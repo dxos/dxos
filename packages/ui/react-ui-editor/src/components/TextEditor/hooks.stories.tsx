@@ -24,9 +24,11 @@ import {
 import { createModelExtensions, createThemeExtensions, useTextEditor } from '../../hooks';
 import { markdownTheme } from '../../themes';
 
+// TODO(burdon): Demo toolbar with hooks.
 // TODO(burdon): Build components from hooks and adapters for model/extensions, etc.
 // TODO(burdon): Remove BaseTextEditor.
 // TODO(burdon): Move scrolling container layout/logic into TextEditor/MarkdownEditor components.
+// TODO(burdon): Define keymap in composer framework format.
 
 type StoryProps = {
   autoFocus?: boolean;
@@ -42,9 +44,20 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
     doc,
     extensions: [
       //
-      createThemeExtensions({ themeMode, theme: markdownTheme }),
+      createThemeExtensions({
+        themeMode,
+        theme: markdownTheme,
+        slots: {
+          // TODO(burdon): Document classes re base theme.
+          // TODO(burdon): Semantic tokens (e.g., replacement of input surface).
+          editor: {
+            className: 'h-full px-20 bg-white text-black dark:bg-black dark:text-white',
+          },
+        },
+      }),
       createModelExtensions({ readonly }),
-      createMarkdownExtensions({ placeholder }),
+      // TODO(burdon): Move lineWrapping.
+      createMarkdownExtensions({ placeholder, lineWrapping: true }),
       // TODO(burdon): Move into markdown bundle (with React callbacks).
       code(),
       formatting(),
@@ -58,8 +71,9 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
   });
 
   return (
-    <div className='absolute inset-0 flex flex-col bg-white dark:bg-black'>
-      <div role='none' className='px-20 py-2' ref={parentRef} />
+    <div className='absolute inset-0 flex flex-col overflow-hidden'>
+      {/* TODO(burdon): Handle scrolling in component wrapper (like this). */}
+      <div role='none' className='h-full overflow-y-auto' ref={parentRef} />
     </div>
   );
 };

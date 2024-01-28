@@ -2,7 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EditorState, type EditorStateConfig, type Extension, type StateEffect } from '@codemirror/state';
+import {
+  EditorSelection,
+  EditorState,
+  type EditorStateConfig,
+  type Extension,
+  type StateEffect,
+} from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { type RefObject, useEffect, useRef, useState } from 'react';
 
@@ -77,16 +83,18 @@ export const useTextEditor = ({
   }, [parentRef]);
 
   useEffect(() => {
-    // TODO(burdon): BUG on first render may appear in middle of formatted heading.
-    //  Make invisible until first render.
     if (view) {
       // Select end of line if not specified.
       if (!selection && !view.state.selection.main.anchor) {
-        selection = { anchor: view.state.doc.line(1).to };
+        selection = EditorSelection.single(view.state.doc.line(1).to);
       }
 
+      // TODO(burdon): BUG on first render may appear in middle of formatted heading.
+      //  Make invisible until first render.
       if (selection || scrollTo) {
-        view.dispatch({ selection, effects: scrollTo && [scrollTo], scrollIntoView: !scrollTo });
+        setTimeout(() => {
+          view.dispatch({ selection, effects: scrollTo && [scrollTo], scrollIntoView: !scrollTo });
+        }, 100);
       }
 
       if (autoFocus) {
@@ -101,6 +109,7 @@ export const useTextEditor = ({
 export type ThemeExtensionsOptions = {
   theme?: ThemeStyles;
   themeMode?: ThemeMode;
+  lineWrap?: boolean;
   slots?: {
     editor?: {
       className?: string;
