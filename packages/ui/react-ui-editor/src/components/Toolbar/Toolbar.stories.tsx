@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { MarkdownToolbar } from './MarkdownToolbar';
+import { Toolbar } from './Toolbar';
 import { code, comments, formatting, heading, image, table, tasklist, useComments } from '../../extensions';
 import { type Comment, useActionHandler, useEditorView, useTextModel } from '../../hooks';
 import { MarkdownEditor } from '../TextEditor';
@@ -54,7 +54,11 @@ const Story: FC<{ content: string }> = ({ content }) => {
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex h-full justify-center'>
         <div className='flex flex-col h-full w-[800px]'>
-          <MarkdownToolbar onAction={handleAction} />
+          <Toolbar.Root onAction={handleAction}>
+            <Toolbar.Markdown />
+            <Toolbar.Separator />
+            <Toolbar.Extended />
+          </Toolbar.Root>
           <MarkdownEditor ref={editorRef} model={model} extensions={extensions} />
         </div>
       </div>
@@ -64,7 +68,7 @@ const Story: FC<{ content: string }> = ({ content }) => {
 
 export default {
   title: 'react-ui-editor/Toolbar',
-  component: MarkdownToolbar,
+  component: Toolbar,
   render: (args: any) => <Story {...args} />,
   decorators: [withTheme],
 };

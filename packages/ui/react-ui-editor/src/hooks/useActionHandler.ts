@@ -16,7 +16,7 @@ import {
   toggleStrikethrough,
 } from '../extensions';
 
-export const useActionHandler = (view: EditorView | null): ToolbarProps['onAction'] => {
+export const useActionHandler = (view?: EditorView | null): ToolbarProps['onAction'] => {
   return (action) => {
     if (!view) {
       return;
@@ -53,9 +53,10 @@ export const useActionHandler = (view: EditorView | null): ToolbarProps['onActio
         break;
     }
 
-    // TODO(burdon): Hack since otherwise focus doesn't leave heading selector.
+    // TODO(burdon): Hack otherwise remains on heading selector.
     setTimeout(() => {
       view.focus();
+      view.dispatch({ selection: view.state.selection });
     });
   };
 };
