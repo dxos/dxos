@@ -6,6 +6,7 @@ import {
   type Icon,
   At,
   CaretRight,
+  ChatText,
   Code,
   Image,
   Link,
@@ -84,56 +85,79 @@ const ToolbarRoot = ({ children, onAction }: ToolbarProps) => {
 
 const ToolbarSeparator = () => <div className='grow' />;
 
-const MarkdownFormatting = () => {
+const MarkdownHeading = () => {
   const { onAction } = useToolbarContext('MarkdownFormatting');
   return (
-    <>
-      <div>
-        <Select.Root defaultValue='0' onValueChange={(value) => onAction?.({ type: 'heading', data: parseInt(value) })}>
-          <Select.TriggerButton classNames='w-[8rem]' />
-          <Select.Portal>
-            <Select.Content>
-              <Select.Viewport>
-                <Select.Option value='0'>Paragraph</Select.Option>
-                {[1, 2, 3, 4, 5, 6].map((level) => (
-                  <Select.Option key={level} value={String(level)}>
-                    Heading {level}
-                  </Select.Option>
-                ))}
-              </Select.Viewport>
-            </Select.Content>
-          </Select.Portal>
-        </Select.Root>
-      </div>
-      <div>
-        <ToolbarButton Icon={TextB} title='Bold' onClick={() => ({ type: 'bold' })} />
-        <ToolbarButton Icon={TextItalic} title='Italic' onClick={() => ({ type: 'italic' })} />
-        <ToolbarButton Icon={TextStrikethrough} title='Strike-through' onClick={() => ({ type: 'strikethrough' })} />
-      </div>
-      <div>
-        <ToolbarButton Icon={ListBullets} title='Bullet list' onClick={() => ({ type: 'list' })} />
-        <ToolbarButton Icon={ListNumbers} title='Numbered list' onClick={() => ({ type: 'list-ordered' })} />
-        <ToolbarButton Icon={ListChecks} title='Task list' onClick={() => ({ type: 'list-tasks' })} />
-      </div>
-      <div>
-        <ToolbarButton Icon={CaretRight} title='Block quite' onClick={() => ({ type: 'blockquote' })} />
-        <ToolbarButton Icon={Code} title='Code block' onClick={() => ({ type: 'codeblock' })} />
-        <ToolbarButton Icon={Table} title='Table' onClick={() => ({ type: 'table' })} />
-      </div>
-      <div>
-        <ToolbarButton Icon={Link} title='Link' onClick={() => ({ type: 'link' })} />
-        <ToolbarButton Icon={At} title='Mention' onClick={() => ({ type: 'mention' })} />
-        <ToolbarButton Icon={Image} title='Image' onClick={() => ({ type: 'image' })} />
-      </div>
-    </>
+    <Select.Root defaultValue='0' onValueChange={(value) => onAction?.({ type: 'heading', data: parseInt(value) })}>
+      <Select.TriggerButton classNames='w-[8rem]' />
+      <Select.Portal>
+        <Select.Content>
+          <Select.Viewport>
+            <Select.Option value='0'>Paragraph</Select.Option>
+            {[1, 2, 3, 4, 5, 6].map((level) => (
+              <Select.Option key={level} value={String(level)}>
+                Heading {level}
+              </Select.Option>
+            ))}
+          </Select.Viewport>
+        </Select.Content>
+      </Select.Portal>
+    </Select.Root>
   );
 };
+
+const MarkdownStyles = () => (
+  <div role='none'>
+    <ToolbarButton Icon={TextB} title='Bold' onClick={() => ({ type: 'bold' })} />
+    <ToolbarButton Icon={TextItalic} title='Italic' onClick={() => ({ type: 'italic' })} />
+    <ToolbarButton Icon={TextStrikethrough} title='Strike-through' onClick={() => ({ type: 'strikethrough' })} />
+  </div>
+);
+
+const MarkdownLists = () => (
+  <div role='none'>
+    <ToolbarButton Icon={ListBullets} title='Bullet list' onClick={() => ({ type: 'list' })} />
+    <ToolbarButton Icon={ListNumbers} title='Numbered list' onClick={() => ({ type: 'list-ordered' })} />
+    <ToolbarButton Icon={ListChecks} title='Task list' onClick={() => ({ type: 'list-tasks' })} />
+  </div>
+);
+
+const MarkdownBlocks = () => (
+  <div role='none'>
+    <ToolbarButton Icon={CaretRight} title='Block quite' onClick={() => ({ type: 'blockquote' })} />
+    <ToolbarButton Icon={Code} title='Code block' onClick={() => ({ type: 'codeblock' })} />
+    <ToolbarButton Icon={Table} title='Table' onClick={() => ({ type: 'table' })} />
+  </div>
+);
+
+const MarkdownLinks = () => (
+  <div role='none'>
+    <ToolbarButton Icon={Link} title='Link' onClick={() => ({ type: 'link' })} />
+    <ToolbarButton Icon={At} title='Mention' onClick={() => ({ type: 'mention' })} />
+    <ToolbarButton Icon={Image} title='Image' onClick={() => ({ type: 'image' })} />
+  </div>
+);
+
+const MarkdownStandard = () => (
+  <>
+    <MarkdownHeading />
+    <MarkdownStyles />
+    <MarkdownLists />
+    <MarkdownBlocks />
+    <MarkdownLinks />
+  </>
+);
+
+const MarkdownExtended = () => (
+  <Toolbar.Button Icon={ChatText} title='Create comment' onClick={() => ({ type: 'comment' })} />
+);
 
 export const Toolbar = {
   Root: ToolbarRoot,
   Button: ToolbarButton,
   Separator: ToolbarSeparator,
-  MarkdownFormatting,
+  Markdown: MarkdownStandard,
+  Extended: MarkdownExtended,
 };
 
 export { useToolbarContext };

@@ -5,7 +5,6 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
-import { ChatText } from '@phosphor-icons/react';
 import React, { type FC, useMemo, useState } from 'react';
 
 import { TextObject } from '@dxos/echo-schema';
@@ -56,9 +55,9 @@ const Story: FC<{ content: string }> = ({ content }) => {
       <div className='flex h-full justify-center'>
         <div className='flex flex-col h-full w-[800px]'>
           <Toolbar.Root onAction={handleAction}>
-            <Toolbar.MarkdownFormatting />
+            <Toolbar.Markdown />
             <Toolbar.Separator />
-            <Toolbar.Button Icon={ChatText} title='Create comment' onClick={() => ({ type: 'comment' })} />
+            <Toolbar.Extended />
           </Toolbar.Root>
           <MarkdownEditor ref={editorRef} model={model} extensions={extensions} />
         </div>
