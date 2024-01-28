@@ -10,13 +10,12 @@ import type { DocumentSection as DocumentSectionType } from './DocumentSection';
 
 export type { DocumentCardProps, DocumentItemProps } from './DocumentCard';
 
-export * from './layout';
-
 export * from './DocumentCard';
 export * from './DocumentMain';
 export * from './DocumentSection';
 export * from './EditorMain';
 export * from './HeadingMenu';
+export * from './Layout';
 export * from './MarkdownSettings';
 
 // Lazily load components for content surfaces.
