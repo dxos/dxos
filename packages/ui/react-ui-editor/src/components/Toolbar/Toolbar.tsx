@@ -52,7 +52,7 @@ export type ToolbarProps = PropsWithChildren<{
 
 const [ToolbarContextProvider, useToolbarContext] = createContext<ToolbarProps>('Toolbar');
 
-export const ToolbarButton: FC<
+const ToolbarButton: FC<
   { Icon: Icon; onClick: () => Action | undefined } & NonNullable<Pick<ButtonProps, 'title'>>
 > = ({ Icon, onClick, title }) => {
   const { onAction } = useToolbarContext('ToolbarButton');
@@ -70,8 +70,7 @@ export const ToolbarButton: FC<
   );
 };
 
-// TODO(burdon): Split into Root, Separator, etc.
-export const Toolbar = ({ children, onAction }: ToolbarProps) => {
+const ToolbarRoot = ({ children, onAction }: ToolbarProps) => {
   return (
     <ToolbarContextProvider onAction={onAction}>
       <DensityProvider density='fine'>
@@ -83,7 +82,9 @@ export const Toolbar = ({ children, onAction }: ToolbarProps) => {
   );
 };
 
-export const MarkdownFormatting = () => {
+const ToolbarSeparator = () => <div className='grow' />;
+
+const MarkdownFormatting = () => {
   const { onAction } = useToolbarContext('MarkdownFormatting');
   return (
     <>
@@ -127,3 +128,12 @@ export const MarkdownFormatting = () => {
     </>
   );
 };
+
+export const Toolbar = {
+  Root: ToolbarRoot,
+  Button: ToolbarButton,
+  Separator: ToolbarSeparator,
+  MarkdownFormatting,
+};
+
+export { useToolbarContext };

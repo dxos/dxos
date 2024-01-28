@@ -24,7 +24,7 @@ import {
 } from '../../extensions';
 import { createDataExtensions, createThemeExtensions, useActionHandler, useTextEditor } from '../../hooks';
 import { markdownTheme } from '../../themes';
-import { MarkdownFormatting, Toolbar } from '../Toolbar';
+import { Toolbar } from '../Toolbar';
 
 // TODO(burdon): Demo toolbar with hooks.
 // TODO(burdon): Build components from hooks and adapters for model/extensions, etc.
@@ -78,9 +78,10 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex h-full justify-center'>
         <div className='flex flex-col h-full w-[800px]'>
-          <Toolbar onAction={handleAction}>
-            <MarkdownFormatting />
-          </Toolbar>
+          <Toolbar.Root onAction={handleAction}>
+            <Toolbar.MarkdownFormatting />
+          </Toolbar.Root>
+
           {/* TODO(burdon): Handle scrolling in component wrapper (like this). */}
           <div role='none' className='h-full overflow-y-auto' ref={parentRef} />
         </div>

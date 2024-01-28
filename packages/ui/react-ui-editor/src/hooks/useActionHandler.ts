@@ -53,10 +53,10 @@ export const useActionHandler = (view?: EditorView | null): ToolbarProps['onActi
         break;
     }
 
-    // TODO(burdon): Hack since otherwise focus doesn't leave heading selector.
-    // TODO(burdon): Set selection after rendered.
+    // TODO(burdon): Hack otherwise remains on heading selector.
     setTimeout(() => {
       view.focus();
+      view.dispatch({ selection: view.state.selection });
     });
   };
 };
