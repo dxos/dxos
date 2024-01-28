@@ -11,9 +11,9 @@ import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type Comment, useTextModel } from '@dxos/react-ui-editor';
 
-import { EditorMain, type EditorMainProps } from './EditorMain';
+import EditorMain, { type EditorMainProps } from './EditorMain';
 
-export const DocumentMain: FC<
+const DocumentMain: FC<
   { document: DocumentType } & Pick<EditorMainProps, 'toolbar' | 'readonly' | 'editorMode' | 'extensions'>
 > = ({ document, ...props }) => {
   const identity = useIdentity();
@@ -38,3 +38,8 @@ export const DocumentMain: FC<
 
   return <EditorMain model={model} comments={comments} {...props} />;
 };
+
+export default DocumentMain;
+
+// TODO(burdon): Document why required?
+export type DocumentMain = typeof DocumentMain;

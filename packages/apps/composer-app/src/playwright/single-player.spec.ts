@@ -51,12 +51,12 @@ test.describe('Single-player tests', () => {
     test('moves item out of folder', async () => {
       await host.createSpace();
       await host.createFolder();
-      // create an item inside the folder
+      // Create an item inside the folder.
       await host.createObject('markdownPlugin');
       await waitForExpect(async () => {
         expect(await host.getObjectsCount()).to.equal(2);
       });
-      // delete the containing folder
+      // Delete the containing folder.
       await host.deleteObject(0);
 
       await waitForExpect(async () => {
@@ -67,14 +67,14 @@ test.describe('Single-player tests', () => {
     test('moves folder with item out of folder', async () => {
       await host.createSpace();
       await host.createFolder();
-      // create a folder inside the folder
+      // Create a folder inside the folder.
       await host.createFolder();
-      // create an item inside the contained folder
+      // Create an item inside the contained folder.
       await host.createObject('markdownPlugin');
       await waitForExpect(async () => {
         expect(await host.getObjectsCount()).to.equal(2);
       });
-      // delete the containing folder
+      // Delete the containing folder.
       await host.deleteObject(0);
 
       await waitForExpect(async () => {
@@ -88,8 +88,8 @@ test.describe('Single-player tests', () => {
       await host.createSpace();
       await host.createObject('stackPlugin');
       const stack = host.getStack();
-      expect(await stack.isEmpty()).to.be.true;
       await waitForExpect(async () => {
+        expect(await stack.isEmpty()).to.be.true;
         expect(await host.getObjectsCount()).to.equal(2);
       });
     });

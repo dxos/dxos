@@ -25,7 +25,7 @@ export type EditorMainProps = {
   toolbar?: boolean;
 } & Pick<TextEditorProps, 'model' | 'readonly' | 'editorMode' | 'extensions'>;
 
-export const EditorMain = ({ comments, toolbar, ...props }: EditorMainProps) => {
+const EditorMain = ({ comments, toolbar, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
 
   const [editorRef, editorView] = useEditorView();
@@ -73,3 +73,5 @@ export const EditorMain = ({ comments, toolbar, ...props }: EditorMainProps) => 
     </div>
   );
 };
+
+export default EditorMain;

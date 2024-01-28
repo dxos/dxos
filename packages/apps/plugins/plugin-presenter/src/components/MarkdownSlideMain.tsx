@@ -8,7 +8,7 @@ import { type Document as DocumentType } from '@braneframe/types';
 
 import { Container, Slide } from './Markdown';
 
-export const MarkdownSlideMain: FC<{ document: DocumentType }> = ({ document }) => {
+const MarkdownSlideMain: FC<{ document: DocumentType }> = ({ document }) => {
   return (
     <Container>
       {/* TODO: content is a YText object, but should be a string. Update after automerge migration. */}
@@ -16,3 +16,5 @@ export const MarkdownSlideMain: FC<{ document: DocumentType }> = ({ document }) 
     </Container>
   );
 };
+
+export default MarkdownSlideMain;

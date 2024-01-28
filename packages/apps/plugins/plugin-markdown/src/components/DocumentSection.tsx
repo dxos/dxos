@@ -16,7 +16,7 @@ import { attentionSurface, focusRing, mx } from '@dxos/react-ui-theme';
 import { MARKDOWN_PLUGIN } from '../meta';
 import { type MarkdownSettingsProps } from '../types';
 
-export const DocumentSection: FC<{
+const DocumentSection: FC<{
   document: DocumentType;
   editorMode: MarkdownSettingsProps['editorMode'];
   extensions: Extension[];
@@ -54,3 +54,7 @@ export const DocumentSection: FC<{
     />
   );
 };
+
+export default DocumentSection;
+
+export type DocumentSection = typeof DocumentSection;

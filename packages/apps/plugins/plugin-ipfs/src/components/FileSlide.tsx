@@ -6,13 +6,11 @@ import React, { type FC } from 'react';
 
 import { type TypedObject } from '@dxos/client/echo';
 import { useConfig } from '@dxos/react-client';
-import { Main } from '@dxos/react-ui';
-import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 import { FilePreview } from './FilePreview';
 import { getIpfsUrl } from '../get-ipfs-url';
 
-const FileMain: FC<{ file: TypedObject }> = ({ file }) => {
+const FileSlide: FC<{ file: TypedObject; cover?: boolean }> = ({ file, cover }) => {
   const config = useConfig();
   if (!file.cid) {
     return null;
@@ -20,10 +18,10 @@ const FileMain: FC<{ file: TypedObject }> = ({ file }) => {
 
   const url = getIpfsUrl(config, file.cid);
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
-      <FilePreview type={file.type} url={url} />
-    </Main.Content>
+    <div className='h-full flex justify-center align-center'>
+      <FilePreview type={file.type} url={url} className={cover ? 'object-cover' : 'object-contain'} />
+    </div>
   );
 };
 
-export default FileMain;
+export default FileSlide;
