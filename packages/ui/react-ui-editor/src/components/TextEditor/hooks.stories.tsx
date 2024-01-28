@@ -21,7 +21,7 @@ import {
   table,
   tasklist,
 } from '../../extensions';
-import { createModelExtensions, createThemeExtensions, useTextEditor } from '../../hooks';
+import { createDataExtensions, createThemeExtensions, useTextEditor } from '../../hooks';
 import { markdownTheme } from '../../themes';
 
 // TODO(burdon): Demo toolbar with hooks.
@@ -44,18 +44,18 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
     doc,
     extensions: [
       //
+      createDataExtensions({ readonly }),
       createThemeExtensions({
         themeMode,
         theme: markdownTheme,
         slots: {
           // TODO(burdon): Document classes re base theme.
-          // TODO(burdon): Semantic tokens (e.g., replacement of input surface).
+          //  Semantic tokens (e.g., replacement of input surface).
           editor: {
             className: 'h-full px-20 bg-white text-black dark:bg-black dark:text-white',
           },
         },
       }),
-      createModelExtensions({ readonly }),
       // TODO(burdon): Move lineWrapping.
       createMarkdownExtensions({ placeholder, lineWrapping: true }),
       // TODO(burdon): Move into markdown bundle (with React callbacks).

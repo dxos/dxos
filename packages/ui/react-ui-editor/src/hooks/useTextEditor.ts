@@ -42,6 +42,7 @@ export const useTextEditor = ({
   selection,
   extensions,
 }: UseTextEditorOptions = {}): UseTextEditor => {
+  const onUpdate = useRef<() => void>();
   const [view, setView] = useState<EditorView>();
   const parentRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -56,6 +57,9 @@ export const useTextEditor = ({
             log.catch(err);
           }),
           extensions,
+          EditorView.updateListener.of(() => {
+            onUpdate.current?.();
+          }),
         ].filter(isNotFalsy),
       });
 
@@ -89,12 +93,14 @@ export const useTextEditor = ({
         selection = EditorSelection.single(view.state.doc.line(1).to);
       }
 
+      // Set selection after first update (since content may rerender on focus).
       // TODO(burdon): BUG on first render may appear in middle of formatted heading.
-      //  Make invisible until first render.
+      // TODO(burdon): Make invisible until first render?
       if (selection || scrollTo) {
-        setTimeout(() => {
+        onUpdate.current = () => {
+          onUpdate.current = undefined;
           view.dispatch({ selection, effects: scrollTo && [scrollTo], scrollIntoView: !scrollTo });
-        }, 100);
+        };
       }
 
       if (autoFocus) {
@@ -105,6 +111,8 @@ export const useTextEditor = ({
 
   return { parentRef, view };
 };
+
+// TODO(burdon): Factor out extension factories.
 
 export type ThemeExtensionsOptions = {
   theme?: ThemeStyles;
@@ -136,7 +144,7 @@ export type ModelExtensionsOptions = {
 };
 
 // TODO(burdon): Pass in TextObject (remove model).
-export const createModelExtensions = ({ readonly = false } = {}): Extension => {
+export const createDataExtensions = ({ readonly = false } = {}): Extension => {
   return [
     //
     EditorState.readOnly.of(readonly),
