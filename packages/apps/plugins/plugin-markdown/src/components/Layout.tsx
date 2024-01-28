@@ -11,9 +11,7 @@ export const MainLayout = ({ children }: PropsWithChildren) => {
   return (
     <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
       <div role='none' className={mx('flex flex-col h-full pli-2', textBlockWidth)}>
-        {/* <div role='none' className='flex flex-col grow pb-8 overflow-y-auto'> */}
         {children}
-        {/* </div> */}
       </div>
     </Main.Content>
   );

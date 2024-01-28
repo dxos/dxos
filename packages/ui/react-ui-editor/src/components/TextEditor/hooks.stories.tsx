@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
+import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { TextEditor } from './TextEditor';
@@ -21,8 +22,9 @@ import {
   table,
   tasklist,
 } from '../../extensions';
-import { createDataExtensions, createThemeExtensions, useTextEditor } from '../../hooks';
+import { createDataExtensions, createThemeExtensions, useActionHandler, useTextEditor } from '../../hooks';
 import { markdownTheme } from '../../themes';
+import { MarkdownFormatting, Toolbar } from '../Toolbar';
 
 // TODO(burdon): Demo toolbar with hooks.
 // TODO(burdon): Build components from hooks and adapters for model/extensions, etc.
@@ -39,7 +41,7 @@ type StoryProps = {
 
 const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
   const { themeMode } = useThemeContext();
-  const { parentRef } = useTextEditor({
+  const { parentRef, view } = useTextEditor({
     autoFocus,
     doc,
     extensions: [
@@ -52,7 +54,7 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
           // TODO(burdon): Document classes re base theme.
           //  Semantic tokens (e.g., replacement of input surface).
           editor: {
-            className: 'h-full px-20 bg-white text-black dark:bg-black dark:text-white',
+            className: 'h-full p-4 bg-white text-black dark:bg-black dark:text-white',
           },
         },
       }),
@@ -70,10 +72,19 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
     ],
   });
 
+  const handleAction = useActionHandler(view);
+
   return (
-    <div className='absolute inset-0 flex flex-col overflow-hidden'>
-      {/* TODO(burdon): Handle scrolling in component wrapper (like this). */}
-      <div role='none' className='h-full overflow-y-auto' ref={parentRef} />
+    <div className={mx(fixedInsetFlexLayout, groupSurface)}>
+      <div className='flex h-full justify-center'>
+        <div className='flex flex-col h-full w-[800px]'>
+          <Toolbar onAction={handleAction}>
+            <MarkdownFormatting />
+          </Toolbar>
+          {/* TODO(burdon): Handle scrolling in component wrapper (like this). */}
+          <div role='none' className='h-full overflow-y-auto' ref={parentRef} />
+        </div>
+      </div>
     </div>
   );
 };

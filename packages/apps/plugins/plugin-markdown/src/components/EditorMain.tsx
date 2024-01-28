@@ -10,7 +10,7 @@ import {
   type TextEditorProps,
   type Comment,
   MarkdownEditor,
-  MarkdownToolbar,
+  Toolbar,
   focusComment,
   useComments,
   useEditorView,
@@ -47,7 +47,7 @@ const EditorMain = ({ comments, toolbar, ...props }: EditorMainProps) => {
 
   return (
     <div role='none' className='flex flex-col h-full'>
-      {toolbar && <MarkdownToolbar onAction={handleAction} />}
+      {toolbar && <Toolbar onAction={handleAction} />}
       <div role='none' className='flex flex-col grow pb-8 overflow-y-auto'>
         <MarkdownEditor
           ref={editorRef}

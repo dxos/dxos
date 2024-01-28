@@ -16,7 +16,7 @@ import {
   toggleStrikethrough,
 } from '../extensions';
 
-export const useActionHandler = (view: EditorView | null): ToolbarProps['onAction'] => {
+export const useActionHandler = (view?: EditorView | null): ToolbarProps['onAction'] => {
   return (action) => {
     if (!view) {
       return;
@@ -54,6 +54,7 @@ export const useActionHandler = (view: EditorView | null): ToolbarProps['onActio
     }
 
     // TODO(burdon): Hack since otherwise focus doesn't leave heading selector.
+    // TODO(burdon): Set selection after rendered.
     setTimeout(() => {
       view.focus();
     });

@@ -49,7 +49,6 @@ export const heading = () => {
 
         update(update: ViewUpdate) {
           this.decorations = buildDecorations(update.view);
-          console.log('up');
         }
       },
       {
