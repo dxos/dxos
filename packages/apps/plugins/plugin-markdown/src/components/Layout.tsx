@@ -19,6 +19,6 @@ export const MainLayout = ({ children }: PropsWithChildren) => {
 
 // Used when the editor is embedded in another context (e.g., iframe) and has no topbar/sidebar/etc.
 // TODO(wittjosiah): What's the difference between this and Section/Card?
-export const EmbeddedLayout = ({ children }: PropsWithChildren<{}>) => {
+export const EmbeddedLayout = ({ children }: PropsWithChildren) => {
   return <Main.Content classNames='min-bs-[100dvh] flex flex-col p-0.5'>{children}</Main.Content>;
 };
