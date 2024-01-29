@@ -16,6 +16,7 @@ import {
   type TranslationsProvides,
   parseLayoutPlugin,
   resolvePlugin,
+  parseIntentPlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import {
@@ -65,6 +66,12 @@ export const ObservabilityPlugin = (options: {
     ready: async (plugins) => {
       const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
+      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+
+      const dispatch = intentPlugin?.provides?.intent?.dispatch;
+      if (!dispatch) {
+        return;
+      }
 
       // Initialize asynchronously in the background, not in plugin initialization.
       // Should not block application startup.
@@ -79,22 +86,6 @@ export const ObservabilityPlugin = (options: {
         }
 
         subscriptions.add(
-          effect(async () => {
-            observability?.event({
-              identityId: getTelemetryIdentifier(client),
-              name: `${options.namespace}.observability.toggle`,
-              properties: {
-                ...BASE_TELEMETRY_PROPERTIES,
-                enabled: settings.enabled,
-              },
-            });
-
-            observability?.setMode(settings.enabled ? 'full' : 'disabled');
-            await storeObservabilityDisabled(options.namespace, !settings.enabled);
-          }),
-        );
-
-        subscriptions.add(
           effect(() => {
             // Read active to subscribe to changes.
             const _ = layoutPlugin?.provides?.layout?.active;
@@ -106,13 +97,15 @@ export const ObservabilityPlugin = (options: {
           }),
         );
 
-        observability.event({
-          identityId: getTelemetryIdentifier(client),
-          name: `${options.namespace}.page.load`,
-          properties: {
-            ...BASE_TELEMETRY_PROPERTIES,
-            href: window.location.href,
-            loadDuration: window.performance.timing.loadEventEnd - window.performance.timing.loadEventStart,
+        await dispatch({
+          action: ObservabilityAction.SEND_EVENT,
+          data: {
+            name: 'page.load',
+            properties: {
+              href: window.location.href,
+              // TODO(wittjosiah): These apis are deprecated. Is there a better way to find this information?
+              loadDuration: window.performance.timing.loadEventEnd - window.performance.timing.loadEventStart,
+            },
           },
         });
 
@@ -130,15 +123,40 @@ export const ObservabilityPlugin = (options: {
     },
     provides: {
       intent: {
-        resolver: (intent) => {
+        resolver: async (intent, plugins) => {
+          const client = resolvePlugin(plugins, parseClientPlugin)?.provides?.client;
+          if (!client || !observability) {
+            return;
+          }
+
           switch (intent.action) {
             case ObservabilityAction.TOGGLE:
               settings.enabled = !settings.enabled;
+              observability.event({
+                identityId: getTelemetryIdentifier(client),
+                name: `${options.namespace}.observability.toggle`,
+                properties: {
+                  ...BASE_TELEMETRY_PROPERTIES,
+                  enabled: settings.enabled,
+                },
+              });
+              observability.setMode(settings.enabled ? 'basic' : 'disabled');
+              await storeObservabilityDisabled(options.namespace, !settings.enabled);
               return { data: settings.enabled };
 
-            case ObservabilityAction.SEND_EVENT:
-              observability?.event(intent.data as EventOptions);
-              return { data: true };
+            case ObservabilityAction.SEND_EVENT: {
+              const data = intent.data as EventOptions;
+              const event = {
+                identityId: getTelemetryIdentifier(client),
+                name: `${options.namespace}.${data.name}`,
+                properties: {
+                  ...BASE_TELEMETRY_PROPERTIES,
+                  ...data.properties,
+                },
+              };
+              observability.event(event);
+              return { data: event };
+            }
           }
         },
       },

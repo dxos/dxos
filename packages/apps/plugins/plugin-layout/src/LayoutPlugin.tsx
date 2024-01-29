@@ -8,6 +8,7 @@ import { type RevertDeepSignal } from 'deepsignal';
 import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
+import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
   findPlugin,
   parseGraphPlugin,
@@ -36,7 +37,11 @@ import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
 import { type LayoutPluginProvides, type LayoutSettingsProps } from './types';
 
-export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
+export const LayoutPlugin = ({
+  observability,
+}: {
+  observability?: boolean;
+} = {}): PluginDefinition<LayoutPluginProvides> => {
   let graphPlugin: Plugin<GraphProvides> | undefined;
   // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
@@ -298,7 +303,31 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                 state.values.active = id;
               });
 
-              return { data: true };
+              const schema = state.values.activeNode?.data?.__typename;
+
+              return {
+                data: {
+                  id,
+                  path,
+                  active: true,
+                },
+                intents: [
+                  observability
+                    ? [
+                        {
+                          action: ObservabilityAction.SEND_EVENT,
+                          data: {
+                            name: 'layout.activate',
+                            properties: {
+                              id,
+                              schema,
+                            },
+                          },
+                        },
+                      ]
+                    : [],
+                ],
+              };
             }
           }
         },

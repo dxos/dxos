@@ -10,7 +10,7 @@ import type { Client, Config } from '@dxos/client';
 import { log } from '@dxos/log';
 // import { type InitOptions as TelemetryInitOptions } from '@dxos/telemetry';
 
-import type { Observability } from '../observability';
+import type { Mode, Observability } from '../observability';
 
 export const BASE_TELEMETRY_PROPERTIES: any = {};
 // item name is 'telemetry' for backwards compatibility
@@ -83,6 +83,7 @@ export const storeObservabilityGroup = async (namespace: string, value: string) 
 export type AppObservabilityOptions = {
   namespace: string;
   config: Config;
+  mode?: Mode;
   tracingEnable?: boolean;
   replayEnable?: boolean;
   // TODO(nf): options for providers?
@@ -96,6 +97,7 @@ type IPData = { city: string; region: string; country: string; latitude: number;
 export const initializeAppObservability = async ({
   namespace,
   config,
+  mode = 'basic',
   tracingEnable = true,
   replayEnable = true,
 }: AppObservabilityOptions): Promise<Observability> => {
@@ -123,7 +125,7 @@ export const initializeAppObservability = async ({
   const observability = new Observability({
     namespace,
     group,
-    mode: 'full',
+    mode,
     config,
     errorLog: {
       sentryInitOptions: {

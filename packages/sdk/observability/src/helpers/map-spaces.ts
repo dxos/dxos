@@ -29,7 +29,6 @@ export const mapSpaces = (spaces: Space[], options: MapSpacesOptions = { verbose
       // TODO(nf): truncate keys for DD?
       key: space.key.truncate(),
       open: space.isOpen,
-      name: space.properties.name,
       members: space.members.get().length,
       objects: space.db.query().objects.length,
       startup,

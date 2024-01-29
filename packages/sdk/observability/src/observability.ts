@@ -14,7 +14,7 @@ import { isNode } from '@dxos/util';
 
 import buildSecrets from './cli-observability-secrets.json';
 import { DatadogMetrics } from './datadog';
-import { mapSpaces } from './helpers';
+import { BASE_TELEMETRY_PROPERTIES, getTelemetryIdentifier, mapSpaces } from './helpers';
 import { SegmentTelemetry, type EventOptions, type PageOptions } from './segment';
 import {
   captureException as sentryCaptureException,
@@ -276,19 +276,30 @@ export class Observability {
     // scheduleTaskInterval(ctx, async () => updateSignalMetrics.emit(), DATADOG_IDLE_INTERVAL);
   }
 
-  startSpacesMetrics(client: Client) {
-    let spaces = client.spaces.get();
+  startSpacesMetrics(client: Client, namespace: string) {
+    const spaces = client.spaces.get();
     const subscriptions = new Map<string, { unsubscribe: () => void }>();
     this._ctx.onDispose(() => subscriptions.forEach((subscription) => subscription.unsubscribe()));
 
     const updateSpaceMetrics = new Event<Space>().debounce(SPACE_METRICS_MIN_INTERVAL);
-    updateSpaceMetrics.on(this._ctx, async (space) => {
+    updateSpaceMetrics.on(this._ctx, async () => {
       log('send space update');
-      for (const sp of mapSpaces(spaces, { truncateKeys: true })) {
-        this.gauge('dxos.client.space.members', sp.members, { key: sp.key });
-        this.gauge('dxos.client.space.objects', sp.objects, { key: sp.key });
-        this.gauge('dxos.client.space.epoch', sp.epoch, { key: sp.key });
-        this.gauge('dxos.client.space.currentDataMutations', sp.currentDataMutations, { key: sp.key });
+      for (const data of mapSpaces(spaces, { truncateKeys: true })) {
+        // Metrics
+        this.gauge('dxos.client.space.members', data.members, { key: data.key });
+        this.gauge('dxos.client.space.objects', data.objects, { key: data.key });
+        this.gauge('dxos.client.space.epoch', data.epoch, { key: data.key });
+        this.gauge('dxos.client.space.currentDataMutations', data.currentDataMutations, { key: data.key });
+
+        // Telemetry
+        this.event({
+          identityId: getTelemetryIdentifier(client),
+          name: `${namespace}.space.update`,
+          properties: {
+            ...BASE_TELEMETRY_PROPERTIES,
+            ...data,
+          },
+        });
       }
     });
 
@@ -304,9 +315,7 @@ export class Observability {
     });
 
     client.spaces.subscribe({
-      next: async () => {
-        spaces = client.spaces.get();
-        // spaces = await this.getSpaces(this._agent.client);
+      next: async (spaces) => {
         spaces
           .filter((space) => !subscriptions.has(space.key.toHex()))
           .forEach((space) => {

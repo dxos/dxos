@@ -162,7 +162,9 @@ const main = async () => {
       [InboxMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-inbox')),
       [IpfsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-ipfs')),
       [KanbanMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-kanban')),
-      [LayoutMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-layout')),
+      [LayoutMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-layout'), {
+        observability: true,
+      }),
       [MapMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-map')),
       [MarkdownMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-markdown')),
       [MermaidMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-mermaid')),
