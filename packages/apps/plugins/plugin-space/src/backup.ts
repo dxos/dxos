@@ -82,7 +82,7 @@ export const importData = async (space: Space, backupBlob: Blob) => {
         const source = id ? space.db.getObjectById<DocumentType>(id) : undefined;
         const target = source ?? space.db.add(new DocumentType());
 
-        // TODO(burdon): Handle YJS/AM separately/specifically.
+        // TODO(burdon): Handle YJS/AM separately/specifically. Delete?
         if (target && target.content.content) {
           target.content.content.delete(0, target.content.content.length);
           (target.content.content as YText).insert(0, docContent ?? ''); // TODO(burdon): Assumes YJS?
