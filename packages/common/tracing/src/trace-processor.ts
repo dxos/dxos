@@ -397,7 +397,7 @@ const serializeError = (err: unknown): SerializedError => {
 
 export const TRACE_PROCESSOR: TraceProcessor = ((globalThis as any).TRACE_PROCESSOR ??= new TraceProcessor());
 
-const sanitizeValue = (value: any, depth: number) => {
+const sanitizeValue = (value: any, depth: number): any => {
   switch (typeof value) {
     case 'string':
     case 'number':
@@ -411,12 +411,16 @@ const sanitizeValue = (value: any, depth: number) => {
         return value;
       }
 
-      if ((typeof value === 'object' && depth === null) || depth > 0) {
-        const res: any = {};
-        for (const key of Object.keys(value)) {
-          res[key] = sanitizeValue(value[key], depth - 1);
+      if (depth === null || depth > 0) {
+        if (Array.isArray(value)) {
+          return value.map((item: any) => sanitizeValue(item, depth - 1));
+        } else if (typeof value === 'object') {
+          const res: any = {};
+          for (const key of Object.keys(value)) {
+            res[key] = sanitizeValue(value[key], depth - 1);
+          }
+          return res;
         }
-        return res;
       }
 
       // TODO(dmaretskyi): Expose trait.

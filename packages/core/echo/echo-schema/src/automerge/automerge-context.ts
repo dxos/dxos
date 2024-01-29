@@ -8,11 +8,15 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type HostInfo, type DataService, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
+import { trace } from '@dxos/tracing';
+import { mapValues } from '@dxos/util';
+import { next as automerge } from '@dxos/automerge/automerge';
 
 /**
  * Shared context for all spaces in the client.
  * Hosts the automerege repo.
  */
+@trace.resource()
 export class AutomergeContext {
   private _repo: Repo;
   private _adapter?: LocalClientNetworkAdapter = undefined;
@@ -33,6 +37,20 @@ export class AutomergeContext {
 
   get repo(): Repo {
     return this._repo;
+  }
+
+  @trace.info({ depth: null })
+  private _automergeDocs() {
+    return mapValues(this._repo.handles, (handle) => ({
+      state: handle.state,
+      hasDoc: !!handle.docSync(),
+      heads: handle.docSync() ? automerge.getHeads(handle.docSync()) : null,
+    }));
+  }
+
+  @trace.info({ depth: null })
+  private _automergePeers() {
+    return this._repo.peers;
   }
 
   async close() {
