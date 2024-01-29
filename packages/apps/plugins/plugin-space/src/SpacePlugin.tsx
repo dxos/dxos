@@ -32,10 +32,8 @@ import { type Client, PublicKey } from '@dxos/react-client';
 import { type Space, SpaceProxy, getSpaceForObject, type PropertiesProps } from '@dxos/react-client/echo';
 import { inferRecordOrder } from '@dxos/util';
 
-import { exportData } from './backup';
 import {
   AwaitingObject,
-  DialogRestoreSpace,
   EmptySpace,
   EmptyTree,
   FolderMain,
@@ -252,12 +250,6 @@ export const SpacePlugin = ({
                 default:
                   return null;
               }
-            case 'dialog':
-              if (data.component === 'dxos.org/plugin/space/RestoreSpaceDialog' && isSpace(data.subject)) {
-                return <DialogRestoreSpace space={data.subject} />;
-              } else {
-                return null;
-              }
             case 'popover':
               if (data.component === 'dxos.org/plugin/space/RenameSpacePopover' && isSpace(data.subject)) {
                 return <PopoverRenameSpace space={data.subject} />;
@@ -388,7 +380,7 @@ export const SpacePlugin = ({
                 invoke: () =>
                   dispatch({
                     plugin: SPACE_PLUGIN,
-                    action: SpaceAction.LOAD_FROM_DISK,
+                    action: SpaceAction.LOAD,
                   }),
               },
             ],
@@ -553,45 +545,6 @@ export const SpacePlugin = ({
               break;
             }
 
-            case SpaceAction.EXPORT: {
-              const space = intent.data?.space;
-              if (space instanceof SpaceProxy) {
-                // TODO(wittjosiah): Expose translations helper from theme plugin provides.
-                const backupBlob = await exportData(space, space.key.toHex());
-                const filename = space.properties.name?.replace(/\W/g, '_') || space.key.toHex();
-
-                const url = URL.createObjectURL(backupBlob);
-                // TODO(burdon): See DebugMain useFileDownload
-                const element = document.createElement('a');
-                element.setAttribute('href', url);
-                element.setAttribute('download', `${filename}.zip`);
-                element.setAttribute('target', 'download');
-                element.click();
-                return { data: element };
-              }
-              break;
-            }
-
-            case SpaceAction.IMPORT: {
-              const space = intent.data?.space;
-              if (space instanceof SpaceProxy) {
-                return {
-                  intents: [
-                    [
-                      {
-                        action: LayoutAction.OPEN_DIALOG,
-                        data: {
-                          component: 'dxos.org/plugin/space/RestoreSpaceDialog',
-                          subject: space,
-                        },
-                      },
-                    ],
-                  ],
-                };
-              }
-              break;
-            }
-
             case SpaceAction.SELECT_DIRECTORY: {
               const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
               directory = handle;
@@ -599,7 +552,7 @@ export const SpacePlugin = ({
               return { data: handle };
             }
 
-            case SpaceAction.SAVE_TO_DISK: {
+            case SpaceAction.SAVE: {
               const space = intent.data?.space;
               if (space instanceof SpaceProxy) {
                 if (!directory) {
@@ -627,7 +580,7 @@ export const SpacePlugin = ({
               break;
             }
 
-            case SpaceAction.LOAD_FROM_DISK: {
+            case SpaceAction.LOAD: {
               const space = intent.data?.space;
               if (space instanceof SpaceProxy) {
                 const directory = await (window as any).showDirectoryPicker({ mode: 'readwrite' });

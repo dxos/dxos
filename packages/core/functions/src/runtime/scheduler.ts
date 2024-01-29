@@ -99,9 +99,24 @@ export class Scheduler {
       });
     });
 
-    // TODO(burdon): Check greater than 30s min (use cron-parser).
     invariant(trigger.schedule);
-    const job = new CronJob(trigger.schedule, () => task.schedule());
+    let last = 0;
+    let run = 0;
+    // https://www.npmjs.com/package/cron#constructor
+    const job = CronJob.from({
+      cronTime: trigger.schedule,
+      runOnInit: false,
+      onTick: () => {
+        // TODO(burdon): Check greater than 30s (use cron-parser).
+        const now = Date.now();
+        const delta = last ? now - last : 0;
+        last = now;
+
+        run++;
+        log.info('tick', { space: space.key.truncate(), count: run, delta });
+        task.schedule();
+      },
+    });
 
     job.start();
     ctx.onDispose(() => job.stop());
