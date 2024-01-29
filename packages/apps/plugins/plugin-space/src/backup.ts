@@ -5,9 +5,9 @@
 import JSZip from 'jszip';
 
 // TODO(wittjosiah): Factor Document functionality out to markdown plugin.
-import { Document } from '@braneframe/types';
+import { Document as DocumentType } from '@braneframe/types';
 import { log } from '@dxos/log';
-import { type Space } from '@dxos/react-client/echo';
+import { getTextContent, type Space } from '@dxos/react-client/echo';
 import { type YText } from '@dxos/text-model';
 
 export type ComposerDocumentBackup = {
@@ -28,7 +28,7 @@ export type SpaceBackup = {
 
 export const createBackup = async (space: Space, defaultDocumentTitle: string): Promise<SpaceBackup> => {
   // TODO(burdon): Not just documents.
-  const itemsQuery = space.db.query(Document.filter());
+  const itemsQuery = space.db.query(DocumentType.filter());
   const namesCount = new Map<string, number>();
   const getFileName = (title: string) => {
     const displayTitle = title || defaultDocumentTitle;
@@ -63,8 +63,8 @@ export const exportData = async (space: Space, title: string): Promise<Blob> => 
   backupPackage.file('space.json', JSON.stringify(backup));
   const items = backupPackage.folder('items');
   backup.items.forEach((docBackup) => {
-    const document = space.db.getObjectById(docBackup.origin!.id!) as Document;
-    items!.file(docBackup.fileName, document?.content.content?.toString() ?? '');
+    const document = space.db.getObjectById(docBackup.origin!.id!) as DocumentType;
+    items!.file(docBackup.fileName, getTextContent(document?.content, ''));
   });
 
   return backupPackage.generateAsync({ type: 'blob' });
@@ -76,16 +76,18 @@ export const importData = async (space: Space, backupBlob: Blob) => {
   try {
     const backup = JSON.parse(backupString!) as SpaceBackup;
     await Promise.all(
-      backup.items.map(async ({ fileName, origin = {} }) => {
-        const { id, title } = origin;
-        const extantDoc = id ? space.db.getObjectById<Document>(id) : undefined;
-        const targetDoc = extantDoc ?? space.db.add(new Document());
+      backup.items.map(async ({ fileName, origin: { id, title } = {} }) => {
         const docContent = await backupPackage.file(`items/${fileName}`)?.async('string');
-        if (targetDoc && targetDoc.content.content) {
-          targetDoc.content.content.delete(0, targetDoc.content.content.length);
-          (targetDoc.content.content as YText).insert(0, docContent ?? '');
+
+        const source = id ? space.db.getObjectById<DocumentType>(id) : undefined;
+        const target = source ?? space.db.add(new DocumentType());
+
+        // TODO(burdon): Handle YJS/AM separately/specifically.
+        if (target && target.content.content) {
+          target.content.content.delete(0, target.content.content.length);
+          (target.content.content as YText).insert(0, docContent ?? ''); // TODO(burdon): Assumes YJS?
           if (title) {
-            targetDoc.title = title;
+            target.title = title;
           }
         }
       }),
