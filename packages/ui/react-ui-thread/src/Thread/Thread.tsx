@@ -20,7 +20,7 @@ export const Thread = forwardRef(
         {...(current && { 'aria-current': typeof current === 'string' ? current : 'location' })}
         {...props}
         className={mx(
-          'grid grid-cols-[3rem_1fr] bg-[var(--surface-bg)] border-[color:var(--surface-separator)] border-bs border-be attention attention-within attention-current',
+          'is-full grid grid-cols-[3rem_1fr] bg-[var(--surface-bg)] border-[color:var(--surface-separator)] border-bs border-be attention attention-within attention-current',
           classNames,
         )}
         ref={ref}

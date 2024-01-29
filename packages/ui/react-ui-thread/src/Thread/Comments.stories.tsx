@@ -28,6 +28,7 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { Thread } from './Thread';
 import { Message, type MessageBlockProps, MessageTextbox } from '../Message';
+import translations from '../translations';
 import { type MessageEntity } from '../types';
 
 faker.seed(101);
@@ -145,7 +146,7 @@ const StoryThread: FC<{
   }
 
   return (
-    <Thread>
+    <Thread current={selected} onClickCapture={onSelect}>
       <div className='col-span-2 flex p-2 gap-2 text-xs fg-description'>
         <span>id:{thread.id.slice(0, 4)}</span>
         <span>from:{thread.range?.from}</span>
@@ -159,11 +160,12 @@ const StoryThread: FC<{
         <Message<{ text: TextObject }> key={message.id} {...message} MessageBlockComponent={StoryMessageBlock} />
       ))}
 
-      <div ref={containerRef} className='contents' onClick={() => onSelect()}>
+      <div ref={containerRef} className='contents'>
         <MessageTextbox
           authorId={authorId}
           ref={editorRef}
           autoFocus={autoFocus}
+          onEditorFocus={onSelect}
           model={model}
           onSend={handleCreateMessage}
         />
@@ -308,23 +310,27 @@ const Story = ({ text, autoCreate }: StoryProps) => {
   };
 
   return (
-    <main className='grid grid-cols-[1fr_24rem] gap-2 place-items-start'>
-      <Editor
-        item={item}
-        selected={selected}
-        comments={comments}
-        onCreateComment={handleCreateComment}
-        onDeleteComment={handleDeleteComment}
-        onUpdateComment={handleUpdateComment}
-        onSelectComment={handleSelectComment}
-      />
+    <main className='fixed inset-0 grid grid-cols-[1fr_24rem]'>
+      <div role='none' className='max-bs-full overflow-y-auto p-4'>
+        <Editor
+          item={item}
+          selected={selected}
+          comments={comments}
+          onCreateComment={handleCreateComment}
+          onDeleteComment={handleDeleteComment}
+          onUpdateComment={handleUpdateComment}
+          onSelectComment={handleSelectComment}
+        />
+      </div>
 
-      <Sidebar
-        threads={visibleThreads}
-        selected={selected}
-        onSelect={handleSelectThread}
-        onResolve={handleResolveThread}
-      />
+      <div role='none' className='max-bs-full overflow-y-auto p-4'>
+        <Sidebar
+          threads={visibleThreads}
+          selected={selected}
+          onSelect={handleSelectThread}
+          onResolve={handleResolveThread}
+        />
+      </div>
     </main>
   );
 };
@@ -334,6 +340,7 @@ export default {
   component: StoryThread,
   decorators: [withTheme],
   render: (args: StoryProps) => <Story {...args} />,
+  parameters: { translations, layout: 'fullscreen' },
 };
 
 const str = (...lines: string[]) => lines.join('\n');
