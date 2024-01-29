@@ -261,29 +261,6 @@ describe('Database', () => {
       });
     });
 
-    test('meta', async () => {
-      const { db } = await createDatabase();
-
-      const obj = new TypedObject();
-      expect(Array.from(obj.__meta.keys)).toEqual([]);
-      obj.__meta.keys = [{ id: 'test-key', source: 'test' }];
-      expect(Array.from(obj.__meta.keys)).toEqual([{ id: 'test-key', source: 'test' }]);
-
-      db.add(obj);
-      await db.flush();
-
-      expect(Array.from(obj.__meta.keys)).toEqual([{ id: 'test-key', source: 'test' }]);
-      // TODO(mykola): Implement in automerge.
-      // expect(obj[data]).toEqual({
-      //   '@id': obj.id,
-      //   '@type': undefined,
-      //   '@model': 'dxos.org/model/document',
-      //   '@meta': {
-      //     keys: [{ id: 'test-key', source: 'test' }],
-      //   },
-      // });
-    });
-
     test('query by id', async () => {
       const { db } = await createDatabase();
 
@@ -319,4 +296,35 @@ describe('Database', () => {
       });
     }
   });
+
+  test('meta', async () => {
+    const { db } = await createDatabase();
+
+    const obj = new TypedObject();
+    expectObjects(obj.__meta.keys, []);
+    obj.__meta.keys = [{ id: 'test-key', source: 'test' }];
+    expectObjects(obj.__meta.keys, [{ id: 'test-key', source: 'test' }]);
+
+    db.add(obj);
+    await db.flush();
+
+    expectObjects(obj.__meta.keys, [{ id: 'test-key', source: 'test' }]);
+    // TODO(mykola): Implement in automerge.
+    // expect(obj[data]).toEqual({
+    //   '@id': obj.id,
+    //   '@type': undefined,
+    //   '@model': 'dxos.org/model/document',
+    //   '@meta': {
+    //     keys: [{ id: 'test-key', source: 'test' }],
+    //   },
+    // });
+  });
 });
+
+const expectObjects = (echoObjects: any[], expectedObjects: any) => {
+  expect(mapEchoToPlainJsObject(echoObjects)).toStrictEqual(expectedObjects);
+};
+
+const mapEchoToPlainJsObject = (array: any[]): any[] => {
+  return array.map((o) => (Array.isArray(o) ? mapEchoToPlainJsObject(o) : { ...o }));
+};
