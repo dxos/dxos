@@ -81,6 +81,7 @@ const ENABLE_FEED_PURGE = false;
 @trace.resource()
 export class DataSpace {
   private _ctx = new Context();
+  @trace.info()
   private readonly _inner: Space;
   private readonly _gossip: Gossip;
   private readonly _presence: Presence;

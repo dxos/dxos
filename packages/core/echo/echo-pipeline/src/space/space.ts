@@ -56,12 +56,15 @@ export class Space {
 
   public readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
   public readonly stateUpdate = new Event();
+  @trace.info()
   public readonly protocol: SpaceProtocol;
 
   private readonly _key: PublicKey;
   private readonly _genesisFeedKey: PublicKey;
   private readonly _feedProvider: FeedProvider;
+  @trace.info()
   private readonly _controlPipeline: ControlPipeline;
+  @trace.info()
   private readonly _dataPipeline: DataPipeline;
   private readonly _snapshotManager: SnapshotManager;
 

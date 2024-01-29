@@ -120,7 +120,11 @@ export class TraceProcessor {
         if (options.enum) {
           res[key] = options.enum[value];
         } else {
-          res[key] = sanitizeValue(value, options.depth === undefined ? 0 : options.depth ?? MAX_INFO_OBJECT_DEPTH);
+          res[key] = sanitizeValue(
+            value,
+            options.depth === undefined ? 1 : options.depth ?? MAX_INFO_OBJECT_DEPTH,
+            this,
+          );
         }
       } catch (err: any) {
         res[key] = err.message;
@@ -282,7 +286,7 @@ export class TraceProcessor {
         const context = getContextFromEntry(entry) ?? {};
 
         for (const key of Object.keys(context)) {
-          context[key] = sanitizeValue(context[key], 0);
+          context[key] = sanitizeValue(context[key], 0, this);
         }
 
         const entryToPush: LogEntry = {
@@ -397,7 +401,7 @@ const serializeError = (err: unknown): SerializedError => {
 
 export const TRACE_PROCESSOR: TraceProcessor = ((globalThis as any).TRACE_PROCESSOR ??= new TraceProcessor());
 
-const sanitizeValue = (value: any, depth: number): any => {
+const sanitizeValue = (value: any, depth: number, traceProcessor: TraceProcessor): any => {
   switch (typeof value) {
     case 'string':
     case 'number':
@@ -411,13 +415,33 @@ const sanitizeValue = (value: any, depth: number): any => {
         return value;
       }
 
-      if (depth === null || depth > 0) {
-        if (Array.isArray(value)) {
-          return value.map((item: any) => sanitizeValue(item, depth - 1));
+      {
+        const resourceEntry = traceProcessor.resourceInstanceIndex.get(value);
+        if (resourceEntry) {
+          return `${resourceEntry.sanitizedClassName}#${resourceEntry.data.instanceId}`;
+        }
+      }
+
+      if (typeof value.toJSON === 'function') {
+        // TODO(dmaretskyi): This has potential to cause infinite recursion.
+        return sanitizeValue(value.toJSON(), depth, traceProcessor);
+      }
+
+      if (depth > 0) {
+        if (isSetLike(value)) {
+          return Object.fromEntries(
+            Array.from(value.entries()).map((value) => sanitizeValue(value, depth - 1, traceProcessor)),
+          );
+        } else if (isMapLike(value)) {
+          return Object.fromEntries(
+            Array.from(value.entries()).map(([key, value]) => [key, sanitizeValue(value, depth - 1, traceProcessor)]),
+          );
+        } else if (Array.isArray(value)) {
+          return value.map((item: any) => sanitizeValue(item, depth - 1, traceProcessor));
         } else if (typeof value === 'object') {
           const res: any = {};
           for (const key of Object.keys(value)) {
-            res[key] = sanitizeValue(value[key], depth - 1);
+            res[key] = sanitizeValue(value[key], depth - 1, traceProcessor);
           }
           return res;
         }
@@ -455,3 +479,11 @@ export const sanitizeClassName = (className: string) => {
     return className.slice(0, -m[1].length);
   }
 };
+
+const isSetLike = (value: any): value is Set<any> =>
+  value instanceof Set ||
+  (typeof value === 'object' && value !== null && Object.getPrototypeOf(value).constructor.name === 'ComplexSet');
+
+const isMapLike = (value: any): value is Map<any, any> =>
+  value instanceof Map ||
+  (typeof value === 'object' && value !== null && Object.getPrototypeOf(value).constructor.name === 'ComplexMap');
