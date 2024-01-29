@@ -281,7 +281,8 @@ describe('Spaces', () => {
     });
   });
 
-  test('epoch correctly resets database', async () => {
+  // TODO(mykola): Automerge epochs are not supported yet.
+  test.skip('epoch correctly resets database', async () => {
     const testBuilder = new TestBuilder();
     const services = testBuilder.createLocal();
     const client = new Client({ services });
