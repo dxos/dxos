@@ -73,9 +73,108 @@
   .italic.font-black, .italic .font-black, .font-black .italic {
     font-variation-settings: 'wght' 900, 'slnt' -10;
   }
+
+  /* SURFACES */
+
+  .base-surface {
+    background-color: theme(colors.neutral.25);
+    --surface-bg: theme(colors.neutral.25);
+    --input-bg: theme(colors.neutral.50);
+    --input-bg-hover: theme(colors.neutral.75);
+  }
+
+  .dark .base-surface {
+    background-color: theme(colors.neutral.850);
+    --surface-bg: theme(colors.neutral.850);
+    --input-bg: theme(colors.neutral.825);
+    --input-bg-hover: theme(colors.neutral.800);
+  }
+
+  .fixed-surface {
+    background-color: theme(colors.neutral.25 / 90%);
+    --surface-bg: theme(colors.neutral.25);
+    --input-bg: theme(colors.neutral.50);
+    --input-bg-hover: theme(colors.neutral.75);
+  }
+
+  .dark .fixed-surface {
+    background-color: theme(colors.neutral.850 / 90%);
+    --surface-bg: theme(colors.neutral.850);
+    --input-bg: theme(colors.neutral.825);
+    --input-bg-hover: theme(colors.neutral.800);
+  }
+
+  .modal-surface {
+    background-color: #FFFFFF;
+    --surface-bg: white;
+  }
+
+  .dark .modal-surface {
+    background-color: theme(colors.neutral.750);
+    --surface-bg: theme(colors.neutral.750);
+  }
+
+  .attention-surface {
+    background-color: white;
+    --surface-bg: white;
+  }
+
+  .dark .attention-surface {
+    background-color: theme(colors.neutral.900);
+    --surface-bg: theme(colors.neutral.900);
+  }
+
+  /* FEATURES */
+
+  .overflow-anchored * {
+    overflow-anchor: none;
+  }
+
+  .overflow-anchor {
+    overflow-anchor: auto;
+  }
+
+  .sticky-top-from-topbar-bottom {
+    --sticky-top: var(--topbar-size);
+  }
+
+  .attention {
+    --surface-bg: transparent;
+    --surface-separator: transparent;
+  }
+
+  .attention-within:focus-within {
+    --surface-bg: white;
+    --surface-separator: theme(colors.neutral.75);
+  }
+
+  .dark .attention-within:focus-within {
+    --surface-bg: theme(colors.neutral.900);
+    --surface-separator: theme(colors.neutral.750);
+  }
+
+  .attention-current[aria-current] {
+    --surface-bg: white;
+    --surface-separator: theme(colors.neutral.75);
+  }
+
+  .dark .attention-current[aria-current] {
+    --surface-bg: theme(colors.neutral.900);
+    --surface-separator: theme(colors.neutral.750);
+  }
+
+  .attention-static, .attention-within.attention-static {
+    --surface-bg: white;
+    --surface-separator: theme(colors.neutral.75);
+  }
+
+  .dark .attention-static, .dark .attention-within.attention-static {
+    --surface-bg: theme(colors.neutral.900);
+    --surface-separator: theme(colors.neutral.750);
+  }
 }
 
-/* SURFACES */
+/* Base variables */
 
 :root {
   font-synthesis: none;
@@ -97,85 +196,8 @@
   --description-text: theme(colors.neutral.500);
 }
 
-.base-surface {
-  background-color: theme(colors.neutral.25);
-  --surface-bg: theme(colors.neutral.25);
-  --input-bg: theme(colors.neutral.50);
-  --input-bg-hover: theme(colors.neutral.75);
-}
-
-.dark .base-surface {
-  background-color: theme(colors.neutral.850);
-  --surface-bg: theme(colors.neutral.850);
-  --input-bg: theme(colors.neutral.825);
-  --input-bg-hover: theme(colors.neutral.800);
-}
-
-.fixed-surface {
-  background-color: theme(colors.neutral.25 / 90%);
-  --surface-bg: theme(colors.neutral.25);
-  --input-bg: theme(colors.neutral.50);
-  --input-bg-hover: theme(colors.neutral.75);
-}
-
-.dark .fixed-surface {
-  background-color: theme(colors.neutral.850 / 90%);
-  --surface-bg: theme(colors.neutral.850);
-  --input-bg: theme(colors.neutral.825);
-  --input-bg-hover: theme(colors.neutral.800);
-}
-
-.modal-surface {
-  background-color: #FFFFFF;
-  --surface-bg: white;
-}
-
-.dark .modal-surface {
-  background-color: theme(colors.neutral.750);
-  --surface-bg: theme(colors.neutral.750);
-}
-
-.attention-surface {
-  background-color: white;
-  --surface-bg: white;
-}
-
-.dark .attention-surface {
-  background-color: theme(colors.neutral.900);
-  --surface-bg: theme(colors.neutral.900);
-}
-
 html {
   background-color: var(--surface-bg);
   color: var(--surface-text);
   @apply font-body;
-}
-
-/* FEATURES */
-
-.overflow-anchored * {
-  overflow-anchor: none;
-}
-
-.overflow-anchor {
-  overflow-anchor: auto;
-}
-
-.sticky-top-from-topbar-bottom {
-  --sticky-top: var(--topbar-size);
-}
-
-.attention-within {
-  --surface-bg: transparent;
-  --surface-separator: transparent;
-}
-
-.attention-within:focus-within {
-  --surface-bg: white;
-  --surface-separator: theme(colors.neutral.75);
-}
-
-.dark .attention-within:focus-within {
-  --surface-bg: theme(colors.neutral.900);
-  --surface-separator: theme(colors.neutral.750);
 }
