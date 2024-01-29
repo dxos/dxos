@@ -11,89 +11,87 @@ import { setGlobalAutomergePreference } from './automerge-preference';
 import { LEGACY_TEXT_TYPE, TextObject, TypedObject, isAutomergeObject, isActualTypedObject } from './object';
 import { Filter } from './query';
 import { type SerializedSpace, Serializer } from './serializer';
-import { createDatabase, testWithAutomerge } from './testing';
+import { createDatabase } from './testing';
 import { Contact } from './tests/proto';
 
 describe('Serializer', () => {
-  testWithAutomerge(() => {
-    test('Basic', async () => {
-      const serializer = new Serializer();
+  test('Basic', async () => {
+    const serializer = new Serializer();
 
-      let data: SerializedSpace;
+    let data: SerializedSpace;
 
-      {
-        const { db } = await createDatabase();
-        const obj = new TypedObject();
-        obj.title = 'Test';
-        db.add(obj);
-        await db.flush();
-        expect(db.objects).to.have.length(1);
+    {
+      const { db } = await createDatabase();
+      const obj = new TypedObject();
+      obj.title = 'Test';
+      db.add(obj);
+      await db.flush();
+      expect(db.objects).to.have.length(1);
 
-        data = await serializer.export(db);
-        expect(data.objects).to.have.length(1);
-        expect(data.objects[0]).to.deep.include({
-          '@id': obj.id,
-          '@meta': { keys: [] },
-          title: 'Test',
-        });
-      }
+      data = await serializer.export(db);
+      expect(data.objects).to.have.length(1);
+      expect(data.objects[0]).to.deep.include({
+        '@id': obj.id,
+        '@meta': { keys: [] },
+        title: 'Test',
+      });
+    }
 
-      {
-        const { db } = await createDatabase();
-        await serializer.import(db, data);
+    {
+      const { db } = await createDatabase();
+      await serializer.import(db, data);
 
-        const { objects } = db.query();
-        expect(objects).to.have.length(1);
-        expect(objects[0].title).to.eq('Test');
-      }
-    });
+      const { objects } = db.query();
+      expect(objects).to.have.length(1);
+      expect(objects[0].title).to.eq('Test');
+    }
+  });
 
-    test('Nested objects', async () => {
-      const serializer = new Serializer();
+  test('Nested objects', async () => {
+    const serializer = new Serializer();
 
-      let serialized: SerializedSpace;
+    let serialized: SerializedSpace;
 
-      {
-        const { db } = await createDatabase();
-        const obj = new TypedObject({
-          title: 'Main task',
-          subtasks: [
-            new TypedObject({
-              title: 'Subtask 1',
-            }),
-            new TypedObject({
-              title: 'Subtask 2',
-            }),
-          ],
-          previous: new TypedObject({
-            title: 'Previous task',
+    {
+      const { db } = await createDatabase();
+      const obj = new TypedObject({
+        title: 'Main task',
+        subtasks: [
+          new TypedObject({
+            title: 'Subtask 1',
           }),
-        });
-        db.add(obj);
-        await db.flush();
-        expect(db.objects).to.have.length(4);
+          new TypedObject({
+            title: 'Subtask 2',
+          }),
+        ],
+        previous: new TypedObject({
+          title: 'Previous task',
+        }),
+      });
+      db.add(obj);
+      await db.flush();
+      expect(db.objects).to.have.length(4);
 
-        serialized = await serializer.export(db);
-        expect(serialized.objects).to.have.length(4);
-      }
+      serialized = await serializer.export(db);
+      expect(serialized.objects).to.have.length(4);
+    }
 
-      {
-        const { db } = await createDatabase();
-        await serializer.import(db, serialized);
+    {
+      const { db } = await createDatabase();
+      await serializer.import(db, serialized);
 
-        const { objects } = db.query();
-        expect(objects).to.have.length(4);
-        const main = objects.find((object) => object.title === 'Main task')!;
-        expect(main).to.exist;
-        expect(main.subtasks).to.have.length(2);
-        expect(main.subtasks[0]).to.be.instanceOf(TypedObject);
-        expect(main.subtasks[0].title).to.eq('Subtask 1');
-        expect(main.subtasks[1]).to.be.instanceOf(TypedObject);
-        expect(main.subtasks[1].title).to.eq('Subtask 2');
-        expect(main.previous).to.be.instanceOf(TypedObject);
-        expect(main.previous.title).to.eq('Previous task');
-      }
-    });
+      const { objects } = db.query();
+      expect(objects).to.have.length(4);
+      const main = objects.find((object) => object.title === 'Main task')!;
+      expect(main).to.exist;
+      expect(main.subtasks).to.have.length(2);
+      expect(main.subtasks[0]).to.be.instanceOf(TypedObject);
+      expect(main.subtasks[0].title).to.eq('Subtask 1');
+      expect(main.subtasks[1]).to.be.instanceOf(TypedObject);
+      expect(main.subtasks[1].title).to.eq('Subtask 2');
+      expect(main.previous).to.be.instanceOf(TypedObject);
+      expect(main.previous.title).to.eq('Previous task');
+    }
   });
 
   test('Text', async () => {

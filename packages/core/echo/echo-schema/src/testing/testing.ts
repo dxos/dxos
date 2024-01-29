@@ -16,7 +16,6 @@ import { TextModel } from '@dxos/text-model';
 import { ComplexMap } from '@dxos/util';
 
 import { AutomergeContext } from '../automerge';
-import { setGlobalAutomergePreference } from '../automerge-preference';
 import { EchoDatabase } from '../database';
 import { Hypergraph } from '../hypergraph';
 import { schemaBuiltin } from '../proto';
@@ -102,23 +101,3 @@ export class TestPeer {
     await this.db.flush();
   }
 }
-
-export const testWithAutomerge = (tests: () => void) => {
-  // describe('with automerge', () => {
-  //   before(() => {
-  //     setGlobalAutomergePreference(true);
-  //   });
-
-  //   after(() => {
-  //     setGlobalAutomergePreference(false);
-  //   });
-
-  //   setGlobalAutomergePreference(true);
-  //   tests();
-  //   setGlobalAutomergePreference(false);
-  // });
-
-  // describe('without automerge', () => {
-  tests();
-  // });
-};
