@@ -63,8 +63,8 @@ export type Diagnostics = {
 };
 
 export type TraceDiagnostic = {
-  resources: Record<string, { data: Resource }>;
-  spans: Record<string, Span>;
+  resources: Record<string, Resource>;
+  spans: Span[];
   logs: LogEntry[];
 };
 
