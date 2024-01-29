@@ -64,8 +64,10 @@ export class Space {
   private readonly _feedProvider: FeedProvider;
   @trace.info()
   private readonly _controlPipeline: ControlPipeline;
+
   @trace.info()
   private readonly _dataPipeline: DataPipeline;
+
   private readonly _snapshotManager: SnapshotManager;
 
   private _isOpen = false;

@@ -19,10 +19,10 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type MuxerStats, Teleport } from '@dxos/teleport';
 import { type BlobStore, BlobSync } from '@dxos/teleport-extension-object-sync';
 import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
+import { trace } from '@dxos/tracing';
 import { ComplexMap } from '@dxos/util';
 
 import { AuthExtension, type AuthProvider, type AuthVerifier } from './auth';
-import { trace } from '@dxos/tracing';
 
 export const MOCK_AUTH_PROVIDER: AuthProvider = async (nonce: Uint8Array) => Buffer.from('mock');
 export const MOCK_AUTH_VERIFIER: AuthVerifier = async (nonce: Uint8Array, credential: Uint8Array) => true;
