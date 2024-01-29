@@ -188,7 +188,7 @@ describe('Serializer from Hypergraph to Automerge', () => {
 
     {
       setGlobalAutomergePreference(true);
-      afterTest(() => setGlobalAutomergePreference(false));
+      afterTest(() => setGlobalAutomergePreference(undefined));
       const { db } = await createDatabase();
       await serializer.import(db, data);
 
@@ -241,7 +241,7 @@ describe('Serializer from Hypergraph to Automerge', () => {
 
     {
       setGlobalAutomergePreference(true);
-      afterTest(() => setGlobalAutomergePreference(false));
+      afterTest(() => setGlobalAutomergePreference(undefined));
       const { db } = await createDatabase();
       await serializer.import(db, serialized);
 
