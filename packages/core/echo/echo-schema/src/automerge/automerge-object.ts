@@ -266,7 +266,16 @@ export class AutomergeObject implements TypedObjectProperties {
     return new Proxy(this, {
       ownKeys: (target) => {
         // TODO(mykola): Add support for expando objects.
-        return this.__schema?.props.map((field) => field.id!) ?? [];
+        if (this.__schema) {
+          return this.__schema.props.map((field) => field.id!);
+        } else {
+          const fullPath = [...this._path, ...path];
+          let value = this._getDoc();
+          for (const key of fullPath) {
+            value = value?.[key];
+          }
+          return Object.keys(value);
+        }
       },
 
       has: (_, key) => {
@@ -451,7 +460,10 @@ export class AutomergeObject implements TypedObjectProperties {
     return value;
   }
 
-  private _getDoc(): Doc<any> {
+  /**
+   * @internal
+   */
+  _getDoc(): Doc<any> {
     return this._doc ?? this._docHandle?.docSync() ?? failedInvariant();
   }
 
