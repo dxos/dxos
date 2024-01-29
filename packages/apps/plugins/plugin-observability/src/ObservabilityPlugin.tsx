@@ -113,7 +113,7 @@ export const ObservabilityPlugin = (options: {
 
         await observability.setIdentityTags(client);
         await observability.startNetworkMetrics(client);
-        await observability.startSpacesMetrics(client);
+        await observability.startSpacesMetrics(client, options.namespace);
         await observability.startRuntimeMetrics(client);
       });
     },
