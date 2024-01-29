@@ -71,7 +71,7 @@ export class Generator {
     const { objects } = this._space.db.query(DocumentType.filter());
     if (objects.length) {
       const object = faker.helpers.arrayElement(objects);
-      const text = getTextContent(object.content);
+      const text = getTextContent(object.content, '');
       const idx = text.lastIndexOf(' ', faker.number.int({ min: 0, max: text.length }));
       if (idx !== -1) {
         object.content.model?.insert(' ' + faker.lorem.word(), idx);
