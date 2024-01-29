@@ -34,8 +34,10 @@ import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { InvitationsProxy } from '../invitations';
+import { trace } from '@dxos/tracing';
 
 // TODO(burdon): This should not be used as part of the API (don't export).
+@trace.resource()
 export class SpaceProxy implements Space {
   private readonly _ctx = new Context();
 
@@ -63,10 +65,12 @@ export class SpaceProxy implements Space {
   public readonly _initializationComplete = new Trigger();
 
   // TODO(burdon): Change to state property.
+  @trace.info()
   private _initializing = false;
   /**
    * @internal
    */
+  @trace.info()
   _initialized = false;
 
   private readonly _db!: EchoDatabase;
@@ -135,6 +139,7 @@ export class SpaceProxy implements Space {
     }
   }
 
+  @trace.info()
   get key() {
     return this._data.spaceKey;
   }
@@ -143,6 +148,7 @@ export class SpaceProxy implements Space {
     return this._db;
   }
 
+  @trace.info()
   get isOpen() {
     return this._data.state === SpaceState.READY && this._initialized;
   }
@@ -198,6 +204,7 @@ export class SpaceProxy implements Space {
    * The database is ready to be used in `SpaceState.READY` state.
    * Presence is available in `SpaceState.CONTROL_ONLY` state.
    */
+  @trace.info()
   private get _currentState(): SpaceState {
     if (this._data.state === SpaceState.READY && !this._initialized) {
       return SpaceState.INITIALIZING;

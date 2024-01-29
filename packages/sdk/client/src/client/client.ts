@@ -22,7 +22,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ModelFactory } from '@dxos/model-factory';
-import { ApiError, trace } from '@dxos/protocols';
+import { ApiError, trace as Trace } from '@dxos/protocols';
 import {
   GetDiagnosticsRequest,
   type QueryStatusResponse,
@@ -38,7 +38,7 @@ import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
-import { TRACE_PROCESSOR } from '@dxos/tracing';
+import { trace, TRACE_PROCESSOR } from '@dxos/tracing';
 
 /**
  * This options object configures the DXOS Client.
@@ -62,10 +62,12 @@ export type ClientOptions = {
 /**
  * The Client class encapsulates the core client-side API of DXOS.
  */
+@trace.resource()
 export class Client {
   /**
    * The version of this client API.
    */
+  @trace.info()
   readonly version = DXOS_VERSION;
 
   /**
@@ -81,7 +83,9 @@ export class Client {
   // TODO(wittjosiah): Make `null` status part of enum.
   private readonly _statusUpdate = new Event<SystemStatus | null>();
 
+  @trace.info()
   private _initialized = false;
+  @trace.info()
   private _resetting = false;
   private _statusStream?: Stream<QueryStatusResponse>;
   private _statusTimeout?: NodeJS.Timeout;
@@ -95,6 +99,7 @@ export class Client {
   /**
    * Unique id of the Client, local to the current peer.
    */
+  @trace.info()
   private readonly _instanceId = PublicKey.random().toHex();
 
   constructor(options: ClientOptions = {}) {
@@ -129,6 +134,7 @@ export class Client {
     return inspectObject(this);
   }
 
+  @trace.info()
   toJSON() {
     return {
       initialized: this.initialized,
@@ -289,7 +295,7 @@ export class Client {
       return;
     }
 
-    log.trace('dxos.sdk.client.open', trace.begin({ id: this._instanceId }));
+    log.trace('dxos.sdk.client.open', Trace.begin({ id: this._instanceId }));
 
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
 
@@ -310,7 +316,7 @@ export class Client {
     }
 
     this._initialized = true;
-    log.trace('dxos.sdk.client.open', trace.end({ id: this._instanceId }));
+    log.trace('dxos.sdk.client.open', Trace.end({ id: this._instanceId }));
   }
 
   private async _open() {

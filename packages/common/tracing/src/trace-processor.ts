@@ -200,13 +200,11 @@ export class TraceProcessor {
     return {
       resources: Object.fromEntries(
         Array.from(this.resources.entries()).map(([id, entry]) => [
-          id,
-          {
-            data: entry.data,
-          },
+          `${entry.sanitizedClassName}#${entry.data.instanceId}`,
+          entry.data,
         ]),
       ),
-      spans: Object.fromEntries(this.spans.entries()),
+      spans: Array.from(this.spans.values()),
       logs: this.logs.filter((log) => log.level >= LogLevel.INFO),
     };
   }
