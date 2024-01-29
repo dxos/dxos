@@ -42,13 +42,7 @@ const Story = () => {
     return null;
   }
 
-  return (
-    <div className='flex w-full justify-center'>
-      <div className='flex w-[600px] overflow-x-hidden'>
-        {space && <ThreadContainer thread={thread} space={space} />}
-      </div>
-    </div>
-  );
+  return <main className='is-[36rem]'>{space && <ThreadContainer thread={thread} space={space} />}</main>;
 };
 
 export default {

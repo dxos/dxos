@@ -22,7 +22,7 @@ import { type MessageEntity, type MessageEntityBlock, type MessageMetadata } fro
 
 const avatarSize = 7;
 
-const messageCell = 'plb-1 bg-[var(--surface-bg)] border-[color:var(--surface-separator)] border-bs border-be';
+const messageCell = 'plb-1 min-is-0';
 
 const safeParseJson = (data: string) => {
   try {
@@ -44,7 +44,7 @@ export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
     const jdenticon = useJdenticonHref(authorId ?? '', avatarSize);
 
     return (
-      <div role='none' {...rootProps} className={mx('contents attention-within', classNames)} ref={forwardedRef}>
+      <div role='none' {...rootProps} className={mx('contents', classNames)} ref={forwardedRef}>
         <Avatar.Root status={authorStatus ?? 'inactive'} size={avatarSize}>
           <div role='none' className={'flex flex-col items-center gap-2 ' + messageCell}>
             <Avatar.Frame>
@@ -72,7 +72,7 @@ const DefaultMessageBlock = ({ block, onDelete }: MessageBlockProps<{ data?: any
     <div role='none' className={mx('contents', hoverableControls, hoverableFocusedWithinControls)}>
       {block.data ? (
         // TODO(burdon): Render via CM editor in readonly.
-        <pre className='font-mono'>
+        <pre className='font-mono max-is-full overflow-x-auto'>
           <code>{JSON.stringify(safeParseJson(block.data), undefined, 2)}</code>
         </pre>
       ) : (
@@ -114,7 +114,7 @@ export const Message = <BlockValue,>(props: MessageProps<BlockValue>) => {
           {dt ? formatDistanceToNow(dt, { locale: dtLocale, addSuffix: true }) : ''}
         </time>
       </p>
-      <div role='none' className={onDelete ? 'grid grid-cols-[1fr_max-content] gap-y-1' : 'grid grid-cols-1 gap-y-1'}>
+      <div role='none' className={mx('grid gap-y-1', onDelete ? 'grid-cols-[1fr_min-content]' : 'grid-cols-1')}>
         {blocks.map((block, i) => (
           <MessageBlockComponent key={i} block={block} onDelete={onDelete && (() => onDelete(id, i))} />
         ))}

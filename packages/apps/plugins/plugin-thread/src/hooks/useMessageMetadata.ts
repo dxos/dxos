@@ -14,7 +14,7 @@ export const useMessageMetadata = (id: string, identity?: Identity): MessageMeta
   return {
     id,
     authorId,
-    authorName: identity?.profile?.displayName ?? (identity?.identityKey ? generateName(authorId) : ''),
+    authorName: identity?.profile?.displayName ?? (identity?.identityKey ? generateName(authorId) : undefined),
     authorStatus: 'inactive',
   };
 };
