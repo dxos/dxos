@@ -37,6 +37,7 @@ type AvatarContextValue = {
   inGroup?: boolean;
   color?: string;
 };
+
 const AVATAR_NAME = 'Avatar';
 const [AvatarProvider, useAvatarContext] = createContext<AvatarContextValue>(AVATAR_NAME);
 

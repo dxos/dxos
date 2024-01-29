@@ -23,8 +23,8 @@ import { SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import {
-  DocumentCard,
   type DocumentItemProps,
+  DocumentCard,
   DocumentMain,
   DocumentSection,
   EditorMain,
@@ -54,7 +54,12 @@ export type MarkdownPluginState = {
 };
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
-  const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { viewMode: {}, experimental: false });
+  const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, {
+    state: {},
+    toolbar: false,
+    experimental: false,
+  });
+
   const state = deepSignal<MarkdownPluginState>({ extensions: [], onChange: [] });
 
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
@@ -84,6 +89,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     ready: async (plugins) => {
       settings
         .prop(settings.values.$editorMode!, 'editor-mode', LocalStorageStore.string)
+        .prop(settings.values.$toolbar!, 'toolbar', LocalStorageStore.bool)
         .prop(settings.values.$experimental!, 'experimental', LocalStorageStore.bool)
         .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool)
         .prop(settings.values.$typewriter!, 'typewriter', LocalStorageStore.string);
@@ -146,7 +152,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 intentPlugin?.provides.intent.dispatch([
                   {
                     plugin: MARKDOWN_PLUGIN,
-                    action: MarkdownAction.TOGGLE_VIEW,
+                    action: MarkdownAction.TOGGLE_READONLY,
                     data: {
                       objectId: parent.data.id,
                     },
@@ -181,16 +187,20 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       surface: {
         component: ({ data, role, ...props }, forwardedRef) => {
           switch (role) {
+            // TODO(burdon): Normalize layout (reduce variants).
             case 'main': {
               if (isDocument(data.active)) {
-                const readonly = settings.values.viewMode[data.active.id];
+                const { readonly } = settings.values.state[data.active.id] ?? {};
                 return (
-                  <DocumentMain
-                    document={data.active}
-                    readonly={readonly}
-                    editorMode={settings.values.editorMode}
-                    extensions={getCustomExtensions(data.active)}
-                  />
+                  <MainLayout>
+                    <DocumentMain
+                      toolbar={settings.values.toolbar}
+                      readonly={readonly}
+                      document={data.active}
+                      editorMode={settings.values.editorMode}
+                      extensions={getCustomExtensions(data.active)}
+                    />
+                  </MainLayout>
                 );
               } else if (
                 'model' in data &&
@@ -273,9 +283,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             }
 
             // TODO(burdon): Generalize for every object.
-            case MarkdownAction.TOGGLE_VIEW: {
+            case MarkdownAction.TOGGLE_READONLY: {
               const objectId = data?.objectId;
-              settings.values.viewMode[objectId as string] = !settings.values.viewMode[objectId];
+              const state = settings.values.state[objectId as string];
+              settings.values.state[objectId as string] = { ...state, readonly: !state.readonly };
               return { data: true };
             }
           }

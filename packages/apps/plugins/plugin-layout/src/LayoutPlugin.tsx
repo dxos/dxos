@@ -31,7 +31,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { LayoutContext, type LayoutState, useLayout } from './LayoutContext';
-import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings } from './components';
+import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings, ContentFallback } from './components';
 import { activeToUri, uriToActive } from './helpers';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
@@ -228,6 +228,12 @@ export const LayoutPlugin = ({
           }
 
           switch (role) {
+            case 'main':
+              return {
+                node: <ContentFallback />,
+                disposition: 'fallback',
+              };
+
             case 'settings':
               return data.plugin === meta.id ? <LayoutSettings settings={state.values} /> : null;
           }

@@ -13,7 +13,7 @@ import { baseSurface, descriptionText, mx, textBlockWidth, topbarBlockPaddingSta
 import { FILES_PLUGIN } from '../meta';
 import { type LocalFile, type LocalEntity } from '../types';
 
-export const LocalFileMain: FC<{ file: LocalFile }> = ({ file }) => {
+const LocalFileMain: FC<{ file: LocalFile }> = ({ file }) => {
   const transformedData = useMemo(
     () =>
       file.text
@@ -67,3 +67,5 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
     </Main.Content>
   );
 };
+
+export default LocalFileMain;

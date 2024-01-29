@@ -84,6 +84,20 @@ describe('create subscription', () => {
       expect(counter.value).to.equal(2);
     });
 
+    test('updates for deep nested objects', async () => {
+      const { db } = await createDatabase();
+      const task = new Expando({
+        nested: { deep_nested: { title: 'Test title' } },
+      });
+      db.add(task);
+
+      const counter = createUpdateCounter(task);
+
+      expect(counter.value).to.equal(1);
+      task.nested.deep_nested.title = 'New title';
+      expect(counter.value).to.equal(2);
+    });
+
     test('updates for array objects', async () => {
       const { db } = await createDatabase();
       const task = new Expando({ array: ['Test value'] });
@@ -96,6 +110,31 @@ describe('create subscription', () => {
       expect(counter.value).to.equal(2);
     });
   });
+});
+
+test('updates for automerge array object fields', async () => {
+  const { db } = await createDatabase();
+  const task = new Expando({ array: [{ title: 'Test value' }] }, { automerge: true });
+  db.add(task);
+
+  const counter = createUpdateCounter(task);
+
+  expect(counter.value).to.equal(1);
+  task.array[0].title = 'New value';
+  expect(counter.value).to.equal(2);
+});
+
+test('updates for nested automerge array object fields', async () => {
+  const { db } = await createDatabase();
+  const nestedArrayHolder = { nested_array: [{ title: 'Test value' }] };
+  const task = new Expando({ array: [nestedArrayHolder] }, { automerge: true });
+  db.add(task);
+
+  const counter = createUpdateCounter(task);
+
+  expect(counter.value).to.equal(1);
+  task.array[0].nested_array[0].title = 'New value';
+  expect(counter.value).to.equal(2);
 });
 
 const createUpdateCounter = (object: any) => {

@@ -2,23 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-export const boolGuard = <T>(value: T | null | undefined): value is T => Boolean(value);
-
 export type AsyncCallback<T> = (param: T) => Promise<void>;
 
 export type Provider<T> = () => T;
 
 export type MaybePromise<T> = T | Promise<T>;
-
-// TODO(burdon): Reconcile with nonNullable.
-export const isNotNullOrUndefined = <T>(value: T): value is Exclude<T, null | undefined> => value != null;
-
-/**
- * Use with filter chaining instead of filter(Boolean) to preserve type.
- * NOTE: To filter by type:
- * items.filter((item: any): item is RangeSet<Decoration> => item instanceof RangeSet)
- */
-export const nonNullable = <T>(value: T): value is NonNullable<T> => value !== null && value !== undefined;
 
 /**
  * All types that evaluate to false when cast to a boolean.
@@ -29,6 +17,17 @@ export type Falsy = false | 0 | '' | null | undefined;
  * A function returning a value or a value itself.
  */
 export type MaybeFunction<T> = T | (() => T);
+
+/**
+ * Use with filter chaining instead of filter(Boolean) to preserve type.
+ * NOTE: To filter by type:
+ * items.filter((item: any): item is RangeSet<Decoration> => item instanceof RangeSet)
+ */
+// TODO(burdon): Reconcile names.
+export const isNotFalsy = <T>(value: T): value is Exclude<T, Falsy> => !!value;
+export const nonNullable = <T>(value: T): value is NonNullable<T> => value !== null && value !== undefined;
+export const isNotNullOrUndefined = <T>(value: T): value is Exclude<T, null | undefined> => value != null;
+export const boolGuard = <T>(value: T | null | undefined): value is T => Boolean(value);
 
 /**
  * Get value from a provider.

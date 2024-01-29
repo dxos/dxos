@@ -4,7 +4,7 @@
 
 import get from 'lodash.get';
 
-import { next as automerge } from '@dxos/automerge/automerge';
+import { next as A } from '@dxos/automerge/automerge';
 import { Reference } from '@dxos/document-model';
 import { log } from '@dxos/log';
 import { type TextKind, type TextMutation } from '@dxos/protocols/proto/dxos/echo/model/text';
@@ -175,7 +175,7 @@ export const toCursor = (object: TextObject, pos: number) => {
   }
 
   // NOTE: Slice is needed because getCursor mutates the array.
-  return automerge.getCursor(doc, accessor.path.slice(), pos);
+  return A.getCursor(doc, accessor.path.slice(), pos);
 };
 
 /**
@@ -202,7 +202,7 @@ export const fromCursor = (object: TextObject, cursor: string) => {
   }
 
   // NOTE: Slice is needed because getCursor mutates the array.
-  return automerge.getCursorPosition(doc, accessor.path.slice(), cursor);
+  return A.getCursorPosition(doc, accessor.path.slice(), cursor);
 };
 
 /**
