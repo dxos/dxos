@@ -79,7 +79,7 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
       <div className='flex h-full justify-center'>
         <div className='flex flex-col h-full w-[800px]'>
           <Toolbar.Root onAction={handleAction}>
-            <Toolbar.Markdown />
+            <Toolbar.Defaults />
           </Toolbar.Root>
 
           {/* TODO(burdon): Handle scrolling in component wrapper (like this). */}

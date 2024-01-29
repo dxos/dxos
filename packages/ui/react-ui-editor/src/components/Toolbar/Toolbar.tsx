@@ -89,7 +89,7 @@ const ToolbarButton = ({ Icon, onClick, title }: ToolbarButtonProps) => {
 const ToolbarSeparator = () => <div className='grow' />;
 
 const MarkdownHeading = () => {
-  const { onAction } = useToolbarContext('MarkdownFormatting');
+  const { onAction } = useToolbarContext('MarkdownHeading');
   return (
     <Select.Root defaultValue='0' onValueChange={(value) => onAction?.({ type: 'heading', data: parseInt(value) })}>
       <Select.TriggerButton classNames='w-[8rem]' />
@@ -141,7 +141,7 @@ const MarkdownLinks = () => (
   </div>
 );
 
-const MarkdownStandard = () => (
+const MarkdownDefaults = () => (
   <>
     <MarkdownHeading />
     <MarkdownStyles />
@@ -151,7 +151,7 @@ const MarkdownStandard = () => (
   </>
 );
 
-const MarkdownExtended = () => (
+const MarkdownComments = () => (
   <Toolbar.Button Icon={ChatText} title='Create comment' onClick={() => ({ type: 'comment' })} />
 );
 
@@ -159,8 +159,8 @@ export const Toolbar = {
   Root: ToolbarRoot,
   Button: ToolbarButton,
   Separator: ToolbarSeparator,
-  Markdown: MarkdownStandard,
-  Extended: MarkdownExtended,
+  Defaults: MarkdownDefaults,
+  Comments: MarkdownComments,
 };
 
 export { useToolbarContext };

@@ -55,9 +55,9 @@ const Story: FC<{ content: string }> = ({ content }) => {
       <div className='flex h-full justify-center'>
         <div className='flex flex-col h-full w-[800px]'>
           <Toolbar.Root onAction={handleAction}>
-            <Toolbar.Markdown />
+            <Toolbar.Defaults />
             <Toolbar.Separator />
-            <Toolbar.Extended />
+            <Toolbar.Comments />
           </Toolbar.Root>
           <MarkdownEditor ref={editorRef} model={model} extensions={extensions} />
         </div>

@@ -49,9 +49,9 @@ const EditorMain = ({ comments, toolbar, ...props }: EditorMainProps) => {
     <div role='none' className='flex flex-col h-full'>
       {toolbar && (
         <Toolbar.Root onAction={handleAction}>
-          <Toolbar.Markdown />
+          <Toolbar.Defaults />
           <Toolbar.Separator />
-          <Toolbar.Extended />
+          <Toolbar.Comments />
         </Toolbar.Root>
       )}
       <div role='none' className='flex flex-col grow pb-8 overflow-y-auto'>
