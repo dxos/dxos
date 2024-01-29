@@ -3,6 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
+import { next as automerge } from '@dxos/automerge/automerge';
 import {
   Repo,
   NetworkAdapter,
@@ -13,7 +14,6 @@ import {
   type StorageKey,
   cbor,
 } from '@dxos/automerge/automerge-repo';
-import { next as automerge } from '@dxos/automerge/automerge';
 import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
 import { Stream } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';

@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { next as automerge } from '@dxos/automerge/automerge';
 import { type Message, NetworkAdapter, type PeerId, Repo, cbor } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
@@ -10,7 +11,6 @@ import { log } from '@dxos/log';
 import { type HostInfo, type DataService, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
-import { next as automerge } from '@dxos/automerge/automerge';
 
 /**
  * Shared context for all spaces in the client.
