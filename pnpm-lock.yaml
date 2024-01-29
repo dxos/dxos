@@ -2211,6 +2211,9 @@ importers:
 
   packages/apps/plugins/plugin-presenter:
     dependencies:
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
       deepsignal:
         specifier: 1.4.0-shallow.0
         version: 1.4.0-shallow.0(react@18.2.0)

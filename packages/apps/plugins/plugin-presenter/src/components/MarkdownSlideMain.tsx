@@ -5,14 +5,19 @@
 import React, { type FC } from 'react';
 
 import { type Document as DocumentType } from '@braneframe/types';
+import { getTextContent } from '@dxos/react-client/echo';
 
 import { Container, Slide } from './Markdown';
 
 const MarkdownSlideMain: FC<{ document: DocumentType }> = ({ document }) => {
+  const content = getTextContent(document.content);
+  if (!content) {
+    return null;
+  }
+
   return (
     <Container>
-      {/* TODO: content is a YText object, but should be a string. Update after automerge migration. */}
-      <Slide content={document.content.content as any} />;
+      <Slide content={content} />;
     </Container>
   );
 };
