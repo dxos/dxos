@@ -482,7 +482,7 @@ describe('Spaces', () => {
     await space2.db.flush();
   });
 
-  test.only('text replicates between clients', async () => {
+  test('text replicates between clients', async () => {
     const testBuilder = new TestBuilder();
 
     const host = new Client({ services: testBuilder.createLocal() });
