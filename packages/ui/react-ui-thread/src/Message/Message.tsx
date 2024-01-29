@@ -44,8 +44,13 @@ export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
     const jdenticon = useJdenticonHref(authorId ?? '', avatarSize);
 
     return (
-      <div role='none' {...rootProps} className={mx('contents', classNames)} ref={forwardedRef}>
-        <Avatar.Root status={authorStatus ?? 'inactive'} size={avatarSize}>
+      <Avatar.Root status={authorStatus ?? 'inactive'} size={avatarSize}>
+        <div
+          role='none'
+          {...rootProps}
+          className={mx('grid grid-cols-subgrid col-span-2', classNames)}
+          ref={forwardedRef}
+        >
           <div role='none' className={'flex flex-col items-center gap-2 ' + messageCell}>
             <Avatar.Frame>
               <Avatar.Fallback href={jdenticon} />
@@ -56,8 +61,8 @@ export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
           <div role='none' className={messageCell}>
             {children}
           </div>
-        </Avatar.Root>
-      </div>
+        </div>
+      </Avatar.Root>
     );
   },
 );
@@ -69,7 +74,10 @@ export type MessageBlockProps<BlockValue> = {
 
 const DefaultMessageBlock = ({ block, onDelete }: MessageBlockProps<{ data?: any; text?: string }>) => {
   return (
-    <div role='none' className={mx('contents', hoverableControls, hoverableFocusedWithinControls)}>
+    <div
+      role='none'
+      className={mx('grid grid-cols-subgrid col-span-2', hoverableControls, hoverableFocusedWithinControls)}
+    >
       {block.data ? (
         // TODO(burdon): Render via CM editor in readonly.
         <pre className='font-mono max-is-full overflow-x-auto'>
