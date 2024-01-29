@@ -12,7 +12,7 @@ import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxo
 
 import { Graph } from './Graph';
 
-export const ExplorerMain = ({ view }: { view: View }) => {
+const ExplorerMain = ({ view }: { view: View }) => {
   const space = getSpaceForObject(view);
   const { match } = useSearch();
   if (!space) {
@@ -25,3 +25,5 @@ export const ExplorerMain = ({ view }: { view: View }) => {
     </Main.Content>
   );
 };
+
+export default ExplorerMain;

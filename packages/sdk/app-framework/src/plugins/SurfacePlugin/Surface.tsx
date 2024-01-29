@@ -4,12 +4,12 @@
 
 import React, {
   forwardRef,
-  type FC,
   type ReactNode,
   Fragment,
   type ForwardedRef,
   type PropsWithChildren,
   isValidElement,
+  Suspense,
 } from 'react';
 import { createContext, useContext } from 'react';
 
@@ -50,11 +50,10 @@ export type SurfaceProps = PropsWithChildren<{
   fallback?: ErrorBoundary['props']['fallback'];
 
   /**
-   * If specified, this will render if no plugin can offer renderable content for the surface.
-   *
-   * @deprecated Provide a component with `disposition: 'fallback'` instead.
+   * If specified, the Surface will be wrapped in a suspense boundary.
+   * The placeholder component will be rendered while the surface component is loading.
    */
-  contentFallback?: FC<{}>;
+  placeholder?: ReactNode;
 
   /**
    * If more than one component is resolved, the limit determines how many are rendered.
@@ -78,21 +77,20 @@ export type SurfaceProps = PropsWithChildren<{
  * A surface is a named region of the screen that can be populated by plugins.
  */
 export const Surface = forwardRef<HTMLElement, SurfaceProps>(
-  ({ role, name = role, fallback, ...rest }, forwardedRef) => {
+  ({ role, name = role, fallback, placeholder, ...rest }, forwardedRef) => {
     const props = { role, name, fallback, ...rest };
     const context = useContext(SurfaceContext);
     const data = props.data ?? ((name && context?.surfaces?.[name]?.data) || {});
 
-    return (
-      <>
-        {fallback ? (
-          <ErrorBoundary data={data} fallback={fallback}>
-            <SurfaceResolver {...props} ref={forwardedRef} />
-          </ErrorBoundary>
-        ) : (
-          <SurfaceResolver {...props} ref={forwardedRef} />
-        )}
-      </>
+    const resolver = <SurfaceResolver {...props} ref={forwardedRef} />;
+    const suspense = placeholder ? <Suspense fallback={placeholder}>{resolver}</Suspense> : resolver;
+
+    return fallback ? (
+      <ErrorBoundary data={data} fallback={fallback}>
+        {suspense}
+      </ErrorBoundary>
+    ) : (
+      suspense
     );
   },
 );
@@ -111,11 +109,7 @@ const SurfaceResolver = forwardRef<HTMLElement, SurfaceProps>((props, forwardedR
     },
   };
 
-  return (
-    <SurfaceContext.Provider value={currentContext}>
-      {nodes.length > 0 ? nodes : props.contentFallback ? <props.contentFallback /> : null}
-    </SurfaceContext.Provider>
-  );
+  return <SurfaceContext.Provider value={currentContext}>{nodes}</SurfaceContext.Provider>;
 });
 
 const resolveNodes = (
