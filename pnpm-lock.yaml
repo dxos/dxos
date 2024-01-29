@@ -3073,6 +3073,9 @@ importers:
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../../common/display-name
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
@@ -3085,6 +3088,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../../ui/react-ui-theme
+      '@dxos/react-ui-thread':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-thread
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -8934,6 +8940,58 @@ importers:
       vite:
         specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
+
+  packages/ui/react-ui-thread:
+    dependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../react-ui-editor
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../react-ui-mosaic
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../react-ui-theme
+      '@radix-ui/react-primitive':
+        specifier: ^1.0.2
+        version: 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      date-fns:
+        specifier: ^3.3.1
+        version: 3.3.1
+    devDependencies:
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../storybook-utils
+      '@faker-js/faker':
+        specifier: ^8.3.1
+        version: 8.3.1
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
+      vite-plugin-turbosnap:
+        specifier: ^1.0.2
+        version: 1.0.2
 
   packages/ui/react-ui-types: {}
 
@@ -17181,7 +17239,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.23.4
       '@radix-ui/react-slot': 1.0.2(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
