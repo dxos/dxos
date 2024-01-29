@@ -58,7 +58,7 @@ export class HaloProxy implements Halo {
     return inspectObject(this);
   }
 
-  @trace.info()
+  @trace.info({ depth: null })
   toJSON() {
     return {
       identityKey: this._identity.get()?.identityKey.truncate(),

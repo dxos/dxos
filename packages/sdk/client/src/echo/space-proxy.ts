@@ -154,6 +154,7 @@ export class SpaceProxy implements Space {
     return this._data.state === SpaceState.READY && this._initialized;
   }
 
+  @trace.info({ depth: 2 })
   get properties(): TypedObject {
     if (this._properties) {
       return this._properties;
@@ -205,7 +206,7 @@ export class SpaceProxy implements Space {
    * The database is ready to be used in `SpaceState.READY` state.
    * Presence is available in `SpaceState.CONTROL_ONLY` state.
    */
-  @trace.info()
+  @trace.info({ enum: SpaceState })
   private get _currentState(): SpaceState {
     if (this._data.state === SpaceState.READY && !this._initialized) {
       return SpaceState.INITIALIZING;

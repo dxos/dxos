@@ -70,7 +70,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return inspectObject(this);
   }
 
-  @trace.info()
+  @trace.info({ depth: null })
   toJSON() {
     return {
       spaces: this._value?.length,

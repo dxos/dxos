@@ -58,6 +58,8 @@ const MAX_LOG_RECORDS = 1_000;
 
 const REFRESH_INTERVAL = 1_000;
 
+const MAX_INFO_OBJECT_DEPTH = 8;
+
 export class TraceProcessor {
   resources = new Map<number, ResourceEntry>();
   resourceInstanceIndex = new WeakMap<any, ResourceEntry>();
@@ -111,9 +113,15 @@ export class TraceProcessor {
     const res: Record<string, any> = {};
     const tracingContext = getTracingContext(Object.getPrototypeOf(instance));
 
-    for (const [key, _opts] of Object.entries(tracingContext.infoProperties)) {
+    for (const [key, { options }] of Object.entries(tracingContext.infoProperties)) {
       try {
-        res[key] = sanitizeValue(typeof instance[key] === 'function' ? instance[key]() : instance[key]);
+        const value = typeof instance[key] === 'function' ? instance[key]() : instance[key];
+
+        if (options.enum) {
+          res[key] = options.enum[value];
+        } else {
+          res[key] = sanitizeValue(value, options.depth === undefined ? 0 : options.depth ?? MAX_INFO_OBJECT_DEPTH);
+        }
       } catch (err: any) {
         res[key] = err.message;
       }
@@ -274,7 +282,7 @@ export class TraceProcessor {
         const context = getContextFromEntry(entry) ?? {};
 
         for (const key of Object.keys(context)) {
-          context[key] = sanitizeValue(context[key]);
+          context[key] = sanitizeValue(context[key], 0);
         }
 
         const entryToPush: LogEntry = {
@@ -389,7 +397,7 @@ const serializeError = (err: unknown): SerializedError => {
 
 export const TRACE_PROCESSOR: TraceProcessor = ((globalThis as any).TRACE_PROCESSOR ??= new TraceProcessor());
 
-const sanitizeValue = (value: any) => {
+const sanitizeValue = (value: any, depth: number) => {
   switch (typeof value) {
     case 'string':
     case 'number':
@@ -401,7 +409,14 @@ const sanitizeValue = (value: any) => {
     case 'function':
       if (value === null) {
         return value;
-        break;
+      }
+
+      if ((typeof value === 'object' && depth === null) || depth > 0) {
+        const res: any = {};
+        for (const key of Object.keys(value)) {
+          res[key] = sanitizeValue(value[key], depth - 1);
+        }
+        return res;
       }
 
       // TODO(dmaretskyi): Expose trait.

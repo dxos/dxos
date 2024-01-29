@@ -136,7 +136,7 @@ export class Client {
     return inspectObject(this);
   }
 
-  @trace.info()
+  @trace.info({ depth: null })
   toJSON() {
     return {
       initialized: this.initialized,
