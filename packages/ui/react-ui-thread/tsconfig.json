@@ -20,6 +20,12 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
       "path": "../react-ui"
     },
     {

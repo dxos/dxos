@@ -8962,9 +8962,15 @@ importers:
         specifier: ^3.3.1
         version: 3.3.1
     devDependencies:
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../storybook-utils

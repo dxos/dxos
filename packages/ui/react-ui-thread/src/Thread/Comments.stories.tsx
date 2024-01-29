@@ -4,23 +4,36 @@
 
 import '@dxosTheme';
 
-import { type EditorView, keymap } from '@codemirror/view';
 import { faker } from '@faker-js/faker';
-import { Check, Trash } from '@phosphor-icons/react';
+import { Check } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { getTextContent, TextObject } from '@dxos/echo-schema';
+import { TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Button, DensityProvider } from '@dxos/react-ui';
-import { fixedInsetFlexLayout, mx } from '@dxos/react-ui-theme';
+import { Button } from '@dxos/react-ui';
+import {
+  MarkdownEditor,
+  comments,
+  type CommentsOptions,
+  focusComment,
+  useComments,
+  type Comment,
+  type Range,
+  useTextModel,
+  type EditorView,
+  keymap,
+  TextEditor,
+} from '@dxos/react-ui-editor';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { MarkdownEditor, TextEditor } from './TextEditor';
-import { comments, type CommentsOptions, focusComment, useComments } from '../../extensions';
-import { type Comment, type Range, useTextModel } from '../../hooks';
+import { Thread } from './Thread';
+import { Message, type MessageBlockProps, MessageTextbox } from '../Message';
+import { type MessageEntity } from '../types';
 
 faker.seed(101);
+
+const authorId = PublicKey.random().toHex();
 
 //
 // Editor
@@ -73,42 +86,44 @@ const Editor: FC<{
   }
 
   // TODO(burdon): Highlight currently selected comment.
-  return (
-    <div className='flex grow overflow-y-scroll'>
-      <MarkdownEditor ref={view} model={model} extensions={extensions} />
-    </div>
-  );
+  return <MarkdownEditor ref={view} model={model} extensions={extensions} />;
 };
 
 //
 // Comments thread
 //
 
-type CommentThread = {
+type StoryCommentThread = {
   id: string;
   cursor?: string;
   range?: Range;
   yPos?: number;
-  messages: TextObject[];
+  messages: MessageEntity<{ text: TextObject }>[];
 };
 
-const Thread: FC<{
-  thread: CommentThread;
+const StoryMessageBlock = (props: MessageBlockProps<{ text: TextObject }>) => {
+  const model = useTextModel({ text: props.block.text });
+  return model ? <TextEditor model={model} /> : null;
+};
+
+const StoryThread: FC<{
+  thread: StoryCommentThread;
   selected: boolean;
   onSelect: () => void;
   onResolve: () => void;
 }> = ({ thread, selected, onSelect, onResolve }) => {
-  const [focus, setFocus] = useState(false);
+  const [autoFocus, setAutoFocus] = useState(false);
   const [item, setItem] = useState({ text: new TextObject() });
   const model = useTextModel({ text: item.text });
   const editorRef = useRef<EditorView>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (selected) {
       containerRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
       if (thread.messages.length === 0) {
-        setFocus(true);
+        setAutoFocus(true);
       }
     }
   }, [selected]);
@@ -116,9 +131,13 @@ const Thread: FC<{
   const handleCreateMessage = () => {
     const text = model?.text().trim();
     if (text?.length) {
-      thread.messages.push(item.text);
+      thread.messages.push({
+        id: item.text.id,
+        authorId,
+        blocks: [{ text: item.text, timestamp: new Date().toISOString() }],
+      });
       setItem({ text: new TextObject() });
-      setFocus(true);
+      setAutoFocus(true);
     }
   };
 
@@ -127,33 +146,25 @@ const Thread: FC<{
   }
 
   return (
-    <div
-      className={mx(
-        'flex flex-col m-1 rounded shadow divide-y bg-white',
-        selected && 'ring',
-        !thread.cursor && 'opacity-50',
-      )}
-    >
-      <div className='flex p-2 gap-2 items-center text-xs font-mono text-neutral-500 font-thin'>
-        <span>id:{thread.id.slice(0, 4)}</span>
-        <span>from:{thread.range?.from}</span>
-        <span>to:{thread.range?.to}</span>
-        <span>y:{thread.yPos}</span>
-        <span className='grow' />
-        {!thread.cursor && <Trash />}
-      </div>
+    <Thread>
+      {/* <div className='flex p-2 gap-2 items-center text-xs font-mono text-neutral-500'> */}
+      {/*  <span>id:{thread.id.slice(0, 4)}</span> */}
+      {/*  <span>from:{thread.range?.from}</span> */}
+      {/*  <span>to:{thread.range?.to}</span> */}
+      {/*  <span>y:{thread.yPos}</span> */}
+      {/*  <span className='grow' /> */}
+      {/*  {!thread.cursor && <Trash />} */}
+      {/* </div> */}
 
-      {thread.messages.map((message, i) => (
-        // TODO(burdon): Fix default editor padding so content doesn't jump on creating message.
-        <div key={i} className='p-2' onClick={() => onSelect()}>
-          {getTextContent(message)}
-        </div>
+      {thread.messages.map((message) => (
+        <Message<{ text: TextObject }> key={message.id} {...message} MessageBlockComponent={StoryMessageBlock} />
       ))}
 
-      <div ref={containerRef} className='flex' onClick={() => onSelect()}>
-        <TextEditor
+      <div ref={containerRef} className='contents' onClick={() => onSelect()}>
+        <MessageTextbox
+          authorId={authorId}
           ref={editorRef}
-          autoFocus={focus}
+          autoFocus={autoFocus}
           model={model}
           placeholder={'Enter comment...'}
           slots={{ root: { className: 'grow rounded-b' } }}
@@ -173,12 +184,12 @@ const Thread: FC<{
           <Check />
         </Button>
       </div>
-    </div>
+    </Thread>
   );
 };
 
 const Sidebar: FC<{
-  threads: CommentThread[];
+  threads: StoryCommentThread[];
   selected?: string;
   onSelect: (thread: string) => void;
   onResolve: (thread: string) => void;
@@ -192,19 +203,17 @@ const Sidebar: FC<{
   }, [threads]);
 
   return (
-    <DensityProvider density='fine'>
-      <div className='flex flex-col grow overflow-y-scroll py-4 gap-4'>
-        {sortedThreads.map((thread) => (
-          <Thread
-            key={thread.id}
-            thread={thread}
-            selected={thread.id === selected}
-            onSelect={() => onSelect(thread.id)}
-            onResolve={() => onResolve(thread.id)}
-          />
-        ))}
-      </div>
-    </DensityProvider>
+    <>
+      {sortedThreads.map((thread) => (
+        <StoryThread
+          key={thread.id}
+          thread={thread}
+          selected={thread.id === selected}
+          onSelect={() => onSelect(thread.id)}
+          onResolve={() => onResolve(thread.id)}
+        />
+      ))}
+    </>
   );
 };
 
@@ -219,7 +228,7 @@ type StoryProps = {
 
 const Story = ({ text, autoCreate }: StoryProps) => {
   const [item] = useState({ text: new TextObject(text) });
-  const [threads, setThreads] = useState<CommentThread[]>([]);
+  const [threads, setThreads] = useState<StoryCommentThread[]>([]);
   const [selected, setSelected] = useState<string>();
 
   const comments = useMemo<Comment[]>(() => threads.map(({ id, cursor }) => ({ id, cursor })), [threads]);
@@ -237,7 +246,19 @@ const Story = ({ text, autoCreate }: StoryProps) => {
         cursor,
         yPos: location ? Math.floor(location.top) : undefined,
         messages: autoCreate
-          ? faker.helpers.multiple(() => new TextObject(faker.lorem.sentence()), { count: { min: 1, max: 3 } })
+          ? faker.helpers.multiple(
+              () => ({
+                id: PublicKey.random().toHex(),
+                authorId: PublicKey.random().toHex(),
+                blocks: [
+                  {
+                    timestamp: new Date().toISOString(),
+                    text: new TextObject(faker.lorem.sentence()),
+                  },
+                ],
+              }),
+              { count: { min: 1, max: 3 } },
+            )
           : [],
       },
     ]);
@@ -300,36 +321,30 @@ const Story = ({ text, autoCreate }: StoryProps) => {
   };
 
   return (
-    <div className={mx(fixedInsetFlexLayout, 'bg-neutral-100')}>
-      <div className='flex justify-center h-full gap-8'>
-        <div className='flex flex-col h-full w-[600px]'>
-          <Editor
-            item={item}
-            selected={selected}
-            comments={comments}
-            onCreateComment={handleCreateComment}
-            onDeleteComment={handleDeleteComment}
-            onUpdateComment={handleUpdateComment}
-            onSelectComment={handleSelectComment}
-          />
-        </div>
+    <main className='grid grid-cols-[1fr_24rem] gap-2 place-items-start'>
+      <Editor
+        item={item}
+        selected={selected}
+        comments={comments}
+        onCreateComment={handleCreateComment}
+        onDeleteComment={handleDeleteComment}
+        onUpdateComment={handleUpdateComment}
+        onSelectComment={handleSelectComment}
+      />
 
-        <div className='flex flex-col h-full w-[300px]'>
-          <Sidebar
-            threads={visibleThreads}
-            selected={selected}
-            onSelect={handleSelectThread}
-            onResolve={handleResolveThread}
-          />
-        </div>
-      </div>
-    </div>
+      <Sidebar
+        threads={visibleThreads}
+        selected={selected}
+        onSelect={handleSelectThread}
+        onResolve={handleResolveThread}
+      />
+    </main>
   );
 };
 
 export default {
-  title: 'react-ui-editor/comments',
-  component: MarkdownEditor,
+  title: 'react-ui-thread/Comments',
+  component: StoryThread,
   decorators: [withTheme],
   render: (args: StoryProps) => <Story {...args} />,
 };
