@@ -38,6 +38,7 @@ import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 /**
  * This options object configures the DXOS Client.
@@ -230,7 +231,7 @@ export class Client {
    */
   async diagnostics(options: JsonKeyOptions = {}): Promise<any> {
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
-    const data = await this._services.services.SystemService.getDiagnostics({
+    const serviceDiagnostics = await this._services.services.SystemService.getDiagnostics({
       keys: options.humanize
         ? GetDiagnosticsRequest.KEY_OPTION.HUMANIZE
         : options.truncate
@@ -238,7 +239,17 @@ export class Client {
         : undefined,
     });
 
-    return JSON.parse(JSON.stringify(data, jsonKeyReplacer(options)));
+    const clientDiagnostics = {
+      config: this._config?.values,
+      trace: TRACE_PROCESSOR.getDiagnostics(),
+    };
+
+    const diagnostics = {
+      client: clientDiagnostics,
+      services: serviceDiagnostics,
+    };
+
+    return JSON.parse(JSON.stringify(diagnostics, jsonKeyReplacer(options)));
   }
 
   /**

@@ -9,7 +9,7 @@ import { type RandomAccessStorage } from 'random-access-storage';
 import { synchronized } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { TimeSeriesCounter, trace } from '@dxos/tracing';
+import { TimeSeriesCounter } from '@dxos/tracing';
 
 import { Directory, type DiskInfo, type File, type Storage, StorageType, getFullPath } from '../common';
 
@@ -163,9 +163,7 @@ export class WebFS implements Storage {
 }
 
 // TODO(mykola): Remove EventEmitter.
-@trace.resource()
 export class WebFile extends EventEmitter implements File {
-  @trace.info()
   private readonly _fileName: string;
 
   private readonly _fileHandle: Promise<FileSystemFileHandle>;
@@ -186,25 +184,18 @@ export class WebFile extends EventEmitter implements File {
   // Metrics
   //
 
-  @trace.metricsCounter()
   private _flushes = new TimeSeriesCounter();
 
-  @trace.metricsCounter()
   private _operations = new TimeSeriesCounter();
 
-  @trace.metricsCounter()
   private _reads = new TimeSeriesCounter();
 
-  @trace.metricsCounter()
   private _readBytes = new TimeSeriesCounter();
 
-  @trace.metricsCounter()
   private _writes = new TimeSeriesCounter();
 
-  @trace.metricsCounter()
   private _writeBytes = new TimeSeriesCounter();
 
-  @trace.info()
   get _bufferSize() {
     return this._buffer?.length;
   }

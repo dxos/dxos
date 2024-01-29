@@ -194,6 +194,23 @@ export class TraceProcessor {
     return res;
   }
 
+  getDiagnostics() {
+    this.refresh();
+
+    return {
+      resources: Object.fromEntries(
+        Array.from(this.resources.entries()).map(([id, entry]) => [
+          id,
+          {
+            data: entry.data,
+          },
+        ]),
+      ),
+      spans: Object.fromEntries(this.spans.entries()),
+      logs: this.logs.filter((log) => log.level >= LogLevel.INFO),
+    };
+  }
+
   /**
    * @internal
    */

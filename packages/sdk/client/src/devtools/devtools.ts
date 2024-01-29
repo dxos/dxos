@@ -3,7 +3,7 @@
 //
 
 import { type Space } from '@dxos/client-protocol';
-import type { ClientServicesHost, DataSpace } from '@dxos/client-services';
+import type { ClientServicesHost, DataSpace, Diagnostics } from '@dxos/client-services';
 import { DocumentModel, type DocumentModelState } from '@dxos/document-model';
 import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
@@ -11,6 +11,7 @@ import { log } from '@dxos/log';
 import { createBundledRpcServer, type RpcPeer, type RpcPort } from '@dxos/rpc';
 
 import { type Client } from '../client';
+import { TRACE_PROCESSOR, TraceProcessor } from '@dxos/tracing';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;
@@ -22,12 +23,16 @@ export interface DevtoolsHook {
   client?: Client;
   host?: ClientServicesHost;
 
+  tracing: TraceProcessor;
+
   spaces?: Accessor<Space | DataSpace>;
   feeds?: Accessor<FeedWrapper>;
 
   openClientRpcServer: () => Promise<boolean>;
 
   openDevtoolsApp?: () => void;
+
+  getDiagnostics?: () => Promise<Diagnostics>;
 
   reset: () => void;
 }
@@ -44,6 +49,8 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     // To debug client from console using 'window.__DXOS__.client'.
     client,
     host,
+
+    tracing: TRACE_PROCESSOR,
 
     openClientRpcServer: async () => {
       if (!client) {
@@ -104,6 +111,11 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
         : `https://devtools${isDev ? '.dev.' : '.'}dxos.org/`;
       const devtoolsUrl = `${devtoolsApp}?target=${vault}`;
       window.open(devtoolsUrl, '_blank');
+    };
+
+    hook.getDiagnostics = async () => {
+      const diagnostics = await client.diagnostics();
+      return diagnostics;
     };
   }
   if (host) {
