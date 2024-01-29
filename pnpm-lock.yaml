@@ -365,6 +365,9 @@ importers:
       '@dxos/shell':
         specifier: workspace:*
         version: link:../packages/sdk/shell
+      '@stackblitz/sdk':
+        specifier: ^1.9.0
+        version: 1.9.0
       '@types/eslint':
         specifier: ^8.44.9
         version: 8.56.0
@@ -6124,6 +6127,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/observability':
+        specifier: workspace:*
+        version: link:../../sdk/observability
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols

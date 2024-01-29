@@ -134,7 +134,9 @@ export class AutomergeObject implements TypedObjectProperties {
     return this._id;
   }
 
-  [base] = this as any;
+  get [base]() {
+    return this as any;
+  }
 
   get [db](): EchoDatabase | undefined {
     return this[base]._database._echoDatabase;
@@ -266,20 +268,16 @@ export class AutomergeObject implements TypedObjectProperties {
     return new Proxy(this, {
       ownKeys: (target) => {
         // TODO(mykola): Add support for expando objects.
-        if (this.__schema) {
-          return this.__schema.props.map((field) => field.id!);
+        const schema = this.__schema;
+        if (schema) {
+          return schema.props.map((field) => field.id!);
         } else {
-          const fullPath = [...this._path, ...path];
-          let value = this._getDoc();
-          for (const key of fullPath) {
-            value = value?.[key];
-          }
-          return Object.keys(value);
+          return Reflect.ownKeys(this._get(path));
         }
       },
 
       has: (_, key) => {
-        if (!isValidKey(key)) {
+        if (isRootDataObjectKey(path, key)) {
           return Reflect.has(this, key);
         } else if (typeof key === 'symbol') {
           // TODO(mykola): Copied from TypedObject, do we need this?
@@ -302,7 +300,7 @@ export class AutomergeObject implements TypedObjectProperties {
           return true;
         }
 
-        if (!isValidKey(key)) {
+        if (typeof key === 'symbol' || isRootDataObjectKey(path, key)) {
           return Reflect.get(this, key);
         }
 
@@ -310,21 +308,7 @@ export class AutomergeObject implements TypedObjectProperties {
 
         const value = this._get(relativePath);
 
-        if (value instanceof AbstractEchoObject || value instanceof AutomergeObject || value instanceof TextObject) {
-          return value;
-        }
-        if (value instanceof Reference && value.protocol === 'protobuf') {
-          // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
-          return value;
-        }
-        if (Array.isArray(value)) {
-          return new AutomergeArray()._attach(this[base], relativePath);
-        }
-        if (typeof value === 'object' && value !== null) {
-          return this._createProxy(relativePath);
-        }
-
-        return value;
+        return this._mapToEchoObject(relativePath, value);
       },
 
       set: (_, key, value) => {
@@ -352,6 +336,25 @@ export class AutomergeObject implements TypedObjectProperties {
     }
 
     return this._decode(value);
+  }
+
+  _mapToEchoObject(relativePath: string[], value: any) {
+    if (value instanceof AbstractEchoObject || value instanceof AutomergeObject || value instanceof TextObject) {
+      return value;
+    }
+    if (value instanceof Reference && value.protocol === 'protobuf') {
+      // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
+      return value;
+    }
+    if (Array.isArray(value)) {
+      return new AutomergeArray()._attach(this[base], relativePath);
+    }
+
+    if (typeof value === 'object' && value !== null) {
+      return this._createProxy(relativePath);
+    }
+
+    return value;
   }
 
   /**
@@ -606,8 +609,11 @@ export class AutomergeObject implements TypedObjectProperties {
   }
 }
 
-const isValidKey = (key: string | symbol) => {
-  return !(
+const isRootDataObjectKey = (relativePath: string[], key: string | symbol) => {
+  if (relativePath.length !== 1 || relativePath[0] !== 'data') {
+    return false;
+  }
+  return (
     typeof key === 'symbol' ||
     key.startsWith('@@__') ||
     key === 'constructor' ||
