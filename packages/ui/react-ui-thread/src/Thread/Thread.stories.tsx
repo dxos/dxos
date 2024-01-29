@@ -16,6 +16,7 @@ import translations from '../translations';
 import { type MessageEntity } from '../types';
 
 const Story = () => {
+  const [pending, setPending] = useState(false);
   const [identityKey1] = useState(PublicKey.random());
   const [identityKey2] = useState(PublicKey.random());
   const [messages] = useState<MessageEntity<{ id: string; text: string }>[]>([
@@ -44,12 +45,22 @@ const Story = () => {
   ]);
   const nextMessageModel = useInMemoryTextModel({ id: 't1__next' });
 
+  // TODO(thure): Why does pressing Enter clear the text content?
+  //  Something to do with the in-memory text model perhaps?
+  const handleSend = () => {
+    setPending(true);
+    setTimeout(() => {
+      nextMessageModel.setContent('');
+      setPending(false);
+    }, 2_000);
+  };
+
   return (
     <Thread id='t1'>
       {messages.map((message) => (
         <Message key={message.id} {...message} />
       ))}
-      <MessageTextbox authorId={identityKey1.toHex()} model={nextMessageModel} />
+      <MessageTextbox disabled={pending} authorId={identityKey1.toHex()} onSend={handleSend} model={nextMessageModel} />
     </Thread>
   );
 };

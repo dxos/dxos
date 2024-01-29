@@ -5,7 +5,7 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
-import { Check } from '@phosphor-icons/react';
+import { Check, Trash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { TextObject } from '@dxos/echo-schema';
@@ -22,7 +22,6 @@ import {
   type Range,
   useTextModel,
   type EditorView,
-  keymap,
   TextEditor,
 } from '@dxos/react-ui-editor';
 import { withTheme } from '@dxos/storybook-utils';
@@ -147,14 +146,14 @@ const StoryThread: FC<{
 
   return (
     <Thread>
-      {/* <div className='flex p-2 gap-2 items-center text-xs font-mono text-neutral-500'> */}
-      {/*  <span>id:{thread.id.slice(0, 4)}</span> */}
-      {/*  <span>from:{thread.range?.from}</span> */}
-      {/*  <span>to:{thread.range?.to}</span> */}
-      {/*  <span>y:{thread.yPos}</span> */}
-      {/*  <span className='grow' /> */}
-      {/*  {!thread.cursor && <Trash />} */}
-      {/* </div> */}
+      <div className='col-span-2 flex p-2 gap-2 text-xs fg-description'>
+        <span>id:{thread.id.slice(0, 4)}</span>
+        <span>from:{thread.range?.from}</span>
+        <span>to:{thread.range?.to}</span>
+        <span>y:{thread.yPos}</span>
+        <span className='grow' />
+        {!thread.cursor && <Trash />}
+      </div>
 
       {thread.messages.map((message) => (
         <Message<{ text: TextObject }> key={message.id} {...message} MessageBlockComponent={StoryMessageBlock} />
@@ -166,19 +165,7 @@ const StoryThread: FC<{
           ref={editorRef}
           autoFocus={autoFocus}
           model={model}
-          placeholder={'Enter comment...'}
-          slots={{ root: { className: 'grow rounded-b' } }}
-          extensions={[
-            keymap.of([
-              {
-                key: 'Enter',
-                run: () => {
-                  handleCreateMessage();
-                  return true;
-                },
-              },
-            ]),
-          ]}
+          onSend={handleCreateMessage}
         />
         <Button variant='ghost' classNames='px-1' title='Resolve' onClick={onResolve}>
           <Check />

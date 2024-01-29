@@ -3,7 +3,7 @@
 //
 
 import get from 'lodash.get';
-import { useEffect, useState } from 'react';
+import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 
 import { generateName } from '@dxos/display-name';
 import { type AutomergeTextCompat, getRawDoc } from '@dxos/echo-schema';
@@ -30,9 +30,15 @@ export const useTextModel = (props: UseTextModelProps): EditorModel | undefined 
   return model;
 };
 
-export const useInMemoryTextModel = ({ id, defaultContent }: { id: string; defaultContent?: string }): EditorModel => {
-  const [content, _setContent] = useState(defaultContent ?? '');
-  return { id, content, text: () => content };
+export const useInMemoryTextModel = ({
+  id,
+  defaultContent,
+}: {
+  id: string;
+  defaultContent?: string;
+}): EditorModel & { setContent: Dispatch<SetStateAction<string>> } => {
+  const [content, setContent] = useState(defaultContent ?? '');
+  return { id, content, setContent, text: () => content };
 };
 
 const createModel = ({ space, identity, text }: UseTextModelProps) => {

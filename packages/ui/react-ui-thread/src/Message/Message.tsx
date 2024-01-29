@@ -7,7 +7,7 @@ import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, { type ComponentPropsWithRef, type FC, forwardRef } from 'react';
 
 import { Avatar, Button, type ThemedClassName, useJdenticonHref, useTranslation } from '@dxos/react-ui';
-import { TextEditor, type TextEditorProps, keymap, type EditorView } from '@dxos/react-ui-editor';
+import { TextEditor, type TextEditorProps, keymap, type EditorView, listener } from '@dxos/react-ui-editor';
 import {
   focusRing,
   hoverableControlItem,
@@ -16,6 +16,7 @@ import {
   mx,
 } from '@dxos/react-ui-theme';
 
+import { command } from './command-extension';
 import { translationKey } from '../translations';
 import { type MessageEntity, type MessageEntityBlock, type MessageMetadata } from '../types';
 
@@ -124,11 +125,14 @@ export const Message = <BlockValue,>(props: MessageProps<BlockValue>) => {
 
 export type MessageTextboxProps = {
   onSend?: () => void;
+  onClear?: () => void;
+  onEditorFocus?: () => void;
+  disabled?: boolean;
 } & Omit<MessageMetadata, 'id' | 'authorStatus'> &
   TextEditorProps;
 
 export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
-  ({ onSend, authorId, authorName, authorImgSrc, ...editorProps }, forwardedRef) => {
+  ({ onSend, onClear, onEditorFocus, authorId, authorName, authorImgSrc, disabled, ...editorProps }, forwardedRef) => {
     // TODO(thure): Handle `onSend`.
     const { t } = useTranslation(translationKey);
     return (
@@ -136,25 +140,51 @@ export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
         {...{ id: editorProps.model.id, authorId, authorName, authorImgSrc }}
         authorStatus='active'
         continues={false}
-        classNames={[hoverableControls, hoverableFocusedWithinControls]}
+        classNames={['[--controls-opacity:0]', hoverableFocusedWithinControls]}
       >
         <TextEditor
-          slots={{ root: { className: mx('plb-1 mie-1 rounded-sm', focusRing) } }}
+          slots={{ root: { className: mx('plb-1 mie-1 rounded-sm', focusRing, disabled && 'opacity-50') } }}
+          readonly={disabled}
           extensions={[
+            command,
             keymap.of([
               {
                 key: 'Enter',
                 run: () => {
-                  onSend?.();
-                  return true;
+                  if (onSend) {
+                    onSend();
+                    return true;
+                  } else {
+                    return false;
+                  }
+                },
+              },
+              {
+                key: 'Meta+Backspace',
+                run: () => {
+                  if (onClear) {
+                    onClear();
+                    return true;
+                  } else {
+                    return false;
+                  }
                 },
               },
             ]),
+            listener({
+              onFocus: (focused) => {
+                if (focused) {
+                  onEditorFocus?.();
+                }
+              },
+            }),
           ]}
           {...editorProps}
           ref={forwardedRef}
         />
-        <p className={mx('fg-description text-end', hoverableControlItem)}>{t('enter to send message')}</p>
+        <p className={mx('fg-description text-xs text-end pli-1', hoverableControlItem)}>
+          {t('enter to send message')}
+        </p>
       </MessageMeta>
     );
   },
