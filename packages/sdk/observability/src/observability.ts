@@ -176,7 +176,7 @@ export class Observability {
         return;
       }
 
-      this.setTag('identityKey', idqr.identity.identityKey.toHex());
+      this.setTag('identityKey', idqr.identity.identityKey.truncate());
     });
 
     client.services.services.DevicesService!.queryDevices().subscribe((dqr) => {
@@ -191,7 +191,7 @@ export class Observability {
         log('no current device', { device: dqr });
         return;
       }
-      this.setTag('deviceKey', thisDevice.deviceKey.toHex());
+      this.setTag('deviceKey', thisDevice.deviceKey.truncate());
       if (thisDevice.profile?.label) {
         this.setTag('deviceProfile', thisDevice.profile.label);
       }
