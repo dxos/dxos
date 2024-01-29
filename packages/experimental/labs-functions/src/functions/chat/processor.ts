@@ -129,7 +129,7 @@ export class RequestProcessor {
         case ChainType.Input.Type.CONTEXT: {
           inputs[name] = () => {
             if (value) {
-              const text = getTextContent(value);
+              const text = getTextContent(value, '');
               if (text.length) {
                 try {
                   const result = get(context, text);
@@ -163,7 +163,7 @@ export class RequestProcessor {
         }
 
         case ChainType.Input.Type.RESOLVER: {
-          const result = await this.execResolver(getTextContent(value));
+          const result = await this.execResolver(getTextContent(value, ''));
           inputs[name] = () => result;
           break;
         }
@@ -172,7 +172,7 @@ export class RequestProcessor {
 
     return RunnableSequence.from([
       inputs,
-      PromptTemplate.fromTemplate(getTextContent(prompt.source)),
+      PromptTemplate.fromTemplate(getTextContent(prompt.source, '')),
       this._resources.chat,
       new StringOutputParser(),
     ]);
