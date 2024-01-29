@@ -34,7 +34,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
         log.info('processing', { object: { id: object.id, type: object.__typename } });
         switch (object.__typename) {
           case DocumentType.schema.typename: {
-            pageContent = !!object.content ? getTextContent(object.content).trim() : undefined;
+            pageContent = getTextContent(object.content)?.trim();
             break;
           }
 
