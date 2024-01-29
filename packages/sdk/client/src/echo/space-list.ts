@@ -28,15 +28,17 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ModelFactory } from '@dxos/model-factory';
-import { ApiError, trace } from '@dxos/protocols';
+import { ApiError, trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { trace } from '@dxos/tracing';
 
 import { AgentQuerySourceProvider } from './agent-query-source-provider';
 import { SpaceProxy } from './space-proxy';
 import { InvitationsProxy } from '../invitations';
 
+@trace.resource()
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _ctx!: Context;
   private _invitationProxy?: InvitationsProxy;
@@ -68,6 +70,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return inspectObject(this);
   }
 
+  @trace.info({ depth: null })
   toJSON() {
     return {
       spaces: this._value?.length,
@@ -82,7 +85,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    * @internal
    */
   async _open() {
-    log.trace('dxos.sdk.echo-proxy.open', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
+    log.trace('dxos.sdk.echo-proxy.open', Trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     this._ctx = new Context({
       onError: (error) => {
         log.catch(error);
@@ -163,7 +166,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     this._ctx.onDispose(() => subscription.unsubscribe());
 
     await gotInitialUpdate.wait();
-    log.trace('dxos.sdk.echo-proxy.open', trace.end({ id: this._instanceId }));
+    log.trace('dxos.sdk.echo-proxy.open', Trace.end({ id: this._instanceId }));
   }
 
   /**
@@ -205,7 +208,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   async create(meta?: PropertiesProps): Promise<Space> {
     invariant(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
     const traceId = PublicKey.random().toHex();
-    log.trace('dxos.sdk.echo-proxy.create-space', trace.begin({ id: traceId }));
+    log.trace('dxos.sdk.echo-proxy.create-space', Trace.begin({ id: traceId }));
     const space = await this._serviceProvider.services.SpacesService.createSpace();
 
     await this._spaceCreated.waitForCondition(() => {
@@ -218,7 +221,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     await spaceProxy.db.flush();
     await spaceProxy._initializationComplete.wait();
 
-    log.trace('dxos.sdk.echo-proxy.create-space', trace.end({ id: traceId }));
+    log.trace('dxos.sdk.echo-proxy.create-space', Trace.end({ id: traceId }));
     return spaceProxy;
   }
 
