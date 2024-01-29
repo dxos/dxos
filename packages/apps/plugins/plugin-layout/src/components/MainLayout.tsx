@@ -6,10 +6,9 @@ import { CaretDoubleLeft, List as MenuIcon } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/react-ui';
+import { Button, Main, Dialog, useTranslation, DensityProvider, Popover, Status } from '@dxos/react-ui';
 import { baseSurface, fixedInsetFlexLayout, getSize } from '@dxos/react-ui-theme';
 
-import { ContentFallback } from './ContentFallback';
 import { Fallback } from './Fallback';
 import { useLayout } from '../LayoutContext';
 import { LAYOUT_PLUGIN } from '../meta';
@@ -110,7 +109,17 @@ export const MainLayout = ({ fullscreen, showHintsFooter, showComplementarySideb
         <Main.Overlay />
 
         {/* Main content surface. */}
-        <Surface role='main' limit={1} fallback={Fallback} contentFallback={ContentFallback} />
+        <Surface
+          role='main'
+          limit={1}
+          fallback={Fallback}
+          placeholder={
+            // TODO(wittjosiah): Better placeholder? Delay rendering?
+            <div className='flex bs-[100dvh] justify-center items-center'>
+              <Status indeterminate aria-label='Initializing' />
+            </div>
+          }
+        />
 
         {/* Status info. */}
         {/* TODO(burdon): Currently obscured by complementary sidebar. */}

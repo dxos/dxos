@@ -9,7 +9,7 @@ import { type ClientServices, useClient } from '@dxos/react-client';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
-export const DevtoolsMain = () => {
+const DevtoolsMain = () => {
   const client = useClient();
 
   return (
@@ -18,3 +18,5 @@ export const DevtoolsMain = () => {
     </Main.Content>
   );
 };
+
+export default DevtoolsMain;

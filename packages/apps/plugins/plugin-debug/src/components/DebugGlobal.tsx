@@ -13,7 +13,7 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 import { DebugPanel } from './DebugPanel';
 import { Json, Tree } from './Tree';
 
-export const DebugGlobal: FC<{ graph: Graph }> = ({ graph }) => {
+const DebugGlobal: FC<{ graph: Graph }> = ({ graph }) => {
   const { themeMode } = useThemeContext();
   const [view, setView] = useState<'config' | 'diagnostics' | 'graph'>('diagnostics');
   const [data, setData] = useState<any>({});
@@ -76,3 +76,5 @@ export const DebugGlobal: FC<{ graph: Graph }> = ({ graph }) => {
     </DebugPanel>
   );
 };
+
+export default DebugGlobal;

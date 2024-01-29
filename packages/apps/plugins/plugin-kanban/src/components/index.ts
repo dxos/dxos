@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './KanbanBoard';
-export * from './KanbanCard';
-export * from './KanbanColumn';
-export * from './KanbanMain';
+import React from 'react';
+
+// Lazily load components for content surfaces.
+export const KanbanMain = React.lazy(() => import('./KanbanMain'));

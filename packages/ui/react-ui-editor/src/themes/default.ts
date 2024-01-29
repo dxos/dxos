@@ -49,9 +49,11 @@ export const defaultTheme: ThemeStyles = {
   '&.cm-focused': {
     outline: 'none',
   },
+
   '.cm-scroller': {
-    overflow: 'visible',
+    // overflow: 'visible',
     fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
+    lineHeight: 1.4,
   },
 
   '.cm-content': {
@@ -91,7 +93,7 @@ export const defaultTheme: ThemeStyles = {
     paddingInline: 0,
   },
   '.cm-activeLine': {
-    background: 'inherit',
+    background: 'transparent',
   },
 
   //

@@ -102,16 +102,16 @@ export class WorkerClientServices implements ClientServicesProvider {
     this._loggingStream.subscribe((entry) => {
       switch (entry.level) {
         case LogLevel.DEBUG:
-          log.debug(`[vault] ${entry.message}`, entry.context);
+          log.debug(`[worker] ${entry.message}`, entry.context);
           break;
         case LogLevel.INFO:
-          log.info(`[vault] ${entry.message}`, entry.context);
+          log.info(`[worker] ${entry.message}`, entry.context);
           break;
         case LogLevel.WARN:
-          log.warn(`[vault] ${entry.message}`, entry.context);
+          log.warn(`[worker] ${entry.message}`, entry.context);
           break;
         case LogLevel.ERROR:
-          log.error(`[vault] ${entry.message}`, entry.context);
+          log.error(`[worker] ${entry.message}`, entry.context);
           break;
       }
     });

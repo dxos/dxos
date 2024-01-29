@@ -5,7 +5,7 @@
 import get from 'lodash.get';
 
 import { Document, Thread } from '@braneframe/types';
-import { next as automerge, type Prop } from '@dxos/automerge/automerge';
+import { next as A, type Prop } from '@dxos/automerge/automerge';
 import { AutomergeObject, type IDocHandle } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type TypedObject, TextObject, getRawDoc } from '@dxos/react-client/echo';
@@ -30,7 +30,7 @@ const cursorConverter = (handle: IDocHandle, path: Prop[]) => ({
     }
 
     // NOTE: Slice is needed because getCursor mutates the array.
-    return automerge.getCursor(doc, path.slice(), pos);
+    return A.getCursor(doc, path.slice(), pos);
   },
   fromCursor: (cursor: string): number => {
     if (cursor === '') {
@@ -52,7 +52,7 @@ const cursorConverter = (handle: IDocHandle, path: Prop[]) => ({
     }
 
     // NOTE: Slice is needed because getCursor mutates the array.
-    return automerge.getCursorPosition(doc, path.slice(), cursor);
+    return A.getCursorPosition(doc, path.slice(), cursor);
   },
 });
 

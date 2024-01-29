@@ -24,10 +24,10 @@
       "path": "../../../common/log"
     },
     {
-      "path": "../../../common/sentry"
+      "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../../sdk/app-framework"
+      "path": "../../../sdk/observability"
     },
     {
       "path": "../../../ui/react-ui"

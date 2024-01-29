@@ -12,10 +12,12 @@ import {
   type UpdateStatusRequest,
   type QueryStatusRequest,
   type QueryStatusResponse,
+  type Platform,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { jsonKeyReplacer, type MaybePromise } from '@dxos/util';
 
 import { type Diagnostics } from '../services';
+import { getPlatform } from '../services/platform';
 
 export type SystemServiceOptions = {
   config?: Config;
@@ -71,6 +73,10 @@ export class SystemServiceImpl implements SystemService {
         ),
       ),
     };
+  }
+
+  async getPlatform(): Promise<Platform> {
+    return getPlatform();
   }
 
   async updateStatus({ status }: UpdateStatusRequest) {

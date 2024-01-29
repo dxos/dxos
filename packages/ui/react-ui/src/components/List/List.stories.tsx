@@ -207,9 +207,13 @@ export const SelectableListbox = {
       })),
     );
 
-    // TODO(burdon): Handle up/down.
-    const handleKeyUp = (event: any) => {
-      console.log(event);
+    const handleKeyUp = (event: any, id: string) => {
+      switch (event.key) {
+        case ' ':
+        case 'Enter': {
+          setSelectedId(id);
+        }
+      }
     };
 
     return (
@@ -217,10 +221,11 @@ export const SelectableListbox = {
         {items.map(({ id, text }) => (
           <ListItem.Root
             key={id}
+            tabIndex={0}
             selected={selectedId === id}
             classNames={mx('items-center', ghostHover, ghostSelected, ghostSelectedTrackingInterFromNormal)}
             onClick={() => setSelectedId(id)}
-            onKeyUp={handleKeyUp}
+            onKeyUp={(event) => handleKeyUp(event, id)}
           >
             <ListItem.Heading classNames='grow'>Lorem ipsum dolor sit amet</ListItem.Heading>
           </ListItem.Root>
