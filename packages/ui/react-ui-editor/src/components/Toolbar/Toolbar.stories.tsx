@@ -13,7 +13,18 @@ import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Toolbar } from './Toolbar';
-import { code, comments, formatting, heading, image, table, tasklist, useComments } from '../../extensions';
+import {
+  code,
+  comments,
+  formatting,
+  heading,
+  image,
+  table,
+  tasklist,
+  useComments,
+  getFormatting,
+  emptyFormatting,
+} from '../../extensions';
 import { type Comment, useActionHandler, useEditorView, useTextModel } from '../../hooks';
 import { MarkdownEditor } from '../TextEditor';
 
@@ -50,11 +61,12 @@ const Story: FC<{ content: string }> = ({ content }) => {
     return null;
   }
 
+  // TODO Wire up the toolbar state to the editor properly
   return (
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex h-full justify-center'>
         <div className='flex flex-col h-full w-[800px]'>
-          <Toolbar.Root onAction={handleAction}>
+          <Toolbar.Root onAction={handleAction} state={editorView ? getFormatting(editorView.state) : emptyFormatting}>
             <Toolbar.Markdown />
             <Toolbar.Separator />
             <Toolbar.Extended />

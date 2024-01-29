@@ -24,15 +24,18 @@ import React, { type PropsWithChildren } from 'react';
 import { Button, type ButtonProps, DensityProvider, Select } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
+import { type Formatting } from '../../extensions/markdown';
+
 // TODO(burdon): Revert to string to make extensible?
 export type ActionType =
   | 'blockquote'
-  | 'bold'
+  | 'strong'
   | 'codeblock'
   | 'comment'
   | 'heading'
   | 'image'
-  | 'italic'
+  | 'emphasis'
+  | 'code'
   | 'link'
   | 'list'
   | 'list-ordered'
@@ -49,13 +52,14 @@ export type Action = {
 
 export type ToolbarProps = PropsWithChildren<{
   onAction?: (action: Action) => void;
+  state: Formatting;
 }>;
 
 const [ToolbarContextProvider, useToolbarContext] = createContext<ToolbarProps>('Toolbar');
 
-const ToolbarRoot = ({ children, onAction }: ToolbarProps) => {
+const ToolbarRoot = ({ children, onAction, state }: ToolbarProps) => {
   return (
-    <ToolbarContextProvider onAction={onAction}>
+    <ToolbarContextProvider onAction={onAction} state={state}>
       <DensityProvider density='fine'>
         <div role='toolbar' className='flex w-full shrink-0 p-2 gap-4 items-center whitespace-nowrap overflow-hidden'>
           {children}
@@ -68,19 +72,28 @@ const ToolbarRoot = ({ children, onAction }: ToolbarProps) => {
 type ToolbarButtonProps = {
   Icon: Icon;
   onClick: () => Action | undefined;
+  getState?: (state: Formatting) => boolean;
 } & NonNullable<Pick<ButtonProps, 'title'>>;
 
-const ToolbarButton = ({ Icon, onClick, title }: ToolbarButtonProps) => {
-  const { onAction } = useToolbarContext('ToolbarButton');
+const ToolbarButton = ({ Icon, onClick, title, getState }: ToolbarButtonProps) => {
+  const { onAction, state } = useToolbarContext('ToolbarButton');
   const handleClick = () => {
     const action = onClick();
     if (action) {
       onAction?.(action);
     }
   };
+  const active = getState ? getState(state) : false;
 
+  // TODO: use the correct way to style these as depressed
   return (
-    <Button variant='ghost' classNames='p-2' onClick={handleClick} title={title}>
+    <Button
+      variant='ghost'
+      classNames='p-2'
+      style={active ? { backgroundColor: 'darkgray' } : {}}
+      onClick={handleClick}
+      title={title}
+    >
       <Icon className={getSize(5)} />
     </Button>
   );
@@ -89,9 +102,14 @@ const ToolbarButton = ({ Icon, onClick, title }: ToolbarButtonProps) => {
 const ToolbarSeparator = () => <div className='grow' />;
 
 const MarkdownHeading = () => {
-  const { onAction } = useToolbarContext('MarkdownFormatting');
+  const { onAction, state } = useToolbarContext('MarkdownFormatting');
+  const header = state.blockType && /heading(\d)/.exec(state.blockType);
+  const value = header ? header[1] : state.blockType === 'paragraph' || !state.blockType ? '0' : null;
+  if (value === null) {
+    return <></>;
+  }
   return (
-    <Select.Root defaultValue='0' onValueChange={(value) => onAction?.({ type: 'heading', data: parseInt(value) })}>
+    <Select.Root value={value} onValueChange={(value) => onAction?.({ type: 'heading', data: parseInt(value) })}>
       <Select.TriggerButton classNames='w-[8rem]' />
       <Select.Portal>
         <Select.Content>
@@ -111,31 +129,67 @@ const MarkdownHeading = () => {
 
 const MarkdownStyles = () => (
   <div role='none'>
-    <ToolbarButton Icon={TextB} title='Bold' onClick={() => ({ type: 'bold' })} />
-    <ToolbarButton Icon={TextItalic} title='Italic' onClick={() => ({ type: 'italic' })} />
-    <ToolbarButton Icon={TextStrikethrough} title='Strike-through' onClick={() => ({ type: 'strikethrough' })} />
+    <ToolbarButton Icon={TextB} title='String' onClick={() => ({ type: 'strong' })} getState={(s) => s.strong} />
+    <ToolbarButton
+      Icon={TextItalic}
+      title='Emphasis'
+      onClick={() => ({ type: 'emphasis' })}
+      getState={(s) => s.emphasis}
+    />
+    <ToolbarButton
+      Icon={TextStrikethrough}
+      title='Strike-through'
+      onClick={() => ({ type: 'strikethrough' })}
+      getState={(s) => s.strikethrough}
+    />
+    <ToolbarButton Icon={Code} title='Inline code' onClick={() => ({ type: 'code' })} getState={(s) => s.code} />
   </div>
 );
 
 const MarkdownLists = () => (
   <div role='none'>
-    <ToolbarButton Icon={ListBullets} title='Bullet list' onClick={() => ({ type: 'list' })} />
-    <ToolbarButton Icon={ListNumbers} title='Numbered list' onClick={() => ({ type: 'list-ordered' })} />
-    <ToolbarButton Icon={ListChecks} title='Task list' onClick={() => ({ type: 'list-tasks' })} />
+    <ToolbarButton
+      Icon={ListBullets}
+      title='Bullet list'
+      onClick={() => ({ type: 'list' })}
+      getState={(s) => s.listStyle === 'bullet'}
+    />
+    <ToolbarButton
+      Icon={ListNumbers}
+      title='Numbered list'
+      onClick={() => ({ type: 'list-ordered' })}
+      getState={(s) => s.listStyle === 'ordered'}
+    />
+    <ToolbarButton
+      Icon={ListChecks}
+      title='Task list'
+      onClick={() => ({ type: 'list-tasks' })}
+      getState={(s) => s.listStyle === 'task'}
+    />
   </div>
 );
 
 const MarkdownBlocks = () => (
   <div role='none'>
-    <ToolbarButton Icon={CaretRight} title='Block quite' onClick={() => ({ type: 'blockquote' })} />
-    <ToolbarButton Icon={Code} title='Code block' onClick={() => ({ type: 'codeblock' })} />
+    <ToolbarButton
+      Icon={CaretRight}
+      title='Block quote'
+      onClick={() => ({ type: 'blockquote' })}
+      getState={(s) => s.blockquote}
+    />
+    <ToolbarButton
+      Icon={Code}
+      title='Code block'
+      onClick={() => ({ type: 'codeblock' })}
+      getState={(s) => s.blockType === 'codeblock'}
+    />
     <ToolbarButton Icon={Table} title='Table' onClick={() => ({ type: 'table' })} />
   </div>
 );
 
 const MarkdownLinks = () => (
   <div role='none'>
-    <ToolbarButton Icon={Link} title='Link' onClick={() => ({ type: 'link' })} />
+    <ToolbarButton Icon={Link} title='Link' onClick={() => ({ type: 'link' })} getState={(s) => s.link} />
     <ToolbarButton Icon={At} title='Mention' onClick={() => ({ type: 'mention' })} />
     <ToolbarButton Icon={Image} title='Image' onClick={() => ({ type: 'image' })} />
   </div>

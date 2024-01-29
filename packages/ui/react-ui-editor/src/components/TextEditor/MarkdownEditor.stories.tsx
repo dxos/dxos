@@ -33,6 +33,7 @@ import {
   mention,
   table,
   tasklist,
+  toolbar,
   typewriter,
   useComments,
   formatting,
@@ -250,6 +251,7 @@ const defaults = [
   hr(),
   image(),
   link({ onRender: onRenderLink, onHover: onHoverLinkTooltip }),
+  toolbar(),
   table(),
   tasklist(),
 ];

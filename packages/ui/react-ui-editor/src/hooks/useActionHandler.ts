@@ -10,8 +10,9 @@ import {
   insertCodeblock,
   insertTable,
   setHeading,
-  toggleBold,
-  toggleItalic,
+  toggleStrong,
+  toggleEmphasis,
+  toggleInlineCode,
   toggleList,
   toggleStrikethrough,
 } from '../extensions';
@@ -27,14 +28,17 @@ export const useActionHandler = (view?: EditorView | null): ToolbarProps['onActi
         setHeading(parseInt(action.data))(view);
         break;
 
-      case 'bold':
-        toggleBold(view);
+      case 'strong':
+        toggleStrong(view);
         break;
-      case 'italic':
-        toggleItalic(view);
+      case 'emphasis':
+        toggleEmphasis(view);
         break;
       case 'strikethrough':
         toggleStrikethrough(view);
+        break;
+      case 'code':
+        toggleInlineCode(view);
         break;
 
       case 'list':

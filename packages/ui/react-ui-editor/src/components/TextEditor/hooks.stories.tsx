@@ -21,6 +21,8 @@ import {
   link,
   table,
   tasklist,
+  getFormatting,
+  emptyFormatting,
 } from '../../extensions';
 import { createDataExtensions, createThemeExtensions, useActionHandler, useTextEditor } from '../../hooks';
 import { markdownTheme } from '../../themes';
@@ -74,11 +76,13 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
 
   const handleAction = useActionHandler(view);
 
+  // FIXME This doesn't update the state on view changes. Also not
+  // sure if view is even guaranteed to exist at this point.
   return (
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex h-full justify-center'>
         <div className='flex flex-col h-full w-[800px]'>
-          <Toolbar.Root onAction={handleAction}>
+          <Toolbar.Root onAction={handleAction} state={view ? getFormatting(view.state) : emptyFormatting}>
             <Toolbar.Markdown />
           </Toolbar.Root>
 
