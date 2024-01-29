@@ -4829,6 +4829,9 @@ importers:
       '@dxos/text-model':
         specifier: workspace:*
         version: link:../text-model
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../../../common/tracing
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -7399,6 +7402,9 @@ importers:
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../common/timeframe
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../../common/tracing
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

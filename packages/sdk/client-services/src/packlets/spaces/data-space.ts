@@ -78,9 +78,12 @@ export type DataSpaceParams = {
 const ENABLE_FEED_PURGE = false;
 
 @trackLeaks('open', 'close')
+@trace.resource()
 export class DataSpace {
   private _ctx = new Context();
+  @trace.info()
   private readonly _inner: Space;
+
   private readonly _gossip: Gossip;
   private readonly _presence: Presence;
   private readonly _keyring: Keyring;
@@ -138,6 +141,7 @@ export class DataSpace {
     log('new state', { state: SpaceState[this._state] });
   }
 
+  @trace.info()
   get key() {
     return this._inner.key;
   }
@@ -146,6 +150,7 @@ export class DataSpace {
     return this._inner.isOpen;
   }
 
+  @trace.info({ enum: SpaceState })
   get state(): SpaceState {
     return this._state;
   }
@@ -173,6 +178,14 @@ export class DataSpace {
 
   get automergeSpaceState() {
     return this._automergeSpaceState;
+  }
+
+  @trace.info({ depth: null })
+  private get _automergeInfo() {
+    return {
+      rootUrl: this._automergeSpaceState.rootUrl,
+      lastEpoch: this._automergeSpaceState.lastEpoch,
+    };
   }
 
   @synchronized
