@@ -3,7 +3,7 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
-import React, { type FC, useState } from 'react';
+import React, { type FC, useMemo, useState } from 'react';
 
 import { type Space } from '@dxos/client/echo';
 import { Schema } from '@dxos/echo-schema';
@@ -39,32 +39,36 @@ export const SchemaList: FC<{ space: Space; onCreate?: (schema: Schema, count: n
   };
 
   const { helper, builder } = createColumnBuilder<SchemaRecord>();
-  const columns: TableColumnDef<SchemaRecord>[] = [
-    helper.accessor((object) => object.id.slice(0, 8), {
-      id: 'id',
-      ...builder.string({ size: 120, classNames: 'font-mono' }),
-    }),
-    helper.accessor('typename', builder.string({ classNames: 'font-mono', meta: { expand: true } })),
-    helper.accessor(
-      'count',
-      builder.number({
-        onUpdate: handleUpdateCount,
+  const columns: TableColumnDef<SchemaRecord>[] = useMemo(
+    () => [
+      helper.accessor((object) => object.id.slice(0, 8), {
+        id: 'id',
+        ...builder.string({ size: 120, classNames: 'font-mono' }),
       }),
-    ),
-    helper.display({
-      id: 'button',
-      size: 40,
-      cell: ({ row }) => (
-        <Button variant={'ghost'} onClick={() => handleCreate(row.original.id)}>
-          <Plus />
-        </Button>
+      helper.accessor('typename', builder.string({ classNames: 'font-mono', meta: { expand: true } })),
+      helper.accessor(
+        'count',
+        builder.number({
+          onUpdate: handleUpdateCount,
+        }),
       ),
-    }),
-  ];
+      helper.display({
+        id: 'button',
+        size: 40,
+        cell: ({ row }) => (
+          <Button variant={'ghost'} onClick={() => handleCreate(row.original.id)}>
+            <Plus />
+          </Button>
+        ),
+      }),
+    ],
+    [],
+  );
 
+  // TODO(burdon): Broken table.
   return (
     <DensityProvider density={'fine'}>
-      <Table<SchemaRecord> columns={columns} data={data} />
+      <Table<SchemaRecord> columns={[]} data={[]} />
     </DensityProvider>
   );
 };
