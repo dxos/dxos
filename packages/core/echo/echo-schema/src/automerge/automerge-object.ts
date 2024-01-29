@@ -266,6 +266,7 @@ export class AutomergeObject implements TypedObjectProperties {
 
   private _createProxy(path: string[]): any {
     return new Proxy(this, {
+      // NOTE: Key order is not guaranteed.
       ownKeys: (target) => {
         // TODO(mykola): Add support for expando objects.
         const schema = this.__schema;
@@ -447,7 +448,7 @@ export class AutomergeObject implements TypedObjectProperties {
     if (value instanceof A.RawString) {
       return value.toString();
     }
-    if (typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG) {
+    if (isEncodedReferenceObject(value)) {
       if (value.protocol === 'protobuf') {
         // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
         return decodeReference(value);
@@ -641,6 +642,16 @@ const decodeReference = (value: any) =>
   new Reference(value.itemId, value.protocol ?? undefined, value.host ?? undefined);
 
 export const REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
+
+type EncodedReferenceObject = {
+  '@type': typeof REFERENCE_TYPE_TAG;
+  itemId: string | null;
+  protocol: string | null;
+  host: string | null;
+};
+
+const isEncodedReferenceObject = (value: any): value is EncodedReferenceObject =>
+  typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG;
 
 export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<DocStructure>) => {
   if (event.patches.some((patch) => patch.path[0] === 'objects' && patch.path[1] === objId)) {
