@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
-export const ChessMain = ({ game }: { game: Game }) => {
+const ChessMain = ({ game }: { game: Game }) => {
   const [model, setModel] = useState<ChessModel>();
   useEffect(() => {
     if (!model || game.pgn !== model?.chess.pgn()) {
@@ -46,3 +46,5 @@ export const ChessMain = ({ game }: { game: Game }) => {
     </Main.Content>
   );
 };
+
+export default ChessMain;

@@ -13,7 +13,7 @@ import { PromptTemplate, Section } from './PromptTemplate';
 import { CHAIN_PLUGIN } from '../meta';
 import { type Preset, presets } from '../presets';
 
-export const ChainMain: FC<{ chain: ChainType }> = ({ chain }) => {
+const ChainMain: FC<{ chain: ChainType }> = ({ chain }) => {
   const space = getSpaceForObject(chain);
   if (!space) {
     return null;
@@ -68,3 +68,5 @@ const Presets: FC<{ presets: Preset[]; onSelect: (preset: Preset) => void }> = (
     </DensityProvider>
   );
 };
+
+export default ChainMain;

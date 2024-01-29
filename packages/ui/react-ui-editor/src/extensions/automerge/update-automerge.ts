@@ -4,9 +4,9 @@
 // Ref: https://github.com/automerge/automerge-codemirror
 //
 
-import { type EditorState, type StateField, type Transaction } from '@codemirror/state';
+import { type EditorState, type StateField, type Transaction, type Text } from '@codemirror/state';
 
-import { next as automerge, type Heads } from '@dxos/automerge/automerge';
+import { next as A, type Heads } from '@dxos/automerge/automerge';
 
 import { type IDocHandle, type State } from './defs';
 
@@ -14,7 +14,7 @@ export const updateAutomerge = (
   field: StateField<State>,
   handle: IDocHandle,
   transactions: Transaction[],
-  state: EditorState, // TODO(burdon): Just pass in the state field value.
+  state: EditorState, // TODO(burdon): Just pass in the state field value?
 ): Heads | undefined => {
   const { lastHeads, path } = state.field(field);
 
@@ -31,17 +31,17 @@ export const updateAutomerge = (
     return undefined;
   }
 
-  const newHeads = handle.changeAt(lastHeads, (doc: automerge.Doc<unknown>) => {
-    const t: any[] = [];
+  const newHeads = handle.changeAt(lastHeads, (doc: A.Doc<unknown>) => {
+    const invertedTransactions: { from: number; del: number; insert: Text }[] = [];
     for (const tr of transactions) {
       tr.changes.iterChanges((fromA, toA, _fromB, _toB, insert) => {
-        t.push({ fromA, toA, insert });
+        invertedTransactions.push({ from: fromA, del: toA - fromA, insert });
       });
     }
 
-    // Apply in reverse order to properly apply range.
-    t.reverse().forEach(({ fromA, toA, insert }) => {
-      automerge.splice(doc, path.slice(), fromA, toA - fromA, insert.toString());
+    // TODO(burdon): Hack to apply in reverse order to properly apply range.
+    invertedTransactions.reverse().forEach(({ from, del, insert }) => {
+      A.splice(doc, path.slice(), from, del, insert.toString());
     });
   });
 

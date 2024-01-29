@@ -10,11 +10,10 @@ import { type AutomergeTextCompat, getRawDoc } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { isAutomergeObject, type Space, type TextObject } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
-import { isNotNullOrUndefined } from '@dxos/util';
 
 import { SpaceAwarenessProvider } from './awareness-provider';
 import { type EditorModel, modelState } from './defs';
-import { automerge, awareness, AwarenessProvider } from '../extensions';
+import { automerge, awareness } from '../extensions';
 import { cursorColor } from '../styles';
 
 // TODO(burdon): Remove space/identity dependency. Define interface for the framework re content and presence.
@@ -49,16 +48,20 @@ const createModel = ({ space, identity, text }: UseTextModelProps) => {
       peerId: identity?.identityKey.toHex() ?? 'Anonymous',
     });
 
+  const extensions = [
+    //
+    modelState.init(() => model),
+    automerge({ handle: doc.handle, path: doc.path }),
+  ];
+  if (awarenessProvider) {
+    extensions.push(awareness(awarenessProvider));
+  }
+
   const model: EditorModel = {
     id: obj.id,
     content: doc,
     text: () => get(doc.handle.docSync(), doc.path),
-    extension: [
-      modelState.init(() => model),
-      automerge({ handle: doc.handle, path: doc.path }),
-      awarenessProvider && AwarenessProvider.of(awarenessProvider),
-      awareness(),
-    ].filter(isNotNullOrUndefined),
+    extension: extensions,
     peer: identity
       ? {
           id: identity.identityKey.toHex(),

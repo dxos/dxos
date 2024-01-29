@@ -11,7 +11,7 @@ import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxo
 
 import { ChatContainer } from './Chat';
 
-export const ThreadMain: FC<{ thread: ThreadType }> = ({ thread }) => {
+const ThreadMain: FC<{ thread: ThreadType }> = ({ thread }) => {
   const space = getSpaceForObject(thread);
   if (!space) {
     return null;
@@ -24,3 +24,5 @@ export const ThreadMain: FC<{ thread: ThreadType }> = ({ thread }) => {
     </Main.Content>
   );
 };
+
+export default ThreadMain;

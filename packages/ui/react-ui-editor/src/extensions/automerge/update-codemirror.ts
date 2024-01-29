@@ -16,7 +16,7 @@ import {
   type SpliceTextPatch,
 } from '@dxos/automerge/automerge';
 
-import { reconcileAnnotationType } from './defs';
+import { reconcileAnnotation } from './defs';
 
 export const updateCodeMirror = (view: EditorView, selection: EditorSelection, target: Prop[], patches: Patch[]) => {
   for (const patch of patches) {
@@ -26,14 +26,14 @@ export const updateCodeMirror = (view: EditorView, selection: EditorSelection, t
       selection = selection.map(changeSet, 1);
       view.dispatch({
         changes: changeSet,
-        annotations: reconcileAnnotationType.of({}),
+        annotations: reconcileAnnotation.of(false),
       });
     }
   }
 
   view.dispatch({
     selection,
-    annotations: reconcileAnnotationType.of({}),
+    annotations: reconcileAnnotation.of(false),
   });
 };
 
@@ -57,7 +57,7 @@ const handleInsert = (target: Prop[], patch: InsertPatch): Array<ChangeSpec> => 
     return [];
   }
 
-  const text = patch.values.map((v) => (v ? v.toString() : '')).join('');
+  const text = patch.values.map((value) => (value ? value.toString() : '')).join('');
   return [{ from: index, to: index, insert: text }];
 };
 
@@ -88,7 +88,7 @@ const handlePut = (target: Prop[], patch: PutPatch, state: EditorState): Array<C
 
   const length = state.doc.length;
   if (typeof patch.value !== 'string') {
-    return []; // TODO(dmaretskyi): How to handle non string values?
+    return []; // TODO(dmaretskyi): How to handle non-string values?
   }
 
   return [{ from: 0, to: length, insert: patch.value as any }];

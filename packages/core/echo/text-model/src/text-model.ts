@@ -208,6 +208,7 @@ export class TextModel extends Model<TextModelState, TextMutation> {
     return childLength;
   };
 
+  // TODO(burdon): Async return type?
   insert(text: string, index: number) {
     const content = this.content;
     if (content instanceof Text) {

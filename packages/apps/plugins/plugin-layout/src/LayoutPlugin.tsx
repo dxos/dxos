@@ -30,7 +30,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { LayoutContext, type LayoutState, useLayout } from './LayoutContext';
-import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings } from './components';
+import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings, ContentFallback } from './components';
 import { activeToUri, uriToActive } from './helpers';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
@@ -223,6 +223,12 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
           }
 
           switch (role) {
+            case 'main':
+              return {
+                node: <ContentFallback />,
+                disposition: 'fallback',
+              };
+
             case 'settings':
               return data.plugin === meta.id ? <LayoutSettings settings={state.values} /> : null;
           }
@@ -288,7 +294,6 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
 
             case LayoutAction.ACTIVATE: {
               const id = intent.data?.id ?? intent.data?.result?.id;
-              console.log(intent.data, id);
               const path = id && graphPlugin?.provides.graph.getPath(id);
               if (path) {
                 Keyboard.singleton.setCurrentContext(path.join('/'));

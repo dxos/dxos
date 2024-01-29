@@ -10,7 +10,7 @@ import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 
-import { DebugSpace } from './DebugSpace';
+import DebugSpace from './DebugSpace';
 
 const Story: FC = () => {
   const [space] = useSpaces();
