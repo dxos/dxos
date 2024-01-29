@@ -2,10 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type InfoOptions } from './api';
+
 export const symbolTracingContext = Symbol('dxos.tracing.context');
 
 export type TracingContext = {
-  infoProperties: Record<string, {}>;
+  infoProperties: Record<
+    string,
+    {
+      options: InfoOptions;
+    }
+  >;
   metricsProperties: Record<string, {}>;
 };
 

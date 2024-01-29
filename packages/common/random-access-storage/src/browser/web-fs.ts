@@ -163,7 +163,7 @@ export class WebFS implements Storage {
 }
 
 // TODO(mykola): Remove EventEmitter.
-@trace.resource()
+// @trace.resource()
 export class WebFile extends EventEmitter implements File {
   @trace.info()
   private readonly _fileName: string;
