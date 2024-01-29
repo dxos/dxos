@@ -9,9 +9,9 @@ import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createBundledRpcServer, type RpcPeer, type RpcPort } from '@dxos/rpc';
+import { TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';
 
 import { type Client } from '../client';
-import { TRACE_PROCESSOR, TraceProcessor } from '@dxos/tracing';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;

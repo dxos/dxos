@@ -28,9 +28,9 @@ import {
   Invitation,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential, type Presentation, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { trace } from '@dxos/tracing';
 
 import { InvitationsProxy } from '../invitations';
-import { trace } from '@dxos/tracing';
 
 @trace.resource()
 export class HaloProxy implements Halo {

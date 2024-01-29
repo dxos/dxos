@@ -32,11 +32,11 @@ import { ApiError, trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { trace } from '@dxos/tracing';
 
 import { AgentQuerySourceProvider } from './agent-query-source-provider';
 import { SpaceProxy } from './space-proxy';
 import { InvitationsProxy } from '../invitations';
-import { trace } from '@dxos/tracing';
 
 @trace.resource()
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {

@@ -32,9 +32,9 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { trace } from '@dxos/tracing';
 
 import { InvitationsProxy } from '../invitations';
-import { trace } from '@dxos/tracing';
 
 // TODO(burdon): This should not be used as part of the API (don't export).
 @trace.resource()
@@ -67,6 +67,7 @@ export class SpaceProxy implements Space {
   // TODO(burdon): Change to state property.
   @trace.info()
   private _initializing = false;
+
   /**
    * @internal
    */

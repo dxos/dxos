@@ -20,18 +20,18 @@ import {
   type Space as SpaceProto,
   type Platform,
   SpaceMember,
-  LogEntry,
+  type LogEntry,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Resource, type Span } from '@dxos/protocols/proto/dxos/tracing';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { getPlatform } from './platform';
 import { type ServiceContext } from './service-context';
 import { DXOS_VERSION } from '../../version';
 import { type DataSpace } from '../spaces';
-import { Resource, Span } from '@dxos/protocols/src/proto/gen/dxos/tracing';
-import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 const DEFAULT_TIMEOUT = 1_000;
 

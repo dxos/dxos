@@ -30,6 +30,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
+import { trace, TRACE_PROCESSOR } from '@dxos/tracing';
 import { type JsonKeyOptions, jsonKeyReplacer, type MaybePromise } from '@dxos/util';
 
 import { ClientRuntime } from './client-runtime';
@@ -38,7 +39,6 @@ import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
-import { trace, TRACE_PROCESSOR } from '@dxos/tracing';
 
 /**
  * This options object configures the DXOS Client.
@@ -85,8 +85,10 @@ export class Client {
 
   @trace.info()
   private _initialized = false;
+
   @trace.info()
   private _resetting = false;
+
   private _statusStream?: Stream<QueryStatusResponse>;
   private _statusTimeout?: NodeJS.Timeout;
   private _status = MulticastObservable.from(this._statusUpdate, null);
