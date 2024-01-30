@@ -151,16 +151,23 @@ export const setTextContent = (object: TextObject, text: string) => {
 /**
  * @deprecated
  */
-export const getTextContent = (object: TextObject): string => {
+export const getTextContent: {
+  (object: TextObject | undefined): string | undefined;
+  (object: TextObject | undefined, defaultValue: string): string;
+} = (object: TextObject | undefined, defaultValue?: string) => {
+  if (!object) {
+    return defaultValue;
+  }
+
   if (isAutomergeObject(object)) {
-    return (object as any).content;
+    return (object as any)?.content ?? defaultValue;
   } else {
-    return object.text;
+    return object?.text ?? defaultValue;
   }
 };
 
 /**
- * TODO: This API is gonna change.
+ * TODO(dima?): This API will change.
  */
 export const toCursor = (object: TextObject, pos: number) => {
   const accessor = getRawDoc(object, ['content']);
@@ -179,7 +186,7 @@ export const toCursor = (object: TextObject, pos: number) => {
 };
 
 /**
- * TODO: This API is gonna change.
+ * TODO(dima?): This API will change.
  */
 export const fromCursor = (object: TextObject, cursor: string) => {
   if (cursor === '') {
@@ -206,7 +213,7 @@ export const fromCursor = (object: TextObject, cursor: string) => {
 };
 
 /**
- * TODO: This API is gonna change.
+ * TODO(dima?): This API will change.
  */
 export const getTextInRange = (object: TextObject, begin: string, end: string) => {
   const beginIdx = fromCursor(object, begin);

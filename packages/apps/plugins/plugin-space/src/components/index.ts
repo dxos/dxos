@@ -3,7 +3,6 @@
 //
 
 export * from './AwaitingObject';
-export * from './DialogRestoreSpace';
 export * from './EmptySpace';
 export * from './EmptyTree';
 export * from './FolderMain';

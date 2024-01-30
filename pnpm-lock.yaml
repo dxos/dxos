@@ -2211,6 +2211,9 @@ importers:
 
   packages/apps/plugins/plugin-presenter:
     dependencies:
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
       deepsignal:
         specifier: 1.4.0-shallow.0
         version: 1.4.0-shallow.0(react@18.2.0)
@@ -4826,6 +4829,9 @@ importers:
       '@dxos/text-model':
         specifier: workspace:*
         version: link:../text-model
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../../../common/tracing
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -7396,6 +7402,9 @@ importers:
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../common/timeframe
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../../common/tracing
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

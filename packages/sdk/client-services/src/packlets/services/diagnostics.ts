@@ -20,10 +20,13 @@ import {
   type Space as SpaceProto,
   type Platform,
   SpaceMember,
+  type LogEntry,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Resource, type Span } from '@dxos/protocols/proto/dxos/tracing';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { getPlatform } from './platform';
 import { type ServiceContext } from './service-context';
@@ -33,23 +36,36 @@ import { type DataSpace } from '../spaces';
 const DEFAULT_TIMEOUT = 1_000;
 
 export type Diagnostics = {
-  created: string;
-  platform: Platform;
-  config?: ConfigProto;
   client: {
-    version: string;
-    storage: {
-      version: number;
-    };
+    config: ConfigProto;
+    trace: TraceDiagnostic;
   };
-  identity?: Identity;
-  devices?: Device[];
-  spaces?: SpaceStats[];
-  networkStatus?: NetworkStatus;
-  swarms?: SwarmInfo[];
-  feeds?: Partial<SubscribeToFeedsResponse.Feed>[];
-  metrics?: Metrics;
-  storage?: { file: string; count: number }[];
+  services: {
+    trace: TraceDiagnostic;
+    created: string;
+    platform: Platform;
+    config?: ConfigProto;
+    client: {
+      version: string;
+      storage: {
+        version: number;
+      };
+    };
+    identity?: Identity;
+    devices?: Device[];
+    spaces?: SpaceStats[];
+    networkStatus?: NetworkStatus;
+    swarms?: SwarmInfo[];
+    feeds?: Partial<SubscribeToFeedsResponse.Feed>[];
+    metrics?: Metrics;
+    storage?: { file: string; count: number }[];
+  };
+};
+
+export type TraceDiagnostic = {
+  resources: Record<string, Resource>;
+  spans: Span[];
+  logs: LogEntry[];
 };
 
 // TODO(burdon): Normalize for ECHO/HALO.
@@ -76,8 +92,8 @@ export const createDiagnostics = async (
   clientServices: Partial<ClientServices>,
   serviceContext: ServiceContext,
   config: Config,
-): Promise<Diagnostics> => {
-  const diagnostics: Diagnostics = {
+): Promise<Diagnostics['services']> => {
+  const diagnostics: Diagnostics['services'] = {
     created: new Date().toISOString(),
     platform: getPlatform(),
     client: {
@@ -86,6 +102,7 @@ export const createDiagnostics = async (
         version: STORAGE_VERSION,
       },
     },
+    trace: TRACE_PROCESSOR.getDiagnostics(),
   };
 
   // Trace metrics.
