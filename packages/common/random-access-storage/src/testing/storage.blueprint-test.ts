@@ -6,25 +6,13 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import { describe, test } from 'vitest';
 
-import { asyncTimeout, sleep } from '@dxos/async';
+import { asyncTimeout } from '@dxos/async';
 
-import { type File, type Storage, StorageType } from '../common';
+import { StorageType, type File, type Storage } from '../common';
 
 chai.use(chaiAsPromised);
 
 export const randomText = () => Math.random().toString(36).substring(2);
-
-const waitForDebugger = async () => {
-  while (true) {
-    const before = performance.now();
-    debugger;
-    const after = performance.now();
-    if (after - before > 100) {
-      break;
-    }
-    await sleep(100);
-  }
-};
 
 export const storageTests = (testGroupName: StorageType, createStorage: () => Storage) => {
   const writeAndCheck = async (file: File, data: Buffer, offset = 0) => {
