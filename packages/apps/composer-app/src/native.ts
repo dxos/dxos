@@ -3,6 +3,7 @@
 //
 
 import { log } from '@dxos/log';
+import { safeParseJson } from '@dxos/util';
 
 // TODO(burdon): Reconcile with other properties.
 const KEY_WINDOW_SIZE = 'dxos.org/composer/settings/window/size';
@@ -83,14 +84,4 @@ export const initializeNativeApp = async () => {
 
   // TODO(burdon): Initial url has index.html, which must be caught/redirected.
   log.info('native setup complete');
-};
-
-// TODO(burdon): Move to util.
-export const safeParseJson = <T extends object>(data: string | undefined | null, defaultValue: T): T => {
-  if (data) {
-    try {
-      return JSON.parse(data);
-    } catch (err) {}
-  }
-  return defaultValue;
 };

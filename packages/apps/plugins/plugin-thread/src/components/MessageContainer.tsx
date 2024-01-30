@@ -15,19 +15,12 @@ import { TextEditor, useTextModel } from '@dxos/react-ui-editor';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import { Message, type MessageBlockProps, type MessageProps } from '@dxos/react-ui-thread';
+import { safeParseJson } from '@dxos/util';
 
 import { useMessageMetadata } from '../hooks';
 import { THREAD_ITEM } from '../meta';
 
 type Block = MessageType.Block;
-
-const safeParseJson = (data: string) => {
-  try {
-    return JSON.parse(data);
-  } catch (err) {
-    return data;
-  }
-};
 
 const messageControlClassNames = ['p-1 min-bs-0 mie-1 transition-opacity', hoverableControlItem];
 

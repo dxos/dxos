@@ -15,6 +15,7 @@ import {
   hoverableFocusedWithinControls,
   mx,
 } from '@dxos/react-ui-theme';
+import { safeParseJson } from '@dxos/util';
 
 import { command } from './command-extension';
 import { translationKey } from '../translations';
@@ -23,14 +24,6 @@ import { type MessageEntity, type MessageEntityBlock, type MessageMetadata } fro
 const avatarSize = 7;
 
 const messageCell = 'plb-1 min-is-0';
-
-const safeParseJson = (data: string) => {
-  try {
-    return JSON.parse(data);
-  } catch (err) {
-    return data;
-  }
-};
 
 export type MessageMetaProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
   MessageMetadata &
