@@ -14,7 +14,7 @@ let globalAutomergePreference: boolean | undefined;
 /**
  * @deprecated Temporary.
  */
-export const setGlobalAutomergePreference = (useAutomerge: boolean) => {
+export const setGlobalAutomergePreference = (useAutomerge?: boolean) => {
   globalAutomergePreference = useAutomerge;
 };
 

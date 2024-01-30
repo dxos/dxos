@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { Document as DocumentType, Folder } from '@braneframe/types';
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import { TextObject, setGlobalAutomergePreference, getTextContent } from '@dxos/echo-schema';
+import { TextObject, getTextContent } from '@dxos/echo-schema';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { FileSerializer, type SerializedSpace } from './file-serializer';
@@ -22,8 +22,6 @@ const createSpace = async (client: Client, name: string | undefined = undefined)
 
 describe('FileSerializer', () => {
   test('Serialize/deserialize space', async () => {
-    setGlobalAutomergePreference(true);
-    afterTest(() => setGlobalAutomergePreference(false));
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
 
