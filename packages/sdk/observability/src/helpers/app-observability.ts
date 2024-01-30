@@ -17,7 +17,7 @@ export const BASE_TELEMETRY_PROPERTIES: any = {};
 export const OBSERVABILITY_DISABLED_KEY = 'telemetry-disabled';
 export const OBSERVABILITY_GROUP_KEY = 'telemetry-group';
 
-if (navigator.storage?.estimate) {
+if (typeof navigator !== 'undefined' && navigator.storage?.estimate) {
   setInterval(async () => {
     try {
       const storageEstimate = await navigator.storage.estimate();
