@@ -9,3 +9,4 @@ const notAvailable = () => {
 export const appendFileSync = () => notAvailable();
 export const mkdirSync = () => notAvailable();
 export const openSync = () => notAvailable();
+export const existsSync = () => notAvailable();
