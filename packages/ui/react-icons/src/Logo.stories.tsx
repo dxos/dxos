@@ -11,7 +11,7 @@ import { Button } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Composer } from './icons';
+import { Composer, DXOS } from './icons';
 // https://pixabay.com/sound-effects/search/logo/?pagi=2
 // @ts-ignore
 import ident from '../assets/sounds/ident-1.mp3';
@@ -64,14 +64,17 @@ export const Default = {
         <div className='absolute'>
           <Composer className={mx(spin && 'animate-spin-logo-3', 'w-[112px] h-[112px] [&>path]:fill-teal-500')} />
         </div>
+
         <div
-          className={mx(
-            'mt-[400px] text-[100px] text-teal-500 font-[k2d] italic',
-            'transition transition-opacity opacity-0 duration-1000',
-            logo && 'opacity-100',
-          )}
+          className={mx('mt-[400px]', 'transition transition-opacity opacity-0 duration-1000', logo && 'opacity-100')}
         >
-          composer
+          <div className={mx('text-[100px] text-teal-400 font-[k2d] italic')}>composer</div>
+          <div className={mx('flex items-center -mt-[20px] text-neutral-700')}>
+            <span className='ml-[210px] mt-[2px] mr-2'>Powered by DXOS</span>
+            <div>
+              <DXOS className='w-[32px] h-[32px]' />
+            </div>
+          </div>
         </div>
       </div>
     );
