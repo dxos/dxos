@@ -4,28 +4,24 @@
 
 import { expect } from 'chai';
 
-import { Document, Folder } from '@braneframe/types';
+import { Document as DocumentType, Folder } from '@braneframe/types';
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import { TextObject, setGlobalAutomergePreference } from '@dxos/echo-schema';
+import { TextObject, getTextContent } from '@dxos/echo-schema';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { FileSerializer } from './file-serializer';
+import { FileSerializer, type SerializedSpace } from './file-serializer';
 
 const createSpace = async (client: Client, name: string | undefined = undefined) => {
   const space = await client.spaces.create(name ? { name } : undefined);
   await space.waitUntilReady();
-  const folder = new Folder();
-  space.properties[Folder.schema.typename] = folder;
+  space.properties[Folder.schema.typename] = new Folder();
   await space.db.flush();
-
   return space;
 };
 
 describe('FileSerializer', () => {
   test('Serialize/deserialize space', async () => {
-    setGlobalAutomergePreference(true);
-    afterTest(() => setGlobalAutomergePreference(false));
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
 
@@ -34,17 +30,25 @@ describe('FileSerializer', () => {
     afterTest(() => client.destroy());
     await client.halo.createIdentity();
 
-    const space = await createSpace(client, 'test');
-    const text = 'Hello world!';
-    space.properties[Folder.schema.typename].objects.push(new Document({ content: new TextObject(text) }));
-
     const serializer = new FileSerializer();
-    const serialized = await serializer.serializeSpace(space);
 
-    const newSpace = await createSpace(client, 'deserialized space');
-    const deserialized = await serializer.deserializeSpace(newSpace, serialized);
-    const deserializedDocument = deserialized.properties[Folder.schema.typename].objects[0];
-    expect(deserializedDocument instanceof Document).to.be.true;
-    expect(deserializedDocument.content.content).to.equal(text);
+    const text = 'Hello world!';
+    let serialized: SerializedSpace;
+    {
+      const space1 = await createSpace(client, 'test-1');
+      space1.properties[Folder.schema.typename].objects.push(new DocumentType({ content: new TextObject(text) }));
+      serialized = await serializer.serializeSpace(space1);
+    }
+
+    {
+      const space2 = await createSpace(client, 'test-2');
+      const space3 = await serializer.deserializeSpace(space2, serialized);
+
+      const object = space3.properties[Folder.schema.typename].objects[0];
+      expect(object instanceof DocumentType).to.be.true;
+
+      const content = getTextContent(object.content);
+      expect(content).to.equal(text);
+    }
   });
 });

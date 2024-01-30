@@ -4,7 +4,7 @@
 
 import { type Document } from '@braneframe/types';
 import { type Plugin } from '@dxos/app-framework';
-import { isTypedObject } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
+import { getTextContent, isTypedObject } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
 import { type EditorModel, YText } from '@dxos/react-ui-editor';
 
 import { type MarkdownProperties, type MarkdownProvides } from './types';
@@ -40,8 +40,8 @@ export const isMarkdownProperties = (data: unknown): data is MarkdownProperties 
   isTypedObject(data)
     ? true
     : data && typeof data === 'object'
-    ? 'title' in data && typeof data.title === 'string'
-    : false;
+      ? 'title' in data && typeof data.title === 'string'
+      : false;
 
 type MarkdownPlugin = Plugin<MarkdownProvides>;
 
@@ -52,5 +52,6 @@ export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
 const nonTitleChars = /[^\w ]/g;
 
 export const getFallbackTitle = (document: Document) => {
-  return document.content.content?.toString().substring(0, 63).split('\n')[0].replaceAll(nonTitleChars, '').trim();
+  const content = getTextContent(document.content);
+  return content?.substring(0, 63).split('\n')[0].replaceAll(nonTitleChars, '').trim();
 };

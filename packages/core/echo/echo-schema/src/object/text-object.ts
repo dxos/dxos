@@ -7,11 +7,12 @@ import get from 'lodash.get';
 import { next as A } from '@dxos/automerge/automerge';
 import { Reference } from '@dxos/document-model';
 import { log } from '@dxos/log';
-import { type TextKind, type TextMutation } from '@dxos/protocols/proto/dxos/echo/model/text';
+import { TextKind, type TextMutation } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { TextModel, type Doc, type YText, type YXmlFragment } from '@dxos/text-model';
 
 import { AbstractEchoObject } from './object';
 import { isAutomergeObject, type AutomergeOptions, type TypedObject } from './typed-object';
+import { base } from './types';
 import { AutomergeObject, getRawDoc } from '../automerge';
 import { getGlobalAutomergePreference } from '../automerge-preference';
 
@@ -26,8 +27,12 @@ export type AutomergeTextCompat = TypedObject<{
 }>;
 
 export class TextObject extends AbstractEchoObject<TextModel> {
+  static [Symbol.hasInstance](instance: any) {
+    return !!instance?.[base] && (isActualTextObject(instance) || isAutomergeText(instance));
+  }
+
   // TODO(mykola): Add immutable option.
-  constructor(text?: string, kind?: TextKind, field?: string, opts?: TextObjectOptions) {
+  constructor(text?: string, kind = TextKind.PLAIN, field?: string, opts?: TextObjectOptions) {
     super(TextModel);
 
     if (opts?.automerge ?? getGlobalAutomergePreference()) {
@@ -151,16 +156,23 @@ export const setTextContent = (object: TextObject, text: string) => {
 /**
  * @deprecated
  */
-export const getTextContent = (object: TextObject): string => {
+export const getTextContent: {
+  (object: TextObject | undefined): string | undefined;
+  (object: TextObject | undefined, defaultValue: string): string;
+} = (object: TextObject | undefined, defaultValue?: string) => {
+  if (!object) {
+    return defaultValue;
+  }
+
   if (isAutomergeObject(object)) {
-    return (object as any).content;
+    return (object as any)?.content ?? defaultValue;
   } else {
-    return object.text;
+    return object?.text ?? defaultValue;
   }
 };
 
 /**
- * TODO: This API is gonna change.
+ * TODO(dima?): This API will change.
  */
 export const toCursor = (object: TextObject, pos: number) => {
   const accessor = getRawDoc(object, ['content']);
@@ -179,7 +191,7 @@ export const toCursor = (object: TextObject, pos: number) => {
 };
 
 /**
- * TODO: This API is gonna change.
+ * TODO(dima?): This API will change.
  */
 export const fromCursor = (object: TextObject, cursor: string) => {
   if (cursor === '') {
@@ -206,10 +218,29 @@ export const fromCursor = (object: TextObject, cursor: string) => {
 };
 
 /**
- * TODO: This API is gonna change.
+ * TODO(dima?): This API will change.
  */
 export const getTextInRange = (object: TextObject, begin: string, end: string) => {
   const beginIdx = fromCursor(object, begin);
   const endIdx = fromCursor(object, end);
   return (object.content as any as string).slice(beginIdx, endIdx);
+};
+
+/**
+ * @deprecated Temporary.
+ */
+export const isActualTextObject = (object: unknown): object is TextObject => {
+  return Object.getPrototypeOf(object) === TextObject.prototype;
+};
+
+/**
+ * @deprecated Temporary.
+ */
+export const isAutomergeText = (object: unknown | undefined | null): object is AutomergeObject => {
+  return (
+    !!(object as any)?.[base] &&
+    Object.getPrototypeOf((object as any)[base]) === AutomergeObject.prototype &&
+    !!(object as any).field &&
+    typeof (object as any)?.[(object as any).field] === 'string'
+  );
 };

@@ -5,18 +5,17 @@
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/sdk/migrations/src/index.ts"
-        ]
+        "entryPoints": ["packages/sdk/migrations/src/index.ts"]
       }
     },
     "lint": {},
-    "test": {}
+    "test": {
+      "options": {
+        "forceExit": true
+      }
+    }
   },
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ],
+  "implicitDependencies": ["esbuild", "test"],
   "name": "migrations"
 }

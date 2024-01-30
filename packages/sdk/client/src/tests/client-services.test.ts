@@ -12,7 +12,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
-import { describe, test, afterTest } from '@dxos/test';
+import { afterTest, describe, test } from '@dxos/test';
 
 import { Client } from '../client';
 import { type SpaceProxy } from '../echo';

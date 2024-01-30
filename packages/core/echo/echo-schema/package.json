@@ -55,6 +55,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/text-model": "workspace:*",
+    "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2"

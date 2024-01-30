@@ -51,10 +51,10 @@ export const getSpaceDisplayName = (space: Space): string | [string, { ns: strin
   return (space.properties.name?.length ?? 0) > 0
     ? space.properties.name
     : space.state.get() === SpaceState.CLOSED || space.state.get() === SpaceState.INACTIVE
-    ? ['closed space label', { ns: SPACE_PLUGIN }]
-    : space.state.get() !== SpaceState.READY
-    ? ['loading space label', { ns: SPACE_PLUGIN }]
-    : ['unnamed space label', { ns: SPACE_PLUGIN }];
+      ? ['closed space label', { ns: SPACE_PLUGIN }]
+      : space.state.get() !== SpaceState.READY
+        ? ['loading space label', { ns: SPACE_PLUGIN }]
+        : ['unnamed space label', { ns: SPACE_PLUGIN }];
 };
 
 const getFolderGraphNodePartials = ({
@@ -231,14 +231,14 @@ export const spaceToGraphNode = ({
           label: ['save space to disk label', { ns: SPACE_PLUGIN }],
           icon: (props) => <FloppyDisk {...props} />,
           keyBinding: 'meta+s',
-          invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SAVE_TO_DISK, data: { space } }),
+          invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SAVE, data: { space } }),
         },
         {
           id: 'load-space-from-disk',
           label: ['load space from disk label', { ns: SPACE_PLUGIN }],
           icon: (props) => <FolderOpen {...props} />,
           keyBinding: 'meta+shift+l',
-          invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.LOAD_FROM_DISK, data: { space } }),
+          invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.LOAD, data: { space } }),
         },
       );
     } else if (space.state.get() === SpaceState.INACTIVE) {
