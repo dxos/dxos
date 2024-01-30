@@ -18,12 +18,15 @@ import {
   autocomplete,
   code,
   comments,
+  heading,
+  hr,
   image,
   link,
   listener,
   table,
   tasklist,
   typewriter,
+  formatting,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -49,6 +52,9 @@ export const getExtensions = ({ settings, document, dispatch, onChange }: Extens
     // Common.
     //
     code(),
+    formatting(),
+    heading(),
+    hr(),
     image(),
     table(),
     tasklist(),
@@ -132,15 +138,16 @@ export const getExtensions = ({ settings, document, dispatch, onChange }: Extens
           onSelect: (state) => {
             const {
               comments,
-              selection: { active, closest },
+              selection: { current, closest },
             } = state;
+
             void dispatch([
               {
                 action: ThreadAction.SELECT,
                 data: {
-                  active: active ?? closest,
+                  active: current ?? closest,
                   threads: comments?.map(({ comment: { id }, location }) => ({ id, y: location?.top })) ?? [
-                    { id: active },
+                    { id: current },
                   ],
                 },
               },

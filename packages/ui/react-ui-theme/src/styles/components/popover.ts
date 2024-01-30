@@ -5,7 +5,7 @@
 import { type ComponentFunction, type Theme } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
-import { focusRing, surfaceElevation, groupArrow, chromeSurface } from '../fragments';
+import { focusRing, surfaceElevation, groupArrow, modalSurface } from '../fragments';
 
 export type PopoverStyleProps = Partial<{
   constrainInline?: boolean;
@@ -21,7 +21,7 @@ export const popoverViewport: ComponentFunction<PopoverStyleProps> = ({ constrai
   );
 
 export const popoverContent: ComponentFunction<PopoverStyleProps> = (_props, ...etc) =>
-  mx('z-[30] rounded-lg', chromeSurface, surfaceElevation({ elevation: 'group' }), focusRing, ...etc);
+  mx('z-[30] rounded-lg', modalSurface, surfaceElevation({ elevation: 'group' }), focusRing, ...etc);
 
 export const popoverArrow: ComponentFunction<PopoverStyleProps> = (_props, ...etc) => mx(groupArrow, ...etc);
 

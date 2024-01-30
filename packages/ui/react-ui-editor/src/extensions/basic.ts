@@ -10,28 +10,30 @@ import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import { drawSelection, EditorView, highlightActiveLine, placeholder } from '@codemirror/view';
 
 import { type ThemeMode } from '@dxos/react-ui';
+import { isNotFalsy } from '@dxos/util';
 
 import { type TextEditorProps } from '../components';
 
 export type BasicBundleOptions = {
   themeMode?: ThemeMode;
-} & Pick<TextEditorProps, 'placeholder' | 'multiline'>;
+} & Pick<TextEditorProps, 'placeholder' | 'lineWrapping'>;
 
-export const basicBundle = ({
+export const createBasicBundle = ({
   themeMode,
   placeholder: _placeholder,
-  multiline = true,
-}: BasicBundleOptions): Extension[] => [
-  multiline ? EditorView.lineWrapping : [],
+  lineWrapping = true,
+}: BasicBundleOptions = {}): Extension[] =>
+  [
+    lineWrapping && EditorView.lineWrapping,
 
-  // https://codemirror.net/docs/ref/#codemirror.minimalSetup
-  bracketMatching(),
-  closeBrackets(),
-  drawSelection(),
-  highlightActiveLine(),
-  history(),
-  _placeholder ? placeholder(_placeholder) : [],
+    // https://codemirror.net/docs/ref/#codemirror.minimalSetup
+    bracketMatching(),
+    closeBrackets(),
+    drawSelection(),
+    highlightActiveLine(),
+    history(),
+    _placeholder && placeholder(_placeholder),
 
-  // https://github.com/codemirror/theme-one-dark
-  themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
-];
+    // https://github.com/codemirror/theme-one-dark
+    themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
+  ].filter(isNotFalsy);

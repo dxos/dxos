@@ -15,10 +15,6 @@ import meta, { CHAIN_PLUGIN } from './meta';
 import translations from './translations';
 import { ChainAction, type ChainPluginProvides, isObject } from './types';
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[ChainType.name] = ChainType;
-
 export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
   return {
     meta,
@@ -91,7 +87,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
           switch (intent.action) {
             case ChainAction.CREATE: {
               return {
-                object: new ChainType(),
+                data: new ChainType(),
               };
             }
           }

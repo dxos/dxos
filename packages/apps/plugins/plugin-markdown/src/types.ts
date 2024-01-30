@@ -19,7 +19,7 @@ const MARKDOWN_ACTION = `${MARKDOWN_PLUGIN}/action`;
 
 export enum MarkdownAction {
   CREATE = `${MARKDOWN_ACTION}/create`,
-  TOGGLE_VIEW = `${MARKDOWN_ACTION}/toggle-view`,
+  TOGGLE_READONLY = `${MARKDOWN_ACTION}/toggle-readonly`,
 }
 
 // TODO(burdon): Remove?
@@ -43,10 +43,6 @@ export type MarkdownProvides = {
   };
 };
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[DocumentType.name] = DocumentType;
-
 // TODO(wittjosiah): Factor out to graph plugin?
 type StackProvides = {
   stack: {
@@ -54,11 +50,17 @@ type StackProvides = {
   };
 };
 
+// TODO(burdon): Extend view mode per document to include scroll position, etc.
+type EditorState = {
+  readonly?: boolean;
+};
+
 export type MarkdownSettingsProps = {
-  viewMode: { [key: string]: boolean };
+  state: { [key: string]: EditorState };
   editorMode?: EditorMode;
   experimental?: boolean;
   debug?: boolean;
+  toolbar?: boolean;
   typewriter?: string;
 };
 

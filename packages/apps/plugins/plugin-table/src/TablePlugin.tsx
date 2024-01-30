@@ -15,10 +15,6 @@ import meta, { TABLE_PLUGIN } from './meta';
 import translations from './translations';
 import { TableAction, type TablePluginProvides, isTable } from './types';
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[TableType.name] = TableType;
-
 export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
   return {
     meta,
@@ -82,7 +78,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case TableAction.CREATE: {
-              return { object: new TableType() };
+              return { data: new TableType() };
             }
           }
         },

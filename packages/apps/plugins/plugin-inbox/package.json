@@ -27,7 +27,7 @@
     "@dxos/display-name": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
-    "date-fns": "^2.29.3",
+    "date-fns": "^3.3.1",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
@@ -45,7 +45,7 @@
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "vite": "^5.0.11"
+    "vite": "^5.0.12"
   },
   "peerDependencies": {
     "@braneframe/plugin-space": "workspace:*",

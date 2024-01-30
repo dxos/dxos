@@ -16,10 +16,6 @@ import meta, { CHESS_PLUGIN } from './meta';
 import translations from './translations';
 import { ChessAction, type ChessPluginProvides, isObject } from './types';
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[Game.name] = Game;
-
 export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
   return {
     meta,
@@ -79,7 +75,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ChessAction.CREATE: {
-              return { object: new Game() };
+              return { data: new Game() };
             }
           }
         },

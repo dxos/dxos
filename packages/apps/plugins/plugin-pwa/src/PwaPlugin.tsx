@@ -7,7 +7,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { type PluginDefinition } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { captureException } from '@dxos/sentry';
+import { captureException } from '@dxos/observability/sentry';
 
 import { ServiceWorkerToast } from './components';
 import meta from './meta';

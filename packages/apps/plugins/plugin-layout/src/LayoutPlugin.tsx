@@ -30,7 +30,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { LayoutContext, type LayoutState, useLayout } from './LayoutContext';
-import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings } from './components';
+import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings, ContentFallback } from './components';
 import { activeToUri, uriToActive } from './helpers';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
@@ -172,7 +172,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                   sidebar: {
                     data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
                   },
-                  complementary: {
+                  context: {
                     data: { component: `${LAYOUT_PLUGIN}/ContextView`, active: layout.activeNode.data },
                   },
                   main: { data: { active: layout.activeNode.data } },
@@ -223,6 +223,12 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
           }
 
           switch (role) {
+            case 'main':
+              return {
+                node: <ContentFallback />,
+                disposition: 'fallback',
+              };
+
             case 'settings':
               return data.plugin === meta.id ? <LayoutSettings settings={state.values} /> : null;
           }
@@ -235,40 +241,40 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
           switch (intent.action) {
             // TODO(wittjosiah): Remove this.
             case 'dxos.org/plugin/layout/enable-complementary-sidebar': {
-              state.values.enableComplementarySidebar = intent.data.state ?? !state.values.enableComplementarySidebar;
-              return true;
+              state.values.enableComplementarySidebar = intent.data?.state ?? !state.values.enableComplementarySidebar;
+              return { data: true };
             }
 
             case LayoutAction.TOGGLE_FULLSCREEN: {
               state.values.fullscreen =
                 (intent.data as LayoutAction.ToggleFullscreen)?.state ?? !state.values.fullscreen;
-              return true;
+              return { data: true };
             }
 
             case LayoutAction.TOGGLE_SIDEBAR: {
               state.values.sidebarOpen =
                 (intent.data as LayoutAction.ToggleSidebar)?.state ?? !state.values.sidebarOpen;
-              return true;
+              return { data: true };
             }
 
             case LayoutAction.TOGGLE_COMPLEMENTARY_SIDEBAR: {
               state.values.complementarySidebarOpen =
                 (intent.data as LayoutAction.ToggleComplementarySidebar).state ??
                 !state.values.complementarySidebarOpen;
-              return true;
+              return { data: true };
             }
 
             case LayoutAction.OPEN_DIALOG: {
               const { component, subject } = intent.data as LayoutAction.OpenDialog;
               state.values.dialogOpen = true;
               state.values.dialogContent = { component, subject };
-              return true;
+              return { data: true };
             }
 
             case LayoutAction.CLOSE_DIALOG: {
               state.values.dialogOpen = false;
               state.values.dialogContent = null;
-              return true;
+              return { data: true };
             }
 
             case LayoutAction.OPEN_POPOVER: {
@@ -276,19 +282,19 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               state.values.popoverOpen = true;
               state.values.popoverContent = { component, subject };
               state.values.popoverAnchorId = anchorId;
-              return true;
+              return { data: true };
             }
 
             case LayoutAction.CLOSE_POPOVER: {
               state.values.popoverOpen = false;
               state.values.popoverContent = null;
               state.values.popoverAnchorId = undefined;
-              return true;
+              return { data: true };
             }
 
             case LayoutAction.ACTIVATE: {
-              const id = (intent.data as LayoutAction.Activate).id;
-              const path = graphPlugin?.provides.graph.getPath(id);
+              const id = intent.data?.id ?? intent.data?.result?.id;
+              const path = id && graphPlugin?.provides.graph.getPath(id);
               if (path) {
                 Keyboard.singleton.setCurrentContext(path.join('/'));
               }
@@ -297,7 +303,8 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                 state.values.previous = state.values.active;
                 state.values.active = id;
               });
-              return true;
+
+              return { data: true };
             }
           }
         },

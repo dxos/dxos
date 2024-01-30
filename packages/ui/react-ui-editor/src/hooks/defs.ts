@@ -3,10 +3,8 @@
 //
 
 import { type Extension, StateField } from '@codemirror/state';
-import type * as YP from 'y-protocols/awareness';
 
 import { type DocAccessor } from '@dxos/echo-schema';
-import type { YText, YXmlFragment } from '@dxos/text-model';
 
 // Runtime data structure.
 export type Range = {
@@ -26,10 +24,7 @@ export type EditorModel = {
   extension?: Extension;
 
   // TODO(burdon): Remove.
-  content: string | YText | YXmlFragment | DocAccessor;
-
-  // TODO(burdon): Move into extension.
-  awareness?: YP.Awareness;
+  content: string | DocAccessor;
 
   // TODO(burdon): Remove.
   peer?: {

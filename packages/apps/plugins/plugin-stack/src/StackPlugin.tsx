@@ -30,10 +30,6 @@ import {
   type StackSettingsProps,
 } from './types';
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[StackType.name] = StackType;
-
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
   const settings = new LocalStorageStore<StackSettingsProps>(STACK_PLUGIN);
   const stackState: StackState = deepSignal({ creators: [] });
@@ -127,7 +123,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case StackAction.CREATE: {
-              return { object: new StackType() };
+              return { data: new StackType() };
             }
           }
         },

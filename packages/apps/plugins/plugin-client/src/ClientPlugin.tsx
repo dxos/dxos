@@ -184,13 +184,16 @@ export const ClientPlugin = ({
         },
       },
       intent: {
-        resolver: (intent) => {
+        resolver: async (intent) => {
           switch (intent.action) {
             case ClientAction.OPEN_SHELL:
-              return client.shell.open(intent.data?.layout);
+              await client.shell.open(intent.data?.layout);
+              return { data: true };
 
-            case ClientAction.SHARE_IDENTITY:
-              return client.shell.shareIdentity();
+            case ClientAction.SHARE_IDENTITY: {
+              const data = await client.shell.shareIdentity();
+              return { data };
+            }
           }
         },
       },

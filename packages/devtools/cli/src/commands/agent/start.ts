@@ -18,11 +18,10 @@ import {
   parseAddress,
 } from '@dxos/agent';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
-import { getGlobalAutomergePreference } from '@dxos/client/echo';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
-import { log } from '@dxos/log';
-import * as Telemetry from '@dxos/telemetry';
+import { invariant } from '@dxos/invariant';
+import { type Platform } from '@dxos/protocols/proto/dxos/client/services';
 
 import { BaseCommand } from '../../base-command';
 
@@ -58,6 +57,7 @@ export default class Start extends BaseCommand<typeof Start> {
   ];
 
   private readonly _ctx = new Context();
+  private _agent?: Agent;
 
   async run(): Promise<any> {
     if (this.flags.foreground) {
@@ -76,9 +76,7 @@ export default class Start extends BaseCommand<typeof Start> {
       rmSync(path, { force: true });
     }
 
-    log.info('agent automerge preference', { automerge: getGlobalAutomergePreference() });
-
-    const agent = new Agent({
+    this._agent = new Agent({
       config: this.clientConfig,
       profile: this.flags.profile,
       metrics: this.flags.metrics,
@@ -97,10 +95,29 @@ export default class Start extends BaseCommand<typeof Start> {
       ],
     });
 
-    await agent.start();
+    await this._agent.start();
     this.log('Agent started... (ctrl-c to exit)');
 
-    this._sendTelemetry();
+    await this._sendTelemetry();
+    invariant(this._telemetryContext);
+    const platform = (await this._agent.client!.services.services.SystemService?.getPlatform()) as Platform;
+    if (!platform) {
+      this.log('failed to get platform, could not initialize observability');
+      return undefined;
+    }
+
+    if (this._observability?.enabled) {
+      this.log('Metrics initialized!');
+
+      this._observability.initialize();
+      await this._observability.setIdentityTags(this._agent.client!);
+      await this._observability.setDeviceTags(this._agent.client!);
+      await this._observability.startNetworkMetrics(this._agent.client!);
+      await this._observability.startSpacesMetrics(this._agent.client!);
+      await this._observability.startRuntimeMetrics(this._agent.client!);
+      // initAgentMetrics(this._ctx, this._observability, this._startTime);
+      //  initClientMetrics(this._ctx, this._observability, this._agent!);
+    }
 
     if (this.flags.ws) {
       this.log(`Open devtools: https://devtools.dxos.org?target=ws://localhost:${this.flags.ws}`);
@@ -130,9 +147,9 @@ export default class Start extends BaseCommand<typeof Start> {
     }, system);
   }
 
-  private _sendTelemetry() {
+  private async _sendTelemetry() {
     const sendTelemetry = async () => {
-      Telemetry.event({
+      this._observability?.event({
         installationId: this._telemetryContext?.installationId,
         name: 'cli.command.run.agent',
         properties: {

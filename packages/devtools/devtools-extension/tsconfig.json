@@ -29,9 +29,6 @@
       "path": "../../common/react-async"
     },
     {
-      "path": "../../common/sentry"
-    },
-    {
       "path": "../../core/mesh/rpc"
     },
     {
@@ -45,6 +42,9 @@
     },
     {
       "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/observability"
     },
     {
       "path": "../../sdk/react-client"

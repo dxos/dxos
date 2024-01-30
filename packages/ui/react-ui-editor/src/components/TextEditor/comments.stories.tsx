@@ -17,7 +17,7 @@ import { fixedInsetFlexLayout, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor, TextEditor } from './TextEditor';
-import { comments, type CommentsOptions, setFocus, useComments } from '../../extensions';
+import { comments, type CommentsOptions, focusComment, useComments } from '../../extensions';
 import { type Comment, type Range, useTextModel } from '../../hooks';
 
 faker.seed(101);
@@ -50,7 +50,7 @@ const Editor: FC<{
     if (!view.current?.hasFocus && selectedValue !== selected) {
       setSelected(selectedValue);
       if (selectedValue) {
-        setFocus(view.current!, selectedValue);
+        focusComment(view.current!, selectedValue);
       }
     }
   }, [selected, commentRanges, selectedValue]);
@@ -150,10 +150,10 @@ const Thread: FC<{
         </div>
       ))}
 
-      <div ref={containerRef} onClick={() => onSelect()} className='flex'>
+      <div ref={containerRef} className='flex' onClick={() => onSelect()}>
         <TextEditor
           ref={editorRef}
-          autofocus={focus}
+          autoFocus={focus}
           model={model}
           placeholder={'Enter comment...'}
           slots={{ root: { className: 'grow rounded-b' } }}
@@ -241,7 +241,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
           : [],
       },
     ]);
-    setSelected(id);
+    setSelected(id); // TODO(burdon): Not required.
     return id;
   };
 
@@ -273,8 +273,8 @@ const Story = ({ text, autoCreate }: StoryProps) => {
     );
   };
 
-  const handleSelectComment: CommentsOptions['onSelect'] = ({ comments, selection: { active, closest } }) => {
-    log.info('select', { active: active?.slice(0, 4), closest: closest?.slice(0, 4) });
+  const handleSelectComment: CommentsOptions['onSelect'] = ({ comments, selection: { current, closest } }) => {
+    log.info('select', { active: current?.slice(0, 4), closest: closest?.slice(0, 4) });
     setThreads((threads) =>
       threads.map((thread) => {
         const comment = comments.find(({ comment }) => comment.id === thread.id);
@@ -287,7 +287,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
       }),
     );
 
-    setSelected(active ?? closest);
+    setSelected(current ?? closest);
   };
 
   const handleSelectThread = (id: string) => {

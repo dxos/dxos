@@ -33,7 +33,7 @@ export type MailboxProps = {
   options?: MailboxOptions;
 };
 
-export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
+const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
   const [selected, setSelected] = useState<MessageType>();
   const tRef = useRef<ReturnType<typeof setTimeout>>();
   useEffect(() => {
@@ -78,3 +78,5 @@ export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
     </Main.Content>
   );
 };
+
+export default Mailbox;

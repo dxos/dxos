@@ -19,11 +19,14 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor, type TextEditorProps } from './TextEditor';
 import {
+  type CommentsOptions,
+  type LinkOptions,
   autocomplete,
   blast,
   code,
   comments,
   defaultOptions,
+  heading,
   hr,
   image,
   link,
@@ -31,15 +34,10 @@ import {
   table,
   tasklist,
   typewriter,
-  type CommentsOptions,
-  type LinkOptions,
   useComments,
+  formatting,
 } from '../../extensions';
 import { type Comment, useTextModel } from '../../hooks';
-
-// Extensions:
-// TODO(burdon): Table of contents.
-// TODO(burdon): Front-matter
 
 faker.seed(101);
 
@@ -82,7 +80,7 @@ const text = {
     '## Code',
     '',
     '```',
-    'const x = 100;',
+    '$ ls -las',
     '```',
     '',
     '```tsx',
@@ -213,11 +211,10 @@ const onRenderLink: LinkOptions['onRender'] = (el, url) => {
 type StoryProps = {
   text?: string;
   comments?: Comment[];
-  automerge?: boolean;
 } & Pick<TextEditorProps, 'readonly' | 'placeholder' | 'slots' | 'extensions'>;
 
-const Story = ({ text, comments, automerge, placeholder = 'New document.', ...props }: StoryProps) => {
-  const [item] = useState({ text: new TextObject(text, undefined, undefined, { automerge }) });
+const Story = ({ text, comments, placeholder = 'New document.', ...props }: StoryProps) => {
+  const [item] = useState({ text: new TextObject(text) });
   const view = useRef<EditorView>(null);
   const model = useTextModel({ text: item.text });
   useComments(view.current, comments);
@@ -248,12 +245,11 @@ const defaults = [
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
   code(),
+  formatting(),
+  heading(),
   hr(),
   image(),
   link({ onRender: onRenderLink, onHover: onHoverLinkTooltip }),
-  // mention({
-  //   onSearch: (text) => names.filter((name) => name.toLowerCase().startsWith(text.toLowerCase())),
-  // }),
   table(),
   tasklist(),
 ];
@@ -290,11 +286,11 @@ export const Links = {
 };
 
 export const Code = {
-  render: () => <Story text={str(text.code, text.footer)} extensions={[code()]} readonly />,
+  render: () => <Story text={str(text.code, text.footer)} extensions={[code()]} />,
 };
 
 export const Image = {
-  render: () => <Story text={str(text.image, text.footer)} readonly extensions={[image()]} />,
+  render: () => <Story text={str(text.image, text.footer)} extensions={[image()]} />,
 };
 
 export const Lists = {
@@ -345,18 +341,18 @@ export const Mention = {
 
 export const Comments = {
   render: () => {
-    const [commentRanges, setCommentRanges] = useState<Comment[]>([]);
+    const [_comments, setComments] = useState<Comment[]>([]);
 
     return (
       <Story
         text={str('# Comments', '', text.paragraphs, text.footer)}
-        comments={commentRanges}
+        comments={_comments}
         extensions={[
           comments({
             onHover: onCommentsHover,
             onCreate: (range) => {
               const id = PublicKey.random().toHex();
-              setCommentRanges((commentRanges) => [...commentRanges, { id, cursor: range }]);
+              setComments((commentRanges) => [...commentRanges, { id, cursor: range }]);
               return id;
             },
             onSelect: (state) => {
@@ -366,7 +362,7 @@ export const Comments = {
                   'update',
                   JSON.stringify({
                     comments: state.comments.length,
-                    active: state.selection.active?.slice(0, 8),
+                    active: state.selection.current?.slice(0, 8),
                     closest: state.selection.closest?.slice(0, 8),
                   }),
                 );

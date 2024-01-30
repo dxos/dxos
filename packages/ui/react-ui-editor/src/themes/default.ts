@@ -49,9 +49,11 @@ export const defaultTheme: ThemeStyles = {
   '&.cm-focused': {
     outline: 'none',
   },
+
   '.cm-scroller': {
-    overflow: 'visible',
+    // overflow: 'visible',
     fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
+    lineHeight: 1.4,
   },
 
   '.cm-content': {
@@ -86,11 +88,9 @@ export const defaultTheme: ThemeStyles = {
   //
   '.cm-line': {
     paddingInline: 0,
-    // TODO(burdon): Other values leave gaps between lines when highlighted.
-    // lineHeight: 'normal',
   },
   '.cm-activeLine': {
-    background: 'inherit',
+    background: 'transparent',
   },
 
   //

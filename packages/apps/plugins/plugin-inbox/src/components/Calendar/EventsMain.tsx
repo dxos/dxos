@@ -27,7 +27,7 @@ export type EventsMainProps = {
   calendar: CalendarType;
 };
 
-export const EventsMain = ({ calendar }: EventsMainProps) => {
+const EventsMain = ({ calendar }: EventsMainProps) => {
   const [selected, setSelected] = useState<EventType>();
   const space = getSpaceForObject(calendar);
   const objects = useQuery(space, EventType.filter());
@@ -41,3 +41,5 @@ export const EventsMain = ({ calendar }: EventsMainProps) => {
     </Main.Content>
   );
 };
+
+export default EventsMain;

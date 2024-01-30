@@ -69,12 +69,14 @@ export const UndoPlugin = (): PluginDefinition<UndoPluginProvides> => {
             case UndoAction.UNDO: {
               if (actions) {
                 void actions?.undo?.();
+                return { data: true };
               }
               break;
             }
             case UndoAction.REDO: {
               if (actions) {
                 void actions?.redo?.();
+                return { data: true };
               }
               break;
             }

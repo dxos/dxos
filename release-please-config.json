@@ -354,16 +354,6 @@
         },
         {
           "type": "json",
-          "path": "packages/common/sentry/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/common/telemetry/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/timeframe/package.json",
           "jsonpath": "$.version"
         },
@@ -669,6 +659,11 @@
         },
         {
           "type": "json",
+          "path": "packages/sdk/observability/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/sdk/react-client/package.json",
           "jsonpath": "$.version"
         },
@@ -690,11 +685,6 @@
         {
           "type": "json",
           "path": "packages/ui/primitives/react-list/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/react-appkit/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -21,13 +21,14 @@ import {
 } from '@codemirror/view';
 
 import type { ThemeMode } from '@dxos/react-ui';
+import { isNotFalsy } from '@dxos/util';
 
 import { markdownHighlightStyle, markdownTagsExtensions } from './highlight';
 import { type TextEditorProps } from '../../components';
 
 export type MarkdownBundleOptions = {
   themeMode?: ThemeMode;
-} & Pick<TextEditorProps, 'readonly' | 'placeholder'>;
+} & Pick<TextEditorProps, 'placeholder' | 'lineWrapping'>;
 
 /**
  * Markdown bundle.
@@ -36,15 +37,15 @@ export type MarkdownBundleOptions = {
  * https://codemirror.net/docs/ref/#codemirror.basicSetup
  */
 // TODO(burdon): Add Composer here: https://codemirror.net/docs/community
-export const markdownBundle = ({
-  readonly,
+export const createMarkdownExtensions = ({
   themeMode,
   placeholder: _placeholder,
-}: MarkdownBundleOptions): Extension[] => {
+  lineWrapping = true,
+}: MarkdownBundleOptions = {}): Extension[] => {
   return [
+    lineWrapping && EditorView.lineWrapping,
     EditorState.allowMultipleSelections.of(true),
     EditorState.tabSize.of(2),
-    EditorView.lineWrapping,
 
     // https://github.com/codemirror/basic-setup
     bracketMatching(),
@@ -55,7 +56,7 @@ export const markdownBundle = ({
     highlightActiveLine(),
     history(),
     indentOnInput(),
-    _placeholder ? placeholder(_placeholder) : [],
+    _placeholder && placeholder(_placeholder),
 
     // Main extension.
     // https://github.com/codemirror/lang-markdown
@@ -82,7 +83,7 @@ export const markdownBundle = ({
     themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
 
     // Custom styles.
-    syntaxHighlighting(markdownHighlightStyle(readonly)),
+    syntaxHighlighting(markdownHighlightStyle()),
 
     keymap.of([
       // https://codemirror.net/docs/ref/#commands.indentWithTab
@@ -96,5 +97,5 @@ export const markdownBundle = ({
       // https://codemirror.net/docs/ref/#commands.standardKeymap
       ...standardKeymap,
     ]),
-  ];
+  ].filter(isNotFalsy);
 };

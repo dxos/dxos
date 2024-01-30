@@ -39,12 +39,17 @@ export const InvitationInput = (props: InvitationInputProps) => {
     unredeemedCode && setInputValue(unredeemedCode ?? '');
   }, [unredeemedCode]);
 
-  const handleNext = () =>
+  const handleNext = () => {
+    if (inputValue.trim().length === 0) {
+      return;
+    }
+
     send({
       type: `set${Kind}InvitationCode`,
       code: invitationCodeFromUrl(inputValue),
       ...(Kind === 'Space' && { succeededKeys }),
     });
+  };
 
   const exitAction = (
     <Action
@@ -62,6 +67,7 @@ export const InvitationInput = (props: InvitationInputProps) => {
       <div role='none' className='grow flex flex-col justify-center'>
         <Input
           label={<StepHeading>{t('invitation input label')}</StepHeading>}
+          // TODO(burdon): Translation.
           placeholder='Type an invitation code'
           disabled={disabled}
           value={inputValue}

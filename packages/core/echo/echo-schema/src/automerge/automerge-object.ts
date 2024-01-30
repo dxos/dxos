@@ -5,7 +5,7 @@
 import { type InspectOptionsStylized, inspect } from 'node:util';
 
 import { Event, Trigger } from '@dxos/async';
-import { next as automerge, type ChangeOptions, type ChangeFn, type Doc, type Heads } from '@dxos/automerge/automerge';
+import { next as A, type ChangeOptions, type ChangeFn, type Doc, type Heads } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { Reference } from '@dxos/document-model';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -134,7 +134,9 @@ export class AutomergeObject implements TypedObjectProperties {
     return this._id;
   }
 
-  [base] = this as any;
+  get [base]() {
+    return this as any;
+  }
 
   get [db](): EchoDatabase | undefined {
     return this[base]._database._echoDatabase;
@@ -215,7 +217,7 @@ export class AutomergeObject implements TypedObjectProperties {
       }
     }
 
-    this._doc = automerge.from({
+    this._doc = A.from({
       data: this._encode(initialProps),
       meta: this._encode({
         keys: [],
@@ -228,7 +230,7 @@ export class AutomergeObject implements TypedObjectProperties {
    * @internal
    */
   _bind(options: BindOptions) {
-    const binded = new Trigger();
+    const bound = new Trigger();
     this._database = options.db;
     this._docHandle = options.docHandle;
     this._docHandle.on('change', async (event) => {
@@ -236,7 +238,7 @@ export class AutomergeObject implements TypedObjectProperties {
         // Note: We need to notify listeners only after _docHandle initialization with cached _doc.
         //       Without it there was race condition in SpacePlugin on Folder creation.
         //       Folder was being accessed during bind process before _docHandle was initialized and after _doc was set to undefined.
-        await binded.wait();
+        await bound.wait();
         this._notifyUpdate();
       }
     });
@@ -259,18 +261,23 @@ export class AutomergeObject implements TypedObjectProperties {
       this._doc = undefined;
       this._set([], doc);
     }
-    binded.wake();
+    bound.wake();
   }
 
   private _createProxy(path: string[]): any {
     return new Proxy(this, {
       ownKeys: (target) => {
         // TODO(mykola): Add support for expando objects.
-        return this.__schema?.props.map((field) => field.id!) ?? [];
+        const schema = this.__schema;
+        if (schema) {
+          return schema.props.map((field) => field.id!);
+        } else {
+          return Reflect.ownKeys(this._get(path));
+        }
       },
 
       has: (_, key) => {
-        if (!isValidKey(key)) {
+        if (isRootDataObjectKey(path, key)) {
           return Reflect.has(this, key);
         } else if (typeof key === 'symbol') {
           // TODO(mykola): Copied from TypedObject, do we need this?
@@ -293,7 +300,7 @@ export class AutomergeObject implements TypedObjectProperties {
           return true;
         }
 
-        if (!isValidKey(key)) {
+        if (typeof key === 'symbol' || isRootDataObjectKey(path, key)) {
           return Reflect.get(this, key);
         }
 
@@ -301,21 +308,7 @@ export class AutomergeObject implements TypedObjectProperties {
 
         const value = this._get(relativePath);
 
-        if (value instanceof AbstractEchoObject || value instanceof AutomergeObject || value instanceof TextObject) {
-          return value;
-        }
-        if (value instanceof Reference && value.protocol === 'protobuf') {
-          // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
-          return value;
-        }
-        if (Array.isArray(value)) {
-          return new AutomergeArray()._attach(this[base], relativePath);
-        }
-        if (typeof value === 'object' && value !== null) {
-          return this._createProxy(relativePath);
-        }
-
-        return value;
+        return this._mapToEchoObject(relativePath, value);
       },
 
       set: (_, key, value) => {
@@ -343,6 +336,25 @@ export class AutomergeObject implements TypedObjectProperties {
     }
 
     return this._decode(value);
+  }
+
+  _mapToEchoObject(relativePath: string[], value: any) {
+    if (value instanceof AbstractEchoObject || value instanceof AutomergeObject || value instanceof TextObject) {
+      return value;
+    }
+    if (value instanceof Reference && value.protocol === 'protobuf') {
+      // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
+      return value;
+    }
+    if (Array.isArray(value)) {
+      return new AutomergeArray()._attach(this[base], relativePath);
+    }
+
+    if (typeof value === 'object' && value !== null) {
+      return this._createProxy(relativePath);
+    }
+
+    return value;
   }
 
   /**
@@ -375,7 +387,7 @@ export class AutomergeObject implements TypedObjectProperties {
       this._docHandle.change(changeFn);
       // Note: We don't need to notify listeners here, since `change` event is already emitted by the doc handle.
     } else if (this._doc) {
-      this._doc = automerge.change(this._doc, changeFn);
+      this._doc = A.change(this._doc, changeFn);
       this._notifyUpdate();
     } else {
       failedInvariant();
@@ -386,7 +398,7 @@ export class AutomergeObject implements TypedObjectProperties {
    * @internal
    */
   _encode(value: any) {
-    if (value instanceof automerge.RawString) {
+    if (value instanceof A.RawString) {
       return value;
     }
     if (value === undefined) {
@@ -416,7 +428,7 @@ export class AutomergeObject implements TypedObjectProperties {
     }
 
     if (typeof value === 'string' && value.length > STRING_CRDT_LIMIT) {
-      return new automerge.RawString(value);
+      return new A.RawString(value);
     }
 
     return value;
@@ -432,7 +444,7 @@ export class AutomergeObject implements TypedObjectProperties {
     if (Array.isArray(value)) {
       return value.map((val) => this._decode(val));
     }
-    if (value instanceof automerge.RawString) {
+    if (value instanceof A.RawString) {
       return value.toString();
     }
     if (typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG) {
@@ -540,9 +552,9 @@ export class AutomergeObject implements TypedObjectProperties {
         change: (callback, options) => {
           if (this._doc) {
             if (options) {
-              this._doc = automerge.change(this._doc!, options, callback);
+              this._doc = A.change(this._doc!, options, callback);
             } else {
-              this._doc = automerge.change(this._doc!, callback);
+              this._doc = A.change(this._doc!, callback);
             }
             this._notifyUpdate();
           } else {
@@ -555,11 +567,11 @@ export class AutomergeObject implements TypedObjectProperties {
           let result: Heads | undefined;
           if (this._doc) {
             if (options) {
-              const { newDoc, newHeads } = automerge.changeAt(this._doc!, heads, options, callback);
+              const { newDoc, newHeads } = A.changeAt(this._doc!, heads, options, callback);
               this._doc = newDoc;
               result = newHeads ?? undefined;
             } else {
-              const { newDoc, newHeads } = automerge.changeAt(this._doc!, heads, callback);
+              const { newDoc, newHeads } = A.changeAt(this._doc!, heads, callback);
               this._doc = newDoc;
               result = newHeads ?? undefined;
             }
@@ -594,8 +606,11 @@ export class AutomergeObject implements TypedObjectProperties {
   }
 }
 
-const isValidKey = (key: string | symbol) => {
-  return !(
+const isRootDataObjectKey = (relativePath: string[], key: string | symbol) => {
+  if (relativePath.length !== 1 || relativePath[0] !== 'data') {
+    return false;
+  }
+  return (
     typeof key === 'symbol' ||
     key.startsWith('@@__') ||
     key === 'constructor' ||
@@ -603,6 +618,7 @@ const isValidKey = (key: string | symbol) => {
     key === 'toString' ||
     key === 'toJSON' ||
     key === 'id' ||
+    key === '_id' ||
     key === '__meta' ||
     key === '__schema' ||
     key === '__typename' ||

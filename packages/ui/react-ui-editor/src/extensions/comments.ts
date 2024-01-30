@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Extension, StateEffect, StateField, type Text } from '@codemirror/state';
+import { invertedEffects } from '@codemirror/commands';
+import { type Extension, Facet, StateEffect, StateField, type Text, type ChangeDesc } from '@codemirror/state';
 import { hoverTooltip, keymap, type Command, Decoration, EditorView, type Rect } from '@codemirror/view';
 import sortBy from 'lodash.sortby';
 import { useEffect } from 'react';
 
 import { debounce } from '@dxos/async';
-import { invariant } from '@dxos/invariant';
 import { nonNullable } from '@dxos/util';
 
 import { Cursor } from './cursor';
@@ -21,15 +21,13 @@ const styles = EditorView.baseTheme({
   '& .cm-comment': {
     backgroundColor: getToken('extend.colors.yellow.50'),
   },
-  '& .cm-comment-active': {
+  '& .cm-comment-current': {
     backgroundColor: getToken('extend.colors.yellow.100'),
   },
 });
 
-const marks = {
-  highlight: Decoration.mark({ class: 'cm-comment' }),
-  highlightActive: Decoration.mark({ class: 'cm-comment-active' }),
-};
+const commentMark = Decoration.mark({ class: 'cm-comment' });
+const commentCurrentMark = Decoration.mark({ class: 'cm-comment-current' });
 
 type CommentState = {
   comment: Comment;
@@ -38,7 +36,7 @@ type CommentState = {
 };
 
 type SelectionState = {
-  active?: string;
+  current?: string;
   closest?: string;
 };
 
@@ -47,7 +45,7 @@ export type CommentsState = {
   selection: SelectionState;
 };
 
-export const setFocus = (view: EditorView, id: string, center = true) => {
+export const focusComment = (view: EditorView, id: string, center = true) => {
   const comment = view.state.field(commentsState).comments.find((range) => range.comment.id === id);
   if (!comment?.comment.cursor) {
     return;
@@ -60,7 +58,7 @@ export const setFocus = (view: EditorView, id: string, center = true) => {
       effects: [
         //
         EditorView.scrollIntoView(range.from, center ? { y: 'center' } : undefined),
-        setSelection.of({ active: id }),
+        setSelection.of({ current: id }),
       ],
     });
   }
@@ -115,9 +113,9 @@ const commentsState = StateField.define<CommentsState>({
 /**
  * Decorate ranges.
  */
-const highlightDecorations = EditorView.decorations.compute([commentsState], (state) => {
+const commentsDecorations = EditorView.decorations.compute([commentsState], (state) => {
   const {
-    selection: { active },
+    selection: { current },
     comments,
   } = state.field(commentsState);
 
@@ -129,10 +127,10 @@ const highlightDecorations = EditorView.decorations.compute([commentsState], (st
         return undefined;
       }
 
-      if (comment.comment.id === active) {
-        return marks.highlightActive.range(range.from, range.to);
+      if (comment.comment.id === current) {
+        return commentCurrentMark.range(range.from, range.to);
       } else {
-        return marks.highlight.range(range.from, range.to);
+        return commentMark.range(range.from, range.to);
       }
     })
     .filter(nonNullable);
@@ -167,11 +165,11 @@ export type CommentsOptions = {
   onHover?: (el: Element, shortcut: string) => void;
 };
 
-// TODO(burdon): Handle cut/restore via undo (need to integrate with history?)
+type TrackedComment = { id: string; from: number; to: number };
+
 const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>) => {
   // Tracks indexed selections within text.
-  // TODO(burdon): Move to main state field?
-  let tracked: { text: Text; comments: { id: string; from: number; to: number }[] } | null = null;
+  let tracked: { text: Text; comments: TrackedComment[] } | null = null;
 
   // Track cut or copy (enables cut-and-paste and copy-delete-paste to restore comment selection).
   const handleTrack = (event: Event, view: EditorView) => {
@@ -201,16 +199,48 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
       copy: handleTrack,
     }),
 
-    // Handle paste.
-    EditorView.updateListener.of(({ view, state, transactions }) => {
+    // Track deleted comments.
+    invertedEffects.of((tr) => {
+      const { comments } = tr.startState.field(commentsState);
+      const effects: StateEffect<any>[] = [];
+      tr.changes.iterChangedRanges((fromA, toA) => {
+        for (const {
+          comment: { id },
+          range: { from, to },
+        } of comments) {
+          if (from < to && from >= fromA && to <= toA) {
+            effects.push(restoreCommentEffect.of({ id, from, to }));
+          }
+        }
+      });
+
+      return effects;
+    }),
+
+    // Handle paste or the undo of comment deletion.
+    EditorView.updateListener.of((update) => {
+      const restore: TrackedComment[] = [];
+
+      for (let i = 0; i < update.transactions.length; i++) {
+        const tr = update.transactions[i];
+        for (let j = 0; j < restore.length; j++) {
+          restore[j] = mapTrackedComment(restore[j], tr.changes);
+        }
+        for (const effect of tr.effects) {
+          if (effect.is(restoreCommentEffect)) {
+            restore.push(effect.value);
+          }
+        }
+      }
+
       if (tracked) {
-        const paste = transactions.find((tr) => tr.isUserEvent('input.paste'));
+        const paste = update.transactions.find((tr) => tr.isUserEvent('input.paste'));
         if (paste) {
           let found = -1;
           paste.changes.iterChanges((fromA, toA, fromB, toB, text) => {
             if (text.eq(tracked!.text)) {
-              for (let i = transactions.indexOf(paste!) + 1; i < transactions.length; i++) {
-                fromB = transactions[i].changes.mapPos(fromB);
+              for (let i = update.transactions.indexOf(paste!) + 1; i < update.transactions.length; i++) {
+                fromB = update.transactions[i].changes.mapPos(fromB);
               }
 
               found = fromB;
@@ -219,21 +249,76 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
 
           if (found > -1) {
             for (const moved of tracked.comments) {
-              const range = {
-                from: found + moved.from,
-                to: found + moved.to,
-              };
-
-              const cursor = Cursor.getCursorFromRange(state, range);
-              onUpdate(moved.id, cursor);
+              restore.push({ id: moved.id, from: found + moved.from, to: found + moved.to });
             }
           }
 
           tracked = null;
         }
       }
+
+      for (const comment of restore) {
+        const { comments } = update.startState.field(commentsState);
+        const exists = comments.some((c) => c.comment.id === comment.id && c.range.from < c.range.to);
+        if (!exists) {
+          const cursor = Cursor.getCursorFromRange(update.state, comment);
+          onUpdate(comment.id, cursor);
+        }
+      }
     }),
   ];
+};
+
+const mapTrackedComment = (comment: TrackedComment, changes: ChangeDesc) => ({
+  id: comment.id,
+  from: changes.mapPos(comment.from, 1),
+  to: changes.mapPos(comment.to, 1),
+});
+
+// These are attached to undone/redone transactions in the editor for the purpose of restoring comments
+// that were deleted by the original changes.
+const restoreCommentEffect = StateEffect.define<TrackedComment>({ map: mapTrackedComment });
+
+const optionsFacet = Facet.define<CommentsOptions, CommentsOptions>({
+  combine: (providers) => providers[0],
+});
+
+/**
+ * Create comment thread action.
+ */
+export const createComment: Command = (view) => {
+  const options = view.state.facet(optionsFacet);
+  const { from, to } = view.state.selection.main;
+  if (from === to) {
+    return false;
+  }
+
+  // Don't allow selection at end of document.
+  if (to === view.state.doc.length) {
+    view.dispatch({
+      changes: {
+        from: to,
+        insert: '\n',
+      },
+    });
+  }
+
+  const cursor = Cursor.getCursorFromRange(view.state, { from, to });
+  if (cursor) {
+    // Create thread via callback.
+    const id = options.onCreate?.(cursor, view.coordsAtPos(from));
+    if (id) {
+      // Update range.
+      view.dispatch({
+        effects: setSelection.of({ current: id }),
+        selection: { anchor: to },
+      });
+
+      return true;
+    }
+  }
+
+  return false;
 };
 
 /**
@@ -252,47 +337,10 @@ export const comments = (options: CommentsOptions = {}): Extension => {
 
   const handleSelect = debounce((state: CommentsState) => options.onSelect?.(state), 200);
 
-  /**
-   * Create comment thread action.
-   */
-  const createCommentThread: Command = (view) => {
-    invariant(options.onCreate);
-    const { from, to } = view.state.selection.main;
-    if (from === to) {
-      return false;
-    }
-
-    // Don't allow selection at end of document.
-    if (to === view.state.doc.length) {
-      view.dispatch({
-        changes: {
-          from: to,
-          insert: '\n',
-        },
-      });
-    }
-
-    const cursor = Cursor.getCursorFromRange(view.state, { from, to });
-    if (cursor) {
-      // Create thread via callback.
-      const id = options.onCreate?.(cursor, view.coordsAtPos(from));
-      if (id) {
-        // Update range.
-        view.dispatch({
-          effects: setSelection.of({ active: id }),
-          selection: { anchor: from },
-        });
-
-        return true;
-      }
-    }
-
-    return false;
-  };
-
   return [
+    optionsFacet.of(options),
     commentsState,
-    highlightDecorations,
+    commentsDecorations,
     styles,
 
     //
@@ -302,7 +350,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       ? keymap.of([
           {
             key: shortcut,
-            run: callbackWrapper(createCommentThread),
+            run: callbackWrapper(createComment),
           },
         ])
       : [],
@@ -371,10 +419,10 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     //
     // Track selection/proximity.
     //
-    EditorView.updateListener.of(({ view, state, changes }) => {
+    EditorView.updateListener.of(({ view, state }) => {
       let min = Infinity;
       const {
-        selection: { active, closest },
+        selection: { current, closest },
         comments,
       } = state.field(commentsState);
 
@@ -382,11 +430,11 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       const selection: SelectionState = {};
       comments.forEach(({ comment, range }) => {
         if (head >= range.from && head <= range.to) {
-          selection.active = comment.id;
+          selection.current = comment.id;
           selection.closest = undefined;
         }
 
-        if (!selection.active) {
+        if (!selection.current) {
           const d = Math.min(Math.abs(head - range.from), Math.abs(head - range.to));
           if (d < min) {
             selection.closest = comment.id;
@@ -395,7 +443,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         }
       });
 
-      if (selection.active !== active || selection.closest !== closest) {
+      if (selection.current !== current || selection.closest !== closest) {
         view.dispatch({ effects: setSelection.of(selection) });
 
         // Update callback.
@@ -415,11 +463,11 @@ export const comments = (options: CommentsOptions = {}): Extension => {
 };
 
 /**
- * Update state field.
+ * Update comments state field.
  */
-export const useComments = (view?: EditorView | null, comments?: Comment[]) => {
+export const useComments = (view: EditorView | null, comments: Comment[] = []) => {
   useEffect(() => {
-    if (view && comments) {
+    if (view) {
       view.dispatch({
         effects: setComments.of(comments),
       });

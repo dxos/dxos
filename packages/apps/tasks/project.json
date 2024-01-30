@@ -15,6 +15,7 @@
       "outputs": ["{options.outputPath}"]
     },
     "bundle": {
+      "dependsOn": ["^build", "^bundle", "prebuild"],
       "executor": "@nx/vite:build",
       "options": {
         "outputPath": "packages/apps/tasks/out/tasks"

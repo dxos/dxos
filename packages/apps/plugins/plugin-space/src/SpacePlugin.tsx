@@ -29,13 +29,11 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { type Space, SpaceProxy, getSpaceForObject } from '@dxos/react-client/echo';
+import { type Space, SpaceProxy, getSpaceForObject, type PropertiesProps } from '@dxos/react-client/echo';
 import { inferRecordOrder } from '@dxos/util';
 
-import { exportData } from './backup';
 import {
   AwaitingObject,
-  DialogRestoreSpace,
   EmptySpace,
   EmptyTree,
   FolderMain,
@@ -62,12 +60,6 @@ import {
 import { SHARED, getActiveSpace, isSpace, spaceToGraphNode } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
-
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[SpaceProxy.name] = SpaceProxy;
-(globalThis as any)[PublicKey.name] = PublicKey;
-(globalThis as any)[Folder.name] = Folder;
 
 export type SpacePluginOptions = {
   version?: string;
@@ -258,12 +250,6 @@ export const SpacePlugin = ({
                 default:
                   return null;
               }
-            case 'dialog':
-              if (data.component === 'dxos.org/plugin/space/RestoreSpaceDialog' && isSpace(data.subject)) {
-                return <DialogRestoreSpace space={data.subject} />;
-              } else {
-                return null;
-              }
             case 'popover':
               if (data.component === 'dxos.org/plugin/space/RenameSpacePopover' && isSpace(data.subject)) {
                 return <PopoverRenameSpace space={data.subject} />;
@@ -394,7 +380,7 @@ export const SpacePlugin = ({
                 invoke: () =>
                   dispatch({
                     plugin: SPACE_PLUGIN,
-                    action: SpaceAction.LOAD_FROM_DISK,
+                    action: SpaceAction.LOAD,
                   }),
               },
             ],
@@ -470,8 +456,8 @@ export const SpacePlugin = ({
           const client = clientPlugin?.provides.client;
           switch (intent.action) {
             case SpaceAction.WAIT_FOR_OBJECT: {
-              state.awaiting = intent.data.id;
-              return true;
+              state.awaiting = intent.data?.id;
+              return { data: true };
             }
 
             case SpaceAction.CREATE: {
@@ -482,18 +468,18 @@ export const SpacePlugin = ({
               const {
                 objects: [sharedSpacesFolder],
               } = defaultSpace.db.query({ key: SHARED });
-              const space = await client.spaces.create(intent.data);
+              const space = await client.spaces.create(intent.data as PropertiesProps);
               const folder = new Folder();
               space.properties[Folder.schema.typename] = folder;
               sharedSpacesFolder?.objects.push(folder);
-              return { space, id: space.key.toHex() };
+              return { data: { space, id: space.key.toHex() } };
             }
 
             case SpaceAction.JOIN: {
               if (client) {
                 const { space } = await client.shell.joinSpace();
                 if (space) {
-                  return { space, id: space.key.toHex() };
+                  return { data: { space, id: space.key.toHex() } };
                 }
               }
               break;
@@ -504,168 +490,182 @@ export const SpacePlugin = ({
               const spaceKey = intent.data?.spaceKey && PublicKey.from(intent.data.spaceKey);
               if (clientPlugin && spaceKey) {
                 const target = layoutPlugin?.provides.layout.active;
-                const { members } = await clientPlugin.provides.client.shell.shareSpace({ spaceKey, target });
-                return members && { members };
+                const result = await clientPlugin.provides.client.shell.shareSpace({ spaceKey, target });
+                return { data: result };
               }
               break;
             }
 
             case SpaceAction.RENAME: {
-              const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-              return intentPlugin?.provides.intent.dispatch({
-                action: LayoutAction.OPEN_POPOVER,
-                data: {
-                  anchorId: `dxos.org/ui/${intent.data.caller}/${intent.data.space.key.toHex()}`,
-                  component: 'dxos.org/plugin/space/RenameSpacePopover',
-                  subject: intent.data.space,
-                  caller: intent.data.caller,
-                },
-              });
+              const { caller, space } = intent.data ?? {};
+              if (typeof caller === 'string' && space instanceof SpaceProxy) {
+                return {
+                  intents: [
+                    [
+                      {
+                        action: LayoutAction.OPEN_POPOVER,
+                        data: {
+                          anchorId: `dxos.org/ui/${caller}/${space.key.toHex()}`,
+                          component: 'dxos.org/plugin/space/RenameSpacePopover',
+                          subject: space,
+                          caller,
+                        },
+                      },
+                    ],
+                  ],
+                };
+              }
+              break;
             }
+
             case SpaceAction.OPEN: {
-              void intent.data.space.internal.open();
+              const space = intent.data?.space;
+              if (space instanceof SpaceProxy) {
+                await space.internal.open();
+                return { data: true };
+              }
               break;
             }
 
             case SpaceAction.CLOSE: {
-              void intent.data.space.internal.close();
+              const space = intent.data?.space;
+              if (space instanceof SpaceProxy) {
+                await space.internal.close();
+                return { data: true };
+              }
               break;
             }
 
             case SpaceAction.MIGRATE: {
-              const space = intent.data.space;
+              const space = intent.data?.space;
               if (space instanceof SpaceProxy) {
-                return Migrations.migrate(space, intent.data.version);
+                const result = Migrations.migrate(space, intent.data?.version);
+                return { data: result };
               }
               break;
-            }
-
-            case SpaceAction.EXPORT: {
-              const space = intent.data.space;
-              if (space instanceof SpaceProxy) {
-                // TODO(wittjosiah): Expose translations helper from theme plugin provides.
-                const backupBlob = await exportData(space, space.key.toHex());
-                const filename = space.properties.name?.replace(/\W/g, '_') || space.key.toHex();
-
-                const url = URL.createObjectURL(backupBlob);
-                // TODO(burdon): See DebugMain useFileDownload
-                const element = document.createElement('a');
-                element.setAttribute('href', url);
-                element.setAttribute('download', `${filename}.zip`);
-                element.setAttribute('target', 'download');
-                element.click();
-                return true;
-              }
-              break;
-            }
-
-            case SpaceAction.IMPORT: {
-              const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-              return intentPlugin?.provides.intent.dispatch({
-                action: LayoutAction.OPEN_DIALOG,
-                data: {
-                  component: 'dxos.org/plugin/space/RestoreSpaceDialog',
-                  subject: intent.data.space,
-                },
-              });
             }
 
             case SpaceAction.SELECT_DIRECTORY: {
               const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
               directory = handle;
               await localforage.setItem(SPACE_DIRECTORY_HANDLE, handle);
-              return handle;
+              return { data: handle };
             }
 
-            case SpaceAction.SAVE_TO_DISK: {
-              const space = intent.data.space;
+            case SpaceAction.SAVE: {
+              const space = intent.data?.space;
               if (space instanceof SpaceProxy) {
                 if (!directory) {
                   directory = await localforage.getItem(SPACE_DIRECTORY_HANDLE);
                 }
                 if (!directory) {
+                  // TODO(wittjosiah): Consider implementing this as an intent chain by returning other intents.
                   const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-                  directory = await intentPlugin?.provides.intent.dispatch({
+                  const result = await intentPlugin?.provides.intent.dispatch({
                     plugin: SPACE_PLUGIN,
                     action: SpaceAction.SELECT_DIRECTORY,
                   });
+                  directory = result?.data;
                 }
                 invariant(directory, 'No directory selected.');
                 if ((directory as any).queryPermission && (await (directory as any).queryPermission()) !== 'granted') {
                   // TODO(mykola): Is it Chrome-specific?
                   await (directory as any).requestPermission?.({ mode: 'readwrite' });
                 }
-                return saveSpaceToDisk({ space, directory }).catch((error) => {
+                await saveSpaceToDisk({ space, directory }).catch((error) => {
                   log.catch(error);
                 });
+                return { data: true };
               }
               break;
             }
 
-            case SpaceAction.LOAD_FROM_DISK: {
-              const space = intent.data.space;
+            case SpaceAction.LOAD: {
+              const space = intent.data?.space;
               if (space instanceof SpaceProxy) {
                 const directory = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
                 await loadSpaceFromDisk({ space, directory });
+                return { data: true };
               }
               break;
             }
 
             case SpaceAction.ADD_OBJECT: {
-              if (!(intent.data.object instanceof TypedObject)) {
+              const object = intent.data?.object ?? intent.data?.result;
+              if (!(object instanceof TypedObject)) {
                 return;
               }
 
-              if (intent.data.target instanceof Folder) {
-                intent.data.target.objects.push(intent.data.object);
-                return intent.data.object;
+              if (intent.data?.target instanceof Folder) {
+                intent.data.target.objects.push(object);
+                return { data: object };
               }
 
-              if (intent.data.target instanceof SpaceProxy) {
+              if (intent.data?.target instanceof SpaceProxy) {
                 const space = intent.data.target;
                 const folder = space.properties[Folder.schema.typename];
                 if (folder instanceof Folder) {
-                  folder.objects.push(intent.data.object);
-                  return intent.data.object;
+                  folder.objects.push(object);
+                  return { data: object };
                 } else {
-                  return space.db.add(intent.data.object);
+                  return { data: space.db.add(object) };
                 }
               }
               break;
             }
 
             case SpaceAction.REMOVE_OBJECT: {
-              const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-              return intentPlugin?.provides.intent.dispatch({
-                action: LayoutAction.OPEN_POPOVER,
-                data: {
-                  anchorId: `dxos.org/ui/${intent.data.caller}/${intent.data.object.id}`,
-                  component: 'dxos.org/plugin/space/RemoveObjectPopover',
-                  subject: {
-                    object: intent.data.object,
-                    folder: intent.data.folder,
-                  },
-                  caller: intent.data.caller,
-                },
-              });
+              const object = intent.data?.object ?? intent.data?.result;
+              const caller = intent.data?.caller;
+              if (object instanceof TypedObject && caller) {
+                return {
+                  intents: [
+                    [
+                      {
+                        action: LayoutAction.OPEN_POPOVER,
+                        data: {
+                          anchorId: `dxos.org/ui/${caller}/${object.id}`,
+                          component: 'dxos.org/plugin/space/RemoveObjectPopover',
+                          subject: {
+                            object,
+                            folder: intent.data?.folder,
+                          },
+                          caller,
+                        },
+                      },
+                    ],
+                  ],
+                };
+              }
+              break;
             }
 
             case SpaceAction.RENAME_OBJECT: {
-              const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-              return intentPlugin?.provides.intent.dispatch({
-                action: LayoutAction.OPEN_POPOVER,
-                data: {
-                  anchorId: `dxos.org/ui/${intent.data.caller}/${intent.data.object.id}`,
-                  component: 'dxos.org/plugin/space/RenameObjectPopover',
-                  subject: intent.data.object,
-                  caller: intent.data.caller,
-                },
-              });
+              const object = intent.data?.object ?? intent.data?.result;
+              const caller = intent.data?.caller;
+              if (object instanceof TypedObject && caller) {
+                return {
+                  intents: [
+                    [
+                      {
+                        action: LayoutAction.OPEN_POPOVER,
+                        data: {
+                          anchorId: `dxos.org/ui/${caller}/${object.id}`,
+                          component: 'dxos.org/plugin/space/RenameObjectPopover',
+                          subject: object,
+                          caller,
+                        },
+                      },
+                    ],
+                  ],
+                };
+              }
+              break;
             }
 
             case SpaceAction.TOGGLE_HIDDEN: {
               settings.values.showHidden = intent.data?.state ?? !settings.values.showHidden;
-              return true;
+              return { data: true };
             }
           }
         },
