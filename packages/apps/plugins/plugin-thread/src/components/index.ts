@@ -12,3 +12,4 @@ export * from './ThreadMain';
 export * from './ThreadSettings';
 export * from './ThreadContainer';
 export * from './MessageContainer';
+export * from './ThreadsContainer';

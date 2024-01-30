@@ -15,7 +15,7 @@ import { ClientRepeater } from '@dxos/react-client/testing';
 import { Thread } from '@dxos/react-ui-thread';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { CommentsCollection } from './CommentsCollection';
+import { ThreadsContainer } from './ThreadsContainer';
 import { createCommentThread } from './testing';
 import translations from '../translations';
 
@@ -43,11 +43,11 @@ const Story = () => {
     return null;
   }
 
-  return <CommentsCollection threads={threads} space={space} />;
+  return <ThreadsContainer threads={threads} space={space} />;
 };
 
 export default {
-  title: 'plugin-thread/CommentsThread',
+  title: 'plugin-thread/Comments',
   component: Thread,
   render: () => <ClientRepeater Component={Story} types={types} createIdentity createSpace />,
   decorators: [withTheme],

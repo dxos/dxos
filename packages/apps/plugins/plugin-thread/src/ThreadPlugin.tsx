@@ -23,10 +23,10 @@ import {
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type TypedObject, SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
+import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
 
-import { ThreadContainer, ThreadMain, ThreadSettings } from './components';
-import { CommentsCollection } from './components/CommentsCollection';
+import { ThreadContainer, ThreadMain, ThreadSettings, ThreadsContainer } from './components';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
 import { ThreadAction, type ThreadPluginProvides, isThread, type ThreadSettingsProps } from './types';
@@ -76,7 +76,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           },
         },
       },
-      translations,
+      translations: [...translations, ...threadTranslations],
       graph: {
         builder: ({ parent, plugins }) => {
           if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
@@ -145,20 +145,22 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   .filter(nonNullable);
 
                 return (
-                  <CommentsCollection
+                  <ThreadsContainer
                     space={space}
                     threads={threads}
-                    // onFocus={(thread: ThreadType) => {
-                    //   if (state.active !== thread.id) {
-                    //     state.active = thread.id;
-                    //     void intentPlugin?.provides.intent.dispatch({
-                    //       action: LayoutAction.FOCUS,
-                    //       data: {
-                    //         object: thread.id,
-                    //       },
-                    //     });
-                    //   }
-                    // }}
+                    currentId={state.active}
+                    currentRelatedId={layout?.active}
+                    onThreadAttend={(thread: ThreadType) => {
+                      if (state.active !== thread.id) {
+                        state.active = thread.id;
+                        void intentPlugin?.provides.intent.dispatch({
+                          action: LayoutAction.FOCUS,
+                          data: {
+                            object: thread.id,
+                          },
+                        });
+                      }
+                    }}
                   />
                 );
               }
@@ -175,7 +177,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const { objects: threads } = space.db.query(ThreadType.filter((thread) => !thread.context));
               if (threads.length) {
                 const thread = threads[0];
-                return <ThreadContainer space={space} thread={thread} activeObjectId={layout?.active} />;
+                return <ThreadContainer space={space} thread={thread} currentRelatedId={layout?.active} />;
               }
 
               break;

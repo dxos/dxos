@@ -11,7 +11,14 @@ import { PublicKey } from '@dxos/react-client';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useTextModel } from '@dxos/react-ui-editor';
-import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter } from '@dxos/react-ui-thread';
+import {
+  MessageTextbox,
+  type MessageTextboxProps,
+  Thread,
+  ThreadFooter,
+  ThreadHeading,
+  type ThreadProps,
+} from '@dxos/react-ui-thread';
 
 import { MessageContainer } from './MessageContainer';
 import { useStatus, useMessageMetadata } from '../hooks';
@@ -19,11 +26,11 @@ import { useStatus, useMessageMetadata } from '../hooks';
 export type ThreadContainerProps = {
   space: Space;
   thread: ThreadType;
-  activeObjectId?: string;
-  onFocus?: () => void;
-};
+  currentRelatedId?: string;
+  onAttend?: () => void;
+} & Pick<ThreadProps, 'current'>;
 
-export const ThreadContainer = ({ space, thread, activeObjectId, onFocus }: ThreadContainerProps) => {
+export const ThreadContainer = ({ space, thread, currentRelatedId, current, onAttend }: ThreadContainerProps) => {
   const identity = useIdentity()!;
   const members = useMembers(space.key);
   const pending = useStatus(space, thread.id);
@@ -39,8 +46,7 @@ export const ThreadContainer = ({ space, thread, activeObjectId, onFocus }: Thre
     };
 
     setNextMessage(() => {
-      const result = new TextObject();
-      return { text: result };
+      return { text: new TextObject() };
     });
 
     // Update current block if same user and time > 3m.
@@ -57,7 +63,7 @@ export const ThreadContainer = ({ space, thread, activeObjectId, onFocus }: Thre
     thread.messages.push(
       new MessageType({
         from: { identityKey: identity.identityKey.toHex() },
-        context: { object: activeObjectId },
+        context: { object: currentRelatedId },
         blocks: [block],
       }),
     );
@@ -80,16 +86,17 @@ export const ThreadContainer = ({ space, thread, activeObjectId, onFocus }: Thre
   const textboxMetadata = useMessageMetadata(thread.id, identity);
 
   return (
-    <Thread onFocus={onFocus}>
+    <Thread onClickCapture={onAttend} onFocusCapture={onAttend} current={current}>
+      {thread.title && <ThreadHeading>{thread.title}</ThreadHeading>}
       {thread.messages.map((message) => (
         <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
       ))}
       {nextMessageModel && (
         <>
           <MessageTextbox
-            autoFocus
             readonly={pending}
             onSend={handleCreate}
+            {...(current && { autoFocus: true })}
             {...textboxMetadata}
             model={nextMessageModel}
           />
