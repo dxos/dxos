@@ -141,14 +141,11 @@ export type MessageTextboxProps = {
 
 export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
   ({ onSend, onClear, onEditorFocus, authorId, authorName, authorImgSrc, disabled, ...editorProps }, forwardedRef) => {
-    // TODO(thure): Handle `onSend`.
-    const { t } = useTranslation(translationKey);
     return (
       <MessageMeta
         {...{ id: editorProps.model.id, authorId, authorName, authorImgSrc }}
         authorStatus='active'
         continues={false}
-        classNames={['[--controls-opacity:0]', hoverableFocusedWithinControls]}
       >
         <TextEditor
           slots={{ root: { className: mx('plb-1 mie-1 rounded-sm', focusRing, disabled && 'opacity-50') } }}
@@ -190,9 +187,6 @@ export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
           {...editorProps}
           ref={forwardedRef}
         />
-        <p className={mx('fg-description text-xs text-end pli-1', hoverableControlItem)}>
-          {t('enter to send message')}
-        </p>
       </MessageMeta>
     );
   },

@@ -26,7 +26,7 @@ import {
 } from '@dxos/react-ui-editor';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Thread } from './Thread';
+import { Thread, ThreadFooter } from './Thread';
 import { Message, type MessageBlockProps, MessageTextbox } from '../Message';
 import translations from '../translations';
 import { type MessageEntity } from '../types';
@@ -169,6 +169,7 @@ const StoryThread: FC<{
           model={model}
           onSend={handleCreateMessage}
         />
+        <ThreadFooter />
         <Button variant='ghost' classNames='px-1' title='Resolve' onClick={onResolve}>
           <Check />
         </Button>

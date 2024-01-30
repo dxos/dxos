@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { useInMemoryTextModel } from '@dxos/react-ui-editor';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Thread } from './Thread';
+import { Thread, ThreadFooter } from './Thread';
 import { Message, MessageTextbox } from '../Message';
 import translations from '../translations';
 import { type MessageEntity } from '../types';
@@ -61,6 +61,7 @@ const Story = () => {
         <Message key={message.id} {...message} />
       ))}
       <MessageTextbox disabled={pending} authorId={identityKey1.toHex()} onSend={handleSend} model={nextMessageModel} />
+      <ThreadFooter activity>Someone is typing</ThreadFooter>
     </Thread>
   );
 };

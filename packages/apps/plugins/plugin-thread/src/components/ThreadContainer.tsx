@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/react-client';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useTextModel } from '@dxos/react-ui-editor';
-import { MessageTextbox, type MessageTextboxProps, Thread } from '@dxos/react-ui-thread';
+import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter } from '@dxos/react-ui-thread';
 
 import { MessageContainer } from './MessageContainer';
 import { useStatus, useMessageMetadata } from '../hooks';
@@ -85,13 +85,16 @@ export const ThreadContainer = ({ space, thread, activeObjectId, onFocus }: Thre
         <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
       ))}
       {nextMessageModel && (
-        <MessageTextbox
-          autoFocus
-          readonly={pending}
-          onSend={handleCreate}
-          {...textboxMetadata}
-          model={nextMessageModel}
-        />
+        <>
+          <MessageTextbox
+            autoFocus
+            readonly={pending}
+            onSend={handleCreate}
+            {...textboxMetadata}
+            model={nextMessageModel}
+          />
+          <ThreadFooter />
+        </>
       )}
     </Thread>
   );
