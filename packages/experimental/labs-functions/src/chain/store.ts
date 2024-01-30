@@ -39,7 +39,10 @@ export class ChainStore {
   private _documentById = new Map<string, ChainDocumentInfo>();
   private _documentByHash = new Map<string, string>();
 
-  constructor(private readonly _embeddings: Embeddings, private readonly _options: ChainStoreOptions = {}) {}
+  constructor(
+    private readonly _embeddings: Embeddings,
+    private readonly _options: ChainStoreOptions = {},
+  ) {}
 
   get size() {
     return this._documentById.size;
