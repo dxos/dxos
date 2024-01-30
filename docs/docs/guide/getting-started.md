@@ -13,16 +13,44 @@ DXOS works in any Node.js or Browser environment. There is a [TypeScript API](ty
 
 ::: note In this guide
 
-*   [Installation and usage](#installation).
-*   Using with [React](#react).
-*   Project [templates](#project-templates).
-*   [Deploy](#deployment) to Netlify.
+- Using with [TypeScript](#usage-with-typescript).
+- Using with [React](#usage-with-react).
+- Project [templates](#project-templates).
+- [Deploy](#deployment) to Netlify.
 
 :::
 
-## Installation and usage
+## Usage in a browser
 
-For any `node` or browser build such as `vite`, or `rollup` (for `react` see [below](#react)):
+DXOS recommends [Vite](https://vitejs.dev/) as the bundler. Vite requires a plugin in order to serve the WebAssembly modules.
+
+```bash
+npm install --save vite-plugin-top-level-await vite-plugin-wasm
+```
+
+Add `topLevelAwait` and `wasm` to your `vite.config.ts`:
+
+<!-- TODO: Turn this into a snippet -->
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite';
+import wasm from 'vite-plugin-wasm';
+import topLevelAwait from 'vite-plugin-top-level-await';
+
+export default defineConfig({
+  plugins: [topLevelAwait(), wasm()],
+
+  worker: {
+    format: 'es',
+    plugins: [topLevelAwait(), wasm()],
+  },
+});
+```
+
+## Usage with TypeScript
+
+DXOS can be used in both the `node` and browser environments. If you're using a browser environment, ensure you've set up your Vite config as described [above](#usage-in-a-browser).
 
 ```bash
 npm install --save @dxos/client
@@ -39,7 +67,6 @@ const client = new Client();
 const main = async () => {
   await client.initialize();
   // use client here
-
 };
 
 main();
@@ -68,6 +95,12 @@ import { ClientProvider } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
+const createWorker = () =>
+  new SharedWorker(new URL('./shared-worker', import.meta.url), {
+    type: 'module',
+    name: 'dxos-client-worker',
+  });
+
 const Component = () => {
   // Get the user to log in before a space can be obtained.
   const identity = useIdentity();
@@ -80,12 +113,21 @@ const Component = () => {
 };
 
 const App = () => (
-  <ClientProvider>
+  <ClientProvider createWorker={createWorker}>
     <Component />
   </ClientProvider>
 );
 
 createRoot(document.body).render(<App />);
+```
+
+The [`SharedWorker`](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker) allows resources to be shared between tabs and windows. Put the following in a file called `shared-worker.ts` in the same directory as your `App` component above:
+
+```tsx file=./react/snippets/shared-worker.tsx#L5-
+onconnect = async (event) => {
+  const { onconnect } = await import('@dxos/react-client/worker');
+  await onconnect(event);
+};
 ```
 
 Components will automatically re-render when the data changes. Change the data by mutating it as any regular JavaScript object.
@@ -117,19 +159,21 @@ npm run serve
 
 This will start the development server and print a URL to the console. Opening two browser windows can demonstrate local state sync working:
 
+<!-- TODO: Re-record this video-->
+
 <video class="dark" controls loop autoplay style="width:100%" src="/images/hello-dark.mp4"></video> <video class="light" controls loop autoplay style="width:100%" src="/images/hello-light.mp4"></video>
 
 ::: info Why this is cool:
 
-*   State is being reactively shared between all instances of the app running on the same device. If more peers join the space, all of them will see updates reactively.
-*   Data is stored **locally**, in-browser, in [OPFS](https://fs.spec.whatwg.org/#origin-private-file-system) or [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API), controlled by the `halo.dxos.org` domain. **This enables privacy and gives end-users control over their data**. The app running on `localhost` subscribes to data through a local shared memory connection with the [HALO](./platform/halo) [PWA](./glossary#pwa) on `halo.dxos.org` which is fast and works offline. Learn more about the [HALO vault topology](./platform/#local-vault-topology).
-*   Remote peers exchange data directly, **peer-to-peer** over secure [WebRTC](https://webrtc.org/) connections.
-*   User identity (public/private keys) are established securely and maintained by [HALO](./platform/halo) for the whole device (browser profile), without a password.
-*   Everything works offline.
-*   Real-time collaboration is possible when online.
-*   There are **no servers** that store any data.
-*   There is no need for [ORMs](https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping). ECHO objects are "plain javascript" objects that can be manipulated directly.
-*   **There is no need for an API tier.** The app has everything it needs on the client.
+- State is being reactively shared between all instances of the app running on the same device. If more peers join the space, all of them will see updates reactively.
+- Data is stored **locally**, in-browser, in [OPFS](https://fs.spec.whatwg.org/#origin-private-file-system) or [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API). **This enables privacy and gives end-users control over their data**. The app running on `localhost` subscribes to data through a local shared memory connection with the [HALO](./platform/halo) [PWA](./glossary#pwa) on `halo.dxos.org` which is fast and works offline. Learn more about the [HALO vault topology](./platform/#local-vault-topology).
+- Remote peers exchange data directly, **peer-to-peer** over secure [WebRTC](https://webrtc.org/) connections.
+- User identity (public/private keys) are established securely and maintained by [HALO](./platform/halo) for the whole device (browser profile), without a password.
+- Everything works offline.
+- Real-time collaboration is possible when online.
+- There are **no servers** that store any data.
+- There is no need for [ORMs](https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping). ECHO objects are "plain javascript" objects that can be manipulated directly.
+- **There is no need for an API tier.** The app has everything it needs on the client.
 
 :::
 
@@ -150,15 +194,15 @@ If you would like to host the application yourself, see our guide on [using KUBE
 
 ## Next steps
 
-*   Step-by-step [React tutorial](./tutorial.md)
-*   ECHO with [React](./react/)
-*   ECHO with [TypeScript](./typescript/)
-*   ECHO with [strongly typed objects](./typescript/queries#typed-queries)
+- Step-by-step [React tutorial](./tutorial.md)
+- ECHO with [React](./react/)
+- ECHO with [TypeScript](./typescript/)
+- ECHO with [strongly typed objects](./typescript/queries#typed-queries)
 
 We hope you'll find the technology useful, and we welcome your ideas and contributions:
 
-*   Join the DXOS [Discord](https://discord.gg/KsDBXuUxvD)
-*   DXOS [repository on GitHub](https://github.com/dxos/dxos)
-*   File a bug or idea in [Issues](https://github.com/dxos/dxos/issues)
+- Join the DXOS [Discord](https://discord.gg/KsDBXuUxvD)
+- DXOS [repository on GitHub](https://github.com/dxos/dxos)
+- File a bug or idea in [Issues](https://github.com/dxos/dxos/issues)
 
 Happy building! 🚀
