@@ -31,6 +31,9 @@
       "path": "../debug"
     },
     {
+      "path": "../esbuild-plugins"
+    },
+    {
       "path": "../invariant"
     },
     {
