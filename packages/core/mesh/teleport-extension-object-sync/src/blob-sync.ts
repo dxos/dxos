@@ -28,7 +28,7 @@ type DownloadRequest = {
 @trackLeaks('open', 'close')
 export class BlobSync {
   private readonly _ctx = new Context();
-  private readonly _lock = new Mutex();
+  private readonly _mutex = new Mutex();
 
   private readonly _downloadRequests = new ComplexMap<Uint8Array, DownloadRequest>((key) =>
     PublicKey.from(key).toHex(),
@@ -51,7 +51,7 @@ export class BlobSync {
    */
   async download(ctx: Context, id: Uint8Array): Promise<void> {
     log('download', { id });
-    const request = await this._lock.executeSynchronized(async () => {
+    const request = await this._mutex.executeSynchronized(async () => {
       const existingRequest = this._downloadRequests.get(id);
 
       if (existingRequest) {
@@ -82,7 +82,7 @@ export class BlobSync {
     });
 
     ctx?.onDispose(() =>
-      this._lock.executeSynchronized(async () => {
+      this._mutex.executeSynchronized(async () => {
         // Remove request if context is disposed and nobody else requests it.
         const request = this._downloadRequests.get(id);
         if (!request) {

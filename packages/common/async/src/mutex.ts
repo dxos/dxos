@@ -87,10 +87,10 @@ export class MutexGuard {
   }
 }
 
-const classLockSymbol = Symbol('class-lock');
+const classMutexSymbol = Symbol('class-mutex');
 
 interface LockableClass {
-  [classLockSymbol]?: Mutex;
+  [classMutexSymbol]?: Mutex;
 }
 
 const FORCE_DISABLE_WARNING = false;
@@ -110,16 +110,16 @@ export const synchronized = (
 ) => {
   const method = descriptor.value!;
   descriptor.value = async function synchronizedMethod(this: any & LockableClass, ...args: any) {
-    const lock: Mutex = (this[classLockSymbol] ??= new Mutex());
+    const mutex: Mutex = (this[classMutexSymbol] ??= new Mutex());
 
     const tag = `${target.constructor.name}.${propertyName}`;
 
     // Disable warning in prod to avoid performance penalty.
     let guard;
     if (!enableWarning) {
-      guard = await lock.acquire(tag);
+      guard = await mutex.acquire(tag);
     } else {
-      guard = await warnAfterTimeout(10_000, `lock on ${tag} (taken by ${lock.tag})`, () => lock.acquire(tag));
+      guard = await warnAfterTimeout(10_000, `lock on ${tag} (taken by ${mutex.tag})`, () => mutex.acquire(tag));
     }
 
     try {

@@ -52,7 +52,7 @@ export type CreatePipelineParams = {
 @trackLeaks('open', 'close')
 @trace.resource()
 export class Space {
-  private readonly _addFeedLock = new Mutex();
+  private readonly _addFeedMutex = new Mutex();
 
   public readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
   public readonly stateUpdate = new Event();
@@ -135,7 +135,7 @@ export class Space {
         }
 
         // Add existing feeds.
-        await this._addFeedLock.executeSynchronized(async () => {
+        await this._addFeedMutex.executeSynchronized(async () => {
           for (const feed of this._controlPipeline.spaceState.feeds.values()) {
             if (feed.assertion.designation === AdmittedFeed.Designation.DATA && !pipeline.hasFeed(feed.key)) {
               await pipeline.addFeed(await this._feedProvider(feed.key, { sparse: true }));
