@@ -6,16 +6,23 @@ import { faker as realFaker } from '@faker-js/faker';
 
 import { type Range } from './random';
 
-// TODO(burdon): Fake faker.
+// TODO(burdon): Migration steps:
+//  - Identify and remove test dependencies on specific values.
+//  - Remove "custom" utils (e.g., animals).
+//  - Replace utils/helpers.
+//  - Replace data types.
+//  - Replace lorem.
+
+// Fake faker.
 export const faker = {
+  //
+  // Util
+  //
   seed: (seed: number) => realFaker.seed(seed),
-  //
-  // Helpers
-  //
   helpers: {
     fake: realFaker.helpers.fake, // TODO(burdon): ???
-    multiple: (f: () => any, range?: { count: Range }) => realFaker.helpers.multiple(f, range),
     arrayElement: <T>(a: T[]) => realFaker.helpers.arrayElement(a),
+    multiple: (f: () => any, range?: { count: Range }) => realFaker.helpers.multiple(f, range),
     arrayElements: <T>(a: T[], n: number) => realFaker.helpers.arrayElements(a, n),
     uniqueArray: (f: readonly any[] | (() => any), n: number) => realFaker.helpers.uniqueArray(f, n),
   },
@@ -23,9 +30,9 @@ export const faker = {
   // Data
   //
   datatype: {
-    array: (n: number) => realFaker.datatype.array(),
-    boolean: (p?: { probability: number }) => realFaker.datatype.boolean(p),
+    array: (n: number) => realFaker.datatype.array(n),
     float: () => realFaker.datatype.float(),
+    boolean: (p?: { probability: number }) => realFaker.datatype.boolean(p),
   },
   date: {
     recent: () => realFaker.date.recent(),
@@ -37,6 +44,9 @@ export const faker = {
     hexadecimal: (l?: { length: number }) => realFaker.string.hexadecimal(l),
     uuid: () => realFaker.string.uuid(),
   },
+  //
+  // Text
+  //
   lorem: {
     lines: (n: Range) => realFaker.lorem.lines(n),
     word: (n?: number) => realFaker.lorem.word(n),
