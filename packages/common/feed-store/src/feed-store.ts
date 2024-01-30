@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-import { Event, Lock } from '@dxos/async';
+import { Event, Mutex } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -21,7 +21,7 @@ export interface FeedStoreOptions<T extends {}> {
  */
 export class FeedStore<T extends {}> {
   private readonly _feeds: ComplexMap<PublicKey, FeedWrapper<T>> = new ComplexMap(PublicKey.hash);
-  private readonly _locks = new ComplexMap<PublicKey, Lock>(PublicKey.hash);
+  private readonly _locks = new ComplexMap<PublicKey, Mutex>(PublicKey.hash);
   private readonly _factory: FeedFactory<T>;
 
   private _closed = false;
@@ -56,7 +56,7 @@ export class FeedStore<T extends {}> {
     invariant(feedKey);
     invariant(!this._closed, 'Feed store is closed');
 
-    const lock = defaultMap(this._locks, feedKey, () => new Lock());
+    const lock = defaultMap(this._locks, feedKey, () => new Mutex());
 
     return lock.executeSynchronized(async () => {
       let feed = this.getFeed(feedKey);

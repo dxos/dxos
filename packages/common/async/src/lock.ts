@@ -20,7 +20,7 @@ import { warnAfterTimeout } from '@dxos/debug';
  * Java docs reference on synchronized sections:
  * https://docs.oracle.com/javase/tutorial/essential/concurrency/locksync.html
  */
-export class Lock {
+export class Mutex {
   private _queue = Promise.resolve();
 
   private _tag: string | null = null;
@@ -90,7 +90,7 @@ export class MutexGuard {
 const classLockSymbol = Symbol('class-lock');
 
 interface LockableClass {
-  [classLockSymbol]?: Lock;
+  [classLockSymbol]?: Mutex;
 }
 
 const FORCE_DISABLE_WARNING = false;
@@ -110,7 +110,7 @@ export const synchronized = (
 ) => {
   const method = descriptor.value!;
   descriptor.value = async function synchronizedMethod(this: any & LockableClass, ...args: any) {
-    const lock: Lock = (this[classLockSymbol] ??= new Lock());
+    const lock: Mutex = (this[classLockSymbol] ??= new Mutex());
 
     const tag = `${target.constructor.name}.${propertyName}`;
 

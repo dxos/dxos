@@ -7,13 +7,13 @@ import { expect } from 'chai';
 import { expectToThrow } from '@dxos/debug';
 import { describe, test } from '@dxos/test';
 
-import { Lock, synchronized } from './lock';
+import { Mutex, synchronized } from './lock';
 import { sleep } from './timeout';
 
 describe('Lock', () => {
   test('single execution', async () => {
     const events = [];
-    const lock = new Lock();
+    const lock = new Mutex();
 
     await lock.executeSynchronized(async () => {
       events.push('lock');
@@ -24,7 +24,7 @@ describe('Lock', () => {
   });
 
   test('return value', async () => {
-    const lock = new Lock();
+    const lock = new Mutex();
 
     const value = await lock.executeSynchronized(async () => 'foo');
 
@@ -33,7 +33,7 @@ describe('Lock', () => {
 
   test('two concurrent synchronizations', async () => {
     const events = [];
-    const lock = new Lock();
+    const lock = new Mutex();
 
     const p1 = lock
       .executeSynchronized(async () => {
@@ -61,7 +61,7 @@ describe('Lock', () => {
   });
 
   test('deadlock', async () => {
-    const lock = new Lock();
+    const lock = new Mutex();
 
     const promise = lock.executeSynchronized(async () => {
       await lock.executeSynchronized(async () => {
@@ -80,7 +80,7 @@ describe('Lock', () => {
   });
 
   test('errors do not break the lock', async () => {
-    const lock = new Lock();
+    const lock = new Mutex();
 
     let p1Status, p2Status;
 
@@ -118,7 +118,7 @@ describe('Lock', () => {
   });
 
   test('errors are propagated with stack traces', async () => {
-    const lock = new Lock();
+    const lock = new Mutex();
 
     const throwsError = async () => {
       throw new Error();
@@ -143,7 +143,7 @@ describe('Lock', () => {
   }).skipEnvironments('webkit');
 
   test('works with explicit resource management syntax', async () => {
-    const mutex = new Lock();
+    const mutex = new Mutex();
 
     const events: string[] = [];
 

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { trackLeaks, Trigger, Lock } from '@dxos/async';
+import { trackLeaks, Trigger, Mutex } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -28,7 +28,7 @@ type DownloadRequest = {
 @trackLeaks('open', 'close')
 export class BlobSync {
   private readonly _ctx = new Context();
-  private readonly _lock = new Lock();
+  private readonly _lock = new Mutex();
 
   private readonly _downloadRequests = new ComplexMap<Uint8Array, DownloadRequest>((key) =>
     PublicKey.from(key).toHex(),
