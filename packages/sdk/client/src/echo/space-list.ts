@@ -50,6 +50,11 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
   private readonly _automergeContext: AutomergeContext;
 
+  @trace.info()
+  private get _isReadyState() {
+    return this._isReady.get();
+  }
+
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _modelFactory: ModelFactory,
@@ -84,6 +89,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   /**
    * @internal
    */
+  @trace.span()
   async _open() {
     log.trace('dxos.sdk.echo-proxy.open', Trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     this._ctx = new Context({
@@ -172,6 +178,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   /**
    * @internal
    */
+  @trace.span()
   async _close() {
     await this._ctx.dispose();
     await this._automergeContext.close();
@@ -197,6 +204,12 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return this._value?.find(({ key }) => key.equals(spaceKey));
   }
 
+  @trace.info()
+  private get _spaces() {
+    return this.get();
+  }
+
+  @trace.info()
   get default(): Space {
     const identityKey = this._getIdentityKey();
     invariant(identityKey, 'Identity must be set.');
