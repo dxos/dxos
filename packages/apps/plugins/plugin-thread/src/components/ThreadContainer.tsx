@@ -28,9 +28,17 @@ export type ThreadContainerProps = {
   thread: ThreadType;
   currentRelatedId?: string;
   onAttend?: () => void;
+  autoFocusTextBox?: boolean;
 } & Pick<ThreadProps, 'current'>;
 
-export const ThreadContainer = ({ space, thread, currentRelatedId, current, onAttend }: ThreadContainerProps) => {
+export const ThreadContainer = ({
+  space,
+  thread,
+  currentRelatedId,
+  current,
+  autoFocusTextBox,
+  onAttend,
+}: ThreadContainerProps) => {
   const identity = useIdentity()!;
   const members = useMembers(space.key);
   const pending = useStatus(space, thread.id);
@@ -85,6 +93,8 @@ export const ThreadContainer = ({ space, thread, currentRelatedId, current, onAt
 
   const textboxMetadata = useMessageMetadata(thread.id, identity);
 
+  console.log('[thread current]', current, thread.id);
+
   return (
     <Thread onClickCapture={onAttend} onFocusCapture={onAttend} current={current}>
       {thread.title && <ThreadHeading>{thread.title}</ThreadHeading>}
@@ -96,7 +106,7 @@ export const ThreadContainer = ({ space, thread, currentRelatedId, current, onAt
           <MessageTextbox
             readonly={pending}
             onSend={handleCreate}
-            {...(current && { autoFocus: true })}
+            autoFocus={autoFocusTextBox}
             {...textboxMetadata}
             model={nextMessageModel}
           />
