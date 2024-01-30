@@ -16,7 +16,7 @@ import { type DocStructure } from './types';
 import { getGlobalAutomergePreference } from '../automerge-preference';
 import { type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
-import { type EchoObject, base, isActualTypedObject, isAutomergeObject, TextObject } from '../object';
+import { type EchoObject, base, isActualTypedObject, isAutomergeObject, isActualTextObject } from '../object';
 import { type Schema } from '../proto';
 
 export type SpaceState = {
@@ -63,7 +63,6 @@ export class AutomergeDb {
     }
     this._ctx = new Context();
 
-    log.info('begin opening', { indexDocId: spaceState.rootUrl, automergePreference: getGlobalAutomergePreference() });
     if (!spaceState.rootUrl) {
       if (getGlobalAutomergePreference()) {
         log.error('Database opened with no rootUrl');
@@ -99,7 +98,10 @@ export class AutomergeDb {
       this._docHandle.off('change', update);
     });
 
-    log.info('db opened', { indexDocId: spaceState.rootUrl, duration: performance.now() - start });
+    const elapsed = performance.now() - start;
+    if (elapsed > 1000) {
+      log.warn('slow AM open', { docId: spaceState.rootUrl, duration: elapsed });
+    }
   }
 
   // TODO(dmaretskyi): Cant close while opening.
@@ -169,7 +171,7 @@ export class AutomergeDb {
   }
 
   add<T extends EchoObject>(obj: T): T {
-    if (isActualTypedObject(obj) || obj instanceof TextObject) {
+    if (isActualTypedObject(obj) || isActualTextObject(obj)) {
       return this._echoDatabase.add(obj);
     }
 
