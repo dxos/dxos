@@ -43,13 +43,7 @@ const Story = () => {
     return null;
   }
 
-  return (
-    <div className='flex w-full justify-center'>
-      <div className='flex w-[400px] overflow-x-hidden'>
-        <CommentsCollection threads={threads} space={space} />
-      </div>
-    </div>
-  );
+  return <CommentsCollection threads={threads} space={space} />;
 };
 
 export default {
