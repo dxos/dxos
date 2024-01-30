@@ -139,7 +139,7 @@ export class AutomergeObject implements TypedObjectProperties {
   }
 
   get [db](): EchoDatabase | undefined {
-    return this[base]._database._echoDatabase;
+    return this[base]._database?._echoDatabase;
   }
 
   get [debug](): string {

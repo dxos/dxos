@@ -8,7 +8,14 @@ import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { setGlobalAutomergePreference } from './automerge-preference';
-import { LEGACY_TEXT_TYPE, TextObject, TypedObject, isAutomergeObject, isActualTypedObject } from './object';
+import {
+  LEGACY_TEXT_TYPE,
+  TextObject,
+  TypedObject,
+  isAutomergeObject,
+  isActualTypedObject,
+  getTextContent,
+} from './object';
 import { Filter } from './query';
 import { type SerializedSpace, Serializer } from './serializer';
 import { createDatabase } from './testing';
@@ -104,18 +111,22 @@ describe('Serializer', () => {
       const text = new TextObject(content);
       db.add(text);
       await db.flush();
-      expect(text.text).to.deep.eq(content);
+      expect(getTextContent(text)).to.deep.eq(content);
       expect(db.objects).to.have.length(1);
 
       data = await serializer.export(db);
       expect(data.objects).to.have.length(1);
       expect(data.objects[0]).to.contain({
         '@id': text.id,
-        '@model': 'dxos.org/model/text',
-        '@type': 'dxos.Text.v0',
         content,
         kind: TextKind.PLAIN,
         field: 'content',
+      });
+      expect(data.objects[0]['@type']).to.contain({
+        '@type': 'dxos.echo.model.document.Reference',
+        itemId: 'dxos.Text.v0',
+        protocol: 'protobuf',
+        host: 'dxos.org',
       });
     }
 
@@ -126,7 +137,7 @@ describe('Serializer', () => {
       const { objects } = db.query(undefined, { models: ['*'] });
       expect(objects[0] instanceof TextObject).to.be.true;
       expect(objects).to.have.length(1);
-      expect(objects[0].text).to.deep.eq(content);
+      expect(getTextContent(objects[0] as any as TextObject)).to.deep.eq(content);
     }
   });
 
@@ -194,7 +205,7 @@ describe('Serializer from Hypergraph to Automerge', () => {
 
       const { objects } = db.query();
       expect(isAutomergeObject(objects[0])).to.be.true;
-      expect(objects[0] instanceof TextObject).to.be.false;
+      expect(objects[0] instanceof TextObject).to.be.true;
       expect(objects).to.have.length(1);
       expect(objects[0][objects[0].field]).to.deep.eq(content);
     }
@@ -211,20 +222,16 @@ describe('Serializer from Hypergraph to Automerge', () => {
         {
           title: 'Main task',
           subtasks: [
-            new TypedObject({
-              title: 'Subtask 1',
-            }),
-            new TypedObject({
-              title: 'Subtask 2',
-            }),
+            new TypedObject({ title: 'Subtask 1' }, { automerge: false }),
+            new TypedObject({ title: 'Subtask 2' }, { automerge: false }),
           ],
-          assignee: new Contact({ name: 'Dmytro Veremchuk' }),
+          assignee: new Contact({ name: 'Dmytro Veremchuk' }, { automerge: false }),
         },
-        // { automerge: false },
+        { automerge: false },
       );
       db.add(obj);
 
-      const yjs = new TextObject();
+      const yjs = new TextObject(undefined, undefined, undefined, { automerge: false });
       yjs.doc!.transact(() => {
         const yMap = yjs.doc!.getMap('records');
         yMap.set('one', { id: 'one', title: 'One' });
@@ -240,8 +247,6 @@ describe('Serializer from Hypergraph to Automerge', () => {
     }
 
     {
-      setGlobalAutomergePreference(true);
-      afterTest(() => setGlobalAutomergePreference(undefined));
       const { db } = await createDatabase();
       await serializer.import(db, serialized);
 

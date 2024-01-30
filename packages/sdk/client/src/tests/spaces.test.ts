@@ -11,7 +11,7 @@ import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { Expando, subscribe } from '@dxos/echo-schema';
+import { Expando, getTextContent, subscribe } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type EchoSnapshot, type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
@@ -512,7 +512,9 @@ describe('Spaces', () => {
     (hostDocument.content as any).content = 'Hello, world!';
 
     await waitForExpect(() => {
-      expect(guestSpace.db.getObjectById<DocumentType>(hostDocument.id)!.content.content).to.equal('Hello, world!');
+      expect(getTextContent(guestSpace.db.getObjectById<DocumentType>(hostDocument.id)!.content)).to.equal(
+        'Hello, world!',
+      );
     });
   });
 });

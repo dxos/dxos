@@ -7,7 +7,7 @@ import expect from 'expect'; // TODO(burdon): Can't use chai with wait-for-expec
 import { sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
-import { TextObject } from './text-object';
+import { TextObject, getTextContent } from './text-object';
 import { TypedObject } from './typed-object';
 import { createDatabase } from '../testing';
 
@@ -18,10 +18,10 @@ describe('TextObject', () => {
     db.add(text);
     await db.flush();
 
-    expect(text.content).toEqual('');
+    expect(getTextContent(text)).toEqual('');
 
     (text.content as any) = 'Hello world';
-    expect(text.content).toEqual('Hello world');
+    expect(getTextContent(text)).toEqual('Hello world');
   });
 
   test('text property', async () => {
@@ -31,9 +31,9 @@ describe('TextObject', () => {
     await db.flush();
     task.text = new TextObject();
     await sleep(10);
-    expect(task.text.content).toEqual('');
+    expect(getTextContent(task.text)).toEqual('');
 
     task.text.content = 'Hello world';
-    expect(task.text.content).toEqual('Hello world');
+    expect(getTextContent(task.text)).toEqual('Hello world');
   });
 });

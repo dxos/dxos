@@ -4,6 +4,7 @@
 
 import { expect } from 'chai';
 
+import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Container, Task, types } from './proto';

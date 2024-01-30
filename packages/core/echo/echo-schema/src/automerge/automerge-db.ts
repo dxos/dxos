@@ -16,7 +16,7 @@ import { type DocStructure } from './types';
 import { getGlobalAutomergePreference } from '../automerge-preference';
 import { type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
-import { type EchoObject, base, isActualTypedObject, isAutomergeObject, TextObject } from '../object';
+import { type EchoObject, base, isActualTypedObject, isAutomergeObject, isActualTextObject } from '../object';
 import { type Schema } from '../proto';
 
 export type SpaceState = {
@@ -171,7 +171,7 @@ export class AutomergeDb {
   }
 
   add<T extends EchoObject>(obj: T): T {
-    if (isActualTypedObject(obj) || obj instanceof TextObject) {
+    if (isActualTypedObject(obj) || isActualTextObject(obj)) {
       return this._echoDatabase.add(obj);
     }
 
