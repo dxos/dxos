@@ -205,6 +205,11 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   @trace.info()
+  private get _spaces() {
+    return this.get();
+  }
+
+  @trace.info()
   get default(): Space {
     const identityKey = this._getIdentityKey();
     invariant(identityKey, 'Identity must be set.');
