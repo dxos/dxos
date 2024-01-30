@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Space } from '@dxos/client-protocol';
+import type { Space } from '@dxos/client-protocol';
 
 export type MapSpacesOptions = {
   verbose?: boolean;
@@ -29,7 +29,6 @@ export const mapSpaces = (spaces: Space[], options: MapSpacesOptions = { verbose
       // TODO(nf): truncate keys for DD?
       key: space.key.truncate(),
       open: space.isOpen,
-      name: space.properties.name,
       members: space.members.get().length,
       objects: space.db.query().objects.length,
       startup,

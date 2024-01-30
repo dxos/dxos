@@ -6,9 +6,9 @@ import '@dxosTheme';
 
 import { registerSW } from 'virtual:pwa-register';
 
-import { initializeAppObservability } from '@braneframe/plugin-telemetry/headless';
 import { Config, Defaults } from '@dxos/config';
 import { log } from '@dxos/log';
+import { initializeAppObservability } from '@dxos/observability';
 
 import { startIFrameRuntime } from './iframe';
 import { namespace } from '../namespace';

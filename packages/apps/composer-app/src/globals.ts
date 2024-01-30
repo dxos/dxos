@@ -7,9 +7,8 @@ import { Migrations } from '@dxos/migrations';
 import type { Client } from '@dxos/react-client';
 import { SpaceState } from '@dxos/react-client/echo';
 
+import { appKey } from './constants';
 import { migrations } from './migrations';
-
-export const appKey = 'composer.dxos.org';
 
 Migrations.define(appKey, migrations);
 

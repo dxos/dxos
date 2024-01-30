@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+export const appKey = 'composer.dxos.org';
+
 export const INITIAL_TITLE = 'README';
 
 // TODO(wittjosiah): Translate.
