@@ -47,10 +47,13 @@ export const SpacePresence = ({ object, spaceKey }: { object: TypedObject; space
         space.key.equals(viewer.spaceKey) && object.id === viewer.objectId && Date.now() - viewer.lastSeen < 30_000
       );
     })
-    .reduce((viewers, viewer) => {
-      viewers.set(viewer.identityKey, viewer.lastSeen);
-      return viewers;
-    }, new ComplexMap<PublicKey, number>((key) => key.toHex()));
+    .reduce(
+      (viewers, viewer) => {
+        viewers.set(viewer.identityKey, viewer.lastSeen);
+        return viewers;
+      },
+      new ComplexMap<PublicKey, number>((key) => key.toHex()),
+    );
 
   const members = spaceMembers
     .filter((member) => member.presence === 1 && !identity.identityKey.equals(member.identity.identityKey))
