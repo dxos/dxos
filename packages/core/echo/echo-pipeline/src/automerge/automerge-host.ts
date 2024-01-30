@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Trigger } from '@dxos/async';
+import { next as automerge } from '@dxos/automerge/automerge';
 import {
   Repo,
   NetworkAdapter,
@@ -15,18 +17,26 @@ import {
 import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
 import { Stream } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type HostInfo, type SyncRepoRequest, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
 import { type PeerInfo } from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
 import { StorageType, type Directory } from '@dxos/random-access-storage';
 import { AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
-import { arrayToBuffer, bufferToArray } from '@dxos/util';
+import { trace } from '@dxos/tracing';
+import { ComplexMap, ComplexSet, arrayToBuffer, bufferToArray, defaultMap, mapValues } from '@dxos/util';
 
+@trace.resource()
 export class AutomergeHost {
   private readonly _repo: Repo;
   private readonly _meshNetwork: MeshNetworkAdapter;
   private readonly _clientNetwork: LocalHostNetworkAdapter;
   private readonly _storage: StorageAdapter;
+
+  /**
+   * spaceKey -> deviceKey[]
+   */
+  private readonly _authorizedDevices = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(PublicKey.hash);
 
   constructor(storageDirectory: Directory) {
     this._meshNetwork = new MeshNetworkAdapter();
@@ -38,11 +48,52 @@ export class AutomergeHost {
         ? new IndexedDBStorageAdapter(storageDirectory.path, 'data')
         : new AutomergeStorageAdapter(storageDirectory);
     this._repo = new Repo({
+      peerId: `host-${PublicKey.random().toHex()}` as PeerId,
       network: [this._clientNetwork, this._meshNetwork],
       storage: this._storage,
 
       // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
-      sharePolicy: async (peerId, documentId) => true, // Share everything.
+      // Hosts, running in the worker, don't share documents unless requested by other peers.
+      sharePolicy: async (peerId /* device key */, documentId /* space key */) => {
+        if (peerId.startsWith('client-')) {
+          return true;
+        }
+
+        if (!documentId) {
+          return false;
+        }
+
+        const doc = this._repo.handles[documentId]?.docSync();
+        if (!doc) {
+          log('doc not found for share policy check', { peerId, documentId });
+          return false;
+        }
+
+        try {
+          if (!doc.experimental_spaceKey) {
+            log.warn('space key not found for share policy check', { peerId, documentId });
+            return false;
+          }
+
+          const spaceKey = PublicKey.from(doc.experimental_spaceKey);
+          const authorizedDevices = this._authorizedDevices.get(spaceKey);
+
+          // TODO(mykola): Hack, stop abusing `peerMetadata` field.
+          const deviceKeyHex = (this.repo.peerMetadataByPeerId[peerId] as any)?.dxos_deviceKey;
+          if (!deviceKeyHex) {
+            log.warn('device key not found for share policy check', { peerId, documentId });
+            return false;
+          }
+          const deviceKey = PublicKey.from(deviceKeyHex);
+
+          const isAuthorized = authorizedDevices?.has(deviceKey) ?? false;
+          log.info('share policy check', { peerId, documentId, deviceKey, spaceKey, isAuthorized });
+          return isAuthorized;
+        } catch (err) {
+          log.catch(err);
+          return false;
+        }
+      }, // Share everything.
     });
     this._clientNetwork.ready();
     this._meshNetwork.ready();
@@ -52,7 +103,22 @@ export class AutomergeHost {
     return this._repo;
   }
 
+  @trace.info({ depth: null })
+  private _automergeDocs() {
+    return mapValues(this._repo.handles, (handle) => ({
+      state: handle.state,
+      hasDoc: !!handle.docSync(),
+      heads: handle.docSync() ? automerge.getHeads(handle.docSync()) : null,
+    }));
+  }
+
+  @trace.info({ depth: null })
+  private _automergePeers() {
+    return this._repo.peers;
+  }
+
   async close() {
+    this._storage instanceof AutomergeStorageAdapter && (await this._storage.close());
     await this._clientNetwork.close();
   }
 
@@ -68,7 +134,7 @@ export class AutomergeHost {
     return this._clientNetwork.sendSyncMessage(request);
   }
 
-  getHostInfo(): HostInfo {
+  async getHostInfo(): Promise<HostInfo> {
     return this._clientNetwork.getHostInfo();
   }
 
@@ -78,6 +144,10 @@ export class AutomergeHost {
 
   createExtension(): AutomergeReplicator {
     return this._meshNetwork.createExtension();
+  }
+
+  authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey) {
+    defaultMap(this._authorizedDevices, spaceKey, () => new ComplexSet(PublicKey.hash)).add(deviceKey);
   }
 }
 
@@ -104,8 +174,11 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
     });
   }
 
+  private _connected = new Trigger();
+
   override connect(peerId: PeerId): void {
     this.peerId = peerId;
+    this._connected.wake();
     // No-op. Client always connects first
   }
 
@@ -146,18 +219,26 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
         },
       });
 
-      this.emit('peer-candidate', {
-        peerId,
-      });
+      this._connected
+        .wait({ timeout: 1_000 })
+        .then(() => {
+          this.emit('peer-candidate', {
+            peerMetadata: {},
+            peerId,
+          });
+        })
+        .catch((err) => log.catch(err));
     });
   }
 
   async sendSyncMessage({ id, syncMessage }: SyncRepoRequest): Promise<void> {
+    await this._connected.wait({ timeout: 1_000 });
     const message = cbor.decode(syncMessage!) as Message;
     this.emit('message', message);
   }
 
-  getHostInfo(): HostInfo {
+  async getHostInfo(): Promise<HostInfo> {
+    await this._connected.wait({ timeout: 1_000 });
     invariant(this.peerId, 'Peer id not set.');
     return {
       peerId: this.peerId,
@@ -210,7 +291,7 @@ export class MeshNetworkAdapter extends NetworkAdapter {
         peerId: this.peerId,
       },
       {
-        onStartReplication: async (info) => {
+        onStartReplication: async (info, remotePeerId /** Teleport ID */) => {
           // Note: We store only one extension per peer.
           //       There can be a case where two connected peers have more than one teleport connection between them
           //       and each of them uses different teleport connections to send messages.
@@ -224,6 +305,10 @@ export class MeshNetworkAdapter extends NetworkAdapter {
           // TODO(mykola): Fix race condition?
           this._extensions.set(info.id, extension);
           this.emit('peer-candidate', {
+            // TODO(mykola): Hack, stop abusing `peerMetadata` field.
+            peerMetadata: {
+              dxos_deviceKey: remotePeerId.toHex(),
+            } as any,
             peerId: info.id as PeerId,
           });
         },
@@ -248,11 +333,18 @@ export class MeshNetworkAdapter extends NetworkAdapter {
 }
 
 export class AutomergeStorageAdapter extends StorageAdapter {
+  // TODO(mykola): Hack for restricting automerge Repo to access storage if Host is `closed`.
+  //               Automerge Repo do not have any lifetime management.
+  private _state: 'opened' | 'closed' = 'opened';
+
   constructor(private readonly _directory: Directory) {
     super();
   }
 
   override async load(key: StorageKey): Promise<Uint8Array | undefined> {
+    if (this._state !== 'opened') {
+      return undefined;
+    }
     const filename = this._getFilename(key);
     const file = this._directory.getOrCreateFile(filename);
     const { size } = await file.stat();
@@ -264,6 +356,9 @@ export class AutomergeStorageAdapter extends StorageAdapter {
   }
 
   override async save(key: StorageKey, data: Uint8Array): Promise<void> {
+    if (this._state !== 'opened') {
+      return undefined;
+    }
     const filename = this._getFilename(key);
     const file = this._directory.getOrCreateFile(filename);
     await file.write(0, arrayToBuffer(data));
@@ -273,6 +368,9 @@ export class AutomergeStorageAdapter extends StorageAdapter {
   }
 
   override async remove(key: StorageKey): Promise<void> {
+    if (this._state !== 'opened') {
+      return undefined;
+    }
     // TODO(dmaretskyi): Better deletion.
     const filename = this._getFilename(key);
     const file = this._directory.getOrCreateFile(filename);
@@ -280,6 +378,9 @@ export class AutomergeStorageAdapter extends StorageAdapter {
   }
 
   override async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
+    if (this._state !== 'opened') {
+      return [];
+    }
     const filename = this._getFilename(keyPrefix);
     const entries = await this._directory.list();
     return Promise.all(
@@ -298,6 +399,9 @@ export class AutomergeStorageAdapter extends StorageAdapter {
   }
 
   override async removeRange(keyPrefix: StorageKey): Promise<void> {
+    if (this._state !== 'opened') {
+      return undefined;
+    }
     const filename = this._getFilename(keyPrefix);
     const entries = await this._directory.list();
     await Promise.all(
@@ -308,6 +412,10 @@ export class AutomergeStorageAdapter extends StorageAdapter {
           await file.destroy();
         }),
     );
+  }
+
+  async close(): Promise<void> {
+    this._state = 'closed';
   }
 
   private _getFilename(key: StorageKey): string {

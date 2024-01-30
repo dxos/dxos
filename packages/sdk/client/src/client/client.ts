@@ -22,7 +22,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ModelFactory } from '@dxos/model-factory';
-import { ApiError, trace } from '@dxos/protocols';
+import { ApiError, trace as Trace } from '@dxos/protocols';
 import {
   GetDiagnosticsRequest,
   type QueryStatusResponse,
@@ -30,6 +30,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
+import { trace, TRACE_PROCESSOR } from '@dxos/tracing';
 import { type JsonKeyOptions, jsonKeyReplacer, type MaybePromise } from '@dxos/util';
 
 import { ClientRuntime } from './client-runtime';
@@ -61,10 +62,12 @@ export type ClientOptions = {
 /**
  * The Client class encapsulates the core client-side API of DXOS.
  */
+@trace.resource()
 export class Client {
   /**
    * The version of this client API.
    */
+  @trace.info()
   readonly version = DXOS_VERSION;
 
   /**
@@ -80,8 +83,12 @@ export class Client {
   // TODO(wittjosiah): Make `null` status part of enum.
   private readonly _statusUpdate = new Event<SystemStatus | null>();
 
+  @trace.info()
   private _initialized = false;
+
+  @trace.info()
   private _resetting = false;
+
   private _statusStream?: Stream<QueryStatusResponse>;
   private _statusTimeout?: NodeJS.Timeout;
   private _status = MulticastObservable.from(this._statusUpdate, null);
@@ -94,6 +101,7 @@ export class Client {
   /**
    * Unique id of the Client, local to the current peer.
    */
+  @trace.info()
   private readonly _instanceId = PublicKey.random().toHex();
 
   constructor(options: ClientOptions = {}) {
@@ -128,6 +136,7 @@ export class Client {
     return inspectObject(this);
   }
 
+  @trace.info({ depth: null })
   toJSON() {
     return {
       initialized: this.initialized,
@@ -230,7 +239,7 @@ export class Client {
    */
   async diagnostics(options: JsonKeyOptions = {}): Promise<any> {
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
-    const data = await this._services.services.SystemService.getDiagnostics({
+    const serviceDiagnostics = await this._services.services.SystemService.getDiagnostics({
       keys: options.humanize
         ? GetDiagnosticsRequest.KEY_OPTION.HUMANIZE
         : options.truncate
@@ -238,7 +247,17 @@ export class Client {
         : undefined,
     });
 
-    return JSON.parse(JSON.stringify(data, jsonKeyReplacer(options)));
+    const clientDiagnostics = {
+      config: this._config?.values,
+      trace: TRACE_PROCESSOR.getDiagnostics(),
+    };
+
+    const diagnostics = {
+      client: clientDiagnostics,
+      services: serviceDiagnostics,
+    };
+
+    return JSON.parse(JSON.stringify(diagnostics, jsonKeyReplacer(options)));
   }
 
   /**
@@ -247,9 +266,11 @@ export class Client {
   async repair(): Promise<any> {
     // TODO(burdon): Factor out.
     const spaces = this.spaces.get();
-    const docs = spaces.map((space) =>
-      (space as any)._data.pipeline.currentEpoch.subject.assertion.automergeRoot.slice('automerge:'.length),
-    );
+    const docs = spaces
+      .map((space) =>
+        (space as any)._data.pipeline.currentEpoch?.subject.assertion.automergeRoot.slice('automerge:'.length),
+      )
+      .filter(Boolean);
 
     let removed = 0;
     if (typeof navigator !== 'undefined' && navigator.storage) {
@@ -276,7 +297,7 @@ export class Client {
       return;
     }
 
-    log.trace('dxos.sdk.client.open', trace.begin({ id: this._instanceId }));
+    log.trace('dxos.sdk.client.open', Trace.begin({ id: this._instanceId }));
 
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
 
@@ -297,7 +318,7 @@ export class Client {
     }
 
     this._initialized = true;
-    log.trace('dxos.sdk.client.open', trace.end({ id: this._instanceId }));
+    log.trace('dxos.sdk.client.open', Trace.end({ id: this._instanceId }));
   }
 
   private async _open() {

@@ -2,5 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './Grid';
-export * from './GridMain';
+import React from 'react';
+
+// Lazily load components for content surfaces.
+export const GridMain = React.lazy(() => import('./GridMain'));
