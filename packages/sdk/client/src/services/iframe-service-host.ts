@@ -14,6 +14,7 @@ import { Context } from '@dxos/context';
 import { RemoteServiceConnectionTimeout } from '@dxos/protocols';
 import { type ServiceBundle, createBundledRpcServer } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
+import { trace } from '@dxos/tracing';
 
 import { IFrameManager } from './iframe-manager';
 import { ShellManager } from './shell-manager';
@@ -31,6 +32,7 @@ export type IFrameClientServicesHostOptions = {
  *
  * @deprecated
  */
+@trace.resource()
 export class IFrameClientServicesHost implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
   /**
