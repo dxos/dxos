@@ -524,6 +524,9 @@ importers:
       '@braneframe/plugin-metadata':
         specifier: workspace:*
         version: link:../plugins/plugin-metadata
+      '@braneframe/plugin-native':
+        specifier: workspace:*
+        version: link:../plugins/plugin-native
       '@braneframe/plugin-navtree':
         specifier: workspace:*
         version: link:../plugins/plugin-navtree
@@ -2044,6 +2047,19 @@ importers:
       react:
         specifier: ^18.2.0
         version: 18.2.0
+      vite:
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
+
+  packages/apps/plugins/plugin-native:
+    dependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+    devDependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
       vite:
         specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
