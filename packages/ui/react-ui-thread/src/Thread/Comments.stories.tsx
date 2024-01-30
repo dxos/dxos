@@ -103,7 +103,7 @@ type StoryCommentThread = {
 
 const StoryMessageBlock = (props: MessageBlockProps<{ text: TextObject }>) => {
   const model = useTextModel({ text: props.block.text });
-  return model ? <TextEditor model={model} /> : null;
+  return model ? <TextEditor model={model} slots={{ root: { className: 'col-span-3' } }} /> : null;
 };
 
 const StoryThread: FC<{

@@ -69,28 +69,28 @@ export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
 
 export type MessageBlockProps<BlockValue> = {
   block: MessageEntityBlock<BlockValue>;
-  onDelete?: () => void;
+  onBlockDelete?: () => void;
 };
 
-const DefaultMessageBlock = ({ block, onDelete }: MessageBlockProps<{ data?: any; text?: string }>) => {
+const DefaultMessageBlock = ({ block, onBlockDelete }: MessageBlockProps<{ data?: any; text?: string }>) => {
+  const contentWidth = onBlockDelete ? 'col-span-2' : 'col-span-3';
   return (
     <div
       role='none'
-      className={mx('grid grid-cols-subgrid col-span-2', hoverableControls, hoverableFocusedWithinControls)}
+      className={mx('grid grid-cols-subgrid col-span-3', hoverableControls, hoverableFocusedWithinControls)}
     >
       {block.data ? (
-        // TODO(burdon): Render via CM editor in readonly.
-        <pre className='font-mono max-is-full overflow-x-auto'>
+        <pre className={mx('font-mono max-is-full overflow-x-auto', contentWidth)}>
           <code>{JSON.stringify(safeParseJson(block.data), undefined, 2)}</code>
         </pre>
       ) : (
-        <p>{block.text ?? ''}</p>
+        <p className={contentWidth}>{block.text ?? ''}</p>
       )}
-      {onDelete && (
+      {onBlockDelete && (
         <Button
           variant='ghost'
           classNames={['p-1 min-bs-0 mie-1 place-self-start transition-opacity', hoverableControlItem]}
-          onClick={onDelete}
+          onClick={onBlockDelete}
         >
           <X />
         </Button>
@@ -122,9 +122,9 @@ export const Message = <BlockValue,>(props: MessageProps<BlockValue>) => {
           {dt ? formatDistanceToNow(dt, { locale: dtLocale, addSuffix: true }) : ''}
         </time>
       </p>
-      <div role='none' className={mx('grid gap-y-1', onDelete ? 'grid-cols-[1fr_min-content]' : 'grid-cols-1')}>
+      <div role='none' className='grid gap-y-1 grid-cols-[min-content_1fr_min-content]'>
         {blocks.map((block, i) => (
-          <MessageBlockComponent key={i} block={block} onDelete={onDelete && (() => onDelete(id, i))} />
+          <MessageBlockComponent key={i} block={block} onBlockDelete={onDelete && (() => onDelete(id, i))} />
         ))}
       </div>
     </MessageMeta>
