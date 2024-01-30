@@ -2,6 +2,8 @@ import { defineConfig } from 'vitest/config';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { FixGracefulFsPlugin } from '@dxos/esbuild-plugins';
 
+const isDebug = !!process.env.VITEST_DEBUG;
+
 function createNodeConfig() {
   return defineConfig({
     test: {
@@ -30,6 +32,8 @@ function createBrowserConfig() {
       reporters: ['basic'],
       include: ['*/browser/**.test.ts'],
 
+      testTimeout: isDebug ? 99999999 : undefined,
+
       onStackTrace(error, stack) {
         return true;
       },
@@ -42,8 +46,9 @@ function createBrowserConfig() {
       },
       browser: {
         enabled: true,
-        headless: false,
+        headless: !isDebug,
         name: 'chrome',
+        isolate: false,
       },
     },
   });
