@@ -51,36 +51,32 @@ describe('static schema', () => {
         host: null,
       },
     });
-    expect(JSON.parse(JSON.stringify(task1, null, 4))).to.deep.contain(
-      {
-        '@backend': 'automerge',
-        '@id': task1.id,
-        '@type': {
-          '@type': 'dxos.echo.model.document.Reference',
-          itemId: task1.__typename,
-          protocol: 'protobuf',
-          host: 'dxos.org',
-        },
-        '@meta': { keys: [] },
-        description: {
-          '@type': 'dxos.echo.model.document.Reference',
-          itemId: task1.description.id,
-          host: null,
-          protocol: null,
-        },
-        subTasks: [],
-        todos: [],
-        title: 'Task 1',
-        assignee: {
-          '@type': 'dxos.echo.model.document.Reference',
-          itemId: contact.id,
-          protocol: null,
-          host: null,
-        },
+    expect(JSON.parse(JSON.stringify(task1, null, 4))).to.deep.contain({
+      '@backend': 'automerge',
+      '@id': task1.id,
+      '@type': {
+        '@type': 'dxos.echo.model.document.Reference',
+        itemId: task1.__typename,
+        protocol: 'protobuf',
+        host: 'dxos.org',
       },
-      null,
-      4,
-    );
+      '@meta': { keys: [] },
+      description: {
+        '@type': 'dxos.echo.model.document.Reference',
+        itemId: task1.description.id,
+        host: null,
+        protocol: null,
+      },
+      subTasks: [],
+      todos: [],
+      title: 'Task 1',
+      assignee: {
+        '@type': 'dxos.echo.model.document.Reference',
+        itemId: contact.id,
+        protocol: null,
+        host: null,
+      },
+    });
   });
 
   test('json with recursion', () => {
