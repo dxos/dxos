@@ -26,7 +26,7 @@ import {
 } from '@dxos/react-ui-editor';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Thread, ThreadFooter } from './Thread';
+import { Thread, ThreadFooter, ThreadHeading } from './Thread';
 import { Message, type MessageBlockProps, MessageTextbox } from '../Message';
 import translations from '../translations';
 import { type MessageEntity } from '../types';
@@ -147,14 +147,15 @@ const StoryThread: FC<{
 
   return (
     <Thread current={selected} onClickCapture={onSelect}>
-      <div className='col-span-2 flex p-2 gap-2 text-xs fg-description'>
+      <div className='col-start-2 flex gap-1 text-xs fg-description'>
         <span>id:{thread.id.slice(0, 4)}</span>
-        <span>from:{thread.range?.from}</span>
-        <span>to:{thread.range?.to}</span>
         <span>y:{thread.yPos}</span>
         <span className='grow' />
         {!thread.cursor && <Trash />}
       </div>
+      <ThreadHeading>
+        {thread.range?.from} &ndash; {thread.range?.to}
+      </ThreadHeading>
 
       {thread.messages.map((message) => (
         <Message<{ text: TextObject }> key={message.id} {...message} MessageBlockComponent={StoryMessageBlock} />

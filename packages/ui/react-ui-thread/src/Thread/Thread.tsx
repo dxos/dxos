@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsThreeOutline } from '@phosphor-icons/react';
+import { ArrowBendLeftDown, DotsThreeOutline } from '@phosphor-icons/react';
 import React, { type ComponentProps, type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -29,6 +29,26 @@ export const Thread = forwardRef<HTMLDivElement, ThreadProps>(
         ref={forwardedRef}
       >
         {children}
+      </div>
+    );
+  },
+);
+
+export type ThreadHeadingProps = ThemedClassName<ComponentPropsWithRef<'div'>>;
+
+export const ThreadHeading = forwardRef<HTMLDivElement, ThreadHeadingProps>(
+  ({ classNames, children, ...props }, forwardedRef) => {
+    return (
+      <div
+        role='heading'
+        {...props}
+        className={mx('col-span-2 grid grid-cols-subgrid fg-description font-medium', classNames)}
+        ref={forwardedRef}
+      >
+        <div role='none' className='grid place-items-end pie-3.5 fg-separator'>
+          <ArrowBendLeftDown />
+        </div>
+        <p>{children}</p>
       </div>
     );
   },
