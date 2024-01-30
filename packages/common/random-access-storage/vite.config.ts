@@ -29,9 +29,20 @@ function createBrowserConfig() {
     test: {
       reporters: ['basic'],
       include: ['*/browser/**.test.ts'],
+
+      onStackTrace(error, stack) {
+        return true;
+      },
+
+      isolate: false,
+      poolOptions: {
+        threads: {
+          singleThread: true,
+        },
+      },
       browser: {
         enabled: true,
-        headless: true,
+        headless: false,
         name: 'chrome',
       },
     },
