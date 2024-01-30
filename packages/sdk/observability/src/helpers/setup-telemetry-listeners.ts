@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Observability } from '@dxos/observability';
-import { type Client } from '@dxos/react-client';
+import type { Client } from '@dxos/client';
 
-import { BASE_TELEMETRY_PROPERTIES, getTelemetryIdentifier } from './observability';
+import { BASE_TELEMETRY_PROPERTIES, getTelemetryIdentifier } from './app-observability';
+import type { Observability } from '../observability';
 
 let lastFocusEvent = new Date();
 let totalTime = 0;

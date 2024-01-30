@@ -91,7 +91,7 @@ export type PluginDefinition<TProvides = {}, TInitializeProvides = {}> = Omit<Pl
    *
    * @return Capabilities provided by the plugin which are merged with base capabilities.
    */
-  initialize?: () => Promise<PluginProvides<TInitializeProvides>>;
+  initialize?: () => Promise<PluginProvides<TInitializeProvides> | void>;
 
   /**
    * Called once all plugins have been initialized.
