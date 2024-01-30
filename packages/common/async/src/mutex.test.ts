@@ -7,47 +7,47 @@ import { expect } from 'chai';
 import { expectToThrow } from '@dxos/debug';
 import { describe, test } from '@dxos/test';
 
-import { Lock, synchronized } from './lock';
+import { Mutex, synchronized } from './mutex';
 import { sleep } from './timeout';
 
-describe('Lock', () => {
+describe('Mutex', () => {
   test('single execution', async () => {
     const events = [];
-    const lock = new Lock();
+    const mutex = new Mutex();
 
-    await lock.executeSynchronized(async () => {
-      events.push('lock');
+    await mutex.executeSynchronized(async () => {
+      events.push('mutex');
     });
     events.push('after');
 
-    expect(events).to.deep.equal(['lock', 'after']);
+    expect(events).to.deep.equal(['mutex', 'after']);
   });
 
   test('return value', async () => {
-    const lock = new Lock();
+    const mutex = new Mutex();
 
-    const value = await lock.executeSynchronized(async () => 'foo');
+    const value = await mutex.executeSynchronized(async () => 'foo');
 
     expect(value).to.equal('foo');
   });
 
   test('two concurrent synchronizations', async () => {
     const events = [];
-    const lock = new Lock();
+    const mutex = new Mutex();
 
-    const p1 = lock
+    const p1 = mutex
       .executeSynchronized(async () => {
-        events.push('lock1');
+        events.push('mutex1');
         await sleep(10);
-        events.push('lock2');
+        events.push('mutex2');
       })
       .then(() => {
         events.push('p1 resolve');
       });
 
-    const p2 = lock
+    const p2 = mutex
       .executeSynchronized(async () => {
-        events.push('lock3');
+        events.push('mutex3');
       })
       .then(() => {
         events.push('p2 resolve');
@@ -57,14 +57,14 @@ describe('Lock', () => {
     await p2;
     events.push('after');
 
-    expect(events).to.deep.equal(['lock1', 'lock2', 'p1 resolve', 'lock3', 'p2 resolve', 'after']);
+    expect(events).to.deep.equal(['mutex1', 'mutex2', 'p1 resolve', 'mutex3', 'p2 resolve', 'after']);
   });
 
-  test('deadlock', async () => {
-    const lock = new Lock();
+  test('deadmutex', async () => {
+    const mutex = new Mutex();
 
-    const promise = lock.executeSynchronized(async () => {
-      await lock.executeSynchronized(async () => {
+    const promise = mutex.executeSynchronized(async () => {
+      await mutex.executeSynchronized(async () => {
         /* No-op. */
       });
     });
@@ -79,12 +79,12 @@ describe('Lock', () => {
     expect(resolved).to.be.false;
   });
 
-  test('errors do not break the lock', async () => {
-    const lock = new Lock();
+  test('errors do not break the mutex', async () => {
+    const mutex = new Mutex();
 
     let p1Status, p2Status;
 
-    const p1 = lock
+    const p1 = mutex
       .executeSynchronized(async () => {
         throw new Error();
       })
@@ -97,7 +97,7 @@ describe('Lock', () => {
         },
       );
 
-    const p2 = lock
+    const p2 = mutex
       .executeSynchronized(async () => {
         /* No-op. */
       })
@@ -118,16 +118,16 @@ describe('Lock', () => {
   });
 
   test('errors are propagated with stack traces', async () => {
-    const lock = new Lock();
+    const mutex = new Mutex();
 
     const throwsError = async () => {
       throw new Error();
     };
 
     let error: Error;
-    const callLock = async () => {
+    const callmutex = async () => {
       try {
-        await lock.executeSynchronized(async () => {
+        await mutex.executeSynchronized(async () => {
           await throwsError();
         });
       } catch (err: any) {
@@ -136,11 +136,34 @@ describe('Lock', () => {
       }
     };
 
-    await expectToThrow(() => callLock());
+    await expectToThrow(() => callmutex());
 
     expect(error!.stack!.includes('throwsError')).to.be.true;
-    expect(error!.stack!.includes('callLock')).to.be.true;
+    expect(error!.stack!.includes('callmutex')).to.be.true;
   }).skipEnvironments('webkit');
+
+  test('works with explicit resource management syntax', async () => {
+    const mutex = new Mutex();
+
+    const events: string[] = [];
+
+    const p1 = (async () => {
+      using _guard = await mutex.acquire();
+      events.push('acquire one');
+      await sleep(10);
+      events.push('end one');
+    })();
+
+    const p2 = (async () => {
+      using _guard = await mutex.acquire();
+      events.push('acquire two');
+      await sleep(10);
+      events.push('end two');
+    })();
+
+    await Promise.all([p1, p2]);
+    expect(events).to.deep.equal(['acquire one', 'end one', 'acquire two', 'end two']);
+  });
 });
 
 class TestClass {

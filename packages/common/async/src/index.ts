@@ -11,7 +11,7 @@ export * from './events';
 export * from './latch';
 export * from './observable';
 export * from './observable-value';
-export * from './lock';
+export * from './mutex';
 export * from './sink';
 export * from './stream-to-array';
 export * from './timeout';
