@@ -6,8 +6,8 @@ import { differenceInSeconds } from 'date-fns/differenceInSeconds';
 import React, { useState } from 'react';
 
 import { type Thread as ThreadType, Message as MessageType } from '@braneframe/types';
-import { TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
+import { TextObject } from '@dxos/react-client/echo';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useTextModel } from '@dxos/react-ui-editor';
@@ -92,8 +92,6 @@ export const ThreadContainer = ({
   };
 
   const textboxMetadata = useMessageMetadata(thread.id, identity);
-
-  console.log('[thread current]', current, thread.id);
 
   return (
     <Thread onClickCapture={onAttend} onFocusCapture={onAttend} current={current}>
