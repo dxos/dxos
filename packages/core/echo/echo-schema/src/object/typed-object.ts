@@ -59,7 +59,7 @@ export const isActualTypedObject = (object: unknown): object is TypedObject => {
 /**
  * @deprecated Temporary.
  */
-export const isAutomergeObject = (object: unknown): object is AutomergeObject => {
+export const isAutomergeObject = (object: unknown | undefined | null): object is AutomergeObject => {
   return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === AutomergeObject.prototype;
 };
 

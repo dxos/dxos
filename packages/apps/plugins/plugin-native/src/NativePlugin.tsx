@@ -2,22 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
+import type { Plugin, PluginDefinition } from '@dxos/app-framework';
+import { LayoutAction, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
+import meta from './meta';
+
 // TODO(burdon): Reconcile with other properties.
-const KEY_WINDOW_SIZE = 'dxos.org/composer/settings/window/size';
+const KEY_WINDOW_SIZE = 'dxos.org/plugin/native/window-size';
 
 /**
  * Native code for socketsupply app.
  * https://www.npmjs.com/package/@socketsupply/socket
  * https://github.com/socketsupply/socket-examples
  */
-export const initializeNativeApp = async () => {
+const initializeNativeApp = async (plugins: Plugin[]) => {
   // SocketSupply implements the dynamic import.
   const module = 'socket:application';
   const app = await import(/* @vite-ignore */ module);
   const { meta_title: appName } = app.config;
-  // console.log(JSON.stringify(app.config, undefined, 2));
+  const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
   //
   // Window size.
@@ -81,6 +85,15 @@ export const initializeNativeApp = async () => {
     }
   });
 
+  // applicationurl is a custom event fired by the Socket Supply Runtime:
+  // https://github.com/socketsupply/socket/blob/ef7fb5559876e41062d5896aafb7b79989fc96e5/api/internal/events.js#L6
+  window.addEventListener('applicationurl', ({ url }: any) => {
+    void intentPlugin?.provides.intent.dispatch({
+      action: LayoutAction.ACTIVATE,
+      data: { id: url.host },
+    });
+  });
+
   // TODO(burdon): Initial url has index.html, which must be caught/redirected.
   log.info('native setup complete');
 };
@@ -94,3 +107,10 @@ export const safeParseJson = <T extends object>(data: string | undefined | null,
   }
   return defaultValue;
 };
+
+export const NativePlugin = (): PluginDefinition => ({
+  meta,
+  ready: async (plugins) => {
+    await initializeNativeApp(plugins);
+  },
+});

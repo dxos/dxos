@@ -65,7 +65,6 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
       const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocal() }));
       await Promise.all(clients.map((client) => client.initialize()));
       types && clients.map((client) => client.spaces.addSchema(types));
-      setClients(clients);
 
       if (createIdentity || createSpace) {
         await Promise.all(clients.map((client) => client.halo.createIdentity()));
@@ -79,6 +78,8 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
           clients.slice(1).map((client) => performInvitation({ host: space as SpaceProxy, guest: client.spaces })),
         );
       }
+
+      setClients(clients);
     });
 
     return () => clearTimeout(timeout);

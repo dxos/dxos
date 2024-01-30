@@ -13,7 +13,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { type Prop } from '@dxos/automerge/automerge';
 import { Repo, type DocHandle } from '@dxos/automerge/automerge-repo';
-import { Filter, setGlobalAutomergePreference } from '@dxos/echo-schema';
+import { Filter } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { Expando, TextObject, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -130,7 +130,6 @@ const EchoStory = ({ id, spaceKey }: { id: number; spaceKey: PublicKey }) => {
 
 export const WithEcho = {
   render: () => {
-    setGlobalAutomergePreference(true);
     return (
       <ClientRepeater
         count={2}

@@ -31,6 +31,7 @@
     "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-mermaid": "workspace:*",
     "@braneframe/plugin-metadata": "workspace:*",
+    "@braneframe/plugin-native": "workspace:*",
     "@braneframe/plugin-navtree": "workspace:*",
     "@braneframe/plugin-observability": "workspace:*",
     "@braneframe/plugin-outliner": "workspace:*",

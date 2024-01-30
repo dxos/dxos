@@ -3,6 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
+import { next as automerge } from '@dxos/automerge/automerge';
 import {
   Repo,
   NetworkAdapter,
@@ -22,8 +23,10 @@ import { type HostInfo, type SyncRepoRequest, type SyncRepoResponse } from '@dxo
 import { type PeerInfo } from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
 import { StorageType, type Directory } from '@dxos/random-access-storage';
 import { AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
-import { ComplexMap, ComplexSet, arrayToBuffer, bufferToArray, defaultMap } from '@dxos/util';
+import { trace } from '@dxos/tracing';
+import { ComplexMap, ComplexSet, arrayToBuffer, bufferToArray, defaultMap, mapValues } from '@dxos/util';
 
+@trace.resource()
 export class AutomergeHost {
   private readonly _repo: Repo;
   private readonly _meshNetwork: MeshNetworkAdapter;
@@ -68,7 +71,7 @@ export class AutomergeHost {
 
         try {
           if (!doc.experimental_spaceKey) {
-            log.warn('space key not found for share policy check', { peerId, documentId });
+            log('space key not found for share policy check', { peerId, documentId });
             return false;
           }
 
@@ -78,13 +81,13 @@ export class AutomergeHost {
           // TODO(mykola): Hack, stop abusing `peerMetadata` field.
           const deviceKeyHex = (this.repo.peerMetadataByPeerId[peerId] as any)?.dxos_deviceKey;
           if (!deviceKeyHex) {
-            log.warn('device key not found for share policy check', { peerId, documentId });
+            log('device key not found for share policy check', { peerId, documentId });
             return false;
           }
           const deviceKey = PublicKey.from(deviceKeyHex);
 
           const isAuthorized = authorizedDevices?.has(deviceKey) ?? false;
-          log.info('share policy check', { peerId, documentId, deviceKey, spaceKey, isAuthorized });
+          log('share policy check', { peerId, documentId, deviceKey, spaceKey, isAuthorized });
           return isAuthorized;
         } catch (err) {
           log.catch(err);
@@ -98,6 +101,20 @@ export class AutomergeHost {
 
   get repo(): Repo {
     return this._repo;
+  }
+
+  @trace.info({ depth: null })
+  private _automergeDocs() {
+    return mapValues(this._repo.handles, (handle) => ({
+      state: handle.state,
+      hasDoc: !!handle.docSync(),
+      heads: handle.docSync() ? automerge.getHeads(handle.docSync()) : null,
+    }));
+  }
+
+  @trace.info({ depth: null })
+  private _automergePeers() {
+    return this._repo.peers;
   }
 
   async close() {

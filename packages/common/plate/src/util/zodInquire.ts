@@ -67,8 +67,8 @@ export const unDefault = <T extends InquirableZodType = InquirableZodType>(shape
 export type StripDefaults<T extends InquirableZodType> = T extends InquirablePrimitive
   ? T
   : T extends InquirableZodObject
-  ? { [k in keyof T]: T[k] extends z.ZodDefault<z.ZodTypeAny> ? z.ZodTypeAny : z.ZodTypeAny }
-  : T;
+    ? { [k in keyof T]: T[k] extends z.ZodDefault<z.ZodTypeAny> ? z.ZodTypeAny : z.ZodTypeAny }
+    : T;
 
 export type QuestionGenerator<T extends InquirableZodType = InquirableZodType> = (
   shape: T,
