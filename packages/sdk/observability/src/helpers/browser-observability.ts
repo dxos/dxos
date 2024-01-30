@@ -6,12 +6,13 @@
 import * as localForage from 'localforage';
 
 // import { type Platform } from '@dxos/client-services';
-import type { Config } from '@dxos/client';
-import { log } from '@dxos/log';
 // import { type InitOptions as TelemetryInitOptions } from '@dxos/telemetry';
 
+import type { Config } from '@dxos/client';
+import { log } from '@dxos/log';
+
 import type { IPData } from './common';
-import type { Observability, Mode } from '../observability';
+import type { Mode, Observability } from '../observability';
 
 // item name is 'telemetry' for backwards compatibility
 export const OBSERVABILITY_DISABLED_KEY = 'telemetry-disabled';
@@ -158,7 +159,7 @@ export const initializeAppObservability = async ({
 
     ipData && observability.addIPDataTelemetryTags(ipData);
 
-    if (navigator.storage?.estimate) {
+    if (typeof navigator !== 'undefined' && navigator.storage?.estimate) {
       setInterval(async () => {
         try {
           const storageEstimate = await navigator.storage.estimate();

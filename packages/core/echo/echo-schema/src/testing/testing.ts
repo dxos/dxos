@@ -48,7 +48,10 @@ export class TestBuilder {
   public readonly defaultSpaceKey = PublicKey.random();
   public readonly automergeContext = new AutomergeContext();
 
-  constructor(public readonly graph = new Hypergraph(), public readonly base = new DatabaseTestBuilder()) {}
+  constructor(
+    public readonly graph = new Hypergraph(),
+    public readonly base = new DatabaseTestBuilder(),
+  ) {}
 
   public readonly peers = new ComplexMap<PublicKey, TestPeer>(PublicKey.hash);
 
