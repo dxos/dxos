@@ -51,10 +51,10 @@ export const getSpaceDisplayName = (space: Space): string | [string, { ns: strin
   return (space.properties.name?.length ?? 0) > 0
     ? space.properties.name
     : space.state.get() === SpaceState.CLOSED || space.state.get() === SpaceState.INACTIVE
-    ? ['closed space label', { ns: SPACE_PLUGIN }]
-    : space.state.get() !== SpaceState.READY
-    ? ['loading space label', { ns: SPACE_PLUGIN }]
-    : ['unnamed space label', { ns: SPACE_PLUGIN }];
+      ? ['closed space label', { ns: SPACE_PLUGIN }]
+      : space.state.get() !== SpaceState.READY
+        ? ['loading space label', { ns: SPACE_PLUGIN }]
+        : ['unnamed space label', { ns: SPACE_PLUGIN }];
 };
 
 const getFolderGraphNodePartials = ({
