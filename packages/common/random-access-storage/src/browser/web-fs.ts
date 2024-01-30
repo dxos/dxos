@@ -51,6 +51,9 @@ export class WebFS implements Storage {
     const entries: string[] = [];
 
     for await (const entry of (root as any).keys()) {
+      // Filter out .crswap files.
+      // https://bugs.chromium.org/p/chromium/issues/detail?id=1228068
+      // https://github.com/logseq/logseq/issues/4466#:~:text=Jun%2015%2C%202023-,.,is%20used%20to%20edit%20files.
       if (entry.startsWith(fullName + '_') && !entry.endsWith('.crswap')) {
         entries.push(entry.slice(fullName.length + 1));
       }
