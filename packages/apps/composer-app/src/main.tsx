@@ -50,6 +50,8 @@ import { TextObject } from '@dxos/react-client/echo';
 import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
+import './globals';
+
 import { ResetDialog } from './components';
 import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
