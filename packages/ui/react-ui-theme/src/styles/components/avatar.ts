@@ -10,7 +10,7 @@ import { descriptionText, getSize, getSizeHeight } from '../fragments';
 export type AvatarStyleProps = Partial<{
   size: Size;
   srOnly: boolean;
-  status: 'active' | 'inactive' | 'current' | 'error' | 'warning';
+  status: 'active' | 'inactive' | 'current' | 'error' | 'warning' | 'internal';
   animation: 'pulse' | 'none';
   variant: 'circle' | 'square';
   inGroup: boolean;
@@ -58,6 +58,8 @@ export const avatarRing: ComponentFunction<AvatarStyleProps> = ({ status, varian
       ? 'border-warning-400 dark:border-warning-500'
       : status === 'inactive'
       ? 'border-neutral-400 dark:border-neutral-500'
+      : status === 'internal'
+      ? 'border-fuchsia-600'
       : 'border-[color:var(--surface-bg)]',
     animation === 'pulse' ? 'animate-halo-pulse' : '',
     ...etc,

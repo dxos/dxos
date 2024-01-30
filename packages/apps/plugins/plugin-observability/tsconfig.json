@@ -45,13 +45,16 @@
       "path": "../../../sdk/react-client"
     },
     {
+      "path": "../../../ui/react-ui"
+    },
+    {
       "path": "../../../ui/storybook-utils"
     },
     {
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-layout"
+      "path": "../plugin-settings"
     }
   ]
 }

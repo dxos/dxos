@@ -14,6 +14,7 @@ import { isNode } from '@dxos/util';
 
 import buildSecrets from './cli-observability-secrets.json';
 import { DatadogMetrics } from './datadog';
+import { BASE_TELEMETRY_PROPERTIES, getTelemetryIdentifier, mapSpaces } from './helpers';
 import { SegmentTelemetry, type EventOptions, type PageOptions } from './segment';
 import {
   captureException as sentryCaptureException,
@@ -23,7 +24,6 @@ import {
   type InitOptions,
   setTag as sentrySetTag,
 } from './sentry';
-import { mapSpaces } from './util';
 
 const SPACE_METRICS_MIN_INTERVAL = 1000 * 60;
 // const DATADOG_IDLE_INTERVAL = 1000 * 60 * 5;
@@ -62,8 +62,8 @@ export type ObservabilityOptions = {
 
   errorLog?: {
     sentryInitOptions?: InitOptions;
+    logProcessor?: boolean;
   };
-  logProcessor?: boolean;
 };
 
 /*
@@ -90,7 +90,7 @@ export class Observability {
   private _tags = new Map<string, string>();
 
   // TODO(nf): make platform a required extension?
-  constructor({ namespace, config, secrets, group, mode, telemetry, errorLog, logProcessor }: ObservabilityOptions) {
+  constructor({ namespace, config, secrets, group, mode, telemetry, errorLog }: ObservabilityOptions) {
     this._namespace = namespace;
     this._config = config;
     this._mode = mode ?? 'disabled';
@@ -98,7 +98,7 @@ export class Observability {
     this._secrets = this._loadSecrets(config, secrets);
     this._telemetryBatchSize = telemetry?.batchSize ?? 30;
     this._errorReportingOptions = errorLog?.sentryInitOptions;
-    this._errorLogProcessor = logProcessor ?? false;
+    this._errorLogProcessor = errorLog?.logProcessor ?? false;
 
     if (this._group) {
       this.setTag('group', this._group);
@@ -168,7 +168,7 @@ export class Observability {
     this._tags.set(key, value);
   }
 
-  // TODO(nf): Combine with setDeviceTags.
+  // TODO(wittjosiah): Improve privacy of telemetry identifiers. See `getTelemetryIdentifier`.
   async setIdentityTags(client: Client) {
     client.services.services.IdentityService!.queryIdentity().subscribe((idqr) => {
       if (!idqr?.identity?.identityKey) {
@@ -176,16 +176,9 @@ export class Observability {
         return;
       }
 
-      // TODO(nf): check mode
-      // TODO(nf): cardinality
-      this.setTag('identityKey', idqr?.identity?.identityKey.truncate());
-      if (idqr?.identity?.profile?.displayName) {
-        this.setTag('username', idqr?.identity?.profile?.displayName);
-      }
+      this.setTag('identityKey', idqr.identity.identityKey.truncate());
     });
-  }
 
-  async setDeviceTags(client: Client) {
     client.services.services.DevicesService!.queryDevices().subscribe((dqr) => {
       if (!dqr || !dqr.devices || dqr.devices.length === 0) {
         log('empty response from device service', { device: dqr });
@@ -283,19 +276,30 @@ export class Observability {
     // scheduleTaskInterval(ctx, async () => updateSignalMetrics.emit(), DATADOG_IDLE_INTERVAL);
   }
 
-  startSpacesMetrics(client: Client) {
-    let spaces = client.spaces.get();
+  startSpacesMetrics(client: Client, namespace: string) {
+    const spaces = client.spaces.get();
     const subscriptions = new Map<string, { unsubscribe: () => void }>();
     this._ctx.onDispose(() => subscriptions.forEach((subscription) => subscription.unsubscribe()));
 
     const updateSpaceMetrics = new Event<Space>().debounce(SPACE_METRICS_MIN_INTERVAL);
-    updateSpaceMetrics.on(this._ctx, async (space) => {
+    updateSpaceMetrics.on(this._ctx, async () => {
       log('send space update');
-      for (const sp of mapSpaces(spaces, { truncateKeys: true })) {
-        this.gauge('dxos.client.space.members', sp.members, { key: sp.key });
-        this.gauge('dxos.client.space.objects', sp.objects, { key: sp.key });
-        this.gauge('dxos.client.space.epoch', sp.epoch, { key: sp.key });
-        this.gauge('dxos.client.space.currentDataMutations', sp.currentDataMutations, { key: sp.key });
+      for (const data of mapSpaces(spaces, { truncateKeys: true })) {
+        // Metrics
+        this.gauge('dxos.client.space.members', data.members, { key: data.key });
+        this.gauge('dxos.client.space.objects', data.objects, { key: data.key });
+        this.gauge('dxos.client.space.epoch', data.epoch, { key: data.key });
+        this.gauge('dxos.client.space.currentDataMutations', data.currentDataMutations, { key: data.key });
+
+        // Telemetry
+        this.event({
+          identityId: getTelemetryIdentifier(client),
+          name: `${namespace}.space.update`,
+          properties: {
+            ...BASE_TELEMETRY_PROPERTIES,
+            ...data,
+          },
+        });
       }
     });
 
@@ -311,9 +315,7 @@ export class Observability {
     });
 
     client.spaces.subscribe({
-      next: async () => {
-        spaces = client.spaces.get();
-        // spaces = await this.getSpaces(this._agent.client);
+      next: async (spaces) => {
         spaces
           .filter((space) => !subscriptions.has(space.key.toHex()))
           .forEach((space) => {

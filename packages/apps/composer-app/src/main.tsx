@@ -27,6 +27,7 @@ import MermaidMeta from '@braneframe/plugin-mermaid/meta';
 import MetadataMeta from '@braneframe/plugin-metadata/meta';
 import NativeMeta from '@braneframe/plugin-native/meta';
 import NavTreeMeta from '@braneframe/plugin-navtree/meta';
+import ObservabilityMeta from '@braneframe/plugin-observability/meta';
 import OutlinerMeta from '@braneframe/plugin-outliner/meta';
 import PresenterMeta from '@braneframe/plugin-presenter/meta';
 import PwaMeta from '@braneframe/plugin-pwa/meta';
@@ -38,26 +39,27 @@ import SketchMeta from '@braneframe/plugin-sketch/meta';
 import SpaceMeta from '@braneframe/plugin-space/meta';
 import StackMeta from '@braneframe/plugin-stack/meta';
 import TableMeta from '@braneframe/plugin-table/meta';
-import TelemetryMeta from '@braneframe/plugin-telemetry/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
 import { types, Document } from '@braneframe/types';
 import { createApp, LayoutAction, Plugin } from '@dxos/app-framework';
-import { createClientServices, Config, Defaults } from '@dxos/react-client';
+import { initializeAppObservability } from '@dxos/observability';
+import { createClientServices } from '@dxos/react-client';
 import { TextObject } from '@dxos/react-client/echo';
 import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
 import { ResetDialog } from './components';
 import { setupConfig } from './config';
-import { appKey } from './globals';
+import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
 import { steps } from './help';
-import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
 import translations from './translations';
 
 const main = async () => {
   const config = await setupConfig();
+  // Intentially do not await, don't block app startup for telemetry.
+  const observability = initializeAppObservability({ namespace: appKey, config });
   const services = await createClientServices(
     config,
     config.values.runtime?.app?.env?.DX_HOST
@@ -87,14 +89,13 @@ const main = async () => {
     ),
     order: [
       // Needs to run ASAP on startup (but not blocking).
-      TelemetryMeta,
-      // Outside of error boundary so error dialog is styled.
-      ThemeMeta,
-      // Outside of error boundary so that updates are not blocked by errors.
+      ObservabilityMeta,
+      // TODO(wittjosiah): Consider what happens to PWA updates when hitting error boundary.
       PwaMeta,
       NativeMeta,
 
       // UX
+      ThemeMeta,
       LayoutMeta,
       NavTreeMeta,
       SettingsMeta,
@@ -158,7 +159,9 @@ const main = async () => {
       [InboxMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-inbox')),
       [IpfsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-ipfs')),
       [KanbanMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-kanban')),
-      [LayoutMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-layout')),
+      [LayoutMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-layout'), {
+        observability: true,
+      }),
       [MapMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-map')),
       [MarkdownMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-markdown')),
       [MermaidMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-mermaid')),
@@ -187,9 +190,9 @@ const main = async () => {
         },
       }),
       [StackMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-stack')),
-      [TelemetryMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-telemetry'), {
+      [ObservabilityMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-observability'), {
         namespace: appKey,
-        config: new Config(Defaults()),
+        observability: () => observability,
       }),
       [TableMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-table')),
       [ThemeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-theme'), {
@@ -211,7 +214,7 @@ const main = async () => {
       SettingsMeta.id,
       SpaceMeta.id,
       ThemeMeta.id,
-      TelemetryMeta.id,
+      ObservabilityMeta.id,
       WildcardMeta.id,
     ],
     // TODO(burdon): Add DebugMeta if dev build.

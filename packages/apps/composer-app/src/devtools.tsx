@@ -7,9 +7,9 @@ import '@dxosTheme';
 import React, { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { initializeAppObservability } from '@braneframe/plugin-telemetry/headless';
 import { Devtools } from '@dxos/devtools';
 import { log } from '@dxos/log';
+import { initializeAppObservability } from '@dxos/observability';
 import { type ClientServices, createClientServices, Client, Remote, Config, Defaults } from '@dxos/react-client';
 
 const namespace = 'devtools';

@@ -2,26 +2,22 @@
 // Copyright 2022 DXOS.org
 //
 
-/*
- * try and reflect changes in react-appkit, minus the activation of metrics?
- */
-
 // NOTE: localStorage is not available in web workers.
 import * as localForage from 'localforage';
 
 // import { type Platform } from '@dxos/client-services';
+import type { Client, Config } from '@dxos/client';
 import { log } from '@dxos/log';
-import { type Observability } from '@dxos/observability';
-import type { Client, Config } from '@dxos/react-client';
 // import { type InitOptions as TelemetryInitOptions } from '@dxos/telemetry';
-import { humanize } from '@dxos/util';
+
+import type { Mode, Observability } from '../observability';
 
 export const BASE_TELEMETRY_PROPERTIES: any = {};
 // item name is 'telemetry' for backwards compatibility
 export const OBSERVABILITY_DISABLED_KEY = 'telemetry-disabled';
 export const OBSERVABILITY_GROUP_KEY = 'telemetry-group';
 
-if (navigator.storage?.estimate) {
+if (typeof navigator !== 'undefined' && navigator.storage?.estimate) {
   setInterval(async () => {
     try {
       const storageEstimate = await navigator.storage.estimate();
@@ -33,8 +29,11 @@ if (navigator.storage?.estimate) {
   }, 10e3);
 }
 
-// TODO(wittjosiah): Store uuid in halo for the purposes of usage metrics.
-// await client.halo.getGlobalPreference('dxosTelemetryIdentifier');
+// TODO(wittjosiah): Improve privacy of telemetry identifiers.
+//  - Identifier should be generated client-side with no attachment to identity.
+//  - Identifier can then be reset by user.
+//  - Identifier can be synced via HALO to allow for correlation of events bewteen devices.
+//  - Identifier should also be stored outside of HALO such that it is available immediately on startup.
 export const getTelemetryIdentifier = (client: Client) => {
   if (!client?.initialized) {
     return undefined;
@@ -42,7 +41,7 @@ export const getTelemetryIdentifier = (client: Client) => {
 
   const identity = client.halo.identity.get();
   if (identity) {
-    humanize(identity.identityKey);
+    return identity.identityKey.truncate();
   }
 
   return undefined;
@@ -57,25 +56,34 @@ export const isObservabilityDisabled = async (namespace: string): Promise<boolea
   }
 };
 
-export const storeObservabilityDisabled = async (namespace: string, value: string) => {
+export const storeObservabilityDisabled = async (namespace: string, value: boolean) => {
   try {
-    await localForage.setItem(`${namespace}:${OBSERVABILITY_DISABLED_KEY}`, value);
+    await localForage.setItem(`${namespace}:${OBSERVABILITY_DISABLED_KEY}`, String(value));
   } catch (err) {
     log.catch('Failed to store observability disabled', err);
   }
 };
 
-export const getObservabilityGroup = async (namespace: string): Promise<string | null | undefined> => {
+export const getObservabilityGroup = async (namespace: string): Promise<string | undefined> => {
   try {
-    return localForage.getItem(`${namespace}:${OBSERVABILITY_GROUP_KEY}`);
+    return (await localForage.getItem(`${namespace}:${OBSERVABILITY_GROUP_KEY}`)) ?? undefined;
   } catch (err) {
     log.catch('Failed to get observability group', err);
+  }
+};
+
+export const storeObservabilityGroup = async (namespace: string, value: string) => {
+  try {
+    await localForage.setItem(`${namespace}:${OBSERVABILITY_GROUP_KEY}`, value);
+  } catch (err) {
+    log.catch('Failed to store observability group', err);
   }
 };
 
 export type AppObservabilityOptions = {
   namespace: string;
   config: Config;
+  mode?: Mode;
   tracingEnable?: boolean;
   replayEnable?: boolean;
   // TODO(nf): options for providers?
@@ -86,10 +94,13 @@ type IPData = { city: string; region: string; country: string; latitude: number;
 // TODO(wittjosiah): Store preference for disabling telemetry.
 //   At minimum should be stored locally (i.e., localstorage), possibly in halo preference.
 //   Needs to be hooked up to settings page for user visibility.
-export const initializeAppObservability = async (
-  { namespace, config, tracingEnable = true, replayEnable = true }: AppObservabilityOptions,
-  client?: Client,
-): Promise<Observability> => {
+export const initializeAppObservability = async ({
+  namespace,
+  config,
+  mode = 'basic',
+  tracingEnable = true,
+  replayEnable = true,
+}: AppObservabilityOptions): Promise<Observability> => {
   log('initializeAppObservability', { config });
 
   /*
@@ -99,8 +110,6 @@ export const initializeAppObservability = async (
       return undefined;
     }
     */
-  // const Telemetry = await import('@dxos/telemetry');
-  // const Sentry = await import('@dxos/sentry');
 
   const group = (await getObservabilityGroup(namespace)) ?? undefined;
   const release = `${namespace}@${config.get('runtime.app.build.version')}`;
@@ -110,13 +119,13 @@ export const initializeAppObservability = async (
   BASE_TELEMETRY_PROPERTIES.environment = environment;
   const observabilityDisabled = await isObservabilityDisabled(namespace);
 
-  const { Observability } = await import('@dxos/observability');
+  const { Observability } = await import('../observability');
 
   // TODO(nf): configure mode
   const observability = new Observability({
     namespace,
     group,
-    mode: 'full',
+    mode,
     config,
     errorLog: {
       sentryInitOptions: {
@@ -139,7 +148,6 @@ export const initializeAppObservability = async (
     return observability;
   }
 
-  // TODO(nf): dedupe with CLI and move to observability
   try {
     const getIPData = async (config: Config): Promise<IPData | void> => {
       const IP_DATA_CACHE_TIMEOUT = 6 * 60 * 60 * 1000; // 6 hours
@@ -189,16 +197,6 @@ export const initializeAppObservability = async (
     // TODO(nf): should provide capability to init Sentry earlier in booting process to capture errors during initialization.
 
     observability.initialize();
-
-    // Start client observability (i.e. not running as shared worker)
-    // TODO(nf): how to prevent multiple instances for single shared worker?
-    if (client) {
-      await observability.setIdentityTags(client);
-      await observability.setDeviceTags(client);
-      await observability.startNetworkMetrics(client);
-      await observability.startSpacesMetrics(client);
-      await observability.startRuntimeMetrics(client);
-    }
   } catch (err: any) {
     log.error('Failed to initialize app observability', err);
   }

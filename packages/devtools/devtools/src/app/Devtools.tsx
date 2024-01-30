@@ -6,13 +6,13 @@ import { deepSignal } from 'deepsignal/react';
 import React, { type FC, useEffect } from 'react';
 import { HashRouter, useLocation } from 'react-router-dom';
 
+import { log } from '@dxos/log';
 import {
+  type Observability,
   BASE_TELEMETRY_PROPERTIES,
   getTelemetryIdentifier,
   setupTelemetryListeners,
-} from '@braneframe/plugin-telemetry/headless';
-import { log } from '@dxos/log';
-import { type Observability } from '@dxos/observability';
+} from '@dxos/observability';
 import { type Client, ClientContext, type ClientServices, useClient } from '@dxos/react-client';
 import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
 import { defaultTheme, bindTheme, toolbarRoot } from '@dxos/react-ui-theme';

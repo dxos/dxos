@@ -134,6 +134,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-observability/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-outliner/package.json",
           "jsonpath": "$.version"
         },
@@ -185,11 +190,6 @@
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-table/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/plugins/plugin-telemetry/package.json",
           "jsonpath": "$.version"
         },
         {

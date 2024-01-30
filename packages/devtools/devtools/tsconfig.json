@@ -19,9 +19,6 @@
   ],
   "references": [
     {
-      "path": "../../apps/plugins/plugin-telemetry"
-    },
-    {
       "path": "../../apps/types"
     },
     {
