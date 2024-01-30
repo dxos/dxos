@@ -3,29 +3,78 @@
 //
 
 import { markdownLanguage } from '@codemirror/lang-markdown';
-import { EditorState } from '@codemirror/state';
+import { EditorState, type StateCommand } from '@codemirror/state';
 import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { getFormatting, emptyFormatting, type Formatting } from './formatting';
+import { setHeading, getFormatting, emptyFormatting, type Formatting } from './formatting';
 
-const t = (name: string, doc: string, result: Partial<Formatting>) => {
-  test(name, () => {
-    const selStart = doc.indexOf('{');
-    const selEnd = doc.indexOf('}') - 1;
-    const state = EditorState.create({
-      doc: doc.replace(/[{}]/g, ''),
-      selection: { anchor: selStart, head: selEnd },
-      extensions: markdownLanguage,
-    });
-    const formatting = getFormatting(state);
-    const expected = Object.assign({}, emptyFormatting, result);
-    expect(formatting).to.deep.equal(expected);
+const createState = (doc: string) => {
+  const selStart = doc.indexOf('{');
+  const selEnd = doc.indexOf('}') - 1;
+  return EditorState.create({
+    doc: doc.replace(/[{}]/g, ''),
+    selection: { anchor: selStart, head: selEnd },
+    extensions: markdownLanguage,
   });
 };
 
+const testCommand = (name: string, doc: string, command: StateCommand, result: string | null) => {
+  test(name, () => {
+    let state = createState(doc);
+    const status = command({ state, dispatch: (tr) => (state = tr.state) });
+    if (!status || result === null) {
+      expect(status).to.equal(result !== null);
+    } else {
+      expect(state.doc.toString()).to.equal(result);
+    }
+  });
+};
+
+describe('setHeading', () => {
+  testCommand('can create a heading', 'Hello {}', setHeading(1), '# Hello ');
+
+  testCommand('can create a level 2 heading', 'One\n\nTw{o}', setHeading(2), 'One\n\n## Two');
+
+  testCommand('can increase change the depth of a heading', '# One{}', setHeading(3), '### One');
+
+  testCommand('can decrease change the depth of a heading', '## One{}', setHeading(1), '# One');
+
+  testCommand('can remove a heading', '### A{}', setHeading(0), 'A');
+
+  testCommand(
+    'can make multiple blocks a heading',
+    '{One\n\nTwo}\n\nThree',
+    setHeading(3),
+    '### One\n\n### Two\n\nThree',
+  );
+
+  testCommand(
+    "doesn't affect code blocks",
+    '{One\n\n```\nTwo\n```\nThree}',
+    setHeading(1),
+    '# One\n\n```\nTwo\n```\n# Three',
+  );
+
+  testCommand('can remove a setext heading', 'One{}\n===', setHeading(0), 'One');
+
+  testCommand('can change a setext heading to ATX', 'One{}\n---', setHeading(1), '# One');
+
+  testCommand('can add a heading inside block markup', '> - {one\n> - two}\n', setHeading(1), '> - # one\n> - # two\n');
+
+  testCommand('can remove a heading inside block markup', '1. # one{}', setHeading(0), '1. one');
+});
+
 describe('getFormatting', () => {
+  const t = (name: string, doc: string, result: Partial<Formatting>) => {
+    test(name, () => {
+      const formatting = getFormatting(createState(doc));
+      const expected = Object.assign({}, emptyFormatting, result);
+      expect(formatting).to.deep.equal(expected);
+    });
+  };
+
   t('returns nothing special for regular content', 'hello {world}', {});
 
   t('can see emphasis', 'hello *{world}*', { emphasis: true });

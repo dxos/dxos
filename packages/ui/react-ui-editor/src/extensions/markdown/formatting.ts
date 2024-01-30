@@ -4,16 +4,14 @@
 
 import { snippet } from '@codemirror/autocomplete';
 import { syntaxTree } from '@codemirror/language';
-import { type Extension, RangeSetBuilder, type EditorState } from '@codemirror/state';
 import {
-  type Command,
-  Decoration,
-  type DecorationSet,
-  type EditorView,
-  keymap,
-  ViewPlugin,
-  type ViewUpdate,
-} from '@codemirror/view';
+  type Extension,
+  type StateCommand,
+  RangeSetBuilder,
+  type EditorState,
+  type ChangeSpec,
+} from '@codemirror/state';
+import { Decoration, type DecorationSet, type EditorView, keymap, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 import { type SyntaxNodeRef, type SyntaxNode } from '@lezer/common';
 
 // Describes the formatting situation of the selection in an editor
@@ -65,59 +63,83 @@ export const emptyFormatting: Formatting = {
 export type FormattingOptions = {};
 
 export const setHeading =
-  (level: number): Command =>
-  (view: EditorView) => {
+  (level: number): StateCommand =>
+  ({ state, dispatch }) => {
     const {
       selection: { ranges },
       doc,
-    } = view.state;
-    const changes = [];
+    } = state;
+    const changes: ChangeSpec[] = [];
+    let prevBlock = -1;
     for (const range of ranges) {
-      const { number } = doc.lineAt(range.anchor);
-      const { from, to } = doc.line(number);
-
-      // Check heading doesn't already exist.
-      const line = doc.sliceString(from, to);
-      const [_, marks, spaces] = line.match(/(#+)(\s+)/) ?? [];
-      const current = marks?.length ?? 0;
-      if (level !== current) {
-        changes.push({
-          from,
-          to: from + current + (spaces?.length ?? 0),
-          insert: '#'.repeat(level) + (level > 0 ? ' ' : ''),
-        });
-      }
+      syntaxTree(state).iterate({
+        from: range.from,
+        to: range.to,
+        enter: (node) => {
+          if (!Object.hasOwn(Textblocks, node.name) || prevBlock === node.from) {
+            return;
+          }
+          prevBlock = node.from;
+          const blockType = Textblocks[node.name];
+          const isHeading = /heading(\d)/.exec(blockType);
+          const curLevel = isHeading ? +isHeading[1] : node.name === 'Paragraph' ? 0 : -1;
+          if (curLevel < 0 || curLevel === level) {
+            return;
+          }
+          if (curLevel === 0) {
+            changes.push({ from: node.from, insert: '#'.repeat(level) + ' ' });
+          } else if (node.name === 'SetextHeading1' || node.name === 'SetextHeading2') {
+            // Change Setext heading to regular one
+            const nextLine = doc.lineAt(node.to);
+            if (level) {
+              changes.push({ from: node.from, insert: '#'.repeat(level) + ' ' });
+            }
+            changes.push({ from: nextLine.from - 1, to: nextLine.to });
+          } else {
+            // Adjust the level of an ATX heading
+            if (level === 0) {
+              changes.push({ from: node.from, to: Math.min(node.to, node.from + curLevel + 1) });
+            } else if (level < curLevel) {
+              changes.push({ from: node.from, to: node.from + (curLevel - level) });
+            } else {
+              changes.push({ from: node.from, insert: '#'.repeat(level - curLevel) });
+            }
+          }
+        },
+      });
     }
 
-    if (changes.length) {
-      view.dispatch({ changes });
+    if (!changes.length) {
+      return false;
     }
-
+    dispatch(state.update({ changes, userEvent: 'format.setHeading', scrollIntoView: true }));
     return true;
   };
 
 export const toggleStyle =
-  (mark: string): Command =>
-  (view) => {
-    const { ranges } = view.state.selection;
+  (mark: string): StateCommand =>
+  ({ state, dispatch }) => {
+    const { ranges } = state.selection;
     for (const range of ranges) {
       if (range.from === range.to) {
         return false;
       }
 
       // TODO(burdon): Detect if already styled (or nested).
-      view.dispatch({
-        changes: [
-          {
-            from: range.from,
-            insert: mark,
-          },
-          {
-            from: range.to,
-            insert: mark,
-          },
-        ],
-      });
+      dispatch(
+        state.update({
+          changes: [
+            {
+              from: range.from,
+              insert: mark,
+            },
+            {
+              from: range.to,
+              insert: mark,
+            },
+          ],
+        }),
+      );
     }
 
     return true;
@@ -267,7 +289,7 @@ const IgnoreInline = new Set([
   'SubscriptMark',
 ]);
 
-const Textblocks: { [name: string]: Formatting['blockType'] } = {
+const Textblocks: { [name: string]: NonNullable<Formatting['blockType']> } = {
   Paragraph: 'paragraph',
   Task: 'paragraph',
   CodeBlock: 'codeblock',
