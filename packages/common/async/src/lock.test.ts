@@ -141,6 +141,29 @@ describe('Lock', () => {
     expect(error!.stack!.includes('throwsError')).to.be.true;
     expect(error!.stack!.includes('callLock')).to.be.true;
   }).skipEnvironments('webkit');
+
+  test('works with explicit resource management syntax', async () => {
+    const mutex = new Lock();
+
+    const events: string[] = [];
+
+    const p1 = (async () => {
+      using _guard = await mutex.acquire();
+      events.push('acquire one');
+      await sleep(10);
+      events.push('end one');
+    })();
+
+    const p2 = (async () => {
+      using _guard = await mutex.acquire();
+      events.push('acquire two');
+      await sleep(10);
+      events.push('end two');
+    })();
+
+    await Promise.all([p1, p2]);
+    expect(events).to.deep.equal(['acquire one', 'end one', 'acquire two', 'end two']);
+  });
 });
 
 class TestClass {

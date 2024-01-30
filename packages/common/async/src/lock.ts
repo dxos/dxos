@@ -35,16 +35,16 @@ export class Lock {
    * NOTE: Using `executeSynchronized` is preferred over using `acquire` directly.
    * @returns Release callback
    */
-  async acquire(tag?: string): Promise<() => void> {
+  async acquire(tag?: string): Promise<MutexGuard> {
     const prev = this._queue;
 
     // Immediately update the promise before invoking any async actions so that next invocation waits for our task to complete.
-    let release!: () => void;
+    let guard!: MutexGuard;
     this._queue = new Promise((resolve) => {
-      release = () => {
+      guard = new MutexGuard(() => {
         this._tag = null;
         resolve();
-      };
+      });
     });
 
     await prev;
@@ -52,7 +52,7 @@ export class Lock {
     if (tag !== undefined) {
       this._tag = tag;
     }
-    return release;
+    return guard;
   }
 
   /**
@@ -62,13 +62,28 @@ export class Lock {
    * WARNING: Calling `executeSynchronized` inside of `executeSynchronized` on the same lock instance is a deadlock.
    */
   async executeSynchronized<T>(fun: () => Promise<T>): Promise<T> {
-    const release = await this.acquire();
+    const guard = await this.acquire();
 
     try {
       return await fun();
     } finally {
-      release();
+      guard.release();
     }
+  }
+}
+
+export class MutexGuard {
+  constructor(private readonly _release: () => void) {}
+
+  /**
+   * Releases the lock.
+   */
+  release(): void {
+    this._release();
+  }
+
+  [Symbol.dispose](): void {
+    this.release();
   }
 }
 
@@ -100,17 +115,17 @@ export const synchronized = (
     const tag = `${target.constructor.name}.${propertyName}`;
 
     // Disable warning in prod to avoid performance penalty.
-    let release;
+    let guard;
     if (!enableWarning) {
-      release = await lock.acquire(tag);
+      guard = await lock.acquire(tag);
     } else {
-      release = await warnAfterTimeout(10_000, `lock on ${tag} (taken by ${lock.tag})`, () => lock.acquire(tag));
+      guard = await warnAfterTimeout(10_000, `lock on ${tag} (taken by ${lock.tag})`, () => lock.acquire(tag));
     }
 
     try {
       return await method.apply(this, args);
     } finally {
-      release();
+      guard.release();
     }
   };
   Object.defineProperty(descriptor.value, 'name', { value: propertyName + '$synchronized' });
