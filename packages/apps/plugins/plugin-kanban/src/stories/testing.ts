@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
-
 import { Kanban as KanbanType } from '@braneframe/types';
+import { faker } from '@dxos/random';
 import { TextObject } from '@dxos/react-client/echo';
 
 // TODO(burdon): Types.

@@ -639,6 +639,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/react-ui-card':
         specifier: workspace:*
         version: link:../../ui/react-ui-card
@@ -654,9 +657,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -854,6 +854,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -863,9 +866,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -1036,6 +1036,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../../core/protocols
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-async':
         specifier: workspace:*
         version: link:../../../common/react-async
@@ -1051,9 +1054,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@preact/signals-react':
         specifier: ^1.3.6
         version: 1.3.6(react@18.2.0)
@@ -1179,6 +1179,9 @@ importers:
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../../core/echo/echo-generator
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -1188,9 +1191,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -1441,6 +1441,9 @@ importers:
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../../core/echo/echo-generator
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -1459,9 +1462,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -1517,6 +1517,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -1526,9 +1529,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -1581,6 +1581,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -1593,9 +1596,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -1712,6 +1712,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -1721,9 +1724,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -2105,6 +2105,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -2114,9 +2117,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -2172,6 +2172,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -2181,9 +2184,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -2257,6 +2257,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -2266,9 +2269,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -2346,6 +2346,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -2358,9 +2361,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -2455,6 +2455,9 @@ importers:
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../../core/echo/echo-generator
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -2467,9 +2470,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -2510,6 +2510,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -2525,9 +2528,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -2632,6 +2632,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -2641,9 +2644,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -2893,6 +2893,9 @@ importers:
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../../core/echo/echo-generator
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -2902,9 +2905,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -3116,6 +3116,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -3128,9 +3131,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -3208,6 +3208,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -3223,9 +3226,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -3599,9 +3599,9 @@ importers:
         specifier: ^2.3.0
         version: 2.3.2
     devDependencies:
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../random
       '@types/binary-parser':
         specifier: ^1.5.1
         version: 1.5.1
@@ -3724,9 +3724,9 @@ importers:
         specifier: ^2.12.5
         version: 2.12.5
     optionalDependencies:
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../random
     devDependencies:
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
@@ -3780,12 +3780,12 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../log
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../random
       '@dxos/tracing':
         specifier: workspace:*
         version: link:../tracing
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@types/randombytes':
         specifier: ^2.0.0
         version: 2.0.0
@@ -4189,6 +4189,15 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
 
+  packages/common/random:
+    dependencies:
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../node-std
+      '@faker-js/faker':
+        specifier: ^8.3.1
+        version: 8.4.0
+
   packages/common/random-access-storage:
     dependencies:
       '@dxos/async':
@@ -4483,9 +4492,9 @@ importers:
         specifier: ^18.11.9
         version: 18.18.9
     devDependencies:
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
 
   packages/core/echo/automerge:
     dependencies:
@@ -4559,9 +4568,9 @@ importers:
         specifier: ^13.6.10
         version: 13.6.10
     devDependencies:
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@types/lodash.clonedeep':
         specifier: ^4.5.6
         version: 4.5.7
@@ -4641,9 +4650,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
 
   packages/core/echo/echo-pipeline:
     dependencies:
@@ -4778,9 +4787,9 @@ importers:
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../echo-generator
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
 
   packages/core/echo/echo-schema:
     dependencies:
@@ -5010,9 +5019,9 @@ importers:
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../../common/feed-store
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
 
   packages/core/functions:
     dependencies:
@@ -5799,6 +5808,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../../core/mesh/rpc
@@ -6508,9 +6520,9 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
     optionalDependencies:
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
     devDependencies:
       '@babel/core':
         specifier: ^7.18.13
@@ -6681,9 +6693,9 @@ importers:
         specifier: ^3.22.0
         version: 3.22.0(zod@3.22.4)
     optionalDependencies:
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
     devDependencies:
       '@dxos/agent':
         specifier: workspace:*
@@ -6788,12 +6800,12 @@ importers:
       '@babel/core':
         specifier: ^7.18.13
         version: 7.21.3
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@swc-node/register':
         specifier: 1.6.8
         version: 1.6.8(@swc/core@1.3.104)(typescript@5.2.2)
@@ -6946,9 +6958,9 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
     devDependencies:
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@types/isomorphic-fetch':
         specifier: ^0.0.36
         version: 0.0.36
@@ -6986,15 +6998,15 @@ importers:
       '@dxos/esbuild-server':
         specifier: ~2.29.0
         version: 2.29.0(@types/react@18.0.21)
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@emotion/css':
         specifier: ^11.7.1
         version: 11.10.0(@babel/core@7.21.3)
       '@emotion/react':
         specifier: ^11.9.0
         version: 11.10.4(@babel/core@7.21.3)(@types/react@18.0.21)(react@18.2.0)
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@types/d3':
         specifier: ^7.4.2
         version: 7.4.2
@@ -7089,6 +7101,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/random-access-storage':
         specifier: workspace:*
         version: link:../../common/random-access-storage
@@ -7104,9 +7119,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       chartjs-node-canvas:
         specifier: ^4.1.6
         version: 4.1.6(chart.js@3.9.1)
@@ -7285,6 +7297,9 @@ importers:
         specifier: ^4.3.2
         version: 4.3.2
     devDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../react-client
@@ -7297,9 +7312,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -7667,6 +7679,9 @@ importers:
       '@dxos/echo-typegen':
         specifier: workspace:*
         version: link:../../core/echo/echo-typegen
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../react-client
@@ -7685,9 +7700,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -7852,15 +7864,15 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
     optionalDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
       '@dxos/text-model':
         specifier: workspace:*
         version: link:../../core/echo/text-model
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       yjs:
         specifier: ^13.6.10
         version: 13.6.11
@@ -7971,15 +7983,15 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../config
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/react-async':
         specifier: workspace:*
         version: link:../../common/react-async
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -8251,12 +8263,12 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.0
         version: 3.2.0(react@18.2.0)
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -8300,15 +8312,15 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.0
         version: 3.2.0(react@18.2.0)
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../storybook-utils
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -8460,15 +8472,15 @@ importers:
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -8605,15 +8617,15 @@ importers:
       '@dxos/gem-core':
         specifier: workspace:*
         version: link:../../experimental/gem-core
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -8678,12 +8690,12 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -8724,12 +8736,12 @@ importers:
         specifier: ^0.2.0
         version: 0.2.0(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -8776,12 +8788,12 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -8849,12 +8861,12 @@ importers:
         specifier: ^3.3.1
         version: 3.3.1
     devDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../storybook-utils
-      '@faker-js/faker':
-        specifier: ^8.3.1
-        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -13464,10 +13476,10 @@ packages:
     resolution: {integrity: sha512-1S8uAY/MTJqVx0SC4epBq+N2yhuwtNwLbJYNZyhL2pO1ZVKn5HFXav5T41Ryzy9K9V7ZId2JB2oy/W4aCd9/2w==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
 
-  /@faker-js/faker@8.3.1:
-    resolution: {integrity: sha512-FdgpFxY6V6rLZE9mmIBb9hM0xpfvQOSNOLnzolzKwsE1DH+gC7lEKV1p1IbR0lAYyvYd5a4u3qWJzowUkw1bIw==}
+  /@faker-js/faker@8.4.0:
+    resolution: {integrity: sha512-htW87352wzUCdX1jyUQocUcmAaFqcR/w082EC8iP/gtkF0K+aKcBp0hR5Arb7dzR8tQ1TrhE9DNa5EbJELm84w==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0, npm: '>=6.14.13'}
-    requiresBuild: true
+    dev: false
 
   /@fal-works/esbuild-plugin-global-externals@2.1.2:
     resolution: {integrity: sha512-cEee/Z+I12mZcFJshKcCqC8tuX5hG3s+d+9nZ3LabqKF1vKdF41B92pJVCBggjAGORAeOzyyDDKrZwIkLffeOQ==}

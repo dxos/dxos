@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
 import fs from 'fs';
 import yaml from 'js-yaml';
 import uniq from 'uniq';
+
+import { faker } from '@dxos/random';
 
 faker.seed(0xdeadbeef);
 

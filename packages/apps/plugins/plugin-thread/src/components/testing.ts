@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
-
 import { Message as MessageType, Thread as ThreadType } from '@braneframe/types';
 import { PublicKey } from '@dxos/keys';
+import { faker } from '@dxos/random';
 import { type Identity } from '@dxos/react-client/halo';
 
 export const createChatThread = (identity: Identity) => {

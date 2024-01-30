@@ -3,7 +3,6 @@
 //
 
 import { css } from '@emotion/css';
-import { faker } from '@faker-js/faker';
 import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -20,6 +19,7 @@ import {
   useSvgContext,
   useZoom,
 } from '@dxos/gem-core';
+import { faker } from '@dxos/random';
 
 // TODO(burdon): Package name/title.
 export default {

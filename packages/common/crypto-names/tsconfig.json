@@ -15,6 +15,9 @@
   "references": [
     {
       "path": "../node-std"
+    },
+    {
+      "path": "../random"
     }
   ]
 }

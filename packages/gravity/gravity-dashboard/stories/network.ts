@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
+import { faker } from '@dxos/random';
 
 // God's eye view.
 

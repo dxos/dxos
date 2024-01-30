@@ -7,9 +7,9 @@ import { Args, Flags } from '@oclif/core';
 import { sleep } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { Expando } from '@dxos/client/echo';
+import { Random } from '@dxos/random';
 
 import { BaseCommand } from '../../base-command';
-import { Random } from '../../util';
 
 const random = new Random();
 

@@ -4,12 +4,12 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import { Pause, Play, Plus, Timer } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import React, { useEffect, useState } from 'react';
 
 import { EventSubscriptions } from '@dxos/async';
+import { faker } from '@dxos/random';
 import { Client } from '@dxos/react-client';
 import { Expando, type Space, SpaceProxy, SpaceState } from '@dxos/react-client/echo';
 import { ClientRepeater, TestBuilder } from '@dxos/react-client/testing';

@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
 import React, { useCallback, useState } from 'react';
 
 import { type Graph, GraphBuilder } from '@dxos/app-graph';
 import { buildGraph } from '@dxos/app-graph/testing';
+import { faker } from '@dxos/random';
 import { arrayMove } from '@dxos/util';
 
 import { Tree, type TreeData, type TreeProps } from './Tree';

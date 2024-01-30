@@ -6,10 +6,9 @@
 
 // TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
 
-import { faker } from '@faker-js/faker';
-
 import { Schema } from '@dxos/client/echo';
 import { Expando, type TypedObject } from '@dxos/echo-schema';
+import { faker } from '@dxos/random';
 
 // TODO(burdon): Util.
 export const range = <T>(fn: (i: number) => T | undefined, length: number): T[] =>

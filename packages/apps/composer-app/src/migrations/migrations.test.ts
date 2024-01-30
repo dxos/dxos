@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
 import { expect } from 'chai';
 
 import { Folder } from '@braneframe/types';
 import { Client } from '@dxos/client';
 import { type Space, Expando } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
+import { faker } from '@dxos/random';
 import { afterEach, beforeEach, describe, test } from '@dxos/test';
 
 import { migrations } from './migrations';

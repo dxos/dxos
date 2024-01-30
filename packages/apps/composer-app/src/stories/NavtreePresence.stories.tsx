@@ -4,7 +4,6 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import { Minus, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
@@ -13,6 +12,7 @@ import { Surface, SurfaceProvider } from '@dxos/app-framework';
 import { GraphBuilder, isGraphNode, type ActionArg } from '@dxos/app-graph';
 import { buildGraph } from '@dxos/app-graph/testing';
 import { PublicKey } from '@dxos/keys';
+import { faker } from '@dxos/random';
 import { Tooltip } from '@dxos/react-ui';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { NavTree, translations, type TreeNode } from '@dxos/react-ui-navtree';

@@ -92,5 +92,6 @@ export const safeParseJson = <T extends object>(data: string | undefined | null,
       return JSON.parse(data);
     } catch (err) {}
   }
+
   return defaultValue;
 };

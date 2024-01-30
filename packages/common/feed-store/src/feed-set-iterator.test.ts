@@ -2,11 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
 import { expect } from 'chai';
 
 import { latch } from '@dxos/async';
 import { log } from '@dxos/log';
+import { faker } from '@dxos/random';
 import { describe, test } from '@dxos/test';
 
 import { type FeedBlockSelector, FeedSetIterator } from './feed-set-iterator';
