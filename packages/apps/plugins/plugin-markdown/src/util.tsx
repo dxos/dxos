@@ -40,8 +40,8 @@ export const isMarkdownProperties = (data: unknown): data is MarkdownProperties 
   isTypedObject(data)
     ? true
     : data && typeof data === 'object'
-    ? 'title' in data && typeof data.title === 'string'
-    : false;
+      ? 'title' in data && typeof data.title === 'string'
+      : false;
 
 type MarkdownPlugin = Plugin<MarkdownProvides>;
 

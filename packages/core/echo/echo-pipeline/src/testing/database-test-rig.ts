@@ -74,7 +74,10 @@ export class DatabaseTestPeer {
 
   private readonly _writes = new Set<WriteRequest>();
 
-  constructor(public readonly rig: DatabaseTestBuilder, public readonly spaceKey: PublicKey) {}
+  constructor(
+    public readonly rig: DatabaseTestBuilder,
+    public readonly spaceKey: PublicKey,
+  ) {}
 
   async open() {
     this.hostItems = new ItemManager(this.modelFactory);
