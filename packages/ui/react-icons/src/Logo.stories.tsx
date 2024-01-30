@@ -4,12 +4,17 @@
 
 import '@dxosTheme';
 
-import { CircleNotch } from '@phosphor-icons/react';
 import { type Icon } from '@phosphor-icons/react';
-import React from 'react';
+import React, { useState } from 'react';
 
+import { Button } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
+
+import { Composer } from './icons';
+// https://pixabay.com/sound-effects/search/logo/?pagi=2
+// @ts-ignore
+import ident from '../assets/sounds/ident-1.mp3';
 
 const Icon = () => null;
 
@@ -21,57 +26,54 @@ export default {
 
 export const Default = {
   render: () => {
+    const [spin, setSpin] = useState(false);
+    const [logo, setLogo] = useState(false);
+    const handleSpin = async () => {
+      const audio = new Audio(ident);
+      await audio.play();
+      setTimeout(() => {
+        setLogo(true);
+      }, 1_500);
+      setTimeout(() => {
+        setSpin(true);
+        setTimeout(() => {
+          setSpin(false);
+        }, 2_000);
+      }, 50);
+    };
+
+    // 256,164,104
+    // 256,168,112
+
     return (
-      <div className='absolute flex w-full h-full items-center justify-center text-blue-700'>
+      <div className='absolute flex w-full h-full items-center justify-center bg-neutral-100 inset-0'>
+        <div className='absolute left-4 top-4'>
+          <Button onClick={handleSpin}>Spin</Button>
+        </div>
         <div className='absolute'>
-          <CircleNotch
-            weight='bold'
-            className={mx(
-              'animate-spin-logo-3',
-              'w-[240px] h-[240px] [&>path]:fill-neutral-300 [&>path]:stroke-neutral-500 [&>path]:stroke-[2px]',
-            )}
-            style={{ filter: 'blur(0.6rem)' }}
+          <Composer className={mx(spin && 'animate-spin-logo-1', 'w-[256px] h-[256px] [&>path]:fill-teal-300')} />
+        </div>
+        <div className='absolute'>
+          <Composer
+            className={mx(spin && 'animate-spin-logo-2', 'w-[168px] h-[168px] [&>path]:fill-teal-400')}
+            style={{
+              animationDirection: 'reverse',
+            }}
           />
         </div>
         <div className='absolute'>
-          <CircleNotch
-            weight='bold'
-            className={mx(
-              'animate-spin-logo-2',
-              'w-[160px] h-[160px] [&>path]:fill-green-200 [&>path]:stroke-neutral-500 [&>path]:stroke-[2px]',
-            )}
-            style={{ animationDirection: 'reverse', filter: 'blur(0.3rem)' }}
-          />
+          <Composer className={mx(spin && 'animate-spin-logo-3', 'w-[112px] h-[112px] [&>path]:fill-teal-500')} />
         </div>
-        <div className='absolute'>
-          <CircleNotch
-            weight='bold'
-            className={mx(
-              'animate-spin-logo-1',
-              'w-[80px] h-[80px] [&>path]:fill-blue-300 [&>path]:stroke-neutral-500 [&>path]:stroke-[2px]',
-            )}
-            style={{ filter: 'blur(0.3rem)' }}
-          />
+        <div
+          className={mx(
+            'mt-[400px] text-[100px] text-teal-500 font-[k2d] italic',
+            'transition transition-opacity opacity-0 duration-1000',
+            logo && 'opacity-100',
+          )}
+        >
+          composer
         </div>
-        {/* <div className='absolute'> */}
-        {/*  <CircleNotch */}
-        {/*    weight='bold' */}
-        {/*    className={mx( */}
-        {/*      'animate-spin-logo-3', */}
-        {/*      'w-[40px] h-[40px] [&>path]:fill-neutral-300 [&>path]:stroke-neutral-500 [&>path]:stroke-[2px]', */}
-        {/*    )} */}
-        {/*    style={{ animationDirection: 'reverse' }} */}
-        {/*  /> */}
-        {/* </div> */}
-        <div className='mt-[400px] text-[100px] font-[k2d] italic text-neutral-500'>composer</div>
       </div>
     );
   },
 };
-
-// stroke-width: 20px;
-// stroke-linecap: butt;
-// stroke-linejoin: bevel;
-// fill: red;
-// stroke: red;
-// fill: none;

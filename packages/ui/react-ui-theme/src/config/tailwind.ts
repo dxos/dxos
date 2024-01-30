@@ -167,9 +167,9 @@ export const tailwindConfig = ({
 
           spin: 'spin 1.5s linear infinite',
 
-          'spin-logo-1': 'spin 5s linear infinite',
-          'spin-logo-2': 'spin 3s linear infinite',
-          'spin-logo-3': 'spin 2s linear infinite',
+          'spin-logo-1': 'spin 2s linear infinite',
+          'spin-logo-2': 'spin 2s linear infinite',
+          'spin-logo-3': 'spin 1s linear infinite',
 
           shimmer: 'shimmer-loop 2s infinite',
           'halo-pulse': 'halo-pulse 2s ease-out infinite',
