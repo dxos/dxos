@@ -6,46 +6,16 @@
 import * as localForage from 'localforage';
 
 // import { type Platform } from '@dxos/client-services';
-import type { Client, Config } from '@dxos/client';
+import type { Config } from '@dxos/client';
 import { log } from '@dxos/log';
 // import { type InitOptions as TelemetryInitOptions } from '@dxos/telemetry';
 
-import type { Mode, Observability } from '../observability';
+import type { IPData } from './common';
+import type { Observability, Mode } from '../observability';
 
-export const BASE_TELEMETRY_PROPERTIES: any = {};
 // item name is 'telemetry' for backwards compatibility
 export const OBSERVABILITY_DISABLED_KEY = 'telemetry-disabled';
 export const OBSERVABILITY_GROUP_KEY = 'telemetry-group';
-
-if (typeof navigator !== 'undefined' && navigator.storage?.estimate) {
-  setInterval(async () => {
-    try {
-      const storageEstimate = await navigator.storage.estimate();
-      BASE_TELEMETRY_PROPERTIES.storageUsage = storageEstimate.usage;
-      BASE_TELEMETRY_PROPERTIES.storageQuota = storageEstimate.quota;
-    } catch (error) {
-      log.warn('Failed to run estimate()', error);
-    }
-  }, 10e3);
-}
-
-// TODO(wittjosiah): Improve privacy of telemetry identifiers.
-//  - Identifier should be generated client-side with no attachment to identity.
-//  - Identifier can then be reset by user.
-//  - Identifier can be synced via HALO to allow for correlation of events bewteen devices.
-//  - Identifier should also be stored outside of HALO such that it is available immediately on startup.
-export const getTelemetryIdentifier = (client: Client) => {
-  if (!client?.initialized) {
-    return undefined;
-  }
-
-  const identity = client.halo.identity.get();
-  if (identity) {
-    return identity.identityKey.truncate();
-  }
-
-  return undefined;
-};
 
 export const isObservabilityDisabled = async (namespace: string): Promise<boolean> => {
   try {
@@ -89,8 +59,6 @@ export type AppObservabilityOptions = {
   // TODO(nf): options for providers?
 };
 
-type IPData = { city: string; region: string; country: string; latitude: number; longitude: number };
-
 // TODO(wittjosiah): Store preference for disabling telemetry.
 //   At minimum should be stored locally (i.e., localstorage), possibly in halo preference.
 //   Needs to be hooked up to settings page for user visibility.
@@ -114,9 +82,7 @@ export const initializeAppObservability = async ({
   const group = (await getObservabilityGroup(namespace)) ?? undefined;
   const release = `${namespace}@${config.get('runtime.app.build.version')}`;
   const environment = config.get('runtime.app.env.DX_ENVIRONMENT');
-  BASE_TELEMETRY_PROPERTIES.group = group;
-  BASE_TELEMETRY_PROPERTIES.release = release;
-  BASE_TELEMETRY_PROPERTIES.environment = environment;
+
   const observabilityDisabled = await isObservabilityDisabled(namespace);
 
   const { Observability } = await import('../observability');
@@ -162,7 +128,6 @@ export const initializeAppObservability = async ({
         return cachedData.data;
       }
 
-      // TODO(nf): move into observability
       // Fetch data if not cached.
       const IPDATA_API_KEY = config.get('runtime.app.env.DX_IPDATA_API_KEY');
       if (IPDATA_API_KEY) {
@@ -183,20 +148,27 @@ export const initializeAppObservability = async ({
       }
     };
 
-    const ipData = await getIPData(config);
-    if (ipData && ipData.city) {
-      BASE_TELEMETRY_PROPERTIES.city = ipData.city;
-      BASE_TELEMETRY_PROPERTIES.region = ipData.region;
-      BASE_TELEMETRY_PROPERTIES.country = ipData.country;
-      BASE_TELEMETRY_PROPERTIES.latitude = ipData.latitude;
-      BASE_TELEMETRY_PROPERTIES.longitude = ipData.longitude;
-    }
-
     // TODO(nf): plugin state?
 
     // TODO(nf): should provide capability to init Sentry earlier in booting process to capture errors during initialization.
 
     observability.initialize();
+
+    const ipData = await getIPData(config);
+
+    ipData && observability.addIPDataTelemetryTags(ipData);
+
+    if (navigator.storage?.estimate) {
+      setInterval(async () => {
+        try {
+          const storageEstimate = await navigator.storage.estimate();
+          storageEstimate.usage && observability.setTag('storageUsage', storageEstimate.usage.toString(), 'telemetry');
+          storageEstimate.quota && observability.setTag('storageQuota', storageEstimate.quota.toString(), 'telemetry');
+        } catch (error) {
+          log.warn('Failed to run estimate()', error);
+        }
+      }, 10e3);
+    }
   } catch (err: any) {
     log.error('Failed to initialize app observability', err);
   }

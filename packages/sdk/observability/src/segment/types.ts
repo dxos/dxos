@@ -6,7 +6,7 @@ export type SegmentTelemetryOptions = {
   apiKey?: string;
   batchSize?: number;
   enable?: boolean;
-  getTags: () => Map<string, string>;
+  getTags: () => { [key: string]: string };
 };
 
 type CommonOptions = {
