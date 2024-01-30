@@ -51,7 +51,7 @@ export class WebFS implements Storage {
     const entries: string[] = [];
 
     for await (const entry of (root as any).keys()) {
-      if (entry.startsWith(fullName + '_')) {
+      if (entry.startsWith(fullName + '_') && !entry.endsWith('.crswap')) {
         entries.push(entry.slice(fullName.length + 1));
       }
     }
