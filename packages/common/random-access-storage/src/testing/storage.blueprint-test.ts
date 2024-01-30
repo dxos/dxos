@@ -4,9 +4,9 @@
 
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
+import { describe, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
-import { describe, test } from '@dxos/test';
 
 import { type File, type Storage, StorageType } from '../common';
 
@@ -139,9 +139,9 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       }
     });
 
-    test('double destroy file', async function () {
+    test('double destroy file', async (t) => {
       if (testGroupName !== StorageType.NODE) {
-        this.skip();
+        t.skip();
       }
       const fileName = randomText();
       let firstHandle: File;
@@ -218,7 +218,11 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       await expect(file.read(0, buffer.length)).to.be.rejected;
     });
 
-    test('del method', async () => {
+    test('del method', async (t) => {
+      // File.del() throws 'Not deletable' error for IDb.
+      if (testGroupName !== StorageType.NODE) {
+        t.skip();
+      }
       const storage = createStorage();
 
       const directory = storage.createDirectory();
@@ -235,7 +239,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       expect((await file.stat()).size).to.equal(buffer1.length);
       expect(await file.read(0, buffer1.length)).to.deep.equal(buffer1);
       await expect(file.read(buffer1.length, buffer2.length)).to.be.rejectedWith('Could not satisfy length');
-    }).onlyEnvironments('nodejs'); // File.del() throws 'Not deletable' error for IDb.
+    });
 
     test('stat of new file', async () => {
       const storage = createStorage();
@@ -314,9 +318,9 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       }
     });
 
-    test('list all files after reopen', async function () {
+    test('list all files after reopen', async (t) => {
       if (testGroupName !== StorageType.WEBFS && testGroupName !== StorageType.NODE) {
-        this.skip();
+        t.skip();
       }
 
       const dirname = randomText();

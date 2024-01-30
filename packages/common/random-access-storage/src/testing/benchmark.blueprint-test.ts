@@ -3,9 +3,9 @@
 //
 
 import randomBytes from 'randombytes';
+import { describe, test } from 'vitest';
 
 import { latch } from '@dxos/async';
-import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { type Storage, type StorageType } from '../common';
@@ -13,7 +13,7 @@ import { type Storage, type StorageType } from '../common';
 export const randomText = () => Math.random().toString(36).substring(2);
 
 // https://gist.github.com/dmaretskyi/20604a10f85704406bbc1a3c672db1e5
-export const storageBenchmark = (testGroupName: StorageType, createStorage: () => Storage) => {
+export const storageBenchmark = (environment: string, testGroupName: StorageType, createStorage: () => Storage) => {
   describe(testGroupName, () => {
     test('individual writers', async () => {
       const DATA_SIZE = 1024;
@@ -73,7 +73,7 @@ export const storageBenchmark = (testGroupName: StorageType, createStorage: () =
 
       console.log({
         params: {
-          environment: mochaExecutor.environment,
+          environment,
           date: new Date().toISOString(),
           type: testGroupName,
           DATA_SIZE,
