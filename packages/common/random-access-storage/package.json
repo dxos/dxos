@@ -37,7 +37,6 @@
     "@dxos/esbuild-plugins": "workspace:*",
     "@types/pify": "^3.0.2",
     "@types/randombytes": "^2.0.0",
-    "@vitest/utils": "^1.2.2",
     "randombytes": "^2.1.0",
     "source-map-support": "^0.5.12"
   },
