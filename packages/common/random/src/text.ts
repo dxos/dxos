@@ -11,12 +11,12 @@ export const text = {
   },
 
   sentence: (range: Range = { min: 8, max: 16 }) => {
-    const sentence = core.multiple(type.number(range), text.word).join(' ');
+    const sentence = core.multiple(type.integer(range), text.word).join(' ');
     return sentence.charAt(0).toUpperCase() + sentence.slice(1) + '.';
   },
 
   paragraph: (range: Range = { min: 3, max: 8 }) => {
-    return core.multiple(type.number(range), text.sentence).join(' ');
+    return core.multiple(type.integer(range), text.sentence).join(' ');
   },
 };
 

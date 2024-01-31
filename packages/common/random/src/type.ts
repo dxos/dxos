@@ -11,7 +11,7 @@ export const type = {
     return generate(range, (range) => core.random * (range.max - range.min) + range.min);
   },
 
-  number: (range: Range = { min: 0, max: 10 }): number => {
+  integer: (range: Range = { min: 0, max: 10 }): number => {
     return generate(range, (range) => Math.floor(core.random * (range.max - range.min) + range.min));
   },
 

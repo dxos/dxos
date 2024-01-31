@@ -4,6 +4,7 @@
 
 import { CaretDown, CaretRight, Clipboard } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { Config, Defaults } from '@dxos/react-client';
 import {
@@ -51,6 +52,10 @@ export const ResetDialog = ({
 }: FatalErrorProps) => {
   const { t } = useTranslation('composer');
   const error = propsError && parseError(t, propsError);
+  const {
+    needRefresh: [needRefresh, _setNeedRefresh],
+    updateServiceWorker,
+  } = useRegisterSW();
   const [showStack, setShowStack] = useState(false);
 
   const handleCopyError = useCallback(() => {
@@ -126,9 +131,15 @@ export const ResetDialog = ({
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
             </DropdownMenu.Root>
-            <Button variant='primary' onClick={() => location.reload()}>
-              {t('reload page label')}
-            </Button>
+            {needRefresh ? (
+              <Button variant='primary' onClick={() => updateServiceWorker()}>
+                {t('update and reload page label')}
+              </Button>
+            ) : (
+              <Button variant='primary' onClick={() => location.reload()}>
+                {t('reload page label')}
+              </Button>
+            )}
           </div>
         </AlertDialog.Content>
       </AlertDialog.Overlay>

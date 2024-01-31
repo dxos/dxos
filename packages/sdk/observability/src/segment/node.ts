@@ -12,7 +12,7 @@ import { captureException } from '../sentry';
 
 export class SegmentTelemetry {
   private _analytics?: Analytics;
-  private _getTags: () => Map<string, string>;
+  private _getTags: () => { [key: string]: string };
 
   constructor({ apiKey, batchSize, getTags }: SegmentTelemetryOptions) {
     this._getTags = getTags;
@@ -52,7 +52,7 @@ export class SegmentTelemetry {
    * Track an event.
    */
   event({ installationId: anonymousId, identityId: userId, name: event, ...options }: EventOptions) {
-    log('sending event to telemetry', { event, options, tags: Object.fromEntries(this._getTags().entries()) });
+    log('sending event to telemetry', { event, options, tags: this._getTags() });
     if (!this._analytics) {
       log('Analytics not initialized', { action: 'event' });
       return;
@@ -61,7 +61,7 @@ export class SegmentTelemetry {
     try {
       this._analytics.track({
         ...options,
-        context: Object.fromEntries(this._getTags().entries()),
+        context: this._getTags(),
         userId,
         anonymousId: anonymousId!,
         event,

@@ -7,12 +7,7 @@ import React, { type FC, useEffect } from 'react';
 import { HashRouter, useLocation } from 'react-router-dom';
 
 import { log } from '@dxos/log';
-import {
-  type Observability,
-  BASE_TELEMETRY_PROPERTIES,
-  getTelemetryIdentifier,
-  setupTelemetryListeners,
-} from '@dxos/observability';
+import { type Observability, getTelemetryIdentifier, setupTelemetryListeners } from '@dxos/observability';
 import { type Client, ClientContext, type ClientServices, useClient } from '@dxos/react-client';
 import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
 import { defaultTheme, bindTheme, toolbarRoot } from '@dxos/react-ui-theme';
@@ -39,7 +34,6 @@ const Telemetry = ({ namespace, observability }: { namespace: string; observabil
       identityId: getTelemetryIdentifier(client),
       name: `${namespace}.page.load`,
       properties: {
-        ...BASE_TELEMETRY_PROPERTIES,
         href: window.location.href,
         loadDuration: window.performance.timing.loadEventEnd - window.performance.timing.loadEventStart,
       },
@@ -51,7 +45,6 @@ const Telemetry = ({ namespace, observability }: { namespace: string; observabil
   useEffect(() => {
     observability.page({
       identityId: getTelemetryIdentifier(client),
-      properties: BASE_TELEMETRY_PROPERTIES,
     });
   }, [location]);
 

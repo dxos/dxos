@@ -9,7 +9,6 @@ export * from './invitations';
 export * from './publish';
 export * from './spaces';
 export * from './supervisor';
-export * from './telemetry';
 export * from './testing';
 export * from './tunnel';
 export * from './types';
