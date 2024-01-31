@@ -36,14 +36,14 @@ export const util = {
   /**
    * Generate an array calling the generator without a value.
    */
-  multiple: (n: number, f: () => any) => {
+  multiple: <T>(n: number, f: () => T): T[] => {
     return array(n).map(() => f());
   },
 
   /**
    * Returns single element.
    */
-  arrayElement: (values: any[]) => {
+  arrayElement: <T>(values: T[]): T => {
     return values[Math.floor(Math.random() * values.length)];
   },
 
