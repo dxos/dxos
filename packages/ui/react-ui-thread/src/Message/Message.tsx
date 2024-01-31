@@ -62,6 +62,7 @@ export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
 
 export type MessageBlockProps<BlockValue> = {
   block: MessageEntityBlock<BlockValue>;
+  authorId?: string;
   onBlockDelete?: () => void;
 };
 
@@ -117,7 +118,12 @@ export const Message = <BlockValue,>(props: MessageProps<BlockValue>) => {
       </p>
       <div role='none' className='grid gap-y-1 grid-cols-[min-content_1fr_min-content]'>
         {blocks.map((block, i) => (
-          <MessageBlockComponent key={i} block={block} onBlockDelete={onDelete && (() => onDelete(id, i))} />
+          <MessageBlockComponent
+            key={i}
+            block={block}
+            authorId={metaProps.authorId}
+            onBlockDelete={onDelete && (() => onDelete(id, i))}
+          />
         ))}
       </div>
     </MessageMeta>
