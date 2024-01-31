@@ -4,7 +4,7 @@
 
 import { faker as realFaker } from '@faker-js/faker';
 
-import { type Range } from './core';
+import { type Range } from './util';
 
 // TODO(burdon): Migration steps:
 //  - Identify and remove test dependencies on specific values.
@@ -21,8 +21,8 @@ export const faker = {
   seed: (seed: number) => realFaker.seed(seed),
   helpers: {
     fake: realFaker.helpers.fake, // TODO(burdon): ???
-    arrayElement: <T>(a: T[]) => realFaker.helpers.arrayElement(a),
     multiple: (f: () => any, range?: { count: Range }) => realFaker.helpers.multiple(f, range),
+    arrayElement: <T>(a: T[]) => realFaker.helpers.arrayElement(a),
     arrayElements: <T>(a: T[], n: number) => realFaker.helpers.arrayElements(a, n),
     uniqueArray: (f: readonly any[] | (() => any), n: number) => realFaker.helpers.uniqueArray(f, n),
   },
@@ -59,6 +59,18 @@ export const faker = {
   //
   // Custom
   //
+  internet: {
+    email: () => realFaker.internet.email(),
+    url: () => realFaker.internet.url(),
+  },
+  //
+  // Random
+  //
+  definitions: {
+    animal: {
+      fish: realFaker.definitions.animal.fish,
+    },
+  },
   company: {
     name: () => realFaker.company.name(),
   },
@@ -69,15 +81,6 @@ export const faker = {
   commerce: {
     product: () => realFaker.commerce.product(),
     productName: () => realFaker.commerce.productName(),
-  },
-  internet: {
-    email: () => realFaker.internet.email(),
-    url: () => realFaker.internet.url(),
-  },
-  definitions: {
-    animal: {
-      fish: realFaker.definitions.animal.fish,
-    },
   },
   animal: {
     bear: () => realFaker.animal.bear(),

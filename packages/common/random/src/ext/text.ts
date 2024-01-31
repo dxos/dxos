@@ -3,20 +3,20 @@
 //
 
 import { type } from './type';
-import { core, type Range } from '../core';
+import { util, type Range } from '../util';
 
 export const text = {
   word: () => {
-    return core.element(data.words);
+    return util.element(data.words);
   },
 
   sentence: (range: Range = { min: 8, max: 16 }) => {
-    const sentence = core.multiple(type.integer(range), text.word).join(' ');
+    const sentence = util.multiple(type.integer(range), text.word).join(' ');
     return sentence.charAt(0).toUpperCase() + sentence.slice(1) + '.';
   },
 
   paragraph: (range: Range = { min: 3, max: 8 }) => {
-    return core.multiple(type.integer(range), text.sentence).join(' ');
+    return util.multiple(type.integer(range), text.sentence).join(' ');
   },
 };
 
