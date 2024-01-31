@@ -2,33 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Range } from './defs';
-import { random } from './random';
+import { core, type Range } from './core';
+import { type } from './type';
 
 export const text = {
   word: () => {
-    return random.element(data.words);
+    return core.element(data.words);
   },
 
   sentence: (range: Range = { min: 8, max: 16 }) => {
-    return (
-      text.word().charAt(0).toUpperCase() +
-      random
-        .array(random.number(range))
-        .map(() => text.word())
-        .join(' ') +
-      '.'
-    );
+    const sentence = core.multiple(type.number(range), text.word).join(' ');
+    return sentence.charAt(0).toUpperCase() + sentence.slice(1) + '.';
   },
 
   paragraph: (range: Range = { min: 3, max: 8 }) => {
-    return random
-      .array(random.number(range))
-      .map(() => text.sentence())
-      .join(' ');
+    return core.multiple(type.number(range), text.sentence).join(' ');
   },
 };
 
+// TODO(burdon): Languages.
 const data = {
   // Lorem ipsum.
   words: [

@@ -2,23 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import { toRange, type Range } from './random';
+import { core, generate, type Range, toRange } from './core';
 
 export const type = {
-  boolean: (probability: number): boolean => Math.random() < probability,
+  boolean: (probability = 0.5): boolean => core.random < probability,
 
   float: (range: Range = { min: 0, max: 1 }): number => {
-    const { min, max } = toRange(range);
-    return min + Math.random() * (max - min);
+    return generate(range, (range) => core.random * (range.max - range.min) + range.min);
   },
 
   number: (range: Range = { min: 0, max: 10 }): number => {
-    return Math.floor(type.float(range));
+    return generate(range, (range) => Math.floor(core.random * (range.max - range.min) + range.min));
   },
 
   // TODO(burdon): Better to use date-fms.
   date: (range: Range = { min: Date.now(), max: Date.now() + 1 }): Date => {
     const { min, max } = toRange(range, Date.now());
-    return new Date(min + Math.random() * (max - min));
+    return new Date(min + core.random * (max - min));
   },
 };

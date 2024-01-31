@@ -4,7 +4,7 @@
 
 import { faker as realFaker } from '@faker-js/faker';
 
-import { type Range } from './random';
+import { type Range } from './core';
 
 // TODO(burdon): Migration steps:
 //  - Identify and remove test dependencies on specific values.
