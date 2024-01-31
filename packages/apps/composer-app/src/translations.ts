@@ -16,6 +16,7 @@ export default [
         'caught error message': 'Something went wrong; check the console for details.',
         'copy error label': 'Copy this error',
         'reload page label': 'Reload',
+        'update and reload page label': 'Update',
         'reset client label': 'Reset',
         'reset client confirm label': 'Confirm to wipe ALL DATA from local database',
         'INVALID_STORAGE_VERSION title': 'Invalid storage version',
