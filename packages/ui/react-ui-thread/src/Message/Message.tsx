@@ -143,7 +143,7 @@ export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
         continues={false}
       >
         <TextEditor
-          slots={{ root: { className: mx('plb-1 mie-1 rounded-sm', focusRing, disabled && 'opacity-50') } }}
+          slots={{ root: { className: mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50') } }}
           readonly={disabled}
           extensions={[
             ...extensions,
