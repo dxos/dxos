@@ -12,10 +12,10 @@
     "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
   },
   "dependencies": {
-    "@braneframe/plugin-telemetry": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/observability": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",

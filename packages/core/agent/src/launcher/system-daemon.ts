@@ -19,7 +19,10 @@ import { lockFilePath, removeLockFile, removeSocketFile, waitForAgentToStart } f
  * Manager of system daemon processes using system service manager.
  */
 export class SystemDaemon implements Daemon {
-  constructor(private readonly _rootDir: string, private readonly _runner: Runner) {
+  constructor(
+    private readonly _rootDir: string,
+    private readonly _runner: Runner,
+  ) {
     const dir = path.join(this._rootDir, PROFILE_FOLDER);
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });

@@ -124,7 +124,17 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-native/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-navtree/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-observability/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -180,11 +190,6 @@
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-table/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/plugins/plugin-telemetry/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -740,6 +745,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-theme/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-thread/package.json",
           "jsonpath": "$.version"
         },
         {

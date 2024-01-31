@@ -104,28 +104,31 @@ describe('FeedSetIterator', () => {
     const iterator = new FeedSetIterator(randomFeedBlockSelector);
 
     // Write blocks.
-    setTimeout(async () => {
-      // Create feeds.
-      // TODO(burdon): Test adding feeds on-the-fly.
-      const writers = await Promise.all(
-        Array.from(Array(numFeeds)).map(async () => {
-          const key = await builder.keyring.createKey();
-          const feed = await feedStore.openFeed(key, { writable: true });
-          await iterator.addFeed(feed);
-          return feed.createFeedWriter();
-        }),
-      );
+    setTimeout(
+      async () => {
+        // Create feeds.
+        // TODO(burdon): Test adding feeds on-the-fly.
+        const writers = await Promise.all(
+          Array.from(Array(numFeeds)).map(async () => {
+            const key = await builder.keyring.createKey();
+            const feed = await feedStore.openFeed(key, { writable: true });
+            await iterator.addFeed(feed);
+            return feed.createFeedWriter();
+          }),
+        );
 
-      expect(iterator.size).to.eq(numFeeds);
+        expect(iterator.size).to.eq(numFeeds);
 
-      for (const _ of Array.from(Array(numBlocks))) {
-        const writer = faker.helpers.arrayElement(writers);
-        const receipts = await builder.generator.writeBlocks(writer, {
-          count: 1,
-        });
-        log('wrote', receipts);
-      }
-    }, faker.number.int({ min: 0, max: 100 }));
+        for (const _ of Array.from(Array(numBlocks))) {
+          const writer = faker.helpers.arrayElement(writers);
+          const receipts = await builder.generator.writeBlocks(writer, {
+            count: 1,
+          });
+          log('wrote', receipts);
+        }
+      },
+      faker.number.int({ min: 0, max: 100 }),
+    );
 
     // Open and start iterator.
     await iterator.open();
@@ -134,16 +137,19 @@ describe('FeedSetIterator', () => {
 
     // Read blocks.
     const [readAll, read] = latch({ count: numBlocks });
-    setTimeout(async () => {
-      for await (const block of iterator) {
-        const { feedKey, seq } = block;
-        const count = read();
-        log('read', { feedKey, seq, count });
-        if (count === numBlocks) {
-          await iterator.stop();
+    setTimeout(
+      async () => {
+        for await (const block of iterator) {
+          const { feedKey, seq } = block;
+          const count = read();
+          log('read', { feedKey, seq, count });
+          if (count === numBlocks) {
+            await iterator.stop();
+          }
         }
-      }
-    }, faker.number.int({ min: 0, max: 100 }));
+      },
+      faker.number.int({ min: 0, max: 100 }),
+    );
 
     // Wait until all written and read.
     const count = await readAll();

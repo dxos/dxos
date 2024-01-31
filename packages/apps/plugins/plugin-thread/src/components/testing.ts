@@ -5,6 +5,7 @@
 import { Message as MessageType, Thread as ThreadType } from '@braneframe/types';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
+import { TextObject, Expando } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 
 export const createChatThread = (identity: Identity) => {
@@ -19,21 +20,10 @@ export const createChatThread = (identity: Identity) => {
             () =>
               faker.datatype.boolean({ probability: 0.8 })
                 ? {
-                    text: faker.lorem.sentences(3),
+                    content: new TextObject(faker.lorem.sentences(3)),
                   }
                 : {
-                    data: JSON.stringify(
-                      faker.helpers.multiple(
-                        () => ({
-                          id: PublicKey.random().truncate(),
-                          name: faker.lorem.word(),
-                          content: faker.lorem.sentences(3),
-                        }),
-                        {
-                          count: { min: 2, max: 5 },
-                        },
-                      ),
-                    ),
+                    object: new Expando({ title: faker.lorem.sentence() }),
                   },
             { count: { min: 1, max: 3 } },
           ),
@@ -53,7 +43,7 @@ export const createCommentThread = (identity: Identity) => {
           blocks: faker.helpers.multiple(
             () => ({
               timestamp: new Date().toISOString(),
-              text: faker.lorem.sentences(3),
+              content: new TextObject(faker.lorem.sentences(3)),
             }),
             { count: { min: 1, max: 2 } },
           ),

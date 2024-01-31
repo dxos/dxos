@@ -54,6 +54,9 @@
       "path": "../../../ui/react-ui-theme"
     },
     {
+      "path": "../../../ui/react-ui-thread"
+    },
+    {
       "path": "../../../ui/storybook-utils"
     },
     {

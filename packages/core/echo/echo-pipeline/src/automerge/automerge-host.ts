@@ -3,6 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
+import { next as automerge } from '@dxos/automerge/automerge';
 import {
   Repo,
   NetworkAdapter,
@@ -22,8 +23,10 @@ import { type HostInfo, type SyncRepoRequest, type SyncRepoResponse } from '@dxo
 import { type PeerInfo } from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
 import { StorageType, type Directory } from '@dxos/random-access-storage';
 import { AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
-import { ComplexMap, ComplexSet, arrayToBuffer, bufferToArray, defaultMap } from '@dxos/util';
+import { trace } from '@dxos/tracing';
+import { ComplexMap, ComplexSet, arrayToBuffer, bufferToArray, defaultMap, mapValues } from '@dxos/util';
 
+@trace.resource()
 export class AutomergeHost {
   private readonly _repo: Repo;
   private readonly _meshNetwork: MeshNetworkAdapter;
@@ -68,7 +71,7 @@ export class AutomergeHost {
 
         try {
           if (!doc.experimental_spaceKey) {
-            log.warn('space key not found for share policy check', { peerId, documentId });
+            log('space key not found for share policy check', { peerId, documentId });
             return false;
           }
 
@@ -78,13 +81,13 @@ export class AutomergeHost {
           // TODO(mykola): Hack, stop abusing `peerMetadata` field.
           const deviceKeyHex = (this.repo.peerMetadataByPeerId[peerId] as any)?.dxos_deviceKey;
           if (!deviceKeyHex) {
-            log.warn('device key not found for share policy check', { peerId, documentId });
+            log('device key not found for share policy check', { peerId, documentId });
             return false;
           }
           const deviceKey = PublicKey.from(deviceKeyHex);
 
           const isAuthorized = authorizedDevices?.has(deviceKey) ?? false;
-          log.info('share policy check', { peerId, documentId, deviceKey, spaceKey, isAuthorized });
+          log('share policy check', { peerId, documentId, deviceKey, spaceKey, isAuthorized });
           return isAuthorized;
         } catch (err) {
           log.catch(err);
@@ -98,6 +101,20 @@ export class AutomergeHost {
 
   get repo(): Repo {
     return this._repo;
+  }
+
+  @trace.info({ depth: null })
+  private _automergeDocs() {
+    return mapValues(this._repo.handles, (handle) => ({
+      state: handle.state,
+      hasDoc: !!handle.docSync(),
+      heads: handle.docSync() ? automerge.getHeads(handle.docSync()) : null,
+    }));
+  }
+
+  @trace.info({ depth: null })
+  private _automergePeers() {
+    return this._repo.peers;
   }
 
   async close() {
@@ -238,6 +255,7 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
  */
 export class MeshNetworkAdapter extends NetworkAdapter {
   private readonly _extensions: Map<string, AutomergeReplicator> = new Map();
+  private _connected = new Trigger();
 
   /**
    * Emits `ready` event. That signals to `Repo` that it can start using the adapter.
@@ -252,6 +270,7 @@ export class MeshNetworkAdapter extends NetworkAdapter {
 
   override connect(peerId: PeerId): void {
     this.peerId = peerId;
+    this._connected.wake();
   }
 
   override send(message: Message): void {
@@ -275,18 +294,22 @@ export class MeshNetworkAdapter extends NetworkAdapter {
       },
       {
         onStartReplication: async (info, remotePeerId /** Teleport ID */) => {
+          await this._connected.wait();
+
           // Note: We store only one extension per peer.
           //       There can be a case where two connected peers have more than one teleport connection between them
           //       and each of them uses different teleport connections to send messages.
           //       It works because we receive messages from all teleport connections and Automerge Repo dedup them.
           // TODO(mykola): Use only one teleport connection per peer.
-          if (this._extensions.has(info.id)) {
-            return;
+          if (!this._extensions.has(info.id)) {
+            peerInfo = info;
+            // TODO(mykola): Fix race condition?
+            this._extensions.set(info.id, extension);
+          } else {
+            // TODO(mykola): retry hack.
+            this.emit('peer-disconnected', { peerId: info.id as PeerId });
           }
 
-          peerInfo = info;
-          // TODO(mykola): Fix race condition?
-          this._extensions.set(info.id, extension);
           this.emit('peer-candidate', {
             // TODO(mykola): Hack, stop abusing `peerMetadata` field.
             peerMetadata: {
