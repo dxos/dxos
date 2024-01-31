@@ -118,7 +118,7 @@ describe('Client', () => {
     }
   }).onlyEnvironments('nodejs', 'chromium', 'firefox');
 
-  test('objects are being synced between clients', async () => {
+  test.only('objects are being synced between clients', async () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
 
@@ -155,12 +155,12 @@ describe('Client', () => {
 
     const text = 'Hello world';
     const message = space2.db.add(new Message({ blocks: [{ content: new TextObject(text) }] }));
-    await space2.db.flush();
     thread2.messages.push(message);
+    await space2.db.flush();
 
     await waitForExpect(() => {
       expect(thread1.messages.length).to.eq(1);
-      expect(thread1.messages[0].blocks[0].content?.text).to.eq(text);
+      expect(thread1.messages[0].blocks[0].content?.content).to.eq(text);
     }, 1000);
   });
 });
