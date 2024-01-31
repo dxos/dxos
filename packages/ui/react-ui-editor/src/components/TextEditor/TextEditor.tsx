@@ -258,7 +258,6 @@ export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
 
 export const defaultSlots: TextEditorSlots = {
   root: {
-    // TODO(burdon): Add focusRing by default/as property?
     className: mx('grow', focusRing),
   },
   editor: {

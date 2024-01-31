@@ -30,6 +30,11 @@ export const useTextModel = (props: UseTextModelProps): EditorModel | undefined 
   return model;
 };
 
+/**
+ * For use primarily in stories & tests so the dependence on TextObject can be avoided.
+ * @param id
+ * @param defaultContent
+ */
 export const useInMemoryTextModel = ({
   id,
   defaultContent,
