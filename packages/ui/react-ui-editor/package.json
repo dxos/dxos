@@ -13,7 +13,7 @@
     "src"
   ],
   "scripts": {
-    "vitest": "vitest --ui"
+    "vitest-ui": "vitest --ui"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.12.0",
