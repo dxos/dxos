@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { core, generate, type Range, toRange } from './core';
+import { core, generate, type Range, toRange } from '../core';
 
 export const type = {
   boolean: (probability = 0.5): boolean => core.random < probability,

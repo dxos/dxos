@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { core, type Range } from './core';
 import { type } from './type';
+import { core, type Range } from '../core';
 
 export const text = {
   word: () => {

@@ -3,8 +3,8 @@
 //
 
 import { core } from './core';
-import { text } from './text';
-import { type } from './type';
+import { text } from './ext/text';
+import { type } from './ext/type';
 
 // TODO(burdon): Extensible.
 export const random = {
