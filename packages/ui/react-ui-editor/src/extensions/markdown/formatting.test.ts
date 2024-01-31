@@ -14,6 +14,8 @@ import {
   removeStyle,
   addList,
   removeList,
+  addBlockquote,
+  removeBlockquote,
   Inline,
   List,
   getFormatting,
@@ -276,6 +278,46 @@ describe('removeList', () => {
     '1. one\n\n2. {two\n\n3. three}\n\n4. four\n\n5. five',
     ordered,
     '1. one\n\ntwo\n\nthree\n\n1. four\n\n2. five',
+  );
+});
+
+describe('addBlockquote', () => {
+  testCommand('can add a blockquote', 'Hi{}', addBlockquote, '> Hi');
+
+  testCommand(
+    'can add a blockquote to multi-line paragraph',
+    'One\ntwo\nthree{}',
+    addBlockquote,
+    '> One\n> two\n> three',
+  );
+
+  testCommand(
+    'can add a blockquote to multiple blocks',
+    '{one\ntwo\n\n# three\n}\nfour',
+    addBlockquote,
+    '> one\n> two\n>\n> # three\n\nfour',
+  );
+});
+
+describe('removeBlockquote', () => {
+  testCommand('can remove a blockquote', '> Hi{}', removeBlockquote, 'Hi');
+
+  testCommand('can remove a blockquote from a multi-line paragraph', '> A\n> B\n> C{}', removeBlockquote, 'A\nB\nC');
+
+  testCommand('can remove a nested blockquote', '>> A\n>> B\n>> C{}', removeBlockquote, '> A\n> B\n> C');
+
+  testCommand(
+    'removes markers from adjacent blank lines',
+    '> one\n>\n> two{}\n>\n> three',
+    removeBlockquote,
+    '> one\n\ntwo\n\n> three',
+  );
+
+  testCommand(
+    'can remove quotes nested in lists',
+    ' - 1. > foo\n      > {bar\n - > baz}',
+    removeBlockquote,
+    ' - 1. foo\n      bar\n - baz',
   );
 });
 

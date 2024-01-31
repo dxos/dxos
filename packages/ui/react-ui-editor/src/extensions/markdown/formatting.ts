@@ -12,6 +12,7 @@ import {
   type ChangeSpec,
   type Text,
   EditorSelection,
+  type Line,
 } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, keymap, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 import { type SyntaxNodeRef, type SyntaxNode } from '@lezer/common';
@@ -535,6 +536,81 @@ const renumberListItems = (item: SyntaxNode | null, counter: number, changes: Ch
       counter++;
     }
   }
+};
+
+export const setBlockquote =
+  (enable: boolean): StateCommand =>
+  ({ state, dispatch }) => {
+    const lines: Line[] = [];
+    let lastBlock = -1;
+    for (const { from, to } of state.selection.ranges) {
+      syntaxTree(state).iterate({
+        from,
+        to,
+        enter: (node) => {
+          if (Object.hasOwn(Textblocks, node.name) || node.name === 'Table') {
+            if (node.from === lastBlock) {
+              return false;
+            }
+            lastBlock = node.from;
+            let line = state.doc.lineAt(node.from);
+            if (line.number > 1) {
+              const prevLine = state.doc.line(line.number - 1);
+              if (/^[>\s]*$/.test(prevLine.text)) {
+                if (!enable || (lines.length && lines[lines.length - 1].number === prevLine.number - 1)) {
+                  lines.push(prevLine);
+                }
+              }
+            }
+            for (;;) {
+              lines.push(line);
+              if (line.to >= node.to) {
+                break;
+              }
+              line = state.doc.line(line.number + 1);
+            }
+            if (!enable && line.number < state.doc.lines) {
+              const nextLine = state.doc.line(line.number + 1);
+              if (/^[>\s]*$/.test(nextLine.text)) {
+                lines.push(nextLine);
+              }
+            }
+            return false;
+          }
+        },
+      });
+    }
+
+    const changes: ChangeSpec[] = [];
+    for (const line of lines) {
+      if (enable) {
+        changes.push({ from: line.from, insert: /\S/.test(line.text) ? '> ' : '>' });
+      } else {
+        const quote = /((?:[\s>\-+*]|\d+[.)])*?)> ?/.exec(line.text);
+        if (quote) {
+          changes.push({ from: line.from + quote[1].length, to: line.from + quote[0].length });
+        }
+      }
+    }
+    if (!changes.length) {
+      return false;
+    }
+    dispatch(
+      state.update({
+        changes,
+        userEvent: enable ? 'format.addBlockquote' : 'format.removeBlockquote',
+        scrollIntoView: true,
+      }),
+    );
+    return true;
+  };
+
+export const addBlockquote = setBlockquote(true);
+
+export const removeBlockquote = setBlockquote(false);
+
+export const toggleBlockquote: StateCommand = (target) => {
+  return (getFormatting(target.state).blockquote ? removeBlockquote : addBlockquote)(target);
 };
 
 export const formatting = (options: FormattingOptions = {}): Extension => {

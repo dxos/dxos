@@ -17,6 +17,9 @@ import {
   addList,
   removeList,
   toggleList,
+  addBlockquote,
+  removeBlockquote,
+  toggleBlockquote,
 } from '../extensions';
 
 export const useActionHandler = (view?: EditorView | null): ToolbarProps['onAction'] => {
@@ -56,6 +59,10 @@ export const useActionHandler = (view?: EditorView | null): ToolbarProps['onActi
           : action.data === true
           ? addList(listType)
           : toggleList(listType))(view);
+        break;
+
+      case 'blockquote':
+        (action.data === false ? removeBlockquote : action.data === true ? addBlockquote : toggleBlockquote)(view);
         break;
 
       case 'codeblock':

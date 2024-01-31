@@ -185,7 +185,7 @@ const MarkdownBlocks = () => (
     <ToolbarButton
       Icon={CaretRight}
       title='Block quote'
-      onClick={() => ({ type: 'blockquote' })}
+      onClick={(s) => ({ type: 'blockquote', data: s ? !s.blockquote : null })}
       getState={(s) => s.blockquote}
     />
     <ToolbarButton
