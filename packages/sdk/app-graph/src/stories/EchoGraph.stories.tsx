@@ -140,13 +140,13 @@ const runAction = (action: Action) => {
     case Action.RENAME_SPACE: {
       const space = getSpace();
       if (space) {
-        space.properties.name = faker.animal.lion();
+        space.properties.name = faker.commerce.productName();
       }
       break;
     }
 
     case Action.ADD_OBJECT:
-      getSpace()?.db.add(new Expando({ type: 'test', name: faker.animal.cat() }));
+      getSpace()?.db.add(new Expando({ type: 'test', name: faker.commerce.productName() }));
       break;
 
     case Action.REMOVE_OBJECT: {
@@ -162,7 +162,7 @@ const runAction = (action: Action) => {
       const space = getSpaceWithObjects();
       if (space) {
         const objects = space.db.query({ type: 'test' }).objects;
-        objects[Math.floor(Math.random() * objects.length)].name = faker.animal.cat();
+        objects[Math.floor(Math.random() * objects.length)].name = faker.commerce.productName();
       }
       break;
     }

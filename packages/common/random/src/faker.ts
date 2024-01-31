@@ -62,14 +62,6 @@ export const faker = {
     email: () => realFaker.internet.email(),
     url: () => realFaker.internet.url(),
   },
-  //
-  // Random
-  //
-  definitions: {
-    animal: {
-      fish: realFaker.definitions.animal.fish,
-    },
-  },
   company: {
     name: () => realFaker.company.name(),
   },
@@ -78,13 +70,6 @@ export const faker = {
     firstName: () => realFaker.person.firstName(),
   },
   commerce: {
-    product: () => realFaker.commerce.product(),
     productName: () => realFaker.commerce.productName(),
-  },
-  animal: {
-    bear: () => realFaker.animal.bear(),
-    bird: () => realFaker.animal.bird(),
-    cat: () => realFaker.animal.cat(),
-    lion: () => realFaker.animal.lion(),
   },
 };

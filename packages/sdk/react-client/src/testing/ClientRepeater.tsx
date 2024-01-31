@@ -71,7 +71,7 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
       }
 
       if (createSpace) {
-        const space = await clients[0].spaces.create({ name: faker.animal.bird() });
+        const space = await clients[0].spaces.create({ name: faker.commerce.productName() });
         setSpaceKey(space.key);
         await onCreateSpace?.(space);
         await Promise.all(

@@ -14,7 +14,7 @@ import { SearchList } from './SearchList';
 type StoryItems = Record<string, string>;
 
 const defaultItems: StoryItems = faker.helpers
-  .uniqueArray(faker.definitions.animal.fish, 100)
+  .uniqueArray(faker.commerce.productName, 16)
   .sort()
   .reduce((acc: StoryItems, label) => {
     acc[faker.string.uuid()] = label;

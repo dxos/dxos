@@ -72,7 +72,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
         <ButtonGroup classNames='mbe-4'>
           {/* <Tooltip content='Create Space'> */}
           <Button
-            onClick={() => client.spaces.create({ name: faker.animal.bird() })}
+            onClick={() => client.spaces.create({ name: faker.commerce.productName() })}
             data-testid='invitations.create-space'
           >
             <PlusCircle className={getSize(6)} />

@@ -12,7 +12,7 @@ import { PopoverCombobox } from './PopoverCombobox';
 
 faker.seed(1234);
 
-const storybookItems = faker.helpers.uniqueArray(faker.commerce.product, 16);
+const storybookItems = faker.helpers.uniqueArray(faker.commerce.productName, 16);
 
 const Story = () => {
   return (
