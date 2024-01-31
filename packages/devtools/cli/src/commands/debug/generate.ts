@@ -64,7 +64,7 @@ export default class Generate extends BaseCommand<typeof Generate> {
       const { objects } = space?.db.query({ type });
       if (objects.length) {
         for (let i = 0; i < this.flags.mutations; i++) {
-          const object = random.util.element(objects);
+          const object = random.util.arrayElement(objects);
           object.title = random.text.word();
           await space.db.flush();
           await pause();

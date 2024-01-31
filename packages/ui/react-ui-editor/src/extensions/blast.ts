@@ -83,7 +83,7 @@ export const blast = (options: Partial<BlastOptions> = defaultOptions): Extensio
         // TODO(burdon): Null if end of line.
         const { element, point } = getPoint(update.view, current - 1);
         if (element && point) {
-          blaster.spawn({ element, point });
+          blaster.spawn({ element: arrayElement, point });
         }
       }
     }),

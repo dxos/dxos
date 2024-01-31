@@ -43,14 +43,14 @@ export const util = {
   /**
    * Returns single element.
    */
-  element: (values: any[]) => {
+  arrayElement: (values: any[]) => {
     return values[Math.floor(Math.random() * values.length)];
   },
 
   /**
    * Returns unique set of values.
    */
-  unique: <T>(values: T[], n: number): T[] => {
+  uniqueArray: <T>(values: T[], n: number): T[] => {
     const selection = Array.from(new Set<T>(values));
     const results: T[] = [];
     for (let i = 0; i < n; i++) {

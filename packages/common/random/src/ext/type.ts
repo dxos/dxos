@@ -17,7 +17,7 @@ export const type = {
   },
 
   // TODO(burdon): Better to use date-fms.
-  date: (range: Range = { min: Date.now(), max: Date.now() + 24 * 3600 * 1000 }): Date => {
+  date: (range: Range = { min: Date.now() - 24 * 3600 * 1000, max: Date.now() }): Date => {
     const { min, max } = toRange(range, Date.now());
     return new Date(min + random() * (max - min));
   },

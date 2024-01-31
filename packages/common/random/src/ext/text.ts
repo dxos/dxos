@@ -7,7 +7,7 @@ import { util, type Range } from '../util';
 
 export const text = {
   word: () => {
-    return util.element(data.words);
+    return util.arrayElement(data.words);
   },
 
   sentence: (range: Range = { min: 8, max: 16 }) => {

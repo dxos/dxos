@@ -22,7 +22,6 @@ export const faker = {
   helpers: {
     multiple: (f: () => any, range?: { count: number | Range }) => realFaker.helpers.multiple(f, range),
     arrayElement: <T>(a: T[]) => realFaker.helpers.arrayElement(a),
-    arrayElements: <T>(a: T[], n: number) => realFaker.helpers.arrayElements(a, n),
     uniqueArray: (f: readonly any[] | (() => any), n: number) => realFaker.helpers.uniqueArray(f, n),
   },
   //

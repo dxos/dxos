@@ -21,7 +21,7 @@ const clean = (array: string[]) => {
 };
 
 const select = (array: string[], n: number) => {
-  const unique = faker.helpers.arrayElements(array, n);
+  const unique = faker.helpers.uniqueArray(array, n);
   unique.sort();
   return unique;
 };

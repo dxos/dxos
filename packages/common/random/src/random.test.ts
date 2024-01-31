@@ -30,9 +30,9 @@ describe('Random', () => {
 
   test('unique', () => {
     const values = ['a', 'b', 'c', 'd', 'e', 'e'];
-    expect(random.util.unique(values, -1)).to.have.lengthOf(0);
-    expect(random.util.unique(values, 0)).to.have.lengthOf(0);
-    expect(random.util.unique(values, 2)).to.have.lengthOf(2);
-    expect(random.util.unique(values, 10)).to.have.lengthOf(5);
+    expect(random.util.uniqueArray(values, -1)).to.have.lengthOf(0);
+    expect(random.util.uniqueArray(values, 0)).to.have.lengthOf(0);
+    expect(random.util.uniqueArray(values, 2)).to.have.lengthOf(2);
+    expect(random.util.uniqueArray(values, 10)).to.have.lengthOf(5);
   });
 });
