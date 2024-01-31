@@ -4,6 +4,7 @@
 
 import { seed } from './core';
 import { date } from './ext/date';
+import { string } from './ext/string';
 import { text } from './ext/text';
 import { type } from './ext/type';
 import { util } from './util';
@@ -15,6 +16,7 @@ import { util } from './util';
 export const random = {
   seed,
   date,
+  string,
   text,
   type,
   util,

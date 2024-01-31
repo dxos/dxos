@@ -51,22 +51,25 @@ export const faker = {
     paragraphs: (n?: number | Range) => realFaker.lorem.paragraphs(n),
   },
   //
-  // Custom
+  // String
   //
   string: {
     hexadecimal: (l?: { length: number }) => realFaker.string.hexadecimal(l),
     uuid: () => realFaker.string.uuid(),
   },
+  //
+  // Custom
+  //
   internet: {
     email: () => realFaker.internet.email(),
     url: () => realFaker.internet.url(),
   },
-  company: {
-    name: () => realFaker.company.name(),
-  },
   person: {
     fullName: () => realFaker.person.fullName(),
     firstName: () => realFaker.person.firstName(),
+  },
+  company: {
+    name: () => realFaker.company.name(),
   },
   commerce: {
     productName: () => realFaker.commerce.productName(),

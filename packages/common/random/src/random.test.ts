@@ -29,6 +29,11 @@ describe('Random', () => {
     expect(random.util.multiple(10, random.date.recent)).to.have.lengthOf(10);
   });
 
+  test('string', () => {
+    expect(random.util.multiple(5, () => random.string.hexadecimal({ length: 4 }))).to.have.lengthOf(5);
+    expect(random.util.multiple(5, () => random.string.uuid())).to.have.lengthOf(5);
+  });
+
   test('unique', () => {
     const values = ['a', 'b', 'c', 'd', 'e', 'e'];
     expect(random.util.uniqueArray(values, -1)).to.have.lengthOf(0);

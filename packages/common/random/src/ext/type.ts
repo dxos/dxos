@@ -34,4 +34,6 @@ export const type = {
   float: (range: Range = { min: 0, max: 1 }): number => {
     return generate(range, (range) => random() * (range.max - range.min) + range.min);
   },
+
+  hex: (range: Range = { min: 0x0, max: 0xf }) => type.integer(range).toString(16),
 };
