@@ -59,6 +59,12 @@ export enum Inline {
   Code = 3,
 }
 
+export enum List {
+  Ordered,
+  Bullet,
+  Task,
+}
+
 export type FormattingOptions = {};
 
 export const setHeading =
@@ -115,6 +121,7 @@ export const setHeading =
     return true;
   };
 
+// TODO test around links
 export const setStyle =
   (type: Inline, enable: boolean): StateCommand =>
   ({ state, dispatch }) => {
@@ -328,7 +335,152 @@ export const toggleEmphasis = toggleStyle(Inline.Emphasis);
 export const toggleStrikethrough = toggleStyle(Inline.Strikethrough);
 export const toggleInlineCode = toggleStyle(Inline.Code);
 
-export const toggleList = (view: EditorView) => {};
+export const addList =
+  (type: List): StateCommand =>
+  ({ state, dispatch }) => {
+    let lastBlock = -1;
+    let counter = 1;
+    let first = true;
+    let parentColumn: number | null = null;
+    const blocks: { node: SyntaxNode; counter: number; parentColumn: number | null }[] = [];
+    // Scan the syntax tree to locate textblocks that can be wrapped
+    for (const { from, to } of state.selection.ranges) {
+      syntaxTree(state).iterate({
+        from,
+        to,
+        enter: (node) => {
+          if ((Object.hasOwn(Textblocks, node.name) && node.name !== 'TableCell') || node.name === 'Table') {
+            if (first) {
+              // For the first block, see if it follows a list, so we
+              // can take indentation and numbering information from
+              // that one
+              let before = node.node.prevSibling;
+              while (before && /Mark$/.test(before.name)) {
+                before = before.prevSibling;
+              }
+              if (before?.name === (type === List.Ordered ? 'OrderedList' : 'BulletList')) {
+                const item = before.lastChild!;
+                const itemLine = state.doc.lineAt(item.from);
+                const itemText = itemLine.text.slice(item.from - itemLine.from);
+                parentColumn = item.from - itemLine.from + /^\s*/.exec(itemText)![0].length;
+                if (type === List.Ordered) {
+                  const mark = /^\s*(\d+)[.)]/.exec(itemText);
+                  if (mark) {
+                    parentColumn += mark[1].length;
+                    counter = +mark[1] + 1;
+                  }
+                }
+              }
+              first = false;
+            }
+            if (node.from === lastBlock) {
+              return;
+            }
+            lastBlock = node.from;
+            blocks.push({ node: node.node, counter, parentColumn });
+            counter++;
+            return false;
+          }
+        },
+        leave: (node) => {
+          // When exiting block-level markup, reset the indentation and
+          // counter
+          if (node.name === 'BulletList' || node.name === 'OrderedList' || node.name === 'Blockquote') {
+            counter = 1;
+            parentColumn = null;
+          }
+        },
+      });
+    }
+    if (!blocks.length) {
+      return false;
+    }
+
+    const changes: ChangeSpec[] = [];
+    for (let i = 0; i < blocks.length; i++) {
+      const { node, counter, parentColumn } = blocks[i];
+      // Compute a padding based on whether we are after whitespace
+      let padding = node.from > 0 && !/\s/.test(state.doc.sliceString(node.from - 1, node.from)) ? 1 : 0;
+      // On ordered lists, the number is counted in the padding
+      if (type === List.Ordered) {
+        padding += String(counter).length;
+      }
+      let line = state.doc.lineAt(node.from);
+      const column = node.from - line.from;
+      // Align to the list above if possible
+      if (parentColumn != null && parentColumn > column) {
+        padding = Math.max(padding, parentColumn - column);
+      }
+
+      let mark;
+      if (type === List.Ordered) {
+        // Scan ahead to find the max number we're adding, adjust
+        // padding for that
+        let max = counter;
+        for (let j = i + 1; j < blocks.length; j++) {
+          if (blocks[j].counter !== max + 1) {
+            break;
+          }
+          max++;
+        }
+        const num = String(counter);
+        padding = Math.max(String(max).length, padding);
+        mark = ' '.repeat(Math.max(0, padding - num.length)) + num + '. ';
+      } else {
+        mark = ' '.repeat(padding) + '- ' + (type === List.Task ? '[ ] ' : '');
+      }
+
+      changes.push({ from: node.from, insert: mark });
+      // Add indentation for the other lines in this block
+      while (line.to < node.to) {
+        line = state.doc.lineAt(line.to + 1);
+        const open = /^[\s>]*/.exec(line.text)![0].length;
+        changes.push({ from: line.from + Math.min(open, column), insert: ' '.repeat(mark.length) });
+      }
+    }
+    // If we are inserting an ordered list and there is another one
+    // right after the last selected block, renumber that one to match
+    // the new order
+    if (type === List.Ordered) {
+      const last = blocks[blocks.length - 1];
+      let next = last.node.nextSibling;
+      while (next && /Mark$/.test(next.name)) {
+        next = next.nextSibling;
+      }
+      if (next?.name === 'OrderedList') {
+        let counter = last.counter + 1;
+        for (let item = next.firstChild; item; item = item.nextSibling) {
+          if (item.name === 'ListItem') {
+            const number = /(\s*)(\d+)[.)]/.exec(state.doc.sliceString(item.from, item.from + 10));
+            if (!number || +number[2] === counter) {
+              break;
+            }
+            const size = number[1].length + number[2].length;
+            const newNum = String(counter);
+            changes.push({ from: item.from + Math.max(0, size - newNum.length), to: item.from + size, insert: newNum });
+            counter++;
+          }
+        }
+      }
+    }
+    dispatch(state.update({ changes, userEvent: 'format.addList', scrollIntoView: true }));
+    return true;
+  };
+
+export const removeList =
+  (type: List): StateCommand =>
+  ({ state, dispatch }) => {
+    return true;
+  };
+
+export const toggleList =
+  (type: List): StateCommand =>
+  (target) => {
+    const formatting = getFormatting(target.state);
+    const active =
+      formatting.listStyle === (type === List.Bullet ? 'bullet' : type === List.Ordered ? 'ordered' : 'task');
+    return (active ? removeList(type) : addList(type))(target);
+  };
 
 export const formatting = (options: FormattingOptions = {}): Extension => {
   return [

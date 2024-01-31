@@ -8,7 +8,7 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { setHeading, addStyle, removeStyle, Inline, getFormatting, type Formatting } from './formatting';
+import { setHeading, addStyle, removeStyle, addList, Inline, List, getFormatting, type Formatting } from './formatting';
 
 export const emptyFormatting: Formatting = {
   blockType: 'paragraph',
@@ -159,6 +159,71 @@ describe('removeStyle', () => {
   );
 
   testCommand('can shrink existing styles', '*one {two three} four*', em, '*one* {two three} *four*');
+});
+
+describe('addList', () => {
+  const bullet = addList(List.Bullet);
+  const ordered = addList(List.Ordered);
+
+  testCommand('can add a bullet list', 'Hi{}', bullet, '- Hi');
+
+  testCommand('can add an ordered list', 'Hi{}', ordered, '1. Hi');
+
+  testCommand('can add a task list', 'Hi{}', addList(List.Task), '- [ ] Hi');
+
+  testCommand(
+    'can wrap multiple blocks in a bullet list',
+    '{One\n\n# Two\n\nThree}',
+    bullet,
+    '- One\n\n- # Two\n\n- Three',
+  );
+
+  testCommand('continues an existing numbered list', '1. Hello\n\nHi{}', ordered, '1. Hello\n\n2. Hi');
+
+  testCommand(
+    'can wrap multi-line blocks',
+    'Hello this\nis a three-line\nparagraph.{}',
+    bullet,
+    '- Hello this\n  is a three-line\n  paragraph.',
+  );
+
+  testCommand(
+    'can wrap fenced code blocks',
+    '```javascript\ntrue{}\n```',
+    ordered,
+    '1. ```javascript\n   true\n   ```',
+  );
+
+  testCommand(
+    'can wrap blocks inside markup',
+    '> 1. Hello\n     {World\n>\n> Again}',
+    bullet,
+    '> 1. - Hello\n       World\n>\n> - Again',
+  );
+
+  testCommand('restarts numbering on outer block markup boundaries', '> {one\n\ntwo}', ordered, '> 1. one\n\n1. two');
+
+  testCommand('aligns with above bullet list', '  - one\n\ntwo{}', bullet, '  - one\n\n  - two');
+
+  testCommand('aligns with above ordered list', '  1. One\n\nTwo{}', ordered, '  1. One\n\n  2. Two');
+
+  testCommand('compensates for number size when aligning', '  9. One\n\nTwo{}', ordered, '  9. One\n\n 10. Two');
+
+  testCommand(
+    'anticipates number size of other items',
+    '{a\n\nb\n\nc\n\nd\n\ne\n\nf\n\ng\n\nh\n\ni\n\nj}',
+    ordered,
+    ' 1. a\n\n 2. b\n\n 3. c\n\n 4. d\n\n 5. e\n\n 6. f\n\n 7. g\n\n 8. h\n\n 9. i\n\n10. j',
+  );
+
+  testCommand(
+    'renumbers lists after the selection',
+    'one{}\n\n1. two\n\n2. three',
+    ordered,
+    '1. one\n\n2. two\n\n3. three',
+  );
+
+  testCommand("doesn't renumber lists with a different parent", '> one{}\n\n1. two', ordered, '> 1. one\n\n1. two');
 });
 
 describe('getFormatting', () => {

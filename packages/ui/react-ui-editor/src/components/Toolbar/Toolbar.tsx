@@ -37,7 +37,7 @@ export type ActionType =
   | 'emphasis'
   | 'code'
   | 'link'
-  | 'list'
+  | 'list-bullet'
   | 'list-ordered'
   | 'list-tasks'
   | 'mention'
@@ -162,19 +162,19 @@ const MarkdownLists = () => (
     <ToolbarButton
       Icon={ListBullets}
       title='Bullet list'
-      onClick={() => ({ type: 'list' })}
+      onClick={(s) => ({ type: 'list-bullet', data: s ? s.listStyle !== 'bullet' : null })}
       getState={(s) => s.listStyle === 'bullet'}
     />
     <ToolbarButton
       Icon={ListNumbers}
       title='Numbered list'
-      onClick={() => ({ type: 'list-ordered' })}
+      onClick={(s) => ({ type: 'list-ordered', data: s ? s.listStyle !== 'ordered' : null })}
       getState={(s) => s.listStyle === 'ordered'}
     />
     <ToolbarButton
       Icon={ListChecks}
       title='Task list'
-      onClick={() => ({ type: 'list-tasks' })}
+      onClick={(s) => ({ type: 'list-tasks', data: s ? s.listStyle !== 'task' : null })}
       getState={(s) => s.listStyle === 'task'}
     />
   </div>
