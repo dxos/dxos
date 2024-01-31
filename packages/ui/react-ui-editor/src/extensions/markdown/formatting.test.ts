@@ -8,7 +8,18 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { setHeading, getFormatting, emptyFormatting, type Formatting } from './formatting';
+import { setHeading, getFormatting, type Formatting } from './formatting';
+
+export const emptyFormatting: Formatting = {
+  blockType: 'paragraph',
+  strong: false,
+  emphasis: false,
+  strikethrough: false,
+  code: false,
+  link: false,
+  listStyle: null,
+  blockquote: false,
+};
 
 const createState = (doc: string) => {
   const selStart = doc.indexOf('{');

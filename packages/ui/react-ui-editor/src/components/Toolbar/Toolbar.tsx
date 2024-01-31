@@ -51,8 +51,8 @@ export type Action = {
 };
 
 export type ToolbarProps = PropsWithChildren<{
+  state: Formatting | null;
   onAction?: (action: Action) => void;
-  state: Formatting;
 }>;
 
 const [ToolbarContextProvider, useToolbarContext] = createContext<ToolbarProps>('Toolbar');
@@ -83,7 +83,7 @@ const ToolbarButton = ({ Icon, onClick, title, getState }: ToolbarButtonProps) =
       onAction?.(action);
     }
   };
-  const active = getState ? getState(state) : false;
+  const active = getState && state ? getState(state) : false;
 
   // TODO: use the correct way to style these as depressed
   return (
@@ -103,10 +103,11 @@ const ToolbarSeparator = () => <div className='grow' />;
 
 const MarkdownHeading = () => {
   const { onAction, state } = useToolbarContext('MarkdownFormatting');
-  const header = state.blockType && /heading(\d)/.exec(state.blockType);
-  const value = header ? header[1] : state.blockType === 'paragraph' || !state.blockType ? '0' : null;
+  const blockType = state ? state.blockType : 'paragraph';
+  const header = blockType && /heading(\d)/.exec(blockType);
+  const value = header ? header[1] : blockType === 'paragraph' || !blockType ? '0' : null;
   if (value === null) {
-    return <></>;
+    return null;
   }
   return (
     <Select.Root value={value} onValueChange={(value) => onAction?.({ type: 'heading', data: parseInt(value) })}>

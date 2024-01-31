@@ -11,8 +11,9 @@ import {
   type EditorState,
   type ChangeSpec,
 } from '@codemirror/state';
-import { Decoration, type DecorationSet, type EditorView, keymap, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { Decoration, type DecorationSet, EditorView, keymap, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 import { type SyntaxNodeRef, type SyntaxNode } from '@lezer/common';
+import { useState, useMemo } from 'react';
 
 // Describes the formatting situation of the selection in an editor
 // state. For inline styles `strong`, `emphasis`, `strikethrough`, and
@@ -47,17 +48,6 @@ export type Formatting = {
   listStyle: null | 'ordered' | 'bullet' | 'task';
   // Whether all selected text is wrapped in a blockquote.
   blockquote: boolean;
-};
-
-export const emptyFormatting: Formatting = {
-  blockType: 'paragraph',
-  strong: false,
-  emphasis: false,
-  strikethrough: false,
-  code: false,
-  link: false,
-  listStyle: null,
-  blockquote: false,
 };
 
 export type FormattingOptions = {};
@@ -446,4 +436,18 @@ export const getFormatting = (state: EditorState): Formatting => {
     blockquote: blockquote ?? false,
     listStyle: listStyle || null,
   };
+};
+
+export const useFormattingState = (): [Formatting | null, Extension] => {
+  const [state, setState] = useState<Formatting | null>(null);
+  const observer = useMemo(
+    () =>
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged || update.selectionSet) {
+          setState(getFormatting(update.state));
+        }
+      }),
+    [],
+  );
+  return [state, observer];
 };
