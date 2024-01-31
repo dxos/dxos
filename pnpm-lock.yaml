@@ -2422,6 +2422,9 @@ importers:
       vite-plugin-pwa:
         specifier: ^0.17.5
         version: 0.17.5(vite@5.0.12)(workbox-window@7.0.0)
+      workbox-window:
+        specifier: ^7.0.0
+        version: 7.0.0
 
   packages/apps/plugins/plugin-registry:
     dependencies:
