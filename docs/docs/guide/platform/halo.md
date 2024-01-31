@@ -30,12 +30,31 @@ In the future, we plan to support recovering an identity using a [seed phrase](.
 
 ## Shell
 
-Shell is a [UI component](https://github.com/dxos/dxos/tree/main/packages/sdk/shell) that provides a user interface for managing the user's identity and connected devices. It can be embedded in any browser-based application.
+[Shell](https://github.com/dxos/dxos/tree/main/packages/sdk/shell) is a set of components and pre-built workflows for managing [ECHO](../platform) spaces, invitations, and identity.
+
+It runs and renders within an iframe managed by the DXOS client.
+
+The shell can be invoked via the client API.
+
+Scenarios:
+
+- View and edit the user's basic profile
+- Invite someone to a space
+- Accept an invitation to join another space
+- Join another device to the user's HALO identity
+- Accept a device invitation to join the current device to an existing HALO identity
 
 You can experiment with the Shell at <https://halo.dxos.org>.
 
-![Shell application](./images/shell-dark.png#dark)
-![Shell application](./images/shell-light.png#light)
+The shell appears overtop the calling UI and looks like a full screen dialog panel.
+
+<div class="shell-images" style="display: flex; flex-direction: row; gap: 2em;">
+  <img class="light" src="./images/shell-light.png" alt="Shell profile panel" />
+  <img class="dark" src="./images/shell-dark.png" alt="Shell profile panel" />
+
+  <img class="light" src="./images/shell-light-add-device.png" alt="Shell device invitation panel" />
+  <img class="dark" src="./images/shell-dark-add-device.png" alt="Shell device invitation panel" />
+</div>
 
 ### Device Invitations
 
@@ -44,6 +63,11 @@ Device Invitations allow users to synchronize their identity and data across mul
 <video controls loop autoplay style="width:100%" src="/images/device-invitations.mp4"></video>
 
 ## Next steps
+
+How to use the HALO Shell in code:
+
+- Use [Shell with Typescript](../typescript/shell#installation)
+- Use [Shell with React](../react/shell#installation)
 
 How to read the HALO identity in code:
 

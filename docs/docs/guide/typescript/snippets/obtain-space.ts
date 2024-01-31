@@ -14,8 +14,6 @@ const space = await client.spaces.create();
 const spaces = client.spaces.get();
 
 // get the default space
-// TODO: move into it's own snippet and wrap in an async closure
-//   await client.spaces.isReady.wait()
 const defaultSpace = client.spaces.default;
 
 // create an invitation to join the space, it will be used to locate the inviter
