@@ -439,5 +439,8 @@ export class DatabaseProxy {
 }
 
 export class UpdateEvent {
-  constructor(public readonly spaceKey: PublicKey, public readonly itemsUpdated: Item[] = []) {}
+  constructor(
+    public readonly spaceKey: PublicKey,
+    public readonly itemsUpdated: Item[] = [],
+  ) {}
 }

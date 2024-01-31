@@ -166,40 +166,42 @@ export const LayoutPlugin = ({
         const surfaceProps: SurfaceProps = plugin
           ? { data: { component: `${plugin.meta.id}/${component}` } }
           : layout.activeNode
-          ? state.values.fullscreen
-            ? {
-                data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
-                surfaces: { main: { data: { active: layout.activeNode.data } } },
-              }
+            ? state.values.fullscreen
+              ? {
+                  data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
+                  surfaces: { main: { data: { active: layout.activeNode.data } } },
+                }
+              : {
+                  data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
+                  surfaces: {
+                    sidebar: {
+                      data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
+                    },
+                    context: {
+                      data: { component: `${LAYOUT_PLUGIN}/ContextView`, active: layout.activeNode.data },
+                    },
+                    main: { data: { active: layout.activeNode.data } },
+                    'navbar-start': {
+                      data: { activeNode: layout.activeNode, popoverAnchorId: layout.popoverAnchorId },
+                    },
+                    'navbar-end': { data: { object: layout.activeNode.data } },
+                    status: { data: { active: layout.activeNode.data } },
+                    documentTitle: { data: { activeNode: layout.activeNode } },
+                  },
+                }
             : {
                 data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
                 surfaces: {
                   sidebar: {
                     data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
                   },
-                  context: {
-                    data: { component: `${LAYOUT_PLUGIN}/ContextView`, active: layout.activeNode.data },
+                  main: {
+                    data: layout.active ? { active: layout.active } : { component: `${LAYOUT_PLUGIN}/ContentEmpty` },
                   },
-                  main: { data: { active: layout.activeNode.data } },
-                  'navbar-start': { data: { activeNode: layout.activeNode, popoverAnchorId: layout.popoverAnchorId } },
-                  'navbar-end': { data: { object: layout.activeNode.data } },
-                  status: { data: { active: layout.activeNode.data } },
-                  documentTitle: { data: { activeNode: layout.activeNode } },
+                  // TODO(wittjosiah): This plugin should own document title.
+                  documentTitle: { data: { component: `${LAYOUT_PLUGIN}/DocumentTitle` } },
                 },
-              }
-          : {
-              data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
-              surfaces: {
-                sidebar: {
-                  data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
-                },
-                main: {
-                  data: layout.active ? { active: layout.active } : { component: `${LAYOUT_PLUGIN}/ContentEmpty` },
-                },
-                // TODO(wittjosiah): This plugin should own document title.
-                documentTitle: { data: { component: `${LAYOUT_PLUGIN}/DocumentTitle` } },
-              },
-            };
+              };
 
         return (
           <>

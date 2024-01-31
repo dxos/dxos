@@ -1,12 +1,12 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 import { StreamLanguage, HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
 
 import { tags } from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+import { tagRoot } from '@dxos/react-ui-theme';
 
 /**
  * https://github.com/codemirror/stream-parser/blob/main/test/test-stream-parser.ts
@@ -33,11 +33,7 @@ const parser = StreamLanguage.define<{ count: number }>({
 const styles = HighlightStyle.define([
   {
     tag: tags.tagName,
-    class: mx(
-      'mr-1 p-1',
-      'bg-neutral-100 dark:bg-neutral-900 text-black dark:text-white font-mono text-sm',
-      'rounded border border-neutral-300 dark:border-neutral-700',
-    ),
+    class: tagRoot({}),
   },
 ]);
 

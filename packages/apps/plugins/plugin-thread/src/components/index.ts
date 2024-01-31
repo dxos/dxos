@@ -8,8 +8,7 @@ import React from 'react';
 export const ThreadMain = React.lazy(() => import('./ThreadMain'));
 
 // TODO(wittjosiah): Suspense boundary for sidebar?
-export * from './Chat';
-export * from './Comments';
-export * from './MessageCard';
-export * from './MessageInput';
 export * from './ThreadSettings';
+export * from './ThreadContainer';
+export * from './MessageContainer';
+export * from './ThreadsContainer';

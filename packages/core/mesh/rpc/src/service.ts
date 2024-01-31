@@ -20,9 +20,8 @@ export type ServiceBundle<Services> = { [Key in keyof Services]: ServiceDescript
 
 export type ServiceHandlers<Services> = { [ServiceName in keyof Services]: ServiceProvider<Services[ServiceName]> };
 
-export type ServiceTypesOf<Bundle extends ServiceBundle<any>> = Bundle extends ServiceBundle<infer Services>
-  ? Services
-  : never;
+export type ServiceTypesOf<Bundle extends ServiceBundle<any>> =
+  Bundle extends ServiceBundle<infer Services> ? Services : never;
 
 /**
  * Groups multiple services together to be served by a single RPC peer.
@@ -33,7 +32,10 @@ export const createServiceBundle = <Service>(services: ServiceBundle<Service>): 
  * Type-safe RPC peer.
  */
 export class ProtoRpcPeer<Service> {
-  constructor(public readonly rpc: Service, private readonly _peer: RpcPeer) {}
+  constructor(
+    public readonly rpc: Service,
+    private readonly _peer: RpcPeer,
+  ) {}
 
   async open() {
     await this._peer.open();
