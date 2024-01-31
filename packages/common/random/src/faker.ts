@@ -28,8 +28,7 @@ export const faker = {
   // Type
   //
   datatype: {
-    array: (n: number) => realFaker.datatype.array(n),
-    float: () => realFaker.datatype.float(),
+    array: (n: number) => realFaker.datatype.array(n), // TODO(burdon): !!!
     boolean: (p?: { probability: number }) => realFaker.datatype.boolean(p),
   },
   date: {
@@ -37,6 +36,7 @@ export const faker = {
   },
   number: {
     int: (range?: number | Range) => realFaker.number.int(range),
+    float: (range?: number | Range) => realFaker.number.float(range),
   },
   //
   // Text

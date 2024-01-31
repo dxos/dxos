@@ -52,7 +52,7 @@ export class Generator {
     this._kubes = this._kubes.map((kube) => (faker.number.int(10) > 7 ? kube : undefined)).filter(Boolean);
 
     // Create.
-    if (faker.datatype.float() > 0.3) {
+    if (faker.number.float() > 0.3) {
       this._kubes.push(this.createKube());
     }
 

@@ -27,11 +27,11 @@ export const type = {
 
   boolean: (probability = 0.5): boolean => random() < probability,
 
-  float: (range: Range = { min: 0, max: 1 }): number => {
-    return generate(range, (range) => random() * (range.max - range.min) + range.min);
-  },
-
   integer: (range: Range = { min: 0, max: 10 }): number => {
     return generate(range, (range) => Math.floor(random() * (range.max - range.min) + range.min));
+  },
+
+  float: (range: Range = { min: 0, max: 1 }): number => {
+    return generate(range, (range) => random() * (range.max - range.min) + range.min);
   },
 };
