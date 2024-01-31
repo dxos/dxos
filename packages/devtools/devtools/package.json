@@ -80,7 +80,7 @@
     "typescript": "^5.2.2",
     "vite": "^5.0.12",
     "vite-plugin-fonts": "^0.7.0",
-    "vite-plugin-pwa": "^0.17.4",
+    "vite-plugin-pwa": "^0.17.5",
     "vite-plugin-top-level-await": "^1.4.1",
     "vite-plugin-wasm": "^3.3.0",
     "workbox-window": "^7.0.0"

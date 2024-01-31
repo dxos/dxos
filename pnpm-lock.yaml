@@ -688,8 +688,8 @@ importers:
         specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
       vite-plugin-pwa:
-        specifier: ^0.17.4
-        version: 0.17.4(vite@5.0.12)(workbox-window@7.0.0)
+        specifier: ^0.17.5
+        version: 0.17.5(vite@5.0.12)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
         version: 1.4.1(rollup@3.23.0)(vite@5.0.12)
@@ -809,8 +809,8 @@ importers:
         specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
       vite-plugin-pwa:
-        specifier: ^0.17.4
-        version: 0.17.4(vite@5.0.12)(workbox-window@7.0.0)
+        specifier: ^0.17.5
+        version: 0.17.5(vite@5.0.12)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
         version: 1.4.1(rollup@3.23.0)(vite@5.0.12)
@@ -2419,6 +2419,9 @@ importers:
       vite:
         specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
+      vite-plugin-pwa:
+        specifier: ^0.17.5
+        version: 0.17.5(vite@5.0.12)
 
   packages/apps/plugins/plugin-registry:
     dependencies:
@@ -6138,8 +6141,8 @@ importers:
         specifier: ^0.7.0
         version: 0.7.0(vite@5.0.12)
       vite-plugin-pwa:
-        specifier: ^0.17.4
-        version: 0.17.4(vite@5.0.12)(workbox-window@7.0.0)
+        specifier: ^0.17.5
+        version: 0.17.5(vite@5.0.12)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
         version: 1.4.1(rollup@3.23.0)(vite@5.0.12)
@@ -6883,8 +6886,8 @@ importers:
         specifier: ^0.8.1
         version: 0.8.3(rollup@3.23.0)(vite@5.0.12)
       vite-plugin-pwa:
-        specifier: ^0.17.4
-        version: 0.17.4(vite@5.0.12)(workbox-window@7.0.0)
+        specifier: ^0.17.5
+        version: 0.17.5(vite@5.0.12)
       workbox-window:
         specifier: ^7.0.0
         version: 7.0.0
@@ -42803,12 +42806,11 @@ packages:
       - supports-color
     dev: true
 
-  /vite-plugin-pwa@0.17.4(vite@5.0.12)(workbox-window@7.0.0):
-    resolution: {integrity: sha512-j9iiyinFOYyof4Zk3Q+DtmYyDVBDAi6PuMGNGq6uGI0pw7E+LNm9e+nQ2ep9obMP/kjdWwzilqUrlfVRj9OobA==}
+  /vite-plugin-pwa@0.17.5(vite@5.0.12):
+    resolution: {integrity: sha512-UxRNPiJBzh4tqU/vc8G2TxmrUTzT6BqvSzhszLk62uKsf+npXdvLxGDz9C675f4BJi6MbD2tPnJhi5txlMzxbQ==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
       vite: ^3.1.0 || ^4.0.0 || ^5.0.0
-      workbox-window: ^7.0.0
     dependencies:
       debug: 4.3.4(supports-color@8.1.1)
       fast-glob: 3.3.2
