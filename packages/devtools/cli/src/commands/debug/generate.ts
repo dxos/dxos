@@ -7,11 +7,9 @@ import { Args, Flags } from '@oclif/core';
 import { sleep } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { Expando } from '@dxos/client/echo';
-import { Random } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { BaseCommand } from '../../base-command';
-
-const random = new Random();
 
 // TODO(burdon): Testing plugin (vs. debug)?
 // TODO(burdon): Disable unless NODE_ENV=development?
@@ -48,7 +46,8 @@ export default class Generate extends BaseCommand<typeof Generate> {
   async run(): Promise<any> {
     const pause = async () => {
       if (this.flags.interval) {
-        const period = this.flags.interval + this.flags.jitter ? random.number({ min: 0, max: this.flags.jitter }) : 0;
+        const period =
+          this.flags.interval + this.flags.jitter ? random.type.integer({ min: 0, max: this.flags.jitter }) : 0;
         await sleep(period);
       }
     };
@@ -57,7 +56,7 @@ export default class Generate extends BaseCommand<typeof Generate> {
     return await this.execWithClient(async (client: Client) => {
       const space = await this.getSpace(client, this.args.key);
       for (let i = 0; i < this.flags.objects; i++) {
-        space?.db.add(new Expando({ type, title: random.word() }));
+        space?.db.add(new Expando({ type, title: random.text.word() }));
         await space.db.flush();
         await pause();
       }
@@ -65,8 +64,8 @@ export default class Generate extends BaseCommand<typeof Generate> {
       const { objects } = space?.db.query({ type });
       if (objects.length) {
         for (let i = 0; i < this.flags.mutations; i++) {
-          const object = random.element(objects);
-          object.title = random.word();
+          const object = random.util.element(objects);
+          object.title = random.text.word();
           await space.db.flush();
           await pause();
 

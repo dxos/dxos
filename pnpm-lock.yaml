@@ -9066,6 +9066,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../storybook-utils

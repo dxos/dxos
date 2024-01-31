@@ -16,25 +16,24 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 import { NavTree } from './NavTree';
 
 faker.seed(3);
-const fake = faker.helpers.fake;
 
 const ROOT_ID = 'root';
 
 const createGraph = () => {
   const content = [...Array(2)].map((_, i) => ({
     id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
-    label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
-    description: fake('{{commerce.productDescription}}'),
+    label: faker.lorem.words(2),
+    description: faker.lorem.sentence(),
     properties: { index: `a${i}` },
     children: [...Array(2)].map((_, j) => ({
       id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
-      label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
-      description: fake('{{commerce.productDescription}}'),
+      label: faker.lorem.words(2),
+      description: faker.lorem.sentence(),
       properties: { index: `a${j}` },
       children: [...Array(2)].map((_, k) => ({
         id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
-        label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
-        description: fake('{{commerce.productDescription}}'),
+        label: faker.lorem.words(2),
+        description: faker.lorem.sentence(),
         properties: { index: `a${k}` },
       })),
     })),

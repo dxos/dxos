@@ -20,8 +20,7 @@ export const faker = {
   //
   seed: (seed: number) => realFaker.seed(seed),
   helpers: {
-    fake: realFaker.helpers.fake, // TODO(burdon): ???
-    multiple: (f: () => any, range?: { count: Range }) => realFaker.helpers.multiple(f, range),
+    multiple: (f: () => any, range?: { count: number | Range }) => realFaker.helpers.multiple(f, range),
     arrayElement: <T>(a: T[]) => realFaker.helpers.arrayElement(a),
     arrayElements: <T>(a: T[], n: number) => realFaker.helpers.arrayElements(a, n),
     uniqueArray: (f: readonly any[] | (() => any), n: number) => realFaker.helpers.uniqueArray(f, n),
@@ -38,7 +37,7 @@ export const faker = {
     recent: () => realFaker.date.recent(),
   },
   number: {
-    int: (range?: Range) => realFaker.number.int(range),
+    int: (range?: number | Range) => realFaker.number.int(range),
   },
   string: {
     hexadecimal: (l?: { length: number }) => realFaker.string.hexadecimal(l),
@@ -48,13 +47,13 @@ export const faker = {
   // Text
   //
   lorem: {
-    lines: (n: Range) => realFaker.lorem.lines(n),
+    lines: (n: number | Range) => realFaker.lorem.lines(n),
     word: (n?: number) => realFaker.lorem.word(n),
-    words: (n?: Range) => realFaker.lorem.words(n),
-    sentence: (n?: Range) => realFaker.lorem.sentence(n),
-    sentences: (n?: Range) => realFaker.lorem.sentences(n),
-    paragraph: (n?: Range) => realFaker.lorem.paragraph(n),
-    paragraphs: (n?: Range) => realFaker.lorem.paragraphs(n),
+    words: (n?: number | Range) => realFaker.lorem.words(n),
+    sentence: (n?: number | Range) => realFaker.lorem.sentence(n),
+    sentences: (n?: number | Range) => realFaker.lorem.sentences(n),
+    paragraph: (n?: number | Range) => realFaker.lorem.paragraph(n),
+    paragraphs: (n?: number | Range) => realFaker.lorem.paragraphs(n),
   },
   //
   // Custom
