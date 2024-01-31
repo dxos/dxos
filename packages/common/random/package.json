@@ -17,7 +17,13 @@
   ],
   "dependencies": {
     "@dxos/node-std": "workspace:*",
-    "@faker-js/faker": "^8.3.1"
+    "@faker-js/faker": "^8.3.1",
+    "seedrandom": "^3.0.5",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/seedrandom": "^3.0.5",
+    "@types/uuid": "^8.3.0"
   },
   "publishConfig": {
     "access": "public"

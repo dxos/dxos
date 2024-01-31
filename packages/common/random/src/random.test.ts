@@ -2,16 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
-
 import { describe, test } from '@dxos/test';
 
-import { Random } from './random';
+import { random } from './random';
 
 describe('Random', () => {
   test('paragraphs', () => {
-    const random = new Random();
-    console.log(random.paragraph());
-    expect(true).to.be.true;
+    random.seed('test');
+    const values = random.int({ min: 0, max: 10, count: 10 });
+    console.log(values);
   });
 });
