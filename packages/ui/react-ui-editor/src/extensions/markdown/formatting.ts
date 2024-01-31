@@ -408,7 +408,7 @@ export const addList =
       let line = state.doc.lineAt(node.from);
       const column = node.from - line.from;
       // Align to the list above if possible
-      if (parentColumn != null && parentColumn > column) {
+      if (parentColumn !== null && parentColumn > column) {
         padding = Math.max(padding, parentColumn - column);
       }
 
@@ -448,19 +448,7 @@ export const addList =
         next = next.nextSibling;
       }
       if (next?.name === 'OrderedList') {
-        let counter = last.counter + 1;
-        for (let item = next.firstChild; item; item = item.nextSibling) {
-          if (item.name === 'ListItem') {
-            const number = /(\s*)(\d+)[.)]/.exec(state.doc.sliceString(item.from, item.from + 10));
-            if (!number || +number[2] === counter) {
-              break;
-            }
-            const size = number[1].length + number[2].length;
-            const newNum = String(counter);
-            changes.push({ from: item.from + Math.max(0, size - newNum.length), to: item.from + size, insert: newNum });
-            counter++;
-          }
-        }
+        renumberListItems(next.firstChild, last.counter + 1, changes, state.doc);
       }
     }
     dispatch(state.update({ changes, userEvent: 'format.addList', scrollIntoView: true }));
@@ -470,6 +458,58 @@ export const addList =
 export const removeList =
   (type: List): StateCommand =>
   ({ state, dispatch }) => {
+    let lastBlock = -1;
+    const changes: ChangeSpec[] = [];
+    const stack: string[] = [];
+    const targetNodeType = type === List.Ordered ? 'OrderedList' : type === List.Bullet ? 'BulletList' : 'TaskList';
+    // Scan the syntax tree to locate list items that can be unwrapped
+    for (const { from, to } of state.selection.ranges) {
+      syntaxTree(state).iterate({
+        from,
+        to,
+        enter: (node) => {
+          const { name } = node;
+          if (name === 'BulletList' || name === 'OrderedList' || name === 'Blockquote') {
+            // Maintain block context
+            stack.push(name);
+          } else if (name === 'Task' && stack[stack.length - 1] === 'BulletList') {
+            stack[stack.length - 1] = 'TaskList';
+          }
+        },
+        leave: (node) => {
+          const { name } = node;
+          if (name === 'BulletList' || name === 'OrderedList' || name === 'Blockquote') {
+            stack.pop();
+          } else if (name === 'ListItem' && stack[stack.length - 1] === targetNodeType && node.from !== lastBlock) {
+            lastBlock = node.from;
+            let line = state.doc.lineAt(node.from);
+            const mark = /^\s*(\d+[.)] |[-*+] (\[[ x]\] )?)/.exec(line.text.slice(node.from - line.from));
+            if (!mark) {
+              return false;
+            }
+            const column = node.from - line.from;
+            // Delete the marker on the first line
+            changes.push({ from: node.from, to: node.from + mark[0].length });
+            // and indentation on subsequent lines
+            while (line.to < node.to) {
+              line = state.doc.lineAt(line.to + 1);
+              const open = /^[\s>]*/.exec(line.text)![0].length;
+              if (open > column) {
+                changes.push({ from: line.from + column, to: line.from + Math.min(column + mark[0].length, open) });
+              }
+            }
+            if (node.to >= to) {
+              renumberListItems(node.node.nextSibling, 1, changes, state.doc);
+            }
+            return false;
+          }
+        },
+      });
+    }
+    if (!changes.length) {
+      return false;
+    }
+    dispatch(state.update({ changes, userEvent: 'format.removeList', scrollIntoView: true }));
     return true;
   };
 
@@ -481,6 +521,21 @@ export const toggleList =
       formatting.listStyle === (type === List.Bullet ? 'bullet' : type === List.Ordered ? 'ordered' : 'task');
     return (active ? removeList(type) : addList(type))(target);
   };
+
+const renumberListItems = (item: SyntaxNode | null, counter: number, changes: ChangeSpec[], doc: Text) => {
+  for (; item; item = item.nextSibling) {
+    if (item.name === 'ListItem') {
+      const number = /(\s*)(\d+)[.)]/.exec(doc.sliceString(item.from, item.from + 10));
+      if (!number || +number[2] === counter) {
+        break;
+      }
+      const size = number[1].length + number[2].length;
+      const newNum = String(counter);
+      changes.push({ from: item.from + Math.max(0, size - newNum.length), to: item.from + size, insert: newNum });
+      counter++;
+    }
+  }
+};
 
 export const formatting = (options: FormattingOptions = {}): Extension => {
   return [

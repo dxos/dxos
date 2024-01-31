@@ -8,7 +8,17 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { setHeading, addStyle, removeStyle, addList, Inline, List, getFormatting, type Formatting } from './formatting';
+import {
+  setHeading,
+  addStyle,
+  removeStyle,
+  addList,
+  removeList,
+  Inline,
+  List,
+  getFormatting,
+  type Formatting,
+} from './formatting';
 
 export const emptyFormatting: Formatting = {
   blockType: 'paragraph',
@@ -224,6 +234,49 @@ describe('addList', () => {
   );
 
   testCommand("doesn't renumber lists with a different parent", '> one{}\n\n1. two', ordered, '> 1. one\n\n1. two');
+});
+
+describe('removeList', () => {
+  const bullet = removeList(List.Bullet);
+  const ordered = removeList(List.Ordered);
+
+  testCommand('can remove a bullet list', ' - Hi{}', bullet, 'Hi');
+
+  testCommand('can remove an ordered list', '1. Hi{}', ordered, 'Hi');
+
+  testCommand('can remove a task list', '- [x] Hi{}', removeList(List.Task), 'Hi');
+
+  testCommand(
+    'can remove a bullet list from multiple blocks',
+    '- {One\n\n- # Two\n\n- Three}',
+    bullet,
+    'One\n\n# Two\n\nThree',
+  );
+
+  testCommand(
+    'can unwrap multi-line blocks',
+    '1. Hello this\n   is a three-line\nparagraph.{}',
+    ordered,
+    'Hello this\nis a three-line\nparagraph.',
+  );
+
+  testCommand('can unwrap fenced code blocks', '- ```javascript\n  true{}\n  ```', bullet, '```javascript\ntrue\n```');
+
+  testCommand(
+    'can unwrap blocks inside markup',
+    '> 1. - Hello\n       {World\n>\n> - Again}',
+    bullet,
+    '> 1. Hello\n     World\n>\n> Again',
+  );
+
+  testCommand("doesn't unwrap other types of lists", '1. foo{}', bullet, null);
+
+  testCommand(
+    'renumbers lists after the selection',
+    '1. one\n\n2. {two\n\n3. three}\n\n4. four\n\n5. five',
+    ordered,
+    '1. one\n\ntwo\n\nthree\n\n1. four\n\n2. five',
+  );
 });
 
 describe('getFormatting', () => {

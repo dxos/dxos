@@ -13,6 +13,9 @@ import {
   setStyle,
   toggleStyle,
   Inline,
+  List,
+  addList,
+  removeList,
   toggleList,
 } from '../extensions';
 
@@ -22,30 +25,37 @@ export const useActionHandler = (view?: EditorView | null): ToolbarProps['onActi
       return;
     }
 
+    let inlineType, listType;
     switch (action.type) {
       case 'heading':
         setHeading(parseInt(action.data))(view);
         break;
 
       case 'strong':
-        (typeof action.data === 'boolean' ? setStyle(Inline.Strong, action.data) : toggleStyle(Inline.Strong))(view);
-        break;
       case 'emphasis':
-        (typeof action.data === 'boolean' ? setStyle(Inline.Emphasis, action.data) : toggleStyle(Inline.Emphasis))(
-          view,
-        );
-        break;
       case 'strikethrough':
-        (typeof action.data === 'boolean'
-          ? setStyle(Inline.Strikethrough, action.data)
-          : toggleStyle(Inline.Strikethrough))(view);
-        break;
       case 'code':
-        (typeof action.data === 'boolean' ? setStyle(Inline.Code, action.data) : toggleStyle(Inline.Code))(view);
+        inlineType =
+          action.type === 'strong'
+            ? Inline.Strong
+            : action.type === 'emphasis'
+            ? Inline.Emphasis
+            : action.type === 'strikethrough'
+            ? Inline.Strikethrough
+            : Inline.Code;
+        (typeof action.data === 'boolean' ? setStyle(inlineType, action.data) : toggleStyle(inlineType))(view);
         break;
 
-      case 'list':
-        toggleList(view);
+      case 'list-ordered':
+      case 'list-bullet':
+      case 'list-tasks':
+        listType =
+          action.type === 'list-ordered' ? List.Ordered : action.type === 'list-bullet' ? List.Bullet : List.Task;
+        (action.data === false
+          ? removeList(listType)
+          : action.data === true
+          ? addList(listType)
+          : toggleList(listType))(view);
         break;
 
       case 'codeblock':
