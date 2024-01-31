@@ -105,7 +105,11 @@ class CreatePeerCommand implements fc.AsyncCommand<Model, Real> {
 // }
 
 class InsertTextCommand implements fc.AsyncCommand<Model, Real> {
-  constructor(readonly peerId: PublicKey, readonly index: number, readonly text: string) {}
+  constructor(
+    readonly peerId: PublicKey,
+    readonly index: number,
+    readonly text: string,
+  ) {}
 
   check(model: Model) {
     return model.peers.has(this.peerId) && model.text.length >= this.index;
@@ -131,7 +135,11 @@ class InsertTextCommand implements fc.AsyncCommand<Model, Real> {
 }
 
 class RemoveTextCommand implements fc.AsyncCommand<Model, Real> {
-  constructor(readonly peerId: PublicKey, readonly index: number, readonly length: number) {}
+  constructor(
+    readonly peerId: PublicKey,
+    readonly index: number,
+    readonly length: number,
+  ) {}
 
   check(model: Model) {
     return model.peers.has(this.peerId) && model.text.length > this.index + this.length;

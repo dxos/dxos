@@ -216,6 +216,7 @@ export class DataPipeline implements CredentialProcessor {
   }
 
   private async _consumePipeline() {
+    const pipeline = this._pipeline;
     if (this.currentEpoch) {
       const waitForOneEpoch = this.onNewEpoch.waitForCount(1);
       await this._processEpochInSeparateTask(this.currentEpoch);
@@ -225,8 +226,8 @@ export class DataPipeline implements CredentialProcessor {
     // CPU bottleneck control.
     let messageCounter = 0;
 
-    invariant(this._pipeline, 'Pipeline is not initialized.');
-    for await (const msg of this._pipeline.consume()) {
+    invariant(pipeline, 'Pipeline is not initialized.');
+    for await (const msg of pipeline.consume()) {
       const span = this._usage.beginRecording();
       this._mutations.inc();
 
@@ -261,7 +262,7 @@ export class DataPipeline implements CredentialProcessor {
           } satisfies DataPipelineProcessed);
 
           // Timeframe clock is not updated yet.
-          await this._noteTargetStateIfNeeded(this._pipeline.state.pendingTimeframe);
+          await this._noteTargetStateIfNeeded(pipeline.state.pendingTimeframe);
         }
       } catch (err: any) {
         log.catch(err);

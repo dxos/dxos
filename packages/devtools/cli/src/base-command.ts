@@ -239,8 +239,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
           // TODO(wittjosiah): Configure this.
           sampleRate: 1.0,
         },
+        logProcessor: true,
       },
-      logProcessor: true,
     });
 
     this._observability.initialize();
@@ -474,8 +474,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
           platform === 'darwin'
             ? new LaunchctlRunner()
             : platform === 'linux'
-            ? new SystemctlRunner()
-            : raise(new Error(`System daemon not implemented for ${os.platform()}.`)),
+              ? new SystemctlRunner()
+              : raise(new Error(`System daemon not implemented for ${os.platform()}.`)),
         )
       : new PhoenixDaemon(DX_RUNTIME);
 

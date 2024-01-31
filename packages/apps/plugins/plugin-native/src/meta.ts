@@ -3,5 +3,5 @@
 //
 
 export default {
-  id: 'dxos.org/plugin/telemetry',
+  id: 'dxos.org/plugin/native',
 };

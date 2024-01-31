@@ -16,7 +16,6 @@
     "proxy": "ts-node scripts/proxy.ts"
   },
   "dependencies": {
-    "@braneframe/plugin-telemetry": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",

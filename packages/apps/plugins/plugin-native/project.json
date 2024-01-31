@@ -1,14 +1,13 @@
 {
-  "sourceRoot": "packages/apps/plugins/plugin-telemetry/src",
+  "sourceRoot": "packages/apps/plugins/plugin-native/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-telemetry/src/index.ts",
-          "packages/apps/plugins/plugin-telemetry/src/meta.ts",
-          "packages/apps/plugins/plugin-telemetry/src/observability/index.ts"
+          "packages/apps/plugins/plugin-native/src/index.ts",
+          "packages/apps/plugins/plugin-native/src/meta.ts"
         ],
         "platforms": [
           "browser"
@@ -21,5 +20,5 @@
   "implicitDependencies": [
     "esbuild"
   ],
-  "name": "plugin-telemetry"
+  "name": "plugin-native"
 }
