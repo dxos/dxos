@@ -318,6 +318,10 @@ export class WebFile extends EventEmitter implements File {
   }
 
   async read(offset: number, size: number) {
+    if (this.destroyed) {
+      throw new Error('Read of a destroyed file');
+    }
+
     this._operations.inc();
     this._reads.inc();
     this._readBytes.inc(size);
@@ -418,6 +422,7 @@ export class WebFile extends EventEmitter implements File {
 
   @synchronized
   async destroy() {
+    await this._flushNow();
     this.destroyed = true;
     return await this._destroy();
   }
