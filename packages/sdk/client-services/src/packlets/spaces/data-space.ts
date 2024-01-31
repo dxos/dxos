@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
+import { Event, asyncTimeout, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context, ContextDisposedError } from '@dxos/context';
 import { timed } from '@dxos/debug';
@@ -383,7 +383,7 @@ export class DataSpace {
 
     queueMicrotask(async () => {
       try {
-        await handle.whenReady();
+        await asyncTimeout(handle.whenReady(), 5_000);
         const doc = handle.docSync() ?? failedInvariant();
         if (!doc.experimental_spaceKey) {
           handle.change((doc: any) => {

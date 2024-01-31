@@ -7,7 +7,7 @@ import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
-import { type Message, NetworkAdapter, type PeerId, Repo } from '@dxos/automerge/automerge-repo';
+import { type Message, NetworkAdapter, type PeerId, Repo, type HandleState } from '@dxos/automerge/automerge-repo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
@@ -352,6 +352,67 @@ describe('AutomergeHost', () => {
     const docC = repoC.find(docA.url);
 
     await docC.whenReady();
+  });
+
+  test('replicate document after request', async () => {
+    const [adapter1, adapter2] = TestAdapter.createPair();
+    const repoA = new Repo({
+      peerId: 'A' as any,
+      network: [adapter1],
+      sharePolicy: async () => true,
+    });
+    const repoB = new Repo({
+      peerId: 'B' as any,
+      network: [adapter2],
+      sharePolicy: async () => true,
+    });
+
+    const unavailable: HandleState = 'unavailable';
+
+    {
+      // Connect repos.
+      adapter1.ready();
+      adapter2.ready();
+      await adapter1.onConnect.wait();
+      await adapter2.onConnect.wait();
+    }
+
+    const docA = repoA.create();
+    // NOTE: Doesn't work if the doc is empty.
+    docA.change((doc: any) => {
+      doc.text = 'Hello world';
+    });
+
+    const docB = repoB.find(docA.url);
+    {
+      // Request document from repoB.
+      await asyncTimeout(docB.whenReady([unavailable]), 1_000);
+    }
+
+    {
+      // Failing to find a document.
+      // await (docB.whenReady([unavailable]), 1_000);
+    }
+
+    {
+      adapter1.peerCandidate(adapter2.peerId!);
+      await sleep(100);
+      adapter2.peerCandidate(adapter1.peerId!);
+    }
+
+    {
+      await asyncTimeout(docB.whenReady([unavailable]), 1_000);
+    }
+
+    {
+      // Note: Retry hack.
+      adapter1.peerDisconnected(adapter2.peerId!);
+      adapter2.peerDisconnected(adapter1.peerId!);
+      adapter1.peerCandidate(adapter2.peerId!);
+      adapter2.peerCandidate(adapter1.peerId!);
+
+      await asyncTimeout(docB.whenReady(), 1_000);
+    }
   });
 });
 
