@@ -91,8 +91,8 @@ const getEnvironments = (options: MochaExecutorOptions): TestEnvironment[] => {
     return options.environments.includes('all')
       ? Array.from(TestEnvironments)
       : options.environments.includes('core')
-      ? ['nodejs', ...Array.from(BrowserTypes)]
-      : (options.environments as TestEnvironment[]);
+        ? ['nodejs', ...Array.from(BrowserTypes)]
+        : (options.environments as TestEnvironment[]);
   } else if (process.env.CI) {
     return options.ciEnvironments;
   } else if (options.devEnvironments) {

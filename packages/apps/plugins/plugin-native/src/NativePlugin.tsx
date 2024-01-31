@@ -5,6 +5,7 @@
 import type { Plugin, PluginDefinition } from '@dxos/app-framework';
 import { LayoutAction, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
 import { log } from '@dxos/log';
+import { safeParseJson } from '@dxos/util';
 
 import meta from './meta';
 
@@ -98,15 +99,7 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
   log.info('native setup complete');
 };
 
-// TODO(burdon): Move to util.
-export const safeParseJson = <T extends object>(data: string | undefined | null, defaultValue: T): T => {
-  if (data) {
-    try {
-      return JSON.parse(data);
-    } catch (err) {}
-  }
-  return defaultValue;
-};
+// 855-451-6753
 
 export const NativePlugin = (): PluginDefinition => ({
   meta,

@@ -50,6 +50,8 @@ import { TextObject } from '@dxos/react-client/echo';
 import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
+import './globals';
+
 import { ResetDialog } from './components';
 import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
@@ -90,12 +92,11 @@ const main = async () => {
     order: [
       // Needs to run ASAP on startup (but not blocking).
       ObservabilityMeta,
+      ThemeMeta,
       // TODO(wittjosiah): Consider what happens to PWA updates when hitting error boundary.
-      PwaMeta,
-      NativeMeta,
+      isSocket ? NativeMeta : PwaMeta,
 
       // UX
-      ThemeMeta,
       LayoutMeta,
       NavTreeMeta,
       SettingsMeta,
@@ -166,11 +167,12 @@ const main = async () => {
       [MarkdownMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-markdown')),
       [MermaidMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-mermaid')),
       [MetadataMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-metadata')),
-      ...(isSocket ? { [NativeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-native')) } : {}),
+      ...(isSocket
+        ? { [NativeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-native')) }
+        : { [PwaMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-pwa')) }),
       [NavTreeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-navtree')),
       [OutlinerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-outliner')),
       [PresenterMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-presenter')),
-      ...(isSocket ? {} : { [PwaMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-pwa')) }),
       [RegistryMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-registry')),
       [ScriptMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-script'), {
         containerUrl: '/script-frame/index.html',
@@ -208,8 +210,7 @@ const main = async () => {
       LayoutMeta.id,
       MetadataMeta.id,
       NavTreeMeta.id,
-      ...(isSocket ? [NativeMeta.id] : []),
-      ...(isSocket ? [] : [PwaMeta.id]),
+      ...(isSocket ? [NativeMeta.id] : [PwaMeta.id]),
       RegistryMeta.id,
       SettingsMeta.id,
       SpaceMeta.id,

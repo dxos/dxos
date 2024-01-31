@@ -1,0 +1,47 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist/types",
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-editor"
+    },
+    {
+      "path": "../react-ui-mosaic"
+    },
+    {
+      "path": "../react-ui-theme"
+    },
+    {
+      "path": "../storybook-utils"
+    }
+  ]
+}
