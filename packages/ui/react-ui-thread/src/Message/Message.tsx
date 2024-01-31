@@ -107,10 +107,10 @@ export const Message = <BlockValue,>(props: MessageProps<BlockValue>) => {
   return (
     <MessageMeta {...metaProps} id={id} continues>
       <p className='grid grid-cols-[1fr_max-content] gap-2 pie-2'>
-        <Avatar.Label classNames={['truncate font-semibold', !authorName && 'fg-description']}>
+        <Avatar.Label classNames={['truncate text-sm font-medium', !authorName && 'fg-description']}>
           {authorName ?? t('anonymous label')}
         </Avatar.Label>
-        <time className='fg-description text-xs pbs-1' dateTime={dt?.toISOString()}>
+        <time className='fg-description text-xs pbs-0.5' dateTime={dt?.toISOString()}>
           {dt ? formatDistanceToNow(dt, { locale: dtLocale, addSuffix: true }) : ''}
         </time>
       </p>
