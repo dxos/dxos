@@ -8,7 +8,7 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { setHeading, getFormatting, type Formatting } from './formatting';
+import { setHeading, addStyle, removeStyle, Inline, getFormatting, type Formatting } from './formatting';
 
 export const emptyFormatting: Formatting = {
   blockType: 'paragraph',
@@ -38,7 +38,16 @@ const testCommand = (name: string, doc: string, command: StateCommand, result: s
     if (!status || result === null) {
       expect(status).to.equal(result !== null);
     } else {
+      let resultSel = null;
+      if (result.includes('{')) {
+        const resultState = createState(result);
+        result = resultState.doc.toString();
+        resultSel = resultState.selection.main;
+      }
       expect(state.doc.toString()).to.equal(result);
+      if (resultSel) {
+        expect([state.selection.main.from, state.selection.main.to]).to.deep.equal([resultSel.from, resultSel.to]);
+      }
     }
   });
 };
@@ -48,9 +57,9 @@ describe('setHeading', () => {
 
   testCommand('can create a level 2 heading', 'One\n\nTw{o}', setHeading(2), 'One\n\n## Two');
 
-  testCommand('can increase change the depth of a heading', '# One{}', setHeading(3), '### One');
+  testCommand('can increase the depth of a heading', '# One{}', setHeading(3), '### One');
 
-  testCommand('can decrease change the depth of a heading', '## One{}', setHeading(1), '# One');
+  testCommand('can decrease the depth of a heading', '## One{}', setHeading(1), '# One');
 
   testCommand('can remove a heading', '### A{}', setHeading(0), 'A');
 
@@ -75,6 +84,81 @@ describe('setHeading', () => {
   testCommand('can add a heading inside block markup', '> - {one\n> - two}\n', setHeading(1), '> - # one\n> - # two\n');
 
   testCommand('can remove a heading inside block markup', '1. # one{}', setHeading(0), '1. one');
+});
+
+describe('addStyle', () => {
+  const em = addStyle(Inline.Emphasis);
+  const str = addStyle(Inline.Strong);
+  const code = addStyle(Inline.Code);
+
+  testCommand('can add emphasis', 'one {two}', em, 'one *{two}*');
+
+  testCommand('can add emphasis around cursor', 'one {}', em, 'one *{}*');
+
+  testCommand('can add strong style', '{one\n\ntwo}', str, '**{one**\n\n**two}**');
+
+  testCommand('can add strikethrough', '{hey}', addStyle(Inline.Strikethrough), '~~{hey}~~');
+
+  testCommand('can add code style', 'a {variable}', code, 'a `{variable}`');
+
+  testCommand('clears styles inside added code', '{some **bold** text}', code, '`some bold text`');
+
+  testCommand(
+    'clears styles partially inside added code',
+    '**some {bold** and *emphasized} text*',
+    code,
+    '**some** `bold and emphasized` *text*',
+  );
+
+  testCommand(
+    'inserts markers at same position in the right order',
+    '{some **bold,}text**',
+    code,
+    '`some bold,`**text**',
+  );
+
+  testCommand('remove existing markers inside', '{one *two* three}', em, '*{one two three}*');
+
+  testCommand(
+    'removes existing markers overlapping boundaries',
+    '*one {two* *three} four*',
+    em,
+    '*one {two three} four*',
+  );
+
+  testCommand(
+    'can style headers',
+    '{one\n\n# two\n\nthree\n---\n\nfour} five',
+    str,
+    '**{one**\n\n# **two**\n\n**three**\n---\n\n**four}** five',
+  );
+
+  testCommand('moves the insert position out of markup', 'one ~{~two~}~ three', em, 'one ~~*two*~~ three');
+});
+
+describe('removeStyle', () => {
+  const em = removeStyle(Inline.Emphasis);
+  const str = removeStyle(Inline.Strong);
+  const code = removeStyle(Inline.Code);
+
+  testCommand('can remove emphasis', 'one *{two}*', em, 'one {two}');
+
+  testCommand('can remove emphasis around cursor', 'one *{}*', em, 'one {}');
+
+  testCommand('can remove strong style', '{**one**\n\n**two**}', str, '{one\n\ntwo}');
+
+  testCommand('can remove strikethrough', '~~{hey}~~', removeStyle(Inline.Strikethrough), '{hey}');
+
+  testCommand('can remove code style', 'a `{variable}`', code, 'a {variable}');
+
+  testCommand(
+    'can remove emphasis across multiple blocks',
+    '{*one*\n\n# *two*\n\n> 1. *three} four*\n',
+    em,
+    '{one\n\n# two\n\n> 1. three} *four*\n',
+  );
+
+  testCommand('can shrink existing styles', '*one {two three} four*', em, '*one* {two three} *four*');
 });
 
 describe('getFormatting', () => {

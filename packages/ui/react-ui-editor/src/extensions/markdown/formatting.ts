@@ -10,6 +10,8 @@ import {
   RangeSetBuilder,
   type EditorState,
   type ChangeSpec,
+  type Text,
+  EditorSelection,
 } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, keymap, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 import { type SyntaxNodeRef, type SyntaxNode } from '@lezer/common';
@@ -49,6 +51,13 @@ export type Formatting = {
   // Whether all selected text is wrapped in a blockquote.
   blockquote: boolean;
 };
+
+export enum Inline {
+  Strong = 0,
+  Emphasis = 1,
+  Strikethrough = 2,
+  Code = 3,
+}
 
 export type FormattingOptions = {};
 
@@ -106,33 +115,184 @@ export const setHeading =
     return true;
   };
 
-export const toggleStyle =
-  (mark: string): StateCommand =>
+export const setStyle =
+  (type: Inline, enable: boolean): StateCommand =>
   ({ state, dispatch }) => {
-    const { ranges } = state.selection;
-    for (const range of ranges) {
-      if (range.from === range.to) {
-        return false;
+    const marker = inlineMarkerText(type);
+    const changes = state.changeByRange((range) => {
+      // Special case for markers directly around the cursor, which will often not be parsed as valid styling
+      if (
+        !enable &&
+        range.empty &&
+        state.doc.sliceString(range.from - marker.length, range.from + marker.length) === marker + marker
+      ) {
+        return {
+          changes: { from: range.from - marker.length, to: range.from + marker.length },
+          range: EditorSelection.cursor(range.from - marker.length),
+        };
       }
+      const changes: ChangeSpec[] = [];
+      // Used to add insertions that should happen *after* any other
+      // insertions at the same position.
+      const changesAtEnd: ChangeSpec[] = [];
+      let blockStart = -1;
+      let blockEnd = -1;
+      let startCovered: boolean | 'adjacent' = false;
+      let endCovered: boolean | 'adjacent' = false;
+      let { from, to } = range;
+      // Iterate the selected range. For each textblock, determine a
+      // start and end position, the overlap of the selected range and
+      // the block's extent, that should be styled/unstyled.
+      syntaxTree(state).iterate({
+        from,
+        to,
+        enter: (node) => {
+          const { name } = node;
+          if (Object.hasOwn(Textblocks, name) && Textblocks[name] !== 'codeblock') {
+            // Set up for this textblock
+            blockStart = blockContentStart(node);
+            blockEnd = blockContentEnd(node, state.doc);
+            startCovered = endCovered = false;
+          } else if (IgnoreInline.has(name)) {
+            // Move endpoints out of markers
+            if (node.from < from && node.to > from) {
+              if (to === from) {
+                to = node.to;
+              }
+              from = node.to;
+            }
+            if (node.from < to && node.to > to) {
+              to = node.from;
+            }
+          } else if (Object.hasOwn(InlineMarker, name)) {
+            // This is an inline marker node.
+            const markType = InlineMarker[name];
+            const size = inlineMarkerText(markType).length;
+            const openEnd = node.from + size;
+            const closeStart = node.to - size;
+            // Determine whether the start/end of the range is covered
+            // by this.
+            if (markType === type) {
+              if (openEnd <= from && closeStart >= from) {
+                startCovered = openEnd === from ? 'adjacent' : true;
+              }
+              if (openEnd <= to && closeStart >= to) {
+                endCovered = closeStart === to ? 'adjacent' : true;
+              }
+            }
+            // Marks of the same type in range, or any mark if we're
+            // adding code style, need to be removed.
+            if (markType === type || (type === Inline.Code && enable)) {
+              if (node.from >= from && openEnd <= to) {
+                changes.push({ from: node.from, to: openEnd });
+                if (markType !== type && closeStart >= to) {
+                  // End marker outside, move start
+                  changesAtEnd.push({
+                    from: skipSpaces(Math.min(to, blockEnd), state.doc, 1, blockEnd),
+                    insert: inlineMarkerText(markType),
+                  });
+                }
+              }
+              if (closeStart >= from && node.to <= to) {
+                changes.push({ from: closeStart, to: node.to });
+                if (markType !== type && openEnd <= from) {
+                  // Start marker outside, move end
+                  changes.push({
+                    from: skipSpaces(Math.max(from, blockStart), state.doc, -1, blockStart),
+                    insert: inlineMarkerText(markType),
+                  });
+                }
+              }
+            }
+          }
+        },
+        leave: (node) => {
+          if (Object.hasOwn(Textblocks, node.name) && Textblocks[node.name] !== 'codeblock') {
+            // Finish opening/closing the marks for this textblock
+            const rangeStart = Math.max(from, blockStart);
+            const rangeEnd = Math.min(to, blockEnd);
+            if (enable) {
+              if (!startCovered) {
+                changes.push({ from: rangeStart, insert: marker });
+              }
+              if (!endCovered) {
+                changes.push({ from: rangeEnd, insert: marker });
+              }
+            } else {
+              if (startCovered === 'adjacent') {
+                changes.push({ from: from - marker.length, to: from });
+              } else if (startCovered) {
+                changes.push({ from: skipSpaces(rangeStart, state.doc, -1, blockStart), insert: marker });
+              }
+              if (endCovered === 'adjacent') {
+                changes.push({ from: to, to: to + marker.length });
+              } else if (endCovered) {
+                changes.push({ from: skipSpaces(rangeEnd, state.doc, 1, blockEnd), insert: marker });
+              }
+            }
+          }
+        },
+      });
+      const changeSet = state.changes(changes.concat(changesAtEnd));
+      return {
+        changes: changeSet,
+        range:
+          range.empty && !changeSet.empty
+            ? EditorSelection.cursor(range.head + inlineMarkerText(type).length)
+            : EditorSelection.range(changeSet.mapPos(range.from, 1), changeSet.mapPos(range.to, -1)),
+      };
+    });
 
-      // TODO(burdon): Detect if already styled (or nested).
-      dispatch(
-        state.update({
-          changes: [
-            {
-              from: range.from,
-              insert: mark,
-            },
-            {
-              from: range.to,
-              insert: mark,
-            },
-          ],
-        }),
-      );
-    }
-
+    dispatch(state.update(changes, { userEvent: 'format.addStyle', scrollIntoView: true }));
     return true;
+  };
+
+const blockContentStart = (node: SyntaxNodeRef) => {
+  const atx = /^ATXHeading(\d)/.exec(node.name);
+  if (atx) {
+    return Math.min(node.to, node.from + +atx[1] + 1);
+  }
+  return node.from;
+};
+
+const blockContentEnd = (node: SyntaxNodeRef, doc: Text) => {
+  const setext = /^SetextHeading(\d)/.exec(node.name);
+  const lastLine = doc.lineAt(node.to);
+  if (setext || /^[\s>]*$/.exec(lastLine.text)) {
+    return lastLine.from - 1;
+  }
+  return node.to;
+};
+
+const inlineMarkerText = (type: Inline) =>
+  type === Inline.Strong ? '**' : type === Inline.Strikethrough ? '~~' : type === Inline.Emphasis ? '*' : '`';
+
+const skipSpaces = (pos: number, doc: Text, dir: -1 | 1, limit?: number) => {
+  const line = doc.lineAt(pos);
+  while (pos !== limit && line.text[pos - line.from - (dir < 0 ? 1 : 0)] === ' ') {
+    pos += dir;
+  }
+  return pos;
+};
+
+export const addStyle = (style: Inline): StateCommand => setStyle(style, true);
+
+export const removeStyle = (style: Inline): StateCommand => setStyle(style, false);
+
+export const toggleStyle =
+  (style: Inline): StateCommand =>
+  (arg) => {
+    const form = getFormatting(arg.state);
+    return setStyle(
+      style,
+      style === Inline.Strong
+        ? !form.strong
+        : style === Inline.Emphasis
+        ? !form.emphasis
+        : style === Inline.Strikethrough
+        ? !form.strikethrough
+        : !form.code,
+    )(arg);
   };
 
 // TODO(burdon): Define and trigger snippets for codeblock, table, etc.
@@ -163,10 +323,10 @@ export const insertTable = (view: EditorView) => {
   snippets.table(view, null, from, from);
 };
 
-export const toggleStrong = toggleStyle('**');
-export const toggleEmphasis = toggleStyle('_');
-export const toggleStrikethrough = toggleStyle('~~');
-export const toggleInlineCode = toggleStyle('`');
+export const toggleStrong = toggleStyle(Inline.Strong);
+export const toggleEmphasis = toggleStyle(Inline.Emphasis);
+export const toggleStrikethrough = toggleStyle(Inline.Strikethrough);
+export const toggleInlineCode = toggleStyle(Inline.Code);
 
 export const toggleList = (view: EditorView) => {};
 
@@ -245,13 +405,6 @@ const styling = (): Extension => {
     ),
   ];
 };
-
-const enum Inline {
-  Strong = 0,
-  Emphasis = 1,
-  Strikethrough = 2,
-  Code = 3,
-}
 
 const InlineMarker: { [name: string]: number } = {
   Emphasis: Inline.Emphasis,

@@ -71,14 +71,14 @@ const ToolbarRoot = ({ children, onAction, state }: ToolbarProps) => {
 
 type ToolbarButtonProps = {
   Icon: Icon;
-  onClick: () => Action | undefined;
+  onClick: (state: Formatting | null) => Action | undefined;
   getState?: (state: Formatting) => boolean;
 } & NonNullable<Pick<ButtonProps, 'title'>>;
 
 const ToolbarButton = ({ Icon, onClick, title, getState }: ToolbarButtonProps) => {
   const { onAction, state } = useToolbarContext('ToolbarButton');
   const handleClick = () => {
-    const action = onClick();
+    const action = onClick(state);
     if (action) {
       onAction?.(action);
     }
@@ -130,20 +130,30 @@ const MarkdownHeading = () => {
 
 const MarkdownStyles = () => (
   <div role='none'>
-    <ToolbarButton Icon={TextB} title='String' onClick={() => ({ type: 'strong' })} getState={(s) => s.strong} />
+    <ToolbarButton
+      Icon={TextB}
+      title='String'
+      onClick={(s) => ({ type: 'strong', data: s ? !s.strong : null })}
+      getState={(s) => s.strong}
+    />
     <ToolbarButton
       Icon={TextItalic}
       title='Emphasis'
-      onClick={() => ({ type: 'emphasis' })}
+      onClick={(s) => ({ type: 'emphasis', data: s ? !s.emphasis : null })}
       getState={(s) => s.emphasis}
     />
     <ToolbarButton
       Icon={TextStrikethrough}
       title='Strike-through'
-      onClick={() => ({ type: 'strikethrough' })}
+      onClick={(s) => ({ type: 'strikethrough', data: s ? !s.strikethrough : null })}
       getState={(s) => s.strikethrough}
     />
-    <ToolbarButton Icon={Code} title='Inline code' onClick={() => ({ type: 'code' })} getState={(s) => s.code} />
+    <ToolbarButton
+      Icon={Code}
+      title='Inline code'
+      onClick={(s) => ({ type: 'code', data: s ? !s.code : null })}
+      getState={(s) => s.code}
+    />
   </div>
 );
 

@@ -10,11 +10,10 @@ import {
   insertCodeblock,
   insertTable,
   setHeading,
-  toggleStrong,
-  toggleEmphasis,
-  toggleInlineCode,
+  setStyle,
+  toggleStyle,
+  Inline,
   toggleList,
-  toggleStrikethrough,
 } from '../extensions';
 
 export const useActionHandler = (view?: EditorView | null): ToolbarProps['onAction'] => {
@@ -29,16 +28,20 @@ export const useActionHandler = (view?: EditorView | null): ToolbarProps['onActi
         break;
 
       case 'strong':
-        toggleStrong(view);
+        (typeof action.data === 'boolean' ? setStyle(Inline.Strong, action.data) : toggleStyle(Inline.Strong))(view);
         break;
       case 'emphasis':
-        toggleEmphasis(view);
+        (typeof action.data === 'boolean' ? setStyle(Inline.Emphasis, action.data) : toggleStyle(Inline.Emphasis))(
+          view,
+        );
         break;
       case 'strikethrough':
-        toggleStrikethrough(view);
+        (typeof action.data === 'boolean'
+          ? setStyle(Inline.Strikethrough, action.data)
+          : toggleStyle(Inline.Strikethrough))(view);
         break;
       case 'code':
-        toggleInlineCode(view);
+        (typeof action.data === 'boolean' ? setStyle(Inline.Code, action.data) : toggleStyle(Inline.Code))(view);
         break;
 
       case 'list':
