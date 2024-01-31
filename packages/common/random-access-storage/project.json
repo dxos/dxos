@@ -12,17 +12,7 @@
       }
     },
     "lint": {},
-    "test": {
-      "executor": "@nx/vite:test",
-      "inputs": [
-        {
-          "env": "VITEST_ENV"
-        }
-      ],
-      "options": {
-        "config": "{projectRoot}/vite.config.ts"
-      }
-    }
+    "vitest": {}
   },
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
