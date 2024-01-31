@@ -5,7 +5,6 @@
 import { Command, type Config as OclifConfig, Flags, type Interfaces } from '@oclif/core';
 import chalk from 'chalk';
 import yaml from 'js-yaml';
-import fetch from 'node-fetch';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import { dirname, join } from 'node:path';
@@ -37,20 +36,16 @@ import { type ConfigProto } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log, LogLevel } from '@dxos/log';
-import { Observability } from '@dxos/observability';
+import {
+  type Observability,
+  getObservabilityState,
+  initializeNodeObservability,
+  showObservabilityBanner,
+} from '@dxos/observability';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 
 import { IdentityWaitTimeoutError, PublisherConnectionError, SpaceWaitTimeoutError } from './errors';
-import {
-  getTelemetryContext,
-  showTelemetryBanner,
-  PublisherRpcPeer,
-  SupervisorRpcPeer,
-  type TelemetryContext,
-  TunnelRpcPeer,
-  selectSpace,
-  waitForSpace,
-} from './util';
+import { PublisherRpcPeer, SupervisorRpcPeer, TunnelRpcPeer, selectSpace, waitForSpace } from './util';
 
 const STDIN_TIMEOUT = 100;
 
@@ -143,7 +138,6 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   protected _startTime: Date;
   private _failing = false;
 
-  protected _telemetryContext?: TelemetryContext;
   protected _observability?: Observability;
 
   protected flags!: Flags<T>;
@@ -204,8 +198,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   }
 
   private async _initObservability() {
-    this._telemetryContext = await getTelemetryContext(DX_DATA);
-    const { mode, installationId, group } = this._telemetryContext;
+    const observabilityState = await getObservabilityState(DX_DATA);
+    const { mode, installationId, group } = observabilityState;
 
     if (mode === 'disabled') {
       this.log('telemetry disabled by config');
@@ -216,7 +210,9 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
         this.log(chalk`✨ {bgMagenta Running as internal user} ✨\n`);
       }
 
-      await showTelemetryBanner(DX_DATA);
+      await showObservabilityBanner(DX_DATA, (input: string) => {
+        process.stderr.write(chalk`{bold {magenta ${input} }}`);
+      });
     }
 
     // TODO(nf): handle cases where the cli starts the agent for the user
@@ -224,39 +220,19 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     if (this.id === 'agent:start') {
       namespace = 'agent';
     }
-    const release = `${namespace}@${this.clientConfig.get('runtime.app.build.version')}`;
-    const environment = this.clientConfig.get('runtime.app.env.DX_ENVIRONMENT');
 
-    this._observability = new Observability({
+    this._observability = await initializeNodeObservability({
       namespace,
+      installationId,
       group,
+      config: this._clientConfig!,
       mode,
-      errorLog: {
-        sentryInitOptions: {
-          installationId,
-          environment,
-          release,
-          // TODO(wittjosiah): Configure this.
-          sampleRate: 1.0,
-        },
-        logProcessor: true,
-      },
+      tracingEnable: true,
+      replayEnable: true,
     });
 
-    this._observability.initialize();
-
-    this.addToTelemetryContext({ command: this.id });
-
-    // TODO(nf): move to observability
-    const IPDATA_API_KEY = this.clientConfig.get('runtime.app.env.DX_IPDATA_API_KEY');
-    try {
-      const res = await fetch(`https://api.ipdata.co/?api-key=${IPDATA_API_KEY}`);
-      const data = await res.json();
-      const { city, region, country, latitude, longitude } = data;
-      this.addToTelemetryContext({ city, region, country, latitude, longitude });
-    } catch (err) {
-      this._observability?.captureException(err);
-    }
+    invariant(this.id);
+    this._observability.setTag('command', this.id, 'telemetry');
   }
 
   /**
@@ -361,10 +337,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   override async finally() {
     const endTime = new Date();
     this._observability?.event({
-      installationId: this._telemetryContext?.installationId,
       name: 'cli.command.run',
       properties: {
-        ...this._telemetryContext,
         status: this._failing ? 'failure' : 'success',
         duration: endTime.getTime() - this._startTime.getTime(),
       },
@@ -540,16 +514,5 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
         await rpc.close();
       }
     }
-  }
-
-  addToTelemetryContext(values: object) {
-    if (!this._telemetryContext) {
-      return;
-    }
-
-    this._telemetryContext = {
-      ...this._telemetryContext,
-      ...values,
-    };
   }
 }
