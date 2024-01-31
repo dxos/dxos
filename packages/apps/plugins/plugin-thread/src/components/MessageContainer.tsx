@@ -3,19 +3,18 @@
 //
 
 import { DotsSixVertical, X } from '@phosphor-icons/react';
-import React, { forwardRef, useState } from 'react';
+import React, { forwardRef } from 'react';
 
 import { type Message as MessageType } from '@braneframe/types';
 import { Surface } from '@dxos/app-framework';
 import { type SpaceMember } from '@dxos/client/echo';
 import { PublicKey } from '@dxos/react-client';
-import { type Expando, getTextContent, TextObject } from '@dxos/react-client/echo';
+import { type Expando, getTextContent, type TextObject } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import { TextEditor, useTextModel } from '@dxos/react-ui-editor';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import { Message, type MessageBlockProps, type MessageProps } from '@dxos/react-ui-thread';
-import { safeParseJson } from '@dxos/util';
 
 import { useMessageMetadata } from '../hooks';
 import { THREAD_ITEM } from '../meta';
@@ -30,6 +29,8 @@ const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
     if (typeof title !== 'string') {
       title = getTextContent(title);
     }
+
+    console.log('[draggableprops]', draggableProps);
 
     return (
       <div
@@ -58,11 +59,10 @@ const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
 );
 
 const TextboxBlock = ({
-  defaultContent,
+  text,
   onBlockDelete,
-}: { defaultContent?: string } & Pick<MessageBlockProps<Block>, 'onBlockDelete'>) => {
-  const [textObject] = useState(new TextObject(defaultContent));
-  const model = useTextModel({ text: textObject });
+}: { text: TextObject } & Pick<MessageBlockProps<Block>, 'onBlockDelete'>) => {
+  const model = useTextModel({ text });
   const textboxWidth = onBlockDelete ? 'col-span-2' : 'col-span-3';
   return (
     <div
@@ -85,7 +85,7 @@ const TextboxBlock = ({
 
 const MessageBlock = ({ block, onBlockDelete }: MessageBlockProps<Block>) => {
   return block.object ? (
-    <Mosaic.Container id={block.object.id} Component={ObjectBlockTile}>
+    <Mosaic.Container id={block.object.id}>
       <Mosaic.DraggableTile
         type={THREAD_ITEM}
         path={block.object.id}
@@ -94,12 +94,9 @@ const MessageBlock = ({ block, onBlockDelete }: MessageBlockProps<Block>) => {
         onRemove={onBlockDelete}
       />
     </Mosaic.Container>
-  ) : (
-    <TextboxBlock
-      defaultContent={block.data ? JSON.stringify(safeParseJson(block.data), null, 2) : block.text ?? undefined}
-      onBlockDelete={onBlockDelete}
-    />
-  );
+  ) : block.content ? (
+    <TextboxBlock text={block.content} onBlockDelete={onBlockDelete} />
+  ) : null;
 };
 
 export const MessageContainer = ({

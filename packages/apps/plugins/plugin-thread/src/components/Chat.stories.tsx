@@ -8,10 +8,12 @@ import { faker } from '@faker-js/faker';
 import React, { useEffect, useState } from 'react';
 
 import { type Thread as ThreadType, types } from '@braneframe/types';
+import { SurfaceProvider } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ClientRepeater } from '@dxos/react-client/testing';
+import { Mosaic } from '@dxos/react-ui-mosaic';
 import { Thread } from '@dxos/react-ui-thread';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -42,7 +44,22 @@ const Story = () => {
     return null;
   }
 
-  return <main className='is-[36rem]'>{space && <ThreadContainer thread={thread} space={space} />}</main>;
+  return (
+    <SurfaceProvider
+      value={{
+        components: {
+          ObjectMessage: ({ role }) => {
+            return role === 'message-block' ? <span>MessageBlock</span> : <span>Not</span>;
+          },
+        },
+      }}
+    >
+      <Mosaic.Root debug>
+        <main className='is-[36rem]'>{space && <ThreadContainer thread={thread} space={space} />}</main>
+        <Mosaic.DragOverlay />
+      </Mosaic.Root>
+    </SurfaceProvider>
+  );
 };
 
 export default {

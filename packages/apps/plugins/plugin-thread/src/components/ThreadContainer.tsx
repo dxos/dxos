@@ -2,14 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { differenceInSeconds } from 'date-fns/differenceInSeconds';
 import React, { useState } from 'react';
 
 import { type Thread as ThreadType, Message as MessageType } from '@braneframe/types';
-import { PublicKey } from '@dxos/react-client';
 import { TextObject } from '@dxos/react-client/echo';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import { useTranslation } from '@dxos/react-ui';
 import { useTextModel } from '@dxos/react-ui-editor';
 import {
   MessageTextbox,
@@ -22,6 +21,7 @@ import {
 
 import { MessageContainer } from './MessageContainer';
 import { useStatus, useMessageMetadata } from '../hooks';
+import { THREAD_PLUGIN } from '../meta';
 
 export type ThreadContainerProps = {
   space: Space;
@@ -41,7 +41,8 @@ export const ThreadContainer = ({
 }: ThreadContainerProps) => {
   const identity = useIdentity()!;
   const members = useMembers(space.key);
-  const pending = useStatus(space, thread.id);
+  const activity = useStatus(space, thread.id);
+  const { t } = useTranslation(THREAD_PLUGIN);
 
   const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
   const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
@@ -50,23 +51,8 @@ export const ThreadContainer = ({
   const handleCreate: MessageTextboxProps['onSend'] = () => {
     const block = {
       timestamp: new Date().toISOString(),
-      text: nextMessageModel?.text(),
+      content: nextMessage.text,
     };
-
-    setNextMessage(() => {
-      return { text: new TextObject() };
-    });
-
-    // Update current block if same user and time > 3m.
-    const period = 3 * 60; // TODO(burdon): Config.
-    const message = thread.messages[thread.messages.length - 1];
-    if (message?.from?.identityKey && PublicKey.equals(message.from.identityKey, identity.identityKey)) {
-      const previous = message.blocks[message.blocks.length - 1];
-      if (previous.timestamp && differenceInSeconds(new Date(block.timestamp), new Date(previous.timestamp)) < period) {
-        message.blocks.push(block);
-        return true;
-      }
-    }
 
     thread.messages.push(
       new MessageType({
@@ -75,6 +61,10 @@ export const ThreadContainer = ({
         blocks: [block],
       }),
     );
+
+    setNextMessage(() => {
+      return { text: new TextObject() };
+    });
 
     // TODO(burdon): Scroll to bottom.
     return true;
@@ -88,6 +78,7 @@ export const ThreadContainer = ({
       if (message.blocks.length === 0) {
         thread.messages.splice(messageIndex, 1);
       }
+      // TODO(thure): Delete thread if no messages remain.
     }
   };
 
@@ -102,13 +93,13 @@ export const ThreadContainer = ({
       {nextMessageModel && (
         <>
           <MessageTextbox
-            readonly={pending}
             onSend={handleCreate}
             autoFocus={autoFocusTextBox}
+            placeholder={t('message placeholder')}
             {...textboxMetadata}
             model={nextMessageModel}
           />
-          <ThreadFooter />
+          <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
         </>
       )}
     </Thread>

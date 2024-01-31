@@ -10,6 +10,7 @@ import waitForExpect from 'wait-for-expect';
 import { Message, Thread } from '@braneframe/types';
 import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { TextObject } from '@dxos/echo-schema';
 import { testWithAutomerge } from '@dxos/echo-schema/testing';
 import { describe, test, afterTest } from '@dxos/test';
 import { isNode } from '@dxos/util';
@@ -154,14 +155,14 @@ describe('Client', () => {
 
       const thread1 = await threadQueried.wait({ timeout: 1000 });
 
-      const text = 'Hello, Dmytro';
-      const message = space2.db.add(new Message({ blocks: [{ text }] }));
+      const text = 'Hello world';
+      const message = space2.db.add(new Message({ blocks: [{ content: new TextObject(text) }] }));
       await space2.db.flush();
       thread2.messages.push(message);
 
       await waitForExpect(() => {
         expect(thread1.messages.length).to.eq(1);
-        expect(thread1.messages[0].blocks[0].text).to.eq(text);
+        expect(thread1.messages[0].blocks[0].content?.text).to.eq(text);
       }, 1000);
     });
   });
