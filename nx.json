@@ -234,22 +234,13 @@
     },
     "vitest": {
       "executor": "@nx/vite:test",
-      "options": {
-        "coveragePath": "coverage/{projectRoot}",
-        "outputPath": "tmp/mocha/{projectRoot}",
-        "resultsPath": "test-results/{projectRoot}"
-      },
       "inputs": [
         "default",
         "^production",
+        "{workspaceRoot}/vite.config.ts",
         {
           "env": "VITEST_ENV"
         }
-      ],
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
       ],
       "dependsOn": [
         "prebuild",
