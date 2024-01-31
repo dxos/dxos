@@ -111,13 +111,13 @@ export const inputInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   props.variant === 'subdued'
     ? mx(...sharedSubduedInputStyles(props), ...etc)
     : props.variant === 'static'
-    ? mx(...sharedStaticInputStyles(props), ...etc)
-    : mx(
-        ...sharedDefaultInputStyles(props),
-        !props.disabled && focusRing,
-        inputValence(props.validationValence) || neutralInputValence,
-        ...etc,
-      );
+      ? mx(...sharedStaticInputStyles(props), ...etc)
+      : mx(
+          ...sharedDefaultInputStyles(props),
+          !props.disabled && focusRing,
+          inputValence(props.validationValence) || neutralInputValence,
+          ...etc,
+        );
 
 export const inputCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5, disabled }, ...etc) =>
   mx(

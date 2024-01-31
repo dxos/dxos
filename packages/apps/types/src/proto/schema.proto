@@ -244,9 +244,8 @@ message Message {
 
   message Block {
     string timestamp = 1;
-    string text = 2;
-    string data = 3; // JSON.
-    dxos.schema.Expando object = 4; // TODO(burdon): Change to TypedObject.
+    dxos.schema.Text content = 2;
+    dxos.schema.Expando object = 3; // TODO(burdon): Change to TypedObject.
   }
 
   // TODO(burdon): Promote to top-level (shared with Event).

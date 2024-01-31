@@ -91,7 +91,10 @@ export const link = (options: LinkOptions = {}): Extension => {
 };
 
 class LinkButton extends WidgetType {
-  constructor(private readonly _url: string, private readonly _onAttach: LinkOptions['onRender']) {
+  constructor(
+    private readonly _url: string,
+    private readonly _onAttach: LinkOptions['onRender'],
+  ) {
     super();
   }
 
@@ -107,7 +110,10 @@ class LinkButton extends WidgetType {
 }
 
 class LinkText extends WidgetType {
-  constructor(private readonly _text: string, private readonly _url?: string) {
+  constructor(
+    private readonly _text: string,
+    private readonly _url?: string,
+  ) {
     super();
   }
 

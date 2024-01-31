@@ -61,7 +61,7 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
 
   const date = message.date;
   const from = message.from?.name ?? message.from?.email;
-  const subject = message.subject ?? message.blocks[0].text;
+  const subject = message.subject ?? message.blocks[0].content?.text;
   return (
     <DensityProvider density='fine'>
       <div
