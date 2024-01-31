@@ -17,15 +17,16 @@ describe('Random', () => {
     expect(random.util.multiple(2, random.text.paragraph)).to.have.lengthOf(2);
   });
 
-  test('types', () => {
+  test('type', () => {
+    expect(random.type.array(-1, () => true)).to.have.lengthOf(0);
+    expect(random.type.array(10, (i) => `${random.text.word()}-${i}`)).to.have.lengthOf(10);
     expect(random.util.multiple(10, random.type.boolean)).to.have.lengthOf(10);
     expect(random.util.multiple(10, random.type.integer)).to.have.lengthOf(10);
     expect(random.util.multiple(10, random.type.float)).to.have.lengthOf(10);
   });
 
-  test('array', () => {
-    expect(random.util.array(-1, () => true)).to.have.lengthOf(0);
-    expect(random.util.array(10, (i) => `${random.text.word()}-${i}`)).to.have.lengthOf(10);
+  test('date', () => {
+    expect(random.util.multiple(10, random.date.recent)).to.have.lengthOf(10);
   });
 
   test('unique', () => {

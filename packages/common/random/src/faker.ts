@@ -25,7 +25,7 @@ export const faker = {
     uniqueArray: (f: readonly any[] | (() => any), n: number) => realFaker.helpers.uniqueArray(f, n),
   },
   //
-  // Data
+  // Type
   //
   datatype: {
     array: (n: number) => realFaker.datatype.array(n),
@@ -37,10 +37,6 @@ export const faker = {
   },
   number: {
     int: (range?: number | Range) => realFaker.number.int(range),
-  },
-  string: {
-    hexadecimal: (l?: { length: number }) => realFaker.string.hexadecimal(l),
-    uuid: () => realFaker.string.uuid(),
   },
   //
   // Text
@@ -57,6 +53,10 @@ export const faker = {
   //
   // Custom
   //
+  string: {
+    hexadecimal: (l?: { length: number }) => realFaker.string.hexadecimal(l),
+    uuid: () => realFaker.string.uuid(),
+  },
   internet: {
     email: () => realFaker.internet.email(),
     url: () => realFaker.internet.url(),

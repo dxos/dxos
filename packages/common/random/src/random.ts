@@ -3,6 +3,7 @@
 //
 
 import { seed } from './core';
+import { date } from './ext/date';
 import { text } from './ext/text';
 import { type } from './ext/type';
 import { util } from './util';
@@ -13,6 +14,7 @@ import { util } from './util';
 // TODO(burdon): Real-world data via falso? But will have different seed!
 export const random = {
   seed,
+  date,
   text,
   type,
   util,
