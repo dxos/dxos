@@ -81,8 +81,8 @@ export const faker = {
   },
   animal: {
     bear: () => realFaker.animal.bear(),
-    cat: () => realFaker.animal.cat(),
     bird: () => realFaker.animal.bird(),
+    cat: () => realFaker.animal.cat(),
     lion: () => realFaker.animal.lion(),
   },
 };
