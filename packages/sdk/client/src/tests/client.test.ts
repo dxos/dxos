@@ -10,6 +10,7 @@ import waitForExpect from 'wait-for-expect';
 import { Message, Thread } from '@braneframe/types';
 import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { TextObject } from '@dxos/echo-schema';
 import { describe, test, afterTest } from '@dxos/test';
 import { isNode } from '@dxos/util';
 
@@ -117,7 +118,7 @@ describe('Client', () => {
     }
   }).onlyEnvironments('nodejs', 'chromium', 'firefox');
 
-  test('objects are being synced between clients', async () => {
+  test.only('objects are being synced between clients', async () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
 
@@ -152,14 +153,14 @@ describe('Client', () => {
 
     const thread1 = await threadQueried.wait({ timeout: 1000 });
 
-    const text = 'Hello, Dmytro';
-    const message = space2.db.add(new Message({ blocks: [{ text }] }));
-    await space2.db.flush();
+    const text = 'Hello world';
+    const message = space2.db.add(new Message({ blocks: [{ content: new TextObject(text) }] }));
     thread2.messages.push(message);
+    await space2.db.flush();
 
     await waitForExpect(() => {
       expect(thread1.messages.length).to.eq(1);
-      expect(thread1.messages[0].blocks[0].text).to.eq(text);
+      expect(thread1.messages[0].blocks[0].content?.content).to.eq(text);
     }, 1000);
   });
 });

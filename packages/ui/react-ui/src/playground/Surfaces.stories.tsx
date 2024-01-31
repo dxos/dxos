@@ -27,12 +27,12 @@ const Surface = ({
     level === 'chrome'
       ? [modalSurface, surfaceElevation({ elevation: 'chrome' })]
       : level === 'group'
-      ? [groupSurface, surfaceElevation({ elevation: 'group' })]
-      : level === 'input'
-      ? [attentionSurface, surfaceElevation({ elevation: 'group' })]
-      : level === 'fixed'
-      ? [fixedSurface, fixedBorder, 'border', surfaceElevation({ elevation: 'chrome' })]
-      : [baseSurface];
+        ? [groupSurface, surfaceElevation({ elevation: 'group' })]
+        : level === 'input'
+          ? [attentionSurface, surfaceElevation({ elevation: 'group' })]
+          : level === 'fixed'
+            ? [fixedSurface, fixedBorder, 'border', surfaceElevation({ elevation: 'chrome' })]
+            : [baseSurface];
 
   return (
     <div

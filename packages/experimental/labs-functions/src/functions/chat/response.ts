@@ -21,7 +21,7 @@ export class ResponseBuilder {
     log('build', { result });
 
     if (pre) {
-      blocks.push({ timestamp, text: pre });
+      blocks.push({ timestamp, content: new TextObject(pre) });
     }
 
     const processed = this.processResult(result);
@@ -30,7 +30,7 @@ export class ResponseBuilder {
     }
 
     if (post) {
-      blocks.push({ timestamp, text: post });
+      blocks.push({ timestamp, content: new TextObject(post) });
     }
 
     return blocks;
@@ -92,7 +92,7 @@ export class ResponseBuilder {
         }
 
         // TODO(burdon): Create ref?
-        return { timestamp, data: JSON.stringify(data) };
+        return { timestamp, content: new TextObject(JSON.stringify(data)) };
       });
     }
 
@@ -102,7 +102,7 @@ export class ResponseBuilder {
     return [
       {
         timestamp,
-        text: content,
+        content: new TextObject(content),
       },
     ];
   }

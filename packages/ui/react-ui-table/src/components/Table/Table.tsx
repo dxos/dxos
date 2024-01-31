@@ -183,8 +183,8 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     ...(rowsSelectable === 'multi'
       ? { enableMultiRowSelection: true }
       : rowsSelectable
-      ? { enableRowSelection: true }
-      : {}),
+        ? { enableRowSelection: true }
+        : {}),
     onRowSelectionChange: handleRowSelectionChange,
 
     // Resize columns

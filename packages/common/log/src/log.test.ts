@@ -10,7 +10,10 @@ import { LogLevel } from './config';
 import { log } from './log';
 
 class LogError extends Error {
-  constructor(message: string, private readonly context?: any) {
+  constructor(
+    message: string,
+    private readonly context?: any,
+  ) {
     super(message);
     // Restore prototype chain.
     // https://stackoverflow.com/a/48342359
