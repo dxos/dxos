@@ -39,8 +39,8 @@ export const config = (
                     jsxRuntime: 'classic',
                   })
                 : plugin.name === 'vite:react-jsx'
-                ? undefined
-                : plugin;
+                  ? undefined
+                  : plugin;
             }),
           }
         : config,

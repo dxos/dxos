@@ -23,7 +23,8 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/log": "workspace:*"
+    "@dxos/log": "workspace:*",
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",

@@ -63,7 +63,7 @@ const main = async () => {
               );
             },
           },
-        } as PluginDefinition<TranslationsProvides>),
+        }) as PluginDefinition<TranslationsProvides>,
     },
   });
 
