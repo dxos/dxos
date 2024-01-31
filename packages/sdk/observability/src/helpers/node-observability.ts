@@ -13,10 +13,10 @@ import { log } from '@dxos/log';
 import { Observability, type Mode } from '../observability';
 
 /**
- * Print telemetry banner once per installation.
+ * Print observability banner once per installation.
  */
 export const showObservabilityBanner = async (configDir: string, bannercb: (input: string) => void) => {
-  const path = join(configDir, '.telemetry-banner-printed');
+  const path = join(configDir, '.observability-banner-printed');
   if (existsSync(path)) {
     return;
   }
@@ -42,8 +42,7 @@ export const getObservabilityState = async (configDir: string): Promise<Persiste
     await mkdir(configDir, { recursive: true });
   }
 
-  // named 'telemetry.yml' for backwards compatibility
-  const idPath = join(configDir, 'telemetry.yml');
+  const idPath = join(configDir, 'observability.yml');
   if (existsSync(idPath)) {
     const context = await readFile(idPath, 'utf-8');
     return validate(context) ?? initializeState(idPath);

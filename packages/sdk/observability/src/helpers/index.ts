@@ -3,7 +3,7 @@
 //
 
 export * from './browser-observability';
-export * from './node-observability';
 export * from './common';
+export * from './node-observability';
 export * from './map-spaces';
 export * from './setup-telemetry-listeners';

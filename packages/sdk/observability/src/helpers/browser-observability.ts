@@ -14,9 +14,8 @@ import { log } from '@dxos/log';
 import type { IPData } from './common';
 import type { Mode, Observability } from '../observability';
 
-// item name is 'telemetry' for backwards compatibility
-export const OBSERVABILITY_DISABLED_KEY = 'telemetry-disabled';
-export const OBSERVABILITY_GROUP_KEY = 'telemetry-group';
+export const OBSERVABILITY_DISABLED_KEY = 'observability-disabled';
+export const OBSERVABILITY_GROUP_KEY = 'observability-group';
 
 export const isObservabilityDisabled = async (namespace: string): Promise<boolean> => {
   try {
@@ -60,7 +59,7 @@ export type AppObservabilityOptions = {
   // TODO(nf): options for providers?
 };
 
-// TODO(wittjosiah): Store preference for disabling telemetry.
+// TODO(wittjosiah): Store preference for disabling observability.
 //   At minimum should be stored locally (i.e., localstorage), possibly in halo preference.
 //   Needs to be hooked up to settings page for user visibility.
 export const initializeAppObservability = async ({
@@ -124,7 +123,7 @@ export const initializeAppObservability = async ({
       };
 
       // Check cache first.
-      const cachedData: null | CachedIPData = await localForage.getItem('dxos:telemetry:ipdata');
+      const cachedData: null | CachedIPData = await localForage.getItem('dxos:observability:ipdata');
       if (cachedData && cachedData.timestamp > Date.now() - IP_DATA_CACHE_TIMEOUT) {
         return cachedData.data;
       }
@@ -137,7 +136,7 @@ export const initializeAppObservability = async ({
           .then((data) => {
             // Cache data.
             localForage
-              .setItem('dxos:telemetry:ipdata', {
+              .setItem('dxos:observability:ipdata', {
                 data,
                 timestamp: Date.now(),
               })
