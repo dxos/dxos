@@ -98,7 +98,7 @@ export const ThreadContainer = ({
   const textboxMetadata = useMessageMetadata(thread.id, identity);
 
   return (
-    <Thread onClickCapture={onAttend} onFocusCapture={onAttend} current={current}>
+    <Thread onClickCapture={onAttend} onFocusCapture={onAttend} current={current} id={thread.id}>
       {thread.title && <ThreadHeading>{thread.title}</ThreadHeading>}
       {thread.messages.map((message) => (
         <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />

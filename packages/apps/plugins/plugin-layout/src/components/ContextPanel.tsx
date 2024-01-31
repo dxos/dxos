@@ -26,7 +26,7 @@ export const ContextPanel = () => {
         </Button>
       </div>
       <ScrollArea.Root classNames='anchored-overflow'>
-        <ScrollArea.Viewport>
+        <ScrollArea.Viewport classNames='pbe-10'>
           <Surface role={Role.THREAD} />
           <ScrollArea.Scrollbar>
             <ScrollArea.Thumb />

@@ -81,7 +81,7 @@ const DefaultMessageBlock = ({ block, onBlockDelete }: MessageBlockProps<{ data?
       {onBlockDelete && (
         <Button
           variant='ghost'
-          classNames={['p-1 min-bs-0 mie-1 place-self-start transition-opacity', hoverableControlItem]}
+          classNames={['p-1.5 min-bs-0 mie-1 items-start transition-opacity', hoverableControlItem]}
           onClick={onBlockDelete}
         >
           <X />
