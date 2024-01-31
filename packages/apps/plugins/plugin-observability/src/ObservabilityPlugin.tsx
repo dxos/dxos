@@ -21,7 +21,6 @@ import {
 import { EventSubscriptions } from '@dxos/async';
 import {
   type Observability,
-  BASE_TELEMETRY_PROPERTIES,
   getTelemetryIdentifier,
   setupTelemetryListeners,
   isObservabilityDisabled,
@@ -92,7 +91,6 @@ export const ObservabilityPlugin = (options: {
 
             observability?.page({
               identityId: getTelemetryIdentifier(client),
-              properties: BASE_TELEMETRY_PROPERTIES,
             });
           }),
         );
@@ -136,7 +134,6 @@ export const ObservabilityPlugin = (options: {
                 identityId: getTelemetryIdentifier(client),
                 name: `${options.namespace}.observability.toggle`,
                 properties: {
-                  ...BASE_TELEMETRY_PROPERTIES,
                   enabled: settings.enabled,
                 },
               });
@@ -150,7 +147,6 @@ export const ObservabilityPlugin = (options: {
                 identityId: getTelemetryIdentifier(client),
                 name: `${options.namespace}.${data.name}`,
                 properties: {
-                  ...BASE_TELEMETRY_PROPERTIES,
                   ...data.properties,
                 },
               };
