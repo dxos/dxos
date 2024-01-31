@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import { type Thread as ThreadType, Message as MessageType } from '@braneframe/types';
 import { TextObject } from '@dxos/react-client/echo';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useTranslation } from '@dxos/react-ui';
+import { AnchoredOverflow, useTranslation } from '@dxos/react-ui';
 import { useTextModel } from '@dxos/react-ui-editor';
 import {
   MessageTextbox,
@@ -46,6 +46,7 @@ export const ThreadContainer = ({
 
   const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
   const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
+  const autoFocusAfterSend = useRef<boolean>(false);
 
   // TODO(burdon): Change to model.
   const handleCreate: MessageTextboxProps['onSend'] = () => {
@@ -63,6 +64,7 @@ export const ThreadContainer = ({
     );
 
     setNextMessage(() => {
+      autoFocusAfterSend.current = true;
       return { text: new TextObject() };
     });
 
@@ -94,12 +96,13 @@ export const ThreadContainer = ({
         <>
           <MessageTextbox
             onSend={handleCreate}
-            autoFocus={autoFocusTextBox}
+            autoFocus={autoFocusAfterSend.current || autoFocusTextBox}
             placeholder={t('message placeholder')}
             {...textboxMetadata}
             model={nextMessageModel}
           />
           <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
+          <AnchoredOverflow.Anchor />
         </>
       )}
     </Thread>

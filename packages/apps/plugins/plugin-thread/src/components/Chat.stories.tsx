@@ -55,7 +55,7 @@ const Story = () => {
       }}
     >
       <Mosaic.Root debug>
-        <main className='is-[36rem]'>{space && <ThreadContainer thread={thread} space={space} />}</main>
+        <main className='max-is-prose mli-auto'>{space && <ThreadContainer thread={thread} space={space} />}</main>
         <Mosaic.DragOverlay />
       </Mosaic.Root>
     </SurfaceProvider>
@@ -67,7 +67,7 @@ export default {
   component: Thread,
   render: () => <ClientRepeater Component={Story} types={types} createIdentity createSpace />,
   decorators: [withTheme],
-  parameters: { translations },
+  parameters: { translations, layout: 'fullscreen' },
 };
 
 export const Default = {};

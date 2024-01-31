@@ -44,7 +44,7 @@ export const createCommentThread = (identity: Identity) => {
           blocks: faker.helpers.multiple(
             () => ({
               timestamp: new Date().toISOString(),
-              text: faker.lorem.sentences(3),
+              content: new TextObject(faker.lorem.sentences(3)),
             }),
             { count: { min: 1, max: 2 } },
           ),

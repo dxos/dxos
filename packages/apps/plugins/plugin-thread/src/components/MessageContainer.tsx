@@ -38,6 +38,8 @@ const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
         className={mx(
           'grid',
           active === 'overlay' ? 'grid-cols-[min-content_1fr_min-content]' : 'col-span-3 grid-cols-subgrid',
+          hoverableControls,
+          hoverableFocusedWithinControls,
         )}
         style={draggableStyle}
         ref={forwardedRef}
