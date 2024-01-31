@@ -176,9 +176,12 @@ describe('Replication', () => {
         }
 
         // Random delay.
-        setTimeout(() => {
-          next(size);
-        }, faker.number.int({ min: 0, max: 100 }));
+        setTimeout(
+          () => {
+            next(size);
+          },
+          faker.number.int({ min: 0, max: 100 }),
+        );
       }, numBlocks);
 
       // Done.

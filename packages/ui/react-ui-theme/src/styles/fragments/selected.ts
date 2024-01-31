@@ -29,10 +29,10 @@ export const staticGhostSelectedCurrent: ComponentFragment<SelectedStyleProps> =
   current && selected
     ? 'bg-primary-200 dark:bg-primary-750 hover:bg-primary-200 hover:dark:bg-primary-750'
     : current
-    ? 'surface-input hover:surface-hover'
-    : selected
-    ? 'bg-primary-100 dark:bg-primary-850 hover:bg-primary-150 hover:dark:bg-primary-800'
-    : ghostHover,
+      ? 'surface-input hover:surface-hover'
+      : selected
+        ? 'bg-primary-100 dark:bg-primary-850 hover:bg-primary-150 hover:dark:bg-primary-800'
+        : ghostHover,
 ];
 
 export const staticGhostSelected: ComponentFragment<Pick<SelectedStyleProps, 'selected'>> = ({ selected }) =>

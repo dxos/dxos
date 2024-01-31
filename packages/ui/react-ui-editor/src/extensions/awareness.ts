@@ -207,7 +207,10 @@ export class RemoteSelectionsDecorator implements PluginValue {
 }
 
 class RemoteCaretWidget extends WidgetType {
-  constructor(private readonly _name: string, private readonly _color: string) {
+  constructor(
+    private readonly _name: string,
+    private readonly _color: string,
+  ) {
     super();
   }
 

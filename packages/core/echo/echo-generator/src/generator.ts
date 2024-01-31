@@ -57,7 +57,11 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
  * Typed object generator for a space.
  */
 export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<T> {
-  constructor(private readonly _space: Space, schemaMap: TestSchemaMap<T>, generators: TestGeneratorMap<T>) {
+  constructor(
+    private readonly _space: Space,
+    schemaMap: TestSchemaMap<T>,
+    generators: TestGeneratorMap<T>,
+  ) {
     super(schemaMap, generators, (type: T) => {
       const { objects } = this._space.db.query((object) => {
         return object.__schema?.id === this.getSchema(type)?.id;
