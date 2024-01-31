@@ -17,7 +17,6 @@ import {
 } from '@dxos/react-ui-theme';
 import { safeParseJson } from '@dxos/util';
 
-import { command } from './command-extension';
 import { translationKey } from '../translations';
 import { type MessageEntity, type MessageEntityBlock, type MessageMetadata } from '../types';
 
@@ -133,7 +132,10 @@ export type MessageTextboxProps = {
   TextEditorProps;
 
 export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
-  ({ onSend, onClear, onEditorFocus, authorId, authorName, authorImgSrc, disabled, ...editorProps }, forwardedRef) => {
+  (
+    { onSend, onClear, onEditorFocus, authorId, authorName, authorImgSrc, disabled, extensions = [], ...editorProps },
+    forwardedRef,
+  ) => {
     return (
       <MessageMeta
         {...{ id: editorProps.model.id, authorId, authorName, authorImgSrc }}
@@ -144,7 +146,7 @@ export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
           slots={{ root: { className: mx('plb-1 mie-1 rounded-sm', focusRing, disabled && 'opacity-50') } }}
           readonly={disabled}
           extensions={[
-            command,
+            ...extensions,
             keymap.of([
               {
                 key: 'Enter',

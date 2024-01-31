@@ -16,6 +16,7 @@ import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import { Message, type MessageBlockProps, type MessageProps } from '@dxos/react-ui-thread';
 
+import { command } from './command-extension';
 import { useMessageMetadata } from '../hooks';
 import { THREAD_ITEM } from '../meta';
 
@@ -72,7 +73,7 @@ const TextboxBlock = ({
       className={mx('col-span-3 grid grid-cols-subgrid', hoverableControls, hoverableFocusedWithinControls)}
     >
       {model ? (
-        <TextEditor model={model} slots={{ root: { className: textboxWidth } }} />
+        <TextEditor model={model} slots={{ root: { className: textboxWidth } }} extensions={[command]} />
       ) : (
         <span className={textboxWidth} />
       )}

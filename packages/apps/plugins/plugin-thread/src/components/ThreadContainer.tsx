@@ -20,6 +20,7 @@ import {
 } from '@dxos/react-ui-thread';
 
 import { MessageContainer } from './MessageContainer';
+import { command } from './command-extension';
 import { useStatus, useMessageMetadata } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
 
@@ -110,6 +111,7 @@ export const ThreadContainer = ({
             placeholder={t('message placeholder')}
             {...textboxMetadata}
             model={nextMessageModel}
+            extensions={[command]}
           />
           <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
           <AnchoredOverflow.Anchor />
