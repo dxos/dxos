@@ -2,11 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { seed } from './core';
-import { date } from './ext/date';
-import { string } from './ext/string';
-import { text } from './ext/text';
-import { type } from './ext/type';
+import { seed } from '@ngneat/falso';
+
 import { util } from './util';
 
 // TODO(burdon): Test tree shaking.
@@ -15,9 +12,5 @@ import { util } from './util';
 // TODO(burdon): Real-world data via falso? But will have different seed!
 export const random = {
   seed,
-  date,
-  string,
-  text,
-  type,
   util,
 };

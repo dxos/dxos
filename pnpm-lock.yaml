@@ -4243,6 +4243,9 @@ importers:
       '@faker-js/faker':
         specifier: ^8.3.1
         version: 8.3.1
+      '@ngneat/falso':
+        specifier: ^7.1.1
+        version: 7.1.1
       seedrandom:
         specifier: ^3.0.5
         version: 3.0.5
@@ -16001,6 +16004,13 @@ packages:
     resolution: {integrity: sha512-WOEf2An9mL4DVY6NHgaRmFC82pZGrmzW4I0hpPPdczDP4Gp5+Q1Nny77x3w0qzENA8+cbgd9+Lx2ClSTLvkB0g==}
     dependencies:
       '@ndhoule/each': 2.0.1
+    dev: false
+
+  /@ngneat/falso@7.1.1:
+    resolution: {integrity: sha512-/5HuJDaZHXl3WVdgvYBAM52OSYbSKfiNazVOZOw/3KjeZ6dQW9F0QCG+W6z52lUu5MZvp/TkPGaVRtoz6h9T1w==}
+    dependencies:
+      seedrandom: 3.0.5
+      uuid: 8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye)
     dev: false
 
   /@noble/hashes@1.3.2:

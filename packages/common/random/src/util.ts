@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { array } from './ext/type';
-
 export type Options = number | Range;
 
 export type Range = { min: number; max: number };
@@ -20,7 +18,7 @@ export const util = {
    * Generate an array calling the generator without a value.
    */
   multiple: <T>(n: number, f: () => T): T[] => {
-    return array(n).map(() => f());
+    return Array.from({ length: n }).map(() => f());
   },
 
   /**

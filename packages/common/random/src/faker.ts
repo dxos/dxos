@@ -3,8 +3,9 @@
 //
 
 import { faker as realFaker } from '@faker-js/faker';
+import { randFloat, randNumber, seed } from '@ngneat/falso';
 
-import { type Range } from './util';
+import { type Range, toRange } from './util';
 
 // TODO(burdon): Migration steps:
 //  - Identify and remove test dependencies on specific values.
@@ -18,7 +19,7 @@ export const faker = {
   //
   // Util
   //
-  seed: (seed: number) => realFaker.seed(seed),
+  seed: (value: number) => seed(String(value)),
   helpers: {
     multiple: (f: () => any, range?: { count: number | Range }) => realFaker.helpers.multiple(f, range),
     arrayElement: <T>(a: T[]) => realFaker.helpers.arrayElement(a),
@@ -35,8 +36,8 @@ export const faker = {
     recent: () => realFaker.date.recent(),
   },
   number: {
-    int: (range?: number | Range) => realFaker.number.int(range),
-    float: (range?: number | Range) => realFaker.number.float(range),
+    int: (range: number | Range) => randNumber(toRange(range)),
+    float: (range: number | Range) => randFloat(toRange(range)),
   },
   //
   // Text
