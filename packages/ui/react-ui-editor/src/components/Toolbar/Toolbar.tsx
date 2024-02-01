@@ -4,15 +4,14 @@
 
 import {
   type Icon,
-  At,
   CaretRight,
   ChatText,
   Code,
-  Image,
   Link,
   ListBullets,
   ListChecks,
   ListNumbers,
+  Paragraph,
   TextStrikethrough,
   Table,
   TextB,
@@ -24,7 +23,7 @@ import React, { type PropsWithChildren } from 'react';
 import { Button, type ButtonProps, DensityProvider, Select } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-import { type Formatting } from '../../extensions/markdown';
+import { type Formatting } from '../../extensions';
 
 // TODO(burdon): Revert to string to make extensible?
 export type ActionType =
@@ -61,7 +60,7 @@ const ToolbarRoot = ({ children, onAction, state }: ToolbarProps) => {
   return (
     <ToolbarContextProvider onAction={onAction} state={state}>
       <DensityProvider density='fine'>
-        <div role='toolbar' className='flex w-full shrink-0 p-2 gap-4 items-center whitespace-nowrap overflow-hidden'>
+        <div role='toolbar' className='flex w-full shrink-0 p-1 gap-2 items-center whitespace-nowrap overflow-hidden'>
           {children}
         </div>
       </DensityProvider>
@@ -71,13 +70,16 @@ const ToolbarRoot = ({ children, onAction, state }: ToolbarProps) => {
 
 type ToolbarButtonProps = {
   Icon: Icon;
-  onClick: (state: Formatting | null) => Action | undefined;
-  getState?: (state: Formatting) => boolean;
   disable?: (state: Formatting) => boolean;
+  getState?: (state: Formatting) => boolean;
+  onClick: (state: Formatting | null) => Action | undefined;
 } & NonNullable<Pick<ButtonProps, 'title'>>;
 
 const ToolbarButton = ({ Icon, onClick, title, getState, disable }: ToolbarButtonProps) => {
   const { onAction, state } = useToolbarContext('ToolbarButton');
+  const active = getState && state ? getState(state) : false;
+  const disabled = disable && state ? disable(state) : false;
+
   const handleClick = (event: React.MouseEvent) => {
     const action = onClick(state);
     if (action) {
@@ -85,13 +87,11 @@ const ToolbarButton = ({ Icon, onClick, title, getState, disable }: ToolbarButto
       event.preventDefault();
     }
   };
-  const active = getState && state ? getState(state) : false;
-  const disabled = disable && state ? disable(state) : false;
 
   return (
     <Button
       variant='ghost'
-      classNames={mx('p-2', active && 'ring')}
+      classNames={mx('p-2', active && 'ring-[1px]')}
       onMouseDown={handleClick}
       title={title}
       disabled={disabled}
@@ -114,7 +114,9 @@ const MarkdownHeading = () => {
       value={value ?? '0'}
       onValueChange={(value) => onAction?.({ type: 'heading', data: parseInt(value) })}
     >
-      <Select.TriggerButton classNames='w-[8rem]' />
+      <Select.TriggerButton>
+        <Paragraph className={getSize(5)} />
+      </Select.TriggerButton>
       <Select.Portal>
         <Select.Content>
           <Select.Viewport>
@@ -136,30 +138,30 @@ const MarkdownStyles = () => (
     <ToolbarButton
       Icon={TextB}
       title='String'
-      onClick={(s) => ({ type: 'strong', data: s ? !s.strong : null })}
-      getState={(s) => s.strong}
       disable={(s) => s.blockType === 'codeblock'}
+      getState={(s) => s.strong}
+      onClick={(s) => ({ type: 'strong', data: s ? !s.strong : null })}
     />
     <ToolbarButton
       Icon={TextItalic}
       title='Emphasis'
-      onClick={(s) => ({ type: 'emphasis', data: s ? !s.emphasis : null })}
-      getState={(s) => s.emphasis}
       disable={(s) => s.blockType === 'codeblock'}
+      getState={(s) => s.emphasis}
+      onClick={(s) => ({ type: 'emphasis', data: s ? !s.emphasis : null })}
     />
     <ToolbarButton
       Icon={TextStrikethrough}
       title='Strike-through'
-      onClick={(s) => ({ type: 'strikethrough', data: s ? !s.strikethrough : null })}
-      getState={(s) => s.strikethrough}
       disable={(s) => s.blockType === 'codeblock'}
+      getState={(s) => s.strikethrough}
+      onClick={(s) => ({ type: 'strikethrough', data: s ? !s.strikethrough : null })}
     />
     <ToolbarButton
       Icon={Code}
       title='Inline code'
-      onClick={(s) => ({ type: 'code', data: s ? !s.code : null })}
-      getState={(s) => s.code}
       disable={(s) => s.blockType === 'codeblock'}
+      getState={(s) => s.code}
+      onClick={(s) => ({ type: 'code', data: s ? !s.code : null })}
     />
   </div>
 );
@@ -169,20 +171,20 @@ const MarkdownLists = () => (
     <ToolbarButton
       Icon={ListBullets}
       title='Bullet list'
-      onClick={(s) => ({ type: 'list-bullet', data: s ? s.listStyle !== 'bullet' : null })}
       getState={(s) => s.listStyle === 'bullet'}
+      onClick={(s) => ({ type: 'list-bullet', data: s ? s.listStyle !== 'bullet' : null })}
     />
     <ToolbarButton
       Icon={ListNumbers}
       title='Numbered list'
-      onClick={(s) => ({ type: 'list-ordered', data: s ? s.listStyle !== 'ordered' : null })}
       getState={(s) => s.listStyle === 'ordered'}
+      onClick={(s) => ({ type: 'list-ordered', data: s ? s.listStyle !== 'ordered' : null })}
     />
     <ToolbarButton
       Icon={ListChecks}
       title='Task list'
-      onClick={(s) => ({ type: 'list-tasks', data: s ? s.listStyle !== 'task' : null })}
       getState={(s) => s.listStyle === 'task'}
+      onClick={(s) => ({ type: 'list-tasks', data: s ? s.listStyle !== 'task' : null })}
     />
   </div>
 );
@@ -192,14 +194,14 @@ const MarkdownBlocks = () => (
     <ToolbarButton
       Icon={CaretRight}
       title='Block quote'
-      onClick={(s) => ({ type: 'blockquote', data: s ? !s.blockquote : null })}
       getState={(s) => s.blockquote}
+      onClick={(s) => ({ type: 'blockquote', data: s ? !s.blockquote : null })}
     />
     <ToolbarButton
       Icon={Code}
       title='Code block'
-      onClick={(s) => ({ type: 'codeblock', data: s ? s.blockType !== 'codeblock' : null })}
       getState={(s) => s.blockType === 'codeblock'}
+      onClick={(s) => ({ type: 'codeblock', data: s ? s.blockType !== 'codeblock' : null })}
     />
     <ToolbarButton Icon={Table} title='Table' onClick={() => ({ type: 'table' })} />
   </div>
@@ -210,11 +212,11 @@ const MarkdownLinks = () => (
     <ToolbarButton
       Icon={Link}
       title='Link'
-      onClick={(s) => ({ type: 'link', data: s ? !s.link : null })}
       getState={(s) => s.link}
+      onClick={(s) => ({ type: 'link', data: s ? !s.link : null })}
     />
-    <ToolbarButton Icon={At} title='Mention' onClick={() => ({ type: 'mention' })} />
-    <ToolbarButton Icon={Image} title='Image' onClick={() => ({ type: 'image' })} />
+    {/* <ToolbarButton Icon={At} title='Mention' onClick={() => ({ type: 'mention' })} /> */}
+    {/* <ToolbarButton Icon={Image} title='Image' onClick={() => ({ type: 'image' })} /> */}
   </div>
 );
 

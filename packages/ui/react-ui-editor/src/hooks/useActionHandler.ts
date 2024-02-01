@@ -52,10 +52,6 @@ export const useActionHandler = (view?: EditorView | null): ToolbarProps['onActi
         (typeof action.data === 'boolean' ? setStyle(inlineType, action.data) : toggleStyle(inlineType))(view);
         break;
 
-      case 'link':
-        (action.data === false ? removeLink : addLink)(view);
-        break;
-
       case 'list-ordered':
       case 'list-bullet':
       case 'list-tasks':
@@ -71,13 +67,15 @@ export const useActionHandler = (view?: EditorView | null): ToolbarProps['onActi
       case 'blockquote':
         (action.data === false ? removeBlockquote : action.data === true ? addBlockquote : toggleBlockquote)(view);
         break;
-
       case 'codeblock':
         (action.data === false ? removeCodeblock : addCodeblock)(view);
         break;
-
       case 'table':
         insertTable(view);
+        break;
+
+      case 'link':
+        (action.data === false ? removeLink : addLink)(view);
         break;
 
       case 'comment':
