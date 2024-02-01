@@ -28,16 +28,16 @@ export const faker = {
   //
   // Type
   //
+  number: {
+    int: (range: number | Range) => randNumber(toRange(range)),
+    float: (range: number | Range) => randFloat(toRange(range)),
+  },
   datatype: {
     array: (n: number) => realFaker.datatype.array(n), // TODO(burdon): !!!
     boolean: (p?: { probability: number }) => realFaker.datatype.boolean(p),
   },
   date: {
     recent: () => realFaker.date.recent(),
-  },
-  number: {
-    int: (range: number | Range) => randNumber(toRange(range)),
-    float: (range: number | Range) => randFloat(toRange(range)),
   },
   //
   // Text
