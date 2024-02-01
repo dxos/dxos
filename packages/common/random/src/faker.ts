@@ -55,7 +55,7 @@ export const faker = {
   //
   lorem: {
     word: () => randWord(),
-    words: (n: number = 1) => randWord({ length: n }).join(' '),
+    words: (n: number | Range = 1) => randWord({ length: getCount(n) }).join(' '),
     sentence: (n: number | Range = 1) => {
       if (n) {
         const text = randWord({ length: getCount(n) }).join(' ');
