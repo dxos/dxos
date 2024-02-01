@@ -10,17 +10,19 @@ import { TextObject } from '@dxos/react-client/echo';
 export const createKanban = () => {
   return new KanbanType({
     title: faker.lorem.words(3),
-    columns: faker.datatype.array(faker.number.int({ min: 2, max: 8 })).map(
+    columns: faker.helpers.multiple(
       () =>
         new KanbanType.Column({
           title: faker.lorem.words(3),
-          items: faker.datatype.array(faker.number.int(8)).map(
+          items: faker.helpers.multiple(
             () =>
               new KanbanType.Item({
                 title: new TextObject(faker.lorem.words(faker.number.int({ min: 3, max: 24 })) + '.'),
               }),
+            { count: faker.number.int(8) },
           ),
         }),
+      { min: 2, max: 8 },
     ),
   });
 };

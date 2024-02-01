@@ -45,7 +45,6 @@ export const faker = {
     int: (range?: number | Range) => randNumber(range ? toRange(range) : undefined),
   },
   datatype: {
-    array: (n: number) => Array.from({ length: n }), // TODO(burdon): range().
     boolean: (p?: { probability: number }) => randChanceBoolean({ chanceTrue: p?.probability ?? 0.5 }),
   },
   date: {
