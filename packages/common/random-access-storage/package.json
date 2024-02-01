@@ -34,7 +34,6 @@
     "random-access-web": "^2.0.3"
   },
   "devDependencies": {
-    "@dxos/esbuild-plugins": "workspace:*",
     "@types/pify": "^3.0.2",
     "@types/randombytes": "^2.0.0",
     "randombytes": "^2.1.0",

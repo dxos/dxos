@@ -237,9 +237,15 @@
       "inputs": [
         "default",
         "^production",
-        "{workspaceRoot}/vite.config.ts",
+        "{workspaceRoot}/vitest.shared.ts",
         {
           "env": "VITEST_ENV"
+        },
+        {
+          "env": "VITEST_DEBUG"
+        },
+        {
+          "env": "VITEST_XML_REPORT"
         }
       ],
       "dependsOn": [

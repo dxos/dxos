@@ -1,24 +1,29 @@
-import { defineConfig, UserConfig } from 'vitest/config';
-import { nodePolyfills } from 'vite-plugin-node-polyfills';
-import { FixGracefulFsPlugin } from '@dxos/esbuild-plugins';
-import {join} from "path";
+//
+// Copyright 2024 DXOS.org
+//
 
-const isDebug = !!process.env.VITEST_DEBUG;
+import { join } from 'path';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import { defineConfig, type UserConfig } from 'vitest/config';
+
+import { FixGracefulFsPlugin } from '@dxos/esbuild-plugins';
 
 const targetProject = String(process.env.NX_TASK_TARGET_PROJECT);
+const isDebug = !!process.env.VITEST_DEBUG;
+const environment = (process.env.VITEST_ENV ?? '').toLowerCase();
+const shouldCreateXmlReport = process.env.VITEST_XML_REPORT;
 
-function createNodeConfig() {
-  return defineConfig({
+const createNodeConfig = () =>
+  defineConfig({
     test: {
       ...resolveReporterConfig(),
       environment: 'node',
-      include: ['src/**/*.test.ts', '!src/**/browser/*.test.ts']
+      include: ['**/src/**/*.test.ts', '!**/src/**/*.browser.test.ts'],
     },
   });
-}
 
-function createBrowserConfig(browserName: 'chrome') {
-  return defineConfig({
+const createBrowserConfig = (browserName: 'chrome') =>
+  defineConfig({
     plugins: [nodePolyfills()],
     resolve: {
       alias: {
@@ -33,7 +38,11 @@ function createBrowserConfig(browserName: 'chrome') {
     },
     test: {
       ...resolveReporterConfig(),
-      include: ['src/**/browser/*.test.ts'],
+      name: targetProject,
+      include: ['**/src/**/*.browser.test.ts', '!**/src/**/*.node.test.ts'],
+
+      testTimeout: isDebug ? 9999999 : 5000,
+      inspect: isDebug,
 
       isolate: false,
       poolOptions: {
@@ -44,28 +53,26 @@ function createBrowserConfig(browserName: 'chrome') {
 
       browser: {
         enabled: true,
-        headless: true,
+        headless: !isDebug,
         name: browserName,
         isolate: false,
       },
     },
   });
-}
 
-function resolveReporterConfig(): UserConfig["test"] {
-  if (Boolean(process.env.VITEST_XML_REPORT)) {
+const resolveReporterConfig = (): UserConfig['test'] => {
+  if (shouldCreateXmlReport) {
     return {
-      reporters: ['junit'],
-      outputFile: join(__dirname, `vitest-reports/${targetProject}/report.xml`)
+      reporters: ['junit', 'verbose'],
+      outputFile: join(__dirname, `vitest-reports/${targetProject}/report.xml`),
     };
   }
   return {
-    reporters: ['verbose']
+    reporters: ['verbose'],
   };
-}
+};
 
-function resolveConfig() {
-  const environment = (process.env.VITEST_ENV ?? "").toLowerCase();
+const resolveConfig = () => {
   switch (environment) {
     case 'chrome':
       return createBrowserConfig(environment);
@@ -76,6 +83,6 @@ function resolveConfig() {
       }
       return createNodeConfig();
   }
-}
+};
 
 export default resolveConfig();
