@@ -49,7 +49,7 @@ This will start the development server and print its URL to the console.
 The bare template is an empty `react` app wrapped in some DXOS goodness. Open the `App.tsx` file and you'll see this:
 
 ```tsx
-const config = () => new Config(Local(), Defaults());
+const config = async () => new Config(Local(), Defaults());
 
 const createWorker = () =>
   new SharedWorker(new URL('./shared-worker', import.meta.url), {
@@ -64,12 +64,11 @@ const Loader = () => (
 );
 
 export const App = () => {
-  const serviceWorker = useRegisterSW();
   return (
     <ThemeProvider
       appNs='counter'
       tx={defaultTx}
-      resourceExtensions={[translations]}
+      resourceExtensions={translations}
       fallback={<Loader />}
     >
       <ErrorBoundary>
@@ -78,7 +77,6 @@ export const App = () => {
           createWorker={createWorker}
           fallback={Loader}
           onInitialized={async (client) => {
-            client.addSchema(types);
             const searchParams = new URLSearchParams(location.search);
             if (
               !client.halo.identity.get() &&
@@ -89,7 +87,6 @@ export const App = () => {
           }}
         >
           <p>Your code goes here</p>
-          <ServiceWorkerToast {...serviceWorker} />
         </ClientProvider>
       </ErrorBoundary>
     </ThemeProvider>
@@ -101,20 +98,18 @@ There's a lot going on here! Let's walk through it.
 
 ### Bootstrap the DXOS Client
 
-DXOS apps enable users to control their data and identity by storing it in a [vault](./platform/README.md#local-vault-topology) separated from the application. In a browser-based environment like this React app, data is stored in persistent browser storage owned by the vault. The vault runs inside of a [Service Worker](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API) which is loaded into the DXOS app via an iFrame. The `ClientProvider` bootstraps the vault and iFrame, enabling the application to access the user's identity and data.
+DXOS apps enable users to control their data and identity by storing it in [ECHO and HALO](./platform/README.md#echo-and-halo). In a browser-based environment like this React app, data is stored in persistent browser storage. ECHO runs inside of a [Shared Worker](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker). The `ClientProvider` bootstraps ECHO and HALO, enabling the application to access the user's identity and data.
 
 ### React Helpers
 
 The other wrapper components are part of the DXOS [UI system](./react/aurora.md):
 
-- The `<ServiceWorkerToastContainer>` pops a toast with a reload prompt whenever a new version of the PWA is ready to go.
-- `<ErrorBoundary>` catches errors that bubble up from the application and `<ResetDialog>` provides a user-friendly way to reset the application in the event of a crash.
+- `<ErrorBoundary>` catches errors that bubble up from the application.
 - `<ThemeProvider>` enables default DXOS styles and [`tailwindcss`](https://tailwindcss.com).
-- `<GenericFallback>` is a loading indicator.
 
 ## Creating a User Identity
 
-Before an application can read or write user data, the device must be authenticated. The first time a user runs a DXOS application, they won't have an identity yet. The application needs to prompt them to create one.
+Before an application can read or write user data, the device must be authenticated. The first time a user runs a DXOS application, they won't have an identity yet. When `useIdentity` is called, an identity is created if one doesn't exist.
 
 Let's create a simple component called `Counter.tsx`.
 
@@ -132,9 +127,17 @@ export const Counter = () => {
 };
 ```
 
-`useIdentity` attempts to use the device's existing identity, if there is one. If the device's vault has no identity, the user will be [prompted](./platform/halo.md#establishing-user-identity) to create a new one or link to an existing authed device.
+`useIdentity` attempts to use the device's existing identity, if there is one. If the device's vault has no identity, an identity will be created automatically.
 
 `useSpaces` returns all the user's spaces. An [ECHO Space](./platform/README.md#spaces) is an instance of an ECHO database that will be replicated to peers that connect to the space. Spaces can be created and joined programmatically, but in this case a space was created automatically when `useIdentity` created a new identity. For now, we'll just grab that first auto-created space.
+
+Don't forget to import the `Counter` component in `App.tsx` and replace "Your code goes here" with the `Counter` component:
+
+```tsx
+import { Counter } from './Counter';
+
+<Counter />;
+```
 
 ## Updating UI state from ECHO
 
@@ -146,7 +149,7 @@ import { useSpaces, useQuery } from '@dxos/react-client/echo';
 
 In the `Counter` component, replace the `return` with the following:
 
-```tsx file=./snippets/counter-1.tsx#L14-
+```tsx file=./snippets/counter-1.tsx#L15-
 
   const [counter] = useQuery(space, { type: 'counter' });
 
@@ -215,7 +218,7 @@ Let's add a button to update the count of the counter.
 
 At this point, your `Counter` component should look like this, with a `<button>` added for incrementing the count:
 
-```tsx{20-27} file=./snippets/counter-2.tsx#L5-
+```tsx{21-28} file=./snippets/counter-2.tsx#L5-
 import React, { useEffect } from 'react';
 import { Expando, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
