@@ -4,10 +4,15 @@
 
 import { Server } from 'isomorphic-ws';
 
-import { Repo } from '@dxos/automerge/automerge-repo';
+import { Chunk, Repo, StorageAdapter, StorageKey } from '@dxos/automerge/automerge-repo';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
+import { sleep } from '@dxos/async';
+import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
+import { AutomergeStorageAdapter } from '@dxos/echo-pipeline';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
+import { MapCounter, trace } from '@dxos/tracing';
 import {
   type AgentEnv,
   type AgentRunOptions,
@@ -17,11 +22,6 @@ import {
   type TestPlan,
 } from '../plan';
 import { randomArraySlice } from '../util';
-import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
-import { createStorage } from '@dxos/random-access-storage';
-import { StorageType } from '@dxos/random-access-storage';
-import { AutomergeStorageAdapter } from '@dxos/echo-pipeline';
-import { Context } from '@dxos/context';
 
 export type AutomergeTestSpec = {
   platform: Platform;
@@ -59,7 +59,7 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
       platform: 'chromium',
       clientConnections: 1,
 
-      clientStorage: 'opfs',
+      clientStorage: 'idb',
 
       symetric: false,
       agents: 2,
@@ -142,6 +142,7 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
       time: performance.measure('ready', 'ready:begin', 'ready:end').duration,
     });
 
+    await sleep(1_000);
     await env.syncBarrier('docs ready')
 
     if(spec.reloadStep &&  config.type === 'client') {
@@ -199,11 +200,11 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
       case 'none':
         return undefined;
       case 'idb':
-        return new IndexedDBStorageAdapter();
+        return new MeteredStorageProxy(new IndexedDBStorageAdapter());
       case 'opfs':
         {
           const storage = createStorage({ type: StorageType.WEBFS })
-          return new AutomergeStorageAdapter(storage.createDirectory('automerge'))
+          return new MeteredStorageProxy(new AutomergeStorageAdapter(storage.createDirectory('automerge')))
         }
     }
   }
@@ -211,3 +212,41 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
 
 // eslint-disable-next-line no-new-func
 const importEsm = Function('path', 'return import(path)');
+
+@trace.resource()
+class MeteredStorageProxy extends StorageAdapter {
+  constructor(
+    private readonly _storage: StorageAdapter,
+  ) {
+    super();
+  }
+
+  @trace.metricsCounter()
+  private _metrics = new MapCounter();
+
+  @trace.info()
+  private get _driverName() {
+    return Object.getPrototypeOf(this._storage).constructor.name;
+  }
+
+  override load(key: StorageKey): Promise<Uint8Array | undefined> {
+    this._metrics.inc('load');
+    return this._storage.load(key);
+  }
+  override save(key: StorageKey, data: Uint8Array): Promise<void> {
+    this._metrics.inc('save');
+    return this._storage.save(key, data);
+  }
+  override remove(key: StorageKey): Promise<void> {
+    this._metrics.inc('remove');
+    return this._storage.remove(key);
+  }
+  override loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
+    this._metrics.inc('loadRange');
+    return this._storage.loadRange(keyPrefix);
+  }
+  override removeRange(keyPrefix: StorageKey): Promise<void> {
+    this._metrics.inc('removeRange');
+    return this._storage.removeRange(keyPrefix);
+  }
+}

@@ -13,6 +13,7 @@ import { WebSocketConnector } from './env/websocket-connector';
 import { DEFAULT_WEBSOCKET_ADDRESS } from './env/websocket-redis-proxy';
 import { type TestPlan, type AgentParams, AGENT_LOG_FILE } from './spec';
 import { RESOURCE_USAGE_LOG, type ResourceUsageLogEntry } from '../analysys/resource-usage';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 /**
  * Entry point for process running in agent mode.
@@ -34,13 +35,20 @@ const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) =
     initDiagnostics();
     await env.open();
     ctx.onDispose(() => env.close());
-    await plan.run(env);
+    try {
+      await plan.run(env);
+      log.info('agent complete', { agentId: params.agentId });
+    } catch(err) {
+      log.error('agent error', { agentId: params.agentId, error: err });
+      console.error(err);
+      throw err;
+    } finally {
+      const diagnostics = TRACE_PROCESSOR.getDiagnostics();
+      await env.redis.set(`${params.testId}:__diagnostics:${params.agentId}`, JSON.stringify(diagnostics));
+    }
   } catch (err) {
-    log.error('agent error', { agentId: params.agentId, error: err });
-    console.error(err);
     finish(1);
   } finally {
-    log.info('agent complete', { agentId: params.agentId });
     void ctx.dispose();
     finish(0);
   }
