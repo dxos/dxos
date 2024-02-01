@@ -65,15 +65,15 @@ See the [glossary](../glossary) for definitions of other terms you'll find in th
 - [Create objects](../typescript/mutations#creating-objects) (in [react](../react/mutations))
 - [Mutate objects](../typescript/mutations) (in [react](../react/mutations))
 
-## Vault
+## ECHO and HALO
 
-ECHO is designed to allow users to own their own data. The ECHO Vault is a secure storage mechanism, responsible for holding end-user identity (keys, credentials, metadata, ..., etc.) and all ECHO data in persistent browser or disk storage. The vault serves as an identity wallet and data vault where specific devices or applications can be revoked from accessing user data at any time.
+ECHO is designed to allow users to own their own data. ECHO is a secure storage mechanism, responsible for holding end-user identity (keys, credentials, metadata, ..., etc.) and all ECHO data in persistent browser or disk storage. Specific devices or applications can be revoked from accessing user data at any time.
 
-Browsers provide storage APIs that allow applications to store data locally. Storage for web apps is isolated to the web app's domain, and this property is used to isolate the main vault of storage to the DXOS application's domain.
+Browsers provide storage APIs that allow applications to store data locally. Storage for web apps is isolated to the web app's domain, and this property is used to isolate the ECHO storage to the DXOS application's domain.
 
-In order to allow multiple applications to access the same vault, the user must initiate a device invitation, which synchronizes the vault across both applications, giving them both read and write access to all of the user's data stored in the vault. See [Device Invitations](./halo#device-invitations) for more information.
+In order to allow multiple applications to access the same ECHO database, the user must initiate a device invitation, which synchronizes ECHO across both applications, giving them both read and write access to all of the user's data stored in their ECHO. See [Device Invitations](./halo#device-invitations) for more information.
 
-For Node.js applications, the vault is implemented by an in-process storage engine that persists to files on disk.
+For Node.js applications, the ECHO database is implemented as an in-process storage engine that persists to files on disk.
 
 ## Next steps
 

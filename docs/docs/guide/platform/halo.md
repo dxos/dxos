@@ -10,8 +10,6 @@ HALO is a system of components for implementing decentralized identity designed 
 - The HALO [**SDK**](https://www.npmjs.com/package/@dxos/client) is part of the DXOS client library and provides user authentication, identity, and contact management capabilities.
 - The HALO **protocol** supports the verification, transport, and exchange of identity information between networked peers.
 
-The HALO application also acts as a secure vault where all ECHO data is physically stored on behalf of the user and their applications.
-
 ## Features
 
 - Public/private key-pair authentication mechanism integrated into ECHO

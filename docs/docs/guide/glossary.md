@@ -49,10 +49,6 @@ A value identifying a particular [space](#space).
 
 Represents an agent or actor in the system.
 
-### Vault
-
-ECHO data and HALO identities are physically stored in browser storage on the application's domain.
-
 ### Device
 
 A running instance of the DXOS `Client` represents a device on the network. Every browser profile acts as a device. A CLI application is it's own device. HALO replicates identity and credential information across devices securely and automatically and supports device revocation.
@@ -75,4 +71,4 @@ A specific point in time when the members of a [space](#space) agree to drop or 
 
 ### Shell
 
-The vault implements a few generic UI flows for managing spaces, membership, and identity. The shell can be invoked by the dxos client API and is rendered by the Vault in an iframe, minimizing impact to the consuming application.
+The shell implements a few generic UI flows for managing spaces, membership, and identity. The shell can be invoked by the dxos client API and is rendered in an iframe, minimizing impact to the consuming application.
