@@ -19,7 +19,7 @@ Before running SSC, Composer must be built using:
 ```bash
 NODE_OPTIONS=--max_old_space_size=8192
 DX_HOST=true
-pnpm nx -w bundle composer-app
+pnpm -w nx bundle composer-app
 ```
 
 Then, to bundle the native app, in this directory, run:

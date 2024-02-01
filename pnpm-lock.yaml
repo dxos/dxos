@@ -2422,6 +2422,9 @@ importers:
       vite-plugin-pwa:
         specifier: ^0.17.5
         version: 0.17.5(vite@5.0.12)(workbox-window@7.0.0)
+      workbox-window:
+        specifier: ^7.0.0
+        version: 7.0.0
 
   packages/apps/plugins/plugin-registry:
     dependencies:
@@ -4027,9 +4030,6 @@ importers:
       assert:
         specifier: ^2.0.0
         version: 2.0.0
-      buffer:
-        specifier: ^6.0.3
-        version: 6.0.3
       events:
         specifier: ^3.3.0
         version: 3.3.0
@@ -4042,6 +4042,10 @@ importers:
       util:
         specifier: ^0.12.4
         version: 0.12.5
+    devDependencies:
+      buffer:
+        specifier: ^6.0.3
+        version: 6.0.3
 
   packages/common/phoenix:
     dependencies:
@@ -5952,6 +5956,9 @@ importers:
       '@oclif/test':
         specifier: ^2.3.31
         version: 2.3.31(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
       '@types/cli-progress':
         specifier: ^3.11.0
         version: 3.11.0
@@ -5970,9 +5977,15 @@ importers:
       '@types/node-fetch':
         specifier: ^2.5.10
         version: 2.6.2
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
       oclif:
         specifier: ^3.7.0
         version: 3.7.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
+      prettier:
+        specifier: ^3.2.4
+        version: 3.2.4
       shx:
         specifier: ^0.3.3
         version: 0.3.4
@@ -6245,8 +6258,8 @@ importers:
         specifier: ^7.18.13
         version: 7.21.3
       '@crxjs/vite-plugin':
-        specifier: ^1.0.14
-        version: 1.0.14(vite@5.0.12)
+        specifier: 2.0.0-beta.23
+        version: 2.0.0-beta.23(vite@5.0.12)
       '@dxos/esbuild-plugins':
         specifier: workspace:*
         version: link:../../common/esbuild-plugins
@@ -9168,9 +9181,6 @@ importers:
       remark-parse:
         specifier: ^10.0.1
         version: 10.0.1
-      remark-prettier:
-        specifier: ^2.0.0
-        version: 2.0.0(prettier@3.2.4)
       remark-stringify:
         specifier: ^10.0.2
         version: 10.0.2
@@ -9183,6 +9193,9 @@ importers:
       unified:
         specifier: ^10.1.2
         version: 10.1.2
+      unified-prettier:
+        specifier: ^2.0.0
+        version: 2.0.0(prettier@3.2.4)
       unist-util-visit:
         specifier: ^4.1.0
         version: 4.1.1
@@ -13761,29 +13774,28 @@ packages:
     dev: true
     optional: true
 
-  /@crxjs/vite-plugin@1.0.14(vite@5.0.12):
-    resolution: {integrity: sha512-emOueVCqFRFmpcfT80Xsm4mfuFw9VSp5GY4eh5qeLDeiP81g0hddlobVQCo0pE2ZvNnWbyhLrXEYAaMAXjNL6A==}
-    engines: {node: '>=14'}
+  /@crxjs/vite-plugin@2.0.0-beta.23(vite@5.0.12):
+    resolution: {integrity: sha512-AO+VYhtNZ1fITq/sc54FZpTtFvHR+gJwFGiWTGKs07bwYzzZFdF0sYeiFgZiEjaNkddkAzuM4F4lgOmCm69YUw==}
     peerDependencies:
       vite: ^5.0.0
     dependencies:
       '@rollup/pluginutils': 4.2.1
       '@webcomponents/custom-elements': 1.5.1
-      acorn-walk: 8.2.0
+      acorn-walk: 8.3.2
       cheerio: 1.0.0-rc.12
       connect-injector: 0.4.4
+      convert-source-map: 1.9.0
       debug: 4.3.4(supports-color@8.1.1)
       es-module-lexer: 0.10.5
-      fast-glob: 3.2.12
+      fast-glob: 3.3.2
       fs-extra: 10.1.0
       jsesc: 3.0.2
       magic-string: 0.26.7
       picocolors: 1.0.0
       react-refresh: 0.13.0
-      rollup: 2.79.1
+      rollup: 2.78.1
+      rxjs: 7.5.7
       vite: 5.0.12(@types/node@18.11.9)
-    optionalDependencies:
-      '@vitejs/plugin-react': 4.2.1(vite@5.0.12)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -19789,7 +19801,7 @@ packages:
       '@storybook/react-dom-shim': 8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)
       '@storybook/theming': 8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)
       '@storybook/types': 8.0.0-alpha.11
-      fs-extra: 11.1.1
+      fs-extra: 11.2.0
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
       remark-external-links: 8.0.0
@@ -19974,7 +19986,7 @@ packages:
       esbuild: 0.18.20
       esbuild-plugin-alias: 0.2.1
       express: 4.18.2
-      fs-extra: 11.1.1
+      fs-extra: 11.2.0
       process: 0.11.10
       util: 0.12.5
     transitivePeerDependencies:
@@ -20112,7 +20124,7 @@ packages:
       file-system-cache: 2.3.0
       find-cache-dir: 3.3.2
       find-up: 5.0.0
-      fs-extra: 11.1.1
+      fs-extra: 11.2.0
       glob: 10.3.10
       handlebars: 4.7.7
       lazy-universal-dotenv: 4.0.0
@@ -20209,7 +20221,7 @@ packages:
       '@babel/types': 7.23.6
       '@storybook/csf': 0.1.2
       '@storybook/types': 8.0.0-alpha.11
-      fs-extra: 11.1.1
+      fs-extra: 11.2.0
       recast: 0.23.1
       ts-dedent: 2.2.0
     transitivePeerDependencies:
@@ -20506,7 +20518,7 @@ packages:
       chalk: 4.1.2
       detect-package-manager: 2.0.1
       fetch-retry: 5.0.3
-      fs-extra: 11.1.1
+      fs-extra: 11.2.0
       read-pkg-up: 7.0.1
     transitivePeerDependencies:
       - encoding
@@ -23679,7 +23691,7 @@ packages:
     resolution: {integrity: sha512-umOSDSDrfHbTNPuNpC2NSnnA3LUrqpevPb4T9jRx4MagXNS0rs+gwiTcAvqCRmsD6utzsrzNt+ebm00SNWiC3Q==}
     dependencies:
       acorn: 8.11.2
-      acorn-walk: 8.2.0
+      acorn-walk: 8.3.2
 
   /acorn-import-assertions@1.9.0(acorn@8.8.2):
     resolution: {integrity: sha512-cmMwop9x+8KFhxvKrKfPYmN6/pKTYYHBqLa0DfvVZcKMJWNyWLnaqND7dx/qn66R7ewM1UX5XMaDVP5wlVTaVA==}
@@ -23731,7 +23743,6 @@ packages:
   /acorn-walk@8.3.2:
     resolution: {integrity: sha512-cjkyv4OtNCIeqhHrfS81QWXoCBPExR/J62oyEqepVw8WaQeSqpW2uhuLPh1m9eWhDuOo/jUXVTlifvesOWp/4A==}
     engines: {node: '>=0.4.0'}
-    dev: true
 
   /acorn@7.4.1:
     resolution: {integrity: sha512-nQyp0o1/mNdbTO1PO6kHkwSrmgZ0MT/jCCpNiwbUjGoRN4dlBhqJtoQuCnEOKzgTVwg0ZWiCoQy6SxMebQVh8A==}
@@ -27717,6 +27728,12 @@ packages:
       minimist: 1.2.8
     dev: false
 
+  /devlop@1.1.0:
+    resolution: {integrity: sha512-RWmIqhcFf1lRYBvNmr7qTNuyCt/7/ns2jbpp1+PalgE/rDQcBT0fioSMUpJ93irlUhC5hrg4cYqe6U+0ImW0rA==}
+    dependencies:
+      dequal: 2.0.3
+    dev: true
+
   /dezalgo@1.0.4:
     resolution: {integrity: sha512-rXSP0bf+5n0Qonsb+SVVfNfIsimO4HEtmnIpPHY8Q1UCzKlQrDMfdobr8nJOOsRgWCyMRqeSBQzmWUMq7zvVig==}
     dependencies:
@@ -29172,7 +29189,7 @@ packages:
     dependencies:
       '@types/estree-jsx': 1.0.0
       estree-util-is-identifier-name: 2.0.1
-      estree-walker: 3.0.1
+      estree-walker: 3.0.3
     dev: true
 
   /estree-util-is-identifier-name@2.0.1:
@@ -29521,6 +29538,7 @@ packages:
 
   /fast-diff@1.2.0:
     resolution: {integrity: sha512-xJuoT5+L99XlZ8twedaRf6Ax2TgQVxvgZOYoPKqZufmJib0tL2tegPBOZb1pVNgIhlqDlA0eO0c3wBvQcmzx4w==}
+    dev: false
 
   /fast-fifo@1.1.0:
     resolution: {integrity: sha512-Kl29QoNbNvn4nhDsLYjyIAaIqaJB6rBx5p3sL9VjaefJ+eMFBWVZiaoguaoZfzEKr5RhAti0UgM8703akGPJ6g==}
@@ -38261,7 +38279,7 @@ packages:
   /periscopic@3.0.4:
     resolution: {integrity: sha512-SFx68DxCv0Iyo6APZuw/AKewkkThGwssmU0QWtTlvov3VAtPX+QJ4CadwSaz8nrT5jPIuxdvJWB4PnD2KNDxQg==}
     dependencies:
-      estree-walker: 3.0.1
+      estree-walker: 3.0.3
       is-reference: 3.0.0
     dev: true
 
@@ -38664,6 +38682,7 @@ packages:
     engines: {node: '>=6.0.0'}
     dependencies:
       fast-diff: 1.2.0
+    dev: false
 
   /prettier@3.2.4:
     resolution: {integrity: sha512-FWu1oLHKCrtpO1ypU6J0SbK2d9Ckwysq6bHj/uaCP26DxrPpppCLQRGVuqAxSTvhF00AcvDRyYrLNW7ocBhFFQ==}
@@ -40198,21 +40217,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /remark-prettier@2.0.0(prettier@3.2.4):
-    resolution: {integrity: sha512-66v8KoqnBivhcfjtahHmHU7qkQuVPq/JIsqTW8suqI8mVuHCpxjapoY2XIBLjC5J7suYICVtNRBXRwrRX7a1hA==}
-    engines: {node: '>=14.0.0'}
-    deprecated: Use unified-consistency and unified-prettier instead
-    peerDependencies:
-      prettier: ^2
-    dependencies:
-      '@types/mdast': 3.0.10
-      '@types/prettier': 2.7.3
-      mdast-util-to-markdown: 1.3.0
-      prettier: 3.2.4
-      prettier-linter-helpers: 1.0.0
-      vfile-location: 4.0.1
-    dev: true
-
   /remark-rehype@10.1.0:
     resolution: {integrity: sha512-EFmR5zppdBp0WQeDVZ/b66CWJipB2q2VLNFMabzDSGR66Z2fQii83G5gTBbgGEnEEA0QRussvrFHxk1HWGJskw==}
     dependencies:
@@ -40528,6 +40532,14 @@ packages:
       terser: 5.19.2
     dev: true
 
+  /rollup@2.78.1:
+    resolution: {integrity: sha512-VeeCgtGi4P+o9hIg+xz4qQpRl6R401LWEXBmxYKOV4zlF82lyhgh2hTZnheFUbANE8l2A41F458iwj2vEYaXJg==}
+    engines: {node: '>=10.0.0'}
+    hasBin: true
+    optionalDependencies:
+      fsevents: 2.3.3
+    dev: true
+
   /rollup@2.79.1:
     resolution: {integrity: sha512-uKxbd0IhMZOhjAiD5oAFp7BqvkA4Dv47qpOCtaNvng4HBwdbWtdOh8f5nZNuk2rp51PMGk3bzfWu5oayNEuYnw==}
     engines: {node: '>=10.0.0'}
@@ -40600,10 +40612,16 @@ packages:
   /rw@1.3.3:
     resolution: {integrity: sha512-PdhdWy89SiZogBLaw42zdeqtRJ//zFd2PgQavcICDUgJT5oW10QCRKbJ6bg4r0/UY2M6BWd5tkxuGFRvCkgfHQ==}
 
+  /rxjs@7.5.7:
+    resolution: {integrity: sha512-z9MzKh/UcOqB3i20H6rtrlaE/CgjLOvheWK/9ILrbhROGTweAi1BaFsTT9FbwZi5Trr1qNRs+MXkhmR06awzQA==}
+    dependencies:
+      tslib: 2.6.2
+    dev: true
+
   /rxjs@7.8.1:
     resolution: {integrity: sha512-AA3TVj+0A2iuIoQkWEK/tqFjBq2j+6PO6Y0zJcvzLAFhEFIO3HL0vls9hWLncZbAAbK0mar7oZ4V079I/qPMxg==}
     dependencies:
-      tslib: 2.6.0
+      tslib: 2.6.2
 
   /sade@1.8.1:
     resolution: {integrity: sha512-xal3CZX1Xlo/k4ApwCFrHVACi9fBqJ7V+mwhBsuf/1IOKbBy098Fex+Wa/5QMubw09pSZ/u8EY8PWgevJsXp1A==}
@@ -43137,6 +43155,15 @@ packages:
       vfile-message: 3.1.2
     dev: false
 
+  /unified-prettier@2.0.0(prettier@3.2.4):
+    resolution: {integrity: sha512-sbe/9D1hEWugtRv3nB2EdItKGnajCq0dYIPG06OFUHx+DwkQojpQSlWyrjvGvGVqrTP6deQ2gIxl4/u5Kra02g==}
+    peerDependencies:
+      prettier: ^3.0.0
+    dependencies:
+      prettier: 3.2.4
+      unified: 11.0.4
+    dev: true
+
   /unified@10.1.2:
     resolution: {integrity: sha512-pUSWAi/RAnVy1Pif2kAoeWNBa3JVrx0MId2LASj8G+7AiHWoKZNTomq6LG326T68U7/e263X6fTdcXIy7XnF7Q==}
     dependencies:
@@ -43147,6 +43174,18 @@ packages:
       is-plain-obj: 4.1.0
       trough: 2.1.0
       vfile: 5.3.6
+
+  /unified@11.0.4:
+    resolution: {integrity: sha512-apMPnyLjAX+ty4OrNap7yumyVAMlKx5IWU2wlzzUdYJO9A8f1p9m/gywF/GM2ZDFcjQPrx59Mc90KwmxsoklxQ==}
+    dependencies:
+      '@types/unist': 3.0.0
+      bail: 2.0.2
+      devlop: 1.1.0
+      extend: 3.0.2
+      is-plain-obj: 4.1.0
+      trough: 2.1.0
+      vfile: 6.0.1
+    dev: true
 
   /union-value@1.0.1:
     resolution: {integrity: sha512-tJfXmxMeWYnczCVs7XAEvIV7ieppALdyepWMkHkwciRpZraG/xwT+s2JN8+pr1+8jCRf80FFzvr+MpQeeoF4Xg==}
@@ -43268,6 +43307,12 @@ packages:
     resolution: {integrity: sha512-7A6eiDCs9UtjcwZOcCpM4aPII3bAAGv13E96IkawkOAW0OhH+yRxtY0lzo8KiHpzEMfH7Q+FizUmwp8Iqy5EWg==}
     dependencies:
       '@types/unist': 2.0.6
+
+  /unist-util-stringify-position@4.0.0:
+    resolution: {integrity: sha512-0ASV06AAoKCDkS2+xw5RXJywruurpbC4JZSm7nr7MOt1ojAzvyyaO+UxZf18j8FCF6kmzCZKcAgN/yu2gm2XgQ==}
+    dependencies:
+      '@types/unist': 3.0.0
+    dev: true
 
   /unist-util-visit-parents@2.1.2:
     resolution: {integrity: sha512-DyN5vD4NE3aSeB+PXYNKxzGsfocxp6asDc2XXE3b0ekO2BaRUpBicbbUygfSvYfUz1IkmjFR1YF7dPklraMZ2g==}
@@ -43759,6 +43804,13 @@ packages:
       '@types/unist': 2.0.6
       unist-util-stringify-position: 3.0.2
 
+  /vfile-message@4.0.2:
+    resolution: {integrity: sha512-jRDZ1IMLttGj41KcZvlrYAaI3CfqpLpfpf+Mfig13viT6NKvRzWZ+lXz0Y5D60w6uJIBAOGq9mSHf0gktF0duw==}
+    dependencies:
+      '@types/unist': 3.0.0
+      unist-util-stringify-position: 4.0.0
+    dev: true
+
   /vfile@4.2.1:
     resolution: {integrity: sha512-O6AE4OskCG5S1emQ/4gl8zK586RqA3srz3nfK/Viy0UPToBc5Trp9BVFb1u0CjsKrAWwnpr4ifM/KBXPWwJbCA==}
     dependencies:
@@ -43775,6 +43827,14 @@ packages:
       is-buffer: 2.0.5
       unist-util-stringify-position: 3.0.2
       vfile-message: 3.1.2
+
+  /vfile@6.0.1:
+    resolution: {integrity: sha512-1bYqc7pt6NIADBJ98UiG0Bn/CHIVOoZ/IyEkqIruLg0mE1BKzkOXY2D6CSqQIcKqgadppE5lrxgWXJmXd7zZJw==}
+    dependencies:
+      '@types/unist': 3.0.0
+      unist-util-stringify-position: 4.0.0
+      vfile-message: 4.0.2
+    dev: true
 
   /vinyl-file@3.0.0:
     resolution: {integrity: sha512-BoJDj+ca3D9xOuPEM6RWVtWQtvEPQiQYn82LvdxhLWplfQsBzBqtgK0yhCP0s1BNTi6dH9BO+dzybvyQIacifg==}
