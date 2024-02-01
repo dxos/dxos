@@ -42,10 +42,10 @@ export const useActionHandler = (view?: EditorView | null): ToolbarProps['onActi
           action.type === 'strong'
             ? Inline.Strong
             : action.type === 'emphasis'
-            ? Inline.Emphasis
-            : action.type === 'strikethrough'
-            ? Inline.Strikethrough
-            : Inline.Code;
+              ? Inline.Emphasis
+              : action.type === 'strikethrough'
+                ? Inline.Strikethrough
+                : Inline.Code;
         (typeof action.data === 'boolean' ? setStyle(inlineType, action.data) : toggleStyle(inlineType))(view);
         break;
 
@@ -57,8 +57,8 @@ export const useActionHandler = (view?: EditorView | null): ToolbarProps['onActi
         (action.data === false
           ? removeList(listType)
           : action.data === true
-          ? addList(listType)
-          : toggleList(listType))(view);
+            ? addList(listType)
+            : toggleList(listType))(view);
         break;
 
       case 'blockquote':

@@ -296,10 +296,10 @@ export const toggleStyle =
       style === Inline.Strong
         ? !form.strong
         : style === Inline.Emphasis
-        ? !form.emphasis
-        : style === Inline.Strikethrough
-        ? !form.strikethrough
-        : !form.code,
+          ? !form.emphasis
+          : style === Inline.Strikethrough
+            ? !form.strikethrough
+            : !form.code,
     )(arg);
   };
 
