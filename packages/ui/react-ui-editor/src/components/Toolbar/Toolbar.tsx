@@ -60,7 +60,7 @@ const ToolbarRoot = ({ children, onAction, state }: ToolbarProps) => {
   return (
     <ToolbarContextProvider onAction={onAction} state={state}>
       <DensityProvider density='fine'>
-        <div role='toolbar' className='flex w-full shrink-0 py-2 gap-2 items-center whitespace-nowrap overflow-hidden'>
+        <div role='toolbar' className='flex w-full shrink-0 p-1 gap-2 items-center whitespace-nowrap overflow-hidden'>
           {children}
         </div>
       </DensityProvider>
@@ -77,6 +77,9 @@ type ToolbarButtonProps = {
 
 const ToolbarButton = ({ Icon, onClick, title, getState, disable }: ToolbarButtonProps) => {
   const { onAction, state } = useToolbarContext('ToolbarButton');
+  const active = getState && state ? getState(state) : false;
+  const disabled = disable && state ? disable(state) : false;
+
   const handleClick = (event: React.MouseEvent) => {
     const action = onClick(state);
     if (action) {
@@ -84,8 +87,6 @@ const ToolbarButton = ({ Icon, onClick, title, getState, disable }: ToolbarButto
       event.preventDefault();
     }
   };
-  const active = getState && state ? getState(state) : false;
-  const disabled = disable && state ? disable(state) : false;
 
   return (
     <Button
@@ -102,7 +103,6 @@ const ToolbarButton = ({ Icon, onClick, title, getState, disable }: ToolbarButto
 
 const ToolbarSeparator = () => <div className='grow' />;
 
-// TODO(burdon): Change to icon.
 const MarkdownHeading = () => {
   const { onAction, state } = useToolbarContext('MarkdownFormatting');
   const blockType = state ? state.blockType : 'paragraph';

@@ -571,7 +571,7 @@ export const addList =
       }
       let line = state.doc.lineAt(nodeFrom);
       const column = nodeFrom - line.from;
-      // Align to the list above if possible
+      // Align to the list above if possible.
       if (parentColumn !== null && parentColumn > column) {
         padding = Math.max(padding, parentColumn - column);
       }
