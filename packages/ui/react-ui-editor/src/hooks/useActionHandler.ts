@@ -12,6 +12,8 @@ import {
   setHeading,
   setStyle,
   toggleStyle,
+  addLink,
+  removeLink,
   Inline,
   List,
   addList,
@@ -47,6 +49,10 @@ export const useActionHandler = (view?: EditorView | null): ToolbarProps['onActi
             ? Inline.Strikethrough
             : Inline.Code;
         (typeof action.data === 'boolean' ? setStyle(inlineType, action.data) : toggleStyle(inlineType))(view);
+        break;
+
+      case 'link':
+        (action.data === false ? removeLink : addLink)(view);
         break;
 
       case 'list-ordered':

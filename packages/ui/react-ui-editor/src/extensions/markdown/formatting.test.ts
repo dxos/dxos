@@ -12,6 +12,8 @@ import {
   setHeading,
   addStyle,
   removeStyle,
+  addLink,
+  removeLink,
   addList,
   removeList,
   addBlockquote,
@@ -171,6 +173,37 @@ describe('removeStyle', () => {
   );
 
   testCommand('can shrink existing styles', '*one {two three} four*', em, '*one* {two three} *four*');
+});
+
+describe('addLink', () => {
+  testCommand('adds a link', '{}', addLink, '[]({})');
+
+  testCommand('adds a link around text', 'hello {world}', addLink, 'hello [world]({})');
+
+  testCommand('clears existing links', '[hello {world}](foo)', addLink, 'hello [world]({})');
+
+  testCommand('does nothing across blocks', '{one\n\ntwo}', addLink, null);
+
+  testCommand('does nothing in code blocks', '```\n{one}\n```', addLink, null);
+
+  testCommand('patches up overlapping styles before', '*foo {bar* baz}', addLink, '*foo* [*bar* baz]({})');
+
+  testCommand(
+    'patches up overlapping styles after',
+    'one {two ~~three} four~~',
+    addLink,
+    'one [two ~~three~~]({}) ~~four~~',
+  );
+});
+
+describe('removeLink', () => {
+  testCommand('removes a link', '[hi{}](x)', removeLink, 'hi{}');
+
+  testCommand('removes multiple links', '{[hi](x)\n\none [two](y)}', removeLink, '{hi\n\none two}');
+
+  testCommand('removes label links', '[hi{}][hi]', removeLink, 'hi{}');
+
+  testCommand('removes titles in links', '[hi{}](a "title" )', removeLink, 'hi{}');
 });
 
 describe('addList', () => {

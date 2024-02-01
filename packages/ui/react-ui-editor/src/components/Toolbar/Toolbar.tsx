@@ -106,11 +106,12 @@ const MarkdownHeading = () => {
   const blockType = state ? state.blockType : 'paragraph';
   const header = blockType && /heading(\d)/.exec(blockType);
   const value = header ? header[1] : blockType === 'paragraph' || !blockType ? '0' : null;
-  if (value === null) {
-    return null;
-  }
   return (
-    <Select.Root value={value} onValueChange={(value) => onAction?.({ type: 'heading', data: parseInt(value) })}>
+    <Select.Root
+      disabled={value === null}
+      value={value ?? '0'}
+      onValueChange={(value) => onAction?.({ type: 'heading', data: parseInt(value) })}
+    >
       <Select.TriggerButton classNames='w-[8rem]' />
       <Select.Portal>
         <Select.Content>
@@ -200,7 +201,12 @@ const MarkdownBlocks = () => (
 
 const MarkdownLinks = () => (
   <div role='none'>
-    <ToolbarButton Icon={Link} title='Link' onClick={() => ({ type: 'link' })} getState={(s) => s.link} />
+    <ToolbarButton
+      Icon={Link}
+      title='Link'
+      onClick={(s) => ({ type: 'link', data: !s.link })}
+      getState={(s) => s.link}
+    />
     <ToolbarButton Icon={At} title='Mention' onClick={() => ({ type: 'mention' })} />
     <ToolbarButton Icon={Image} title='Image' onClick={() => ({ type: 'image' })} />
   </div>
