@@ -18,6 +18,8 @@ import {
   removeList,
   addBlockquote,
   removeBlockquote,
+  addCodeblock,
+  removeCodeblock,
   Inline,
   List,
   getFormatting,
@@ -351,6 +353,48 @@ describe('removeBlockquote', () => {
     ' - 1. > foo\n      > {bar\n - > baz}',
     removeBlockquote,
     ' - 1. foo\n      bar\n - baz',
+  );
+});
+
+describe('addCodeblock', () => {
+  testCommand('add a code block to a blank line', '{}', addCodeblock, '```{lang}\n\n```');
+
+  testCommand(
+    'can turn a paragraph into a code block',
+    'one\ntwo{}\nthree',
+    addCodeblock,
+    '```\none\ntwo{}\nthree\n```',
+  );
+
+  testCommand(
+    'can turn an indented paragraph into a code block',
+    '1. one\n   two{}',
+    addCodeblock,
+    '1. ```\n   one\n   two{}\n   ```',
+  );
+
+  testCommand(
+    'can turn multiple paragraphs into a code block',
+    "{10 print 'hello'\n\n20 goto 10}",
+    addCodeblock,
+    "```\n10 print 'hello'\n\n20 goto 10\n```",
+  );
+});
+
+describe('removeCodeblock', () => {
+  testCommand('removes fenced code blocks', '```\ncode{}\n```', removeCodeblock, 'code{}');
+
+  testCommand('removes indented code blocks', '    code{}', removeCodeblock, 'code{}');
+
+  testCommand('does nothing on regular text', 'not code{}', removeCodeblock, null);
+
+  testCommand('can remove multiple code block', '{```\none\n```\n\n    two}', removeCodeblock, 'one\n\ntwo');
+
+  testCommand(
+    'can remove code in other block markup',
+    '> 1. ```\n>    {one\n>    ```\n>\n> 2.     two}',
+    removeCodeblock,
+    '> 1. one\n>\n> 2. two',
   );
 });
 

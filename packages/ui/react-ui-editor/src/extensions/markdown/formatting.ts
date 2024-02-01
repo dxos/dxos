@@ -307,20 +307,10 @@ export const toggleStyle =
 
 // TODO(burdon): Define and trigger snippets for codeblock, table, etc.
 const snippets = {
-  codeblock: snippet(['```#{lang}', '\t#{}', '```'].join('\n')),
+  codeblock: snippet(['```#{lang}', '#{}', '```'].join('\n')),
   table: snippet(
     ['| #{col1} | #{col2} |', '| ---- | ---- |', '| #{val1} | #{val2} |', '| #{val3} | #{val4} |'].join('\n'),
   ),
-};
-
-export const insertCodeblock = (view: EditorView) => {
-  const {
-    selection: { main },
-    doc,
-  } = view.state;
-  const { number } = doc.lineAt(main.anchor);
-  const { from } = doc.line(number);
-  snippets.codeblock(view, null, from, from);
 };
 
 export const insertTable = (view: EditorView) => {
@@ -734,6 +724,107 @@ export const removeBlockquote = setBlockquote(false);
 
 export const toggleBlockquote: StateCommand = (target) => {
   return (getFormatting(target.state).blockquote ? removeBlockquote : addBlockquote)(target);
+};
+
+export const addCodeblock: StateCommand = (target) => {
+  const { state, dispatch } = target;
+  const { selection } = state;
+  // If on a blank line, use the code block snippet
+  if (selection.ranges.length === 1 && selection.main.empty) {
+    const { head } = selection.main;
+    const line = state.doc.lineAt(head);
+    if (!/\S/.test(line.text) && head === line.from) {
+      snippets.codeblock(target, null, line.from, line.to);
+      return true;
+    }
+  }
+
+  // Otherwise, wrap any selected blocks in triple backticks
+  const ranges: { from: number; to: number }[] = [];
+  for (const { from, to } of selection.ranges) {
+    let blockFrom = from;
+    let blockTo = to;
+    syntaxTree(state).iterate({
+      from,
+      to,
+      enter: (node) => {
+        if (Object.hasOwn(Textblocks, node.name)) {
+          if (from >= node.from && to <= node.to) {
+            // Selection in a single block
+            blockFrom = node.from;
+            blockTo = node.to;
+          } else {
+            // Expand to cover whole lines
+            blockFrom = Math.min(blockFrom, state.doc.lineAt(node.from).from);
+            blockTo = Math.max(blockTo, state.doc.lineAt(node.to).to);
+          }
+        }
+      },
+    });
+    if (ranges.length && ranges[ranges.length - 1].to >= blockFrom - 1) {
+      ranges[ranges.length - 1].to = blockTo;
+    } else {
+      ranges.push({ from: blockFrom, to: blockTo });
+    }
+  }
+  if (!ranges.length) {
+    return false;
+  }
+  const changes: ChangeSpec[] = ranges.map(({ from, to }) => {
+    const column = from - state.doc.lineAt(from).from;
+    return [
+      { from, insert: '```\n' + ' '.repeat(column) },
+      { from: to, insert: '\n' + ' '.repeat(column) + '```' },
+    ];
+  });
+  dispatch(state.update({ changes, userEvent: 'format.codeblock.add', scrollIntoView: true }));
+  return true;
+};
+
+export const removeCodeblock: StateCommand = ({ state, dispatch }) => {
+  const changes: ChangeSpec[] = [];
+  let lastBlock = -1;
+  // Find all code blocks, remove their markup
+  for (const { from, to } of state.selection.ranges) {
+    syntaxTree(state).iterate({
+      from,
+      to,
+      enter: (node) => {
+        if (Textblocks[node.name] === 'codeblock' && lastBlock !== node.from) {
+          lastBlock = node.from;
+          const firstLine = state.doc.lineAt(node.from);
+          if (node.name === 'FencedCode') {
+            changes.push({ from: node.from, to: firstLine.to + 1 + node.from - firstLine.from });
+            const lastLine = state.doc.lineAt(node.to);
+            if (/^([\s>]|[-*+] |\d+[).])*`+$/.test(lastLine.text)) {
+              changes.push({
+                from: lastLine.from - (lastLine.number === firstLine.number + 1 ? 0 : 1),
+                to: lastLine.to,
+              });
+            }
+          } else {
+            // Indented code block
+            const column = node.from - firstLine.from;
+            for (let line = firstLine; ; line = state.doc.line(line.number + 1)) {
+              changes.push({ from: line.from + column - 4, to: line.from + column });
+              if (line.to >= node.to) {
+                break;
+              }
+            }
+          }
+        }
+      },
+    });
+  }
+  if (!changes.length) {
+    return false;
+  }
+  dispatch(state.update({ changes, userEvent: 'format.codeblock.remove', scrollIntoView: true }));
+  return true;
+};
+
+export const toggleCodeblock: StateCommand = (target) => {
+  return (getFormatting(target.state).blockType === 'codeblock' ? removeCodeblock : addCodeblock)(target);
 };
 
 export const formatting = (options: FormattingOptions = {}): Extension => {

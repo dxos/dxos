@@ -7,7 +7,6 @@ import type { EditorView } from '@codemirror/view';
 import type { ToolbarProps } from '../components';
 import {
   createComment,
-  insertCodeblock,
   insertTable,
   setHeading,
   setStyle,
@@ -21,6 +20,8 @@ import {
   toggleList,
   addBlockquote,
   removeBlockquote,
+  addCodeblock,
+  removeCodeblock,
   toggleBlockquote,
 } from '../extensions';
 
@@ -72,8 +73,9 @@ export const useActionHandler = (view?: EditorView | null): ToolbarProps['onActi
         break;
 
       case 'codeblock':
-        insertCodeblock(view);
+        (action.data === false ? removeCodeblock : addCodeblock)(view);
         break;
+
       case 'table':
         insertTable(view);
         break;

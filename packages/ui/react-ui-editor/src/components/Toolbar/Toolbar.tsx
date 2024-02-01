@@ -192,7 +192,7 @@ const MarkdownBlocks = () => (
     <ToolbarButton
       Icon={Code}
       title='Code block'
-      onClick={() => ({ type: 'codeblock' })}
+      onClick={(s) => ({ type: 'codeblock', data: s ? s.blockType !== 'codeblock' : null })}
       getState={(s) => s.blockType === 'codeblock'}
     />
     <ToolbarButton Icon={Table} title='Table' onClick={() => ({ type: 'table' })} />
