@@ -1,6 +1,7 @@
 ---
 breadcrumb: false
 ---
+
 # Composer
 
 What if software had a different shape? What if things that were difficult or impossible were instead trivial? What if operating systems provided a different set of primitives that shaped our usage?
@@ -21,6 +22,12 @@ This document describes a system, Composer, under active design and development.
 
 **Table of Contents**
 [[toc]]
+
+# Technology Preview
+
+Composer is currently in a technology preview phase. This means that Composer is not yet ready for production use, but we are actively seeking feedback from developers and users to help shape the future of the platform. We are also actively developing the platform, and we expect to make breaking changes to the platform as we iterate on the design and implementation.
+
+Prior to version 1.0, breaking changes will be denoted by a minor version bump (0.3.x to 0.4, for example.) When we ship a breaking change release, we will provide a migration guide to help users and developers update their applications to the new version.
 
 # Use Cases
 
@@ -126,98 +133,116 @@ data-bound controls
 ## Stacks
 
 ### What is a stack
+
 A stack is a novel interface for users to navigate, organize, and manipulate items of a variety of "data types" in a unified manner. Concretely, a stack is a visual presentation of an ordered list of items that can be navigated by scrolling up and down, where each item is visually represented by a card roughly the size and shape of a 3x5 index card.
 
 ..stack diagram..
 
 ### Why we need a stack
-The DXOS model upends a key relationship between applications and data: rather than each application having a separate silo of data, there is a single shared substrate of data that multiple applications interact with. 
+
+The DXOS model upends a key relationship between applications and data: rather than each application having a separate silo of data, there is a single shared substrate of data that multiple applications interact with.
 
 How does upending this relationship change the Composer environment?
+
 - **Many diverse types of data coexist.** Multiple applications read and write to the same data store, leading to a variety of items of various types and media: documents, images, whiteboards, table rows, person records, etc.
 - **Apps are always running.** Within Composer, applications can be thought of as all "running" simultaneously. There's no need to "open" or "quit" an application. There's no longer a need to differentiate between the modes of "view" and "edit."
 - **Items don't have an inherent location.** Items do not live at a specific location in a file system construct as files do, but rather in a database. Thus they can be visible in multiple places in the interface at the same time. (This concept is sometimes called transclusion.)
 
 This reversal creates a need for new user interfaces that are not predicated on an app silo model. We need new UI paradigms. Specifically, we need a way of navigating, organizing, and manipulating items that takes seriously:
+
 - Transclusion over location
 - Visualize multiple data types
 - Apps as always-available views into data
 
 ### Prior Art
+
 In an application-centric world, there have been various solutions to this general problem.
+
 - The Desktop Interface: the desktop, folders, overlapping windows
 - macOS Finder Views
-	- List
-	- Grid
-	- Columns
-	- Quick Look
+  - List
+  - Grid
+  - Columns
+  - Quick Look
 - Block-based editors
 - On mobile, the ubiquity of UITableView on iOS
-	- scroll up and down
-	- pull-to-refresh
-	- swipe left and right on items
+  - scroll up and down
+  - pull-to-refresh
+  - swipe left and right on items
 
 ### Data Structure
+
 Given any collection (ordered list or unordered) of items, that collection can be visualized as a stack. A stack presents an ordering of the collection:
+
 - manual sort order (stored in the list itself if ordered?)
 - currently active sort order (manual or automatic)
 - hidden item IDs
 - active view mode
 
 ### Stack Affordances
+
 The UX affordances necessary for a stack to function are as follows:
+
 - Add item to stack
 - Remove item from stack
 - Re-order stack (manual sort order)
 - Edit item (depending on the preferences)
 - Sort stack automatically
-	- most/least recently updated
-	- most/least recently created
-	- by kind
-	- by name
-	- by size?
+  - most/least recently updated
+  - most/least recently created
+  - by kind
+  - by name
+  - by size?
 - Navigate to the stack item
 - Drag item from any other view into the stack
 - Navigate up and down via keyboard
 
 Possible extensions of stack functionality:
+
 - Hide or archive item
-	- the ability to leave something in the list but mark it as "dealt with" - archived or hidden
+  - the ability to leave something in the list but mark it as "dealt with" - archived or hidden
 - Delete item completely
 - Context action items based on item type
 - Collapse to list view (just headers of the cards)
 - Expand item to full height (but not navigate to the item)
 - Items must be able to customize their own appearance
 - Switch between different views (plugins) for any item
-	- view a markdown doc as a doc or as a slide
+  - view a markdown doc as a doc or as a slide
 - Publish stack as web page
-	- this is probably a _different_ plugin actually, just like Presenter is a different plugin
+  - this is probably a _different_ plugin actually, just like Presenter is a different plugin
 
 ### Stack use cases
+
 How might we use a stack to accomplish a variety of user objectives?
 
 #### Browsing a diverse set of items
+
 Spaces within Composer can contain a variety of different item types. A stack can be used to visualize the items within a space and allow for them to be quickly navigated to, edited, and/or sorted.
 
 #### Queue of items to work through (inbox)
+
 - Rather than having a custom "email" plugin, a stack could be used to sort through and deal with emails
 - Favorited tweets automatically sent to a List, work through as a Stack
 
 #### Slide deck editor
+
 - Don't need a full "slide editor" - stack primitives give you most of what you need
 
 #### Curating a collection of related items - Pinterest
+
 - Collect multiple items into a stack
 - View the stack in masonry mode
 
 #### Notification queue
+
 - Rather than build a custom "notifications" feature in Composer, it can be built simply from the existing stack primitives - no special feature needed
 - Notifications plugin would handle the presentation, but stack would handle the list manipulation
 
 ### Open Questions for Stack
+
 - What about mobile?
-	- Just like we don't use Finder metaphors on mobile (iOS metaphors instead), this interface is meant for Desktops (keyboard and mouse/trackpad, wider screen, etc)
-	- Reduce things to Cards - different affordances
+  - Just like we don't use Finder metaphors on mobile (iOS metaphors instead), this interface is meant for Desktops (keyboard and mouse/trackpad, wider screen, etc)
+  - Reduce things to Cards - different affordances
 - How do we make it more composable with other DXOS primitives?
 
 # Anatomy of a Plugin
