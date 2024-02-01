@@ -350,9 +350,9 @@ export const Comments = {
         extensions={[
           comments({
             onHover: onCommentsHover,
-            onCreate: (range) => {
+            onCreate: ({ cursor }) => {
               const id = PublicKey.random().toHex();
-              setComments((commentRanges) => [...commentRanges, { id, cursor: range }]);
+              setComments((commentRanges) => [...commentRanges, { id, cursor }]);
               return id;
             },
             onSelect: (state) => {

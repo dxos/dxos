@@ -405,7 +405,10 @@ export class AutomergeArray<T> implements Array<T> {
   }
 
   private _getModel(index: number): T | undefined {
-    return this._getArray()[index] as T | undefined;
+    invariant(this._object?.[base] instanceof AutomergeObject);
+    const relativePath = [...this._path!, String(index)];
+    const value = this._object._get(relativePath);
+    return this._object._mapToEchoObject(relativePath, value);
   }
 
   private _setModel(index: number, value: T) {
@@ -428,9 +431,12 @@ export class AutomergeArray<T> implements Array<T> {
 
   private _getArray(): T[] {
     // TODO(mykola): Add cache to improve performance?
-    invariant(this._object?.[base] instanceof AutomergeObject);
-    const array = this._object._get(this._path!);
+    const obj = this._object;
+    invariant(obj?.[base] instanceof AutomergeObject);
+    const array = obj._get(this._path!);
     invariant(Array.isArray(array));
-    return array;
+    return array.map((value, idx) => {
+      return obj._mapToEchoObject([...this._path!, String(idx)], value);
+    });
   }
 }

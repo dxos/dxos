@@ -18,7 +18,10 @@ export class AgentEnv<S, C> {
   // Redis client for subscribing to sync events.
   public redisSub: Redis;
 
-  constructor(public params: AgentParams<S, C>, private readonly _redisOptions?: RedisOptions) {
+  constructor(
+    public params: AgentParams<S, C>,
+    private readonly _redisOptions?: RedisOptions,
+  ) {
     this.redis = new Redis(this._redisOptions ?? { port: REDIS_PORT });
     this.redisSub = new Redis(this._redisOptions ?? { port: REDIS_PORT });
 

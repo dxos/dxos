@@ -3,8 +3,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
-
-import { safeParseJson } from '../../util';
+import { safeParseJson } from '@dxos/util';
 
 export type ParseResult = {
   timestamp: string;

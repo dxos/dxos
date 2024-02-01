@@ -59,7 +59,7 @@ export const isActualTypedObject = (object: unknown): object is TypedObject => {
 /**
  * @deprecated Temporary.
  */
-export const isAutomergeObject = (object: unknown): object is AutomergeObject => {
+export const isAutomergeObject = (object: unknown | undefined | null): object is AutomergeObject => {
   return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === AutomergeObject.prototype;
 };
 
@@ -441,7 +441,10 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
           } else if (value['@type'] === REFERENCE_TYPE_TAG) {
             // Special case for assigning unresolved references in the form of { '@id': '0x123' }
             this._mutate(
-              this._model.builder().set(key, new Reference(value.itemId, value.protocol, value.host)).build(meta),
+              this._model
+                .builder()
+                .set(key, new Reference(value.itemId, value.protocol, value.host))
+                .build(meta),
             );
           } else {
             const sub = this._createProxy({}, key);

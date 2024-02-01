@@ -39,13 +39,13 @@
       "path": "../../sdk/config"
     },
     {
+      "path": "../../sdk/observability"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
       "path": "../../sdk/shell"
-    },
-    {
-      "path": "../plugins/plugin-telemetry"
     }
   ]
 }

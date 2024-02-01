@@ -17,7 +17,7 @@ export type TagStyleProps = {
 };
 
 const paletteColorMap: Record<Exclude<TagStyleProps['palette'], undefined>, string> = {
-  neutral: 'bg-neutral-200 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-150',
+  neutral: 'surface-separator text-neutral-800 dark:text-neutral-150',
   red: 'bg-red-200 text-red-800 dark:bg-red-700 dark:text-red-150',
   orange: 'bg-orange-200 text-orange-800 dark:bg-orange-700 dark:text-orange-150',
   amber: 'bg-amber-200 text-amber-800 dark:bg-amber-700 dark:text-amber-150',

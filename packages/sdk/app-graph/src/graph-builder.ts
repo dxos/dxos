@@ -150,10 +150,10 @@ export class GraphBuilder {
               shortcut = availablePlatforms.includes(platform)
                 ? action.keyBinding[platform]
                 : platform === 'ios'
-                ? action.keyBinding.macos // Fallback to macos if ios-specific bindings not provided.
-                : platform === 'linux' || platform === 'unknown'
-                ? action.keyBinding.windows // Fallback to windows if platform-specific bindings not provided.
-                : undefined;
+                  ? action.keyBinding.macos // Fallback to macos if ios-specific bindings not provided.
+                  : platform === 'linux' || platform === 'unknown'
+                    ? action.keyBinding.windows // Fallback to windows if platform-specific bindings not provided.
+                    : undefined;
             } else {
               shortcut = action.keyBinding;
             }

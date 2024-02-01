@@ -4,7 +4,7 @@
 
 import prettier from 'prettier';
 
-export const pretty = (content: string, path: string) => {
+export const pretty = async (content: string, path: string): Promise<string> => {
   const map = {
     '.ts': 'typescript',
     '.tsx': 'typescript',

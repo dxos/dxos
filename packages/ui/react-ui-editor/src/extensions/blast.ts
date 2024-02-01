@@ -125,7 +125,10 @@ class Blaster {
 
   _lastPoint = { x: 0, y: 0 };
 
-  constructor(private readonly _node: HTMLElement, private readonly _options: BlastOptions) {
+  constructor(
+    private readonly _node: HTMLElement,
+    private readonly _options: BlastOptions,
+  ) {
     this._effect = this._options.effect === 1 ? new Effect1(_options) : new Effect2(_options);
   }
 

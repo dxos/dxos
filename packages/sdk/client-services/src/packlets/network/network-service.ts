@@ -12,7 +12,10 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 
 export class NetworkServiceImpl implements NetworkService {
-  constructor(private readonly networkManager: NetworkManager, private readonly signalManager: SignalManager) {}
+  constructor(
+    private readonly networkManager: NetworkManager,
+    private readonly signalManager: SignalManager,
+  ) {}
 
   queryStatus() {
     return new Stream<NetworkStatus>(({ next }) => {

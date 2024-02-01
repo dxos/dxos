@@ -39,6 +39,7 @@ export default defineConfig({
     minify: process.env.DX_ENVIRONMENT === 'development' ? false : undefined,
     rollupOptions: {
       input: {
+        internal: resolve(__dirname, './internal.html'),
         main: resolve(__dirname, './index.html'),
         shell: resolve(__dirname, './shell.html'),
         devtools: resolve(__dirname, './devtools.html'),

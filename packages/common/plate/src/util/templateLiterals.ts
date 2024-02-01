@@ -43,7 +43,7 @@ export const plate = (literals: TemplateStringsArray, ...args: any[]) => {
 
 // export const plate = (literals: TemplateStringsArray, ...args: any[]) => textUntrimmed(literals, ...args);
 
-export const ts = (literals: TemplateStringsArray, ...args: any[]) => {
+export const ts = async (literals: TemplateStringsArray, ...args: any[]): Promise<string> => {
   const result = plate(literals, ...args);
   try {
     return prettier.format(result, {

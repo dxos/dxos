@@ -19,6 +19,7 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type MuxerStats, Teleport } from '@dxos/teleport';
 import { type BlobStore, BlobSync } from '@dxos/teleport-extension-object-sync';
 import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
+import { trace } from '@dxos/tracing';
 import { ComplexMap } from '@dxos/util';
 
 import { AuthExtension, type AuthProvider, type AuthVerifier } from './auth';
@@ -51,6 +52,7 @@ export type SpaceProtocolOptions = {
 /**
  * Manages Teleport protocol stream creation and joining swarms with replication and presence extensions.
  */
+@trace.resource()
 export class SpaceProtocol {
   private readonly _networkManager: NetworkManager;
   private readonly _swarmIdentity: SwarmIdentity;
@@ -60,8 +62,10 @@ export class SpaceProtocol {
   public readonly blobSync: BlobSync;
 
   @logInfo
+  @trace.info()
   private readonly _topic: Promise<PublicKey>;
 
+  @trace.info()
   private readonly _spaceKey: PublicKey;
 
   private readonly _feeds = new Set<FeedWrapper<FeedMessage>>();

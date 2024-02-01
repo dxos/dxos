@@ -39,8 +39,8 @@ const InvitationActions = ({
             failReason === 'timeout'
               ? 'timeout status label'
               : failReason === 'cancelled'
-              ? 'cancelled status label'
-              : 'error status label',
+                ? 'cancelled status label'
+                : 'error status label',
           )}
         </StepHeading>
         <div role='none' className='grow' />
