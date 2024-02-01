@@ -10,6 +10,7 @@ import { Surface } from '@dxos/app-framework';
 import { type SpaceMember } from '@dxos/client/echo';
 import { PublicKey } from '@dxos/react-client';
 import { type Expando, getTextContent, type TextObject } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 import { Button } from '@dxos/react-ui';
 import { TextEditor, useTextModel } from '@dxos/react-ui-editor';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
@@ -71,17 +72,26 @@ const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
 
 const TextboxBlock = ({
   text,
+  authorId,
   onBlockDelete,
-}: { text: TextObject } & Pick<MessageBlockProps<Block>, 'onBlockDelete'>) => {
+}: { text: TextObject } & Pick<MessageBlockProps<Block>, 'authorId' | 'onBlockDelete'>) => {
+  const identity = useIdentity();
   const model = useTextModel({ text });
   const textboxWidth = onBlockDelete ? 'col-span-2' : 'col-span-3';
+  const readonly = identity?.identityKey.toHex() !== authorId;
+
   return (
     <div
       role='none'
       className={mx('col-span-3 grid grid-cols-subgrid', hoverableControls, hoverableFocusedWithinControls)}
     >
       {model ? (
-        <TextEditor model={model} slots={{ root: { className: textboxWidth } }} extensions={[command]} />
+        <TextEditor
+          model={model}
+          readonly={readonly}
+          slots={{ root: { className: textboxWidth } }}
+          extensions={[command]}
+        />
       ) : (
         <span className={textboxWidth} />
       )}
@@ -94,7 +104,7 @@ const TextboxBlock = ({
   );
 };
 
-const MessageBlock = ({ block, onBlockDelete }: MessageBlockProps<Block>) => {
+const MessageBlock = ({ block, authorId, onBlockDelete }: MessageBlockProps<Block>) => {
   return block.object ? (
     <Mosaic.Container id={block.object.id}>
       <Mosaic.DraggableTile
@@ -106,7 +116,7 @@ const MessageBlock = ({ block, onBlockDelete }: MessageBlockProps<Block>) => {
       />
     </Mosaic.Container>
   ) : block.content ? (
-    <TextboxBlock text={block.content} onBlockDelete={onBlockDelete} />
+    <TextboxBlock text={block.content} authorId={authorId} onBlockDelete={onBlockDelete} />
   ) : null;
 };
 
