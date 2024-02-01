@@ -22,7 +22,7 @@ export const createKanban = () => {
             { count: faker.number.int(8) },
           ),
         }),
-      { min: 2, max: 8 },
+      { count: { min: 2, max: 8 } },
     ),
   });
 };

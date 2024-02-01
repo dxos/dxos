@@ -43,6 +43,10 @@ To reset the app, inspect and delete local storage properties.
 
 ## Dependencies
 
+To view dependencies and build sizes using bundle buddy, upload pairs of javascript and source map files from
+`out/assets` to https://bundle-buddy.com (via the rollup upload).
+
+
 
 
 ## Docker
