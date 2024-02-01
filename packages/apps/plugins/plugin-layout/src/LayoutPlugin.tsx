@@ -93,7 +93,7 @@ export const LayoutPlugin = ({
       state.close();
     },
     provides: {
-      // TODO(wittjosiah): Does this need to be provided twice? Does it matter?
+      // TODO(wittjosiah): Split settings and state.
       layout: state.values as RevertDeepSignal<LayoutState>,
       settings: state.values,
       translations,
@@ -136,11 +136,7 @@ export const LayoutPlugin = ({
             await dispatch({
               plugin: LAYOUT_PLUGIN,
               action: LayoutAction.ACTIVATE,
-              data: {
-                // TODO(wittjosiah): Remove condition. This is here for backwards compatibility.
-                id:
-                  window.location.pathname === '/embedded' ? 'github:embedded' : uriToActive(window.location.pathname),
-              },
+              data: { id: uriToActive(window.location.pathname) },
             });
           };
 
