@@ -62,11 +62,11 @@ export const defaultTheme: ThemeStyles = {
     fontSize: '16px',
   },
   '&light .cm-content': {
-    color: get(tokens, 'extend.colors.neutral.900', 'black'),
+    color: get(tokens, 'extend.semanticColors.base.fg.light', 'black'),
     caretColor: 'black',
   },
   '&dark .cm-content': {
-    color: get(tokens, 'extend.colors.neutral.100', 'white'),
+    color: get(tokens, 'extend.semanticColors.base.fg.dark', 'white'),
     caretColor: 'white',
   },
 

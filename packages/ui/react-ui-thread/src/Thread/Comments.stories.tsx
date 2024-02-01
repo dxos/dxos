@@ -227,7 +227,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
   // Filter by visibility.
   const visibleThreads = useMemo(() => threads.filter((thread) => thread.yPos !== undefined), [threads]);
 
-  const handleCreateComment: CommentsOptions['onCreate'] = (cursor, location) => {
+  const handleCreateComment: CommentsOptions['onCreate'] = ({ cursor, location }) => {
     const id = PublicKey.random().toHex();
     log.info('create', { id: id.slice(0, 4), cursor });
     setThreads((threads) => [

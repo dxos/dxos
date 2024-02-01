@@ -17,12 +17,13 @@ import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import { Message, type MessageBlockProps, type MessageProps } from '@dxos/react-ui-thread';
 
+import { command } from './command-extension';
 import { useMessageMetadata } from '../hooks';
 import { THREAD_ITEM } from '../meta';
 
 type Block = MessageType.Block;
 
-const messageControlClassNames = ['p-1 min-bs-0 mie-1 transition-opacity', hoverableControlItem];
+const messageControlClassNames = ['p-1 min-bs-0 mie-1 transition-opacity items-start', hoverableControlItem];
 
 const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
   ({ draggableStyle, draggableProps, item, onRemove, active }, forwardedRef) => {
@@ -45,14 +46,22 @@ const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
         style={draggableStyle}
         ref={forwardedRef}
       >
-        <Button variant='ghost' classNames={messageControlClassNames} {...draggableProps}>
+        <Button
+          variant='ghost'
+          classNames={['pli-0 plb-1 min-bs-0 transition-opacity', hoverableControlItem]}
+          {...draggableProps}
+        >
           <DotsSixVertical />
         </Button>
         <div role='none' className={onRemove ? '' : 'col-span-2'}>
           <Surface role='message-block' data={item} fallback={title} />
         </div>
         {onRemove && (
-          <Button variant='ghost' classNames={messageControlClassNames} onClick={onRemove}>
+          <Button
+            variant='ghost'
+            classNames={['p-1.5 min-bs-0 mie-1 transition-opacity items-start', hoverableControlItem]}
+            onClick={onRemove}
+          >
             <X />
           </Button>
         )}
@@ -77,7 +86,12 @@ const TextboxBlock = ({
       className={mx('col-span-3 grid grid-cols-subgrid', hoverableControls, hoverableFocusedWithinControls)}
     >
       {model ? (
-        <TextEditor model={model} readonly={readonly} slots={{ root: { className: textboxWidth } }} />
+        <TextEditor
+          model={model}
+          readonly={readonly}
+          slots={{ root: { className: textboxWidth } }}
+          extensions={[command]}
+        />
       ) : (
         <span className={textboxWidth} />
       )}
