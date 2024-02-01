@@ -151,7 +151,7 @@ export class TraceProcessor {
 
   traceSpan(params: TraceSpanParams): TracingSpan {
     const span = new TracingSpan(this, params);
-    if(span.metricsCounter) {
+    if (span.metricsCounter) {
       span.metricsCounter.beginSpan(span);
     } else {
       this._flushSpan(span);
@@ -219,10 +219,18 @@ export class TraceProcessor {
 
     return {
       resources: Object.fromEntries(
-        Array.from(this.resources.entries()).map(([id, entry]) => [
-          `${entry.sanitizedClassName}#${entry.data.instanceId}`,
-          entry.data,
-        ]),
+        Array.from(this.resources.entries()).map(([id, entry]) => {
+          const data = structuredClone(entry.data);
+          data.metrics = {} as any;
+          entry.data.metrics?.forEach((metric) => {
+            const { name, ...content } = metric;
+            (data.metrics as any)[name] = {
+              '@type': Object.keys(content)[0],
+              ...(content as any)[Object.keys(content)[0]],
+            };
+          });
+          return [`${entry.sanitizedClassName}#${entry.data.instanceId}`, data];
+        }),
       ),
       spans: Array.from(this.spans.values()),
       logs: this.logs.filter((log) => log.level >= LogLevel.INFO),
@@ -362,7 +370,7 @@ export class TracingSpan {
   markSuccess() {
     this.endTs = performance.now();
 
-    if(this.metricsCounter) {
+    if (this.metricsCounter) {
       this.metricsCounter.endSpan(this);
     } else {
       this._traceProcessor._flushSpan(this);
@@ -376,8 +384,8 @@ export class TracingSpan {
   markError(err: unknown) {
     this.endTs = performance.now();
     this.error = serializeError(err);
-    
-    if(this.metricsCounter) {
+
+    if (this.metricsCounter) {
       this.metricsCounter.endSpan(this);
     } else {
       this._traceProcessor._flushSpan(this);

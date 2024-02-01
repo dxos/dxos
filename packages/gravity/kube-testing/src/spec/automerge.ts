@@ -40,7 +40,7 @@ export type AutomergeTestSpec = {
   /**
    * Both server and client create docs.
    */
-  symetric: boolean;
+  symmetric: boolean;
   docCount: number;
   changeCount: number;
   contentKind: 'strings' | 'seq-numbers';
@@ -60,9 +60,9 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
 
       clientStorage: 'idb',
 
-      symetric: false,
+      symmetric: false,
       agents: 2,
-      docCount: 10,
+      docCount: 1000,
       changeCount: 10,
       contentKind: 'strings',
 
@@ -91,7 +91,7 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
     const { config, spec } = env.params;
 
     performance.mark('create:begin');
-    const docsToCreate = spec.symetric || config.type === 'server' ? spec.docCount : 0;
+    const docsToCreate = spec.symmetric || config.type === 'server' ? spec.docCount : 0;
     const localDocs = range(docsToCreate).map((idx) => {
       const handle = this.repo.create();
       handle.change((doc: any) => {
