@@ -4,7 +4,7 @@
 
 import type { Client } from '@dxos/client';
 
-import { BASE_TELEMETRY_PROPERTIES, getTelemetryIdentifier } from './app-observability';
+import { getTelemetryIdentifier } from './common';
 import type { Observability } from '../observability';
 
 let lastFocusEvent = new Date();
@@ -12,7 +12,7 @@ let totalTime = 0;
 
 export const setupTelemetryListeners = (namespace: string, client: Client, observability: Observability) => {
   const clickCallback = (event: any) => {
-    if (BASE_TELEMETRY_PROPERTIES.group === 'dxos' && event.target && !event.target.id) {
+    if (observability.group === 'dxos' && event.target && !event.target.id) {
       // TODO(wittjosiah): Use @dxos/log so these can be filtered.
       console.warn('Click event on element without id:', event.target);
     }
@@ -22,7 +22,6 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
         identityId: getTelemetryIdentifier(client),
         name: `${namespace}.window.click`,
         properties: {
-          ...BASE_TELEMETRY_PROPERTIES,
           href: window.location.href,
           id: (event.target as HTMLElement)?.id,
           path: (event.path as HTMLElement[])
@@ -42,7 +41,6 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
         identityId: getTelemetryIdentifier(client),
         name: `${namespace}.window.focus`,
         properties: {
-          ...BASE_TELEMETRY_PROPERTIES,
           href: window.location.href,
           timeAway: now.getTime() - lastFocusEvent.getTime(),
         },
@@ -59,7 +57,6 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
         identityId: getTelemetryIdentifier(client),
         name: `${namespace}.window.blur`,
         properties: {
-          ...BASE_TELEMETRY_PROPERTIES,
           href: window.location.href,
           timeSpent,
         },
@@ -75,7 +72,6 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
         identityId: getTelemetryIdentifier(client),
         name: `${namespace}.page.unload`,
         properties: {
-          ...BASE_TELEMETRY_PROPERTIES,
           href: window.location.href,
           timeSpent: totalTime,
         },
@@ -89,7 +85,6 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
         identityId: getTelemetryIdentifier(client),
         name: `${namespace}.window.error`,
         properties: {
-          ...BASE_TELEMETRY_PROPERTIES,
           href: window.location.href,
           message: event.message,
           filename: event.filename,
