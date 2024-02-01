@@ -27,6 +27,7 @@ export const uniqueArray = <T>(values: T[] | (() => T), n: number): T[] => {
     return results;
   } else {
     const results = new Set<T>();
+    // TODO(burdon): Set timeout.
     while (results.size < n) {
       results.add(values());
     }
