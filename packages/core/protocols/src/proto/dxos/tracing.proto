@@ -97,6 +97,15 @@ message Metric {
     repeated Track tracks = 1;
   }
 
+  message Distribution {
+    double min = 1;
+    double max = 2;
+    double mean = 3;
+    double stddev = 4;
+    int32 count = 5;
+    int32 error_count = 6;
+  }
+
   message Custom {
     google.protobuf.Struct payload = 1;
   }
@@ -107,6 +116,7 @@ message Metric {
     Counter counter = 100;
     TimeSeries time_series = 101;
     MultiCounter multi_counter = 102;
+    Distribution distribution = 103;
     Custom custom = 199;
   }
 }

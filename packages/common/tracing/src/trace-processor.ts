@@ -10,7 +10,7 @@ import { type Error as SerializedError } from '@dxos/protocols/proto/dxos/error'
 import { type Metric, type Resource, type Span } from '@dxos/protocols/proto/dxos/tracing';
 import { getPrototypeSpecificInstanceId } from '@dxos/util';
 
-import type { AddLinkOptions } from './api';
+import type { AddLinkOptions, SpanMetricsCounter } from './api';
 import { type BaseCounter } from './metrics';
 import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
 import { TraceSender } from './trace-sender';
@@ -25,6 +25,7 @@ export type TraceSpanParams = {
   methodName: string;
   parentCtx: Context | null;
   showInBrowserTimeline: boolean;
+  metricsCounter: SpanMetricsCounter | null;
 };
 
 export class ResourceEntry {
@@ -150,7 +151,11 @@ export class TraceProcessor {
 
   traceSpan(params: TraceSpanParams): TracingSpan {
     const span = new TracingSpan(this, params);
-    this._flushSpan(span);
+    if(span.metricsCounter) {
+      span.metricsCounter.beginSpan(span);
+    } else {
+      this._flushSpan(span);
+    }
     return span;
   }
 
@@ -318,7 +323,8 @@ export class TracingSpan {
   readonly parentId: number | null = null;
   readonly methodName: string;
   readonly resourceId: number | null = null;
-  startTs: number;
+  readonly metricsCounter: SpanMetricsCounter | null = null;
+  beginTs: number;
   endTs: number | null = null;
   error: SerializedError | null = null;
 
@@ -332,8 +338,9 @@ export class TracingSpan {
     this.id = TracingSpan.nextId++;
     this.methodName = params.methodName;
     this.resourceId = _traceProcessor.getResourceId(params.instance);
-    this.startTs = performance.now();
+    this.beginTs = performance.now();
     this._showInBrowserTimeline = params.showInBrowserTimeline;
+    this.metricsCounter = params.metricsCounter;
 
     if (params.parentCtx) {
       this._ctx = params.parentCtx.derive({
@@ -354,7 +361,12 @@ export class TracingSpan {
 
   markSuccess() {
     this.endTs = performance.now();
-    this._traceProcessor._flushSpan(this);
+
+    if(this.metricsCounter) {
+      this.metricsCounter.endSpan(this);
+    } else {
+      this._traceProcessor._flushSpan(this);
+    }
 
     if (this._showInBrowserTimeline) {
       this._markInBrowserTimeline();
@@ -364,7 +376,12 @@ export class TracingSpan {
   markError(err: unknown) {
     this.endTs = performance.now();
     this.error = serializeError(err);
-    this._traceProcessor._flushSpan(this);
+    
+    if(this.metricsCounter) {
+      this.metricsCounter.endSpan(this);
+    } else {
+      this._traceProcessor._flushSpan(this);
+    }
 
     if (this._showInBrowserTimeline) {
       this._markInBrowserTimeline();
@@ -377,7 +394,7 @@ export class TracingSpan {
       resourceId: this.resourceId ?? undefined,
       methodName: this.methodName,
       parentId: this.parentId ?? undefined,
-      startTs: this.startTs.toFixed(3),
+      startTs: this.beginTs.toFixed(3),
       endTs: this.endTs?.toFixed(3) ?? undefined,
       error: this.error ?? undefined,
     };
@@ -388,7 +405,7 @@ export class TracingSpan {
     const name = resource
       ? `${resource.sanitizedClassName}#${resource.data.instanceId}.${this.methodName}`
       : this.methodName;
-    performance.measure(name, { start: this.startTs, end: this.endTs! });
+    performance.measure(name, { start: this.beginTs, end: this.endTs! });
   }
 }
 

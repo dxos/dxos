@@ -12,7 +12,7 @@ import { sleep } from '@dxos/async';
 import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
 import { AutomergeStorageAdapter } from '@dxos/echo-pipeline';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { MapCounter, trace } from '@dxos/tracing';
+import { MapCounter, SpanTimeDistributionCounter, trace } from '@dxos/tracing';
 import {
   type AgentEnv,
   type AgentRunOptions,
@@ -30,12 +30,12 @@ export type AutomergeTestSpec = {
   // Number of connections per client.
   clientConnections: number;
 
-  clientStorage: 'none' | 'idb' | 'opfs',
+  clientStorage: 'none' | 'idb' | 'opfs';
 
   /**
    * Measure disk load time.
    */
-  reloadStep: boolean,
+  reloadStep: boolean;
 
   /**
    * Both server and client create docs.
@@ -44,7 +44,6 @@ export type AutomergeTestSpec = {
   docCount: number;
   changeCount: number;
   contentKind: 'strings' | 'seq-numbers';
-  
 };
 
 export type AutomergeAgentConfig = {
@@ -143,9 +142,9 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
     });
 
     await sleep(1_000);
-    await env.syncBarrier('docs ready')
+    await env.syncBarrier('docs ready');
 
-    if(spec.reloadStep &&  config.type === 'client') {
+    if (spec.reloadStep && config.type === 'client') {
       await this._init(env, { network: false });
 
       performance.mark('load:begin');
@@ -165,7 +164,10 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
 
   async finish(params: TestParams<AutomergeTestSpec>, results: PlanResults): Promise<any> {}
 
-  private async _init(env: AgentEnv<AutomergeTestSpec, AutomergeAgentConfig>, { network }: { network: boolean}): Promise<void> {
+  private async _init(
+    env: AgentEnv<AutomergeTestSpec, AutomergeAgentConfig>,
+    { network }: { network: boolean },
+  ): Promise<void> {
     const { config, spec, agents, runtime } = env.params;
 
     const {
@@ -186,26 +188,27 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
       case 'client':
         this.repo = new Repo({
           storage: this._createStorage(spec.clientStorage),
-          network: network ? randomArraySlice(
-            Object.values(agents).filter((a) => a.config.type === 'server'),
-            spec.clientConnections,
-          ).map((a) => new BrowserWebSocketClientAdapter(`ws://localhost:${a.config.port}`)) : [],
+          network: network
+            ? randomArraySlice(
+                Object.values(agents).filter((a) => a.config.type === 'server'),
+                spec.clientConnections,
+              ).map((a) => new BrowserWebSocketClientAdapter(`ws://localhost:${a.config.port}`))
+            : [],
         });
         break;
     }
   }
 
   private _createStorage(kind: AutomergeTestSpec['clientStorage']) {
-    switch(kind) {
+    switch (kind) {
       case 'none':
         return undefined;
       case 'idb':
         return new MeteredStorageProxy(new IndexedDBStorageAdapter());
-      case 'opfs':
-        {
-          const storage = createStorage({ type: StorageType.WEBFS })
-          return new MeteredStorageProxy(new AutomergeStorageAdapter(storage.createDirectory('automerge')))
-        }
+      case 'opfs': {
+        const storage = createStorage({ type: StorageType.WEBFS });
+        return new MeteredStorageProxy(new AutomergeStorageAdapter(storage.createDirectory('automerge')));
+      }
     }
   }
 }
@@ -215,38 +218,52 @@ const importEsm = Function('path', 'return import(path)');
 
 @trace.resource()
 class MeteredStorageProxy extends StorageAdapter {
-  constructor(
-    private readonly _storage: StorageAdapter,
-  ) {
+  constructor(private readonly _storage: StorageAdapter) {
     super();
   }
-
-  @trace.metricsCounter()
-  private _metrics = new MapCounter();
 
   @trace.info()
   private get _driverName() {
     return Object.getPrototypeOf(this._storage).constructor.name;
   }
 
+  @trace.metricsCounter()
+  _loadMetrics = new SpanTimeDistributionCounter();
+
+  @trace.span({ metricsCounter: '_loadMetrics' })
   override load(key: StorageKey): Promise<Uint8Array | undefined> {
-    this._metrics.inc('load');
     return this._storage.load(key);
   }
+
+  @trace.metricsCounter()
+  _saveMetrics = new SpanTimeDistributionCounter();
+
+  @trace.span({ metricsCounter: '_saveMetrics' })
   override save(key: StorageKey, data: Uint8Array): Promise<void> {
-    this._metrics.inc('save');
     return this._storage.save(key, data);
   }
+
+  @trace.metricsCounter()
+  _removeMetrics = new SpanTimeDistributionCounter();
+
+  @trace.span({ metricsCounter: '_removeMetrics' })
   override remove(key: StorageKey): Promise<void> {
-    this._metrics.inc('remove');
     return this._storage.remove(key);
   }
+
+  @trace.metricsCounter()
+  _loadRangeMetrics = new SpanTimeDistributionCounter();
+
+  @trace.span({ metricsCounter: '_loadRangeMetrics' })
   override loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
-    this._metrics.inc('loadRange');
     return this._storage.loadRange(keyPrefix);
   }
+
+  @trace.metricsCounter()
+  _removeRangeMetrics = new SpanTimeDistributionCounter();
+
+  @trace.span({ metricsCounter: '_removeRangeMetrics' })
   override removeRange(keyPrefix: StorageKey): Promise<void> {
-    this._metrics.inc('removeRange');
     return this._storage.removeRange(keyPrefix);
   }
 }
