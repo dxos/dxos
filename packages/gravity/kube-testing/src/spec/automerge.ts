@@ -119,6 +119,7 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
     await Promise.all(docs.map((doc) => doc.whenReady()));
     performance.mark('ready:end');
     log.info('docs ready', {
+      from: config.type,
       count: docs.length,
       time: performance.measure('ready', 'ready:begin', 'ready:end').duration,
     });
