@@ -204,7 +204,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
             case ThreadAction.SELECT: {
               state.threads = { ...state.threads, ...intent.data?.threads };
-              state.current = intent.data?.active;
+              state.current = intent.data?.current;
               state.focus = intent.data?.focus;
               return { data: true };
             }
