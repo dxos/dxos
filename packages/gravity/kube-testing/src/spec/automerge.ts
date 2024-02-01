@@ -43,7 +43,7 @@ export type AutomergeAgentConfig = {
 export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeAgentConfig> {
   defaultSpec(): AutomergeTestSpec {
     return {
-      platform: 'nodejs',
+      platform: 'chromium',
       clientConnections: 1,
       symetric: false,
       agents: 2,
