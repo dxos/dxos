@@ -4,11 +4,9 @@
 
 import { randNumber } from '@ngneat/falso';
 
-export type Options = number | Range;
-
 export type Range = { min?: number; max?: number; count?: number };
 
-export const toRange = (range: Options, min = 0) => (typeof range === 'number' ? { min, max: range } : range);
+export const toRange = (range: number | Range, min = 0) => (typeof range === 'number' ? { min, max: range } : range);
 
 export const getCount = (range?: number | Range) => (typeof range === 'number' ? range : randNumber(range));
 

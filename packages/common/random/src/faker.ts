@@ -22,7 +22,7 @@ import {
   seed,
 } from '@ngneat/falso';
 
-import { getCount, multiple, type Range, toRange, uniqueArray } from './util';
+import { type Range, getCount, multiple, toRange, uniqueArray } from './util';
 
 // Fake faker.
 export const faker = {
