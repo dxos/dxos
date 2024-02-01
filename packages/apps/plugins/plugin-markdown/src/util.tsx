@@ -7,7 +7,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { getTextContent, isTypedObject } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
 import { type EditorModel, YText } from '@dxos/react-ui-editor';
 
-import { type MarkdownProperties, type MarkdownProvides } from './types';
+import { type MarkdownProperties, type MarkdownExtensionProvides } from './types';
 
 // TODO(burdon): These tests clash with Diagram.content.
 //  Uncaught Error: Type with the name content has already been defined with a different constructor.
@@ -43,10 +43,10 @@ export const isMarkdownProperties = (data: unknown): data is MarkdownProperties 
       ? 'title' in data && typeof data.title === 'string'
       : false;
 
-type MarkdownPlugin = Plugin<MarkdownProvides>;
+type MarkdownExtensionPlugin = Plugin<MarkdownExtensionProvides>;
 
-export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
-  return (plugins as MarkdownPlugin[]).filter((plugin) => Boolean(plugin.provides?.markdown));
+export const markdownExtensionPlugins = (plugins: Plugin[]): MarkdownExtensionPlugin[] => {
+  return (plugins as MarkdownExtensionPlugin[]).filter((plugin) => Boolean(plugin.provides?.markdown));
 };
 
 const nonTitleChars = /[^\w ]/g;
