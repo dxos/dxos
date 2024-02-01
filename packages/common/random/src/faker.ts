@@ -3,7 +3,7 @@
 //
 
 import { faker as realFaker } from '@faker-js/faker';
-import { randFloat, randNumber, seed } from '@ngneat/falso';
+import { randBoolean, randChanceBoolean, randFloat, randNumber, seed } from '@ngneat/falso';
 
 import { type Range, toRange } from './util';
 
@@ -34,7 +34,7 @@ export const faker = {
   },
   datatype: {
     array: (n: number) => realFaker.datatype.array(n), // TODO(burdon): !!!
-    boolean: (p?: { probability: number }) => realFaker.datatype.boolean(p),
+    boolean: (p?: { probability: number }) => (p ? randChanceBoolean({ chanceTrue: p.probability }) : randBoolean()),
   },
   date: {
     recent: () => realFaker.date.recent(),
