@@ -12,10 +12,10 @@ The code completed application can be found [here](https://github.com/dxos/share
 
 ::: note In this tutorial, we will:
 
-*   Build a `react` app using a [DXOS app template](#create-an-app).
-*   Use [ECHO](#updating-the-counter) for real-time state consensus.
-*   Create a decentralized identity with [HALO](#creating-a-user-identity).
-*   [Deploy](#deploying-the-app) the app to Netlify.
+- Build a `react` app using a [DXOS app template](#create-an-app).
+- Use [ECHO](#updating-the-counter) for real-time state consensus.
+- Create a decentralized identity with [HALO](#creating-a-user-identity).
+- [Deploy](#deploying-the-app) the app to Netlify.
 
 :::
 
@@ -24,13 +24,6 @@ The code completed application can be found [here](https://github.com/dxos/share
 DXOS works in any Node.js or Browser environment. There is a [TypeScript API](typescript) and a [`react` API](react).
 
 Ensure `node -v` is at version 18 or higher (we recommend [Node Version Manager](https://github.com/nvm-sh/nvm)).
-
-First, create a new empty folder:
-
-```bash
-mkdir shared-counter
-cd shared-counter
-```
 
 We have a few [app templates](./cli/app-templates.md) that are designed to get you going quickly. They are based on [`vite`](https://vitejs.dev/), [`typescript`](https://www.typescriptlang.org/), [`react`](https://reactjs.org/), [`tailwind`](https://tailwindcss.com/), [`pwa`](https://vite-pwa-org.netlify.app/), and other opinions.
 
@@ -89,10 +82,10 @@ DXOS apps enable users to control their data and identity by storing it in a [va
 
 The other wrapper components are part of the DXOS [UI system](./react/aurora.md):
 
-*   The `<ServiceWorkerToastContainer>` pops a toast with a reload prompt whenever a new version of the PWA is ready to go.
-*   `<ErrorBoundary>` catches errors that bubble up from the application and `<ResetDialog>` provides a user-friendly way to reset the application in the event of a crash.
-*   `<ThemeProvider>` enables default DXOS styles and [`tailwindcss`](https://tailwindcss.com).
-*   `<GenericFallback>` is a loading indicator.
+- The `<ServiceWorkerToastContainer>` pops a toast with a reload prompt whenever a new version of the PWA is ready to go.
+- `<ErrorBoundary>` catches errors that bubble up from the application and `<ResetDialog>` provides a user-friendly way to reset the application in the event of a crash.
+- `<ThemeProvider>` enables default DXOS styles and [`tailwindcss`](https://tailwindcss.com).
+- `<GenericFallback>` is a loading indicator.
 
 ## Creating a User Identity
 
@@ -258,7 +251,7 @@ You may wonder why we chose to represent a counter as an array when an integer w
 2.  Increment the count value by 1.
 3.  Save the count value to the shared state.
 
-If both peers click the button at the exact same time, the count *should* increase by 2. But it will increase by 1. Why? Each of them started with the same number and did the same operation of incrementing by 1.
+If both peers click the button at the exact same time, the count _should_ increase by 2. But it will increase by 1. Why? Each of them started with the same number and did the same operation of incrementing by 1.
 
 With an array, each time a client pushes an element onto the array, the CRDT algorithm merges those changes together, preserving all elements from all clients.
 
@@ -266,9 +259,9 @@ This is one of the "gotchas" when working with CRDTs. While they ensure that con
 
 ## Recap
 
-*   A [HALO identity](./platform/halo) and a [space](./platform/#spaces) are required to use ECHO.
-*   Reading objects is as simple as querying for the object using [`useQuery()`](react/queries).
-*   The objects returned are tracked by the `Client` and direct mutations to them will be synchronized with other peers (and other parts of your app) reactively.
+- A [HALO identity](./platform/halo) and a [space](./platform/#spaces) are required to use ECHO.
+- Reading objects is as simple as querying for the object using [`useQuery()`](react/queries).
+- The objects returned are tracked by the `Client` and direct mutations to them will be synchronized with other peers (and other parts of your app) reactively.
 
 ## Deploying the app
 
@@ -278,8 +271,8 @@ For the sake of simplicity, we will deploy the app's static assets to Netlify. T
 
 1.  Go to "Add new site" in Netlify, and click "Import an existing project."
 2.  Link to your application's repository.
-    *   Set the build command to `npm run build`
-    *   Set the output directory to `out/shared-counter` (To customize this, change `vite.config.ts`)
+    - Set the build command to `npm run build`
+    - Set the output directory to `out/shared-counter` (To customize this, change `vite.config.ts`)
 3.  Publish!
 
 That's it. Your app is now live!
@@ -294,14 +287,14 @@ This guide demonstrated how to create and deploy a local-first DXOS application.
 
 For more info on using DXOS, see:
 
-*   ECHO with [React](./react/)
-*   ECHO with [TypeScript](./typescript/)
-*   ECHO with [strongly typed objects](./typescript/queries#typed-queries)
+- ECHO with [React](./react/)
+- ECHO with [TypeScript](./typescript/)
+- ECHO with [strongly typed objects](./typescript/queries#typed-queries)
 
 We hope you'll find the technology useful, and we welcome your ideas and contributions:
 
-*   Join the DXOS [Discord](https://discord.gg/KsDBXuUxvD)
-*   DXOS [repository on GitHub](https://github.com/dxos/dxos)
-*   File a bug or idea in [Issues](https://github.com/dxos/dxos/issues)
+- Join the DXOS [Discord](https://discord.gg/KsDBXuUxvD)
+- DXOS [repository on GitHub](https://github.com/dxos/dxos)
+- File a bug or idea in [Issues](https://github.com/dxos/dxos/issues)
 
 Happy building! 🚀
