@@ -32,9 +32,9 @@ export const faker = {
   seed: (value: number) => seed(String(value)),
   helpers: {
     arrayElement: <T>(a: T[]) => rand(a),
-    multiple: (f: () => any, { count }: { count: number | { min: number; max: number } }) =>
+    multiple: <T>(f: () => T, { count }: { count: number | { min: number; max: number } }) =>
       multiple(f, typeof count === 'number' ? count : getCount(count)),
-    uniqueArray: (f: any[] | (() => any), n: number) => uniqueArray(f, n),
+    uniqueArray: <T>(f: T[] | (() => T), n: number) => uniqueArray(f, n),
   },
 
   //
