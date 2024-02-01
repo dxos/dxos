@@ -21,7 +21,11 @@ export const ContextPanel = () => {
     <div role='none' className='bs-full grid grid-cols-1 grid-rows-[min-content_1fr]'>
       <div role='none' className='grid grid-cols-[1fr_3rem] border-be -mbe-px separator-separator'>
         <Surface role={Role.SEARCH} />
-        <Button variant='ghost' onClick={() => (layout.complementarySidebarOpen = false)}>
+        <Button
+          variant='ghost'
+          classNames='col-start-2 bs-12 is-12'
+          onClick={() => (layout.complementarySidebarOpen = false)}
+        >
           <X />
         </Button>
       </div>
