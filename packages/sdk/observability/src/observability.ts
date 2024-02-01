@@ -110,7 +110,20 @@ export class Observability {
 
   private _loadSecrets(config: Config | undefined, secrets?: Record<string, string>) {
     if (isNode()) {
-      return buildSecrets as ObservabilitySecrets;
+      const mergedSecrets = {
+        ...(buildSecrets as ObservabilitySecrets),
+        ...secrets,
+      };
+
+      process.env.DX_ENVIRONMENT && (mergedSecrets.DX_ENVIRONMENT = process.env.DX_ENVIRONMENT);
+      process.env.DX_RELEASE && (mergedSecrets.DX_RELEASE = process.env.DX_RELEASE);
+      process.env.SENTRY_DESTINATION && (mergedSecrets.SENTRY_DESTINATION = process.env.SENTRY_DESTINATION);
+      process.env.TELEMETRY_API_KEY && (mergedSecrets.TELEMETRY_API_KEY = process.env.TELEMETRY_API_KEY);
+      process.env.IPDATA_API_KEY && (mergedSecrets.IPDATA_API_KEY = process.env.IPDATA_API_KEY);
+      process.env.DATADOG_API_KEY && (mergedSecrets.DATADOG_API_KEY = process.env.DATADOG_API_KEY);
+      process.env.DATADOG_APP_KEY && (mergedSecrets.DATADOG_APP_KEY = process.env.DATADOG_APP_KEY);
+
+      return mergedSecrets;
     } else {
       invariant(config, 'runtime config is required');
       log('config', { rtc: this._secrets, config });
