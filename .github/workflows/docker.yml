@@ -154,3 +154,10 @@ jobs:
           repository: dxos/agent
           short-description: DXOS Agent provides offline backup and synchronization capabilities for DXOS applications.
           readme-filepath: packages/devtools/cli/README-docker.md
+      - name: Write summary
+        run: |-
+          echo "# Build successful" >> $GITHUB_STEP_SUMMARY
+          echo "Container version: ${{ env.DX_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "Agent tags: ${{ steps.agent-meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "Composer tags: ${{ steps.composer-meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "Time complete: $(date)" >> $GITHUB_STEP_SUMMARY
