@@ -30,7 +30,7 @@ import {
   getSpaceForObject,
   getTextInRange,
 } from '@dxos/react-client/echo';
-import { comments } from '@dxos/react-ui-editor';
+import { comments, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
 
@@ -219,6 +219,20 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           }
 
           return [
+            listener({
+              onChange: () => {
+                document.comments.forEach(({ thread, cursor }) => {
+                  if (thread && cursor) {
+                    const [start, end] = cursor.split(':');
+                    const title = getTextInRange(document.content, start, end);
+                    // Only update if the title has changed, otherwise this will cause an infinite loop.
+                    if (title !== thread.title) {
+                      thread.title = title;
+                    }
+                  }
+                });
+              },
+            }),
             comments({
               onCreate: ({ cursor, location }) => {
                 // Create comment thread.
