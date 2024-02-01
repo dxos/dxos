@@ -17,6 +17,9 @@ export type ThreadsContainerProps = Omit<
   autoFocusCurrentTextbox?: boolean;
 };
 
+/**
+ * Comment threads.
+ */
 export const ThreadsContainer = ({
   threads,
   onThreadAttend,

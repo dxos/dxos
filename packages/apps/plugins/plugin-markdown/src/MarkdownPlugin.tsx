@@ -39,10 +39,9 @@ import {
   type ExtensionsProvider,
   type MarkdownPluginProvides,
   type MarkdownSettingsProps,
-  type OnChange,
   MarkdownAction,
 } from './types';
-import { getFallbackTitle, isEditorModel, isMarkdownProperties, markdownPlugins } from './util';
+import { getFallbackTitle, isEditorModel, isMarkdownProperties, markdownExtensionPlugins } from './util';
 
 export const isDocument = (data: unknown): data is DocumentType =>
   isTypedObject(data) && DocumentType.schema.typename === data.__typename;
@@ -50,7 +49,6 @@ export const isDocument = (data: unknown): data is DocumentType =>
 export type MarkdownPluginState = {
   activeComment?: string;
   extensions: NonNullable<ExtensionsProvider>[];
-  onChange: NonNullable<OnChange>[];
 };
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
@@ -60,7 +58,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     experimental: false,
   });
 
-  const state = deepSignal<MarkdownPluginState>({ extensions: [], onChange: [] });
+  const state = deepSignal<MarkdownPluginState>({ extensions: [] });
 
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
@@ -70,14 +68,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       settings: settings.values,
       document,
       dispatch: intentPlugin?.provides.intent.dispatch,
-      onChange: (text: string) => {
-        state.onChange.forEach((onChange) => onChange(text));
-      },
     });
 
     // Add extensions from other plugins.
     for (const provider of state.extensions) {
-      const provided = typeof provider === 'function' ? provider() : provider;
+      const provided = typeof provider === 'function' ? provider({ document }) : provider;
       extensions.push(...provided);
     }
 
@@ -96,14 +91,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-      markdownPlugins(plugins).forEach((plugin) => {
-        const { extensions, onChange } = plugin.provides.markdown;
-        if (extensions) {
-          state.extensions.push(extensions);
-        }
-        if (onChange) {
-          state.onChange.push(onChange);
-        }
+      markdownExtensionPlugins(plugins).forEach((plugin) => {
+        const { extensions } = plugin.provides.markdown;
+        state.extensions.push(extensions);
       });
     },
     provides: {
@@ -212,11 +202,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   <EditorMain
                     model={data.model}
                     editorMode={settings.values.editorMode}
-                    extensions={getExtensions({
-                      onChange: (text: string) => {
-                        state.onChange.forEach((onChange) => onChange(text));
-                      },
-                    })}
+                    extensions={getCustomExtensions()}
                   />
                 );
 

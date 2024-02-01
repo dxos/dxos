@@ -4,7 +4,6 @@
 
 import { defineConfig, mergeConfig } from 'vitest/config';
 
-// @ts-ignore
 import configShared from '../../../vitest.shared';
 
 export default mergeConfig(configShared, defineConfig({}));

@@ -9,7 +9,7 @@ import localforage from 'localforage';
 import React from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
-import { type MarkdownProvides } from '@braneframe/plugin-markdown';
+import { type MarkdownExtensionProvides } from '@braneframe/plugin-markdown';
 import {
   resolvePlugin,
   type PluginDefinition,
@@ -19,6 +19,7 @@ import {
   LayoutAction,
 } from '@dxos/app-framework';
 import { EventSubscriptions, Trigger } from '@dxos/async';
+import { listener } from '@dxos/react-ui-editor';
 
 import { LocalFileMain } from './components';
 import meta, { FILES_PLUGIN } from './meta';
@@ -38,7 +39,7 @@ import {
 
 // TODO(burdon): Rename package plugin-file (singular).
 
-export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, MarkdownProvides> => {
+export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, MarkdownExtensionProvides> => {
   let onFilesUpdate: ((node?: Node<LocalEntity>) => void) | undefined;
   const state = deepSignal<{ files: LocalEntity[]; current: LocalFile | undefined }>({
     files: [],
@@ -75,13 +76,17 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
 
       return {
         markdown: {
-          onChange: (text) => {
-            if (state.current) {
-              state.current.text = text.toString();
-              state.current.modified = true;
-              onFilesUpdate?.();
-            }
-          },
+          extensions: () => [
+            listener({
+              onChange: (text) => {
+                if (state.current) {
+                  state.current.text = text.toString();
+                  state.current.modified = true;
+                  onFilesUpdate?.();
+                }
+              },
+            }),
+          ],
         },
       };
     },
