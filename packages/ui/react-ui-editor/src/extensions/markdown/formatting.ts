@@ -246,7 +246,7 @@ export const setStyle =
         changes: changeSet,
         range:
           range.empty && !changeSet.empty
-            ? EditorSelection.cursor(range.head + inlineMarkerText(type).length)
+            ? EditorSelection.cursor(range.head + marker.length)
             : EditorSelection.range(changeSet.mapPos(range.from, 1), changeSet.mapPos(range.to, -1)),
       };
     });

@@ -87,8 +87,9 @@ export const useActionHandler = (view?: EditorView | null): ToolbarProps['onActi
 
     // TODO(burdon): Hack otherwise remains on heading selector.
     setTimeout(() => {
-      view.focus();
-      view.dispatch({ selection: view.state.selection });
+      if (!view.hasFocus) {
+        view.focus();
+      }
     });
   };
 };

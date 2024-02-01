@@ -77,10 +77,11 @@ type ToolbarButtonProps = {
 
 const ToolbarButton = ({ Icon, onClick, title, getState }: ToolbarButtonProps) => {
   const { onAction, state } = useToolbarContext('ToolbarButton');
-  const handleClick = () => {
+  const handleClick = (event: React.MouseEvent) => {
     const action = onClick(state);
     if (action) {
       onAction?.(action);
+      event.preventDefault();
     }
   };
   const active = getState && state ? getState(state) : false;
@@ -91,7 +92,7 @@ const ToolbarButton = ({ Icon, onClick, title, getState }: ToolbarButtonProps) =
       variant='ghost'
       classNames='p-2'
       style={active ? { backgroundColor: 'darkgray' } : {}}
-      onClick={handleClick}
+      onMouseDown={handleClick}
       title={title}
     >
       <Icon className={getSize(5)} />
