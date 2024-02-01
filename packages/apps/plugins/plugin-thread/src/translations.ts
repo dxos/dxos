@@ -17,6 +17,7 @@ export default [
         'settings standalone label': 'Enable standalone thread creation',
         'activity message': 'Processing…',
         'anonymous label': 'Anonymous',
+        'detached thread label': 'Referenced content was removed',
       },
     },
   },

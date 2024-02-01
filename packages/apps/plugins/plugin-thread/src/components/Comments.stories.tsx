@@ -5,13 +5,14 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 
-import { type Thread as ThreadType, types } from '@braneframe/types';
-import { useClient } from '@dxos/react-client';
-import { type Space } from '@dxos/react-client/echo';
+import { Thread as ThreadType, types } from '@braneframe/types';
+import { type PublicKey } from '@dxos/react-client';
+import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ClientRepeater } from '@dxos/react-client/testing';
+import { Tooltip } from '@dxos/react-ui';
 import { Thread } from '@dxos/react-ui-thread';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -21,29 +22,32 @@ import translations from '../translations';
 
 faker.seed(1);
 
-const Story = () => {
-  const client = useClient();
+const Story = ({ spaceKey }: { spaceKey: PublicKey }) => {
   const identity = useIdentity();
-  const [space, setSpace] = useState<Space>();
-  const [threads, setThreads] = useState<ThreadType[] | null>();
+  const space = useSpace(spaceKey);
+  const threads = useQuery(space, ThreadType.filter());
+  const [detached, setDetached] = React.useState<string[]>([]);
 
   useEffect(() => {
-    if (identity) {
+    if (identity && space) {
       setTimeout(async () => {
-        const space = await client.spaces.create();
-        const thread1 = space.db.add(createCommentThread(identity));
-        const thread2 = space.db.add(createCommentThread(identity));
-        setSpace(space);
-        setThreads([thread1, thread2]);
+        space.db.add(createCommentThread(identity));
+        const thread = space.db.add(createCommentThread(identity));
+        setDetached([thread.id]);
       });
     }
-  }, [identity]);
+  }, [identity, space]);
 
   if (!identity || !space || !threads) {
     return null;
   }
 
-  return <ThreadsContainer threads={threads} space={space} />;
+  // TODO(wittjosiah): Include Tooltip.Provider in `withTheme` decorator?
+  return (
+    <Tooltip.Provider>
+      <ThreadsContainer threads={threads} detached={detached} space={space} onThreadResolve={console.log} />;
+    </Tooltip.Provider>
+  );
 };
 
 export default {
