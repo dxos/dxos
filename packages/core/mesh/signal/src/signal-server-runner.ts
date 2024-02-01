@@ -194,8 +194,8 @@ export class SignalServerRunner {
 const ARCH = ['x64', 'amd64', 'ppc64'].includes(process.arch)
   ? 'amd64'
   : ['arm64'].includes(process.arch)
-  ? 'arm64'
-  : '32';
+    ? 'arm64'
+    : '32';
 
 const OS = process.platform;
 

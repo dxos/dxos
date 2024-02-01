@@ -88,8 +88,5 @@ export class InteractiveDirectoryTemplate<I extends InquirableZodType> extends D
   }
 }
 
-export type InputOf<T> = T extends InteractiveDirectoryTemplate<infer U>
-  ? z.TypeOf<U>
-  : T extends DirectoryTemplate<infer Z>
-  ? Z
-  : never;
+export type InputOf<T> =
+  T extends InteractiveDirectoryTemplate<infer U> ? z.TypeOf<U> : T extends DirectoryTemplate<infer Z> ? Z : never;

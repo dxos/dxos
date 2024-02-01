@@ -1,10 +1,13 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 
 import { FileSerializer, type SerializedObject, type SerializedSpace } from './file-serializer';
+
+// TODO(burdon): Create class.
 
 export const saveSpaceToDisk = async ({ space, directory }: { space: Space; directory: FileSystemDirectoryHandle }) => {
   const serializer = new FileSerializer();

@@ -23,7 +23,7 @@ export type SystemServiceOptions = {
   config?: Config;
   statusUpdate: Event<void>;
   getCurrentStatus: () => SystemStatus;
-  getDiagnostics: () => Promise<Partial<Diagnostics>>;
+  getDiagnostics: () => Promise<Partial<Diagnostics['services']>>;
   onUpdateStatus: (status: SystemStatus) => MaybePromise<void>;
   onReset: () => MaybePromise<void>;
 };

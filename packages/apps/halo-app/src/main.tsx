@@ -8,11 +8,12 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import ClientMeta from '@braneframe/plugin-client/meta';
+import ObservabilityMeta from '@braneframe/plugin-observability/meta';
 import PwaMeta from '@braneframe/plugin-pwa/meta';
-import TelemetryMeta from '@braneframe/plugin-telemetry/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import { Plugin, type PluginDefinition, type TranslationsProvides, createApp } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
+import { initializeAppObservability } from '@dxos/observability';
 import { fromHost, fromIFrame } from '@dxos/react-client';
 
 import { OpenVault, ProgressBar } from './components';
@@ -24,7 +25,8 @@ const HaloMeta = {
 };
 
 const main = async () => {
-  const config = new Config(await Envs(), Local(), Defaults());
+  const config = new Config(Envs(), Local(), Defaults());
+  const observability = initializeAppObservability({ namespace: appKey, config });
   const services = config.get('runtime.app.env.DX_HOST') ? fromHost(config) : fromIFrame(config);
 
   const App = createApp({
@@ -33,11 +35,11 @@ const main = async () => {
         <ProgressBar indeterminate />
       </div>
     ),
-    order: [TelemetryMeta, ThemeMeta, PwaMeta, ClientMeta, HaloMeta],
+    order: [ObservabilityMeta, ThemeMeta, PwaMeta, ClientMeta, HaloMeta],
     plugins: {
-      [TelemetryMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-telemetry'), {
+      [ObservabilityMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-observability'), {
         namespace: appKey,
-        config: new Config(Defaults()),
+        observability: () => observability,
       }),
       [ThemeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-theme'), { appName: 'HALO' }),
       // Outside of error boundary so that updates are not blocked by errors.
@@ -61,7 +63,7 @@ const main = async () => {
               );
             },
           },
-        } as PluginDefinition<TranslationsProvides>),
+        }) as PluginDefinition<TranslationsProvides>,
     },
   });
 

@@ -43,7 +43,8 @@ describe('TypedObject', () => {
 
   test('keys', () => {
     const obj = new Expando({ title: 'hello world', priority: 1 });
-    expect(Object.keys(obj)).to.deep.equal(['title', 'priority']);
+    // Key order is not guaranteed.
+    expect(Object.keys(obj).sort()).to.deep.equal(['title', 'priority'].sort());
   });
 
   describe('meta', () => {

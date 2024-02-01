@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, synchronized, trackLeaks, Lock } from '@dxos/async';
+import { Event, synchronized, trackLeaks, Mutex } from '@dxos/async';
 import { type Context } from '@dxos/context';
 import { type FeedInfo } from '@dxos/credentials';
 import { type FeedOptions, type FeedWrapper } from '@dxos/feed-store';
@@ -52,17 +52,22 @@ export type CreatePipelineParams = {
 @trackLeaks('open', 'close')
 @trace.resource()
 export class Space {
-  private readonly _addFeedLock = new Lock();
+  private readonly _addFeedMutex = new Mutex();
 
   public readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
   public readonly stateUpdate = new Event();
+  @trace.info()
   public readonly protocol: SpaceProtocol;
 
   private readonly _key: PublicKey;
   private readonly _genesisFeedKey: PublicKey;
   private readonly _feedProvider: FeedProvider;
+  @trace.info()
   private readonly _controlPipeline: ControlPipeline;
+
+  @trace.info()
   private readonly _dataPipeline: DataPipeline;
+
   private readonly _snapshotManager: SnapshotManager;
 
   private _isOpen = false;
@@ -130,7 +135,7 @@ export class Space {
         }
 
         // Add existing feeds.
-        await this._addFeedLock.executeSynchronized(async () => {
+        await this._addFeedMutex.executeSynchronized(async () => {
           for (const feed of this._controlPipeline.spaceState.feeds.values()) {
             if (feed.assertion.designation === AdmittedFeed.Designation.DATA && !pipeline.hasFeed(feed.key)) {
               await pipeline.addFeed(await this._feedProvider(feed.key, { sparse: true }));

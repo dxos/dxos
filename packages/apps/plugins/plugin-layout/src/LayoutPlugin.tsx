@@ -8,6 +8,7 @@ import { type RevertDeepSignal } from 'deepsignal';
 import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
+import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
   findPlugin,
   parseGraphPlugin,
@@ -36,7 +37,11 @@ import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
 import { type LayoutPluginProvides, type LayoutSettingsProps } from './types';
 
-export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
+export const LayoutPlugin = ({
+  observability,
+}: {
+  observability?: boolean;
+} = {}): PluginDefinition<LayoutPluginProvides> => {
   let graphPlugin: Plugin<GraphProvides> | undefined;
   // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
@@ -161,40 +166,42 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
         const surfaceProps: SurfaceProps = plugin
           ? { data: { component: `${plugin.meta.id}/${component}` } }
           : layout.activeNode
-          ? state.values.fullscreen
-            ? {
-                data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
-                surfaces: { main: { data: { active: layout.activeNode.data } } },
-              }
+            ? state.values.fullscreen
+              ? {
+                  data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
+                  surfaces: { main: { data: { active: layout.activeNode.data } } },
+                }
+              : {
+                  data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
+                  surfaces: {
+                    sidebar: {
+                      data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
+                    },
+                    context: {
+                      data: { component: `${LAYOUT_PLUGIN}/ContextView`, active: layout.activeNode.data },
+                    },
+                    main: { data: { active: layout.activeNode.data } },
+                    'navbar-start': {
+                      data: { activeNode: layout.activeNode, popoverAnchorId: layout.popoverAnchorId },
+                    },
+                    'navbar-end': { data: { object: layout.activeNode.data } },
+                    status: { data: { active: layout.activeNode.data } },
+                    documentTitle: { data: { activeNode: layout.activeNode } },
+                  },
+                }
             : {
                 data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
                 surfaces: {
                   sidebar: {
                     data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
                   },
-                  context: {
-                    data: { component: `${LAYOUT_PLUGIN}/ContextView`, active: layout.activeNode.data },
+                  main: {
+                    data: layout.active ? { active: layout.active } : { component: `${LAYOUT_PLUGIN}/ContentEmpty` },
                   },
-                  main: { data: { active: layout.activeNode.data } },
-                  'navbar-start': { data: { activeNode: layout.activeNode, popoverAnchorId: layout.popoverAnchorId } },
-                  'navbar-end': { data: { object: layout.activeNode.data } },
-                  status: { data: { active: layout.activeNode.data } },
-                  documentTitle: { data: { activeNode: layout.activeNode } },
+                  // TODO(wittjosiah): This plugin should own document title.
+                  documentTitle: { data: { component: `${LAYOUT_PLUGIN}/DocumentTitle` } },
                 },
-              }
-          : {
-              data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
-              surfaces: {
-                sidebar: {
-                  data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
-                },
-                main: {
-                  data: layout.active ? { active: layout.active } : { component: `${LAYOUT_PLUGIN}/ContentEmpty` },
-                },
-                // TODO(wittjosiah): This plugin should own document title.
-                documentTitle: { data: { component: `${LAYOUT_PLUGIN}/DocumentTitle` } },
-              },
-            };
+              };
 
         return (
           <>
@@ -304,7 +311,31 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                 state.values.active = id;
               });
 
-              return { data: true };
+              const schema = state.values.activeNode?.data?.__typename;
+
+              return {
+                data: {
+                  id,
+                  path,
+                  active: true,
+                },
+                intents: [
+                  observability
+                    ? [
+                        {
+                          action: ObservabilityAction.SEND_EVENT,
+                          data: {
+                            name: 'layout.activate',
+                            properties: {
+                              id,
+                              schema,
+                            },
+                          },
+                        },
+                      ]
+                    : [],
+                ],
+              };
             }
           }
         },

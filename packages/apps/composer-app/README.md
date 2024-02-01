@@ -19,7 +19,7 @@ Before running SSC, Composer must be built using:
 ```bash
 NODE_OPTIONS=--max_old_space_size=8192
 DX_HOST=true
-pnpm nx -w bundle composer-app
+pnpm -w nx bundle composer-app
 ```
 
 Then, to bundle the native app, in this directory, run:
@@ -35,7 +35,7 @@ To open the app:
 To run against the vite dev server:
 
 ```bash
-pnpm nx serve-with-vault composer-app
+pnpm nx serve composer-app
 ssc build -r --port 5173
 ```
 
@@ -50,4 +50,5 @@ The app can be run using Docker.
 `docker run -it -p 80:80 dxos/composer-app:latest`
 
 # License
+
 [MIT](https://github.com/dxos/dxos/blob/main/LICENSE) Copyright 2023 © DXOS

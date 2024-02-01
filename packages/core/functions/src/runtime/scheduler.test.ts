@@ -13,7 +13,7 @@ import { Scheduler } from './scheduler';
 import { type FunctionManifest } from '../manifest';
 
 describe('scheduler', () => {
-  test('basic', async () => {
+  test.only('callback', async () => {
     const testBuilder = new TestBuilder();
     const client = new Client({ services: testBuilder.createLocal() });
     await client.initialize();
@@ -30,7 +30,7 @@ describe('scheduler', () => {
       triggers: [
         {
           function: 'example.com/function/test',
-          schedule: '* * * * * *', // Every second.
+          schedule: '0/1 * * * * *', // Every 1s.
         },
       ],
     };
@@ -48,6 +48,7 @@ describe('scheduler', () => {
     });
 
     await scheduler.start();
+
     await done.wait();
     expect(count).to.equal(3);
 

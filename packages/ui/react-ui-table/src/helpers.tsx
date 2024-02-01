@@ -353,8 +353,8 @@ export class ColumnBuilder<TData extends RowData> {
             ? formatSpec
               ? format(value, formatSpec)
               : relative
-              ? formatDistanceToNow(value, { addSuffix: true })
-              : value.toISOString()
+                ? formatDistanceToNow(value, { addSuffix: true })
+                : value.toISOString()
             : undefined;
 
           return <div className={mx(textPadding, classNames)}>{str}</div>;

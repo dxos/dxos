@@ -70,7 +70,7 @@ export const ScriptBlock = ({
 
   const handleExec = useCallback(
     async (auto = true) => {
-      const result = await compiler.compile(getTextContent(source));
+      const result = await compiler.compile(getTextContent(source, ''));
       setResult(result);
       if (auto && view === 'editor') {
         setView('preview');

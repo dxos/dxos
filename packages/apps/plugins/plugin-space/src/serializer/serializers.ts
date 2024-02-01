@@ -140,7 +140,9 @@ export const serializers: Record<string, TypedObjectSerializer> = {
 
     serialize: async (object: Thread): Promise<string> => {
       return (
-        object.messages.map((message) => message.blocks.map((block) => `${block.text}`).join(' - ')).join(' | ') ?? ''
+        object.messages
+          .map((message) => message.blocks.map((block) => `${block.content?.text}`).join(' - '))
+          .join(' | ') ?? ''
       );
     },
 

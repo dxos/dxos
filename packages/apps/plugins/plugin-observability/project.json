@@ -1,0 +1,24 @@
+{
+  "sourceRoot": "packages/apps/plugins/plugin-observability/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/apps/plugins/plugin-observability/src/index.ts",
+          "packages/apps/plugins/plugin-observability/src/meta.ts"
+        ],
+        "platforms": [
+          "browser"
+        ]
+      }
+    },
+    "lint": {}
+  },
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild"
+  ],
+  "name": "plugin-observability"
+}
