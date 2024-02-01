@@ -48,7 +48,7 @@ const EditorMain = ({ comments, toolbar, ...props }: EditorMainProps) => {
   return (
     <div role='none' className='flex flex-col h-full'>
       {toolbar && (
-        <Toolbar.Root onAction={handleAction}>
+        <Toolbar.Root onAction={handleAction} state={null}>
           <Toolbar.Markdown />
           <Toolbar.Separator />
           <Toolbar.Extended />
