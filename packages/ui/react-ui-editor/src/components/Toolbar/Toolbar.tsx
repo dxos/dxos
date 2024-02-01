@@ -203,7 +203,7 @@ const MarkdownBlocks = () => (
       getState={(s) => s.blockType === 'codeblock'}
       onClick={(s) => ({ type: 'codeblock', data: s ? s.blockType !== 'codeblock' : null })}
     />
-    <ToolbarButton Icon={Table} title='Table' onClick={() => ({ type: 'table' })} />
+    <ToolbarButton Icon={Table} title='Table' disable={(s) => !!s.blockType} onClick={() => ({ type: 'table' })} />
   </div>
 );
 

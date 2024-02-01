@@ -556,6 +556,7 @@ export const addList =
     }
 
     if (!blocks.length) {
+      // Insert a new list item if the selection is empty.
       const { from, to } = state.doc.lineAt(state.selection.main.anchor);
       if (from === to) {
         dispatch(
