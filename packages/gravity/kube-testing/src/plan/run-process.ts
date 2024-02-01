@@ -187,7 +187,7 @@ export const runBrowser = <S, C>(
     });
 
     const port = (server.address() as AddressInfo).port;
-    await page.goto(`http://localhost:${port}`);
+    await page.goto(`http://localhost:${port}`, { timeout: 0 });
 
     log.info('browser started and page loaded', {
       agentIdx: agentParams.agentIdx,
