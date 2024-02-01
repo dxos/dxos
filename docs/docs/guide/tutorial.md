@@ -33,6 +33,8 @@ For this guide, we're going to start with the [`bare`](./cli/app-templates.md#ba
 npm create @dxos/bare
 ```
 
+Running `npm create` will give you different options to customize your app. For this tutorial, default to saying "yes" to all the prompts with the exception of "Include PWA support", to which you should say "no".
+
 ::: note
 If you encounter an error with `EINVALIDPACKAGENAME` it's likely the npm/node versions are out of date. Ensure `node -v` is 18 or higher and `npm -v` is 9 or higher.
 :::
