@@ -20,6 +20,7 @@ import {
 } from '@dxos/react-ui-thread';
 
 import { MessageContainer } from './MessageContainer';
+import { command } from './command-extension';
 import { useStatus, useMessageMetadata } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
 
@@ -97,7 +98,7 @@ export const ThreadContainer = ({
   const textboxMetadata = useMessageMetadata(thread.id, identity);
 
   return (
-    <Thread onClickCapture={onAttend} onFocusCapture={onAttend} current={current}>
+    <Thread onClickCapture={onAttend} onFocusCapture={onAttend} current={current} id={thread.id}>
       {thread.title && <ThreadHeading>{thread.title}</ThreadHeading>}
       {thread.messages.map((message) => (
         <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
@@ -110,6 +111,7 @@ export const ThreadContainer = ({
             placeholder={t('message placeholder')}
             {...textboxMetadata}
             model={nextMessageModel}
+            extensions={[command]}
           />
           <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
           <AnchoredOverflow.Anchor />

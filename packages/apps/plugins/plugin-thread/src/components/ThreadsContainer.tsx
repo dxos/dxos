@@ -1,7 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { type Thread as ThreadType } from '@braneframe/types';
 
@@ -27,6 +27,12 @@ export const ThreadsContainer = ({
   autoFocusCurrentTextbox,
   ...props
 }: ThreadsContainerProps) => {
+  useEffect(() => {
+    if (currentId) {
+      const threadElement = document.getElementById(currentId);
+      threadElement?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [currentId]);
   return (
     <>
       {threads.map((thread) => (
