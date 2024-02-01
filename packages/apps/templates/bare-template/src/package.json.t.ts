@@ -95,7 +95,6 @@ export const base = ({ name, monorepo, version, depVersion }: Context): Partial<
     private: true,
     scripts: {
       build: 'tsc --noEmit && vite build',
-      deploy: 'dx app publish',
       preview: 'vite preview',
       serve: 'vite',
     },
@@ -107,7 +106,6 @@ export const base = ({ name, monorepo, version, depVersion }: Context): Partial<
     devDependencies: {
       '@types/node': '^18.11.9',
       '@types/sharedworker': '^0.0.111',
-      '@dxos/cli': depVersion,
       typescript: '^5.0.4',
       vite: '^5.0.12',
       'vite-plugin-top-level-await': '^1.4.1',
