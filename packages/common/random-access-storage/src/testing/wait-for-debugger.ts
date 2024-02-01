@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { sleep } from '@dxos/async';
 
 /**
@@ -7,6 +11,7 @@ import { sleep } from '@dxos/async';
 export const waitForDebugger = async () => {
   while (true) {
     const before = performance.now();
+    // eslint-disable-next-line no-debugger
     debugger;
     const after = performance.now();
     if (after - before > 100) {

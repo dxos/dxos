@@ -1,7 +1,10 @@
-import { defineConfig, mergeConfig } from 'vitest/config'
-import configShared from '../../../vitest.shared'
+//
+// Copyright 2024 DXOS.org
+//
 
-export default mergeConfig(
-  configShared,
-  defineConfig({})
-)
+import { defineConfig, mergeConfig } from 'vitest/config';
+
+// @ts-ignore
+import configShared from '../../../vitest.shared';
+
+export default mergeConfig(configShared, defineConfig({}));
