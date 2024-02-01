@@ -18,11 +18,21 @@ import { callbackWrapper } from '../util';
 
 // TODO(burdon): Reconcile with theme.
 const styles = EditorView.baseTheme({
-  '& .cm-comment': {
+  '&light .cm-comment, &light .cm-comment-current': { mixBlendMode: 'darken' },
+  '&dark .cm-comment, &dark .cm-comment-current': { mixBlendMode: 'plus-lighter' },
+  '&light .cm-comment': {
     backgroundColor: getToken('extend.colors.yellow.50'),
   },
-  '& .cm-comment-current': {
+  '&light .cm-comment-current': {
     backgroundColor: getToken('extend.colors.yellow.100'),
+  },
+  '&dark .cm-comment': {
+    color: getToken('extend.colors.yellow.50'),
+    backgroundColor: getToken('extend.colors.yellow.900'),
+  },
+  '&dark .cm-comment-current': {
+    color: getToken('extend.colors.yellow.100'),
+    backgroundColor: getToken('extend.colors.yellow.950'),
   },
 });
 
