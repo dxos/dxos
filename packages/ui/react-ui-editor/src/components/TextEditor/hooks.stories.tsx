@@ -21,6 +21,7 @@ import {
   link,
   table,
   tasklist,
+  useFormattingState,
 } from '../../extensions';
 import { createDataExtensions, createThemeExtensions, useActionHandler, useTextEditor } from '../../hooks';
 import { markdownTheme } from '../../themes';
@@ -41,6 +42,7 @@ type StoryProps = {
 
 const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
   const { themeMode } = useThemeContext();
+  const [formattingState, trackFormatting] = useFormattingState();
   const { parentRef, view } = useTextEditor({
     autoFocus,
     doc,
@@ -69,16 +71,19 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
       link(),
       table(),
       tasklist(),
+      trackFormatting,
     ],
   });
 
   const handleAction = useActionHandler(view);
 
+  // FIXME This doesn't update the state on view changes. Also not
+  // sure if view is even guaranteed to exist at this point.
   return (
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex h-full justify-center'>
         <div className='flex flex-col h-full w-[800px]'>
-          <Toolbar.Root onAction={handleAction}>
+          <Toolbar.Root onAction={handleAction} state={formattingState}>
             <Toolbar.Markdown />
           </Toolbar.Root>
 
