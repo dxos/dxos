@@ -30,6 +30,9 @@ export {
   isDocAccessor,
   getTextContent,
   setTextContent,
+  getTextInRange,
+  fromCursor,
+  toCursor,
   type AutomergeTextCompat,
   type DocAccessor,
   type EchoObject, // TODO(burdon): Remove from API?

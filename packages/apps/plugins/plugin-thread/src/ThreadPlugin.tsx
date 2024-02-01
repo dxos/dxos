@@ -23,7 +23,13 @@ import {
   resolvePlugin,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { type TypedObject, SpaceProxy, isTypedObject, getSpaceForObject } from '@dxos/react-client/echo';
+import {
+  type TypedObject,
+  SpaceProxy,
+  isTypedObject,
+  getSpaceForObject,
+  getTextInRange,
+} from '@dxos/react-client/echo';
 import { comments } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
@@ -35,7 +41,7 @@ import { ThreadAction, type ThreadPluginProvides, isThread, type ThreadSettingsP
 
 type ThreadState = {
   threads: Record<string, number>;
-  active?: string | undefined;
+  current?: string | undefined;
   focus?: boolean;
 };
 
@@ -149,12 +155,12 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   <ThreadsContainer
                     space={space}
                     threads={threads}
-                    currentId={state.active}
+                    currentId={state.current}
                     autoFocusCurrentTextbox={state.focus}
                     currentRelatedId={layout?.active}
                     onThreadAttend={(thread: ThreadType) => {
-                      if (state.active !== thread.id) {
-                        state.active = thread.id;
+                      if (state.current !== thread.id) {
+                        state.current = thread.id;
                         void intentPlugin?.provides.intent.dispatch({
                           action: LayoutAction.FOCUS,
                           data: {
@@ -198,7 +204,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
             case ThreadAction.SELECT: {
               state.threads = { ...state.threads, ...intent.data?.threads };
-              state.active = intent.data?.active;
+              state.current = intent.data?.active;
               state.focus = intent.data?.focus;
               return { data: true };
             }
@@ -215,14 +221,16 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           return [
             comments({
               onCreate: ({ cursor, location }) => {
-                console.log({ cursor, location });
                 // Create comment thread.
-                const thread = space.db.add(new ThreadType({ context: { object: document.id } }));
+                // TODO(wittjosiah): Consider using cursor to get live text from document.
+                const [start, end] = cursor.split(':');
+                const title = getTextInRange(document.content, start, end);
+                const thread = space.db.add(new ThreadType({ title, context: { object: document.id } }));
                 document.comments.push({ thread, cursor });
                 void intentPlugin?.provides.intent.dispatch([
                   {
                     action: ThreadAction.SELECT,
-                    data: { active: thread.id, threads: { [thread.id]: location?.top }, focus: true },
+                    data: { current: thread.id, threads: { [thread.id]: location?.top }, focus: true },
                   },
                   {
                     action: LayoutAction.TOGGLE_COMPLEMENTARY_SIDEBAR,
@@ -256,7 +264,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   {
                     action: ThreadAction.SELECT,
                     data: {
-                      active: current ?? closest,
+                      current: current ?? closest,
                       threads,
                     },
                   },
