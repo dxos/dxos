@@ -18,8 +18,8 @@ describe('Mutex', () => {
     await mutex.executeSynchronized(async () => {
       events.push('mutex');
     });
-    events.push('after');
 
+    events.push('after');
     expect(events).to.deep.equal(['mutex', 'after']);
   });
 
@@ -27,7 +27,6 @@ describe('Mutex', () => {
     const mutex = new Mutex();
 
     const value = await mutex.executeSynchronized(async () => 'foo');
-
     expect(value).to.equal('foo');
   });
 
