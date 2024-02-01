@@ -18,11 +18,21 @@ import { callbackWrapper } from '../util';
 
 // TODO(burdon): Reconcile with theme.
 const styles = EditorView.baseTheme({
-  '& .cm-comment': {
+  '&light .cm-comment, &light .cm-comment-current': { mixBlendMode: 'darken' },
+  '&dark .cm-comment, &dark .cm-comment-current': { mixBlendMode: 'plus-lighter' },
+  '&light .cm-comment': {
     backgroundColor: getToken('extend.colors.yellow.50'),
   },
-  '& .cm-comment-current': {
+  '&light .cm-comment-current': {
     backgroundColor: getToken('extend.colors.yellow.100'),
+  },
+  '&dark .cm-comment': {
+    color: getToken('extend.colors.yellow.50'),
+    backgroundColor: getToken('extend.colors.yellow.900'),
+  },
+  '&dark .cm-comment-current': {
+    color: getToken('extend.colors.yellow.100'),
+    backgroundColor: getToken('extend.colors.yellow.950'),
   },
 });
 
@@ -146,7 +156,7 @@ export type CommentsOptions = {
   /**
    * Called to create a new thread and return the thread id.
    */
-  onCreate?: (cursor: string, location?: Rect | null) => string | undefined;
+  onCreate?: (params: { cursor: string; from: number; location?: Rect | null }) => string | undefined;
   /**
    * Selection cut/deleted.
    */
@@ -306,7 +316,7 @@ export const createComment: Command = (view) => {
   const cursor = Cursor.getCursorFromRange(view.state, { from, to });
   if (cursor) {
     // Create thread via callback.
-    const id = options.onCreate?.(cursor, view.coordsAtPos(from));
+    const id = options.onCreate?.({ cursor, from, location: view.coordsAtPos(from) });
     if (id) {
       // Update range.
       view.dispatch({

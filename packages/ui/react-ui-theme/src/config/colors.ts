@@ -190,7 +190,7 @@ export const semanticColors = {
   base: {
     light: physicalColors.neutral['25'],
     dark: physicalColors.neutral['850'],
-    fg: { light: '#ffffff', dark: '#000000' },
+    fg: { light: '#000000', dark: '#ffffff' },
   },
   description: {
     light: physicalColors.neutral['300'],

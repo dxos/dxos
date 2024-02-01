@@ -7,7 +7,8 @@ import { effect } from '@preact/signals-react';
 import { deepSignal } from 'deepsignal';
 import React from 'react';
 
-import { getActiveSpace, SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
+import { isDocument } from '@braneframe/plugin-markdown';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Thread as ThreadType } from '@braneframe/types';
 import {
   LayoutAction,
@@ -22,7 +23,8 @@ import {
   resolvePlugin,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { type TypedObject, SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
+import { type TypedObject, SpaceProxy, isTypedObject, getSpaceForObject } from '@dxos/react-client/echo';
+import { comments } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
 
@@ -32,8 +34,8 @@ import translations from './translations';
 import { ThreadAction, type ThreadPluginProvides, isThread, type ThreadSettingsProps } from './types';
 
 type ThreadState = {
+  threads: Record<string, number>;
   active?: string | undefined;
-  threads?: { id: string; y: number }[];
   focus?: boolean;
 };
 
@@ -43,7 +45,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
   const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
-  const state = deepSignal<ThreadState>({});
+  const state = deepSignal<ThreadState>({ threads: {} });
 
   return {
     meta,
@@ -127,22 +129,21 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             case 'context-thread': {
               const graph = graphPlugin?.provides.graph;
               const layout = layoutPlugin?.provides.layout;
-              const space = layout?.active && getActiveSpace(graph!, layout.active);
+              const activeNode = layout?.active ? graph?.findNode(layout.active) : undefined;
+              const active = activeNode?.data;
+              const space = isDocument(active) && getSpaceForObject(active);
               if (!space) {
                 return null;
               }
-
-              const active = layout?.active && space.db.getObjectById(layout.active);
 
               // TODO(burdon): Hack to detect comments.
               if ((active as any)?.comments?.length) {
                 // Sort threads by y-position.
                 // TODO(burdon): Should just use document position?
-                // TODO(burdon): RTE if don't copy array!
-                const threads = [...(state.threads ?? [])]
-                  .sort((a, b) => a.y - b.y)
-                  .map(({ id }) => space.db.getObjectById(id) as ThreadType)
-                  .filter(nonNullable);
+                const threads = active.comments
+                  .map(({ thread }) => thread)
+                  .filter(nonNullable)
+                  .toSorted((a, b) => state.threads[a.id] - state.threads[b.id]);
 
                 return (
                   <ThreadsContainer
@@ -196,12 +197,73 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             }
 
             case ThreadAction.SELECT: {
-              state.threads = intent.data?.threads;
+              state.threads = { ...state.threads, ...intent.data?.threads };
               state.active = intent.data?.active;
               state.focus = intent.data?.focus;
               return { data: true };
             }
           }
+        },
+      },
+      markdown: {
+        extensions: ({ document }) => {
+          const space = document && getSpaceForObject(document);
+          if (!document || !space) {
+            return [];
+          }
+
+          return [
+            comments({
+              onCreate: ({ cursor, location }) => {
+                console.log({ cursor, location });
+                // Create comment thread.
+                const thread = space.db.add(new ThreadType({ context: { object: document.id } }));
+                document.comments.push({ thread, cursor });
+                void intentPlugin?.provides.intent.dispatch([
+                  {
+                    action: ThreadAction.SELECT,
+                    data: { active: thread.id, threads: { [thread.id]: location?.top }, focus: true },
+                  },
+                  {
+                    action: LayoutAction.TOGGLE_COMPLEMENTARY_SIDEBAR,
+                    data: { state: true },
+                  },
+                ]);
+
+                return thread.id;
+              },
+              onSelect: (state) => {
+                const {
+                  comments,
+                  selection: { current, closest },
+                } = state;
+
+                const threads = comments
+                  ? comments.reduce(
+                      (threads, { comment: { id }, location }) => ({
+                        ...threads,
+                        [id]: location?.top,
+                      }),
+                      {},
+                    )
+                  : current
+                    ? { [current]: 0 }
+                    : closest
+                      ? { [closest]: 0 }
+                      : {};
+
+                void intentPlugin?.provides.intent.dispatch([
+                  {
+                    action: ThreadAction.SELECT,
+                    data: {
+                      active: current ?? closest,
+                      threads,
+                    },
+                  },
+                ]);
+              },
+            }),
+          ];
         },
       },
     },

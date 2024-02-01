@@ -10,18 +10,20 @@ import { Surface } from '@dxos/app-framework';
 import { type SpaceMember } from '@dxos/client/echo';
 import { PublicKey } from '@dxos/react-client';
 import { type Expando, getTextContent, type TextObject } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 import { Button } from '@dxos/react-ui';
 import { TextEditor, useTextModel } from '@dxos/react-ui-editor';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import { Message, type MessageBlockProps, type MessageProps } from '@dxos/react-ui-thread';
 
+import { command } from './command-extension';
 import { useMessageMetadata } from '../hooks';
 import { THREAD_ITEM } from '../meta';
 
 type Block = MessageType.Block;
 
-const messageControlClassNames = ['p-1 min-bs-0 mie-1 transition-opacity', hoverableControlItem];
+const messageControlClassNames = ['p-1 min-bs-0 mie-1 transition-opacity items-start', hoverableControlItem];
 
 const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
   ({ draggableStyle, draggableProps, item, onRemove, active }, forwardedRef) => {
@@ -44,14 +46,22 @@ const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
         style={draggableStyle}
         ref={forwardedRef}
       >
-        <Button variant='ghost' classNames={messageControlClassNames} {...draggableProps}>
+        <Button
+          variant='ghost'
+          classNames={['pli-0 plb-1 min-bs-0 transition-opacity', hoverableControlItem]}
+          {...draggableProps}
+        >
           <DotsSixVertical />
         </Button>
         <div role='none' className={onRemove ? '' : 'col-span-2'}>
           <Surface role='message-block' data={item} fallback={title} />
         </div>
         {onRemove && (
-          <Button variant='ghost' classNames={messageControlClassNames} onClick={onRemove}>
+          <Button
+            variant='ghost'
+            classNames={['p-1.5 min-bs-0 mie-1 transition-opacity items-start', hoverableControlItem]}
+            onClick={onRemove}
+          >
             <X />
           </Button>
         )}
@@ -62,17 +72,26 @@ const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
 
 const TextboxBlock = ({
   text,
+  authorId,
   onBlockDelete,
-}: { text: TextObject } & Pick<MessageBlockProps<Block>, 'onBlockDelete'>) => {
+}: { text: TextObject } & Pick<MessageBlockProps<Block>, 'authorId' | 'onBlockDelete'>) => {
+  const identity = useIdentity();
   const model = useTextModel({ text });
   const textboxWidth = onBlockDelete ? 'col-span-2' : 'col-span-3';
+  const readonly = identity?.identityKey.toHex() !== authorId;
+
   return (
     <div
       role='none'
       className={mx('col-span-3 grid grid-cols-subgrid', hoverableControls, hoverableFocusedWithinControls)}
     >
       {model ? (
-        <TextEditor model={model} slots={{ root: { className: textboxWidth } }} />
+        <TextEditor
+          model={model}
+          readonly={readonly}
+          slots={{ root: { className: textboxWidth } }}
+          extensions={[command]}
+        />
       ) : (
         <span className={textboxWidth} />
       )}
@@ -85,7 +104,7 @@ const TextboxBlock = ({
   );
 };
 
-const MessageBlock = ({ block, onBlockDelete }: MessageBlockProps<Block>) => {
+const MessageBlock = ({ block, authorId, onBlockDelete }: MessageBlockProps<Block>) => {
   return block.object ? (
     <Mosaic.Container id={block.object.id}>
       <Mosaic.DraggableTile
@@ -97,7 +116,7 @@ const MessageBlock = ({ block, onBlockDelete }: MessageBlockProps<Block>) => {
       />
     </Mosaic.Container>
   ) : block.content ? (
-    <TextboxBlock text={block.content} onBlockDelete={onBlockDelete} />
+    <TextboxBlock text={block.content} authorId={authorId} onBlockDelete={onBlockDelete} />
   ) : null;
 };
 
