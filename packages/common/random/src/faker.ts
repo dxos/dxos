@@ -22,28 +22,7 @@ import {
   seed,
 } from '@ngneat/falso';
 
-import { type Range, toRange } from './util';
-
-const uniqueArray = <T>(values: T[] | (() => T), n: number): T[] => {
-  if (Array.isArray(values)) {
-    const results: T[] = [];
-    const selection = Array.from(new Set<T>(values));
-    for (let i = 0; i < n; i++) {
-      if (selection.length === 0) {
-        break;
-      }
-      results.push(selection.splice(Math.floor(Math.random() * selection.length), 1)[0]);
-    }
-    return results;
-  } else {
-    const results = new Set<T>();
-    while (results.size < n) {
-      results.add(values());
-    }
-
-    return Array.from(results);
-  }
-};
+import { type Range, toRange, uniqueArray } from './util';
 
 // Fake faker.
 export const faker = {
@@ -61,7 +40,7 @@ export const faker = {
   // Type
   //
   number: {
-    int: (range: number | Range) => randNumber(toRange(range)),
+    int: (range?: number | Range) => randNumber(range ? toRange(range) : undefined),
     float: (range: number | Range) => randFloat(toRange(range)),
   },
   datatype: {
@@ -80,16 +59,17 @@ export const faker = {
       Array.from({ length: n })
         .map(() => randWord())
         .join(' '),
-    sentence: () => randSentence(),
-    sentences: (n: number = 1) =>
-      Array.from({ length: n })
-        .map(() => randSentence())
-        .join(' '),
+    sentence: (n?: number) => {
+      if (n) {
+        const text = randWord({ length: n }).join(' ');
+        return text.charAt(0).toUpperCase() + text.slice(1) + '.';
+      }
+
+      return randSentence();
+    },
+    sentences: (n: number = 1) => randSentence({ length: n }).join(' '),
     paragraph: () => randParagraph(),
-    paragraphs: (n: number = 1) =>
-      Array.from({ length: n })
-        .map(() => randParagraph())
-        .join(' '),
+    paragraphs: (n: number = 1) => randParagraph({ length: n }).join(' '),
   },
   //
   // String

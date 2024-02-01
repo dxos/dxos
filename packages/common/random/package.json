@@ -17,7 +17,6 @@
   ],
   "dependencies": {
     "@dxos/node-std": "workspace:*",
-    "@faker-js/faker": "^8.3.1",
     "@ngneat/falso": "^7.1.1",
     "seedrandom": "^3.0.5",
     "uuid": "^8.3.2"

@@ -12,6 +12,27 @@ export const generate = <T>(range: Range, f: (range: Range) => T): T => {
   return f(toRange(range));
 };
 
+export const uniqueArray = <T>(values: T[] | (() => T), n: number): T[] => {
+  if (Array.isArray(values)) {
+    const results: T[] = [];
+    const selection = Array.from(new Set<T>(values));
+    for (let i = 0; i < n; i++) {
+      if (selection.length === 0) {
+        break;
+      }
+      results.push(selection.splice(Math.floor(Math.random() * selection.length), 1)[0]);
+    }
+    return results;
+  } else {
+    const results = new Set<T>();
+    while (results.size < n) {
+      results.add(values());
+    }
+
+    return Array.from(results);
+  }
+};
+
 // Similar to faker.helpers.
 export const util = {
   /**
