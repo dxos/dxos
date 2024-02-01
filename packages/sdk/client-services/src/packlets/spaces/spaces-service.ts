@@ -222,8 +222,8 @@ export class SpacesServiceImpl implements SpacesService {
           presence: member.removed
             ? SpaceMember.PresenceState.REMOVED
             : isMe || peers.length > 0
-            ? SpaceMember.PresenceState.ONLINE
-            : SpaceMember.PresenceState.OFFLINE,
+              ? SpaceMember.PresenceState.ONLINE
+              : SpaceMember.PresenceState.OFFLINE,
           peerStates: peers,
         };
       }),

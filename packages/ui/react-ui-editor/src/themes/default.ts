@@ -62,11 +62,11 @@ export const defaultTheme: ThemeStyles = {
     fontSize: '16px',
   },
   '&light .cm-content': {
-    color: get(tokens, 'extend.colors.neutral.900', 'black'),
+    color: get(tokens, 'extend.semanticColors.base.fg.light', 'black'),
     caretColor: 'black',
   },
   '&dark .cm-content': {
-    color: get(tokens, 'extend.colors.neutral.100', 'white'),
+    color: get(tokens, 'extend.semanticColors.base.fg.dark', 'white'),
     caretColor: 'white',
   },
 
@@ -79,8 +79,11 @@ export const defaultTheme: ThemeStyles = {
   '&dark .cm-cursor, &dark .cm-dropCursor': {
     borderLeft: '2px solid white',
   },
-  '.cm-placeholder': {
-    fontWeight: 100,
+  '&light .cm-placeholder': {
+    color: get(tokens, 'extend.semanticColors.description.light', 'rgba(0,0,0,.2)'),
+  },
+  '&dark .cm-placeholder': {
+    color: get(tokens, 'extend.semanticColors.description.dark', 'rgba(255,255,255,.2)'),
   },
 
   //

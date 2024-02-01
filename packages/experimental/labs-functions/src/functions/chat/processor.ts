@@ -10,7 +10,7 @@ import get from 'lodash.get';
 
 import { Chain as ChainType, type Message as MessageType, type Thread as ThreadType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { getTextContent } from '@dxos/echo-schema';
+import { getTextContent, TextObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { createContext, type RequestContext } from './context';
@@ -52,7 +52,7 @@ export class RequestProcessor {
     const { start, stop } = createStatusNotifier(space, thread.id);
     try {
       const text = message.blocks
-        .map((message) => message.text)
+        .map((block) => block.content)
         .filter(Boolean)
         .join('\n');
 
@@ -77,7 +77,7 @@ export class RequestProcessor {
       }
     } catch (err) {
       log.error('processing message', err);
-      blocks = [{ text: 'Error generating response.' }];
+      blocks = [{ content: new TextObject('Error generating response.') }];
     } finally {
       stop();
     }
@@ -129,7 +129,7 @@ export class RequestProcessor {
         case ChainType.Input.Type.CONTEXT: {
           inputs[name] = () => {
             if (value) {
-              const text = getTextContent(value);
+              const text = getTextContent(value, '');
               if (text.length) {
                 try {
                   const result = get(context, text);
@@ -163,7 +163,7 @@ export class RequestProcessor {
         }
 
         case ChainType.Input.Type.RESOLVER: {
-          const result = await this.execResolver(getTextContent(value));
+          const result = await this.execResolver(getTextContent(value, ''));
           inputs[name] = () => result;
           break;
         }
@@ -172,7 +172,7 @@ export class RequestProcessor {
 
     return RunnableSequence.from([
       inputs,
-      PromptTemplate.fromTemplate(getTextContent(prompt.source)),
+      PromptTemplate.fromTemplate(getTextContent(prompt.source, '')),
       this._resources.chat,
       new StringOutputParser(),
     ]);

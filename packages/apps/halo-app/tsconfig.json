@@ -49,6 +49,9 @@
       "path": "../../sdk/config"
     },
     {
+      "path": "../../sdk/observability"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -67,10 +70,10 @@
       "path": "../plugins/plugin-client"
     },
     {
-      "path": "../plugins/plugin-pwa"
+      "path": "../plugins/plugin-observability"
     },
     {
-      "path": "../plugins/plugin-telemetry"
+      "path": "../plugins/plugin-pwa"
     },
     {
       "path": "../plugins/plugin-theme"

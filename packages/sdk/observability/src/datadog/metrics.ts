@@ -16,7 +16,7 @@ export type DatadogOptions = {
   apiKey: string;
   host?: string;
   site?: String;
-  getTags: () => Map<string, string>;
+  getTags: () => { [key: string]: string };
   // needed to read CORS proxy
   config: Config;
 };
@@ -25,7 +25,7 @@ debug.enable('metrics');
 
 export class DatadogMetrics {
   private _datadogmetrics?: any;
-  private _getTags: () => Map<string, string>;
+  private _getTags: () => { [key: string]: string };
 
   constructor(options: DatadogOptions) {
     this._getTags = options.getTags;
@@ -36,9 +36,7 @@ export class DatadogMetrics {
 
   gauge(name: string, value: number, tags?: any) {
     invariant(this._datadogmetrics, 'Datadog not initialized');
-    const mergedTags = Object.entries({ ...Object.fromEntries(this._getTags().entries()), ...tags }).map(
-      ([key, value]) => `${key}:${value}`,
-    );
+    const mergedTags = Object.entries({ ...this._getTags(), ...tags }).map(([key, value]) => `${key}:${value}`);
     log('datadog gauge', { name, value, tags: mergedTags });
     this._datadogmetrics.gauge(name, value, mergedTags);
   }

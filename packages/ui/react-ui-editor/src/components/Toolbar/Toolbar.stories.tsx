@@ -39,7 +39,7 @@ const Story: FC<{ content: string }> = ({ content }) => {
     () => [
       code(),
       comments({
-        onCreate: (cursor) => {
+        onCreate: ({ cursor }) => {
           const id = PublicKey.random().toHex();
           setComments((comments) => [...comments, { id, cursor }]);
           return id;

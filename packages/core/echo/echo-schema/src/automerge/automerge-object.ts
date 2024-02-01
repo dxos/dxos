@@ -134,10 +134,12 @@ export class AutomergeObject implements TypedObjectProperties {
     return this._id;
   }
 
-  [base] = this as any;
+  get [base]() {
+    return this as any;
+  }
 
   get [db](): EchoDatabase | undefined {
-    return this[base]._database._echoDatabase;
+    return this[base]._database?._echoDatabase;
   }
 
   get [debug](): string {
@@ -264,13 +266,19 @@ export class AutomergeObject implements TypedObjectProperties {
 
   private _createProxy(path: string[]): any {
     return new Proxy(this, {
+      // NOTE: Key order is not guaranteed.
       ownKeys: (target) => {
         // TODO(mykola): Add support for expando objects.
-        return this.__schema?.props.map((field) => field.id!) ?? [];
+        const schema = this.__schema;
+        if (schema) {
+          return schema.props.map((field) => field.id!);
+        } else {
+          return Reflect.ownKeys(this._get(path));
+        }
       },
 
       has: (_, key) => {
-        if (!isValidKey(key)) {
+        if (isRootDataObjectKey(path, key)) {
           return Reflect.has(this, key);
         } else if (typeof key === 'symbol') {
           // TODO(mykola): Copied from TypedObject, do we need this?
@@ -293,7 +301,7 @@ export class AutomergeObject implements TypedObjectProperties {
           return true;
         }
 
-        if (!isValidKey(key)) {
+        if (typeof key === 'symbol' || isRootDataObjectKey(path, key)) {
           return Reflect.get(this, key);
         }
 
@@ -301,21 +309,7 @@ export class AutomergeObject implements TypedObjectProperties {
 
         const value = this._get(relativePath);
 
-        if (value instanceof AbstractEchoObject || value instanceof AutomergeObject || value instanceof TextObject) {
-          return value;
-        }
-        if (value instanceof Reference && value.protocol === 'protobuf') {
-          // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
-          return value;
-        }
-        if (Array.isArray(value)) {
-          return new AutomergeArray()._attach(this[base], relativePath);
-        }
-        if (typeof value === 'object' && value !== null) {
-          return this._createProxy(relativePath);
-        }
-
-        return value;
+        return this._mapToEchoObject(relativePath, value);
       },
 
       set: (_, key, value) => {
@@ -343,6 +337,25 @@ export class AutomergeObject implements TypedObjectProperties {
     }
 
     return this._decode(value);
+  }
+
+  _mapToEchoObject(relativePath: string[], value: any) {
+    if (value instanceof AbstractEchoObject || value instanceof AutomergeObject || value instanceof TextObject) {
+      return value;
+    }
+    if (value instanceof Reference && value.protocol === 'protobuf') {
+      // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
+      return value;
+    }
+    if (Array.isArray(value)) {
+      return new AutomergeArray()._attach(this[base], relativePath);
+    }
+
+    if (typeof value === 'object' && value !== null) {
+      return this._createProxy(relativePath);
+    }
+
+    return value;
   }
 
   /**
@@ -435,7 +448,7 @@ export class AutomergeObject implements TypedObjectProperties {
     if (value instanceof A.RawString) {
       return value.toString();
     }
-    if (typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG) {
+    if (isEncodedReferenceObject(value)) {
       if (value.protocol === 'protobuf') {
         // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
         return decodeReference(value);
@@ -451,7 +464,10 @@ export class AutomergeObject implements TypedObjectProperties {
     return value;
   }
 
-  private _getDoc(): Doc<any> {
+  /**
+   * @internal
+   */
+  _getDoc(): Doc<any> {
     return this._doc ?? this._docHandle?.docSync() ?? failedInvariant();
   }
 
@@ -594,8 +610,11 @@ export class AutomergeObject implements TypedObjectProperties {
   }
 }
 
-const isValidKey = (key: string | symbol) => {
-  return !(
+const isRootDataObjectKey = (relativePath: string[], key: string | symbol) => {
+  if (relativePath.length !== 1 || relativePath[0] !== 'data') {
+    return false;
+  }
+  return (
     typeof key === 'symbol' ||
     key.startsWith('@@__') ||
     key === 'constructor' ||
@@ -623,6 +642,16 @@ const decodeReference = (value: any) =>
   new Reference(value.itemId, value.protocol ?? undefined, value.host ?? undefined);
 
 export const REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
+
+type EncodedReferenceObject = {
+  '@type': typeof REFERENCE_TYPE_TAG;
+  itemId: string | null;
+  protocol: string | null;
+  host: string | null;
+};
+
+const isEncodedReferenceObject = (value: any): value is EncodedReferenceObject =>
+  typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG;
 
 export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<DocStructure>) => {
   if (event.patches.some((patch) => patch.path[0] === 'objects' && patch.path[1] === objId)) {

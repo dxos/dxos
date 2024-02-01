@@ -94,8 +94,8 @@ export const AwaitingObject = ({ id }: { id: string }) => {
             found
               ? 'found object description'
               : waiting
-              ? 'waiting for object description'
-              : 'object not found description',
+                ? 'waiting for object description'
+                : 'object not found description',
           )}
         </Toast.Description>
       </Toast.Body>

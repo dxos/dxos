@@ -60,7 +60,11 @@ const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
           }
         }
 
-        log.warn('No plugin found to handle intent', intent);
+        // https://vitejs.dev/guide/env-and-mode#env-variables
+        // TODO(wittjosiah): How to handle this more generically?
+        if (import.meta?.env?.DEV) {
+          log.warn('No plugin found to handle intent', intent);
+        }
       };
 
       // Sequentially dispatch array of invents.

@@ -47,8 +47,8 @@ export const mainSidebar: ComponentFunction<MainStyleProps> = (
         ? 'inline-start-0'
         : mx('-inline-start-[100vw]', sidebarSlots.start.sidebar)
       : inlineEndSidebarOpen
-      ? 'inline-end-0'
-      : mx('-inline-end-[100vw]', sidebarSlots.end.sidebar),
+        ? 'inline-end-0'
+        : mx('-inline-end-[100vw]', sidebarSlots.end.sidebar),
     side === 'inline-start' ? 'border-ie' : 'border-is',
     fixedSurface,
     ...etc,
