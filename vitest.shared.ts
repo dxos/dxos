@@ -39,7 +39,7 @@ const createBrowserConfig = (browserName: 'chrome') =>
     test: {
       ...resolveReporterConfig(),
       name: targetProject,
-      include: ['**/src/**/*.browser.test.ts', '!**/src/**/*.node.test.ts'],
+      include: ['**/src/**/*.test.ts', '!**/src/**/*.node.test.ts'],
 
       testTimeout: isDebug ? 9999999 : 5000,
       inspect: isDebug,
