@@ -41,6 +41,10 @@ ssc build -r --port 5173
 
 To reset the app, inspect and delete local storage properties.
 
+## Dependencies
+
+
+
 ## Docker
 
 Note: experimental.
