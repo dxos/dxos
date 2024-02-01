@@ -7,11 +7,12 @@ import type { EditorView } from '@codemirror/view';
 import type { ToolbarProps } from '../components';
 import {
   createComment,
-  insertCodeblock,
   insertTable,
   setHeading,
   setStyle,
   toggleStyle,
+  addLink,
+  removeLink,
   Inline,
   List,
   addList,
@@ -19,6 +20,8 @@ import {
   toggleList,
   addBlockquote,
   removeBlockquote,
+  addCodeblock,
+  removeCodeblock,
   toggleBlockquote,
 } from '../extensions';
 
@@ -49,6 +52,10 @@ export const useActionHandler = (view?: EditorView | null): ToolbarProps['onActi
         (typeof action.data === 'boolean' ? setStyle(inlineType, action.data) : toggleStyle(inlineType))(view);
         break;
 
+      case 'link':
+        (action.data === false ? removeLink : addLink)(view);
+        break;
+
       case 'list-ordered':
       case 'list-bullet':
       case 'list-tasks':
@@ -66,8 +73,9 @@ export const useActionHandler = (view?: EditorView | null): ToolbarProps['onActi
         break;
 
       case 'codeblock':
-        insertCodeblock(view);
+        (action.data === false ? removeCodeblock : addCodeblock)(view);
         break;
+
       case 'table':
         insertTable(view);
         break;
@@ -79,8 +87,9 @@ export const useActionHandler = (view?: EditorView | null): ToolbarProps['onActi
 
     // TODO(burdon): Hack otherwise remains on heading selector.
     setTimeout(() => {
-      view.focus();
-      view.dispatch({ selection: view.state.selection });
+      if (!view.hasFocus) {
+        view.focus();
+      }
     });
   };
 };
