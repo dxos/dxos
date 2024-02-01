@@ -556,6 +556,23 @@ export const addList =
     }
 
     if (!blocks.length) {
+      const { from, to } = state.doc.lineAt(state.selection.main.anchor);
+      if (from === to) {
+        dispatch(
+          state.update({
+            changes: [
+              {
+                from,
+                insert: type === List.Bullet ? '- ' : type === List.Ordered ? '1. ' : '- [ ] ',
+              },
+            ],
+            userEvent: 'format.list.add',
+            scrollIntoView: true,
+          }),
+        );
+        return true;
+      }
+
       return false;
     }
 
