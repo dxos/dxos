@@ -7,7 +7,7 @@ import { Args, Flags } from '@oclif/core';
 import { sleep } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { Expando } from '@dxos/client/echo';
-import { random } from '@dxos/random';
+import { faker } from '@dxos/random';
 
 import { BaseCommand } from '../../base-command';
 
@@ -47,7 +47,7 @@ export default class Generate extends BaseCommand<typeof Generate> {
     const pause = async () => {
       if (this.flags.interval) {
         const period =
-          this.flags.interval + this.flags.jitter ? random.type.integer({ min: 0, max: this.flags.jitter }) : 0;
+          this.flags.interval + this.flags.jitter ? faker.number.int({ min: 0, max: this.flags.jitter }) : 0;
         await sleep(period);
       }
     };
@@ -56,7 +56,7 @@ export default class Generate extends BaseCommand<typeof Generate> {
     return await this.execWithClient(async (client: Client) => {
       const space = await this.getSpace(client, this.args.key);
       for (let i = 0; i < this.flags.objects; i++) {
-        space?.db.add(new Expando({ type, title: random.text.word() }));
+        space?.db.add(new Expando({ type, title: faker.lorem.word() }));
         await space.db.flush();
         await pause();
       }
@@ -64,8 +64,8 @@ export default class Generate extends BaseCommand<typeof Generate> {
       const { objects } = space?.db.query({ type });
       if (objects.length) {
         for (let i = 0; i < this.flags.mutations; i++) {
-          const object = random.util.arrayElement(objects);
-          object.title = random.text.word();
+          const object = faker.helpers.arrayElement(objects);
+          object.title = faker.lorem.word();
           await space.db.flush();
           await pause();
 

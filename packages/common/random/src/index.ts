@@ -3,4 +3,3 @@
 //
 
 export * from './faker';
-export * from './random';

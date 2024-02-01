@@ -2,14 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
+import { randNumber } from '@ngneat/falso';
+
 export type Options = number | Range;
 
-export type Range = { min: number; max: number };
+export type Range = { min?: number; max?: number; count?: number };
 
 export const toRange = (range: Options, min = 0) => (typeof range === 'number' ? { min, max: range } : range);
 
-export const generate = <T>(range: Range, f: (range: Range) => T): T => {
-  return f(toRange(range));
+export const getCount = (range?: number | Range) => (typeof range === 'number' ? range : randNumber(range));
+
+export const multiple = <T>(f: () => T, n: number): T[] => {
+  return Array.from({ length: n }).map(() => f());
 };
 
 export const uniqueArray = <T>(values: T[] | (() => T), n: number): T[] => {
@@ -31,36 +35,4 @@ export const uniqueArray = <T>(values: T[] | (() => T), n: number): T[] => {
 
     return Array.from(results);
   }
-};
-
-// Similar to faker.helpers.
-export const util = {
-  /**
-   * Generate an array calling the generator without a value.
-   */
-  multiple: <T>(n: number, f: () => T): T[] => {
-    return Array.from({ length: n }).map(() => f());
-  },
-
-  /**
-   * Returns single element.
-   */
-  arrayElement: <T>(values: T[]): T => {
-    return values[Math.floor(Math.random() * values.length)];
-  },
-
-  /**
-   * Returns unique set of values.
-   */
-  uniqueArray: <T>(values: T[], n: number): T[] => {
-    const selection = Array.from(new Set<T>(values));
-    const results: T[] = [];
-    for (let i = 0; i < n; i++) {
-      if (selection.length === 0) {
-        break;
-      }
-      results.push(selection.splice(Math.floor(Math.random() * selection.length), 1)[0]);
-    }
-    return results;
-  },
 };
