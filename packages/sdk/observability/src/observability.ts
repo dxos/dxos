@@ -182,6 +182,10 @@ export class Observability {
     this._tags.set(key, { value, scope });
   }
 
+  getTag(key: string) {
+    return this._tags.get(key);
+  }
+
   addIPDataTelemetryTags = (ipData: IPData) => {
     this.setTag('city', ipData.city, 'telemetry');
     this.setTag('region', ipData.region, 'telemetry');
