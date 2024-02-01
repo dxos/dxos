@@ -53,6 +53,16 @@ export type Formatting = {
   blockquote: boolean;
 };
 
+export const compareFormatting = (a: Formatting, b: Formatting) =>
+  a.blockType === b.blockType &&
+  a.strong === b.strong &&
+  a.emphasis === b.emphasis &&
+  a.strikethrough === b.strikethrough &&
+  a.code === b.code &&
+  a.link === b.link &&
+  a.listStyle === b.listStyle &&
+  a.blockquote === b.blockquote;
+
 export enum Inline {
   Strong = 0,
   Emphasis = 1,
@@ -122,22 +132,30 @@ export const setHeading =
     return true;
   };
 
-// TODO test around links
 export const setStyle =
   (type: Inline, enable: boolean): StateCommand =>
   ({ state, dispatch }) => {
     const marker = inlineMarkerText(type);
     const changes = state.changeByRange((range) => {
       // Special case for markers directly around the cursor, which will often not be parsed as valid styling
-      if (
-        !enable &&
-        range.empty &&
-        state.doc.sliceString(range.from - marker.length, range.from + marker.length) === marker + marker
-      ) {
-        return {
-          changes: { from: range.from - marker.length, to: range.from + marker.length },
-          range: EditorSelection.cursor(range.from - marker.length),
-        };
+      if (!enable && range.empty) {
+        const after = state.doc.sliceString(range.head, range.head + 6);
+        const found = after.indexOf(marker);
+        if (found >= 0 && /^[*~`]*$/.test(after.slice(0, found))) {
+          const before = state.doc.sliceString(range.head - 6, range.head);
+          if (
+            before.slice(before.length - found - marker.length, before.length - found) === marker &&
+            [...before.slice(before.length - found)].reverse().join('') === after.slice(0, found)
+          ) {
+            return {
+              changes: [
+                { from: range.head - marker.length - found, to: range.head - found },
+                { from: range.head + found, to: range.head + found + marker.length },
+              ],
+              range: EditorSelection.cursor(range.from - marker.length),
+            };
+          }
+        }
       }
       const changes: ChangeSpec[] = [];
       // Used to add insertions that should happen *after* any other
@@ -161,7 +179,15 @@ export const setStyle =
             blockStart = blockContentStart(node);
             blockEnd = blockContentEnd(node, state.doc);
             startCovered = endCovered = false;
-          } else if (IgnoreInline.has(name)) {
+          } else if (name === 'Link' || (name === 'Image' && enable)) {
+            // If the range partially overlaps a link or image, expand
+            // it to cover it.
+            if (from < node.from && to > node.from && to <= node.to) {
+              to = node.to;
+            } else if (to > node.to && from >= node.from && from < node.to) {
+              from = node.from;
+            }
+          } else if (IgnoreInline.has(name) && enable) {
             // Move endpoints out of markers
             if (node.from < from && node.to > from) {
               if (to === from) {
@@ -513,14 +539,15 @@ export const addList =
     const changes: ChangeSpec[] = [];
     for (let i = 0; i < blocks.length; i++) {
       const { node, counter, parentColumn } = blocks[i];
+      const nodeFrom = node.name === 'CodeBlock' ? node.from - 4 : node.from;
       // Compute a padding based on whether we are after whitespace
-      let padding = node.from > 0 && !/\s/.test(state.doc.sliceString(node.from - 1, node.from)) ? 1 : 0;
+      let padding = nodeFrom > 0 && !/\s/.test(state.doc.sliceString(nodeFrom - 1, nodeFrom)) ? 1 : 0;
       // On ordered lists, the number is counted in the padding
       if (type === List.Ordered) {
         padding += String(counter).length;
       }
-      let line = state.doc.lineAt(node.from);
-      const column = node.from - line.from;
+      let line = state.doc.lineAt(nodeFrom);
+      const column = nodeFrom - line.from;
       // Align to the list above if possible
       if (parentColumn !== null && parentColumn > column) {
         padding = Math.max(padding, parentColumn - column);
@@ -544,7 +571,7 @@ export const addList =
         mark = ' '.repeat(padding) + '- ' + (type === List.Task ? '[ ] ' : '');
       }
 
-      changes.push({ from: node.from, insert: mark });
+      changes.push({ from: nodeFrom, insert: mark });
       // Add indentation for the other lines in this block
       while (line.to < node.to) {
         line = state.doc.lineAt(line.to + 1);
@@ -996,6 +1023,30 @@ export const getFormatting = (state: EditorState): Formatting => {
 
   const { selection } = state;
   for (const range of selection.ranges) {
+    if (range.empty && inline.some((v) => v === null)) {
+      // Check for markers directly around the cursor (which, not
+      // being valid Markdown, the syntax tree won't pick up).
+      const contextSize = Math.min(range.head, 6);
+      const contextBefore = state.doc.sliceString(range.head - contextSize, range.head);
+      let contextAfter = state.doc.sliceString(range.head, range.head + contextSize);
+      for (let i = 0; i < contextSize; i++) {
+        const ch = contextAfter[i];
+        if (ch !== contextBefore[contextBefore.length - 1 - i] || !/[~`*]/.test(ch)) {
+          contextAfter = contextAfter.slice(0, i);
+          break;
+        }
+      }
+      for (let i = 0; i < inline.length; i++) {
+        const mark = inlineMarkerText(i);
+        const found = contextAfter.indexOf(mark);
+        if (found > -1) {
+          contextAfter = contextAfter.slice(0, found) + contextAfter.slice(found + mark.length);
+          if (inline[i] === null) {
+            inline[i] = true;
+          }
+        }
+      }
+    }
     syntaxTree(state).iterate({
       from: range.from,
       to: range.to,
@@ -1094,7 +1145,10 @@ export const useFormattingState = (): [Formatting | null, Extension] => {
     () =>
       EditorView.updateListener.of((update) => {
         if (update.docChanged || update.selectionSet) {
-          setState(getFormatting(update.state));
+          const newState = getFormatting(update.state);
+          if (!state || !compareFormatting(state, newState)) {
+            setState(newState);
+          }
         }
       }),
     [],
