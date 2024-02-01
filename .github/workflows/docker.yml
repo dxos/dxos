@@ -108,8 +108,8 @@ jobs:
             DX_IPDATA_API_KEY=${{ secrets.IPDATA_API_KEY }}
             DX_SENTRY_DESTINATION=${{ secrets.CLI_SENTRY_DESTINATION }}
             DX_TELEMETRY_API_KEY=${{ secrets.CLI_SEGMENT_API_KEY }}
-            DX_DATADOG_API_KEY=${{ secerts.DATADOG_API_KEY }}
-            DX_DATADOG_APP_KEY=${{ secerts.DATADOG_APP_KEY }}
+            DX_DATADOG_API_KEY=${{ secrets.DATADOG_API_KEY }}
+            DX_DATADOG_APP_KEY=${{ secrets.DATADOG_APP_KEY }}
             DX_DATADOG_PROXY=${{ secrets.DX_DATADOG_PROXY }}
             COMPOSER_DX_SENTRY_DESTINATION=${{ secrets.COMPOSER_APP_SENTRY_DESTINATION }}
             COMPOSER_DX_TELEMETRY_API_KEY=${{ secrets.COMPOSER_APP_SEGMENT_API_KEY }}
@@ -131,8 +131,8 @@ jobs:
             DX_IPDATA_API_KEY=${{ secrets.IPDATA_API_KEY }}
             DX_SENTRY_DESTINATION=${{ secrets.CLI_SENTRY_DESTINATION }}
             DX_TELEMETRY_API_KEY=${{ secrets.CLI_SEGMENT_API_KEY }}
-            DX_DATADOG_API_KEY=${{ secerts.DATADOG_API_KEY }}
-            DX_DATADOG_APP_KEY=${{ secerts.DATADOG_APP_KEY }}
+            DX_DATADOG_API_KEY=${{ secrets.DATADOG_API_KEY }}
+            DX_DATADOG_APP_KEY=${{ secrets.DATADOG_APP_KEY }}
             DX_DATADOG_PROXY=${{ secrets.DX_DATADOG_PROXY }}
             COMPOSER_DX_SENTRY_DESTINATION=${{ secrets.COMPOSER_APP_SENTRY_DESTINATION }}
             COMPOSER_DX_TELEMETRY_API_KEY=${{ secrets.COMPOSER_APP_SEGMENT_API_KEY }}
