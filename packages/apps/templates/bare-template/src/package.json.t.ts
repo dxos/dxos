@@ -22,8 +22,10 @@ export namespace Features {
       // 'react-router-dom': '^6.4.0'
     },
     devDependencies: {
-      '@types/react': '^18.0.21',
-      '@types/react-dom': '^18.0.6',
+      // TODO(wittjosiah): Don't upgrade to 18.2 yet.
+      //   https://github.com/creativetimofficial/material-tailwind/issues/528#issuecomment-1856348865
+      '@types/react': '~18.0.21',
+      '@types/react-dom': '~18.0.6',
       '@vitejs/plugin-react': '^4.2.1',
     },
   });
