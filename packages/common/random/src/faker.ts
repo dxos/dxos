@@ -31,17 +31,18 @@ export const faker = {
   //
   seed: (value: number) => seed(String(value)),
   helpers: {
+    arrayElement: <T>(a: T[]) => rand(a),
     multiple: (f: () => any, { count }: { count: number | { min: number; max: number } }) =>
       multiple(f, typeof count === 'number' ? count : getCount(count)),
-    arrayElement: <T>(a: T[]) => rand(a),
     uniqueArray: (f: any[] | (() => any), n: number) => uniqueArray(f, n),
   },
+
   //
   // Type
   //
   number: {
-    int: (range?: number | Range) => randNumber(range ? toRange(range) : undefined),
     float: (range?: number | Range) => randFloat(range ? toRange(range) : undefined),
+    int: (range?: number | Range) => randNumber(range ? toRange(range) : undefined),
   },
   datatype: {
     array: (n: number) => Array.from({ length: n }), // TODO(burdon): range().
@@ -50,6 +51,7 @@ export const faker = {
   date: {
     recent: () => randRecentDate(),
   },
+
   //
   // Text
   //
@@ -74,6 +76,7 @@ export const faker = {
     },
     paragraphs: (n: number | Range = 1) => randParagraph({ length: getCount(n) }).join(' '),
   },
+
   //
   // String
   //
@@ -81,6 +84,7 @@ export const faker = {
     hexadecimal: (l?: { length: number }) => randHexaDecimal(l).join(''),
     uuid: () => randUuid(),
   },
+
   //
   // Custom
   //
@@ -89,8 +93,8 @@ export const faker = {
     url: () => randUrl(),
   },
   person: {
-    fullName: () => randFullName(),
     firstName: () => randFirstName(),
+    fullName: () => randFullName(),
   },
   company: {
     name: () => randCompanyName(),
