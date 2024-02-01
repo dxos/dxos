@@ -26,7 +26,12 @@ import {
   type Identity,
   Invitation,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { type Credential, type Presentation, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  type Credential,
+  type Presentation,
+  type ProfileDocument,
+  type DeviceProfileDocument,
+} from '@dxos/protocols/proto/dxos/halo/credentials';
 import { trace } from '@dxos/tracing';
 
 import { InvitationsProxy } from '../invitations';
@@ -106,9 +111,13 @@ export class HaloProxy implements Halo {
     // const gotContacts = this._contactsChanged.waitForCount(1);
 
     invariant(this._serviceProvider.services.InvitationsService, 'InvitationsService not available');
-    this._invitationProxy = new InvitationsProxy(this._serviceProvider.services.InvitationsService, () => ({
-      kind: Invitation.Kind.DEVICE,
-    }));
+    this._invitationProxy = new InvitationsProxy(
+      this._serviceProvider.services.InvitationsService,
+      this._serviceProvider.services.IdentityService,
+      () => ({
+        kind: Invitation.Kind.DEVICE,
+      }),
+    );
     await this._invitationProxy.open();
 
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
@@ -175,10 +184,14 @@ export class HaloProxy implements Halo {
    * Create Identity.
    * Then initializes profile with given display name.
    */
-  async createIdentity(profile: ProfileDocument = {}): Promise<Identity> {
+  async createIdentity(
+    profile: ProfileDocument = {},
+    deviceProfile: DeviceProfileDocument | undefined = undefined,
+  ): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identity = await this._serviceProvider.services.IdentityService.createIdentity({
       profile,
+      deviceProfile,
     });
     this._identityChanged.emit(identity);
     return identity;
@@ -265,13 +278,13 @@ export class HaloProxy implements Halo {
   /**
    * Initiates accepting invitation.
    */
-  join(invitation: Invitation | string) {
+  join(invitation: Invitation | string, deviceProfile?: DeviceProfileDocument) {
     if (!this.opened) {
       throw new ApiError('Client not open.');
     }
 
     log('accept invitation', invitation);
-    return this._invitationProxy!.join(invitation);
+    return this._invitationProxy!.join(invitation, deviceProfile);
   }
 
   /**

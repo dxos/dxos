@@ -137,6 +137,7 @@ message CreateIdentityRequest {
   optional halo.credentials.ProfileDocument profile = 1;
 
   reserved 2; // Removed use_automerge flag.
+  optional halo.credentials.DeviceProfileDocument device_profile = 3;
 }
 
 // TODO(wittjosiah): Align pluralization with other services.
@@ -146,6 +147,7 @@ service IdentityService {
   rpc QueryIdentity(google.protobuf.Empty) returns (stream QueryIdentityResponse);
   rpc UpdateProfile(halo.credentials.ProfileDocument) returns (Identity);
   rpc SignPresentation(SignPresentationRequest) returns (dxos.halo.credentials.Presentation);
+  rpc SetCurrentDeviceProfile(halo.credentials.DeviceProfileDocument) returns (google.protobuf.Empty);
 }
 
 //
@@ -168,7 +170,18 @@ message QueryDevicesResponse {
   repeated Device devices = 1;
 }
 
+enum CreateDeviceProfileContext {
+  INITIAL_DEVICE = 0;
+  ADDITIONAL_DEVICE = 1;
+}
+message CreateDeviceProfileRequest {
+  optional CreateDeviceProfileContext context = 1;
+  /// Override parts of the default device profile.
+  optional halo.credentials.DeviceProfileDocument profile_override = 2;
+}
+
 service DevicesService {
+  rpc CreateDeviceProfile(CreateDeviceProfileRequest) returns (halo.credentials.DeviceProfileDocument);
   rpc UpdateDevice(halo.credentials.DeviceProfileDocument) returns (Device);
   rpc QueryDevices(google.protobuf.Empty) returns (stream QueryDevicesResponse);
 }

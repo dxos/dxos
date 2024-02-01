@@ -8,6 +8,7 @@ import platform from 'platform';
 import { asyncTimeout } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
+import { DeviceType } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { BaseCommand } from '../../base-command';
 import { IdentityWaitTimeoutError } from '../../errors';
@@ -40,6 +41,7 @@ export default class Update extends BaseCommand<typeof Update> {
       // TODO(nf): dedupe
       const uDevice = await client.services.services.DevicesService.updateDevice({
         label,
+        type: DeviceType.AGENT,
         platform: platform.name,
         platformVersion: platform.version,
         architecture: typeof platform.os?.architecture === 'number' ? String(platform.os.architecture) : undefined,

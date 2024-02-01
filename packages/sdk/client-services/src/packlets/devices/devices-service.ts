@@ -5,6 +5,7 @@
 import { EventSubscriptions } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import {
+  type CreateDeviceProfileRequest,
   type Device,
   DeviceKind,
   type DevicesService,
@@ -57,5 +58,9 @@ export class DevicesServiceImpl implements DevicesService {
 
       return () => subscriptions.clear();
     });
+  }
+
+  async createDeviceProfile({ context, profileOverride }: CreateDeviceProfileRequest): Promise<DeviceProfileDocument> {
+    return this._identityManager.createDeviceProfile({ context, deviceProfileOverride: profileOverride });
   }
 }

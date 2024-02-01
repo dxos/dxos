@@ -1,7 +1,6 @@
 //
 // Copyright 2022 DXOS.org
 //
-
 import platform from 'platform';
 
 import { Event } from '@dxos/async';
@@ -14,17 +13,18 @@ import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
-import { type Device, DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
+import { type Device, DeviceKind, CreateDeviceProfileContext } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type IdentityRecord, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
   AdmittedFeed,
   type DeviceProfileDocument,
+  DeviceType,
   type ProfileDocument,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { trace as Trace } from '@dxos/tracing';
-import { deferFunction } from '@dxos/util';
+import { isNode, deferFunction } from '@dxos/util';
 
 import { createAuthProvider } from './authenticator';
 import { Identity } from './identity';
@@ -52,6 +52,8 @@ export type JoinIdentityParams = {
 
 export type CreateIdentityOptions = {
   displayName?: string;
+  // device profile for device creating the identity.
+  deviceProfile?: DeviceProfileDocument;
 };
 
 // TODO(dmaretskyi): Rename: represents the peer's state machine.
@@ -60,6 +62,8 @@ export class IdentityManager {
   readonly stateUpdate = new Event();
 
   private _identity?: Identity;
+  // hack to set device profile after joining an existing identity.
+  currentDeviceProfile?: DeviceProfileDocument;
 
   // TODO(burdon): IdentityManagerParams.
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
@@ -89,6 +93,7 @@ export class IdentityManager {
         identityKey: identityRecord.identityKey,
         displayName: this._identity.profileDocument?.displayName,
       });
+
       this.stateUpdate.emit();
     }
     log.trace('dxos.halo.identity-manager.open', trace.end({ id: traceId }));
@@ -98,7 +103,13 @@ export class IdentityManager {
     await this._identity?.close(new Context());
   }
 
-  async createIdentity({ displayName }: CreateIdentityOptions = {}) {
+  async createIdentity({ displayName, deviceProfile }: CreateIdentityOptions = {}) {
+    // If no device profile is supplied when asked to create identity, create one from defaults.
+    if (!deviceProfile) {
+      deviceProfile = this.createDeviceProfile({ context: CreateDeviceProfileContext.INITIAL_DEVICE });
+    }
+
+    // TODO(nf): populate using context from ServiceContext?
     invariant(!this._identity, 'Identity already exists.');
     log('creating identity...');
 
@@ -142,15 +153,7 @@ export class IdentityManager {
       credentials.push(await generator.createDeviceAuthorization(identityRecord.deviceKey));
 
       // Write device metadata to profile.
-      credentials.push(
-        await generator.createDeviceProfile({
-          platform: platform.name,
-          platformVersion: platform.version,
-          architecture: typeof platform.os?.architecture === 'number' ? String(platform.os.architecture) : undefined,
-          os: platform.os?.family,
-          osVersion: platform.os?.version,
-        }),
-      );
+      credentials.push(await generator.createDeviceProfile(deviceProfile));
       for (const credential of credentials) {
         await identity.controlPipeline.writer.write({
           credential: { credential },
@@ -175,8 +178,44 @@ export class IdentityManager {
     return identity;
   }
 
+  // Note: also exposed through DeviceService for clients to use.
+  // TODO(nf): receive platform info rather than generating it here.
+  createDeviceProfile({
+    context,
+    deviceProfileOverride,
+  }: {
+    context?: CreateDeviceProfileContext;
+    deviceProfileOverride?: DeviceProfileDocument;
+  } = {}): DeviceProfileDocument {
+    let type: DeviceType;
+    // TODO(nf): call Platform service instead?
+    if (isNode()) {
+      type = DeviceType.AGENT;
+    } else {
+      if (platform.name?.startsWith('iOS') || platform.name?.startsWith('Android')) {
+        type = DeviceType.MOBILE;
+      } else if ((globalThis as any).__args) {
+        type = DeviceType.NATIVE;
+      } else {
+        type = DeviceType.BROWSER;
+      }
+    }
+
+    const defaultDeviceProfile = {
+      type,
+      label: context === CreateDeviceProfileContext.INITIAL_DEVICE ? 'initial identity device' : 'additional device',
+      platform: platform.name,
+      platformVersion: platform.version,
+      architecture: typeof platform.os?.architecture === 'number' ? String(platform.os.architecture) : undefined,
+      os: platform.os?.family,
+      osVersion: platform.os?.version,
+    };
+
+    return { ...defaultDeviceProfile, ...deviceProfileOverride };
+  }
+
   /**
-   * Accept an existing identity. Expects it's device key to be authorized (now or later).
+   * Accept an existing identity. Expects its device key to be authorized (now or later).
    */
   async acceptIdentity(params: JoinIdentityParams) {
     log('accepting identity', { params });
@@ -203,6 +242,13 @@ export class IdentityManager {
       identityKey: identityRecord.identityKey,
       displayName: this._identity.profileDocument?.displayName,
     });
+
+    if (!this.currentDeviceProfile) {
+      this.currentDeviceProfile = this.createDeviceProfile({
+        context: CreateDeviceProfileContext.ADDITIONAL_DEVICE,
+      });
+    }
+    await this.updateDeviceProfile(this.currentDeviceProfile!);
 
     this.stateUpdate.emit();
     log('accepted identity', { identityKey: identity.identityKey, deviceKey: identity.deviceKey });
@@ -289,6 +335,11 @@ export class IdentityManager {
     if (identityRecord.haloSpace.controlTimeframe) {
       identity.controlPipeline.state.setTargetTimeframe(identityRecord.haloSpace.controlTimeframe);
     }
+
+    identity.stateUpdate.on(() => {
+      log('identityManager received identity.stateUpdate, forwarding');
+      this.stateUpdate.emit();
+    });
 
     return identity;
   }

@@ -16,9 +16,11 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   Invitation,
+  type IdentityService,
   type InvitationsService,
   QueryInvitationsResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 /**
  * Create an observable from an RPC stream.
@@ -56,6 +58,7 @@ export class InvitationsProxy implements Invitations {
 
   constructor(
     private readonly _invitationsService: InvitationsService,
+    private readonly _identityService: IdentityService | undefined,
     private readonly _getInvitationContext: () => Partial<Invitation> & Pick<Invitation, 'kind'>,
   ) {}
 
@@ -156,7 +159,7 @@ export class InvitationsProxy implements Invitations {
     return observable;
   }
 
-  join(invitation: Invitation | string): AuthenticatingInvitation {
+  join(invitation: Invitation | string, deviceProfile?: DeviceProfileDocument): AuthenticatingInvitation {
     if (typeof invitation === 'string') {
       invitation = InvitationEncoder.decode(invitation);
     }
@@ -180,6 +183,16 @@ export class InvitationsProxy implements Invitations {
       onAuthenticate: async (authCode: string) => {
         const invitationId = observable.get().invitationId;
         invariant(invitationId, 'Invitation missing identifier');
+
+        if (deviceProfile) {
+          invariant(
+            this._getInvitationContext().kind === Invitation.Kind.DEVICE,
+            'deviceProfile provided for non-device invitation',
+          );
+          invariant(this._identityService);
+          await this._identityService.setCurrentDeviceProfile(deviceProfile);
+        }
+
         await this._invitationsService.authenticate({ invitationId, authCode });
       },
     });
