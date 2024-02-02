@@ -67,9 +67,7 @@ See the [glossary](../glossary) for definitions of other terms you'll find in th
 
 ## ECHO and HALO
 
-ECHO is designed to allow users to own their own data. ECHO is a secure storage mechanism, responsible for holding end-user identity (keys, credentials, metadata, ..., etc.) and all ECHO data in persistent browser or disk storage. Specific devices or applications can be revoked from accessing user data at any time.
-
-Browsers provide storage APIs that allow applications to store data locally. Storage for web apps is isolated to the web app's domain, and this property is used to isolate the ECHO storage to the DXOS application's domain.
+ECHO is designed to allow users to retain control over their data. ECHO is a secure storage mechanism, responsible for holding end-user data and identity information (keys, credentials, metadata, ..., etc.) in persistent browser or filesystem storage. Specific devices can be revoked from accessing user data at any time.
 
 In order to allow multiple applications to access the same ECHO database, the user must initiate a device invitation, which synchronizes ECHO across both applications, giving them both read and write access to all of the user's data stored in their ECHO. See [Device Invitations](./halo#device-invitations) for more information.
 

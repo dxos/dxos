@@ -1,63 +1,76 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "lib": ["DOM", "ESNext"],
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
     "module": "ESNext",
     "outDir": "dist",
-    "types": ["@vuepress/client/types", "node", "vite/client", "sharedworker"],
+    "types": [
+      "@vuepress/client/types",
+      "node",
+      "sharedworker",
+      "vite/client"
+    ]
   },
-  "include": ["**/*.vue", "docs", "src", "vuepress.config.ts"],
+  "include": [
+    "**/*.vue",
+    "docs",
+    "src",
+    "vuepress.config.ts"
+  ],
   "references": [
     {
-      "path": "../packages/common/async",
+      "path": "../packages/common/async"
     },
     {
-      "path": "../packages/common/keys",
+      "path": "../packages/common/keys"
     },
     {
-      "path": "../packages/common/log",
+      "path": "../packages/common/log"
     },
     {
-      "path": "../packages/core/echo/echo-schema",
+      "path": "../packages/core/echo/echo-schema"
     },
     {
-      "path": "../packages/core/protocols",
+      "path": "../packages/core/protocols"
     },
     {
-      "path": "../packages/sdk/client",
+      "path": "../packages/sdk/client"
     },
     {
-      "path": "../packages/sdk/client-services",
+      "path": "../packages/sdk/client-services"
     },
     {
-      "path": "../packages/sdk/config",
+      "path": "../packages/sdk/config"
     },
     {
-      "path": "../packages/sdk/examples",
+      "path": "../packages/sdk/examples"
     },
     {
-      "path": "../packages/sdk/observability",
+      "path": "../packages/sdk/observability"
     },
     {
-      "path": "../packages/sdk/react-client",
+      "path": "../packages/sdk/react-client"
     },
     {
-      "path": "../packages/sdk/shell",
+      "path": "../packages/sdk/shell"
     },
     {
-      "path": "../packages/ui/react-ui",
+      "path": "../packages/ui/react-ui"
     },
     {
-      "path": "../packages/ui/react-ui-theme",
+      "path": "../packages/ui/react-ui-theme"
     },
     {
-      "path": "../tools/apidoc",
-    },
+      "path": "../tools/apidoc"
+    }
   ],
   "ts-node": {
     "compilerOptions": {
-      "allowJs": true,
+      "allowJs": true
     },
-    "esm": true,
-  },
+    "esm": true
+  }
 }
