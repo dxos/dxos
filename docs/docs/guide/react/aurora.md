@@ -70,13 +70,15 @@ For best results, load `@dxosTheme` ahead of any other stylesheets.
 
 The special `@dxosTheme` import will not be a available. Include the following stylesheet in your `index.html`:
 
-    node_modules/@dxos/react-ui/dist/plugin/node/theme.css
+```
+node_modules/@dxos/react-ui/dist/plugin/node/theme.css
+```
 
 This package exports both CJS and ESM builds of its components, though these are styled with Tailwind as the design token system. Any build stack can use the component builds in this package, you’ll just need to configure your build to handle Tailwind so that styles are applied correctly.
 
 Follow the [Tailwind Framework Guides documentation](https://tailwindcss.com/docs/installation/framework-guides) relevant to your stack to see how that’s done, but make the following modifications:
 
-- Use the Tailwind configuration from this package:
+* Use the Tailwind configuration from this package:
 
 ```ts
 import tailwindcss from 'tailwindcss';
@@ -93,8 +95,8 @@ tailwindcss(
 // ...
 ```
 
-- Instead of adding the Tailwind directives to your own CSS, use or import this package’s `theme.css` (`@dxos/react-ui/dist/plugin/node/theme.css`) which adds the Tailwind directives itself.
-- This package relies on font assets installed via npm as dependencies; if you’re seeing errors in the browser console or build logs about missing `.woff2` files, ensure your build can correctly resolve the import directives used in `theme.css` e.g. `@import '@fontsource/roboto-flex/variable-full.css'`.
+* Instead of adding the Tailwind directives to your own CSS, use or import this package’s `theme.css` (`@dxos/react-ui/dist/plugin/node/theme.css`) which adds the Tailwind directives itself.
+* This package relies on font assets installed via npm as dependencies; if you’re seeing errors in the browser console or build logs about missing `.woff2` files, ensure your build can correctly resolve the import directives used in `theme.css` e.g. `@import '@fontsource/roboto-flex/variable-full.css'`.
 
 :::
 
@@ -148,5 +150,5 @@ Note that you can apply this classname selectively further down the DOM tree if 
 
 [Storybook](https://storybook.js.org/) is used to browse and test components.
 
-- [react-ui storybook](https://609d2a9c8202250039083fbb-owiqnnxehq.chromatic.com/).
-- [react-shell storybook](https://64c18b27fca920629f846e5b-qdjdssmfjl.chromatic.com/)
+* [react-ui storybook](https://609d2a9c8202250039083fbb-owiqnnxehq.chromatic.com/).
+* [react-shell storybook](https://64c18b27fca920629f846e5b-qdjdssmfjl.chromatic.com/)

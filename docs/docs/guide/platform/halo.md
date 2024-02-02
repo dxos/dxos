@@ -6,23 +6,23 @@ order: 2
 
 HALO is a system of components for implementing decentralized identity designed around privacy, security, and collaboration requirements.
 
-- The HALO **Shell** manages the user's identity and connected devices. It's available as a [component](https://github.com/dxos/dxos/tree/main/packages/sdk/shell).
-- The HALO [**SDK**](https://www.npmjs.com/package/@dxos/client) is part of the DXOS client library and provides user authentication, identity, and contact management capabilities.
-- The HALO **protocol** supports the verification, transport, and exchange of identity information between networked peers.
+* The HALO **Shell** manages the user's identity and connected devices. It's available as a [component](https://github.com/dxos/dxos/tree/main/packages/sdk/shell).
+* The HALO [**SDK**](https://www.npmjs.com/package/@dxos/client) is part of the DXOS client library and provides user authentication, identity, and contact management capabilities.
+* The HALO **protocol** supports the verification, transport, and exchange of identity information between networked peers.
 
 ## Features
 
-- Public/private key-pair authentication mechanism integrated into ECHO
-- Passwordless log in
-- Local-first credentials and key storage
-- Multi-device synchronization of identities, credentials, ECHO spaces
+* Public/private key-pair authentication mechanism integrated into ECHO
+* Passwordless log in
+* Local-first credentials and key storage
+* Multi-device synchronization of identities, credentials, ECHO spaces
 
 ## Establishing user identity
 
 There are two ways a user can establish their identity (login) with DXOS on any given [device](../glossary#device).
 
-1.  Visiting any DXOS-powered application in the browser will immediately initialize a HALO identity for the user.
-2.  Accepting a [device invitation](#device-invitations) will synchronize the user's identity from another device.
+1. Visiting any DXOS-powered application in the browser will immediately initialize a HALO identity for the user.
+2. Accepting a [device invitation](#device-invitations) will synchronize the user's identity from another device.
 
 In the future, we plan to support recovering an identity using a [seed phrase](../glossary#seed-phrase), sometimes referred to as paper key recovery.
 
@@ -36,11 +36,11 @@ The shell can be invoked via the client API.
 
 Scenarios:
 
-- View and edit the user's basic profile
-- Invite someone to a space
-- Accept an invitation to join another space
-- Join another device to the user's HALO identity
-- Accept a device invitation to join the current device to an existing HALO identity
+* View and edit the user's basic profile
+* Invite someone to a space
+* Accept an invitation to join another space
+* Join another device to the user's HALO identity
+* Accept a device invitation to join the current device to an existing HALO identity
 
 You can experiment with the Shell at <https://halo.dxos.org>.
 
@@ -64,10 +64,10 @@ Device Invitations allow users to synchronize their identity and data across mul
 
 How to use the HALO Shell in code:
 
-- Use [Shell with Typescript](../typescript/shell#installation)
-- Use [Shell with React](../react/shell#installation)
+* Use [Shell with Typescript](../typescript/shell#installation)
+* Use [Shell with React](../react/shell#installation)
 
 How to read the HALO identity in code:
 
-- Use the [`useIdentity` hook in react](../react/identity)
-- Use the [`client.halo.profile` field in TypeScript](../typescript/identity)
+* Use the [`useIdentity` hook in react](../react/identity)
+* Use the [`client.halo.profile` field in TypeScript](../typescript/identity)

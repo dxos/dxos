@@ -13,9 +13,9 @@ DXOS is under development and will continue to change frequently.<br/>Your feedb
 
 DXOS is a group of technologies that work together:
 
-- [ECHO](platform) - Database and reactive state container for offline-first, real-time, collaborative apps.
-- [HALO](platform/halo) - Identity for decentralized apps.
-- [KUBE](platform/kube) - Self-contained infrastructure for hosting and operating decentralized apps.
+* [ECHO](platform) - Database and reactive state container for offline-first, real-time, collaborative apps.
+* [HALO](platform/halo) - Identity for decentralized apps.
+* [KUBE](platform/kube) - Self-contained infrastructure for hosting and operating decentralized apps.
 
 Compare DXOS applications to client-server web applications:
 | | `web2` Apps | DXOS Apps |
