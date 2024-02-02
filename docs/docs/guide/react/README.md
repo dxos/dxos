@@ -26,6 +26,12 @@ import { ClientProvider } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
+const createWorker = () =>
+  new SharedWorker(new URL('../shared-worker', import.meta.url), {
+    type: 'module',
+    name: 'dxos-client-worker',
+  });
+
 const Component = () => {
   // Get the user to log in before a space can be obtained.
   const identity = useIdentity();
@@ -38,7 +44,7 @@ const Component = () => {
 };
 
 const App = () => (
-  <ClientProvider>
+  <ClientProvider createWorker={createWorker}>
     <Component />
   </ClientProvider>
 );
@@ -58,14 +64,17 @@ A fallback element is displayed while the Client is initializing. Any component 
 ```tsx file=./snippets/create-client-react-with-fallback.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+
 import { Client } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 
 const client = new Client();
 
+const Fallback = () => <div>Loading...</div>;
+
 const App = () => {
   return (
-    <ClientProvider client={client}>
+    <ClientProvider client={client} fallback={Fallback}>
       {/* ... */}
     </ClientProvider>
   );
