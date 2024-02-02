@@ -54,7 +54,7 @@ export type MarkdownPluginState = {
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, {
     state: {},
-    toolbar: false,
+    toolbar: true,
     experimental: false,
   });
 
