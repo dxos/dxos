@@ -280,7 +280,8 @@ export const LayoutPlugin = ({
                   onDismissToast={(id) => {
                     const index = layout.values.toasts.findIndex((toast) => toast.id === id);
                     if (index !== -1) {
-                      layout.values.toasts.splice(index, 1);
+                      // Allow time for the toast to animate out.
+                      setTimeout(() => layout.values.toasts.splice(index, 1), 1000);
                     }
                   }}
                 />
