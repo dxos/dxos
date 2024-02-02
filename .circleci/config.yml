@@ -17,6 +17,10 @@ parameters:
     type: boolean
     default: false
 
+  vitest-browser:
+    type: boolean
+    default: false
+
 aliases:
   # https://github.com/dxos/dxos/issues/4946
   # - &node-version [ "18.19.0", "20.10.0", "21.4.0" ]
@@ -70,7 +74,22 @@ aliases:
   - &install_datadog
     run:
       name: Install Datadog
-      command: npm install -g @datadog/datadog-ci 
+      command: npm install -g @datadog/datadog-ci
+
+commands:
+  vitest-affected:
+    parameters:
+      mode:
+        description: "Test execution environment, incompatible tests will be ignored"
+        type: enum
+        enum: [ "node", "chrome" ]
+        default: "node"
+    steps:
+      - run:
+          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=vitest
+          environment:
+            VITEST_XML_REPORT: true
+            VITEST_ENV: << parameters.mode >>
 
 jobs:
   #
@@ -104,6 +123,8 @@ jobs:
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --coverage --xmlReport --environments=nodejs
+      - vitest-affected:
+          mode: node
       - when:
           condition:
             equal: [ main, <<pipeline.git.branch>> ]
@@ -111,6 +132,7 @@ jobs:
             - run: pnpm nx run-many --target=lint
             - run: pnpm nx run-many --target=build
             - run: pnpm nx run-many --target=test --skip-nx-cache --coverage --xmlReport --environments=nodejs
+            - run: VITEST_XML_REPORT=true pnpm nx run-many --target=vitest --skip-nx-cache
       - *send_test_report
       - *codecov_upload
       - *store_test_results
@@ -172,6 +194,22 @@ jobs:
       - *store_test_results
 
   #
+  # Vitest headless browser tests.
+  #
+  vitest-browser:
+    docker:
+      - *docker_image_default
+    steps:
+      - checkout
+      - *cache_restore
+      - run: pnpm install
+      - *cache_save
+      - nx/set-shas
+      - vitest-affected:
+          mode: chrome
+      - *store_test_results
+
+  #
   # Publish applications.
   #
   publish:
@@ -219,8 +257,19 @@ workflows:
           matrix:
             parameters:
               node-version: *node-version
+      # Only run e2e and browser tests on pushes to main & release branches.
       - e2e:
-          # Only run e2e tests on pushes to main & release branches.
+          filters:
+            branches:
+              only:
+                - main
+                - /^rc-.*/
+                - /^hotfix-.*/
+                - /^release-please-.*/
+                - nf/circleci-docker
+          context:
+            - Github
+      - vitest-browser:
           filters:
             branches:
               only:
@@ -240,6 +289,17 @@ workflows:
           equal: [ clear_pnpm_cache, << pipeline.schedule.name >> ]
     jobs:
       - e2e:
+          context:
+            - Github
+
+  vitest-browser:
+    when:
+      and:
+        - << pipeline.parameters.vitest-browser >>
+        - not:
+          equal: [ clear_pnpm_cache, << pipeline.schedule.name >> ]
+    jobs:
+      - vitest-browser:
           context:
             - Github
 
