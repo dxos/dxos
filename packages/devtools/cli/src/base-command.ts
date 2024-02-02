@@ -336,7 +336,12 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    */
   override async finally() {
     const endTime = new Date();
+    // TODO(nf): move to observability
+    const installationId = this._observability?.getTag('installationId');
+    const userId = this._observability?.getTag('identityKey');
     this._observability?.event({
+      installationId: installationId?.value,
+      identityId: userId?.value,
       name: 'cli.command.run',
       properties: {
         status: this._failing ? 'failure' : 'success',

@@ -20,6 +20,9 @@
       "path": "../../apps/types"
     },
     {
+      "path": "../../common/random"
+    },
+    {
       "path": "../../common/util"
     },
     {

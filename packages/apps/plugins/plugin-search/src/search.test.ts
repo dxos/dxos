@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
 import { expect } from 'chai';
 
 import { Client } from '@dxos/client';
 import { Expando } from '@dxos/client/echo';
+import { faker } from '@dxos/random';
 import { describe, test } from '@dxos/test';
 
 import { filterObjects } from './search';
@@ -21,13 +21,16 @@ describe('Search', () => {
     await client.initialize();
     await client.halo.createIdentity();
 
+    const match = 'xxx';
     const space = await client.spaces.create();
-    Array.from({ length: 20 }).forEach(() =>
-      space.db.add(new Expando({ title: faker.lorem.sentence(), content: faker.lorem.sentences() })),
-    );
+    Array.from({ length: 20 }).map((_, i) => {
+      const content =
+        i === 10 ? faker.lorem.sentence() + ` ${match}}. ` + faker.lorem.sentence() : faker.lorem.sentences();
+      return space.db.add(new Expando({ title: faker.lorem.sentence(), content }));
+    });
 
     const { objects } = space.db.query();
-    const results = filterObjects(objects, /quo/i);
+    const results = filterObjects(objects, new RegExp(match, 'i'));
     expect(results).to.have.length(1);
   });
 });

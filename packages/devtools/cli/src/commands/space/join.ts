@@ -30,7 +30,8 @@ export default class Join extends BaseCommand<typeof Join> {
       if (!encoded) {
         encoded = await ux.prompt(chalk`\n{blue Invitation}`);
       }
-      if (encoded.startsWith('http')) {
+
+      if (encoded.startsWith('http') || encoded.startsWith('socket')) {
         const searchParams = new URLSearchParams(encoded.substring(encoded.lastIndexOf('?')));
         encoded = searchParams.get('spaceInvitationCode') ?? encoded; // TODO(burdon): Const.
       }

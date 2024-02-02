@@ -4,11 +4,11 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import React, { useEffect, useState } from 'react';
 
 import { Table as TableType } from '@braneframe/types';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
+import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';

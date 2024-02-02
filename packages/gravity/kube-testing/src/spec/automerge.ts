@@ -4,15 +4,13 @@
 
 import { Server } from 'isomorphic-ws';
 
-import { Chunk, Repo, StorageAdapter, StorageKey } from '@dxos/automerge/automerge-repo';
+import { sleep } from '@dxos/async';
+import { type Chunk, Repo, StorageAdapter, type StorageKey } from '@dxos/automerge/automerge-repo';
 import { log } from '@dxos/log';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { SpanTimeDistributionCounter, trace } from '@dxos/tracing';
 import { range } from '@dxos/util';
 
-import { sleep } from '@dxos/async';
-import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
-import { AutomergeStorageAdapter } from '@dxos/echo-pipeline';
-import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { MapCounter, SpanTimeDistributionCounter, trace } from '@dxos/tracing';
 import {
   type AgentEnv,
   type AgentRunOptions,
@@ -198,6 +196,8 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
         break;
     }
   }
+
+  private _storageCtx = new Context();
 
   private _createStorage(kind: AutomergeTestSpec['clientStorage']) {
     switch (kind) {

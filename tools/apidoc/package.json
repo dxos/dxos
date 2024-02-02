@@ -28,16 +28,16 @@
     "minimatch": "^5.1.0",
     "prettier": "^3.2.4",
     "recursive-readdir": "^2.2.3",
-    "remark-code-import": "^1.1.1",
-    "remark-directive": "^2.0.1",
-    "remark-frontmatter": "^4.0.1",
-    "remark-parse": "^10.0.1",
-    "remark-stringify": "^10.0.2",
+    "remark-code-import": "^1.2.0",
+    "remark-directive": "^3.0.0",
+    "remark-frontmatter": "^5.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
     "typedoc": "^0.23.22",
     "typescript": "^5.2.2",
-    "unified": "^10.1.2",
+    "unified": "^11.0.0",
     "unified-prettier": "^2.0.0",
     "unist-util-visit": "^4.1.0",
-    "vfile": "^5.3.6"
+    "vfile": "^6.0.1"
   }
 }

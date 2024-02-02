@@ -13,6 +13,7 @@
     "serve": "cd tmp && npm run serve"
   },
   "devDependencies": {
+    "@dxos/async": "main",
     "@dxos/cli": "main",
     "@playwright/test": "^1.36.2",
     "typescript": "^5.2.2",
