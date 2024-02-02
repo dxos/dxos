@@ -233,10 +233,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           return [
             listener({
               onChange: () => {
-                document.comments.forEach(({ thread, cursor }) => {
+                doc.comments.forEach(({ thread, cursor }) => {
                   if (thread && cursor) {
                     const [start, end] = cursor.split(':');
-                    const title = getTextInRange(document.content, start, end);
+                    const title = getTextInRange(doc.content, start, end);
                     // Only update if the title has changed, otherwise this will cause an infinite loop.
                     if (title !== thread.title) {
                       thread.title = title;
