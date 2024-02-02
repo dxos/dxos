@@ -48,7 +48,7 @@ export const ThreadHeading = forwardRef<HTMLDivElement, ThreadHeadingProps>(
         <div role='none' className='grid place-items-end pie-3.5 fg-separator'>
           <ArrowBendLeftDown />
         </div>
-        <p>{children}</p>
+        <p className='truncate'>{children}</p>
       </div>
     );
   },
