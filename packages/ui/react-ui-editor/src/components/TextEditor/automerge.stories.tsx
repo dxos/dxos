@@ -65,7 +65,8 @@ const Story = () => {
 
       const object1 = repo1.create();
       object1.change((doc: any) => {
-        doc.text = 'Hello world!';
+        // doc.text = 'Hello world!';
+        doc.text = '';
       });
 
       const object2 = repo2.find(object1.url);

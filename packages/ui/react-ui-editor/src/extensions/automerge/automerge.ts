@@ -73,7 +73,7 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
         }
 
         _handleChange() {
-          semaphore.reconcile(this._view);
+          semaphore.reconcile(this._view, false);
         }
       },
     ),
@@ -81,7 +81,7 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
     // Reconcile local updates.
     EditorView.updateListener.of(({ view, changes }) => {
       if (!changes.empty) {
-        semaphore.reconcile(view);
+        semaphore.reconcile(view, true);
       }
     }),
 
