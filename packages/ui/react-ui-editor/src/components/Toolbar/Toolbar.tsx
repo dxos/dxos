@@ -7,6 +7,7 @@ import {
   CaretRight,
   ChatText,
   Code,
+  CodeBlock,
   Link,
   ListBullets,
   ListChecks,
@@ -15,6 +16,12 @@ import {
   TextStrikethrough,
   Table,
   TextB,
+  TextHOne,
+  TextHTwo,
+  TextHThree,
+  TextHFour,
+  TextHFive,
+  TextHSix,
   TextItalic,
 } from '@phosphor-icons/react';
 import { createContext } from '@radix-ui/react-context';
@@ -24,6 +31,16 @@ import { Button, type ButtonProps, DensityProvider, Select } from '@dxos/react-u
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { type Formatting } from '../../extensions';
+
+const HeadingIcons: { [key: string]: Icon } = {
+  '0': Paragraph,
+  '1': TextHOne,
+  '2': TextHTwo,
+  '3': TextHThree,
+  '4': TextHFour,
+  '5': TextHFive,
+  '6': TextHSix,
+};
 
 // TODO(burdon): Revert to string to make extensible?
 export type ActionType =
@@ -60,7 +77,7 @@ const ToolbarRoot = ({ children, onAction, state }: ToolbarProps) => {
   return (
     <ToolbarContextProvider onAction={onAction} state={state}>
       <DensityProvider density='fine'>
-        <div role='toolbar' className='flex w-full shrink-0 p-1 gap-2 items-center whitespace-nowrap overflow-hidden'>
+        <div role='toolbar' className='flex w-full shrink-0 p-1 gap-4 items-center whitespace-nowrap overflow-hidden'>
           {children}
         </div>
       </DensityProvider>
@@ -107,7 +124,8 @@ const MarkdownHeading = () => {
   const { onAction, state } = useToolbarContext('MarkdownFormatting');
   const blockType = state ? state.blockType : 'paragraph';
   const header = blockType && /heading(\d)/.exec(blockType);
-  const value = header ? header[1] : blockType === 'paragraph' || !blockType ? '0' : null;
+  const value = header ? header[1] : blockType === 'paragraph' || !blockType ? '0' : undefined;
+  const HeadingIcon = HeadingIcons[value ?? '0'];
   return (
     <Select.Root
       disabled={value === null}
@@ -115,7 +133,7 @@ const MarkdownHeading = () => {
       onValueChange={(value) => onAction?.({ type: 'heading', data: parseInt(value) })}
     >
       <Select.TriggerButton>
-        <Paragraph className={getSize(5)} />
+        <HeadingIcon className={getSize(5)} />
       </Select.TriggerButton>
       <Select.Portal>
         <Select.Content>
@@ -194,16 +212,17 @@ const MarkdownBlocks = () => (
     <ToolbarButton
       Icon={CaretRight}
       title='Block quote'
-      getState={(s) => s.blockquote}
-      onClick={(s) => ({ type: 'blockquote', data: s ? !s.blockquote : null })}
+      getState={(s) => s.blockQuote}
+      onClick={(s) => ({ type: 'blockquote', data: s ? !s.blockQuote : null })}
     />
     <ToolbarButton
-      Icon={Code}
+      Icon={CodeBlock}
       title='Code block'
+      disable={(s) => !s.blankLine}
       getState={(s) => s.blockType === 'codeblock'}
       onClick={(s) => ({ type: 'codeblock', data: s ? s.blockType !== 'codeblock' : null })}
     />
-    <ToolbarButton Icon={Table} title='Table' disable={(s) => !!s.blockType} onClick={() => ({ type: 'table' })} />
+    <ToolbarButton Icon={Table} title='Table' disable={(s) => !s.blankLine} onClick={() => ({ type: 'table' })} />
   </div>
 );
 
