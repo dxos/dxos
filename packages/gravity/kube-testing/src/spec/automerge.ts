@@ -5,7 +5,11 @@
 import { Server } from 'isomorphic-ws';
 
 import { Repo } from '@dxos/automerge/automerge-repo';
+import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
+import { Context } from '@dxos/context';
+import { AutomergeStorageAdapter } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { range } from '@dxos/util';
 
 import {
@@ -25,6 +29,13 @@ export type AutomergeTestSpec = {
   // Number of connections per client.
   clientConnections: number;
 
+  clientStorage: 'none' | 'idb' | 'opfs';
+
+  /**
+   * Measure disk load time.
+   */
+  reloadStep: boolean;
+
   /**
    * Both server and client create docs.
    */
@@ -43,13 +54,18 @@ export type AutomergeAgentConfig = {
 export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeAgentConfig> {
   defaultSpec(): AutomergeTestSpec {
     return {
-      platform: 'nodejs',
+      platform: 'chromium',
       clientConnections: 1,
+
+      clientStorage: 'idb',
+
       symetric: false,
       agents: 2,
       docCount: 1000,
       changeCount: 10,
       contentKind: 'strings',
+
+      reloadStep: true,
     };
   }
 
@@ -70,7 +86,7 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
   repo!: Repo;
 
   async run(env: AgentEnv<AutomergeTestSpec, AutomergeAgentConfig>): Promise<void> {
-    await this._init(env);
+    await this._init(env, { network: true });
     const { config, spec } = env.params;
 
     performance.mark('create:begin');
@@ -119,16 +135,39 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
     await Promise.all(docs.map((doc) => doc.whenReady()));
     performance.mark('ready:end');
     log.info('docs ready', {
+      from: config.type,
       count: docs.length,
       time: performance.measure('ready', 'ready:begin', 'ready:end').duration,
     });
+
+    await env.syncBarrier('docs ready');
+
+    if (spec.reloadStep && config.type === 'client') {
+      await this._storageCtx.dispose();
+      this._storageCtx = new Context();
+      await this._init(env, { network: false });
+
+      performance.mark('load:begin');
+      const docs = docUrls.map((url) => this.repo.find(url));
+      await Promise.all(docs.map((doc) => doc.whenReady()));
+      performance.mark('load:end');
+      log.info('docs ready after reload', {
+        from: config.type,
+        storageType: spec.clientStorage,
+        count: docs.length,
+        time: performance.measure('load', 'load:begin', 'load:end').duration,
+      });
+    }
 
     await env.syncBarrier('done');
   }
 
   async finish(params: TestParams<AutomergeTestSpec>, results: PlanResults): Promise<any> {}
 
-  private async _init(env: AgentEnv<AutomergeTestSpec, AutomergeAgentConfig>): Promise<void> {
+  private async _init(
+    env: AgentEnv<AutomergeTestSpec, AutomergeAgentConfig>,
+    { network }: { network: boolean },
+  ): Promise<void> {
     const { config, spec, agents, runtime } = env.params;
 
     const {
@@ -143,17 +182,36 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
     switch (config.type) {
       case 'server':
         this.repo = new Repo({
-          network: [new NodeWSServerAdapter(new Server({ port: config.port }))],
+          network: network ? [new NodeWSServerAdapter(new Server({ port: config.port }))] : [],
         });
         break;
       case 'client':
         this.repo = new Repo({
-          network: randomArraySlice(
-            Object.values(agents).filter((a) => a.config.type === 'server'),
-            spec.clientConnections,
-          ).map((a) => new BrowserWebSocketClientAdapter(`ws://localhost:${a.config.port}`)),
+          storage: this._createStorage(spec.clientStorage),
+          network: network
+            ? randomArraySlice(
+                Object.values(agents).filter((a) => a.config.type === 'server'),
+                spec.clientConnections,
+              ).map((a) => new BrowserWebSocketClientAdapter(`ws://localhost:${a.config.port}`))
+            : [],
         });
         break;
+    }
+  }
+
+  private _storageCtx = new Context();
+
+  private _createStorage(kind: AutomergeTestSpec['clientStorage']) {
+    switch (kind) {
+      case 'none':
+        return undefined;
+      case 'idb':
+        return new IndexedDBStorageAdapter();
+      case 'opfs': {
+        const storage = createStorage({ type: StorageType.WEBFS });
+        this._storageCtx.onDispose(() => storage.close());
+        return new AutomergeStorageAdapter(storage.createDirectory('automerge'));
+      }
     }
   }
 }
