@@ -12,10 +12,10 @@ The code completed application can be found [here](https://github.com/dxos/share
 
 ::: note In this tutorial, we will:
 
-*   Build a `react` app using a [DXOS app template](#create-an-app).
-*   Use [ECHO](#updating-the-counter) for real-time state consensus.
-*   Create a decentralized identity with [HALO](#creating-a-user-identity).
-*   [Deploy](#deploying-the-app) the app to Netlify.
+* Build a `react` app using a [DXOS app template](#create-an-app).
+* Use [ECHO](#updating-the-counter) for real-time state consensus.
+* Create a decentralized identity with [HALO](#creating-a-user-identity).
+* [Deploy](#deploying-the-app) the app to Netlify.
 
 :::
 
@@ -25,13 +25,6 @@ DXOS works in any Node.js or Browser environment. There is a [TypeScript API](ty
 
 Ensure `node -v` is at version 18 or higher (we recommend [Node Version Manager](https://github.com/nvm-sh/nvm)).
 
-First, create a new empty folder:
-
-```bash
-mkdir shared-counter
-cd shared-counter
-```
-
 We have a few [app templates](./cli/app-templates.md) that are designed to get you going quickly. They are based on [`vite`](https://vitejs.dev/), [`typescript`](https://www.typescriptlang.org/), [`react`](https://reactjs.org/), [`tailwind`](https://tailwindcss.com/), [`pwa`](https://vite-pwa-org.netlify.app/), and other opinions.
 
 For this guide, we're going to start with the [`bare`](./cli/app-templates.md#bare-template) template and create a simple shared counter. Initialize the app with `npm create`:
@@ -39,6 +32,8 @@ For this guide, we're going to start with the [`bare`](./cli/app-templates.md#ba
 ```bash
 npm create @dxos/bare
 ```
+
+Running `npm create` will give you different options to customize your app. For this tutorial, default to saying "yes" to all the prompts with the exception of "Include PWA support", to which you should say "no".
 
 ::: note
 If you encounter an error with `EINVALIDPACKAGENAME` it's likely the npm/node versions are out of date. Ensure `node -v` is 18 or higher and `npm -v` is 9 or higher.
@@ -56,22 +51,44 @@ This will start the development server and print its URL to the console.
 The bare template is an empty `react` app wrapped in some DXOS goodness. Open the `App.tsx` file and you'll see this:
 
 ```tsx
-const config = async () => new Config(await Dynamics(), Local(), Defaults());
+const config = async () => new Config(Local(), Defaults());
+
+const createWorker = () =>
+  new SharedWorker(new URL('./shared-worker', import.meta.url), {
+    type: 'module',
+    name: 'dxos-client-worker',
+  });
+
+const Loader = () => (
+  <div className='flex bs-[100dvh] justify-center items-center'>
+    <Status indeterminate aria-label='Initializing' />
+  </div>
+);
 
 export const App = () => {
-  const serviceWorker = useRegisterSW();
   return (
     <ThemeProvider
-      appNs='shared-counter'
-      resourceExtensions={[appkitTranslations]}
-      fallback={<GenericFallback />}
+      appNs='counter'
+      tx={defaultTx}
+      resourceExtensions={translations}
+      fallback={<Loader />}
     >
-      <ErrorBoundary
-        fallback={({ error }) => <ResetDialog error={error} config={config} />}
-      >
-        <ClientProvider config={config} fallback={GenericFallback}>
-          <Counter />
-          <ServiceWorkerToastContainer {...serviceWorker} />
+      <ErrorBoundary>
+        <ClientProvider
+          config={config}
+          createWorker={createWorker}
+          fallback={Loader}
+          onInitialized={async (client) => {
+            const searchParams = new URLSearchParams(location.search);
+            if (
+              !client.halo.identity.get() &&
+              !searchParams.has('deviceInvitationCode')
+            ) {
+              await client.halo.createIdentity();
+            }
+          }}
+        >
+          <p>Your code goes here</p>
         </ClientProvider>
       </ErrorBoundary>
     </ThemeProvider>
@@ -83,20 +100,18 @@ There's a lot going on here! Let's walk through it.
 
 ### Bootstrap the DXOS Client
 
-DXOS apps enable users to control their data and identity by storing it in a [vault](./platform/README.md#local-vault-topology) separated from the application. In a browser-based environment like this React app, data is stored in persistent browser storage owned by the vault. The vault runs inside of a [Service Worker](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API) which is loaded into the DXOS app via an iFrame. The `ClientProvider` bootstraps the vault and iFrame, enabling the application to access the user's identity and data.
+DXOS apps enable users to control their data and identity by storing it in [ECHO and HALO](./platform/README.md#echo-and-halo). In a browser-based environment like this React app, data is stored in persistent browser storage. ECHO runs inside of a [Shared Worker](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker). The `ClientProvider` bootstraps ECHO and HALO, enabling the application to access the user's identity and data.
 
 ### React Helpers
 
 The other wrapper components are part of the DXOS [UI system](./react/aurora.md):
 
-*   The `<ServiceWorkerToastContainer>` pops a toast with a reload prompt whenever a new version of the PWA is ready to go.
-*   `<ErrorBoundary>` catches errors that bubble up from the application and `<ResetDialog>` provides a user-friendly way to reset the application in the event of a crash.
-*   `<ThemeProvider>` enables default DXOS styles and [`tailwindcss`](https://tailwindcss.com).
-*   `<GenericFallback>` is a loading indicator.
+* `<ErrorBoundary>` catches errors that bubble up from the application.
+* `<ThemeProvider>` enables default DXOS styles and [`tailwindcss`](https://tailwindcss.com).
 
 ## Creating a User Identity
 
-Before an application can read or write user data, the device must be authenticated. The first time a user runs a DXOS application, they won't have an identity yet. The application needs to prompt them to create one.
+Before an application can read or write user data, the device must be authenticated. The first time a user runs a DXOS application, they won't have an identity yet. When `useIdentity` is called, an identity is created if one doesn't exist.
 
 Let's create a simple component called `Counter.tsx`.
 
@@ -114,9 +129,17 @@ export const Counter = () => {
 };
 ```
 
-`useIdentity` attempts to use the device's existing identity, if there is one. If the device's vault has no identity, the user will be [prompted](./platform/halo.md#establishing-user-identity) to create a new one or link to an existing authed device.
+`useIdentity` attempts to use the device's existing identity, if there is one. If the device's vault has no identity, an identity will be created automatically.
 
 `useSpaces` returns all the user's spaces. An [ECHO Space](./platform/README.md#spaces) is an instance of an ECHO database that will be replicated to peers that connect to the space. Spaces can be created and joined programmatically, but in this case a space was created automatically when `useIdentity` created a new identity. For now, we'll just grab that first auto-created space.
+
+Don't forget to import the `Counter` component in `App.tsx` and replace "Your code goes here" with the `Counter` component:
+
+```tsx
+import { Counter } from './Counter';
+
+<Counter />;
+```
 
 ## Updating UI state from ECHO
 
@@ -128,7 +151,7 @@ import { useSpaces, useQuery } from '@dxos/react-client/echo';
 
 In the `Counter` component, replace the `return` with the following:
 
-```tsx file=./snippets/counter-1.tsx#L14-
+```tsx file=./snippets/counter-1.tsx#L15-
 
   const [counter] = useQuery(space, { type: 'counter' });
 
@@ -197,7 +220,7 @@ Let's add a button to update the count of the counter.
 
 At this point, your `Counter` component should look like this, with a `<button>` added for incrementing the count:
 
-```tsx{20-27} file=./snippets/counter-2.tsx#L5-
+```tsx{21-28} file=./snippets/counter-2.tsx#L5-
 import React, { useEffect } from 'react';
 import { Expando, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -254,9 +277,9 @@ What's going on behind the scenes? The two peers are communicating directly, pee
 
 You may wonder why we chose to represent a counter as an array when an integer would be simpler. ECHO uses [CRDTs](https://crdt.tech/) to ensure the state remains consistent. If we used an integer to represent the count, the algorithm for updating the state effectively becomes "last write wins" and short-circuits the CRDT. Consider how each client would update the count, assuming it was an integer:
 
-1.  Grab the most recent count value.
-2.  Increment the count value by 1.
-3.  Save the count value to the shared state.
+1. Grab the most recent count value.
+2. Increment the count value by 1.
+3. Save the count value to the shared state.
 
 If both peers click the button at the exact same time, the count *should* increase by 2. But it will increase by 1. Why? Each of them started with the same number and did the same operation of incrementing by 1.
 
@@ -266,9 +289,9 @@ This is one of the "gotchas" when working with CRDTs. While they ensure that con
 
 ## Recap
 
-*   A [HALO identity](./platform/halo) and a [space](./platform/#spaces) are required to use ECHO.
-*   Reading objects is as simple as querying for the object using [`useQuery()`](react/queries).
-*   The objects returned are tracked by the `Client` and direct mutations to them will be synchronized with other peers (and other parts of your app) reactively.
+* A [HALO identity](./platform/halo) and a [space](./platform/#spaces) are required to use ECHO.
+* Reading objects is as simple as querying for the object using [`useQuery()`](react/queries).
+* The objects returned are tracked by the `Client` and direct mutations to them will be synchronized with other peers (and other parts of your app) reactively.
 
 ## Deploying the app
 
@@ -276,11 +299,11 @@ DXOS apps are static apps that rely on peer-to-peer networking and client-side r
 
 For the sake of simplicity, we will deploy the app's static assets to Netlify. These instructions should be easy to cross-apply to any hosting provider, including Vercel, GitHub Pages, Cloudflare, etc.
 
-1.  Go to "Add new site" in Netlify, and click "Import an existing project."
-2.  Link to your application's repository.
-    *   Set the build command to `npm run build`
-    *   Set the output directory to `out/shared-counter` (To customize this, change `vite.config.ts`)
-3.  Publish!
+1. Go to "Add new site" in Netlify, and click "Import an existing project."
+2. Link to your application's repository.
+   * Set the build command to `npm run build`
+   * Set the output directory to `out/shared-counter` (To customize this, change `vite.config.ts`)
+3. Publish!
 
 That's it. Your app is now live!
 
@@ -294,14 +317,14 @@ This guide demonstrated how to create and deploy a local-first DXOS application.
 
 For more info on using DXOS, see:
 
-*   ECHO with [React](./react/)
-*   ECHO with [TypeScript](./typescript/)
-*   ECHO with [strongly typed objects](./typescript/queries#typed-queries)
+* ECHO with [React](./react/)
+* ECHO with [TypeScript](./typescript/)
+* ECHO with [strongly typed objects](./typescript/queries#typed-queries)
 
 We hope you'll find the technology useful, and we welcome your ideas and contributions:
 
-*   Join the DXOS [Discord](https://discord.gg/KsDBXuUxvD)
-*   DXOS [repository on GitHub](https://github.com/dxos/dxos)
-*   File a bug or idea in [Issues](https://github.com/dxos/dxos/issues)
+* Join the DXOS [Discord](https://discord.gg/KsDBXuUxvD)
+* DXOS [repository on GitHub](https://github.com/dxos/dxos)
+* File a bug or idea in [Issues](https://github.com/dxos/dxos/issues)
 
 Happy building! 🚀

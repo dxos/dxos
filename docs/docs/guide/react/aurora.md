@@ -6,15 +6,14 @@ order: 20
 
 There are several open-source packages of UI components available:
 
-| Package                        | Description                                                                                                   | Audience                                          |
-|:-------------------------------|:--------------------------------------------------------------------------------------------------------------|:--------------------------------------------------|
-| `@dxos/react-ui`               | A set of lookless components in a UI system based on `radix`, `phosphor`, `react`, and `tailwind`.            | Any react application.                            |
-| `@dxos/react-ui-theme`         | A default theme for DXOS UI                                                                                   | Any react application.                            |
-| `@dxos/react-ui-types`         | TypeScript types for the UI system.                                                                           | Any react application using DXOS UI.              |
-| `@dxos/react-ui-editor`      | A collaborative rich text editor component.                                                                   | Any react application using DXOS UI (and/or ECHO). |
-| `@dxos/react-ui-mosaic`        | Drag and drop utilities.                                                                                      | Any react application using DXOS UI (and/or ECHO). |
-| `@dxos/react-ui-table`         | A data table component.                                                                                       | Any react application using DXOS UI (and/or ECHO). |
-| [`@dxos/react-shell`](./shell) | A set of components and specific UI flows for managing [ECHO](../platform) spaces, invitations, and identity. | Any react application using ECHO and HALO.        |
+| Package                 | Description                                                                                        | Audience                                           |
+| :---------------------- | :------------------------------------------------------------------------------------------------- | :------------------------------------------------- |
+| `@dxos/react-ui`        | A set of lookless components in a UI system based on `radix`, `phosphor`, `react`, and `tailwind`. | Any react application.                             |
+| `@dxos/react-ui-theme`  | A default theme for DXOS UI                                                                        | Any react application.                             |
+| `@dxos/react-ui-types`  | TypeScript types for the UI system.                                                                | Any react application using DXOS UI.               |
+| `@dxos/react-ui-editor` | A collaborative rich text editor component.                                                        | Any react application using DXOS UI (and/or ECHO). |
+| `@dxos/react-ui-mosaic` | Drag and drop utilities.                                                                           | Any react application using DXOS UI (and/or ECHO). |
+| `@dxos/react-ui-table`  | A data table component.                                                                            | Any react application using DXOS UI (and/or ECHO). |
 
 ## DXOS UI Installation
 
@@ -41,10 +40,10 @@ export default defineConfig({
     ThemePlugin({
       content: [
         resolve(__dirname, './index.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')
-      ]
-    })
-  ]
+        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+      ],
+    }),
+  ],
 });
 ```
 
@@ -71,13 +70,15 @@ For best results, load `@dxosTheme` ahead of any other stylesheets.
 
 The special `@dxosTheme` import will not be a available. Include the following stylesheet in your `index.html`:
 
-    node_modules/@dxos/react-ui/dist/plugin/node/theme.css
+```
+node_modules/@dxos/react-ui/dist/plugin/node/theme.css
+```
 
 This package exports both CJS and ESM builds of its components, though these are styled with Tailwind as the design token system. Any build stack can use the component builds in this package, you’ll just need to configure your build to handle Tailwind so that styles are applied correctly.
 
 Follow the [Tailwind Framework Guides documentation](https://tailwindcss.com/docs/installation/framework-guides) relevant to your stack to see how that’s done, but make the following modifications:
 
-*   Use the Tailwind configuration from this package:
+* Use the Tailwind configuration from this package:
 
 ```ts
 import tailwindcss from 'tailwindcss';
@@ -85,15 +86,17 @@ import { tailwindConfig } from '@dxos/react-components';
 // ...
 tailwindcss(
   tailwindConfig({
-    content: [/* Wherever else Tailwind utility classes are used */],
+    content: [
+      /* Wherever else Tailwind utility classes are used */
+    ],
     /* Optional params as neeeded */
-  })
-)
+  }),
+);
 // ...
 ```
 
-*   Instead of adding the Tailwind directives to your own CSS, use or import this package’s `theme.css` (`@dxos/react-ui/dist/plugin/node/theme.css`) which adds the Tailwind directives itself.
-*   This package relies on font assets installed via npm as dependencies; if you’re seeing errors in the browser console or build logs about missing `.woff2` files, ensure your build can correctly resolve the import directives used in `theme.css` e.g. `@import '@fontsource/roboto-flex/variable-full.css'`.
+* Instead of adding the Tailwind directives to your own CSS, use or import this package’s `theme.css` (`@dxos/react-ui/dist/plugin/node/theme.css`) which adds the Tailwind directives itself.
+* This package relies on font assets installed via npm as dependencies; if you’re seeing errors in the browser console or build logs about missing `.woff2` files, ensure your build can correctly resolve the import directives used in `theme.css` e.g. `@import '@fontsource/roboto-flex/variable-full.css'`.
 
 :::
 
@@ -112,9 +115,7 @@ import { render } from 'react-dom';
 import { ThemeProvider } from '@dxos/react-ui';
 
 render(
-  <ThemeProvider>
-    {/* your components using react-ui here */}
-  </ThemeProvider>,
+  <ThemeProvider>{/* your components using react-ui here */}</ThemeProvider>,
   document.getElementById('root'),
 );
 ```
@@ -131,12 +132,14 @@ To prevent flash of unstyled content, ensure the document features the right cla
 <head>
   <script>
     function setTheme(darkMode) {
-      document.documentElement.classList[darkMode ? 'add' : 'remove']('dark')
+      document.documentElement.classList[darkMode ? 'add' : 'remove']('dark');
     }
-    setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches)
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
-      setTheme(e.matches)
-    });
+    setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
+    window
+      .matchMedia('(prefers-color-scheme: dark)')
+      .addEventListener('change', function (e) {
+        setTheme(e.matches);
+      });
   </script>
 </head>
 ```
@@ -147,5 +150,5 @@ Note that you can apply this classname selectively further down the DOM tree if 
 
 [Storybook](https://storybook.js.org/) is used to browse and test components.
 
-*   [react-ui storybook](https://609d2a9c8202250039083fbb-owiqnnxehq.chromatic.com/).
-*   [react-shell storybook](https://64c18b27fca920629f846e5b-qdjdssmfjl.chromatic.com/)
+* [react-ui storybook](https://609d2a9c8202250039083fbb-owiqnnxehq.chromatic.com/).
+* [react-shell storybook](https://64c18b27fca920629f846e5b-qdjdssmfjl.chromatic.com/)
