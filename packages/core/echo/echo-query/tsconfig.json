@@ -17,6 +17,9 @@
       "path": "../../../common/node-std"
     },
     {
+      "path": "../../../common/random"
+    },
+    {
       "path": "../echo-db"
     },
     {

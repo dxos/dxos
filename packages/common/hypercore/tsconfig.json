@@ -36,6 +36,9 @@
       "path": "../node-std"
     },
     {
+      "path": "../random"
+    },
+    {
       "path": "../random-access-storage"
     },
     {

@@ -4,9 +4,9 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import React, { useRef, useState } from 'react';
 
+import { faker } from '@dxos/random';
 import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation, Path } from '@dxos/react-ui-mosaic';
 import { withTheme } from '@dxos/storybook-utils';
 

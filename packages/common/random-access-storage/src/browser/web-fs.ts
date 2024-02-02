@@ -134,6 +134,10 @@ export class WebFS implements Storage {
     this._root = undefined;
   }
 
+  async close() {
+    await Promise.all(Array.from(files.values()).map((file) => file.close()));
+  }
+
   private _getFullFilename(path: string, filename?: string) {
     // Replace slashes with underscores. Because we can't have slashes in filenames in Browser File Handle API.
     if (filename) {

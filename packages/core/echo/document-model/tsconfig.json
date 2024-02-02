@@ -20,6 +20,9 @@
       "path": "../../../common/node-std"
     },
     {
+      "path": "../../../common/random"
+    },
+    {
       "path": "../../../common/util"
     },
     {

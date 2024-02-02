@@ -349,6 +349,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/random/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/random-access-storage/package.json",
           "jsonpath": "$.version"
         },

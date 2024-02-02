@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@dxos/echo-generator": "workspace:*",
-    "@faker-js/faker": "^8.3.1"
+    "@dxos/random": "workspace:*"
   },
   "publishConfig": {
     "access": "public"
