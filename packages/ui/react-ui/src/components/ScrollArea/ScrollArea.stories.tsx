@@ -4,9 +4,9 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import React, { type PropsWithChildren } from 'react';
 
+import { faker } from '@dxos/random';
 import { groupSurface, surfaceElevation } from '@dxos/react-ui-theme';
 
 import { ScrollArea } from './ScrollArea';

@@ -4,13 +4,13 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import { type DecoratorFunction } from '@storybook/csf';
 import { type ReactRenderer } from '@storybook/react';
 import React, { type Ref, forwardRef, useState } from 'react';
 
 import { Surface, SurfaceProvider } from '@dxos/app-framework';
 import { type TestObjectGenerator, TestSchemaType, createTestObjectGenerator } from '@dxos/echo-generator';
+import { faker } from '@dxos/random';
 import { TypedObject } from '@dxos/react-client/echo';
 import { Card } from '@dxos/react-ui-card';
 import {

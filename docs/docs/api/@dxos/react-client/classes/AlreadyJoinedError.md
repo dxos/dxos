@@ -1,20 +1,22 @@
-# Class `SpaceNotFoundError`
-<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:67]()</sub>
+# Class `AlreadyJoinedError`
+<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:46]()</sub>
 
 
 Database errors.
 
 ## Constructors
-### [constructor(spaceKey)]()
+### [constructor(\[message\], \[context\])]()
 
 
 
 
-Returns: <code>[SpaceNotFoundError](/api/@dxos/react-client/classes/SpaceNotFoundError)</code>
+Returns: <code>[AlreadyJoinedError](/api/@dxos/react-client/classes/AlreadyJoinedError)</code>
 
 Arguments: 
 
-`spaceKey`: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+`message`: <code>string</code>
+
+`context`: <code>Record&lt;string, any&gt;</code>
 
 
 

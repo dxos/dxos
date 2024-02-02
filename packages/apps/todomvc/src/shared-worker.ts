@@ -1,5 +1,5 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 onconnect = async (event) => {

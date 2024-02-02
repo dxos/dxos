@@ -27,11 +27,10 @@ import { useState, useMemo } from 'react';
 // the field only holds true when *all* selected text has the style,
 // or when the selection is a cursor inside such a style.
 export type Formatting = {
+  blankLine: boolean;
   // The type of the block at the selection.
   // If multiple different block types are selected, this will hold null.
   blockType:
-    | 'paragraph'
-    | 'tablecell'
     | 'codeblock'
     | 'heading1'
     | 'heading2'
@@ -39,7 +38,11 @@ export type Formatting = {
     | 'heading4'
     | 'heading5'
     | 'heading6'
+    | 'paragraph'
+    | 'tablecell'
     | null;
+  // Whether all selected text is wrapped in a blockquote.
+  blockQuote: boolean;
   // Whether the selected text is strong.
   strong: boolean;
   // Whether the selected text is emphasized.
@@ -52,8 +55,6 @@ export type Formatting = {
   link: boolean;
   // If all selected blocks have the same (innermost) list style, that is indicated here.
   listStyle: null | 'ordered' | 'bullet' | 'task';
-  // Whether all selected text is wrapped in a blockquote.
-  blockquote: boolean;
 };
 
 export const compareFormatting = (a: Formatting, b: Formatting) =>
@@ -64,7 +65,7 @@ export const compareFormatting = (a: Formatting, b: Formatting) =>
   a.code === b.code &&
   a.link === b.link &&
   a.listStyle === b.listStyle &&
-  a.blockquote === b.blockquote;
+  a.blockQuote === b.blockQuote;
 
 export enum Inline {
   Strong = 0,
@@ -133,6 +134,7 @@ export const setHeading =
     if (!changes.length) {
       return false;
     }
+
     dispatch(state.update({ changes, userEvent: 'format.setHeading', scrollIntoView: true }));
     return true;
   };
@@ -348,17 +350,31 @@ const skipSpaces = (pos: number, doc: Text, dir: -1 | 1, limit?: number) => {
   return pos;
 };
 
+// TODO(burdon): Define and trigger snippets for codeblock, table, etc.
+const snippets = {
+  codeblock: snippet(
+    [
+      //
+      '```#{}',
+      '#{}',
+      '```',
+    ].join('\n'),
+  ),
+  table: snippet(
+    [
+      //
+      '| #{col1} | #{col2} |',
+      '| ---- | ---- |',
+      '| #{val1} | #{val2} |',
+      '| #{val3} | #{val4} |',
+      '',
+    ].join('\n'),
+  ),
+};
+
 //
 // Table
 //
-
-// TODO(burdon): Define and trigger snippets for codeblock, table, etc.
-const snippets = {
-  codeblock: snippet(['```#{lang}', '#{}', '```'].join('\n')),
-  table: snippet(
-    ['| #{col1} | #{col2} |', '| ---- | ---- |', '| #{val1} | #{val2} |', '| #{val3} | #{val4} |'].join('\n'),
-  ),
-};
 
 export const insertTable = (view: EditorView) => {
   const {
@@ -367,6 +383,7 @@ export const insertTable = (view: EditorView) => {
   } = view.state;
   const { number } = doc.lineAt(main.anchor);
   const { from } = doc.line(number);
+
   snippets.table(view, null, from, from);
 };
 
@@ -556,6 +573,24 @@ export const addList =
     }
 
     if (!blocks.length) {
+      // Insert a new list item if the selection is empty.
+      const { from, to } = state.doc.lineAt(state.selection.main.anchor);
+      if (from === to) {
+        dispatch(
+          state.update({
+            changes: [
+              {
+                from,
+                insert: type === List.Bullet ? '- ' : type === List.Ordered ? '1. ' : '- [ ] ',
+              },
+            ],
+            userEvent: 'format.list.add',
+            scrollIntoView: true,
+          }),
+        );
+        return true;
+      }
+
       return false;
     }
 
@@ -779,7 +814,7 @@ export const addBlockquote = setBlockquote(true);
 export const removeBlockquote = setBlockquote(false);
 
 export const toggleBlockquote: StateCommand = (target) => {
-  return (getFormatting(target.state).blockquote ? removeBlockquote : addBlockquote)(target);
+  return (getFormatting(target.state).blockQuote ? removeBlockquote : addBlockquote)(target);
 };
 
 //
@@ -976,38 +1011,38 @@ const InlineMarker: { [name: string]: number } = {
 };
 
 const IgnoreInline = new Set([
-  'Hardbreak',
-  'HTMLTag',
-  'Comment',
-  'ProcessingInstruction',
   'Autolink',
-  'HeaderMark',
-  'QuoteMark',
-  'ListMark',
-  'LinkMark',
-  'EmphasisMark',
   'CodeMark',
   'CodeText',
+  'Comment',
+  'EmphasisMark',
+  'Hardbreak',
+  'HeaderMark',
+  'HTMLTag',
+  'LinkMark',
+  'ListMark',
+  'ProcessingInstruction',
+  'QuoteMark',
   'StrikethroughMark',
-  'TaskMarker',
-  'SuperscriptMark',
   'SubscriptMark',
+  'SuperscriptMark',
+  'TaskMarker',
 ]);
 
 const Textblocks: { [name: string]: NonNullable<Formatting['blockType']> } = {
-  Paragraph: 'paragraph',
-  Task: 'paragraph',
-  CodeBlock: 'codeblock',
-  FencedCode: 'codeblock',
   ATXHeading1: 'heading1',
   ATXHeading2: 'heading2',
   ATXHeading3: 'heading3',
   ATXHeading4: 'heading4',
   ATXHeading5: 'heading5',
   ATXHeading6: 'heading6',
+  CodeBlock: 'codeblock',
+  FencedCode: 'codeblock',
+  Paragraph: 'paragraph',
   SetextHeading1: 'heading1',
   SetextHeading2: 'heading2',
   TableCell: 'tablecell',
+  Task: 'paragraph',
 };
 
 /**
@@ -1021,7 +1056,7 @@ export const getFormatting = (state: EditorState): Formatting => {
   // null = no text seen, true = all text had the mark, false = saw text without it.
   const inline: (boolean | null)[] = [null, null, null, null];
   let link: boolean = false;
-  let blockquote: boolean | null = null;
+  let blockQuote: boolean | null = null;
   // False indicates mixed list styles
   let listStyle: Formatting['listStyle'] | null | false = null;
 
@@ -1143,10 +1178,10 @@ export const getFormatting = (state: EditorState): Formatting => {
               hasList = stack[i] === 'TaskList' ? 'task' : stack[i] === 'BulletList' ? 'bullet' : 'ordered';
             }
           }
-          if (blockquote === null) {
-            blockquote = hasQuote;
-          } else if (!hasQuote && blockquote) {
-            blockquote = false;
+          if (blockQuote === null) {
+            blockQuote = hasQuote;
+          } else if (!hasQuote && blockQuote) {
+            blockQuote = false;
           }
           if (listStyle === null) {
             listStyle = hasList;
@@ -1164,14 +1199,18 @@ export const getFormatting = (state: EditorState): Formatting => {
     });
   }
 
+  const { from, to } = state.doc.lineAt(selection.main.anchor);
+  const blankLine = from === to;
+
   return {
+    blankLine,
     blockType: blockType || null,
-    strong: inline[Inline.Strong] ?? false,
-    emphasis: inline[Inline.Emphasis] ?? false,
+    blockQuote: blockQuote ?? false,
     code: inline[Inline.Code] ?? false,
+    emphasis: inline[Inline.Emphasis] ?? false,
+    strong: inline[Inline.Strong] ?? false,
     strikethrough: inline[Inline.Strikethrough] ?? false,
     link,
-    blockquote: blockquote ?? false,
     listStyle: listStyle || null,
   };
 };

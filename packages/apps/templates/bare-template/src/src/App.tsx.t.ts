@@ -43,7 +43,7 @@ export default template.define
       </ErrorBoundary>`;
 
       const themeProvider = (content: string) => plate`
-      <${ThemeProvider} appNs='${name}' tx={${defaultTx}} resourceExtensions={[${translations}]} fallback={<Loader />}>
+      <${ThemeProvider} appNs='${name}' tx={${defaultTx}} resourceExtensions={${translations}} fallback={<Loader />}>
         ${content}
       </${ThemeProvider}>
       `;
@@ -57,7 +57,7 @@ export default template.define
         
         ${slots.extraImports}
         
-        const config = () => new ${Config}(${Local}(), ${Defaults}());
+        const config = async () => new ${Config}(${Local}(), ${Defaults}());
 
         const createWorker = () =>
           new SharedWorker(new URL('./shared-worker', import.meta.url), {

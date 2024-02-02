@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-query",
-  "version": "0.3.10",
+  "version": "0.4.0",
   "description": "ECHO queries.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@dxos/echo-generator": "workspace:*",
-    "@faker-js/faker": "^8.3.1"
+    "@dxos/random": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

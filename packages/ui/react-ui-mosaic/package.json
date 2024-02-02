@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-mosaic",
-  "version": "0.3.10",
+  "version": "0.4.0",
   "description": "An intermediate interface for drag-and-drop interactions.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -38,9 +38,9 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/gem-core": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@faker-js/faker": "^8.3.1",
     "@phosphor-icons/react": "^2.0.5",
     "@types/d3": "^7.4.2",
     "@types/lodash.defaultsdeep": "^4.6.6",

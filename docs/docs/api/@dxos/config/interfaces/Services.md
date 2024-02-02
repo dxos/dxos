@@ -4,6 +4,12 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
+### [agentHosting]()
+Type: <code>[AgentHosting](/api/@dxos/config/interfaces/AgentHosting)</code>
+
+Options:
+  - proto3_optional = true
+
 ### [app]()
 Type: <code>[AppServer](/api/@dxos/config/interfaces/AppServer)</code>
 

@@ -23,8 +23,14 @@ import {
   resolvePlugin,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { type TypedObject, SpaceProxy, isTypedObject, getSpaceForObject } from '@dxos/react-client/echo';
-import { comments } from '@dxos/react-ui-editor';
+import {
+  type TypedObject,
+  SpaceProxy,
+  isTypedObject,
+  getSpaceForObject,
+  getTextInRange,
+} from '@dxos/react-client/echo';
+import { comments, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
 
@@ -35,7 +41,7 @@ import { ThreadAction, type ThreadPluginProvides, isThread, type ThreadSettingsP
 
 type ThreadState = {
   threads: Record<string, number>;
-  active?: string | undefined;
+  current?: string | undefined;
   focus?: boolean;
 };
 
@@ -145,22 +151,34 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   .filter(nonNullable)
                   .toSorted((a, b) => state.threads[a.id] - state.threads[b.id]);
 
+                const detached = active.comments
+                  .filter(({ cursor }) => !cursor)
+                  .map(({ thread }) => thread?.id)
+                  .filter(nonNullable);
+
                 return (
                   <ThreadsContainer
                     space={space}
                     threads={threads}
-                    currentId={state.active}
+                    detached={detached}
+                    currentId={state.current}
                     autoFocusCurrentTextbox={state.focus}
                     currentRelatedId={layout?.active}
                     onThreadAttend={(thread: ThreadType) => {
-                      if (state.active !== thread.id) {
-                        state.active = thread.id;
+                      if (state.current !== thread.id) {
+                        state.current = thread.id;
                         void intentPlugin?.provides.intent.dispatch({
                           action: LayoutAction.FOCUS,
                           data: {
                             object: thread.id,
                           },
                         });
+                      }
+                    }}
+                    onThreadDelete={(thread: ThreadType) => {
+                      const index = active.comments.findIndex((comment) => comment.thread?.id === thread.id);
+                      if (index !== -1) {
+                        active.comments.splice(index, 1);
                       }
                     }}
                   />
@@ -198,7 +216,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
             case ThreadAction.SELECT: {
               state.threads = { ...state.threads, ...intent.data?.threads };
-              state.active = intent.data?.active;
+              state.current = intent.data?.current;
               state.focus = intent.data?.focus;
               return { data: true };
             }
@@ -206,23 +224,38 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         },
       },
       markdown: {
-        extensions: ({ document }) => {
-          const space = document && getSpaceForObject(document);
-          if (!document || !space) {
+        extensions: ({ document: doc }) => {
+          const space = doc && getSpaceForObject(doc);
+          if (!doc || !space) {
             return [];
           }
 
           return [
+            listener({
+              onChange: () => {
+                doc.comments.forEach(({ thread, cursor }) => {
+                  if (thread && cursor) {
+                    const [start, end] = cursor.split(':');
+                    const title = getTextInRange(doc.content, start, end);
+                    // Only update if the title has changed, otherwise this will cause an infinite loop.
+                    if (title !== thread.title) {
+                      thread.title = title;
+                    }
+                  }
+                });
+              },
+            }),
             comments({
               onCreate: ({ cursor, location }) => {
-                console.log({ cursor, location });
                 // Create comment thread.
-                const thread = space.db.add(new ThreadType({ context: { object: document.id } }));
-                document.comments.push({ thread, cursor });
+                const [start, end] = cursor.split(':');
+                const title = getTextInRange(doc.content, start, end);
+                const thread = space.db.add(new ThreadType({ title, context: { object: doc.id } }));
+                doc.comments.push({ thread, cursor });
                 void intentPlugin?.provides.intent.dispatch([
                   {
                     action: ThreadAction.SELECT,
-                    data: { active: thread.id, threads: { [thread.id]: location?.top }, focus: true },
+                    data: { current: thread.id, threads: { [thread.id]: location?.top }, focus: true },
                   },
                   {
                     action: LayoutAction.TOGGLE_COMPLEMENTARY_SIDEBAR,
@@ -231,6 +264,20 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 ]);
 
                 return thread.id;
+              },
+              onDelete: ({ id }) => {
+                const comment = doc.comments.find(({ thread }) => thread?.id === id);
+                if (comment) {
+                  comment.cursor = undefined;
+                }
+              },
+              onUpdate: ({ id, cursor }) => {
+                const comment = doc.comments.find(({ thread }) => thread?.id === id);
+                if (comment && comment.thread) {
+                  const [start, end] = cursor.split(':');
+                  comment.thread.title = getTextInRange(doc.content, start, end);
+                  comment.cursor = cursor;
+                }
               },
               onSelect: (state) => {
                 const {
@@ -246,17 +293,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                       }),
                       {},
                     )
-                  : current
-                    ? { [current]: 0 }
-                    : closest
-                      ? { [closest]: 0 }
-                      : {};
+                  : {};
 
                 void intentPlugin?.provides.intent.dispatch([
                   {
                     action: ThreadAction.SELECT,
                     data: {
-                      active: current ?? closest,
+                      current: current ?? closest,
                       threads,
                     },
                   },

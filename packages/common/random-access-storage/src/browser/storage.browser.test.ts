@@ -2,12 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-// @dxos/test platform=browser
-
-import expect from 'expect';
 import 'source-map-support/register';
 
-import { describe, test } from '@dxos/test';
+import { expect, describe, test } from 'vitest';
 
 import { createStorage } from './storage';
 import { StorageType } from '../common';
@@ -17,10 +14,6 @@ const ROOT_DIRECTORY = 'testing';
 
 describe('Tests for different storage types in different browsers', () => {
   for (const dataStore of [StorageType.RAM, StorageType.IDB, StorageType.WEBFS] as StorageType[]) {
-    if (mochaExecutor.environment === 'webkit' && dataStore === StorageType.WEBFS) {
-      // Skip WEBFS in webkit.
-      continue;
-    }
     storageTests(dataStore, () => createStorage({ type: dataStore, root: ROOT_DIRECTORY }));
   }
 

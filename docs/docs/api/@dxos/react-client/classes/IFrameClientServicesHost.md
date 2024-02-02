@@ -1,5 +1,5 @@
 # Class `IFrameClientServicesHost`
-<sub>Declared in [packages/sdk/client/dist/types/src/services/iframe-service-host.d.ts:15]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/services/iframe-service-host.d.ts:16]()</sub>
 
 
 Proxy to host client service via iframe.
@@ -19,10 +19,12 @@ Arguments:
 
 
 ## Properties
-### [joinedSpace]()
-Type: <code>Event&lt;[PublicKey](/api/@dxos/react-client/classes/PublicKey)&gt;</code>
+### [closed]()
+Type: <code>Event&lt;undefined | Error&gt;</code>
 
+The connection to the services provider was termintaed.
 
+This should fire if the services disconnect unexpectedly or during a client reset.
 
 ### [descriptors]()
 Type: <code>ServiceBundle&lt;[ClientServices](/api/@dxos/react-client/types/ClientServices)&gt;</code>

@@ -4,13 +4,13 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import { Check, Trash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { faker } from '@dxos/random';
 import { Button } from '@dxos/react-ui';
 import {
   MarkdownEditor,
@@ -257,7 +257,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
     return id;
   };
 
-  const handleDeleteComment: CommentsOptions['onDelete'] = (id) => {
+  const handleDeleteComment: CommentsOptions['onDelete'] = ({ id }) => {
     log.info('delete', { id: id.slice(0, 4) });
     setThreads((threads) =>
       threads.map((thread) => {
@@ -272,7 +272,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
     setSelected((selected) => (selected === id ? undefined : selected));
   };
 
-  const handleUpdateComment: CommentsOptions['onUpdate'] = (id, cursor) => {
+  const handleUpdateComment: CommentsOptions['onUpdate'] = ({ id, cursor }) => {
     log.info('update', { id: id.slice(0, 4), cursor });
     setThreads((threads) =>
       threads.map((thread) => {
