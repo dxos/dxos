@@ -57,7 +57,7 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
       platform: 'chromium',
       clientConnections: 1,
 
-      clientStorage: 'opfs',
+      clientStorage: 'idb',
 
       symetric: false,
       agents: 2,
