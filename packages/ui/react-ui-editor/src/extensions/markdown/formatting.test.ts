@@ -27,6 +27,7 @@ import {
 } from './formatting';
 
 export const emptyFormatting: Formatting = {
+  blankLine: false,
   blockType: 'paragraph',
   strong: false,
   emphasis: false,
@@ -34,7 +35,7 @@ export const emptyFormatting: Formatting = {
   code: false,
   link: false,
   listStyle: null,
-  blockquote: false,
+  blockQuote: false,
 };
 
 const createState = (doc: string) => {
@@ -369,7 +370,7 @@ describe('removeBlockquote', () => {
 });
 
 describe('addCodeblock', () => {
-  testCommand('add a code block to a blank line', '{}', addCodeblock, '```{lang}\n\n```');
+  testCommand('add a code block to a blank line', '{}', addCodeblock, '```{}\n\n```');
 
   testCommand(
     'can turn a paragraph into a code block',
@@ -453,9 +454,9 @@ describe('getFormatting', () => {
 
   t('reports heading for multiple selected headings', '# on{e\n\n# two}', { blockType: 'heading1' });
 
-  t('notices blockquotes', '> {one}', { blockquote: true });
+  t('notices blockquotes', '> {one}', { blockQuote: true });
 
-  t('notices multi-block blockquotes', '> {one\n>\n> two}', { blockquote: true });
+  t('notices multi-block blockquotes', '> {one\n>\n> two}', { blockQuote: true });
 
   t('disables blockquote when not all blocks are quoted', '{one\n\n> two}', {});
 

@@ -15,6 +15,8 @@ npm install --save @dxos/client
 
 # Configuration
 
+If using DXOS in a browser environment, [set up your Vite config](../getting-started#usage-in-a-browser).
+
 Create and initialize a [`Client`](/api/@dxos/client/classes/Client):
 
 ```ts file=./snippets/create-client.ts#L5-

@@ -4,10 +4,10 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import React, { useEffect } from 'react';
 
 import { Thread as ThreadType, types } from '@braneframe/types';
+import { faker } from '@dxos/random';
 import { type PublicKey } from '@dxos/react-client';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';

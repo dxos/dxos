@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
 import { create, insert, search } from '@orama/orama';
 import { expect } from 'chai';
 
 import { createTestObjectGenerator, range } from '@dxos/echo-generator';
+import { faker } from '@dxos/random';
 import { describe, test } from '@dxos/test';
 
 faker.seed(1);

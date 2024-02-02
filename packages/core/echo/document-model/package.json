@@ -1,6 +1,6 @@
 {
   "name": "@dxos/document-model",
-  "version": "0.3.10",
+  "version": "0.4.0",
   "private": false,
   "description": "ECHO object model.",
   "homepage": "https://dxos.org",
@@ -31,7 +31,7 @@
     "yjs": "^13.6.10"
   },
   "devDependencies": {
-    "@faker-js/faker": "^8.3.1",
+    "@dxos/random": "workspace:*",
     "@types/lodash.clonedeep": "^4.5.6",
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.set": "^4.3.7"
