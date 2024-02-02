@@ -40,10 +40,10 @@ export default defineConfig({
     ThemePlugin({
       content: [
         resolve(__dirname, './index.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-      ],
-    }),
-  ],
+        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')
+      ]
+    })
+  ]
 });
 ```
 
@@ -115,7 +115,9 @@ import { render } from 'react-dom';
 import { ThemeProvider } from '@dxos/react-ui';
 
 render(
-  <ThemeProvider>{/* your components using react-ui here */}</ThemeProvider>,
+  <ThemeProvider>
+    {/* your components using react-ui here */}
+  </ThemeProvider>,
   document.getElementById('root'),
 );
 ```
@@ -132,14 +134,12 @@ To prevent flash of unstyled content, ensure the document features the right cla
 <head>
   <script>
     function setTheme(darkMode) {
-      document.documentElement.classList[darkMode ? 'add' : 'remove']('dark');
+      document.documentElement.classList[darkMode ? 'add' : 'remove']('dark')
     }
-    setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
-    window
-      .matchMedia('(prefers-color-scheme: dark)')
-      .addEventListener('change', function (e) {
-        setTheme(e.matches);
-      });
+    setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches)
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+      setTheme(e.matches)
+    });
   </script>
 </head>
 ```
