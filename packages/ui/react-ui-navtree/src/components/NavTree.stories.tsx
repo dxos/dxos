@@ -4,10 +4,10 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import { Boat, Butterfly, Shrimp, TrainSimple } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 
+import { faker } from '@dxos/random';
 import { Button, DensityProvider, Tooltip } from '@dxos/react-ui';
 import { type MosaicDropEvent, type MosaicMoveEvent, Path } from '@dxos/react-ui-mosaic';
 import { Mosaic } from '@dxos/react-ui-mosaic';

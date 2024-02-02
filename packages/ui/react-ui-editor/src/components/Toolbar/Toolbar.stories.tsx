@@ -4,16 +4,26 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import React, { type FC, useMemo, useState } from 'react';
 
 import { TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
+import { faker } from '@dxos/random';
 import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Toolbar } from './Toolbar';
-import { code, comments, formatting, heading, image, table, tasklist, useComments } from '../../extensions';
+import {
+  code,
+  comments,
+  formatting,
+  heading,
+  image,
+  table,
+  tasklist,
+  useComments,
+  useFormattingState,
+} from '../../extensions';
 import { type Comment, useActionHandler, useEditorView, useTextModel } from '../../hooks';
 import { MarkdownEditor } from '../TextEditor';
 
@@ -24,6 +34,7 @@ const Story: FC<{ content: string }> = ({ content }) => {
   const [_comments, setComments] = useState<Comment[]>([]);
   const [editorRef, editorView] = useEditorView();
   const model = useTextModel({ text: item.text });
+  const [formattingState, formattingObserver] = useFormattingState();
   const extensions = useMemo(
     () => [
       code(),
@@ -39,6 +50,7 @@ const Story: FC<{ content: string }> = ({ content }) => {
       image(),
       table(),
       tasklist(),
+      formattingObserver,
     ],
     [],
   );
@@ -54,7 +66,7 @@ const Story: FC<{ content: string }> = ({ content }) => {
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex h-full justify-center'>
         <div className='flex flex-col h-full w-[800px]'>
-          <Toolbar.Root onAction={handleAction}>
+          <Toolbar.Root onAction={handleAction} state={formattingState}>
             <Toolbar.Markdown />
             <Toolbar.Separator />
             <Toolbar.Extended />

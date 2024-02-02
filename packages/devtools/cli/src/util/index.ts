@@ -7,7 +7,6 @@ export * from './credentials';
 export * from './devices';
 export * from './invitations';
 export * from './publish';
-export * from './random';
 export * from './spaces';
 export * from './supervisor';
 export * from './testing';
