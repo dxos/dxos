@@ -10,6 +10,7 @@
     "types": [
       "@vuepress/client/types",
       "node",
+      "sharedworker",
       "vite/client"
     ]
   },

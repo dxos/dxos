@@ -54,17 +54,17 @@ The agent acts as a HALO device, which can share an identity and ECHO space memb
 
 #### To configure the agent to join an existing HALO identity from a browser:
 
-*   Open a DXOS app, such as [Composer](https://composer.dxos.org)
-*   Click on the avatar icon in the upper left corner.
-*   Click on "Add device"
-*   Click "Copy URL" to copy the invitation code.
-*   Run the CLI command `dx halo join` and paste the invitation code.
+* Open a DXOS app, such as [Composer](https://composer.dxos.org)
+* Click on the avatar icon in the upper left corner.
+* Click on "Add device"
+* Click "Copy URL" to copy the invitation code.
+* Run the CLI command `dx halo join` and paste the invitation code.
 
 #### To configure a browser profile to join an identity created by the CLI:
 
-*   Ensure a HALO identity has been created in the agent, or use the `dx halo create <username>` command to create one.
-*   Run `dx halo share` to create a device invitation.
-*   Copy the invitation code and open it in a browser.
+* Ensure a HALO identity has been created in the agent, or use the `dx halo create <username>` command to create one.
+* Run `dx halo share` to create a device invitation.
+* Copy the invitation code and open it in a browser.
 
 ### Reset
 
