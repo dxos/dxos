@@ -29,7 +29,7 @@ import {
   hoverableFocusedControls,
   hoverableFocusedKeyboardControls,
   hoverableOpenControlItem,
-  inputSurface,
+  attentionSurface,
   mx,
   staticFocusRing,
   staticHoverableControls,
@@ -37,19 +37,6 @@ import {
 } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../translations';
-
-export type SectionProps = PropsWithChildren<{
-  // Data props.
-  id: string;
-  title: string;
-
-  // Tile props.
-  active?: MosaicActiveType;
-  draggableProps?: MosaicTileProps['draggableProps'];
-  draggableStyle?: MosaicTileProps['draggableStyle'];
-  onRemove?: MosaicTileProps['onRemove'];
-  onNavigate?: MosaicTileProps['onNavigate'];
-}>;
 
 export type StackSectionContent = MosaicDataItem & { title?: string };
 
@@ -71,23 +58,43 @@ export type StackSectionItem = MosaicDataItem & {
 
 export type StackSectionItemWithContext = StackSectionItem & StackContextValue;
 
+export type SectionProps = PropsWithChildren<{
+  // Data props.
+  id: string;
+  title: string;
+  separation: boolean;
+
+  // Tile props.
+  active?: MosaicActiveType;
+  draggableProps?: MosaicTileProps['draggableProps'];
+  draggableStyle?: MosaicTileProps['draggableStyle'];
+  onRemove?: MosaicTileProps['onRemove'];
+  onNavigate?: MosaicTileProps['onNavigate'];
+}>;
+
 export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElement>> = forwardRef<
   HTMLLIElement,
   SectionProps
->(({ id, title, active, draggableProps, draggableStyle, onRemove, onNavigate, children }, forwardedRef) => {
+>(({ id, title, separation, active, draggableProps, draggableStyle, onRemove, onNavigate, children }, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
   return (
     <DensityProvider density='fine'>
-      <ListItem.Root ref={forwardedRef} id={id} classNames='block pbe-2' style={draggableStyle}>
+      <ListItem.Root
+        ref={forwardedRef}
+        id={id}
+        classNames={['block group', separation && 'pbe-2']}
+        style={draggableStyle}
+      >
         <div
           role='none'
           className={mx(
             surfaceElevation({ elevation: 'group' }),
-            inputSurface,
+            attentionSurface,
             hoverableControls,
-            'flex rounded min-bs-[4rem]',
+            'flex',
+            separation ? 'rounded min-bs-[4rem]' : 'group-first:rounded-bs group-last:rounded-be',
             active && staticHoverableControls,
             (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
           )}
@@ -167,6 +174,7 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
     const { t } = useTranslation(translationKey);
     const { activeItem } = useMosaic();
 
+    const separation = !!itemContext?.separation;
     const { transform, onRemoveSection, onNavigateToSection, SectionContent, ...contentItem } = {
       ...itemContext,
       ...item,
@@ -188,6 +196,7 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
         ref={forwardedRef}
         id={transformedItem.id}
         title={itemObject?.title ?? t('untitled section title')}
+        separation={separation}
         active={active}
         draggableProps={draggableProps}
         draggableStyle={draggableStyle}

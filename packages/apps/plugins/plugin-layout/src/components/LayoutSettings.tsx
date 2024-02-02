@@ -18,7 +18,7 @@ export const LayoutSettings = ({ settings }: { settings: LayoutSettingsProps }) 
   return (
     <>
       {intentPlugin && (
-        <SettingsValue label={t('enable complementary sidebar label')}>
+        <SettingsValue label={t('settings enable complementary sidebar label')}>
           <Input.Switch
             checked={settings.enableComplementarySidebar}
             onCheckedChange={(checked) =>
@@ -31,6 +31,9 @@ export const LayoutSettings = ({ settings }: { settings: LayoutSettingsProps }) 
           />
         </SettingsValue>
       )}
+      <SettingsValue label={t('settings show footer label')}>
+        <Input.Switch checked={settings.showFooter} onCheckedChange={(checked) => (settings.showFooter = !!checked)} />
+      </SettingsValue>
     </>
   );
 };

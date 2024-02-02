@@ -303,9 +303,6 @@ export class InvitationsHandler {
                     }
                   }
                 }
-              } else {
-                // Notify that introduction is complete even if auth is not required.
-                setState({ state: Invitation.State.READY_FOR_AUTHENTICATION });
               }
 
               // 3. Send admission credentials to host (with local space keys).
@@ -321,7 +318,7 @@ export class InvitationsHandler {
 
               // 5. Success.
               log('admitted by host', { ...protocol.toJSON() });
-              setState({ ...result, state: Invitation.State.SUCCESS });
+              setState({ ...result, target: invitation.target, state: Invitation.State.SUCCESS });
               log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.end({ id: traceId }));
             } catch (err: any) {
               if (err instanceof TimeoutError) {
@@ -355,20 +352,25 @@ export class InvitationsHandler {
     };
 
     scheduleTask(ctx, async () => {
-      invariant(invitation.swarmKey);
-      const topic = invitation.swarmKey;
-      const swarmConnection = await this._networkManager.joinSwarm({
-        topic,
-        peerId: PublicKey.random(),
-        protocolProvider: createTeleportProtocolFactory(async (teleport) => {
-          teleport.addExtension('dxos.halo.invitations', createExtension());
-        }),
-        topology: new StarTopology(topic),
-        label: 'invitation guest',
-      });
-      ctx.onDispose(() => swarmConnection.close());
+      const error = protocol.checkInvitation(invitation);
+      if (error) {
+        stream.error(error);
+      } else {
+        invariant(invitation.swarmKey);
+        const topic = invitation.swarmKey;
+        const swarmConnection = await this._networkManager.joinSwarm({
+          topic,
+          peerId: PublicKey.random(),
+          protocolProvider: createTeleportProtocolFactory(async (teleport) => {
+            teleport.addExtension('dxos.halo.invitations', createExtension());
+          }),
+          topology: new StarTopology(topic),
+          label: 'invitation guest',
+        });
+        ctx.onDispose(() => swarmConnection.close());
 
-      setState({ state: Invitation.State.CONNECTING });
+        setState({ state: Invitation.State.CONNECTING });
+      }
     });
 
     const observable = new AuthenticatingInvitation({

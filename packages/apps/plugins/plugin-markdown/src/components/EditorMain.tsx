@@ -2,81 +2,82 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type HTMLAttributes, type RefCallback } from 'react';
+import React, { type HTMLAttributes } from 'react';
 
+import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
 import { useTranslation } from '@dxos/react-ui';
-import { type TextEditorProps, type TextEditorRef, MarkdownEditor } from '@dxos/react-ui-editor';
-import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
+import {
+  type TextEditorProps,
+  type Comment,
+  MarkdownEditor,
+  Toolbar,
+  focusComment,
+  useComments,
+  useEditorView,
+  useActionHandler,
+} from '@dxos/react-ui-editor';
+import { focusRing, attentionSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
 
-import { EmbeddedLayout } from './EmbeddedLayout';
-import { StandaloneLayout } from './StandaloneLayout';
-import { useExtensions, type UseExtensionsOptions } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
-import type { MarkdownProperties } from '../types';
-
-export type SearchResult = {
-  text: string;
-  url: string;
-};
 
 export type EditorMainProps = {
-  editorRefCb?: RefCallback<TextEditorRef>;
-  properties: MarkdownProperties;
-  layout: 'standalone' | 'embedded';
-  extensions?: UseExtensionsOptions;
-} & Pick<TextEditorProps, 'readonly' | 'model' | 'editorMode'>;
+  comments?: Comment[];
+  toolbar?: boolean;
+} & Pick<TextEditorProps, 'model' | 'readonly' | 'editorMode' | 'extensions'>;
 
-export const EditorMain = ({
-  editorRefCb,
-  properties,
-  layout,
-  extensions: _extensions,
-  readonly,
-  model,
-  editorMode,
-}: EditorMainProps) => {
+const EditorMain = ({ comments, toolbar, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
-  const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
-  const extensions = useExtensions(_extensions);
+
+  const [editorRef, editorView] = useEditorView();
+  useComments(editorView, comments);
+  const handleAction = useActionHandler(editorView);
+
+  // Focus comment.
+  useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
+    switch (action) {
+      case LayoutAction.FOCUS: {
+        const object = data?.object;
+        if (editorView) {
+          focusComment(editorView, object);
+        }
+        break;
+      }
+    }
+  });
 
   return (
-    <Root properties={properties} model={model}>
-      <MarkdownEditor
-        ref={editorRefCb}
-        model={model}
-        readonly={readonly}
-        editorMode={editorMode}
-        extensions={extensions}
-        slots={{
-          root: {
-            role: 'none',
-            className: mx(
-              focusRing,
-              inputSurface,
-              surfaceElevation({ elevation: 'group' }),
-              layout !== 'embedded' && 'rounded',
-              'flex flex-col shrink-0 grow pli-10 m-0.5 py-2',
-            ),
-            'data-testid': 'composer.markdownRoot',
-          } as HTMLAttributes<HTMLDivElement>,
-          editor: {
-            placeholder: t('editor placeholder'),
-            theme: {
-              '&, & .cm-scroller': {
-                display: 'flex',
-                flexDirection: 'column',
-                flex: '1 0 auto',
-                inlineSize: '100%',
-              },
-              '& .cm-content': {
-                flex: '1 0 auto',
-                inlineSize: '100%',
-                paddingBlock: '1rem',
-              },
+    <div role='none' className='flex flex-col h-full'>
+      {toolbar && (
+        <Toolbar.Root onAction={handleAction} state={null}>
+          <Toolbar.Markdown />
+          <Toolbar.Separator />
+          <Toolbar.Extended />
+        </Toolbar.Root>
+      )}
+      <div role='none' className='flex flex-col grow pb-8 overflow-y-auto'>
+        <MarkdownEditor
+          ref={editorRef}
+          autoFocus
+          placeholder={t('editor placeholder')}
+          slots={{
+            root: {
+              className: mx(
+                'flex flex-col grow m-0.5',
+                attentionSurface,
+                focusRing,
+                surfaceElevation({ elevation: 'group' }),
+              ),
+              'data-testid': 'composer.markdownRoot',
+            } as HTMLAttributes<HTMLDivElement>,
+            editor: {
+              className: 'h-full pli-10 py-4 rounded',
             },
-          },
-        }}
-      />
-    </Root>
+          }}
+          {...props}
+        />
+      </div>
+    </div>
   );
 };
+
+export default EditorMain;

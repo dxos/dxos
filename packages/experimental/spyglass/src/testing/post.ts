@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
-
 import { PublicKey } from '@dxos/keys';
+import { faker } from '@dxos/random';
 
 import { Spy } from '../client';
 import { Command } from '../common';

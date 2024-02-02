@@ -73,25 +73,23 @@ message File {
 message Document {
   option (object) = true;
 
+  message Comment {
+    // TODO(burdon): Should not be object, but arrays of plain objects are broken.
+    // option (object) = true;
+
+    Thread thread = 1;
+    string cursor = 2; // TODO(burdon): Rename cursor (start/end).
+  }
+
   string title = 1;
   dxos.schema.Text content = 2;
+  repeated Comment comments = 3;
 }
 
 /**
  *
  */
 message Script {
-  option (object) = true;
-
-  string title = 1;
-  dxos.schema.Text source = 2;
-}
-
-/**
- *
- */
-// TODO(burdon): Generalize to script?
-message Mermaid {
   option (object) = true;
 
   string title = 1;
@@ -208,8 +206,16 @@ message Sketch {
 message Thread {
   option (object) = true;
 
+  // TODO(burdon): Reconcile with Message.Context.
+  message Context {
+    string space = 1;
+    string schema = 2;
+    string object = 3;
+  }
+
   string title = 1;
   repeated Message messages = 2;
+  Context context = 3;
 }
 
 /**
@@ -238,9 +244,8 @@ message Message {
 
   message Block {
     string timestamp = 1;
-    string text = 2;
-    string data = 3; // JSON.
-    dxos.schema.Expando object = 4; // TODO(burdon): Change to TypedObject.
+    dxos.schema.Text content = 2;
+    dxos.schema.Expando object = 3; // TODO(burdon): Change to TypedObject.
   }
 
   // TODO(burdon): Promote to top-level (shared with Event).
@@ -331,6 +336,8 @@ message Chain {
       RETRIEVER = 2;
       FUNCTION = 3;
       QUERY = 4;
+      RESOLVER = 5;
+      CONTEXT = 6;
     }
 
     string name = 1;
@@ -351,3 +358,9 @@ message Chain {
   string title = 1;
   repeated Prompt prompts = 2;
 }
+
+message Map {
+  option (object) = true;
+
+  string title = 1;
+};

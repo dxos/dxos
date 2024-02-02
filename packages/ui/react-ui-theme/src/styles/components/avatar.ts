@@ -10,7 +10,7 @@ import { descriptionText, getSize, getSizeHeight } from '../fragments';
 export type AvatarStyleProps = Partial<{
   size: Size;
   srOnly: boolean;
-  status: 'active' | 'inactive' | 'error' | 'warning';
+  status: 'active' | 'inactive' | 'current' | 'error' | 'warning' | 'internal';
   animation: 'pulse' | 'none';
   variant: 'circle' | 'square';
   inGroup: boolean;
@@ -39,8 +39,8 @@ export const avatarStatusIcon: ComponentFunction<AvatarStyleProps> = ({ status, 
     status === 'inactive'
       ? 'text-warning-350 dark:text-warning-250'
       : status === 'active'
-      ? 'text-success-350 dark:text-success-250'
-      : 'text-neutral-350 dark:text-neutral-250',
+        ? 'text-success-350 dark:text-success-250'
+        : 'text-neutral-350 dark:text-neutral-250',
     ...etc,
   );
 
@@ -48,21 +48,24 @@ export const avatarRing: ComponentFunction<AvatarStyleProps> = ({ status, varian
   mx(
     'absolute inset-0 border-2',
     variant === 'circle' ? 'rounded-full' : 'rounded',
-    status === 'active'
-      ? 'border-success-400 dark:border-success-400'
-      : status === 'error'
-      ? 'border-error-400 dark:border-error-500'
-      : status === 'warning'
-      ? 'border-warning-400 dark:border-warning-500'
-      : status === 'inactive'
-      ? 'border-neutral-400 dark:border-neutral-500'
-      : 'border-[color:var(--surface-bg)]',
+    status === 'current'
+      ? 'border-primary-400 dark:border-primary-500'
+      : status === 'active'
+        ? 'border-success-400 dark:border-success-400'
+        : status === 'error'
+          ? 'border-error-400 dark:border-error-500'
+          : status === 'warning'
+            ? 'border-warning-400 dark:border-warning-500'
+            : status === 'inactive'
+              ? 'separator-separator'
+              : status === 'internal'
+                ? 'border-fuchsia-600'
+                : 'border-[color:var(--surface-bg)]',
     animation === 'pulse' ? 'animate-halo-pulse' : '',
     ...etc,
   );
 
-export const avatarFallbackText: ComponentFunction<AvatarStyleProps> = (_props, ...etc) =>
-  mx('fill-neutral-600 dark:fill-neutral-300', ...etc);
+export const avatarFallbackText: ComponentFunction<AvatarStyleProps> = (_props, ...etc) => mx('fill-white', ...etc);
 
 export const avatarGroup: ComponentFunction<AvatarStyleProps> = (_props, ...etc) =>
   mx('inline-flex items-center', ...etc);

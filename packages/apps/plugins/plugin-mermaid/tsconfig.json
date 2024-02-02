@@ -21,13 +21,13 @@
   ],
   "references": [
     {
+      "path": "../../../core/echo/echo-schema"
+    },
+    {
       "path": "../../../core/echo/text-model"
     },
     {
       "path": "../../../sdk/app-framework"
-    },
-    {
-      "path": "../../../sdk/react-client"
     },
     {
       "path": "../../../ui/react-ui"
@@ -42,16 +42,10 @@
       "path": "../../../ui/storybook-utils"
     },
     {
-      "path": "../../types"
-    },
-    {
-      "path": "../plugin-script"
+      "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-stack"
     }
   ]
 }

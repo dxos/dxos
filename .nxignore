@@ -1,10 +1,5 @@
 **/dist/**
 **/out/**
 
-packages/experimental/kai-types/**
-packages/experimental/kai/**
-packages/experimental/kai-frames/**
-packages/experimental/kai-functions/**
-packages/experimental/kai-bots/**
-packages/experimental/kai-framework/**
-packages/experimental/kube-console/**
+packages/common/observability/src/cli-observability-secrets.json
+packages/sdk/examples/src/template/**

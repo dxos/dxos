@@ -24,6 +24,7 @@ import {
   type MosaicTileProps as NaturalMosaicTileProps,
   type MosaicTileComponent as NaturalMosaicTileComponent,
   type MosaicActiveType as NaturalMosaicActiveType,
+  type MosaicTileComponentProps as NaturalMosaicTileComponentProps,
 } from './Tile';
 import { type MosaicDataItem } from './types';
 
@@ -74,7 +75,11 @@ export type MosaicTileProps<
 export type MosaicTileComponent<
   TData extends MosaicDataItem = MosaicDataItem,
   TElement extends HTMLElement = HTMLDivElement,
-> = NaturalMosaicTileComponent<TData, TElement>;
+  TProps = {},
+> = NaturalMosaicTileComponent<TData, TElement, TProps>;
+
+export type MosaicTileComponentProps<TData extends MosaicDataItem = MosaicDataItem> =
+  NaturalMosaicTileComponentProps<TData>;
 
 export type MosaicMoveEvent<TPosition = unknown> = NaturalMosaicMoveEvent<TPosition>;
 export type MosaicDropEvent<TPosition = unknown> = NaturalMosaicDropEvent<TPosition>;

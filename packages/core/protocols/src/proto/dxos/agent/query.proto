@@ -10,7 +10,6 @@ import "dxos/echo/object.proto";
 
 package dxos.agent.query;
 
-
 message QueryRequest {
   string queryId = 1;
   filter.Filter filter = 2;

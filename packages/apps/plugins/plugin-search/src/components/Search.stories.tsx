@@ -4,11 +4,11 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import type { DecoratorFunction } from '@storybook/csf';
 import type { ReactRenderer } from '@storybook/react';
 import React, { type FC, useState } from 'react';
 
+import { faker } from '@dxos/random';
 import { FullscreenDecorator } from '@dxos/react-client/testing';
 import { DensityProvider } from '@dxos/react-ui';
 
@@ -44,6 +44,7 @@ const SearchContextDecorator = (): DecoratorFunction<ReactRenderer> => {
 };
 
 export default {
+  title: 'plugin-search/Search',
   component: Searchbar,
   render: Story,
   decorators: [FullscreenDecorator(), SearchContextDecorator()],

@@ -4,9 +4,9 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import React from 'react';
 
+import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Grid, type GridLayout } from './Grid';

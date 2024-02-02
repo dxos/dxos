@@ -13,6 +13,7 @@ import {
 
 export type LayoutSettingsProps = {
   enableComplementarySidebar: boolean;
+  showFooter: boolean;
 };
 
 export type LayoutPluginProvides = SurfaceProvides &

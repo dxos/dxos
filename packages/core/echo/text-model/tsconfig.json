@@ -26,7 +26,7 @@
       "path": "../../../common/node-std"
     },
     {
-      "path": "../../protocols"
+      "path": "../../../common/random"
     },
     {
       "path": "../../protocols"

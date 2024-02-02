@@ -7,14 +7,15 @@ import { expect } from 'chai';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { AutomergeObject } from './automerge-object';
-import { Expando, TypedObject, base, setGlobalAutomergePreference } from '../object';
+import { setGlobalAutomergePreference } from '../automerge-preference';
+import { Expando, TypedObject, base } from '../object';
 import { TestBuilder } from '../testing';
 import { Contact, Task } from '../tests/proto';
 
 describe('AutomergeObject', () => {
   test('objects become automerge objects when global flag is set', () => {
     setGlobalAutomergePreference(true);
-    afterTest(() => setGlobalAutomergePreference(false));
+    afterTest(() => setGlobalAutomergePreference(undefined));
 
     const obj = new Expando({});
     expect(obj[base] instanceof AutomergeObject).to.eq(true);
@@ -22,9 +23,6 @@ describe('AutomergeObject', () => {
   });
 
   test('are instance of TypedObject', () => {
-    setGlobalAutomergePreference(true);
-    afterTest(() => setGlobalAutomergePreference(false));
-
     const obj = new Task({});
     expect(obj instanceof TypedObject).to.eq(true);
     expect(obj instanceof AutomergeObject).to.eq(true);
@@ -33,16 +31,13 @@ describe('AutomergeObject', () => {
   });
 
   test('cross reference', async () => {
-    setGlobalAutomergePreference(true);
-    afterTest(() => setGlobalAutomergePreference(false));
-
     const testBuilder = new TestBuilder();
     const { db } = await testBuilder.createPeer();
 
-    const contact = new Contact({ name: 'Contact' }, { useAutomergeBackend: false });
+    const contact = new Contact({ name: 'Contact' }, { automerge: false });
     db.add(contact);
-    const task1 = new Task({ title: 'Task1' }, { useAutomergeBackend: true });
-    const task2 = new Task({ title: 'Task2' }, { useAutomergeBackend: false });
+    const task1 = new Task({ title: 'Task1' }, { automerge: true });
+    const task2 = new Task({ title: 'Task2' }, { automerge: false });
 
     contact.tasks.push(task1);
     contact.tasks.push(task2);
@@ -55,9 +50,6 @@ describe('AutomergeObject', () => {
   });
 
   test('destructuring', async () => {
-    setGlobalAutomergePreference(true);
-    afterTest(() => setGlobalAutomergePreference(false));
-
     const obj = new Task({ title: 'Task' });
     const { title } = obj;
     expect(title).to.eq('Task');
@@ -67,9 +59,6 @@ describe('AutomergeObject', () => {
   });
 
   test('`in` operator', async () => {
-    setGlobalAutomergePreference(true);
-    afterTest(() => setGlobalAutomergePreference(false));
-
     const obj = new Task({ title: 'Task' });
     expect('title' in obj).to.eq(true);
     expect('id' in obj).to.eq(true);

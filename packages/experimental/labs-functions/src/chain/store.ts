@@ -39,7 +39,10 @@ export class ChainStore {
   private _documentById = new Map<string, ChainDocumentInfo>();
   private _documentByHash = new Map<string, string>();
 
-  constructor(private readonly _embeddings: Embeddings, private readonly _options: ChainStoreOptions = {}) {}
+  constructor(
+    private readonly _embeddings: Embeddings,
+    private readonly _options: ChainStoreOptions = {},
+  ) {}
 
   get size() {
     return this._documentById.size;
@@ -65,7 +68,7 @@ export class ChainStore {
   }
 
   async initialize() {
-    log.info('initializing...', this.info);
+    log('initializing...', this.info);
     try {
       if (this.baseDir && fs.existsSync(this.baseDir)) {
         this._vectorStore = await FaissStore.load(this.baseDir, this._embeddings);
@@ -96,14 +99,14 @@ export class ChainStore {
       );
     }
 
-    log.info('initialized', this.info);
+    log('initialized', this.info);
     return this;
   }
 
   async save() {
     invariant(this.baseDir);
     invariant(this._vectorStore);
-    log.info('saving...', this.info);
+    log('saving...', this.info);
     fs.mkdirSync(this.baseDir, { recursive: true });
     await this._vectorStore.save(this.baseDir);
 
@@ -121,7 +124,7 @@ export class ChainStore {
 
   async delete() {
     invariant(this.baseDir);
-    log.info('deleting...', this.info);
+    log('deleting...', this.info);
     fs.rmSync(this.baseDir, { recursive: true, force: true });
     return this;
   }

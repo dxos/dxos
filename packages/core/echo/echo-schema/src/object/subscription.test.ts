@@ -17,17 +17,13 @@ describe('create subscription', () => {
     const task = new Expando();
     db.add(task);
 
-    let counter = 0;
-    const selection = createSubscription(() => {
-      counter++;
-    });
-    selection.update([task]);
+    const counter = createUpdateCounter(task);
 
     task.title = 'Test title';
-    expect(counter).to.equal(2);
+    expect(counter.value).to.equal(2);
 
     task.title = 'Test title revision';
-    expect(counter).to.equal(3);
+    expect(counter.value).to.equal(3);
   });
 
   test('updates are synchronous', async () => {
@@ -74,4 +70,76 @@ describe('create subscription', () => {
     const selection = createSubscription(() => {});
     selection.update(['example', null, -1]);
   });
+
+  test('updates for nested objects', async () => {
+    const { db } = await createDatabase();
+    const task = new Expando({ nested: { title: 'Test title' } });
+    db.add(task);
+
+    const counter = createUpdateCounter(task);
+
+    expect(counter.value).to.equal(1);
+    task.nested.title = 'New title';
+    expect(counter.value).to.equal(2);
+  });
+
+  test('updates for deep nested objects', async () => {
+    const { db } = await createDatabase();
+    const task = new Expando({
+      nested: { deep_nested: { title: 'Test title' } },
+    });
+    db.add(task);
+
+    const counter = createUpdateCounter(task);
+
+    expect(counter.value).to.equal(1);
+    task.nested.deep_nested.title = 'New title';
+    expect(counter.value).to.equal(2);
+  });
+
+  test('updates for array objects', async () => {
+    const { db } = await createDatabase();
+    const task = new Expando({ array: ['Test value'] });
+    db.add(task);
+
+    const counter = createUpdateCounter(task);
+
+    expect(counter.value).to.equal(1);
+    task.array[0] = 'New value';
+    expect(counter.value).to.equal(2);
+  });
 });
+
+test('updates for automerge array object fields', async () => {
+  const { db } = await createDatabase();
+  const task = new Expando({ array: [{ title: 'Test value' }] }, { automerge: true });
+  db.add(task);
+
+  const counter = createUpdateCounter(task);
+
+  expect(counter.value).to.equal(1);
+  task.array[0].title = 'New value';
+  expect(counter.value).to.equal(2);
+});
+
+test('updates for nested automerge array object fields', async () => {
+  const { db } = await createDatabase();
+  const nestedArrayHolder = { nested_array: [{ title: 'Test value' }] };
+  const task = new Expando({ array: [nestedArrayHolder] }, { automerge: true });
+  db.add(task);
+
+  const counter = createUpdateCounter(task);
+
+  expect(counter.value).to.equal(1);
+  task.array[0].nested_array[0].title = 'New value';
+  expect(counter.value).to.equal(2);
+});
+
+const createUpdateCounter = (object: any) => {
+  const counter = { value: 0 };
+  const selection = createSubscription(() => {
+    counter.value++;
+  });
+  selection.update([object]);
+  return counter;
+};

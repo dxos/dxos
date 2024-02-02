@@ -16,27 +16,22 @@ import {
   type SurfaceProvides,
   type TranslationsProvides,
 } from '@dxos/app-framework';
-import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { log } from '@dxos/log';
-import { Client, ClientContext, type ClientOptions, PublicKey, type SystemStatus } from '@dxos/react-client';
+import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
 import { type TypeCollection } from '@dxos/react-client/echo';
 
 import { ClientSettings } from './components';
 import meta, { CLIENT_PLUGIN } from './meta';
 import translations from './translations';
 
-const WAIT_FOR_DEFAULT_SPACE_TIMEOUT = 10_000;
+const WAIT_FOR_DEFAULT_SPACE_TIMEOUT = 30_000;
 
 const CLIENT_ACTION = `${CLIENT_PLUGIN}/action`;
 export enum ClientAction {
   OPEN_SHELL = `${CLIENT_ACTION}/SHELL`,
   SHARE_IDENTITY = `${CLIENT_ACTION}/SHARE_IDENTITY`,
-  // TODO(burdon): Reconcile with SpacePlugin.
-  JOIN_SPACE = `${CLIENT_ACTION}/JOIN_SPACE`,
-  SHARE_SPACE = `${CLIENT_ACTION}/SHARE_SPACE`,
 }
 
 export type ClientPluginOptions = ClientOptions & { appKey: string; debugIdentity?: boolean; types?: TypeCollection };
@@ -62,7 +57,6 @@ export const parseClientPlugin = (plugin?: Plugin) =>
   (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
 
 export const ClientPlugin = ({
-  debugIdentity,
   types,
   appKey,
   ...options
@@ -73,18 +67,29 @@ export const ClientPlugin = ({
   // TODO(burdon): Document.
   registerSignalFactory();
 
-  const settings = new LocalStorageStore<ClientSettingsProps>('dxos.org/settings');
+  const settings = new LocalStorageStore<ClientSettingsProps>('dxos.org/settings', { automerge: true });
 
-  const client = new Client({ config: new Config(Envs(), Local(), Defaults()), ...options });
+  let client: Client;
+  let error: unknown = null;
 
   return {
     meta,
     initialize: async () => {
-      let error: unknown = null;
       let firstRun = false;
+
+      client = new Client({ config: new Config(await Envs(), Local(), Defaults()), ...options });
 
       try {
         await client.initialize();
+
+        // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
+        client.reloaded.on(() => {
+          client.halo.identity.subscribe(async (identity) => {
+            if (identity) {
+              window.location.href = window.location.origin;
+            }
+          });
+        });
 
         if (types) {
           client.addTypes(types);
@@ -93,7 +98,8 @@ export const ClientPlugin = ({
         // TODO(burdon): Factor out invitation logic since depends on path routing?
         const searchParams = new URLSearchParams(location.search);
         const deviceInvitationCode = searchParams.get('deviceInvitationCode');
-        if (!client.halo.identity.get() && !deviceInvitationCode) {
+        const identity = client.halo.identity.get();
+        if (!identity && !deviceInvitationCode) {
           await client.halo.createIdentity();
           // TODO(wittjosiah): Ideally this would be per app rather than per identity.
           firstRun = true;
@@ -105,36 +111,16 @@ export const ClientPlugin = ({
         } else if (deviceInvitationCode) {
           void client.shell.initializeIdentity({ invitationCode: deviceInvitationCode });
         }
+
+        if (client.halo.identity.get()) {
+          await client.spaces.isReady.wait({ timeout: WAIT_FOR_DEFAULT_SPACE_TIMEOUT });
+          // TODO(wittjosiah): This doesn't work currently.
+          //   There's no guaruntee that the default space will be fully synced by the time this is called.
+          // firstRun = !client.spaces.default.properties[appKey];
+          client.spaces.default.properties[appKey] = true;
+        }
       } catch (err) {
         error = err;
-      }
-
-      // Debugging (e.g., for monolithic mode).
-      if (debugIdentity) {
-        if (!client.halo.identity.get()) {
-          await client.halo.createIdentity();
-        }
-
-        // Handle initial connection (assumes no PIN).
-        const searchParams = new URLSearchParams(window.location.search);
-        const spaceInvitationCode = searchParams.get('spaceInvitationCode');
-        if (spaceInvitationCode) {
-          setTimeout(() => {
-            // TODO(burdon): Unsubscribe.
-            const observer = client.spaces.join(InvitationEncoder.decode(spaceInvitationCode));
-            observer.subscribe(({ state }) => {
-              log.info('invitation', { state });
-            });
-          }, 2000);
-        }
-      }
-
-      if (client.halo.identity.get()) {
-        await client.spaces.isReady.wait({ timeout: WAIT_FOR_DEFAULT_SPACE_TIMEOUT });
-        // TODO(wittjosiah): This doesn't work currently.
-        //   There's no guaruntee that the default space will be fully synced by the time this is called.
-        // firstRun = !client.spaces.default.properties[appKey];
-        client.spaces.default.properties[appKey] = true;
       }
 
       return {
@@ -153,16 +139,13 @@ export const ClientPlugin = ({
 
           return <ClientContext.Provider value={{ client, status }}>{children}</ClientContext.Provider>;
         },
-        root: () => {
-          if (error) {
-            throw error;
-          }
-
-          return null;
-        },
       };
     },
     ready: async () => {
+      if (error) {
+        throw error;
+      }
+
       settings.prop(settings.values.$automerge!, 'automerge', LocalStorageStore.bool);
     },
     unload: async () => {
@@ -201,26 +184,16 @@ export const ClientPlugin = ({
         },
       },
       intent: {
-        resolver: (intent) => {
+        resolver: async (intent) => {
           switch (intent.action) {
             case ClientAction.OPEN_SHELL:
-              return client.shell.open(intent.data?.layout);
+              await client.shell.open(intent.data?.layout);
+              return { data: true };
 
-            case ClientAction.SHARE_IDENTITY:
-              return client.shell.shareIdentity();
-
-            // TODO(burdon): Remove.
-            case ClientAction.JOIN_SPACE:
-              return typeof intent.data?.invitationCode === 'string'
-                ? client.shell.joinSpace({ invitationCode: intent.data.invitationCode })
-                : false;
-
-            // TODO(burdon): Remove.
-            case ClientAction.SHARE_SPACE:
-              return intent.data?.spaceKey instanceof PublicKey &&
-                !intent.data?.spaceKey.equals(client.spaces.default.key)
-                ? client.shell.shareSpace({ spaceKey: intent.data.spaceKey })
-                : false;
+            case ClientAction.SHARE_IDENTITY: {
+              const data = await client.shell.shareIdentity();
+              return { data };
+            }
           }
         },
       },

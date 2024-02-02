@@ -2,12 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './EditorCard';
+import React, { type LazyExoticComponent } from 'react';
+
+// TODO(burdon): Standardize exports.
+import type { DocumentMain as DocumentMainType } from './DocumentMain';
+import type { DocumentSection as DocumentSectionType } from './DocumentSection';
+
+export type { DocumentCardProps, DocumentItemProps } from './DocumentCard';
+
+export * from './DocumentCard';
+export * from './DocumentMain';
+export * from './DocumentSection';
 export * from './EditorMain';
-export * from './EditorMainEmbedded';
-export * from './EditorSection';
-export * from './MarkdownMainEmpty';
+export * from './HeadingMenu';
+export * from './Layout';
 export * from './MarkdownSettings';
-export * from './StandaloneLayout';
-export * from './SpaceMarkdownChooser';
-export * from './StandaloneMenu';
+
+// Lazily load components for content surfaces.
+export const DocumentCard = React.lazy(() => import('./DocumentCard'));
+export const DocumentMain: LazyExoticComponent<DocumentMainType> = React.lazy(() => import('./DocumentMain'));
+export const DocumentSection: LazyExoticComponent<DocumentSectionType> = React.lazy(() => import('./DocumentSection'));
+export const EditorMain = React.lazy(() => import('./EditorMain'));

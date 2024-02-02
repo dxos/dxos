@@ -40,13 +40,16 @@ export const CellCombobox = <TData extends RowData>({
     setLoading(true);
     const items = await model.query(text);
     setItems(
-      items.reduce((acc: ComboboxCellItems<TData>, item) => {
-        acc[model.getId(item)] = {
-          label: model.getText(item),
-          data: item,
-        };
-        return acc;
-      }, initialItems(model, value)),
+      items.reduce(
+        (acc: ComboboxCellItems<TData>, item) => {
+          acc[model.getId(item)] = {
+            label: model.getText(item),
+            data: item,
+          };
+          return acc;
+        },
+        initialItems(model, value),
+      ),
     );
     setLoading(false);
   };

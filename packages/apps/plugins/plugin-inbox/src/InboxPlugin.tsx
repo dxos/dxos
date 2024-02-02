@@ -21,12 +21,6 @@ import meta, { INBOX_PLUGIN } from './meta';
 import translations from './translations';
 import { InboxAction, type InboxPluginProvides, isAddressBook, isCalendar, isMailbox } from './types';
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[MailboxType.name] = MailboxType;
-(globalThis as any)[AddressBookType.name] = AddressBookType;
-(globalThis as any)[CalendarType.name] = CalendarType;
-
 export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
   return {
     meta,
@@ -118,13 +112,13 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case InboxAction.CREATE_MAILBOX: {
-              return { object: new MailboxType() };
+              return { data: new MailboxType() };
             }
             case InboxAction.CREATE_ADDRESSBOOK: {
-              return { object: new AddressBookType() };
+              return { data: new AddressBookType() };
             }
             case InboxAction.CREATE_CALENDAR: {
-              return { object: new CalendarType() };
+              return { data: new CalendarType() };
             }
           }
         },

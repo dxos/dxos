@@ -19,6 +19,7 @@ import { Globe } from './Globe';
 // TODO(burdon): How to provide geo service via agent?
 
 export default {
+  title: 'plugin-explorer/Globe',
   component: Plot,
   decorators: [FullscreenDecorator()],
 };

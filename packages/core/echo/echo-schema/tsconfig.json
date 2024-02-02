@@ -38,6 +38,9 @@
       "path": "../../../common/node-std"
     },
     {
+      "path": "../../../common/tracing"
+    },
+    {
       "path": "../../../common/util"
     },
     {
@@ -51,9 +54,6 @@
     },
     {
       "path": "../echo-db"
-    },
-    {
-      "path": "../echo-pipeline"
     },
     {
       "path": "../echo-pipeline"

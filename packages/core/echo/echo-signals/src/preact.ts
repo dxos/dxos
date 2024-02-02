@@ -29,6 +29,7 @@ export const registerSignalRuntime = () => {
     batch,
   });
 };
+
 /**
  * @deprecated Use `registerSignalRuntime`.
  */

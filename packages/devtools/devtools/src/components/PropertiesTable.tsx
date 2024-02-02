@@ -3,8 +3,8 @@
 //
 
 import { sentenceCase } from 'change-case';
-import format from 'date-fns/format';
-import formatDistance from 'date-fns/formatDistance';
+import { format } from 'date-fns/format';
+import { formatDistance } from 'date-fns/formatDistance';
 import React, { type FC, type ReactNode } from 'react';
 
 import { type PublicKey } from '@dxos/keys';

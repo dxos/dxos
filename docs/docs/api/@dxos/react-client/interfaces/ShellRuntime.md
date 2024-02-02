@@ -33,4 +33,9 @@ Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 
 
 
+### [target]()
+Type: <code>string</code>
+
+
+
     
