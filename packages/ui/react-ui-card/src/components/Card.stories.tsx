@@ -7,9 +7,9 @@ import '@dxosTheme';
 import { DndContext, type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { faker } from '@faker-js/faker';
 import React, { type FC, type PropsWithChildren, useState } from 'react';
 
+import { faker } from '@dxos/random';
 import { DensityProvider, DropdownMenu, Input, ScrollArea } from '@dxos/react-ui';
 import { modalSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';

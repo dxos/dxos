@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
+import { faker } from '@dxos/random';
 
 type SlideOptions = {
   number?: number;

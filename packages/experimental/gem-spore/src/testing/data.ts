@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
+import { faker } from '@dxos/random';
 
 import { type TestNode } from './types';
 import { type GraphData, type GraphLink } from '../graph';
