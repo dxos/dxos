@@ -4,9 +4,9 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import React, { type FC } from 'react';
 
+import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { SearchList } from './SearchList';
@@ -14,7 +14,7 @@ import { SearchList } from './SearchList';
 type StoryItems = Record<string, string>;
 
 const defaultItems: StoryItems = faker.helpers
-  .uniqueArray(faker.definitions.animal.fish, 100)
+  .uniqueArray(faker.commerce.productName, 16)
   .sort()
   .reduce((acc: StoryItems, label) => {
     acc[faker.string.uuid()] = label;

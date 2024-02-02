@@ -2,18 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
 import React, { useCallback, useState } from 'react';
 
 import { type Graph, GraphBuilder } from '@dxos/app-graph';
 import { buildGraph } from '@dxos/app-graph/testing';
+import { faker } from '@dxos/random';
 import { arrayMove } from '@dxos/util';
 
 import { Tree, type TreeData, type TreeProps } from './Tree';
 import { type MosaicDropEvent, type MosaicMoveEvent, Path, type MosaicOperation } from '../../mosaic';
 import { TestObjectGenerator } from '../../testing';
-
-const fake = faker.helpers.fake;
 
 export type DemoTreeProps = TreeProps & {
   initialItems?: TreeData[];
@@ -84,18 +82,18 @@ export const DemoTree = ({ id = 'tree', initialItems, types, debug }: DemoTreePr
 export const createGraph = () => {
   const content = [...Array(2)].map((_, i) => ({
     id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
-    label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
-    description: fake('{{commerce.productDescription}}'),
+    label: faker.lorem.words(2),
+    description: faker.lorem.sentence(),
     properties: { index: `a${i}` },
     children: [...Array(2)].map((_, j) => ({
       id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
-      label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
-      description: fake('{{commerce.productDescription}}'),
+      label: faker.lorem.words(2),
+      description: faker.lorem.sentence(),
       properties: { index: `a${j}` },
       children: [...Array(2)].map((_, k) => ({
         id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
-        label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
-        description: fake('{{commerce.productDescription}}'),
+        label: faker.lorem.words(2),
+        description: faker.lorem.sentence(),
         properties: { index: `a${k}` },
       })),
     })),

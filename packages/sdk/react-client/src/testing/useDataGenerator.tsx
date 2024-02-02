@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
 import { useEffect } from 'react';
 import { XmlElement, XmlText } from 'yjs';
 
 import { type UnsubscribeCallback } from '@dxos/async';
 import type { Space } from '@dxos/client/echo';
+import { faker } from '@dxos/random';
 import { YText, type YXmlFragment } from '@dxos/text-model';
 
 // TODO(wittjosiah): Replace with gravity agent?

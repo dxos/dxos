@@ -4,10 +4,10 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import { Laptop, Planet, Plus, PlusCircle, SignIn, QrCode, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
+import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space, type SpaceMember, SpaceProxy, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -72,7 +72,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
         <ButtonGroup classNames='mbe-4'>
           {/* <Tooltip content='Create Space'> */}
           <Button
-            onClick={() => client.spaces.create({ name: faker.animal.bird() })}
+            onClick={() => client.spaces.create({ name: faker.commerce.productName() })}
             data-testid='invitations.create-space'
           >
             <PlusCircle className={getSize(6)} />

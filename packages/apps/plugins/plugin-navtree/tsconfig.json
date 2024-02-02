@@ -30,6 +30,9 @@
       "path": "../../../common/keyboard"
     },
     {
+      "path": "../../../common/random"
+    },
+    {
       "path": "../../../common/util"
     },
     {
