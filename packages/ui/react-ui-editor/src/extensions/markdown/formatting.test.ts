@@ -370,7 +370,7 @@ describe('removeBlockquote', () => {
 });
 
 describe('addCodeblock', () => {
-  testCommand('add a code block to a blank line', '{}', addCodeblock, '```{lang}\n\n```');
+  testCommand('add a code block to a blank line', '{}', addCodeblock, '```{}\n\n```');
 
   testCommand(
     'can turn a paragraph into a code block',
