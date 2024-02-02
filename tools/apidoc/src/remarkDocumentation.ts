@@ -11,7 +11,6 @@ import remarkFrontmatter from 'remark-frontmatter';
 import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
 import { unified } from 'unified';
-import unifiedPrettier from 'unified-prettier';
 import { VFile } from 'vfile';
 
 import { Remark } from './apiDocDirective.js';
