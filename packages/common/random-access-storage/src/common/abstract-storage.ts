@@ -134,6 +134,10 @@ export abstract class AbstractStorage implements Storage {
     );
   }
 
+  async close() {
+    await this._closeFilesInPath('');
+  }
+
   // TODO(burdon): Delete directory (not just listed files).
   protected async _remove(path: string): Promise<void> {
     await Promise.all(
