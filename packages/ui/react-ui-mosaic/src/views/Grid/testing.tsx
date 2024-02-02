@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
 import React, { useState } from 'react';
+
+import { faker } from '@dxos/random';
 
 import { Grid, type GridLayout, type GridProps } from './Grid';
 import { type Position } from './layout';
