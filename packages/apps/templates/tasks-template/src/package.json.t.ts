@@ -1,7 +1,9 @@
 import template from './template.t';
 import packageJson from '@dxos/bare-template/dist/src/package.json.t';
 
-export default template.define.script({
+// TODO(wittjosiah): Build failing.
+//   Error TS2742: The inferred type of 'default' cannot be named without a reference to 'packages/apps/templates/bare-template/node_modules/@dxos/plate/dist/types/src'. This is likely not portable. A type annotation is necessary.
+const script: any = template.define.script({
   async content(context) {
     const inherited = await packageJson({
       ...context,
@@ -16,3 +18,5 @@ export default template.define.script({
     return inherited?.files?.[0].content;
   },
 });
+
+export default script;

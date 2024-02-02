@@ -24,6 +24,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/debug"
     },
     {
@@ -33,7 +36,13 @@
       "path": "../../common/invariant"
     },
     {
+      "path": "../../common/keyboard"
+    },
+    {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/random"
     },
     {
       "path": "../../common/react-async"
@@ -46,6 +55,9 @@
     },
     {
       "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/echo/echo-signals"
     },
     {
       "path": "../../core/echo/echo-typegen"
@@ -61,9 +73,6 @@
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../react-ui"
     },
     {
       "path": "../react-ui"

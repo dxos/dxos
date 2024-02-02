@@ -7,7 +7,7 @@ import { promisify } from 'node:util';
 import textract from 'textract';
 
 import { Document as DocumentType, File as FileType } from '@braneframe/types';
-import { hasType, type TypedObject } from '@dxos/echo-schema';
+import { getTextContent, hasType, type TypedObject } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -34,7 +34,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
         log.info('processing', { object: { id: object.id, type: object.__typename } });
         switch (object.__typename) {
           case DocumentType.schema.typename: {
-            pageContent = object.content?.text.trim();
+            pageContent = getTextContent(object.content)?.trim();
             break;
           }
 

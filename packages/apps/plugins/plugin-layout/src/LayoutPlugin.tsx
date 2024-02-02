@@ -8,6 +8,7 @@ import { type RevertDeepSignal } from 'deepsignal';
 import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
+import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
   findPlugin,
   parseGraphPlugin,
@@ -30,13 +31,17 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { LayoutContext, type LayoutState, useLayout } from './LayoutContext';
-import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings } from './components';
+import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings, ContentFallback } from './components';
 import { activeToUri, uriToActive } from './helpers';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
 import { type LayoutPluginProvides, type LayoutSettingsProps } from './types';
 
-export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
+export const LayoutPlugin = ({
+  observability,
+}: {
+  observability?: boolean;
+} = {}): PluginDefinition<LayoutPluginProvides> => {
   let graphPlugin: Plugin<GraphProvides> | undefined;
   // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
@@ -46,6 +51,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
     sidebarOpen: true,
     complementarySidebarOpen: false,
     enableComplementarySidebar: true,
+    showFooter: false,
 
     dialogContent: 'never',
     dialogOpen: false,
@@ -57,6 +63,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
     active: undefined,
     previous: undefined,
 
+    // TODO(burdon): Should not be on this object.
     get activeNode() {
       invariant(graphPlugin, 'Graph plugin not found.');
       return this.active && graphPlugin.provides.graph.findNode(this.active);
@@ -75,7 +82,8 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
       state
         .prop(state.values.$sidebarOpen!, 'sidebar-open', LocalStorageStore.bool)
         .prop(state.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool)
-        .prop(state.values.$enableComplementarySidebar!, 'enable-complementary-sidebar', LocalStorageStore.bool);
+        .prop(state.values.$enableComplementarySidebar!, 'enable-complementary-sidebar', LocalStorageStore.bool)
+        .prop(state.values.$showFooter!, 'show-footer', LocalStorageStore.bool);
 
       // TODO(burdon): Create context and plugin.
       Keyboard.singleton.initialize();
@@ -85,7 +93,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
       state.close();
     },
     provides: {
-      // TODO(wittjosiah): Does this need to be provided twice? Does it matter?
+      // TODO(wittjosiah): Split settings and state.
       layout: state.values as RevertDeepSignal<LayoutState>,
       settings: state.values,
       translations,
@@ -128,11 +136,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
             await dispatch({
               plugin: LAYOUT_PLUGIN,
               action: LayoutAction.ACTIVATE,
-              data: {
-                // TODO(wittjosiah): Remove condition. This is here for backwards compatibility.
-                id:
-                  window.location.pathname === '/embedded' ? 'github:embedded' : uriToActive(window.location.pathname),
-              },
+              data: { id: uriToActive(window.location.pathname) },
             });
           };
 
@@ -158,40 +162,42 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
         const surfaceProps: SurfaceProps = plugin
           ? { data: { component: `${plugin.meta.id}/${component}` } }
           : layout.activeNode
-          ? state.values.fullscreen
-            ? {
-                data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
-                surfaces: { main: { data: { active: layout.activeNode.data } } },
-              }
+            ? state.values.fullscreen
+              ? {
+                  data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
+                  surfaces: { main: { data: { active: layout.activeNode.data } } },
+                }
+              : {
+                  data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
+                  surfaces: {
+                    sidebar: {
+                      data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
+                    },
+                    context: {
+                      data: { component: `${LAYOUT_PLUGIN}/ContextView`, active: layout.activeNode.data },
+                    },
+                    main: { data: { active: layout.activeNode.data } },
+                    'navbar-start': {
+                      data: { activeNode: layout.activeNode, popoverAnchorId: layout.popoverAnchorId },
+                    },
+                    'navbar-end': { data: { object: layout.activeNode.data } },
+                    status: { data: { active: layout.activeNode.data } },
+                    documentTitle: { data: { activeNode: layout.activeNode } },
+                  },
+                }
             : {
                 data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
                 surfaces: {
                   sidebar: {
                     data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
                   },
-                  complementary: {
-                    data: { component: `${LAYOUT_PLUGIN}/ContextView`, active: layout.activeNode.data },
+                  main: {
+                    data: layout.active ? { active: layout.active } : { component: `${LAYOUT_PLUGIN}/ContentEmpty` },
                   },
-                  main: { data: { active: layout.activeNode.data } },
-                  presence: { data: { object: layout.activeNode.data } },
-                  status: { data: { active: layout.activeNode.data } },
-                  heading: { data: { activeNode: layout.activeNode } },
-                  documentTitle: { data: { activeNode: layout.activeNode } },
+                  // TODO(wittjosiah): This plugin should own document title.
+                  documentTitle: { data: { component: `${LAYOUT_PLUGIN}/DocumentTitle` } },
                 },
-              }
-          : {
-              data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
-              surfaces: {
-                sidebar: {
-                  data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
-                },
-                main: {
-                  data: layout.active ? { active: layout.active } : { component: `${LAYOUT_PLUGIN}/ContentEmpty` },
-                },
-                // TODO(wittjosiah): This plugin should own document title.
-                documentTitle: { data: { component: `${LAYOUT_PLUGIN}/DocumentTitle` } },
-              },
-            };
+              };
 
         return (
           <>
@@ -206,6 +212,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
             case `${LAYOUT_PLUGIN}/MainLayout`:
               return (
                 <MainLayout
+                  showHintsFooter={state.values.showFooter}
                   fullscreen={state.values.fullscreen}
                   showComplementarySidebar={state.values.enableComplementarySidebar}
                 />
@@ -219,6 +226,12 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
           }
 
           switch (role) {
+            case 'main':
+              return {
+                node: <ContentFallback />,
+                disposition: 'fallback',
+              };
+
             case 'settings':
               return data.plugin === meta.id ? <LayoutSettings settings={state.values} /> : null;
           }
@@ -231,40 +244,40 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
           switch (intent.action) {
             // TODO(wittjosiah): Remove this.
             case 'dxos.org/plugin/layout/enable-complementary-sidebar': {
-              state.values.enableComplementarySidebar = intent.data.state ?? !state.values.enableComplementarySidebar;
-              return true;
+              state.values.enableComplementarySidebar = intent.data?.state ?? !state.values.enableComplementarySidebar;
+              return { data: true };
             }
 
             case LayoutAction.TOGGLE_FULLSCREEN: {
               state.values.fullscreen =
                 (intent.data as LayoutAction.ToggleFullscreen)?.state ?? !state.values.fullscreen;
-              return true;
+              return { data: true };
             }
 
             case LayoutAction.TOGGLE_SIDEBAR: {
               state.values.sidebarOpen =
                 (intent.data as LayoutAction.ToggleSidebar)?.state ?? !state.values.sidebarOpen;
-              return true;
+              return { data: true };
             }
 
             case LayoutAction.TOGGLE_COMPLEMENTARY_SIDEBAR: {
               state.values.complementarySidebarOpen =
                 (intent.data as LayoutAction.ToggleComplementarySidebar).state ??
                 !state.values.complementarySidebarOpen;
-              return true;
+              return { data: true };
             }
 
             case LayoutAction.OPEN_DIALOG: {
               const { component, subject } = intent.data as LayoutAction.OpenDialog;
               state.values.dialogOpen = true;
               state.values.dialogContent = { component, subject };
-              return true;
+              return { data: true };
             }
 
             case LayoutAction.CLOSE_DIALOG: {
               state.values.dialogOpen = false;
               state.values.dialogContent = null;
-              return true;
+              return { data: true };
             }
 
             case LayoutAction.OPEN_POPOVER: {
@@ -272,19 +285,19 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               state.values.popoverOpen = true;
               state.values.popoverContent = { component, subject };
               state.values.popoverAnchorId = anchorId;
-              return true;
+              return { data: true };
             }
 
             case LayoutAction.CLOSE_POPOVER: {
               state.values.popoverOpen = false;
               state.values.popoverContent = null;
               state.values.popoverAnchorId = undefined;
-              return true;
+              return { data: true };
             }
 
             case LayoutAction.ACTIVATE: {
-              const id = (intent.data as LayoutAction.Activate).id;
-              const path = graphPlugin?.provides.graph.getPath(id);
+              const id = intent.data?.id ?? intent.data?.result?.id;
+              const path = id && graphPlugin?.provides.graph.getPath(id);
               if (path) {
                 Keyboard.singleton.setCurrentContext(path.join('/'));
               }
@@ -293,7 +306,32 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                 state.values.previous = state.values.active;
                 state.values.active = id;
               });
-              return true;
+
+              const schema = state.values.activeNode?.data?.__typename;
+
+              return {
+                data: {
+                  id,
+                  path,
+                  active: true,
+                },
+                intents: [
+                  observability
+                    ? [
+                        {
+                          action: ObservabilityAction.SEND_EVENT,
+                          data: {
+                            name: 'layout.activate',
+                            properties: {
+                              id,
+                              schema,
+                            },
+                          },
+                        },
+                      ]
+                    : [],
+                ],
+              };
             }
           }
         },

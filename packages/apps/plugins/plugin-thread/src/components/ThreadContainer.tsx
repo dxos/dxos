@@ -2,91 +2,82 @@
 // Copyright 2023 DXOS.org
 //
 
-import differenceInSeconds from 'date-fns/differenceInSeconds';
-import React from 'react';
+import React, { useRef, useState } from 'react';
 
 import { type Thread as ThreadType, Message as MessageType } from '@braneframe/types';
-import { generateName } from '@dxos/display-name';
-import { PublicKey } from '@dxos/react-client';
-import { type SpaceMember, type Space, useMembers } from '@dxos/react-client/echo';
-import { type Identity, useIdentity } from '@dxos/react-client/halo';
+import { TextObject } from '@dxos/react-client/echo';
+import { type Space, useMembers } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
+import { AnchoredOverflow, useTranslation } from '@dxos/react-ui';
+import { useTextModel } from '@dxos/react-ui-editor';
+import {
+  MessageTextbox,
+  type MessageTextboxProps,
+  Thread,
+  ThreadFooter,
+  ThreadHeading,
+  type ThreadProps,
+} from '@dxos/react-ui-thread';
 
-import { type BlockProperties, ThreadChannel } from './Thread';
-
-// TODO(burdon): Goals.
-// - Usable within a single column which may be visible in the sidebar of another content block (e.g., document).
-// - Create and navigate between threads.
-// - Lightweight threads for document comments, inline AI, etc.
-//    (Similar reusable components everywhere; same data structure).
-
-const colors = [
-  'text-blue-300',
-  'text-green-300',
-  'text-red-300',
-  'text-cyan-300',
-  'text-indigo-300',
-  'text-teal-300',
-  'text-orange-300',
-  'text-purple-300',
-];
-
-// TODO(burdon): Move to key.
-const colorHash = (key: PublicKey) => {
-  const num = Number('0x' + key.toHex().slice(0, 8));
-  return colors[num % colors.length];
-};
-
-export const messagePropertiesProvider = (identity: Identity, members: SpaceMember[]) => {
-  return (identityKey: PublicKey | undefined) => {
-    const author =
-      identityKey && PublicKey.equals(identityKey, identity.identityKey)
-        ? identity
-        : members.find((member) => identityKey && PublicKey.equals(member.identity.identityKey, identityKey))?.identity;
-
-    const key = author?.identityKey ?? identityKey;
-    return {
-      displayName: author?.profile?.displayName ?? (identityKey ? generateName(identityKey.toHex()) : ''),
-      classes: key ? colorHash(key) : undefined,
-    } satisfies BlockProperties;
-  };
-};
+import { MessageContainer } from './MessageContainer';
+import { command } from './command-extension';
+import { useStatus, useMessageMetadata } from '../hooks';
+import { THREAD_PLUGIN } from '../meta';
 
 export type ThreadContainerProps = {
   space: Space;
   thread: ThreadType;
-  activeObjectId?: string;
-  fullWidth?: boolean;
-};
+  currentRelatedId?: string;
+  onAttend?: () => void;
+  autoFocusTextBox?: boolean;
+} & Pick<ThreadProps, 'current'>;
 
-export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth }: ThreadContainerProps) => {
+/**
+ * Component for connecting an ECHO Thread object to the UI component Thread.
+ * @param space - the containing Space entity
+ * @param thread - the Thread entity
+ * @param currentRelatedId - an entity’s id that this thread is related to
+ * @param current - whether this thread is current (wrt ARIA) in the app
+ * @param autoFocusTextBox - whether to set `autoFocus` on the thread’s textbox
+ * @param onAttend - combined callback for `onClickCapture` and `onFocusCapture` within the thread
+ * @constructor
+ */
+export const ThreadContainer = ({
+  space,
+  thread,
+  currentRelatedId,
+  current,
+  autoFocusTextBox,
+  onAttend,
+}: ThreadContainerProps) => {
   const identity = useIdentity()!;
   const members = useMembers(space.key);
+  const activity = useStatus(space, thread.id);
+  const { t } = useTranslation(THREAD_PLUGIN);
+
+  const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
+  const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
+  const autoFocusAfterSend = useRef<boolean>(false);
 
   // TODO(burdon): Change to model.
-  const handleCreate = (text: string) => {
+  const handleCreate: MessageTextboxProps['onSend'] = () => {
     const block = {
       timestamp: new Date().toISOString(),
-      text,
+      content: nextMessage.text,
     };
-
-    // Update current block if same user and time > 3m.
-    const period = 3 * 60; // TODO(burdon): Config.
-    const message = thread.messages[thread.messages.length - 1];
-    if (message?.from?.identityKey && PublicKey.equals(message.from.identityKey, identity.identityKey)) {
-      const previous = message.blocks[message.blocks.length - 1];
-      if (previous.timestamp && differenceInSeconds(new Date(block.timestamp), new Date(previous.timestamp)) < period) {
-        message.blocks.push(block);
-        return true;
-      }
-    }
 
     thread.messages.push(
       new MessageType({
         from: { identityKey: identity.identityKey.toHex() },
-        context: { object: activeObjectId },
+        context: { object: currentRelatedId },
         blocks: [block],
       }),
     );
+
+    setNextMessage(() => {
+      autoFocusAfterSend.current = true;
+      return { text: new TextObject() };
+    });
 
     // TODO(burdon): Scroll to bottom.
     return true;
@@ -100,17 +91,32 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth }: Th
       if (message.blocks.length === 0) {
         thread.messages.splice(messageIndex, 1);
       }
+      // TODO(thure): Delete thread if no messages remain.
     }
   };
 
+  const textboxMetadata = useMessageMetadata(thread.id, identity);
+
   return (
-    <ThreadChannel
-      identityKey={identity.identityKey}
-      propertiesProvider={messagePropertiesProvider(identity, members)}
-      thread={thread}
-      fullWidth={fullWidth}
-      onCreate={handleCreate}
-      onDelete={handleDelete}
-    />
+    <Thread onClickCapture={onAttend} onFocusCapture={onAttend} current={current} id={thread.id}>
+      {thread.title && <ThreadHeading>{thread.title}</ThreadHeading>}
+      {thread.messages.map((message) => (
+        <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
+      ))}
+      {nextMessageModel && (
+        <>
+          <MessageTextbox
+            onSend={handleCreate}
+            autoFocus={autoFocusAfterSend.current || autoFocusTextBox}
+            placeholder={t('message placeholder')}
+            {...textboxMetadata}
+            model={nextMessageModel}
+            extensions={[command]}
+          />
+          <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
+          <AnchoredOverflow.Anchor />
+        </>
+      )}
+    </Thread>
   );
 };

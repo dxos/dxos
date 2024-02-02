@@ -9,6 +9,8 @@ export class AutomergeSpaceState implements CredentialProcessor {
   public rootUrl: string | undefined = undefined;
   public lastEpoch: SpecificCredential<Epoch> | undefined = undefined;
 
+  constructor(private readonly _onNewRoot: (rootUrl: string) => void) {}
+
   async processCredential(credential: Credential) {
     if (!checkCredentialType(credential, 'dxos.halo.credentials.Epoch')) {
       return;
@@ -17,6 +19,8 @@ export class AutomergeSpaceState implements CredentialProcessor {
     this.lastEpoch = credential;
     if (credential.subject.assertion.automergeRoot) {
       this.rootUrl = credential.subject.assertion.automergeRoot;
+
+      this._onNewRoot(this.rootUrl);
     }
   }
 }

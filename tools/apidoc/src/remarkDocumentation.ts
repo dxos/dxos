@@ -9,7 +9,6 @@ import { codeImport } from 'remark-code-import';
 import remarkDirective from 'remark-directive';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkParse from 'remark-parse';
-import remarkPrettier from 'remark-prettier';
 import remarkStringify from 'remark-stringify';
 import { unified } from 'unified';
 import { VFile } from 'vfile';
@@ -30,9 +29,9 @@ export const remarkDocumentation = async (config: Config) => {
         .use(remarkDirective)
         // TODO(wittjosiah): Fix remark plugin types.
         //   Our plugin types change the type of the chain such that all following plugins require arrays.
-        .use(Remark.apiDocGenerateDirective)
-        .use([codeImport])
-        .use([remarkPrettier as any]) // TODO(burdon): Hack.
+        .use([Remark.apiDocGenerateDirective])
+        .use([codeImport as any])
+        // .use([unifiedPrettier as any]) // TODO(burdon): Hack.
         .use([remarkStringify as any]) // TODO(burdon): Hack.
         .process(
           new VFile({

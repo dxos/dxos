@@ -2,11 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type MarkdownExtensionProvides } from '@braneframe/plugin-markdown';
 import { Thread as ThreadType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
+  SettingsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
@@ -24,7 +26,11 @@ export type ThreadPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
-  TranslationsProvides;
+  SettingsProvides &
+  TranslationsProvides &
+  MarkdownExtensionProvides;
+
+export type ThreadSettingsProps = { standalone?: boolean };
 
 export interface ThreadModel {
   root: ThreadType;

@@ -44,7 +44,7 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange }
   return (
     <DensityProvider density='fine'>
       <List classNames='select-none'>
-        {plugins.map(({ id, name, description, homePage, tags, iconComponent: Icon = Circle }) => {
+        {plugins.map(({ id, name, description, homePage, tags = [], iconComponent: Icon = Circle }) => {
           const isEnabled = enabled.includes(id);
           const isLoaded = loaded.includes(id);
           const reloadRequired = isEnabled !== isLoaded;
@@ -56,6 +56,7 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange }
             <Input.Root key={id} id={inputId}>
               <ListItem.Root
                 labelId={labelId}
+                data-testid={`pluginList.${id}`}
                 aria-describedby={descriptionId}
                 classNames={['flex gap-2 cursor-pointer plb-2 pli-2 -mli-2 rounded', ghostHover]}
               >
@@ -82,7 +83,7 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange }
                       {reloadRequired && <p className='text-sm font-medium'>{t('reload required message')}</p>}
                     </div>
                   )}
-                  {tags?.length && (
+                  {tags.length > 0 && (
                     <div className='flex my-1'>
                       {tags.map((tag) => (
                         <Tag key={tag} palette={palette[tag] ?? palette.default}>

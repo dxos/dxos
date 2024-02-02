@@ -12,6 +12,7 @@ import type {
   Intent,
   IntentResolverProvides,
   MetadataRecordsProvides,
+  SettingsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
@@ -34,7 +35,7 @@ type StackSectionAction = {
 };
 
 export type StackSectionCreator = StackSectionAction & {
-  intent: Intent;
+  intent: Intent | Intent[];
 };
 
 export type StackProvides = {
@@ -47,10 +48,13 @@ export type StackState = DeepSignal<{
   creators: StackSectionCreator[];
 }>;
 
+export type StackSettingsProps = { separation?: boolean };
+
 export type StackPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
+  SettingsProvides<StackSettingsProps> &
   TranslationsProvides & { stack: StackState };
 
 export const isStack = (data: unknown): data is StackType =>

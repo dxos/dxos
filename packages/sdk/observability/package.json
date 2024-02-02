@@ -1,0 +1,98 @@
+{
+  "name": "@dxos/observability",
+  "version": "0.4.0",
+  "description": "Provides a common interface for app and platform observability",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "import": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "node": "./dist/lib/node/index.cjs"
+    },
+    "./datadog": {
+      "browser": "./dist/lib/browser/datadog/index.mjs",
+      "import": "./dist/lib/browser/datadog/index.mjs",
+      "require": "./dist/lib/node/datadog/index.cjs",
+      "node": "./dist/lib/node/datadog/index.cjs"
+    },
+    "./segment": {
+      "browser": "./dist/lib/browser/segment/index.mjs",
+      "import": "./dist/lib/browser/segment/index.mjs",
+      "require": "./dist/lib/node/segment/index.cjs",
+      "node": "./dist/lib/node/segment/index.cjs"
+    },
+    "./sentry": {
+      "browser": "./dist/lib/browser/sentry/index.mjs",
+      "import": "./dist/lib/browser/sentry/index.mjs",
+      "require": "./dist/lib/node/sentry/index.cjs",
+      "node": "./dist/lib/node/sentry/index.cjs"
+    }
+  },
+  "browser": {
+    "./src/datadog/node.ts": "./src/datadog/browser.ts",
+    "./src/segment/node.ts": "./src/segment/browser.ts",
+    "./src/sentry/node.ts": "./src/sentry/browser.ts",
+    "./testing/testkit/index.ts": "./testing/testkit/browser.ts"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "datadog": [
+        "dist/types/src/datadog/index.d.ts"
+      ],
+      "segment": [
+        "dist/types/src/segment/index.d.ts"
+      ],
+      "sentry": [
+        "dist/types/src/sentry/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "api-keys": "node ./scripts/inject_api_keys.js"
+  },
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
+    "@dxos/client-services": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/network-manager": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@segment/snippet": "^4.15.3",
+    "@sentry/browser": "^7.98.0",
+    "@sentry/integrations": "7.98.0",
+    "@sentry/node": "^7.98.0",
+    "@sentry/tracing": "^7.98.0",
+    "analytics-node": "^6.2.0",
+    "datadog-metrics": "^0.11.1",
+    "debug": "^4.3.4",
+    "js-yaml": "^4.1.0",
+    "localforage": "^1.10.0",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@sentry/types": "^7.98.0",
+    "@types/analytics-node": "^3.1.9",
+    "@types/debug": "^4.1.10",
+    "@types/js-yaml": "^4.0.5",
+    "sentry-testkit": "^5.0.5"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

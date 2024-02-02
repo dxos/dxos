@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools",
-  "version": "0.3.10",
+  "version": "0.4.0",
   "private": true,
   "description": "Standalone devtool app used to inspect DXOS client state",
   "homepage": "https://dxos.org",
@@ -16,7 +16,6 @@
     "proxy": "ts-node scripts/proxy.ts"
   },
   "dependencies": {
-    "@braneframe/plugin-telemetry": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -29,6 +28,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/network-manager": "workspace:*",
+    "@dxos/observability": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -36,7 +36,6 @@
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "@dxos/sentry": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -45,7 +44,7 @@
     "@types/bytes": "^3.1.1",
     "bytes": "^3.1.2",
     "change-case": "^4.1.2",
-    "date-fns": "^2.29.3",
+    "date-fns": "^3.3.1",
     "deepsignal": "1.4.0-shallow.0",
     "flame-chart-js": "^2.3.1",
     "isomorphic-ws": "^4.0.1",
@@ -67,21 +66,23 @@
   "devDependencies": {
     "@dxos/config": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
-    "@dxos/react-shell": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/shell": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@types/react-syntax-highlighter": "^15.5.5",
     "@types/react-vis": "^1.11.11",
-    "@vitejs/plugin-react": "^3.0.1",
+    "@vitejs/plugin-react": "^4.2.1",
     "postcss": "^8.4.21",
-    "tailwindcss": "~3.3.2",
+    "tailwindcss": "~3.4.1",
     "typescript": "^5.2.2",
-    "vite": "^4.3.9",
+    "vite": "^5.0.12",
     "vite-plugin-fonts": "^0.7.0",
-    "vite-plugin-pwa": "^0.14.1",
-    "workbox-window": "^6.5.4"
+    "vite-plugin-pwa": "^0.17.5",
+    "vite-plugin-top-level-await": "^1.4.1",
+    "vite-plugin-wasm": "^3.3.0",
+    "workbox-window": "^7.0.0"
   }
 }

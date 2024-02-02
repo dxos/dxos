@@ -4,9 +4,11 @@
 
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
+import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
+import WasmPlugin from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
@@ -22,6 +24,7 @@ export default defineConfig({
           }
         : false,
     fs: {
+      strict: false,
       allow: [
         // TODO(wittjosiah): Not detecting pnpm-workspace?
         //   https://vitejs.dev/config/server-options.html#server-fs-allow
@@ -32,6 +35,10 @@ export default defineConfig({
   build: {
     sourcemap: true,
     rollupOptions: {
+      input: {
+        main: resolve(__dirname, './index.html'),
+        shell: resolve(__dirname, './shell.html'),
+      },
       output: {
         manualChunks: {
           react: ['react', 'react-dom', 'react-router-dom'],
@@ -40,8 +47,17 @@ export default defineConfig({
       },
     }
   },
+  worker: {
+    format: 'es',
+    plugins: () => [
+      TopLevelAwaitPlugin(),
+      WasmPlugin(),
+    ],
+  },
   plugins: [
     ConfigPlugin({ env: ['DX_VAULT'] }),
+    TopLevelAwaitPlugin(),
+    WasmPlugin(),
     // https://github.com/preactjs/signals/issues/269
     ReactPlugin({ jsxRuntime: 'classic' }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite

@@ -2,12 +2,12 @@
 // Copyright 2019 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
 import { expect } from 'chai';
 
 import { latch, sleep, Trigger } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
+import { faker } from '@dxos/random';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test } from '@dxos/test';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
@@ -176,9 +176,12 @@ describe('Replication', () => {
         }
 
         // Random delay.
-        setTimeout(() => {
-          next(size);
-        }, faker.number.int({ min: 0, max: 100 }));
+        setTimeout(
+          () => {
+            next(size);
+          },
+          faker.number.int({ min: 0, max: 100 }),
+        );
       }, numBlocks);
 
       // Done.

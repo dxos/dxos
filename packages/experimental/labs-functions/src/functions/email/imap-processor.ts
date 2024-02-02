@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import sub from 'date-fns/sub';
+import { sub } from 'date-fns/sub';
 import { type Config as ImapConfig } from 'imap';
 import imaps, { type Message as ImapMessage, type ImapSimple } from 'imap-simple';
 import { simpleParser, type EmailAddress } from 'mailparser';
@@ -10,6 +10,7 @@ import { promisify } from 'node:util';
 import textract from 'textract';
 
 import { Message as MessageType } from '@braneframe/types';
+import { TextObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -117,7 +118,7 @@ export class ImapProcessor {
       body = (await promisify(textract.fromBufferWithMime)('text/html', Buffer.from(textAsHtml))) as string;
     }
 
-    message.blocks = [{ text: body }];
+    message.blocks = [{ content: new TextObject(body) }];
     return message;
   }
 }

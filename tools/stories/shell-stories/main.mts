@@ -4,4 +4,4 @@
 
 import { config } from '../.storybook-shared/config';
 
-export default config({ stories: ['../../../packages/sdk/react-shell/src/**/*.stories.tsx'] });
+export default config({ stories: ['../../../packages/sdk/shell/src/**/*.stories.tsx'] });

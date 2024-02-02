@@ -18,13 +18,17 @@ import {
   type Metrics,
   type NetworkStatus,
   type Space as SpaceProto,
+  type Platform,
   SpaceMember,
+  type LogEntry,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Resource, type Span } from '@dxos/protocols/proto/dxos/tracing';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { getPlatform, type Platform } from './platform';
+import { getPlatform } from './platform';
 import { type ServiceContext } from './service-context';
 import { DXOS_VERSION } from '../../version';
 import { type DataSpace } from '../spaces';
@@ -32,22 +36,36 @@ import { type DataSpace } from '../spaces';
 const DEFAULT_TIMEOUT = 1_000;
 
 export type Diagnostics = {
-  created: string;
-  platform: Platform;
-  config?: ConfigProto;
   client: {
-    version: string;
-    storage: {
-      version: number;
-    };
+    config: ConfigProto;
+    trace: TraceDiagnostic;
   };
-  identity?: Identity;
-  devices?: Device[];
-  spaces?: SpaceStats[];
-  networkStatus?: NetworkStatus;
-  swarms?: SwarmInfo[];
-  feeds?: Partial<SubscribeToFeedsResponse.Feed>[];
-  metrics?: Metrics;
+  services: {
+    trace: TraceDiagnostic;
+    created: string;
+    platform: Platform;
+    config?: ConfigProto;
+    client: {
+      version: string;
+      storage: {
+        version: number;
+      };
+    };
+    identity?: Identity;
+    devices?: Device[];
+    spaces?: SpaceStats[];
+    networkStatus?: NetworkStatus;
+    swarms?: SwarmInfo[];
+    feeds?: Partial<SubscribeToFeedsResponse.Feed>[];
+    metrics?: Metrics;
+    storage?: { file: string; count: number }[];
+  };
+};
+
+export type TraceDiagnostic = {
+  resources: Record<string, Resource>;
+  spans: Span[];
+  logs: LogEntry[];
 };
 
 // TODO(burdon): Normalize for ECHO/HALO.
@@ -74,8 +92,8 @@ export const createDiagnostics = async (
   clientServices: Partial<ClientServices>,
   serviceContext: ServiceContext,
   config: Config,
-): Promise<Diagnostics> => {
-  const diagnostics: Diagnostics = {
+): Promise<Diagnostics['services']> => {
+  const diagnostics: Diagnostics['services'] = {
     created: new Date().toISOString(),
     platform: getPlatform(),
     client: {
@@ -84,6 +102,7 @@ export const createDiagnostics = async (
         version: STORAGE_VERSION,
       },
     },
+    trace: TRACE_PROCESSOR.getDiagnostics(),
   };
 
   // Trace metrics.
@@ -93,6 +112,23 @@ export const createDiagnostics = async (
     diagnostics.metrics = await getFirstStreamValue(clientServices.LoggingService.queryMetrics({}), {
       timeout: DEFAULT_TIMEOUT,
     }).catch(() => undefined);
+  }
+
+  if (typeof navigator !== 'undefined' && navigator.storage) {
+    const map = new Map();
+    const dir = await navigator.storage.getDirectory();
+    for await (const filename of (dir as any)?.keys()) {
+      const idx = filename.indexOf('-', filename.indexOf('-') + 1);
+      if (idx === -1) {
+        continue;
+      }
+
+      map.set(filename.slice(0, idx), (map.get(filename.slice(0, idx)) ?? 0) + 1);
+    }
+
+    diagnostics.storage = Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([file, count]) => ({ file, count }));
   }
 
   const identity = serviceContext.identityManager.identity;

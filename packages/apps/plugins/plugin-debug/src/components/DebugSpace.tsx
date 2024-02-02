@@ -19,20 +19,18 @@ import {
 } from '@phosphor-icons/react';
 import React, { type FC, useContext, useEffect, useMemo, useState } from 'react';
 
-import { type Space } from '@dxos/client/echo';
-import { InvitationEncoder } from '@dxos/client/invitations';
 import { type Schema, type TypedObject } from '@dxos/echo-schema';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
-import { useSpaceInvitation } from '@dxos/react-client/echo';
-import { Button, DropdownMenu, Input, useThemeContext } from '@dxos/react-ui';
+import { type Space, useSpaceInvitation } from '@dxos/react-client/echo';
+import { InvitationEncoder } from '@dxos/react-client/invitations';
+import { Button, DropdownMenu, Input, useFileDownload, useThemeContext } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { safeParseInt } from '@dxos/util';
 
 import { DebugPanel } from './DebugPanel';
 import { SchemaList } from './SchemaList';
 import { Json } from './Tree';
-import { useFileDownload } from './util';
 import { Generator } from '../testing';
 import { DebugContext } from '../types';
 
@@ -40,10 +38,7 @@ const DEFAULT_COUNT = 100;
 const DEFAULT_PERIOD = 500;
 const DEFAULT_JITTER = 50;
 
-export const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject[]) => void }> = ({
-  space,
-  onAddObjects,
-}) => {
+const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject[]) => void }> = ({ space, onAddObjects }) => {
   const { themeMode } = useThemeContext();
   const { connect } = useSpaceInvitation(space?.key);
   const client = useClient();
@@ -214,3 +209,5 @@ export const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject
     </DebugPanel>
   );
 };
+
+export default DebugSpace;

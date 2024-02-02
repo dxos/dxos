@@ -3,7 +3,6 @@
 //
 
 import { css } from '@emotion/css';
-import { faker } from '@faker-js/faker';
 import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -20,6 +19,7 @@ import {
   useSvgContext,
   useZoom,
 } from '@dxos/gem-core';
+import { faker } from '@dxos/random';
 
 // TODO(burdon): Package name/title.
 export default {
@@ -251,7 +251,10 @@ class MeshLayout {
   private readonly _circleLayout: CircularLayout;
   private readonly _kubeLayout: KubeLayout;
 
-  constructor(private readonly _context: SVGContext, private readonly _radius: Fraction = [5, 2]) {
+  constructor(
+    private readonly _context: SVGContext,
+    private readonly _radius: Fraction = [5, 2],
+  ) {
     this._circleLayout = useMemo(() => new CircularLayout(this._context).initialize(this._radius), []);
     this._kubeLayout = useMemo(() => new KubeLayout(this._context).initialize([3, 5]), []);
   }

@@ -7,7 +7,15 @@ Defined in:
 ### [display]()
 Type: <code>[ShellDisplay](/api/@dxos/react-client/enums#ShellDisplay)</code>
 
-The display mode that shell should use
+The display mode that shell should use.
+
+Options:
+  - proto3_optional = true
+
+### [reload]()
+Type: <code>boolean</code>
+
+Used after sign out/identity reset.
 
 Options:
   - proto3_optional = true
@@ -15,7 +23,15 @@ Options:
 ### [spaceKey]()
 Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 
-The key of the joined space
+The key of the joined space.
+
+Options:
+  - proto3_optional = true
+
+### [target]()
+Type: <code>string</code>
+
+Target to redirect to after a successful invitation.
 
 Options:
   - proto3_optional = true

@@ -13,16 +13,17 @@ export {
   RpcNotOpenError,
   CancelledError,
   InvalidConfigError,
+  InvalidInvitationError,
+  InvalidInvitationExtensionRoleError,
+  AlreadyJoinedError,
+  IdentityNotInitializedError,
+  InvalidStorageVersionError,
   RemoteServiceConnectionError,
   RemoteServiceConnectionTimeout,
   DataCorruptionError,
-  InvalidInvitationExtensionRoleError,
-  IdentityNotInitializedError,
-  InvalidInvitationError,
-  InvalidStorageVersionError,
-  SpaceNotFoundError,
   EntityNotFoundError,
   UnknownModelError,
 } from '@dxos/protocols';
 
 export { Client, type ClientOptions } from './client';
+export { DXOS_VERSION } from './version';

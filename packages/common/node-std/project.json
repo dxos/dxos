@@ -7,6 +7,8 @@
         "bundlePackages": [
           "assert",
           "available-typed-arrays",
+          "base64-js",
+          "buffer",
           "call-bind",
           "define-data-property",
           "define-properties",
@@ -23,6 +25,7 @@
           "has-symbols",
           "has-tostringtag",
           "hasown",
+          "ieee754",
           "inherits",
           "is-arguments",
           "is-callable",
@@ -40,9 +43,11 @@
         ],
         "entryPoints": [
           "packages/common/node-std/src/assert.js",
+          "packages/common/node-std/src/buffer.js",
           "packages/common/node-std/src/crypto.js",
           "packages/common/node-std/src/events.js",
           "packages/common/node-std/src/fs.js",
+          "packages/common/node-std/src/fs/promises.js",
           "packages/common/node-std/src/globals.js",
           "packages/common/node-std/src/inject-globals.js",
           "packages/common/node-std/src/path.js",
@@ -56,7 +61,9 @@
     },
     "lint": {}
   },
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ]
+  ],
+  "name": "node-std"
 }

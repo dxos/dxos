@@ -8,10 +8,9 @@ import { Play } from '@phosphor-icons/react';
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type TextObject } from '@dxos/client/echo';
+import { getTextContent, type TextObject } from '@dxos/client/echo';
 import { DensityProvider, useThemeContext, Toolbar, Button } from '@dxos/react-ui';
 import { mx, getSize } from '@dxos/react-ui-theme';
-import { type YText } from '@dxos/text-model';
 
 import { FrameContainer } from './FrameContainer';
 import { ScriptEditor } from './ScriptEditor';
@@ -71,7 +70,7 @@ export const ScriptBlock = ({
 
   const handleExec = useCallback(
     async (auto = true) => {
-      const result = await compiler.compile(String(source.content));
+      const result = await compiler.compile(getTextContent(source, ''));
       setResult(result);
       if (auto && view === 'editor') {
         setView('preview');
@@ -122,7 +121,7 @@ export const ScriptBlock = ({
       <Splitter view={view}>
         <ScriptEditor
           id={id}
-          content={source.content as YText}
+          source={source}
           themeMode={themeMode}
           language='typescript'
           onBeforeMount={handleBeforeMount}

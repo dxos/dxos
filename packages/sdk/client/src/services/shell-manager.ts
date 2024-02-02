@@ -9,7 +9,6 @@ import {
   appServiceBundle,
   shellServiceBundle,
 } from '@dxos/client-protocol';
-import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type AppContextRequest, type LayoutRequest, ShellDisplay } from '@dxos/protocols/proto/dxos/iframe';
 import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
@@ -37,9 +36,9 @@ export class ShellManager {
   private _shellRpc?: ProtoRpcPeer<ShellServiceBundle>;
   private _display = ShellDisplay.NONE;
 
+  // prettier-ignore
   constructor(
     private readonly _iframeManager: IFrameManager,
-    private readonly _joinedSpace: Event<PublicKey>,
     private readonly _channel = DEFAULT_SHELL_CHANNEL,
   ) {}
 
@@ -55,21 +54,36 @@ export class ShellManager {
   }
 
   async open() {
+    if (this._shellRpc) {
+      return;
+    }
+
     await this._iframeManager.open();
 
     const iframe = this._iframeManager.iframe;
     iframe!.setAttribute('style', shellStyles);
+    iframe!.setAttribute('name', 'dxos-shell');
     iframe!.setAttribute('data-testid', 'dxos-shell');
-    this.contextUpdate.on(({ display, spaceKey }) => {
+    this.contextUpdate.on(({ display, reload }) => {
+      if (reload) {
+        window.location.reload();
+      }
+
       iframe!.style.display = display === ShellDisplay.NONE ? 'none' : '';
       if (display === ShellDisplay.NONE) {
         iframe!.blur();
       }
-      spaceKey && this._joinedSpace.emit(spaceKey);
     });
 
+    // TODO(wittjosiah): Remove. Workaround for socket runtime bug.
+    //   https://github.com/socketsupply/socket/issues/893
+    const origin =
+      this._iframeManager.source.origin === 'null'
+        ? this._iframeManager.source.toString().split('/').slice(0, 3).join('/')
+        : this._iframeManager.source.origin;
+
     const port = createIFramePort({
-      origin: this._iframeManager.source.origin,
+      origin,
       channel: this._channel,
       iframe: this._iframeManager.iframe,
     });
@@ -95,6 +109,10 @@ export class ShellManager {
   }
 
   async close() {
+    if (!this._shellRpc) {
+      return;
+    }
+
     await this._shellRpc?.close();
     this._shellRpc = undefined;
   }

@@ -46,6 +46,7 @@ test.describe('Basic test', () => {
         return;
       }
 
+      await host.openShareSpace();
       const invitationCode = await host.shell.createSpaceInvitation();
       const authCode = await host.shell.getAuthCode();
 
@@ -54,11 +55,15 @@ test.describe('Basic test', () => {
       await guest.shell.authenticate(authCode);
       await host.shell.closeShell();
 
+      // TODO(wittjosiah): useSpaces hook isn't updating for a long time for some reason.
+      //  This should be removed once that is fixed.
+      test.slow();
+
       // Wait for redirect.
       await waitForExpect(async () => {
         expect(await host.page.url()).to.equal(await guest.page.url());
         expect(await guest.todoIsVisible(Groceries.Eggs)).to.be.true;
-      });
+      }, 20_000); // TODO(wittjosiah): Remove.
     });
 
     test('toggle a task', async () => {

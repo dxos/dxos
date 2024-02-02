@@ -11,7 +11,7 @@ const knownIndirectPeers = [
   '@dxos/react-*',
   '@dxos/react-ui-*',
   '@dxos/devtools',
-  '@dxos/vault',
+  '@dxos/shell',
   // TODO(thure): glob v7 runs out of memory if we do a `**` search, and this is (hopefully) the only L3 content package; find a better solution.
   '@dxos/react-ui-table/node_modules/@dxos/react-ui-searchlist',
 ];
