@@ -1,11 +1,11 @@
 # Class `LocalClientServices`
-<sub>Declared in [packages/sdk/client/dist/types/src/services/local-client-services.d.ts:7]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/services/local-client-services.d.ts:13]()</sub>
 
 
 Starts a local instance of the service host.
 
 ## Constructors
-### [constructor(_params)]()
+### [constructor(params)]()
 
 
 
@@ -14,11 +14,18 @@ Returns: <code>[LocalClientServices](/api/@dxos/react-client/classes/LocalClient
 
 Arguments: 
 
-`_params`: <code>ClientServicesHostParams</code>
+`params`: <code>ClientServicesHostParams</code>
 
 
 
 ## Properties
+### [closed]()
+Type: <code>Event&lt;undefined | Error&gt;</code>
+
+The connection to the services provider was termintaed.
+
+This should fire if the services disconnect unexpectedly or during a client reset.
+
 ### [descriptors]()
 Type: <code>ServiceBundle&lt;[ClientServices](/api/@dxos/react-client/types/ClientServices)&gt;</code>
 
