@@ -17,7 +17,7 @@
     "@dxos/react-input": "workspace:*",
     "@dxos/react-list": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
-    "@fluentui/react-tabster": "^9.17.4",
+    "@fluentui/react-tabster": "^9.18.0",
     "@radix-ui/react-alert-dialog": "^1.0.3",
     "@radix-ui/react-avatar": "^1.0.2",
     "@radix-ui/react-checkbox": "^1.0.3",
@@ -42,15 +42,15 @@
     "date-fns": "^3.3.1",
     "i18next": "^21.10.0",
     "jdenticon": "^3.2.0",
-    "keyborg": "^2.0.0",
+    "keyborg": "^2.5.0",
     "react-i18next": "^11.18.6"
   },
   "devDependencies": {
     "@dnd-kit/core": "^6.0.5",
     "@dnd-kit/sortable": "^7.0.1",
     "@dnd-kit/utilities": "^3.2.0",
+    "@dxos/random": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@faker-js/faker": "^8.3.1",
     "@phosphor-icons/react": "^2.0.5",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
@@ -61,6 +61,7 @@
   },
   "peerDependencies": {
     "@phosphor-icons/react": "^2.0.5",
+    "date-fns": "^3.3.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

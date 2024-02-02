@@ -2,10 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import { X } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { groupSurface, mx } from '@dxos/react-ui-theme';
+import { Button, ScrollArea } from '@dxos/react-ui';
+
+import { useLayout } from '../LayoutContext';
 
 enum Role {
   SEARCH = 'context-search',
@@ -13,14 +16,27 @@ enum Role {
 }
 
 export const ContextPanel = () => {
+  const layout = useLayout();
   return (
-    <div className={mx('flex flex-col h-full overflow-hidden', groupSurface)}>
-      <div className='flex shrink-0 overflow-hidden'>
+    <div role='none' className='bs-full grid grid-cols-1 grid-rows-[min-content_1fr]'>
+      <div role='none' className='grid grid-cols-[1fr_3rem] border-be -mbe-px separator-separator'>
         <Surface role={Role.SEARCH} />
+        <Button
+          variant='ghost'
+          classNames='col-start-2 bs-12 is-12'
+          onClick={() => (layout.complementarySidebarOpen = false)}
+        >
+          <X />
+        </Button>
       </div>
-      <div className='flex flex-1 overflow-hidden'>
-        <Surface role={Role.THREAD} />
-      </div>
+      <ScrollArea.Root classNames='anchored-overflow'>
+        <ScrollArea.Viewport classNames='pbe-10'>
+          <Surface role={Role.THREAD} />
+          <ScrollArea.Scrollbar>
+            <ScrollArea.Thumb />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     </div>
   );
 };

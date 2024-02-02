@@ -2,14 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ProtoCodec } from '@dxos/codec-protobuf';
-import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 
-import { type AbstractEchoObject } from './object';
 import { TypedObject } from './typed-object';
 import { base, type EchoObject } from './types';
+import { type AutomergeObject } from '../automerge';
 
 export type CloneOptions = {
   /**
@@ -61,38 +58,44 @@ export const clone = <T extends EchoObject>(obj: T, { retainId = true, additiona
         continue;
       }
 
-      (clone as TypedObject)[base]._linkCache!.set(ref.id, ref);
+      (clone as AutomergeObject)[base]._linkCache!.set(ref.id, ref);
     }
   }
 
   return clone;
 };
 
-const cloneInner = (obj: AbstractEchoObject, id: string): EchoObject => {
+const cloneInner = (obj: any, id: string): EchoObject => {
   const prototype = Object.getPrototypeOf(obj);
-  const snapshot = getObjectSnapshot(obj);
+  const automergeSnapshot = getObjectDoc(obj);
 
-  const clone: EchoObject = new prototype.constructor();
+  const clone: AutomergeObject = new prototype.constructor();
   clone[base]._id = id;
-  clone[base]._stateMachine?.reset(obj._modelConstructor.meta.snapshotCodec!.decode(snapshot.snapshot!.model.value));
+  if (automergeSnapshot) {
+    clone[base]._change((doc: any) => {
+      const path = clone._path;
+      if (path?.length > 0) {
+        let parent = doc;
+        for (const key of path.slice(0, -1)) {
+          parent[key] ??= {};
+          parent = parent[key];
+        }
+        parent[path.at(-1)!] = automergeSnapshot;
+      } else {
+        for (const key of Object.keys(automergeSnapshot)) {
+          doc[key] = automergeSnapshot[key];
+        }
+      }
+    });
+  }
 
   return clone;
 };
 
-const getObjectSnapshot = (obj: AbstractEchoObject): EchoObjectProto => {
-  if (obj._item) {
-    return obj._item.createSnapshot();
-  } else {
-    invariant(obj._stateMachine);
-    invariant(obj._modelConstructor.meta.snapshotCodec);
-    return {
-      objectId: obj.id,
-      genesis: {
-        modelType: obj._modelConstructor.meta.type,
-      },
-      snapshot: {
-        model: (obj._modelConstructor.meta.snapshotCodec as ProtoCodec).encodeAsAny(obj._stateMachine.snapshot()),
-      },
-    };
+const getObjectDoc = (obj: AutomergeObject): any => {
+  let value = obj._getDoc();
+  for (const key of obj._path) {
+    value = value?.[key];
   }
+  return value;
 };

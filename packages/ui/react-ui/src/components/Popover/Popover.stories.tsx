@@ -4,8 +4,9 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import React, { type PropsWithChildren, type ReactNode } from 'react';
+
+import { faker } from '@dxos/random';
 
 import { Popover } from './Popover';
 import { withTheme } from '../../testing';

@@ -14,6 +14,7 @@ import { isNode } from '@dxos/util';
 
 import buildSecrets from './cli-observability-secrets.json';
 import { DatadogMetrics } from './datadog';
+import { type IPData, getTelemetryIdentifier, mapSpaces } from './helpers';
 import { SegmentTelemetry, type EventOptions, type PageOptions } from './segment';
 import {
   captureException as sentryCaptureException,
@@ -23,14 +24,10 @@ import {
   type InitOptions,
   setTag as sentrySetTag,
 } from './sentry';
-import { mapSpaces } from './util';
 
 const SPACE_METRICS_MIN_INTERVAL = 1000 * 60;
 // const DATADOG_IDLE_INTERVAL = 1000 * 60 * 5;
 const DATADOG_IDLE_INTERVAL = 1000 * 60 * 1;
-
-// TODO(nf): add allowlist for telemetry tags?
-const ERROR_TAGS = ['identityKey', 'username', 'deviceKey', 'group'];
 
 // Secrets? EnvironmentConfig?
 
@@ -45,6 +42,7 @@ export type ObservabilitySecrets = {
 };
 
 export type Mode = 'basic' | 'full' | 'disabled';
+export type TagScope = 'errors' | 'telemetry' | 'metrics' | 'all';
 
 export type ObservabilityOptions = {
   /// The webapp (e.g. 'composer.dxos.org'), 'cli', or 'agent'.
@@ -62,8 +60,8 @@ export type ObservabilityOptions = {
 
   errorLog?: {
     sentryInitOptions?: InitOptions;
+    logProcessor?: boolean;
   };
-  logProcessor?: boolean;
 };
 
 /*
@@ -87,10 +85,10 @@ export class Observability {
   private _group?: string;
   // TODO(nf): accept upstream context?
   private _ctx = new Context();
-  private _tags = new Map<string, string>();
+  private _tags = new Map<string, { value: string; scope: TagScope }>();
 
   // TODO(nf): make platform a required extension?
-  constructor({ namespace, config, secrets, group, mode, telemetry, errorLog, logProcessor }: ObservabilityOptions) {
+  constructor({ namespace, config, secrets, group, mode, telemetry, errorLog }: ObservabilityOptions) {
     this._namespace = namespace;
     this._config = config;
     this._mode = mode ?? 'disabled';
@@ -98,7 +96,7 @@ export class Observability {
     this._secrets = this._loadSecrets(config, secrets);
     this._telemetryBatchSize = telemetry?.batchSize ?? 30;
     this._errorReportingOptions = errorLog?.sentryInitOptions;
-    this._errorLogProcessor = logProcessor ?? false;
+    this._errorLogProcessor = errorLog?.logProcessor ?? false;
 
     if (this._group) {
       this.setTag('group', this._group);
@@ -112,7 +110,20 @@ export class Observability {
 
   private _loadSecrets(config: Config | undefined, secrets?: Record<string, string>) {
     if (isNode()) {
-      return buildSecrets as ObservabilitySecrets;
+      const mergedSecrets = {
+        ...(buildSecrets as ObservabilitySecrets),
+        ...secrets,
+      };
+
+      process.env.DX_ENVIRONMENT && (mergedSecrets.DX_ENVIRONMENT = process.env.DX_ENVIRONMENT);
+      process.env.DX_RELEASE && (mergedSecrets.DX_RELEASE = process.env.DX_RELEASE);
+      process.env.SENTRY_DESTINATION && (mergedSecrets.SENTRY_DESTINATION = process.env.SENTRY_DESTINATION);
+      process.env.TELEMETRY_API_KEY && (mergedSecrets.TELEMETRY_API_KEY = process.env.TELEMETRY_API_KEY);
+      process.env.IPDATA_API_KEY && (mergedSecrets.IPDATA_API_KEY = process.env.IPDATA_API_KEY);
+      process.env.DATADOG_API_KEY && (mergedSecrets.DATADOG_API_KEY = process.env.DATADOG_API_KEY);
+      process.env.DATADOG_APP_KEY && (mergedSecrets.DATADOG_APP_KEY = process.env.DATADOG_APP_KEY);
+
+      return mergedSecrets;
     } else {
       invariant(config, 'runtime config is required');
       log('config', { rtc: this._secrets, config });
@@ -149,6 +160,10 @@ export class Observability {
     return this._mode;
   }
 
+  get group() {
+    return this._group;
+  }
+
   get enabled() {
     return this._mode !== 'disabled';
   }
@@ -157,18 +172,29 @@ export class Observability {
   // Tags
   //
 
-  /**
-   * Set a tag for all observability services.
-   */
-  setTag(key: string, value: string) {
-    if (this.enabled && ERROR_TAGS.includes(key)) {
+  setTag(key: string, value: string, scope?: TagScope) {
+    if (this.enabled && (scope === undefined || scope === 'all' || scope === 'errors')) {
       sentrySetTag(key, value);
     }
-
-    this._tags.set(key, value);
+    if (!scope) {
+      scope = 'all';
+    }
+    this._tags.set(key, { value, scope });
   }
 
-  // TODO(nf): Combine with setDeviceTags.
+  getTag(key: string) {
+    return this._tags.get(key);
+  }
+
+  addIPDataTelemetryTags = (ipData: IPData) => {
+    this.setTag('city', ipData.city, 'telemetry');
+    this.setTag('region', ipData.region, 'telemetry');
+    this.setTag('country', ipData.country, 'telemetry');
+    ipData.latitude && this.setTag('latitude', ipData.latitude.toString(), 'telemetry');
+    ipData.longitude && this.setTag('longitude', ipData.longitude.toString(), 'telemetry');
+  };
+
+  // TODO(wittjosiah): Improve privacy of telemetry identifiers. See `getTelemetryIdentifier`.
   async setIdentityTags(client: Client) {
     client.services.services.IdentityService!.queryIdentity().subscribe((idqr) => {
       if (!idqr?.identity?.identityKey) {
@@ -176,16 +202,9 @@ export class Observability {
         return;
       }
 
-      // TODO(nf): check mode
-      // TODO(nf): cardinality
-      this.setTag('identityKey', idqr?.identity?.identityKey.truncate());
-      if (idqr?.identity?.profile?.displayName) {
-        this.setTag('username', idqr?.identity?.profile?.displayName);
-      }
+      this.setTag('identityKey', idqr.identity.identityKey.truncate());
     });
-  }
 
-  async setDeviceTags(client: Client) {
     client.services.services.DevicesService!.queryDevices().subscribe((dqr) => {
       if (!dqr || !dqr.devices || dqr.devices.length === 0) {
         log('empty response from device service', { device: dqr });
@@ -213,7 +232,14 @@ export class Observability {
     if (this.enabled && this._secrets.DATADOG_API_KEY) {
       this._metrics = new DatadogMetrics({
         apiKey: this._secrets.DATADOG_API_KEY,
-        getTags: () => this._tags,
+        getTags: () =>
+          Object.fromEntries(
+            Array.from(this._tags)
+              .filter(([key, value]) => {
+                return value.scope === 'all' || value.scope === 'metrics';
+              })
+              .map(([key, value]) => [key, value.value]),
+          ),
         // TODO(nf): move/refactor from telementryContext, needed to read CORS proxy
         config: this._config!,
       });
@@ -283,19 +309,27 @@ export class Observability {
     // scheduleTaskInterval(ctx, async () => updateSignalMetrics.emit(), DATADOG_IDLE_INTERVAL);
   }
 
-  startSpacesMetrics(client: Client) {
-    let spaces = client.spaces.get();
+  startSpacesMetrics(client: Client, namespace: string) {
+    const spaces = client.spaces.get();
     const subscriptions = new Map<string, { unsubscribe: () => void }>();
     this._ctx.onDispose(() => subscriptions.forEach((subscription) => subscription.unsubscribe()));
 
     const updateSpaceMetrics = new Event<Space>().debounce(SPACE_METRICS_MIN_INTERVAL);
-    updateSpaceMetrics.on(this._ctx, async (space) => {
+    updateSpaceMetrics.on(this._ctx, async () => {
       log('send space update');
-      for (const sp of mapSpaces(spaces, { truncateKeys: true })) {
-        this.gauge('dxos.client.space.members', sp.members, { key: sp.key });
-        this.gauge('dxos.client.space.objects', sp.objects, { key: sp.key });
-        this.gauge('dxos.client.space.epoch', sp.epoch, { key: sp.key });
-        this.gauge('dxos.client.space.currentDataMutations', sp.currentDataMutations, { key: sp.key });
+      for (const data of mapSpaces(spaces, { truncateKeys: true })) {
+        // Metrics
+        this.gauge('dxos.client.space.members', data.members, { key: data.key });
+        this.gauge('dxos.client.space.objects', data.objects, { key: data.key });
+        this.gauge('dxos.client.space.epoch', data.epoch, { key: data.key });
+        this.gauge('dxos.client.space.currentDataMutations', data.currentDataMutations, { key: data.key });
+
+        // Telemetry
+        this.event({
+          identityId: getTelemetryIdentifier(client),
+          name: `${namespace}.space.update`,
+          properties: data,
+        });
       }
     });
 
@@ -311,9 +345,7 @@ export class Observability {
     });
 
     client.spaces.subscribe({
-      next: async () => {
-        spaces = client.spaces.get();
-        // spaces = await this.getSpaces(this._agent.client);
+      next: async (spaces) => {
         spaces
           .filter((space) => !subscriptions.has(space.key.toHex()))
           .forEach((space) => {
@@ -370,7 +402,14 @@ export class Observability {
       this._telemetry = new SegmentTelemetry({
         apiKey: this._secrets.TELEMETRY_API_KEY,
         batchSize: this._telemetryBatchSize,
-        getTags: () => this._tags,
+        getTags: () =>
+          Object.fromEntries(
+            Array.from(this._tags)
+              .filter(([key, value]) => {
+                return value.scope === 'all' || value.scope === 'telemetry';
+              })
+              .map(([key, value]) => [key, value.value]),
+          ),
       });
     } else {
       log('segment disabled');
@@ -420,8 +459,8 @@ export class Observability {
       }
       // TODO(nf): is this different than passing as properties in options?
       this._tags.forEach((v, k) => {
-        if (ERROR_TAGS.includes(k)) {
-          sentrySetTag(k, v);
+        if (v.scope === 'all' || v.scope === 'errors') {
+          sentrySetTag(k, v.value);
         }
       });
     } else {

@@ -46,6 +46,9 @@
       "path": "../../common/node-std"
     },
     {
+      "path": "../../common/random"
+    },
+    {
       "path": "../../common/random-access-storage"
     },
     {

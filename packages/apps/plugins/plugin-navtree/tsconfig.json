@@ -30,6 +30,9 @@
       "path": "../../../common/keyboard"
     },
     {
+      "path": "../../../common/random"
+    },
+    {
       "path": "../../../common/util"
     },
     {
@@ -67,6 +70,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-observability"
     },
     {
       "path": "../plugin-theme"

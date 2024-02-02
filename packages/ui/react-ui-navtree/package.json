@@ -27,9 +27,9 @@
   "devDependencies": {
     "@dnd-kit/core": "^6.0.5",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@faker-js/faker": "^8.3.1",
     "@phosphor-icons/react": "^2.0.5",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",

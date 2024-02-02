@@ -66,7 +66,10 @@ class MermaidWidget extends WidgetType {
   _error: string | undefined;
 
   // TODO(burdon): Mermaid API requires unique id.
-  constructor(private readonly _id: string, private readonly _source: string) {
+  constructor(
+    private readonly _id: string,
+    private readonly _source: string,
+  ) {
     super();
   }
 

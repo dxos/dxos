@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
+import { faker } from '@dxos/random';
 
 export const noop = () => {};
 

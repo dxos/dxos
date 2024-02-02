@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { initializeAppObservability } from '@braneframe/plugin-telemetry/headless';
 import { Trigger } from '@dxos/async';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config, Defaults, Dynamics, Envs, Local } from '@dxos/config';
 import { log } from '@dxos/log';
+import { initializeAppObservability } from '@dxos/observability';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
 import { namespace } from '../namespace';
