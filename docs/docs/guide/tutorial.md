@@ -152,7 +152,6 @@ import { useSpaces, useQuery } from '@dxos/react-client/echo';
 In the `Counter` component, replace the `return` with the following:
 
 ```tsx file=./snippets/counter-1.tsx#L15-
-
   const [counter] = useQuery(space, { type: 'counter' });
 
   return (

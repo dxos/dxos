@@ -29,6 +29,20 @@ Returns an immutable config JSON object.
 
 
 ## Methods
+### [find(path, test)]()
+
+
+Get unique key.
+
+Returns: <code>undefined | T</code>
+
+Arguments: 
+
+`path`: <code>string</code>
+
+`test`: <code>object</code>
+
+
 ### [get(key, \[defaultValue\])]()
 
 
