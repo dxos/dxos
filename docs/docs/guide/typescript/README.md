@@ -28,6 +28,7 @@ const client = new Client();
 const main = async () => {
   await client.initialize();
   // use client here
+
 };
 
 main();

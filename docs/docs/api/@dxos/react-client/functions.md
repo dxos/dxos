@@ -2,7 +2,7 @@
 title: Functions
 ---
 # Functions
-### [ClientProvider(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L99)
+### [ClientProvider(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L97)
 
 
 Root component that provides the DXOS client instance to child components.
@@ -12,7 +12,7 @@ Returns: <code>Element</code>
 
 Arguments: 
 
-`options`: <code>[ClientProviderProps](/api/@dxos/react-client/interfaces/ClientProviderProps)</code>
+`options`: <code>[ClientProviderProps](/api/@dxos/react-client/types/ClientProviderProps)</code>
 
 
 ### [Defaults(\[basePath\])]()
@@ -75,7 +75,7 @@ Arguments:
 `target`: <code>undefined | string</code>
 
 
-### [createClientServices(config)]()
+### [createClientServices(config, \[createWorker\])]()
 
 
 Create services from config.
@@ -85,6 +85,8 @@ Returns: <code>Promise&lt;[ClientServicesProvider](/api/@dxos/react-client/inter
 Arguments: 
 
 `config`: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
+
+`createWorker`: <code>function</code>
 
 
 ### [fromAgent(\[options\])]()
@@ -139,6 +141,20 @@ Arguments:
 `url`: <code>string</code>
 
 
+### [fromWorker(config, options)]()
+
+
+Creates services provider connected via worker.
+
+Returns: <code>Promise&lt;[WorkerClientServices](/api/@dxos/react-client/classes/WorkerClientServices)&gt;</code>
+
+Arguments: 
+
+`config`: <code>undefined | [Config](/api/@dxos/react-client/classes/Config)</code>
+
+`options`: <code>Omit&lt;WorkerClientServicesParams, "config"&gt;</code>
+
+
 ### [getUnixSocket(profile, \[protocol\])]()
 
 
@@ -153,7 +169,19 @@ Arguments:
 `protocol`: <code>string</code>
 
 
-### [useClient()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L46)
+### [useAgentHostingProviderClient(config)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/useAgentHostingProvider.ts#L13)
+
+
+
+
+Returns: <code>"null" | [AgentHostingProviderClient](/api/@dxos/react-client/interfaces/AgentHostingProviderClient)</code>
+
+Arguments: 
+
+`config`: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
+
+
+### [useClient()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L45)
 
 
 Hook returning instance of DXOS client.
