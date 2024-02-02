@@ -30,8 +30,8 @@ export const remarkDocumentation = async (config: Config) => {
         .use(remarkDirective)
         // TODO(wittjosiah): Fix remark plugin types.
         //   Our plugin types change the type of the chain such that all following plugins require arrays.
-        .use(Remark.apiDocGenerateDirective)
-        .use([codeImport])
+        .use([Remark.apiDocGenerateDirective])
+        .use([codeImport as any])
         .use([unifiedPrettier as any]) // TODO(burdon): Hack.
         .use([remarkStringify as any]) // TODO(burdon): Hack.
         .process(
