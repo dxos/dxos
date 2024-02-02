@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-presenter",
-  "version": "0.3.10",
+  "version": "0.4.0",
   "description": "Braneframe presenter plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -31,7 +31,7 @@
     "react-resize-detector": "^7.1.2",
     "rehype-add-classes": "^1.0.0",
     "rehype-highlight": "^6.0.0",
-    "remark-frontmatter": "^4.0.1",
+    "remark-frontmatter": "^5.0.0",
     "remark-parse-frontmatter": "^1.0.3"
   },
   "devDependencies": {

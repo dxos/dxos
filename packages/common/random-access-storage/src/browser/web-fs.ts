@@ -14,24 +14,33 @@ import { TimeSeriesCounter, trace } from '@dxos/tracing';
 import { Directory, type DiskInfo, type File, type Storage, StorageType, getFullPath } from '../common';
 
 /**
+ * When handles weren't shared by different WebFS instances, browser tests
+ * were sporadically failing with NonReadableError on test cases like:
+ * webFs1.createFile->createWritable->write->close
+ * webFs2.createFile->read
+ * Presumably due to some handle-level write buffering.
+ */
+const files = new Map<string, WebFile>();
+/**
  * Web file systems.
  */
 export class WebFS implements Storage {
   readonly type = StorageType.WEBFS;
 
-  protected readonly _files = new Map<string, WebFile>();
   protected _root?: FileSystemDirectoryHandle;
 
   constructor(public readonly path: string) {}
 
   public get size() {
-    return this._files.size;
+    return files.size;
   }
 
   private _getFiles(path: string): Map<string, WebFile> {
     const fullName = this._getFullFilename(this.path, path);
     return new Map(
-      [...this._files.entries()].filter(([path, file]) => path.includes(fullName) && file.destroyed !== true),
+      [...files.entries()].filter(([path, file]) => {
+        return path.includes(fullName) && !file.destroyed;
+      }),
     );
   }
 
@@ -51,7 +60,10 @@ export class WebFS implements Storage {
     const entries: string[] = [];
 
     for await (const entry of (root as any).keys()) {
-      if (entry.startsWith(fullName + '_')) {
+      // Filter out .crswap files.
+      // https://bugs.chromium.org/p/chromium/issues/detail?id=1228068
+      // https://github.com/logseq/logseq/issues/4466#:~:text=Jun%2015%2C%202023-,.,is%20used%20to%20edit%20files.
+      if (entry.startsWith(fullName + '_') && !entry.endsWith('.crswap')) {
         entries.push(entry.slice(fullName.length + 1));
       }
     }
@@ -83,12 +95,12 @@ export class WebFS implements Storage {
 
   getOrCreateFile(path: string, filename: string, opts?: any): File {
     const fullName = this._getFullFilename(path, filename);
-    const existingFile = this._files.get(fullName);
+    const existingFile = files.get(fullName);
     if (existingFile) {
       return existingFile;
     }
     const file = this._createFile(fullName);
-    this._files.set(fullName, file);
+    files.set(fullName, file);
     return file;
   }
 
@@ -97,7 +109,7 @@ export class WebFS implements Storage {
       fileName: fullName,
       file: this._initialize().then((root) => root.getFileHandle(fullName, { create: true })),
       destroy: async () => {
-        this._files.delete(fullName);
+        files.delete(fullName);
         const root = await this._initialize();
         return root.removeEntry(fullName);
       },
@@ -108,7 +120,7 @@ export class WebFS implements Storage {
     await Promise.all(
       Array.from(this._getFiles(path)).map(async ([path, file]) => {
         await file.destroy().catch((err: any) => log.warn(err));
-        this._files.delete(path);
+        files.delete(path);
       }),
     );
   }
@@ -116,10 +128,14 @@ export class WebFS implements Storage {
   async reset() {
     await this._initialize();
     for await (const filename of await (this._root as any).keys()) {
-      this._files.delete(filename);
+      files.delete(filename);
       await this._root!.removeEntry(filename, { recursive: true }).catch((err: any) => log.warn(err));
     }
     this._root = undefined;
+  }
+
+  async close() {
+    await Promise.all(Array.from(files.values()).map((file) => file.close()));
   }
 
   private _getFullFilename(path: string, filename?: string) {
@@ -315,6 +331,10 @@ export class WebFile extends EventEmitter implements File {
   }
 
   async read(offset: number, size: number) {
+    if (this.destroyed) {
+      throw new Error('Read of a destroyed file');
+    }
+
     this._operations.inc();
     this._reads.inc();
     this._readBytes.inc(size);
@@ -415,6 +435,7 @@ export class WebFile extends EventEmitter implements File {
 
   @synchronized
   async destroy() {
+    await this._flushNow();
     this.destroyed = true;
     return await this._destroy();
   }
