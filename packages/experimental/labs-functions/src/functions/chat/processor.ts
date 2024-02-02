@@ -41,7 +41,10 @@ export type SequenceOptions = {
 };
 
 export class RequestProcessor {
-  constructor(private readonly _resources: ChainResources, private readonly _resolvers: ResolverMap) {}
+  constructor(
+    private readonly _resources: ChainResources,
+    private readonly _resolvers: ResolverMap,
+  ) {}
 
   async processThread(
     space: Space,
@@ -52,7 +55,7 @@ export class RequestProcessor {
     const { start, stop } = createStatusNotifier(space, thread.id);
     try {
       const text = message.blocks
-        .map((block) => block.content)
+        .map((block) => getTextContent(block.content))
         .filter(Boolean)
         .join('\n');
 
