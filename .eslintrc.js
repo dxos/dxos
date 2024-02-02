@@ -21,6 +21,8 @@ module.exports = {
     'esbuild-server.config.js',
     'webpack.config.js',
     'vite.config.ts',
+    'vitest.config.ts',
+    'vitest.shared.ts',
 
     // Dependencies
     'node_modules',
