@@ -7,7 +7,7 @@ import React from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Grid as GridType } from '@braneframe/types';
-import { LayoutAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
+import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { GridMain } from './components';
@@ -63,7 +63,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
                   data: { target: parent.data },
                 },
                 {
-                  action: LayoutAction.ACTIVATE,
+                  action: NavigationAction.ACTIVATE,
                 },
               ]),
             properties: {

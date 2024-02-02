@@ -125,8 +125,8 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
             keyBinding: 'meta+k',
             invoke: () =>
               intentPlugin?.provides.intent.dispatch({
-                action: LayoutAction.OPEN_DIALOG,
-                data: { component: `${NAVTREE_PLUGIN}/Commands` },
+                action: LayoutAction.SET_LAYOUT,
+                data: { element: 'dialog', component: `${NAVTREE_PLUGIN}/Commands` },
               }),
           });
         },

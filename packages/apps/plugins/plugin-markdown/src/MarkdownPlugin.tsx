@@ -13,10 +13,11 @@ import {
   isObject,
   parseIntentPlugin,
   resolvePlugin,
-  LayoutAction,
+  NavigationAction,
   type IntentPluginProvides,
   type Plugin,
   type PluginDefinition,
+  LayoutAction,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
@@ -125,7 +126,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                     data: { target: parent.data },
                   },
                   {
-                    action: LayoutAction.ACTIVATE,
+                    action: NavigationAction.ACTIVATE,
                   },
                 ]),
               properties: {

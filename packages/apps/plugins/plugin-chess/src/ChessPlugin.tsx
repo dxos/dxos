@@ -7,7 +7,7 @@ import React from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder } from '@braneframe/types';
-import { type PluginDefinition, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { type PluginDefinition, resolvePlugin, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
 import { Game } from '@dxos/chess-app';
 import { SpaceProxy } from '@dxos/react-client/echo';
 
@@ -51,7 +51,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
                   data: { target: parent.data },
                 },
                 {
-                  action: LayoutAction.ACTIVATE,
+                  action: NavigationAction.ACTIVATE,
                 },
               ]),
             properties: {
