@@ -4,7 +4,7 @@ Instructions and documentation for developer workflows in this DXOS repository.
 
 ## Prerequisites
 
-- Node v18.x (recommended: [Node Version Manager](https://github.com/nvm-sh/nvm))
+- Node v18.x (recommended: [Node Version Manager](https://github.com/nvm-sh/nvm); see `.node-version`).
 - Native libraries: `brew install pkg-config cairo pango libpng jpeg giflib librsvg`
 
 ## Monorepo workspace

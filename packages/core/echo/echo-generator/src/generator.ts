@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
-
 import { Expando, type TypedObject, Schema, type Space } from '@dxos/client/echo';
+import { faker } from '@dxos/random';
 
 import { type TestSchemaType } from './data';
 import { type TestGeneratorMap, type TestObjectProvider, type TestSchemaMap } from './types';

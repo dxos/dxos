@@ -5,9 +5,8 @@
 // TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/aurora/testing.
 // TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
 
-import { faker } from '@faker-js/faker';
-
 import { Schema, type Space, TextObject } from '@dxos/client/echo';
+import { faker } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
 import { type TestGeneratorMap, type TestSchemaMap } from './types';

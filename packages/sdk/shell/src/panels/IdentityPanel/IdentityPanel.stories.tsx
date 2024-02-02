@@ -4,9 +4,9 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import React from 'react';
 
+import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { DeviceKind } from '@dxos/react-client/halo';
 import { Invitation } from '@dxos/react-client/invitations';
