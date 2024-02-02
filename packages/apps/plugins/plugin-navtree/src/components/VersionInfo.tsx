@@ -6,6 +6,8 @@ import { formatDistance } from 'date-fns/formatDistance';
 import React, { type FC } from 'react';
 
 import { type Config } from '@dxos/react-client';
+import { Tooltip } from '@dxos/react-ui';
+import { warningText, infoText, chromeText } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Factor out.
 export const VersionInfo: FC<{ config: Config }> = ({ config }) => {
@@ -27,14 +29,41 @@ export const VersionInfo: FC<{ config: Config }> = ({ config }) => {
         >
           v{version}
         </span>
+        <Tooltip.Provider>
+          <Tooltip.Root delayDuration={0}>
+            <Tooltip.Trigger asChild>
+              <a
+                className='font-mono cursor-pointer'
+                href='https://docs.dxos.org/composer#technology-preview'
+                target='_blank'
+                rel='noreferrer'
+              >
+                BETA
+              </a>
+            </Tooltip.Trigger>
+            <Tooltip.Content side='top'>
+              <Tooltip.Arrow />
+              <a
+                className='flex flex-col max-w-40 text-center'
+                href='https://docs.dxos.org/composer#technology-preview'
+                target='_blank'
+                rel='noreferrer'
+              >
+                <span className={infoText}>Technology preview.</span>
+                <span className={warningText}>Data loss may occur.</span>
+                <span className={chromeText}>Click to learn more.</span>
+              </a>
+            </Tooltip.Content>
+          </Tooltip.Root>
+        </Tooltip.Provider>
         <div role='none' className='grow' />
         <span>
           Powered by{' '}
           <a
             href='https://dxos.org'
-            rel='noreferrer'
             target='_blank'
             className='font-normal hover:text-neutral-700 hover:dark:text-neutral-200'
+            rel='noreferrer'
           >
             DXOS
           </a>

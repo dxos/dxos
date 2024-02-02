@@ -165,8 +165,8 @@ importers:
         specifier: ^18.0.21
         version: 18.0.21
       '@types/sharedworker':
-        specifier: 0.0.80
-        version: 0.0.80
+        specifier: ^0.0.111
+        version: 0.0.111
       '@types/uuid':
         specifier: ^8.3.0
         version: 8.3.4
@@ -22446,8 +22446,8 @@ packages:
       '@types/node': 18.18.9
     dev: true
 
-  /@types/sharedworker@0.0.80:
-    resolution: {integrity: sha512-xVSMSKP6wufPZ0WKLE175iUiTPYSavdF68e+8bfjAOargnrpAkgGFZMNTC2REQ01plUHZouf652RG6FQZGSmbA==}
+  /@types/sharedworker@0.0.111:
+    resolution: {integrity: sha512-pyviJ17SWJc0HMoZYAol5P4B/3f+smo3FcyecSWcPGbbKBYuBPY/EUw2rvXbOzzTX5GKqTrnXni8/aIDpj9fsw==}
     dev: true
 
   /@types/simple-peer@9.11.3:

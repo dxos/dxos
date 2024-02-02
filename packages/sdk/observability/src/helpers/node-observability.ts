@@ -25,7 +25,7 @@ export const showObservabilityBanner = async (configDir: string, bannercb: (inpu
     'Basic observability data will be sent to the DXOS team in order to improve the product. This includes \
     performance metrics, error logs, and usage data. No personally identifiable information, other than your \
     public key, is included with this data and no private data ever leaves your devices. To disable sending \
-    observability data, set the environment variable DX_DISABLE_TELEMETRY=true.',
+    observability data, set the environment variable DX_DISABLE_OBSERVABILITY=true.',
   );
 
   await writeFile(path, '', 'utf-8');
@@ -74,8 +74,8 @@ const initializeState = async (idPath: string): Promise<PersistentObservabilityS
   // TODO(nf): read initial values from config or seed file
   const observabilityState = {
     installationId: uuid(),
-    group: process.env.DX_TELEMETRY_GROUP ?? undefined,
-    mode: (process.env.DX_DISABLE_TELEMETRY ? 'disabled' : process.env.DX_TELEMETRY_MODE ?? 'basic') as Mode,
+    group: process.env.DX_OBSERVABILITY_GROUP ?? undefined,
+    mode: (process.env.DX_DISABLE_OBSERVABILITY ? 'disabled' : process.env.DX_OBSERVABILITY_MODE ?? 'basic') as Mode,
   };
 
   await writeFile(
@@ -92,7 +92,7 @@ const validate = (contextString: string) => {
   if (Boolean(context.installationId) && validateUuid(context.installationId!)) {
     return {
       ...context,
-      mode: process.env.DX_DISABLE_TELEMETRY ? 'disabled' : context.mode ?? 'basic',
+      mode: process.env.DX_DISABLE_OBSERVABILITY ? 'disabled' : context.mode ?? 'basic',
     };
   }
 };
