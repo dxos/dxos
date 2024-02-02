@@ -21,13 +21,7 @@ export const LayoutSettings = ({ settings }: { settings: LayoutSettingsProps }) 
         <SettingsValue label={t('settings enable complementary sidebar label')}>
           <Input.Switch
             checked={settings.enableComplementarySidebar}
-            onCheckedChange={(checked) =>
-              intentPlugin.provides.intent.dispatch({
-                plugin: LAYOUT_PLUGIN,
-                action: 'dxos.org/plugin/layout/enable-complementary-sidebar',
-                data: { state: !!checked },
-              })
-            }
+            onCheckedChange={(checked) => (settings.enableComplementarySidebar = !!checked)}
           />
         </SettingsValue>
       )}
