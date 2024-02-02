@@ -6,6 +6,9 @@ import { Server } from 'isomorphic-ws';
 
 import { sleep } from '@dxos/async';
 import { type Chunk, Repo, StorageAdapter, type StorageKey } from '@dxos/automerge/automerge-repo';
+import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
+import { Context } from '@dxos/context';
+import { AutomergeStorageAdapter } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { SpanTimeDistributionCounter, trace } from '@dxos/tracing';
@@ -56,11 +59,11 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
       platform: 'chromium',
       clientConnections: 1,
 
-      clientStorage: 'idb',
+      clientStorage: 'opfs',
 
       symmetric: false,
       agents: 2,
-      docCount: 1000,
+      docCount: 100,
       changeCount: 10,
       contentKind: 'strings',
 
@@ -138,6 +141,8 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
       count: docs.length,
       time: performance.measure('ready', 'ready:begin', 'ready:end').duration,
     });
+    await this._storageCtx.dispose();
+    this._storageCtx = new Context();
 
     await sleep(1_000);
     await env.syncBarrier('docs ready');
@@ -207,6 +212,7 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
         return new MeteredStorageProxy(new IndexedDBStorageAdapter());
       case 'opfs': {
         const storage = createStorage({ type: StorageType.WEBFS });
+        this._storageCtx.onDispose(() => storage.close());
         return new MeteredStorageProxy(new AutomergeStorageAdapter(storage.createDirectory('automerge')));
       }
     }
