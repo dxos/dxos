@@ -1,5 +1,5 @@
 # Class `Config`
-<sub>Declared in [packages/sdk/config/src/config.ts:121](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/config.ts#L121)</sub>
+<sub>Declared in [packages/sdk/config/src/config.ts:122](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/config.ts#L122)</sub>
 
 
 Global configuration object.
@@ -29,6 +29,20 @@ Returns an immutable config JSON object.
 
 
 ## Methods
+### [find(path, test)](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/config.ts#L157)
+
+
+Get unique key.
+
+Returns: <code>undefined | T</code>
+
+Arguments: 
+
+`path`: <code>string</code>
+
+`test`: <code>object</code>
+
+
 ### [get(key, \[defaultValue\])](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/config.ts#L147)
 
 
@@ -43,7 +57,7 @@ Arguments:
 `defaultValue`: <code>[DeepIndex](/api/@dxos/config/types/DeepIndex)&lt;[Config](/api/@dxos/config/interfaces/Config), [ParseKey](/api/@dxos/config/types/ParseKey)&lt;K&gt;&gt;</code>
 
 
-### [getOrThrow(key)](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/config.ts#L168)
+### [getOrThrow(key)](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/config.ts#L180)
 
 
 Returns the given config property or throw if it doesn't exist.
@@ -55,7 +69,7 @@ Arguments:
 `key`: <code>K</code>
 
 
-### [getUnchecked(key, \[defaultValue\])](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/config.ts#L159)
+### [getUnchecked(key, \[defaultValue\])](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/config.ts#L171)
 
 
 Returns config key without type checking.
