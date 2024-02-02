@@ -11,12 +11,12 @@ import { FixGracefulFsPlugin } from '@dxos/esbuild-plugins';
 const targetProject = String(process.env.NX_TASK_TARGET_PROJECT);
 const isDebug = !!process.env.VITEST_DEBUG;
 const environment = (process.env.VITEST_ENV ?? '').toLowerCase();
-const shouldCreateXmlReport = process.env.VITEST_XML_REPORT;
+const shouldCreateXmlReport = Boolean(process.env.VITEST_XML_REPORT);
 
 const createNodeConfig = () =>
   defineConfig({
     test: {
-      ...resolveReporterConfig(),
+      ...resolveReporterConfig({ browserMode: false }),
       environment: 'node',
       include: ['**/src/**/*.test.ts', '!**/src/**/*.browser.test.ts'],
     },
@@ -37,7 +37,7 @@ const createBrowserConfig = (browserName: 'chrome') =>
       },
     },
     test: {
-      ...resolveReporterConfig(),
+      ...resolveReporterConfig({ browserMode: true }),
       name: targetProject,
       include: ['**/src/**/*.test.ts', '!**/src/**/*.node.test.ts'],
 
@@ -60,11 +60,12 @@ const createBrowserConfig = (browserName: 'chrome') =>
     },
   });
 
-const resolveReporterConfig = (): UserConfig['test'] => {
+const resolveReporterConfig = (args: { browserMode: boolean }): UserConfig['test'] => {
   if (shouldCreateXmlReport) {
+    const vitestReportDir = `vitest${args.browserMode ? "-browser" : ""}-reports`;
     return {
-      reporters: ['junit', 'verbose'],
-      outputFile: join(__dirname, `vitest-reports/${targetProject}/report.xml`),
+      reporters: ['junit'],
+      outputFile: join(__dirname, `test-results/${vitestReportDir}/${targetProject}/report.xml`),
     };
   }
   return {
