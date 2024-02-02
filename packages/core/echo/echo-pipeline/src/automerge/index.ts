@@ -2,4 +2,4 @@
 // Copyright 2023 DXOS.org
 //
 
-export { AutomergeHost } from './automerge-host';
+export { AutomergeHost, AutomergeStorageAdapter } from './automerge-host';
