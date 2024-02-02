@@ -12,7 +12,7 @@ import {
   AddressBook as AddressBookType,
   Calendar as CalendarType,
 } from '@braneframe/types';
-import { LayoutAction, type PluginDefinition, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
+import { type PluginDefinition, parseIntentPlugin, resolvePlugin, NavigationAction } from '@dxos/app-framework';
 import { type Action } from '@dxos/app-graph';
 import { SpaceProxy } from '@dxos/react-client/echo';
 
@@ -65,7 +65,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                     data: { target: parent.data },
                   },
                   {
-                    action: LayoutAction.ACTIVATE,
+                    action: NavigationAction.ACTIVATE,
                   },
                 ]),
             });

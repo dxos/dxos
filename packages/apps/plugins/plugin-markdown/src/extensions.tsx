@@ -7,7 +7,7 @@ import React, { type AnchorHTMLAttributes, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { Document as DocumentType } from '@braneframe/types';
-import { type IntentDispatcher, LayoutAction } from '@dxos/app-framework';
+import { type IntentDispatcher, NavigationAction } from '@dxos/app-framework';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import {
   type AutocompleteResult,
@@ -65,7 +65,7 @@ export const getExtensions = ({ settings, document, dispatch }: ExtensionsOption
         onHover: onHoverLinkTooltip,
         onRender: onRenderLink((id: string) => {
           void dispatch({
-            action: LayoutAction.ACTIVATE,
+            action: NavigationAction.ACTIVATE,
             data: { id },
           });
         }),
