@@ -19,7 +19,9 @@ import {
   useIntent,
   usePlugins,
   LayoutAction,
+  NavigationAction,
   Surface,
+  Toast as ToastSchema,
   type IntentPluginProvides,
   type Location,
   type Plugin,
@@ -27,7 +29,6 @@ import {
   type GraphProvides,
   type SurfaceProps,
   type Layout,
-  NavigationAction,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
@@ -71,6 +72,8 @@ export const LayoutPlugin = ({
     popoverContent: 'never',
     popoverAnchorId: undefined,
     popoverOpen: false,
+
+    toasts: [],
   });
 
   const location = deepSignal<NavigationState>({
@@ -116,6 +119,13 @@ export const LayoutPlugin = ({
         layout.values.popoverContent = component ? { component, subject } : null;
         layout.values.popoverAnchorId = anchorId;
         return { data: true };
+      }
+
+      case 'toast': {
+        if (ToastSchema.safeParse(subject).success) {
+          layout.values.toasts = [...layout.values.toasts, subject];
+          return { data: true };
+        }
       }
     }
   };
@@ -266,6 +276,14 @@ export const LayoutPlugin = ({
                   fullscreen={layout.values.fullscreen}
                   showComplementarySidebar={settings.values.enableComplementarySidebar}
                   showHintsFooter={settings.values.showFooter}
+                  toasts={layout.values.toasts}
+                  onDismissToast={(id) => {
+                    const index = layout.values.toasts.findIndex((toast) => toast.id === id);
+                    if (index !== -1) {
+                      // Allow time for the toast to animate out.
+                      setTimeout(() => layout.values.toasts.splice(index, 1), 1000);
+                    }
+                  }}
                 />
               );
 

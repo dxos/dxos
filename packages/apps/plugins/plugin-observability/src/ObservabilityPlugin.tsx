@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type IconProps, WaveTriangle } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { deepSignal } from 'deepsignal/react';
 import React from 'react';
@@ -17,8 +18,11 @@ import {
   resolvePlugin,
   parseIntentPlugin,
   parseNavigationPlugin,
+  LayoutAction,
+  SettingsAction,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
+import { LocalStorageStore } from '@dxos/local-storage';
 import {
   type Observability,
   getTelemetryIdentifier,
@@ -28,13 +32,15 @@ import {
   getObservabilityGroup,
 } from '@dxos/observability';
 import type { EventOptions } from '@dxos/observability/segment';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { ObservabilitySettings, type ObservabilitySettingsProps } from './components';
-import meta, { ObservabilityAction } from './meta';
+import meta, { OBSERVABILITY_PLUGIN, ObservabilityAction } from './meta';
 import translations from './translations';
 
 export type ObservabilityPluginState = {
   group?: string;
+  notified?: boolean;
 };
 
 export type ObservabilityPluginProvides = IntentResolverProvides &
@@ -52,7 +58,7 @@ export const ObservabilityPlugin = (options: {
   observability: () => Promise<Observability>;
 }): PluginDefinition<ObservabilityPluginProvides> => {
   const settings = deepSignal<ObservabilitySettingsProps>({});
-  const state = deepSignal<ObservabilityPluginState>({});
+  const state = new LocalStorageStore<ObservabilityPluginState>(OBSERVABILITY_PLUGIN, {});
   const subscriptions = new EventSubscriptions();
   let observability: Observability | undefined;
 
@@ -60,7 +66,9 @@ export const ObservabilityPlugin = (options: {
     meta,
     initialize: async () => {
       settings.enabled = !(await isObservabilityDisabled(options.namespace));
-      state.group = await getObservabilityGroup(options.namespace);
+      state.values.group = await getObservabilityGroup(options.namespace);
+
+      state.prop(state.values.$notified!, 'notified', LocalStorageStore.bool);
     },
     ready: async (plugins) => {
       const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
@@ -70,6 +78,31 @@ export const ObservabilityPlugin = (options: {
       const dispatch = intentPlugin?.provides?.intent?.dispatch;
       if (!dispatch) {
         return;
+      }
+
+      if (!state.values.notified) {
+        await dispatch({
+          action: LayoutAction.SET_LAYOUT,
+          data: {
+            element: 'toast',
+            subject: {
+              id: `${OBSERVABILITY_PLUGIN}/notice`,
+              // TODO(wittjosiah): Non-react translation utils.
+              title: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast label'],
+              description: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast description'],
+              duration: Infinity,
+              icon: (props: IconProps) => (
+                <WaveTriangle className={mx(getSize(5), props.className)} weight='duotone' {...props} />
+              ),
+              actionLabel: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast action label'],
+              actionAlt: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast action alt'],
+              closeLabel: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast close label'],
+              onAction: () => dispatch({ action: SettingsAction.OPEN, data: { plugin: OBSERVABILITY_PLUGIN } }),
+            },
+          },
+        });
+
+        state.values.notified = true;
       }
 
       // Initialize asynchronously in the background, not in plugin initialization.
@@ -156,7 +189,7 @@ export const ObservabilityPlugin = (options: {
           }
         },
       },
-      observability: state,
+      observability: state.values,
       settings,
       surface: {
         component: ({ role, data }) => {
