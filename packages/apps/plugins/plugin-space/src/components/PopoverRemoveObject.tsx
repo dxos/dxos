@@ -5,7 +5,7 @@
 import React, { useCallback, useRef } from 'react';
 
 import { Folder } from '@braneframe/types';
-import { LayoutAction, parseIntentPlugin, parseLayoutPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { NavigationAction, parseIntentPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { TypedObject, SpaceProxy, getSpaceForObject } from '@dxos/react-client/echo';
 import { Button, Popover, useTranslation } from '@dxos/react-ui';
 
@@ -16,7 +16,7 @@ export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: T
   const { t } = useTranslation(SPACE_PLUGIN);
   const deleteButton = useRef<HTMLButtonElement>(null);
 
-  const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
+  const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
   const intentPlugin = useResolvePlugin(parseIntentPlugin);
 
   const handleDelete = useCallback(async () => {
@@ -25,9 +25,9 @@ export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: T
     }
 
     // If the item is active, navigate to "nowhere" to avoid navigating to a removed item
-    if (layoutPlugin?.provides.layout.active === object.id) {
+    if (navigationPlugin?.provides.location.active === object.id) {
       await intentPlugin?.provides.intent.dispatch({
-        action: LayoutAction.ACTIVATE,
+        action: NavigationAction.ACTIVATE,
         data: { id: undefined },
       });
     }

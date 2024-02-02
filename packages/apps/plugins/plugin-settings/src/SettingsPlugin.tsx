@@ -52,8 +52,11 @@ export const SettingsPlugin = (): PluginDefinition<SettingsPluginProvides> => {
                 intents: [
                   [
                     {
-                      action: LayoutAction.OPEN_DIALOG,
-                      data: { component: `${SETTINGS_PLUGIN}/Settings` },
+                      action: LayoutAction.SET_LAYOUT,
+                      data: {
+                        element: 'dialog',
+                        component: `${SETTINGS_PLUGIN}/Settings`,
+                      },
                     },
                   ],
                 ],

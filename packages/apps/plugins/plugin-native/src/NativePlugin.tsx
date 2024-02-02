@@ -3,7 +3,7 @@
 //
 
 import type { Plugin, PluginDefinition } from '@dxos/app-framework';
-import { LayoutAction, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
+import { NavigationAction, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { safeParseJson } from '@dxos/util';
 
@@ -90,7 +90,7 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
   // https://github.com/socketsupply/socket/blob/ef7fb5559876e41062d5896aafb7b79989fc96e5/api/internal/events.js#L6
   window.addEventListener('applicationurl', ({ url }: any) => {
     void intentPlugin?.provides.intent.dispatch({
-      action: LayoutAction.ACTIVATE,
+      action: NavigationAction.ACTIVATE,
       data: { id: url.host },
     });
   });

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Sketch as SketchType } from '@braneframe/types';
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
 import { Expando, SpaceProxy, getGlobalAutomergePreference } from '@dxos/react-client/echo';
 
 import { SketchMain, SketchComponent } from './components';
@@ -51,7 +51,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                   data: { target: parent.data },
                 },
                 {
-                  action: LayoutAction.ACTIVATE,
+                  action: NavigationAction.ACTIVATE,
                 },
               ]),
             properties: {
@@ -74,7 +74,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
               },
               // TODO(burdon): Navigate directly (but return result to caller).
               // {
-              //   action: LayoutAction.ACTIVATE,
+              //   action: NavigationAction.ACTIVATE,
               // },
             ],
           },
