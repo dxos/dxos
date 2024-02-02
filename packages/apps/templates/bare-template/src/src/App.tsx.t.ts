@@ -9,27 +9,26 @@ export default template.define
   .script({
     content: ({ input, slots, imports }) => {
       const { react, pwa, dxosUi, name, proto } = input;
-      const { ClientProvider, Config, Dynamics, Defaults, Local } = imports.use(
+      const { ClientProvider, Config, Defaults, Local } = imports.use(
         ['ClientProvider', 'Config', 'Dynamics', 'Defaults', 'Local'],
         '@dxos/react-client',
       );
-      const ThemeProvider = imports.use('ThemeProvider', '@dxos/react-appkit');
+      const { Status, ThemeProvider }  = imports.use(['Status', 'ThemeProvider'], '@dxos/react-ui');
+      const defaultTx = imports.use('defaultTx', '@dxos/react-ui-theme');
       const useRegisterSW = imports.use('useRegisterSW', 'virtual:pwa-register/react');
-      // TODO(wittjosiah): Remove appkit.
-      const { ResetDialog, ServiceWorkerToastContainer, GenericFallback, appkitTranslations } = imports.use(
-        ['ResetDialog', 'ServiceWorkerToastContainer', 'GenericFallback', 'appkitTranslations'],
-        '@dxos/react-appkit',
-      );
 
       const types = imports.use('types', './proto');
+      const ServiceWorkerToast = imports.use('ServiceWorkerToast', './ServiceWorkerToast');
+      const translations = imports.use('translations', './translations', { isDefault: true });
 
-      const swToast = () => plate`<${ServiceWorkerToastContainer} {...serviceWorker} />`;
+      const swToast = () => plate`<${ServiceWorkerToast} {...serviceWorker} />`;
 
       const coreContent = plate`
-      <ErrorBoundary fallback={({ error }) => <${ResetDialog} error={error} config={config} />}>
+      <ErrorBoundary>
         <${ClientProvider}
-          config={config}${dxosUi ? plate`
-          fallback={${GenericFallback}}` : ''}
+          config={config}
+          createWorker={createWorker}${dxosUi ? plate`
+          fallback={Loader}` : ''}
           onInitialized={async (client) => {
             ${proto && plate`client.addSchema(${types});`}
             const searchParams = new URLSearchParams(location.search);
@@ -43,9 +42,8 @@ export default template.define
         </${ClientProvider}>
       </ErrorBoundary>`;
 
-      // TODO(wittjosiah): Generic fallback is missing translations.
       const themeProvider = (content: string) => plate`
-      <${ThemeProvider} appNs='${name}' resourceExtensions={[${appkitTranslations}]} fallback={<${GenericFallback} />}>
+      <${ThemeProvider} appNs='${name}' tx={${defaultTx}} resourceExtensions={${translations}} fallback={<Loader />}>
         ${content}
       </${ThemeProvider}>
       `;
@@ -59,15 +57,27 @@ export default template.define
         
         ${slots.extraImports}
         
-        // Dynamics allows configuration to be supplied by the hosting KUBE.
-        const config = async () => new ${Config}(await ${Dynamics}(), ${Local}(), ${Defaults}());
+        const config = async () => new ${Config}(${Local}(), ${Defaults}());
+
+        const createWorker = () =>
+          new SharedWorker(new URL('./shared-worker', import.meta.url), {
+            type: 'module',
+            name: 'dxos-client-worker',
+          });
+
+        ${dxosUi && plate`
+        const Loader = () => (
+          <div className='flex bs-[100dvh] justify-center items-center'>
+            <${Status} indeterminate aria-label='Initializing' />
+          </div>
+        );`}
 
         export const App = () => {
           ${pwa && plate`const serviceWorker = ${useRegisterSW}();`}
           return (
             ${dxosUi ? themeProvider(coreContent) : coreContent}
           )
-        }`
+        };`
       );
     },
   });

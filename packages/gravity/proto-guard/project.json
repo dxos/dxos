@@ -23,6 +23,11 @@
       }
     },
     "test": {
+      "dependsOn": [
+        {
+          "target": "build"
+        }
+      ],
       "options": {
         "environments": [
           "nodejs"
@@ -30,5 +35,7 @@
         "forceExit": true
       }
     }
-  }
+  },
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "proto-guard"
 }

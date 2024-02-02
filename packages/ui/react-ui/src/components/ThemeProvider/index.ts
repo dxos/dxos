@@ -3,3 +3,4 @@
 //
 
 export * from './ThemeProvider';
+export { useTranslation } from './TranslationsProvider';

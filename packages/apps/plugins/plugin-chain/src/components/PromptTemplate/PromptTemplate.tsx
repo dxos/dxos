@@ -5,7 +5,7 @@
 import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { Chain as ChainType } from '@braneframe/types';
-import { TextObject } from '@dxos/react-client/echo';
+import { TextObject, getTextContent } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select, useTranslation } from '@dxos/react-ui';
 import { TextEditor, useTextModel } from '@dxos/react-ui-editor';
 import { groupBorder, mx } from '@dxos/react-ui-theme';
@@ -34,6 +34,14 @@ const inputTypes = [
   //   value: ChainType.Input.Type.QUERY,
   //   label: 'Query',
   // },
+  {
+    value: ChainType.Input.Type.RESOLVER,
+    label: 'Resolver',
+  },
+  {
+    value: ChainType.Input.Type.CONTEXT,
+    label: 'Context',
+  },
 ];
 
 const getInputType = (type: string) => inputTypes.find(({ value }) => String(value) === type)?.value;
@@ -46,7 +54,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
   const { t } = useTranslation(CHAIN_PLUGIN);
   const model = useTextModel({ text: prompt.source });
 
-  const text = prompt.source?.text ?? '';
+  const text = getTextContent(prompt.source) ?? '';
   useEffect(() => {
     if (!prompt.inputs) {
       prompt.inputs = []; // TODO(burdon): Required?
@@ -108,21 +116,10 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
         </Section>
 
         <Section title='Template'>
-          <TextEditor
-            model={model}
-            extensions={[promptExtension]}
-            slots={{
-              root: {
-                className: 'w-full p-2',
-              },
-              editor: {
-                placeholder: t('template placeholder'),
-              },
-            }}
-          />
+          <TextEditor model={model} placeholder={t('template placeholder')} extensions={[promptExtension]} />
         </Section>
 
-        {prompt.inputs?.length && (
+        {prompt.inputs?.length > 0 && (
           <Section title='Inputs'>
             <div className='flex flex-col divide-y'>
               <table className='table-fixed border-collapse'>
@@ -154,7 +151,11 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
                         </Input.Root>
                       </td>
                       <td className='px-3 py-1.5'>
-                        {input.type === ChainType.Input.Type.VALUE && <ValueEditor input={input} />}
+                        {[
+                          ChainType.Input.Type.VALUE,
+                          ChainType.Input.Type.CONTEXT,
+                          ChainType.Input.Type.RESOLVER,
+                        ].includes(input.type) && <ValueEditor input={input} />}
                       </td>
                     </tr>
                   ))}
@@ -178,19 +179,18 @@ const ValueEditor = ({ input }: { input: ChainType.Input }) => {
   return (
     <TextEditor
       model={model}
+      placeholder={t('value placeholder')}
+      lineWrapping={false}
       slots={{
         root: {
           className: mx('w-full border-b', groupBorder),
-        },
-        editor: {
-          placeholder: t('value placeholder'),
         },
       }}
     />
   );
 };
 
-const Section = ({ title, actions, children }: PropsWithChildren<{ title: string; actions?: JSX.Element }>) => {
+export const Section = ({ title, actions, children }: PropsWithChildren<{ title: string; actions?: JSX.Element }>) => {
   return (
     <div className={mx('border rounded-md', groupBorder)}>
       <div

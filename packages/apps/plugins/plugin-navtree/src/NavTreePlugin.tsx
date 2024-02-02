@@ -21,13 +21,7 @@ import {
 import { Graph, type Node } from '@dxos/app-graph';
 import { Keyboard } from '@dxos/keyboard';
 
-import {
-  CommandsDialogContent,
-  NODE_TYPE,
-  TreeItemMainHeading,
-  TreeViewContainer,
-  TreeViewDocumentTitle,
-} from './components';
+import { CommandsDialogContent, NODE_TYPE, NavBarStart, TreeViewContainer, TreeViewDocumentTitle } from './components';
 import meta, { NAVTREE_PLUGIN } from './meta';
 import translations from './translations';
 
@@ -46,14 +40,6 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
 
       // TODO(burdon): Create context and plugin.
       Keyboard.singleton.initialize();
-      // TODO(burdon): Move to separate plugin (for keys and command k). Move bindings from LayoutPlugin.
-      Keyboard.singleton.bind({
-        binding: 'meta+k',
-        handler: () => {
-          console.log('meta');
-        },
-        data: 'Command menu',
-      });
     },
     unload: async () => {
       Keyboard.singleton.destroy();
@@ -78,9 +64,11 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       surface: {
         component: ({ data, role }) => {
           switch (data.component) {
-            case `${NAVTREE_PLUGIN}/Commands`:
+            case `${NAVTREE_PLUGIN}/Commands`: {
+              const selected = typeof data.subject === 'string' ? data.subject : undefined;
               // TODO(wittjosiah): Pass graph in data.
-              return <CommandsDialogContent graph={graphPlugin?.provides.graph} />;
+              return <CommandsDialogContent graph={graphPlugin?.provides.graph} selected={selected} />;
+            }
           }
 
           switch (role) {
@@ -99,14 +87,22 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
             case 'document-title':
               return <TreeViewDocumentTitle activeNode={data.activeNode as Node | undefined} />;
 
-            case 'heading':
+            case 'navbar-start':
               if (
                 data.activeNode &&
                 typeof data.activeNode === 'object' &&
                 'label' in data.activeNode &&
                 'parent' in data.activeNode
               ) {
-                return <TreeItemMainHeading activeNode={data.activeNode as Node} />;
+                return {
+                  node: (
+                    <NavBarStart
+                      activeNode={data.activeNode as Node}
+                      popoverAnchorId={data.popoverAnchorId as string | undefined}
+                    />
+                  ),
+                  disposition: 'hoist',
+                };
               }
               break;
           }
@@ -120,6 +116,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
             return;
           }
 
+          // TODO(burdon): Move to separate plugin (for keys and command k). Move bindings from LayoutPlugin.
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
           parent.addAction({
             id: 'dxos.org/plugin/navtree/open-commands',

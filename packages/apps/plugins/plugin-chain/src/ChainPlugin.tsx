@@ -8,16 +8,12 @@ import React from 'react';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Chain as ChainType, Folder } from '@braneframe/types';
 import { resolvePlugin, parseIntentPlugin, LayoutAction, type PluginDefinition } from '@dxos/app-framework';
-import { SpaceProxy, TextObject } from '@dxos/react-client/echo';
+import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { ChainMain } from './components';
 import meta, { CHAIN_PLUGIN } from './meta';
 import translations from './translations';
 import { ChainAction, type ChainPluginProvides, isObject } from './types';
-
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[ChainType.name] = ChainType;
 
 export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
   return {
@@ -91,9 +87,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
           switch (intent.action) {
             case ChainAction.CREATE: {
               return {
-                object: new ChainType({
-                  prompts: [createPrompt()],
-                }),
+                data: new ChainType(),
               };
             }
           }
@@ -102,17 +96,3 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
     },
   };
 };
-
-const createPrompt = () =>
-  new ChainType.Prompt({
-    command: 'say',
-    source: new TextObject(['Translate the following into {language}.', '---', '{input}'].join('\n')),
-    inputs: [
-      new ChainType.Input({
-        type: ChainType.Input.Type.VALUE,
-        name: 'language',
-        value: new TextObject('japanese'),
-      }),
-      new ChainType.Input({ type: ChainType.Input.Type.PASS_THROUGH, name: 'input' }),
-    ],
-  });

@@ -53,7 +53,7 @@ describe('ordered-set', () => {
 
   test('array of plain objects', async () => {
     const root = new Container();
-    const plain: Container.Record = { title: 'test', contacts: [new Contact({ name: 'Mykola' })] };
+    const plain: Container.Record = { title: 'test', contacts: [new Contact({ name: 'tester' })] };
     root.records.push(plain);
     const { db } = await createDatabase(new Hypergraph().addTypes(types));
     db.add(root);
@@ -62,15 +62,15 @@ describe('ordered-set', () => {
     expect(root.records).to.have.length(1);
     const queriedContainer = db.query(Container.filter()).objects[0];
     expect(queriedContainer.records.length).to.equal(1);
-    expect(queriedContainer.records[0].contacts?.[0].name).to.equal('Mykola');
+    expect(queriedContainer.records[0].contacts?.[0].name).to.equal('tester');
   });
 
   test('reset array', async () => {
     const { db } = await createDatabase(new Hypergraph().addTypes(types));
     const root = db.add(new Container());
     await db.flush();
-    root.records.push({ title: 'one' });
 
+    root.records.push({ title: 'one' });
     expect(root.records).to.have.length(1);
 
     root.records = [];
@@ -79,7 +79,6 @@ describe('ordered-set', () => {
     expect(root.records).to.have.length(0);
 
     root.records.push({ title: 'two' });
-
     expect(root.records).to.have.length(1);
     await db.flush();
     expect(root.records).to.have.length(1);

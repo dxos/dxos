@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Event as EventType } from '@braneframe/types';
 import { List, ListItem } from '@dxos/react-ui';
-import { ghostHover, groupBorder, inputSurface, mx } from '@dxos/react-ui-theme';
+import { ghostHover, groupBorder, attentionSurface, mx } from '@dxos/react-ui-theme';
 
 import { styles } from '../styles';
 
@@ -18,7 +18,7 @@ export type EventListProps = {
 
 export const EventList = ({ events = [], selected, onSelect }: EventListProps) => {
   return (
-    <div className={mx('flex w-full overflow-y-scroll', inputSurface)}>
+    <div className={mx('flex w-full overflow-y-scroll', attentionSurface)}>
       <List classNames={mx('w-full divide-y', groupBorder)}>
         {events.map((event) => (
           <ListItem.Root

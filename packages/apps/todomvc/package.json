@@ -1,6 +1,6 @@
 {
   "name": "@dxos/todomvc",
-  "version": "0.3.10",
+  "version": "0.4.0",
   "private": true,
   "description": "Collaborative TodoMVC using DXOS",
   "homepage": "https://dxos.org",
@@ -12,13 +12,12 @@
     "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
   },
   "dependencies": {
-    "@braneframe/plugin-telemetry": "workspace:*",
-    "@dxos/client": "workspace:*",
-    "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/observability": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
     "@sentry/react": "^7.41.0",
     "classnames": "^2.3.2",
@@ -31,11 +30,12 @@
   "devDependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
-    "@dxos/vault": "workspace:*",
-    "@sentry/vite-plugin": "^0.7.2",
+    "@sentry/vite-plugin": "^2.10.2",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "@vitejs/plugin-react": "^3.0.1",
-    "vite": "^4.3.9"
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.0.12",
+    "vite-plugin-top-level-await": "^1.4.1",
+    "vite-plugin-wasm": "^3.3.0"
   }
 }

@@ -1,5 +1,5 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 import React from 'react';
@@ -7,6 +7,12 @@ import { createRoot } from 'react-dom/client';
 import { ClientProvider } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+
+const createWorker = () =>
+  new SharedWorker(new URL('../shared-worker', import.meta.url), {
+    type: 'module',
+    name: 'dxos-client-worker',
+  });
 
 const Component = () => {
   // Get the user to log in before a space can be obtained.
@@ -20,7 +26,7 @@ const Component = () => {
 };
 
 const App = () => (
-  <ClientProvider>
+  <ClientProvider createWorker={createWorker}>
     <Component />
   </ClientProvider>
 );

@@ -2,32 +2,31 @@
 set -euxo pipefail
 
 export DX_CONFIG=./testing/config/user-1.yml
-
-dx=./bin/run
+export PATH=$PATH:./bin
 
 # Reset
 if [ "${1:-}" = '--reset' ];
 then
-  $dx reset
+  dx reset
 fi
 
 # Create Identity
-PUBLIC_KEY=$($dx halo --json | jq --raw-output '.public_key' 2>/dev/null)
+PUBLIC_KEY=$(dx halo --json | jq --raw-output '.public_key' 2>/dev/null)
 if [ "$PUBLIC_KEY" = 'null' ];
 then
   # TODO(burdon): Error attempt to create space with null halo before creating profile.
   #   Error [OpenError]: Error parsing JSON in /tmp/dxos/cli/user-1/keystore/data.json: Unexpected end of JSON input
-  $dx reset
-  $dx halo create
+  dx reset
+  dx halo create
 fi
 
 # Create Space
-KEY=$($dx space create --json | jq --raw-output '.key')
+KEY=$(dx space create --json | jq --raw-output '.key')
 # mkdir -p /tmp/cli/testing
 # echo $KEY > /tmp/cli/testing_space_key.txt
 
 # Create Invitation
-$dx space invite $KEY
+dx space invite $KEY
 
 # List spaces
-$dx space list
+dx space list

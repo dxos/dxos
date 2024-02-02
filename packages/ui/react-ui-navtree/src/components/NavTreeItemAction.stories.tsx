@@ -4,11 +4,11 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import { List, Circle } from '@phosphor-icons/react';
 import { type Meta } from '@storybook/react';
 import React from 'react';
 
+import { faker } from '@dxos/random';
 import { DensityProvider, Tooltip } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -57,9 +57,7 @@ export const Default = {
     // TODO(burdon): Goal: Factor-out CMD-K like dialog.
     return (
       <NavTreeItemAction
-        id='test'
         icon={List}
-        level={0}
         actions={actions}
         menuType='searchList'
         label='Select action'

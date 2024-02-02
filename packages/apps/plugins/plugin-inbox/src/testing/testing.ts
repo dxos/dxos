@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
-
 import { Thread as ThreadType, Message as MessageType } from '@braneframe/types';
+import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 
 faker.seed(1);

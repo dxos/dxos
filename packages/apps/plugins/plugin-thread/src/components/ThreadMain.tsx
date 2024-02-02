@@ -11,15 +11,18 @@ import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxo
 
 import { ThreadContainer } from './ThreadContainer';
 
-export const ThreadMain: FC<{ thread: ThreadType }> = ({ thread }) => {
+const ThreadMain: FC<{ thread: ThreadType }> = ({ thread }) => {
   const space = getSpaceForObject(thread);
   if (!space) {
     return null;
   }
 
+  // TODO(burdon): Factor out Main container across plugins?
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
-      <ThreadContainer space={space} thread={thread} fullWidth={false} />
+      <ThreadContainer space={space} thread={thread} />
     </Main.Content>
   );
 };
+
+export default ThreadMain;

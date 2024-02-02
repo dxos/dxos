@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import sub from 'date-fns/sub';
+import { sub } from 'date-fns/sub';
 import { google } from 'googleapis';
 import path from 'node:path';
 import process from 'node:process';

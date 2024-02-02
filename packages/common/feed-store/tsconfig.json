@@ -40,13 +40,13 @@
       "path": "../keys"
     },
     {
-      "path": "../keys"
-    },
-    {
       "path": "../log"
     },
     {
       "path": "../node-std"
+    },
+    {
+      "path": "../random"
     },
     {
       "path": "../random-access-storage"

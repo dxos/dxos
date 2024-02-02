@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kube-testing",
-  "version": "0.3.10",
+  "version": "0.4.0",
   "private": true,
   "description": "KUBE Testing.",
   "homepage": "https://dxos.org",
@@ -17,7 +17,7 @@
     "run-tests": "SWC_PLUGINS=$(cat swc-plugins.json) node -r ts-node/register ./src/main.ts"
   },
   "dependencies": {
-    "@automerge/automerge-repo-network-websocket": "^1.0.19",
+    "@automerge/automerge-repo-network-websocket": "^1.1.0",
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -35,12 +35,12 @@
     "@dxos/network-manager": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/teleport-extension-replicator": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@faker-js/faker": "^8.0.2",
     "chartjs-node-canvas": "^4.1.6",
     "danfojs-node": "^1.1.2",
     "debug": "^4.3.4",

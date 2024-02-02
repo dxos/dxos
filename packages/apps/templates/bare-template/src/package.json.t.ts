@@ -22,16 +22,17 @@ export namespace Features {
       // 'react-router-dom': '^6.4.0'
     },
     devDependencies: {
-      '@types/react': '^18.0.21',
-      '@types/react-dom': '^18.0.6',
-      '@vitejs/plugin-react': '^3.0.1',
+      // TODO(wittjosiah): Don't upgrade to 18.2 yet.
+      //   https://github.com/creativetimofficial/material-tailwind/issues/528#issuecomment-1856348865
+      '@types/react': '~18.0.21',
+      '@types/react-dom': '~18.0.6',
+      '@vitejs/plugin-react': '^4.2.1',
     },
   });
 
   export const dxosUi = ({ depVersion }: Context): Partial<PackageJson> => ({
     dependencies: {
       '@dxos/react-ui': depVersion,
-      '@dxos/react-appkit': depVersion,
       '@phosphor-icons/react': '^2.0.5',
       'react-router-dom': '^6.4.0',
     },
@@ -54,21 +55,21 @@ export namespace Features {
       storybook: 'start-storybook -p 9009 --no-open',
     },
     devDependencies: {
-      '@storybook/addon-essentials': '^7.0.6',
-      '@storybook/addon-interactions': '^7.0.6',
-      '@storybook/addon-links': '^7.0.6',
-      '@storybook/builder-vite': '^7.0.6',
-      '@storybook/core-server': '^7.0.6',
-      '@storybook/mdx2-csf': '^1.0.0',
-      '@storybook/react': '^7.0.6',
-      '@storybook/react-vite': '^7.0.6',
+      '@storybook/addon-essentials': '8.0.0-alpha.11',
+      '@storybook/addon-interactions': '8.0.0-alpha.11',
+      '@storybook/addon-links': '8.0.0-alpha.11',
+      '@storybook/builder-vite': '8.0.0-alpha.11',
+      '@storybook/core-server': '8.0.0-alpha.11',
+      '@storybook/mdx2-csf': '^1.1.0',
+      '@storybook/react': '8.0.0-alpha.11',
+      '@storybook/react-vite': '8.0.0-alpha.11',
     },
   });
 
   export const pwa = (): Partial<PackageJson> => ({
     devDependencies: {
-      'vite-plugin-pwa': '^0.14.1',
-      'workbox-window': '^6.5.4',
+      'vite-plugin-pwa': '^0.17.4',
+      'workbox-window': '^7.0.0',
     },
   });
 
@@ -96,20 +97,21 @@ export const base = ({ name, monorepo, version, depVersion }: Context): Partial<
     private: true,
     scripts: {
       build: 'tsc --noEmit && vite build',
-      deploy: 'dx app publish',
       preview: 'vite preview',
       serve: 'vite',
     },
     dependencies: {
       '@dxos/client': depVersion,
       '@dxos/config': depVersion,
-      '@dxos/vault': depVersion,
+      '@dxos/shell': depVersion,
     },
     devDependencies: {
       '@types/node': '^18.11.9',
-      '@dxos/cli': depVersion,
+      '@types/sharedworker': '^0.0.111',
       typescript: '^5.0.4',
-      vite: '^4.3.9',
+      vite: '^5.0.12',
+      'vite-plugin-top-level-await': '^1.4.1',
+      'vite-plugin-wasm': '^3.3.0',
     },
   };
 };

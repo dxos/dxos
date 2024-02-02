@@ -24,6 +24,9 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/display-name"
+    },
+    {
       "path": "../../../common/invariant"
     },
     {
@@ -37,6 +40,9 @@
     },
     {
       "path": "../../../common/util"
+    },
+    {
+      "path": "../../../core/echo/automerge"
     },
     {
       "path": "../../../core/echo/echo-schema"

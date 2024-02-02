@@ -19,25 +19,43 @@
   ],
   "references": [
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/util"
     },
     {
       "path": "../../core/echo/echo-schema"
     },
     {
+      "path": "../../core/echo/echo-signals"
+    },
+    {
+      "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/client-protocol"
+    },
+    {
+      "path": "../../sdk/client-services"
     },
     {
       "path": "../../sdk/config"
     },
     {
+      "path": "../../sdk/observability"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-shell"
-    },
-    {
-      "path": "../../sdk/vault"
+      "path": "../../sdk/shell"
     },
     {
       "path": "../../ui/react-ui"
@@ -52,13 +70,10 @@
       "path": "../plugins/plugin-client"
     },
     {
-      "path": "../plugins/plugin-error"
+      "path": "../plugins/plugin-observability"
     },
     {
       "path": "../plugins/plugin-pwa"
-    },
-    {
-      "path": "../plugins/plugin-telemetry"
     },
     {
       "path": "../plugins/plugin-theme"

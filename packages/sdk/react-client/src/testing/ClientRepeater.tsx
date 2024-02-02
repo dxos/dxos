@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
 import React, { useState, type FC, useEffect } from 'react';
 
 import { Client, type PublicKey } from '@dxos/client';
@@ -10,6 +9,7 @@ import { type SpaceProxy, type Space, type TypeCollection } from '@dxos/client/e
 import { ConnectionState } from '@dxos/client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
+import { faker } from '@dxos/random';
 import { Input } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
@@ -37,6 +37,10 @@ export type ClientRepeaterProps<P extends RepeatedComponentProps> = {
  * Utility component for Storybook stories which sets up clients for n peers.
  * The `Component` property is rendered n times, once for each peer.
  */
+// NOTE: This is specifically not a storybook decorator because it broke stories as a decorator.
+//   This seems primarily due to the fact that it required top-level await for the clients to initialize.
+//   Storybook seemed to handle it alright, but Chromatic had a lot of trouble with it.
+//   There was also a question of whether or not calling the story function multiple times was a good idea.
 // TODO(wittjosiah): Rename.
 export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRepeaterProps<P>) => {
   const {
@@ -61,20 +65,21 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
       const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocal() }));
       await Promise.all(clients.map((client) => client.initialize()));
       types && clients.map((client) => client.spaces.addSchema(types));
-      setClients(clients);
 
       if (createIdentity || createSpace) {
         await Promise.all(clients.map((client) => client.halo.createIdentity()));
       }
 
       if (createSpace) {
-        const space = await clients[0].spaces.create({ name: faker.animal.bird() });
+        const space = await clients[0].spaces.create({ name: faker.commerce.productName() });
         setSpaceKey(space.key);
         await onCreateSpace?.(space);
         await Promise.all(
           clients.slice(1).map((client) => performInvitation({ host: space as SpaceProxy, guest: client.spaces })),
         );
       }
+
+      setClients(clients);
     });
 
     return () => clearTimeout(timeout);

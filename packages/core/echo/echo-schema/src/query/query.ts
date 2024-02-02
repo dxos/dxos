@@ -101,7 +101,10 @@ export class Query<T extends TypedObject = TypedObject> {
   private _resultCache: QueryResult<T>[] | undefined = undefined;
   private _objectCache: T[] | undefined = undefined;
 
-  constructor(private readonly _queryContext: QueryContext, filter: Filter) {
+  constructor(
+    private readonly _queryContext: QueryContext,
+    filter: Filter,
+  ) {
     this._filter = filter;
 
     this._queryContext.added.on((source) => {

@@ -8,16 +8,16 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
+import WasmPlugin from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '', // Ensure relative path to assets.
   server: {
     host: true,
-    port: 3967,
     https:
       process.env.HTTPS === 'true'
         ? {
@@ -26,6 +26,7 @@ export default defineConfig({
           }
         : false,
     fs: {
+      strict: false,
       allow: [
         // TODO(wittjosiah): Not detecting pnpm-workspace?
         //   https://vitejs.dev/config/server-options.html#server-fs-allow
@@ -49,15 +50,14 @@ export default defineConfig({
   },
   plugins: [
     ConfigPlugin({
-      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT'],
+      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_DATADOG_API_KEY', 'DX_DATADOG_APP_KEY', 'DX_VAULT'],
     }),
     ThemePlugin({
       root: __dirname,
-      content: [
-        resolve(__dirname, './*.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-      ],
+      content: [resolve(__dirname, './*.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
     }),
+    TopLevelAwaitPlugin(),
+    WasmPlugin(),
     // https://github.com/preactjs/signals/issues/269
     ReactPlugin({ jsxRuntime: 'classic' }),
     VitePWA({
@@ -121,10 +121,12 @@ export default defineConfig({
   ],
   worker: {
     format: 'es',
-    plugins: [
+    plugins: () => [
       ConfigPlugin({
         env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT'],
       }),
+      TopLevelAwaitPlugin(),
+      WasmPlugin(),
     ],
   },
 });

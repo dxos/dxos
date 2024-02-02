@@ -5,7 +5,8 @@
 import { CaretDoubleLeft, GearSix } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { LayoutAction, SettingsAction, Surface, useIntent } from '@dxos/app-framework';
+import { parseObservabilityPlugin } from '@braneframe/plugin-observability';
+import { LayoutAction, SettingsAction, Surface, useIntent, useResolvePlugin } from '@dxos/app-framework';
 import { type Node, type Graph, isGraphNode } from '@dxos/app-graph';
 import { useClient, useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -63,6 +64,7 @@ export const TreeViewContainer = ({
   const client = useClient();
   const config = useConfig();
   const identity = useIdentity();
+  const observabilityPlugin = useResolvePlugin(parseObservabilityPlugin);
 
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const { navigationSidebarOpen, closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
@@ -188,6 +190,7 @@ export const TreeViewContainer = ({
                 <HaloButton
                   size={6}
                   identityKey={identity?.identityKey.toHex()}
+                  internal={observabilityPlugin?.provides?.observability?.group === 'dxos'}
                   onClick={() => client.shell.shareIdentity()}
                 />
                 <div role='none' className='grow' />
@@ -198,6 +201,7 @@ export const TreeViewContainer = ({
                       data-joyride='welcome/settings'
                       variant='ghost'
                       classNames='pli-2.5'
+                      data-testid='treeView.openSettings'
                       {...(!navigationSidebarOpen && { tabIndex: -1 })}
                       onClick={() => dispatch({ action: SettingsAction.OPEN })}
                     >
