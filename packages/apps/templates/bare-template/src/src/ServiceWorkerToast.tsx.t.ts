@@ -36,35 +36,37 @@ export default template.define.text({
         const { variant } = props;
         const needRefresh = isNeedRefreshToast(props);
         return (
-          <Toast.Root defaultOpen {...(needRefresh && { duration: 240e3 })}>
-            <Toast.Body>
-              <Toast.Title>
-                {variant === 'needRefresh' ? (
-                  <>
-                    <Gift className={mx(getSize(5), 'inline mr-1')} weight='duotone' />
-                    <span>{t('need refresh label')}</span>
-                  </>
-                ) : (
-                  t('offline ready label', { appName: t('current app name') })
+          <Toast.Provider>
+            <Toast.Root defaultOpen {...(needRefresh && { duration: 240e3 })}>
+              <Toast.Body>
+                <Toast.Title>
+                  {variant === 'needRefresh' ? (
+                    <>
+                      <Gift className={mx(getSize(5), 'inline mr-1')} weight='duotone' />
+                      <span>{t('need refresh label')}</span>
+                    </>
+                  ) : (
+                    t('offline ready label', { appName: t('current app name') })
+                  )}
+                </Toast.Title>
+                {variant === 'needRefresh' && <Toast.Description>{t('need refresh description')}</Toast.Description>}
+              </Toast.Body>
+              <Toast.Actions>
+                {needRefresh && (
+                  <Toast.Action altText={t('refresh alt')} asChild>
+                    <Button variant='primary' onClick={() => props.updateServiceWorker()}>
+                      {t('refresh label')}
+                    </Button>
+                  </Toast.Action>
                 )}
-              </Toast.Title>
-              {variant === 'needRefresh' && <Toast.Description>{t('need refresh description')}</Toast.Description>}
-            </Toast.Body>
-            <Toast.Actions>
-              {needRefresh && (
-                <Toast.Action altText={t('refresh alt')} asChild>
-                  <Button variant='primary' onClick={() => props.updateServiceWorker()}>
-                    {t('refresh label')}
-                  </Button>
-                </Toast.Action>
-              )}
-              {variant === 'offlineReady' && (
-                <Toast.Close asChild>
-                  <Button>{t('confirm label')}</Button>
-                </Toast.Close>
-              )}
-            </Toast.Actions>
-          </Toast.Root>
+                {variant === 'offlineReady' && (
+                  <Toast.Close asChild>
+                    <Button>{t('confirm label')}</Button>
+                  </Toast.Close>
+                )}
+              </Toast.Actions>
+            </Toast.Root>
+          </Toast.Provider>
         );
       };
     `,

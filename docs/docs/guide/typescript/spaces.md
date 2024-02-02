@@ -44,9 +44,11 @@ const client = new Client();
 
 ## Default Space
 
-Whenever an Identity is created, a Space is automatically created and marked as the **default Space**. In order to get the default space:
+Whenever an Identity is created, a Space is automatically created and marked as the **default Space**. In order to get the default space, wait for spaces to complete loading, like so:
 
-```ts file=./snippets/obtain-space.ts#L16-17
+```ts file=./snippets/default-space.ts#L10-13
+// ensure the spaces are loaded before trying to load a space
+await client.spaces.isReady.wait();
 // get the default space
 const defaultSpace = client.spaces.default;
 ```

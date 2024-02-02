@@ -1,5 +1,5 @@
 # Class `InvalidStorageVersionError`
-<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:64]()</sub>
+<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:67]()</sub>
 
 
 Database errors.

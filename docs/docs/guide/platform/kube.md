@@ -6,9 +6,9 @@ next: ../react
 
 KUBE is a set of runtime services for static web apps and peer-to-peer applications. It can host applications on a local network and expose them to the outer internet via automatic tunneling. It also provides services for peer and network discovery.
 
-*   Single, compact binary.
-*   Runs as a service.
-*   Exposes a command line interface and API.
+* Single, compact binary.
+* Runs as a service.
+* Exposes a command line interface and API.
 
 KUBE instances form and propagate the peer-to-peer [MESH](../glossary#mesh) networks of DXOS.
 
@@ -23,5 +23,5 @@ Some of the services offered by KUBE:
 
 ### Next steps
 
-*   KUBE [Installation](../kube)
-*   [Build an application](../getting-started#project-templates) and [deploy to KUBE](../kube/deploying)
+* KUBE [Installation](../kube)
+* [Build an application](../getting-started#project-templates) and [deploy to KUBE](../kube/deploying)
