@@ -44,8 +44,9 @@ export const MarkdownActions = ({ model, properties }: { model: EditorModel; pro
           data: { html_url: issueUrl },
         } = await updateIssueContent();
         await dispatch({
-          action: LayoutAction.OPEN_DIALOG,
+          action: LayoutAction.SET_LAYOUT,
           data: {
+            element: 'dialog',
             component: 'dxos.org/plugin/github/ExportDialog',
             subject: { type: 'response', target: issueUrl, model, docGhId },
           },
@@ -63,8 +64,9 @@ export const MarkdownActions = ({ model, properties }: { model: EditorModel; pro
       void exportGhIssueContent();
     } else if ('path' in docGhId!) {
       void dispatch({
-        action: LayoutAction.OPEN_DIALOG,
+        action: LayoutAction.SET_LAYOUT,
         data: {
+          element: 'dialog',
           component: 'dxos.org/plugin/github/ExportDialog',
           subject: { type: 'create-pr', model, docGhId },
         },
@@ -83,8 +85,8 @@ export const MarkdownActions = ({ model, properties }: { model: EditorModel; pro
             onClick={() =>
               // TODO(burdon): Intent should return content value from dialog.
               dispatch({
-                action: LayoutAction.OPEN_DIALOG,
-                data: { component: 'dxos.org/plugin/github/ImportDialog', subject: { docGhId } },
+                action: LayoutAction.SET_LAYOUT,
+                data: { element: 'dialog', component: 'dxos.org/plugin/github/ImportDialog', subject: { docGhId } },
               })
             }
           >
@@ -119,8 +121,8 @@ export const MarkdownActions = ({ model, properties }: { model: EditorModel; pro
           classNames='gap-2'
           onClick={() =>
             dispatch({
-              action: LayoutAction.OPEN_DIALOG,
-              data: { component: 'dxos.org/plugin/github/BindDialog', subject: properties },
+              action: LayoutAction.SET_LAYOUT,
+              data: { element: 'dialog', component: 'dxos.org/plugin/github/BindDialog', subject: properties },
             })
           }
         >

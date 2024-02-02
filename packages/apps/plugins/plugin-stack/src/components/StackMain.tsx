@@ -7,7 +7,7 @@ import React, { useCallback, type FC } from 'react';
 
 import { Stack as StackType, type File as FileType, Folder } from '@braneframe/types';
 import {
-  LayoutAction,
+  NavigationAction,
   Surface,
   parseMetadataResolverPlugin,
   useIntent,
@@ -104,7 +104,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
 
   const handleNavigate = async (id: string) => {
     await dispatch({
-      action: LayoutAction.ACTIVATE,
+      action: NavigationAction.ACTIVATE,
       data: { id },
     });
   };

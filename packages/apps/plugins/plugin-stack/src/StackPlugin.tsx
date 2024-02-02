@@ -13,7 +13,7 @@ import {
   type Plugin,
   type PluginDefinition,
   parseIntentPlugin,
-  LayoutAction,
+  NavigationAction,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy } from '@dxos/react-client/echo';
@@ -95,7 +95,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
                   data: { target: parent.data },
                 },
                 {
-                  action: LayoutAction.ACTIVATE,
+                  action: NavigationAction.ACTIVATE,
                 },
               ]),
             properties: {

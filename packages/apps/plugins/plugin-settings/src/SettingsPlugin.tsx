@@ -3,6 +3,7 @@
 //
 
 import { Gear } from '@phosphor-icons/react';
+import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import {
@@ -17,9 +18,11 @@ import {
   type TranslationsProvides,
 } from '@dxos/app-framework';
 
-import { SettingsDialogContent } from './components';
+import { SettingsDialog } from './components';
 import meta, { SETTINGS_PLUGIN } from './meta';
 import translations from './translations';
+
+const DEFAULT_PANEL = 'dxos.org/plugin/registry';
 
 export type SettingsPluginProvides = SurfaceProvides &
   IntentResolverProvides &
@@ -30,6 +33,8 @@ export type SettingsPluginProvides = SurfaceProvides &
  * Plugin for aggregating and rendering plugin settings.
  */
 export const SettingsPlugin = (): PluginDefinition<SettingsPluginProvides> => {
+  const state = deepSignal<{ plugin: string }>({ plugin: DEFAULT_PANEL });
+
   return {
     meta,
     provides: {
@@ -37,7 +42,7 @@ export const SettingsPlugin = (): PluginDefinition<SettingsPluginProvides> => {
         component: ({ data }) => {
           switch (data.component) {
             case `${SETTINGS_PLUGIN}/Settings`:
-              return <SettingsDialogContent />;
+              return <SettingsDialog plugin={state.plugin} setPlugin={(plugin) => (state.plugin = plugin)} />;
 
             default:
               return null;
@@ -48,12 +53,17 @@ export const SettingsPlugin = (): PluginDefinition<SettingsPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case SettingsAction.OPEN: {
+              state.plugin = intent.data?.plugin ?? DEFAULT_PANEL;
+
               return {
                 intents: [
                   [
                     {
-                      action: LayoutAction.OPEN_DIALOG,
-                      data: { component: `${SETTINGS_PLUGIN}/Settings` },
+                      action: LayoutAction.SET_LAYOUT,
+                      data: {
+                        element: 'dialog',
+                        component: `${SETTINGS_PLUGIN}/Settings`,
+                      },
                     },
                   ],
                 ],
