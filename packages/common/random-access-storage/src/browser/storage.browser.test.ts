@@ -4,8 +4,7 @@
 
 import 'source-map-support/register';
 
-import { expect } from 'chai';
-import { describe, test } from 'vitest';
+import { expect, describe, test } from 'vitest';
 
 import { createStorage } from './storage';
 import { StorageType } from '../common';
@@ -20,6 +19,6 @@ describe('Tests for different storage types in different browsers', () => {
 
   test.skip(`Used ${StorageType.WEBFS} by default`, async () => {
     const storage = createStorage({ root: ROOT_DIRECTORY });
-    expect(storage.type).to.be(StorageType.WEBFS);
+    expect(storage.type).toBe(StorageType.WEBFS);
   });
 });
