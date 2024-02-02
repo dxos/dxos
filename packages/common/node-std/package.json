@@ -15,18 +15,22 @@
     "./path": "./dist/lib/browser/path.mjs",
     "./stream": "./dist/lib/browser/stream.mjs",
     "./util": "./dist/lib/browser/util.mjs",
-    "./fs": "./dist/lib/browser/fs.mjs"
+    "./fs": "./dist/lib/browser/fs.mjs",
+    "./fs/promises": "./dist/lib/browser/fs/promises.mjs",
+    "./buffer": "./dist/lib/browser/buffer.mjs"
   },
   "files": [
     "dist"
   ],
   "dependencies": {
     "assert": "^2.0.0",
-    "buffer": "^6.0.3",
     "events": "^3.3.0",
     "path-browserify": "^1.0.1",
     "readable-stream": "^3.6.0",
     "util": "^0.12.4"
+  },
+  "devDependencies": {
+    "buffer": "^6.0.3"
   },
   "publishConfig": {
     "access": "public"

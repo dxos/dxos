@@ -14,7 +14,7 @@ import { isNode } from '@dxos/util';
 
 import buildSecrets from './cli-observability-secrets.json';
 import { DatadogMetrics } from './datadog';
-import { BASE_TELEMETRY_PROPERTIES, getTelemetryIdentifier, mapSpaces } from './helpers';
+import { type IPData, getTelemetryIdentifier, mapSpaces } from './helpers';
 import { SegmentTelemetry, type EventOptions, type PageOptions } from './segment';
 import {
   captureException as sentryCaptureException,
@@ -29,9 +29,6 @@ const SPACE_METRICS_MIN_INTERVAL = 1000 * 60;
 // const DATADOG_IDLE_INTERVAL = 1000 * 60 * 5;
 const DATADOG_IDLE_INTERVAL = 1000 * 60 * 1;
 
-// TODO(nf): add allowlist for telemetry tags?
-const ERROR_TAGS = ['identityKey', 'username', 'deviceKey', 'group'];
-
 // Secrets? EnvironmentConfig?
 
 export type ObservabilitySecrets = {
@@ -45,6 +42,7 @@ export type ObservabilitySecrets = {
 };
 
 export type Mode = 'basic' | 'full' | 'disabled';
+export type TagScope = 'errors' | 'telemetry' | 'metrics' | 'all';
 
 export type ObservabilityOptions = {
   /// The webapp (e.g. 'composer.dxos.org'), 'cli', or 'agent'.
@@ -87,7 +85,7 @@ export class Observability {
   private _group?: string;
   // TODO(nf): accept upstream context?
   private _ctx = new Context();
-  private _tags = new Map<string, string>();
+  private _tags = new Map<string, { value: string; scope: TagScope }>();
 
   // TODO(nf): make platform a required extension?
   constructor({ namespace, config, secrets, group, mode, telemetry, errorLog }: ObservabilityOptions) {
@@ -112,7 +110,20 @@ export class Observability {
 
   private _loadSecrets(config: Config | undefined, secrets?: Record<string, string>) {
     if (isNode()) {
-      return buildSecrets as ObservabilitySecrets;
+      const mergedSecrets = {
+        ...(buildSecrets as ObservabilitySecrets),
+        ...secrets,
+      };
+
+      process.env.DX_ENVIRONMENT && (mergedSecrets.DX_ENVIRONMENT = process.env.DX_ENVIRONMENT);
+      process.env.DX_RELEASE && (mergedSecrets.DX_RELEASE = process.env.DX_RELEASE);
+      process.env.SENTRY_DESTINATION && (mergedSecrets.SENTRY_DESTINATION = process.env.SENTRY_DESTINATION);
+      process.env.TELEMETRY_API_KEY && (mergedSecrets.TELEMETRY_API_KEY = process.env.TELEMETRY_API_KEY);
+      process.env.IPDATA_API_KEY && (mergedSecrets.IPDATA_API_KEY = process.env.IPDATA_API_KEY);
+      process.env.DATADOG_API_KEY && (mergedSecrets.DATADOG_API_KEY = process.env.DATADOG_API_KEY);
+      process.env.DATADOG_APP_KEY && (mergedSecrets.DATADOG_APP_KEY = process.env.DATADOG_APP_KEY);
+
+      return mergedSecrets;
     } else {
       invariant(config, 'runtime config is required');
       log('config', { rtc: this._secrets, config });
@@ -149,6 +160,10 @@ export class Observability {
     return this._mode;
   }
 
+  get group() {
+    return this._group;
+  }
+
   get enabled() {
     return this._mode !== 'disabled';
   }
@@ -157,16 +172,27 @@ export class Observability {
   // Tags
   //
 
-  /**
-   * Set a tag for all observability services.
-   */
-  setTag(key: string, value: string) {
-    if (this.enabled && ERROR_TAGS.includes(key)) {
+  setTag(key: string, value: string, scope?: TagScope) {
+    if (this.enabled && (scope === undefined || scope === 'all' || scope === 'errors')) {
       sentrySetTag(key, value);
     }
-
-    this._tags.set(key, value);
+    if (!scope) {
+      scope = 'all';
+    }
+    this._tags.set(key, { value, scope });
   }
+
+  getTag(key: string) {
+    return this._tags.get(key);
+  }
+
+  addIPDataTelemetryTags = (ipData: IPData) => {
+    this.setTag('city', ipData.city, 'telemetry');
+    this.setTag('region', ipData.region, 'telemetry');
+    this.setTag('country', ipData.country, 'telemetry');
+    ipData.latitude && this.setTag('latitude', ipData.latitude.toString(), 'telemetry');
+    ipData.longitude && this.setTag('longitude', ipData.longitude.toString(), 'telemetry');
+  };
 
   // TODO(wittjosiah): Improve privacy of telemetry identifiers. See `getTelemetryIdentifier`.
   async setIdentityTags(client: Client) {
@@ -206,7 +232,14 @@ export class Observability {
     if (this.enabled && this._secrets.DATADOG_API_KEY) {
       this._metrics = new DatadogMetrics({
         apiKey: this._secrets.DATADOG_API_KEY,
-        getTags: () => this._tags,
+        getTags: () =>
+          Object.fromEntries(
+            Array.from(this._tags)
+              .filter(([key, value]) => {
+                return value.scope === 'all' || value.scope === 'metrics';
+              })
+              .map(([key, value]) => [key, value.value]),
+          ),
         // TODO(nf): move/refactor from telementryContext, needed to read CORS proxy
         config: this._config!,
       });
@@ -295,10 +328,7 @@ export class Observability {
         this.event({
           identityId: getTelemetryIdentifier(client),
           name: `${namespace}.space.update`,
-          properties: {
-            ...BASE_TELEMETRY_PROPERTIES,
-            ...data,
-          },
+          properties: data,
         });
       }
     });
@@ -372,7 +402,14 @@ export class Observability {
       this._telemetry = new SegmentTelemetry({
         apiKey: this._secrets.TELEMETRY_API_KEY,
         batchSize: this._telemetryBatchSize,
-        getTags: () => this._tags,
+        getTags: () =>
+          Object.fromEntries(
+            Array.from(this._tags)
+              .filter(([key, value]) => {
+                return value.scope === 'all' || value.scope === 'telemetry';
+              })
+              .map(([key, value]) => [key, value.value]),
+          ),
       });
     } else {
       log('segment disabled');
@@ -422,8 +459,8 @@ export class Observability {
       }
       // TODO(nf): is this different than passing as properties in options?
       this._tags.forEach((v, k) => {
-        if (ERROR_TAGS.includes(k)) {
-          sentrySetTag(k, v);
+        if (v.scope === 'all' || v.scope === 'errors') {
+          sentrySetTag(k, v.value);
         }
       });
     } else {

@@ -26,14 +26,14 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@fluentui/react-tabster": "^9.17.4",
+    "@fluentui/react-tabster": "^9.18.0",
     "react-resize-detector": "^7.1.2"
   },
   "devDependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@faker-js/faker": "^8.3.1",
     "@phosphor-icons/react": "^2.0.5",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
@@ -45,7 +45,7 @@
   "peerDependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
-    "@faker-js/faker": "^8.3.1",
+    "@dxos/random": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

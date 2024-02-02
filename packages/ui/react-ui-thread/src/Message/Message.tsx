@@ -17,7 +17,6 @@ import {
 } from '@dxos/react-ui-theme';
 import { safeParseJson } from '@dxos/util';
 
-import { command } from './command-extension';
 import { translationKey } from '../translations';
 import { type MessageEntity, type MessageEntityBlock, type MessageMetadata } from '../types';
 
@@ -62,6 +61,7 @@ export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
 
 export type MessageBlockProps<BlockValue> = {
   block: MessageEntityBlock<BlockValue>;
+  authorId?: string;
   onBlockDelete?: () => void;
 };
 
@@ -82,7 +82,7 @@ const DefaultMessageBlock = ({ block, onBlockDelete }: MessageBlockProps<{ data?
       {onBlockDelete && (
         <Button
           variant='ghost'
-          classNames={['p-1 min-bs-0 mie-1 place-self-start transition-opacity', hoverableControlItem]}
+          classNames={['p-1.5 min-bs-0 mie-1 items-start transition-opacity', hoverableControlItem]}
           onClick={onBlockDelete}
         >
           <X />
@@ -108,16 +108,21 @@ export const Message = <BlockValue,>(props: MessageProps<BlockValue>) => {
   return (
     <MessageMeta {...metaProps} id={id} continues>
       <p className='grid grid-cols-[1fr_max-content] gap-2 pie-2'>
-        <Avatar.Label classNames={['truncate font-semibold', !authorName && 'fg-description']}>
+        <Avatar.Label classNames={['truncate text-sm font-medium', !authorName && 'fg-description']}>
           {authorName ?? t('anonymous label')}
         </Avatar.Label>
-        <time className='fg-description text-xs pbs-1' dateTime={dt?.toISOString()}>
+        <time className='fg-description text-xs pbs-0.5' dateTime={dt?.toISOString()}>
           {dt ? formatDistanceToNow(dt, { locale: dtLocale, addSuffix: true }) : ''}
         </time>
       </p>
       <div role='none' className='grid gap-y-1 grid-cols-[min-content_1fr_min-content]'>
         {blocks.map((block, i) => (
-          <MessageBlockComponent key={i} block={block} onBlockDelete={onDelete && (() => onDelete(id, i))} />
+          <MessageBlockComponent
+            key={i}
+            block={block}
+            authorId={metaProps.authorId}
+            onBlockDelete={onDelete && (() => onDelete(id, i))}
+          />
         ))}
       </div>
     </MessageMeta>
@@ -133,7 +138,10 @@ export type MessageTextboxProps = {
   TextEditorProps;
 
 export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
-  ({ onSend, onClear, onEditorFocus, authorId, authorName, authorImgSrc, disabled, ...editorProps }, forwardedRef) => {
+  (
+    { onSend, onClear, onEditorFocus, authorId, authorName, authorImgSrc, disabled, extensions = [], ...editorProps },
+    forwardedRef,
+  ) => {
     return (
       <MessageMeta
         {...{ id: editorProps.model.id, authorId, authorName, authorImgSrc }}
@@ -141,10 +149,10 @@ export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
         continues={false}
       >
         <TextEditor
-          slots={{ root: { className: mx('plb-1 mie-1 rounded-sm', focusRing, disabled && 'opacity-50') } }}
+          slots={{ root: { className: mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50') } }}
           readonly={disabled}
           extensions={[
-            command,
+            ...extensions,
             keymap.of([
               {
                 key: 'Enter',

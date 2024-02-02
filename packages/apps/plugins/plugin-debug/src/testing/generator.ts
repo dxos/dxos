@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
-
 import { Document as DocumentType, Table as TableType } from '@braneframe/types';
 import { createSpaceObjectGenerator, type SpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { getTextContent } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { faker } from '@dxos/random';
 import { type Space, TextObject } from '@dxos/react-client/echo';
 import { range } from '@dxos/util';
 

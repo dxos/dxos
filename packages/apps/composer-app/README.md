@@ -19,7 +19,7 @@ Before running SSC, Composer must be built using:
 ```bash
 NODE_OPTIONS=--max_old_space_size=8192
 DX_HOST=true
-pnpm nx -w bundle composer-app
+pnpm -w nx bundle composer-app
 ```
 
 Then, to bundle the native app, in this directory, run:
@@ -40,6 +40,11 @@ ssc build -r --port 5173
 ```
 
 To reset the app, inspect and delete local storage properties.
+
+## Dependencies
+
+To view dependencies and build sizes using bundle buddy, upload pairs of javascript and source map files from
+`out/assets` to https://bundle-buddy.com (via the rollup upload).
 
 ## Docker
 

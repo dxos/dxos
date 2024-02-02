@@ -40,14 +40,15 @@
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
+    "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@faker-js/faker": "^8.3.1",
     "@phosphor-icons/react": "^2.0.5",
     "@types/lodash.get": "^4.4.7",
     "@types/react": "^18.0.21",
@@ -57,6 +58,7 @@
     "vite": "^5.0.12"
   },
   "peerDependencies": {
+    "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",

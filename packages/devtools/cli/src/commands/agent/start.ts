@@ -20,7 +20,6 @@ import {
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
-import { invariant } from '@dxos/invariant';
 import { type Platform } from '@dxos/protocols/proto/dxos/client/services';
 
 import { BaseCommand } from '../../base-command';
@@ -99,7 +98,6 @@ export default class Start extends BaseCommand<typeof Start> {
     this.log('Agent started... (ctrl-c to exit)');
 
     await this._sendTelemetry();
-    invariant(this._telemetryContext);
     const platform = (await this._agent.client!.services.services.SystemService?.getPlatform()) as Platform;
     if (!platform) {
       this.log('failed to get platform, could not initialize observability');
@@ -148,12 +146,15 @@ export default class Start extends BaseCommand<typeof Start> {
 
   private async _sendTelemetry() {
     const sendTelemetry = async () => {
+      // TODO(nf): move to observability
+      const installationId = this._observability?.getTag('installationId');
+      const userId = this._observability?.getTag('identityKey');
       this._observability?.event({
-        installationId: this._telemetryContext?.installationId,
+        installationId: installationId?.value,
+        identityId: userId?.value,
         name: 'cli.command.run.agent',
         properties: {
           profile: this.flags.profile,
-          ...this._telemetryContext,
           duration: this.duration,
         },
       });

@@ -7,9 +7,10 @@ import { plate } from '@dxos/plate';
 import template from '../template.t';
 
 export default template.define.text({
-  content: ({ input: { name, react, dxosUi } }) =>
+  content: ({ input: { name, react, dxosUi, pwa } }) =>
     react &&
     dxosUi &&
+    pwa &&
     plate`
       import { Gift } from '@phosphor-icons/react';
       import React from 'react';

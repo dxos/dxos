@@ -5,7 +5,6 @@
 import '@dxosTheme';
 
 import { type EditorView } from '@codemirror/view';
-import { faker } from '@faker-js/faker';
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { type FC, StrictMode, useRef, useState } from 'react';
@@ -14,6 +13,7 @@ import { createRoot } from 'react-dom/client';
 import { TextObject } from '@dxos/echo-schema';
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
+import { faker } from '@dxos/random';
 import { fixedInsetFlexLayout, getSize, groupSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -350,9 +350,9 @@ export const Comments = {
         extensions={[
           comments({
             onHover: onCommentsHover,
-            onCreate: (range) => {
+            onCreate: ({ cursor }) => {
               const id = PublicKey.random().toHex();
-              setComments((commentRanges) => [...commentRanges, { id, cursor: range }]);
+              setComments((commentRanges) => [...commentRanges, { id, cursor }]);
               return id;
             },
             onSelect: (state) => {

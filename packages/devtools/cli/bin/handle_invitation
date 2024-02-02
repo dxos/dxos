@@ -1,5 +1,8 @@
 #!/bin/sh
 set -eu
+if [ "${DX_PROFILE_MODE-}" = "volume" ] && [ -n "${DX_PROFILE_ROOT-}" ]; then
+  export HOME=$DX_PROFILE_ROOT
+fi
 
 [ -f $HOME/.agent-invitation-complete ] && exit 0
 

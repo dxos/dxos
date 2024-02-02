@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
 import expect from 'expect';
 import { Doc, applyUpdate } from 'yjs';
 
@@ -10,6 +9,7 @@ import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { TestBuilder } from '@dxos/model-factory/testing';
+import { faker } from '@dxos/random';
 import { describe, test } from '@dxos/test';
 
 import { TextModel } from './text-model';
@@ -54,8 +54,8 @@ describe('TextModel', () => {
     const rig = new TestBuilder(new ModelFactory().registerModel(TextModel), TextModel);
     const peer1 = rig.createPeer();
 
-    const text1 = faker.lorem.lines(1);
-    const text2 = faker.lorem.lines(1);
+    const text1 = faker.lorem.sentence();
+    const text2 = faker.lorem.sentence();
 
     peer1.model.insertTextNode(text1, 0);
     expect(peer1.model.content._length).toBe(1);
@@ -79,7 +79,7 @@ describe('TextModel', () => {
       new MockFeedWriter(),
     );
 
-    const _text = faker.lorem.lines(1);
+    // const _text = faker.lorem.sentence();
     // model1.model.insert(text, 0);
 
     const snapshot = model1.createSnapshot();

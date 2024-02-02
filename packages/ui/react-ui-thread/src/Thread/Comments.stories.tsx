@@ -4,13 +4,13 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import { Check, Trash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { faker } from '@dxos/random';
 import { Button } from '@dxos/react-ui';
 import {
   MarkdownEditor,
@@ -227,7 +227,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
   // Filter by visibility.
   const visibleThreads = useMemo(() => threads.filter((thread) => thread.yPos !== undefined), [threads]);
 
-  const handleCreateComment: CommentsOptions['onCreate'] = (cursor, location) => {
+  const handleCreateComment: CommentsOptions['onCreate'] = ({ cursor, location }) => {
     const id = PublicKey.random().toHex();
     log.info('create', { id: id.slice(0, 4), cursor });
     setThreads((threads) => [
