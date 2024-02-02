@@ -277,6 +277,12 @@ export const LayoutPlugin = ({
                   showComplementarySidebar={settings.values.enableComplementarySidebar}
                   showHintsFooter={settings.values.showFooter}
                   toasts={layout.values.toasts}
+                  onDismissToast={(id) => {
+                    const index = layout.values.toasts.findIndex((toast) => toast.id === id);
+                    if (index !== -1) {
+                      layout.values.toasts.splice(index, 1);
+                    }
+                  }}
                 />
               );
 

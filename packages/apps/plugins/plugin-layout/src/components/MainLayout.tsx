@@ -19,9 +19,16 @@ export type MainLayoutProps = {
   showHintsFooter: boolean;
   showComplementarySidebar: boolean;
   toasts: ToastSchema[];
+  onDismissToast: (id: string) => void;
 };
 
-export const MainLayout = ({ fullscreen, showHintsFooter, showComplementarySidebar, toasts }: MainLayoutProps) => {
+export const MainLayout = ({
+  fullscreen,
+  showHintsFooter,
+  showComplementarySidebar,
+  toasts,
+  onDismissToast,
+}: MainLayoutProps) => {
   const context = useLayout();
   const { complementarySidebarOpen, dialogOpen, dialogContent, popoverOpen, popoverContent, popoverAnchorId } = context;
   const { t } = useTranslation(LAYOUT_PLUGIN);
@@ -163,7 +170,19 @@ export const MainLayout = ({ fullscreen, showHintsFooter, showComplementarySideb
         </Dialog.Root>
 
         {/* Global toasts. */}
-        {toasts?.map((toast) => <Toast {...toast} key={toast.id} />)}
+        {toasts?.map((toast) => (
+          <Toast
+            {...toast}
+            key={toast.id}
+            onOpenChange={(open) => {
+              if (!open) {
+                onDismissToast(toast.id);
+              }
+
+              return open;
+            }}
+          />
+        ))}
       </Main.Root>
     </Popover.Root>
   );

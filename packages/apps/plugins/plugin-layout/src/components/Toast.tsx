@@ -5,7 +5,7 @@
 import React from 'react';
 
 import type { Toast as ToastProps } from '@dxos/app-framework';
-import { Button, Toast as NaturalToast } from '@dxos/react-ui';
+import { Button, Toast as NaturalToast, type ToastRootProps } from '@dxos/react-ui';
 
 export const Toast = ({
   title,
@@ -16,9 +16,10 @@ export const Toast = ({
   actionAlt,
   closeLabel,
   onAction,
-}: ToastProps) => {
+  onOpenChange,
+}: ToastProps & Pick<ToastRootProps, 'onOpenChange'>) => {
   return (
-    <NaturalToast.Root defaultOpen duration={duration}>
+    <NaturalToast.Root defaultOpen duration={duration} onOpenChange={onOpenChange}>
       <NaturalToast.Body>
         <NaturalToast.Title>
           {icon?.({ className: 'inline mr-1' })}
