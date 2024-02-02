@@ -6,7 +6,7 @@ import { X } from '@phosphor-icons/react';
 import React, { useRef, useState } from 'react';
 
 import { type Thread as ThreadType, Message as MessageType } from '@braneframe/types';
-import { TextObject } from '@dxos/react-client/echo';
+import { TextObject, getTextContent } from '@dxos/react-client/echo';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { AnchoredOverflow, Button, Tooltip, useTranslation } from '@dxos/react-ui';
@@ -73,9 +73,14 @@ export const ThreadContainer = ({
 
   // TODO(burdon): Change to model.
   const handleCreate: MessageTextboxProps['onSend'] = () => {
+    const content = nextMessage.text;
+    if (!getTextContent(content)) {
+      return false;
+    }
+
     const block = {
       timestamp: new Date().toISOString(),
-      content: nextMessage.text,
+      content,
     };
 
     thread.messages.push(
