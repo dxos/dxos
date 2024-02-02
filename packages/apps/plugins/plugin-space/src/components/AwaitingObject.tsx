@@ -5,7 +5,7 @@
 import { CheckCircle, CircleDashed, CircleNotch } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 
-import { LayoutAction, parseIntentPlugin, useResolvePlugin, parseLayoutPlugin } from '@dxos/app-framework';
+import { parseIntentPlugin, useResolvePlugin, parseNavigationPlugin, NavigationAction } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
 import { Button, Toast, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -22,7 +22,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   const [found, setFound] = useState(false);
   const { t } = useTranslation(SPACE_PLUGIN);
   const intentPlugin = useResolvePlugin(parseIntentPlugin);
-  const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
+  const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
 
   const client = useClient();
   const query = useMemo(() => client.spaces.query(), []);
@@ -47,7 +47,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
     if (objects.findIndex((object) => object.id === id) > -1) {
       setFound(true);
 
-      if (layoutPlugin?.provides.layout.active === id) {
+      if (navigationPlugin?.provides.location.active === id) {
         setOpen(false);
       }
     }
@@ -62,7 +62,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
 
   const handleNavigate = () => {
     void intentPlugin?.provides.intent.dispatch({
-      action: LayoutAction.ACTIVATE,
+      action: NavigationAction.ACTIVATE,
       data: { id },
     });
     void handleClose();

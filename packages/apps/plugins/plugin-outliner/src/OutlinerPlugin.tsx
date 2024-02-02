@@ -7,7 +7,7 @@ import React from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Tree as TreeType, Folder } from '@braneframe/types';
-import { resolvePlugin, parseIntentPlugin, LayoutAction, type PluginDefinition } from '@dxos/app-framework';
+import { resolvePlugin, parseIntentPlugin, NavigationAction, type PluginDefinition } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { OutlinerMain, TreeSection } from './components';
@@ -48,7 +48,7 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
                     data: { target: parent.data },
                   },
                   {
-                    action: LayoutAction.ACTIVATE,
+                    action: NavigationAction.ACTIVATE,
                   },
                 ]),
               properties: {

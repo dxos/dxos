@@ -2190,6 +2190,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -2224,9 +2227,15 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
