@@ -48,13 +48,13 @@ const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
       >
         <Button
           variant='ghost'
-          classNames={['pli-0 plb-1 min-bs-0 transition-opacity', hoverableControlItem]}
+          classNames={['p-1 min-bs-0 transition-opacity', hoverableControlItem]}
           {...draggableProps}
         >
           <DotsSixVertical />
         </Button>
-        <div role='none' className={onRemove ? '' : 'col-span-2'}>
-          <Surface role='message-block' data={item} fallback={title} />
+        <div role='none' className={mx('min-is-0 min-bs-0 overflow-auto max-bs-[36rem]', !onRemove && 'col-span-2')}>
+          <Surface role='card' data={item} fallback={title} />
         </div>
         {onRemove && (
           <Button

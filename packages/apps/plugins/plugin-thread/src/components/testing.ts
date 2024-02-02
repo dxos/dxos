@@ -18,12 +18,14 @@ export const createChatThread = (identity: Identity) => {
           },
           blocks: faker.helpers.multiple(
             () =>
-              faker.datatype.boolean({ probability: 0.8 })
+              faker.datatype.boolean({ probability: 0.5 })
                 ? {
+                    timestamp: new Date().toISOString(),
                     content: new TextObject(faker.lorem.sentences(3)),
                   }
                 : {
-                    object: new Expando({ title: faker.lorem.sentence() }),
+                    timestamp: new Date().toISOString(),
+                    object: new Expando({ title: faker.lorem.paragraph() }),
                   },
             { count: { min: 1, max: 3 } },
           ),

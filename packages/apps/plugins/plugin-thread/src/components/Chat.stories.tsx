@@ -48,13 +48,13 @@ const Story = () => {
     <SurfaceProvider
       value={{
         components: {
-          ObjectMessage: ({ role }) => {
-            return role === 'message-block' ? <span>MessageBlock</span> : <span>Not</span>;
+          Wildcard: ({ data }) => {
+            return <pre>{JSON.stringify(data, null, 2)}</pre>;
           },
         },
       }}
     >
-      <Mosaic.Root debug>
+      <Mosaic.Root>
         <main className='max-is-prose mli-auto'>{space && <ThreadContainer thread={thread} space={space} />}</main>
         <Mosaic.DragOverlay />
       </Mosaic.Root>
