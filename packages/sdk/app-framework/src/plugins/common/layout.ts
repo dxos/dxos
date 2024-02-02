@@ -14,7 +14,7 @@ import type { Plugin } from '../PluginHost';
 /**
  * Basic state provided by a layout plugin.
  */
-// TODO(burdon): Josiah: why do we use zod here?
+// TODO(wittjosiah): Replace Zod w/ Effect Schema to align with ECHO.
 export const Layout = z.object({
   fullscreen: z.boolean(),
   sidebarOpen: z.boolean(),
@@ -27,11 +27,6 @@ export const Layout = z.object({
   popoverOpen: z.boolean(),
   popoverContent: z.any().optional().describe('Data to be passed to the popover Surface.'),
   popoverAnchorId: z.string().optional(),
-
-  // TODO(wittjosiah): Array?
-  active: z.string().optional().describe('Id of the currently active item.'),
-  // TODO(wittjosiah): History?
-  previous: z.string().optional(),
 });
 
 export type Layout = z.infer<typeof Layout>;
@@ -56,16 +51,12 @@ export const parseLayoutPlugin = (plugin: Plugin) => {
 //
 
 const LAYOUT_ACTION = 'dxos.org/plugin/layout';
-// TODO(wittjosiah): Consider consolidating some action types (e.g. toggle).
 export enum LayoutAction {
-  TOGGLE_FULLSCREEN = `${LAYOUT_ACTION}/toggle-fullscreen`,
-  TOGGLE_SIDEBAR = `${LAYOUT_ACTION}/toggle-sidebar`,
-  TOGGLE_COMPLEMENTARY_SIDEBAR = `${LAYOUT_ACTION}/toggle-complementary-sidebar`,
-  OPEN_DIALOG = `${LAYOUT_ACTION}/open-dialog`,
-  CLOSE_DIALOG = `${LAYOUT_ACTION}/close-dialog`,
-  OPEN_POPOVER = `${LAYOUT_ACTION}/open-popover`,
-  CLOSE_POPOVER = `${LAYOUT_ACTION}/close-popover`,
-  ACTIVATE = `${LAYOUT_ACTION}/activate`,
+  SET_LAYOUT = `${LAYOUT_ACTION}/set-layout`,
+
+  /** @deprecated */
+  // TODO(wittjosiah): At minimum this should be renamed, "focus" means something very specific on a web page.
+  //   Consider removing this action entirely, it's maybe not generic enough to live here.
   FOCUS = `${LAYOUT_ACTION}/focus`,
 }
 
@@ -73,34 +64,33 @@ export enum LayoutAction {
  * Expected payload for layout actions.
  */
 export namespace LayoutAction {
-  export type ToggleFullscreen = IntentData<{
+  export type SetLayout = IntentData<{
+    /**
+     * Element to set the state of.
+     */
+    element: 'fullscreen' | 'sidebar' | 'complementary' | 'dialog' | 'popover' | 'toast';
+
+    /**
+     * Whether the element is on or off.
+     *
+     * If omitted, the element's state will be toggled or set based on other provided data.
+     * For example, if `component` is provided, the state will be set to `true`.
+     */
     state?: boolean;
-  }>;
 
-  export type ToggleSidebar = IntentData<{
-    state?: boolean;
-  }>;
+    /**
+     * Component to render in the dialog or popover.
+     */
+    component?: string;
 
-  export type ToggleComplementarySidebar = IntentData<{
-    state?: boolean;
-  }>;
+    /**
+     * Data to be passed to the dialog or popover Surface.
+     */
+    subject?: any;
 
-  export type OpenDialog = IntentData<{
-    component: string;
-    subject: any;
-  }>;
-
-  export type CloseDialog = IntentData<{}>;
-
-  export type OpenPopover = IntentData<{
-    anchorId: string;
-    component: string;
-    subject: any;
-  }>;
-
-  export type ClosePopover = IntentData<{}>;
-
-  export type Activate = IntentData<{
-    id: string;
+    /**
+     * Anchor ID for the popover.
+     */
+    anchorId?: string;
   }>;
 }

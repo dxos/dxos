@@ -14,9 +14,9 @@ import {
   type SettingsProvides,
   type SurfaceProvides,
   type TranslationsProvides,
-  parseLayoutPlugin,
   resolvePlugin,
   parseIntentPlugin,
+  parseNavigationPlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import {
@@ -63,7 +63,7 @@ export const ObservabilityPlugin = (options: {
       state.group = await getObservabilityGroup(options.namespace);
     },
     ready: async (plugins) => {
-      const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+      const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
@@ -87,7 +87,7 @@ export const ObservabilityPlugin = (options: {
         subscriptions.add(
           effect(() => {
             // Read active to subscribe to changes.
-            const _ = layoutPlugin?.provides?.layout?.active;
+            const _ = navigationPlugin?.provides?.location?.active;
 
             observability?.page({
               identityId: getTelemetryIdentifier(client),

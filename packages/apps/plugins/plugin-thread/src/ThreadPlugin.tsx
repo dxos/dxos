@@ -14,13 +14,14 @@ import {
   LayoutAction,
   type GraphProvides,
   type IntentPluginProvides,
-  type LayoutProvides,
   type Plugin,
   type PluginDefinition,
   parseIntentPlugin,
-  parseLayoutPlugin,
   parseGraphPlugin,
   resolvePlugin,
+  NavigationAction,
+  type LocationProvides,
+  parseNavigationPlugin,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import {
@@ -47,7 +48,7 @@ type ThreadState = {
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   let graphPlugin: Plugin<GraphProvides> | undefined;
-  let layoutPlugin: Plugin<LayoutProvides> | undefined;
+  let navigationPlugin: Plugin<LocationProvides> | undefined;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
   const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
@@ -59,7 +60,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       settings.prop(settings.values.$standalone!, 'standalone', LocalStorageStore.bool);
 
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-      layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+      navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
     },
     provides: {
@@ -108,7 +109,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                       data: { target: parent.data },
                     },
                     {
-                      action: LayoutAction.ACTIVATE,
+                      action: NavigationAction.ACTIVATE,
                     },
                   ]),
                 properties: {
@@ -134,8 +135,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
             case 'context-thread': {
               const graph = graphPlugin?.provides.graph;
-              const layout = layoutPlugin?.provides.layout;
-              const activeNode = layout?.active ? graph?.findNode(layout.active) : undefined;
+              const location = navigationPlugin?.provides.location;
+              const activeNode = location?.active ? graph?.findNode(location.active) : undefined;
               const active = activeNode?.data;
               const space = isDocument(active) && getSpaceForObject(active);
               if (!space) {
@@ -163,7 +164,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     detached={detached}
                     currentId={state.current}
                     autoFocusCurrentTextbox={state.focus}
-                    currentRelatedId={layout?.active}
+                    currentRelatedId={location?.active}
                     onThreadAttend={(thread: ThreadType) => {
                       if (state.current !== thread.id) {
                         state.current = thread.id;
@@ -197,7 +198,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const { objects: threads } = space.db.query(ThreadType.filter((thread) => !thread.context));
               if (threads.length) {
                 const thread = threads[0];
-                return <ThreadContainer space={space} thread={thread} currentRelatedId={layout?.active} />;
+                return <ThreadContainer space={space} thread={thread} currentRelatedId={location?.active} />;
               }
 
               break;
@@ -258,8 +259,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     data: { current: thread.id, threads: { [thread.id]: location?.top }, focus: true },
                   },
                   {
-                    action: LayoutAction.TOGGLE_COMPLEMENTARY_SIDEBAR,
-                    data: { state: true },
+                    action: LayoutAction.SET_LAYOUT,
+                    data: { element: 'complementary', state: true },
                   },
                 ]);
 
