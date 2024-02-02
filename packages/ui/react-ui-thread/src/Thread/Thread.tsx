@@ -34,22 +34,27 @@ export const Thread = forwardRef<HTMLDivElement, ThreadProps>(
   },
 );
 
-export type ThreadHeadingProps = ThemedClassName<ComponentPropsWithRef<'div'>>;
+export type ThreadHeadingProps = ThemedClassName<ComponentPropsWithRef<'div'>> & { detached?: boolean };
 
-export const ThreadHeading = forwardRef<HTMLDivElement, ThreadHeadingProps>(
-  ({ classNames, children, ...props }, forwardedRef) => {
+export const ThreadHeading = forwardRef<HTMLParagraphElement, ThreadHeadingProps>(
+  ({ classNames, children, detached, ...props }, forwardedRef) => {
     return (
-      <div
-        role='heading'
-        {...props}
-        className={mx('col-span-2 grid grid-cols-subgrid fg-description font-medium', classNames)}
-        ref={forwardedRef}
-      >
-        <div role='none' className='grid place-items-end pie-3.5 fg-separator'>
+      <>
+        <div role='none' className='grid place-items-end pie-3.5 fg-description'>
           <ArrowBendLeftDown />
         </div>
-        <p className='truncate'>{children}</p>
-      </div>
+        <p
+          role='heading'
+          {...props}
+          className={mx(
+            'fg-description font-medium truncate before:content-[open-quote] after:content-[close-quote]',
+            detached && 'line-through decoration-1',
+          )}
+          ref={forwardedRef}
+        >
+          {children}
+        </p>
+      </>
     );
   },
 );
