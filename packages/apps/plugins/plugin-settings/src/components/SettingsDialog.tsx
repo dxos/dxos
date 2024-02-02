@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React from 'react';
 
 import { type Plugin, Surface, usePlugins } from '@dxos/app-framework';
 import { Button, Dialog, List, ListItem, useTranslation } from '@dxos/react-ui';
@@ -10,12 +10,8 @@ import { ghostHover, ghostSelected } from '@dxos/react-ui-theme';
 
 import { SETTINGS_PLUGIN } from '../meta';
 
-// TODO(burdon): Move into separate plugin.
-export const SettingsDialogContent = () => {
+export const SettingsDialog = ({ plugin, setPlugin }: { plugin: string; setPlugin: (plugin: string) => void }) => {
   const { t } = useTranslation(SETTINGS_PLUGIN);
-
-  // TODO(burdon): Store preview tab.
-  const [plugin, setPlugin] = useState<string>('dxos.org/plugin/registry');
   const { plugins, enabled } = usePlugins();
 
   const core = [

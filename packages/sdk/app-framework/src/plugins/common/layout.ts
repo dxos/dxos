@@ -11,8 +11,27 @@ import type { Plugin } from '../PluginHost';
 // Provides
 //
 
+export const Toast = z.object({
+  id: z.string(),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  // TODO(wittjosiah): `icon` should be string to be parsed by an `Icon` component.
+  icon: z.any().optional(),
+  duration: z.number().optional(),
+  closeLabel: z.string().optional(),
+  actionLabel: z.string().optional(),
+  actionAlt: z.string().optional(),
+  onAction: z.function().optional(),
+});
+
+export type Toast = z.infer<typeof Toast>;
+
 /**
  * Basic state provided by a layout plugin.
+ *
+ * Layout provides the state of global UI landmarks, such as the sidebar, dialog, and popover.
+ * Generally only one dialog or popover should be open at a time, a layout plugin should manage this.
+ * For other landmarks, such as toasts, rendering them in the layout prevents them from unmounting when navigating.
  */
 // TODO(wittjosiah): Replace Zod w/ Effect Schema to align with ECHO.
 export const Layout = z.object({
@@ -20,13 +39,14 @@ export const Layout = z.object({
   sidebarOpen: z.boolean(),
   complementarySidebarOpen: z.boolean(),
 
-  // TODO(burdon): Why do we have a single root?
   dialogOpen: z.boolean(),
   dialogContent: z.any().optional().describe('Data to be passed to the dialog Surface.'),
 
   popoverOpen: z.boolean(),
   popoverContent: z.any().optional().describe('Data to be passed to the popover Surface.'),
   popoverAnchorId: z.string().optional(),
+
+  toasts: z.array(Toast),
 });
 
 export type Layout = z.infer<typeof Layout>;
