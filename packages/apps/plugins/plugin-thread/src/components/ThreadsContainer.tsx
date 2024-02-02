@@ -9,12 +9,17 @@ import { ThreadContainer, type ThreadContainerProps } from './ThreadContainer';
 
 export type ThreadsContainerProps = Omit<
   ThreadContainerProps,
-  'thread' | 'onAttend' | 'current' | 'autoFocusTextBox'
+  'thread' | 'detached' | 'onAttend' | 'onDelete' | 'current' | 'autoFocusTextBox'
 > & {
   threads: ThreadType[];
-  onThreadAttend?: (thread: ThreadType) => void;
+  /**
+   * Threads that are no longer anchored to a position in the object.
+   */
+  detached?: string[];
   currentId?: string;
   autoFocusCurrentTextbox?: boolean;
+  onThreadAttend?: (thread: ThreadType) => void;
+  onThreadDelete?: (thread: ThreadType) => void;
 };
 
 /**
@@ -22,9 +27,11 @@ export type ThreadsContainerProps = Omit<
  */
 export const ThreadsContainer = ({
   threads,
-  onThreadAttend,
+  detached = [],
   currentId,
   autoFocusCurrentTextbox,
+  onThreadAttend,
+  onThreadDelete,
   ...props
 }: ThreadsContainerProps) => {
   useEffect(() => {
@@ -33,6 +40,7 @@ export const ThreadsContainer = ({
       threadElement?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [currentId]);
+
   return (
     <>
       {threads.map((thread) => (
@@ -40,8 +48,10 @@ export const ThreadsContainer = ({
           key={thread.id}
           thread={thread}
           current={currentId === thread.id}
+          detached={detached.includes(thread.id)}
           autoFocusTextBox={autoFocusCurrentTextbox && currentId === thread.id}
           {...(onThreadAttend && { onAttend: () => onThreadAttend(thread) })}
+          {...(onThreadDelete && { onDelete: () => onThreadDelete(thread) })}
           {...props}
         />
       ))}

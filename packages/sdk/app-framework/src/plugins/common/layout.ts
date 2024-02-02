@@ -29,9 +29,9 @@ export type Toast = z.infer<typeof Toast>;
 /**
  * Basic state provided by a layout plugin.
  *
- * Layout provides the state of global UI affordances, such as the sidebar, dialog, and popover.
+ * Layout provides the state of global UI landmarks, such as the sidebar, dialog, and popover.
  * Generally only one dialog or popover should be open at a time, a layout plugin should manage this.
- * For other affordances, such as toasts, rendering them in the layout prevents them from unmounting when navigating.
+ * For other landmarks, such as toasts, rendering them in the layout prevents them from unmounting when navigating.
  */
 // TODO(wittjosiah): Replace Zod w/ Effect Schema to align with ECHO.
 export const Layout = z.object({
