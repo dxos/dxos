@@ -175,7 +175,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                         });
                       }
                     }}
-                    onThreadResolve={(thread: ThreadType) => {
+                    onThreadDelete={(thread: ThreadType) => {
                       const index = active.comments.findIndex((comment) => comment.thread?.id === thread.id);
                       if (index !== -1) {
                         active.comments.splice(index, 1);

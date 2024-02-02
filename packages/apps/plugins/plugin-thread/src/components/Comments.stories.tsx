@@ -45,7 +45,7 @@ const Story = ({ spaceKey }: { spaceKey: PublicKey }) => {
   // TODO(wittjosiah): Include Tooltip.Provider in `withTheme` decorator?
   return (
     <Tooltip.Provider>
-      <ThreadsContainer threads={threads} detached={detached} space={space} onThreadResolve={console.log} />;
+      <ThreadsContainer threads={threads} detached={detached} space={space} onThreadDelete={console.log} />
     </Tooltip.Provider>
   );
 };

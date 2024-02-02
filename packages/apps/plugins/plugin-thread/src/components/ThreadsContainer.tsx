@@ -9,7 +9,7 @@ import { ThreadContainer, type ThreadContainerProps } from './ThreadContainer';
 
 export type ThreadsContainerProps = Omit<
   ThreadContainerProps,
-  'thread' | 'detached' | 'onAttend' | 'onResolve' | 'current' | 'autoFocusTextBox'
+  'thread' | 'detached' | 'onAttend' | 'onDelete' | 'current' | 'autoFocusTextBox'
 > & {
   threads: ThreadType[];
   /**
@@ -19,7 +19,7 @@ export type ThreadsContainerProps = Omit<
   currentId?: string;
   autoFocusCurrentTextbox?: boolean;
   onThreadAttend?: (thread: ThreadType) => void;
-  onThreadResolve?: (thread: ThreadType) => void;
+  onThreadDelete?: (thread: ThreadType) => void;
 };
 
 /**
@@ -31,7 +31,7 @@ export const ThreadsContainer = ({
   currentId,
   autoFocusCurrentTextbox,
   onThreadAttend,
-  onThreadResolve,
+  onThreadDelete,
   ...props
 }: ThreadsContainerProps) => {
   useEffect(() => {
@@ -51,7 +51,7 @@ export const ThreadsContainer = ({
           detached={detached.includes(thread.id)}
           autoFocusTextBox={autoFocusCurrentTextbox && currentId === thread.id}
           {...(onThreadAttend && { onAttend: () => onThreadAttend(thread) })}
-          {...(onThreadResolve && { onResolve: () => onThreadResolve(thread) })}
+          {...(onThreadDelete && { onDelete: () => onThreadDelete(thread) })}
           {...props}
         />
       ))}

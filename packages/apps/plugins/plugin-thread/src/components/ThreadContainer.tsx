@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Check, Trash } from '@phosphor-icons/react';
+import { X } from '@phosphor-icons/react';
 import React, { useRef, useState } from 'react';
 
 import { type Thread as ThreadType, Message as MessageType } from '@braneframe/types';
@@ -11,6 +11,7 @@ import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { AnchoredOverflow, Button, Tooltip, useTranslation } from '@dxos/react-ui';
 import { useTextModel } from '@dxos/react-ui-editor';
+import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import {
   MessageTextbox,
   type MessageTextboxProps,
@@ -32,7 +33,7 @@ export type ThreadContainerProps = {
   autoFocusTextBox?: boolean;
   detached?: boolean;
   onAttend?: () => void;
-  onResolve?: () => void;
+  onDelete?: () => void;
 } & Pick<ThreadProps, 'current'>;
 
 /**
@@ -44,6 +45,7 @@ export type ThreadContainerProps = {
  * @param current - whether this thread is current (wrt ARIA) in the app
  * @param autoFocusTextBox - whether to set `autoFocus` on the thread’s textbox
  * @param onAttend - combined callback for `onClickCapture` and `onFocusCapture` within the thread
+ * @param onDelete - callback for deleting the thread
  * @constructor
  */
 // TODO(wittjosiah): Decide if chat & comment threads are similar enough to share a container.
@@ -58,7 +60,7 @@ export const ThreadContainer = ({
   current,
   autoFocusTextBox,
   onAttend,
-  onResolve,
+  onDelete,
 }: ThreadContainerProps) => {
   const identity = useIdentity()!;
   const members = useMembers(space.key);
@@ -102,7 +104,7 @@ export const ThreadContainer = ({
         thread.messages.splice(messageIndex, 1);
       }
       if (thread.messages.length === 0) {
-        onResolve?.();
+        onDelete?.();
       }
     }
   };
@@ -111,23 +113,35 @@ export const ThreadContainer = ({
 
   return (
     <Thread onClickCapture={onAttend} onFocusCapture={onAttend} current={current} id={thread.id}>
-      <ThreadHeading>
-        {thread.title ?? t('thread title placeholder')}
-        {/* TODO(wittjosiah): Layout. */}
-        {detached && (
-          <Tooltip.Root>
-            <Tooltip.Trigger>
-              <Trash />
-            </Tooltip.Trigger>
-            <Tooltip.Content>{t('detached thread label')}</Tooltip.Content>
-          </Tooltip.Root>
+      <div
+        role='none'
+        className={mx(
+          'col-span-2 grid grid-cols-[3rem_1fr_min-content]',
+          hoverableControls,
+          hoverableFocusedWithinControls,
         )}
-        {onResolve && (
-          <Button variant='ghost' onClick={onResolve}>
-            <Check />
+      >
+        {detached ? (
+          <Tooltip.Root>
+            <Tooltip.Trigger asChild>
+              <ThreadHeading detached>{thread.title ?? t('thread title placeholder')}</ThreadHeading>
+            </Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Content classNames='z-[11]' side='top'>
+                {t('detached thread label')}
+                <Tooltip.Arrow />
+              </Tooltip.Content>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+        ) : (
+          <ThreadHeading>{thread.title ?? t('thread title placeholder')}</ThreadHeading>
+        )}
+        {onDelete && (
+          <Button variant='ghost' onClick={onDelete} classNames={['min-bs-0 p-1 mie-1', hoverableControlItem]}>
+            <X />
           </Button>
         )}
-      </ThreadHeading>
+      </div>
       {thread.messages.map((message) => (
         <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
       ))}
