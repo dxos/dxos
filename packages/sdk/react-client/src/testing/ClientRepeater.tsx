@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
 import React, { useState, type FC, useEffect } from 'react';
 
 import { Client, type PublicKey } from '@dxos/client';
@@ -10,6 +9,7 @@ import { type SpaceProxy, type Space, type TypeCollection } from '@dxos/client/e
 import { ConnectionState } from '@dxos/client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
+import { faker } from '@dxos/random';
 import { Input } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
@@ -71,7 +71,7 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
       }
 
       if (createSpace) {
-        const space = await clients[0].spaces.create({ name: faker.animal.bird() });
+        const space = await clients[0].spaces.create({ name: faker.commerce.productName() });
         setSpaceKey(space.key);
         await onCreateSpace?.(space);
         await Promise.all(

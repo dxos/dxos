@@ -13,9 +13,9 @@ DXOS is under development and will continue to change frequently.<br/>Your feedb
 
 DXOS is a group of technologies that work together:
 
-*   [ECHO](platform) - Database and reactive state container for offline-first, real-time, collaborative apps.
-*   [HALO](platform/halo) - Identity for decentralized apps.
-*   [KUBE](platform/kube) - Self-contained infrastructure for hosting and operating decentralized apps.
+* [ECHO](platform) - Database and reactive state container for offline-first, real-time, collaborative apps.
+* [HALO](platform/halo) - Identity for decentralized apps.
+* [KUBE](platform/kube) - Self-contained infrastructure for hosting and operating decentralized apps.
 
 Compare DXOS applications to client-server web applications:
 | | `web2` Apps | DXOS Apps |
@@ -27,13 +27,13 @@ Compare DXOS applications to client-server web applications:
 
 ## ECHO
 
-ECHO (The **E**ventually **C**onsistent **H**ierarhical **O**bject store) is a peer-to-peer graph database written in TypeScript. ECHO connects to other peers directly via [WebRTC](https://en.wikipedia.org/wiki/WebRTC), and continuously replicates writes with those peers using technologies based on [CRDTs](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type). ECHO supports multiple concurrent writers collaborating on large objects, bodies of text, and other "custom data models". Peers going offline and returning to reconcile changes with the online swarm are also supported.
+ECHO (The **E**ventually **C**onsistent **H**ierarhical **O**bject store) is a peer-to-peer graph database written in TypeScript. ECHO connects to other peers directly via [WebRTC](https://en.wikipedia.org/wiki/WebRTC), and continuously replicates writes with those peers using the [Automerge CRDT](https://automerge.org/). ECHO supports multiple concurrent writers collaborating on objects and text. Peers going offline and returning to reconcile changes with the online swarm are also supported.
 
 Learn more about [ECHO](platform).
 
 ## HALO
 
-Establishing user identity in a non authoritative internet is hard. Every peer has to learn how to trust each other. HALO is a set of components and protocols for decentralized identity and access control designed around privacy, security, and collaboration requirements.
+Establishing user identity in a non-authoritative internet is hard. Every peer has to decide how to trust each other. HALO is a set of components and protocols for decentralized identity and access control designed around privacy, security, and collaboration requirements.
 
 Learn more about [HALO](platform/halo).
 

@@ -4,11 +4,11 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import { Bug, Compass, GithubLogo, Kanban, Gear, Table } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import type { Plugin } from '@dxos/app-framework';
+import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { PluginList } from './PluginList';

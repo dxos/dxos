@@ -1,6 +1,6 @@
 {
   "name": "@dxos/feed-store",
-  "version": "0.3.10",
+  "version": "0.4.0",
   "description": "A consistent store for hypercore feeds.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -39,11 +39,11 @@
   },
   "devDependencies": {
     "@dxos/keys": "workspace:*",
-    "@faker-js/faker": "^8.3.1",
+    "@dxos/random": "workspace:*",
     "@types/lodash.defaultsdeep": "^4.6.6"
   },
   "optionalDependencies": {
-    "@faker-js/faker": "^8.3.1"
+    "@dxos/random": "workspace:*"
   },
   "publishConfig": {
     "access": "public"
