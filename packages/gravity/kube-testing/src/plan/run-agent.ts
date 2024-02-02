@@ -44,6 +44,7 @@ const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) =
       throw err;
     } finally {
       const diagnostics = TRACE_PROCESSOR.getDiagnostics();
+      log.info('diagnostics', {diagnostics})
       await env.redis.set(`${params.testId}:__diagnostics:${params.agentId}`, JSON.stringify(diagnostics));
     }
   } catch (err) {

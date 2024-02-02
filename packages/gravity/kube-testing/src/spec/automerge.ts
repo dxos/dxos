@@ -59,11 +59,11 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
       platform: 'chromium',
       clientConnections: 1,
 
-      clientStorage: 'opfs',
+      clientStorage: 'idb',
 
       symmetric: false,
       agents: 2,
-      docCount: 100,
+      docCount: 10000,
       changeCount: 10,
       contentKind: 'strings',
 
@@ -134,7 +134,7 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
 
     performance.mark('ready:begin');
     const docs = docUrls.map((url) => this.repo.find(url));
-    await Promise.all(docs.map((doc) => doc.whenReady()));
+    await Promise.all(docs.map((doc) => doc.doc()));
     performance.mark('ready:end');
     log.info('docs ready', {
       from: config.type,
@@ -152,7 +152,7 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
 
       performance.mark('load:begin');
       const docs = docUrls.map((url) => this.repo.find(url));
-      await Promise.all(docs.map((doc) => doc.whenReady()));
+      await Promise.all(docs.map((doc) => doc.doc()));
       performance.mark('load:end');
       log.info('docs ready after reload', {
         from: config.type,
