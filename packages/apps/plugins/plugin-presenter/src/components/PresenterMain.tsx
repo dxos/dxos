@@ -32,8 +32,8 @@ const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
         data: { state: running },
       },
       {
-        action: LayoutAction.TOGGLE_FULLSCREEN,
-        data: { state: running },
+        action: LayoutAction.SET_LAYOUT,
+        data: { element: 'fullscreen', state: running },
       },
     ]);
   };

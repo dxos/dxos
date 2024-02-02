@@ -9,13 +9,13 @@ import { getActiveSpace } from '@braneframe/plugin-space';
 import { Folder } from '@braneframe/types';
 import {
   type PluginDefinition,
-  type LayoutProvides,
+  type LocationProvides,
   type GraphProvides,
   type Plugin,
   resolvePlugin,
   parseIntentPlugin,
   parseGraphPlugin,
-  parseLayoutPlugin,
+  parseNavigationPlugin,
   LayoutAction,
 } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/react-client/echo';
@@ -28,13 +28,13 @@ import translations from './translations';
 import { SearchAction, type SearchPluginProvides } from './types';
 
 export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
-  let layoutPlugin: Plugin<LayoutProvides> | undefined;
+  let navigationPlugin: Plugin<LocationProvides> | undefined;
   let graphPlugin: Plugin<GraphProvides> | undefined;
 
   return {
     meta,
     ready: async (plugins) => {
-      layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+      navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
     },
     provides: {
@@ -79,9 +79,9 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
       context: ({ children }) => <SearchContextProvider>{children}</SearchContextProvider>,
       surface: {
         component: ({ role }) => {
-          const layout = layoutPlugin?.provides.layout;
+          const location = navigationPlugin?.provides.location;
           const graph = graphPlugin?.provides.graph;
-          const space = graph && layout ? getActiveSpace(graph, layout.active) : undefined;
+          const space = graph && location ? getActiveSpace(graph, location.active) : undefined;
           switch (role) {
             case 'context-search':
               return space ? <SearchMain space={space} /> : null;
@@ -96,8 +96,8 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
             case SearchAction.SEARCH: {
               const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
               return intentPlugin?.provides.intent.dispatch({
-                action: LayoutAction.TOGGLE_COMPLEMENTARY_SIDEBAR,
-                data: { state: true },
+                action: LayoutAction.SET_LAYOUT,
+                data: { element: 'complementary', state: true },
               });
             }
           }

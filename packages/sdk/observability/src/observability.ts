@@ -125,16 +125,15 @@ export class Observability {
 
       return mergedSecrets;
     } else {
-      invariant(config, 'runtime config is required');
       log('config', { rtc: this._secrets, config });
       return {
-        DX_ENVIRONMENT: config.get('runtime.app.env.DX_ENVIRONMENT'),
-        DX_RELEASE: config.get('runtime.app.env.DX_RELEASE'),
-        SENTRY_DESTINATION: config.get('runtime.app.env.DX_SENTRY_DESTINATION'),
-        TELEMETRY_API_KEY: config.get('runtime.app.env.DX_TELEMETRY_API_KEY'),
-        IPDATA_API_KEY: config.get('runtime.app.env.DX_IPDATA_API_KEY'),
-        DATADOG_API_KEY: config.get('runtime.app.env.DX_DATADOG_API_KEY'),
-        DATADOG_APP_KEY: config.get('runtime.app.env.DX_DATADOG_APP_KEY'),
+        DX_ENVIRONMENT: config?.get('runtime.app.env.DX_ENVIRONMENT'),
+        DX_RELEASE: config?.get('runtime.app.env.DX_RELEASE'),
+        SENTRY_DESTINATION: config?.get('runtime.app.env.DX_SENTRY_DESTINATION'),
+        TELEMETRY_API_KEY: config?.get('runtime.app.env.DX_TELEMETRY_API_KEY'),
+        IPDATA_API_KEY: config?.get('runtime.app.env.DX_IPDATA_API_KEY'),
+        DATADOG_API_KEY: config?.get('runtime.app.env.DX_DATADOG_API_KEY'),
+        DATADOG_APP_KEY: config?.get('runtime.app.env.DX_DATADOG_APP_KEY'),
         ...secrets,
       };
     }

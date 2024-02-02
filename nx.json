@@ -232,6 +232,28 @@
       ],
       "cache": true
     },
+    "vitest": {
+      "executor": "@nx/vite:test",
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/vitest.shared.ts",
+        {
+          "env": "VITEST_ENV"
+        },
+        {
+          "env": "VITEST_DEBUG"
+        },
+        {
+          "env": "VITEST_XML_REPORT"
+        }
+      ],
+      "dependsOn": [
+        "prebuild",
+        "^compile"
+      ],
+      "cache": true
+    },
     "compile-lib": {
       "cache": true
     },

@@ -2,15 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-// @dxos/test platform=nodejs
-
 import crypto from 'crypto';
 import del from 'del';
 import expect from 'expect';
 import { promises as fs, constants } from 'fs';
 import path from 'path';
-
-import { afterAll, beforeAll, describe, test } from '@dxos/test';
+import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { createStorage } from './storage';
 import { type File, StorageType } from '../common';
@@ -32,10 +29,14 @@ const write = async (file: File, data = 'test') => {
 /**
  * Node file system specific tests.
  */
-describe('testing node storage types', () => {
-  beforeAll(() => del(ROOT_DIRECTORY));
+describe('testing node storage types', (v) => {
+  beforeAll(async () => {
+    await del(ROOT_DIRECTORY);
+  });
 
-  afterAll(() => del(ROOT_DIRECTORY));
+  afterAll(async () => {
+    await del(ROOT_DIRECTORY);
+  });
 
   for (const dataStore of [StorageType.RAM, StorageType.NODE] as StorageType[]) {
     storageTests(dataStore, () => createStorage({ type: dataStore, root: ROOT_DIRECTORY }));

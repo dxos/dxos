@@ -15,12 +15,13 @@ import {
   type IntentDispatcher,
   type PluginDefinition,
   type Plugin,
-  LayoutAction,
+  NavigationAction,
   resolvePlugin,
   parseIntentPlugin,
-  parseLayoutPlugin,
+  parseNavigationPlugin,
   parseGraphPlugin,
   parseMetadataResolverPlugin,
+  LayoutAction,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import { Expando, TypedObject, isTypedObject } from '@dxos/echo-schema';
@@ -102,15 +103,15 @@ export const SpacePlugin = ({
       settings.prop(settings.values.$showHidden!, 'show-hidden', LocalStorageStore.bool);
       const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-      const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+      const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      if (!clientPlugin || !layoutPlugin || !intentPlugin || !graphPlugin) {
+      if (!clientPlugin || !navigationPlugin || !intentPlugin || !graphPlugin) {
         return;
       }
 
       const client = clientPlugin.provides.client;
       const graph = graphPlugin.provides.graph;
-      const layout = layoutPlugin.provides.layout;
+      const location = navigationPlugin.provides.location;
       const dispatch = intentPlugin.provides.intent.dispatch;
 
       // Create root folder structure.
@@ -127,7 +128,7 @@ export const SpacePlugin = ({
       }
 
       // Check if opening app from invitation code.
-      const searchParams = new URLSearchParams(location.search);
+      const searchParams = new URLSearchParams(window.location.search);
       const spaceInvitationCode = searchParams.get('spaceInvitationCode');
       if (spaceInvitationCode) {
         void client.shell.joinSpace({ invitationCode: spaceInvitationCode }).then(async ({ space, target }) => {
@@ -135,7 +136,7 @@ export const SpacePlugin = ({
             return;
           }
 
-          const url = new URL(location.href);
+          const url = new URL(window.location.href);
           const params = Array.from(url.searchParams.entries());
           const [name] = params.find(([name, value]) => value === spaceInvitationCode) ?? [null, null];
           if (name) {
@@ -144,7 +145,7 @@ export const SpacePlugin = ({
           }
 
           await dispatch({
-            action: LayoutAction.ACTIVATE,
+            action: NavigationAction.ACTIVATE,
             data: { id: target ?? space.key.toHex() },
           });
         });
@@ -155,13 +156,13 @@ export const SpacePlugin = ({
         effect(() => {
           const send = () => {
             const identity = client.halo.identity.get();
-            const space = getActiveSpace(graph, layout.active);
-            if (identity && space && layout.active) {
+            const space = getActiveSpace(graph, location.active);
+            if (identity && space && location.active) {
               void space.postMessage('viewing', {
                 identityKey: identity.identityKey.toHex(),
                 spaceKey: space.key.toHex(),
-                added: [layout.active],
-                removed: [layout.previous],
+                added: [location.active],
+                removed: [location.previous],
               });
             }
           };
@@ -366,7 +367,7 @@ export const SpacePlugin = ({
                       action: SpaceAction.JOIN,
                     },
                     {
-                      action: LayoutAction.ACTIVATE,
+                      action: NavigationAction.ACTIVATE,
                     },
                   ]),
               },
@@ -486,10 +487,10 @@ export const SpacePlugin = ({
             }
 
             case SpaceAction.SHARE: {
-              const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+              const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
               const spaceKey = intent.data?.spaceKey && PublicKey.from(intent.data.spaceKey);
               if (clientPlugin && spaceKey) {
-                const target = layoutPlugin?.provides.layout.active;
+                const target = navigationPlugin?.provides.location.active;
                 const result = await clientPlugin.provides.client.shell.shareSpace({ spaceKey, target });
                 return { data: result };
               }
@@ -503,12 +504,12 @@ export const SpacePlugin = ({
                   intents: [
                     [
                       {
-                        action: LayoutAction.OPEN_POPOVER,
+                        action: LayoutAction.SET_LAYOUT,
                         data: {
+                          element: 'popover',
                           anchorId: `dxos.org/ui/${caller}/${space.key.toHex()}`,
                           component: 'dxos.org/plugin/space/RenameSpacePopover',
                           subject: space,
-                          caller,
                         },
                       },
                     ],
@@ -622,15 +623,15 @@ export const SpacePlugin = ({
                   intents: [
                     [
                       {
-                        action: LayoutAction.OPEN_POPOVER,
+                        action: LayoutAction.SET_LAYOUT,
                         data: {
+                          element: 'popover',
                           anchorId: `dxos.org/ui/${caller}/${object.id}`,
                           component: 'dxos.org/plugin/space/RemoveObjectPopover',
                           subject: {
                             object,
                             folder: intent.data?.folder,
                           },
-                          caller,
                         },
                       },
                     ],
@@ -648,12 +649,12 @@ export const SpacePlugin = ({
                   intents: [
                     [
                       {
-                        action: LayoutAction.OPEN_POPOVER,
+                        action: LayoutAction.SET_LAYOUT,
                         data: {
+                          element: 'popover',
                           anchorId: `dxos.org/ui/${caller}/${object.id}`,
                           component: 'dxos.org/plugin/space/RenameObjectPopover',
                           subject: object,
-                          caller,
                         },
                       },
                     ],

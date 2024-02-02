@@ -6,7 +6,7 @@ import { Circle, type IconProps, Lightning, LightningSlash } from '@phosphor-ico
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
 import { getActiveSpace } from '@braneframe/plugin-space';
-import { parseGraphPlugin, parseLayoutPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { parseGraphPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { TimeoutError } from '@dxos/async';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
@@ -139,11 +139,11 @@ const SwarmIndicator: FC<IconProps> = (props) => {
  */
 const SavingIndicator: FC<IconProps> = (props) => {
   const [state, setState] = useState(0);
-  const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
+  const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
   const graphPlugin = useResolvePlugin(parseGraphPlugin);
-  const layout = layoutPlugin?.provides.layout;
+  const location = navigationPlugin?.provides.location;
   const graph = graphPlugin?.provides.graph;
-  const space = layout && graph ? getActiveSpace(graph, layout.active) : undefined;
+  const space = location && graph ? getActiveSpace(graph, location.active) : undefined;
   useEffect(() => {
     if (!space) {
       return;
