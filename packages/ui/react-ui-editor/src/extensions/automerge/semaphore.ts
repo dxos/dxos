@@ -8,6 +8,8 @@ import { type StateField } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 
 import { next as A } from '@dxos/automerge/automerge';
+import { log } from '@dxos/log';
+import { getDebugName } from '@dxos/util';
 
 import {
   getLastHeads,
@@ -33,12 +35,16 @@ export class PatchSemaphore {
     private readonly _state: StateField<State>
   ) {}
 
+  // TODO(burdon): Split into two methods.
   reconcile(view: EditorView, cm: boolean) {
-    if (!this._inReconcile) {
-      this._inReconcile = true;
-      this.doReconcile(view, cm);
-      this._inReconcile = false;
+    if (this._inReconcile) {
+      log.info('already in reconcile');
+      return;
     }
+
+    this._inReconcile = true;
+    this.doReconcile(view, cm);
+    this._inReconcile = false;
   }
 
   private doReconcile(view: EditorView, cm: boolean) {
@@ -47,9 +53,10 @@ export class PatchSemaphore {
     // Get the heads before the unreconciled transactions are applied.
     const oldHeads = getLastHeads(view.state, this._state);
     const selection = view.state.selection;
+    const transactions = view.state.field(this._state).unreconciledTransactions.filter((tx) => !isReconcile(tx));
+    console.log(':::', getDebugName(view.state), cm, transactions.length);
 
     // First undo all the unreconciled transactions.
-    const transactions = view.state.field(this._state).unreconciledTransactions.filter((tx) => !isReconcile(tx));
     // const toInvert = transactions.slice().reverse();
     // for (const tr of toInvert) {
     // const inverted = tr.changes.invert(tr.startState.doc);
