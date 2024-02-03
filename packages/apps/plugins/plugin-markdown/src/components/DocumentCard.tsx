@@ -25,7 +25,7 @@ export type DocumentCardProps = {
   settings: MarkdownSettingsProps;
 };
 
-const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement, DocumentCardProps> = forwardRef(
+export const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement, DocumentCardProps> = forwardRef(
   (
     {
       classNames,
