@@ -68,8 +68,9 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
               invoke: () => {
                 settings.values.showHints = true;
                 return intentPlugin?.provides.intent.dispatch({
-                  action: LayoutAction.OPEN_DIALOG,
+                  action: LayoutAction.SET_LAYOUT,
                   data: {
+                    element: 'dialog',
                     component: `${HELP_PLUGIN}/Shortcuts`,
                   },
                 });

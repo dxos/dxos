@@ -43,7 +43,7 @@ import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
 import { types, Document } from '@braneframe/types';
-import { createApp, LayoutAction, Plugin } from '@dxos/app-framework';
+import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
 import { initializeAppObservability } from '@dxos/observability';
 import { createClientServices } from '@dxos/react-client';
 import { TextObject } from '@dxos/react-client/echo';
@@ -186,7 +186,7 @@ const main = async () => {
           const document = new Document({ title: INITIAL_TITLE, content: new TextObject(INITIAL_CONTENT) });
           personalSpaceFolder.objects.push(document);
           void dispatch({
-            action: LayoutAction.ACTIVATE,
+            action: NavigationAction.ACTIVATE,
             data: { id: document.id },
           });
         },

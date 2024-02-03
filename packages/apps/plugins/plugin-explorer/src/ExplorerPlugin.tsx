@@ -7,7 +7,7 @@ import React from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, View as ViewType } from '@braneframe/types';
-import { parseIntentPlugin, resolvePlugin, type PluginDefinition, LayoutAction } from '@dxos/app-framework';
+import { parseIntentPlugin, resolvePlugin, type PluginDefinition, NavigationAction } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { ExplorerMain } from './components';
@@ -51,7 +51,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
                   data: { target: parent.data },
                 },
                 {
-                  action: LayoutAction.ACTIVATE,
+                  action: NavigationAction.ACTIVATE,
                 },
               ]),
             properties: {

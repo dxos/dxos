@@ -27,6 +27,9 @@
       "path": "../../../common/context"
     },
     {
+      "path": "../../../common/local-storage"
+    },
+    {
       "path": "../../../common/log"
     },
     {
@@ -46,6 +49,9 @@
     },
     {
       "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui-theme"
     },
     {
       "path": "../../../ui/storybook-utils"
