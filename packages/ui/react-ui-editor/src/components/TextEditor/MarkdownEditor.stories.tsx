@@ -36,6 +36,7 @@ import {
   typewriter,
   useComments,
   formatting,
+  annotations,
 } from '../../extensions';
 import { type Comment, useTextModel } from '../../hooks';
 
@@ -390,6 +391,10 @@ export const HorizontalRule = {
       extensions={[hr()]}
     />
   ),
+};
+
+export const Annotations = {
+  render: () => <Story text={str('# Annotations', '', large)} extensions={[annotations({ match: /volup/gi })]} />,
 };
 
 const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewriter')?.split(',');
