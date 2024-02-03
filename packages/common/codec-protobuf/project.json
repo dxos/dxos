@@ -5,9 +5,6 @@
     "build": {},
     "compile": {
       "options": {
-        "bundlePackages": [
-          "protobufjs"
-        ],
         "entryPoints": [
           "packages/common/codec-protobuf/src/index.ts"
         ],
