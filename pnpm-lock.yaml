@@ -3612,6 +3612,36 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
+      '@protobufjs/aspromise':
+        specifier: ^1.1.2
+        version: 1.1.2
+      '@protobufjs/base64':
+        specifier: ^1.1.2
+        version: 1.1.2
+      '@protobufjs/codegen':
+        specifier: ^2.0.4
+        version: 2.0.4
+      '@protobufjs/eventemitter':
+        specifier: ^1.1.0
+        version: 1.1.0
+      '@protobufjs/fetch':
+        specifier: ^1.1.0
+        version: 1.1.0
+      '@protobufjs/float':
+        specifier: ^1.0.2
+        version: 1.0.2
+      '@protobufjs/inquire':
+        specifier: ^1.1.0
+        version: 1.1.0
+      '@protobufjs/path':
+        specifier: ^1.1.2
+        version: 1.1.2
+      '@protobufjs/pool':
+        specifier: ^1.1.0
+        version: 1.1.0
+      '@protobufjs/utf8':
+        specifier: ^1.1.0
+        version: 1.1.0
       compress-json:
         specifier: ^2.1.2
         version: 2.1.2
