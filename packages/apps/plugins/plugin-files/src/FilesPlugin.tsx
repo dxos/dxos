@@ -9,16 +9,17 @@ import localforage from 'localforage';
 import React from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
-import { type MarkdownProvides } from '@braneframe/plugin-markdown';
+import { type MarkdownExtensionProvides } from '@braneframe/plugin-markdown';
 import {
   resolvePlugin,
   type PluginDefinition,
-  parseLayoutPlugin,
   parseGraphPlugin,
   parseIntentPlugin,
-  LayoutAction,
+  NavigationAction,
+  parseNavigationPlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, Trigger } from '@dxos/async';
+import { listener } from '@dxos/react-ui-editor';
 
 import { LocalFileMain } from './components';
 import meta, { FILES_PLUGIN } from './meta';
@@ -38,7 +39,7 @@ import {
 
 // TODO(burdon): Rename package plugin-file (singular).
 
-export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, MarkdownProvides> => {
+export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, MarkdownExtensionProvides> => {
   let onFilesUpdate: ((node?: Node<LocalEntity>) => void) | undefined;
   const state = deepSignal<{ files: LocalEntity[]; current: LocalFile | undefined }>({
     files: [],
@@ -75,13 +76,17 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
 
       return {
         markdown: {
-          onChange: (text) => {
-            if (state.current) {
-              state.current.text = text.toString();
-              state.current.modified = true;
-              onFilesUpdate?.();
-            }
-          },
+          extensions: () => [
+            listener({
+              onChange: (text) => {
+                if (state.current) {
+                  state.current.text = text.toString();
+                  state.current.modified = true;
+                  onFilesUpdate?.();
+                }
+              },
+            }),
+          ],
         },
       };
     },
@@ -89,12 +94,12 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
       window.addEventListener('keydown', handleKeyDown);
 
       // Subscribe to graph to track the currently active file.
-      const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+      const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-      if (layoutPlugin && graphPlugin) {
+      if (navigationPlugin && graphPlugin) {
         subscriptions.add(
           effect(() => {
-            const active = layoutPlugin.provides.layout.active;
+            const active = navigationPlugin.provides.location.active;
             const path = active && graphPlugin.provides.graph.getPath(active)?.filter((id) => id.startsWith(PREFIX));
             const current = (active?.startsWith(PREFIX) && path && findFile(state.files, path)) || undefined;
             if (state.current !== current) {
@@ -151,7 +156,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   plugin: FILES_PLUGIN,
                   action: LocalFilesAction.OPEN_FILE,
                 },
-                { action: LayoutAction.ACTIVATE },
+                { action: NavigationAction.ACTIVATE },
               ]),
           });
 
@@ -166,7 +171,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                     plugin: FILES_PLUGIN,
                     action: LocalFilesAction.OPEN_DIRECTORY,
                   },
-                  { action: LayoutAction.ACTIVATE },
+                  { action: NavigationAction.ACTIVATE },
                 ]),
             });
           }

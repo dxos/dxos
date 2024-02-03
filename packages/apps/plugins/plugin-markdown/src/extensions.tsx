@@ -6,23 +6,19 @@ import { ArrowSquareOut } from '@phosphor-icons/react';
 import React, { type AnchorHTMLAttributes, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { ThreadAction } from '@braneframe/plugin-thread';
-import { Document as DocumentType, Thread as ThreadType } from '@braneframe/types';
-import { type IntentDispatcher, LayoutAction } from '@dxos/app-framework';
+import { Document as DocumentType } from '@braneframe/types';
+import { type IntentDispatcher, NavigationAction } from '@dxos/app-framework';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import {
   type AutocompleteResult,
   type Extension,
   type LinkOptions,
-  type ListenerOptions,
   autocomplete,
   code,
-  comments,
   heading,
   hr,
   image,
   link,
-  listener,
   table,
   tasklist,
   typewriter,
@@ -39,12 +35,12 @@ export type ExtensionsOptions = {
   debug?: boolean;
   experimental?: boolean;
   dispatch?: IntentDispatcher;
-} & Pick<ListenerOptions, 'onChange'>;
+};
 
 /**
  * Create extension instances for editor.
  */
-export const getExtensions = ({ settings, document, dispatch, onChange }: ExtensionsOptions): Extension[] => {
+export const getExtensions = ({ settings, document, dispatch }: ExtensionsOptions): Extension[] => {
   const space = document ? getSpaceForObject(document) : undefined;
 
   const extensions: Extension[] = [
@@ -61,17 +57,6 @@ export const getExtensions = ({ settings, document, dispatch, onChange }: Extens
   ];
 
   //
-  // Document change listener.
-  //
-  if (onChange) {
-    extensions.push(
-      listener({
-        onChange,
-      }),
-    );
-  }
-
-  //
   // Hyperlinks (external and internal object links).
   //
   if (dispatch) {
@@ -80,7 +65,7 @@ export const getExtensions = ({ settings, document, dispatch, onChange }: Extens
         onHover: onHoverLinkTooltip,
         onRender: onRenderLink((id: string) => {
           void dispatch({
-            action: LayoutAction.ACTIVATE,
+            action: NavigationAction.ACTIVATE,
             data: { id },
           });
         }),
@@ -111,51 +96,6 @@ export const getExtensions = ({ settings, document, dispatch, onChange }: Extens
         },
       }),
     );
-
-    //
-    // Comment threads.
-    //
-    if (dispatch && document) {
-      extensions.push(
-        comments({
-          onCreate: (cursor: string) => {
-            // Create comment thread.
-            const thread = space.db.add(new ThreadType({ context: { object: document.id } }));
-            document.comments.push({ thread, cursor });
-            void dispatch([
-              {
-                action: ThreadAction.SELECT,
-                data: { active: thread.id, threads: [{ id: thread.id }], focus: true },
-              },
-              {
-                action: LayoutAction.TOGGLE_COMPLEMENTARY_SIDEBAR,
-                data: { state: true },
-              },
-            ]);
-
-            return thread.id;
-          },
-          onSelect: (state) => {
-            const {
-              comments,
-              selection: { current, closest },
-            } = state;
-
-            void dispatch([
-              {
-                action: ThreadAction.SELECT,
-                data: {
-                  active: current ?? closest,
-                  threads: comments?.map(({ comment: { id }, location }) => ({ id, y: location?.top })) ?? [
-                    { id: current },
-                  ],
-                },
-              },
-            ]);
-          },
-        }),
-      );
-    }
   }
 
   if (settings?.debug) {

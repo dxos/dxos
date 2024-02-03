@@ -5,9 +5,11 @@
 import { ArrowsOut } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-react';
 import { type RevertDeepSignal } from 'deepsignal';
+import { deepSignal } from 'deepsignal/react';
 import React, { type PropsWithChildren, useEffect } from 'react';
 
-import { useGraph } from '@braneframe/plugin-graph';
+import { type Node, useGraph } from '@braneframe/plugin-graph';
+import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
   findPlugin,
   parseGraphPlugin,
@@ -17,36 +19,52 @@ import {
   useIntent,
   usePlugins,
   LayoutAction,
+  NavigationAction,
   Surface,
+  Toast as ToastSchema,
   type IntentPluginProvides,
+  type Location,
   type Plugin,
   type PluginDefinition,
   type GraphProvides,
   type SurfaceProps,
+  type Layout,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
-import { LayoutContext, type LayoutState, useLayout } from './LayoutContext';
+import { LayoutContext } from './LayoutContext';
 import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings, ContentFallback } from './components';
 import { activeToUri, uriToActive } from './helpers';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
 import { type LayoutPluginProvides, type LayoutSettingsProps } from './types';
 
-export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
+type NavigationState = Location & {
+  activeNode: Node | undefined;
+  previousNode: Node | undefined;
+};
+
+export const LayoutPlugin = ({
+  observability,
+}: {
+  observability?: boolean;
+} = {}): PluginDefinition<LayoutPluginProvides> => {
   let graphPlugin: Plugin<GraphProvides> | undefined;
   // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
-  const state = new LocalStorageStore<LayoutState & LayoutSettingsProps>(LAYOUT_PLUGIN, {
+  const settings = new LocalStorageStore<LayoutSettingsProps>(LAYOUT_PLUGIN, {
+    enableComplementarySidebar: true,
+    showFooter: false,
+  });
+
+  const layout = new LocalStorageStore<Layout>(LAYOUT_PLUGIN, {
     fullscreen: false,
     sidebarOpen: true,
     complementarySidebarOpen: false,
-    enableComplementarySidebar: true,
-    showFooter: false,
 
     dialogContent: 'never',
     dialogOpen: false,
@@ -55,6 +73,10 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
     popoverAnchorId: undefined,
     popoverOpen: false,
 
+    toasts: [],
+  });
+
+  const location = deepSignal<NavigationState>({
     active: undefined,
     previous: undefined,
 
@@ -69,42 +91,85 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
     },
   });
 
+  const handleSetLayout = ({ element, state, component, subject, anchorId }: LayoutAction.SetLayout) => {
+    switch (element) {
+      case 'fullscreen': {
+        layout.values.fullscreen = state ?? !layout.values.fullscreen;
+        return { data: true };
+      }
+
+      case 'sidebar': {
+        layout.values.sidebarOpen = state ?? !layout.values.sidebarOpen;
+        return { data: true };
+      }
+
+      case 'complementary': {
+        layout.values.complementarySidebarOpen = state ?? !layout.values.complementarySidebarOpen;
+        return { data: true };
+      }
+
+      case 'dialog': {
+        layout.values.dialogOpen = state ?? Boolean(component);
+        layout.values.dialogContent = component ? { component, subject } : null;
+        return { data: true };
+      }
+
+      case 'popover': {
+        layout.values.popoverOpen = state ?? Boolean(component);
+        layout.values.popoverContent = component ? { component, subject } : null;
+        layout.values.popoverAnchorId = anchorId;
+        return { data: true };
+      }
+
+      case 'toast': {
+        if (ToastSchema.safeParse(subject).success) {
+          layout.values.toasts = [...layout.values.toasts, subject];
+          return { data: true };
+        }
+      }
+    }
+  };
+
   return {
     meta,
     ready: async (plugins) => {
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-      state
-        .prop(state.values.$sidebarOpen!, 'sidebar-open', LocalStorageStore.bool)
-        .prop(state.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool)
-        .prop(state.values.$enableComplementarySidebar!, 'enable-complementary-sidebar', LocalStorageStore.bool)
-        .prop(state.values.$showFooter!, 'show-footer', LocalStorageStore.bool);
+
+      layout
+        .prop(layout.values.$sidebarOpen!, 'sidebar-open', LocalStorageStore.bool)
+        .prop(layout.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool);
+
+      settings
+        .prop(settings.values.$enableComplementarySidebar!, 'enable-complementary-sidebar', LocalStorageStore.bool)
+        .prop(settings.values.$showFooter!, 'show-footer', LocalStorageStore.bool);
 
       // TODO(burdon): Create context and plugin.
       Keyboard.singleton.initialize();
     },
     unload: async () => {
       Keyboard.singleton.destroy();
-      state.close();
+      layout.close();
     },
     provides: {
-      // TODO(wittjosiah): Does this need to be provided twice? Does it matter?
-      layout: state.values as RevertDeepSignal<LayoutState>,
-      settings: state.values,
+      settings: settings.values,
+      layout: layout.values as RevertDeepSignal<Layout>,
+      location: location as RevertDeepSignal<Location>,
       translations,
       graph: {
         builder: ({ parent }) => {
           if (parent.id === 'root') {
             // TODO(burdon): Root menu isn't visible so nothing bound.
             parent.addAction({
-              id: LayoutAction.TOGGLE_FULLSCREEN,
+              id: `${LayoutAction.SET_LAYOUT}/fullscreen`,
               label: ['toggle fullscreen label', { ns: LAYOUT_PLUGIN }],
               icon: (props) => <ArrowsOut {...props} />,
               keyBinding: 'ctrl+meta+f',
               invoke: () =>
                 intentPlugin?.provides.intent.dispatch({
                   plugin: LAYOUT_PLUGIN,
-                  action: LayoutAction.TOGGLE_FULLSCREEN,
+                  action: LayoutAction.SET_LAYOUT,
+                  data: { element: 'fullscreen' },
                 }),
             });
           }
@@ -112,7 +177,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
       },
       context: (props: PropsWithChildren) => (
         <Mosaic.Root>
-          <LayoutContext.Provider value={state.values as RevertDeepSignal<LayoutState>}>
+          <LayoutContext.Provider value={layout.values as RevertDeepSignal<Layout>}>
             {props.children}
           </LayoutContext.Provider>
         </Mosaic.Root>
@@ -121,8 +186,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
         const { plugins } = usePlugins();
         const { dispatch } = useIntent();
         const { graph } = useGraph();
-        const layout = useLayout();
-        const [shortId, component] = layout.active?.split(':') ?? [];
+        const [shortId, component] = location.active?.split(':') ?? [];
         const plugin = parseSurfacePlugin(findPlugin(plugins, shortId));
 
         // Update selection based on browser navigation.
@@ -130,16 +194,12 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
           const handleNavigation = async () => {
             await dispatch({
               plugin: LAYOUT_PLUGIN,
-              action: LayoutAction.ACTIVATE,
-              data: {
-                // TODO(wittjosiah): Remove condition. This is here for backwards compatibility.
-                id:
-                  window.location.pathname === '/embedded' ? 'github:embedded' : uriToActive(window.location.pathname),
-              },
+              action: NavigationAction.ACTIVATE,
+              data: { id: uriToActive(window.location.pathname) },
             });
           };
 
-          if (!state.values.active && window.location.pathname.length > 1) {
+          if (!location.active && window.location.pathname.length > 1) {
             void handleNavigation();
           }
 
@@ -151,50 +211,54 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
 
         // Update URL when selection changes.
         useEffect(() => {
-          const selectedPath = activeToUri(state.values.active);
+          const selectedPath = activeToUri(location.active);
           if (window.location.pathname !== selectedPath) {
             // TODO(wittjosiah): Better support for search params?
             history.pushState(null, '', `${selectedPath}${window.location.search}`);
           }
-        }, [state.values.active]);
+        }, [location.active]);
 
         const surfaceProps: SurfaceProps = plugin
           ? { data: { component: `${plugin.meta.id}/${component}` } }
-          : layout.activeNode
-          ? state.values.fullscreen
-            ? {
-                data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
-                surfaces: { main: { data: { active: layout.activeNode.data } } },
-              }
+          : location.activeNode
+            ? layout.values.fullscreen
+              ? {
+                  data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
+                  surfaces: { main: { data: { active: location.activeNode.data } } },
+                }
+              : {
+                  data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
+                  surfaces: {
+                    sidebar: {
+                      data: { graph, activeId: location.active, popoverAnchorId: layout.values.popoverAnchorId },
+                    },
+                    context: {
+                      data: { component: `${LAYOUT_PLUGIN}/ContextView`, active: location.activeNode.data },
+                    },
+                    main: { data: { active: location.activeNode.data } },
+                    'navbar-start': {
+                      data: { activeNode: location.activeNode, popoverAnchorId: layout.values.popoverAnchorId },
+                    },
+                    'navbar-end': { data: { object: location.activeNode.data } },
+                    status: { data: { active: location.activeNode.data } },
+                    documentTitle: { data: { activeNode: location.activeNode } },
+                  },
+                }
             : {
                 data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
                 surfaces: {
                   sidebar: {
-                    data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
+                    data: { graph, activeId: location.active, popoverAnchorId: layout.values.popoverAnchorId },
                   },
-                  context: {
-                    data: { component: `${LAYOUT_PLUGIN}/ContextView`, active: layout.activeNode.data },
+                  main: {
+                    data: location.active
+                      ? { active: location.active }
+                      : { component: `${LAYOUT_PLUGIN}/ContentEmpty` },
                   },
-                  main: { data: { active: layout.activeNode.data } },
-                  'navbar-start': { data: { activeNode: layout.activeNode, popoverAnchorId: layout.popoverAnchorId } },
-                  'navbar-end': { data: { object: layout.activeNode.data } },
-                  status: { data: { active: layout.activeNode.data } },
-                  documentTitle: { data: { activeNode: layout.activeNode } },
+                  // TODO(wittjosiah): This plugin should own document title.
+                  documentTitle: { data: { component: `${LAYOUT_PLUGIN}/DocumentTitle` } },
                 },
-              }
-          : {
-              data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
-              surfaces: {
-                sidebar: {
-                  data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
-                },
-                main: {
-                  data: layout.active ? { active: layout.active } : { component: `${LAYOUT_PLUGIN}/ContentEmpty` },
-                },
-                // TODO(wittjosiah): This plugin should own document title.
-                documentTitle: { data: { component: `${LAYOUT_PLUGIN}/DocumentTitle` } },
-              },
-            };
+              };
 
         return (
           <>
@@ -209,9 +273,17 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
             case `${LAYOUT_PLUGIN}/MainLayout`:
               return (
                 <MainLayout
-                  showHintsFooter={state.values.showFooter}
-                  fullscreen={state.values.fullscreen}
-                  showComplementarySidebar={state.values.enableComplementarySidebar}
+                  fullscreen={layout.values.fullscreen}
+                  showComplementarySidebar={settings.values.enableComplementarySidebar}
+                  showHintsFooter={settings.values.showFooter}
+                  toasts={layout.values.toasts}
+                  onDismissToast={(id) => {
+                    const index = layout.values.toasts.findIndex((toast) => toast.id === id);
+                    if (index !== -1) {
+                      // Allow time for the toast to animate out.
+                      setTimeout(() => layout.values.toasts.splice(index, 1), 1000);
+                    }
+                  }}
                 />
               );
 
@@ -230,7 +302,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               };
 
             case 'settings':
-              return data.plugin === meta.id ? <LayoutSettings settings={state.values} /> : null;
+              return data.plugin === meta.id ? <LayoutSettings settings={settings.values} /> : null;
           }
 
           return null;
@@ -239,60 +311,12 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
       intent: {
         resolver: (intent) => {
           switch (intent.action) {
-            // TODO(wittjosiah): Remove this.
-            case 'dxos.org/plugin/layout/enable-complementary-sidebar': {
-              state.values.enableComplementarySidebar = intent.data?.state ?? !state.values.enableComplementarySidebar;
-              return { data: true };
+            case LayoutAction.SET_LAYOUT: {
+              return intent.data && handleSetLayout(intent.data as LayoutAction.SetLayout);
             }
 
-            case LayoutAction.TOGGLE_FULLSCREEN: {
-              state.values.fullscreen =
-                (intent.data as LayoutAction.ToggleFullscreen)?.state ?? !state.values.fullscreen;
-              return { data: true };
-            }
-
-            case LayoutAction.TOGGLE_SIDEBAR: {
-              state.values.sidebarOpen =
-                (intent.data as LayoutAction.ToggleSidebar)?.state ?? !state.values.sidebarOpen;
-              return { data: true };
-            }
-
-            case LayoutAction.TOGGLE_COMPLEMENTARY_SIDEBAR: {
-              state.values.complementarySidebarOpen =
-                (intent.data as LayoutAction.ToggleComplementarySidebar).state ??
-                !state.values.complementarySidebarOpen;
-              return { data: true };
-            }
-
-            case LayoutAction.OPEN_DIALOG: {
-              const { component, subject } = intent.data as LayoutAction.OpenDialog;
-              state.values.dialogOpen = true;
-              state.values.dialogContent = { component, subject };
-              return { data: true };
-            }
-
-            case LayoutAction.CLOSE_DIALOG: {
-              state.values.dialogOpen = false;
-              state.values.dialogContent = null;
-              return { data: true };
-            }
-
-            case LayoutAction.OPEN_POPOVER: {
-              const { anchorId, component, subject } = intent.data as LayoutAction.OpenPopover;
-              state.values.popoverOpen = true;
-              state.values.popoverContent = { component, subject };
-              state.values.popoverAnchorId = anchorId;
-              return { data: true };
-            }
-
-            case LayoutAction.CLOSE_POPOVER: {
-              state.values.popoverOpen = false;
-              state.values.popoverContent = null;
-              state.values.popoverAnchorId = undefined;
-              return { data: true };
-            }
-
-            case LayoutAction.ACTIVATE: {
+            // TODO(wittjosiah): Factor out.
+            case NavigationAction.ACTIVATE: {
               const id = intent.data?.id ?? intent.data?.result?.id;
               const path = id && graphPlugin?.provides.graph.getPath(id);
               if (path) {
@@ -300,11 +324,35 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               }
 
               batch(() => {
-                state.values.previous = state.values.active;
-                state.values.active = id;
+                location.previous = location.active;
+                location.active = id;
               });
 
-              return { data: true };
+              const schema = location.activeNode?.data?.__typename;
+
+              return {
+                data: {
+                  id,
+                  path,
+                  active: true,
+                },
+                intents: [
+                  observability
+                    ? [
+                        {
+                          action: ObservabilityAction.SEND_EVENT,
+                          data: {
+                            name: 'navigation.activate',
+                            properties: {
+                              id,
+                              schema,
+                            },
+                          },
+                        },
+                      ]
+                    : [],
+                ],
+              };
             }
           }
         },

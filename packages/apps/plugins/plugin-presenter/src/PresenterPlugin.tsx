@@ -49,7 +49,8 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
                     action: 'toggle-presentation',
                   },
                   {
-                    action: LayoutAction.TOGGLE_FULLSCREEN,
+                    action: LayoutAction.SET_LAYOUT,
+                    data: { element: 'fullscreen' },
                   },
                 ]),
             });

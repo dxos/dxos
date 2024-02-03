@@ -46,11 +46,3 @@ export const getKey = (config: Config, name: string) => {
   const key = keys?.find((key) => key.name === name);
   return key?.value;
 };
-
-export const safeParseJson = <T>(content: string): T | null => {
-  try {
-    return JSON.parse(content);
-  } catch (err) {
-    return null;
-  }
-};

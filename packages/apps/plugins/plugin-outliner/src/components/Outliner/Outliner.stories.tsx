@@ -4,12 +4,12 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import { deepSignal, type RevertDeepSignal } from 'deepsignal';
 import React, { useState } from 'react';
 
 import { TextObject } from '@dxos/client/echo';
 import { PublicKey } from '@dxos/keys';
+import { faker } from '@dxos/random';
 import { DensityProvider } from '@dxos/react-ui';
 import { attentionSurface } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';

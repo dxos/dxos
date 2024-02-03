@@ -27,6 +27,9 @@
       "path": "../../../common/local-storage"
     },
     {
+      "path": "../../../common/random"
+    },
+    {
       "path": "../../../common/util"
     },
     {
@@ -51,10 +54,16 @@
       "path": "../../../ui/react-ui-theme"
     },
     {
+      "path": "../../../ui/react-ui-thread"
+    },
+    {
       "path": "../../../ui/storybook-utils"
     },
     {
       "path": "../../types"
+    },
+    {
+      "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-settings"

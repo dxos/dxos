@@ -1,6 +1,6 @@
 {
   "name": "@dxos/todomvc",
-  "version": "0.3.10",
+  "version": "0.4.1",
   "private": true,
   "description": "Collaborative TodoMVC using DXOS",
   "homepage": "https://dxos.org",
@@ -12,10 +12,10 @@
     "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
   },
   "dependencies": {
-    "@braneframe/plugin-telemetry": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/observability": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",

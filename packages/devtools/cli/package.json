@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli",
-  "version": "0.3.10",
+  "version": "0.4.1",
   "description": "DXOS CLI",
   "keywords": [
     "dxos",
@@ -47,6 +47,7 @@
     "@dxos/plate": "workspace:*",
     "@dxos/process": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/tasks-template": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -75,15 +76,22 @@
   },
   "devDependencies": {
     "@oclif/test": "^2.3.31",
+    "@phosphor-icons/react": "^2.0.5",
     "@types/cli-progress": "^3.11.0",
     "@types/fs-extra": "^9.0.4",
     "@types/js-yaml": "^4.0.5",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/node": "^18.11.9",
     "@types/node-fetch": "^2.5.10",
+    "@types/react-dom": "^18.0.6",
     "oclif": "^3.7.0",
+    "prettier": "^3.2.4",
     "shx": "^0.3.3",
     "typescript": "^5.2.2"
+  },
+  "peerDependencies": {
+    "@phosphor-icons/react": "^2.0.5",
+    "@types/react-dom": "^18.0.6"
   },
   "engines": {
     "node": ">=12.0.0"

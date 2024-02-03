@@ -1,6 +1,6 @@
 {
   "name": "@dxos/shell",
-  "version": "0.3.10",
+  "version": "0.4.1",
   "description": "DXOS’s OS experiences",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -41,7 +41,7 @@
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@fluentui/react-tabster": "^9.17.4",
+    "@fluentui/react-tabster": "^9.18.0",
     "@radix-ui/react-accordion": "^1.1.1",
     "@radix-ui/react-context": "^1.0.0",
     "@radix-ui/react-radio-group": "^1.1.2",
@@ -55,10 +55,10 @@
   },
   "devDependencies": {
     "@dxos/config": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@faker-js/faker": "^8.3.1",
     "@phosphor-icons/react": "^2.0.5",
     "@types/lodash.toarray": "^4.4.7",
     "@types/react": "^18.0.21",

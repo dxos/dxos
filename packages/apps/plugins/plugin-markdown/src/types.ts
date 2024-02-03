@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Document as DocumentType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -31,15 +32,12 @@ export type MarkdownProperties = {
   readonly?: boolean;
 };
 
-export type ExtensionsProvider = () => Extension[];
+export type ExtensionsProvider = (props: { document?: DocumentType }) => Extension[];
 export type OnChange = (text: string) => void;
 
-export type MarkdownProvides = {
+export type MarkdownExtensionProvides = {
   markdown: {
-    extensions?: ExtensionsProvider;
-
-    // TODO(burdon): Replace with `listener` extension?
-    onChange?: OnChange;
+    extensions: ExtensionsProvider;
   };
 };
 

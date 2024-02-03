@@ -78,7 +78,10 @@ export class Client {
   private readonly _options: ClientOptions;
   private _ctx = new Context();
   private _config?: Config;
+
+  @trace.info()
   private _services?: ClientServicesProvider;
+
   private _runtime?: ClientRuntime;
   // TODO(wittjosiah): Make `null` status part of enum.
   private readonly _statusUpdate = new Event<SystemStatus | null>();
@@ -243,8 +246,8 @@ export class Client {
       keys: options.humanize
         ? GetDiagnosticsRequest.KEY_OPTION.HUMANIZE
         : options.truncate
-        ? GetDiagnosticsRequest.KEY_OPTION.TRUNCATE
-        : undefined,
+          ? GetDiagnosticsRequest.KEY_OPTION.TRUNCATE
+          : undefined,
     });
 
     const clientDiagnostics = {

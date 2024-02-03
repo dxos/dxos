@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-navtree",
-  "version": "0.3.10",
+  "version": "0.4.1",
   "description": "DXOS Surface plugin for a tree view visualization of the graph.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -24,6 +24,7 @@
   ],
   "dependencies": {
     "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-observability": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/async": "workspace:*",
@@ -43,10 +44,10 @@
   "devDependencies": {
     "@braneframe/plugin-theme": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@faker-js/faker": "^8.3.1",
     "@phosphor-icons/react": "^2.0.5",
     "@types/lodash.get": "^4.4.7",
     "@types/react": "^18.0.21",

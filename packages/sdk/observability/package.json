@@ -1,6 +1,6 @@
 {
   "name": "@dxos/observability",
-  "version": "0.3.10",
+  "version": "0.4.1",
   "description": "Provides a common interface for app and platform observability",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -80,12 +80,16 @@
     "@sentry/tracing": "^7.98.0",
     "analytics-node": "^6.2.0",
     "datadog-metrics": "^0.11.1",
-    "debug": "^4.3.4"
+    "debug": "^4.3.4",
+    "js-yaml": "^4.1.0",
+    "localforage": "^1.10.0",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@sentry/types": "^7.98.0",
     "@types/analytics-node": "^3.1.9",
     "@types/debug": "^4.1.10",
+    "@types/js-yaml": "^4.0.5",
     "sentry-testkit": "^5.0.5"
   },
   "publishConfig": {

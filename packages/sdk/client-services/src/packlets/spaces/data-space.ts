@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
+import { Event, asyncTimeout, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
-import { cancelWithContext, Context } from '@dxos/context';
+import { cancelWithContext, Context, ContextDisposedError } from '@dxos/context';
 import { timed } from '@dxos/debug';
 import {
   type MetadataStore,
@@ -246,7 +246,7 @@ export class DataSpace {
         this.metrics.pipelineInitBegin = new Date();
         await this.initializeDataPipeline();
       } catch (err) {
-        if (err instanceof CancelledError) {
+        if (err instanceof CancelledError || err instanceof ContextDisposedError) {
           log('data pipeline initialization cancelled', err);
           return;
         }
@@ -378,12 +378,12 @@ export class DataSpace {
   }
 
   private _onNewAutomergeRoot(rootUrl: string) {
-    log.info('loading automerge root doc for space', { space: this.key, rootUrl });
+    log('loading automerge root doc for space', { space: this.key, rootUrl });
     const handle = this._automergeHost.repo.find(rootUrl as any);
 
     queueMicrotask(async () => {
       try {
-        await handle.whenReady();
+        await asyncTimeout(handle.whenReady(), 5_000);
         const doc = handle.docSync() ?? failedInvariant();
         if (!doc.experimental_spaceKey) {
           handle.change((doc: any) => {

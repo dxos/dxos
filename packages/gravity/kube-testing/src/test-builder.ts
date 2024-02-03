@@ -82,8 +82,8 @@ export class TestPeer {
       const discoveredPeer = swarmEvent.peerAvailable
         ? PublicKey.from(swarmEvent.peerAvailable.peer).toHex()
         : swarmEvent.peerLeft
-        ? PublicKey.from(swarmEvent.peerLeft.peer).toHex()
-        : raise(new Error('Unknown peer event'));
+          ? PublicKey.from(swarmEvent.peerLeft.peer).toHex()
+          : raise(new Error('Unknown peer event'));
 
       log.trace(
         'dxos.test.signal',

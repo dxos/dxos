@@ -2,11 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, useEffect, useMemo } from 'react';
+import React, { type FC, useMemo } from 'react';
 
-import { ThreadAction } from '@braneframe/plugin-thread';
 import { type Document as DocumentType } from '@braneframe/types';
-import { useIntent } from '@dxos/app-framework';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type Comment, useTextModel } from '@dxos/react-ui-editor';
@@ -24,14 +22,6 @@ const DocumentMain: FC<
     return document.comments?.map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! }));
   }, [document.comments]);
 
-  // TODO(burdon): Move into EditorMain?
-  const { dispatch } = useIntent();
-  useEffect(() => {
-    void dispatch({
-      action: ThreadAction.SELECT,
-    });
-  }, [document.id]);
-
   if (!model) {
     return null;
   }
@@ -41,5 +31,4 @@ const DocumentMain: FC<
 
 export default DocumentMain;
 
-// TODO(burdon): Document why required?
 export type DocumentMain = typeof DocumentMain;

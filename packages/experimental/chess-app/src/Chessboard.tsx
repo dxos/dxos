@@ -104,13 +104,13 @@ export const ChessPanel: FC<{
     ? chess.isCheckmate()
       ? 'CHECKMATE'
       : chess.isStalemate()
-      ? 'STALEMATE'
-      : 'DRAW'
+        ? 'STALEMATE'
+        : 'DRAW'
     : chess.isCheck()
-    ? 'CHECK'
-    : history.length
-    ? `Move ${history.length}`
-    : '';
+      ? 'CHECK'
+      : history.length
+        ? `Move ${history.length}`
+        : '';
 
   const Player = ({ color }: { color: Color }) => {
     const turn = color === chess.turn();

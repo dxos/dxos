@@ -109,6 +109,7 @@ export const App = () => {
     <ClientProvider
       config={getConfig}
       createWorker={createWorker}
+      shell='./shell.html'
       onInitialized={async (client) => {
         // TODO(wittjosiah): ClientProvider should support adding schemas.
         client.addSchema(types);

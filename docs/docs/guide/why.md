@@ -33,14 +33,14 @@ What if all software universally worked offline and allowed real-time collaborat
 
 What would have to be true for such a world to exist?
 
-*   We need software to work **offline first**
-*   We need **decentralized technologies** for peer discovery, consensus, service availability, and user identity problems.
-*   We also need to solve continuous integration, code management, and **software trust** for decentralized software.
-*   We need a platform built around **privacy by default** without precluding public discord and reputation
-*   We need a platform and community that enables **developers to share schema**, code and infrastructure, and interoperate without repeating the same wheels in every application
-*   We need a **workable revenue model** that supports the infrastructure and developers that make up this platform
-*   There must be **an order of mangnitude of productivity gains** for developers when compared to building "siloed" applications, to "pay" for their switch.
-*   This efficiency will come from **schema interoperability**, and deeper re-use of community code as a consequence of that.
+* We need software to work **offline first**
+* We need **decentralized technologies** for peer discovery, consensus, service availability, and user identity problems.
+* We also need to solve continuous integration, code management, and **software trust** for decentralized software.
+* We need a platform built around **privacy by default** without precluding public discord and reputation
+* We need a platform and community that enables **developers to share schema**, code and infrastructure, and interoperate without repeating the same wheels in every application
+* We need a **workable revenue model** that supports the infrastructure and developers that make up this platform
+* There must be **an order of mangnitude of productivity gains** for developers when compared to building "siloed" applications, to "pay" for their switch.
+* This efficiency will come from **schema interoperability**, and deeper re-use of community code as a consequence of that.
 
 ## Technologies
 
