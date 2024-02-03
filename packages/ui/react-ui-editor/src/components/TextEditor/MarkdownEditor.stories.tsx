@@ -211,7 +211,7 @@ const onRenderLink: LinkOptions['onRender'] = (el, url) => {
 type StoryProps = {
   text?: string;
   comments?: Comment[];
-} & Pick<TextEditorProps, 'readonly' | 'placeholder' | 'slots' | 'extensions'>;
+} & Pick<TextEditorProps, 'readonly' | 'placeholder' | 'extensions'>;
 
 const Story = ({ text, comments, placeholder = 'New document.', ...props }: StoryProps) => {
   const [item] = useState({ text: new TextObject(text) });
@@ -225,8 +225,16 @@ const Story = ({ text, comments, placeholder = 'New document.', ...props }: Stor
   return (
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex h-full justify-center'>
-        <div className='flex flex-col h-full w-[800px]'>
-          <MarkdownEditor ref={view} model={model} placeholder={placeholder} {...props} />
+        <div className='flex flex-col h-full w-[800px] overflow-y-auto'>
+          <MarkdownEditor
+            ref={view}
+            model={model}
+            placeholder={placeholder}
+            slots={{
+              editor: { className: 'bs-full p-2 bg-white dark:bg-black' },
+            }}
+            {...props}
+          />
         </div>
       </div>
     </div>
