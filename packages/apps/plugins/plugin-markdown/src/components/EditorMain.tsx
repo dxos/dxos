@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type HTMLAttributes, useMemo } from 'react';
+import React, { type HTMLAttributes } from 'react';
 
 import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
 import { useTranslation } from '@dxos/react-ui';
@@ -15,7 +15,6 @@ import {
   useComments,
   useEditorView,
   useActionHandler,
-  useFormattingState,
 } from '@dxos/react-ui-editor';
 import { focusRing, attentionSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
 
@@ -26,7 +25,7 @@ export type EditorMainProps = {
   toolbar?: boolean;
 } & Pick<TextEditorProps, 'model' | 'readonly' | 'editorMode' | 'extensions'>;
 
-const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: EditorMainProps) => {
+const EditorMain = ({ comments, toolbar, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
 
   const [editorRef, editorView] = useEditorView();
@@ -46,14 +45,10 @@ const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: Ed
     }
   });
 
-  // Toolbar state.
-  const [formattingState, formattingObserver] = useFormattingState();
-  const extensions = useMemo(() => [...(_extensions ?? []), formattingObserver], [_extensions, formattingObserver]);
-
   return (
     <div role='none' className='flex flex-col h-full'>
       {toolbar && (
-        <Toolbar.Root onAction={handleAction} state={formattingState}>
+        <Toolbar.Root onAction={handleAction} state={null}>
           <Toolbar.Markdown />
           <Toolbar.Separator />
           <Toolbar.Extended />
@@ -64,7 +59,6 @@ const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: Ed
           ref={editorRef}
           autoFocus
           placeholder={t('editor placeholder')}
-          extensions={extensions}
           slots={{
             root: {
               className: mx(

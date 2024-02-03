@@ -31,4 +31,5 @@ const DocumentMain: FC<
 
 export default DocumentMain;
 
+// TODO(burdon): Document why required?
 export type DocumentMain = typeof DocumentMain;
