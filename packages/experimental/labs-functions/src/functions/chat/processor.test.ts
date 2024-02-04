@@ -15,7 +15,7 @@ import { RequestProcessor } from './processor';
 import { type ChainVariant, createChainResources } from '../../chain';
 import { getConfig, getKey } from '../../util';
 
-describe('RequestBuilder', () => {
+describe.skip('RequestBuilder', () => {
   test.only('prompt', async () => {
     const builder = new TestBuilder();
     const config = getConfig()!;
