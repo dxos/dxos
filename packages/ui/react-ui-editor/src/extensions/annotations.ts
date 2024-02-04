@@ -14,7 +14,7 @@ type Annotation = {
 };
 
 export type AnnotationOptions = {
-  match?: RegExp; // TODO(burdon): Update via hook.
+  match?: RegExp; // TODO(burdon): Update via hook (e.g., for search).
 };
 
 const annotationMark = Decoration.mark({ class: 'cm-annotation' });
@@ -22,6 +22,7 @@ const annotationMark = Decoration.mark({ class: 'cm-annotation' });
 export const annotations = (options: AnnotationOptions = {}): Extension => {
   // TODO(burdon): Build index of matches and cursors (in background function).
   //  Define annotation action in prompt. E.g., extract company names. Find links, etc.
+  //  Show popover card. A16Z chain demo. Identify, extract, research, link. Multi-agent.
   const match = (state: EditorState) => {
     const annotations: Annotation[] = [];
     const text = state.doc.toString();

@@ -111,7 +111,7 @@ const text = {
     `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
     `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
     `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
-    '', // TODO(burdon): Possible GFM parsing bug if no newline?
+    '',
   ),
 
   image: str('# Image', '', '![dxos](https://pbs.twimg.com/profile_banners/1268328127673044992/1684766689/1500x500)'),
