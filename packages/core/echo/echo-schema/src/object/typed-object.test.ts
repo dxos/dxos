@@ -47,11 +47,9 @@ describe('TypedObject', () => {
     expect(Object.keys(obj).sort()).to.deep.equal(['title', 'priority'].sort());
   });
 
-  describe('meta', () => {
-    test('meta keys', () => {
-      const obj = new TypedObject();
-      expect(Object.keys(obj.__meta)).to.deep.equal(['keys']);
-    });
+  test('meta keys', () => {
+    const obj = new TypedObject();
+    expect(Object.keys(obj.__meta)).to.deep.equal(['keys']);
   });
 
   if (!getGlobalAutomergePreference()) {

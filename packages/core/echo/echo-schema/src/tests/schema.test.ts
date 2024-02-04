@@ -8,6 +8,7 @@ import { describe, test } from '@dxos/test';
 
 import { Contact, Container, Task, types } from './proto';
 import { immutable, Expando } from '../object';
+import { toJsonSchema } from '../object/json-schema';
 import { Schema } from '../proto';
 import { Filter } from '../query';
 import { TestBuilder, createDatabase } from '../testing';
@@ -195,5 +196,11 @@ describe('static schema', () => {
       builder.graph.addTypes(types);
       expect(task2!.__schema?.typename).to.eq('example.test.Task');
     }
+  });
+
+  test.only('convert to JSON schema', () => {
+    const contact = new Contact();
+    const schema = toJsonSchema(contact.__schema!);
+    console.log(schema);
   });
 });

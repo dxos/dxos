@@ -173,6 +173,8 @@ export const presets = [
         ],
       }),
   },
+  // TODO(burdon): Extract schema to build model.
+  // TODO(burdon): Output objects.
   {
     id: 'dxos.org/prompt/extract',
     title: 'Extract',
