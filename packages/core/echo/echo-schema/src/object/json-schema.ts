@@ -34,6 +34,7 @@ export interface JsonSchema {
   description?: string;
   type: string;
   properties?: { [key: string]: JsonSchema };
+  items?: JsonSchema;
 }
 
 export const toJsonSchema = (schema: Schema): JsonSchema => {

@@ -125,6 +125,22 @@ export class RequestProcessor {
       inputs[input.name] = await this.getInput(input, context);
     }
 
+    const schema = {
+      type: 'object',
+      properties: {
+        company: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string', description: 'The name of the company' },
+            },
+          },
+          description: 'An array of companies mentioned in the text',
+        },
+      },
+    };
+
     // TODO(burdon): Optional args.
     const args = {
       function_call: { name: 'output_formatter' },
@@ -132,21 +148,15 @@ export class RequestProcessor {
         {
           name: 'output_formatter',
           description: 'Should always be used to properly format output',
-          parameters: {
-            company: {
-              type: 'array',
-              items: [],
-              description: 'An array of companies mentioned in the text',
-            },
-          },
+          parameters: schema,
         },
       ],
     };
 
     return RunnableSequence.from([
       inputs,
-      PromptTemplate.fromTemplate(getTextContent(prompt.source, '')),
-      this._resources.model.bind(args),
+      PromptTemplate.fromTemplate(getTextContent(prompt.source)!),
+      this._resources.model.bind(args as any), // TODO(burdon): ???
       new StringOutputParser(),
     ]);
   }

@@ -55,7 +55,7 @@ import { getConfig, getKey } from '../util';
 // TODO(burdon): Plugins: https://platform.openai.com/docs/plugins/examples
 // TODO(burdon): FakeEmbeddings for tests
 
-describe('LangChain', () => {
+describe.skip('LangChain', () => {
   const createModel = (modelName = 'gpt-4') => {
     const config = getConfig()!;
 
@@ -231,7 +231,7 @@ describe('LangChain', () => {
   // TODO(burdon): How to make prompt satisfy all fields?
   // TODO(burdon): Metadata for zod: https://github.com/colinhacks/zod/issues/273
   //
-  test.only('functions', async () => {
+  test('functions', async () => {
     const defs = z.object({
       company: z
         .array(
@@ -254,7 +254,7 @@ describe('LangChain', () => {
     });
 
     const schema = zodToJsonSchema(defs);
-    console.log(schema);
+    console.log(JSON.stringify(schema, null, 2));
     const model = createModel().bind({
       function_call: { name: 'output_formatter' },
       functions: [
