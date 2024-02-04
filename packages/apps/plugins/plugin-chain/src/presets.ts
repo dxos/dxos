@@ -80,7 +80,7 @@ export const presets = [
         source: new TextObject(
           str(
             //
-            'Create a valid mermaid diagram representing the text below.',
+            'Create a simplified mermaid graph representing the text below.',
             'Do not explain anything.',
             '',
             '---',

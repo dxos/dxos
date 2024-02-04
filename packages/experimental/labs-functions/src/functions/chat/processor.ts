@@ -59,7 +59,8 @@ export class RequestProcessor {
         .filter(Boolean)
         .join('\n');
 
-      const match = text.match(/\/(\w+)\s*(.+)?/);
+      // Match prompt, and include content over multiple lines.
+      const match = text.match(/\/(\w+)\s*(.+)/s);
       if (match) {
         start();
 
