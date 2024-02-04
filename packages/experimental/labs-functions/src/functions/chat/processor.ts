@@ -126,7 +126,22 @@ export class RequestProcessor {
     }
 
     // TODO(burdon): Optional args.
-    const args = {};
+    const args = {
+      function_call: { name: 'output_formatter' },
+      functions: [
+        {
+          name: 'output_formatter',
+          description: 'Should always be used to properly format output',
+          parameters: {
+            company: {
+              type: 'array',
+              items: [],
+              description: 'An array of companies mentioned in the text',
+            },
+          },
+        },
+      ],
+    };
 
     return RunnableSequence.from([
       inputs,
