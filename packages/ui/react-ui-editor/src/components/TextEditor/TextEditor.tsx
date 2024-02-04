@@ -71,6 +71,7 @@ export type TextEditorProps = {
 /**
  * Base text editor.
  */
+// TODO(burdon): Replace with useTextEditor.
 export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
   (
     {

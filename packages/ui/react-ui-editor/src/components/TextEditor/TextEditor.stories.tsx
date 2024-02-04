@@ -38,8 +38,14 @@ const Story = ({
   return (
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex justify-center'>
-        <div className='flex flex-col w-[800px] py-16'>
-          <TextEditor model={model} {...props} />
+        <div className='flex flex-col w-[800px] overflow-y-auto'>
+          <TextEditor
+            model={model}
+            slots={{
+              editor: { className: 'bs-full p-2 bg-white dark:bg-black' },
+            }}
+            {...props}
+          />
         </div>
       </div>
     </div>

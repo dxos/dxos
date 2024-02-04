@@ -86,7 +86,7 @@ export default {
 };
 
 const content = [
-  'Demo',
+  '# Demo',
   '',
   'The editor supports **Markdown** styles.',
   '',
