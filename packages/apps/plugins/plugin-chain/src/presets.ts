@@ -174,6 +174,28 @@ export const presets = [
       }),
   },
   {
+    id: 'dxos.org/prompt/extract',
+    title: 'Extract',
+    prompt: () =>
+      new ChainType.Prompt({
+        command: 'extract',
+        source: new TextObject(
+          str(
+            //
+            'List all people and companies mentioned in the following text:',
+            '',
+            '---',
+            '',
+            '{input}',
+          ),
+        ),
+        inputs: [
+          //
+          new ChainType.Input({ type: ChainType.Input.Type.CONTEXT, name: 'input', value: new TextObject('text') }),
+        ],
+      }),
+  },
+  {
     id: 'dxos.org/prompt/discord',
     title: 'Summarize',
     prompt: () =>

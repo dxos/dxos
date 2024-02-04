@@ -16,6 +16,7 @@ import { AbstractEchoObject } from './object';
 import {
   base,
   data,
+  debug,
   immutable,
   meta,
   proxy,
@@ -23,7 +24,6 @@ import {
   type EchoObject,
   type ObjectMeta,
   type TypedObjectProperties,
-  debug,
 } from './types';
 import { AutomergeObject, REFERENCE_TYPE_TAG } from '../automerge';
 import { getGlobalAutomergePreference } from '../automerge-preference';
@@ -108,11 +108,9 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * @internal
    */
-  _linkCache: Map<string, EchoObject> | undefined = new Map<string, EchoObject>();
-
+  private _linkCache: Map<string, EchoObject> | undefined = new Map<string, EchoObject>();
   private _schema?: Schema;
   private readonly _immutable;
-
   private _updateDepth = 0;
 
   constructor(initialProps?: T, opts?: TypedObjectOptions) {

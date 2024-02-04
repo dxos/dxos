@@ -55,7 +55,7 @@ import { getConfig, getKey } from '../util';
 // TODO(burdon): Plugins: https://platform.openai.com/docs/plugins/examples
 // TODO(burdon): FakeEmbeddings for tests
 
-describe.skip('LangChain', () => {
+describe('LangChain', () => {
   const createModel = (modelName = 'gpt-4') => {
     const config = getConfig()!;
 
@@ -151,12 +151,9 @@ describe.skip('LangChain', () => {
 
     const retriever = vectorStore.asRetriever();
     const prompt = PromptTemplate.fromTemplate(
-      [
-        'answer the question based only on the following context:',
-        '{context}',
-        '----------------',
-        'question: {question}',
-      ].join('\n'),
+      ['answer the question based only on the following context:', '{context}', '---', 'question: {question}'].join(
+        '\n',
+      ),
     );
 
     const agent = RunnableSequence.from([
@@ -201,7 +198,7 @@ describe.skip('LangChain', () => {
         [
           'use the following pieces of context to answer the question at the end.',
           "if you don't know the answer, just say that you don't know, don't try to make up an answer.",
-          '----------------',
+          '---',
           '{context}',
         ].join('\n'),
       ),
@@ -234,8 +231,8 @@ describe.skip('LangChain', () => {
   // TODO(burdon): How to make prompt satisfy all fields?
   // TODO(burdon): Metadata for zod: https://github.com/colinhacks/zod/issues/273
   //
-  test('functions', async () => {
-    const schema = z.object({
+  test.only('functions', async () => {
+    const defs = z.object({
       company: z
         .array(
           z.object({
@@ -256,13 +253,17 @@ describe.skip('LangChain', () => {
         .describe('An array of people mentioned in the text'),
     });
 
+    // TODO(burdon): Convert ECHO schema.
+    const schema = zodToJsonSchema(defs);
+    console.log(schema);
+
     const model = createModel().bind({
       function_call: { name: 'output_formatter' },
       functions: [
         {
           name: 'output_formatter',
           description: 'Should always be used to properly format output',
-          parameters: zodToJsonSchema(schema),
+          parameters: schema,
         },
       ],
     });
