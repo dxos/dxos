@@ -61,10 +61,10 @@ export class RequestProcessor {
 
       const match = text.match(/\/(\w+)\s*(.+)?/);
       if (match) {
+        start();
+
         const prompt = match[1];
         const content = match[2];
-
-        start();
         const context = createContext(space, message, thread);
 
         log.info('processing', { prompt, content });

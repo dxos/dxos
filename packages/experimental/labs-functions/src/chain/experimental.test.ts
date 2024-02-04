@@ -253,10 +253,7 @@ describe('LangChain', () => {
         .describe('An array of people mentioned in the text'),
     });
 
-    // TODO(burdon): Convert ECHO schema.
     const schema = zodToJsonSchema(defs);
-    console.log(schema);
-
     const model = createModel().bind({
       function_call: { name: 'output_formatter' },
       functions: [
