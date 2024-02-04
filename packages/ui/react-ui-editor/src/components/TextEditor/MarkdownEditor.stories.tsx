@@ -36,6 +36,7 @@ import {
   typewriter,
   useComments,
   formatting,
+  annotations,
 } from '../../extensions';
 import { type Comment, useTextModel } from '../../hooks';
 
@@ -110,7 +111,7 @@ const text = {
     `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
     `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
     `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
-    '', // TODO(burdon): Possible GFM parsing bug if no newline?
+    '',
   ),
 
   image: str('# Image', '', '![dxos](https://pbs.twimg.com/profile_banners/1268328127673044992/1684766689/1500x500)'),
@@ -211,7 +212,7 @@ const onRenderLink: LinkOptions['onRender'] = (el, url) => {
 type StoryProps = {
   text?: string;
   comments?: Comment[];
-} & Pick<TextEditorProps, 'readonly' | 'placeholder' | 'slots' | 'extensions'>;
+} & Pick<TextEditorProps, 'readonly' | 'placeholder' | 'extensions'>;
 
 const Story = ({ text, comments, placeholder = 'New document.', ...props }: StoryProps) => {
   const [item] = useState({ text: new TextObject(text) });
@@ -225,8 +226,16 @@ const Story = ({ text, comments, placeholder = 'New document.', ...props }: Stor
   return (
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex h-full justify-center'>
-        <div className='flex flex-col h-full w-[800px]'>
-          <MarkdownEditor ref={view} model={model} placeholder={placeholder} {...props} />
+        <div className='flex flex-col h-full w-[800px] overflow-y-auto'>
+          <MarkdownEditor
+            ref={view}
+            model={model}
+            placeholder={placeholder}
+            slots={{
+              editor: { className: 'bs-full p-2 bg-white dark:bg-black' },
+            }}
+            {...props}
+          />
         </div>
       </div>
     </div>
@@ -382,6 +391,10 @@ export const HorizontalRule = {
       extensions={[hr()]}
     />
   ),
+};
+
+export const Annotations = {
+  render: () => <Story text={str('# Annotations', '', large)} extensions={[annotations({ match: /volup/gi })]} />,
 };
 
 const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewriter')?.split(',');

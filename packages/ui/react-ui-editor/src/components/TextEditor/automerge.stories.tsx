@@ -101,16 +101,15 @@ export default {
 
 export const Default = {};
 
-const EchoStory = ({ id, spaceKey }: { id: number; spaceKey: PublicKey }) => {
+const EchoStory = ({ spaceKey }: { spaceKey: PublicKey }) => {
   const identity = useIdentity();
   const space = useSpace(spaceKey);
   // TODO(dmaretskyi): useQuery doesn't work.
   const [obj] = space?.db.query(Filter.from({ type: 'test' })).objects ?? [];
-
   const model = useTextModel({
-    text: obj?.content,
     identity,
     space,
+    text: obj?.content,
   });
 
   if (!model) {
@@ -118,14 +117,11 @@ const EchoStory = ({ id, spaceKey }: { id: number; spaceKey: PublicKey }) => {
   }
 
   return (
-    // <div className={mx(fixedInsetFlexLayout, groupSurface)}>
-    <div className='flex justify-center overflow-y-scroll'>
-      <div className='flex flex-col w-[800px] py-16'>
+    <div className='flex overflow-hidden'>
+      <div className='flex flex-col w-[800px] overflow-y-scroll'>
         <MarkdownEditor model={model} />
-        <div className='flex shrink-0 h-[300px]'></div>
       </div>
     </div>
-    // </div>
   );
 };
 

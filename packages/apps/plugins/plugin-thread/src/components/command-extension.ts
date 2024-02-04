@@ -26,14 +26,10 @@ const parser = StreamLanguage.define<{ count: number }>({
   },
 });
 
-/**
- * https://codemirror.net/examples/styling
- * https://lezer.codemirror.net/docs/ref/#highlight
- */
 const styles = HighlightStyle.define([
   {
     tag: tags.tagName,
-    class: mx(tagRoot({}), 'text-base font-medium'),
+    class: mx(tagRoot({ palette: 'cyan' }), 'text-base font-medium'),
   },
 ]);
 
