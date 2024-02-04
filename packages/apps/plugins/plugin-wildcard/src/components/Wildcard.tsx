@@ -15,6 +15,23 @@ export type WildcardProps = {
   object: TypedObject;
 };
 
+const WildcardContent = ({ debug, object }: { debug?: boolean; object?: any }) => {
+  const content = getTextContent(object.description ?? object.content);
+
+  return (
+    (content && (
+      <Card.Body gutter classNames='text-sm text-neutral-500'>
+        {content}
+      </Card.Body>
+    )) ||
+    (debug ? (
+      <Card.Body classNames='text-xs whitespace-break-spaces break-all text-neutral-500'>
+        {JSON.stringify(object, null, 2)}
+      </Card.Body>
+    ) : null)
+  );
+};
+
 // TODO(wittjosiah): Instead of title, look for first field with type string.
 // TODO(wittjosiah): Instead of JSON view, show some high-level info about the object (e.g. type/icon, description, etc)
 //  JSON view can be an advanced secondary view behind an info button.
@@ -29,7 +46,6 @@ const Wildcard: MosaicTileComponent<any> = forwardRef(
 
     // TODO(burdon): Parse schema.
     const label = getTextContent(object.title ?? object.label ?? object.name);
-    const content = getTextContent(object.description ?? object.content);
 
     const handleSetLabel = (label: string) => {
       if (object.title) {
@@ -66,16 +82,7 @@ const Wildcard: MosaicTileComponent<any> = forwardRef(
               </DropdownMenu.Item>
             </Card.Menu>
           </Card.Header>
-          {(content && (
-            <Card.Body gutter classNames={'text-sm text-neutral-500'}>
-              {content}
-            </Card.Body>
-          )) ||
-            (debug && (
-              <Card.Body classNames={'text-xs whitespace-break-spaces break-all text-neutral-500'}>
-                {JSON.stringify(object, null, 2)}
-              </Card.Body>
-            ))}
+          <WildcardContent object={object} debug={debug} />
         </Card.Root>
       </div>
     );
@@ -83,3 +90,5 @@ const Wildcard: MosaicTileComponent<any> = forwardRef(
 );
 
 export default Wildcard;
+
+export { WildcardContent };

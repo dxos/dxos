@@ -32,8 +32,6 @@ const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
       title = getTextContent(title);
     }
 
-    console.log('[draggableprops]', draggableProps);
-
     return (
       <div
         role='group'
@@ -54,7 +52,7 @@ const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
           <DotsSixVertical />
         </Button>
         <div role='none' className={mx('min-is-0 min-bs-0 overflow-auto max-bs-[36rem]', !onRemove && 'col-span-2')}>
-          <Surface role='card' data={item} fallback={title} />
+          <Surface role='message-block' data={item} fallback={title} />
         </div>
         {onRemove && (
           <Button

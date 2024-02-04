@@ -7,3 +7,4 @@ import { WildcardPlugin } from './WildcardPlugin';
 export default WildcardPlugin;
 
 export * from './WildcardPlugin';
+export { WildcardContent } from './components/Wildcard';

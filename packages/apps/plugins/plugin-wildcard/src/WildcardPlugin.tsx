@@ -8,6 +8,7 @@ import type { PluginDefinition, SurfaceProvides, TranslationsProvides } from '@d
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import { Wildcard } from './components';
+import { WildcardContent } from './components/Wildcard';
 import meta from './meta';
 import translations from './translations';
 
@@ -21,6 +22,10 @@ export const WildcardPlugin = (): PluginDefinition<WildcardPluginProvides> => {
       surface: {
         component: ({ data, role, ...props }, forwardedRef) => {
           switch (role) {
+            case 'message-block':
+              return {
+                node: <WildcardContent object={data.object} debug />,
+              };
             case 'card': {
               const cardProps = { ...props, item: data.content };
               return isTileComponentProps(cardProps)
