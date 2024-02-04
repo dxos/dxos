@@ -71,6 +71,7 @@ export class PatchSemaphore {
     // NOTE: null and undefined each come from automerge and repo respectively.
     let newHeads = updateAutomerge(this._state, this._handle, transactions, view.state);
     if (newHeads === null || newHeads === undefined) {
+      console.log('??', transactions.length, newHeads);
       // TODO(alexjg): this is the call that's resetting the editor state on click.
       newHeads = A.getHeads(this._handle.docSync()!);
     }
