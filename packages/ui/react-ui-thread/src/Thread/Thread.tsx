@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowBendLeftDown, DotsThreeOutline } from '@phosphor-icons/react';
+import { ArrowBendLeftDown, Spinner } from '@phosphor-icons/react';
 import React, { type ComponentProps, type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -22,7 +22,8 @@ export const Thread = forwardRef<HTMLDivElement, ThreadProps>(
         {...(current && { 'aria-current': typeof current === 'string' ? current : 'location' })}
         {...props}
         className={mx(
-          'is-full place-self-start grid grid-cols-[3rem_1fr] bg-[var(--surface-bg)] border-[color:var(--surface-separator)] border-bs border-be plb-1.5 attention attention-within attention-current [--controls-opacity:0]',
+          'is-full place-self-start grid grid-cols-[3rem_1fr] bg-[var(--surface-bg)]',
+          'border-[color:var(--surface-separator)] border-bs border-be plb-1.5 attention attention-within attention-current [--controls-opacity:0]',
           hoverableFocusedWithinControls,
           classNames,
         )}
@@ -72,10 +73,10 @@ export const ThreadFooter = forwardRef<HTMLDivElement, ThreadFooterProps>(
         className={mx('col-start-2 grid grid-cols-[min-content_1fr_max-content] text-xs fg-description', classNames)}
         ref={forwardedRef}
       >
-        <DotsThreeOutline
-          weight='fill'
+        <Spinner
+          weight='bold'
           data-visible={activity ? 'show' : 'hide'}
-          className='is-6 bs-4 invisible data-[visible=show]:visible'
+          className='is-6 bs-4 invisible data-[visible=show]:visible animate-spin-slow'
         />
         <span className='truncate min-is-0' aria-live='polite'>
           {activity ? children : null}
