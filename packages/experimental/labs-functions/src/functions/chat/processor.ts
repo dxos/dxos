@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { PromptTemplate } from 'langchain/prompts';
-import { StringOutputParser } from 'langchain/schema/output_parser';
-import { type Runnable, RunnablePassthrough, RunnableSequence } from 'langchain/schema/runnable';
+import { StringOutputParser } from '@langchain/core/output_parsers';
+import { PromptTemplate } from '@langchain/core/prompts';
+import { type Runnable, RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import { formatDocumentsAsString } from 'langchain/util/document';
 import get from 'lodash.get';
 

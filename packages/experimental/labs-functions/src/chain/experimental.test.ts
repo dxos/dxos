@@ -2,6 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { SerpAPI } from '@langchain/community/tools/serpapi';
+import { HNSWLib } from '@langchain/community/vectorstores/hnswlib';
+import { StringOutputParser } from '@langchain/core/output_parsers';
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
@@ -9,28 +12,25 @@ import {
   PromptTemplate,
   SystemMessagePromptTemplate,
 } from '@langchain/core/prompts';
+import { RunnableSequence, RunnablePassthrough } from '@langchain/core/runnables';
+import { DynamicStructuredTool } from '@langchain/core/tools';
+import { ChatOpenAI, formatToOpenAITool, OpenAIEmbeddings } from '@langchain/openai';
 import { expect } from 'chai';
 import { AgentExecutor } from 'langchain/agents';
 import { formatLogToString } from 'langchain/agents/format_scratchpad/log';
 import { formatToOpenAIToolMessages } from 'langchain/agents/format_scratchpad/openai_tools';
 import { OpenAIToolsAgentOutputParser, type ToolsAgentStep } from 'langchain/agents/openai/output_parser';
 import { ReActSingleInputOutputParser } from 'langchain/agents/react/output_parser';
-import { ChatOpenAI } from 'langchain/chat_models/openai';
 import { type Document } from 'langchain/document';
-import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
 import { PlanAndExecuteAgentExecutor } from 'langchain/experimental/plan_and_execute';
 import { pull } from 'langchain/hub';
 import { BufferMemory } from 'langchain/memory';
 import { JsonOutputFunctionsParser } from 'langchain/output_parsers';
 import { type AgentStep, type BaseMessage } from 'langchain/schema';
-import { StringOutputParser } from 'langchain/schema/output_parser';
-import { RunnableSequence, RunnablePassthrough } from 'langchain/schema/runnable';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
-import { DynamicStructuredTool, formatToOpenAITool, SerpAPI } from 'langchain/tools';
 import { Calculator } from 'langchain/tools/calculator';
 import { renderTextDescription } from 'langchain/tools/render';
 import { formatDocumentsAsString } from 'langchain/util/document';
-import { HNSWLib } from 'langchain/vectorstores/hnswlib';
 import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -231,7 +231,7 @@ describe.skip('LangChain', () => {
   // TODO(burdon): How to make prompt satisfy all fields?
   // TODO(burdon): Metadata for zod: https://github.com/colinhacks/zod/issues/273
   //
-  test.only('functions', async () => {
+  test('functions', async () => {
     const defs = z.object({
       company: z
         .array(

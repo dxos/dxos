@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { PromptTemplate } from 'langchain/prompts';
-import { StringOutputParser } from 'langchain/schema/output_parser';
-import { RunnablePassthrough, RunnableSequence } from 'langchain/schema/runnable';
+import { StringOutputParser } from '@langchain/core/output_parsers';
+import { PromptTemplate } from '@langchain/core/prompts';
+import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import { formatDocumentsAsString } from 'langchain/util/document';
 
 import { str } from '../../../util';

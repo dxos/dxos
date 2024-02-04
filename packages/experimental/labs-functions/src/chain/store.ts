@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { FaissStore } from '@langchain/community/vectorstores/faiss';
 import { type Document } from 'langchain/document';
 import { type Embeddings } from 'langchain/embeddings/base';
 import { type VectorStore } from 'langchain/vectorstores/base';
-import { FaissStore } from 'langchain/vectorstores/faiss';
 import fs from 'node:fs';
 import { join } from 'node:path';
 
