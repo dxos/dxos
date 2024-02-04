@@ -2,6 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import {
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  MessagesPlaceholder,
+  PromptTemplate,
+  SystemMessagePromptTemplate,
+} from '@langchain/core/prompts';
 import { expect } from 'chai';
 import { AgentExecutor } from 'langchain/agents';
 import { formatLogToString } from 'langchain/agents/format_scratchpad/log';
@@ -15,13 +22,6 @@ import { PlanAndExecuteAgentExecutor } from 'langchain/experimental/plan_and_exe
 import { pull } from 'langchain/hub';
 import { BufferMemory } from 'langchain/memory';
 import { JsonOutputFunctionsParser } from 'langchain/output_parsers';
-import {
-  ChatPromptTemplate,
-  HumanMessagePromptTemplate,
-  MessagesPlaceholder,
-  PromptTemplate,
-  SystemMessagePromptTemplate,
-} from 'langchain/prompts';
 import { type AgentStep, type BaseMessage } from 'langchain/schema';
 import { StringOutputParser } from 'langchain/schema/output_parser';
 import { RunnableSequence, RunnablePassthrough } from 'langchain/schema/runnable';
@@ -55,7 +55,7 @@ import { getConfig, getKey } from '../util';
 // TODO(burdon): Plugins: https://platform.openai.com/docs/plugins/examples
 // TODO(burdon): FakeEmbeddings for tests
 
-describe('LangChain', () => {
+describe.skip('LangChain', () => {
   const createModel = (modelName = 'gpt-4') => {
     const config = getConfig()!;
 

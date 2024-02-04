@@ -43,7 +43,7 @@ export type SequenceOptions = {
 export class RequestProcessor {
   constructor(
     private readonly _resources: ChainResources,
-    private readonly _resolvers: ResolverMap,
+    private readonly _resolvers?: ResolverMap,
   ) {}
 
   async processThread(
@@ -117,16 +117,20 @@ export class RequestProcessor {
   /**
    * Create a runnable sequence from a stored prompt.
    */
+  // TODO(burdon): Create test.
   async createSequenceFromPrompt(prompt: ChainType.Prompt, context: RequestContext): Promise<RunnableSequence> {
     const inputs: Record<string, any> = {};
     for (const input of prompt.inputs) {
       inputs[input.name] = await this.getInput(input, context);
     }
 
+    // TODO(burdon): Optional args.
+    const args = {};
+
     return RunnableSequence.from([
       inputs,
       PromptTemplate.fromTemplate(getTextContent(prompt.source, '')),
-      this._resources.model,
+      this._resources.model.bind(args),
       new StringOutputParser(),
     ]);
   }
@@ -210,11 +214,15 @@ export class RequestProcessor {
   }
 
   // TODO(burdon): Remove (build into resolver abstraction).
-  private async execResolver(name: string) {
+  private async execResolver(name: string): Promise<string | undefined> {
+    if (!this._resolvers) {
+      return undefined;
+    }
+
     try {
       const resolver = get(this._resolvers, name);
       if (!resolver) {
-        return '';
+        return undefined;
       }
 
       log.info('running resolver', { resolver: name });
@@ -224,7 +232,7 @@ export class RequestProcessor {
       return result;
     } catch (error) {
       log.error('resolver error', { resolver: name, error });
-      return '';
+      return undefined;
     }
   }
 }

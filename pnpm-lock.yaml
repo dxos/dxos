@@ -6695,6 +6695,15 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@langchain/community':
+        specifier: ^0.0.26
+        version: 0.0.26(discord.js@14.14.1)(faiss-node@0.5.1)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@20.0.1)
+      '@langchain/core':
+        specifier: ^0.1.22
+        version: 0.1.22
+      '@langchain/openai':
+        specifier: ^0.0.14
+        version: 0.0.14
       '@octokit/rest':
         specifier: ^19.0.5
         version: 19.0.5
@@ -6747,7 +6756,7 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       langchain:
-        specifier: ^0.1.0
+        specifier: ^0.1.12
         version: 0.1.12(discord.js@14.14.1)(faiss-node@0.5.1)(fast-xml-parser@4.3.2)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@20.0.1)
       lodash.defaultsdeep:
         specifier: ^4.6.1
@@ -15697,7 +15706,7 @@ packages:
     engines: {node: '>=18'}
     dependencies:
       '@langchain/core': 0.1.22
-      js-tiktoken: 1.0.7
+      js-tiktoken: 1.0.10
       openai: 4.26.0
       zod: 3.22.4
       zod-to-json-schema: 3.22.4(zod@3.22.4)
@@ -26812,11 +26821,6 @@ packages:
     engines: {node: '>=14'}
     dev: false
 
-  /commander@11.1.0:
-    resolution: {integrity: sha512-yPVavfyCcRhmorC7rWlkHn15b4wDVgVmBA7kV4QVBsF7kv/9TKJAbAXVTxvTnwP8HHKjRCJDClKbciiYS7p0DQ==}
-    engines: {node: '>=16'}
-    dev: false
-
   /commander@12.0.0:
     resolution: {integrity: sha512-MwVNWlYjDTtOjX5PiD7o5pK0UrFU/OYgcJfjjK4RaHZETNtjJqrZa9Y9ds88+A+f+d5lv+561eZ+yCKoS3gbAA==}
     engines: {node: '>=18'}
@@ -33596,7 +33600,7 @@ packages:
     deprecated: The underlying libraries have been unified.  See < https://cdn.sheetjs.com/j/ >.
     hasBin: true
     dependencies:
-      commander: 11.1.0
+      commander: 12.0.0
       concat-stream: 2.0.0
       harb: 0.0.7
       xlsjs: 0.7.6
@@ -34652,12 +34656,6 @@ packages:
       base64-js: 1.5.1
     dev: false
 
-  /js-tiktoken@1.0.7:
-    resolution: {integrity: sha512-biba8u/clw7iesNEWLOLwrNGoBP2lA+hTaBLs/D45pJdUPFXyxD6nhcDVtADChghv4GgyAiMKYMiRx7x6h7Biw==}
-    dependencies:
-      base64-js: 1.5.1
-    dev: false
-
   /js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
@@ -35214,7 +35212,7 @@ packages:
       google-auth-library: 8.9.0
       googleapis: 126.0.1
       html-to-text: 9.0.5
-      js-tiktoken: 1.0.7
+      js-tiktoken: 1.0.10
       js-yaml: 4.1.0
       jsdom: 20.0.1
       jsonpointer: 5.0.1
