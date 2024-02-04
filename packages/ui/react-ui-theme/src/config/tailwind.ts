@@ -166,6 +166,7 @@ export const tailwindConfig = ({
           'toast-swipe-out': 'toast-swipe-out 100ms ease-out forwards',
 
           spin: 'spin 1.5s linear infinite',
+          'spin-slow': 'spin 3s linear infinite',
           shimmer: 'shimmer-loop 2s infinite',
           'halo-pulse': 'halo-pulse 2s ease-out infinite',
           'progress-indeterminate': 'progress-indeterminate 2s ease-out infinite',
