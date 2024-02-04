@@ -176,7 +176,7 @@ export class RequestProcessor {
     return RunnableSequence.from([
       inputs,
       PromptTemplate.fromTemplate(getTextContent(prompt.source, '')),
-      this._resources.chat,
+      this._resources.model,
       new StringOutputParser(),
     ]);
   }

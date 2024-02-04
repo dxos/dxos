@@ -38,7 +38,7 @@ export class ChainResources<
   constructor(
     private readonly _id: string,
     private readonly _embeddings: Embeddings,
-    private readonly _chat: BaseChatModel,
+    private readonly _model: BaseChatModel,
     private readonly _options: ChainResourcesOptions<E, M> = {},
   ) {
     this._store = new ChainStore(this._embeddings, { id: this._id, baseDir: this._options.baseDir });
@@ -55,8 +55,8 @@ export class ChainResources<
     return this._embeddings;
   }
 
-  get chat() {
-    return this._chat;
+  get model() {
+    return this._model;
   }
 
   get store() {

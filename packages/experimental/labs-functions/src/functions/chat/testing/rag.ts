@@ -35,7 +35,7 @@ export const generator: SequenceGenerator = (resources, _, options) => {
         'question: {question}',
       ),
     ),
-    resources.chat,
+    resources.model,
     new StringOutputParser(),
   ]);
 };

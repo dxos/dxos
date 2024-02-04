@@ -198,9 +198,9 @@ describe('static schema', () => {
     }
   });
 
-  test.only('convert to JSON schema', () => {
+  test('convert to JSON schema', () => {
     const contact = new Contact();
     const schema = toJsonSchema(contact.__schema!);
-    console.log(schema);
+    expect(Object.keys(schema.properties!)).to.have.length(6);
   });
 });
