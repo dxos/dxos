@@ -44,6 +44,8 @@ export class ChainResources<
     this._store = new ChainStore(this._embeddings, { id: this._id, baseDir: this._options.baseDir });
   }
 
+  setFunctions() {}
+
   get info() {
     return {
       store: this._store.info,
@@ -55,7 +57,7 @@ export class ChainResources<
     return this._embeddings;
   }
 
-  get model() {
+  get model(): BaseChatModel {
     return this._model;
   }
 

@@ -4,7 +4,7 @@
 
 import { PromptTemplate } from 'langchain/prompts';
 import { StringOutputParser } from 'langchain/schema/output_parser';
-import { RunnablePassthrough, RunnableSequence } from 'langchain/schema/runnable';
+import { type Runnable, RunnablePassthrough, RunnableSequence } from 'langchain/schema/runnable';
 import { formatDocumentsAsString } from 'langchain/util/document';
 import get from 'lodash.get';
 
@@ -114,63 +114,13 @@ export class RequestProcessor {
     return undefined;
   }
 
+  /**
+   * Create a runnable sequence from a stored prompt.
+   */
   async createSequenceFromPrompt(prompt: ChainType.Prompt, context: RequestContext): Promise<RunnableSequence> {
     const inputs: Record<string, any> = {};
-
-    for (const { type, name, value } of prompt.inputs) {
-      switch (type) {
-        case ChainType.Input.Type.VALUE: {
-          inputs[name] = () => getTextContent(value);
-          break;
-        }
-
-        case ChainType.Input.Type.PASS_THROUGH: {
-          inputs[name] = new RunnablePassthrough();
-          break;
-        }
-
-        case ChainType.Input.Type.CONTEXT: {
-          inputs[name] = () => {
-            if (value) {
-              const text = getTextContent(value, '');
-              if (text.length) {
-                try {
-                  const result = get(context, text);
-
-                  // TODO(burdon): Special case for getting schema fields for list preset.
-                  // TODO(burdon): Proxied arrays don't pass Array.isArray.
-                  // if (Array.isArray(result)) {
-                  if (typeof result !== 'string' && result?.length) {
-                    return result
-                      .slice(0, 3)
-                      .map((prop: any) => prop?.id)
-                      .join(',');
-                  }
-
-                  return result;
-                } catch (err) {
-                  // TODO(burdon): Return error to user.
-                }
-              }
-            }
-
-            return context.text;
-          };
-          break;
-        }
-
-        case ChainType.Input.Type.RETRIEVER: {
-          const retriever = this._resources.store.vectorStore.asRetriever({});
-          inputs[name] = retriever.pipe(formatDocumentsAsString);
-          break;
-        }
-
-        case ChainType.Input.Type.RESOLVER: {
-          const result = await this.execResolver(getTextContent(value, ''));
-          inputs[name] = () => result;
-          break;
-        }
-      }
+    for (const input of prompt.inputs) {
+      inputs[input.name] = await this.getInput(input, context);
     }
 
     return RunnableSequence.from([
@@ -179,6 +129,84 @@ export class RequestProcessor {
       this._resources.model,
       new StringOutputParser(),
     ]);
+  }
+
+  private async getInput(
+    { type, value }: ChainType.Input,
+    context: RequestContext,
+  ): Promise<Runnable | null | (() => string | null | undefined)> {
+    switch (type) {
+      //
+      // Predefined value.
+      //
+      case ChainType.Input.Type.VALUE: {
+        return () => getTextContent(value);
+      }
+
+      //
+      // User message.
+      //
+      case ChainType.Input.Type.PASS_THROUGH: {
+        return new RunnablePassthrough();
+      }
+
+      //
+      // Embeddings vector store.
+      //
+      case ChainType.Input.Type.RETRIEVER: {
+        const retriever = this._resources.store.vectorStore.asRetriever({});
+        return retriever.pipe(formatDocumentsAsString);
+      }
+
+      //
+      // Retrieve external data.
+      //
+      case ChainType.Input.Type.RESOLVER: {
+        const type = getTextContent(value);
+        if (!type) {
+          return null;
+        }
+
+        // TODO(burdon): Exec now?
+        const result = await this.execResolver(type);
+        return () => result;
+      }
+
+      //
+      // Current app context/state.
+      //
+      case ChainType.Input.Type.CONTEXT: {
+        return () => {
+          if (value) {
+            const text = getTextContent(value, '');
+            if (text.length) {
+              try {
+                const result = get(context, text);
+
+                // TODO(burdon): Special case for getting schema fields for list preset.
+                // TODO(burdon): Proxied arrays don't pass Array.isArray.
+                // if (Array.isArray(result)) {
+                if (typeof result !== 'string' && result?.length) {
+                  return result
+                    .slice(0, 3)
+                    .map((prop: any) => prop?.id)
+                    .join(',');
+                }
+
+                return result;
+              } catch (err) {
+                // TODO(burdon): Return error to user.
+                log.catch(err);
+              }
+            }
+          }
+
+          return context.text;
+        };
+      }
+    }
+
+    return null;
   }
 
   // TODO(burdon): Remove (build into resolver abstraction).

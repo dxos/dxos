@@ -67,7 +67,7 @@ export type OllamaChainResourcesOptions = ChainResourcesOptions<
  * https://github.com/jmorganca/ollama#model-library
  * https://ai.meta.com/llama/get-started
  */
-export const createOllamaChainResources = (options: OllamaChainResourcesOptions) => {
+export const createOllamaChainResources = (options: OllamaChainResourcesOptions): ChainResources => {
   const embeddings = new OllamaEmbeddings({
     ...options.embeddings,
   });

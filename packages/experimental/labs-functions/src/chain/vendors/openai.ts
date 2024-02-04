@@ -44,7 +44,7 @@ export type OpenAIChainResourcesOptions = ChainResourcesOptions<
 export const createOpenAIChainResources: ChainResourcesFactory<
   OpenAIEmbeddingsParams,
   OpenAIBaseInput & BaseChatModelParams
-> = (options: OpenAIChainResourcesOptions) => {
+> = (options: OpenAIChainResourcesOptions): ChainResources => {
   const embeddings = new OpenAIEmbeddings({
     openAIApiKey: options.apiKey,
     ...options.embeddings,

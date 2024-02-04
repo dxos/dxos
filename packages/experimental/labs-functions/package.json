@@ -54,7 +54,7 @@
     "imap": "^0.8.19",
     "imap-simple": "^5.1.0",
     "js-yaml": "^4.1.0",
-    "langchain": "^0.0.196",
+    "langchain": "^0.1.0",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
     "lodash.startcase": "^4.4.0",
