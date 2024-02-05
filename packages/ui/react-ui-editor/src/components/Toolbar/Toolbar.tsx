@@ -32,6 +32,7 @@ import {
   DensityProvider,
   ElevationProvider,
   Select,
+  type ThemedClassName,
   Toolbar as NaturalToolbar,
   type ToolbarToggleGroupItemProps,
   useTranslation,
@@ -75,19 +76,23 @@ export type Action = {
   data?: any;
 };
 
-export type ToolbarProps = PropsWithChildren<{
-  state: Formatting | null;
-  onAction?: (action: Action) => void;
-}>;
+export type ToolbarProps = ThemedClassName<
+  PropsWithChildren<{
+    state: Formatting | null;
+    onAction?: (action: Action) => void;
+  }>
+>;
 
 const [ToolbarContextProvider, useToolbarContext] = createContext<ToolbarProps>('Toolbar');
 
-const ToolbarRoot = ({ children, onAction, state }: ToolbarProps) => {
+const ToolbarRoot = ({ children, onAction, classNames, state }: ToolbarProps) => {
   return (
     <ToolbarContextProvider onAction={onAction} state={state}>
       <DensityProvider density='fine'>
         <ElevationProvider elevation='chrome'>
-          <NaturalToolbar.Root classNames='is-full shrink-0 overflow-x-auto p-1'>{children}</NaturalToolbar.Root>
+          <NaturalToolbar.Root classNames={['is-full shrink-0 overflow-x-auto p-1', classNames]}>
+            {children}
+          </NaturalToolbar.Root>
         </ElevationProvider>
       </DensityProvider>
     </ToolbarContextProvider>

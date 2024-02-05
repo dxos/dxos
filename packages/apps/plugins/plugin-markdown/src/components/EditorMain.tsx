@@ -17,7 +17,7 @@ import {
   useActionHandler,
   useFormattingState,
 } from '@dxos/react-ui-editor';
-import { focusRing, attentionSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
+import { focusRing, attentionSurface, mx } from '@dxos/react-ui-theme';
 
 import { MARKDOWN_PLUGIN } from '../meta';
 
@@ -51,7 +51,7 @@ const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: Ed
   const extensions = useMemo(() => [...(_extensions ?? []), formattingObserver], [_extensions, formattingObserver]);
 
   return (
-    <div role='none' className='flex flex-col h-full'>
+    <>
       {toolbar && (
         <Toolbar.Root onAction={handleAction} state={formattingState}>
           <Toolbar.Markdown />
@@ -59,30 +59,26 @@ const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: Ed
           <Toolbar.Extended />
         </Toolbar.Root>
       )}
-      <div role='none' className='flex flex-col grow pb-8 overflow-y-auto'>
-        <MarkdownEditor
-          ref={editorRef}
-          autoFocus
-          placeholder={t('editor placeholder')}
-          extensions={extensions}
-          slots={{
-            root: {
-              className: mx(
-                'flex flex-col grow m-0.5',
-                attentionSurface,
-                focusRing,
-                surfaceElevation({ elevation: 'group' }),
-              ),
-              'data-testid': 'composer.markdownRoot',
-            } as HTMLAttributes<HTMLDivElement>,
-            editor: {
-              className: 'h-full pli-10 py-4 rounded',
-            },
-          }}
-          {...props}
-        />
-      </div>
-    </div>
+      <MarkdownEditor
+        ref={editorRef}
+        autoFocus
+        placeholder={t('editor placeholder')}
+        extensions={extensions}
+        slots={{
+          root: {
+            className: mx(focusRing, 'grid overflow-y-auto border-bs separator-separator'),
+            'data-testid': 'composer.markdownRoot',
+          } as HTMLAttributes<HTMLDivElement>,
+          editor: {
+            className: mx(
+              attentionSurface,
+              'is-full pli-2 sm:pli-4 md:pli-10 py-4 mbe-[50dvh] border-be md:border-is md:border-ie separator-separator',
+            ),
+          },
+        }}
+        {...props}
+      />
+    </>
   );
 };
 
