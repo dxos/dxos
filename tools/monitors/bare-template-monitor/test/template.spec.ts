@@ -18,6 +18,7 @@ test.describe('Bare Template', () => {
 
   test('builds', async ({ browserName }) => {
     test.skip(browserName !== 'chromium', 'Not browser-based, just run once.');
+    test.slow();
 
     const child = await exec('npm run build', { cwd: 'tmp' });
     child.stdout?.pipe(process.stdout);
