@@ -9003,8 +9003,8 @@ importers:
   packages/ui/react-ui-theme:
     dependencies:
       '@ch-ui/colors':
-        specifier: ^0.4.2
-        version: 0.4.2
+        specifier: ^0.4.3
+        version: 0.4.3
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
@@ -13479,9 +13479,9 @@ packages:
     requiresBuild: true
     optional: true
 
-  /@ch-ui/colors@0.4.2:
-    resolution: {integrity: sha512-b+7LjFS60RWOdIYJsPd/8Tr2mlia306phiM0Vi3jFAEopJDxhb/fFQV61nWHVgDFNb/jx2eI8TKyZ4WMZEOp9g==}
-    engines: {node: '>=12.0.0', pnpm: '>=7.0.0'}
+  /@ch-ui/colors@0.4.3:
+    resolution: {integrity: sha512-m9trw6Y26vwreTgbaWJTr2XAoyoa7gOP7NRLE42Kp2A1Xhl8Q55KZCnuWJXU1bHMz0ylwJmMq35jUWeoTS4qAQ==}
+    engines: {node: '>=12.0.0'}
     dev: false
 
   /@cnakazawa/watch@1.0.4:
