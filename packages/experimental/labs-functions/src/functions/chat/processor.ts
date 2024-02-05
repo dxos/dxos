@@ -126,6 +126,8 @@ export class RequestProcessor {
       inputs[input.name] = await this.getInput(input, context);
     }
 
+    const withSchema = false;
+
     // TODO(burdon): Get types from space.
     const types = {
       company: {
@@ -174,8 +176,8 @@ export class RequestProcessor {
     return RunnableSequence.from([
       inputs,
       PromptTemplate.fromTemplate(getTextContent(prompt.source)!),
-      this._resources.model.bind(args),
-      args ? new JsonOutputFunctionsParser() : new StringOutputParser(),
+      this._resources.model.bind(withSchema ? args : {}),
+      withSchema ? new JsonOutputFunctionsParser() : new StringOutputParser(),
     ]);
   }
 
