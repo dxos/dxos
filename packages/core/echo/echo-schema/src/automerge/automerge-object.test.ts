@@ -14,9 +14,6 @@ import { Contact, Task } from '../tests/proto';
 
 describe('AutomergeObject', () => {
   test('objects become automerge objects when global flag is set', () => {
-    setGlobalAutomergePreference(true);
-    afterTest(() => setGlobalAutomergePreference(undefined));
-
     const obj = new Expando({});
     expect(obj[base] instanceof AutomergeObject).to.eq(true);
     expect(obj instanceof AutomergeObject).to.eq(true);
