@@ -16,9 +16,11 @@ import {
   type SurfaceProvides,
   type TranslationsProvides,
 } from '@dxos/app-framework';
-import { Config, Defaults, Envs, Local } from '@dxos/config';
+import { createStorageObjects } from '@dxos/client-services';
+import { Config, Defaults, Envs, Local, defs } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
 import { type TypeCollection } from '@dxos/react-client/echo';
 
@@ -38,6 +40,7 @@ export type ClientPluginOptions = ClientOptions & { appKey: string; debugIdentit
 
 export type ClientSettingsProps = {
   automerge?: boolean;
+  storageAdapter?: 'idb' | 'opfs';
 };
 
 export type ClientPluginProvides = SurfaceProvides &
@@ -77,7 +80,25 @@ export const ClientPlugin = ({
     initialize: async () => {
       let firstRun = false;
 
-      client = new Client({ config: new Config(await Envs(), Local(), Defaults()), ...options });
+      settings.prop(settings.values.$storageAdapter!, 'storage-adapter', LocalStorageStore.string);
+      if (!settings.values.storageAdapter && (await defaultStorageIsEmpty())) {
+        settings.values.storageAdapter = 'idb';
+      }
+
+      const storageConfig = {
+        runtime: {
+          client: {
+            storage: {
+              dataStore:
+                settings.values.storageAdapter === 'idb'
+                  ? defs.Runtime.Client.Storage.StorageDriver.IDB
+                  : defs.Runtime.Client.Storage.StorageDriver.WEBFS,
+            },
+          },
+        },
+      };
+
+      client = new Client({ config: new Config(await Envs(), Local(), Defaults(), storageConfig), ...options });
 
       try {
         await client.initialize();
@@ -199,4 +220,17 @@ export const ClientPlugin = ({
       },
     },
   };
+};
+
+const defaultStorageIsEmpty = async (): Promise<boolean> => {
+  try {
+    const storage = createStorageObjects({}).storage;
+    const metadataDir = storage.createDirectory('metadata');
+    const echoMetadata = metadataDir.getOrCreateFile('EchoMetadata');
+    const { size } = await echoMetadata.stat();
+    return !!size;
+  } catch (err) {
+    log.warn('Error checking if default storage is empty', { err });
+    return false;
+  }
 };

@@ -10,6 +10,9 @@ export default [
       [CLIENT_PLUGIN]: {
         'open shell label': 'Open HALO',
         'enable experimental automerge backend': 'Automerge backend (reload required).',
+        'choose storage adaptor': 'Storage adaptor (reload required).',
+        'settings storage adaptor idb label': 'IndexedDB',
+        'settings storage adaptor opfs label': 'OPFS',
       },
     },
   },

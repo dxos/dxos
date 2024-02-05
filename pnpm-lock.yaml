@@ -975,6 +975,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
+      '@dxos/client-services':
+        specifier: workspace:*
+        version: link:../../../sdk/client-services
       '@dxos/config':
         specifier: workspace:*
         version: link:../../../sdk/config

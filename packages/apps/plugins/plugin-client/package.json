@@ -26,6 +26,7 @@
     "@braneframe/plugin-settings": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/local-storage": "workspace:*",
