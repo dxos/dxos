@@ -4,8 +4,8 @@
 
 import { type InspectOptionsStylized, inspect } from 'node:util';
 
-import { Event, Trigger } from '@dxos/async';
-import { next as A, type ChangeOptions, type ChangeFn, type Doc, type Heads } from '@dxos/automerge/automerge';
+import { Trigger } from '@dxos/async';
+import { next as A, type ChangeFn, type Doc } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { Reference } from '@dxos/document-model';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -15,7 +15,8 @@ import { TextModel } from '@dxos/text-model';
 
 import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
-import { ObjectStructure, type DocStructure, type ObjectSystem } from './types';
+import { AutomergeObjectCore, type DocAccessor } from './automerge-object-core';
+import { type ObjectStructure, type DocStructure, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
 import {
   isAutomergeObject,
@@ -36,7 +37,6 @@ import {
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
 import { compositeRuntime } from '../util';
-import { AutomergeObjectCore, DocAccessor } from './automerge-object-core';
 
 export type BindOptions = {
   db: AutomergeDb;

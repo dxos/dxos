@@ -16,9 +16,9 @@ import { type AutomergeContext, AutomergeDb, AutomergeObject } from './automerge
 import { type Hypergraph } from './hypergraph';
 import { type EchoObject, base, db, TextObject } from './object';
 import { TypedObject } from './object';
+import { AbstractEchoObject } from './object/object';
 import { type Schema } from './proto';
 import { type FilterSource, type Query } from './query';
-import { AbstractEchoObject } from './object/object';
 
 /**
  * Database wrapper.

@@ -3,9 +3,9 @@
 //
 
 import type { AbstractEchoObject } from './object';
+import { type AutomergeObject } from '../automerge';
 import type { EchoDatabase } from '../database';
 import type { Schema } from '../proto';
-import { AutomergeObject } from '../automerge';
 
 // TODO(burdon): Don't export symbols outside of package?
 

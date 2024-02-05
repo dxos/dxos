@@ -4,10 +4,9 @@
 
 import { expect } from 'chai';
 
-import { afterTest, describe, test } from '@dxos/test';
+import { describe, test } from '@dxos/test';
 
 import { AutomergeObject } from './automerge-object';
-import { setGlobalAutomergePreference } from '../automerge-preference';
 import { Expando, TypedObject, base } from '../object';
 import { TestBuilder } from '../testing';
 import { Contact, Task } from '../tests/proto';

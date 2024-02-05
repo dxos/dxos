@@ -1,9 +1,14 @@
-import { next as A, ChangeFn, ChangeOptions, Doc, Heads } from '@dxos/automerge/automerge';
-import { AutomergeDb } from './automerge-db';
-import { DocHandle } from '@dxos/automerge/automerge-repo';
-import { DocStructure, ObjectStructure } from './types';
-import { failedInvariant, invariant } from '@dxos/invariant';
+//
+// Copyright 2024 DXOS.org
+//
+
 import { Event } from '@dxos/async';
+import { next as A, type ChangeFn, type ChangeOptions, type Doc, type Heads } from '@dxos/automerge/automerge';
+import { type DocHandle } from '@dxos/automerge/automerge-repo';
+import { failedInvariant, invariant } from '@dxos/invariant';
+
+import { type AutomergeDb } from './automerge-db';
+import { type DocStructure, type ObjectStructure } from './types';
 
 // TODO(dmaretskyi): Rename to `AutomergeObject`.
 export class AutomergeObjectCore {
