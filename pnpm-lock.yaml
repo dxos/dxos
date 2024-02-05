@@ -4938,6 +4938,9 @@ importers:
       '@dxos/echo-typegen':
         specifier: workspace:*
         version: link:../echo-typegen
+      '@preact/signals-core':
+        specifier: ^1.5.0
+        version: 1.5.0
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7

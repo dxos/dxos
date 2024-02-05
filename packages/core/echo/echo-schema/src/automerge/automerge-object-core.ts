@@ -102,6 +102,9 @@ export class AutomergeObjectCore {
     return this.doc ?? this.docHandle?.docSync() ?? failedInvariant('Invalid state');
   }
 
+  /**
+   * Do not take into account mountPath.
+   */
   change(changeFn: ChangeFn<any>, options?: A.ChangeOptions<any>) {
     if (this.doc) {
       if (options) {
@@ -117,6 +120,9 @@ export class AutomergeObjectCore {
     }
   }
 
+  /**
+   * Do not take into account mountPath.
+   */
   changeAt(heads: Heads, callback: ChangeFn<any>, options?: ChangeOptions<any>): string[] | undefined {
     let result: Heads | undefined;
     if (this.doc) {
