@@ -15,7 +15,13 @@ import { TextModel } from '@dxos/text-model';
 
 import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
-import { AutomergeObjectCore, objectIsUpdated, type DocAccessor, assignDeep } from './automerge-object-core';
+import {
+  AutomergeObjectCore,
+  objectIsUpdated,
+  type DocAccessor,
+  assignDeep,
+  BindOptions,
+} from './automerge-object-core';
 import { type ObjectStructure, type DocStructure, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
 import {
@@ -37,13 +43,6 @@ import {
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
 import { compositeRuntime } from '../util';
-
-export type BindOptions = {
-  db: AutomergeDb;
-  docHandle: DocHandle<DocStructure>;
-  path: string[];
-  ignoreLocalState?: boolean;
-};
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
