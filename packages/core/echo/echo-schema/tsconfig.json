@@ -59,6 +59,9 @@
       "path": "../echo-pipeline"
     },
     {
+      "path": "../echo-signals"
+    },
+    {
       "path": "../echo-typegen"
     },
     {

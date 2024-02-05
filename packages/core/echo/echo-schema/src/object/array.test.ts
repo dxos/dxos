@@ -2,8 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
+import { effect } from '@preact/signals-core';
 import expect from 'expect'; // TODO(burdon): Can't use chai with wait-for-expect?
+import { inspect } from 'util';
 
+import { sleep } from '@dxos/async';
+import { registerSignalRuntime } from '@dxos/echo-signals';
+import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 import { EchoArray } from './array';
@@ -148,5 +153,35 @@ describe('Arrays', () => {
 
     await db.flush();
     expect(root.records).toHaveLength(1);
+  });
+
+  test('bind object with array', async () => {
+    registerSignalRuntime();
+
+    const { db } = await createDatabase();
+    const root = db.add(new Expando({}));
+
+    const leaf = new Expando({ entries: ['foo'] });
+
+    let broken = false;
+    const clearEffect = effect(() => {
+      // log.info('effect', { entires: leaf.entries.length });
+      root.foo; // Receive updates from root.
+      if (leaf.entries.length !== 1) {
+        broken = true;
+      }
+    });
+
+    log.info('set');
+    root.foo = leaf;
+
+    await sleep(10);
+    clearEffect();
+    expect(broken).toBeFalsy();
+  });
+
+  test.skip('inspect array elements', () => {
+    const obj = new Expando({ entries: ['foo'] });
+    expect(inspect(obj.entries).includes('foo')).toBeTruthy();
   });
 });
