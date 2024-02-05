@@ -14,7 +14,7 @@ export default [
         'delete thread label': 'Delete thread',
         'create thread label': 'Create thread',
         'message placeholder': 'Reply...',
-        'settings standalone label': 'Enable standalone thread creation',
+        'settings standalone label': '[Experimental] Enable standalone thread creation',
         'activity message': 'Processing…',
         'anonymous label': 'Anonymous',
         'delete message block label': 'Delete message block',
