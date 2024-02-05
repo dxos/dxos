@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+// TODO(wittjosiah): Cleanup. Remove translations that have been moved to other plugins.
 export const os = {
   'manage profile label': 'Manage identity',
   'identity offline description': 'Offline',

@@ -4,6 +4,7 @@
 
 import { type Any, type ProtoCodec } from '@dxos/codec-protobuf';
 import { type Item, type MutateResult, createModelMutation, encodeModelMutation } from '@dxos/echo-db';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import {
@@ -17,7 +18,6 @@ import {
 
 import { type EchoObject, base, debug, db, subscribe } from './types';
 import { type EchoDatabase } from '../database';
-import { compositeRuntime } from '../util/signal';
 
 /**
  * Base class for all echo objects.
