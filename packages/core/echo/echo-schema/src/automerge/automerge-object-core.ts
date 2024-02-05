@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { type AutomergeDb } from './automerge-db';
 import { type DocStructure, type ObjectStructure } from './types';
 import { type EchoObject } from '../object';
-import { compositeRuntime } from '../util';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
 
 // TODO(dmaretskyi): Rename to `AutomergeObject`.
 export class AutomergeObjectCore {

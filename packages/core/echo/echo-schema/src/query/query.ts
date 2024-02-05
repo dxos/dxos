@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 
 import { type Filter } from './filter';
 import { type EchoObject, type TypedObject } from '../object';
-import { compositeRuntime } from '../util';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
 
 // TODO(burdon): Reconcile with echo-db/database/selection.
 

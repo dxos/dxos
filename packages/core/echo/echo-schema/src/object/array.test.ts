@@ -13,7 +13,7 @@ import { describe, test } from '@dxos/test';
 import { EchoArray } from './array';
 import { Expando, TypedObject } from './typed-object';
 import { createDatabase } from '../testing';
-import { registerPreactSignals } from '../tests/signal-runtime';
+import { registerSignalRuntime } from '@dxos/echo-signals';
 
 describe('Arrays', () => {
   test('array of tags', async () => {
@@ -156,7 +156,7 @@ describe('Arrays', () => {
   });
 
   test('bind object with array', async () => {
-    registerPreactSignals();
+    registerSignalRuntime();
 
     const { db } = await createDatabase();
     const root = db.add(new Expando({}));

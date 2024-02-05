@@ -25,7 +25,7 @@ import {
   type QuerySource,
 } from './query';
 import { TypeCollection } from './type-collection';
-import { compositeRuntime } from './util';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
 
 /**
  * Manages cross-space database interactions.

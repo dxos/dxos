@@ -12,7 +12,7 @@ import { describe, test } from '@dxos/test';
 import { createSubscription } from './subscription';
 import { Expando } from './typed-object';
 import { createDatabase } from '../testing';
-import { registerPreactSignals } from '../tests/signal-runtime';
+import { registerSignalRuntime } from '@dxos/echo-signals';
 
 describe('create subscription', () => {
   test('updates are propagated', async () => {
@@ -51,7 +51,7 @@ describe('create subscription', () => {
   });
 
   test.skip('signal updates are synchronous', async () => {
-    registerPreactSignals();
+    registerSignalRuntime();
 
     const { db } = await createDatabase();
     const task = new Expando();
