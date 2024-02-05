@@ -13,6 +13,7 @@ import { base } from '../object';
 const isIndex = (property: string | symbol): property is string =>
   typeof property === 'string' && parseInt(property).toString() === property;
 
+// TODO(dmaretskyi): Rename to `AutomergeArrayApi`.
 export class AutomergeArray<T> implements Array<T> {
   /**
    * Until this array is attached a document, the items are stored in this array.

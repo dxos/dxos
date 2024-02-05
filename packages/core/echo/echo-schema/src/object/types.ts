@@ -5,6 +5,7 @@
 import type { AbstractEchoObject } from './object';
 import type { EchoDatabase } from '../database';
 import type { Schema } from '../proto';
+import { AutomergeObject } from '../automerge';
 
 // TODO(burdon): Don't export symbols outside of package?
 
@@ -16,6 +17,10 @@ export const immutable = Symbol.for('dxos.echo.immutable');
 
 // Misc
 export const debug = Symbol.for('dxos.echo.debug');
+/**
+ * Proxy object detection.
+ * Querying this key should return true for ECHO proxy objects.
+ */
 export const proxy = Symbol.for('dxos.echo.proxy');
 export const base = Symbol.for('dxos.echo.base');
 export const db = Symbol.for('dxos.echo.db');
@@ -37,7 +42,7 @@ export interface EchoObject {
    * Returns the underlying object.
    * Same as `this` for non-proxied objects.
    */
-  [base]: AbstractEchoObject;
+  [base]: AbstractEchoObject | AutomergeObject;
 
   /**
    * The database this object belongs to.
