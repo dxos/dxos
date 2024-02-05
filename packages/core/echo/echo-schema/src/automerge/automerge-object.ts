@@ -409,15 +409,7 @@ export class AutomergeObject implements TypedObjectProperties {
    */
   _change(changeFn: ChangeFn<any>) {
     invariant(!this[proxy]);
-    if (this._core.docHandle) {
-      this._core.docHandle.change(changeFn);
-      // Note: We don't need to notify listeners here, since `change` event is already emitted by the doc handle.
-    } else if (this._core.doc) {
-      this._core.doc = A.change(this._core.doc, changeFn);
-      this._notifyUpdate();
-    } else {
-      failedInvariant();
-    }
+    this._core.change(changeFn);
   }
 
   /**

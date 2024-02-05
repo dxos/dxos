@@ -40,45 +40,53 @@ export class AutomergeObjectCore {
     return this.doc ?? this.docHandle?.docSync() ?? failedInvariant('Invalid state');
   }
 
+  change(changeFn: ChangeFn<any>, options?: A.ChangeOptions<any>) {
+    if (this.doc) {
+      if (options) {
+        this.doc = A.change(this.doc!, options, changeFn);
+      } else {
+        this.doc = A.change(this.doc!, changeFn);
+      }
+      this.onManualChange.emit();
+    } else {
+      invariant(this.docHandle);
+      this.docHandle.change(changeFn, options);
+      // Note: We don't need to notify listeners here, since `change` event is already emitted by the doc handle.
+    }
+  }
+
+  changeAt(heads: Heads, callback: ChangeFn<any>, options?: ChangeOptions<any>): string[] | undefined {
+    let result: Heads | undefined;
+    if (this.doc) {
+      if (options) {
+        const { newDoc, newHeads } = A.changeAt(this.doc!, heads, options, callback);
+        this.doc = newDoc;
+        result = newHeads ?? undefined;
+      } else {
+        const { newDoc, newHeads } = A.changeAt(this.doc!, heads, callback);
+        this.doc = newDoc;
+        result = newHeads ?? undefined;
+      }
+      this.onManualChange.emit();
+    } else {
+      invariant(this.docHandle);
+      result = this.docHandle.changeAt(heads, callback, options);
+      // Note: We don't need to notify listeners here, since `change` event is already emitted by the doc handle.
+    }
+
+    return result;
+  }
+
   getDocAccessor(path: string[] = []): DocAccessor {
     const self = this;
     return {
       handle: {
         docSync: () => this.getDoc(),
         change: (callback, options) => {
-          if (this.doc) {
-            if (options) {
-              this.doc = A.change(this.doc!, options, callback);
-            } else {
-              this.doc = A.change(this.doc!, callback);
-            }
-            this.onManualChange.emit();
-          } else {
-            invariant(this.docHandle);
-            this.docHandle.change(callback, options);
-            // Note: We don't need to notify listeners here, since `change` event is already emitted by the doc handle.
-          }
+          this.change(callback, options);
         },
         changeAt: (heads, callback, options) => {
-          let result: Heads | undefined;
-          if (this.doc) {
-            if (options) {
-              const { newDoc, newHeads } = A.changeAt(this.doc!, heads, options, callback);
-              this.doc = newDoc;
-              result = newHeads ?? undefined;
-            } else {
-              const { newDoc, newHeads } = A.changeAt(this.doc!, heads, callback);
-              this.doc = newDoc;
-              result = newHeads ?? undefined;
-            }
-            this.onManualChange.emit();
-          } else {
-            invariant(this.docHandle);
-            result = this.docHandle.changeAt(heads, callback, options);
-            // Note: We don't need to notify listeners here, since `change` event is already emitted by the doc handle.
-          }
-
-          return result;
+          return this.changeAt(heads, callback, options);
         },
         addListener: (event, listener) => {
           if (event === 'change') {
