@@ -12,7 +12,7 @@ export const MainLayout = ({ children }: PropsWithChildren) => {
     <Main.Content
       bounce
       classNames={[
-        'grid grid-cols-[minmax(0,60rem)] grid-rows-[min-content_1fr] justify-center content-start overflow-hidden',
+        'grid grid-cols-1 grid-rows-[min-content_1fr] justify-center content-start overflow-hidden',
         topbarBlockPaddingStart,
       ]}
     >

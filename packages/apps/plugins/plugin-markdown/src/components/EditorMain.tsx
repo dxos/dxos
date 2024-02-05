@@ -17,7 +17,7 @@ import {
   useActionHandler,
   useFormattingState,
 } from '@dxos/react-ui-editor';
-import { focusRing, attentionSurface, mx } from '@dxos/react-ui-theme';
+import { focusRing, attentionSurface, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
 import { MARKDOWN_PLUGIN } from '../meta';
 
@@ -53,7 +53,11 @@ const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: Ed
   return (
     <>
       {toolbar && (
-        <Toolbar.Root onAction={handleAction} state={formattingState}>
+        <Toolbar.Root
+          onAction={handleAction}
+          state={formattingState}
+          classNames='max-is-[60rem] justify-self-center border-be separator-separator'
+        >
           <Toolbar.Markdown />
           <Toolbar.Separator />
           <Toolbar.Extended />
@@ -66,13 +70,15 @@ const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: Ed
         extensions={extensions}
         slots={{
           root: {
-            className: mx(focusRing, 'grid overflow-y-auto border-bs separator-separator'),
+            className: mx(focusRing, 'overflow-y-auto'),
             'data-testid': 'composer.markdownRoot',
           } as HTMLAttributes<HTMLDivElement>,
           editor: {
             className: mx(
               attentionSurface,
-              'is-full pli-2 sm:pli-4 md:pli-10 py-4 mbe-[50dvh] border-be md:border-is md:border-ie separator-separator',
+              textBlockWidth,
+              'is-full min-bs-full justify-self-center pli-3 sm:pli-6 md:pli-10 py-4 mbe-[50dvh] border-be md:border-is md:border-ie separator-separator',
+              !toolbar && 'border-bs',
             ),
           },
         }}
