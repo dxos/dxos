@@ -9005,12 +9005,12 @@ importers:
 
   packages/ui/react-ui-theme:
     dependencies:
+      '@ch-ui/colors':
+        specifier: ^0.4.4
+        version: 0.4.4
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
-      '@fluent-blocks/colors':
-        specifier: ^9.2.0
-        version: 9.2.0
       '@fontsource-variable/inter':
         specifier: ^5.0.16
         version: 5.0.16
@@ -13482,6 +13482,11 @@ packages:
     requiresBuild: true
     optional: true
 
+  /@ch-ui/colors@0.4.4:
+    resolution: {integrity: sha512-x1RGeg+Kxc5wPLI6Mn7eqTuG8LEbiHRbcuWzzTGV6VjcqPq6U5hfhVSso5UNcPfKVT2EMkW5l88r3RaX2zdmpw==}
+    engines: {node: '>=12.0.0'}
+    dev: false
+
   /@cnakazawa/watch@1.0.4:
     resolution: {integrity: sha512-v9kIhKwjeZThiWrLmj0y17CWoyddASLj9O2yvbZkbvw/N3rWOYy9zkV66ursAoVr0mV15bL8g0c4QZUE6cdDoQ==}
     engines: {node: '>=0.1.95'}
@@ -14701,11 +14706,6 @@ packages:
       '@floating-ui/dom': 1.2.9
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-    dev: false
-
-  /@fluent-blocks/colors@9.2.0:
-    resolution: {integrity: sha512-NgK+n4IHRj35ttJjN3UBF8oqk2ZT8xwCdT52+nTXvVSL5yHDtKwQlgb+zvrNFhYNajbqEeqYdj4QA3XSkytLww==}
-    engines: {node: '>=12.0.0 <17.0.0', pnpm: ^7}
     dev: false
 
   /@fluentui/keyboard-keys@9.0.7:
