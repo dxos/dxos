@@ -4,19 +4,15 @@
 
 import { expect } from 'chai';
 
-import { afterTest, describe, test } from '@dxos/test';
+import { describe, test } from '@dxos/test';
 
 import { AutomergeObject } from './automerge-object';
-import { setGlobalAutomergePreference } from '../automerge-preference';
 import { Expando, TypedObject, base } from '../object';
 import { TestBuilder } from '../testing';
 import { Contact, Task } from '../tests/proto';
 
 describe('AutomergeObject', () => {
   test('objects become automerge objects when global flag is set', () => {
-    setGlobalAutomergePreference(true);
-    afterTest(() => setGlobalAutomergePreference(undefined));
-
     const obj = new Expando({});
     expect(obj[base] instanceof AutomergeObject).to.eq(true);
     expect(obj instanceof AutomergeObject).to.eq(true);
