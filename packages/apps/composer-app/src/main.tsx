@@ -74,6 +74,42 @@ const main = async () => {
   );
   const isSocket = !!(globalThis as any).__args;
 
+  // @todo(mjamesderocher) move this to a plugin
+  // Possible names for plugin: "bridge" or "native-connect"
+  const checkAppScheme = (url: string) => {
+    // @todo(mjamesderocer) change this iframe to be inserted with React
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+
+    // @todo(mjamesderocher) Append current URL for proper redirection
+    iframe.src = url + window.location.pathname;
+
+    const timer = setTimeout(() => {
+      document.body.removeChild(iframe);
+      // @todo(mjamesderocher) this comment is just for testing. Remove before merge.
+      console.log('Timeout: App scheme may not be recognized.');
+    }, 2000);
+
+    window.addEventListener('pagehide', (event) => {
+      clearTimeout(timer);
+      // @todo(mjamesderocher) these comments are just for testing. Remove before merge.
+      if (event.persisted) {
+        console.log('App scheme recognized.');
+      } else {
+        console.log('App scheme may not be recognized.');
+      }
+      document.body.removeChild(iframe);
+    });
+  };
+
+  // @todo(mjamesderocher) can we get this directly from Socket?
+  const appScheme = 'composer:/';
+
+  if (!isSocket) {
+    checkAppScheme(appScheme);
+  }
+
   const App = createApp({
     fallback: ({ error }) => (
       <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
