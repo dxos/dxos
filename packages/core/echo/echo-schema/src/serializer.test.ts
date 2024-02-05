@@ -170,12 +170,15 @@ describe('Serializer', () => {
 
 describe('Serializer from Hypergraph to Automerge', () => {
   test('transfer text to automerge', async () => {
+    afterTest(() => setGlobalAutomergePreference(undefined));
+
     const serializer = new Serializer();
 
     let data: SerializedSpace;
     const content = 'Hello world!';
 
     {
+      setGlobalAutomergePreference(false);
       const { db } = await createDatabase();
       const text = new TextObject(content, undefined, undefined, { automerge: false });
       db.add(text);
@@ -199,7 +202,6 @@ describe('Serializer from Hypergraph to Automerge', () => {
 
     {
       setGlobalAutomergePreference(true);
-      afterTest(() => setGlobalAutomergePreference(undefined));
       const { db } = await createDatabase();
       await serializer.import(db, data);
 
