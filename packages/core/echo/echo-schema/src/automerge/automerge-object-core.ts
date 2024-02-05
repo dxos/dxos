@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { next as A, type ChangeFn, type ChangeOptions, type Doc, type Heads } from '@dxos/automerge/automerge';
-import { type DocHandle } from '@dxos/automerge/automerge-repo';
+import { DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { failedInvariant, invariant } from '@dxos/invariant';
 
 import { type AutomergeDb } from './automerge-db';
@@ -126,6 +126,11 @@ export class AutomergeObjectCore {
     };
   }
 
+  /**
+   * Fire a synchronous update notification via signal and event subscriptions.
+   * Called after local changes and link resolution.
+   * This function can be used unbound.
+   */
   public readonly notifyUpdate = () => {
     try {
       this.signal.notifyWrite();
@@ -134,6 +139,20 @@ export class AutomergeObjectCore {
       log.catch(err);
     }
   };
+
+  public subscribeToDocHandleChanges() {
+    invariant(this.docHandle);
+    this.docHandle.on('change', (event) => {
+      if (objectIsUpdated(this.id, event)) {
+        // Updates must come in the next microtask since the object state is not fully updated at the time of "change" event processing.
+        // Update listeners might access the state of the object and it must be fully updated at that time.
+        // It's ok to use `queueMicrotask` here since this path is only used for propagation of remote changes.
+        queueMicrotask(() => {
+          this.notifyUpdate();
+        });
+      }
+    });
+  }
 }
 
 export type DocAccessor<T = any> = {
@@ -155,4 +174,11 @@ export type IDocHandle<T = any> = {
 
 export const isDocAccessor = (obj: any): obj is DocAccessor => {
   return !!obj?.isAutomergeDocAccessor;
+};
+
+export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<DocStructure>) => {
+  if (event.patches.some((patch) => patch.path[0] === 'objects' && patch.path[1] === objId)) {
+    return true;
+  }
+  return false;
 };

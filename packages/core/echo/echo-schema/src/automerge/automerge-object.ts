@@ -15,7 +15,7 @@ import { TextModel } from '@dxos/text-model';
 
 import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
-import { AutomergeObjectCore, type DocAccessor } from './automerge-object-core';
+import { AutomergeObjectCore, objectIsUpdated, type DocAccessor } from './automerge-object-core';
 import { type ObjectStructure, type DocStructure, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
 import {
@@ -263,17 +263,8 @@ export class AutomergeObject implements TypedObjectProperties {
       this._set([], doc);
     }
 
-    this._core.docHandle.on('change', (event) => {
-      if (objectIsUpdated(this._core.id, event)) {
-        // Updates must come in the next microtask since the object state is not fully updated at the time of "change" event processing.
-        // Update listeners might access the state of the object and it must be fully updated at that time.
-        // It's ok to use `queueMicrotask` here since this path is only used for propagation of remote changes.
-        queueMicrotask(() => {
-          this._notifyUpdate();
-        });
-      }
-    });
-    this._notifyUpdate();
+    this._core.subscribeToDocHandleChanges();
+    this._core.notifyUpdate();
   }
 
   private _createProxy(path: string[]): any {
@@ -515,28 +506,12 @@ export class AutomergeObject implements TypedObjectProperties {
     invariant(!this[proxy]);
     if (this._core.database) {
       // This doesn't clean-up properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
-      return this._core.database.graph._lookupLink(ref, this._core.database, this._onLinkResolved);
+      return this._core.database.graph._lookupLink(ref, this._core.database, this._core.notifyUpdate);
     } else {
       invariant(this._linkCache);
       return this._linkCache.get(ref.itemId);
     }
   }
-
-  // TODO(mykola): Do we need this?
-  private _onLinkResolved = () => {
-    invariant(!this[proxy]);
-    this._core.signal.notifyWrite();
-    this._core.updates.emit();
-  };
-
-  /**
-   * Notifies listeners and front-end framework about the change.
-   */
-  // TODO(mykola): Unify usage of `_notifyUpdate`.
-  private _notifyUpdate = () => {
-    invariant(!this[proxy]);
-    this._core.notifyUpdate();
-  };
 
   /**
    * @internal
@@ -609,13 +584,6 @@ type EncodedReferenceObject = {
 
 const isEncodedReferenceObject = (value: any): value is EncodedReferenceObject =>
   typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG;
-
-export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<DocStructure>) => {
-  if (event.patches.some((patch) => patch.path[0] === 'objects' && patch.path[1] === objId)) {
-    return true;
-  }
-  return false;
-};
 
 // Deferred import to avoid circular dependency.
 let schemaProto: typeof Schema;
