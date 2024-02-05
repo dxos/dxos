@@ -19,6 +19,8 @@ export class AutomergeObjectCore {
    */
   public id = PublicKey.random().toHex();
 
+  // TODO(dmaretskyi): Create a discriminated union for the bound/not bound states.
+
   /**
    * Set if when the object is not bound to a database.
    */

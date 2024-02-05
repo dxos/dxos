@@ -245,18 +245,8 @@ export class AutomergeObject implements TypedObjectProperties {
    */
   _bind(options: BindOptions) {
     invariant(!this[proxy]);
-    const bound = new Trigger();
     this._core.database = options.db;
     this._core.docHandle = options.docHandle;
-    this._core.docHandle.on('change', async (event) => {
-      if (objectIsUpdated(this._core.id, event)) {
-        // Note: We need to notify listeners only after _docHandle initialization with cached _doc.
-        //       Without it there was race condition in SpacePlugin on Folder creation.
-        //       Folder was being accessed during bind process before _docHandle was initialized and after _doc was set to undefined.
-        await bound.wait();
-        this._notifyUpdate();
-      }
-    });
     this._core.mountPath = options.path;
 
     if (this._linkCache) {
@@ -276,7 +266,18 @@ export class AutomergeObject implements TypedObjectProperties {
       this._core.doc = undefined;
       this._set([], doc);
     }
-    bound.wake();
+
+    this._core.docHandle.on('change', (event) => {
+      if (objectIsUpdated(this._core.id, event)) {
+        // Updates must come in the next microtask since the object state is not fully updated at the time of "change" event processing.
+        // Update listeners might access the state of the object and it must be fully updated at that time.
+        // It's ok to use `queueMicrotask` here since this path is only used for propagation of remote changes.
+        queueMicrotask(() => {
+          this._notifyUpdate();
+        });
+      }
+    });
+    this._notifyUpdate();
   }
 
   private _createProxy(path: string[]): any {
