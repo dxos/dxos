@@ -110,6 +110,8 @@ const ToolbarButton = ({ Icon, children, ...props }: ToolbarButtonProps) => {
   );
 };
 
+const ToolbarSeparator = () => <div role='separator' className='grow' />;
+
 const MarkdownHeading = () => {
   const { t } = useTranslation(translationKey);
   const { onAction, state } = useToolbarContext('MarkdownFormatting');
@@ -273,12 +275,10 @@ const MarkdownExtended = () => {
   );
 };
 
-const Separator = () => <div role='none' className='grow' />;
-
 export const Toolbar = {
   Root: ToolbarRoot,
   Button: ToolbarButton,
-  Separator,
+  Separator: ToolbarSeparator,
   Markdown: MarkdownStandard,
   Extended: MarkdownExtended,
 };
