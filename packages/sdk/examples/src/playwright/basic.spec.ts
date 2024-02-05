@@ -36,9 +36,13 @@ test.describe('Demo', () => {
     await app.page.keyboard.press('End');
     await app.page.keyboard.press('Enter');
     await app.getMarkdownTextbox(0).type('hello');
-    await app.getMarkdownTextbox(0).blur();
     await app.getMarkdownTextbox(1).getByText('hello').waitFor();
 
+    // Wait for the cursor to disappear in order for text content to not include the cursor.
+    await app.getMarkdownTextbox(0).blur();
+    await waitForExpect(async () => {
+      expect(await app.getCollaboratorCursors().count()).to.equal(0);
+    });
     const content0 = await app.getMarkdownTextbox(0).textContent();
     const content1 = await app.getMarkdownTextbox(1).textContent();
     expect(content0).to.equal(content1);
@@ -52,7 +56,12 @@ test.describe('Demo', () => {
     await app.page.keyboard.press('End');
     await app.page.keyboard.press('Enter');
     await app.getMarkdownTextbox(0).type('hello');
+
+    // Wait for the cursor to disappear in order for text content to not include the cursor.
     await app.getMarkdownTextbox(0).blur();
+    await waitForExpect(async () => {
+      expect(await app.getCollaboratorCursors().count()).to.equal(0);
+    });
     const offline0 = await app.getMarkdownTextbox(0).textContent();
     const offline1 = await app.getMarkdownTextbox(1).textContent();
     expect(offline0).not.to.equal(offline1);
