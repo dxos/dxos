@@ -21,3 +21,15 @@ export const parseIntentPlugin = (plugin: Plugin) =>
 
 export const parseIntentResolverPlugin = (plugin: Plugin) =>
   (plugin.provides as any).intent?.resolver ? (plugin as Plugin<IntentResolverProvides>) : undefined;
+
+//
+// Intents
+//
+
+const INTENT_ACTION = 'dxos.org/plugin/intent';
+export enum IntentAction {
+  /**
+   * Fired after an intent is dispatched if the intent is undoable.
+   */
+  UNDO_AVAILABLE = `${INTENT_ACTION}/undo-available`,
+}

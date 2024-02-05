@@ -29,6 +29,7 @@ import {
   type GraphProvides,
   type SurfaceProps,
   type Layout,
+  IntentAction,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
@@ -55,6 +56,7 @@ export const LayoutPlugin = ({
   let graphPlugin: Plugin<GraphProvides> | undefined;
   // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
+  let currentUndoId: string | undefined;
 
   const settings = new LocalStorageStore<LayoutSettingsProps>(LAYOUT_PLUGIN, {
     enableComplementarySidebar: true,
@@ -281,7 +283,12 @@ export const LayoutPlugin = ({
                     const index = layout.values.toasts.findIndex((toast) => toast.id === id);
                     if (index !== -1) {
                       // Allow time for the toast to animate out.
-                      setTimeout(() => layout.values.toasts.splice(index, 1), 1000);
+                      setTimeout(() => {
+                        if (layout.values.toasts[index].id === currentUndoId) {
+                          currentUndoId = undefined;
+                        }
+                        layout.values.toasts.splice(index, 1);
+                      }, 1000);
                     }
                   }}
                 />
@@ -313,6 +320,27 @@ export const LayoutPlugin = ({
           switch (intent.action) {
             case LayoutAction.SET_LAYOUT: {
               return intent.data && handleSetLayout(intent.data as LayoutAction.SetLayout);
+            }
+
+            case IntentAction.UNDO_AVAILABLE: {
+              // TODO(wittjosiah): Support undoing further back than the last action.
+              if (currentUndoId) {
+                layout.values.toasts = layout.values.toasts.filter((toast) => toast.id !== currentUndoId);
+              }
+              currentUndoId = `${IntentAction.UNDO_AVAILABLE}-${Date.now()}`;
+              layout.values.toasts = [
+                ...layout.values.toasts,
+                {
+                  id: currentUndoId,
+                  title: translations[0]['en-US']['dxos.org/plugin/layout']['undo available label'],
+                  duration: 10_000,
+                  actionLabel: translations[0]['en-US']['dxos.org/plugin/layout']['undo action label'],
+                  actionAlt: translations[0]['en-US']['dxos.org/plugin/layout']['undo action alt'],
+                  closeLabel: translations[0]['en-US']['dxos.org/plugin/layout']['undo close label'],
+                  onAction: () => intentPlugin?.provides.intent.undo?.(),
+                },
+              ];
+              return { data: true };
             }
 
             // TODO(wittjosiah): Factor out.

@@ -20,6 +20,7 @@ const THREAD_ACTION = `${THREAD_PLUGIN}/action`;
 export enum ThreadAction {
   CREATE = `${THREAD_ACTION}/create`,
   SELECT = `${THREAD_ACTION}/select`,
+  DELETE = `${THREAD_ACTION}/delete`,
 }
 
 export type ThreadPluginProvides = SurfaceProvides &
