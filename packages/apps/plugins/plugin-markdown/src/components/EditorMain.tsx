@@ -77,7 +77,7 @@ const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: Ed
             className: mx(
               attentionSurface,
               textBlockWidth,
-              'is-full min-bs-[calc(100%-4rem)] justify-self-center pli-3 sm:pli-6 md:pli-10 py-4 mbe-16 border-be md:border-is md:border-ie separator-separator',
+              'is-full min-bs-[calc(100%-2rem)] pli-3 sm:pli-6 md:pli-10 py-4 mbe-[50dvh] border-be md:border-is md:border-ie separator-separator',
               !toolbar && 'border-bs',
             ),
           },
