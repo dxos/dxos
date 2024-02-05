@@ -6,6 +6,7 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Reference } from '@dxos/document-model';
 import { type UpdateEvent } from '@dxos/echo-db';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -25,7 +26,6 @@ import {
   type QuerySource,
 } from './query';
 import { TypeCollection } from './type-collection';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
 
 /**
  * Manages cross-space database interactions.

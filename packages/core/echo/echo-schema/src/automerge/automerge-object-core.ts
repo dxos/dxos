@@ -5,6 +5,7 @@
 import { Event } from '@dxos/async';
 import { next as A, type ChangeFn, type ChangeOptions, type Doc, type Heads } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -12,7 +13,6 @@ import { log } from '@dxos/log';
 import { type AutomergeDb } from './automerge-db';
 import { type DocStructure, type ObjectStructure } from './types';
 import { type EchoObject } from '../object';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
 
 // TODO(dmaretskyi): Rename to `AutomergeObject`.
 export class AutomergeObjectCore {

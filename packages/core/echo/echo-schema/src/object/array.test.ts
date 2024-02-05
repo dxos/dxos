@@ -7,13 +7,13 @@ import expect from 'expect'; // TODO(burdon): Can't use chai with wait-for-expec
 import { inspect } from 'util';
 
 import { sleep } from '@dxos/async';
+import { registerSignalRuntime } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 import { EchoArray } from './array';
 import { Expando, TypedObject } from './typed-object';
 import { createDatabase } from '../testing';
-import { registerSignalRuntime } from '@dxos/echo-signals';
 
 describe('Arrays', () => {
   test('array of tags', async () => {

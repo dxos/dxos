@@ -6,13 +6,13 @@ import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
 
 import { Trigger, sleep } from '@dxos/async';
+import { registerSignalRuntime } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 import { createSubscription } from './subscription';
 import { Expando } from './typed-object';
 import { createDatabase } from '../testing';
-import { registerSignalRuntime } from '@dxos/echo-signals';
 
 describe('create subscription', () => {
   test('updates are propagated', async () => {
