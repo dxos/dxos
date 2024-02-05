@@ -11,6 +11,7 @@ import { type AutomergeDb } from './automerge-db';
 import { type DocStructure, type ObjectStructure } from './types';
 import { PublicKey } from '@dxos/keys';
 import { compositeRuntime } from '../util';
+import { log } from '@dxos/log';
 
 // TODO(dmaretskyi): Rename to `AutomergeObject`.
 export class AutomergeObjectCore {
@@ -43,12 +44,6 @@ export class AutomergeObjectCore {
   public mountPath: string[] = [];
 
   /**
-   * Fires after updates that come from the using the doc accessor.
-   * NOTE: Does not capture all changes.
-   */
-  public onManualChange = new Event();
-
-  /**
    * Handles link resolution as well as manual changes.
    */
   public updates = new Event();
@@ -69,7 +64,7 @@ export class AutomergeObjectCore {
       } else {
         this.doc = A.change(this.doc!, changeFn);
       }
-      this.onManualChange.emit();
+      this.notifyUpdate();
     } else {
       invariant(this.docHandle);
       this.docHandle.change(changeFn, options);
@@ -89,7 +84,7 @@ export class AutomergeObjectCore {
         this.doc = newDoc;
         result = newHeads ?? undefined;
       }
-      this.onManualChange.emit();
+      this.notifyUpdate();
     } else {
       invariant(this.docHandle);
       result = this.docHandle.changeAt(heads, callback, options);
@@ -130,6 +125,15 @@ export class AutomergeObjectCore {
       isAutomergeDocAccessor: true,
     };
   }
+
+  public readonly notifyUpdate = () => {
+    try {
+      this.signal.notifyWrite();
+      this.updates.emit();
+    } catch (err) {
+      log.catch(err);
+    }
+  };
 }
 
 export type DocAccessor<T = any> = {

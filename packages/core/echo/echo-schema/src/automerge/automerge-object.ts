@@ -86,10 +86,6 @@ export class AutomergeObject implements TypedObjectProperties {
     }
     this._immutable = opts?.immutable ?? false;
 
-    this._core.onManualChange.on(() => {
-      this._notifyUpdate();
-    });
-
     return this._createProxy(['data']);
   }
 
@@ -539,12 +535,7 @@ export class AutomergeObject implements TypedObjectProperties {
   // TODO(mykola): Unify usage of `_notifyUpdate`.
   private _notifyUpdate = () => {
     invariant(!this[proxy]);
-    try {
-      this._core.signal.notifyWrite();
-      this._core.updates.emit();
-    } catch (err) {
-      log.catch(err);
-    }
+    this._core.notifyUpdate();
   };
 
   /**
