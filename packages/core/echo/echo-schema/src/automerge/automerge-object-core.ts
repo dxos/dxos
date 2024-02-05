@@ -12,6 +12,7 @@ import { type DocStructure, type ObjectStructure } from './types';
 import { PublicKey } from '@dxos/keys';
 import { compositeRuntime } from '../util';
 import { log } from '@dxos/log';
+import { EchoObject } from '../object';
 
 // TODO(dmaretskyi): Rename to `AutomergeObject`.
 export class AutomergeObjectCore {
@@ -36,6 +37,12 @@ export class AutomergeObjectCore {
    * Set if when the object is bound to a database.
    */
   public docHandle?: DocHandle<DocStructure> = undefined;
+
+  /**
+   * Until object is persisted in the database, the linked object references are stored in this cache.
+   * Set only when the object is not bound to a database.
+   */
+  public linkCache?: Map<string, EchoObject> = new Map<string, EchoObject>();
 
   /**
    * Key path at where we are mounted in the `doc` or `docHandle`.

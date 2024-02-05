@@ -59,12 +59,6 @@ export class AutomergeObject implements TypedObjectProperties {
 
   private readonly _immutable: boolean; // TODO(burdon): Not used.
 
-  /**
-   * Until object is persisted in the database, the linked object references are stored in this cache.
-   * @internal
-   */
-  _linkCache: Map<string, EchoObject> | undefined = new Map<string, EchoObject>();
-
   constructor(initialProps?: unknown, opts?: TypedObjectOptions) {
     this._initNewObject(initialProps, opts);
 
@@ -245,12 +239,12 @@ export class AutomergeObject implements TypedObjectProperties {
     this._core.docHandle = options.docHandle;
     this._core.mountPath = options.path;
 
-    if (this._linkCache) {
-      for (const obj of this._linkCache.values()) {
+    if (this._core.linkCache) {
+      for (const obj of this._core.linkCache.values()) {
         this._core.database!.add(obj);
       }
 
-      this._linkCache = undefined;
+      this._core.linkCache = undefined;
     }
 
     if (options.ignoreCache) {
@@ -492,8 +486,8 @@ export class AutomergeObject implements TypedObjectProperties {
         }
       }
     } else {
-      invariant(this._linkCache);
-      this._linkCache.set(obj.id, obj);
+      invariant(this._core.linkCache);
+      this._core.linkCache.set(obj.id, obj);
       return new Reference(obj.id);
     }
   }
@@ -508,8 +502,8 @@ export class AutomergeObject implements TypedObjectProperties {
       // This doesn't clean-up properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
       return this._core.database.graph._lookupLink(ref, this._core.database, this._core.notifyUpdate);
     } else {
-      invariant(this._linkCache);
-      return this._linkCache.get(ref.itemId);
+      invariant(this._core.linkCache);
+      return this._core.linkCache.get(ref.itemId);
     }
   }
 

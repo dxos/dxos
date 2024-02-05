@@ -58,7 +58,7 @@ export const clone = <T extends EchoObject>(obj: T, { retainId = true, additiona
         continue;
       }
 
-      (clone as AutomergeObject)[base]._linkCache!.set(ref.id, ref);
+      (clone as AutomergeObject)[base]._core.linkCache!.set(ref.id, ref);
     }
   }
 
