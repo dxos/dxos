@@ -52,6 +52,11 @@ export class AppManager {
     return this.page.getByTestId('layoutPlugin.firstRunMessage').isVisible();
   }
 
+  async closeToasts() {
+    const toasts = await this.page.getByTestId('toast.close').all();
+    await Promise.all(toasts.map((toast) => toast.click()));
+  }
+
   async createSpace() {
     await this.page.getByTestId('spacePlugin.createSpace').click();
     return this.page.getByTestId('navtree.treeItem.openTrigger').last().click();
