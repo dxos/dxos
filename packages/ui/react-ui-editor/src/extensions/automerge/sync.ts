@@ -34,6 +34,7 @@ export class Syncer {
   ) {}
 
   reconcile(view: EditorView, editor: boolean) {
+    // TODO(burdon): Better way to do mutex?
     if (this._pending) {
       return;
     }
@@ -48,8 +49,10 @@ export class Syncer {
   }
 
   onEditorChange(view: EditorView) {
+    // Apply the unreconciled transactions to the document.
     const transactions = view.state.field(this._state).unreconciledTransactions.filter((tx) => !isReconcile(tx));
     const newHeads = updateAutomerge(this._state, this._handle, transactions, view.state);
+
     if (newHeads) {
       view.dispatch({
         effects: updateHeads(newHeads),
@@ -59,12 +62,15 @@ export class Syncer {
   }
 
   onAutomergeChange(view: EditorView) {
-    const path = getPath(view.state, this._state);
-    const selection = view.state.selection;
+    // Get the diff between the updated state of the document and the heads and apply that to the codemirror doc.
     const oldHeads = getLastHeads(view.state, this._state);
     const newHeads = A.getHeads(this._handle.docSync()!);
     const diff = A.equals(oldHeads, newHeads) ? [] : A.diff(this._handle.docSync()!, oldHeads, newHeads);
+
+    const selection = view.state.selection;
+    const path = getPath(view.state, this._state);
     updateCodeMirror(view, selection, path, diff);
+
     view.dispatch({
       effects: updateHeads(newHeads),
       annotations: reconcileAnnotation.of(false),
