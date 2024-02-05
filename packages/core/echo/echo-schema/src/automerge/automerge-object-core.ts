@@ -10,6 +10,7 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { type AutomergeDb } from './automerge-db';
 import { type DocStructure, type ObjectStructure } from './types';
 import { PublicKey } from '@dxos/keys';
+import { compositeRuntime } from '../util';
 
 // TODO(dmaretskyi): Rename to `AutomergeObject`.
 export class AutomergeObjectCore {
@@ -49,6 +50,11 @@ export class AutomergeObjectCore {
    * Handles link resolution as well as manual changes.
    */
   public updates = new Event();
+
+  /**
+   * Reactive signal for update propagation.
+   */
+  public signal = compositeRuntime.createSignal();
 
   getDoc() {
     return this.doc ?? this.docHandle?.docSync() ?? failedInvariant('Invalid state');

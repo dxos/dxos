@@ -56,9 +56,8 @@ export class AutomergeObject implements TypedObjectProperties {
   _core = new AutomergeObjectCore();
 
   private _schema?: Schema = undefined;
-  private readonly _immutable: boolean; // TODO(burdon): Not used.
 
-  protected readonly _signal = compositeRuntime.createSignal();
+  private readonly _immutable: boolean; // TODO(burdon): Not used.
 
   /**
    * Until object is persisted in the database, the linked object references are stored in this cache.
@@ -346,7 +345,7 @@ export class AutomergeObject implements TypedObjectProperties {
    */
   _get(path: string[]) {
     invariant(!this[proxy]);
-    this._signal.notifyRead();
+    this._core.signal.notifyRead();
 
     const fullPath = [...this._core.mountPath, ...path];
     let value = this._getDoc();
@@ -529,7 +528,7 @@ export class AutomergeObject implements TypedObjectProperties {
   // TODO(mykola): Do we need this?
   private _onLinkResolved = () => {
     invariant(!this[proxy]);
-    this._signal.notifyWrite();
+    this._core.signal.notifyWrite();
     this._core.updates.emit();
   };
 
@@ -540,7 +539,7 @@ export class AutomergeObject implements TypedObjectProperties {
   private _notifyUpdate = () => {
     invariant(!this[proxy]);
     try {
-      this._signal.notifyWrite();
+      this._core.signal.notifyWrite();
       this._core.updates.emit();
     } catch (err) {
       log.catch(err);
