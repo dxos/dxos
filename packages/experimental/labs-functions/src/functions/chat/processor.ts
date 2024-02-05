@@ -11,7 +11,7 @@ import get from 'lodash.get';
 
 import { Chain as ChainType, type Message as MessageType, type Thread as ThreadType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { getTextContent, TextObject } from '@dxos/echo-schema';
+import { getTextContent, type JsonSchema, TextObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { createContext, type RequestContext } from './context';
@@ -126,36 +126,40 @@ export class RequestProcessor {
       inputs[input.name] = await this.getInput(input, context);
     }
 
-    // TODO(burdon): Build schema from prompt.
-    const schema = {
-      type: 'object',
-      properties: {
-        company: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              name: { type: 'string', description: 'The name of the company.' },
-              website: { type: 'string', description: 'The public website of the company.' },
-            },
-          },
-          description: 'An array of companies.',
+    // TODO(burdon): Get types from space.
+    const types = {
+      company: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: 'The name of the company.' },
+          website: { type: 'string', description: 'The public website of the company.' },
         },
-        contact: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              name: { type: 'string', description: 'The name of the person.' },
-              organization: { type: 'string', description: "The name of the person's employer." },
-            },
-          },
-          description: 'An array of contacts.',
+      },
+      contact: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: 'The name of the person.' },
+          // TODO(burdon): Reference.
+          organization: { type: 'string', description: "The name of the person's employer." },
         },
       },
     };
 
-    // TODO(burdon): OpenAI kwargs only.
+    // TODO(burdon): Build schema from prompt.
+    const schema = {
+      type: 'object',
+      properties: Object.entries(types).reduce<{ [name: string]: JsonSchema }>((schema, [key, value]) => {
+        schema[key] = {
+          type: 'array',
+          items: value,
+          description: `An array of ${key} entities.`,
+        };
+
+        return schema;
+      }, {}),
+    };
+
+    // TODO(burdon): OpenAI-specific kwargs.
     const args: any = {
       function_call: { name: 'output_formatter' },
       functions: [
