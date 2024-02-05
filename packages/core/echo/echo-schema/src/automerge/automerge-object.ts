@@ -36,7 +36,7 @@ import {
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
 import { compositeRuntime } from '../util';
-import { AutomergeObjectCore } from './automerge-object-core';
+import { AutomergeObjectCore, DocAccessor } from './automerge-object-core';
 
 export type BindOptions = {
   db: AutomergeDb;
@@ -58,8 +58,6 @@ export class AutomergeObject implements TypedObjectProperties {
   private readonly _immutable: boolean; // TODO(burdon): Not used.
 
   protected readonly _signal = compositeRuntime.createSignal();
-
-  private _updates = new Event();
 
   /**
    * Until object is persisted in the database, the linked object references are stored in this cache.
@@ -92,6 +90,10 @@ export class AutomergeObject implements TypedObjectProperties {
       this.__system.type = type;
     }
     this._immutable = opts?.immutable ?? false;
+
+    this._core.onManualChange.on(() => {
+      this._notifyUpdate();
+    });
 
     return this._createProxy(['data']);
   }
@@ -211,10 +213,10 @@ export class AutomergeObject implements TypedObjectProperties {
     };
 
     this[base]._core.docHandle?.on('change', changeListener);
-    this[base]._updates.on(updatesListener);
+    this[base]._core.updates.on(updatesListener);
     return () => {
       this[base]._core.docHandle?.off('change', changeListener);
-      this[base]._updates.off(updatesListener);
+      this[base]._core.updates.off(updatesListener);
     };
   }
 
@@ -540,7 +542,7 @@ export class AutomergeObject implements TypedObjectProperties {
   private _onLinkResolved = () => {
     invariant(!this[proxy]);
     this._signal.notifyWrite();
-    this._updates.emit();
+    this._core.updates.emit();
   };
 
   /**
@@ -551,7 +553,7 @@ export class AutomergeObject implements TypedObjectProperties {
     invariant(!this[proxy]);
     try {
       this._signal.notifyWrite();
-      this._updates.emit();
+      this._core.updates.emit();
     } catch (err) {
       log.catch(err);
     }
@@ -582,64 +584,7 @@ export class AutomergeObject implements TypedObjectProperties {
    */
   _getRawDoc(path?: string[]): DocAccessor {
     invariant(!this[proxy]);
-    const self = this;
-    return {
-      handle: {
-        docSync: () => this._getDoc(),
-        change: (callback, options) => {
-          if (this._core.doc) {
-            if (options) {
-              this._core.doc = A.change(this._core.doc!, options, callback);
-            } else {
-              this._core.doc = A.change(this._core.doc!, callback);
-            }
-            this._notifyUpdate();
-          } else {
-            invariant(this._core.docHandle);
-            this._core.docHandle.change(callback, options);
-            // Note: We don't need to notify listeners here, since `change` event is already emitted by the doc handle.
-          }
-        },
-        changeAt: (heads, callback, options) => {
-          let result: Heads | undefined;
-          if (this._core.doc) {
-            if (options) {
-              const { newDoc, newHeads } = A.changeAt(this._core.doc!, heads, options, callback);
-              this._core.doc = newDoc;
-              result = newHeads ?? undefined;
-            } else {
-              const { newDoc, newHeads } = A.changeAt(this._core.doc!, heads, callback);
-              this._core.doc = newDoc;
-              result = newHeads ?? undefined;
-            }
-            this._notifyUpdate();
-          } else {
-            invariant(this._core.docHandle);
-            result = this._core.docHandle.changeAt(heads, callback, options);
-            // Note: We don't need to notify listeners here, since `change` event is already emitted by the doc handle.
-          }
-
-          return result;
-        },
-        addListener: (event, listener) => {
-          if (event === 'change') {
-            this[base]._core.docHandle?.on('change', listener);
-            this._updates.on(listener);
-          }
-        },
-        removeListener: (event, listener) => {
-          if (event === 'change') {
-            this[base]._core.docHandle?.off('change', listener);
-            this._updates.off(listener);
-          }
-        },
-      },
-      get path() {
-        return [...self._core.mountPath, 'data', ...(path ?? [])];
-      },
-
-      isAutomergeDocAccessor: true,
-    };
+    return this._core.getDocAccessor(path);
   }
 }
 
@@ -703,27 +648,6 @@ const getSchemaProto = (): typeof Schema => {
   }
 
   return schemaProto;
-};
-
-export type IDocHandle<T = any> = {
-  docSync(): Doc<T> | undefined;
-  change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
-  changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): string[] | undefined;
-
-  addListener(event: 'change', listener: () => void): void;
-  removeListener(event: 'change', listener: () => void): void;
-};
-
-export type DocAccessor<T = any> = {
-  handle: IDocHandle<T>;
-
-  path: string[];
-
-  isAutomergeDocAccessor: true;
-};
-
-export const isDocAccessor = (obj: any): obj is DocAccessor => {
-  return !!obj?.isAutomergeDocAccessor;
 };
 
 export const getRawDoc = (obj: EchoObject, path?: string[]): DocAccessor => {
