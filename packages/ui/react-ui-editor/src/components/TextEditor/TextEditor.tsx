@@ -47,7 +47,6 @@ export type TextEditorSlots = {
   };
 };
 
-// TODO(burdon): Spellcheck?
 export type TextEditorProps = {
   model: EditorModel; // TODO(burdon): Optional (e.g., just provide content if readonly).
   readonly?: boolean; // TODO(burdon): Move into model.
