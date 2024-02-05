@@ -5,6 +5,7 @@
 import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
 import { Context } from '@dxos/context';
 import { AutomergeStorageAdapter } from '@dxos/echo-pipeline';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { range } from '@dxos/util';
@@ -41,9 +42,9 @@ export class StorageTestPlan implements TestPlan<StorageTestSpec, StorageAgentCo
     return {
       platform: 'chromium',
       storageAdaptor: 'idb',
-      filesAmount: 1000,
-      fileSize: 1000,
-      batchSize: 0,
+      filesAmount: 1_000_000,
+      fileSize: 1_000,
+      batchSize: 100,
     };
   }
 
@@ -68,6 +69,7 @@ export class StorageTestPlan implements TestPlan<StorageTestSpec, StorageAgentCo
     });
 
     {
+      // Save.
       performance.mark('save:begin');
       const storageAdapter = this._createStorage(spec.storageAdaptor);
       for (const batchIdx of range(Math.ceil(spec.filesAmount / batchSize))) {
@@ -84,20 +86,38 @@ export class StorageTestPlan implements TestPlan<StorageTestSpec, StorageAgentCo
       });
     }
 
-    await this._storageCtx.dispose();
-    this._storageCtx = new Context();
-
     {
+      // Dispose storage adaptor.
+      await this._storageCtx.dispose();
+      this._storageCtx = new Context();
+    }
+
+    const loadedFiles: { key: string[]; data: Uint8Array | undefined }[] = [];
+    {
+      // Load.
       performance.mark('load:begin');
-      const loadedFiles = [];
       const storageAdapter = this._createStorage(spec.storageAdaptor);
       for (const batchIdx of range(Math.ceil(spec.filesAmount / batchSize))) {
-        loadedFiles.push(await storageAdapter.loadRange(['file', batchIdx.toString()]));
+        const loadedBatch = await storageAdapter.loadRange(['file', batchIdx.toString()]);
+        loadedFiles.push(...loadedBatch);
       }
       performance.mark('load:end');
-      log.info('docs ready', {
+      log.info('docs loaded', {
         count: loadedFiles.length,
         time: performance.measure('load', 'load:begin', 'load:end').duration,
+      });
+    }
+
+    {
+      // Sanity check
+      performance.mark('sanity:begin');
+      for (const file of loadedFiles) {
+        invariant(filesToSave.find((f) => f.key.join() === file.key.join())!.data === file.data);
+      }
+      performance.mark('sanity:end');
+      log.info('sanity check', {
+        count: loadedFiles.length,
+        time: performance.measure('sanity', 'sanity:begin', 'sanity:end').duration,
       });
     }
   }
