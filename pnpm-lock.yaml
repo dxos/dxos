@@ -6700,7 +6700,7 @@ importers:
         version: 0.0.26(discord.js@14.14.1)(faiss-node@0.5.1)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@20.0.1)
       '@langchain/core':
         specifier: ^0.1.22
-        version: 0.1.22
+        version: 0.1.23
       '@langchain/openai':
         specifier: ^0.0.14
         version: 0.0.14
@@ -6757,7 +6757,7 @@ importers:
         version: 4.1.0
       langchain:
         specifier: ^0.1.12
-        version: 0.1.12(discord.js@14.14.1)(faiss-node@0.5.1)(fast-xml-parser@4.3.2)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@20.0.1)
+        version: 0.1.13(discord.js@14.14.1)(faiss-node@0.5.1)(fast-xml-parser@4.3.2)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@20.0.1)
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -9011,12 +9011,12 @@ importers:
 
   packages/ui/react-ui-theme:
     dependencies:
+      '@ch-ui/colors':
+        specifier: ^0.4.4
+        version: 0.4.4
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
-      '@fluent-blocks/colors':
-        specifier: ^9.2.0
-        version: 9.2.0
       '@fontsource-variable/inter':
         specifier: ^5.0.16
         version: 5.0.16
@@ -13488,6 +13488,11 @@ packages:
     requiresBuild: true
     optional: true
 
+  /@ch-ui/colors@0.4.4:
+    resolution: {integrity: sha512-x1RGeg+Kxc5wPLI6Mn7eqTuG8LEbiHRbcuWzzTGV6VjcqPq6U5hfhVSso5UNcPfKVT2EMkW5l88r3RaX2zdmpw==}
+    engines: {node: '>=12.0.0'}
+    dev: false
+
   /@cnakazawa/watch@1.0.4:
     resolution: {integrity: sha512-v9kIhKwjeZThiWrLmj0y17CWoyddASLj9O2yvbZkbvw/N3rWOYy9zkV66ursAoVr0mV15bL8g0c4QZUE6cdDoQ==}
     engines: {node: '>=0.1.95'}
@@ -14709,11 +14714,6 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
-  /@fluent-blocks/colors@9.2.0:
-    resolution: {integrity: sha512-NgK+n4IHRj35ttJjN3UBF8oqk2ZT8xwCdT52+nTXvVSL5yHDtKwQlgb+zvrNFhYNajbqEeqYdj4QA3XSkytLww==}
-    engines: {node: '>=12.0.0 <17.0.0', pnpm: ^7}
-    dev: false
-
   /@fluentui/keyboard-keys@9.0.7:
     resolution: {integrity: sha512-vaQ+lOveQTdoXJYqDQXWb30udSfTVcIuKk1rV0X0eGAgcHeSDeP1HxMy+OgHOQZH3OiBH4ZYeWxb+tmfiDiygQ==}
     dependencies:
@@ -15667,7 +15667,7 @@ packages:
       ws:
         optional: true
     dependencies:
-      '@langchain/core': 0.1.22
+      '@langchain/core': 0.1.23
       '@langchain/openai': 0.0.14
       discord.js: 14.14.1
       faiss-node: 0.5.1
@@ -15676,7 +15676,7 @@ packages:
       googleapis: 126.0.1
       html-to-text: 9.0.5
       jsdom: 20.0.1
-      langsmith: 0.0.66
+      langsmith: 0.0.48
       uuid: 9.0.1
       zod: 3.22.4
     transitivePeerDependencies:
@@ -15684,18 +15684,19 @@ packages:
       - supports-color
     dev: false
 
-  /@langchain/core@0.1.22:
-    resolution: {integrity: sha512-I3KMv87D5AFeAvuJhzaGOYdppFL4h/bRm7LeJfwF2PspQIZwvDE9GP7hkw4n+7jwNaBxjU8ZTj6o3LZAh1R5LQ==}
+  /@langchain/core@0.1.23:
+    resolution: {integrity: sha512-Kn2AiwEMHW9+o6bkKiEUbJ8abQMlEVoePTKw6axdnEOE9zX5Epl1iRCJo+Id5ajNYSYXjWky4puqz75OcFGD6w==}
     engines: {node: '>=18'}
     dependencies:
       ansi-styles: 5.2.0
       camelcase: 6.3.0
       decamelize: 1.2.0
       js-tiktoken: 1.0.10
-      langsmith: 0.0.66
+      langsmith: 0.0.48
       ml-distance: 4.0.1
       p-queue: 6.6.2
       p-retry: 4.6.2
+      sax: 1.3.0
       uuid: 9.0.1
       zod: 3.22.4
       zod-to-json-schema: 3.22.4(zod@3.22.4)
@@ -15705,9 +15706,9 @@ packages:
     resolution: {integrity: sha512-co6nRylPrLGY/C3JYxhHt6cxLq07P086O7K3QaZH7SFFErIN9wSzJonpvhZR07DEUq6eK6wKgh2ORxA/NcjSRQ==}
     engines: {node: '>=18'}
     dependencies:
-      '@langchain/core': 0.1.22
-      js-tiktoken: 1.0.10
-      openai: 4.26.0
+      '@langchain/core': 0.1.23
+      js-tiktoken: 1.0.7
+      openai: 4.26.1
       zod: 3.22.4
       zod-to-json-schema: 3.22.4(zod@3.22.4)
     transitivePeerDependencies:
@@ -26821,6 +26822,11 @@ packages:
     engines: {node: '>=14'}
     dev: false
 
+  /commander@11.1.0:
+    resolution: {integrity: sha512-yPVavfyCcRhmorC7rWlkHn15b4wDVgVmBA7kV4QVBsF7kv/9TKJAbAXVTxvTnwP8HHKjRCJDClKbciiYS7p0DQ==}
+    engines: {node: '>=16'}
+    dev: false
+
   /commander@12.0.0:
     resolution: {integrity: sha512-MwVNWlYjDTtOjX5PiD7o5pK0UrFU/OYgcJfjjK4RaHZETNtjJqrZa9Y9ds88+A+f+d5lv+561eZ+yCKoS3gbAA==}
     engines: {node: '>=18'}
@@ -33600,7 +33606,7 @@ packages:
     deprecated: The underlying libraries have been unified.  See < https://cdn.sheetjs.com/j/ >.
     hasBin: true
     dependencies:
-      commander: 12.0.0
+      commander: 11.1.0
       concat-stream: 2.0.0
       harb: 0.0.7
       xlsjs: 0.7.6
@@ -34656,6 +34662,12 @@ packages:
       base64-js: 1.5.1
     dev: false
 
+  /js-tiktoken@1.0.7:
+    resolution: {integrity: sha512-biba8u/clw7iesNEWLOLwrNGoBP2lA+hTaBLs/D45pJdUPFXyxD6nhcDVtADChghv4GgyAiMKYMiRx7x6h7Biw==}
+    dependencies:
+      base64-js: 1.5.1
+    dev: false
+
   /js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
@@ -35039,8 +35051,8 @@ packages:
     engines: {node: '>=14.16'}
     dev: true
 
-  /langchain@0.1.12(discord.js@14.14.1)(faiss-node@0.5.1)(fast-xml-parser@4.3.2)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@20.0.1):
-    resolution: {integrity: sha512-F3WK6KJGeA+gnXIrijKy892yEGzUOpO4pEWWphUrCxrtfjXh1hFcXfj5Oh14qGvaUCmn8ezBqQMJ/LhL6z3DhQ==}
+  /langchain@0.1.13(discord.js@14.14.1)(faiss-node@0.5.1)(fast-xml-parser@4.3.2)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@20.0.1):
+    resolution: {integrity: sha512-A56Qi5Jlxc3b/G9ny/B6gsqujFp9dFpnT7HIKFCq/mS/5foCb0nQ8P2F/Pwv8COg6b/be9Gwu1WQ97L93uE+dw==}
     engines: {node: '>=18'}
     peerDependencies:
       '@aws-sdk/client-s3': ^3.310.0
@@ -35069,7 +35081,6 @@ packages:
       faiss-node: '*'
       fast-xml-parser: ^4.2.7
       google-auth-library: ^8.9.0
-      googleapis: ^126.0.1
       handlebars: ^4.7.8
       html-to-text: ^9.0.5
       ignore: ^5.2.0
@@ -35148,8 +35159,6 @@ packages:
         optional: true
       google-auth-library:
         optional: true
-      googleapis:
-        optional: true
       handlebars:
         optional: true
       html-to-text:
@@ -35203,16 +35212,15 @@ packages:
     dependencies:
       '@anthropic-ai/sdk': 0.9.1
       '@langchain/community': 0.0.26(discord.js@14.14.1)(faiss-node@0.5.1)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@20.0.1)
-      '@langchain/core': 0.1.22
+      '@langchain/core': 0.1.23
       '@langchain/openai': 0.0.14
       binary-extensions: 2.2.0
       expr-eval: 2.0.2
       faiss-node: 0.5.1
       fast-xml-parser: 4.3.2
       google-auth-library: 8.9.0
-      googleapis: 126.0.1
       html-to-text: 9.0.5
-      js-tiktoken: 1.0.10
+      js-tiktoken: 1.0.7
       js-yaml: 4.1.0
       jsdom: 20.0.1
       jsonpointer: 5.0.1
@@ -35268,6 +35276,7 @@ packages:
       - discord.js
       - encoding
       - firebase-admin
+      - googleapis
       - hnswlib-node
       - llmonitor
       - lodash
@@ -35287,6 +35296,17 @@ packages:
 
   /langchainhub@0.0.6:
     resolution: {integrity: sha512-SW6105T+YP1cTe0yMf//7kyshCgvCTyFBMTgH2H3s9rTAR4e+78DA/BBrUL/Mt4Q5eMWui7iGuAYb3pgGsdQ9w==}
+    dev: false
+
+  /langsmith@0.0.48:
+    resolution: {integrity: sha512-s0hW8iZ90Q9XLTnDK0Pgee245URV3b1cXQjPDj5OKm1+KN7iSK1pKx+4CO7RcFLz58Ixe7Mt+mVcomYqUuryxQ==}
+    hasBin: true
+    dependencies:
+      '@types/uuid': 9.0.7
+      commander: 10.0.1
+      p-queue: 6.6.2
+      p-retry: 4.6.2
+      uuid: 9.0.1
     dev: false
 
   /langsmith@0.0.66:
@@ -38561,8 +38581,8 @@ packages:
       - debug
     dev: false
 
-  /openai@4.26.0:
-    resolution: {integrity: sha512-HPC7tgYdeP38F3uHA5WgnoXZyGbAp9jgcIo23p6It+q/07u4C+NZ8xHKlMShsPbDDmFRpPsa3vdbXYpbhJH3eg==}
+  /openai@4.26.1:
+    resolution: {integrity: sha512-DvWbjhWbappsFRatOWmu4Dp1/Q4RG9oOz6CfOSjy0/Drb8G+5iAiqWAO4PfpGIkhOOKtvvNfQri2SItl+U7LhQ==}
     hasBin: true
     dependencies:
       '@types/node': 18.18.9
@@ -41737,6 +41757,10 @@ packages:
 
   /sax@1.2.4:
     resolution: {integrity: sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw==}
+
+  /sax@1.3.0:
+    resolution: {integrity: sha512-0s+oAmw9zLl1V1cS9BtZN7JAd0cW5e0QH4W3LWEK6a4LaLEA2OTpGYWDY+6XasBLtz6wkm3u1xRw95mRuJ59WA==}
+    dev: false
 
   /saxes@5.0.1:
     resolution: {integrity: sha512-5LBh1Tls8c9xgGjw3QrMwETmTMVk0oFgvrFSvWx62llR2hcEInrKNZ2GZCCuuy2lvWrdl5jhbpeqc5hRYKFOcw==}

@@ -30,14 +30,14 @@ export const Toast = ({
       <NaturalToast.Actions>
         {onAction && actionAlt && actionLabel && (
           <NaturalToast.Action altText={actionAlt} asChild>
-            <Button variant='primary' onClick={() => onAction?.()}>
+            <Button data-testid='toast.action' variant='primary' onClick={() => onAction?.()}>
               {actionLabel}
             </Button>
           </NaturalToast.Action>
         )}
         {closeLabel && (
           <NaturalToast.Close asChild>
-            <Button>{closeLabel}</Button>
+            <Button data-testid='toast.close'>{closeLabel}</Button>
           </NaturalToast.Close>
         )}
       </NaturalToast.Actions>

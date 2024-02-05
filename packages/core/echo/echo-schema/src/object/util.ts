@@ -23,10 +23,10 @@ export const forceUpdate = (obj: AbstractEchoObject) => {
 
 export const getDatabaseFromObject = (obj: EchoObject): EchoDatabase | undefined => {
   if (isAutomergeObject(obj)) {
-    return obj[base]._database._echoDatabase;
+    return obj[base]._core.database?._echoDatabase;
   }
 
-  return obj[base]._database;
+  return (obj[base] as AbstractEchoObject)._database;
 };
 
 export const getReferenceWithSpaceKey = (obj: EchoObject): Reference | undefined => {

@@ -73,7 +73,7 @@ const cloneInner = (obj: any, id: string): EchoObject => {
   clone[base]._id = id;
   if (automergeSnapshot) {
     clone[base]._change((doc: any) => {
-      const path = clone._path;
+      const path = clone[base]._core.mountPath;
       if (path?.length > 0) {
         let parent = doc;
         for (const key of path.slice(0, -1)) {
@@ -94,7 +94,7 @@ const cloneInner = (obj: any, id: string): EchoObject => {
 
 const getObjectDoc = (obj: AutomergeObject): any => {
   let value = obj._getDoc();
-  for (const key of obj._path) {
+  for (const key of obj[base]._core.mountPath) {
     value = value?.[key];
   }
   return value;

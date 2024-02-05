@@ -6,7 +6,6 @@ import template from './template.t';
 import { getDxosRepoInfo } from './utils.t/getDxosRepoInfo';
 import path from 'path';
 
-// TODO(wittjosiah): Nx executor to execute in place.
 export default template.define.text({
   content: async ({ input, outputDirectory }) => {
     const { monorepo } = input;
