@@ -15,7 +15,7 @@ import { TextModel } from '@dxos/text-model';
 
 import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
-import { type DocStructure, type ObjectSystem } from './types';
+import { ObjectStructure, type DocStructure, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
 import {
   isAutomergeObject,
@@ -57,10 +57,6 @@ export class AutomergeObject implements TypedObjectProperties {
   private _schema?: Schema = undefined;
   private readonly _immutable: boolean; // TODO(burdon): Not used.
 
-  /**
-   * @internal
-   */
-  _path: string[] = [];
   protected readonly _signal = compositeRuntime.createSignal();
 
   private _updates = new Event();
@@ -159,7 +155,7 @@ export class AutomergeObject implements TypedObjectProperties {
 
   get [data](): any {
     let value = this[base]._getDoc();
-    for (const key of this[base]._path) {
+    for (const key of this[base]._core.mountPath) {
       value = value?.[key];
     }
     const typeRef = this.__system.type;
@@ -237,12 +233,13 @@ export class AutomergeObject implements TypedObjectProperties {
       }
     }
 
-    this._core.doc = A.from({
+    this._core.doc = A.from<ObjectStructure>({
       data: this._encode(initialProps),
       meta: this._encode({
         keys: [],
         ...opts?.meta,
       }),
+      system: {},
     });
   }
 
@@ -263,7 +260,7 @@ export class AutomergeObject implements TypedObjectProperties {
         this._notifyUpdate();
       }
     });
-    this._path = options.path;
+    this._core.mountPath = options.path;
 
     if (this._linkCache) {
       for (const obj of this._linkCache.values()) {
@@ -353,7 +350,7 @@ export class AutomergeObject implements TypedObjectProperties {
     invariant(!this[proxy]);
     this._signal.notifyRead();
 
-    const fullPath = [...this._path, ...path];
+    const fullPath = [...this._core.mountPath, ...path];
     let value = this._getDoc();
     for (const key of fullPath) {
       value = value?.[key];
@@ -387,7 +384,7 @@ export class AutomergeObject implements TypedObjectProperties {
    */
   _set(path: string[], value: any) {
     invariant(!this[proxy]);
-    const fullPath = [...this._path, ...path];
+    const fullPath = [...this._core.mountPath, ...path];
 
     const changeFn: ChangeFn<any> = (doc) => {
       let parent = doc;
@@ -638,7 +635,7 @@ export class AutomergeObject implements TypedObjectProperties {
         },
       },
       get path() {
-        return [...self._path, 'data', ...(path ?? [])];
+        return [...self._core.mountPath, 'data', ...(path ?? [])];
       },
 
       isAutomergeDocAccessor: true,

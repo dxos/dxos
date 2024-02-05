@@ -142,7 +142,7 @@ export class AutomergeArray<T> implements Array<T> {
       invariant(this._object?.[base] instanceof AutomergeObject);
       const deletedItems = deleteCount !== undefined ? this.slice(start, start + deleteCount) : [];
 
-      const fullPath = [...this._object._path, ...this._path!];
+      const fullPath = [...this._object._core.mountPath, ...this._path!];
 
       // TODO(mykola): Do not allow direct access to doc in array.
       const changeFn: ChangeFn<any> = (doc) => {
@@ -316,7 +316,7 @@ export class AutomergeArray<T> implements Array<T> {
 
   push(...items: T[]) {
     if (this._object) {
-      const fullPath = [...this._object._path, ...this._path!];
+      const fullPath = [...this._object._core.mountPath, ...this._path!];
 
       // TODO(mykola): Do not allow direct access to doc in array.
       const changeFn: ChangeFn<any> = (doc) => {
@@ -415,7 +415,7 @@ export class AutomergeArray<T> implements Array<T> {
   private _setModel(index: number, value: T) {
     invariant(this._object?.[base] instanceof AutomergeObject);
 
-    const fullPath = [...this._object._path, ...this._path!];
+    const fullPath = [...this._object._core.mountPath, ...this._path!];
 
     // TODO(mykola): Do not allow direct access to doc in array.
     const changeFn: ChangeFn<any> = (doc) => {
