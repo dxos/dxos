@@ -15,7 +15,7 @@ import { TextModel } from '@dxos/text-model';
 
 import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
-import { AutomergeObjectCore, objectIsUpdated, type DocAccessor } from './automerge-object-core';
+import { AutomergeObjectCore, objectIsUpdated, type DocAccessor, assignDeep } from './automerge-object-core';
 import { type ObjectStructure, type DocStructure, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
 import {
@@ -42,7 +42,7 @@ export type BindOptions = {
   db: AutomergeDb;
   docHandle: DocHandle<DocStructure>;
   path: string[];
-  ignoreCache?: boolean;
+  ignoreLocalState?: boolean;
 };
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
@@ -235,30 +235,7 @@ export class AutomergeObject implements TypedObjectProperties {
    */
   _bind(options: BindOptions) {
     invariant(!this[proxy]);
-    this._core.database = options.db;
-    this._core.docHandle = options.docHandle;
-    this._core.mountPath = options.path;
-
-    if (this._core.linkCache) {
-      for (const obj of this._core.linkCache.values()) {
-        this._core.database!.add(obj);
-      }
-
-      this._core.linkCache = undefined;
-    }
-
-    if (options.ignoreCache) {
-      this._core.doc = undefined;
-    }
-
-    if (this._core.doc) {
-      const doc = this._core.doc;
-      this._core.doc = undefined;
-      this._set([], doc);
-    }
-
-    this._core.subscribeToDocHandleChanges();
-    this._core.notifyUpdate();
+    this._core.bind(options);
   }
 
   private _createProxy(path: string[]): any {
@@ -366,12 +343,7 @@ export class AutomergeObject implements TypedObjectProperties {
     const fullPath = [...this._core.mountPath, ...path];
 
     const changeFn: ChangeFn<any> = (doc) => {
-      let parent = doc;
-      for (const key of fullPath.slice(0, -1)) {
-        parent[key] ??= {};
-        parent = parent[key];
-      }
-      parent[fullPath.at(-1)!] = this._encode(value);
+      assignDeep(doc, fullPath, this._encode(value));
 
       if (value instanceof AutomergeArray) {
         value._attach(this[base], path);

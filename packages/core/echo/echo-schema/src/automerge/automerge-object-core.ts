@@ -60,6 +60,44 @@ export class AutomergeObjectCore {
    */
   public signal = compositeRuntime.createSignal();
 
+  bind(options: BindOptions) {
+    this.database = options.db;
+    this.docHandle = options.docHandle;
+    this.mountPath = options.path;
+
+    if (this.linkCache) {
+      for (const obj of this.linkCache.values()) {
+        this.database!.add(obj);
+      }
+
+      this.linkCache = undefined;
+    }
+
+    const doc = this.doc;
+    this.doc = undefined;
+
+    if (!options.ignoreLocalState) {
+      this.docHandle.change((newDoc: DocStructure) => {
+        assignDeep(newDoc, this.mountPath, doc);
+      });
+    }
+
+    // TODO(dmaretskyi): Cleanup this subscription.
+    this.docHandle.on('change', (event) => {
+      if (objectIsUpdated(this.id, event)) {
+        // Updates must come in the next microtask since the object state is not fully updated at the time of "change" event processing.
+        // Update listeners might access the state of the object and it must be fully updated at that time.
+        // It's ok to use `queueMicrotask` here since this path is only used for propagation of remote changes.
+        queueMicrotask(() => {
+          // TODO(dmaretskyi): Local changes have already called `notifyUpdate` so this would fire the notification twice for local updates.
+          this.notifyUpdate();
+        });
+      }
+    });
+
+    this.notifyUpdate();
+  }
+
   getDoc() {
     return this.doc ?? this.docHandle?.docSync() ?? failedInvariant('Invalid state');
   }
@@ -149,16 +187,6 @@ export class AutomergeObjectCore {
 
   public subscribeToDocHandleChanges() {
     invariant(this.docHandle);
-    this.docHandle.on('change', (event) => {
-      if (objectIsUpdated(this.id, event)) {
-        // Updates must come in the next microtask since the object state is not fully updated at the time of "change" event processing.
-        // Update listeners might access the state of the object and it must be fully updated at that time.
-        // It's ok to use `queueMicrotask` here since this path is only used for propagation of remote changes.
-        queueMicrotask(() => {
-          this.notifyUpdate();
-        });
-      }
-    });
   }
 }
 
@@ -179,6 +207,18 @@ export type IDocHandle<T = any> = {
   removeListener(event: 'change', listener: () => void): void;
 };
 
+export type BindOptions = {
+  db: AutomergeDb;
+  docHandle: DocHandle<DocStructure>;
+  path: string[];
+
+  /**
+   * Discard the local state that the object held before binding.
+   * Otherwise the local state will be assigned into the shared structure for the database.
+   */
+  ignoreLocalState?: boolean;
+};
+
 export const isDocAccessor = (obj: any): obj is DocAccessor => {
   return !!obj?.isAutomergeDocAccessor;
 };
@@ -188,4 +228,19 @@ export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<Doc
     return true;
   }
   return false;
+};
+
+/**
+ * To be used inside doc.change callback to initialize a deeply nested object.
+ * @returns The value of the prop after assignment.
+ */
+export const assignDeep = <T>(doc: any, path: string[], value: T): T => {
+  invariant(path.length > 0);
+  let parent = doc;
+  for (const key of path.slice(0, -1)) {
+    parent[key] ??= {};
+    parent = parent[key];
+  }
+  parent[path.at(-1)!] = value;
+  return parent[path.at(-1)!]; // NOTE: We can't just return value here since doc's getter might return a different object.
 };

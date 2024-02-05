@@ -230,7 +230,7 @@ export class AutomergeDb {
         db: this,
         docHandle: this._docHandle,
         path: ['objects', obj.id],
-        ignoreCache: true,
+        ignoreLocalState: true,
       });
     }
   }
