@@ -3,6 +3,7 @@
 //
 
 import { ArrowSquareOut } from '@phosphor-icons/react';
+import { vim } from '@replit/codemirror-vim';
 import React, { type AnchorHTMLAttributes, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -55,6 +56,10 @@ export const getExtensions = ({ settings, document, dispatch }: ExtensionsOption
     table(),
     tasklist(),
   ];
+
+  if (settings?.editorMode === 'vim') {
+    extensions.push(vim());
+  }
 
   //
   // Hyperlinks (external and internal object links).

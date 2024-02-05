@@ -4,13 +4,12 @@
 
 import { EditorState, type Extension, type StateEffect } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-// import { useFocusableGroup } from '@fluentui/react-tabster';
-import { vim } from '@replit/codemirror-vim';
+import { useFocusableGroup } from '@fluentui/react-tabster';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, {
   type ComponentProps,
-  type KeyboardEvent,
   forwardRef,
+  type KeyboardEventHandler,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -28,10 +27,6 @@ import { type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
 import { defaultTheme, markdownTheme, textTheme } from '../../themes';
 import { logChanges } from '../../util';
-
-// TODO(burdon): Change to enum?
-export const EditorModes = ['default', 'vim'] as const;
-export type EditorMode = (typeof EditorModes)[number];
 
 export type CursorInfo = {
   from: number;
@@ -60,7 +55,6 @@ export type TextEditorProps = {
   lineWrapping?: boolean;
   scrollTo?: StateEffect<any>; // TODO(burdon): Restore scroll position: scrollTo EditorView.scrollSnapshot().
   selection?: { anchor: number; head?: number };
-  editorMode?: EditorMode; // TODO(burdon): Factor out.
   placeholder?: string;
   theme?: ThemeStyles;
   slots?: TextEditorSlots;
@@ -74,18 +68,7 @@ export type TextEditorProps = {
 // TODO(burdon): Replace with useTextEditor.
 export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
   (
-    {
-      model,
-      readonly,
-      autoFocus,
-      scrollTo,
-      selection,
-      editorMode,
-      theme,
-      slots = defaultSlots,
-      extensions = [],
-      debug,
-    },
+    { model, readonly, autoFocus, scrollTo, selection, theme, slots = defaultSlots, extensions = [], debug },
     forwardedRef,
   ) => {
     // TODO(burdon): Hook causes error even if properties are not spread into div.
@@ -93,7 +76,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
     //  Uses event.detail, which is deprecated (not event.details). At runtime the event has a property `details`.
     //  https://github.com/microsoft/tabster/blob/master/src/State/FocusedElement.ts#L348 (e.detail.relatedTarget)
     //  https://github.com/microsoft/keyborg/blob/49e49b2c3ba0a5f6cc518ac46825d7551def8109/src/FocusEvent.ts#L58
-    // const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
+    const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
     const { themeMode } = useThemeContext();
 
     const rootRef = useRef<HTMLDivElement>(null);
@@ -151,9 +134,6 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
           // NOTE: This must come before user extensions.
           model.extension,
 
-          // TODO(burdon): Factor out? (Requires special handling for Escape/Enter below).
-          editorMode === 'vim' && vim(),
-
           // Custom.
           ...extensions,
         ].filter(isNotFalsy),
@@ -184,29 +164,30 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         newView?.destroy();
         setView(null);
       };
-    }, [rootRef, model, readonly, editorMode, themeMode]);
+    }, [rootRef, model, readonly, themeMode]);
 
-    // Handles tab/focus.
-    // Pressing Escape focuses the outer div (to support tab navigation); pressing Enter refocuses the editor.
-    // TODO(burdon): Convert to keymap?
-    const handleKeyUp = useCallback(
-      (event: KeyboardEvent) => {
+    // Pressing Escape focuses the outer div (to support tab navigation). Pressing Enter should refocus the editor.
+    // In vim-mode, press a key modifier to focus the outer div.
+    const handleKeyUp = useCallback<KeyboardEventHandler<HTMLDivElement>>(
+      (event) => {
         const { key, altKey, shiftKey, metaKey, ctrlKey } = event;
         switch (key) {
           case 'Enter': {
             view?.focus();
             break;
           }
-
           case 'Escape': {
-            if (editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey)) {
+            if (altKey || shiftKey || metaKey || ctrlKey) {
+              rootRef.current?.focus();
+              break;
+            } else {
               view?.focus();
             }
             break;
           }
         }
       },
-      [view, editorMode],
+      [view],
     );
 
     return (
@@ -215,7 +196,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         role='none'
         tabIndex={0}
         {...slots.root}
-        // {...(editorMode !== 'vim' && tabsterDOMAttribute)}
+        {...tabsterDOMAttribute}
         onKeyUp={handleKeyUp}
         ref={rootRef}
       />

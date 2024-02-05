@@ -24,7 +24,7 @@ import { MARKDOWN_PLUGIN } from '../meta';
 export type EditorMainProps = {
   comments?: Comment[];
   toolbar?: boolean;
-} & Pick<TextEditorProps, 'model' | 'readonly' | 'editorMode' | 'extensions'>;
+} & Pick<TextEditorProps, 'model' | 'readonly' | 'extensions'>;
 
 const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);

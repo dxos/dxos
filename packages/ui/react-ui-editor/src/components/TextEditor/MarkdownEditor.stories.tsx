@@ -6,6 +6,7 @@ import '@dxosTheme';
 
 import { type EditorView } from '@codemirror/view';
 import { ArrowSquareOut } from '@phosphor-icons/react';
+import { vim } from '@replit/codemirror-vim';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { type FC, StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -389,6 +390,15 @@ export const HorizontalRule = {
     <Story
       text={str('# Horizontal Rule', '', text.paragraphs, '---', text.paragraphs, '---', text.paragraphs)}
       extensions={[hr()]}
+    />
+  ),
+};
+
+export const Vim = {
+  render: () => (
+    <Story
+      text={str('# Vim Mode', '', 'The distant future. The year 2000.', '', text.paragraphs)}
+      extensions={[...defaults, vim({ status: true })]}
     />
   ),
 };
