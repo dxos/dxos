@@ -425,6 +425,7 @@ export class AutomergeArray<T> implements Array<T> {
       }
       const array: any[] = parent[fullPath.at(-1)!];
       invariant(Array.isArray(array));
+      // TODO(dmaretskyi): Remove recursive doc.change calls. How do they even work?
       array[index] = this._object!._encode(value);
     };
     this._object._change(changeFn);
