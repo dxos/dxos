@@ -1,8 +1,13 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { signal, batch } from '@preact/signals-core';
+
 import { registerSignalRuntime } from '../util';
 
 // TODO(dmaretskyi): Refactor, extract to echo-signals.
-let registered = false;
+const registered = false;
 
 /**
  * Only for testing

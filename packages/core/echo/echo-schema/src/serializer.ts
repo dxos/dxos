@@ -12,8 +12,8 @@ import { stripUndefinedValues } from '@dxos/util';
 import { getGlobalAutomergePreference } from './automerge-preference';
 import { type EchoDatabase } from './database';
 import { base, type EchoObject, LEGACY_TEXT_TYPE, TextObject, TypedObject, isAutomergeObject } from './object';
-import { Filter } from './query';
 import { AbstractEchoObject } from './object/object';
+import { Filter } from './query';
 
 /**
  * Archive of echo objects.

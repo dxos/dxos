@@ -1,6 +1,11 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { expect } from 'chai';
+
 import { Repo } from '@dxos/automerge/automerge-repo';
 import { describe, test } from '@dxos/test';
-import { expect } from 'chai';
 
 describe('AutomergeRepo', () => {
   test('change events', () => {

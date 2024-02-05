@@ -2,17 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
+import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
-import { effect, signal, batch } from '@preact/signals-core';
 
 import { Trigger, sleep } from '@dxos/async';
+import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 import { createSubscription } from './subscription';
 import { Expando } from './typed-object';
 import { createDatabase } from '../testing';
-import { log } from '@dxos/log';
-import { registerSignalRuntime } from '../util';
 import { registerPreactSignals } from '../tests/signal-runtime';
 
 describe('create subscription', () => {

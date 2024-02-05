@@ -2,18 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
+import { effect } from '@preact/signals-core';
 import expect from 'expect'; // TODO(burdon): Can't use chai with wait-for-expect?
+import { inspect } from 'util';
 
+import { sleep } from '@dxos/async';
+import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 import { EchoArray } from './array';
 import { Expando, TypedObject } from './typed-object';
 import { createDatabase } from '../testing';
 import { registerPreactSignals } from '../tests/signal-runtime';
-import { effect } from '@preact/signals-core';
-import { log } from '@dxos/log';
-import { inspect } from 'util';
-import { sleep } from '@dxos/async';
 
 describe('Arrays', () => {
   test('array of tags', async () => {
