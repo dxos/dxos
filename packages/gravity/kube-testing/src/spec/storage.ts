@@ -112,7 +112,10 @@ export class StorageTestPlan implements TestPlan<StorageTestSpec, StorageAgentCo
       // Sanity check
       performance.mark('sanity:begin');
       for (const file of loadedFiles) {
-        invariant(filesToSave.find((f) => f.key.join() === file.key.join())!.data === file.data);
+        invariant(
+          filesToSave.find((f) => f.key.join() === file.key.join())!.data.toString() === file.data!.toString(),
+          `sanity check failed ${file.key.join()}`,
+        );
       }
       performance.mark('sanity:end');
       log.info('sanity check', {
