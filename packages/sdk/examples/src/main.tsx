@@ -91,6 +91,7 @@ const main = async () => {
                   <div className='flex'>
                     <Input.Root>
                       <Input.Switch
+                        data-testid='airplane-mode'
                         classNames='me-2'
                         onCheckedChange={(e) => {
                           setOffline(!offline);
@@ -110,6 +111,7 @@ const main = async () => {
                   <div className='flex'>
                     <Input.Root>
                       <Input.Switch
+                        data-testid='batching'
                         classNames='me-2'
                         onCheckedChange={(e) => {
                           setBatching(!batching);
