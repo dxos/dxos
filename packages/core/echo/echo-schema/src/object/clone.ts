@@ -58,7 +58,7 @@ export const clone = <T extends EchoObject>(obj: T, { retainId = true, additiona
         continue;
       }
 
-      (clone as AutomergeObject)[base]._linkCache!.set(ref.id, ref);
+      (clone as AutomergeObject)[base]._core.linkCache!.set(ref.id, ref);
     }
   }
 
@@ -70,7 +70,7 @@ const cloneInner = (obj: any, id: string): EchoObject => {
   const automergeSnapshot = getObjectDoc(obj);
 
   const clone: AutomergeObject = new prototype.constructor();
-  clone[base]._id = id;
+  clone[base]._core.id = id;
   if (automergeSnapshot) {
     clone[base]._change((doc: any) => {
       const path = clone[base]._core.mountPath;
