@@ -12,7 +12,7 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { type ObjectMeta } from '@dxos/react-client/echo';
-import { type Extension } from '@dxos/react-ui-editor';
+import { type Extension, type EditorMode } from '@dxos/react-ui-editor';
 
 import { MARKDOWN_PLUGIN } from './meta';
 
@@ -52,8 +52,6 @@ type StackProvides = {
 type EditorState = {
   readonly?: boolean;
 };
-
-export type EditorMode = 'default' | 'vim' | undefined;
 
 export type MarkdownSettingsProps = {
   state: { [key: string]: EditorState };

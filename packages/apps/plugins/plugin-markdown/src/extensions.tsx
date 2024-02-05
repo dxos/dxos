@@ -3,7 +3,6 @@
 //
 
 import { ArrowSquareOut } from '@phosphor-icons/react';
-import { vim } from '@replit/codemirror-vim';
 import React, { type AnchorHTMLAttributes, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -14,6 +13,7 @@ import {
   type AutocompleteResult,
   type Extension,
   type LinkOptions,
+  EditorModes,
   autocomplete,
   code,
   heading,
@@ -57,8 +57,14 @@ export const getExtensions = ({ settings, document, dispatch }: ExtensionsOption
     tasklist(),
   ];
 
-  if (settings?.editorMode === 'vim') {
-    extensions.push(vim());
+  //
+  // Editor mode.
+  //
+  if (settings?.editorMode) {
+    const extension = EditorModes[settings.editorMode];
+    if (extension) {
+      extensions.push(extension);
+    }
   }
 
   //
