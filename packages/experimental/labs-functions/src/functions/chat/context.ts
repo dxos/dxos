@@ -4,12 +4,14 @@
 
 import { Document as DocumentType, type Message as MessageType, type Thread as ThreadType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { getTextInRange, Schema, type TypedObject } from '@dxos/echo-schema';
+import { getTextInRange, Schema, type TypedObject, type JsonSchema } from '@dxos/echo-schema';
 
 export type RequestContext = {
   object?: TypedObject;
-  schema?: Schema;
   text?: string;
+  // TODO(burdon): Reconcile.
+  schema?: Schema;
+  types?: JsonSchema;
 };
 
 export const createContext = (space: Space, message: MessageType, thread: ThreadType): RequestContext => {
@@ -23,11 +25,6 @@ export const createContext = (space: Space, message: MessageType, thread: Thread
   }
 
   let text: string | undefined;
-
-  // TODO(burdon): How to infer schema from message/context/prompt.
-  const { objects: schemas } = space.db.query(Schema.filter());
-  const schema = schemas.find((schema) => schema.typename === 'example.com/schema/project');
-
   if (object instanceof DocumentType) {
     const comment = object.comments?.find((comment) => comment.thread === thread);
     if (comment) {
@@ -35,7 +32,11 @@ export const createContext = (space: Space, message: MessageType, thread: Thread
     }
   }
 
-  return { object, schema, text };
+  // TODO(burdon): Get schema from message/context/prompt.
+  const { objects: schemas } = space.db.query(Schema.filter());
+  const schema = schemas.find((schema) => schema.typename === 'example.com/schema/project');
+
+  return { object, text, schema };
 };
 
 /**

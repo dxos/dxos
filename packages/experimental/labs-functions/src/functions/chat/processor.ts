@@ -5,6 +5,7 @@
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { type Runnable, RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
+import { JsonOutputFunctionsParser } from 'langchain/output_parsers';
 import { formatDocumentsAsString } from 'langchain/util/document';
 import get from 'lodash.get';
 
@@ -125,6 +126,7 @@ export class RequestProcessor {
       inputs[input.name] = await this.getInput(input, context);
     }
 
+    // TODO(burdon): Build schema from prompt.
     const schema = {
       type: 'object',
       properties: {
@@ -133,21 +135,33 @@ export class RequestProcessor {
           items: {
             type: 'object',
             properties: {
-              name: { type: 'string', description: 'The name of the company' },
+              name: { type: 'string', description: 'The name of the company.' },
+              website: { type: 'string', description: 'The public website of the company.' },
             },
           },
-          description: 'An array of companies mentioned in the text',
+          description: 'An array of companies.',
+        },
+        contact: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string', description: 'The name of the person.' },
+              organization: { type: 'string', description: "The name of the person's employer." },
+            },
+          },
+          description: 'An array of contacts.',
         },
       },
     };
 
-    // TODO(burdon): Optional args.
-    const args = {
+    // TODO(burdon): OpenAI kwargs only.
+    const args: any = {
       function_call: { name: 'output_formatter' },
       functions: [
         {
           name: 'output_formatter',
-          description: 'Should always be used to properly format output',
+          description: 'Should always be used to properly format output.',
           parameters: schema,
         },
       ],
@@ -156,8 +170,8 @@ export class RequestProcessor {
     return RunnableSequence.from([
       inputs,
       PromptTemplate.fromTemplate(getTextContent(prompt.source)!),
-      this._resources.model.bind(args as any), // TODO(burdon): ???
-      new StringOutputParser(),
+      this._resources.model.bind(args),
+      args ? new JsonOutputFunctionsParser() : new StringOutputParser(),
     ]);
   }
 

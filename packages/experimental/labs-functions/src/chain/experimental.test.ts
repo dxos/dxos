@@ -260,7 +260,7 @@ describe.skip('LangChain', () => {
       functions: [
         {
           name: 'output_formatter',
-          description: 'Should always be used to properly format output',
+          description: 'Should always be used to properly format output.',
           parameters: schema,
         },
       ],

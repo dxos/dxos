@@ -123,7 +123,6 @@ describe('RequestProcessor', () => {
     }
   });
 
-  // TODO(burdon): Schema.
   test('schema', async () => {
     const builder = new TestProcessorBuilder();
     await builder.init();
@@ -142,7 +141,12 @@ describe('RequestProcessor', () => {
             new ChainType.Prompt({
               command: 'extract',
               source: new TextObject(
-                ['List all people and companies mentioned in the following text:', '---', '{input}'].join('\n'),
+                [
+                  'List all people and companies mentioned in the following text.',
+                  // 'For each entity try to fill out all the fields in the schema if possible.',
+                  '---',
+                  '{input}',
+                ].join('\n'),
               ),
               inputs: [new ChainType.Input({ name: 'input', type: ChainType.Input.Type.PASS_THROUGH })],
             }),
@@ -168,7 +172,11 @@ describe('RequestProcessor', () => {
         ],
       });
 
-      // TODO(burdon): Extract and create graph.
+      // TODO(burdon): Create schema context from registry.
+      // TODO(burdon): Extract schema from prompt. Auto match type/category? Reference via input.
+      // TODO(burdon): Construct graph from data (e.g., person => org).
+      // TODO(burdon): Chain to lookup info afterwards.
+
       const processor = new RequestProcessor(resources);
       const blocks = await processor.processThread(space, thread, message);
       expect(blocks).to.have.length(1);

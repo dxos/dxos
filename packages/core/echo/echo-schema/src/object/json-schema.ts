@@ -27,6 +27,8 @@ export const getPropType = (type?: Schema.PropType): string => {
   }
 };
 
+// TODO(burdon): https://json-schema.org/implementations#javascript
+// https://json-schema.org/learn/getting-started-step-by-step#define
 export interface JsonSchema {
   $schema?: string;
   $id?: string;
@@ -42,7 +44,7 @@ export const toJsonSchema = (schema: Schema): JsonSchema => {
   return schema.props.reduce<JsonSchema>(
     (schema, { id, type, description }) => {
       invariant(id);
-      // TODO(burdon): Handle objects.
+      // TODO(burdon): Handle nested objects.
       schema.properties![id] = stripUndefinedValues({ type: getPropType(type), description });
       return schema;
     },
