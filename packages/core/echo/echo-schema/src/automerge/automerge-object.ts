@@ -54,6 +54,7 @@ export class AutomergeObject implements TypedObjectProperties {
    * @internal
    */
   _core = new AutomergeObjectCore();
+
   private _schema?: Schema = undefined;
   private readonly _immutable: boolean; // TODO(burdon): Not used.
 
@@ -64,11 +65,6 @@ export class AutomergeObject implements TypedObjectProperties {
    * @internal
    */
   _linkCache: Map<string, EchoObject> | undefined = new Map<string, EchoObject>();
-
-  /**
-   * @internal
-   */
-  _id = PublicKey.random().toHex();
 
   constructor(initialProps?: unknown, opts?: TypedObjectOptions) {
     this._initNewObject(initialProps, opts);
@@ -132,7 +128,7 @@ export class AutomergeObject implements TypedObjectProperties {
   }
 
   get id(): string {
-    return this._id;
+    return this._core.id;
   }
 
   get [base](): AutomergeObject {
@@ -165,7 +161,7 @@ export class AutomergeObject implements TypedObjectProperties {
     return {
       // TODO(mykola): Delete backend (for debug).
       '@backend': 'automerge',
-      '@id': this._id,
+      '@id': this._core.id,
       '@type': typeRef
         ? {
             '@type': REFERENCE_TYPE_TAG,
@@ -203,7 +199,7 @@ export class AutomergeObject implements TypedObjectProperties {
 
   [subscribe](callback: (value: AutomergeObject) => void): () => void {
     const changeListener = (event: DocHandleChangePayload<DocStructure>) => {
-      if (objectIsUpdated(this._id, event)) {
+      if (objectIsUpdated(this[base]._core.id, event)) {
         callback(this);
       }
     };
@@ -254,7 +250,7 @@ export class AutomergeObject implements TypedObjectProperties {
     this._core.database = options.db;
     this._core.docHandle = options.docHandle;
     this._core.docHandle.on('change', async (event) => {
-      if (objectIsUpdated(this._id, event)) {
+      if (objectIsUpdated(this._core.id, event)) {
         // Note: We need to notify listeners only after _docHandle initialization with cached _doc.
         //       Without it there was race condition in SpacePlugin on Folder creation.
         //       Folder was being accessed during bind process before _docHandle was initialized and after _doc was set to undefined.

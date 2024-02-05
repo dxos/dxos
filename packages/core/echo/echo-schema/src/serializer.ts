@@ -11,8 +11,9 @@ import { stripUndefinedValues } from '@dxos/util';
 
 import { getGlobalAutomergePreference } from './automerge-preference';
 import { type EchoDatabase } from './database';
-import { base, type EchoObject, LEGACY_TEXT_TYPE, TextObject, TypedObject } from './object';
+import { base, type EchoObject, LEGACY_TEXT_TYPE, TextObject, TypedObject, isAutomergeObject } from './object';
 import { Filter } from './query';
+import { AbstractEchoObject } from './object/object';
 
 /**
  * Archive of echo objects.
@@ -144,7 +145,7 @@ export class Serializer {
       });
     }
 
-    obj[base]._id = id;
+    setObjectId(obj, id);
     database.add(obj);
     if (deleted) {
       // Note: We support "soft" deletion. This is why adding and removing the object is not equal to no-op.
@@ -160,5 +161,17 @@ export const getTypeRef = (type?: SerializedReference | string): Reference | und
   } else if (typeof type === 'string') {
     // TODO(mykola): Never reached?
     return Reference.fromLegacyTypename(type);
+  }
+};
+
+/**
+ * Works with both automerge and legacy objects.
+ */
+const setObjectId = (obj: EchoObject, id: string) => {
+  if (isAutomergeObject(obj)) {
+    obj[base]._core.id = id;
+  } else {
+    invariant(obj[base] instanceof AbstractEchoObject);
+    obj[base]._id = id;
   }
 };

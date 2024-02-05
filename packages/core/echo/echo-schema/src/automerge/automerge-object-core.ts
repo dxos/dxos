@@ -9,9 +9,18 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 
 import { type AutomergeDb } from './automerge-db';
 import { type DocStructure, type ObjectStructure } from './types';
+import { PublicKey } from '@dxos/keys';
 
 // TODO(dmaretskyi): Rename to `AutomergeObject`.
 export class AutomergeObjectCore {
+  /**
+   * Id of the ECHO object.
+   */
+  public id = PublicKey.random().toHex();
+
+  /**
+   * Set if when the object is not bound to a database.
+   */
   public database?: AutomergeDb | undefined;
 
   /**
