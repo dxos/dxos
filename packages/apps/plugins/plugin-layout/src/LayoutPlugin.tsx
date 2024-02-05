@@ -250,6 +250,9 @@ export const LayoutPlugin = ({
                   sidebar: {
                     data: { graph, activeId: location.active, popoverAnchorId: layout.values.popoverAnchorId },
                   },
+                  context: {
+                    data: { component: `${LAYOUT_PLUGIN}/ContextView` },
+                  },
                   main: {
                     data: location.active
                       ? { active: location.active }
