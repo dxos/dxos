@@ -74,7 +74,7 @@ class TestProcessorBuilder {
   }
 }
 
-describe.skip('RequestProcessor', () => {
+describe('RequestProcessor', () => {
   // TODO(burdon): Create test prompt.
   test('translate', async () => {
     const builder = new TestProcessorBuilder();

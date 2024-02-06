@@ -3,8 +3,8 @@
 //
 
 import { type Message as MessageType, Document as DocumentType, Stack as StackType } from '@braneframe/types';
-import { Expando, type Space } from '@dxos/client/echo';
-import { Schema, TextObject } from '@dxos/echo-schema';
+import { type Space } from '@dxos/client/echo';
+import { TextObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { type RequestContext } from './context';
@@ -13,7 +13,10 @@ import { type ParseResult } from './parser';
 // TODO(burdon): Create variant of StringOutputParser.
 //  https://js.langchain.com/docs/modules/model_io/output_parsers/json_functions
 export class ResponseBuilder {
-  constructor(private _space: Space, private _context: RequestContext) {}
+  constructor(
+    private _space: Space,
+    private _context: RequestContext,
+  ) {}
 
   build(result: ParseResult): MessageType.Block[] | undefined {
     const blocks: MessageType.Block[] = [];
@@ -39,6 +42,8 @@ export class ResponseBuilder {
   processResult(result: ParseResult): MessageType.Block[] | undefined {
     const timestamp = new Date().toISOString();
     const { data, content, type, kind } = result;
+
+    console.log('?????', result);
 
     //
     // Add to stack.
@@ -73,22 +78,20 @@ export class ResponseBuilder {
       const dataArray = Array.isArray(data) ? data : [data];
       return dataArray.map((data): MessageType.Block => {
         // Create object.
+        // TODO(burdon): Map returned JSON objects to schema.
         if (this._context.schema) {
-          const { objects: schemas } = this._space.db.query(Schema.filter());
-          const schema = schemas.find((schema) => schema.typename === this._context.schema!.typename);
-          if (schema) {
-            data['@type'] = this._context.schema.typename;
-            for (const prop of schema.props) {
-              if (data[prop.id!]) {
-                if (typeof data[prop.id!] === 'string') {
-                  data[prop.id!] = new TextObject(data[prop.id!]);
-                }
-              }
-            }
-
-            const object = new Expando(data, { schema });
-            return { timestamp, object };
-          }
+          console.log('###', data);
+          // data['@type'] = this._context.schema.typename;
+          // for (const prop of schema.props) {
+          //   if (data[prop.id!]) {
+          //     if (typeof data[prop.id!] === 'string') {
+          //       data[prop.id!] = new TextObject(data[prop.id!]);
+          //     }
+          //   }
+          // }
+          //
+          // const object = new Expando(data, { schema });
+          // return { timestamp, object };
         }
 
         // TODO(burdon): Create ref?
