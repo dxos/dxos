@@ -47,6 +47,10 @@ export const useInMemoryTextModel = ({
 };
 
 const createModel = ({ space, identity, text }: UseTextModelProps) => {
+  if (!text) {
+    return undefined;
+  }
+
   invariant(isAutomergeObject(text));
   const obj = text as any as AutomergeTextCompat;
   const doc = getRawDoc(obj, [obj.field]);
@@ -64,11 +68,7 @@ const createModel = ({ space, identity, text }: UseTextModelProps) => {
       peerId: identity?.identityKey.toHex() ?? 'Anonymous',
     });
 
-  const extensions = [
-    //
-    modelState.init(() => model),
-    automerge({ handle: doc.handle, path: doc.path }),
-  ];
+  const extensions = [modelState.init(() => model), automerge({ handle: doc.handle, path: doc.path })];
   if (awarenessProvider) {
     extensions.push(awareness(awarenessProvider));
   }

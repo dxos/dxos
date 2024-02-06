@@ -16,6 +16,7 @@ import { type AutomergeContext, AutomergeDb, AutomergeObject } from './automerge
 import { type Hypergraph } from './hypergraph';
 import { type EchoObject, base, db, TextObject } from './object';
 import { TypedObject } from './object';
+import { AbstractEchoObject } from './object/object';
 import { type Schema } from './proto';
 import { type FilterSource, type Query } from './query';
 
@@ -231,6 +232,7 @@ export class EchoDatabase {
         log('add to set', { id: obj[base]._id, instance: getDebugName(obj) });
         invariant(!this._objects.has(object.id));
         this._objects.set(object.id, obj);
+        invariant(obj[base] instanceof AbstractEchoObject);
         obj[base]._database = this;
         obj[base]._beforeBind();
         obj[base]._bind(object);
@@ -240,6 +242,8 @@ export class EchoDatabase {
     // Remove objects that are no longer in the database.
     for (const [id, obj] of this._objects.entries()) {
       if (!this._itemManager.entities.has(id)) {
+        invariant(obj[base] instanceof AbstractEchoObject);
+
         if (obj[base]._item) {
           obj[base]._item.deleted = true;
         }
@@ -254,6 +258,7 @@ export class EchoDatabase {
     for (const item of updateEvent.itemsUpdated) {
       const obj = this._objects.get(item.id);
       if (obj) {
+        invariant(obj[base] instanceof AbstractEchoObject);
         obj[base]._itemUpdate();
       }
     }
