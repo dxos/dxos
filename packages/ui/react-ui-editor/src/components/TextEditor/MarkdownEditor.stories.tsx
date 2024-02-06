@@ -3,7 +3,6 @@
 //
 
 import '@dxosTheme';
-
 import { type EditorView } from '@codemirror/view';
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import defaultsDeep from 'lodash.defaultsdeep';
@@ -37,6 +36,7 @@ import {
   useComments,
   formatting,
   annotations,
+  EditorModes,
 } from '../../extensions';
 import { type Comment, useTextModel } from '../../hooks';
 import translations from '../../translations';
@@ -386,6 +386,15 @@ export const HorizontalRule = {
     <Story
       text={str('# Horizontal Rule', '', text.paragraphs, '---', text.paragraphs, '---', text.paragraphs)}
       extensions={[hr()]}
+    />
+  ),
+};
+
+export const Vim = {
+  render: () => (
+    <Story
+      text={str('# Vim Mode', '', 'The distant future. The year 2000.', '', text.paragraphs)}
+      extensions={[defaults, EditorModes.vim]}
     />
   ),
 };

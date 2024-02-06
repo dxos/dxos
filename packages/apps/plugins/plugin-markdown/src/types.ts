@@ -12,7 +12,7 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { type ObjectMeta } from '@dxos/react-client/echo';
-import { type EditorMode, type Extension } from '@dxos/react-ui-editor';
+import { type Extension, type EditorMode } from '@dxos/react-ui-editor';
 
 import { MARKDOWN_PLUGIN } from './meta';
 
