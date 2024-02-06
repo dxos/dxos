@@ -8,13 +8,12 @@ import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/aut
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { defer } from '@dxos/util';
 
 import { type AutomergeDb } from './automerge-db';
+import { docChangeSemaphore } from './doc-semaphore';
 import { type DocStructure, type ObjectStructure } from './types';
 import { type EchoObject } from '../object';
-import { docChangeSemaphore } from './doc-semaphore';
 
 // TODO(dmaretskyi): Rename to `AutomergeObject`.
 export class AutomergeObjectCore {

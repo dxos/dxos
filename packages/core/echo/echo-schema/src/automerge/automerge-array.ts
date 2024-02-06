@@ -4,7 +4,6 @@
 
 import { inspect, type CustomInspectFunction } from 'node:util';
 
-import { type ChangeFn } from '@dxos/automerge/automerge';
 import { invariant } from '@dxos/invariant';
 
 import { AutomergeObject } from './automerge-object';

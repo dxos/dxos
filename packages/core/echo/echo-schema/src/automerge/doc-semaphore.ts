@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { getDebugName } from '@dxos/util';
