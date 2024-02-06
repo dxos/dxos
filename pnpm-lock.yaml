@@ -3143,6 +3143,9 @@ importers:
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../../common/display-name
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage

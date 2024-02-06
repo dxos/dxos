@@ -49,10 +49,10 @@ type ToolbarToggleGroupProps = (
   ButtonGroupProps;
 
 const ToolbarToggleGroup = forwardRef<HTMLDivElement, ToolbarToggleGroupProps>(
-  ({ classNames, children, ...props }, forwardedRef) => {
+  ({ classNames, children, elevation, ...props }, forwardedRef) => {
     return (
       <ToolbarPrimitive.ToolbarToggleGroup {...props} asChild>
-        <ButtonGroup {...{ classNames, children }} ref={forwardedRef} />
+        <ButtonGroup {...{ classNames, children, elevation }} ref={forwardedRef} />
       </ToolbarPrimitive.ToolbarToggleGroup>
     );
   },

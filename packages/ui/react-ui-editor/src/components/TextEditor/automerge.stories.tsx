@@ -23,6 +23,7 @@ import { MarkdownEditor } from './TextEditor';
 import { type IDocHandle, automerge, awareness, createBasicBundle } from '../../extensions';
 import { useTextEditor, useTextModel } from '../../hooks';
 import { defaultTheme } from '../../themes';
+import translations from '../../translations';
 
 const initialContent = 'Hello world!';
 
@@ -83,9 +84,9 @@ const Story = () => {
   }
 
   return (
-    <div className='grid grid-cols-2 gap-4'>
-      <Editor handle={object1} />
-      <Editor handle={object2} />
+    <div role='none' className='grid grid-cols-2 bs-full is-full gap-2'>
+      <Editor handle={object1} path={['text']} />
+      <Editor handle={object2} path={['text']} />
     </div>
   );
 };
@@ -94,6 +95,7 @@ export default {
   title: 'react-ui-editor/Automerge',
   component: Editor,
   render: () => <Story />,
+  parameters: { translations, layout: 'fullscreen' },
 };
 
 export const Default = {};
@@ -113,11 +115,7 @@ const EchoStory = ({ spaceKey }: { spaceKey: PublicKey }) => {
     return null;
   }
 
-  return (
-    <div className='flex flex-col w-full p-2'>
-      <MarkdownEditor model={model} slots={{ editor: { className: 'bg-white p-2' } }} />
-    </div>
-  );
+  return <MarkdownEditor model={model} />;
 };
 
 export const WithEcho = {

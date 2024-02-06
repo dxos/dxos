@@ -141,8 +141,7 @@ describe('Mutex', () => {
     expect(error!.stack!.includes('callmutex')).to.be.true;
   }).skipEnvironments('webkit');
 
-  // TODO(burdon): TypeError: Property [Symbol.dispose] is not a function.
-  test.skip('works with explicit resource management syntax', async () => {
+  test('works with explicit resource management syntax', async () => {
     const mutex = new Mutex();
 
     const events: string[] = [];
