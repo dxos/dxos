@@ -109,6 +109,9 @@
       "path": "../plugins/plugin-github"
     },
     {
+      "path": "../plugins/plugin-gpt"
+    },
+    {
       "path": "../plugins/plugin-graph"
     },
     {
