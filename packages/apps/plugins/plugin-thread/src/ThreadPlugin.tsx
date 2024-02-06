@@ -134,6 +134,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             }
 
             case 'context-thread': {
+              const dispatch = intentPlugin?.provides.intent.dispatch;
               const graph = graphPlugin?.provides.graph;
               const location = navigationPlugin?.provides.location;
               const activeNode = location?.active ? graph?.findNode(location.active) : undefined;
@@ -176,12 +177,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                         });
                       }
                     }}
-                    onThreadDelete={(thread: ThreadType) => {
-                      const index = active.comments.findIndex((comment) => comment.thread?.id === thread.id);
-                      if (index !== -1) {
-                        active.comments.splice(index, 1);
-                      }
-                    }}
+                    onThreadDelete={(thread: ThreadType) =>
+                      dispatch?.({
+                        plugin: THREAD_PLUGIN,
+                        action: ThreadAction.DELETE,
+                        data: { document: active, thread },
+                      })
+                    }
                   />
                 );
               }
@@ -220,6 +222,30 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               state.current = intent.data?.current;
               state.focus = intent.data?.focus;
               return { data: true };
+            }
+
+            case ThreadAction.DELETE: {
+              const { document: doc, thread, cursor } = intent.data ?? {};
+              if (!isDocument(doc) || !isThread(thread)) {
+                return;
+              }
+
+              if (!intent.undo) {
+                const index = doc.comments.findIndex((comment) => comment.thread?.id === thread.id);
+                const cursor = doc.comments[index]?.cursor;
+                if (index !== -1) {
+                  doc.comments.splice(index, 1);
+                }
+                return {
+                  undoable: {
+                    message: translations[0]['en-US'][THREAD_PLUGIN]['thread deleted label'],
+                    data: { cursor },
+                  },
+                };
+              } else if (intent.undo && typeof cursor === 'string') {
+                doc.comments.push({ thread, cursor });
+                return { data: true };
+              }
             }
           }
         },
