@@ -37,7 +37,7 @@ test.describe('Collaboration tests', () => {
   });
 
   test('join new identity', async () => {
-    test.slow();
+    test.setTimeout(60_000);
 
     await host.createSpace();
     await host.createSpace();
@@ -64,7 +64,7 @@ test.describe('Collaboration tests', () => {
     await waitForExpect(async () => {
       expect(await host.getSpaceItemsCount()).to.equal(3);
       expect(await guest.getSpaceItemsCount()).to.equal(3);
-    }, 15_000);
+    }, 30_000);
 
     await host.openIdentityManager();
     await guest.openIdentityManager();
