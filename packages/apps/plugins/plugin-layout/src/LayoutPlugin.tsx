@@ -130,6 +130,29 @@ export const LayoutPlugin = ({
     }
   };
 
+  const isSocket = !!(globalThis as any).__args;
+
+  // TODO factor out as part of NavigationPlugin.
+  const checkAppScheme = (url: string) => {
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+
+    iframe.src = url + window.location.pathname.replace(/^\/+/, '');
+
+    const timer = setTimeout(() => {
+      document.body.removeChild(iframe);
+    }, 3000);
+
+    window.addEventListener('pagehide', (event) => {
+      clearTimeout(timer);
+      document.body.removeChild(iframe);
+    });
+  };
+
+  // TODO(mjamesderocher) can we get this directly from Socket?
+  const appScheme = 'composer://';
+
   return {
     meta,
     ready: async (plugins) => {
@@ -146,6 +169,10 @@ export const LayoutPlugin = ({
 
       // TODO(burdon): Create context and plugin.
       Keyboard.singleton.initialize();
+
+      if (!isSocket) {
+        checkAppScheme(appScheme);
+      }
     },
     unload: async () => {
       Keyboard.singleton.destroy();
