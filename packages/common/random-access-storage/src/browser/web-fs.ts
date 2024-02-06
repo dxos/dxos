@@ -426,6 +426,12 @@ export class WebFile extends EventEmitter implements File {
     await this._flushNow();
   }
 
+  /**
+   * It's best to avoid using this method as it doesn't really close a file.
+   * We could update the _opened flag and add a guard like for destroyed, but this would break
+   * the FileSystemFileHandle sharing required for browser tests to run, where writes are
+   * not immediately visible if using different file handles.
+   */
   async close(): Promise<void> {
     await this._flushNow();
   }
