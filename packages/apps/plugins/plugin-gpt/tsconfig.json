@@ -21,6 +21,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/local-storage"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {
@@ -37,6 +40,9 @@
     },
     {
       "path": "../../types"
+    },
+    {
+      "path": "../plugin-settings"
     },
     {
       "path": "../plugin-space"

@@ -10,6 +10,7 @@ export default [
       [GPT_PLUGIN]: {
         'plugin name': 'GPT',
         'analyze document label': 'Analyze Document',
+        'settings api key': 'API Key',
       },
     },
   },

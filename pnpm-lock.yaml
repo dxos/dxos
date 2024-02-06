@@ -1400,9 +1400,15 @@ importers:
 
   packages/apps/plugins/plugin-gpt:
     dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
