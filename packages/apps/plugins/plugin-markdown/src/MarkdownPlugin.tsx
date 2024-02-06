@@ -17,7 +17,6 @@ import {
   type IntentPluginProvides,
   type Plugin,
   type PluginDefinition,
-  LayoutAction,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
@@ -48,7 +47,6 @@ export const isDocument = (data: unknown): data is DocumentType =>
   isTypedObject(data) && DocumentType.schema.typename === data.__typename;
 
 export type MarkdownPluginState = {
-  activeComment?: string;
   extensions: NonNullable<ExtensionsProvider>[];
 };
 
@@ -260,11 +258,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       intent: {
         resolver: ({ action, data }) => {
           switch (action) {
-            case LayoutAction.FOCUS: {
-              state.activeComment = data?.object;
-              return { data: true };
-            }
-
             case MarkdownAction.CREATE: {
               return { data: new DocumentType() };
             }
