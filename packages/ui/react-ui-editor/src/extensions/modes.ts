@@ -17,8 +17,8 @@ export const editorMode = Facet.define<EditorConfig, EditorConfig>({
   combine: (modes) => modes[0] ?? {},
 });
 
-export const EditorModes: { [mode: string]: Extension | undefined } = {
-  default: {},
+export const EditorModes: { [mode: string]: Extension } = {
+  default: [],
   vim: [
     vim(),
     editorMode.of({ type: 'vim', noTabster: true }),
@@ -28,6 +28,7 @@ export const EditorModes: { [mode: string]: Extension | undefined } = {
         run: (view) => {
           // Focus container for tab navigation.
           view.dispatch({ userEvent: 'focus.container' });
+          return true;
         },
       },
     ]),

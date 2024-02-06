@@ -394,7 +394,7 @@ export const Vim = {
   render: () => (
     <Story
       text={str('# Vim Mode', '', 'The distant future. The year 2000.', '', text.paragraphs)}
-      extensions={[...defaults, EditorModes.vim]}
+      extensions={[defaults, EditorModes.vim]}
     />
   ),
 };
