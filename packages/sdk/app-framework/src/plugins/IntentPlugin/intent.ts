@@ -31,6 +31,11 @@ export type Intent = {
   action: string;
 
   /**
+   * Whether or not the intent is being undone.
+   */
+  undo?: boolean;
+
+  /**
    * Any data needed to perform the desired action.
    */
   data?: IntentData;
@@ -43,6 +48,21 @@ export type IntentResult = {
    * If the intent is apart of a chain of intents, the data will be passed to the next intent.
    */
   data?: any;
+
+  /**
+   * If provided, the action will be undoable.
+   */
+  undoable?: {
+    /**
+     * Message to display to the user when indicating that the action can be undone.
+     */
+    message: string;
+
+    /**
+     * Will be merged with the original intent data when firing the undo intent.
+     */
+    data?: IntentData;
+  };
 
   /**
    * An error that occurred while performing the action.
