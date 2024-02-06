@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+export * from './annotations';
 export * from './autocomplete';
 export * from './automerge';
 export * from './awareness';

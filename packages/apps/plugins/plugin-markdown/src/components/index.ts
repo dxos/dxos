@@ -4,11 +4,10 @@
 
 import React, { type LazyExoticComponent } from 'react';
 
-// TODO(burdon): Standardize exports.
-import type { DocumentMain as DocumentMainType } from './DocumentMain';
-import type { DocumentSection as DocumentSectionType } from './DocumentSection';
+import { type DocumentMain as DocumentMainType } from './DocumentMain';
+import { type DocumentSection as DocumentSectionType } from './DocumentSection';
 
-export type { DocumentCardProps, DocumentItemProps } from './DocumentCard';
+export { type DocumentCardProps, type DocumentItemProps } from './DocumentCard';
 
 export * from './DocumentCard';
 export * from './DocumentMain';
