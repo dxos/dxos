@@ -187,7 +187,13 @@ export class AutomergeObjectCore {
       this.signal.notifyWrite();
       this.updates.emit();
     } catch (err) {
-      log.catch(err);
+      // Reports all errors that happen during even propagation as unhandled.
+      // This is important since we don't want to silently swallow errors.
+      // Unfortunately, this will only report errors in the next microtask after the current stack has already unwound.
+      // TODO(dmaretskyi): Take some inspiration from facebook/react/packages/shared/invokeGuardedCallbackImpl.js
+      queueMicrotask(() => {
+        throw err;
+      });
     }
   };
 
