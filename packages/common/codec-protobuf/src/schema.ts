@@ -46,10 +46,8 @@ export class Schema<T, S extends {} = {}> {
     }
 
     const type = this._typesRoot.lookupType(typeName);
-
     codec = new ProtoCodec(type, this._mapping, this);
     this._codecCache.set(typeName, codec);
-
     return codec;
   }
 
@@ -89,10 +87,8 @@ export class Schema<T, S extends {} = {}> {
     }
 
     const type = this._typesRoot.lookupType(typeName);
-
     codec = new ProtoCodec(type, this._mapping, this);
     this._codecCache.set(typeName, codec);
-
     return codec;
   }
 
@@ -100,6 +96,7 @@ export class Schema<T, S extends {} = {}> {
     if (typeof name !== 'string') {
       throw new TypeError('Expected `name` argument to be a string');
     }
+
     const service = this._typesRoot.lookupService(name);
     return new ServiceDescriptor(service, this);
   }
@@ -111,6 +108,7 @@ export class Schema<T, S extends {} = {}> {
     if (!schema.nested) {
       throw new Error('Invalid schema: missing nested object');
     }
+
     this._typesRoot = Root.fromJSON(merge(this._typesRoot.toJSON(), schema));
   }
 }

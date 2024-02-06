@@ -15,9 +15,19 @@ export type ParseResult = {
   data?: any;
 };
 
-export const parseMessage = (content: string, type?: string): ParseResult => {
+export const parseMessage = (content: object | string, type?: string): ParseResult => {
   invariant(content);
   const timestamp = new Date().toISOString();
+
+  // TODO(burdon): Reconcile with JsonOutputFunctionsParser.
+  if (typeof content === 'object') {
+    return {
+      timestamp,
+      type: 'json',
+      content: JSON.stringify(content),
+      data: content,
+    };
+  }
 
   // Check if raw JSON.
   if (!type || type === 'json') {
