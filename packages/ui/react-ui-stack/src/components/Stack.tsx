@@ -116,7 +116,7 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
         ref={forwardedRef}
         classNames={mx(
           textBlockWidth,
-          'm-2 p-2 rounded-lg',
+          'mbs-1 mbe-2',
           !separation && ['divide-y', groupBorder],
           isOver && dropRing,
           classNames,

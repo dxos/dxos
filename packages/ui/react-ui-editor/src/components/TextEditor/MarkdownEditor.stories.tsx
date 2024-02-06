@@ -14,7 +14,7 @@ import { TextObject } from '@dxos/echo-schema';
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
-import { fixedInsetFlexLayout, getSize, groupSurface, mx } from '@dxos/react-ui-theme';
+import { getSize, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor, type TextEditorProps } from './TextEditor';
@@ -39,6 +39,7 @@ import {
   annotations,
 } from '../../extensions';
 import { type Comment, useTextModel } from '../../hooks';
+import translations from '../../translations';
 
 faker.seed(101);
 
@@ -224,21 +225,16 @@ const Story = ({ text, comments, placeholder = 'New document.', ...props }: Stor
   }
 
   return (
-    <div className={mx(fixedInsetFlexLayout, groupSurface)}>
-      <div className='flex h-full justify-center'>
-        <div className='flex flex-col h-full w-[800px] overflow-y-auto'>
-          <MarkdownEditor
-            ref={view}
-            model={model}
-            placeholder={placeholder}
-            slots={{
-              editor: { className: 'bs-full p-2 bg-white dark:bg-black' },
-            }}
-            {...props}
-          />
-        </div>
-      </div>
-    </div>
+    <MarkdownEditor
+      ref={view}
+      model={model}
+      placeholder={placeholder}
+      slots={{
+        root: { className: mx(textBlockWidth, 'min-bs-dvh') },
+        editor: { className: 'min-bs-dvh p-2 bg-white dark:bg-black' },
+      }}
+      {...props}
+    />
   );
 };
 
@@ -247,6 +243,7 @@ export default {
   component: MarkdownEditor,
   decorators: [withTheme],
   render: Story,
+  parameters: { translations, layout: 'fullscreen' },
 };
 
 const defaults = [
