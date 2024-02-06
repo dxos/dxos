@@ -1,3 +1,9 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import './explicit-resource-management-polyfill';
+
 /**
  * Run function on scope exit. Go style.
  *
@@ -9,10 +15,6 @@
  *   ...
  * }
  */
-//
-// Copyright 2024 DXOS.org
-//
-
 export const defer = (fn: () => void): Disposable => new DeferGuard(fn);
 
 class DeferGuard {
