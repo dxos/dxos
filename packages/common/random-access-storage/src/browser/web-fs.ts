@@ -329,9 +329,14 @@ export class WebFile extends EventEmitter implements File {
   }
 
   private async _flushNow() {
-    this._flushPromise = (this._flushPromise ?? Promise.resolve())
-      .then(() => this._flushCache())
-      .catch((err) => log.warn(err));
+    this._flushPromise = this._flushPromise ?? Promise.resolve();
+
+    try {
+      await this._flushCache();
+      this._flushPromise = null;
+    } catch (err) {
+      log.warn('flush error', { err });
+    }
 
     await this._flushPromise;
   }
