@@ -4,11 +4,11 @@
 
 import type { Browser, Page } from '@playwright/test';
 
-import { StackManager } from '@dxos/react-ui-stack/testing';
 import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test/playwright';
 
 // TODO(wittjosiah): Normalize data-testids between snake and camel case.
+// TODO(wittjosiah): Consider structuring tests in such that they could be run with different sets of plugins enabled.
 
 export class AppManager {
   page!: Page;
@@ -127,43 +127,5 @@ export class AppManager {
     );
 
     await this.page.getByTestId('resetDialog').waitFor();
-  }
-
-  // TODO(wittjosiah): Consider factoring out into plugin packages.
-
-  // Markdown Plugin
-
-  getMarkdownTextbox() {
-    return this.page.getByTestId('composer.markdownRoot').getByRole('textbox');
-  }
-
-  getMarkdownActiveLineText() {
-    return this.getMarkdownTextbox()
-      .locator('.cm-activeLine > span:not([class=cm-collab-selectionCaret])')
-      .first()
-      .textContent();
-  }
-
-  waitForMarkdownTextbox() {
-    return this.getMarkdownTextbox().waitFor();
-  }
-
-  getDocumentTitleInput() {
-    return this.page.getByTestId('composer.documentTitle');
-  }
-
-  getCollaboratorCursors() {
-    return this.page.locator('.cm-collab-selectionInfo');
-  }
-
-  // Stack Plugin
-
-  getStack() {
-    return new StackManager(this.page.getByTestId('main.stack'));
-  }
-
-  async createSection(plugin: string) {
-    await this.page.getByTestId('stack.createSection').click();
-    return this.page.getByTestId(`${plugin}.createSection`).click();
   }
 }
