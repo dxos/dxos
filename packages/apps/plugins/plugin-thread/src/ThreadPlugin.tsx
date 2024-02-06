@@ -11,25 +11,25 @@ import { isDocument } from '@braneframe/plugin-markdown';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Thread as ThreadType } from '@braneframe/types';
 import {
-  LayoutAction,
   type GraphProvides,
   type IntentPluginProvides,
+  LayoutAction,
+  type LocationProvides,
+  NavigationAction,
   type Plugin,
   type PluginDefinition,
-  parseIntentPlugin,
   parseGraphPlugin,
-  resolvePlugin,
-  NavigationAction,
-  type LocationProvides,
+  parseIntentPlugin,
   parseNavigationPlugin,
+  resolvePlugin,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import {
-  type TypedObject,
   SpaceProxy,
-  isTypedObject,
+  type TypedObject,
   getSpaceForObject,
   getTextInRange,
+  isTypedObject,
 } from '@dxos/react-client/echo';
 import { comments, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
@@ -87,7 +87,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       },
       translations: [...translations, ...threadTranslations],
       graph: {
-        builder: ({ parent, plugins }) => {
+        builder: ({ parent }) => {
           if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
             return;
           }
