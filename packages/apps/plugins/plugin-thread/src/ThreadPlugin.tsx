@@ -138,13 +138,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const location = navigationPlugin?.provides.location;
               const activeNode = location?.active ? graph?.findNode(location.active) : undefined;
               const active = activeNode?.data;
-              const space = isDocument(active) && getSpaceForObject(active);
+              const space = active && getSpaceForObject(active);
               if (!space) {
                 return null;
               }
 
               // TODO(burdon): Hack to detect comments.
-              if ((active as any)?.comments?.length) {
+              if (isDocument(active) && (active as any)?.comments?.length) {
                 // Sort threads by y-position.
                 // TODO(burdon): Should just use document position?
                 const threads = active.comments
