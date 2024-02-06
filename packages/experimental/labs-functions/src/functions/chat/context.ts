@@ -4,12 +4,12 @@
 
 import { Document as DocumentType, type Message as MessageType, type Thread as ThreadType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { getTextInRange, Schema, type TypedObject, type JsonSchema, toJsonSchema } from '@dxos/echo-schema';
+import { getTextInRange, Schema, toJsonSchema, type TypedObject } from '@dxos/echo-schema';
 
 export type RequestContext = {
   object?: TypedObject;
   text?: string;
-  schema?: JsonSchema;
+  schema?: Map<string, Schema>;
 };
 
 export const createContext = (space: Space, message: MessageType, thread: ThreadType): RequestContext => {
@@ -31,22 +31,16 @@ export const createContext = (space: Space, message: MessageType, thread: Thread
   }
 
   // Create schema registry.
+  // TODO(burdon): Filter?
   const { objects } = space.db.query(Schema.filter());
-  const schema = {
-    type: 'object',
-    properties: objects.reduce<{ [name: string]: JsonSchema }>((map, schema) => {
-      const jsonSchema = toJsonSchema(schema);
-      if (jsonSchema.title) {
-        map[jsonSchema.title] = {
-          type: 'array',
-          items: jsonSchema,
-          description: `An array of ${jsonSchema.title} entities.`,
-        };
-      }
+  const schema = objects.reduce<Map<string, Schema>>((map, schema) => {
+    const jsonSchema = toJsonSchema(schema);
+    if (jsonSchema.title) {
+      map.set(jsonSchema.title, schema);
+    }
 
-      return map;
-    }, {}),
-  };
+    return map;
+  }, new Map());
 
   return { object, text, schema };
 };

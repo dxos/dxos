@@ -11,7 +11,7 @@ import get from 'lodash.get';
 
 import { Chain as ChainType, type Message as MessageType, type Thread as ThreadType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { getTextContent, Schema, TextObject } from '@dxos/echo-schema';
+import { getTextContent, type JsonSchema, Schema, TextObject, toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { createContext, type RequestContext } from './context';
@@ -122,7 +122,21 @@ export class RequestProcessor {
         {
           name: 'output_formatter',
           description: 'Should always be used to properly format output.',
-          parameters: context.schema,
+          parameters: Array.from(context.schema?.values() ?? []).reduce<{ [name: string]: JsonSchema }>(
+            (map, schema) => {
+              const jsonSchema = toJsonSchema(schema);
+              if (jsonSchema.title) {
+                map[jsonSchema.title] = {
+                  type: 'array',
+                  items: jsonSchema,
+                  description: `An array of ${jsonSchema.title} entities.`,
+                };
+              }
+
+              return map;
+            },
+            {},
+          ),
         },
       ],
     };

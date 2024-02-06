@@ -4,7 +4,8 @@
 
 import { type Message as MessageType, Document as DocumentType, Stack as StackType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { TextObject } from '@dxos/echo-schema';
+import { Expando, TextObject } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { type RequestContext } from './context';
@@ -43,8 +44,6 @@ export class ResponseBuilder {
     const timestamp = new Date().toISOString();
     const { data, content, type, kind } = result;
 
-    console.log('?????', result);
-
     //
     // Add to stack.
     //
@@ -75,28 +74,34 @@ export class ResponseBuilder {
     // Convert JSON data to objects.
     //
     if (result.type === 'json') {
-      const dataArray = Array.isArray(data) ? data : [data];
-      return dataArray.map((data): MessageType.Block => {
-        // Create object.
-        // TODO(burdon): Map returned JSON objects to schema.
-        if (this._context.schema) {
-          console.log('###', data);
-          // data['@type'] = this._context.schema.typename;
-          // for (const prop of schema.props) {
-          //   if (data[prop.id!]) {
-          //     if (typeof data[prop.id!] === 'string') {
-          //       data[prop.id!] = new TextObject(data[prop.id!]);
-          //     }
-          //   }
-          // }
-          //
-          // const object = new Expando(data, { schema });
-          // return { timestamp, object };
-        }
+      const blocks: MessageType.Block[] = [];
+      Object.entries(data).forEach(([type, values]) => {
+        const schema = this._context.schema?.get(type);
+        if (schema) {
+          for (const value of values as any[]) {
+            const data: Record<string, any> = {
+              '@type': schema.typename,
+            };
 
-        // TODO(burdon): Create ref?
-        return { timestamp, content: new TextObject(JSON.stringify(data)) };
+            for (const { id } of schema.props) {
+              invariant(id);
+              if (value[id]) {
+                // TODO(burdon): Currently only handles string properties.
+                if (typeof value[id] === 'string') {
+                  data[id] = new TextObject(value[id]);
+                }
+              }
+            }
+
+            const object = new Expando(data, { schema });
+            blocks.push({ timestamp, object });
+          }
+        }
       });
+
+      if (blocks.length) {
+        return blocks;
+      }
     }
 
     //
