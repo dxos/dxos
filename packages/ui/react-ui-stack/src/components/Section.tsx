@@ -33,7 +33,6 @@ import {
   mx,
   staticFocusRing,
   staticHoverableControls,
-  surfaceElevation,
 } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../translations';
@@ -90,12 +89,12 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
         <div
           role='none'
           className={mx(
-            surfaceElevation({ elevation: 'group' }),
             attentionSurface,
             hoverableControls,
-            'flex',
-            separation ? 'rounded min-bs-[4rem]' : 'group-first:rounded-bs group-last:rounded-be',
+            'flex separator-separator md:border-is md:border-ie',
+            separation ? 'min-bs-[4rem]' : 'group-first:border-bs group-last:border-be',
             active && staticHoverableControls,
+            active && 'border-bs border-be',
             (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
           )}
         >

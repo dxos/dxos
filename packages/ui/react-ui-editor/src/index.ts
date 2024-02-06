@@ -10,6 +10,6 @@ export { type EditorView, keymap } from '@codemirror/view';
 export * from './components';
 export * from './extensions';
 export * from './hooks';
-export { getToken } from './styles';
+export { getToken, editorWithToolbarLayout } from './styles';
 export * from './themes';
 export * from './util';

@@ -9,7 +9,7 @@ import React, { type FC, useMemo, useState } from 'react';
 import { TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
-import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
+import { mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Toolbar } from './Toolbar';
@@ -25,6 +25,8 @@ import {
   useFormattingState,
 } from '../../extensions';
 import { type Comment, useActionHandler, useEditorView, useTextModel } from '../../hooks';
+import { editorWithToolbarLayout } from '../../styles';
+import translations from '../../translations';
 import { MarkdownEditor } from '../TextEditor';
 
 faker.seed(101);
@@ -63,17 +65,18 @@ const Story: FC<{ content: string }> = ({ content }) => {
   }
 
   return (
-    <div className={mx(fixedInsetFlexLayout, groupSurface)}>
-      <div className='flex h-full justify-center'>
-        <div className='flex flex-col h-full w-[800px]'>
-          <Toolbar.Root onAction={handleAction} state={formattingState}>
-            <Toolbar.Markdown />
-            <Toolbar.Separator />
-            <Toolbar.Extended />
-          </Toolbar.Root>
-          <MarkdownEditor ref={editorRef} model={model} extensions={extensions} />
-        </div>
-      </div>
+    <div role='none' className={mx('fixed inset-0', editorWithToolbarLayout)}>
+      <Toolbar.Root onAction={handleAction} state={formattingState} classNames={textBlockWidth}>
+        <Toolbar.Markdown />
+        <Toolbar.Separator />
+        <Toolbar.Extended />
+      </Toolbar.Root>
+      <MarkdownEditor
+        ref={editorRef}
+        model={model}
+        extensions={extensions}
+        slots={{ root: { className: mx(textBlockWidth, 'pli-2') } }}
+      />
     </div>
   );
 };
@@ -83,6 +86,7 @@ export default {
   component: Toolbar,
   render: (args: any) => <Story {...args} />,
   decorators: [withTheme],
+  parameters: { translations, layout: 'fullscreen' },
 };
 
 const content = [
