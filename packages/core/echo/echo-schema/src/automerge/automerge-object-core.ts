@@ -8,9 +8,10 @@ import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/aut
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { defer } from '@dxos/util';
 
 import { type AutomergeDb } from './automerge-db';
+import { docChangeSemaphore } from './doc-semaphore';
 import { type DocStructure, type ObjectStructure } from './types';
 import { type EchoObject } from '../object';
 
@@ -77,6 +78,9 @@ export class AutomergeObjectCore {
     this.doc = undefined;
 
     if (!options.ignoreLocalState) {
+      // Prevent recursive change calls.
+      using _ = defer(docChangeSemaphore(this.docHandle ?? this));
+
       this.docHandle.change((newDoc: DocStructure) => {
         assignDeep(newDoc, this.mountPath, doc);
       });
@@ -106,6 +110,9 @@ export class AutomergeObjectCore {
    * Do not take into account mountPath.
    */
   change(changeFn: ChangeFn<any>, options?: A.ChangeOptions<any>) {
+    // Prevent recursive change calls.
+    using _ = defer(docChangeSemaphore(this.docHandle ?? this));
+
     if (this.doc) {
       if (options) {
         this.doc = A.change(this.doc!, options, changeFn);
@@ -124,6 +131,9 @@ export class AutomergeObjectCore {
    * Do not take into account mountPath.
    */
   changeAt(heads: Heads, callback: ChangeFn<any>, options?: ChangeOptions<any>): string[] | undefined {
+    // Prevent recursive change calls.
+    using _ = defer(docChangeSemaphore(this.docHandle ?? this));
+
     let result: Heads | undefined;
     if (this.doc) {
       if (options) {
@@ -187,7 +197,17 @@ export class AutomergeObjectCore {
       this.signal.notifyWrite();
       this.updates.emit();
     } catch (err) {
-      log.catch(err);
+      // Print the error message synchronously for easier debugging.
+      // The stack trace and details will be printed asynchronously.
+      console.error('' + err);
+
+      // Reports all errors that happen during even propagation as unhandled.
+      // This is important since we don't want to silently swallow errors.
+      // Unfortunately, this will only report errors in the next microtask after the current stack has already unwound.
+      // TODO(dmaretskyi): Take some inspiration from facebook/react/packages/shared/invokeGuardedCallbackImpl.js
+      queueMicrotask(() => {
+        throw err;
+      });
     }
   };
 
