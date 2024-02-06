@@ -12,7 +12,7 @@ import get from 'lodash.get';
 
 import { Chain as ChainType, type Message as MessageType, type Thread as ThreadType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { getTextContent, type JsonSchema, Schema, TextObject } from '@dxos/echo-schema';
+import { getTextContent, Schema, TextObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { createContext, type RequestContext } from './context';
@@ -99,7 +99,6 @@ export class RequestProcessor {
     log.info('create sequence', {
       context: {
         object: { id: context.object?.id, schema: context.object?.__typename },
-        schema: context.schema?.typename,
       },
       options,
     });
@@ -130,49 +129,15 @@ export class RequestProcessor {
       inputs[input.name] = await this.getInput(space, input, context);
     }
 
-    const withSchema = false;
-
-    // TODO(burdon): Get types from space.
-    const types = {
-      company: {
-        type: 'object',
-        properties: {
-          name: { type: 'string', description: 'The name of the company.' },
-          website: { type: 'string', description: 'The public website of the company.' },
-        },
-      },
-      contact: {
-        type: 'object',
-        properties: {
-          name: { type: 'string', description: 'The name of the person.' },
-          // TODO(burdon): Reference.
-          organization: { type: 'string', description: "The name of the person's employer." },
-        },
-      },
-    };
-
-    // TODO(burdon): Build schema from prompt.
-    const schema = {
-      type: 'object',
-      properties: Object.entries(types).reduce<{ [name: string]: JsonSchema }>((schema, [key, value]) => {
-        schema[key] = {
-          type: 'array',
-          items: value,
-          description: `An array of ${key} entities.`,
-        };
-
-        return schema;
-      }, {}),
-    };
-
     // TODO(burdon): OpenAI-specific kwargs.
-    const args: any = {
+    const withSchema = false;
+    const customArgs: any = withSchema && {
       function_call: { name: 'output_formatter' },
       functions: [
         {
           name: 'output_formatter',
           description: 'Should always be used to properly format output.',
-          parameters: schema,
+          parameters: context.schema,
         },
       ],
     };
@@ -187,7 +152,7 @@ export class RequestProcessor {
       inputs,
       PromptTemplate.fromTemplate(getTextContent(prompt.source)!),
       promptLogger,
-      this._resources.model.bind(withSchema ? args : {}),
+      this._resources.model.bind(customArgs),
       withSchema ? new JsonOutputFunctionsParser() : new StringOutputParser(),
     ]);
   }
@@ -246,8 +211,9 @@ export class RequestProcessor {
         const { objects: schemas } = space.db.query(Schema.filter());
         const schema = schemas.find((schema) => schema.typename === type);
         if (schema) {
+          // TODO(burdon): Use annotations.
           const name = schema.typename.split(/[.-/]/).pop();
-          const fields = schema.props.map((prop) => prop.id);
+          const fields = schema.props.filter(({ type }) => type === Schema.PropType.STRING).map(({ id }) => id);
           return () => `${name}: ${fields.join(', ')}`;
         }
 

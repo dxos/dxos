@@ -40,7 +40,6 @@ export interface JsonSchema {
 }
 
 export const toJsonSchema = (schema: Schema): JsonSchema => {
-  const parts = schema.typename.split('.');
   return schema.props.reduce<JsonSchema>(
     (schema, { id, type, description }) => {
       invariant(id);
@@ -51,7 +50,7 @@ export const toJsonSchema = (schema: Schema): JsonSchema => {
     {
       $schema: 'http://json-schema.org/draft-07/schema#',
       $id: schema.typename,
-      title: parts[parts.length - 1],
+      title: schema.typename.split(/[.-/]/).pop(),
       type: 'object',
       properties: {},
     },

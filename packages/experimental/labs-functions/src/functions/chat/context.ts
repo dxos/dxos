@@ -4,14 +4,12 @@
 
 import { Document as DocumentType, type Message as MessageType, type Thread as ThreadType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { getTextInRange, Schema, type TypedObject, type JsonSchema } from '@dxos/echo-schema';
+import { getTextInRange, Schema, type TypedObject, type JsonSchema, toJsonSchema } from '@dxos/echo-schema';
 
 export type RequestContext = {
   object?: TypedObject;
   text?: string;
-  // TODO(burdon): Reconcile.
-  schema?: Schema;
-  types?: JsonSchema;
+  schema?: JsonSchema;
 };
 
 export const createContext = (space: Space, message: MessageType, thread: ThreadType): RequestContext => {
@@ -32,9 +30,23 @@ export const createContext = (space: Space, message: MessageType, thread: Thread
     }
   }
 
-  // TODO(burdon): Get schema from message/context/prompt.
-  const { objects: schemas } = space.db.query(Schema.filter());
-  const schema = schemas.find((schema) => schema.typename === 'example.com/schema/project');
+  // Create schema registry.
+  const { objects } = space.db.query(Schema.filter());
+  const schema = {
+    type: 'object',
+    properties: objects.reduce<{ [name: string]: JsonSchema }>((map, schema) => {
+      const jsonSchema = toJsonSchema(schema);
+      if (jsonSchema.title) {
+        map[jsonSchema.title] = {
+          type: 'array',
+          items: jsonSchema,
+          description: `An array of ${jsonSchema.title} entities.`,
+        };
+      }
+
+      return map;
+    }, {}),
+  };
 
   return { object, text, schema };
 };

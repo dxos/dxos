@@ -128,7 +128,7 @@ describe('RequestProcessor', () => {
     await builder.init();
     await builder.addSchema();
     afterTest(async () => {
-      await builder.destroy(); // TODO(burdon): Hangs.
+      await builder.destroy();
     });
 
     const { space, resources } = builder;
@@ -142,9 +142,11 @@ describe('RequestProcessor', () => {
               command: 'extract',
               source: new TextObject(
                 [
-                  'List all people and companies mentioned in the content below.',
-                  'Use the following type definitions:',
+                  'List all people and companies mentioned in the content section below.',
+                  'You are a machine that only replies with valid, iterable RFC8259 compliant JSON in your responses.',
+                  'Your entire response should be a single JSON object containing arrays of objects for the following types:',
                   '{company}',
+                  '{contact}',
                   '---',
                   'Content:',
                   '{input}',
@@ -157,6 +159,11 @@ describe('RequestProcessor', () => {
                   name: 'company',
                   type: ChainType.Input.Type.SCHEMA,
                   value: new TextObject('example.com/schema/organization'),
+                }),
+                new ChainType.Input({
+                  name: 'contact',
+                  type: ChainType.Input.Type.SCHEMA,
+                  value: new TextObject('example.com/schema/contact'),
                 }),
               ],
             }),
@@ -181,11 +188,6 @@ describe('RequestProcessor', () => {
           },
         ],
       });
-
-      // TODO(burdon): Create schema context from registry.
-      // TODO(burdon): Extract schema from prompt. Auto match type/category? Reference via input.
-      // TODO(burdon): Construct graph from data (e.g., person => org).
-      // TODO(burdon): Chain to lookup info afterwards.
 
       const processor = new RequestProcessor(resources);
       const blocks = await processor.processThread(space, thread, message);
