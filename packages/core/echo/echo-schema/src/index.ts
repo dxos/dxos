@@ -18,6 +18,9 @@ export * from './util';
 export * from './automerge';
 export { getGlobalAutomergePreference, setGlobalAutomergePreference } from './automerge-preference';
 
+// TODO(dmaretskyi): Until we resolve the circular dependencies lets avoid using "barrel" index.ts files in subdirectories.
+export * from './object/json-schema';
+
 linkDeferred();
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
