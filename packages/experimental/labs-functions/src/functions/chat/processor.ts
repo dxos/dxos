@@ -21,20 +21,6 @@ import { ResponseBuilder } from './response';
 import { createStatusNotifier } from './status';
 import type { ChainResources } from '../../chain';
 
-/**
- * @deprecated
- */
-export type SequenceGenerator = (
-  resources: ChainResources,
-  getContext: () => RequestContext,
-  options?: SequenceOptions,
-) => RunnableSequence;
-
-/**
- * @deprecated
- */
-export type SequenceTest = (context: RequestContext) => boolean;
-
 export type SequenceOptions = {
   prompt?: string;
   noVectorStore?: boolean;
