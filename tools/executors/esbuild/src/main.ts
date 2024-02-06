@@ -33,8 +33,8 @@ export interface EsbuildExecutorOptions {
 const GLOBALS = ['global', 'Buffer', 'process'];
 
 export default async (options: EsbuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
-  console.info('Executing esbuild...');
   if (context.isVerbose) {
+    console.info('Executing esbuild...');
     console.info(`Options: ${JSON.stringify(options, null, 2)}`);
   }
 
