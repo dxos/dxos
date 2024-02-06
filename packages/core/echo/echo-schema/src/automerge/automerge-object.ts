@@ -337,16 +337,16 @@ export class AutomergeObject implements TypedObjectProperties {
     invariant(!this[proxy]);
     const fullPath = [...this._core.mountPath, ...path];
 
-    const changeFn: ChangeFn<any> = (doc) => {
-      // TODO(dmaretskyi): Remove recursive doc.change calls. How do they even work?
-      assignDeep(doc, fullPath, this._encode(value));
+    const encoded = this._encode(value);
 
-      if (value instanceof AutomergeArray) {
-        value._attach(this[base], path);
-      }
-    };
+    // Attach array after encoding as attaching array will clear the local state.
+    if (value instanceof AutomergeArray) {
+      value._attach(this[base], path);
+    }
 
-    this._change(changeFn);
+    this._change((doc) => {
+      assignDeep(doc, fullPath, encoded);
+    });
   }
 
   /**
