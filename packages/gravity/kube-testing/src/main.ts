@@ -17,8 +17,15 @@ import {
   runAgentForPlan,
   type PlanOptions,
 } from './plan';
-import { ReplicationTestPlan, EmptyTestPlan, SignalTestPlan, TransportTestPlan, EchoTestPlan } from './spec';
-import { AutomergeTestPlan } from './spec/automerge';
+import {
+  ReplicationTestPlan,
+  EmptyTestPlan,
+  SignalTestPlan,
+  TransportTestPlan,
+  EchoTestPlan,
+  AutomergeTestPlan,
+  StorageTestPlan,
+} from './spec';
 
 // eslint-disable-next-line unused-imports/no-unused-vars
 const DXOS_REPO = process.env.DXOS_REPO;
@@ -29,6 +36,7 @@ const plans: { [key: string]: () => TestPlan<any, any> } = {
   echo: () => new EchoTestPlan(),
   replication: () => new ReplicationTestPlan(),
   automerge: () => new AutomergeTestPlan(),
+  storage: () => new StorageTestPlan(),
   empty: () => new EmptyTestPlan(),
 };
 

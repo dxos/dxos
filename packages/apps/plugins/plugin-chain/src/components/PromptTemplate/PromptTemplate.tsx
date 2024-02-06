@@ -116,7 +116,16 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
         </Section>
 
         <Section title='Template'>
-          <TextEditor model={model} placeholder={t('template placeholder')} extensions={[promptExtension]} />
+          <TextEditor
+            model={model}
+            placeholder={t('template placeholder')}
+            slots={{
+              editor: {
+                className: 'p-3',
+              },
+            }}
+            extensions={[promptExtension]}
+          />
         </Section>
 
         {prompt.inputs?.length > 0 && (
@@ -150,7 +159,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
                           </Select.Root>
                         </Input.Root>
                       </td>
-                      <td className='px-3 py-1.5'>
+                      <td className='px-3'>
                         {[
                           ChainType.Input.Type.VALUE,
                           ChainType.Input.Type.CONTEXT,
@@ -176,18 +185,7 @@ const ValueEditor = ({ input }: { input: ChainType.Input }) => {
     return null;
   }
 
-  return (
-    <TextEditor
-      model={model}
-      placeholder={t('value placeholder')}
-      lineWrapping={false}
-      slots={{
-        root: {
-          className: mx('w-full border-b', groupBorder),
-        },
-      }}
-    />
-  );
+  return <TextEditor model={model} placeholder={t('value placeholder')} lineWrapping={false} />;
 };
 
 export const Section = ({ title, actions, children }: PropsWithChildren<{ title: string; actions?: JSX.Element }>) => {

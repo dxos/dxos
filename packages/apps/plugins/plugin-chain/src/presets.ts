@@ -28,7 +28,9 @@ export const presets = [
           str(
             //
             'Translate the following into {language}.',
+            '',
             '---',
+            '',
             '{input}',
           ),
         ),
@@ -80,7 +82,9 @@ export const presets = [
             //
             'Create a valid mermaid diagram representing the text below.',
             'Do not explain anything.',
+            '',
             '---',
+            '',
             '{input}',
           ),
         ),
@@ -104,7 +108,9 @@ export const presets = [
             'Your entire response should be a single array of JSON objects.',
             '',
             'Each item should contain the following fields: {schema}',
+            '',
             '---',
+            '',
             '{question}',
           ),
         ),
@@ -132,7 +138,9 @@ export const presets = [
             // 'answer the question using the following context as well as your training data:',
             '',
             '{context}',
+            '',
             '---',
+            '',
             'question: {question}',
           ),
         ),
@@ -153,7 +161,9 @@ export const presets = [
           str(
             //
             'Lookup and very briefly summarize the following topic in one or two sentences:',
+            '',
             '---',
+            '',
             '{input}',
           ),
         ),
@@ -173,7 +183,9 @@ export const presets = [
           str(
             //
             'Summarize what the team is working on and format it as a markdown table without any explanation.',
+            '',
             '---',
+            '',
             '{context}',
           ),
         ),
