@@ -3,6 +3,7 @@
 //
 
 import type { Client } from '@dxos/client';
+import { log } from '@dxos/log';
 
 import { getTelemetryIdentifier } from './common';
 import type { Observability } from '../observability';
@@ -13,8 +14,7 @@ let totalTime = 0;
 export const setupTelemetryListeners = (namespace: string, client: Client, observability: Observability) => {
   const clickCallback = (event: any) => {
     if (observability.group === 'dxos' && event.target && !event.target.id) {
-      // TODO(wittjosiah): Use @dxos/log so these can be filtered.
-      console.warn('Click event on element without id:', event.target);
+      log.info('Click event on element without id:', event.target);
     }
 
     setTimeout(() =>
