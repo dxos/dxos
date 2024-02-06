@@ -14,7 +14,7 @@ let totalTime = 0;
 export const setupTelemetryListeners = (namespace: string, client: Client, observability: Observability) => {
   const clickCallback = (event: any) => {
     if (observability.group === 'dxos' && event.target && !event.target.id) {
-      log.info('Click event on element without id:', event.target);
+      log.info('click event on element without id', { target: event.target });
     }
 
     setTimeout(() =>
