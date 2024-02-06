@@ -74,7 +74,7 @@ class TestProcessorBuilder {
   }
 }
 
-describe.skip('RequestProcessor', () => {
+describe('RequestProcessor', () => {
   // TODO(burdon): Create test prompt.
   test('translate', async () => {
     const builder = new TestProcessorBuilder();
@@ -123,7 +123,7 @@ describe.skip('RequestProcessor', () => {
     }
   });
 
-  test('schema', async () => {
+  test.only('schema', async () => {
     const builder = new TestProcessorBuilder();
     await builder.init();
     await builder.addSchema();
@@ -142,13 +142,23 @@ describe.skip('RequestProcessor', () => {
               command: 'extract',
               source: new TextObject(
                 [
-                  'List all people and companies mentioned in the following text.',
-                  // 'For each entity try to fill out all the fields in the schema if possible.',
+                  'List all people and companies mentioned in the content below.',
+                  'Use the following type definitions:',
+                  '{company}',
                   '---',
+                  'Content:',
                   '{input}',
                 ].join('\n'),
               ),
-              inputs: [new ChainType.Input({ name: 'input', type: ChainType.Input.Type.PASS_THROUGH })],
+              inputs: [
+                //
+                new ChainType.Input({ name: 'input', type: ChainType.Input.Type.PASS_THROUGH }),
+                new ChainType.Input({
+                  name: 'company',
+                  type: ChainType.Input.Type.SCHEMA,
+                  value: new TextObject('example.com/schema/organization'),
+                }),
+              ],
             }),
           ],
         }),

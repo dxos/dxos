@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type RunnableLike } from '@langchain/core/dist/runnables/base';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { type Runnable, RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
@@ -11,7 +12,7 @@ import get from 'lodash.get';
 
 import { Chain as ChainType, type Message as MessageType, type Thread as ThreadType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { getTextContent, type JsonSchema, TextObject } from '@dxos/echo-schema';
+import { getTextContent, type JsonSchema, Schema, TextObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { createContext, type RequestContext } from './context';
@@ -108,7 +109,7 @@ export class RequestProcessor {
     for (const chain of chains) {
       for (const prompt of chain.prompts) {
         if (prompt.command === options.prompt) {
-          return await this.createSequenceFromPrompt(prompt, context);
+          return await this.createSequenceFromPrompt(space, prompt, context);
         }
       }
     }
@@ -119,11 +120,14 @@ export class RequestProcessor {
   /**
    * Create a runnable sequence from a stored prompt.
    */
-  // TODO(burdon): Create test.
-  async createSequenceFromPrompt(prompt: ChainType.Prompt, context: RequestContext): Promise<RunnableSequence> {
+  async createSequenceFromPrompt(
+    space: Space,
+    prompt: ChainType.Prompt,
+    context: RequestContext,
+  ): Promise<RunnableSequence> {
     const inputs: Record<string, any> = {};
     for (const input of prompt.inputs) {
-      inputs[input.name] = await this.getInput(input, context);
+      inputs[input.name] = await this.getInput(space, input, context);
     }
 
     const withSchema = false;
@@ -173,15 +177,23 @@ export class RequestProcessor {
       ],
     };
 
+    // TODO(burdon): Factor out.
+    const promptLogger: RunnableLike = (input) => {
+      log.info('prompt', { prompt: input.value });
+      return input;
+    };
+
     return RunnableSequence.from([
       inputs,
       PromptTemplate.fromTemplate(getTextContent(prompt.source)!),
+      promptLogger,
       this._resources.model.bind(withSchema ? args : {}),
       withSchema ? new JsonOutputFunctionsParser() : new StringOutputParser(),
     ]);
   }
 
   private async getInput(
+    space: Space,
     { type, value }: ChainType.Input,
     context: RequestContext,
   ): Promise<Runnable | null | (() => string | null | undefined)> {
@@ -205,7 +217,7 @@ export class RequestProcessor {
       //
       case ChainType.Input.Type.RETRIEVER: {
         const retriever = this._resources.store.vectorStore.asRetriever({});
-        return retriever.pipe(formatDocumentsAsString);
+        return retriever.pipe(formatDocumentsAsString); // TODO(burdon): ???
       }
 
       //
@@ -223,32 +235,33 @@ export class RequestProcessor {
       }
 
       //
+      // Schema
+      //
+      case ChainType.Input.Type.SCHEMA: {
+        const type = getTextContent(value);
+        if (!type) {
+          return null;
+        }
+
+        const { objects: schemas } = space.db.query(Schema.filter());
+        const schema = schemas.find((schema) => schema.typename === type);
+        if (schema) {
+          const name = schema.typename.split(/[.-/]/).pop();
+          const fields = schema.props.map((prop) => prop.id);
+          return () => `${name}: ${fields.join(', ')}`;
+        }
+
+        break;
+      }
+
+      //
       // Current app context/state.
       //
       case ChainType.Input.Type.CONTEXT: {
         return () => {
           if (value) {
-            const text = getTextContent(value, '');
-            if (text.length) {
-              try {
-                const result = get(context, text);
-
-                // TODO(burdon): Special case for getting schema fields for list preset.
-                // TODO(burdon): Proxied arrays don't pass Array.isArray.
-                // if (Array.isArray(result)) {
-                if (typeof result !== 'string' && result?.length) {
-                  return result
-                    .slice(0, 3)
-                    .map((prop: any) => prop?.id)
-                    .join(',');
-                }
-
-                return result;
-              } catch (err) {
-                // TODO(burdon): Return error to user.
-                log.catch(err);
-              }
-            }
+            const text = getTextContent(value);
+            return text ? get(context, text) : undefined;
           }
 
           return context.text;

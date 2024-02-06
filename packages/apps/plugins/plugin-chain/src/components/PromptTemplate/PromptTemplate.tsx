@@ -185,6 +185,7 @@ const ValueEditor = ({ input }: { input: ChainType.Input }) => {
     return null;
   }
 
+  // TODO(burdon): String?
   return <TextEditor model={model} placeholder={t('value placeholder')} lineWrapping={false} />;
 };
 

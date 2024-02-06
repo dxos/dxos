@@ -106,7 +106,7 @@ export const presets = [
             'You are a machine that only replies with valid, iterable RFC8259 compliant JSON in your responses.',
             'Your entire response should be a single array of JSON objects.',
             '',
-            'Each item should contain the following fields: {schema}',
+            'Each object should conform to the following schema: {schema}',
             '',
             '---',
             '',
@@ -116,9 +116,9 @@ export const presets = [
         inputs: [
           //
           new ChainType.Input({
-            type: ChainType.Input.Type.CONTEXT,
+            type: ChainType.Input.Type.SCHEMA,
             name: 'schema',
-            value: new TextObject('schema.props'), // TODO(burdon): Convert to JSON schema.
+            value: new TextObject('example.com/schema/project'),
           }),
           new ChainType.Input({ name: 'question', type: ChainType.Input.Type.PASS_THROUGH }),
         ],
