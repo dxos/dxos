@@ -23,6 +23,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { MarkdownEditor } from './TextEditor';
 import { type IDocHandle, automerge, awareness } from '../../extensions';
 import { useTextModel } from '../../hooks';
+import translations from '../../translations';
 
 // TODO(burdon): Move to components.
 
@@ -81,13 +82,9 @@ const Story = () => {
   }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', width: '100vw' }}>
-      <div>
-        <Editor handle={object1} path={['text']} />
-      </div>
-      <div>
-        <Editor handle={object2} path={['text']} />
-      </div>
+    <div role='none' className='grid grid-cols-2 bs-full is-full gap-2'>
+      <Editor handle={object1} path={['text']} />
+      <Editor handle={object2} path={['text']} />
     </div>
   );
 };
@@ -96,6 +93,7 @@ export default {
   title: 'react-ui-editor/Automerge',
   component: Editor,
   render: () => <Story />,
+  parameters: { translations, layout: 'fullscreen' },
 };
 
 export const Default = {};
@@ -115,13 +113,7 @@ const EchoStory = ({ spaceKey }: { spaceKey: PublicKey }) => {
     return null;
   }
 
-  return (
-    <div className='flex overflow-hidden'>
-      <div className='flex flex-col w-[800px] overflow-y-scroll'>
-        <MarkdownEditor model={model} />
-      </div>
-    </div>
-  );
+  return <MarkdownEditor model={model} />;
 };
 
 export const WithEcho = {

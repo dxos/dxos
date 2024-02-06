@@ -5,17 +5,12 @@
 import React, { type PropsWithChildren } from 'react';
 
 import { Main } from '@dxos/react-ui';
+import { editorWithToolbarLayout } from '@dxos/react-ui-editor';
 import { topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
 export const MainLayout = ({ children }: PropsWithChildren) => {
   return (
-    <Main.Content
-      bounce
-      classNames={[
-        'grid grid-cols-1 grid-rows-[min-content_1fr] justify-center content-start overflow-hidden',
-        topbarBlockPaddingStart,
-      ]}
-    >
+    <Main.Content bounce classNames={[editorWithToolbarLayout, topbarBlockPaddingStart]}>
       {children}
     </Main.Content>
   );

@@ -7,12 +7,13 @@ import '@dxosTheme';
 import React, { useState } from 'react';
 
 import { TextObject } from '@dxos/echo-schema';
-import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
+import { mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { TextEditor, type TextEditorProps } from './TextEditor';
 import { listener } from '../../extensions';
 import { useTextModel } from '../../hooks';
+import translations from '../../translations';
 
 const initialText = [
   '# TextEditor',
@@ -36,19 +37,14 @@ const Story = ({
   }
 
   return (
-    <div className={mx(fixedInsetFlexLayout, groupSurface)}>
-      <div className='flex justify-center'>
-        <div className='flex flex-col w-[800px] overflow-y-auto'>
-          <TextEditor
-            model={model}
-            slots={{
-              editor: { className: 'bs-full p-2 bg-white dark:bg-black' },
-            }}
-            {...props}
-          />
-        </div>
-      </div>
-    </div>
+    <TextEditor
+      model={model}
+      slots={{
+        root: { className: mx(textBlockWidth, 'min-bs-dvh') },
+        editor: { className: 'min-bs-dvh p-2 bg-white dark:bg-black' },
+      }}
+      {...props}
+    />
   );
 };
 
@@ -57,6 +53,7 @@ export default {
   component: TextEditor,
   decorators: [withTheme],
   render: Story,
+  parameters: { translations, layout: 'fullscreen' },
 };
 
 export const Default = {
