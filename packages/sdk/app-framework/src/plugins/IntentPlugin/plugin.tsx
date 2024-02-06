@@ -111,7 +111,7 @@ const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
         state.history = [...state.history.slice(0, HISTORY_LIMIT - 2), executionResults];
 
         if (isUndoable(executionResults)) {
-          void dispatch({ action: IntentAction.SHOW_UNDO });
+          void dispatch({ action: IntentAction.SHOW_UNDO, data: { results: executionResults } });
         }
 
         return executionResults.at(-1)?.result;
@@ -122,7 +122,7 @@ const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
         const chain =
           last !== -1 &&
           state.history[last]?.map(({ intent, result }): Intent => {
-            const data = typeof result.undoable === 'object' ? { ...intent.data, ...result.undoable } : intent.data;
+            const data = result.undoable?.data ? { ...intent.data, ...result.undoable.data } : intent.data;
             return { ...intent, data, undo: true };
           });
         if (chain) {

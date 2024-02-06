@@ -331,11 +331,15 @@ export const LayoutPlugin = ({
                 layout.values.toasts = layout.values.toasts.filter((toast) => toast.id !== currentUndoId);
               }
               currentUndoId = `${IntentAction.SHOW_UNDO}-${Date.now()}`;
+              const title =
+                // TODO(wittjosiah): How to handle chains better?
+                intent.data?.results?.[0]?.result?.undoable?.message ??
+                translations[0]['en-US']['dxos.org/plugin/layout']['undo available label'];
               layout.values.toasts = [
                 ...layout.values.toasts,
                 {
                   id: currentUndoId,
-                  title: translations[0]['en-US']['dxos.org/plugin/layout']['undo available label'],
+                  title,
                   duration: 10_000,
                   actionLabel: translations[0]['en-US']['dxos.org/plugin/layout']['undo action label'],
                   actionAlt: translations[0]['en-US']['dxos.org/plugin/layout']['undo action alt'],

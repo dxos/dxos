@@ -50,11 +50,19 @@ export type IntentResult = {
   data?: any;
 
   /**
-   * Whether or not the action is undoable.
-   *
-   * If a data object is provided it will be merged with the original intent data when firing the undo intent.
+   * If provided, the action will be undoable.
    */
-  undoable?: boolean | IntentData;
+  undoable?: {
+    /**
+     * Message to display to the user when indicating that the action can be undone.
+     */
+    message: string;
+
+    /**
+     * Will be merged with the original intent data when firing the undo intent.
+     */
+    data?: IntentData;
+  };
 
   /**
    * An error that occurred while performing the action.

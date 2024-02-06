@@ -236,7 +236,12 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 if (index !== -1) {
                   doc.comments.splice(index, 1);
                 }
-                return { undoable: { cursor } };
+                return {
+                  undoable: {
+                    message: translations[0]['en-US'][THREAD_PLUGIN]['thread deleted label'],
+                    data: { cursor },
+                  },
+                };
               } else if (intent.undo && typeof cursor === 'string') {
                 doc.comments.push({ thread, cursor });
                 return { data: true };
