@@ -80,7 +80,7 @@ export class AutomergeObjectCore {
 
     if (!options.ignoreLocalState) {
       // Prevent recursive change calls.
-      using _ = defer(docChangeSemaphore(this.docHandle! ?? this));
+      using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
       this.docHandle.change((newDoc: DocStructure) => {
         assignDeep(newDoc, this.mountPath, doc);
@@ -112,7 +112,7 @@ export class AutomergeObjectCore {
    */
   change(changeFn: ChangeFn<any>, options?: A.ChangeOptions<any>) {
     // Prevent recursive change calls.
-    using _ = defer(docChangeSemaphore(this.docHandle! ?? this));
+    using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
     if (this.doc) {
       if (options) {
@@ -133,7 +133,7 @@ export class AutomergeObjectCore {
    */
   changeAt(heads: Heads, callback: ChangeFn<any>, options?: ChangeOptions<any>): string[] | undefined {
     // Prevent recursive change calls.
-    using _ = defer(docChangeSemaphore(this.doc ?? this.docHandle!));
+    using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
     let result: Heads | undefined;
     if (this.doc) {
