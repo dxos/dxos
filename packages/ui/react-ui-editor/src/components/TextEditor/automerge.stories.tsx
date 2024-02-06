@@ -20,10 +20,10 @@ import { ClientRepeater } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor } from './TextEditor';
-import translations from '../../translations';
 import { type IDocHandle, automerge, awareness, createBasicBundle } from '../../extensions';
 import { useTextEditor, useTextModel } from '../../hooks';
 import { defaultTheme } from '../../themes';
+import translations from '../../translations';
 
 const initialContent = 'Hello world!';
 
