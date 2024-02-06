@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.2](https://github.com/dxos/dxos/compare/v0.4.1...v0.4.2) (2024-02-05)
+
+
+### Features
+
+* Make thread processing animation more prominent. ([#5519](https://github.com/dxos/dxos/issues/5519)) ([022012d](https://github.com/dxos/dxos/commit/022012d0c6b0dd9d43500293cc65531b3a4a56f1))
+* Wire up editor toolbar ([#5513](https://github.com/dxos/dxos/issues/5513)) ([6ccea39](https://github.com/dxos/dxos/commit/6ccea3915668ab3ec4ddfb8eb95b5e2e3c6cdbbc))
+
 ## [0.4.1](https://github.com/dxos/dxos/compare/v0.4.0...v0.4.1) (2024-02-02)
 
 

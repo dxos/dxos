@@ -20,7 +20,7 @@ import React, {
 
 import { log } from '@dxos/log';
 import { useThemeContext } from '@dxos/react-ui';
-import { focusRing, mx } from '@dxos/react-ui-theme';
+import { focusRing } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
 
 import { createBasicBundle, createMarkdownExtensions } from '../../extensions';
@@ -259,10 +259,10 @@ export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
 
 export const defaultSlots: TextEditorSlots = {
   root: {
-    className: mx('grow', focusRing),
+    className: focusRing,
   },
   editor: {
-    className: 'bs-full',
+    className: 'min-bs-full',
   },
 };
 

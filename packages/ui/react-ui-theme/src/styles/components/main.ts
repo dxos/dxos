@@ -21,14 +21,14 @@ export type MainStyleProps = Partial<{
 // Sidebar widths (used by main and complementary sidebar).
 const sidebarSlots = {
   start: {
-    width: 'sm:is-[270px]',
-    sidebar: 'sm:-inline-start-[270px]',
+    width: 'sm:is-[271px]',
+    sidebar: 'sm:-inline-start-[271px]',
     content: 'pis-[270px]',
   },
   // TODO(burdon): Maximal size for phone.
   end: {
-    width: 'sm:is-[360px]',
-    sidebar: 'sm:-inline-end-[360px]',
+    width: 'sm:is-[361px]',
+    sidebar: 'sm:-inline-end-[361px]',
     content: 'pie-[360px]',
   },
 };

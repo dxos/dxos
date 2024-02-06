@@ -25,6 +25,7 @@ export const getDatabaseFromObject = (obj: EchoObject): EchoDatabase | undefined
   if (isAutomergeObject(obj)) {
     return obj[base]._core.database?._echoDatabase;
   }
+
   return (obj[base] as AbstractEchoObject)._database;
 };
 
@@ -33,5 +34,6 @@ export const getReferenceWithSpaceKey = (obj: EchoObject): Reference | undefined
   return db && new Reference(obj.id, undefined, db.spaceKey.toHex());
 };
 
-export const matchKeys = (a: ForeignKey[], b: ForeignKey[]): boolean =>
-  a.some((keyA) => b.some((keyB) => keyA.source === keyB.source && keyA.id === keyB.id));
+export const matchKeys = (a: ForeignKey[], b: ForeignKey[]): boolean => {
+  return a.some((keyA) => b.some((keyB) => keyA.source === keyB.source && keyA.id === keyB.id));
+};
