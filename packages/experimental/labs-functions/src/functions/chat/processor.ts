@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type RunnableLike } from '@langchain/core/dist/runnables/base';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { PromptTemplate } from '@langchain/core/prompts';
-import { type Runnable, RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
+import { type RunnableLike, type Runnable, RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import { JsonOutputFunctionsParser } from 'langchain/output_parsers';
 import { formatDocumentsAsString } from 'langchain/util/document';
 import get from 'lodash.get';
@@ -126,7 +125,7 @@ export class RequestProcessor {
   ): Promise<RunnableSequence> {
     const inputs: Record<string, any> = {};
     for (const input of prompt.inputs) {
-      inputs[input.name] = await this.getInput(space, input, context);
+      inputs[input.name] = await this.getTemplateInput(space, input, context);
     }
 
     // TODO(burdon): OpenAI-specific kwargs.
@@ -157,7 +156,7 @@ export class RequestProcessor {
     ]);
   }
 
-  private async getInput(
+  private async getTemplateInput(
     space: Space,
     { type, value }: ChainType.Input,
     context: RequestContext,
