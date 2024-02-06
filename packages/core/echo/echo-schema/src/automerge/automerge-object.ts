@@ -4,18 +4,21 @@
 
 import { type InspectOptionsStylized, inspect } from 'node:util';
 
-import { Trigger } from '@dxos/async';
 import { next as A, type ChangeFn, type Doc } from '@dxos/automerge/automerge';
-import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
+import { type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
 import { Reference } from '@dxos/document-model';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
 import { AutomergeArray } from './automerge-array';
-import { type AutomergeDb } from './automerge-db';
-import { AutomergeObjectCore, type DocAccessor } from './automerge-object-core';
+import {
+  AutomergeObjectCore,
+  objectIsUpdated,
+  type DocAccessor,
+  assignDeep,
+  type BindOptions,
+} from './automerge-object-core';
 import { type ObjectStructure, type DocStructure, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
 import {
@@ -36,14 +39,6 @@ import {
 } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
-import { compositeRuntime } from '../util';
-
-export type BindOptions = {
-  db: AutomergeDb;
-  docHandle: DocHandle<DocStructure>;
-  path: string[];
-  ignoreCache?: boolean;
-};
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
@@ -54,21 +49,10 @@ export class AutomergeObject implements TypedObjectProperties {
    * @internal
    */
   _core = new AutomergeObjectCore();
+
   private _schema?: Schema = undefined;
+
   private readonly _immutable: boolean; // TODO(burdon): Not used.
-
-  protected readonly _signal = compositeRuntime.createSignal();
-
-  /**
-   * Until object is persisted in the database, the linked object references are stored in this cache.
-   * @internal
-   */
-  _linkCache: Map<string, EchoObject> | undefined = new Map<string, EchoObject>();
-
-  /**
-   * @internal
-   */
-  _id = PublicKey.random().toHex();
 
   constructor(initialProps?: unknown, opts?: TypedObjectOptions) {
     this._initNewObject(initialProps, opts);
@@ -90,10 +74,6 @@ export class AutomergeObject implements TypedObjectProperties {
       this.__system.type = type;
     }
     this._immutable = opts?.immutable ?? false;
-
-    this._core.onManualChange.on(() => {
-      this._notifyUpdate();
-    });
 
     return this._createProxy(['data']);
   }
@@ -132,7 +112,7 @@ export class AutomergeObject implements TypedObjectProperties {
   }
 
   get id(): string {
-    return this._id;
+    return this._core.id;
   }
 
   get [base](): AutomergeObject {
@@ -165,7 +145,7 @@ export class AutomergeObject implements TypedObjectProperties {
     return {
       // TODO(mykola): Delete backend (for debug).
       '@backend': 'automerge',
-      '@id': this._id,
+      '@id': this._core.id,
       '@type': typeRef
         ? {
             '@type': REFERENCE_TYPE_TAG,
@@ -203,7 +183,7 @@ export class AutomergeObject implements TypedObjectProperties {
 
   [subscribe](callback: (value: AutomergeObject) => void): () => void {
     const changeListener = (event: DocHandleChangePayload<DocStructure>) => {
-      if (objectIsUpdated(this._id, event)) {
+      if (objectIsUpdated(this[base]._core.id, event)) {
         callback(this);
       }
     };
@@ -250,38 +230,7 @@ export class AutomergeObject implements TypedObjectProperties {
    */
   _bind(options: BindOptions) {
     invariant(!this[proxy]);
-    const bound = new Trigger();
-    this._core.database = options.db;
-    this._core.docHandle = options.docHandle;
-    this._core.docHandle.on('change', async (event) => {
-      if (objectIsUpdated(this._id, event)) {
-        // Note: We need to notify listeners only after _docHandle initialization with cached _doc.
-        //       Without it there was race condition in SpacePlugin on Folder creation.
-        //       Folder was being accessed during bind process before _docHandle was initialized and after _doc was set to undefined.
-        await bound.wait();
-        this._notifyUpdate();
-      }
-    });
-    this._core.mountPath = options.path;
-
-    if (this._linkCache) {
-      for (const obj of this._linkCache.values()) {
-        this._core.database!.add(obj);
-      }
-
-      this._linkCache = undefined;
-    }
-
-    if (options.ignoreCache) {
-      this._core.doc = undefined;
-    }
-
-    if (this._core.doc) {
-      const doc = this._core.doc;
-      this._core.doc = undefined;
-      this._set([], doc);
-    }
-    bound.wake();
+    this._core.bind(options);
   }
 
   private _createProxy(path: string[]): any {
@@ -350,7 +299,7 @@ export class AutomergeObject implements TypedObjectProperties {
    */
   _get(path: string[]) {
     invariant(!this[proxy]);
-    this._signal.notifyRead();
+    this._core.signal.notifyRead();
 
     const fullPath = [...this._core.mountPath, ...path];
     let value = this._getDoc();
@@ -389,12 +338,8 @@ export class AutomergeObject implements TypedObjectProperties {
     const fullPath = [...this._core.mountPath, ...path];
 
     const changeFn: ChangeFn<any> = (doc) => {
-      let parent = doc;
-      for (const key of fullPath.slice(0, -1)) {
-        parent[key] ??= {};
-        parent = parent[key];
-      }
-      parent[fullPath.at(-1)!] = this._encode(value);
+      // TODO(dmaretskyi): Remove recursive doc.change calls. How do they even work?
+      assignDeep(doc, fullPath, this._encode(value));
 
       if (value instanceof AutomergeArray) {
         value._attach(this[base], path);
@@ -509,8 +454,8 @@ export class AutomergeObject implements TypedObjectProperties {
         }
       }
     } else {
-      invariant(this._linkCache);
-      this._linkCache.set(obj.id, obj);
+      invariant(this._core.linkCache);
+      this._core.linkCache.set(obj.id, obj);
       return new Reference(obj.id);
     }
   }
@@ -523,33 +468,12 @@ export class AutomergeObject implements TypedObjectProperties {
     invariant(!this[proxy]);
     if (this._core.database) {
       // This doesn't clean-up properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
-      return this._core.database.graph._lookupLink(ref, this._core.database, this._onLinkResolved);
+      return this._core.database.graph._lookupLink(ref, this._core.database, this._core.notifyUpdate);
     } else {
-      invariant(this._linkCache);
-      return this._linkCache.get(ref.itemId);
+      invariant(this._core.linkCache);
+      return this._core.linkCache.get(ref.itemId);
     }
   }
-
-  // TODO(mykola): Do we need this?
-  private _onLinkResolved = () => {
-    invariant(!this[proxy]);
-    this._signal.notifyWrite();
-    this._core.updates.emit();
-  };
-
-  /**
-   * Notifies listeners and front-end framework about the change.
-   */
-  // TODO(mykola): Unify usage of `_notifyUpdate`.
-  private _notifyUpdate = () => {
-    invariant(!this[proxy]);
-    try {
-      this._signal.notifyWrite();
-      this._core.updates.emit();
-    } catch (err) {
-      log.catch(err);
-    }
-  };
 
   /**
    * @internal
@@ -622,13 +546,6 @@ type EncodedReferenceObject = {
 
 const isEncodedReferenceObject = (value: any): value is EncodedReferenceObject =>
   typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG;
-
-export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<DocStructure>) => {
-  if (event.patches.some((patch) => patch.path[0] === 'objects' && patch.path[1] === objId)) {
-    return true;
-  }
-  return false;
-};
 
 // Deferred import to avoid circular dependency.
 let schemaProto: typeof Schema;

@@ -40,6 +40,7 @@ const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: Ed
         const object = data?.object;
         if (editorView) {
           focusComment(editorView, object);
+          return { data: true };
         }
         break;
       }
