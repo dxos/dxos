@@ -325,12 +325,12 @@ export const LayoutPlugin = ({
               return intent.data && handleSetLayout(intent.data as LayoutAction.SetLayout);
             }
 
-            case IntentAction.UNDO_AVAILABLE: {
+            case IntentAction.SHOW_UNDO: {
               // TODO(wittjosiah): Support undoing further back than the last action.
               if (currentUndoId) {
                 layout.values.toasts = layout.values.toasts.filter((toast) => toast.id !== currentUndoId);
               }
-              currentUndoId = `${IntentAction.UNDO_AVAILABLE}-${Date.now()}`;
+              currentUndoId = `${IntentAction.SHOW_UNDO}-${Date.now()}`;
               layout.values.toasts = [
                 ...layout.values.toasts,
                 {

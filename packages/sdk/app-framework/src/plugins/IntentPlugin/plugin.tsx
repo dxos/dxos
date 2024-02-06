@@ -111,7 +111,7 @@ const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
         state.history = [...state.history.slice(0, HISTORY_LIMIT - 2), executionResults];
 
         if (isUndoable(executionResults)) {
-          void dispatch({ action: IntentAction.UNDO_AVAILABLE });
+          void dispatch({ action: IntentAction.SHOW_UNDO });
         }
 
         return executionResults.at(-1)?.result;
@@ -121,9 +121,9 @@ const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
         const last = state.history.findLastIndex(isUndoable);
         const chain =
           last !== -1 &&
-          state.history[last]?.map(({ intent, result }) => {
+          state.history[last]?.map(({ intent, result }): Intent => {
             const data = typeof result.undoable === 'object' ? { ...intent.data, ...result.undoable } : intent.data;
-            return { ...intent, data, inverse: true };
+            return { ...intent, data, undo: true };
           });
         if (chain) {
           const result = await dispatchChain(chain);

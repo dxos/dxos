@@ -33,7 +33,7 @@ export type Intent = {
   /**
    * Whether or not the intent is being undone.
    */
-  inverse?: boolean;
+  undo?: boolean;
 
   /**
    * Any data needed to perform the desired action.

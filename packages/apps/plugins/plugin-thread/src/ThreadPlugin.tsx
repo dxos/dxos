@@ -230,16 +230,16 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 return;
               }
 
-              if (intent.inverse && typeof cursor === 'string') {
-                doc.comments.push({ thread, cursor });
-                return { data: true };
-              } else {
+              if (!intent.undo) {
                 const index = doc.comments.findIndex((comment) => comment.thread?.id === thread.id);
                 const cursor = doc.comments[index]?.cursor;
                 if (index !== -1) {
                   doc.comments.splice(index, 1);
                 }
                 return { undoable: { cursor } };
+              } else if (intent.undo && typeof cursor === 'string') {
+                doc.comments.push({ thread, cursor });
+                return { data: true };
               }
             }
           }

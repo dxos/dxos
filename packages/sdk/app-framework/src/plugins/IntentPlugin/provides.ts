@@ -31,5 +31,5 @@ export enum IntentAction {
   /**
    * Fired after an intent is dispatched if the intent is undoable.
    */
-  UNDO_AVAILABLE = `${INTENT_ACTION}/undo-available`,
+  SHOW_UNDO = `${INTENT_ACTION}/show-undo`,
 }
