@@ -55,11 +55,7 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
         themeMode,
         theme: markdownTheme,
         slots: {
-          // TODO(burdon): Document classes re base theme.
-          //  Semantic tokens (e.g., replacement of input surface).
-          editor: {
-            className: 'h-full p-4 bg-white text-black dark:bg-black dark:text-white',
-          },
+          editor: { className: 'min-bs-full' },
         },
       }),
       // TODO(burdon): Move lineWrapping.
@@ -86,7 +82,13 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
       <Toolbar.Root onAction={handleAction} state={formattingState} classNames={textBlockWidth}>
         <Toolbar.Markdown />
       </Toolbar.Root>
-      <div role='none' className={mx('is-full overflow-y-auto pli-2', textBlockWidth)} ref={parentRef} />
+      <div role='none' className='overflow-y-auto'>
+        <div
+          role='textbox'
+          className={mx(textBlockWidth, 'min-bs-full p-4 surface-attention fg-base')}
+          ref={parentRef}
+        />
+      </div>
     </div>
   );
 };
