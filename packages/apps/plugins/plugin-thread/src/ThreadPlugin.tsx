@@ -138,7 +138,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const location = navigationPlugin?.provides.location;
               const activeNode = location?.active ? graph?.findNode(location.active) : undefined;
               const active = activeNode?.data;
-              const space = active && getSpaceForObject(active);
+              const space = isTypedObject(active) && getSpaceForObject(active);
               if (!space) {
                 return null;
               }
