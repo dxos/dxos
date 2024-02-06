@@ -7,6 +7,7 @@ import React from 'react';
 import type { Toast as ToastProps } from '@dxos/app-framework';
 import { Button, Toast as NaturalToast, type ToastRootProps } from '@dxos/react-ui';
 
+// TODO(wittjosiah): Render remaining duration as a progress bar within the toast.
 export const Toast = ({
   title,
   description,
