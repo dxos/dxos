@@ -29,13 +29,6 @@
         setTheme(e.matches);
       });
     </script>
-    <script>
-      // Load automerge settings.
-      const preference = localStorage.getItem('dxos.org/settings/automerge');
-      if (['true', 'false'].includes(preference)) {
-        DXOS_FORCE_AUTOMERGE = JSON.parse(preference);
-      }
-    </script>
   </head>
   <body>
     <div id="root"></div>
