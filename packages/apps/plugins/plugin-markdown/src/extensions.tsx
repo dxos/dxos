@@ -13,6 +13,7 @@ import {
   type AutocompleteResult,
   type Extension,
   type LinkOptions,
+  EditorModes,
   autocomplete,
   code,
   heading,
@@ -55,6 +56,16 @@ export const getExtensions = ({ settings, document, dispatch }: ExtensionsOption
     table(),
     tasklist(),
   ];
+
+  //
+  // Editor mode.
+  //
+  if (settings?.editorMode) {
+    const extension = EditorModes[settings.editorMode];
+    if (extension) {
+      extensions.push(extension);
+    }
+  }
 
   //
   // Hyperlinks (external and internal object links).

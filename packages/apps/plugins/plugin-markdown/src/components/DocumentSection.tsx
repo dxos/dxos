@@ -12,13 +12,11 @@ import { type Extension, MarkdownEditor, useTextModel } from '@dxos/react-ui-edi
 import { attentionSurface, focusRing, mx } from '@dxos/react-ui-theme';
 
 import { MARKDOWN_PLUGIN } from '../meta';
-import { type MarkdownSettingsProps } from '../types';
 
 const DocumentSection: FC<{
   document: DocumentType;
-  editorMode: MarkdownSettingsProps['editorMode'];
   extensions: Extension[];
-}> = ({ document, editorMode, extensions }) => {
+}> = ({ document, extensions }) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const identity = useIdentity();
   const space = getSpaceForObject(document);
@@ -32,7 +30,6 @@ const DocumentSection: FC<{
     <MarkdownEditor
       model={model}
       extensions={extensions}
-      editorMode={editorMode}
       placeholder={t('editor placeholder')}
       slots={{
         root: {
