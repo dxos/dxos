@@ -204,6 +204,26 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       await file.close();
     });
 
+    test('operations on a destroyed file are rejected', async () => {
+      const storage = createStorage();
+      const directory = storage.createDirectory();
+      const file = directory.getOrCreateFile('file');
+
+      const buffer = Buffer.from(randomText());
+      await writeAndCheck(file, buffer);
+      await file.destroy();
+
+      expect(file.destroyed).toBeTruthy();
+      await expect(file.destroy()).resolves.toBeUndefined();
+      await expect(file.read(0, 1)).rejects.toThrow();
+      await expect(file.write(0, buffer)).rejects.toThrow();
+      await expect(file.del(0, 1)).rejects.toThrow();
+      await expect(file.stat()).rejects.toThrow();
+      if (file.truncate) {
+        await expect(file.truncate(0)).rejects.toThrow();
+      }
+    });
+
     test('delete directory', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory();
@@ -370,8 +390,9 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       if (storage.type === StorageType.IDB) {
         t.skip();
       }
-      const directory = storage.createDirectory('dirrr');
-      const file = directory.getOrCreateFile('fileee');
+      await storage.reset();
+      const directory = storage.createDirectory('dir');
+      const file = directory.getOrCreateFile('file');
       const content = 'Hello, world!';
       await file.write(0, Buffer.from(content));
       await file.close();

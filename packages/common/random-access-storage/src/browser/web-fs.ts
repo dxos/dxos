@@ -128,14 +128,20 @@ export class WebFS implements Storage {
   async reset() {
     await this._initialize();
     for await (const filename of await (this._root as any).keys()) {
-      await this._root!.removeEntry(filename, { recursive: true }).catch((err: any) => log.warn(err));
+      await this._root!.removeEntry(filename, { recursive: true }).catch((err: any) =>
+        log.warn('failed to remove an entry', { filename, err }),
+      );
       files.delete(filename);
     }
     this._root = undefined;
   }
 
   async close() {
-    await Promise.all(Array.from(files.values()).map((file) => file.close()));
+    await Promise.all(
+      Array.from(files.values()).map((file) => {
+        return file.close().catch((e) => log.warn('failed to close a file', { file: file.fileName, e }));
+      }),
+    );
   }
 
   private _getFullFilename(path: string, filename?: string) {
@@ -182,7 +188,7 @@ export class WebFS implements Storage {
 // @trace.resource()
 export class WebFile extends EventEmitter implements File {
   @trace.info()
-  private readonly _fileName: string;
+  readonly fileName: string;
 
   private readonly _fileHandle: Promise<FileSystemFileHandle>;
   private readonly _destroy: () => Promise<void>;
@@ -235,7 +241,7 @@ export class WebFile extends EventEmitter implements File {
     destroy: () => Promise<void>;
   }) {
     super();
-    this._fileName = fileName;
+    this.fileName = fileName;
     this._fileHandle = file;
     this._destroy = destroy;
 
@@ -331,9 +337,7 @@ export class WebFile extends EventEmitter implements File {
   }
 
   async read(offset: number, size: number) {
-    if (this.destroyed) {
-      throw new Error('Read of a destroyed file');
-    }
+    this.assertNotDestroyed('Read');
 
     this._operations.inc();
     this._reads.inc();
@@ -350,6 +354,8 @@ export class WebFile extends EventEmitter implements File {
   }
 
   async write(offset: number, data: Buffer) {
+    this.assertNotDestroyed('Write');
+
     this._operations.inc();
     this._writes.inc();
     this._writeBytes.inc(data.length);
@@ -370,6 +376,8 @@ export class WebFile extends EventEmitter implements File {
   }
 
   async del(offset: number, size: number) {
+    this.assertNotDestroyed('Del');
+
     this._operations.inc();
 
     if (offset < 0 || size <= 0) {
@@ -390,6 +398,8 @@ export class WebFile extends EventEmitter implements File {
   }
 
   async stat() {
+    this.assertNotDestroyed('Truncate');
+
     this._operations.inc();
 
     // NOTE: This will load all data from the file just to get it's size. While this is a lot of overhead, this works ok for out use cases.
@@ -401,6 +411,8 @@ export class WebFile extends EventEmitter implements File {
   }
 
   async truncate(offset: number) {
+    this.assertNotDestroyed('Truncate');
+
     this._operations.inc();
 
     this._buffer = (await this.requireBuffer()).slice(0, offset);
@@ -409,6 +421,8 @@ export class WebFile extends EventEmitter implements File {
   }
 
   async flush() {
+    this.assertNotDestroyed('Flush');
+
     await this._flushNow();
   }
 
@@ -418,9 +432,17 @@ export class WebFile extends EventEmitter implements File {
 
   @synchronized
   async destroy() {
-    await this._flushNow();
-    this.destroyed = true;
-    return await this._destroy();
+    if (!this.destroyed) {
+      this.destroyed = true;
+      await this._flushNow();
+      return await this._destroy();
+    }
+  }
+
+  private assertNotDestroyed(operation: string) {
+    if (this.destroyed) {
+      throw new Error(`${operation} on a destroyed or closed file`);
+    }
   }
 
   private async requireBuffer(): Promise<Uint8Array> {
