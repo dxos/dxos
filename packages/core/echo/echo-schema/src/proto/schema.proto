@@ -35,7 +35,7 @@ message Schema {
     PropType type = 2;
 
     /// Human readable name.
-    /// TODO(burdon): Rename?
+    /// TODO(burdon): Rename? FQ?
     optional string typename = 7;
 
     /// Referenced object's FQN.
