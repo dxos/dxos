@@ -163,8 +163,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     threads={threads}
                     detached={detached}
                     currentId={state.current}
-                    autoFocusCurrentTextbox={state.focus}
                     currentRelatedId={location?.active}
+                    autoFocusCurrentTextbox={state.focus}
                     onThreadAttend={(thread: ThreadType) => {
                       if (state.current !== thread.id) {
                         state.current = thread.id;
