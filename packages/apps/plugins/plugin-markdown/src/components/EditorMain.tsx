@@ -70,7 +70,10 @@ const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: Ed
         extensions={extensions}
         slots={{
           root: {
-            className: mx(focusRing, 'overflow-y-auto overscroll-auto scroll-smooth'),
+            className: mx(
+              focusRing,
+              'overflow-y-auto overscroll-auto scroll-smooth overflow-anchored after:block after:is-px after:bs-px after:overflow-anchor',
+            ),
             'data-testid': 'composer.markdownRoot',
           } as HTMLAttributes<HTMLDivElement>,
           editor: {
