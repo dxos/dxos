@@ -21,9 +21,11 @@ export default template.define
       const ServiceWorkerToast = imports.use('ServiceWorkerToast', './ServiceWorkerToast');
       const translations = imports.use('translations', './translations', { isDefault: true });
 
-      const swToast = () => plate`<${ServiceWorkerToast} {...serviceWorker} />`;
+      const swToast = () => plate`
+        {variant && <${ServiceWorkerToast} variant={variant} updateServiceWorker={updateServiceWorker} />}`;
 
       const coreContent = plate`
+      ${dxosUi && pwa && swToast}
       <ErrorBoundary>
         <${ClientProvider}
           config={config}
@@ -38,7 +40,6 @@ export default template.define
           }}
         >
           ${slots.content}
-          ${dxosUi && pwa && swToast}
         </${ClientProvider}>
       </ErrorBoundary>`;
 
@@ -73,7 +74,14 @@ export default template.define
         );`}
 
         export const App = () => {
-          ${pwa && plate`const serviceWorker = ${useRegisterSW}();`}
+          ${pwa && plate`
+          const {
+            needRefresh: [needRefresh],
+            offlineReady: [offlineReady],
+            updateServiceWorker,
+          } = ${useRegisterSW}();
+          const variant = needRefresh ? 'needRefresh' : offlineReady ? 'offlineReady' : undefined;`}
+
           return (
             ${dxosUi ? themeProvider(coreContent) : coreContent}
           )
