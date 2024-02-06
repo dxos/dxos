@@ -1,5 +1,5 @@
 /**
- * Run function on scope exit.
+ * Run function on scope exit. Go style.
  *
  * @example
  * ```ts
@@ -30,7 +30,7 @@ class DeferGuard {
 }
 
 /**
- * Run async function on scope exit.
+ * Run async function on scope exit. Go style.
  *
  * @example
  * ```ts

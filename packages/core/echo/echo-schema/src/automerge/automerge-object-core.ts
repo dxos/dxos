@@ -9,10 +9,12 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { defer } from '@dxos/util';
 
 import { type AutomergeDb } from './automerge-db';
 import { type DocStructure, type ObjectStructure } from './types';
 import { type EchoObject } from '../object';
+import { docChangeSemaphore } from './doc-semaphore';
 
 // TODO(dmaretskyi): Rename to `AutomergeObject`.
 export class AutomergeObjectCore {
@@ -77,6 +79,9 @@ export class AutomergeObjectCore {
     this.doc = undefined;
 
     if (!options.ignoreLocalState) {
+      // Prevent recursive change calls.
+      using _ = defer(docChangeSemaphore(this.docHandle! ?? this));
+
       this.docHandle.change((newDoc: DocStructure) => {
         assignDeep(newDoc, this.mountPath, doc);
       });
@@ -106,6 +111,9 @@ export class AutomergeObjectCore {
    * Do not take into account mountPath.
    */
   change(changeFn: ChangeFn<any>, options?: A.ChangeOptions<any>) {
+    // Prevent recursive change calls.
+    using _ = defer(docChangeSemaphore(this.docHandle! ?? this));
+
     if (this.doc) {
       if (options) {
         this.doc = A.change(this.doc!, options, changeFn);
@@ -124,6 +132,9 @@ export class AutomergeObjectCore {
    * Do not take into account mountPath.
    */
   changeAt(heads: Heads, callback: ChangeFn<any>, options?: ChangeOptions<any>): string[] | undefined {
+    // Prevent recursive change calls.
+    using _ = defer(docChangeSemaphore(this.doc ?? this.docHandle!));
+
     let result: Heads | undefined;
     if (this.doc) {
       if (options) {
