@@ -22,7 +22,7 @@ import { useThemeContext } from '@dxos/react-ui';
 import { focusRing } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
 
-import { createBasicBundle, createMarkdownExtensions } from '../../extensions';
+import { createBasicBundle, createMarkdownExtensions, editorMode } from '../../extensions';
 import { type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
 import { defaultTheme, markdownTheme, textTheme } from '../../themes';
@@ -70,11 +70,6 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
     { model, readonly, autoFocus, scrollTo, selection, theme, slots = defaultSlots, extensions = [], debug },
     forwardedRef,
   ) => {
-    // TODO(burdon): Hook causes error even if properties are not spread into div.
-    //  Uncaught TypeError: Cannot read properties of undefined (reading 'relatedTarget')
-    //  Uses event.detail, which is deprecated (not event.details). At runtime the event has a property `details`.
-    //  https://github.com/microsoft/tabster/blob/master/src/State/FocusedElement.ts#L348 (e.detail.relatedTarget)
-    //  https://github.com/microsoft/keyborg/blob/49e49b2c3ba0a5f6cc518ac46825d7551def8109/src/FocusEvent.ts#L58
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
     const { themeMode } = useThemeContext();
 
@@ -125,6 +120,15 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
           EditorView.editorAttributes.of({ class: slots.editor?.className ?? '' }),
           EditorView.contentAttributes.of({ class: slots.content?.className ?? '' }),
 
+          // Focus.
+          EditorView.updateListener.of((update) => {
+            update.transactions.forEach((transaction) => {
+              if (transaction.isUserEvent('focus.container')) {
+                rootRef.current?.focus();
+              }
+            });
+          }),
+
           // State.
           EditorView.editable.of(!readonly),
           EditorState.readOnly.of(!!readonly),
@@ -159,29 +163,24 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
       view?.destroy();
       setView(newView);
 
+      // Remove tabster attribute (rely on custom keymap).
+      if (state.facet(editorMode).noTabster) {
+        rootRef.current.removeAttribute('data-tabster');
+      }
+
       return () => {
         newView?.destroy();
         setView(null);
       };
     }, [rootRef, model, readonly, themeMode]);
 
-    // Pressing Escape focuses the outer div (to support tab navigation). Pressing Enter should refocus the editor.
-    // In vim-mode, press a key modifier to focus the outer div.
+    // Focus editor on Enter (e.g., when tabbing to this component).
     const handleKeyUp = useCallback<KeyboardEventHandler<HTMLDivElement>>(
       (event) => {
-        const { key, altKey, shiftKey, metaKey, ctrlKey } = event;
+        const { key } = event;
         switch (key) {
           case 'Enter': {
             view?.focus();
-            break;
-          }
-          case 'Escape': {
-            if (altKey || shiftKey || metaKey || ctrlKey) {
-              rootRef.current?.focus();
-              break;
-            } else {
-              view?.focus();
-            }
             break;
           }
         }
@@ -191,13 +190,13 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
 
     return (
       <div
-        key={model.id}
         role='none'
+        ref={rootRef}
+        key={model.id}
         tabIndex={0}
+        onKeyUp={handleKeyUp}
         {...slots.root}
         {...tabsterDOMAttribute}
-        onKeyUp={handleKeyUp}
-        ref={rootRef}
       />
     );
   },
