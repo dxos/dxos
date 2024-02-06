@@ -29,6 +29,7 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
       {
         id: 'title',
         type: Schema.PropType.STRING,
+        description: 'title of the document',
       },
       {
         id: 'content',
@@ -43,14 +44,17 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
       {
         id: 'name',
         type: Schema.PropType.STRING,
+        description: 'name of the company or organization',
       },
       {
         id: 'website',
         type: Schema.PropType.STRING,
+        description: 'public website URL',
       },
       {
         id: 'description',
         type: Schema.PropType.STRING,
+        description: 'short summary of the company',
       },
     ],
   });
@@ -61,8 +65,9 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
       {
         id: 'name',
         type: Schema.PropType.STRING,
+        description: 'name of the person',
       },
-      // TODO(burdon): Support multiple.
+      // TODO(burdon): Support multiple tagged properties.
       {
         id: 'email',
         type: Schema.PropType.STRING,
@@ -90,6 +95,7 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
       {
         id: 'name',
         type: Schema.PropType.STRING,
+        description: 'name of the project',
       },
       {
         id: 'description',

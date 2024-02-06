@@ -27,7 +27,7 @@ export const presets = [
         source: new TextObject(
           str(
             //
-            'Translate the following into {language}.',
+            'Translate the following into {language}:',
             '',
             '---',
             '',
@@ -37,11 +37,11 @@ export const presets = [
         inputs: [
           //
           new ChainType.Input({
-            type: ChainType.Input.Type.VALUE,
             name: 'language',
+            type: ChainType.Input.Type.VALUE,
             value: new TextObject('japanese'),
           }),
-          new ChainType.Input({ type: ChainType.Input.Type.PASS_THROUGH, name: 'input' }),
+          new ChainType.Input({ name: 'input', type: ChainType.Input.Type.PASS_THROUGH }),
         ],
       }),
   },
@@ -64,8 +64,8 @@ export const presets = [
         inputs: [
           //
           new ChainType.Input({
-            type: ChainType.Input.Type.CONTEXT,
             name: 'history',
+            type: ChainType.Input.Type.CONTEXT,
             value: new TextObject('object.pgn'),
           }),
         ],
@@ -80,7 +80,7 @@ export const presets = [
         source: new TextObject(
           str(
             //
-            'Create a valid mermaid diagram representing the text below.',
+            'Create a simplified mermaid graph representing the text below.',
             'Do not explain anything.',
             '',
             '---',
@@ -90,7 +90,7 @@ export const presets = [
         ),
         inputs: [
           //
-          new ChainType.Input({ type: ChainType.Input.Type.PASS_THROUGH, name: 'input' }),
+          new ChainType.Input({ name: 'input', type: ChainType.Input.Type.PASS_THROUGH }),
         ],
       }),
   },
@@ -104,10 +104,9 @@ export const presets = [
           str(
             //
             'You are a machine that only replies with valid, iterable RFC8259 compliant JSON in your responses.',
-            '',
             'Your entire response should be a single array of JSON objects.',
             '',
-            'Each item should contain the following fields: {schema}',
+            'Each object should conform to the following schema: {schema}',
             '',
             '---',
             '',
@@ -117,11 +116,11 @@ export const presets = [
         inputs: [
           //
           new ChainType.Input({
-            type: ChainType.Input.Type.CONTEXT,
+            type: ChainType.Input.Type.SCHEMA,
             name: 'schema',
-            value: new TextObject('schema.props'),
+            value: new TextObject('example.com/schema/project'),
           }),
-          new ChainType.Input({ type: ChainType.Input.Type.PASS_THROUGH, name: 'question' }),
+          new ChainType.Input({ name: 'question', type: ChainType.Input.Type.PASS_THROUGH }),
         ],
       }),
   },
@@ -146,8 +145,8 @@ export const presets = [
         ),
         inputs: [
           //
-          new ChainType.Input({ type: ChainType.Input.Type.RETRIEVER, name: 'context' }),
-          new ChainType.Input({ type: ChainType.Input.Type.PASS_THROUGH, name: 'question' }),
+          new ChainType.Input({ name: 'context', type: ChainType.Input.Type.RETRIEVER }),
+          new ChainType.Input({ name: 'question', type: ChainType.Input.Type.PASS_THROUGH }),
         ],
       }),
   },
@@ -169,7 +168,31 @@ export const presets = [
         ),
         inputs: [
           //
-          new ChainType.Input({ type: ChainType.Input.Type.CONTEXT, name: 'input', value: new TextObject('text') }),
+          new ChainType.Input({ name: 'input', type: ChainType.Input.Type.CONTEXT, value: new TextObject('text') }),
+        ],
+      }),
+  },
+  // TODO(burdon): Extract schema to build model.
+  // TODO(burdon): Output objects.
+  {
+    id: 'dxos.org/prompt/extract',
+    title: 'Extract',
+    prompt: () =>
+      new ChainType.Prompt({
+        command: 'extract',
+        source: new TextObject(
+          str(
+            //
+            'List all people and companies mentioned in the following text:',
+            '',
+            '---',
+            '',
+            '{input}',
+          ),
+        ),
+        inputs: [
+          //
+          new ChainType.Input({ name: 'input', type: ChainType.Input.Type.CONTEXT, value: new TextObject('text') }),
         ],
       }),
   },
@@ -192,8 +215,8 @@ export const presets = [
         inputs: [
           //
           new ChainType.Input({
-            type: ChainType.Input.Type.RESOLVER,
             name: 'context',
+            type: ChainType.Input.Type.RESOLVER,
             value: new TextObject('discord.messages.recent'),
           }),
         ],
