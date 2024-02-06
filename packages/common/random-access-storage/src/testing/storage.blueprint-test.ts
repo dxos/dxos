@@ -2,11 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import { expect, describe, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
 
-import { StorageType, type File, type Storage } from '../common';
+import { type File, type Storage, StorageType } from '../common';
 
 export const randomText = () => Math.random().toString(36).substring(2);
 
@@ -363,6 +363,21 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       await directory.flush();
       const entries = await directory.list();
       expect(entries).toEqual(expect.arrayContaining(FILES));
+    });
+
+    test('getDiskInfo returns correct size', async (t) => {
+      const storage = createStorage();
+      if (storage.type === StorageType.IDB) {
+        t.skip();
+      }
+      const directory = storage.createDirectory('dirrr');
+      const file = directory.getOrCreateFile('fileee');
+      const content = 'Hello, world!';
+      await file.write(0, Buffer.from(content));
+      await file.close();
+      await expect(storage.getDiskInfo?.() ?? Promise.resolve(-1)).resolves.toEqual({
+        used: content.length,
+      });
     });
   });
 };

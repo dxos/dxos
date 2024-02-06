@@ -88,7 +88,7 @@ export class WebFS implements Storage {
       getOrCreateFile: (...args) => this.getOrCreateFile(...args),
       remove: () => this._delete(sub),
       onFlush: async () => {
-        await Promise.all(Array.from(this._getFiles(sub)).map(([path, file]) => file.flush()));
+        await Promise.all(Array.from(this._getFiles(sub)).map(([_, file]) => file.flush()));
       },
     });
   }
@@ -128,8 +128,8 @@ export class WebFS implements Storage {
   async reset() {
     await this._initialize();
     for await (const filename of await (this._root as any).keys()) {
-      files.delete(filename);
       await this._root!.removeEntry(filename, { recursive: true }).catch((err: any) => log.warn(err));
+      files.delete(filename);
     }
     this._root = undefined;
   }
@@ -141,9 +141,9 @@ export class WebFS implements Storage {
   private _getFullFilename(path: string, filename?: string) {
     // Replace slashes with underscores. Because we can't have slashes in filenames in Browser File Handle API.
     if (filename) {
-      return getFullPath(path, filename).split('/').join('_');
+      return getFullPath(path, filename).replace(/\//g, '_');
     } else {
-      return path.split('/').join('_');
+      return path.replace(/\//g, '_');
     }
   }
 
@@ -158,7 +158,7 @@ export class WebFS implements Storage {
           (async () => {
             switch (entry.kind) {
               case 'file':
-                used += await (entry as FileSystemFileHandle).getFile().then((f) => (used += f.size));
+                used += await (entry as FileSystemFileHandle).getFile().then((f) => f.size);
                 break;
               case 'directory':
                 await recurse(entry as FileSystemDirectoryHandle);
@@ -339,17 +339,14 @@ export class WebFile extends EventEmitter implements File {
     this._reads.inc();
     this._readBytes.inc(size);
 
-    if (!this._buffer) {
-      await this._loadBufferGuarded();
-      invariant(this._buffer);
-    }
+    const buffer = await this.requireBuffer();
 
-    if (offset + size > this._buffer.length) {
+    if (offset + size > buffer.length) {
       throw new Error('Read out of bounds');
     }
 
     // Copy data into a new buffer.
-    return Buffer.from(this._buffer.slice(offset, offset + size));
+    return Buffer.from(buffer.slice(offset, offset + size));
   }
 
   async write(offset: number, data: Buffer) {
@@ -357,17 +354,14 @@ export class WebFile extends EventEmitter implements File {
     this._writes.inc();
     this._writeBytes.inc(data.length);
 
-    if (!this._buffer) {
-      await this._loadBufferGuarded();
-      invariant(this._buffer);
-    }
+    const buffer = await this.requireBuffer();
 
-    if (offset + data.length <= this._buffer.length) {
-      this._buffer.set(data, offset);
+    if (offset + data.length <= buffer.length) {
+      buffer.set(data, offset);
     } else {
       // TODO(dmaretskyi): Optimize re-allocations.
       const newCache = new Uint8Array(offset + data.length);
-      newCache.set(this._buffer);
+      newCache.set(buffer);
       newCache.set(data, offset);
       this._buffer = newCache;
     }
@@ -378,22 +372,19 @@ export class WebFile extends EventEmitter implements File {
   async del(offset: number, size: number) {
     this._operations.inc();
 
-    if (offset < 0 || size < 0) {
+    if (offset < 0 || size <= 0) {
       return;
     }
 
-    if (!this._buffer) {
-      await this._loadBufferGuarded();
-      invariant(this._buffer);
-    }
+    const buffer = await this.requireBuffer();
 
     let leftoverSize = 0;
-    if (offset + size < this._buffer.length) {
-      leftoverSize = this._buffer.length - (offset + size);
-      this._buffer.set(this._buffer.slice(offset + size, offset + size + leftoverSize), offset);
+    if (offset + size < buffer.length) {
+      leftoverSize = buffer.length - (offset + size);
+      buffer.set(buffer.slice(offset + size, offset + size + leftoverSize), offset);
     }
 
-    this._buffer = this._buffer.slice(0, offset + leftoverSize);
+    this._buffer = buffer.slice(0, offset + leftoverSize);
 
     this._flushLater();
   }
@@ -402,25 +393,17 @@ export class WebFile extends EventEmitter implements File {
     this._operations.inc();
 
     // NOTE: This will load all data from the file just to get it's size. While this is a lot of overhead, this works ok for out use cases.
-    if (!this._buffer) {
-      await this._loadBufferGuarded();
-      invariant(this._buffer);
-    }
+    const buffer = await this.requireBuffer();
 
     return {
-      size: this._buffer.length,
+      size: buffer.length,
     };
   }
 
   async truncate(offset: number) {
     this._operations.inc();
 
-    if (!this._buffer) {
-      await this._loadBufferGuarded();
-      invariant(this._buffer);
-    }
-
-    this._buffer = this._buffer.slice(0, offset);
+    this._buffer = (await this.requireBuffer()).slice(0, offset);
 
     this._flushLater();
   }
@@ -438,5 +421,13 @@ export class WebFile extends EventEmitter implements File {
     await this._flushNow();
     this.destroyed = true;
     return await this._destroy();
+  }
+
+  private async requireBuffer(): Promise<Uint8Array> {
+    if (!this._buffer) {
+      await this._loadBufferGuarded();
+      invariant(this._buffer);
+    }
+    return this._buffer;
   }
 }
