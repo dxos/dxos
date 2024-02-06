@@ -145,6 +145,9 @@
       "path": "../plugins/plugin-native"
     },
     {
+      "path": "../plugins/plugin-native-redirect"
+    },
+    {
       "path": "../plugins/plugin-navtree"
     },
     {

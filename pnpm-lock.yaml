@@ -539,6 +539,9 @@ importers:
       '@braneframe/plugin-native':
         specifier: workspace:*
         version: link:../plugins/plugin-native
+      '@braneframe/plugin-native-redirect':
+        specifier: workspace:*
+        version: link:../plugins/plugin-native-redirect
       '@braneframe/plugin-navtree':
         specifier: workspace:*
         version: link:../plugins/plugin-navtree
@@ -2081,6 +2084,34 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      vite:
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
+
+  packages/apps/plugins/plugin-native-redirect:
+    dependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+    devDependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)

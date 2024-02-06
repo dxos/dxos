@@ -26,6 +26,7 @@ import MarkdownMeta from '@braneframe/plugin-markdown/meta';
 import MermaidMeta from '@braneframe/plugin-mermaid/meta';
 import MetadataMeta from '@braneframe/plugin-metadata/meta';
 import NativeMeta from '@braneframe/plugin-native/meta';
+import NativeRedirectMeta from '@braneframe/plugin-native-redirect/meta';
 import NavTreeMeta from '@braneframe/plugin-navtree/meta';
 import ObservabilityMeta from '@braneframe/plugin-observability/meta';
 import OutlinerMeta from '@braneframe/plugin-outliner/meta';
@@ -107,7 +108,7 @@ const main = async () => {
   const appScheme = 'composer:/';
 
   if (!isSocket) {
-    checkAppScheme(appScheme);
+    // checkAppScheme(appScheme);
   }
 
   const App = createApp({
@@ -130,7 +131,7 @@ const main = async () => {
       ObservabilityMeta,
       ThemeMeta,
       // TODO(wittjosiah): Consider what happens to PWA updates when hitting error boundary.
-      isSocket ? NativeMeta : PwaMeta,
+      ...(isSocket ? [NativeMeta] : [PwaMeta, NativeRedirectMeta]),
 
       // UX
       LayoutMeta,
@@ -205,7 +206,10 @@ const main = async () => {
       [MetadataMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-metadata')),
       ...(isSocket
         ? { [NativeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-native')) }
-        : { [PwaMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-pwa')) }),
+        : {
+            [PwaMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-pwa')),
+            [NativeRedirectMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-native-redirect')),
+          }),
       [NavTreeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-navtree')),
       [OutlinerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-outliner')),
       [PresenterMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-presenter')),
@@ -246,7 +250,7 @@ const main = async () => {
       LayoutMeta.id,
       MetadataMeta.id,
       NavTreeMeta.id,
-      ...(isSocket ? [NativeMeta.id] : [PwaMeta.id]),
+      ...(isSocket ? [NativeMeta.id] : [PwaMeta.id, NativeRedirectMeta.id]),
       RegistryMeta.id,
       SettingsMeta.id,
       SpaceMeta.id,
