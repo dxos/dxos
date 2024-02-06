@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { create } from 'ipfs-http-client';
+import { create } from 'kubo-rpc-client';
 import { useMemo } from 'react';
 
 import { useConfig } from '@dxos/react-client';
