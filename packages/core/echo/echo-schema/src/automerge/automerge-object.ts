@@ -198,7 +198,7 @@ export class AutomergeObject implements TypedObjectProperties {
     }
 
     this._core.doc = A.from<ObjectStructure>({
-      data: this._core.encode(initialProps),
+      data: this._core.encode(initialProps as any),
       meta: this._core.encode({
         keys: [],
         ...opts?.meta,
@@ -225,7 +225,7 @@ export class AutomergeObject implements TypedObjectProperties {
         if (schema) {
           return schema.props.map((field) => field.id!);
         } else {
-          return Reflect.ownKeys(this._get(path));
+          return Reflect.ownKeys(this._get(path) as any);
         }
       },
 
@@ -236,7 +236,7 @@ export class AutomergeObject implements TypedObjectProperties {
           // TODO(mykola): Copied from TypedObject, do we need this?
           return false;
         } else {
-          return key in this._get(path);
+          return key in (this._get(path) as any);
         }
       },
 

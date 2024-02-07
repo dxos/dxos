@@ -18,6 +18,7 @@ import {
   type ObjectStructure,
   isEncodedReferenceObject,
   decodeReference,
+  DecodedAutomergeValue,
 } from './types';
 import { base, type EchoObject } from '../object';
 import { Reference } from '@dxos/document-model';
@@ -264,7 +265,7 @@ export class AutomergeObjectCore {
   /**
    * Encode a value to be stored in the Automerge document.
    */
-  encode(value: any) {
+  encode(value: DecodedAutomergeValue) {
     if (value instanceof A.RawString) {
       return value;
     }
@@ -305,7 +306,7 @@ export class AutomergeObjectCore {
   /**
    * Decode a value from the Automerge document.
    */
-  decode(value: any): any {
+  decode(value: any): DecodedAutomergeValue {
     if (value === null) {
       return undefined;
     }
@@ -318,6 +319,7 @@ export class AutomergeObjectCore {
     if (isEncodedReferenceObject(value)) {
       if (value.protocol === 'protobuf') {
         // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
+        // TODO(dmaretskyi): Why are we returning raw reference here instead of doing lookup?
         return decodeReference(value);
       }
 

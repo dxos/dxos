@@ -145,7 +145,7 @@ export class AutomergeArray<T> implements Array<T> {
 
       // TODO(mykola): Do not allow direct access to doc in array.
 
-      const encodedItems = items.map((value) => this._object!._core.encode(value));
+      const encodedItems = items.map((value) => this._object!._core.encode(value as any));
 
       this._object._core.change((doc) => {
         let parent = doc;
@@ -320,7 +320,7 @@ export class AutomergeArray<T> implements Array<T> {
       const fullPath = [...this._object._core.mountPath, ...this._path!];
 
       // TODO(mykola): Do not allow direct access to doc in array.
-      const encodedItems = items.map((value) => this._object!._core.encode(value));
+      const encodedItems = items.map((value) => this._object!._core.encode(value as any));
       this._object._core.change((doc) => {
         let parent = doc;
         for (const key of fullPath.slice(0, -1)) {
@@ -418,7 +418,7 @@ export class AutomergeArray<T> implements Array<T> {
 
     const fullPath = [...this._object._core.mountPath, ...this._path!];
 
-    const encodedValue = this._object!._core.encode(value);
+    const encodedValue = this._object!._core.encode(value as any);
 
     // TODO(mykola): Do not allow direct access to doc in array.
     this._object._core.change((doc) => {

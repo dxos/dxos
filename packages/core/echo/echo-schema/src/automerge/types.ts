@@ -4,7 +4,7 @@
 
 import { Reference } from '@dxos/document-model';
 
-import { type ObjectMeta } from '../object';
+import { type ObjectMeta, type EchoObject } from '../object';
 import { type Schema } from '../proto';
 
 export interface DocStructure {
@@ -69,3 +69,13 @@ export const decodeReference = (value: any) =>
 
 export const isEncodedReferenceObject = (value: any): value is EncodedReferenceObject =>
   typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG;
+
+export type DecodedAutomergeValue =
+  | undefined
+  | string
+  | number
+  | boolean
+  | DecodedAutomergeValue[]
+  | { [key: string]: DecodedAutomergeValue }
+  | Reference // TODO(dmaretskyi): Raw references shouldn't be here.
+  | EchoObject;
