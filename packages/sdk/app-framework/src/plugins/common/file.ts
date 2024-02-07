@@ -8,7 +8,7 @@ export type FileInfo = {
   cid: string; // TODO(burdon): Meta.
 };
 
-export type FileUploader = (file: FileInfo) => string | undefined;
+export type FileUploader = (file: FileInfo) => Promise<string | undefined>;
 
 export type FileManagerProvides = {
   file: {
@@ -17,6 +17,6 @@ export type FileManagerProvides = {
 };
 
 // TODO(burdon): Better match against interface? and Return provided service type.
-export const parseFileManagerResolverPlugin = (plugin: Plugin) => {
+export const parseFileManagerPlugin = (plugin: Plugin) => {
   return (plugin.provides as any).file ? (plugin as Plugin<FileManagerProvides>) : undefined;
 };

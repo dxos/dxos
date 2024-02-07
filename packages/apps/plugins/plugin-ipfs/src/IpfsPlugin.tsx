@@ -3,7 +3,7 @@
 //
 
 import { FileCloud, type IconProps } from '@phosphor-icons/react';
-import { type IPFSHTTPClient, create as createIpfsClient } from 'ipfs-http-client';
+import { create as createIpfsClient } from 'ipfs-http-client';
 import React, { type Ref } from 'react';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
@@ -18,17 +18,11 @@ import { type IpfsPluginProvides, isFile } from './types';
 
 export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
   let clientPlugin: Plugin<ClientPluginProvides> | undefined;
-  let ipfsClient: IPFSHTTPClient | undefined;
 
   return {
     meta,
     ready: async (plugins) => {
       clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      const config = clientPlugin?.provides.client.config;
-      const server = config?.values.runtime?.services?.ipfs?.server;
-      if (server) {
-        ipfsClient = createIpfsClient({ url: server, timeout: 30_000 });
-      }
     },
     provides: {
       translations,
@@ -41,10 +35,20 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
         },
       },
       file: {
+        // TODO(burdon): Error handling.
         upload: async (file) => {
-          console.log('::::', file);
-          const { cid } = await ipfsClient.add(file);
-          console.log('>>>', cid);
+          const config = clientPlugin?.provides.client.config;
+          const server = config?.values.runtime?.services?.ipfs?.server;
+          if (server) {
+            const ipfsClient = createIpfsClient({ url: server, timeout: 30_000 });
+            console.log('::::', file);
+            const { cid } = await ipfsClient.add(file);
+            console.log('>>>', cid);
+            return {
+              cid: cid.toString(),
+            };
+          }
+
           return undefined;
         },
       },
