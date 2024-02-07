@@ -12,8 +12,8 @@ import { AbstractEchoObject } from './object';
 import { type AutomergeOptions, type TypedObject, isAutomergeObject } from './typed-object';
 import { base } from './types';
 import { AutomergeArray } from '../automerge';
-import { getGlobalAutomergePreference } from '../automerge-preference';
 import { REFERENCE_TYPE_TAG } from '../automerge/types';
+import { getGlobalAutomergePreference } from '../automerge-preference';
 
 const isIndex = (property: string | symbol): property is string =>
   typeof property === 'string' && parseInt(property).toString() === property;

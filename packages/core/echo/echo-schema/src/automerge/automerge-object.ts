@@ -10,9 +10,11 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
+import { AutomergeArray } from './automerge-array';
+import { assignDeep, AutomergeObjectCore, type BindOptions, type DocAccessor } from './automerge-object-core';
+import { REFERENCE_TYPE_TAG, type ObjectStructure, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
 import {
-  TextObject,
   base,
   data,
   db,
@@ -22,6 +24,7 @@ import {
   mutationOverride,
   proxy,
   subscribe,
+  TextObject,
   type EchoObject,
   type ObjectMeta,
   type TypedObjectOptions,
@@ -29,12 +32,6 @@ import {
 } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
-import { AutomergeArray } from './automerge-array';
-import { AutomergeObjectCore, assignDeep, type BindOptions, type DocAccessor } from './automerge-object-core';
-import { REFERENCE_TYPE_TAG, type ObjectStructure, type ObjectSystem } from './types';
-
-// Strings longer than this will have collaborative editing disabled for performance reasons.
-const STRING_CRDT_LIMIT = 300_000;
 
 // TODO(dmaretskyi): Rename to `AutomergeObjectApi`.
 export class AutomergeObject implements TypedObjectProperties {

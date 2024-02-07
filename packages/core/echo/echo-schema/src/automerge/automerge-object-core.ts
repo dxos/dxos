@@ -5,12 +5,15 @@
 import { Event } from '@dxos/async';
 import { next as A, type ChangeFn, type ChangeOptions, type Doc, type Heads } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
+import { Reference } from '@dxos/document-model';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { defer } from '@dxos/util';
 
+import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
+import { AutomergeObject } from './automerge-object';
 import { docChangeSemaphore } from './doc-semaphore';
 import {
   encodeReference,
@@ -18,13 +21,10 @@ import {
   type ObjectStructure,
   isEncodedReferenceObject,
   decodeReference,
-  DecodedAutomergeValue,
+  type DecodedAutomergeValue,
 } from './types';
 import { base, type EchoObject } from '../object';
-import { Reference } from '@dxos/document-model';
 import { AbstractEchoObject } from '../object/object';
-import { AutomergeObject } from './automerge-object';
-import { AutomergeArray } from './automerge-array';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
