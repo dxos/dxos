@@ -102,11 +102,6 @@ export const ClientPlugin = ({
           await client.halo.createIdentity();
           // TODO(wittjosiah): Ideally this would be per app rather than per identity.
           firstRun = true;
-        } else if (client.halo.identity.get() && deviceInvitationCode) {
-          // Ignore device invitation if identity already exists.
-          // TODO(wittjosiah): Identity merging.
-          searchParams.delete('deviceInvitationCode');
-          window.history.replaceState({}, '', `${location.pathname}?${searchParams}`);
         } else if (deviceInvitationCode) {
           void client.shell.initializeIdentity({ invitationCode: deviceInvitationCode });
         }
