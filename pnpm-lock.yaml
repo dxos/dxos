@@ -978,9 +978,6 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
-      '@dxos/client-services':
-        specifier: workspace:*
-        version: link:../../../sdk/client-services
       '@dxos/config':
         specifier: workspace:*
         version: link:../../../sdk/config
@@ -7540,9 +7537,6 @@ importers:
       base-x:
         specifier: ~3.0.9
         version: 3.0.9
-      localforage:
-        specifier: ^1.10.0
-        version: 1.10.0
       lodash.isequal:
         specifier: ^4.5.0
         version: 4.5.0
@@ -7753,6 +7747,9 @@ importers:
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
+      localforage:
+        specifier: ^1.10.0
+        version: 1.10.0
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
