@@ -273,7 +273,12 @@ const MarkdownExtended = () => {
   const { onAction } = useToolbarContext('MarkdownStyles');
   const { t } = useTranslation(translationKey);
   return (
-    <NaturalToolbar.Button variant='ghost' onClick={() => onAction?.({ type: 'comment' })} classNames={buttonStyles}>
+    <NaturalToolbar.Button
+      variant='ghost'
+      data-testid='editor.toolbar.comment'
+      onClick={() => onAction?.({ type: 'comment' })}
+      classNames={buttonStyles}
+    >
       <ChatText className={iconStyles} />
       <span className='sr-only'>{t('comment label')}</span>
     </NaturalToolbar.Button>
