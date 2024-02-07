@@ -23,11 +23,13 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-client": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "deepsignal": "1.4.0-shallow.0",
+    "ipfs-http-client": "^56.0.3",
     "lodash.get": "^4.4.2",
     "url-join": "^5.0.0"
   },

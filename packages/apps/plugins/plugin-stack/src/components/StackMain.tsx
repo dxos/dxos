@@ -5,7 +5,7 @@
 import { Plus, Placeholder } from '@phosphor-icons/react';
 import React, { useCallback, type FC } from 'react';
 
-import { Stack as StackType, type File as FileType, Folder } from '@braneframe/types';
+import { File as FileType, Stack as StackType, Folder } from '@braneframe/types';
 import {
   NavigationAction,
   Surface,
@@ -99,13 +99,22 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
 
   const handleAdd = useCallback(
     (sectionObject: StackType.Section['object']) => {
-      console.log('::::', sectionObject);
       stack.sections.push(new StackType.Section({ object: sectionObject }));
       // TODO(wittjosiah): Remove once stack items can be added to folders separately.
       folder?.objects.push(sectionObject);
     },
     [stack, stack.sections],
   );
+
+  const handleFileUpload = fileManagerPlugin?.provides.file.upload
+    ? async (file: File) => {
+        const filename = file.name.split('.')[0];
+        const info = await fileManagerPlugin.provides.file.upload?.(file);
+        if (info) {
+          handleAdd(new FileType({ type: file.type, title: filename, filename, cid: info.cid }));
+        }
+      }
+    : undefined;
 
   const handleNavigate = async (id: string) => {
     await dispatch({
@@ -166,14 +175,12 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
               </DropdownMenu.Viewport>
             </DropdownMenu.Content>
           </DropdownMenu.Root>
-          {fileManagerPlugin && (
-            // TODO(burdon): Surface?
+          {/* TODO(burdon): Surface? */}
+          {handleFileUpload && (
             <FileUpload
               classNames='p-2'
               fileTypes={[...defaultFileTypes.images, ...defaultFileTypes.media, ...defaultFileTypes.text]}
-              onUpload={(file: FileType) => {
-                handleAdd(file);
-              }}
+              onUpload={handleFileUpload}
             />
           )}
         </ButtonGroup>

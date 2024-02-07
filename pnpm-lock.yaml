@@ -1644,6 +1644,9 @@ importers:
 
   packages/apps/plugins/plugin-ipfs:
     dependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -1659,6 +1662,9 @@ importers:
       deepsignal:
         specifier: 1.4.0-shallow.0
         version: 1.4.0-shallow.0(react@18.2.0)
+      ipfs-http-client:
+        specifier: ^56.0.3
+        version: 56.0.3(node-fetch@2.6.7)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -2926,9 +2932,6 @@ importers:
       deepsignal:
         specifier: 1.4.0-shallow.0
         version: 1.4.0-shallow.0(react@18.2.0)
-      ipfs-http-client:
-        specifier: ^56.0.3
-        version: 56.0.3(node-fetch@2.6.7)
       node-fetch:
         specifier: ^2.6.0
         version: 2.6.7

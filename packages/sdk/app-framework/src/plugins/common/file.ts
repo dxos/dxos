@@ -5,13 +5,14 @@
 import { type Plugin } from '../PluginHost';
 
 export type FileInfo = {
-  file: File;
   cid: string; // TODO(burdon): Meta.
 };
 
+export type FileUploader = (file: FileInfo) => string | undefined;
+
 export type FileManagerProvides = {
   file: {
-    upload?: (file: FileInfo) => Promise<string | undefined>;
+    upload?: FileUploader;
   };
 };
 
