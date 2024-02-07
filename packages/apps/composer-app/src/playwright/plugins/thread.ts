@@ -4,6 +4,7 @@
 
 import type { Locator, Page } from '@playwright/test';
 
+// TODO(wittjosiah): If others find this useful, factor out the thread plugin.
 export const Thread = {
   createComment: async (page: Page, comment: string) => {
     await page.getByTestId('editor.toolbar.comment').click();
