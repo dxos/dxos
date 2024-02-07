@@ -14,13 +14,6 @@ import { TimeSeriesCounter, trace } from '@dxos/tracing';
 import { Directory, type DiskInfo, type File, type Storage, StorageType, getFullPath } from '../common';
 
 /**
- * When handles weren't shared by different WebFS instances, browser tests
- * were sporadically failing with NonReadableError on test cases like:
- * webFs1.createFile->createWritable->write->close
- * webFs2.createFile->read
- * Presumably due to some handle-level write buffering.
- */
-/**
  * Web file systems.
  */
 export class WebFS implements Storage {
