@@ -23,8 +23,10 @@ import {
   decodeReference,
   type DecodedAutomergeValue,
 } from './types';
-import { base, type EchoObject } from '../object';
+import { base, TypedObjectOptions, type EchoObject, TextObject } from '../object';
 import { AbstractEchoObject } from '../object/object';
+import { type Schema } from '../proto'; // Keep type-only
+import { TextModel } from '@dxos/text-model';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
@@ -76,6 +78,36 @@ export class AutomergeObjectCore {
    * Reactive signal for update propagation.
    */
   public signal = compositeRuntime.createSignal();
+
+  /**
+   * Create local doc with initial state from this object.
+   */
+  initNewObject(initialProps?: unknown, opts?: TypedObjectOptions) {
+    invariant(!this.docHandle && !this.doc);
+
+    initialProps ??= {};
+
+    // Init schema defaults
+    if (opts?.schema) {
+      for (const field of opts.schema.props) {
+        if (field.repeated) {
+          (initialProps as Record<string, any>)[field.id!] ??= [];
+        } else if (field.type === getSchemaProto().PropType.REF && field.refModelType === TextModel.meta.type) {
+          // TODO(dmaretskyi): Is this right? Should we init with empty string or an actual reference to a Text object?
+          (initialProps as Record<string, any>)[field.id!] ??= new TextObject();
+        }
+      }
+    }
+
+    this.doc = A.from<ObjectStructure>({
+      data: this.encode(initialProps as any),
+      meta: this.encode({
+        keys: [],
+        ...opts?.meta,
+      }),
+      system: {},
+    });
+  }
 
   bind(options: BindOptions) {
     this.database = options.db;
@@ -387,4 +419,16 @@ export const assignDeep = <T>(doc: any, path: string[], value: T): T => {
   }
   parent[path.at(-1)!] = value;
   return parent[path.at(-1)!]; // NOTE: We can't just return value here since doc's getter might return a different object.
+};
+
+// Deferred import to avoid circular dependency.
+let schemaProto: typeof Schema;
+const getSchemaProto = (): typeof Schema => {
+  if (!schemaProto) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { Schema } = require('../proto');
+    schemaProto = Schema;
+  }
+
+  return schemaProto;
 };
