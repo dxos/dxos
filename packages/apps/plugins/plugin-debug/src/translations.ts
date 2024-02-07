@@ -26,7 +26,8 @@ export default [
         'settings storage adaptor idb label': 'IndexedDB',
         'settings storage adaptor opfs label': 'OPFS',
         'settings data store label': 'Data Store',
-        'settings storage adapter changed alert': 'Warning: Swapping the storage adapter will make your data unavailable.',
+        'settings storage adapter changed alert':
+          'Warning: Swapping the storage adapter will make your data unavailable.',
       },
     },
   },
