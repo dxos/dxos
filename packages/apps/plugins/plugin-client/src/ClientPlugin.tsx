@@ -16,7 +16,7 @@ import {
   type SurfaceProvides,
   type TranslationsProvides,
 } from '@dxos/app-framework';
-import { Config, Defaults, Envs, Local } from '@dxos/config';
+import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
@@ -66,7 +66,6 @@ export const ClientPlugin = ({
 > => {
   // TODO(burdon): Document.
   registerSignalFactory();
-
   const settings = new LocalStorageStore<ClientSettingsProps>('dxos.org/settings', { automerge: true });
 
   let client: Client;
@@ -77,7 +76,7 @@ export const ClientPlugin = ({
     initialize: async () => {
       let firstRun = false;
 
-      client = new Client({ config: new Config(await Envs(), Local(), Defaults()), ...options });
+      client = new Client({ config: new Config(await Storage(), Envs(), Local(), Defaults()), ...options });
 
       try {
         await client.initialize();
