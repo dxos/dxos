@@ -61,10 +61,6 @@ import { steps } from './help';
 import translations from './translations';
 
 const main = async () => {
-  const config = await setupConfig();
-  // Intentially do not await, don't block app startup for telemetry.
-  const observability = initializeAppObservability({ namespace: appKey, config });
-
   if (await defaultStorageIsEmpty()) {
     // NOTE: Set default for first time users to IDB (works better with automerge CRDTs).
     //       Needs to be done before worker is created.
@@ -72,6 +68,10 @@ const main = async () => {
       runtime: { client: { storage: { dataStore: defs.Runtime.Client.Storage.StorageDriver.IDB } } },
     });
   }
+
+  const config = await setupConfig();
+  // Intentially do not await, don't block app startup for telemetry.
+  const observability = initializeAppObservability({ namespace: appKey, config });
 
   const services = await createClientServices(
     config,
