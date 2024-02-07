@@ -9,6 +9,7 @@ import { log } from '@dxos/log';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { DensityProvider, useId, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 import { type SpacePanelHeadingProps, type SpacePanelImplProps, type SpacePanelProps } from './SpacePanelProps';
 import { useSpaceMachine } from './spaceMachine';
@@ -17,7 +18,7 @@ import { Heading, CloseButton, Viewport } from '../../components';
 import { InvitationManager } from '../../steps';
 import { stepStyles } from '../../styles';
 
-const SpacePanelHeading = ({ titleId, space, onDone }: SpacePanelHeadingProps) => {
+const SpacePanelHeading = ({ titleId, space, onDone, variant }: SpacePanelHeadingProps) => {
   const { t } = useTranslation('os');
   const name = space.properties.name;
   return (
@@ -25,10 +26,14 @@ const SpacePanelHeading = ({ titleId, space, onDone }: SpacePanelHeadingProps) =
       titleId={titleId}
       title={t('space panel heading')}
       corner={<CloseButton data-testid='identity-panel-done' onDone={onDone} />}
+      variant={variant}
     >
-      <div role='none' className='flex gap-4 items-center justify-center mlb-4'>
-        <Planet size={32} />
-        <div className='block text-start font-light text-xl'>{name ?? space.key.truncate()}</div>
+      <div
+        role='none'
+        className={mx('flex items-center mlb-4', variant === 'main' ? 'gap-2 pli-4' : 'gap-4 justify-center')}
+      >
+        <Planet size={32} weight='light' />
+        <h2 className='font-light text-xl'>{name ?? space.key.truncate()}</h2>
       </div>
     </Heading>
   );
@@ -49,7 +54,7 @@ export const SpacePanelImpl = (props: SpacePanelImplProps) => {
     <DensityProvider density='fine'>
       <SpacePanelHeading {...rest} {...{ titleId, space }} />
       <Viewport.Root activeView={activeView}>
-        <Viewport.Views>
+        <Viewport.Views {...(props.variant === 'main' && { classNames: 'bs-full' })}>
           <Viewport.View id='space manager' classNames={stepStyles}>
             <SpaceManagerComponent active={activeView === 'space manager'} space={space} target={target} {...rest} />
           </Viewport.View>

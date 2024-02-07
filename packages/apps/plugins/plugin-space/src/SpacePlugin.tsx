@@ -31,6 +31,7 @@ import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
 import { type Space, SpaceProxy, getSpaceForObject, type PropertiesProps } from '@dxos/react-client/echo';
+import { osTranslations } from '@dxos/shell/react';
 import { inferRecordOrder } from '@dxos/util';
 
 import {
@@ -219,7 +220,7 @@ export const SpacePlugin = ({
     provides: {
       space: state as RevertDeepSignal<PluginState>,
       settings: settings.values,
-      translations,
+      translations: [...translations, osTranslations],
       root: () => (state.awaiting ? <AwaitingObject id={state.awaiting} /> : null),
       metadata: {
         records: {

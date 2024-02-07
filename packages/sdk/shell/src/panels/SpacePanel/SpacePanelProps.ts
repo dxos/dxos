@@ -9,12 +9,14 @@ import { type Space } from '@dxos/react-client/echo';
 
 import { type SpaceManagerProps } from './steps';
 import { type InvitationManagerProps } from '../../steps';
+import { type PanelVariant } from '../../types';
 
 export type ErsatzSpace = Pick<Space, 'key'> & Partial<Pick<Space, 'share'>> & { properties: { name?: string } };
 
 export type SpacePanelImplProps = {
   titleId: string;
   activeView: string;
+  variant?: PanelVariant;
   send: (event: SingleOrArray<Event<any>>) => void;
   target?: string;
   createInvitationUrl: (invitationCode: string) => string;
@@ -31,7 +33,10 @@ export type SpacePanelImplProps = {
 export type SpacePanelProps = Pick<SpacePanelImplProps, 'space'> &
   Partial<Omit<SpacePanelImplProps, 'send' | 'activeView' | 'space'>>;
 
-export type SpacePanelHeadingProps = Pick<SpacePanelImplProps, 'titleId' | 'space' | 'onDone' | 'doneActionParent'>;
+export type SpacePanelHeadingProps = Pick<
+  SpacePanelImplProps,
+  'titleId' | 'space' | 'onDone' | 'doneActionParent' | 'variant'
+>;
 
 export type SpacePanelStepProps = Pick<
   SpacePanelImplProps,
