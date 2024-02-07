@@ -5,6 +5,8 @@
 import type { Browser, Page } from '@playwright/test';
 import os from 'node:os';
 
+import { OBSERVABILITY_PLUGIN } from '@braneframe/plugin-observability/meta';
+import { PWA_PLUGIN } from '@braneframe/plugin-pwa/meta';
 import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test/playwright';
 
@@ -32,14 +34,18 @@ export class AppManager {
       return;
     }
 
-    const { page, initialUrl } = await setupPage(this._browser, {
-      waitFor: (page) => page.getByTestId('treeView.haloButton').isVisible(),
-    });
-
+    const { page, initialUrl } = await setupPage(this._browser);
     this.page = page;
     this.initialUrl = initialUrl;
+
+    await this.isAuthenticated();
+    // Wait for and dismiss first-run toasts. This is necessary to avoid flakiness in tests.
+    // If the first-run toasts are not dismissed, they will block the UI and cause tests to hang.
+    await this.page.getByTestId(`${PWA_PLUGIN}/offline-ready`).waitFor({ timeout: 5_000 });
+    await this.page.getByTestId(`${PWA_PLUGIN}/offline-ready`).getByTestId('toast.close').click();
+    await this.page.getByTestId(`${OBSERVABILITY_PLUGIN}/notice`).getByTestId('toast.close').click();
+
     this.shell = new ShellManager(this.page, this._inIframe);
-    await this.closeToast(); // Close telemetry toast.
     this._initialized = true;
   }
 
@@ -74,17 +80,17 @@ export class AppManager {
     await this.page.keyboard.press('Meta+.');
   }
 
-  isAuthenticated() {
-    return this.page.getByTestId('layoutPlugin.firstRunMessage').isVisible();
+  isAuthenticated({ timeout = 5_000 } = {}) {
+    return this.page
+      .getByTestId('treeView.haloButton')
+      .waitFor({ timeout })
+      .then(() => true)
+      .catch(() => false);
   }
 
   //
   // Toasts
   //
-
-  getToasts() {
-    return this.page.getByTestId('toast');
-  }
 
   async toastAction(nth = 0) {
     await this.page.getByTestId('toast.action').nth(nth).click();
