@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type HTMLAttributes, useMemo } from 'react';
+import React, { type HTMLAttributes, useMemo, useEffect } from 'react';
 
 import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
 import { useTranslation } from '@dxos/react-ui';
@@ -32,6 +32,15 @@ const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: Ed
   const [editorRef, editorView] = useEditorView();
   useComments(editorView, comments);
   const handleAction = useActionHandler(editorView);
+
+  // Expose editor view for playwright tests.
+  // TODO(wittjosiah): Find a better way to expose this or find a way to limit it to test runs.
+  useEffect(() => {
+    const composer = (window as any).composer;
+    if (composer) {
+      composer.editorView = editorView;
+    }
+  }, [editorView]);
 
   // Focus comment.
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {

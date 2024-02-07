@@ -73,7 +73,7 @@ export const faker = {
 
       return randParagraph();
     },
-    paragraphs: (n: number | Range = 1) => randParagraph({ length: getCount(n) }).join(' '),
+    paragraphs: (n: number | Range = 1) => randParagraph({ length: getCount(n) }).join('\n'),
   },
 
   //
