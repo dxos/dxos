@@ -161,13 +161,15 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
               </DropdownMenu.Viewport>
             </DropdownMenu.Content>
           </DropdownMenu.Root>
-          <FileUpload
-            classNames='p-2'
-            fileTypes={[...defaultFileTypes.images, ...defaultFileTypes.media, ...defaultFileTypes.text]}
-            onUpload={(file: FileType) => {
-              handleAdd(file);
-            }}
-          />
+          {true && (
+            <FileUpload
+              classNames='p-2'
+              fileTypes={[...defaultFileTypes.images, ...defaultFileTypes.media, ...defaultFileTypes.text]}
+              onUpload={(file: FileType) => {
+                handleAdd(file);
+              }}
+            />
+          )}
         </ButtonGroup>
       </div>
     </Main.Content>

@@ -27,6 +27,12 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
           },
         },
       },
+      file: {
+        upload: async (file) => {
+          console.log('::::', file);
+          return undefined;
+        },
+      },
       surface: {
         component: ({ data, role, ...props }, forwardedRef) => {
           switch (role) {
