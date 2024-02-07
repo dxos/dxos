@@ -5,21 +5,14 @@
 import { type InspectOptionsStylized, inspect } from 'node:util';
 
 import { next as A, type ChangeFn, type Doc } from '@dxos/automerge/automerge';
-import { type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
 import { Reference } from '@dxos/document-model';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
 import { AutomergeArray } from './automerge-array';
-import {
-  AutomergeObjectCore,
-  objectIsUpdated,
-  type DocAccessor,
-  assignDeep,
-  type BindOptions,
-} from './automerge-object-core';
-import { type ObjectStructure, type DocStructure, type ObjectSystem } from './types';
+import { AutomergeObjectCore, type DocAccessor, assignDeep, type BindOptions } from './automerge-object-core';
+import { type ObjectStructure, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
 import {
   isAutomergeObject,
@@ -182,22 +175,11 @@ export class AutomergeObject implements TypedObjectProperties {
   }
 
   [subscribe](callback: (value: AutomergeObject) => void): () => void {
-    const changeListener = (event: DocHandleChangePayload<DocStructure>) => {
-      if (objectIsUpdated(this[base]._core.id, event)) {
-        callback(this);
-      }
-    };
-
     const updatesListener = () => {
       callback(this);
     };
 
-    this[base]._core.docHandle?.on('change', changeListener);
-    this[base]._core.updates.on(updatesListener);
-    return () => {
-      this[base]._core.docHandle?.off('change', changeListener);
-      this[base]._core.updates.off(updatesListener);
-    };
+    return this[base]._core.updates.on(updatesListener);
   }
 
   private _initNewObject(initialProps?: unknown, opts?: TypedObjectOptions) {
