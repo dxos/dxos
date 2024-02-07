@@ -238,7 +238,6 @@ export class ClientServicesHost {
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.client-services.host.open', trace.begin({ id: traceId }));
 
-    log.info('opening...', { config: this.config });
     invariant(this._config, 'config not set');
     invariant(this._storage, 'storage not set');
     invariant(this._signalManager, 'signal manager not set');
