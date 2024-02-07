@@ -305,6 +305,9 @@ export class MeshNetworkAdapter extends NetworkAdapter {
             peerInfo = info;
             // TODO(mykola): Fix race condition?
             this._extensions.set(info.id, extension);
+          } else {
+            // TODO(mykola): retry hack.
+            this.emit('peer-disconnected', { peerId: info.id as PeerId });
           }
 
           this.emit('peer-candidate', {
