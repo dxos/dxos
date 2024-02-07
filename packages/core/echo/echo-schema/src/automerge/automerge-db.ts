@@ -5,6 +5,7 @@
 import { Event, asyncTimeout, synchronized } from '@dxos/async';
 import { type DocumentId, type DocHandle, type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
+import { warnAfterTimeout } from '@dxos/debug';
 import { type Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -18,7 +19,6 @@ import { type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
 import { type EchoObject, base, isActualTypedObject, isAutomergeObject, isActualTextObject } from '../object';
 import { type Schema } from '../proto';
-import { warnAfterTimeout } from '@dxos/debug';
 
 export type SpaceState = {
   // Url of the root automerge document.

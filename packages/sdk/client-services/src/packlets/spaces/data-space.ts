@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, asyncTimeout, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
+import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context, ContextDisposedError } from '@dxos/context';
 import { timed, warnAfterTimeout } from '@dxos/debug';
