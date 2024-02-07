@@ -6,6 +6,7 @@ import { type PlaywrightTestConfig } from '@playwright/test';
 
 import { defaultPlaywrightConfig } from '@dxos/test/playwright';
 
-const config: PlaywrightTestConfig = { ...defaultPlaywrightConfig, workers: 3 };
+// TODO(wittjosiah): Sometimes seems to take a long time to hit this in CI. Can we disable PWA in CI?
+const config: PlaywrightTestConfig = { ...defaultPlaywrightConfig, timeout: 30_000, workers: 3 };
 
 export default config;
