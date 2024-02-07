@@ -13,10 +13,15 @@ export const Markdown = {
       const pos = doc.indexOf(text);
       composer.editorView.dispatch({ selection: { anchor: pos, head: pos + text.length } });
     }, text),
+
   getDocumentTitleInput: (page: Page) => page.getByTestId('composer.documentTitle'),
+
   getMarkdownTextbox: (page: Page) => page.getByTestId('composer.markdownRoot').getByRole('textbox'),
+
   waitForMarkdownTextbox: (page: Page) => Markdown.getMarkdownTextbox(page).waitFor(),
+
   getCollaboratorCursors: (page: Page) => page.locator('.cm-collab-selectionInfo'),
+
   getMarkdownActiveLineText: (page: Page) =>
     Markdown.getMarkdownTextbox(page)
       .locator('.cm-activeLine > span:not([class=cm-collab-selectionCaret])')
