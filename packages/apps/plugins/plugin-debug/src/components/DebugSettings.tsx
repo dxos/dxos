@@ -7,7 +7,7 @@ import { create } from 'ipfs-http-client';
 import React, { useState } from 'react';
 
 import { SettingsValue } from '@braneframe/plugin-settings';
-import { type ConfigProto, defs, SaveConfig } from '@dxos/config';
+import { type ConfigProto, defs, SaveConfig, Storage } from '@dxos/config';
 import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';

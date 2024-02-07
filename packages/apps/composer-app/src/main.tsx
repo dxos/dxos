@@ -61,7 +61,8 @@ import { steps } from './help';
 import translations from './translations';
 
 const main = async () => {
-  if (await defaultStorageIsEmpty()) {
+  if (await defaultStorageIsEmpty((await setupConfig()).values.runtime?.client?.storage)) {
+    log.info('Default storage is empty, setting default storage.');
     // NOTE: Set default for first time users to IDB (works better with automerge CRDTs).
     //       Needs to be done before worker is created.
     await SaveConfig({
@@ -240,16 +241,16 @@ const main = async () => {
   );
 };
 
-const defaultStorageIsEmpty = async (): Promise<boolean> => {
+const defaultStorageIsEmpty = async (config?: defs.Runtime.Client.Storage): Promise<boolean> => {
   try {
-    const storage = createStorageObjects({}).storage;
+    const storage = createStorageObjects(config ?? {}).storage;
     const metadataDir = storage.createDirectory('metadata');
     const echoMetadata = metadataDir.getOrCreateFile('EchoMetadata');
     const { size } = await echoMetadata.stat();
-    return size > 0;
+    return !(size > 0);
   } catch (err) {
     log.warn('Error checking if default storage is empty', { err });
-    return false;
+    return true;
   }
 };
 
