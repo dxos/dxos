@@ -993,9 +993,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -1033,6 +1030,9 @@ importers:
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../../sdk/client-services
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../../sdk/config
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../../devtools/devtools
