@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { BaseChatModelParams } from 'langchain/chat_models/base';
-import { ChatOpenAI } from 'langchain/chat_models/openai';
-import { OpenAIEmbeddings, type OpenAIEmbeddingsParams } from 'langchain/embeddings/openai';
+import { ChatOpenAI, OpenAIEmbeddings, type OpenAIEmbeddingsParams } from '@langchain/openai';
+import { type BaseChatModelParams } from 'langchain/chat_models/base';
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { ChainResources, type ChainResourcesFactory, type ChainResourcesOptions } from '../resources';
@@ -44,7 +43,7 @@ export type OpenAIChainResourcesOptions = ChainResourcesOptions<
 export const createOpenAIChainResources: ChainResourcesFactory<
   OpenAIEmbeddingsParams,
   OpenAIBaseInput & BaseChatModelParams
-> = (options: OpenAIChainResourcesOptions) => {
+> = (options: OpenAIChainResourcesOptions): ChainResources => {
   const embeddings = new OpenAIEmbeddings({
     openAIApiKey: options.apiKey,
     ...options.embeddings,

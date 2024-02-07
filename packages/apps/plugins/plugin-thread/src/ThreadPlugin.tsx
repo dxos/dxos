@@ -11,25 +11,25 @@ import { isDocument } from '@braneframe/plugin-markdown';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Thread as ThreadType } from '@braneframe/types';
 import {
-  LayoutAction,
   type GraphProvides,
   type IntentPluginProvides,
+  LayoutAction,
+  type LocationProvides,
+  NavigationAction,
   type Plugin,
   type PluginDefinition,
-  parseIntentPlugin,
   parseGraphPlugin,
-  resolvePlugin,
-  NavigationAction,
-  type LocationProvides,
+  parseIntentPlugin,
   parseNavigationPlugin,
+  resolvePlugin,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import {
-  type TypedObject,
   SpaceProxy,
-  isTypedObject,
+  type TypedObject,
   getSpaceForObject,
   getTextInRange,
+  isTypedObject,
 } from '@dxos/react-client/echo';
 import { comments, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
@@ -87,7 +87,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       },
       translations: [...translations, ...threadTranslations],
       graph: {
-        builder: ({ parent, plugins }) => {
+        builder: ({ parent }) => {
           if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
             return;
           }
@@ -139,13 +139,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const location = navigationPlugin?.provides.location;
               const activeNode = location?.active ? graph?.findNode(location.active) : undefined;
               const active = activeNode?.data;
-              const space = isDocument(active) && getSpaceForObject(active);
+              const space = isTypedObject(active) && getSpaceForObject(active);
               if (!space) {
                 return null;
               }
 
               // TODO(burdon): Hack to detect comments.
-              if ((active as any)?.comments?.length) {
+              if (isDocument(active) && (active as any)?.comments?.length) {
                 // Sort threads by y-position.
                 // TODO(burdon): Should just use document position?
                 const threads = active.comments
@@ -164,8 +164,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     threads={threads}
                     detached={detached}
                     currentId={state.current}
-                    autoFocusCurrentTextbox={state.focus}
                     currentRelatedId={location?.active}
+                    autoFocusCurrentTextbox={state.focus}
                     onThreadAttend={(thread: ThreadType) => {
                       if (state.current !== thread.id) {
                         state.current = thread.id;
