@@ -5,7 +5,7 @@
 import { Event, asyncTimeout, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context, ContextDisposedError } from '@dxos/context';
-import { timed } from '@dxos/debug';
+import { timed, warnAfterTimeout } from '@dxos/debug';
 import {
   type MetadataStore,
   type Space,
@@ -383,7 +383,9 @@ export class DataSpace {
 
     queueMicrotask(async () => {
       try {
-        await asyncTimeout(handle.whenReady(), 5_000);
+        await warnAfterTimeout(5_000, 'Automerge root doc load timeout', async () => {
+          await handle.whenReady();
+        });
         const doc = handle.docSync() ?? failedInvariant();
         if (!doc.experimental_spaceKey) {
           handle.change((doc: any) => {
