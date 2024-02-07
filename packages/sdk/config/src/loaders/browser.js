@@ -6,8 +6,6 @@
 
 /* global __DXOS_CONFIG__ __CONFIG_ENVS__ __CONFIG_DEFAULTS__ __CONFIG_LOCAL__ */
 
-import localforage from 'localforage';
-
 import { log } from '@dxos/log';
 
 const CONFIG_ENDPOINT = '/.well-known/dx/config';
@@ -45,6 +43,7 @@ export const Defaults = () => {
  */
 export const Storage = async () => {
   try {
+    const localforage = await import('localforage');
     const config = await localforage.getItem('dxos.org/settings/config');
     if (config) {
       return config;
