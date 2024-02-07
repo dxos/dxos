@@ -2,17 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  type LayoutProvides,
-  type SettingsProvides,
-  type IntentResolverProvides,
-  type GraphBuilderProvides,
-  type SurfaceProvides,
-  type TranslationsProvides,
+import type {
+  LayoutProvides,
+  SettingsProvides,
+  IntentResolverProvides,
+  GraphBuilderProvides,
+  SurfaceProvides,
+  TranslationsProvides,
+  LocationProvides,
 } from '@dxos/app-framework';
 
 export type LayoutSettingsProps = {
-  enableComplementarySidebar: boolean;
   showFooter: boolean;
 };
 
@@ -21,4 +21,5 @@ export type LayoutPluginProvides = SurfaceProvides &
   GraphBuilderProvides &
   TranslationsProvides &
   SettingsProvides<LayoutSettingsProps> &
-  LayoutProvides;
+  LayoutProvides &
+  LocationProvides;

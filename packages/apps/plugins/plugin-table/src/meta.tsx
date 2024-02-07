@@ -12,5 +12,7 @@ export const TABLE_PLUGIN = 'dxos.org/plugin/table';
 export default pluginMeta({
   id: TABLE_PLUGIN,
   name: 'Tables',
+  description: 'Create and manage tables.',
+  tags: ['experimental'],
   iconComponent: (props: IconProps) => <Table {...props} />,
 });

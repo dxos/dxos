@@ -19,6 +19,7 @@ const source = [
   'If asked to suggest a move explain why it is a good move.',
   '',
   '---',
+  '',
   '{input}',
 ].join('\n');
 

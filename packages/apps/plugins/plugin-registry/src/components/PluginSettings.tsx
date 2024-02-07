@@ -36,6 +36,7 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
     <>
       <SettingsValue label={t('settings show experimental label')}>
         <Input.Switch
+          data-testid='pluginSettings.experimental'
           checked={settings.experimental}
           onCheckedChange={(checked) => (settings.experimental = !!checked)}
         />

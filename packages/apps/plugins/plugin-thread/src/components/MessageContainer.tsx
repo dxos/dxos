@@ -11,7 +11,7 @@ import { type SpaceMember } from '@dxos/client/echo';
 import { PublicKey } from '@dxos/react-client';
 import { type Expando, getTextContent, type TextObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button } from '@dxos/react-ui';
+import { Button, useTranslation } from '@dxos/react-ui';
 import { TextEditor, useTextModel } from '@dxos/react-ui-editor';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
@@ -19,7 +19,7 @@ import { Message, type MessageBlockProps, type MessageProps } from '@dxos/react-
 
 import { command } from './command-extension';
 import { useMessageMetadata } from '../hooks';
-import { THREAD_ITEM } from '../meta';
+import { THREAD_ITEM, THREAD_PLUGIN } from '../meta';
 
 type Block = MessageType.Block;
 
@@ -27,6 +27,7 @@ const messageControlClassNames = ['p-1 min-bs-0 mie-1 transition-opacity items-s
 
 const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
   ({ draggableStyle, draggableProps, item, onRemove, active }, forwardedRef) => {
+    const { t } = useTranslation(THREAD_PLUGIN);
     let title = item.name ?? item.title ?? item.__typename ?? 'Object';
     if (typeof title !== 'string') {
       title = getTextContent(title);
@@ -61,6 +62,7 @@ const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
             onClick={onRemove}
           >
             <X />
+            <span className='sr-only'>{t('delete message block label')}</span>
           </Button>
         )}
       </div>
@@ -94,7 +96,12 @@ const TextboxBlock = ({
         <span className={textboxWidth} />
       )}
       {onBlockDelete && (
-        <Button variant='ghost' classNames={messageControlClassNames} onClick={onBlockDelete}>
+        <Button
+          variant='ghost'
+          data-testid='thread.message.delete'
+          classNames={messageControlClassNames}
+          onClick={onBlockDelete}
+        >
           <X />
         </Button>
       )}

@@ -74,7 +74,7 @@ export class QueryPlugin extends Plugin {
 }
 
 const createSnapshot = (object: EchoObject): EchoObjectProto => {
-  const item = getEchoObjectItem(object[base])!;
+  const item = getEchoObjectItem(object[base] as any)!;
   let model: WithTypeUrl<Any> | undefined;
   if (!item?.modelMeta?.snapshotCodec) {
     log.warn('No snapshot codec for model.');

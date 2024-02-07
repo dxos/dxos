@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-undo",
-  "version": "0.4.0",
+  "version": "0.4.2",
   "description": "Undo actions",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

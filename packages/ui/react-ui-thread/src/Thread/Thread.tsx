@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowBendLeftDown, DotsThreeOutline } from '@phosphor-icons/react';
+import { ArrowBendLeftDown, Spinner } from '@phosphor-icons/react';
 import React, { type ComponentProps, type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -19,10 +19,12 @@ export const Thread = forwardRef<HTMLDivElement, ThreadProps>(
     return (
       <div
         role='group'
+        data-testid='thread'
         {...(current && { 'aria-current': typeof current === 'string' ? current : 'location' })}
         {...props}
         className={mx(
-          'is-full place-self-start grid grid-cols-[3rem_1fr] bg-[var(--surface-bg)] border-[color:var(--surface-separator)] border-bs border-be plb-1.5 attention attention-within attention-current [--controls-opacity:0]',
+          'is-full place-self-start grid grid-cols-[3rem_1fr] bg-[var(--surface-bg)]',
+          'border-[color:var(--surface-separator)] border-bs border-be plb-1.5 attention attention-within attention-current [--controls-opacity:0]',
           hoverableFocusedWithinControls,
           classNames,
         )}
@@ -34,22 +36,28 @@ export const Thread = forwardRef<HTMLDivElement, ThreadProps>(
   },
 );
 
-export type ThreadHeadingProps = ThemedClassName<ComponentPropsWithRef<'div'>>;
+export type ThreadHeadingProps = ThemedClassName<ComponentPropsWithRef<'div'>> & { detached?: boolean };
 
-export const ThreadHeading = forwardRef<HTMLDivElement, ThreadHeadingProps>(
-  ({ classNames, children, ...props }, forwardedRef) => {
+export const ThreadHeading = forwardRef<HTMLParagraphElement, ThreadHeadingProps>(
+  ({ classNames, children, detached, ...props }, forwardedRef) => {
     return (
-      <div
-        role='heading'
-        {...props}
-        className={mx('col-span-2 grid grid-cols-subgrid fg-description font-medium', classNames)}
-        ref={forwardedRef}
-      >
-        <div role='none' className='grid place-items-end pie-3.5 fg-separator'>
+      <>
+        <div role='none' className='grid place-items-end pie-3.5 fg-description'>
           <ArrowBendLeftDown />
         </div>
-        <p>{children}</p>
-      </div>
+        <p
+          role='heading'
+          data-testid='thread.heading'
+          {...props}
+          className={mx(
+            'fg-description font-medium truncate before:content-[open-quote] after:content-[close-quote]',
+            detached && 'line-through decoration-1',
+          )}
+          ref={forwardedRef}
+        >
+          {children}
+        </p>
+      </>
     );
   },
 );
@@ -67,10 +75,10 @@ export const ThreadFooter = forwardRef<HTMLDivElement, ThreadFooterProps>(
         className={mx('col-start-2 grid grid-cols-[min-content_1fr_max-content] text-xs fg-description', classNames)}
         ref={forwardedRef}
       >
-        <DotsThreeOutline
-          weight='fill'
+        <Spinner
+          weight='bold'
           data-visible={activity ? 'show' : 'hide'}
-          className='is-6 bs-4 invisible data-[visible=show]:visible'
+          className='is-6 bs-4 invisible data-[visible=show]:visible animate-spin-slow'
         />
         <span className='truncate min-is-0' aria-live='polite'>
           {activity ? children : null}

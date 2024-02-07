@@ -5,21 +5,23 @@
 import { CaretDoubleLeft, List as MenuIcon } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface, type Toast as ToastSchema } from '@dxos/app-framework';
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover, Status } from '@dxos/react-ui';
 import { baseSurface, fixedInsetFlexLayout, getSize } from '@dxos/react-ui-theme';
 
 import { Fallback } from './Fallback';
+import { Toast } from './Toast';
 import { useLayout } from '../LayoutContext';
 import { LAYOUT_PLUGIN } from '../meta';
 
 export type MainLayoutProps = {
-  fullscreen?: boolean;
-  showHintsFooter?: boolean;
-  showComplementarySidebar?: boolean;
+  fullscreen: boolean;
+  showHintsFooter: boolean;
+  toasts: ToastSchema[];
+  onDismissToast: (id: string) => void;
 };
 
-export const MainLayout = ({ fullscreen, showHintsFooter, showComplementarySidebar }: MainLayoutProps) => {
+export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast }: MainLayoutProps) => {
   const context = useLayout();
   const { complementarySidebarOpen, dialogOpen, dialogContent, popoverOpen, popoverContent, popoverAnchorId } = context;
   const { t } = useTranslation(LAYOUT_PLUGIN);
@@ -63,7 +65,7 @@ export const MainLayout = ({ fullscreen, showHintsFooter, showComplementarySideb
         </Main.NavigationSidebar>
 
         {/* Right Complementary sidebar. */}
-        {complementarySidebarOpen !== null && showComplementarySidebar && (
+        {complementarySidebarOpen !== null && (
           <Main.ComplementarySidebar classNames='overflow-hidden'>
             <Surface role='complementary' name='context' />
           </Main.ComplementarySidebar>
@@ -87,7 +89,7 @@ export const MainLayout = ({ fullscreen, showHintsFooter, showComplementarySideb
                 <div role='none' className='grow' />
                 <Surface role='navbar-end' direction='inline-reverse' />
 
-                {complementarySidebarOpen !== null && showComplementarySidebar && (
+                {complementarySidebarOpen !== null && (
                   <Button
                     onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
                     variant='ghost'
@@ -150,6 +152,7 @@ export const MainLayout = ({ fullscreen, showHintsFooter, showComplementarySideb
             <Popover.Arrow />
           </Popover.Content>
         </Popover.Portal>
+
         {/* Global dialog. */}
         <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
           <DensityProvider density='fine'>
@@ -158,6 +161,21 @@ export const MainLayout = ({ fullscreen, showHintsFooter, showComplementarySideb
             </Dialog.Overlay>
           </DensityProvider>
         </Dialog.Root>
+
+        {/* Global toasts. */}
+        {toasts?.map((toast) => (
+          <Toast
+            {...toast}
+            key={toast.id}
+            onOpenChange={(open) => {
+              if (!open) {
+                onDismissToast(toast.id);
+              }
+
+              return open;
+            }}
+          />
+        ))}
       </Main.Root>
     </Popover.Root>
   );

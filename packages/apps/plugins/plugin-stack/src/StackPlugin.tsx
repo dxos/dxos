@@ -13,7 +13,7 @@ import {
   type Plugin,
   type PluginDefinition,
   parseIntentPlugin,
-  LayoutAction,
+  NavigationAction,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy } from '@dxos/react-client/echo';
@@ -31,7 +31,7 @@ import {
 } from './types';
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
-  const settings = new LocalStorageStore<StackSettingsProps>(STACK_PLUGIN);
+  const settings = new LocalStorageStore<StackSettingsProps>(STACK_PLUGIN, { separation: true });
   const stackState: StackState = deepSignal({ creators: [] });
 
   return {
@@ -95,7 +95,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
                   data: { target: parent.data },
                 },
                 {
-                  action: LayoutAction.ACTIVATE,
+                  action: NavigationAction.ACTIVATE,
                 },
               ]),
             properties: {

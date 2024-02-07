@@ -61,7 +61,7 @@ const Story = () => {
         <Message key={message.id} {...message} />
       ))}
       <MessageTextbox disabled={pending} authorId={identityKey1.toHex()} onSend={handleSend} model={nextMessageModel} />
-      <ThreadFooter activity>Someone is typing</ThreadFooter>
+      <ThreadFooter activity>Processing...</ThreadFooter>
     </Thread>
   );
 };

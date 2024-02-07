@@ -11,9 +11,10 @@ import { type Comment, useTextModel } from '@dxos/react-ui-editor';
 
 import EditorMain, { type EditorMainProps } from './EditorMain';
 
-const DocumentMain: FC<
-  { document: DocumentType } & Pick<EditorMainProps, 'toolbar' | 'readonly' | 'editorMode' | 'extensions'>
-> = ({ document, ...props }) => {
+const DocumentMain: FC<{ document: DocumentType } & Pick<EditorMainProps, 'toolbar' | 'readonly' | 'extensions'>> = ({
+  document,
+  ...props
+}) => {
   const identity = useIdentity();
   const space = getSpaceForObject(document);
   const model = useTextModel({ identity, space, text: document.content });
@@ -31,5 +32,4 @@ const DocumentMain: FC<
 
 export default DocumentMain;
 
-// TODO(burdon): Document why required?
 export type DocumentMain = typeof DocumentMain;

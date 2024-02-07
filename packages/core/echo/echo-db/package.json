@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "0.4.0",
+  "version": "0.4.2",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -51,7 +51,7 @@
   },
   "devDependencies": {
     "@automerge/automerge": "^2.1.10",
-    "@automerge/automerge-repo": "^1.1.0",
+    "@automerge/automerge-repo": "^1.1.1",
     "@dxos/feed-store": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/typings": "workspace:*",

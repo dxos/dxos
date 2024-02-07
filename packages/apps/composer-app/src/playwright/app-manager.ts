@@ -3,12 +3,15 @@
 //
 
 import type { Browser, Page } from '@playwright/test';
+import os from 'node:os';
 
-import { StackManager } from '@dxos/react-ui-stack/testing';
+import { OBSERVABILITY_PLUGIN } from '@braneframe/plugin-observability/meta';
+import { PWA_PLUGIN } from '@braneframe/plugin-pwa/meta';
 import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test/playwright';
 
 // TODO(wittjosiah): Normalize data-testids between snake and camel case.
+// TODO(wittjosiah): Consider structuring tests in such that they could be run with different sets of plugins enabled.
 
 export class AppManager {
   page!: Page;
@@ -31,13 +34,43 @@ export class AppManager {
       return;
     }
 
-    const { page, initialUrl } = await setupPage(this._browser, {
-      waitFor: (page) => page.getByTestId('treeView.haloButton').isVisible(),
-    });
+    const { page, initialUrl } = await setupPage(this._browser);
     this.page = page;
     this.initialUrl = initialUrl;
+
+    await this.isAuthenticated();
+    // Wait for and dismiss first-run toasts. This is necessary to avoid flakiness in tests.
+    // If the first-run toasts are not dismissed, they will block the UI and cause tests to hang.
+    // TODO(wittjosiah): Sometimes seems to take a long time to hit this in CI. Can we disable PWA in CI?
+    await this.page.getByTestId(`${PWA_PLUGIN}/offline-ready`).waitFor({ timeout: 15_000 });
+    await this.page.getByTestId(`${PWA_PLUGIN}/offline-ready`).getByTestId('toast.close').click();
+    await this.page.getByTestId(`${OBSERVABILITY_PLUGIN}/notice`).getByTestId('toast.close').click();
+
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
+  }
+
+  //
+  // Page
+  //
+
+  // Based on https://github.com/microsoft/playwright/issues/8114#issuecomment-1584033229.
+  async copy(): Promise<void> {
+    const isMac = os.platform() === 'darwin';
+    const modifier = isMac ? 'Meta' : 'Control';
+    await this.page.keyboard.press(`${modifier}+KeyC`);
+  }
+
+  async cut(): Promise<void> {
+    const isMac = os.platform() === 'darwin';
+    const modifier = isMac ? 'Meta' : 'Control';
+    await this.page.keyboard.press(`${modifier}+KeyX`);
+  }
+
+  async paste(): Promise<void> {
+    const isMac = os.platform() === 'darwin';
+    const modifier = isMac ? 'Meta' : 'Control';
+    await this.page.keyboard.press(`${modifier}+KeyV`);
   }
 
   async openIdentityManager() {
@@ -48,9 +81,29 @@ export class AppManager {
     await this.page.keyboard.press('Meta+.');
   }
 
-  isAuthenticated() {
-    return this.page.getByTestId('layoutPlugin.firstRunMessage').isVisible();
+  isAuthenticated({ timeout = 5_000 } = {}) {
+    return this.page
+      .getByTestId('treeView.haloButton')
+      .waitFor({ timeout })
+      .then(() => true)
+      .catch(() => false);
   }
+
+  //
+  // Toasts
+  //
+
+  async toastAction(nth = 0) {
+    await this.page.getByTestId('toast.action').nth(nth).click();
+  }
+
+  async closeToast(nth = 0) {
+    await this.page.getByTestId('toast.close').nth(nth).click();
+  }
+
+  //
+  // Spaces
+  //
 
   async createSpace() {
     await this.page.getByTestId('spacePlugin.createSpace').click();
@@ -62,28 +115,47 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
-  // TODO(wittjosiah): This is not always a space.
-  expandSpace() {
-    return this.page.getByTestId('navtree.treeItem.openTrigger').last().click();
+  toggleSpaceCollapsed(nth = 0) {
+    return this.page.getByTestId('spacePlugin.space').nth(nth).getByRole('button').first().click();
   }
 
-  async createObject(plugin: string) {
-    await this.page.getByTestId('spacePlugin.createObject').last().click();
-    return this.page.getByTestId(`${plugin}.createObject`).last().click();
+  toggleFolderCollapsed(nth = 0) {
+    return this.page.getByTestId('spacePlugin.object').nth(nth).getByRole('button').first().click();
   }
 
-  async createFolder() {
-    await this.page.getByTestId('spacePlugin.createObject').last().click();
-    return this.page.getByTestId('spacePlugin.createFolder').last().click();
+  // TODO(wittjosiah): Last for backwards compatibility. Default to first object.
+  async createObject(plugin: string, nth?: number) {
+    const object = this.page.getByTestId('spacePlugin.createObject');
+    await (nth ? object.nth(nth) : object.last()).click();
+    return this.page.getByTestId(`${plugin}.createObject`).click();
   }
 
-  async deleteObject(itemNumber: number) {
-    // TODO: Would prefer to use testId of `spacePlugin.object`, but for folders, it refers to the entire block
-    // including all of the containing item, so the click doesn't land on the folder, but in the middle of the
-    // folder's containing items.
-    await this.page.getByTestId('navtree.treeItem.actionsLevel2').nth(itemNumber).click({ button: 'right' });
+  // TODO(wittjosiah): Last for backwards compatibility. Default to first object.
+  async createFolder(nth?: number) {
+    const object = this.page.getByTestId('spacePlugin.createObject');
+    await (nth ? object.nth(nth) : object.last()).click();
+    return this.page.getByTestId('spacePlugin.createFolder').click();
+  }
+
+  async renameObject(newName: string, nth = 0) {
+    await this.page.getByTestId('spacePlugin.object').nth(nth).click({ button: 'right' });
+    await this.page.getByTestId('spacePlugin.renameObject').last().click();
+    await this.page.getByTestId('spacePlugin.renameObject.input').fill(newName);
+    await this.page.getByTestId('spacePlugin.renameObject.input').press('Enter');
+  }
+
+  async deleteObject(nth = 0) {
+    await this.page.getByTestId('spacePlugin.object').nth(nth).click({ button: 'right' });
     await this.page.getByTestId('spacePlugin.deleteObject').last().click();
-    return this.page.getByTestId('spacePlugin.confirmDeleteObject').last().click();
+    await this.page.getByTestId('spacePlugin.confirmDeleteObject').last().click();
+  }
+
+  getObject(nth = 0) {
+    return this.page.getByTestId('spacePlugin.object').nth(nth);
+  }
+
+  getObjectByName(name: string) {
+    return this.page.getByTestId('spacePlugin.object').filter({ has: this.page.locator(`span:has-text("${name}")`) });
   }
 
   async getSpaceItemsCount() {
@@ -98,16 +170,23 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.object').count();
   }
 
-  getFoldersCount() {
-    return this.page.getByTestId('spacePlugin.folder').count();
-  }
-
   getObjectLinks() {
     return this.page.getByTestId('spacePlugin.object');
   }
 
-  async enablePlugin(plugin: string) {
+  //
+  // Plugins
+  //
+
+  async openSettings() {
     await this.page.getByTestId('treeView.openSettings').click();
+  }
+
+  async toggleExperimenalPlugins() {
+    await this.page.getByTestId('pluginSettings.experimental').click();
+  }
+
+  async enablePlugin(plugin: string) {
     await this.page.getByTestId(`pluginList.${plugin}`).getByRole('switch').click();
     await this.page.goto(this.initialUrl);
     await this.page.getByTestId('treeView.haloButton').waitFor();
@@ -122,43 +201,5 @@ export class AppManager {
     );
 
     await this.page.getByTestId('resetDialog').waitFor();
-  }
-
-  // TODO(wittjosiah): Consider factoring out into plugin packages.
-
-  // Markdown Plugin
-
-  getMarkdownTextbox() {
-    return this.page.getByTestId('composer.markdownRoot').getByRole('textbox');
-  }
-
-  getMarkdownActiveLineText() {
-    return this.getMarkdownTextbox()
-      .locator('.cm-activeLine > span:not([class=cm-collab-selectionCaret])')
-      .first()
-      .textContent();
-  }
-
-  waitForMarkdownTextbox() {
-    return this.getMarkdownTextbox().waitFor();
-  }
-
-  getDocumentTitleInput() {
-    return this.page.getByTestId('composer.documentTitle');
-  }
-
-  getCollaboratorCursors() {
-    return this.page.locator('.cm-collab-selectionInfo');
-  }
-
-  // Stack Plugin
-
-  getStack() {
-    return new StackManager(this.page.getByTestId('main.stack'));
-  }
-
-  async createSection(plugin: string) {
-    await this.page.getByTestId('stack.createSection').click();
-    return this.page.getByTestId(`${plugin}.createSection`).click();
   }
 }

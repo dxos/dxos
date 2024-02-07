@@ -13,7 +13,7 @@ import {
   isObject,
   parseIntentPlugin,
   resolvePlugin,
-  LayoutAction,
+  NavigationAction,
   type IntentPluginProvides,
   type Plugin,
   type PluginDefinition,
@@ -47,14 +47,13 @@ export const isDocument = (data: unknown): data is DocumentType =>
   isTypedObject(data) && DocumentType.schema.typename === data.__typename;
 
 export type MarkdownPluginState = {
-  activeComment?: string;
   extensions: NonNullable<ExtensionsProvider>[];
 };
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, {
     state: {},
-    toolbar: false,
+    toolbar: true,
     experimental: false,
   });
 
@@ -108,7 +107,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       },
       translations,
       graph: {
-        builder: ({ parent, plugins }) => {
+        builder: ({ parent }) => {
           if (parent.data instanceof Folder || parent.data instanceof SpaceProxy) {
             parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
               id: `${MARKDOWN_PLUGIN}/create`,
@@ -125,7 +124,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                     data: { target: parent.data },
                   },
                   {
-                    action: LayoutAction.ACTIVATE,
+                    action: NavigationAction.ACTIVATE,
                   },
                 ]),
               properties: {
@@ -187,7 +186,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                       toolbar={settings.values.toolbar}
                       readonly={readonly}
                       document={data.active}
-                      editorMode={settings.values.editorMode}
                       extensions={getCustomExtensions(data.active)}
                     />
                   </MainLayout>
@@ -198,13 +196,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 'properties' in data &&
                 isMarkdownProperties(data.properties)
               ) {
-                const main = (
-                  <EditorMain
-                    model={data.model}
-                    editorMode={settings.values.editorMode}
-                    extensions={getCustomExtensions()}
-                  />
-                );
+                const main = <EditorMain model={data.model} extensions={getCustomExtensions()} />;
 
                 if ('view' in data && data.view === 'embedded') {
                   return <EmbeddedLayout>{main}</EmbeddedLayout>;
@@ -217,13 +209,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
             case 'section': {
               if (isDocument(data.object)) {
-                return (
-                  <DocumentSection
-                    document={data.object}
-                    editorMode={settings.values.editorMode}
-                    extensions={getCustomExtensions(data.object)}
-                  />
-                );
+                return <DocumentSection document={data.object} extensions={getCustomExtensions(data.object)} />;
               }
               break;
             }
@@ -259,11 +245,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       intent: {
         resolver: ({ action, data }) => {
           switch (action) {
-            case LayoutAction.FOCUS: {
-              state.activeComment = data?.object;
-              return { data: true };
-            }
-
             case MarkdownAction.CREATE: {
               return { data: new DocumentType() };
             }

@@ -19,7 +19,7 @@ Type: string
 
 
 ### [`DXOS_VERSION`]()
-Type: "0.4.0"
+Type: "0.4.2"
 
 
 

@@ -36,8 +36,11 @@ const styles = EditorView.baseTheme({
   },
 });
 
-const commentMark = Decoration.mark({ class: 'cm-comment' });
-const commentCurrentMark = Decoration.mark({ class: 'cm-comment-current' });
+const commentMark = Decoration.mark({ class: 'cm-comment', attributes: { 'data-testid': 'cm-comment' } });
+const commentCurrentMark = Decoration.mark({
+  class: 'cm-comment-current',
+  attributes: { 'data-testid': 'cm-comment' },
+});
 
 type CommentState = {
   comment: Comment;
@@ -160,11 +163,11 @@ export type CommentsOptions = {
   /**
    * Selection cut/deleted.
    */
-  onDelete?: (thread: string) => void;
+  onDelete?: (params: { id: string }) => void;
   /**
    * Called when a comment is moved.
    */
-  onUpdate?: (thread: string, cursor: string) => void;
+  onUpdate?: (params: { id: string; cursor: string }) => void;
   /**
    * Called to notify which thread is currently closest to the cursor.
    */
@@ -272,7 +275,7 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
         const exists = comments.some((c) => c.comment.id === comment.id && c.range.from < c.range.to);
         if (!exists) {
           const cursor = Cursor.getCursorFromRange(update.state, comment);
-          onUpdate(comment.id, cursor);
+          onUpdate({ id: comment.id, cursor });
         }
       }
     }),
@@ -408,7 +411,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
           if (from2 === to2) {
             const newRange = Cursor.getRangeFromCursor(view.state, comment.cursor!);
             if (!newRange || newRange.to - newRange.from === 0) {
-              options.onDelete?.(comment.id);
+              options.onDelete?.({ id: comment.id });
             }
           }
 

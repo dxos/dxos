@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.4.2](https://github.com/dxos/dxos/compare/v0.4.1...v0.4.2) (2024-02-05)
+
+
+### Features
+
+* Make thread processing animation more prominent. ([#5519](https://github.com/dxos/dxos/issues/5519)) ([022012d](https://github.com/dxos/dxos/commit/022012d0c6b0dd9d43500293cc65531b3a4a56f1))
+* Wire up editor toolbar ([#5513](https://github.com/dxos/dxos/issues/5513)) ([6ccea39](https://github.com/dxos/dxos/commit/6ccea3915668ab3ec4ddfb8eb95b5e2e3c6cdbbc))
+
+## [0.4.1](https://github.com/dxos/dxos/compare/v0.4.0...v0.4.1) (2024-02-02)
+
+
+### Features
+
+* initial vitest random-access-storage setup ([#5446](https://github.com/dxos/dxos/issues/5446)) ([764a9c1](https://github.com/dxos/dxos/commit/764a9c1fb125a727db84f2267aee6268c3f7c234))
+* **plugin-observability:** add telemetry notice ([#5512](https://github.com/dxos/dxos/issues/5512)) ([4f4a61d](https://github.com/dxos/dxos/commit/4f4a61d69293624b29407f33439dc8a2f0f09726))
+* **plugin-thread:** resolve threads & cut+paste comments ([#5500](https://github.com/dxos/dxos/issues/5500)) ([29ad906](https://github.com/dxos/dxos/commit/29ad906a389897d0250662a4f411e1e3035767fc))
+
+
+### Bug Fixes
+
+* **docs:** gracefully fallback if config is not provided ([#5516](https://github.com/dxos/dxos/issues/5516)) ([31058a6](https://github.com/dxos/dxos/commit/31058a61fd714f27d59c684fc4f847d26e770b42))
+* **plugin-thread:** include title for comment threads ([#5491](https://github.com/dxos/dxos/issues/5491)) ([2495eb8](https://github.com/dxos/dxos/commit/2495eb8e9821d904fedd5cb72a29e7654c103efd))
+* **plugin-thread:** prevent empty messages from being sent ([#5501](https://github.com/dxos/dxos/issues/5501)) ([618f18c](https://github.com/dxos/dxos/commit/618f18c75679b43fd69a86247eeb6495693554bd))
+* **react-ui-editor:** Upgrade @codemirror/language ([#5509](https://github.com/dxos/dxos/issues/5509)) ([16a59d5](https://github.com/dxos/dxos/commit/16a59d584db6743c2ec52d883666ccc451da182f))
+
 ## [0.4.0](https://github.com/dxos/dxos/compare/v0.3.10...v0.4.0) (2024-02-02)
 
 

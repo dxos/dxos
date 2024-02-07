@@ -12,5 +12,7 @@ export const DEBUG_PLUGIN = 'dxos.org/plugin/debug';
 export default pluginMeta({
   id: DEBUG_PLUGIN,
   name: 'Debug',
+  description: 'DXOS debugging tools.',
+  tags: ['experimental'],
   iconComponent: (props: IconProps) => <Bug {...props} />,
 });

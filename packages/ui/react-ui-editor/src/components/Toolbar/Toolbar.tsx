@@ -4,7 +4,6 @@
 
 import {
   type Icon,
-  CaretRight,
   ChatText,
   Code,
   CodeBlock,
@@ -23,14 +22,24 @@ import {
   TextHFive,
   TextHSix,
   TextItalic,
+  Quotes,
 } from '@phosphor-icons/react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
-import { Button, type ButtonProps, DensityProvider, Select } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import {
+  DensityProvider,
+  ElevationProvider,
+  Select,
+  type ThemedClassName,
+  Toolbar as NaturalToolbar,
+  type ToolbarToggleGroupItemProps,
+  useTranslation,
+} from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 
 import { type Formatting } from '../../extensions';
+import { translationKey } from '../../translations';
 
 const HeadingIcons: { [key: string]: Icon } = {
   '0': Paragraph,
@@ -55,7 +64,7 @@ export type ActionType =
   | 'link'
   | 'list-bullet'
   | 'list-ordered'
-  | 'list-tasks'
+  | 'list-task'
   | 'mention'
   | 'prompt'
   | 'strikethrough'
@@ -66,61 +75,54 @@ export type Action = {
   data?: any;
 };
 
-export type ToolbarProps = PropsWithChildren<{
-  state: Formatting | null;
-  onAction?: (action: Action) => void;
-}>;
+export type ToolbarProps = ThemedClassName<
+  PropsWithChildren<{
+    state: Formatting | null;
+    onAction?: (action: Action) => void;
+  }>
+>;
 
 const [ToolbarContextProvider, useToolbarContext] = createContext<ToolbarProps>('Toolbar');
 
-const ToolbarRoot = ({ children, onAction, state }: ToolbarProps) => {
+const ToolbarRoot = ({ children, onAction, classNames, state }: ToolbarProps) => {
   return (
     <ToolbarContextProvider onAction={onAction} state={state}>
       <DensityProvider density='fine'>
-        <div role='toolbar' className='flex w-full shrink-0 p-1 gap-4 items-center whitespace-nowrap overflow-hidden'>
-          {children}
-        </div>
+        <ElevationProvider elevation='chrome'>
+          <NaturalToolbar.Root classNames={['is-full shrink-0 overflow-x-auto p-1', classNames]}>
+            {children}
+          </NaturalToolbar.Root>
+        </ElevationProvider>
       </DensityProvider>
     </ToolbarContextProvider>
   );
 };
 
-type ToolbarButtonProps = {
+const buttonStyles = 'min-bs-0 p-2';
+const iconStyles = getSize(5);
+
+type ButtonProps = {
+  type: ActionType;
   Icon: Icon;
-  disable?: (state: Formatting) => boolean;
-  getState?: (state: Formatting) => boolean;
-  onClick: (state: Formatting | null) => Action | undefined;
-} & NonNullable<Pick<ButtonProps, 'title'>>;
+  getState: (state: Formatting) => boolean;
+  disabled?: (state: Formatting) => boolean;
+};
 
-const ToolbarButton = ({ Icon, onClick, title, getState, disable }: ToolbarButtonProps) => {
-  const { onAction, state } = useToolbarContext('ToolbarButton');
-  const active = getState && state ? getState(state) : false;
-  const disabled = disable && state ? disable(state) : false;
+type ToolbarButtonProps = ToolbarToggleGroupItemProps & { Icon: Icon };
 
-  const handleClick = (event: React.MouseEvent) => {
-    const action = onClick(state);
-    if (action) {
-      onAction?.(action);
-      event.preventDefault();
-    }
-  };
-
+const ToolbarButton = ({ Icon, children, ...props }: ToolbarButtonProps) => {
   return (
-    <Button
-      variant='ghost'
-      classNames={mx('p-2', active && 'ring-[1px]')}
-      onMouseDown={handleClick}
-      title={title}
-      disabled={disabled}
-    >
-      <Icon className={getSize(5)} />
-    </Button>
+    <NaturalToolbar.ToggleGroupItem variant='ghost' {...props} classNames={buttonStyles}>
+      <Icon className={iconStyles} />
+      <span className='sr-only'>{children}</span>
+    </NaturalToolbar.ToggleGroupItem>
   );
 };
 
-const ToolbarSeparator = () => <div className='grow' />;
+const ToolbarSeparator = () => <div role='separator' className='grow' />;
 
 const MarkdownHeading = () => {
+  // const { t } = useTranslation(translationKey);
   const { onAction, state } = useToolbarContext('MarkdownFormatting');
   const blockType = state ? state.blockType : 'paragraph';
   const header = blockType && /heading(\d)/.exec(blockType);
@@ -133,111 +135,137 @@ const MarkdownHeading = () => {
       onValueChange={(value) => onAction?.({ type: 'heading', data: parseInt(value) })}
     >
       <Select.TriggerButton>
-        <HeadingIcon className={getSize(5)} />
+        <HeadingIcon className={iconStyles} />
+        {/* TODO(burdon): Incorrectly positioned. */}
+        {/* <NaturalToolbar.Button variant='ghost' classNames={buttonStyles}> */}
+        {/*  <span className='sr-only'>{t('heading label')}</span> */}
+        {/*  <HeadingIcon className={iconStyles} /> */}
+        {/*  <CaretDown className={getSize(2)} weight='bold' /> */}
+        {/* </NaturalToolbar.Button> */}
       </Select.TriggerButton>
       <Select.Portal>
         <Select.Content>
+          <Select.ScrollUpButton />
           <Select.Viewport>
-            <Select.Option value='0'>Paragraph</Select.Option>
+            <Select.Option value='0'>
+              <Paragraph className={iconStyles} />
+            </Select.Option>
             {[1, 2, 3, 4, 5, 6].map((level) => (
               <Select.Option key={level} value={String(level)}>
-                Heading {level}
+                {level === 1 && <TextHOne className={iconStyles} />}
+                {level === 2 && <TextHTwo className={iconStyles} />}
+                {level === 3 && <TextHThree className={iconStyles} />}
+                {level === 4 && <TextHFour className={iconStyles} />}
+                {level === 5 && <TextHFive className={iconStyles} />}
+                {level === 6 && <TextHSix className={iconStyles} />}
               </Select.Option>
             ))}
           </Select.Viewport>
+          <Select.ScrollDownButton />
+          <Select.Arrow />
         </Select.Content>
       </Select.Portal>
     </Select.Root>
   );
 };
 
-const MarkdownStyles = () => (
-  <div role='none'>
-    <ToolbarButton
-      Icon={TextB}
-      title='String'
-      disable={(s) => s.blockType === 'codeblock'}
-      getState={(s) => s.strong}
-      onClick={(s) => ({ type: 'strong', data: s ? !s.strong : null })}
-    />
-    <ToolbarButton
-      Icon={TextItalic}
-      title='Emphasis'
-      disable={(s) => s.blockType === 'codeblock'}
-      getState={(s) => s.emphasis}
-      onClick={(s) => ({ type: 'emphasis', data: s ? !s.emphasis : null })}
-    />
-    <ToolbarButton
-      Icon={TextStrikethrough}
-      title='Strike-through'
-      disable={(s) => s.blockType === 'codeblock'}
-      getState={(s) => s.strikethrough}
-      onClick={(s) => ({ type: 'strikethrough', data: s ? !s.strikethrough : null })}
-    />
-    <ToolbarButton
-      Icon={Code}
-      title='Inline code'
-      disable={(s) => s.blockType === 'codeblock'}
-      getState={(s) => s.code}
-      onClick={(s) => ({ type: 'code', data: s ? !s.code : null })}
-    />
-  </div>
-);
+const markdownStyles: ButtonProps[] = [
+  { type: 'strong', Icon: TextB, getState: (state) => state.strong },
+  { type: 'emphasis', Icon: TextItalic, getState: (state) => state.emphasis },
+  { type: 'strikethrough', Icon: TextStrikethrough, getState: (state) => state.strikethrough },
+  { type: 'code', Icon: Code, getState: (state) => state.code },
+  { type: 'link', Icon: Link, getState: (state) => state.link },
+];
 
-const MarkdownLists = () => (
-  <div role='none'>
-    <ToolbarButton
-      Icon={ListBullets}
-      title='Bullet list'
-      getState={(s) => s.listStyle === 'bullet'}
-      onClick={(s) => ({ type: 'list-bullet', data: s ? s.listStyle !== 'bullet' : null })}
-    />
-    <ToolbarButton
-      Icon={ListNumbers}
-      title='Numbered list'
-      getState={(s) => s.listStyle === 'ordered'}
-      onClick={(s) => ({ type: 'list-ordered', data: s ? s.listStyle !== 'ordered' : null })}
-    />
-    <ToolbarButton
-      Icon={ListChecks}
-      title='Task list'
-      getState={(s) => s.listStyle === 'task'}
-      onClick={(s) => ({ type: 'list-tasks', data: s ? s.listStyle !== 'task' : null })}
-    />
-  </div>
-);
+const MarkdownStyles = () => {
+  const { onAction, state } = useToolbarContext('MarkdownStyles');
+  const { t } = useTranslation(translationKey);
 
-const MarkdownBlocks = () => (
-  <div role='none'>
-    <ToolbarButton
-      Icon={CaretRight}
-      title='Block quote'
-      getState={(s) => s.blockQuote}
-      onClick={(s) => ({ type: 'blockquote', data: s ? !s.blockQuote : null })}
-    />
-    <ToolbarButton
-      Icon={CodeBlock}
-      title='Code block'
-      disable={(s) => !s.blankLine}
-      getState={(s) => s.blockType === 'codeblock'}
-      onClick={(s) => ({ type: 'codeblock', data: s ? s.blockType !== 'codeblock' : null })}
-    />
-    <ToolbarButton Icon={Table} title='Table' disable={(s) => !s.blankLine} onClick={() => ({ type: 'table' })} />
-  </div>
-);
+  return (
+    <NaturalToolbar.ToggleGroup
+      type='multiple'
+      value={markdownStyles.filter(({ getState }) => state && getState(state)).map(({ type }) => type)}
+    >
+      {markdownStyles.map(({ type, getState, Icon }) => (
+        <ToolbarButton
+          key={type}
+          value={type}
+          Icon={Icon}
+          disabled={state?.blockType === 'codeblock'}
+          onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
+        >
+          {t(`${type} label`)}
+        </ToolbarButton>
+      ))}
+    </NaturalToolbar.ToggleGroup>
+  );
+};
 
-const MarkdownLinks = () => (
-  <div role='none'>
-    <ToolbarButton
-      Icon={Link}
-      title='Link'
-      getState={(s) => s.link}
-      onClick={(s) => ({ type: 'link', data: s ? !s.link : null })}
-    />
-    {/* <ToolbarButton Icon={At} title='Mention' onClick={() => ({ type: 'mention' })} /> */}
-    {/* <ToolbarButton Icon={Image} title='Image' onClick={() => ({ type: 'image' })} /> */}
-  </div>
-);
+const markdownLists: ButtonProps[] = [
+  { type: 'list-bullet', Icon: ListBullets, getState: (state) => state.listStyle === 'bullet' },
+  { type: 'list-ordered', Icon: ListNumbers, getState: (state) => state.listStyle === 'ordered' },
+  { type: 'list-task', Icon: ListChecks, getState: (state) => state.listStyle === 'task' },
+];
+
+const MarkdownLists = () => {
+  const { onAction, state } = useToolbarContext('MarkdownStyles');
+  const { t } = useTranslation(translationKey);
+  return (
+    <NaturalToolbar.ToggleGroup type='single' value={state?.listStyle ?? undefined}>
+      {markdownLists.map(({ type, getState, Icon }) => (
+        <ToolbarButton
+          key={type}
+          value={type}
+          Icon={Icon}
+          onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
+        >
+          {t(`${type} label`)}
+        </ToolbarButton>
+      ))}
+    </NaturalToolbar.ToggleGroup>
+  );
+};
+
+const markdownBlocks: ButtonProps[] = [
+  {
+    type: 'blockquote',
+    Icon: Quotes,
+    getState: (state) => state.blockQuote,
+  },
+  {
+    type: 'codeblock',
+    Icon: CodeBlock,
+    getState: (state) => state.blockQuote,
+    disabled: (state) => !state.blankLine,
+  },
+  {
+    type: 'table',
+    Icon: Table,
+    getState: (state) => state.blockType === 'tablecell',
+    disabled: (state) => !state.blankLine,
+  },
+];
+
+const MarkdownBlocks = () => {
+  const { onAction, state } = useToolbarContext('MarkdownStyles');
+  const { t } = useTranslation(translationKey);
+  const value = markdownBlocks.find(({ getState }) => state && getState(state));
+  return (
+    <NaturalToolbar.ToggleGroup type='single' value={value?.type}>
+      {markdownBlocks.map(({ type, disabled, getState, Icon }) => (
+        <ToolbarButton
+          key={type}
+          value={type}
+          Icon={Icon}
+          disabled={!state || disabled?.(state)}
+          onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
+        >
+          {t(`${type} label`)}
+        </ToolbarButton>
+      ))}
+    </NaturalToolbar.ToggleGroup>
+  );
+};
 
 const MarkdownStandard = () => (
   <>
@@ -245,13 +273,24 @@ const MarkdownStandard = () => (
     <MarkdownStyles />
     <MarkdownLists />
     <MarkdownBlocks />
-    <MarkdownLinks />
   </>
 );
 
-const MarkdownExtended = () => (
-  <Toolbar.Button Icon={ChatText} title='Create comment' onClick={() => ({ type: 'comment' })} />
-);
+const MarkdownExtended = () => {
+  const { onAction } = useToolbarContext('MarkdownStyles');
+  const { t } = useTranslation(translationKey);
+  return (
+    <NaturalToolbar.Button
+      variant='ghost'
+      data-testid='editor.toolbar.comment'
+      onClick={() => onAction?.({ type: 'comment' })}
+      classNames={buttonStyles}
+    >
+      <ChatText className={iconStyles} />
+      <span className='sr-only'>{t('comment label')}</span>
+    </NaturalToolbar.Button>
+  );
+};
 
 export const Toolbar = {
   Root: ToolbarRoot,
