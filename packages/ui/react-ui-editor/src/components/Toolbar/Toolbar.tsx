@@ -23,7 +23,6 @@ import {
   TextHSix,
   TextItalic,
   Quotes,
-  CaretDown,
 } from '@phosphor-icons/react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
@@ -118,7 +117,7 @@ const ToolbarButton = ({ Icon, children, ...props }: ToolbarButtonProps) => {
 const ToolbarSeparator = () => <div role='separator' className='grow' />;
 
 const MarkdownHeading = () => {
-  const { t } = useTranslation(translationKey);
+  // const { t } = useTranslation(translationKey);
   const { onAction, state } = useToolbarContext('MarkdownFormatting');
   const blockType = state ? state.blockType : 'paragraph';
   const header = blockType && /heading(\d)/.exec(blockType);
@@ -130,21 +129,30 @@ const MarkdownHeading = () => {
       value={value ?? '0'}
       onValueChange={(value) => onAction?.({ type: 'heading', data: parseInt(value) })}
     >
-      <Select.Trigger asChild>
-        <NaturalToolbar.Button variant='ghost' classNames={buttonStyles}>
-          <span className='sr-only'>{t('heading label')}</span>
-          <HeadingIcon className={iconStyles} />
-          <CaretDown className={getSize(2)} weight='bold' />
-        </NaturalToolbar.Button>
-      </Select.Trigger>
+      <Select.TriggerButton>
+        <HeadingIcon className={getSize(5)} />
+        {/* TODO(burdon): Incorrectly positioned. */}
+        {/* <NaturalToolbar.Button variant='ghost' classNames={buttonStyles}> */}
+        {/*  <span className='sr-only'>{t('heading label')}</span> */}
+        {/*  <HeadingIcon className={iconStyles} /> */}
+        {/*  <CaretDown className={getSize(2)} weight='bold' /> */}
+        {/* </NaturalToolbar.Button> */}
+      </Select.TriggerButton>
       <Select.Portal>
         <Select.Content>
           <Select.ScrollUpButton />
           <Select.Viewport>
-            <Select.Option value='0'>Paragraph</Select.Option>
+            <Select.Option value='0'>
+              <Paragraph className={iconStyles} />
+            </Select.Option>
             {[1, 2, 3, 4, 5, 6].map((level) => (
               <Select.Option key={level} value={String(level)}>
-                Heading {level}
+                {level === 1 && <TextHOne className={iconStyles} />}
+                {level === 2 && <TextHTwo className={iconStyles} />}
+                {level === 3 && <TextHThree className={iconStyles} />}
+                {level === 4 && <TextHFour className={iconStyles} />}
+                {level === 5 && <TextHFive className={iconStyles} />}
+                {level === 6 && <TextHSix className={iconStyles} />}
               </Select.Option>
             ))}
           </Select.Viewport>

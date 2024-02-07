@@ -5,12 +5,21 @@
 import { Brain } from '@phosphor-icons/react';
 import React from 'react';
 
-import { SPACE_PLUGIN } from '@braneframe/plugin-space';
-import { Folder } from '@braneframe/types';
-import { resolvePlugin, parseIntentPlugin, type PluginDefinition } from '@dxos/app-framework';
+import { isMarkdownProperties } from '@braneframe/plugin-markdown';
+import {
+  resolvePlugin,
+  parseGraphPlugin,
+  parseIntentPlugin,
+  parseNavigationPlugin,
+  type GraphProvides,
+  type LocationProvides,
+  type Plugin,
+  type PluginDefinition,
+} from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { SpaceProxy } from '@dxos/react-client/echo';
+import { getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
 
+import { GptAnalyzer } from './analyzer';
 import { GptSettings } from './components';
 import meta, { GPT_PLUGIN } from './meta';
 import translations from './translations';
@@ -19,27 +28,38 @@ import { GptAction, type GptPluginProvides, type GptSettingsProps } from './type
 export const GptPlugin = (): PluginDefinition<GptPluginProvides> => {
   const settings = new LocalStorageStore<GptSettingsProps>(GPT_PLUGIN, {});
 
+  let graphPlugin: Plugin<GraphProvides> | undefined;
+  let navigationPlugin: Plugin<LocationProvides> | undefined;
+
   return {
     meta,
-    ready: async () => {
+    ready: async (plugins) => {
       settings.prop(settings.values.$apiKey!, 'api-key', LocalStorageStore.string);
+
+      graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+      navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
     },
     provides: {
+      settings: settings.values,
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
-            return;
+          if (isMarkdownProperties(parent.data)) {
+            const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+
+            parent.addAction({
+              id: `${GPT_PLUGIN}/analyze`,
+              label: ['analyze document label', { ns: GPT_PLUGIN }],
+              icon: (props) => <Brain {...props} />,
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch([
+                  {
+                    plugin: GPT_PLUGIN,
+                    action: GptAction.ANALYZE,
+                  },
+                ]),
+            });
           }
-
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
-          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
-            id: `${GPT_PLUGIN}/analyze`,
-            label: ['analyze document label', { ns: GPT_PLUGIN }],
-            icon: (props) => <Brain {...props} />,
-            invoke: () => intentPlugin?.provides.intent.dispatch([]),
-          });
         },
       },
       surface: {
@@ -56,7 +76,16 @@ export const GptPlugin = (): PluginDefinition<GptPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case GptAction.ANALYZE: {
-              console.log('analyze...');
+              // TODO(burdon): Factor out.
+              const location = navigationPlugin?.provides.location;
+              const graph = graphPlugin?.provides.graph;
+              const activeNode = location?.active ? graph?.findNode(location.active) : undefined;
+              const active = activeNode?.data;
+              const space = isTypedObject(active) && getSpaceForObject(active);
+              if (space && settings.values.apiKey) {
+                // TODO(burdon): Toast on success.
+                void new GptAnalyzer({ apiKey: settings.values.apiKey }).exec(space, active);
+              }
             }
           }
         },

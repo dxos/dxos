@@ -47,12 +47,12 @@ type ThreadState = {
 };
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
+  const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
+  const state = deepSignal<ThreadState>({ threads: {} });
+
   let graphPlugin: Plugin<GraphProvides> | undefined;
   let navigationPlugin: Plugin<LocationProvides> | undefined;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
-
-  const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
-  const state = deepSignal<ThreadState>({ threads: {} });
 
   return {
     meta,

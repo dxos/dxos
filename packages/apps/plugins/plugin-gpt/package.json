@@ -23,8 +23,10 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-settings": "workspace:*",
     "@braneframe/types": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "deepsignal": "1.4.0-shallow.0",

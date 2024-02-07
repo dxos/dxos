@@ -16,12 +16,11 @@ export const GptSettings = ({ settings }: { settings: GptSettingsProps }) => {
   // TODO(wittjosiah): Add skill test confirmation for entering vim mode.
   return (
     <>
-      <SettingsValue label={t('settings debug label')}>
+      <SettingsValue label={t('settings api key')}>
         <Input.Root>
           <Input.TextInput
-            value={settings.apiKey}
+            value={settings.apiKey ?? ''}
             onChange={({ target: { value } }) => (settings.apiKey = value)}
-            placeholder={t('settings api key')}
           />
         </Input.Root>
       </SettingsValue>

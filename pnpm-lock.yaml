@@ -1400,12 +1400,18 @@ importers:
 
   packages/apps/plugins/plugin-gpt:
     dependencies:
+      '@braneframe/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage

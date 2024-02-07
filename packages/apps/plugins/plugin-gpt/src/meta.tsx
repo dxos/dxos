@@ -12,5 +12,6 @@ export const GPT_PLUGIN = 'dxos.org/plugin/gpt';
 export default pluginMeta({
   id: GPT_PLUGIN,
   name: 'GPT',
+  tags: ['experimental'],
   iconComponent: (props: IconProps) => <Brain {...props} />,
 });

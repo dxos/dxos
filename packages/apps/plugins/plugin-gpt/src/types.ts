@@ -5,6 +5,7 @@
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
+  SettingsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
@@ -21,4 +22,8 @@ export type GptSettingsProps = {
   apiKey?: string;
 };
 
-export type GptPluginProvides = SurfaceProvides & IntentResolverProvides & GraphBuilderProvides & TranslationsProvides;
+export type GptPluginProvides = SurfaceProvides &
+  IntentResolverProvides &
+  GraphBuilderProvides &
+  SettingsProvides<GptSettingsProps> &
+  TranslationsProvides;
