@@ -9,6 +9,7 @@ import waitForExpect from 'wait-for-expect';
 import { AppManager } from './app-manager';
 
 // NOTE: Object 0 is the README.
+// NOTE: Reduce flakiness in CI by using waitForExpect.
 test.describe('Folder tests', () => {
   let host: AppManager;
 
@@ -20,7 +21,9 @@ test.describe('Folder tests', () => {
   test('create folder', async () => {
     await host.createSpace();
     await host.createFolder();
-    expect((await host.getObject(1).innerText()).trim()).to.equal('New folder');
+    await waitForExpect(async () => {
+      expect((await host.getObject(1).innerText()).trim()).to.equal('New folder');
+    });
   });
 
   test('re-order folders', async () => {
@@ -37,8 +40,11 @@ test.describe('Folder tests', () => {
     await host.getObjectByName('Folder 1').hover();
     await host.page.mouse.up();
 
-    expect((await host.getObject(1).innerText()).trim()).to.equal('Folder 2');
-    expect((await host.getObject(2).innerText()).trim()).to.equal('Folder 1');
+    // Folders are now in reverse order.
+    await waitForExpect(async () => {
+      expect((await host.getObject(1).innerText()).trim()).to.equal('Folder 2');
+      expect((await host.getObject(2).innerText()).trim()).to.equal('Folder 1');
+    });
   });
 
   test('drag object into folder', async () => {
@@ -55,8 +61,10 @@ test.describe('Folder tests', () => {
     await host.page.mouse.up();
 
     // Document is now inside the folder.
-    const folder = await host.getObjectByName('New folder');
-    expect((await folder.getByTestId('spacePlugin.object').innerText()).trim()).to.equal('New document');
+    await waitForExpect(async () => {
+      const folder = await host.getObjectByName('New folder');
+      expect((await folder.getByTestId('spacePlugin.object').innerText()).trim()).to.equal('New document');
+    });
   });
 
   test.describe('deleting folder', () => {
@@ -68,11 +76,11 @@ test.describe('Folder tests', () => {
       await waitForExpect(async () => {
         expect(await host.getObjectsCount()).to.equal(3);
       });
+
       // Folder must be collapsed for playwright to click in the right place.
       await host.toggleFolderCollapsed(1);
       // Delete the containing folder.
       await host.deleteObject(1);
-
       await waitForExpect(async () => {
         expect(await host.getObjectsCount()).to.equal(2);
       });
@@ -85,14 +93,15 @@ test.describe('Folder tests', () => {
       await host.createFolder();
       // Create an item inside the contained folder.
       await host.createObject('markdownPlugin');
+      // Reduce flakiness in CI by waiting.
       await waitForExpect(async () => {
         expect(await host.getObjectsCount()).to.equal(4);
       });
+
       // Folder must be collapsed for playwright to click in the right place.
       await host.toggleFolderCollapsed(1);
       // Delete the containing folder.
       await host.deleteObject(1);
-
       await waitForExpect(async () => {
         expect(await host.getObjectsCount()).to.equal(3);
       });
