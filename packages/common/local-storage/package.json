@@ -18,7 +18,8 @@
   "dependencies": {
     "@dxos/node-std": "workspace:*",
     "@preact/signals-core": "^1.5.0",
-    "deepsignal": "1.4.0-shallow.0"
+    "deepsignal": "1.4.0-shallow.0",
+    "localforage": "^1.10.0"
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
