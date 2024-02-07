@@ -17,7 +17,7 @@ import {
   type TranslationsProvides,
 } from '@dxos/app-framework';
 import { createStorageObjects } from '@dxos/client-services';
-import { Config, Defaults, Envs, Local, defs } from '@dxos/config';
+import { Config, type ConfigProto, Defaults, Envs, Local, defs } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { LocalForageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
@@ -84,9 +84,11 @@ export const ClientPlugin = ({
       if (!settings.values.storageDriver && (await defaultStorageIsEmpty())) {
         settings.values.storageDriver = defs.Runtime.Client.Storage.StorageDriver.IDB;
       }
-      const storageConfig = { runtime: { client: { storage: { dataStore: settings.values.storageDriver } } } };
 
-      client = new Client({ config: new Config(await Envs(), Local(), Defaults(), storageConfig), ...options });
+      client = new Client({
+        config: new Config(await Envs(), Local(), Defaults(), configFromSettings(settings.values)),
+        ...options,
+      });
 
       try {
         await client.initialize();
@@ -216,9 +218,21 @@ const defaultStorageIsEmpty = async (): Promise<boolean> => {
     const metadataDir = storage.createDirectory('metadata');
     const echoMetadata = metadataDir.getOrCreateFile('EchoMetadata');
     const { size } = await echoMetadata.stat();
-    return !!size;
+    return size > 0;
   } catch (err) {
     log.warn('Error checking if default storage is empty', { err });
     return false;
   }
+};
+
+const configFromSettings = (settings: ClientSettingsProps): ConfigProto => {
+  return {
+    runtime: {
+      client: {
+        storage: {
+          dataStore: settings.storageDriver,
+        },
+      },
+    },
+  };
 };

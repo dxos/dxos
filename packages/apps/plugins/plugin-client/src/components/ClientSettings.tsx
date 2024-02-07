@@ -28,10 +28,12 @@ export const ClientSettings = ({ settings }: { settings: ClientSettingsProps }) 
         <Select.Root
           value={Object.entries(StorageAdapters).find(([name, value]) => value === settings.storageDriver)?.[0]}
           onValueChange={(value) => {
-            settings.storageDriver = StorageAdapters[value as keyof typeof StorageAdapters];
+            if (confirm(t('storage adapter changed alert'))) {
+              settings.storageDriver = StorageAdapters[value as keyof typeof StorageAdapters];
+            }
           }}
         >
-          <Select.TriggerButton placeholder={t('data store label')}/>
+          <Select.TriggerButton placeholder={t('data store label')} />
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>
