@@ -3,15 +3,48 @@
 //
 
 import { type Context, createContext, useContext, type Provider } from 'react';
+import { useEffect } from 'react';
 
-import { type DispatchIntent } from './intent';
+import type { UnsubscribeCallback } from '@dxos/async';
 
-export type IntentContext = {
-  dispatch: DispatchIntent;
+import type { Intent, IntentDispatcher, IntentResolver, IntentResult } from './intent';
+
+export type IntentExecution = {
+  intent: Intent;
+  result: IntentResult;
 };
 
-const IntentContext: Context<IntentContext> = createContext<IntentContext>({ dispatch: async () => {} });
+export type IntentContext = {
+  dispatch: IntentDispatcher;
+  undo: () => Promise<IntentResult | void>;
+  history: IntentExecution[][];
+  registerResolver: (pluginId: string, resolver: IntentResolver) => UnsubscribeCallback;
+};
 
+const IntentContext: Context<IntentContext> = createContext<IntentContext>({
+  dispatch: async () => ({}),
+  undo: async () => ({}),
+  history: [],
+  registerResolver: () => () => {},
+});
+
+/**
+ * @deprecated Prefer granular hooks.
+ * TODO(burdon): Remove. Use useIntentDispatcher.
+ */
 export const useIntent = () => useContext(IntentContext);
+
+// TODO(burdon): Rename useIntentDispatch.
+export const useIntentDispatcher = (): IntentDispatcher => {
+  const { dispatch } = useIntent();
+  return dispatch;
+};
+
+export const useIntentResolver = (plugin: string, resolver: IntentResolver) => {
+  const { registerResolver } = useIntent();
+  useEffect(() => {
+    return registerResolver(plugin, resolver);
+  }, [plugin, resolver]);
+};
 
 export const IntentProvider: Provider<IntentContext> = IntentContext.Provider;

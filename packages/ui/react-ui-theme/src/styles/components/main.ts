@@ -21,14 +21,14 @@ export type MainStyleProps = Partial<{
 // Sidebar widths (used by main and complementary sidebar).
 const sidebarSlots = {
   start: {
-    width: 'sm:is-[270px]',
-    sidebar: 'sm:-inline-start-[270px]',
+    width: 'sm:is-[271px]',
+    sidebar: 'sm:-inline-start-[271px]',
     content: 'pis-[270px]',
   },
   // TODO(burdon): Maximal size for phone.
   end: {
-    width: 'sm:is-[360px]',
-    sidebar: 'sm:-inline-end-[360px]',
+    width: 'sm:is-[361px]',
+    sidebar: 'sm:-inline-end-[361px]',
     content: 'pie-[360px]',
   },
 };
@@ -47,8 +47,8 @@ export const mainSidebar: ComponentFunction<MainStyleProps> = (
         ? 'inline-start-0'
         : mx('-inline-start-[100vw]', sidebarSlots.start.sidebar)
       : inlineEndSidebarOpen
-      ? 'inline-end-0'
-      : mx('-inline-end-[100vw]', sidebarSlots.end.sidebar),
+        ? 'inline-end-0'
+        : mx('-inline-end-[100vw]', sidebarSlots.end.sidebar),
     side === 'inline-start' ? 'border-ie' : 'border-is',
     fixedSurface,
     ...etc,
@@ -71,7 +71,7 @@ export const mainOverlay: ComponentFunction<MainStyleProps> = (
   ...etc
 ) =>
   mx(
-    'fixed inset-0 z-[9] bg-transparent',
+    'fixed inset-0 z-[9] surface-scrim',
     'transition-opacity duration-200 ease-in-out',
     !isLg && (inlineStartSidebarOpen || inlineEndSidebarOpen) ? 'opacity-100' : 'opacity-0',
     !isLg && (inlineStartSidebarOpen || inlineEndSidebarOpen) ? 'block' : 'hidden',

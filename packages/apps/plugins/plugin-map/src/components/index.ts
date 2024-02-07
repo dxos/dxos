@@ -2,4 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './MapMain';
+import React from 'react';
+
+// Lazily load components for content surfaces.
+export const MapMain = React.lazy(() => import('./MapMain'));
+export const MapSection = React.lazy(() => import('./MapSection'));
+
+export * from './MapSection';

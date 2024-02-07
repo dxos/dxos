@@ -21,6 +21,7 @@ export type { BrowserType } from './types';
 
 export type SetupOptions = {
   url?: string;
+  /** @deprecated Use native playwright `waitFor` method on a locator. */
   waitFor?: (page: Page) => Promise<boolean>;
   bridgeLogs?: boolean;
 };
@@ -42,7 +43,7 @@ export const getPersistentContext = (browserType: BrowserType) => {
   return getBrowser(browserType).launchPersistentContext(`/tmp/playwright/${v4()}`, options);
 };
 
-export const setupPage = async (browser: Browser | BrowserContext, options: SetupOptions) => {
+export const setupPage = async (browser: Browser | BrowserContext, options: SetupOptions = {}) => {
   const executorResult = JSON.parse(process.env.EXECUTOR_RESULT ?? '{}');
   const { url = executorResult.baseUrl, waitFor, bridgeLogs } = options;
 
@@ -92,7 +93,7 @@ export const setupPage = async (browser: Browser | BrowserContext, options: Setu
     });
   }
 
-  return { context, page };
+  return { context, page, initialUrl: url };
 };
 
 export const extensionId = async (context: BrowserContext) => {
@@ -139,14 +140,15 @@ export const defaultPlaywrightConfig: PlaywrightTestConfig = {
   testDir: '.',
   outputDir: process.env.OUTPUT_PATH,
   timeout: process.env.TIMEOUT ? Number(process.env.TIMEOUT) : undefined,
+  workers: 6,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter:
     process.env.WATCH === 'true'
       ? [['dot']]
       : process.env.RESULTS_PATH
-      ? [['list'], ['junit', { outputFile: process.env.RESULTS_PATH }]]
-      : [['list']],
+        ? [['list'], ['junit', { outputFile: process.env.RESULTS_PATH }]]
+        : [['list']],
   use: {
     headless: process.env.HEADLESS !== 'false',
     trace: 'retain-on-failure',

@@ -4,9 +4,9 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import React from 'react';
 
+import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Stack } from './Stack';
@@ -17,7 +17,7 @@ import { FullscreenDecorator, SimpleCard } from '../../testing';
 faker.seed(3);
 
 export default {
-  title: 'Views/Stack/Columns',
+  title: 'react-ui-mosaic/Stack',
   component: Stack,
   render: (args: DemoStackProps) => {
     return (

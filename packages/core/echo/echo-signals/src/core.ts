@@ -4,14 +4,15 @@
 
 import { signal, batch } from '@preact/signals-core';
 
-import { registerSignalRuntime as registerRuntimeForEcho } from '@dxos/echo-schema';
+import { registerSignalRuntime as registerRuntimeForEcho } from './runtime';
 
-const registered = false;
+let registered = false;
 
 export const registerSignalRuntime = () => {
   if (registered) {
     return false;
   }
+  registered = true;
 
   registerRuntimeForEcho({
     createSignal: () => {

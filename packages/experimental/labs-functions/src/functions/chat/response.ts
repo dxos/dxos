@@ -2,82 +2,116 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Message as MessageType, Mermaid as MermaidType, Stack as StackType } from '@braneframe/types';
-import { Expando, type Space } from '@dxos/client/echo';
-import { Schema, TextObject } from '@dxos/echo-schema';
+import { type Message as MessageType, Document as DocumentType, Stack as StackType } from '@braneframe/types';
+import { type Space } from '@dxos/client/echo';
+import { Expando, TextObject } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { parseMessage } from './parser';
-import { type PromptContext } from './request';
-
-// TODO(burdon): Create test.
+import { type RequestContext } from './context';
+import { type ParseResult } from './parser';
 
 // TODO(burdon): Create variant of StringOutputParser.
 //  https://js.langchain.com/docs/modules/model_io/output_parsers/json_functions
-export const createResponse = (space: Space, context: PromptContext, content: string): MessageType.Block[] => {
-  const timestamp = new Date().toISOString();
+export class ResponseBuilder {
+  constructor(
+    private _space: Space,
+    private _context: RequestContext,
+  ) {}
 
-  const r = parseMessage(content);
-  log.info('parse', { r, content });
+  build(result: ParseResult): MessageType.Block[] | undefined {
+    const blocks: MessageType.Block[] = [];
+    const { timestamp, pre, post } = result;
+    log('build', { result });
 
-  const blocks: MessageType.Block[] = [];
-  const result = parseMessage(content);
-  if (result) {
-    const { pre, data, content, post } = result;
-    pre && blocks.push({ timestamp, text: pre });
+    if (pre) {
+      blocks.push({ timestamp, content: new TextObject(pre) });
+    }
 
-    switch (result.type) {
-      case 'json': {
-        const dataArray = Array.isArray(data) ? data : [data];
-        blocks.push(
-          ...dataArray.map((data): MessageType.Block => {
-            // Create object.
-            if (context.schema) {
-              const { objects: schemas } = space.db.query(Schema.filter());
-              const schema = schemas.find((schema) => schema.typename === context.schema!.typename);
-              if (schema) {
-                data['@type'] = context.schema.typename;
-                for (const prop of schema.props) {
-                  if (data[prop.id!]) {
-                    if (typeof data[prop.id!] === 'string') {
-                      data[prop.id!] = new TextObject(data[prop.id!]);
-                    }
-                  }
+    const processed = this.processResult(result);
+    if (processed) {
+      blocks.push(...processed);
+    }
+
+    if (post) {
+      blocks.push({ timestamp, content: new TextObject(post) });
+    }
+
+    return blocks;
+  }
+
+  processResult(result: ParseResult): MessageType.Block[] | undefined {
+    const timestamp = new Date().toISOString();
+    const { data, content, type, kind } = result;
+
+    //
+    // Add to stack.
+    //
+    if (this._context.object?.__typename === StackType.schema.typename) {
+      // TODO(burdon): Insert based on prompt config.
+      log.info('adding section to stack', { stack: this._context.object.id });
+
+      const formatFenced = (type: string, content: string) => {
+        const tick = '```';
+        return `${tick}${type}\n${content}\n${tick}\n`;
+      };
+
+      const formattedContent =
+        type !== 'markdown' && kind === 'fenced'
+          ? '# Generated content\n\n' + formatFenced(type, content.trim())
+          : content;
+
+      this._context.object.sections.push(
+        new StackType.Section({
+          object: new DocumentType({ content: new TextObject(formattedContent) }),
+        }),
+      );
+
+      return undefined;
+    }
+
+    //
+    // Convert JSON data to objects.
+    //
+    if (result.type === 'json') {
+      const blocks: MessageType.Block[] = [];
+      Object.entries(data).forEach(([type, values]) => {
+        const schema = this._context.schema?.get(type);
+        if (schema) {
+          for (const value of values as any[]) {
+            const data: Record<string, any> = {
+              '@type': schema.typename,
+            };
+
+            for (const { id } of schema.props) {
+              invariant(id);
+              if (value[id]) {
+                // TODO(burdon): Currently only handles string properties.
+                if (typeof value[id] === 'string') {
+                  data[id] = new TextObject(value[id]);
                 }
-
-                const object = new Expando(data, { schema });
-                return { timestamp, object };
               }
             }
 
-            // TODO(burdon): Create ref?
-            return { timestamp, data: JSON.stringify(data) };
-          }),
-        );
-        break;
-      }
-
-      case 'mermaid': {
-        // TODO(burdon): Insert based on prompt config.
-        if (context.object?.__typename === StackType.schema.typename) {
-          log.info('adding mermaid diagram to stack', { stack: context.object.id });
-          context.object.sections.push(
-            new StackType.Section({
-              object: new MermaidType({ source: new TextObject(content.trim()) }),
-            }),
-          );
+            const object = new Expando(data, { schema });
+            blocks.push({ timestamp, object });
+          }
         }
-        break;
+      });
+
+      if (blocks.length) {
+        return blocks;
       }
     }
 
-    post && blocks.push({ timestamp, text: post });
-  } else {
-    blocks.push({
-      timestamp,
-      text: content,
-    });
+    //
+    // Default
+    //
+    return [
+      {
+        timestamp,
+        content: new TextObject(content),
+      },
+    ];
   }
-
-  return blocks;
-};
+}

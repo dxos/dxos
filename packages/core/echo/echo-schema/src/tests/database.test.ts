@@ -8,7 +8,7 @@ import { describe, test } from '@dxos/test';
 
 import { Contact, Container, Task, types } from './proto';
 import { Hypergraph } from '../hypergraph';
-import { base, db, clone, Expando, TextObject } from '../object';
+import { base, db, clone, Expando, TextObject, getTextContent } from '../object';
 import { createDatabase } from '../testing';
 
 // TODO(burdon): Reconcile/document tests in parent folder.
@@ -61,8 +61,8 @@ describe('database', () => {
       await database.flush();
       expect(task.description).to.be.instanceOf(TextObject);
 
-      task.description.model!.insert('test', 0);
-      expect(task.description.model!.textContent).to.eq('test');
+      (task.description as any).content = 'test';
+      expect(getTextContent(task.description)).to.eq('test');
     });
   });
 
@@ -126,14 +126,14 @@ describe('database', () => {
     const { db: database2 } = await createDatabase(new Hypergraph().addTypes(types));
 
     const task1 = new Task();
-    task1.description.model!.insert('test', 0);
+    (task1.description as any).content = 'test';
     database1.add(task1);
     await database1.flush();
 
     const task2 = database2.add(clone(task1, { additional: [task1.description] }));
     await database2.flush();
     expect(task2.description).to.be.instanceOf(TextObject);
-    expect(task2.description.model!.textContent).to.eq('test');
+    expect(getTextContent(task2.description)).to.eq('test');
     expect(task2 !== task1).to.be.true;
   });
 

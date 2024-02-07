@@ -6,6 +6,8 @@ import { deepSignal } from 'deepsignal/react';
 // TODO(wittjosiah): Remove lodash dependency.
 import get from 'lodash.get';
 
+import { invariant } from '@dxos/invariant';
+
 import { type Label } from './action';
 import { type Node } from './node';
 
@@ -28,16 +30,15 @@ export type TraversalOptions = {
   /**
    * A callback which is called for each node visited during traversal.
    */
-  visitor?: (node: Node) => void;
+  visitor?: (node: Node, path: string[]) => void;
 };
 
 /**
- * The Graph represents...
+ * The Graph represents the structure of the application constructed via plugins.
  */
 export class Graph {
-  // TODO(burdon): Document.
   // TODO(wittjosiah): Should this support multiple paths to the same node?
-  private readonly _index = deepSignal<{ [key: string]: string[] }>({});
+  private readonly _index = deepSignal<Record<string, string[]>>({});
 
   constructor(private readonly _root: Node) {}
 
@@ -78,6 +79,7 @@ export class Graph {
    * @internal
    */
   _setPath(id: string, path: string[]) {
+    invariant(id && path, 'Invalid path.');
     this._index[id] = path;
   }
 
@@ -98,7 +100,7 @@ export class Graph {
    */
   traverse({ node = this._root, direction = 'down', filter, visitor }: TraversalOptions, depth = 0): void {
     if (!filter || filter(node)) {
-      visitor?.(node);
+      visitor?.(node, this.getPath(node.id)!);
     }
 
     if (direction === 'down') {

@@ -25,12 +25,37 @@ const resource =
     return klass;
   };
 
+export type InfoOptions = {
+  /**
+   * Value is of enum type and should be converted to string.
+   *
+   * Example:
+   *
+   * ```ts
+   * @trace.info({ enum: SpaceState })
+   * get state(): SpaceState { ... }
+   * ```
+   */
+  enum?: Record<string, any>;
+
+  /**
+   * Max depth of the object to be included in the resource info section.
+   *
+   * null means no limit (a limit of 8 nested objects is still imposed).
+   *
+   * Default: 0 - objects will be stringified with toString.
+   */
+  depth?: number | null;
+};
+
 /**
  * Marks a property or a method to be included in the resource info section.
  */
-const info = () => (target: any, propertyKey: string, descriptor?: PropertyDescriptor) => {
-  getTracingContext(target).infoProperties[propertyKey] = {};
-};
+const info =
+  (opts: InfoOptions = {}) =>
+  (target: any, propertyKey: string, descriptor?: PropertyDescriptor) => {
+    getTracingContext(target).infoProperties[propertyKey] = { options: opts };
+  };
 
 const mark = (name: string) => {
   performance.mark(name);

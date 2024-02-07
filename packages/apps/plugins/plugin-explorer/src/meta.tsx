@@ -12,5 +12,7 @@ export const EXPLORER_PLUGIN = 'dxos.org/plugin/explorer';
 export default pluginMeta({
   id: EXPLORER_PLUGIN,
   name: 'Explorer',
+  description: 'Explore the ECHO hypergraph.',
+  tags: ['experimental'],
   iconComponent: (props: IconProps) => <Graph {...props} />,
 });

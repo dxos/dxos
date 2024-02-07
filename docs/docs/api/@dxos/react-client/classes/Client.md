@@ -1,5 +1,5 @@
 # Class `Client`
-<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:30]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:34]()</sub>
 
 
 The Client class encapsulates the core client-side API of DXOS.
@@ -19,8 +19,13 @@ Arguments:
 
 
 ## Properties
+### [reloaded]()
+Type: <code>Event&lt;void&gt;</code>
+
+Emitted after the client is reset and the services have finished restarting.
+
 ### [version]()
-Type: <code>"0.3.9"</code>
+Type: <code>"0.4.2"</code>
 
 The version of this client API.
 
@@ -145,11 +150,22 @@ Arguments: none
 
 
 
+### [repair()]()
+
+
+Test and repair database.
+
+Returns: <code>Promise&lt;any&gt;</code>
+
+Arguments: none
+
+
+
+
 ### [reset()]()
 
 
 Resets and destroys client storage.
-Warning: Inconsistent state after reset, do not continue to use this client instance.
 
 Returns: <code>Promise&lt;void&gt;</code>
 

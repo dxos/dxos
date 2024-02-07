@@ -4,7 +4,6 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import {
   AirplaneTakeoff,
   ArrowLeft,
@@ -24,6 +23,7 @@ import hash from 'string-hash';
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 import { Markers, type GraphLayoutNode } from '@dxos/gem-spore';
 import { convertTreeToGraph, createTree, type TestNode, TestGraphModel } from '@dxos/gem-spore/testing';
+import { faker } from '@dxos/random';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { Plexus } from './Plexus';

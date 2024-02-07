@@ -4,13 +4,16 @@
 
 import { untracked } from '@preact/signals-react';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
-import Mousetrap from 'mousetrap';
 
 import { EventSubscriptions } from '@dxos/async';
+import { Keyboard } from '@dxos/keyboard';
+import { getHostPlatform } from '@dxos/util';
 
 import type { ActionArg, Action } from './action';
 import { Graph } from './graph';
 import type { NodeArg, Node, NodeBuilder } from './node';
+
+export const KEY_BINDING = 'KeyBinding';
 
 /**
  * The builder...
@@ -92,6 +95,10 @@ export class GraphBuilder {
         return Object.values(node.actionsMap);
       },
 
+      //
+      // Properties
+      //
+
       addProperty: (key, value) => {
         untracked(() => {
           (node.properties as Record<string, any>)[key] = value;
@@ -102,6 +109,10 @@ export class GraphBuilder {
           delete (node.properties as Record<string, any>)[key];
         });
       },
+
+      //
+      // Nodes
+      //
 
       addNode: (builder, ...partials) => {
         return untracked(() => {
@@ -124,14 +135,35 @@ export class GraphBuilder {
         });
       },
 
+      //
+      // Actions
+      //
+
       addAction: (...partials) => {
         return untracked(() => {
           return partials.map((partial) => {
             const action = this._createAction(partial);
-            if (action.keyBinding) {
-              // TODO(burdon): Last writer wins.
-              Mousetrap.bind(action.keyBinding, () => {
-                action.invoke();
+            let shortcut: string | undefined;
+            if (typeof action.keyBinding === 'object') {
+              const availablePlatforms = Object.keys(action.keyBinding);
+              const platform = getHostPlatform();
+              shortcut = availablePlatforms.includes(platform)
+                ? action.keyBinding[platform]
+                : platform === 'ios'
+                  ? action.keyBinding.macos // Fallback to macos if ios-specific bindings not provided.
+                  : platform === 'linux' || platform === 'unknown'
+                    ? action.keyBinding.windows // Fallback to windows if platform-specific bindings not provided.
+                    : undefined;
+            } else {
+              shortcut = action.keyBinding;
+            }
+            if (shortcut) {
+              Keyboard.singleton.getContext(path.join('/')).bind({
+                shortcut,
+                handler: () => {
+                  action.invoke({ caller: KEY_BINDING });
+                },
+                data: action.label,
               });
             }
 
@@ -144,7 +176,7 @@ export class GraphBuilder {
         return untracked(() => {
           const action = node.actionsMap[id];
           if (action.keyBinding) {
-            Mousetrap.unbind(action.keyBinding);
+            // keyboardjs.unbind(action.keyBinding);
           }
 
           delete node.actionsMap[id];

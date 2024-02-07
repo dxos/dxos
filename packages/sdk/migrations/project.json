@@ -11,10 +11,16 @@
       }
     },
     "lint": {},
-    "test": {}
+    "test": {
+      "options": {
+        "forceExit": true
+      }
+    }
   },
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild",
     "test"
-  ]
+  ],
+  "name": "migrations"
 }

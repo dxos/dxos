@@ -19,6 +19,7 @@ const source = [
   'If asked to suggest a move explain why it is a good move.',
   '',
   '---',
+  '',
   '{input}',
 ].join('\n');
 
@@ -38,6 +39,7 @@ const Story = () => {
 };
 
 export default {
+  title: 'plugin-chain/PromptTemplate',
   component: PromptTemplate,
   render: Story,
   decorators: [withTheme],

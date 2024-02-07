@@ -3,7 +3,6 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/common/process/src/index.ts",
         "outputPath": "packages/common/process/dist",
@@ -11,7 +10,6 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [
@@ -23,5 +21,7 @@
         "{options.outputFile}"
       ]
     }
-  }
+  },
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "process"
 }

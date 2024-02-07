@@ -13,12 +13,12 @@ import {
   textBlockWidth,
   mx,
   surfaceElevation,
-  inputSurface,
+  attentionSurface,
 } from '@dxos/react-ui-theme';
 
 import { Outliner } from './Outliner';
 
-export const OutlinerMain: FC<{ tree: TreeType }> = ({ tree }) => {
+const OutlinerMain: FC<{ tree: TreeType }> = ({ tree }) => {
   const space = getSpaceForObject(tree);
   if (!space) {
     return null;
@@ -30,7 +30,7 @@ export const OutlinerMain: FC<{ tree: TreeType }> = ({ tree }) => {
       <div role='none' className={mx(textBlockWidth, 'pli-2')}>
         <div role='none' className={mx('plb-4 min-bs-[calc(100dvh-var(--topbar-size))] flex flex-col')}>
           <Outliner.Root
-            className={mx(inputSurface, surfaceElevation({ elevation: 'group' }), 'p-4')}
+            className={mx(attentionSurface, surfaceElevation({ elevation: 'group' }), 'p-4')}
             isTasklist={tree.checkbox}
             root={tree.root}
             onCreate={(text?: string) => new TreeType.Item({ text: new TextObject(text) })}
@@ -45,22 +45,4 @@ export const OutlinerMain: FC<{ tree: TreeType }> = ({ tree }) => {
   );
 };
 
-export const TreeSection: FC<{ tree: TreeType }> = ({ tree }) => {
-  const space = getSpaceForObject(tree);
-  if (!space) {
-    return null;
-  }
-
-  return (
-    <Outliner.Root
-      className='w-full plb-4'
-      isTasklist={tree.checkbox}
-      root={tree.root}
-      onCreate={() => new TreeType.Item()}
-      onDelete={({ id }) => {
-        const item = space.db.getObjectById(id);
-        item && space.db.remove(item);
-      }}
-    />
-  );
-};
+export default OutlinerMain;

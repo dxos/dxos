@@ -30,12 +30,11 @@ const Editor = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
   }
 
   return (
-    <main className={`client client-${id}`}>
+    <main data-testid={`client-${id}`} className={`client client-${id}`}>
       <MarkdownEditor
         model={model}
         slots={{
           root: {
-            role: 'none',
             className: 'pli-4',
           },
         }}

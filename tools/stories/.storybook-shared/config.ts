@@ -7,8 +7,9 @@ import ReactPlugin from '@vitejs/plugin-react';
 import flatten from 'lodash.flatten';
 import { resolve } from 'path';
 import { type InlineConfig, mergeConfig } from 'vite';
-import topLevelAwait from 'vite-plugin-top-level-await';
-import turbosnap from 'vite-plugin-turbosnap';
+import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
+import TurbosnapPlugin from 'vite-plugin-turbosnap';
+import WasmPlugin from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
@@ -38,8 +39,8 @@ export const config = (
                     jsxRuntime: 'classic',
                   })
                 : plugin.name === 'vite:react-jsx'
-                ? undefined
-                : plugin;
+                  ? undefined
+                  : plugin;
             }),
           }
         : config,
@@ -48,14 +49,22 @@ export const config = (
         ...(configType === 'PRODUCTION' && { build: { target: 'esnext' } }),
         resolve: {
           alias: {
-            // TODO(burdon): Add documentation.
-            // '@automerge/automerge-repo': '@dxos/automerge/automerge-repo'
-            // '@automerge/automerge-repo':
-            //   '/Users/dmaretskyi/Projects/protocols/packages/core/echo/automerge/dist/lib/browser/automerge-repo.js',
+            // Some packages depend on automerge-repo. We alias them to point to our pre-bundled version.
+            // `resolve` assumes that CWD is at the repo root.
+            '@automerge/automerge-repo': resolve('packages/core/echo/automerge/dist/lib/browser/automerge-repo.js'),
           },
         },
+        // TODO(burdon): Disable overlay error (e.g., "ESM integration proposal for Wasm" is not supported currently.")
+        server: {
+          hmr: {
+            overlay: false,
+          },
+        },
+        worker: {
+          format: 'es',
+          plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
+        },
         plugins: [
-          topLevelAwait(),
           ThemePlugin({
             root: __dirname,
             content: [
@@ -63,7 +72,9 @@ export const config = (
               resolve(__dirname, '../../../packages/apps/plugins/*/src') + '/**/*.{ts,tsx,js,jsx}',
             ],
           }),
-          turbosnap({ rootDir: turbosnapRootDir ?? config.root ?? __dirname }),
+          TopLevelAwaitPlugin(),
+          WasmPlugin(),
+          TurbosnapPlugin({ rootDir: turbosnapRootDir ?? config.root ?? __dirname }),
         ],
       } satisfies InlineConfig,
     );

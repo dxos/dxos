@@ -4,7 +4,8 @@
 
 import { Event, asyncTimeout, synchronized } from '@dxos/async';
 import { type DocumentId, type DocHandle, type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
-import { Context } from '@dxos/context';
+import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
+import { warnAfterTimeout } from '@dxos/debug';
 import { type Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -13,16 +14,10 @@ import { log } from '@dxos/log';
 import { type AutomergeContext } from './automerge-context';
 import { AutomergeObject } from './automerge-object';
 import { type DocStructure } from './types';
+import { getGlobalAutomergePreference } from '../automerge-preference';
 import { type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
-import {
-  type EchoObject,
-  base,
-  getGlobalAutomergePreference,
-  isActualTypedObject,
-  isActualAutomergeObject,
-  TextObject,
-} from '../object';
+import { type EchoObject, base, isActualTypedObject, isAutomergeObject, isActualTextObject } from '../object';
 import { type Schema } from '../proto';
 
 export type SpaceState = {
@@ -62,24 +57,39 @@ export class AutomergeDb {
 
   @synchronized
   async open(spaceState: SpaceState) {
+    const start = performance.now();
     if (this._ctx) {
       log.info('Already open');
       return;
     }
     this._ctx = new Context();
 
-    if (spaceState.rootUrl) {
+    if (!spaceState.rootUrl) {
+      if (getGlobalAutomergePreference()) {
+        log.error('Database opened with no rootUrl');
+      }
+      await this._fallbackToNewDoc();
+    } else {
       try {
-        this._docHandle = this.automerge.repo.find(spaceState.rootUrl as DocumentId);
-        const doc = await asyncTimeout(this._docHandle.doc(), 1_000);
+        this._docHandle = await this._initDocHandle(spaceState.rootUrl);
+
+        const doc = this._docHandle.docSync();
+        invariant(doc);
+
         const ojectIds = Object.keys(doc.objects ?? {});
         this._createObjects(ojectIds);
       } catch (err) {
-        log('Error opening document', err);
-        await this._fallbackToNewDoc();
+        if (err instanceof ContextDisposedError) {
+          return;
+        }
+
+        log.catch(err);
+        if (getGlobalAutomergePreference()) {
+          throw err;
+        } else {
+          await this._fallbackToNewDoc();
+        }
       }
-    } else {
-      await this._fallbackToNewDoc();
     }
 
     const update = (event: DocHandleChangePayload<DocStructure>) => {
@@ -92,21 +102,56 @@ export class AutomergeDb {
     this._ctx.onDispose(() => {
       this._docHandle.off('change', update);
     });
+
+    const elapsed = performance.now() - start;
+    if (elapsed > 1000) {
+      log.warn('slow AM open', { docId: spaceState.rootUrl, duration: elapsed });
+    }
   }
 
+  // TODO(dmaretskyi): Cant close while opening.
   @synchronized
   async close() {
     if (!this._ctx) {
       return;
     }
+
     void this._ctx.dispose();
     this._ctx = undefined;
   }
 
-  private async _fallbackToNewDoc() {
+  private async _initDocHandle(url: string) {
+    const docHandle = this.automerge.repo.find(url as DocumentId);
+    // TODO(mykola): Remove check for global preference or timeout?
     if (getGlobalAutomergePreference()) {
-      log.error("Automerge is falling back to creating a new document for the space. Changed won't be persisted.");
+      // Loop on timeout.
+      while (true) {
+        try {
+          await warnAfterTimeout(5_000, 'Automerge root doc load timeout (AutomergeDb)', async () => {
+            await cancelWithContext(this._ctx!, docHandle.whenReady(['ready'])); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
+          });
+          break;
+        } catch (err) {
+          if (`${err}`.includes('Timeout')) {
+            log.info('wraparound', { id: docHandle.documentId, state: docHandle.state });
+            continue;
+          }
+
+          throw err;
+        }
+      }
+    } else {
+      await asyncTimeout(docHandle.whenReady(['ready']), 1_000, 'short doc ready timeout with automerge disabled');
     }
+
+    if (docHandle.state === 'unavailable') {
+      throw new Error('Automerge document is unavailable');
+    }
+
+    return docHandle;
+  }
+
+  private async _fallbackToNewDoc() {
     this._docHandle = this.automerge.repo.create();
     this._ctx!.onDispose(() => {
       this._docHandle.delete();
@@ -115,10 +160,10 @@ export class AutomergeDb {
 
   getObjectById(id: string): EchoObject | undefined {
     const obj = this._objects.get(id) ?? this._echoDatabase._objects.get(id);
-
     if (!obj) {
       return undefined;
     }
+
     if ((obj as any).__deleted === true) {
       return undefined;
     }
@@ -127,7 +172,7 @@ export class AutomergeDb {
   }
 
   add<T extends EchoObject>(obj: T): T {
-    if (isActualTypedObject(obj) || obj instanceof TextObject) {
+    if (isActualTypedObject(obj) || isActualTextObject(obj)) {
       return this._echoDatabase.add(obj);
     }
 
@@ -135,19 +180,21 @@ export class AutomergeDb {
       return obj;
     }
 
-    invariant(isActualAutomergeObject(obj));
+    invariant(isAutomergeObject(obj));
     invariant(!this._objects.has(obj.id));
     this._objects.set(obj.id, obj);
     (obj[base] as AutomergeObject)._bind({
       db: this,
       docHandle: this._docHandle,
       path: ['objects', obj.id],
+      assignFromLocalState: true,
     });
+
     return obj;
   }
 
   remove<T extends EchoObject>(obj: T) {
-    invariant(isActualAutomergeObject(obj));
+    invariant(isAutomergeObject(obj));
     invariant(this._objects.has(obj.id));
     (obj[base] as AutomergeObject).__system!.deleted = true;
   }
@@ -179,13 +226,13 @@ export class AutomergeDb {
     for (const id of objectIds) {
       invariant(!this._objects.has(id));
       const obj = new AutomergeObject();
-      obj[base]._id = id;
+      obj[base]._core.id = id;
       this._objects.set(obj.id, obj);
       (obj[base] as AutomergeObject)._bind({
         db: this,
         docHandle: this._docHandle,
         path: ['objects', obj.id],
-        ignoreCache: true,
+        assignFromLocalState: false,
       });
     }
   }

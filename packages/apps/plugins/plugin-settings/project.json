@@ -1,0 +1,21 @@
+{
+  "sourceRoot": "packages/apps/plugins/plugin-settings/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/apps/plugins/plugin-settings/src/index.ts",
+          "packages/apps/plugins/plugin-settings/src/meta.ts"
+        ]
+      }
+    },
+    "lint": {}
+  },
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild"
+  ],
+  "name": "plugin-settings"
+}

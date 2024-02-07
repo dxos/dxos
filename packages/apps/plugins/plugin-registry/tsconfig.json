@@ -21,6 +21,15 @@
   ],
   "references": [
     {
+      "path": "../../../common/local-storage"
+    },
+    {
+      "path": "../../../common/random"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {
@@ -34,6 +43,9 @@
     },
     {
       "path": "../../../ui/storybook-utils"
+    },
+    {
+      "path": "../plugin-settings"
     }
   ]
 }

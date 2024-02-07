@@ -4,9 +4,9 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import React, { type FC, type PropsWithChildren, useState } from 'react';
 
+import { faker } from '@dxos/random';
 import { type Density } from '@dxos/react-ui-types';
 
 import { Select } from './Select';
@@ -59,7 +59,7 @@ const StorybookSelect = ({ items = [] }: PropsWithChildren<{ items: ItemProps[] 
 };
 
 export default {
-  title: 'DXOS UI/Select',
+  title: 'react-ui/Select',
   component: createDensityTest(StorybookSelect),
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/labs-functions",
-  "version": "0.3.9",
+  "version": "0.4.2",
   "private": true,
   "description": "Experimental functions.",
   "homepage": "https://dxos.org",
@@ -37,13 +37,17 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@langchain/community": "^0.0.26",
+    "@langchain/core": "^0.1.22",
+    "@langchain/openai": "^0.0.14",
     "@octokit/rest": "^19.0.5",
     "amadeus": "^8.0.0",
     "assert": "^2.0.0",
     "chess.js": "1.0.0-alpha.0",
     "cross-fetch": "^3.1.5",
     "csv-parse": "^5.3.6",
-    "date-fns": "^2.29.3",
+    "date-fns": "^3.3.1",
+    "discord.js": "^14.14.1",
     "email-addresses": "^5.0.0",
     "faiss-node": "^0.5.1",
     "fast-xml-parser": "^4.3.2",
@@ -53,8 +57,9 @@
     "imap": "^0.8.19",
     "imap-simple": "^5.1.0",
     "js-yaml": "^4.1.0",
-    "langchain": "^0.0.196",
+    "langchain": "^0.1.12",
     "lodash.defaultsdeep": "^4.6.1",
+    "lodash.get": "^4.4.2",
     "lodash.startcase": "^4.4.0",
     "mailparser": "^3.6.4",
     "node-fetch": "^2.6.0",
@@ -69,7 +74,7 @@
   "devDependencies": {
     "@dxos/agent": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
-    "@faker-js/faker": "^8.0.2",
+    "@dxos/random": "workspace:*",
     "@mediapipe/tasks-text": "^0.10.7",
     "@types/html-to-text": "^9.0.0",
     "@types/imap": "^0.8.35",
@@ -84,6 +89,6 @@
     "ts-node": "10.9.1"
   },
   "optionalDependencies": {
-    "@faker-js/faker": "^8.0.2"
+    "@dxos/random": "workspace:*"
   }
 }

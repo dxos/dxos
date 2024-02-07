@@ -7,17 +7,13 @@ import React from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Tree as TreeType, Folder } from '@braneframe/types';
-import { resolvePlugin, parseIntentPlugin, LayoutAction, type PluginDefinition } from '@dxos/app-framework';
+import { resolvePlugin, parseIntentPlugin, NavigationAction, type PluginDefinition } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { OutlinerMain, TreeSection } from './components';
 import meta, { OUTLINER_PLUGIN } from './meta';
 import translations from './translations';
 import { OutlinerAction, type OutlinerPluginProvides, isObject } from './types';
-
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[TreeType.name] = TreeType;
 
 export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
   return {
@@ -52,7 +48,7 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
                     data: { target: parent.data },
                   },
                   {
-                    action: LayoutAction.ACTIVATE,
+                    action: NavigationAction.ACTIVATE,
                   },
                 ]),
               properties: {
@@ -105,7 +101,7 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
           switch (intent.action) {
             case OutlinerAction.CREATE: {
               return {
-                object: new TreeType({
+                data: new TreeType({
                   root: new TreeType.Item({
                     items: [new TreeType.Item()],
                   }),
@@ -114,7 +110,10 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
             }
 
             case OutlinerAction.TOGGLE_CHECKBOX: {
-              (intent.data.object as TreeType).checkbox = !(intent.data.object as TreeType).checkbox;
+              if (intent.data?.object instanceof TreeType) {
+                intent.data.object.checkbox = !intent.data.object.checkbox;
+                return { data: true };
+              }
               break;
             }
           }

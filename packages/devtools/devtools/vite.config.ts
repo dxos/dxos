@@ -6,8 +6,10 @@ import ReactPlugin from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
-import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
+import { VitePWA } from 'vite-plugin-pwa';
+import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
+import WasmPlugin from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
@@ -37,6 +39,13 @@ export default defineConfig({
       },
     },
   },
+  worker: {
+    format: 'es',
+    plugins: () => [
+      TopLevelAwaitPlugin(),
+      WasmPlugin(),
+    ],
+  },
   plugins: [
     {
       name: 'package-version',
@@ -46,7 +55,7 @@ export default defineConfig({
         }
       })
     },
-    ConfigPlugin({ env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'PACKAGE_VERSION'] }),
+    ConfigPlugin({ env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_DATADOG_API_KEY', 'DX_DATADOG_APP_KEY', 'DX_DATADOG_PROXY', 'PACKAGE_VERSION'] }),
     ThemePlugin({
       root: __dirname,
       content: [
@@ -55,6 +64,8 @@ export default defineConfig({
       ],
       extensions: []
     }),
+    TopLevelAwaitPlugin(),
+    WasmPlugin(),
     // https://github.com/preactjs/signals/issues/269
     ReactPlugin({ jsxRuntime: 'classic' }),
     VitePWA({

@@ -4,8 +4,8 @@
 
 import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
-import { cancelWithContext, Context } from '@dxos/context';
-import { timed } from '@dxos/debug';
+import { cancelWithContext, Context, ContextDisposedError } from '@dxos/context';
+import { timed, warnAfterTimeout } from '@dxos/debug';
 import {
   type MetadataStore,
   type Space,
@@ -15,6 +15,7 @@ import {
   type AutomergeHost,
 } from '@dxos/echo-pipeline';
 import { type FeedStore } from '@dxos/feed-store';
+import { failedInvariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -77,9 +78,12 @@ export type DataSpaceParams = {
 const ENABLE_FEED_PURGE = false;
 
 @trackLeaks('open', 'close')
+@trace.resource()
 export class DataSpace {
   private _ctx = new Context();
+  @trace.info()
   private readonly _inner: Space;
+
   private readonly _gossip: Gossip;
   private readonly _presence: Presence;
   private readonly _keyring: Keyring;
@@ -92,7 +96,7 @@ export class DataSpace {
   private readonly _automergeHost: AutomergeHost;
 
   // TODO(dmaretskyi): Move into Space?
-  private readonly _automergeSpaceState = new AutomergeSpaceState();
+  private readonly _automergeSpaceState = new AutomergeSpaceState((rootUrl) => this._onNewAutomergeRoot(rootUrl));
 
   private _state = SpaceState.CLOSED;
 
@@ -137,6 +141,7 @@ export class DataSpace {
     log('new state', { state: SpaceState[this._state] });
   }
 
+  @trace.info()
   get key() {
     return this._inner.key;
   }
@@ -145,6 +150,7 @@ export class DataSpace {
     return this._inner.isOpen;
   }
 
+  @trace.info({ enum: SpaceState })
   get state(): SpaceState {
     return this._state;
   }
@@ -172,6 +178,14 @@ export class DataSpace {
 
   get automergeSpaceState() {
     return this._automergeSpaceState;
+  }
+
+  @trace.info({ depth: null })
+  private get _automergeInfo() {
+    return {
+      rootUrl: this._automergeSpaceState.rootUrl,
+      lastEpoch: this._automergeSpaceState.lastEpoch,
+    };
   }
 
   @synchronized
@@ -232,7 +246,7 @@ export class DataSpace {
         this.metrics.pipelineInitBegin = new Date();
         await this.initializeDataPipeline();
       } catch (err) {
-        if (err instanceof CancelledError) {
+        if (err instanceof CancelledError || err instanceof ContextDisposedError) {
           log('data pipeline initialization cancelled', err);
           return;
         }
@@ -361,6 +375,34 @@ export class DataSpace {
       // Set this after credentials are notarized so that on failure we will retry.
       await this._metadataStore.setWritableFeedKeys(this.key, this.inner.controlFeedKey!, this.inner.dataFeedKey!);
     }
+  }
+
+  private _onNewAutomergeRoot(rootUrl: string) {
+    log('loading automerge root doc for space', { space: this.key, rootUrl });
+    const handle = this._automergeHost.repo.find(rootUrl as any);
+
+    queueMicrotask(async () => {
+      try {
+        await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
+          await cancelWithContext(this._ctx, handle.whenReady());
+        });
+        if (this._ctx.disposed) {
+          return;
+        }
+
+        const doc = handle.docSync() ?? failedInvariant();
+        if (!doc.experimental_spaceKey) {
+          handle.change((doc: any) => {
+            doc.experimental_spaceKey = this.key.toHex();
+          });
+        }
+      } catch (err) {
+        if (err instanceof ContextDisposedError) {
+          return;
+        }
+        log.warn('error loading automerge root doc', { space: this.key, rootUrl, err });
+      }
+    });
   }
 
   // TODO(dmaretskyi): Use profile from signing context.

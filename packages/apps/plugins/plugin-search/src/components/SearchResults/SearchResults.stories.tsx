@@ -4,9 +4,9 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import React, { type FC, useState } from 'react';
 
+import { faker } from '@dxos/random';
 import { FullscreenDecorator } from '@dxos/react-client/testing';
 import { DensityProvider } from '@dxos/react-ui';
 
@@ -30,6 +30,7 @@ const Story: FC<SearchResultsProps> = (args) => {
 };
 
 export default {
+  title: 'plugin-search/SearchResults',
   component: SearchResults,
   render: Story,
   decorators: [FullscreenDecorator()],

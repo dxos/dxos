@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
 import { expect } from 'chai';
 import ProtocolStream from 'hypercore-protocol';
 
@@ -10,6 +9,7 @@ import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { faker } from '@dxos/random';
 import { describe, test } from '@dxos/test';
 
 import { HypercoreFactory } from './hypercore-factory';

@@ -30,6 +30,9 @@
       "path": "../../../common/local-storage"
     },
     {
+      "path": "../../../common/log"
+    },
+    {
       "path": "../../../common/util"
     },
     {
@@ -72,13 +75,13 @@
       "path": "../plugin-layout"
     },
     {
+      "path": "../plugin-settings"
+    },
+    {
       "path": "../plugin-space"
     },
     {
       "path": "../plugin-theme"
-    },
-    {
-      "path": "../plugin-thread"
     }
   ]
 }

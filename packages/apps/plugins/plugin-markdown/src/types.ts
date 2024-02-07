@@ -2,16 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Document } from '@braneframe/types';
+import { type Document as DocumentType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
+  SettingsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import type { ObjectMeta } from '@dxos/react-client/echo';
-import type { EditorMode } from '@dxos/react-ui-editor';
+import { type ObjectMeta } from '@dxos/react-client/echo';
+import { type Extension, type EditorMode } from '@dxos/react-ui-editor';
 
 import { MARKDOWN_PLUGIN } from './meta';
 
@@ -19,26 +20,26 @@ const MARKDOWN_ACTION = `${MARKDOWN_PLUGIN}/action`;
 
 export enum MarkdownAction {
   CREATE = `${MARKDOWN_ACTION}/create`,
+  TOGGLE_READONLY = `${MARKDOWN_ACTION}/toggle-readonly`,
 }
 
+// TODO(burdon): Remove?
 export type MarkdownProperties = {
   title: string;
 
   // TODO(burdon): Since this is always very precisely an ECHO object why obfuscate it?
   __meta: ObjectMeta;
-  readOnly?: boolean;
+  readonly?: boolean;
 };
 
-export type MarkdownProvides = {
+export type ExtensionsProvider = (props: { document?: DocumentType }) => Extension[];
+export type OnChange = (text: string) => void;
+
+export type MarkdownExtensionProvides = {
   markdown: {
-    filter?: (document: Document) => boolean;
-    onChange?: (text: string) => void;
+    extensions: ExtensionsProvider;
   };
 };
-
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[DocumentType.name] = DocumentType;
 
 // TODO(wittjosiah): Factor out to graph plugin?
 type StackProvides = {
@@ -47,16 +48,24 @@ type StackProvides = {
   };
 };
 
+// TODO(burdon): Extend view mode per document to include scroll position, etc.
+type EditorState = {
+  readonly?: boolean;
+};
+
 export type MarkdownSettingsProps = {
+  state: { [key: string]: EditorState };
   editorMode?: EditorMode;
-  experimental?: boolean; // TODO(burdon): Flip.
+  experimental?: boolean;
+  debug?: boolean;
+  toolbar?: boolean;
+  typewriter?: string;
 };
 
 export type MarkdownPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
+  SettingsProvides<MarkdownSettingsProps> &
   TranslationsProvides &
-  StackProvides & {
-    settings: MarkdownSettingsProps;
-  };
+  StackProvides;

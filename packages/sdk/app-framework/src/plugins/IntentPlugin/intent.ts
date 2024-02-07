@@ -2,6 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
+import type { MaybePromise } from '@dxos/util';
+
+import type { Plugin } from '../PluginHost';
+
+export type IntentData<T extends Record<string, any> = Record<string, any>> = T & {
+  /**
+   * The data from the result of the previous intent.
+   */
+  result?: any;
+};
+
 /**
  * An intent is an abstract description of an operation to be performed.
  * Intents allow actions to be performed across plugins.
@@ -20,9 +31,50 @@ export type Intent = {
   action: string;
 
   /**
+   * Whether or not the intent is being undone.
+   */
+  undo?: boolean;
+
+  /**
    * Any data needed to perform the desired action.
    */
+  data?: IntentData;
+};
+
+export type IntentResult = {
+  /**
+   * The output of the action that was performed.
+   *
+   * If the intent is apart of a chain of intents, the data will be passed to the next intent.
+   */
   data?: any;
+
+  /**
+   * If provided, the action will be undoable.
+   */
+  undoable?: {
+    /**
+     * Message to display to the user when indicating that the action can be undone.
+     */
+    message: string;
+
+    /**
+     * Will be merged with the original intent data when firing the undo intent.
+     */
+    data?: IntentData;
+  };
+
+  /**
+   * An error that occurred while performing the action.
+   *
+   * If the intent is apart of a chain of intents and an error occurs, the chain will be aborted.
+   */
+  error?: Error;
+
+  /**
+   * Other intent chains to be triggered.
+   */
+  intents?: Intent[][];
 };
 
 /**
@@ -31,4 +83,12 @@ export type Intent = {
  *
  * @returns The result of the last intent.
  */
-export type DispatchIntent = (intent: Intent | Intent[]) => Promise<any>;
+export type IntentDispatcher = (intent: Intent | Intent[]) => Promise<IntentResult | void>;
+
+/**
+ * Resolves an intent that was dispatched.
+ * If the intent is not handled, nothing should be returned.
+ *
+ * @returns The result of the intent.
+ */
+export type IntentResolver = (intent: Intent, plugins: Plugin[]) => MaybePromise<IntentResult | void>;

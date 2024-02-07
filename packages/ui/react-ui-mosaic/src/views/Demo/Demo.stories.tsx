@@ -4,9 +4,9 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import React from 'react';
 
+import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Mosaic } from '../../mosaic';
@@ -19,7 +19,7 @@ import { DemoTree } from '../Tree/testing';
 faker.seed(5);
 
 export default {
-  title: 'Views/Demo',
+  title: 'react-ui-mosaic/Demo',
   decorators: [withTheme, FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',

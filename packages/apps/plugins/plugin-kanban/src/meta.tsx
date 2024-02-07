@@ -12,5 +12,7 @@ export const KANBAN_PLUGIN = 'dxos.org/plugin/kanban';
 export default pluginMeta({
   id: KANBAN_PLUGIN,
   name: 'Kanban',
+  description: 'Kanban board for managing tasks.',
+  tags: ['experimental'],
   iconComponent: (props: IconProps) => <Kanban {...props} />,
 });

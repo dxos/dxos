@@ -55,6 +55,11 @@ export type Plugin<TProvides = {}> = {
     description?: string;
 
     /**
+     * URL of home page.
+     */
+    homePage?: string;
+
+    /**
      * Tags to help categorize the plugin.
      */
     tags?: string[];
@@ -86,7 +91,7 @@ export type PluginDefinition<TProvides = {}, TInitializeProvides = {}> = Omit<Pl
    *
    * @return Capabilities provided by the plugin which are merged with base capabilities.
    */
-  initialize?: () => Promise<PluginProvides<TInitializeProvides>>;
+  initialize?: () => Promise<PluginProvides<TInitializeProvides> | void>;
 
   /**
    * Called once all plugins have been initialized.
@@ -94,6 +99,7 @@ export type PluginDefinition<TProvides = {}, TInitializeProvides = {}> = Omit<Pl
    *
    * @param plugins All plugins which successfully initialized.
    */
+  // TODO(wittjosiah): Rename `ready` to a verb?
   ready?: (plugins: Plugin[]) => Promise<void>;
 
   /**

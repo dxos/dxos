@@ -1,16 +1,18 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import '@dxosTheme';
-import { faker } from '@faker-js/faker';
+
 import { Minus, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { ObjectPresence } from '@braneframe/plugin-space';
+import { SmallPresence } from '@braneframe/plugin-space';
 import { Surface, SurfaceProvider } from '@dxos/app-framework';
 import { GraphBuilder, isGraphNode, type ActionArg } from '@dxos/app-graph';
 import { buildGraph } from '@dxos/app-graph/testing';
 import { PublicKey } from '@dxos/keys';
+import { faker } from '@dxos/random';
 import { Tooltip } from '@dxos/react-ui';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { NavTree, translations, type TreeNode } from '@dxos/react-ui-navtree';
@@ -18,7 +20,6 @@ import { fineBlockSize } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 faker.seed(3);
-const fake = faker.helpers.fake;
 
 const StorybookNavtreePresence = () => {};
 
@@ -49,8 +50,8 @@ const defaultActions: ActionArg[] = [
 const createGraph = () => {
   const content = [...Array(2)].map((_, i) => ({
     id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
-    label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
-    description: fake('{{commerce.productDescription}}'),
+    label: faker.lorem.words(2),
+    description: faker.lorem.sentence(),
     data: {
       viewers: [...Array(faker.number.int(4))].map(() => ({
         identityKey: PublicKey.random(),
@@ -59,8 +60,8 @@ const createGraph = () => {
     actions: defaultActions,
     children: [...Array(2)].map((_, j) => ({
       id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
-      label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
-      description: fake('{{commerce.productDescription}}'),
+      label: faker.lorem.words(2),
+      description: faker.lorem.sentence(),
       data: {
         viewers: [...Array(faker.number.int(4))].map(() => ({
           identityKey: PublicKey.random(),
@@ -69,8 +70,8 @@ const createGraph = () => {
       actions: defaultActions,
       children: [...Array(2)].map((_, k) => ({
         id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
-        label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
-        description: fake('{{commerce.productDescription}}'),
+        label: faker.lorem.words(2),
+        description: faker.lorem.sentence(),
         data: {
           viewers: [...Array(faker.number.int(4))].map(() => ({
             identityKey: PublicKey.random(),
@@ -97,7 +98,7 @@ export const Demo = {
                 // @ts-ignore
                 presence: ({ data: { object } }: { data: { object: any } }) => {
                   return (
-                    <ObjectPresence size={2} viewers={object?.viewers ?? []} classNames={[fineBlockSize, 'is-6']} />
+                    <SmallPresence size={2} members={object?.viewers ?? []} classNames={[fineBlockSize, 'is-6']} />
                   );
                 },
               },
@@ -111,7 +112,9 @@ export const Demo = {
   },
 };
 
+// TODO(burdon): Move to react-ui-navtree?
 export default {
+  title: 'composer-app/StorybookNavtreePresence',
   component: StorybookNavtreePresence,
   decorators: [withTheme],
   parameters: { translations },

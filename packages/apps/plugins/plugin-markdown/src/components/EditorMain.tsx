@@ -2,79 +2,103 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type HTMLAttributes, type RefCallback } from 'react';
+import React, { type HTMLAttributes, useMemo, useEffect } from 'react';
 
+import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
 import { useTranslation } from '@dxos/react-ui';
-import { type TextEditorProps, type TextEditorRef, MarkdownEditor } from '@dxos/react-ui-editor';
-import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
+import {
+  type TextEditorProps,
+  type Comment,
+  MarkdownEditor,
+  Toolbar,
+  focusComment,
+  useComments,
+  useEditorView,
+  useActionHandler,
+  useFormattingState,
+} from '@dxos/react-ui-editor';
+import { focusRing, attentionSurface, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
-import { EmbeddedLayout } from './EmbeddedLayout';
-import { StandaloneLayout } from './StandaloneLayout';
-import { useExtensions, type UseExtensionsOptions } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
-import type { MarkdownProperties } from '../types';
-
-export type SearchResult = {
-  text: string;
-  url: string;
-};
 
 export type EditorMainProps = {
-  editorRefCb?: RefCallback<TextEditorRef>;
-  properties: MarkdownProperties;
-  layout: 'standalone' | 'embedded';
-  extensions?: UseExtensionsOptions;
-} & Pick<TextEditorProps, 'model' | 'editorMode'>;
+  comments?: Comment[];
+  toolbar?: boolean;
+} & Pick<TextEditorProps, 'model' | 'readonly' | 'extensions'>;
 
-export const EditorMain = ({
-  editorRefCb,
-  model,
-  properties,
-  layout,
-  editorMode,
-  extensions: _extensions,
-}: EditorMainProps) => {
+const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
-  const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
-  const extensions = useExtensions(_extensions);
+
+  const [editorRef, editorView] = useEditorView();
+  useComments(editorView, comments);
+  const handleAction = useActionHandler(editorView);
+
+  // Expose editor view for playwright tests.
+  // TODO(wittjosiah): Find a better way to expose this or find a way to limit it to test runs.
+  useEffect(() => {
+    const composer = (window as any).composer;
+    if (composer) {
+      composer.editorView = editorView;
+    }
+  }, [editorView]);
+
+  // Focus comment.
+  useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
+    switch (action) {
+      case LayoutAction.FOCUS: {
+        const object = data?.object;
+        if (editorView) {
+          focusComment(editorView, object);
+          return { data: true };
+        }
+        break;
+      }
+    }
+  });
+
+  // Toolbar state.
+  const [formattingState, formattingObserver] = useFormattingState();
+  const extensions = useMemo(() => [...(_extensions ?? []), formattingObserver], [_extensions, formattingObserver]);
 
   return (
-    <Root properties={properties} model={model}>
+    <>
+      {toolbar && (
+        <Toolbar.Root
+          onAction={handleAction}
+          state={formattingState}
+          classNames='max-is-[60rem] justify-self-center border-be separator-separator'
+        >
+          <Toolbar.Markdown />
+          <Toolbar.Separator />
+          <Toolbar.Extended />
+        </Toolbar.Root>
+      )}
       <MarkdownEditor
-        ref={editorRefCb}
-        model={model}
-        editorMode={editorMode}
+        ref={editorRef}
+        autoFocus
+        placeholder={t('editor placeholder')}
         extensions={extensions}
         slots={{
           root: {
-            role: 'none',
             className: mx(
               focusRing,
-              inputSurface,
-              surfaceElevation({ elevation: 'group' }),
-              layout !== 'embedded' && 'rounded',
-              'flex flex-col shrink-0 grow pli-10 m-0.5 py-2',
+              'overflow-y-auto overscroll-auto scroll-smooth overflow-anchored after:block after:is-px after:bs-px after:overflow-anchor',
             ),
             'data-testid': 'composer.markdownRoot',
           } as HTMLAttributes<HTMLDivElement>,
           editor: {
-            placeholder: t('editor placeholder'),
-            theme: {
-              '&, & .cm-scroller': {
-                display: 'flex',
-                flexDirection: 'column',
-                flex: '1 0 auto',
-                inlineSize: '100%',
-              },
-              '& .cm-content': {
-                flex: '1 0 auto',
-                inlineSize: '100%',
-                paddingBlock: '1rem',
-              },
-            },
+            className: mx(
+              attentionSurface,
+              textBlockWidth,
+              'is-full min-bs-[calc(100%-2rem)] pli-3 sm:pli-6 md:pli-10 py-4 mbe-[50dvh] border-be md:border-is md:border-ie separator-separator',
+              !toolbar && 'border-bs',
+            ),
           },
         }}
+        {...props}
       />
-    </Root>
+    </>
   );
 };
+
+export default EditorMain;

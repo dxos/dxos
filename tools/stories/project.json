@@ -4,6 +4,7 @@
   "targets": {
     "chromatic": {
       "dependsOn": [
+        "chromatic-examples",
         "chromatic-shell",
         "chromatic-ui"
       ],
@@ -102,7 +103,7 @@
         }
       },
       "dependsOn": [
-        "examples:compile"
+        "examples:prebuild"
       ],
       "executor": "@nx/storybook:build",
       "options": {
@@ -179,5 +180,7 @@
         "configDir": "tools/stories/examples-stories"
       }
     }
-  }
+  },
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "stories"
 }

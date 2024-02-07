@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
 import React, { type FC } from 'react';
 
+import { faker } from '@dxos/random';
 import { type PublicKey } from '@dxos/react-client';
 import { Expando } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
@@ -42,7 +42,7 @@ const Story: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
 };
 
 export default {
-  title: 'Views/Demo',
+  title: 'react-ui-mosaic/Demo',
   render: () => (
     <ClientRepeater
       Component={Story}

@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
 import fs from 'fs';
 import yaml from 'js-yaml';
 import uniq from 'uniq';
+
+import { faker } from '@dxos/random';
 
 faker.seed(0xdeadbeef);
 
@@ -20,7 +21,7 @@ const clean = (array: string[]) => {
 };
 
 const select = (array: string[], n: number) => {
-  const unique = faker.helpers.arrayElements(array, n);
+  const unique = faker.helpers.uniqueArray(array, n);
   unique.sort();
   return unique;
 };

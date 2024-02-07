@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { ChatOllama } from '@langchain/community/chat_models/ollama';
+import { OllamaEmbeddings } from '@langchain/community/embeddings/ollama';
 import { type BaseChatModelParams } from 'langchain/chat_models/base';
-import { ChatOllama } from 'langchain/chat_models/ollama';
 import { type EmbeddingsParams } from 'langchain/embeddings/base';
-import { OllamaEmbeddings } from 'langchain/embeddings/ollama';
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { ChainResources, type ChainResourcesOptions } from '../resources';
@@ -67,7 +67,7 @@ export type OllamaChainResourcesOptions = ChainResourcesOptions<
  * https://github.com/jmorganca/ollama#model-library
  * https://ai.meta.com/llama/get-started
  */
-export const createOllamaChainResources = (options: OllamaChainResourcesOptions) => {
+export const createOllamaChainResources = (options: OllamaChainResourcesOptions): ChainResources => {
   const embeddings = new OllamaEmbeddings({
     ...options.embeddings,
   });

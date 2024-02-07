@@ -12,16 +12,18 @@ import {
   type UpdateStatusRequest,
   type QueryStatusRequest,
   type QueryStatusResponse,
+  type Platform,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { jsonKeyReplacer, type MaybePromise } from '@dxos/util';
 
 import { type Diagnostics } from '../services';
+import { getPlatform } from '../services/platform';
 
 export type SystemServiceOptions = {
-  config?: Config;
+  config?: () => MaybePromise<Config | undefined>;
   statusUpdate: Event<void>;
   getCurrentStatus: () => SystemStatus;
-  getDiagnostics: () => Promise<Partial<Diagnostics>>;
+  getDiagnostics: () => Promise<Partial<Diagnostics['services']>>;
   onUpdateStatus: (status: SystemStatus) => MaybePromise<void>;
   onReset: () => MaybePromise<void>;
 };
@@ -51,7 +53,7 @@ export class SystemServiceImpl implements SystemService {
   }
 
   async getConfig() {
-    return this._config?.values ?? {};
+    return (await this._config?.())?.values ?? {};
   }
 
   /**
@@ -71,6 +73,10 @@ export class SystemServiceImpl implements SystemService {
         ),
       ),
     };
+  }
+
+  async getPlatform(): Promise<Platform> {
+    return getPlatform();
   }
 
   async updateStatus({ status }: UpdateStatusRequest) {

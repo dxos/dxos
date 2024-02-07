@@ -4,7 +4,6 @@
 
 import { inspect, type CustomInspectFunction } from 'node:util';
 
-import { type ChangeFn } from '@dxos/automerge/automerge';
 import { invariant } from '@dxos/invariant';
 
 import { AutomergeObject } from './automerge-object';
@@ -13,6 +12,7 @@ import { base } from '../object';
 const isIndex = (property: string | symbol): property is string =>
   typeof property === 'string' && parseInt(property).toString() === property;
 
+// TODO(dmaretskyi): Rename to `AutomergeArrayApi`.
 export class AutomergeArray<T> implements Array<T> {
   /**
    * Until this array is attached a document, the items are stored in this array.
@@ -37,23 +37,47 @@ export class AutomergeArray<T> implements Array<T> {
   constructor(items: T[] = []) {
     this._uninitialized = [...items];
 
-    // Change type returned by `new`.
-    return new Proxy(this, {
-      get: (target, property, receiver) => {
+    return new Proxy<AutomergeArray<T>>([] as any as AutomergeArray<T>, {
+      defineProperty: (_, property: string | symbol, attributes: PropertyDescriptor): boolean => {
+        Object.defineProperty(this, property, attributes);
+        return true;
+      },
+
+      deleteProperty: (_, p: string | symbol): boolean => {
+        return delete this[p as any];
+      },
+
+      get: (_, property, receiver) => {
         if (isIndex(property)) {
           return this._get(+property);
         } else {
-          return Reflect.get(target, property, receiver);
+          return Reflect.get(this, property, receiver);
         }
       },
 
-      set: (target, property, value, receiver) => {
+      set: (_, property, value, receiver) => {
         if (isIndex(property)) {
           this._set(+property, value);
           return true;
         } else {
-          return Reflect.set(target, property, value, receiver);
+          return Reflect.set(this, property, value, receiver);
         }
+      },
+
+      has: (_, symbol) => {
+        return this._has(symbol);
+      },
+
+      getOwnPropertyDescriptor: (_, p: string | symbol): PropertyDescriptor | undefined => {
+        return Object.getOwnPropertyDescriptor(this, p);
+      },
+
+      getPrototypeOf: (_): object | null => {
+        return Object.getPrototypeOf(this);
+      },
+
+      ownKeys: (_): ArrayLike<string | symbol> => {
+        return Reflect.ownKeys(this);
       },
     });
   }
@@ -117,19 +141,21 @@ export class AutomergeArray<T> implements Array<T> {
       invariant(this._object?.[base] instanceof AutomergeObject);
       const deletedItems = deleteCount !== undefined ? this.slice(start, start + deleteCount) : [];
 
-      const fullPath = [...this._object._path, ...this._path!];
+      const fullPath = [...this._object._core.mountPath, ...this._path!];
 
       // TODO(mykola): Do not allow direct access to doc in array.
-      const changeFn: ChangeFn<any> = (doc) => {
+
+      const encodedItems = items.map((value) => this._object!._core.encode(value as any));
+
+      this._object._core.change((doc) => {
         let parent = doc;
         for (const key of fullPath.slice(0, -1)) {
           parent = parent[key];
         }
         const array: any[] = parent[fullPath.at(-1)!];
         invariant(Array.isArray(array));
-        array.splice(start, deleteCount ?? 0, ...items.map((value) => this._object!._encode(value)));
-      };
-      this._object._change(changeFn);
+        array.splice(start, deleteCount ?? 0, ...encodedItems);
+      });
       return deletedItems;
     } else {
       invariant(this._uninitialized);
@@ -234,7 +260,19 @@ export class AutomergeArray<T> implements Array<T> {
   }
 
   entries(): IterableIterator<[number, T]> {
-    throw new Error('Method not implemented.');
+    if (this._object) {
+      invariant(this._object?.[base] instanceof AutomergeObject);
+
+      const array = this._getArray();
+      if (!array) {
+        return [][Symbol.iterator]();
+      }
+
+      return (array.filter(Boolean) as T[]).entries();
+    } else {
+      invariant(this._uninitialized);
+      return this._uninitialized.entries();
+    }
   }
 
   keys(): IterableIterator<number> {
@@ -279,10 +317,11 @@ export class AutomergeArray<T> implements Array<T> {
 
   push(...items: T[]) {
     if (this._object) {
-      const fullPath = [...this._object._path, ...this._path!];
+      const fullPath = [...this._object._core.mountPath, ...this._path!];
 
       // TODO(mykola): Do not allow direct access to doc in array.
-      const changeFn: ChangeFn<any> = (doc) => {
+      const encodedItems = items.map((value) => this._object!._core.encode(value as any));
+      this._object._core.change((doc) => {
         let parent = doc;
         for (const key of fullPath.slice(0, -1)) {
           parent = parent[key];
@@ -290,9 +329,8 @@ export class AutomergeArray<T> implements Array<T> {
         const array: any[] = parent[fullPath.at(-1)!];
         invariant(Array.isArray(array));
 
-        array.push(...items.map((value) => this._object!._encode(value)));
-      };
-      this._object._change(changeFn);
+        array.push(...encodedItems);
+      });
     } else {
       invariant(this._uninitialized);
       this._uninitialized.push(...items);
@@ -348,6 +386,17 @@ export class AutomergeArray<T> implements Array<T> {
     }
   }
 
+  private _has(property: string | symbol) {
+    if (typeof property === 'symbol') {
+      return property in this;
+    }
+    const parsedIndex = parseInt(property);
+    if (!Number.isNaN(parsedIndex)) {
+      return parsedIndex < this.length;
+    }
+    return property in this;
+  }
+
   private _set(index: number, value: T) {
     if (this._object) {
       this._setModel(index, value);
@@ -358,32 +407,40 @@ export class AutomergeArray<T> implements Array<T> {
   }
 
   private _getModel(index: number): T | undefined {
-    return this._getArray()[index] as T | undefined;
+    invariant(this._object?.[base] instanceof AutomergeObject);
+    const relativePath = [...this._path!, String(index)];
+    const value = this._object._get(relativePath);
+    return this._object._mapToEchoObject(relativePath, value);
   }
 
   private _setModel(index: number, value: T) {
     invariant(this._object?.[base] instanceof AutomergeObject);
 
-    const fullPath = [...this._object._path, ...this._path!];
+    const fullPath = [...this._object._core.mountPath, ...this._path!];
+
+    const encodedValue = this._object!._core.encode(value as any);
 
     // TODO(mykola): Do not allow direct access to doc in array.
-    const changeFn: ChangeFn<any> = (doc) => {
+    this._object._core.change((doc) => {
       let parent = doc;
       for (const key of fullPath.slice(0, -1)) {
         parent = parent[key];
       }
       const array: any[] = parent[fullPath.at(-1)!];
       invariant(Array.isArray(array));
-      array[index] = this._object!._encode(value);
-    };
-    this._object._change(changeFn);
+      // TODO(dmaretskyi): Remove recursive doc.change calls. How do they even work?
+      array[index] = encodedValue;
+    });
   }
 
   private _getArray(): T[] {
     // TODO(mykola): Add cache to improve performance?
-    invariant(this._object?.[base] instanceof AutomergeObject);
-    const array = this._object._get(this._path!);
+    const obj = this._object;
+    invariant(obj?.[base] instanceof AutomergeObject);
+    const array = obj._get(this._path!);
     invariant(Array.isArray(array));
-    return array;
+    return array.map((value, idx) => {
+      return obj._mapToEchoObject([...this._path!, String(idx)], value);
+    });
   }
 }

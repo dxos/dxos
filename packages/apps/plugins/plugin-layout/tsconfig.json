@@ -27,6 +27,9 @@
       "path": "../../../common/invariant"
     },
     {
+      "path": "../../../common/keyboard"
+    },
+    {
       "path": "../../../common/local-storage"
     },
     {
@@ -46,6 +49,12 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-observability"
+    },
+    {
+      "path": "../plugin-settings"
     },
     {
       "path": "../plugin-theme"

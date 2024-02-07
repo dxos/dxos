@@ -16,6 +16,7 @@ import { type AutomergeContext, AutomergeDb, AutomergeObject } from './automerge
 import { type Hypergraph } from './hypergraph';
 import { type EchoObject, base, db, TextObject } from './object';
 import { TypedObject } from './object';
+import { AbstractEchoObject } from './object/object';
 import { type Schema } from './proto';
 import { type FilterSource, type Query } from './query';
 
@@ -227,6 +228,7 @@ export class EchoDatabase {
           continue;
         }
 
+        invariant(obj[base] instanceof AbstractEchoObject);
         obj[base]._id = object.id;
         log('add to set', { id: obj[base]._id, instance: getDebugName(obj) });
         invariant(!this._objects.has(object.id));
@@ -240,6 +242,8 @@ export class EchoDatabase {
     // Remove objects that are no longer in the database.
     for (const [id, obj] of this._objects.entries()) {
       if (!this._itemManager.entities.has(id)) {
+        invariant(obj[base] instanceof AbstractEchoObject);
+
         if (obj[base]._item) {
           obj[base]._item.deleted = true;
         }
@@ -254,6 +258,7 @@ export class EchoDatabase {
     for (const item of updateEvent.itemsUpdated) {
       const obj = this._objects.get(item.id);
       if (obj) {
+        invariant(obj[base] instanceof AbstractEchoObject);
         obj[base]._itemUpdate();
       }
     }
@@ -268,12 +273,12 @@ export class EchoDatabase {
     if (item.modelType === DocumentModel.meta.type) {
       const state = item.state as DocumentModelState;
       if (!state.type) {
-        return new TypedObject(undefined, { useAutomergeBackend: false });
+        return new TypedObject(undefined, { automerge: false });
       } else {
-        return new TypedObject(undefined, { type: state.type, useAutomergeBackend: false });
+        return new TypedObject(undefined, { type: state.type, automerge: false });
       }
     } else if (item.modelType === TextModel.meta.type) {
-      return new TextObject(undefined, undefined, undefined, { useAutomergeBackend: false });
+      return new TextObject(undefined, undefined, undefined, { automerge: false });
     } else {
       log.warn('Unknown model type', { type: item.modelType });
       return undefined;

@@ -8,7 +8,7 @@ import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/docum
 import { type TextSnapshot } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 import { type AbstractEchoObject } from './object';
-import { isActualAutomergeObject } from './typed-object';
+import { isAutomergeObject } from './typed-object';
 import { base, type EchoObject, type ForeignKey } from './types';
 import type { EchoDatabase } from '../database';
 
@@ -22,10 +22,11 @@ export const forceUpdate = (obj: AbstractEchoObject) => {
 };
 
 export const getDatabaseFromObject = (obj: EchoObject): EchoDatabase | undefined => {
-  if (isActualAutomergeObject(obj)) {
-    return obj[base]._database._echoDatabase;
+  if (isAutomergeObject(obj)) {
+    return obj[base]._core.database?._echoDatabase;
   }
-  return obj[base]._database;
+
+  return (obj[base] as AbstractEchoObject)._database;
 };
 
 export const getReferenceWithSpaceKey = (obj: EchoObject): Reference | undefined => {
@@ -33,5 +34,6 @@ export const getReferenceWithSpaceKey = (obj: EchoObject): Reference | undefined
   return db && new Reference(obj.id, undefined, db.spaceKey.toHex());
 };
 
-export const matchKeys = (a: ForeignKey[], b: ForeignKey[]): boolean =>
-  a.some((keyA) => b.some((keyB) => keyA.source === keyB.source && keyA.id === keyB.id));
+export const matchKeys = (a: ForeignKey[], b: ForeignKey[]): boolean => {
+  return a.some((keyA) => b.some((keyB) => keyA.source === keyB.source && keyA.id === keyB.id));
+};

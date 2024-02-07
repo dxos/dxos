@@ -8,6 +8,7 @@ import { describe, test } from '@dxos/test';
 
 import { Contact, Container, Task, types } from './proto';
 import { immutable, Expando } from '../object';
+import { toJsonSchema } from '../object/json-schema';
 import { Schema } from '../proto';
 import { Filter } from '../query';
 import { TestBuilder, createDatabase } from '../testing';
@@ -47,37 +48,36 @@ describe('static schema', () => {
       assignee: {
         '@type': 'dxos.echo.model.document.Reference',
         itemId: contact.id,
+        protocol: null,
+        host: null,
       },
     });
-    expect(JSON.stringify(task1, null, 4)).to.equal(
-      JSON.stringify(
-        {
-          '@backend': 'hypercore',
-          '@id': task1.id,
-          '@type': {
-            '@type': 'dxos.echo.model.document.Reference',
-            itemId: task1.__typename,
-            protocol: 'protobuf',
-            host: 'dxos.org',
-          },
-          '@model': 'dxos.org/model/document',
-          '@meta': { keys: [] },
-          subTasks: [],
-          description: {
-            '@type': 'dxos.echo.model.document.Reference',
-            itemId: task1.description.id,
-          },
-          todos: [],
-          title: 'Task 1',
-          assignee: {
-            '@type': 'dxos.echo.model.document.Reference',
-            itemId: contact.id,
-          },
-        },
-        null,
-        4,
-      ),
-    );
+    expect(JSON.parse(JSON.stringify(task1, null, 4))).to.deep.contain({
+      '@backend': 'automerge',
+      '@id': task1.id,
+      '@type': {
+        '@type': 'dxos.echo.model.document.Reference',
+        itemId: task1.__typename,
+        protocol: 'protobuf',
+        host: 'dxos.org',
+      },
+      '@meta': { keys: [] },
+      description: {
+        '@type': 'dxos.echo.model.document.Reference',
+        itemId: task1.description.id,
+        host: null,
+        protocol: null,
+      },
+      subTasks: [],
+      todos: [],
+      title: 'Task 1',
+      assignee: {
+        '@type': 'dxos.echo.model.document.Reference',
+        itemId: contact.id,
+        protocol: null,
+        host: null,
+      },
+    });
   });
 
   test('json with recursion', () => {
@@ -86,7 +86,7 @@ describe('static schema', () => {
     contact.tasks.push(new Task({ title: 'Task 2', assignee: contact }));
 
     expect(contact.toJSON()).to.deep.eq({
-      '@backend': 'hypercore',
+      '@backend': 'automerge',
       '@id': contact.id,
       '@type': {
         '@type': 'dxos.echo.model.document.Reference',
@@ -94,17 +94,20 @@ describe('static schema', () => {
         itemId: contact.__typename,
         protocol: 'protobuf',
       },
-      '@model': 'dxos.org/model/document',
       '@meta': { keys: [] },
       name: 'User 1',
       tasks: [
         {
           '@type': 'dxos.echo.model.document.Reference',
           itemId: contact.tasks[0].id,
+          protocol: null,
+          host: null,
         },
         {
           '@type': 'dxos.echo.model.document.Reference',
           itemId: contact.tasks[1].id,
+          protocol: null,
+          host: null,
         },
       ],
     });
@@ -193,5 +196,11 @@ describe('static schema', () => {
       builder.graph.addTypes(types);
       expect(task2!.__schema?.typename).to.eq('example.test.Task');
     }
+  });
+
+  test('convert to JSON schema', () => {
+    const contact = new Contact();
+    const schema = toJsonSchema(contact.__schema!);
+    expect(Object.keys(schema.properties!)).to.have.length(6);
   });
 });

@@ -16,7 +16,7 @@ export type FileCardProps = {
   object: FileType;
 };
 
-export const FileCard: MosaicTileComponent<FileCardProps> = forwardRef(
+const FileCard: MosaicTileComponent<FileCardProps> = forwardRef(
   (
     { classNames, isDragging, draggableStyle, draggableProps, item: { id, object: file }, grow, onSelect, onAction },
     forwardRef,
@@ -42,3 +42,5 @@ export const FileCard: MosaicTileComponent<FileCardProps> = forwardRef(
     );
   },
 );
+
+export default FileCard;

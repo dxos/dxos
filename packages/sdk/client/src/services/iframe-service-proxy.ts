@@ -14,10 +14,11 @@ import {
 import { type Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log, type LogFilter, parseFilter } from '@dxos/log';
-import { RemoteServiceConnectionTimeout, trace } from '@dxos/protocols';
+import { RemoteServiceConnectionTimeout, trace as Trace } from '@dxos/protocols';
 import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
 import { type RpcPort, type ServiceBundle } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
+import { trace } from '@dxos/tracing';
 
 import { IFrameManager } from './iframe-manager';
 import { ClientServicesProxy } from './service-proxy';
@@ -35,17 +36,18 @@ export type IFrameClientServicesProxyOptions = {
 
 /**
  * Proxy to host client service via iframe.
+ *
+ * @deprecated
  */
+@trace.resource()
 export class IFrameClientServicesProxy implements ClientServicesProvider {
-  readonly joinedSpace = new Event<PublicKey>();
-
+  readonly closed = new Event<Error | undefined>();
   /**
    * @internal
    */
-  _shellManager?: ShellManager;
-  private _iframe?: HTMLIFrameElement;
+  readonly _shellManager?: ShellManager;
+  private readonly _iframeManager: IFrameManager;
   private _appPort!: RpcPort;
-  private _iframeManager: IFrameManager;
   private _clientServicesProxy?: ClientServicesProxy;
   private _loggingStream?: Stream<LogEntry>;
   private readonly _source: string;
@@ -113,6 +115,10 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
         }
       },
     });
+
+    if (typeof this._shell === 'string') {
+      this._shellManager = new ShellManager(this._iframeManager);
+    }
   }
 
   get proxy() {
@@ -132,7 +138,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
       return;
     }
 
-    log.trace('dxos.sdk.iframe-client-services-proxy', trace.begin({ id: this._instanceId }));
+    log.trace('dxos.sdk.iframe-clientTraceices-proxy', Trace.begin({ id: this._instanceId }));
 
     await this._iframeManager.open();
     this._clientServicesProxy = new ClientServicesProxy(this._appPort);
@@ -158,24 +164,15 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
       }
     });
 
-    if (typeof this._shell !== 'string') {
-      return;
-    }
-
-    this._shellManager = new ShellManager(this._iframeManager, this.joinedSpace);
-    await this._shellManager.open();
+    await this._shellManager?.open();
   }
 
   async close() {
     await this._shellManager?.close();
+    await this._iframeManager.close();
     await this._loggingStream?.close();
     await this._clientServicesProxy?.close();
-    this._shellManager = undefined;
     this._clientServicesProxy = undefined;
-    if (this._iframe) {
-      this._iframe.remove();
-      this._iframe = undefined;
-    }
-    log.trace('dxos.sdk.iframe-client-services-proxy', trace.end({ id: this._instanceId }));
+    log.trace('dxos.sdk.iframe-clientTraceices-proxy', Trace.end({ id: this._instanceId }));
   }
 }

@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
-
 import { Expando, type TypedObject, Schema, type Space } from '@dxos/client/echo';
+import { faker } from '@dxos/random';
 
 import { type TestSchemaType } from './data';
 import { type TestGeneratorMap, type TestObjectProvider, type TestSchemaMap } from './types';
@@ -57,7 +56,11 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
  * Typed object generator for a space.
  */
 export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<T> {
-  constructor(private readonly _space: Space, schemaMap: TestSchemaMap<T>, generators: TestGeneratorMap<T>) {
+  constructor(
+    private readonly _space: Space,
+    schemaMap: TestSchemaMap<T>,
+    generators: TestGeneratorMap<T>,
+  ) {
     super(schemaMap, generators, (type: T) => {
       const { objects } = this._space.db.query((object) => {
         return object.__schema?.id === this.getSchema(type)?.id;

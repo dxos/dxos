@@ -2,118 +2,179 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Users } from '@phosphor-icons/react';
 import React from 'react';
 
-import { parseIntentPlugin, usePlugin, useResolvePlugin } from '@dxos/app-framework';
-import { type TypedObject, getSpaceForObject, useSpace } from '@dxos/react-client/echo';
+import { usePlugin } from '@dxos/app-framework';
+import { generateName } from '@dxos/display-name';
+import { type PublicKey, useClient } from '@dxos/react-client';
+import { type TypedObject, getSpaceForObject, useSpace, useMembers, type SpaceMember } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import {
   Avatar,
   AvatarGroup,
   AvatarGroupItem,
-  Button,
   type Size,
   type ThemedClassName,
   Tooltip,
   useDensityContext,
   useTranslation,
+  Button,
 } from '@dxos/react-ui';
-import { getColorForValue, getSize, mx } from '@dxos/react-ui-theme';
+import { getColorForValue, mx } from '@dxos/react-ui-theme';
+import { ComplexMap } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';
-import { SpaceAction, type SpacePluginProvides, type ObjectViewer } from '../types';
+import type { SpacePluginProvides } from '../types';
 
-export const SpacePresence = ({ object }: { object: TypedObject }) => {
-  const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
-  const intentPlugin = useResolvePlugin(parseIntentPlugin);
+export const SpacePresence = ({ object, spaceKey }: { object: TypedObject; spaceKey?: PublicKey }) => {
   const density = useDensityContext();
-  const defaultSpace = useSpace();
+  const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
+  const client = useClient();
   const identity = useIdentity();
+  const defaultSpace = useSpace();
+  const space = spaceKey ? client.spaces.get(spaceKey) : getSpaceForObject(object);
+  const spaceMembers = useMembers(space?.key);
 
-  if (!identity || !spacePlugin || !intentPlugin) {
+  if (!identity || !spacePlugin || !space || defaultSpace?.key.equals(space.key)) {
     return null;
   }
 
-  const space = getSpaceForObject(object);
+  // TODO(wittjosiah): This isn't working because of issue w/ deepsignal state.
+  //  Assigning plugin to deepsignal seems to create a new instance of objects in provides and breaks the reference.
+  const viewers = spacePlugin.provides.space.viewers
+    .filter((viewer) => {
+      return (
+        space.key.equals(viewer.spaceKey) && object.id === viewer.objectId && Date.now() - viewer.lastSeen < 30_000
+      );
+    })
+    .reduce(
+      (viewers, viewer) => {
+        viewers.set(viewer.identityKey, viewer.lastSeen);
+        return viewers;
+      },
+      new ComplexMap<PublicKey, number>((key) => key.toHex()),
+    );
 
-  const handleShare = () => {
-    void intentPlugin!.provides.intent.dispatch({
-      plugin: SPACE_PLUGIN,
-      action: SpaceAction.SHARE,
-      data: { spaceKey: space!.key.toHex() },
-    });
-  };
+  const members = spaceMembers
+    .filter((member) => member.presence === 1 && !identity.identityKey.equals(member.identity.identityKey))
+    .map((member) => ({
+      ...member,
+      match: viewers.has(member.identity.identityKey),
+      lastSeen: viewers.get(member.identity.identityKey) ?? Infinity,
+    }))
+    .toSorted((a, b) => a.lastSeen - b.lastSeen);
 
-  if (!space || defaultSpace?.key.equals(space.key)) {
-    return null;
-  }
+  const onMoreClick = () => client.shell.shareSpace({ spaceKey: space.key });
 
-  const viewers = spacePlugin.provides.space.viewers.filter((viewer) => {
-    return space.key.equals(viewer.spaceKey) && object.id === viewer.objectId && Date.now() - viewer.lastSeen < 30_000;
-  });
-
-  return (
-    <ObjectPresence
-      size={density === 'fine' ? 2 : 4}
-      classNames={density === 'fine' ? 'is-6' : 'pli-2.5'}
-      onShareClick={handleShare}
-      viewers={viewers}
-    />
+  return density === 'fine' ? (
+    <SmallPresence members={members.filter((member) => member.match)} />
+  ) : (
+    <FullPresence members={members} onMoreClick={onMoreClick} />
   );
 };
 
-export type ObjectPresenceProps = ThemedClassName<{
+export type Member = SpaceMember & {
+  /**
+   * True if the member is currently viewing the specified object.
+   */
+  match: boolean;
+
+  /**
+   * Last time a member was seen on this object.
+   */
+  lastSeen: number;
+};
+
+export type MemberPresenceProps = ThemedClassName<{
   size?: Size;
-  viewers?: ObjectViewer[];
+  members?: Member[];
   showCount?: boolean;
-  onShareClick?: () => void;
+  onMemberClick?: (member: Member) => void;
+  onMoreClick?: () => void;
 }>;
 
-export const ObjectPresence = (props: ObjectPresenceProps) => {
-  const {
-    onShareClick,
-    viewers = [],
-    size = 4,
-    showCount = !props?.size || (props.size !== 'px' && props.size > 4),
-    classNames,
-  } = props;
+export const FullPresence = (props: MemberPresenceProps) => {
+  const { members = [], size = 9, onMemberClick, onMoreClick } = props;
   const { t } = useTranslation(SPACE_PLUGIN);
-  const density = useDensityContext();
-  return density === 'fine' && viewers.length === 0 ? (
+
+  if (members.length === 0) {
+    return null;
+  }
+
+  return (
+    <AvatarGroup.Root size={size} classNames='mbs-2 mie-4'>
+      {members.slice(0, 3).map((member, i) => {
+        const memberHex = member.identity.identityKey.toHex();
+        const status = member.match ? 'current' : 'active';
+        const name = member.identity.profile?.displayName ?? generateName(member.identity.identityKey.toHex());
+        return (
+          <Tooltip.Root key={memberHex}>
+            <Tooltip.Trigger>
+              <AvatarGroupItem.Root color={getColorForValue({ value: memberHex, type: 'color' })} status={status}>
+                <Avatar.Frame style={{ zIndex: members.length - i }} onClick={() => onMemberClick?.(member)}>
+                  <Avatar.Fallback text={name[0]} />
+                </Avatar.Frame>
+              </AvatarGroupItem.Root>
+            </Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Content side='bottom'>
+                <span>{name}</span>
+                <Tooltip.Arrow />
+              </Tooltip.Content>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+        );
+      })}
+
+      {members.length > 3 && (
+        <Tooltip.Root>
+          <Tooltip.Trigger>
+            <AvatarGroupItem.Root color='#ccc' status='inactive'>
+              <Avatar.Frame style={{ zIndex: members.length - 4 }} onClick={onMoreClick}>
+                {/* TODO(wittjosiah): Make text fit. */}
+                <Avatar.Fallback text={`+${members.length - 3}`} />
+              </Avatar.Frame>
+            </AvatarGroupItem.Root>
+          </Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Content side='bottom'>
+              <span>
+                {t('viewers label', { count: members.filter((member) => member.match).length })}
+                {t('members online label', { count: members.length - members.filter((member) => member.match).length })}
+              </span>
+              <Tooltip.Arrow />
+            </Tooltip.Content>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+      )}
+    </AvatarGroup.Root>
+  );
+};
+
+export const SmallPresence = (props: MemberPresenceProps) => {
+  const { members = [], size = 2, classNames } = props;
+  const { t } = useTranslation(SPACE_PLUGIN);
+  return members.length === 0 ? (
     <div role='none' className={mx(classNames)} />
   ) : (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
-        <Button variant='ghost' classNames={['pli-0', classNames]} onClick={onShareClick}>
-          {onShareClick && viewers.length === 0 && (
-            <>
-              <Users className={getSize(4)} />
-              <span className='sr-only'>{t('share space')}</span>
-            </>
-          )}
-          {viewers.length > 0 && (
-            <AvatarGroup.Root size={size} classNames={size !== 'px' && size > 3 ? 'm-2 mie-4' : 'm-1 mie-2'}>
-              {viewers.length > 3 && showCount && (
-                <AvatarGroup.Label classNames='text-xs font-system-semibold'>{viewers.length}</AvatarGroup.Label>
-              )}
-              {viewers.slice(0, 3).map((viewer, i) => {
-                const viewerHex = viewer.identityKey.toHex();
-                return (
-                  <AvatarGroupItem.Root key={viewerHex} color={getColorForValue({ value: viewerHex, type: 'color' })}>
-                    <Avatar.Frame style={{ zIndex: viewers.length - i }}>
-                      <Avatar.Fallback href={viewerHex} />
-                    </Avatar.Frame>
-                  </AvatarGroupItem.Root>
-                );
-              })}
-            </AvatarGroup.Root>
-          )}
+        <Button variant='ghost' classNames={['pli-0', classNames]}>
+          <AvatarGroup.Root size={size} classNames='m-1 mie-2'>
+            {members.slice(0, 3).map((viewer, i) => {
+              const viewerHex = viewer.identity.identityKey.toHex();
+              return (
+                <AvatarGroupItem.Root key={viewerHex} color={getColorForValue({ value: viewerHex, type: 'color' })}>
+                  <Avatar.Frame style={{ zIndex: members.length - i }} />
+                </AvatarGroupItem.Root>
+              );
+            })}
+          </AvatarGroup.Root>
         </Button>
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content side='bottom' classNames='z-[70]'>
-          <span>{viewers.length > 0 ? t('presence label', { count: viewers.length }) : t('share space')}</span>
+          <span>{t('presence label', { count: members.length })}</span>
           <Tooltip.Arrow />
         </Tooltip.Content>
       </Tooltip.Portal>

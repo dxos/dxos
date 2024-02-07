@@ -18,5 +18,6 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "protobuf-compiler"
-  ]
+  ],
+  "name": "nx-protobuf-compiler"
 }

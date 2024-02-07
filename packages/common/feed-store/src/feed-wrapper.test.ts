@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
@@ -10,6 +9,7 @@ import { asyncTimeout, latch, sleep } from '@dxos/async';
 import { createReadable } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { faker } from '@dxos/random';
 import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 

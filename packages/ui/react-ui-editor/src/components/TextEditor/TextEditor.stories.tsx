@@ -4,16 +4,16 @@
 
 import '@dxosTheme';
 
-import defaultsDeep from 'lodash.defaultsdeep';
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 
 import { TextObject } from '@dxos/echo-schema';
-import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
+import { mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { defaultSlots, TextEditor, type TextEditorProps, type TextEditorRef, type TextEditorSlots } from './TextEditor';
-import { textTheme } from './themes';
+import { TextEditor, type TextEditorProps } from './TextEditor';
+import { listener } from '../../extensions';
 import { useTextModel } from '../../hooks';
+import translations from '../../translations';
 
 const initialText = [
   '# TextEditor',
@@ -29,23 +29,22 @@ const Story = ({
   text,
   automerge,
   ...props
-}: { text?: string; automerge?: boolean } & Pick<TextEditorProps, 'extensions' | 'slots'>) => {
-  const ref = useRef<TextEditorRef>(null);
-  const [item] = useState({ text: new TextObject(text, undefined, undefined, { useAutomergeBackend: automerge }) });
+}: { text?: string; automerge?: boolean } & Pick<TextEditorProps, 'extensions' | 'placeholder' | 'slots'>) => {
+  const [item] = useState({ text: new TextObject(text, undefined, undefined, { automerge }) });
   const model = useTextModel({ text: item.text });
   if (!model) {
     return null;
   }
 
   return (
-    <div className={mx(fixedInsetFlexLayout, groupSurface)}>
-      <div className='flex justify-center overflow-y-scroll'>
-        <div className='flex flex-col w-[800px] py-16'>
-          <TextEditor ref={ref} model={model} {...props} />
-          <div className='flex shrink-0 h-[300px]'></div>
-        </div>
-      </div>
-    </div>
+    <TextEditor
+      model={model}
+      slots={{
+        root: { className: mx(textBlockWidth, 'min-bs-dvh') },
+        editor: { className: 'min-bs-dvh p-2 bg-white dark:bg-black' },
+      }}
+      {...props}
+    />
   );
 };
 
@@ -54,29 +53,23 @@ export default {
   component: TextEditor,
   decorators: [withTheme],
   render: Story,
+  parameters: { translations, layout: 'fullscreen' },
 };
 
 export const Default = {
-  render: () => (
-    <Story
-      text={initialText}
-      slots={defaultsDeep(
-        { editor: { theme: textTheme, placeholder: 'Enter text...' } } satisfies TextEditorSlots,
-        defaultSlots,
-      )}
-    />
-  ),
+  render: () => <Story placeholder='Enter text...' />,
+};
+
+export const Text = {
+  render: () => <Story text={initialText} placeholder='Enter text...' />,
 };
 
 export const Automerge = {
+  render: () => <Story text={initialText} placeholder='Enter text...' automerge />,
+};
+
+export const Listener = {
   render: () => (
-    <Story
-      text={initialText}
-      slots={defaultsDeep(
-        { editor: { theme: textTheme, placeholder: 'Enter text...' } } satisfies TextEditorSlots,
-        defaultSlots,
-      )}
-      automerge
-    />
+    <Story placeholder='Enter text...' extensions={[listener({ onChange: (text) => console.log(text) })]} />
   ),
 };

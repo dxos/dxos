@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+export * from './assign';
 export * from './binder';
 export * from './bitfield';
 export * from './callback';
@@ -18,6 +19,7 @@ export * from './random';
 export * from './range';
 export * from './reducers';
 export * from './safe-instanceof';
+export * from './safe-parse-json';
 export * from './sort';
 export * from './tracer';
 export * from './types';
@@ -26,3 +28,5 @@ export * from './instance-id';
 export * from './sum';
 export * from './for-each-async';
 export * from './weak';
+export * from './map-values';
+export * from './defer';

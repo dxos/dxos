@@ -7,7 +7,7 @@ import React, { useCallback, type FC } from 'react';
 
 import { Stack as StackType, type File as FileType, Folder } from '@braneframe/types';
 import {
-  LayoutAction,
+  NavigationAction,
   Surface,
   parseMetadataResolverPlugin,
   useIntent,
@@ -32,10 +32,11 @@ import { STACK_PLUGIN } from '../meta';
 import { type StackPluginProvides, isStack } from '../types';
 
 const SectionContent: StackProps['SectionContent'] = ({ data }) => {
-  return <Surface role='section' data={{ object: data }} />;
+  // TODO(wittjosiah): Better section placeholder.
+  return <Surface role='section' data={{ object: data }} placeholder={<></>} />;
 };
 
-export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
+const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, separation }) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const { dispatch } = useIntent();
   const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
@@ -47,7 +48,7 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
     // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
     .filter(({ object }) => Boolean(object));
   const space = getSpaceForObject(stack);
-  const [folder] = useQuery(space, Folder.filter({ name: space?.key.toHex() }));
+  const [folder] = useQuery(space, Folder.filter());
 
   const handleOver = ({ active }: MosaicMoveEvent<number>) => {
     const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
@@ -103,7 +104,7 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
 
   const handleNavigate = async (id: string) => {
     await dispatch({
-      action: LayoutAction.ACTIVATE,
+      action: NavigationAction.ACTIVATE,
       data: { id },
     });
   };
@@ -121,6 +122,7 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
         SectionContent={SectionContent}
         type={StackType.Section.schema.typename}
         items={items}
+        separation={separation}
         transform={handleTransform}
         onOver={handleOver}
         onDrop={handleDrop}
@@ -147,7 +149,7 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
                       id={id}
                       data-testid={testId}
                       onClick={async () => {
-                        const { object: nextSection } = await dispatch(intent);
+                        const { data: nextSection } = (await dispatch(intent)) ?? {};
                         handleAdd(nextSection);
                       }}
                     >
@@ -171,3 +173,5 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
     </Main.Content>
   );
 };
+
+export default StackMain;

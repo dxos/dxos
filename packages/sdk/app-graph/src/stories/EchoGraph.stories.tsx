@@ -3,12 +3,13 @@
 //
 
 import '@dxosTheme';
-import { faker } from '@faker-js/faker';
+
 import { Pause, Play, Plus, Timer } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import React, { useEffect, useState } from 'react';
 
 import { EventSubscriptions } from '@dxos/async';
+import { faker } from '@dxos/random';
 import { Client } from '@dxos/react-client';
 import { Expando, type Space, SpaceProxy, SpaceState } from '@dxos/react-client/echo';
 import { ClientRepeater, TestBuilder } from '@dxos/react-client/testing';
@@ -22,7 +23,7 @@ import { GraphBuilder } from '../graph-builder';
 import { type Node } from '../node';
 
 export default {
-  title: 'Echo Graph',
+  title: 'app-graph/EchoGraph',
   decorators: [withTheme],
 };
 
@@ -139,13 +140,13 @@ const runAction = (action: Action) => {
     case Action.RENAME_SPACE: {
       const space = getSpace();
       if (space) {
-        space.properties.name = faker.animal.lion();
+        space.properties.name = faker.commerce.productName();
       }
       break;
     }
 
     case Action.ADD_OBJECT:
-      getSpace()?.db.add(new Expando({ type: 'test', name: faker.animal.cat() }));
+      getSpace()?.db.add(new Expando({ type: 'test', name: faker.commerce.productName() }));
       break;
 
     case Action.REMOVE_OBJECT: {
@@ -161,7 +162,7 @@ const runAction = (action: Action) => {
       const space = getSpaceWithObjects();
       if (space) {
         const objects = space.db.query({ type: 'test' }).objects;
-        objects[Math.floor(Math.random() * objects.length)].name = faker.animal.cat();
+        objects[Math.floor(Math.random() * objects.length)].name = faker.commerce.productName();
       }
       break;
     }
@@ -229,6 +230,6 @@ const EchoGraphStory = () => {
   );
 };
 
-export const EchoGraph = {
+export const Default = {
   render: () => <ClientRepeater Component={EchoGraphStory} clients={[client]} className='flex flex-col' />,
 };

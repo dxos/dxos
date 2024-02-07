@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+// TODO(wittjosiah): Cleanup. Remove translations that have been moved to other plugins.
 export const os = {
   'manage profile label': 'Manage identity',
   'identity offline description': 'Offline',
@@ -49,6 +50,8 @@ export const os = {
   'reconnect label': 'Reconnect',
   'cancel label': 'Cancel',
   'done label': 'Done',
+  'delete label': 'Delete',
+  'delete object description': 'Delete item?',
   'reset label': 'Start over',
   'auth code input label': 'Enter the verification code',
   'invitation input label': 'Paste an invitation code or URL',
@@ -67,6 +70,4 @@ export const os = {
   'close sidebar label': 'Close sidebar',
   'welcome message': 'Welcome',
   'selecting identity heading': 'Selecting identity',
-  'settings dialog title': 'Settings',
-  'target blank description': 'Link opens in a new tab.',
 };

@@ -26,6 +26,12 @@ import { ClientProvider } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
+const createWorker = () =>
+  new SharedWorker(new URL('../shared-worker', import.meta.url), {
+    type: 'module',
+    name: 'dxos-client-worker',
+  });
+
 const Component = () => {
   // Get the user to log in before a space can be obtained.
   const identity = useIdentity();
@@ -38,7 +44,7 @@ const Component = () => {
 };
 
 const App = () => (
-  <ClientProvider>
+  <ClientProvider createWorker={createWorker}>
     <Component />
   </ClientProvider>
 );
@@ -53,20 +59,22 @@ Before manipulating data, a [user identity](identity) and a [space](spaces) are 
 ## Further configuration
 
 :::details Using a fallback element during initial load
-A fallback element is displayed while the Client is initializing. Any component can be used, and it will be given an instance of the `client` as a prop directly. A reasonable default is available as `GenericFallback` from `@dxos/react-appkit`.
+A fallback element is displayed while the Client is initializing. Any component can be used, and it will be given an instance of the `client` as a prop directly.
 
 ```tsx file=./snippets/create-client-react-with-fallback.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+
 import { Client } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
-import { GenericFallback } from '@dxos/react-appkit';
 
 const client = new Client();
 
+const Fallback = () => <div>Loading...</div>;
+
 const App = () => {
   return (
-    <ClientProvider client={client} fallback={GenericFallback}>
+    <ClientProvider client={client} fallback={Fallback}>
       {/* ... */}
     </ClientProvider>
   );
