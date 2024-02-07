@@ -13,6 +13,6 @@ export default pluginMeta({
   id: FILES_PLUGIN,
   name: 'Files',
   description: 'Open files from the local file system.',
-  tags: [],
+  tags: ['experimental'],
   iconComponent: (props: IconProps) => <File {...props} />,
 });
