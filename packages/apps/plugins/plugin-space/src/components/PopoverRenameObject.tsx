@@ -28,6 +28,7 @@ export const PopoverRenameObject = ({ object }: { object: TypedObject }) => {
           <Input.TextInput
             placeholder={t('object title placeholder')}
             value={name}
+            data-testid='spacePlugin.renameObject.input'
             onChange={({ target: { value } }) => setName(value)}
             onKeyDown={({ key }) => key === 'Enter' && doneButton.current?.click()}
           />

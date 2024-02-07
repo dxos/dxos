@@ -319,7 +319,7 @@ export const objectToGraphNode = ({
       ...partials,
       properties: {
         ...partials.properties,
-        testId: object instanceof Folder ? 'spacePlugin.folder' : 'spacePlugin.object',
+        testId: 'spacePlugin.object',
         persistenceClass: 'folder',
       },
     });
@@ -335,6 +335,9 @@ export const objectToGraphNode = ({
             action: SpaceAction.RENAME_OBJECT,
             data: { object, ...params },
           }),
+        properties: {
+          testId: 'spacePlugin.renameObject',
+        },
       },
       {
         id: 'delete',
