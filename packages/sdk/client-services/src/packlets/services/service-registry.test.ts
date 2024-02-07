@@ -36,7 +36,7 @@ describe('service registry', () => {
 
     const serviceRegistry = new ServiceRegistry(serviceBundle, {
       SystemService: new SystemServiceImpl({
-        config: new Config({ runtime: { client: { remoteSource } } }),
+        config: () => new Config({ runtime: { client: { remoteSource } } }),
         getCurrentStatus: () => SystemStatus.ACTIVE,
         getDiagnostics: async () => ({}),
         onReset: () => {},
