@@ -25,7 +25,8 @@ import {
   type ObjectMeta,
   type TypedObjectProperties,
 } from './types';
-import { AutomergeObject, REFERENCE_TYPE_TAG } from '../automerge';
+import { AutomergeObject } from '../automerge';
+import { REFERENCE_TYPE_TAG } from '../automerge/types';
 import { getGlobalAutomergePreference } from '../automerge-preference';
 import { type Schema } from '../proto'; // NOTE: Keep as type-import.
 import { isReferenceLike, getBody, getHeader } from '../util';
