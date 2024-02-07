@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus, Placeholder } from '@phosphor-icons/react';
+import { PlusCircle, Placeholder } from '@phosphor-icons/react';
 import React, { useCallback, type FC } from 'react';
 
 import { File as FileType, Stack as StackType, Folder } from '@braneframe/types';
@@ -147,7 +147,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
           <DropdownMenu.Root modal={false}>
             <DropdownMenu.Trigger asChild>
               <Button variant='ghost' data-testid='stack.createSection'>
-                <Plus className={getSize(5)} />
+                <PlusCircle className={getSize(6)} />
               </Button>
             </DropdownMenu.Trigger>
             <DropdownMenu.Content>
@@ -165,7 +165,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
                         handleAdd(nextSection);
                       }}
                     >
-                      <Icon className={getSize(4)} />
+                      <Icon className={getSize(6)} />
                       <span>{typeof label === 'string' ? label : t(...(label as [string, { ns: string }]))}</span>
                     </DropdownMenu.Item>
                   );
@@ -176,7 +176,6 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
           {/* TODO(burdon): Surface? */}
           {handleFileUpload && (
             <FileUpload
-              classNames='p-2'
               fileTypes={[...defaultFileTypes.images, ...defaultFileTypes.media, ...defaultFileTypes.text]}
               onUpload={handleFileUpload}
             />

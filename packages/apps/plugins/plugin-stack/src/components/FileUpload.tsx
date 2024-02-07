@@ -6,28 +6,25 @@ import { FilePlus } from '@phosphor-icons/react';
 import React, { type FC } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { Button } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Factor out. Reconcile with plugin-file.
 export const FileUpload: FC<{
-  classNames?: string | string[];
   fileTypes: string[];
   onUpload: (file: File) => void;
-}> = ({ classNames, fileTypes, onUpload }) => {
+}> = ({ fileTypes, onUpload }) => {
   return (
-    <div className={mx('flex shrink-0 flex-col')}>
+    <Button variant='ghost'>
       <FileUploader
         name='file'
         types={fileTypes}
         hoverTitle={' '}
-        classes='flex flex-col grow justify-center w-full h-full'
-        dropMessageStyle={{ border: 'none', backgroundColor: '#ffffff' }}
+        dropMessageStyle={{ border: 'none', backgroundColor: 'transparent' }}
         handleChange={onUpload}
       >
-        <div className={mx('flex flex-col items-center cursor-pointer', classNames)}>
-          <FilePlus weight='light' className={getSize(8)} />
-        </div>
+        <FilePlus className={getSize(6)} />
       </FileUploader>
-    </div>
+    </Button>
   );
 };
