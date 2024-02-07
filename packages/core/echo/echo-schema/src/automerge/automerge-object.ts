@@ -5,21 +5,14 @@
 import { type InspectOptionsStylized, inspect } from 'node:util';
 
 import { next as A, type ChangeFn, type Doc } from '@dxos/automerge/automerge';
-import { type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
 import { Reference } from '@dxos/document-model';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
 import { AutomergeArray } from './automerge-array';
-import {
-  AutomergeObjectCore,
-  objectIsUpdated,
-  type DocAccessor,
-  assignDeep,
-  type BindOptions,
-} from './automerge-object-core';
-import { type ObjectStructure, type DocStructure, type ObjectSystem } from './types';
+import { AutomergeObjectCore, type DocAccessor, assignDeep, type BindOptions } from './automerge-object-core';
+import { type ObjectStructure, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
 import {
   isAutomergeObject,

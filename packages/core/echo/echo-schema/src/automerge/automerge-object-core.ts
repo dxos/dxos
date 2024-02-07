@@ -14,7 +14,6 @@ import { type AutomergeDb } from './automerge-db';
 import { docChangeSemaphore } from './doc-semaphore';
 import { type DocStructure, type ObjectStructure } from './types';
 import { type EchoObject } from '../object';
-import { log } from '@dxos/log';
 
 // TODO(dmaretskyi): Rename to `AutomergeObject`.
 export class AutomergeObjectCore {
