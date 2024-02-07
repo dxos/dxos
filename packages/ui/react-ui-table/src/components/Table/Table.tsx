@@ -76,6 +76,10 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     defaultProp: props.defaultRowSelection,
   });
 
+  useEffect(() => {
+    onDataSelectionChange?.(Object.keys(rowSelection).map((id) => table.getRowModel().rowsById[id].original));
+  }, [onDataSelectionChange, rowSelection]);
+
   // TODO(thure): Does @tanstack/react-table really need this intervention? It did seem necessary to enforce single-selection...
   const handleRowSelectionChange = useCallback<OnChangeFn<RowSelectionState>>(
     (updaterOrValue) => {
@@ -145,13 +149,6 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     debugTable: debug,
   });
 
-  // TODO(burdon): Comment required.
-  useEffect(() => {
-    if (onDataSelectionChange) {
-      onDataSelectionChange(Object.keys(rowSelection).map((id) => table.getRowModel().rowsById[id].original));
-    }
-  }, [onDataSelectionChange, rowSelection, table]);
-
   // Create additional expansion column if all columns have fixed width.
   const expand = false; // columns.map((column) => column.size).filter(Boolean).length === columns?.length;
 
@@ -168,6 +165,9 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
   );
 };
 
+/**
+ * Pure implementation of table outside of context set-up.
+ */
 const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
   const { role, footer, grouping, getScrollElement, fullWidth, classNames, debug } = props;
   const { table } = useTableContext<TData>('TableImpl');
