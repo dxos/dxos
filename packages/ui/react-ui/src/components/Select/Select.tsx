@@ -34,12 +34,13 @@ type SelectTriggerButtonProps = Omit<ButtonProps, 'children'> & Pick<SelectValue
 
 const SelectTriggerButton = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ children, placeholder, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
     return (
       <SelectPrimitive.Trigger asChild ref={forwardedRef}>
         <Button {...props}>
           <SelectPrimitive.Value placeholder={placeholder}>{children}</SelectPrimitive.Value>
-          <SelectPrimitive.Icon className='pis-2'>
-            <CaretDown weight='bold' />
+          <SelectPrimitive.Icon asChild>
+            <CaretDown className={tx('select.triggerIcon', 'select__trigger__icon', {})} weight='bold' />
           </SelectPrimitive.Icon>
         </Button>
       </SelectPrimitive.Trigger>
