@@ -61,16 +61,20 @@ import { steps } from './help';
 import translations from './translations';
 
 const main = async () => {
-  if (await defaultStorageIsEmpty((await setupConfig()).values.runtime?.client?.storage)) {
-    log.info('Default storage is empty, setting default storage.');
+  let config = await setupConfig();
+
+  if (
+    !config.values.runtime?.client?.storage?.dataStore &&
+    (await defaultStorageIsEmpty(config.values.runtime?.client?.storage))
+  ) {
     // NOTE: Set default for first time users to IDB (works better with automerge CRDTs).
     //       Needs to be done before worker is created.
     await SaveConfig({
       runtime: { client: { storage: { dataStore: defs.Runtime.Client.Storage.StorageDriver.IDB } } },
     });
+    config = await setupConfig();
   }
 
-  const config = await setupConfig();
   // Intentially do not await, don't block app startup for telemetry.
   const observability = initializeAppObservability({ namespace: appKey, config });
 
