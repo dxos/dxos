@@ -30,7 +30,7 @@
     "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "deepsignal": "1.4.0-shallow.0",
-    "ipfs-http-client": "^56.0.3",
+    "kubo-rpc-client": "^3.0.2",
     "lodash.get": "^4.4.2",
     "url-join": "^5.0.0"
   },

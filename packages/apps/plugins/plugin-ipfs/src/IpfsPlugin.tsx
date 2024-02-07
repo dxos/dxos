@@ -3,7 +3,7 @@
 //
 
 import { FileCloud, type IconProps } from '@phosphor-icons/react';
-import { create as createIpfsClient } from 'ipfs-http-client';
+import { create as createIpfsClient } from 'kubo-rpc-client';
 import React, { type Ref } from 'react';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
