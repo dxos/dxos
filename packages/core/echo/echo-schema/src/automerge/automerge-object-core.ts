@@ -9,6 +9,7 @@ import { Reference } from '@dxos/document-model';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { TextModel } from '@dxos/text-model';
 import { defer } from '@dxos/util';
 
 import { AutomergeArray } from './automerge-array';
@@ -23,8 +24,9 @@ import {
   decodeReference,
   type DecodedAutomergeValue,
 } from './types';
-import { base, type EchoObject } from '../object';
+import { base, type TypedObjectOptions, type EchoObject, TextObject } from '../object';
 import { AbstractEchoObject } from '../object/object';
+import { type Schema } from '../proto'; // Keep type-only
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
@@ -77,7 +79,42 @@ export class AutomergeObjectCore {
    */
   public signal = compositeRuntime.createSignal();
 
+  /**
+   * Create local doc with initial state from this object.
+   */
+  initNewObject(initialProps?: unknown, opts?: TypedObjectOptions) {
+    invariant(!this.docHandle && !this.doc);
+
+    initialProps ??= {};
+
+    // Init schema defaults
+    if (opts?.schema) {
+      for (const field of opts.schema.props) {
+        if (field.repeated) {
+          (initialProps as Record<string, any>)[field.id!] ??= [];
+        } else if (field.type === getSchemaProto().PropType.REF && field.refModelType === TextModel.meta.type) {
+          // TODO(dmaretskyi): Is this right? Should we init with empty string or an actual reference to a Text object?
+          (initialProps as Record<string, any>)[field.id!] ??= new TextObject();
+        }
+      }
+    }
+
+    this.doc = A.from<ObjectStructure>({
+      data: this.encode(initialProps as any),
+      meta: this.encode({
+        keys: [],
+        ...opts?.meta,
+      }),
+      system: {},
+    });
+  }
+
   bind(options: BindOptions) {
+    if (this.docHandle) {
+      // Dispose the subscription from the previous bind call.
+      this.docHandle.off('change', this._changeHandler);
+    }
+
     this.database = options.db;
     this.docHandle = options.docHandle;
     this.mountPath = options.path;
@@ -93,7 +130,9 @@ export class AutomergeObjectCore {
     const doc = this.doc;
     this.doc = undefined;
 
-    if (!options.ignoreLocalState) {
+    if (options.assignFromLocalState) {
+      invariant(doc, 'assignFromLocalState');
+
       // Prevent recursive change calls.
       using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
@@ -103,14 +142,16 @@ export class AutomergeObjectCore {
     }
 
     // TODO(dmaretskyi): Dispose this subscription.
-    this.docHandle.on('change', (event) => {
-      if (objectIsUpdated(this.id, event)) {
-        this.notifyUpdate();
-      }
-    });
+    this.docHandle.on('change', this._changeHandler);
 
     this.notifyUpdate();
   }
+
+  private _changeHandler = (event: DocHandleChangePayload<DocStructure>) => {
+    if (objectIsUpdated(this.id, event)) {
+      this.notifyUpdate();
+    }
+  };
 
   getDoc() {
     return this.doc ?? this.docHandle?.docSync() ?? failedInvariant('Invalid state');
@@ -357,10 +398,9 @@ export type BindOptions = {
   path: string[];
 
   /**
-   * Discard the local state that the object held before binding.
-   * Otherwise the local state will be assigned into the shared structure for the database.
+   * Assign the state from the local doc into the shared structure for the database.
    */
-  ignoreLocalState?: boolean;
+  assignFromLocalState?: boolean;
 };
 
 export const isDocAccessor = (obj: any): obj is DocAccessor => {
@@ -387,4 +427,16 @@ export const assignDeep = <T>(doc: any, path: string[], value: T): T => {
   }
   parent[path.at(-1)!] = value;
   return parent[path.at(-1)!]; // NOTE: We can't just return value here since doc's getter might return a different object.
+};
+
+// Deferred import to avoid circular dependency.
+let schemaProto: typeof Schema;
+const getSchemaProto = (): typeof Schema => {
+  if (!schemaProto) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { Schema } = require('../proto');
+    schemaProto = Schema;
+  }
+
+  return schemaProto;
 };
