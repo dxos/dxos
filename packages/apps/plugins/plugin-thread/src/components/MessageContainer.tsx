@@ -96,7 +96,12 @@ const TextboxBlock = ({
         <span className={textboxWidth} />
       )}
       {onBlockDelete && (
-        <Button variant='ghost' classNames={messageControlClassNames} onClick={onBlockDelete}>
+        <Button
+          variant='ghost'
+          data-testid='thread.message.delete'
+          classNames={messageControlClassNames}
+          onClick={onBlockDelete}
+        >
           <X />
         </Button>
       )}

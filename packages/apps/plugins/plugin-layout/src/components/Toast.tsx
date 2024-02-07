@@ -9,6 +9,7 @@ import { Button, Toast as NaturalToast, type ToastRootProps } from '@dxos/react-
 
 // TODO(wittjosiah): Render remaining duration as a progress bar within the toast.
 export const Toast = ({
+  id,
   title,
   description,
   icon,
@@ -20,7 +21,7 @@ export const Toast = ({
   onOpenChange,
 }: ToastProps & Pick<ToastRootProps, 'onOpenChange'>) => {
   return (
-    <NaturalToast.Root defaultOpen duration={duration} onOpenChange={onOpenChange}>
+    <NaturalToast.Root data-testid={id} defaultOpen duration={duration} onOpenChange={onOpenChange}>
       <NaturalToast.Body>
         <NaturalToast.Title>
           {icon?.({ className: 'inline mr-1' })}
