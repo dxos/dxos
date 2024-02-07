@@ -3,4 +3,3 @@
 //
 
 export * from './store';
-export * from './forage';
