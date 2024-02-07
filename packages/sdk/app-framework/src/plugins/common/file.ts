@@ -4,6 +4,12 @@
 
 import { type Plugin } from '../PluginHost';
 
+export const defaultFileTypes = {
+  images: ['png', 'jpg', 'jpeg'],
+  media: ['mp3', 'mp4', 'mov', 'avi'],
+  text: ['pdf', 'txt', 'md'],
+};
+
 export type FileInfo = {
   cid: string; // TODO(burdon): Meta.
 };

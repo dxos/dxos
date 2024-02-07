@@ -9,8 +9,9 @@ import { File as FileType, Stack as StackType, Folder } from '@braneframe/types'
 import {
   NavigationAction,
   Surface,
+  defaultFileTypes,
   parseMetadataResolverPlugin,
-  parseFileManagerResolverPlugin,
+  parseFileManagerPlugin,
   useIntent,
   usePlugin,
   useResolvePlugin,
@@ -28,7 +29,6 @@ import {
 } from '@dxos/react-ui-theme';
 
 import { FileUpload } from './FileUpload';
-import { defaultFileTypes } from '../hooks';
 import { STACK_PLUGIN } from '../meta';
 import { type StackPluginProvides, isStack } from '../types';
 
@@ -42,9 +42,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
   const { dispatch } = useIntent();
   const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
-
-  // TODO(burdon): Get services.
-  const fileManagerPlugin = useResolvePlugin(parseFileManagerResolverPlugin);
+  const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
 
   const id = `stack-${stack.id}`;
   const items = stack.sections
