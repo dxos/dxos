@@ -25,10 +25,11 @@ import {
   type ObjectMeta,
   type TypedObjectProperties,
 } from './types';
-import { AutomergeObject, REFERENCE_TYPE_TAG } from '../automerge';
+import { AutomergeObject } from '../automerge';
 import { getGlobalAutomergePreference } from '../automerge-preference';
 import { type Schema } from '../proto'; // NOTE: Keep as type-import.
 import { isReferenceLike, getBody, getHeader } from '../util';
+import { REFERENCE_TYPE_TAG } from '../automerge/types';
 
 const isValidKey = (key: string | symbol) => {
   return !(

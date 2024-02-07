@@ -12,11 +12,26 @@ import { defer } from '@dxos/util';
 
 import { type AutomergeDb } from './automerge-db';
 import { docChangeSemaphore } from './doc-semaphore';
-import { type DocStructure, type ObjectStructure } from './types';
-import { type EchoObject } from '../object';
+import {
+  encodeReference,
+  type DocStructure,
+  type ObjectStructure,
+  isEncodedReferenceObject,
+  decodeReference,
+} from './types';
+import { base, type EchoObject } from '../object';
+import { Reference } from '@dxos/document-model';
+import { AbstractEchoObject } from '../object/object';
+import { AutomergeObject } from './automerge-object';
+import { AutomergeArray } from './automerge-array';
+
+// Strings longer than this will have collaborative editing disabled for performance reasons.
+const STRING_CRDT_LIMIT = 300_000;
 
 // TODO(dmaretskyi): Rename to `AutomergeObject`.
 export class AutomergeObjectCore {
+  // TODO(dmaretskyi): Start making some of those fields private.
+
   /**
    * Id of the ECHO object.
    */
@@ -211,8 +226,109 @@ export class AutomergeObjectCore {
     }
   };
 
-  public subscribeToDocHandleChanges() {
-    invariant(this.docHandle);
+  /**
+   * Store referenced object.
+   */
+  linkObject(obj: EchoObject): Reference {
+    if (this.database) {
+      if (!obj[base]._database) {
+        this.database.add(obj);
+        return new Reference(obj.id);
+      } else {
+        if ((obj[base]._database as any) !== this.database) {
+          return new Reference(obj.id, undefined, obj[base]._database.spaceKey.toHex());
+        } else {
+          return new Reference(obj.id);
+        }
+      }
+    } else {
+      invariant(this.linkCache);
+      this.linkCache.set(obj.id, obj);
+      return new Reference(obj.id);
+    }
+  }
+
+  /**
+   * Lookup referenced object.
+   */
+  lookupLink(ref: Reference): EchoObject | undefined {
+    if (this.database) {
+      // This doesn't clean-up properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
+      return this.database.graph._lookupLink(ref, this.database, this.notifyUpdate);
+    } else {
+      invariant(this.linkCache);
+      return this.linkCache.get(ref.itemId);
+    }
+  }
+
+  /**
+   * Encode a value to be stored in the Automerge document.
+   */
+  encode(value: any) {
+    if (value instanceof A.RawString) {
+      return value;
+    }
+    if (value === undefined) {
+      return null;
+    }
+    if (value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
+      const reference = this.linkObject(value);
+      return encodeReference(reference);
+    }
+    if (value instanceof Reference && value.protocol === 'protobuf') {
+      // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
+      return encodeReference(value);
+    }
+    if (value instanceof AutomergeArray || Array.isArray(value)) {
+      const values: any = value.map((val) => {
+        if (val instanceof AutomergeArray || Array.isArray(val)) {
+          // TODO(mykola): Add support for nested arrays.
+          throw new Error('Nested arrays are not supported');
+        }
+        return this.encode(val);
+      });
+      return values;
+    }
+    if (typeof value === 'object' && value !== null) {
+      // TODO(dmaretskyi): Why do we freeze it?
+      Object.freeze(value);
+      return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this.encode(value)]));
+    }
+
+    if (typeof value === 'string' && value.length > STRING_CRDT_LIMIT) {
+      return new A.RawString(value);
+    }
+
+    return value;
+  }
+
+  /**
+   * Decode a value from the Automerge document.
+   */
+  decode(value: any): any {
+    if (value === null) {
+      return undefined;
+    }
+    if (Array.isArray(value)) {
+      return value.map((val) => this.decode(val));
+    }
+    if (value instanceof A.RawString) {
+      return value.toString();
+    }
+    if (isEncodedReferenceObject(value)) {
+      if (value.protocol === 'protobuf') {
+        // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
+        return decodeReference(value);
+      }
+
+      const reference = decodeReference(value);
+      return this.lookupLink(reference);
+    }
+    if (typeof value === 'object') {
+      return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this.decode(value)]));
+    }
+
+    return value;
   }
 }
 

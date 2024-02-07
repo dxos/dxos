@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type InspectOptionsStylized, inspect } from 'node:util';
+import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { next as A, type ChangeFn, type Doc } from '@dxos/automerge/automerge';
 import { Reference } from '@dxos/document-model';
@@ -10,28 +10,28 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
-import { AutomergeArray } from './automerge-array';
-import { AutomergeObjectCore, type DocAccessor, assignDeep, type BindOptions } from './automerge-object-core';
-import { type ObjectStructure, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
 import {
-  isAutomergeObject,
   TextObject,
-  type TypedObjectOptions,
-  type EchoObject,
-  type ObjectMeta,
-  type TypedObjectProperties,
   base,
   data,
   db,
   debug,
   immutable,
+  isAutomergeObject,
   mutationOverride,
   proxy,
   subscribe,
+  type EchoObject,
+  type ObjectMeta,
+  type TypedObjectOptions,
+  type TypedObjectProperties,
 } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
+import { AutomergeArray } from './automerge-array';
+import { AutomergeObjectCore, assignDeep, type BindOptions, type DocAccessor } from './automerge-object-core';
+import { REFERENCE_TYPE_TAG, type ObjectStructure, type ObjectSystem } from './types';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
@@ -61,7 +61,7 @@ export class AutomergeObject implements TypedObjectProperties {
       (this._schema
         ? this._schema[immutable]
           ? Reference.fromLegacyTypename(opts!.schema!.typename)
-          : this._linkObject(this._schema)
+          : this._core.linkObject(this._schema)
         : undefined);
     if (type) {
       this.__system.type = type;
@@ -198,8 +198,8 @@ export class AutomergeObject implements TypedObjectProperties {
     }
 
     this._core.doc = A.from<ObjectStructure>({
-      data: this._encode(initialProps),
-      meta: this._encode({
+      data: this._core.encode(initialProps),
+      meta: this._core.encode({
         keys: [],
         ...opts?.meta,
       }),
@@ -289,7 +289,7 @@ export class AutomergeObject implements TypedObjectProperties {
       value = value?.[key];
     }
 
-    return this._decode(value);
+    return this._core.decode(value);
   }
 
   _mapToEchoObject(relativePath: string[], value: any) {
@@ -319,7 +319,7 @@ export class AutomergeObject implements TypedObjectProperties {
     invariant(!this[proxy]);
     const fullPath = [...this._core.mountPath, ...path];
 
-    const encoded = this._encode(value);
+    const encoded = this._core.encode(value);
 
     // Attach array after encoding as attaching array will clear the local state.
     if (value instanceof AutomergeArray) {
@@ -342,119 +342,9 @@ export class AutomergeObject implements TypedObjectProperties {
   /**
    * @internal
    */
-  _encode(value: any) {
-    invariant(!this[proxy]);
-    if (value instanceof A.RawString) {
-      return value;
-    }
-    if (value === undefined) {
-      return null;
-    }
-    if (value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
-      const reference = this._linkObject(value);
-      return encodeReference(reference);
-    }
-    if (value instanceof Reference && value.protocol === 'protobuf') {
-      // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
-      return encodeReference(value);
-    }
-    if (value instanceof AutomergeArray || Array.isArray(value)) {
-      const values: any = value.map((val) => {
-        if (val instanceof AutomergeArray || Array.isArray(val)) {
-          // TODO(mykola): Add support for nested arrays.
-          throw new Error('Nested arrays are not supported');
-        }
-        return this._encode(val);
-      });
-      return values;
-    }
-    if (typeof value === 'object' && value !== null) {
-      Object.freeze(value);
-      return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this._encode(value)]));
-    }
-
-    if (typeof value === 'string' && value.length > STRING_CRDT_LIMIT) {
-      return new A.RawString(value);
-    }
-
-    return value;
-  }
-
-  /**
-   * @internal
-   */
-  _decode(value: any): any {
-    invariant(!this[proxy]);
-    if (value === null) {
-      return undefined;
-    }
-    if (Array.isArray(value)) {
-      return value.map((val) => this._decode(val));
-    }
-    if (value instanceof A.RawString) {
-      return value.toString();
-    }
-    if (isEncodedReferenceObject(value)) {
-      if (value.protocol === 'protobuf') {
-        // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
-        return decodeReference(value);
-      }
-
-      const reference = decodeReference(value);
-      return this._lookupLink(reference);
-    }
-    if (typeof value === 'object') {
-      return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this._decode(value)]));
-    }
-
-    return value;
-  }
-
-  /**
-   * @internal
-   */
   _getDoc(): Doc<any> {
     invariant(!this[proxy]);
     return this._core.doc ?? this._core.docHandle?.docSync() ?? failedInvariant();
-  }
-
-  /**
-   * Store referenced object.
-   * @internal
-   */
-  _linkObject(obj: EchoObject): Reference {
-    invariant(!this[proxy]);
-    if (this._core.database) {
-      if (!obj[base]._database) {
-        this._core.database.add(obj);
-        return new Reference(obj.id);
-      } else {
-        if ((obj[base]._database as any) !== this._core.database) {
-          return new Reference(obj.id, undefined, obj[base]._database.spaceKey.toHex());
-        } else {
-          return new Reference(obj.id);
-        }
-      }
-    } else {
-      invariant(this._core.linkCache);
-      this._core.linkCache.set(obj.id, obj);
-      return new Reference(obj.id);
-    }
-  }
-
-  /**
-   * Lookup referenced object.
-   * @internal
-   */
-  _lookupLink(ref: Reference): EchoObject | undefined {
-    invariant(!this[proxy]);
-    if (this._core.database) {
-      // This doesn't clean-up properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
-      return this._core.database.graph._lookupLink(ref, this._core.database, this._core.notifyUpdate);
-    } else {
-      invariant(this._core.linkCache);
-      return this._core.linkCache.get(ref.itemId);
-    }
   }
 
   /**
@@ -505,29 +395,6 @@ const isRootDataObjectKey = (relativePath: string[], key: string | symbol) => {
     key === '__deleted'
   );
 };
-
-const encodeReference = (reference: Reference) => ({
-  '@type': REFERENCE_TYPE_TAG,
-  // NOTE: Automerge do not support undefined values, so we need to use null instead.
-  itemId: reference.itemId ?? null,
-  protocol: reference.protocol ?? null,
-  host: reference.host ?? null,
-});
-
-const decodeReference = (value: any) =>
-  new Reference(value.itemId, value.protocol ?? undefined, value.host ?? undefined);
-
-export const REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
-
-type EncodedReferenceObject = {
-  '@type': typeof REFERENCE_TYPE_TAG;
-  itemId: string | null;
-  protocol: string | null;
-  host: string | null;
-};
-
-const isEncodedReferenceObject = (value: any): value is EncodedReferenceObject =>
-  typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG;
 
 // Deferred import to avoid circular dependency.
 let schemaProto: typeof Schema;
