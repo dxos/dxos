@@ -108,28 +108,47 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
-  // TODO(wittjosiah): This is not always a space.
-  expandSpace() {
-    return this.page.getByTestId('navtree.treeItem.openTrigger').last().click();
+  toggleSpaceCollapsed(nth = 0) {
+    return this.page.getByTestId('spacePlugin.space').nth(nth).getByRole('button').first().click();
   }
 
-  async createObject(plugin: string) {
-    await this.page.getByTestId('spacePlugin.createObject').last().click();
-    return this.page.getByTestId(`${plugin}.createObject`).last().click();
+  toggleFolderCollapsed(nth = 0) {
+    return this.page.getByTestId('spacePlugin.object').nth(nth).getByRole('button').first().click();
   }
 
-  async createFolder() {
-    await this.page.getByTestId('spacePlugin.createObject').last().click();
-    return this.page.getByTestId('spacePlugin.createFolder').last().click();
+  // TODO(wittjosiah): Last for backwards compatibility. Default to first object.
+  async createObject(plugin: string, nth?: number) {
+    const object = this.page.getByTestId('spacePlugin.createObject');
+    await (nth ? object.nth(nth) : object.last()).click();
+    return this.page.getByTestId(`${plugin}.createObject`).click();
   }
 
-  async deleteObject(itemNumber: number) {
-    // TODO: Would prefer to use testId of `spacePlugin.object`, but for folders, it refers to the entire block
-    // including all of the containing item, so the click doesn't land on the folder, but in the middle of the
-    // folder's containing items.
-    await this.page.getByTestId('navtree.treeItem.actionsLevel2').nth(itemNumber).click({ button: 'right' });
+  // TODO(wittjosiah): Last for backwards compatibility. Default to first object.
+  async createFolder(nth?: number) {
+    const object = this.page.getByTestId('spacePlugin.createObject');
+    await (nth ? object.nth(nth) : object.last()).click();
+    return this.page.getByTestId('spacePlugin.createFolder').click();
+  }
+
+  async renameObject(newName: string, nth = 0) {
+    await this.page.getByTestId('spacePlugin.object').nth(nth).click({ button: 'right' });
+    await this.page.getByTestId('spacePlugin.renameObject').last().click();
+    await this.page.getByTestId('spacePlugin.renameObject.input').fill(newName);
+    await this.page.getByTestId('spacePlugin.renameObject.input').press('Enter');
+  }
+
+  async deleteObject(nth = 0) {
+    await this.page.getByTestId('spacePlugin.object').nth(nth).click({ button: 'right' });
     await this.page.getByTestId('spacePlugin.deleteObject').last().click();
-    return this.page.getByTestId('spacePlugin.confirmDeleteObject').last().click();
+    await this.page.getByTestId('spacePlugin.confirmDeleteObject').last().click();
+  }
+
+  getObject(nth = 0) {
+    return this.page.getByTestId('spacePlugin.object').nth(nth);
+  }
+
+  getObjectByName(name: string) {
+    return this.page.getByTestId('spacePlugin.object').filter({ has: this.page.locator(`span:has-text("${name}")`) });
   }
 
   async getSpaceItemsCount() {
@@ -142,10 +161,6 @@ export class AppManager {
 
   getObjectsCount() {
     return this.page.getByTestId('spacePlugin.object').count();
-  }
-
-  getFoldersCount() {
-    return this.page.getByTestId('spacePlugin.folder').count();
   }
 
   getObjectLinks() {
