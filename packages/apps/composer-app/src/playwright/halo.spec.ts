@@ -38,9 +38,9 @@ test.describe('HALO tests', () => {
       expect(await guest.getSpaceItemsCount()).to.equal(2);
     });
 
-    // NOTE: Not closing toasts here causes the test to hang.
-    await host.closeToasts();
-    await guest.closeToasts();
+    // NOTE: Not closing toast here causes the test to hang.
+    await host.closeToast();
+    await guest.closeToast();
 
     await host.openIdentityManager();
     const invitationCode = await host.shell.createDeviceInvitation();

@@ -3,6 +3,7 @@
 //
 
 import type { Browser, Page } from '@playwright/test';
+import os from 'node:os';
 
 import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test/playwright';
@@ -34,10 +35,35 @@ export class AppManager {
     const { page, initialUrl } = await setupPage(this._browser, {
       waitFor: (page) => page.getByTestId('treeView.haloButton').isVisible(),
     });
+
     this.page = page;
     this.initialUrl = initialUrl;
     this.shell = new ShellManager(this.page, this._inIframe);
+    await this.closeToast(); // Close telemetry toast.
     this._initialized = true;
+  }
+
+  //
+  // Page
+  //
+
+  // Based on https://github.com/microsoft/playwright/issues/8114#issuecomment-1584033229.
+  async copy(): Promise<void> {
+    const isMac = os.platform() === 'darwin';
+    const modifier = isMac ? 'Meta' : 'Control';
+    await this.page.keyboard.press(`${modifier}+KeyC`);
+  }
+
+  async cut(): Promise<void> {
+    const isMac = os.platform() === 'darwin';
+    const modifier = isMac ? 'Meta' : 'Control';
+    await this.page.keyboard.press(`${modifier}+KeyX`);
+  }
+
+  async paste(): Promise<void> {
+    const isMac = os.platform() === 'darwin';
+    const modifier = isMac ? 'Meta' : 'Control';
+    await this.page.keyboard.press(`${modifier}+KeyV`);
   }
 
   async openIdentityManager() {
@@ -52,10 +78,25 @@ export class AppManager {
     return this.page.getByTestId('layoutPlugin.firstRunMessage').isVisible();
   }
 
-  async closeToasts() {
-    const toasts = await this.page.getByTestId('toast.close').all();
-    await Promise.all(toasts.map((toast) => toast.click()));
+  //
+  // Toasts
+  //
+
+  getToasts() {
+    return this.page.getByTestId('toast');
   }
+
+  async toastAction(nth = 0) {
+    await this.page.getByTestId('toast.action').nth(nth).click();
+  }
+
+  async closeToast(nth = 0) {
+    await this.page.getByTestId('toast.close').nth(nth).click();
+  }
+
+  //
+  // Spaces
+  //
 
   async createSpace() {
     await this.page.getByTestId('spacePlugin.createSpace').click();
@@ -110,6 +151,10 @@ export class AppManager {
   getObjectLinks() {
     return this.page.getByTestId('spacePlugin.object');
   }
+
+  //
+  // Plugins
+  //
 
   async enablePlugin(plugin: string) {
     await this.page.getByTestId('treeView.openSettings').click();
