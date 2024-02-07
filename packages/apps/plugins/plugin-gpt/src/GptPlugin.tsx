@@ -6,6 +6,7 @@ import { Brain } from '@phosphor-icons/react';
 import React from 'react';
 
 import { isMarkdownProperties } from '@braneframe/plugin-markdown';
+import { type Document as DocumentType } from '@braneframe/types';
 import {
   resolvePlugin,
   parseGraphPlugin,
@@ -84,7 +85,7 @@ export const GptPlugin = (): PluginDefinition<GptPluginProvides> => {
               const space = isTypedObject(active) && getSpaceForObject(active);
               if (space && settings.values.apiKey) {
                 // TODO(burdon): Toast on success.
-                void new GptAnalyzer({ apiKey: settings.values.apiKey }).exec(space, active);
+                void new GptAnalyzer({ apiKey: settings.values.apiKey }).exec(space, active as DocumentType);
               }
             }
           }

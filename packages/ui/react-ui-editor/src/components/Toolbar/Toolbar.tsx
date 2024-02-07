@@ -103,7 +103,7 @@ type ToolbarButtonProps = ToolbarToggleGroupItemProps & {
 };
 
 const buttonStyles = 'min-bs-0 p-2';
-const iconStyles = getSize(4);
+const iconStyles = getSize(5);
 
 const ToolbarButton = ({ Icon, children, ...props }: ToolbarButtonProps) => {
   return (
@@ -130,7 +130,7 @@ const MarkdownHeading = () => {
       onValueChange={(value) => onAction?.({ type: 'heading', data: parseInt(value) })}
     >
       <Select.TriggerButton>
-        <HeadingIcon className={getSize(5)} />
+        <HeadingIcon className={iconStyles} />
         {/* TODO(burdon): Incorrectly positioned. */}
         {/* <NaturalToolbar.Button variant='ghost' classNames={buttonStyles}> */}
         {/*  <span className='sr-only'>{t('heading label')}</span> */}
