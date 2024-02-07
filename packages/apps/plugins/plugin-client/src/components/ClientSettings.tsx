@@ -5,12 +5,16 @@
 import React from 'react';
 
 import { SettingsValue } from '@braneframe/plugin-settings';
+import { defs } from '@dxos/config';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 
 import { type ClientSettingsProps } from '../ClientPlugin';
 import { CLIENT_PLUGIN } from '../meta';
 
-const StorageAdapters = ['opfs', 'idb'] as const;
+const StorageAdapters = {
+  opfs: defs.Runtime.Client.Storage.StorageDriver.WEBFS,
+  idb: defs.Runtime.Client.Storage.StorageDriver.IDB,
+} as const;
 
 export const ClientSettings = ({ settings }: { settings: ClientSettingsProps }) => {
   const { t } = useTranslation(CLIENT_PLUGIN);
@@ -22,18 +26,18 @@ export const ClientSettings = ({ settings }: { settings: ClientSettingsProps }) 
       </SettingsValue>
       <SettingsValue label={t('choose storage adaptor')}>
         <Select.Root
-          value={settings.storageAdapter}
+          value={Object.entries(StorageAdapters).find(([name, value]) => value === settings.storageDriver)?.[0]}
           onValueChange={(value) => {
-            settings.storageAdapter = value === 'opfs' ? 'opfs' : 'idb';
+            settings.storageDriver = StorageAdapters[value as keyof typeof StorageAdapters];
           }}
         >
-          <Select.TriggerButton />
+          <Select.TriggerButton placeholder={t('data store label')}/>
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>
-                {StorageAdapters.map((adapter) => (
-                  <Select.Option key={adapter} value={adapter}>
-                    {t(`settings storage adaptor ${adapter} label`)}
+                {Object.keys(StorageAdapters).map((key) => (
+                  <Select.Option key={key} value={key}>
+                    {t(`settings storage adaptor ${key} label`)}
                   </Select.Option>
                 ))}
               </Select.Viewport>

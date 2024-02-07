@@ -19,7 +19,7 @@ import {
 import { createStorageObjects } from '@dxos/client-services';
 import { Config, Defaults, Envs, Local, defs } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
-import { LocalStorageStore } from '@dxos/local-storage';
+import { LocalForageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
 import { type TypeCollection } from '@dxos/react-client/echo';
@@ -40,7 +40,7 @@ export type ClientPluginOptions = ClientOptions & { appKey: string; debugIdentit
 
 export type ClientSettingsProps = {
   automerge?: boolean;
-  storageAdapter?: 'idb' | 'opfs';
+  storageDriver?: defs.Runtime.Client.Storage.StorageDriver;
 };
 
 export type ClientPluginProvides = SurfaceProvides &
@@ -70,7 +70,7 @@ export const ClientPlugin = ({
   // TODO(burdon): Document.
   registerSignalFactory();
 
-  const settings = new LocalStorageStore<ClientSettingsProps>('dxos.org/settings', { automerge: true });
+  const settings = new LocalForageStore<ClientSettingsProps>('dxos.org/settings', { automerge: true });
 
   let client: Client;
   let error: unknown = null;
@@ -80,23 +80,11 @@ export const ClientPlugin = ({
     initialize: async () => {
       let firstRun = false;
 
-      settings.prop(settings.values.$storageAdapter!, 'storage-adapter', LocalStorageStore.string);
-      if (!settings.values.storageAdapter && (await defaultStorageIsEmpty())) {
-        settings.values.storageAdapter = 'idb';
+      settings.prop(settings.values.$storageDriver!, 'storage-driver');
+      if (!settings.values.storageDriver && (await defaultStorageIsEmpty())) {
+        settings.values.storageDriver = defs.Runtime.Client.Storage.StorageDriver.IDB;
       }
-
-      const storageConfig = {
-        runtime: {
-          client: {
-            storage: {
-              dataStore:
-                settings.values.storageAdapter === 'idb'
-                  ? defs.Runtime.Client.Storage.StorageDriver.IDB
-                  : defs.Runtime.Client.Storage.StorageDriver.WEBFS,
-            },
-          },
-        },
-      };
+      const storageConfig = { runtime: { client: { storage: { dataStore: settings.values.storageDriver } } } };
 
       client = new Client({ config: new Config(await Envs(), Local(), Defaults(), storageConfig), ...options });
 
@@ -167,7 +155,7 @@ export const ClientPlugin = ({
         throw error;
       }
 
-      settings.prop(settings.values.$automerge!, 'automerge', LocalStorageStore.bool);
+      settings.prop(settings.values.$automerge!, 'automerge');
     },
     unload: async () => {
       await client.destroy();

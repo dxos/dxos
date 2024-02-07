@@ -13,6 +13,7 @@ export default [
         'choose storage adaptor': 'Storage adaptor (reload required).',
         'settings storage adaptor idb label': 'IndexedDB',
         'settings storage adaptor opfs label': 'OPFS',
+        'data store label': 'Data Store',
       },
     },
   },
