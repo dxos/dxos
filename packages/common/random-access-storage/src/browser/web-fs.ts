@@ -20,11 +20,12 @@ import { Directory, type DiskInfo, type File, type Storage, StorageType, getFull
  * webFs2.createFile->read
  * Presumably due to some handle-level write buffering.
  */
-const files = new Map<string, WebFile>();
 /**
  * Web file systems.
  */
 export class WebFS implements Storage {
+  private readonly _files = new Map<string, WebFile>();
+
   readonly type = StorageType.WEBFS;
 
   protected _root?: FileSystemDirectoryHandle;
@@ -32,13 +33,13 @@ export class WebFS implements Storage {
   constructor(public readonly path: string) {}
 
   public get size() {
-    return files.size;
+    return this._files.size;
   }
 
   private _getFiles(path: string): Map<string, WebFile> {
     const fullName = this._getFullFilename(this.path, path);
     return new Map(
-      [...files.entries()].filter(([path, file]) => {
+      [...this._files.entries()].filter(([path, file]) => {
         return path.includes(fullName) && !file.destroyed;
       }),
     );
@@ -95,12 +96,12 @@ export class WebFS implements Storage {
 
   getOrCreateFile(path: string, filename: string, opts?: any): File {
     const fullName = this._getFullFilename(path, filename);
-    const existingFile = files.get(fullName);
+    const existingFile = this._files.get(fullName);
     if (existingFile) {
       return existingFile;
     }
     const file = this._createFile(fullName);
-    files.set(fullName, file);
+    this._files.set(fullName, file);
     return file;
   }
 
@@ -109,7 +110,7 @@ export class WebFS implements Storage {
       fileName: fullName,
       file: this._initialize().then((root) => root.getFileHandle(fullName, { create: true })),
       destroy: async () => {
-        files.delete(fullName);
+        this._files.delete(fullName);
         const root = await this._initialize();
         return root.removeEntry(fullName);
       },
@@ -120,7 +121,7 @@ export class WebFS implements Storage {
     await Promise.all(
       Array.from(this._getFiles(path)).map(async ([path, file]) => {
         await file.destroy().catch((err: any) => log.warn(err));
-        files.delete(path);
+        this._files.delete(path);
       }),
     );
   }
@@ -131,14 +132,14 @@ export class WebFS implements Storage {
       await this._root!.removeEntry(filename, { recursive: true }).catch((err: any) =>
         log.warn('failed to remove an entry', { filename, err }),
       );
-      files.delete(filename);
+      this._files.delete(filename);
     }
     this._root = undefined;
   }
 
   async close() {
     await Promise.all(
-      Array.from(files.values()).map((file) => {
+      Array.from(this._files.values()).map((file) => {
         return file.close().catch((e) => log.warn('failed to close a file', { file: file.fileName, e }));
       }),
     );
