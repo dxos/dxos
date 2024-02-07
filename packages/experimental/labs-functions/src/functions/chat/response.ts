@@ -3,8 +3,9 @@
 //
 
 import { type Message as MessageType, Document as DocumentType, Stack as StackType } from '@braneframe/types';
-import { Expando, type Space } from '@dxos/client/echo';
-import { Schema, TextObject } from '@dxos/echo-schema';
+import { type Space } from '@dxos/client/echo';
+import { Expando, TextObject } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { type RequestContext } from './context';
@@ -13,7 +14,10 @@ import { type ParseResult } from './parser';
 // TODO(burdon): Create variant of StringOutputParser.
 //  https://js.langchain.com/docs/modules/model_io/output_parsers/json_functions
 export class ResponseBuilder {
-  constructor(private _space: Space, private _context: RequestContext) {}
+  constructor(
+    private _space: Space,
+    private _context: RequestContext,
+  ) {}
 
   build(result: ParseResult): MessageType.Block[] | undefined {
     const blocks: MessageType.Block[] = [];
@@ -70,30 +74,34 @@ export class ResponseBuilder {
     // Convert JSON data to objects.
     //
     if (result.type === 'json') {
-      const dataArray = Array.isArray(data) ? data : [data];
-      return dataArray.map((data): MessageType.Block => {
-        // Create object.
-        if (this._context.schema) {
-          const { objects: schemas } = this._space.db.query(Schema.filter());
-          const schema = schemas.find((schema) => schema.typename === this._context.schema!.typename);
-          if (schema) {
-            data['@type'] = this._context.schema.typename;
-            for (const prop of schema.props) {
-              if (data[prop.id!]) {
-                if (typeof data[prop.id!] === 'string') {
-                  data[prop.id!] = new TextObject(data[prop.id!]);
+      const blocks: MessageType.Block[] = [];
+      Object.entries(data).forEach(([type, values]) => {
+        const schema = this._context.schema?.get(type);
+        if (schema) {
+          for (const value of values as any[]) {
+            const data: Record<string, any> = {
+              '@type': schema.typename,
+            };
+
+            for (const { id } of schema.props) {
+              invariant(id);
+              if (value[id]) {
+                // TODO(burdon): Currently only handles string properties.
+                if (typeof value[id] === 'string') {
+                  data[id] = new TextObject(value[id]);
                 }
               }
             }
 
             const object = new Expando(data, { schema });
-            return { timestamp, object };
+            blocks.push({ timestamp, object });
           }
         }
-
-        // TODO(burdon): Create ref?
-        return { timestamp, content: new TextObject(JSON.stringify(data)) };
       });
+
+      if (blocks.length) {
+        return blocks;
+      }
     }
 
     //
