@@ -383,7 +383,7 @@ export class DataSpace {
 
     queueMicrotask(async () => {
       try {
-        await warnAfterTimeout(5_000, 'Automerge root doc load timeout', async () => {
+        await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
           await handle.whenReady();
         });
         const doc = handle.docSync() ?? failedInvariant();

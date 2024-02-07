@@ -18,6 +18,7 @@ import { type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
 import { type EchoObject, base, isActualTypedObject, isAutomergeObject, isActualTextObject } from '../object';
 import { type Schema } from '../proto';
+import { warnAfterTimeout } from '@dxos/debug';
 
 export type SpaceState = {
   // Url of the root automerge document.
@@ -122,7 +123,9 @@ export class AutomergeDb {
       // Loop on timeout.
       while (true) {
         try {
-          await asyncTimeout(cancelWithContext(this._ctx!, this._docHandle.whenReady(['ready'])), 5_000); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
+          await warnAfterTimeout(5_000, 'Automerge root doc load timeout (AutomergeDb)', async () => {
+            await cancelWithContext(this._ctx!, this._docHandle.whenReady(['ready'])); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
+          });
           break;
         } catch (err) {
           if (err instanceof ContextDisposedError) {
