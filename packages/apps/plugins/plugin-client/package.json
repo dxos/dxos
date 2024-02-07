@@ -32,6 +32,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "localforage": "^1.10.0"
   },

@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import localforage from 'localforage';
 import React from 'react';
 
 import { SettingsValue } from '@braneframe/plugin-settings';
-import { defs } from '@dxos/config';
+import { type ConfigProto, Storage, defs, SaveConfig } from '@dxos/config';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
+import { assignDeep } from '@dxos/util';
 
 import { useAsyncEffect } from '../../../../../common/react-async/src';
 import { type ClientSettingsProps } from '../ClientPlugin';
@@ -20,13 +20,11 @@ const StorageAdapters = {
 
 export const ClientSettings = ({ settings }: { settings: ClientSettingsProps }) => {
   const { t } = useTranslation(CLIENT_PLUGIN);
-  const [storageDriver, setStorageDriver] = React.useState<defs.Runtime.Client.Storage.StorageDriver>();
+  const [storageConfig, setStorageConfig] = React.useState<ConfigProto>();
 
   useAsyncEffect(async () => {
-    const storageDriver = await localforage.getItem<defs.Runtime.Client.Storage.StorageDriver>(
-      'dxos.org/settings/storage-driver',
-    );
-    storageDriver && setStorageDriver(storageDriver);
+    const config = await Storage();
+    config && setStorageConfig(config);
   }, []);
 
   return (
@@ -36,13 +34,21 @@ export const ClientSettings = ({ settings }: { settings: ClientSettingsProps }) 
       </SettingsValue>
       <SettingsValue label={t('choose storage adaptor')}>
         <Select.Root
-          value={Object.entries(StorageAdapters).find(([name, value]) => value === storageDriver)?.[0]}
+          value={
+            Object.entries(StorageAdapters).find(
+              ([name, value]) => value === storageConfig?.runtime?.client?.storage?.dataStore,
+            )?.[0]
+          }
           onValueChange={(value) => {
             if (confirm(t('storage adapter changed alert'))) {
-              const newStorageDriver = StorageAdapters[value as keyof typeof StorageAdapters];
-              setStorageDriver(newStorageDriver);
+              const storageConfigCopy = JSON.parse(JSON.stringify(storageConfig));
+              assignDeep(
+                storageConfigCopy,
+                ['runtime', 'client', 'storage', 'dataStore'],
+                StorageAdapters[value as keyof typeof StorageAdapters],
+              );
               queueMicrotask(async () => {
-                await localforage.setItem('dxos.org/settings/storage-driver', newStorageDriver);
+                await SaveConfig(storageConfigCopy);
               });
             }
           }}

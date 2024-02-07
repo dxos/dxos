@@ -27,6 +27,9 @@
       "path": "../../../common/log"
     },
     {
+      "path": "../../../common/util"
+    },
+    {
       "path": "../../../core/echo/echo-signals"
     },
     {
