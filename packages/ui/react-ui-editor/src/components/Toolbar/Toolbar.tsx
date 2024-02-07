@@ -122,7 +122,7 @@ const ToolbarButton = ({ Icon, children, ...props }: ToolbarButtonProps) => {
 const ToolbarSeparator = () => <div role='separator' className='grow' />;
 
 const MarkdownHeading = () => {
-  // const { t } = useTranslation(translationKey);
+  const { t } = useTranslation(translationKey);
   const { onAction, state } = useToolbarContext('MarkdownFormatting');
   const blockType = state ? state.blockType : 'paragraph';
   const header = blockType && /heading(\d)/.exec(blockType);
@@ -134,15 +134,12 @@ const MarkdownHeading = () => {
       value={value ?? '0'}
       onValueChange={(value) => onAction?.({ type: 'heading', data: parseInt(value) })}
     >
-      <Select.TriggerButton>
-        <HeadingIcon className={iconStyles} />
-        {/* TODO(burdon): Incorrectly positioned. */}
-        {/* <NaturalToolbar.Button variant='ghost' classNames={buttonStyles}> */}
-        {/*  <span className='sr-only'>{t('heading label')}</span> */}
-        {/*  <HeadingIcon className={iconStyles} /> */}
-        {/*  <CaretDown className={getSize(2)} weight='bold' /> */}
-        {/* </NaturalToolbar.Button> */}
-      </Select.TriggerButton>
+      <NaturalToolbar.Button asChild>
+        <Select.TriggerButton variant='ghost' classNames={buttonStyles}>
+          <span className='sr-only'>{t('heading label')}</span>
+          <HeadingIcon className={iconStyles} />
+        </Select.TriggerButton>
+      </NaturalToolbar.Button>
       <Select.Portal>
         <Select.Content>
           <Select.ScrollUpButton />
