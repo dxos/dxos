@@ -125,7 +125,9 @@ export class AutomergeObjectCore {
     const doc = this.doc;
     this.doc = undefined;
 
-    if (!options.ignoreLocalState) {
+    if (options.assignFromLocalState) {
+      invariant(doc, 'assignFromLocalState');
+
       // Prevent recursive change calls.
       using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
@@ -389,10 +391,9 @@ export type BindOptions = {
   path: string[];
 
   /**
-   * Discard the local state that the object held before binding.
-   * Otherwise the local state will be assigned into the shared structure for the database.
+   * Assign the state from the local doc into the shared structure for the database.
    */
-  ignoreLocalState?: boolean;
+  assignFromLocalState?: boolean;
 };
 
 export const isDocAccessor = (obj: any): obj is DocAccessor => {
