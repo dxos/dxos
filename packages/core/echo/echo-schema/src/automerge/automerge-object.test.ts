@@ -2,13 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
+import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
 
+import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
+import { defer } from '@dxos/util';
 
-import { AutomergeObject } from './automerge-object';
+import { AutomergeObject, getAutomergeObjectCore } from './automerge-object';
 import { Expando, TypedObject, base } from '../object';
-import { TestBuilder } from '../testing';
+import { TestBuilder, createDatabase } from '../testing';
 import { Contact, Task } from '../tests/proto';
 
 describe('AutomergeObject', () => {
@@ -58,5 +61,36 @@ describe('AutomergeObject', () => {
     const obj = new Task({ title: 'Task' });
     expect('title' in obj).to.eq(true);
     expect('id' in obj).to.eq(true);
+  });
+
+  test('rebind', async () => {
+    registerSignalRuntime();
+
+    const { db } = await createDatabase();
+
+    const obj1 = db.add(new Expando({ title: 'Object 1' }));
+    const obj2 = db.add(new Expando({ title: 'Object 2' }));
+
+    let updateCount = 0;
+    using _ = defer(
+      effect(() => {
+        obj1.title;
+        obj2.title;
+        updateCount++;
+      }),
+    );
+
+    expect(updateCount).to.eq(1);
+
+    // Rebind obj2 to obj1
+    getAutomergeObjectCore(obj2).bind({
+      db: getAutomergeObjectCore(obj1).database!,
+      docHandle: getAutomergeObjectCore(obj1).docHandle!,
+      path: getAutomergeObjectCore(obj1).mountPath,
+      assignFromLocalState: false,
+    });
+
+    expect(updateCount).to.eq(2);
+    expect(obj2.title).to.eq('Object 1');
   });
 });
