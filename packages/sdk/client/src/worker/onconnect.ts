@@ -80,7 +80,7 @@ export const onconnect = async (event: MessageEvent<any>) => {
 
 const loadStorageConfig = async (): Promise<ConfigProto> => {
   try {
-    const storageAdapterOption = await localforage.getItem('dxos.org/settings/storage-driver');
+    const storageAdapterOption = await localforage.getItem<number>('dxos.org/settings/storage-driver');
     if (storageAdapterOption) {
       return { runtime: { client: { storage: { dataStore: storageAdapterOption } } } };
     }
