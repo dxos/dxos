@@ -338,11 +338,12 @@ message Chain {
       QUERY = 4;
       RESOLVER = 5;
       CONTEXT = 6;
+      SCHEMA = 7;
     }
 
     string name = 1;
     Type type = 2;
-    dxos.schema.Text value = 3;
+    dxos.schema.Text value = 3; // TODO(burdon): String?
   }
 
   // TODO(burdon): Bug: Not reactive unless object?

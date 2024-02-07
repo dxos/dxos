@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { ChatOpenAI } from '@langchain/openai';
 import { expect } from 'chai';
-import { ChatOpenAI } from 'langchain/chat_models/openai';
 
 import { describe, test } from '@dxos/test';
 

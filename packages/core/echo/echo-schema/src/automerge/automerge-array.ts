@@ -4,7 +4,6 @@
 
 import { inspect, type CustomInspectFunction } from 'node:util';
 
-import { type ChangeFn } from '@dxos/automerge/automerge';
 import { invariant } from '@dxos/invariant';
 
 import { AutomergeObject } from './automerge-object';
@@ -145,16 +144,18 @@ export class AutomergeArray<T> implements Array<T> {
       const fullPath = [...this._object._core.mountPath, ...this._path!];
 
       // TODO(mykola): Do not allow direct access to doc in array.
-      const changeFn: ChangeFn<any> = (doc) => {
+
+      const encodedItems = items.map((value) => this._object!._core.encode(value as any));
+
+      this._object._core.change((doc) => {
         let parent = doc;
         for (const key of fullPath.slice(0, -1)) {
           parent = parent[key];
         }
         const array: any[] = parent[fullPath.at(-1)!];
         invariant(Array.isArray(array));
-        array.splice(start, deleteCount ?? 0, ...items.map((value) => this._object!._encode(value)));
-      };
-      this._object._change(changeFn);
+        array.splice(start, deleteCount ?? 0, ...encodedItems);
+      });
       return deletedItems;
     } else {
       invariant(this._uninitialized);
@@ -319,7 +320,8 @@ export class AutomergeArray<T> implements Array<T> {
       const fullPath = [...this._object._core.mountPath, ...this._path!];
 
       // TODO(mykola): Do not allow direct access to doc in array.
-      const changeFn: ChangeFn<any> = (doc) => {
+      const encodedItems = items.map((value) => this._object!._core.encode(value as any));
+      this._object._core.change((doc) => {
         let parent = doc;
         for (const key of fullPath.slice(0, -1)) {
           parent = parent[key];
@@ -327,9 +329,8 @@ export class AutomergeArray<T> implements Array<T> {
         const array: any[] = parent[fullPath.at(-1)!];
         invariant(Array.isArray(array));
 
-        array.push(...items.map((value) => this._object!._encode(value)));
-      };
-      this._object._change(changeFn);
+        array.push(...encodedItems);
+      });
     } else {
       invariant(this._uninitialized);
       this._uninitialized.push(...items);
@@ -417,8 +418,10 @@ export class AutomergeArray<T> implements Array<T> {
 
     const fullPath = [...this._object._core.mountPath, ...this._path!];
 
+    const encodedValue = this._object!._core.encode(value as any);
+
     // TODO(mykola): Do not allow direct access to doc in array.
-    const changeFn: ChangeFn<any> = (doc) => {
+    this._object._core.change((doc) => {
       let parent = doc;
       for (const key of fullPath.slice(0, -1)) {
         parent = parent[key];
@@ -426,9 +429,8 @@ export class AutomergeArray<T> implements Array<T> {
       const array: any[] = parent[fullPath.at(-1)!];
       invariant(Array.isArray(array));
       // TODO(dmaretskyi): Remove recursive doc.change calls. How do they even work?
-      array[index] = this._object!._encode(value);
-    };
-    this._object._change(changeFn);
+      array[index] = encodedValue;
+    });
   }
 
   private _getArray(): T[] {
