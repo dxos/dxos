@@ -46,12 +46,12 @@ export const Defaults = () => {
 export const Storage = async () => {
   // NOTE: Load the configuration which is set in `plugin-client` settings
   try {
-    const storageAdapterOption = await localforage.getItem('dxos.org/settings/storage-driver');
-    if (storageAdapterOption) {
-      return { runtime: { client: { storage: { dataStore: storageAdapterOption } } } };
+    const config = await localforage.getItem('dxos.org/settings/config');
+    if (config) {
+      return config;
     }
   } catch (err) {
-    log.warn('Failed to load storage-adapter option', { err });
+    log.warn('Failed to load config', { err });
+    return {};
   }
-  return {};
 };

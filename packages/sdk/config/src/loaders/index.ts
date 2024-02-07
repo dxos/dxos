@@ -63,4 +63,4 @@ export const Defaults = (basePath = DEFAULT_BASE_PATH): Partial<ConfigProto> =>
 /**
  * Load config from storage.
  */
-export const Storage = async () => ({});
+export const Storage = async (): Promise<Partial<ConfigProto>> => ({});
