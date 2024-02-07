@@ -384,8 +384,12 @@ export class DataSpace {
     queueMicrotask(async () => {
       try {
         await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
-          await handle.whenReady();
+          await cancelWithContext(this._ctx, handle.whenReady());
         });
+        if (this._ctx.disposed) {
+          return;
+        }
+
         const doc = handle.docSync() ?? failedInvariant();
         if (!doc.experimental_spaceKey) {
           handle.change((doc: any) => {
@@ -393,6 +397,9 @@ export class DataSpace {
           });
         }
       } catch (err) {
+        if (err instanceof ContextDisposedError) {
+          return;
+        }
         log.warn('error loading automerge root doc', { space: this.key, rootUrl, err });
       }
     });
