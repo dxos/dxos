@@ -8,7 +8,7 @@ export type FileInfo = {
   cid: string; // TODO(burdon): Meta.
 };
 
-export type FileUploader = (file: FileInfo) => Promise<string | undefined>;
+export type FileUploader = (file: File) => Promise<FileInfo | undefined>;
 
 export type FileManagerProvides = {
   file: {
