@@ -20,7 +20,7 @@ test.describe('Folder tests', () => {
   test('create folder', async () => {
     await host.createSpace();
     await host.createFolder();
-    expect(await host.getObject(1).innerText()).to.equal('New folder');
+    expect((await host.getObject(1).innerText()).trim()).to.equal('New folder');
   });
 
   test('re-order folders', async () => {
@@ -37,8 +37,8 @@ test.describe('Folder tests', () => {
     await host.getObjectByName('Folder 1').hover();
     await host.page.mouse.up();
 
-    expect(await host.getObject(1).innerText()).to.equal('Folder 2');
-    expect(await host.getObject(2).innerText()).to.equal('Folder 1');
+    expect((await host.getObject(1).innerText()).trim()).to.equal('Folder 2');
+    expect((await host.getObject(2).innerText()).trim()).to.equal('Folder 1');
   });
 
   test('drag object into folder', async () => {
@@ -56,7 +56,7 @@ test.describe('Folder tests', () => {
 
     // Document is now inside the folder.
     const folder = await host.getObjectByName('New folder');
-    expect(await folder.getByTestId('spacePlugin.object').innerText()).to.equal('New document');
+    expect((await folder.getByTestId('spacePlugin.object').innerText()).trim()).to.equal('New document');
   });
 
   test.describe('deleting folder', () => {

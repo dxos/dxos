@@ -43,12 +43,12 @@ test.describe('Comments tests', () => {
     await Thread.createComment(host.page, messageText);
     const thread = Thread.getThread(host.page, editorText);
     const message = Thread.getMessage(thread, messageText).getByRole('textbox');
-    expect(await message.innerText()).to.equal(messageText);
+    expect((await message.innerText()).trim()).to.equal(messageText);
 
     const editedText = 'Edited';
     await message.fill(editedText);
     const editedMessage = Thread.getMessage(thread, editedText).getByRole('textbox');
-    expect(await editedMessage.innerText()).to.equal(editedText);
+    expect((await editedMessage.innerText()).trim()).to.equal(editedText);
   });
 
   test('delete message', async () => {
