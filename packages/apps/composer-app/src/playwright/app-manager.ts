@@ -178,8 +178,15 @@ export class AppManager {
   // Plugins
   //
 
-  async enablePlugin(plugin: string) {
+  async openSettings() {
     await this.page.getByTestId('treeView.openSettings').click();
+  }
+
+  async toggleExperimenalPlugins() {
+    await this.page.getByTestId('pluginSettings.experimental').click();
+  }
+
+  async enablePlugin(plugin: string) {
     await this.page.getByTestId(`pluginList.${plugin}`).getByRole('switch').click();
     await this.page.goto(this.initialUrl);
     await this.page.getByTestId('treeView.haloButton').waitFor();
