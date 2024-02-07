@@ -7,7 +7,7 @@ import { type Chat } from 'openai/resources';
 
 import { type Document as DocumentType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { getTextContent, toJsonSchema, Schema } from '@dxos/echo-schema';
+import { getTextContent, toJsonSchema, Schema, Expando, TextObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 export type GptAnalyzerOptions = {
@@ -33,6 +33,16 @@ export class GptAnalyzer {
       return;
     }
 
+    const schemaMap = schemas.reduce((map, schema) => {
+      const jsonSchema = toJsonSchema(schema);
+      if (jsonSchema.title) {
+        console.log(schema.typename);
+        map.set(jsonSchema.title, jsonSchema);
+      }
+
+      return map;
+    }, new Map());
+
     const messages: Chat.ChatCompletionMessageParam[] = [
       {
         role: 'system',
@@ -40,9 +50,9 @@ export class GptAnalyzer {
           //
           'You are a machine that only replies with valid, iterable RFC8259 compliant JSON in your responses.',
           'Your entire response should be a single array of JSON objects.',
-          'Each object should conform to the following schemas:',
+          'Each object should conform to one of the following schemas:',
           '---',
-          schemas.map((schema) => toJsonSchema(schema)).join('\n'),
+          Array.from(schemaMap.values()).map((schema) => JSON.stringify(schema)),
         ].join('\n'),
       },
       {
@@ -56,9 +66,48 @@ export class GptAnalyzer {
       },
     ];
 
-    const stream = await this._client.chat.completions.create({ model: 'gpt-4', messages, stream: true });
-    for await (const chunk of stream) {
-      console.log(chunk.choices[0]?.delta?.content || '');
+    console.log(JSON.stringify(messages, null, 2));
+
+    console.info('requesting...', { length: text?.length, schema: schemas.length });
+    const response = await this._client.chat.completions.create({ model: 'gpt-4', messages });
+    console.log('processing', { choices: response.choices.length });
+    const result = response.choices[0];
+    try {
+      if (result.message.content) {
+        const data = JSON.parse(result.message.content);
+        for (const obj of data) {
+          const schema = schemas.find((schema) => schema.typename === obj.$id);
+          if (!schema) {
+            console.warn('invalid object', obj);
+            continue;
+          }
+
+          // TODO(burdon): Check for duplicates.
+          const data: Record<string, any> = {
+            '@type': schema.typename,
+          };
+
+          for (const { id, type } of schema.props) {
+            invariant(id);
+            const value = obj[id];
+            if (value !== undefined && value !== null) {
+              switch (type) {
+                // TODO(burdon): Currently only handles string properties.
+                case Schema.PropType.STRING: {
+                  data[id] = new TextObject(value);
+                  break;
+                }
+              }
+            }
+          }
+
+          const object = new Expando(data, { schema });
+          space.db.add(object);
+          console.log('created', JSON.stringify(object, null, 2));
+        }
+      }
+    } catch (err) {
+      console.warn('invalid response', err);
     }
   }
 }
