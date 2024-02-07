@@ -2,35 +2,35 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
-import { AgentExecutor } from 'langchain/agents';
-import { formatLogToString } from 'langchain/agents/format_scratchpad/log';
-import { formatToOpenAIToolMessages } from 'langchain/agents/format_scratchpad/openai_tools';
-import { OpenAIToolsAgentOutputParser, type ToolsAgentStep } from 'langchain/agents/openai/output_parser';
-import { ReActSingleInputOutputParser } from 'langchain/agents/react/output_parser';
-import { ChatOpenAI } from 'langchain/chat_models/openai';
-import { type Document } from 'langchain/document';
-import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
-import { PlanAndExecuteAgentExecutor } from 'langchain/experimental/plan_and_execute';
-import { pull } from 'langchain/hub';
-import { BufferMemory } from 'langchain/memory';
-import { JsonOutputFunctionsParser } from 'langchain/output_parsers';
+import { SerpAPI } from '@langchain/community/tools/serpapi';
+import { HNSWLib } from '@langchain/community/vectorstores/hnswlib';
+import { StringOutputParser } from '@langchain/core/output_parsers';
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   MessagesPlaceholder,
   PromptTemplate,
   SystemMessagePromptTemplate,
-} from 'langchain/prompts';
+} from '@langchain/core/prompts';
+import { RunnableSequence, RunnablePassthrough } from '@langchain/core/runnables';
+import { DynamicStructuredTool } from '@langchain/core/tools';
+import { ChatOpenAI, formatToOpenAITool, OpenAIEmbeddings } from '@langchain/openai';
+import { expect } from 'chai';
+import { AgentExecutor } from 'langchain/agents';
+import { formatLogToString } from 'langchain/agents/format_scratchpad/log';
+import { formatToOpenAIToolMessages } from 'langchain/agents/format_scratchpad/openai_tools';
+import { OpenAIToolsAgentOutputParser, type ToolsAgentStep } from 'langchain/agents/openai/output_parser';
+import { ReActSingleInputOutputParser } from 'langchain/agents/react/output_parser';
+import { type Document } from 'langchain/document';
+import { PlanAndExecuteAgentExecutor } from 'langchain/experimental/plan_and_execute';
+import { pull } from 'langchain/hub';
+import { BufferMemory } from 'langchain/memory';
+import { JsonOutputFunctionsParser } from 'langchain/output_parsers';
 import { type AgentStep, type BaseMessage } from 'langchain/schema';
-import { StringOutputParser } from 'langchain/schema/output_parser';
-import { RunnableSequence, RunnablePassthrough } from 'langchain/schema/runnable';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
-import { DynamicStructuredTool, formatToOpenAITool, SerpAPI } from 'langchain/tools';
 import { Calculator } from 'langchain/tools/calculator';
 import { renderTextDescription } from 'langchain/tools/render';
 import { formatDocumentsAsString } from 'langchain/util/document';
-import { HNSWLib } from 'langchain/vectorstores/hnswlib';
 import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -151,12 +151,9 @@ describe.skip('LangChain', () => {
 
     const retriever = vectorStore.asRetriever();
     const prompt = PromptTemplate.fromTemplate(
-      [
-        'answer the question based only on the following context:',
-        '{context}',
-        '----------------',
-        'question: {question}',
-      ].join('\n'),
+      ['answer the question based only on the following context:', '{context}', '---', 'question: {question}'].join(
+        '\n',
+      ),
     );
 
     const agent = RunnableSequence.from([
@@ -201,7 +198,7 @@ describe.skip('LangChain', () => {
         [
           'use the following pieces of context to answer the question at the end.',
           "if you don't know the answer, just say that you don't know, don't try to make up an answer.",
-          '----------------',
+          '---',
           '{context}',
         ].join('\n'),
       ),
@@ -235,7 +232,7 @@ describe.skip('LangChain', () => {
   // TODO(burdon): Metadata for zod: https://github.com/colinhacks/zod/issues/273
   //
   test('functions', async () => {
-    const schema = z.object({
+    const defs = z.object({
       company: z
         .array(
           z.object({
@@ -256,13 +253,15 @@ describe.skip('LangChain', () => {
         .describe('An array of people mentioned in the text'),
     });
 
+    const schema = zodToJsonSchema(defs);
+    console.log(JSON.stringify(schema, null, 2));
     const model = createModel().bind({
       function_call: { name: 'output_formatter' },
       functions: [
         {
           name: 'output_formatter',
-          description: 'Should always be used to properly format output',
-          parameters: zodToJsonSchema(schema),
+          description: 'Should always be used to properly format output.',
+          parameters: schema,
         },
       ],
     });
