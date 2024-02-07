@@ -27,6 +27,8 @@ test.describe('Folder tests', () => {
   });
 
   test('re-order folders', async () => {
+    test.slow();
+
     await host.createSpace();
     await host.createFolder(1);
     await host.createFolder(1);

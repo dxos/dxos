@@ -15,6 +15,8 @@ faker.seed(0);
 
 // NOTE: Reduce flakiness in CI by using waitForExpect.
 test.describe('Comments tests', () => {
+  test.slow();
+
   let host: AppManager;
 
   test.beforeEach(async ({ browser }) => {

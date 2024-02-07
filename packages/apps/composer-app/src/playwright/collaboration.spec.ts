@@ -23,6 +23,8 @@ const perfomInvitation = async (host: AppManager, guest: AppManager) => {
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
 //   https://github.com/microsoft/playwright/issues/2973
 test.describe('Collaboration tests', () => {
+  test.setTimeout(60_000);
+
   let host: AppManager;
   let guest: AppManager;
 
@@ -38,8 +40,6 @@ test.describe('Collaboration tests', () => {
   });
 
   test('guest joins host’s space', async () => {
-    test.slow();
-
     await host.createSpace();
     await host.createObject('markdownPlugin');
     await perfomInvitation(host, guest);
@@ -57,8 +57,6 @@ test.describe('Collaboration tests', () => {
   });
 
   test('host and guest can see each others’ presence when same document is in focus', async () => {
-    test.slow();
-
     await host.createSpace();
     await host.createObject('markdownPlugin');
     await Markdown.waitForMarkdownTextbox(host.page);
@@ -85,8 +83,6 @@ test.describe('Collaboration tests', () => {
   });
 
   test('host and guest can see each others’ changes in same document', async () => {
-    test.slow();
-
     await host.createSpace();
     await host.createObject('markdownPlugin');
     await Markdown.waitForMarkdownTextbox(host.page);
