@@ -1024,6 +1024,9 @@ importers:
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../../sdk/client-services
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../../sdk/config
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../../devtools/devtools
@@ -7735,6 +7738,9 @@ importers:
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
+      localforage:
+        specifier: ^1.10.0
+        version: 1.10.0
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1

@@ -14,7 +14,7 @@ import {
   type PluginDefinition,
   type TranslationsProvides,
 } from '@dxos/app-framework';
-import { Config, Defaults, Envs, Local } from '@dxos/config';
+import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
 import { type TypeCollection } from '@dxos/react-client/echo';
@@ -65,7 +65,7 @@ export const ClientPlugin = ({
     initialize: async () => {
       let firstRun = false;
 
-      client = new Client({ config: new Config(await Envs(), Local(), Defaults()), ...options });
+      client = new Client({ config: new Config(await Storage(), Envs(), Local(), Defaults()), ...options });
 
       try {
         await client.initialize();

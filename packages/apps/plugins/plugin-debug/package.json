@@ -26,6 +26,7 @@
     "@braneframe/plugin-settings": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client-services": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
     "@dxos/echo-pipeline": "workspace:*",

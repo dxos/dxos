@@ -16,7 +16,7 @@ export const DialogRestoreSpace = ({ handleFile }: { handleFile: (backupFile: Fi
     <div className='flex shrink-0 m-2'>
       <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => setDialogOpen(nextOpen)}>
         <Dialog.Trigger asChild>
-          <Button variant='primary'>Import space</Button>
+          <Button>Import space</Button>
         </Dialog.Trigger>
 
         <Dialog.Overlay>

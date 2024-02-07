@@ -29,7 +29,8 @@ export const VaultSelector = () => {
   const handleSetVault = (value: string) => {
     const url = new URL(window.location.href);
     const target = getTarget(value);
-    window.location.href = url.origin + (target.value ? `?target=${target.value}` : undefined) + url.hash;
+    url.searchParams.set('target', target.value);
+    window.location.href = url.href;
   };
 
   return <Select value={vault.value ?? ''} items={targets} onValueChange={(value) => handleSetVault(value)} />;
