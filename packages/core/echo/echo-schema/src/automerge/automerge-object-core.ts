@@ -14,6 +14,7 @@ import { type AutomergeDb } from './automerge-db';
 import { docChangeSemaphore } from './doc-semaphore';
 import { type DocStructure, type ObjectStructure } from './types';
 import { type EchoObject } from '../object';
+import { log } from '@dxos/log';
 
 // TODO(dmaretskyi): Rename to `AutomergeObject`.
 export class AutomergeObjectCore {
@@ -86,16 +87,10 @@ export class AutomergeObjectCore {
       });
     }
 
-    // TODO(dmaretskyi): Cleanup this subscription.
+    // TODO(dmaretskyi): Dispose this subscription.
     this.docHandle.on('change', (event) => {
       if (objectIsUpdated(this.id, event)) {
-        // Updates must come in the next microtask since the object state is not fully updated at the time of "change" event processing.
-        // Update listeners might access the state of the object and it must be fully updated at that time.
-        // It's ok to use `queueMicrotask` here since this path is only used for propagation of remote changes.
-        queueMicrotask(() => {
-          // TODO(dmaretskyi): Local changes have already called `notifyUpdate` so this would fire the notification twice for local updates.
-          this.notifyUpdate();
-        });
+        this.notifyUpdate();
       }
     });
 
@@ -119,6 +114,8 @@ export class AutomergeObjectCore {
       } else {
         this.doc = A.change(this.doc!, changeFn);
       }
+
+      // No change event is emitted here since we are not using the doc handle. Notify listeners manually.
       this.notifyUpdate();
     } else {
       invariant(this.docHandle);
@@ -145,6 +142,8 @@ export class AutomergeObjectCore {
         this.doc = newDoc;
         result = newHeads ?? undefined;
       }
+
+      // No change event is emitted here since we are not using the doc handle. Notify listeners manually.
       this.notifyUpdate();
     } else {
       invariant(this.docHandle);
@@ -168,12 +167,14 @@ export class AutomergeObjectCore {
         },
         addListener: (event, listener) => {
           if (event === 'change') {
+            // TODO(dmaretskyi): We probably don't need to subscribe to docHandle here separately.
             this.docHandle?.on('change', listener);
             this.updates.on(listener);
           }
         },
         removeListener: (event, listener) => {
           if (event === 'change') {
+            // TODO(dmaretskyi): We probably don't need to subscribe to docHandle here separately.
             this.docHandle?.off('change', listener);
             this.updates.off(listener);
           }

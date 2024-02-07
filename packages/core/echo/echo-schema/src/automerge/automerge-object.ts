@@ -182,22 +182,11 @@ export class AutomergeObject implements TypedObjectProperties {
   }
 
   [subscribe](callback: (value: AutomergeObject) => void): () => void {
-    const changeListener = (event: DocHandleChangePayload<DocStructure>) => {
-      if (objectIsUpdated(this[base]._core.id, event)) {
-        callback(this);
-      }
-    };
-
     const updatesListener = () => {
       callback(this);
     };
 
-    this[base]._core.docHandle?.on('change', changeListener);
-    this[base]._core.updates.on(updatesListener);
-    return () => {
-      this[base]._core.docHandle?.off('change', changeListener);
-      this[base]._core.updates.off(updatesListener);
-    };
+    return this[base]._core.updates.on(updatesListener);
   }
 
   private _initNewObject(initialProps?: unknown, opts?: TypedObjectOptions) {
