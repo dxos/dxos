@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 
 let PERFORMING_CONFIG_SAVE = false;
 
-export const SaveConfig = async () => {
+export const SaveConfig = async (config) => {
   if (PERFORMING_CONFIG_SAVE) {
     log.warn('Already performing config save');
     return;
@@ -19,10 +19,7 @@ export const SaveConfig = async () => {
 
   // NOTE: Load the configuration which is set in `plugin-client` settings
   try {
-    const config = await localforage.getItem('dxos.org/settings/config');
-    if (config) {
-      return config;
-    }
+    await localforage.setItem('dxos.org/settings/config', config);
   } catch (err) {
     log.warn('Failed to save config', { err });
     return {};

@@ -6,6 +6,7 @@ import React from 'react';
 
 import { SettingsValue } from '@braneframe/plugin-settings';
 import { type ConfigProto, Storage, defs, SaveConfig } from '@dxos/config';
+import { log } from '@dxos/log';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { assignDeep } from '@dxos/util';
 
@@ -42,12 +43,13 @@ export const ClientSettings = ({ settings }: { settings: ClientSettingsProps }) 
           }
           onValueChange={(value) => {
             if (confirm(t('storage adapter changed alert'))) {
-              const storageConfigCopy = JSON.parse(JSON.stringify(storageConfig));
+              const storageConfigCopy = JSON.parse(JSON.stringify(storageConfig ?? {}));
               assignDeep(
                 storageConfigCopy,
                 ['runtime', 'client', 'storage', 'dataStore'],
                 StorageAdapters[value as keyof typeof StorageAdapters],
               );
+              setStorageConfig(storageConfigCopy);
               queueMicrotask(async () => {
                 await SaveConfig(storageConfigCopy);
               });

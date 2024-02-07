@@ -4,7 +4,6 @@
 
 import '@dxosTheme';
 
-import localforage from 'localforage';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -46,7 +45,7 @@ import WildcardMeta from '@braneframe/plugin-wildcard/meta';
 import { types, Document } from '@braneframe/types';
 import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
 import { createStorageObjects } from '@dxos/client-services';
-import { defs } from '@dxos/config';
+import { defs, SaveConfig } from '@dxos/config';
 import { log } from '@dxos/log';
 import { initializeAppObservability } from '@dxos/observability';
 import { createClientServices } from '@dxos/react-client';
@@ -69,7 +68,9 @@ const main = async () => {
   if (await defaultStorageIsEmpty()) {
     // NOTE: Set default for first time users to IDB (works better with automerge CRDTs).
     //       Needs to be done before worker is created.
-    await localforage.setItem('dxos.org/settings/storage-driver', defs.Runtime.Client.Storage.StorageDriver.IDB);
+    await SaveConfig({
+      runtime: { client: { storage: { dataStore: defs.Runtime.Client.Storage.StorageDriver.IDB } } },
+    });
   }
 
   const services = await createClientServices(
