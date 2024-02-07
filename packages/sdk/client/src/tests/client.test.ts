@@ -118,7 +118,7 @@ describe('Client', () => {
     }
   }).onlyEnvironments('nodejs', 'chromium', 'firefox');
 
-  test.only('objects are being synced between clients', async () => {
+  test('objects are being synced between clients', async () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
 
