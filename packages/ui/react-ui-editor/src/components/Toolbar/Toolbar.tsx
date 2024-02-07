@@ -64,7 +64,7 @@ export type ActionType =
   | 'link'
   | 'list-bullet'
   | 'list-ordered'
-  | 'list-tasks'
+  | 'list-task'
   | 'mention'
   | 'prompt'
   | 'strikethrough'
@@ -98,12 +98,17 @@ const ToolbarRoot = ({ children, onAction, classNames, state }: ToolbarProps) =>
   );
 };
 
-type ToolbarButtonProps = ToolbarToggleGroupItemProps & {
-  Icon: Icon;
-};
-
 const buttonStyles = 'min-bs-0 p-2';
 const iconStyles = getSize(5);
+
+type ButtonProps = {
+  type: ActionType;
+  Icon: Icon;
+  getState: (state: Formatting) => boolean;
+  disabled?: (state: Formatting) => boolean;
+};
+
+type ToolbarButtonProps = ToolbarToggleGroupItemProps & { Icon: Icon };
 
 const ToolbarButton = ({ Icon, children, ...props }: ToolbarButtonProps) => {
   return (
@@ -164,14 +169,12 @@ const MarkdownHeading = () => {
   );
 };
 
-const markdownStyles = [
-  { key: 'strong' as const, Icon: TextB },
-  { key: 'emphasis' as const, Icon: TextItalic },
-  { key: 'strikethrough' as const, Icon: TextStrikethrough },
-  { key: 'code' as const, Icon: Code },
-  { key: 'link' as const, Icon: Link },
-  // <ToolbarButton Icon={At} title='Mention' onClick={() => ({ type: 'mention' })} />
-  // <ToolbarButton Icon={Image} title='Image' onClick={() => ({ type: 'image' })} />
+const markdownStyles: ButtonProps[] = [
+  { type: 'strong', Icon: TextB, getState: (state) => state.strong },
+  { type: 'emphasis', Icon: TextItalic, getState: (state) => state.emphasis },
+  { type: 'strikethrough', Icon: TextStrikethrough, getState: (state) => state.strikethrough },
+  { type: 'code', Icon: Code, getState: (state) => state.code },
+  { type: 'link', Icon: Link, getState: (state) => state.link },
 ];
 
 const MarkdownStyles = () => {
@@ -181,27 +184,27 @@ const MarkdownStyles = () => {
   return (
     <NaturalToolbar.ToggleGroup
       type='multiple'
-      value={markdownStyles.filter(({ key }) => !!state?.[key]).map(({ key }) => key)}
+      value={markdownStyles.filter(({ getState }) => state && getState(state)).map(({ type }) => type)}
     >
-      {markdownStyles.map(({ key, Icon }) => (
+      {markdownStyles.map(({ type, getState, Icon }) => (
         <ToolbarButton
-          key={key}
-          value={key}
+          key={type}
+          value={type}
           Icon={Icon}
           disabled={state?.blockType === 'codeblock'}
-          onClick={() => onAction?.({ type: key, data: state ? !state[key] : null })}
+          onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
         >
-          {t(`${key} label`)}
+          {t(`${type} label`)}
         </ToolbarButton>
       ))}
     </NaturalToolbar.ToggleGroup>
   );
 };
 
-const markdownLists = [
-  { key: 'bullet' as const, Icon: ListBullets, actionType: 'list-bullet' as const },
-  { key: 'ordered' as const, Icon: ListNumbers, actionType: 'list-ordered' as const },
-  { key: 'task' as const, Icon: ListChecks, actionType: 'list-tasks' as const },
+const markdownLists: ButtonProps[] = [
+  { type: 'list-bullet', Icon: ListBullets, getState: (state) => state.listStyle === 'bullet' },
+  { type: 'list-ordered', Icon: ListNumbers, getState: (state) => state.listStyle === 'ordered' },
+  { type: 'list-task', Icon: ListChecks, getState: (state) => state.listStyle === 'task' },
 ];
 
 const MarkdownLists = () => {
@@ -209,62 +212,58 @@ const MarkdownLists = () => {
   const { t } = useTranslation(translationKey);
   return (
     <NaturalToolbar.ToggleGroup type='single' value={state?.listStyle ?? undefined}>
-      {markdownLists.map(({ key, Icon, actionType }) => (
+      {markdownLists.map(({ type, getState, Icon }) => (
         <ToolbarButton
-          key={key}
-          value={key}
+          key={type}
+          value={type}
           Icon={Icon}
-          onClick={() => onAction?.({ type: actionType, data: state ? state.listStyle !== key : null })}
+          onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
         >
-          {t(`${key} label`)}
+          {t(`${type} label`)}
         </ToolbarButton>
       ))}
     </NaturalToolbar.ToggleGroup>
   );
 };
 
-const markdownBlocks = [
+const markdownBlocks: ButtonProps[] = [
   {
-    key: 'blockquote' as const,
+    type: 'blockquote',
     Icon: Quotes,
-    pressed: (state: Formatting | null) => state?.blockQuote,
-    action: (state: Formatting | null) => ({ type: 'blockquote' as const, data: state ? !state.blockQuote : null }),
-    disabled: (state: Formatting | null) => false,
+    getState: (state) => state.blockQuote,
   },
   {
-    key: 'codeblock' as const,
+    type: 'codeblock',
     Icon: CodeBlock,
-    pressed: (state: Formatting | null) => state?.blockType === 'codeblock',
-    action: (state: Formatting | null) => ({ type: 'blockquote' as const, data: state ? !state.blockQuote : null }),
-    disabled: (state: Formatting | null) => !state?.blankLine,
+    getState: (state) => state.blockQuote,
+    disabled: (state) => !state.blankLine,
+  },
+  {
+    type: 'table',
+    Icon: Table,
+    getState: (state) => state.blockType === 'tablecell',
+    disabled: (state) => !state.blankLine,
   },
 ];
 
 const MarkdownBlocks = () => {
   const { onAction, state } = useToolbarContext('MarkdownStyles');
   const { t } = useTranslation(translationKey);
+  const value = markdownBlocks.find(({ getState }) => state && getState(state));
   return (
-    <>
-      <NaturalToolbar.ToggleGroup
-        type='multiple'
-        value={markdownBlocks.filter(({ pressed }) => pressed(state)).map(({ key }) => key)}
-      >
-        {markdownBlocks.map(({ key, Icon, action }) => (
-          <ToolbarButton key={key} value={key} Icon={Icon} onClick={() => onAction?.(action(state))}>
-            {t(`${key} label`)}
-          </ToolbarButton>
-        ))}
-      </NaturalToolbar.ToggleGroup>
-      <NaturalToolbar.Button
-        variant='ghost'
-        disabled={!state?.blankLine}
-        onClick={() => onAction?.({ type: 'table' })}
-        classNames={buttonStyles}
-      >
-        <Table className={iconStyles} />
-        <span className='sr-only'>{t('table label')}</span>
-      </NaturalToolbar.Button>
-    </>
+    <NaturalToolbar.ToggleGroup type='single' value={value?.type}>
+      {markdownBlocks.map(({ type, disabled, getState, Icon }) => (
+        <ToolbarButton
+          key={type}
+          value={type}
+          Icon={Icon}
+          disabled={!state || disabled?.(state)}
+          onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
+        >
+          {t(`${type} label`)}
+        </ToolbarButton>
+      ))}
+    </NaturalToolbar.ToggleGroup>
   );
 };
 
