@@ -68,6 +68,7 @@ const main = async () => {
 
   if (await defaultStorageIsEmpty()) {
     // NOTE: Set default for first time users to IDB (works better with automerge CRDTs).
+    //       Needs to be done before worker is created.
     await localforage.setItem('dxos.org/settings/storage-driver', defs.Runtime.Client.Storage.StorageDriver.IDB);
   }
 
