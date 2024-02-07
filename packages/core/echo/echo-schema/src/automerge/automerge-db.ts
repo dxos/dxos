@@ -186,6 +186,7 @@ export class AutomergeDb {
       db: this,
       docHandle: this._docHandle,
       path: ['objects', obj.id],
+      assignFromLocalState: true,
     });
 
     return obj;
@@ -230,7 +231,7 @@ export class AutomergeDb {
         db: this,
         docHandle: this._docHandle,
         path: ['objects', obj.id],
-        ignoreLocalState: true,
+        assignFromLocalState: false,
       });
     }
   }
