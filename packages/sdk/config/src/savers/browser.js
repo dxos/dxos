@@ -17,7 +17,6 @@ export const SaveConfig = async (config) => {
   }
   PERFORMING_CONFIG_SAVE = true;
 
-  // NOTE: Load the configuration which is set in `plugin-client` settings
   try {
     await localforage.setItem('dxos.org/settings/config', config);
   } catch (err) {

@@ -44,7 +44,6 @@ export const Defaults = () => {
  * Settings config from browser storage.
  */
 export const Storage = async () => {
-  // NOTE: Load the configuration which is set in `plugin-client` settings
   try {
     const config = await localforage.getItem('dxos.org/settings/config');
     if (config) {
