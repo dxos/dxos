@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { PlusCircle, Placeholder } from '@phosphor-icons/react';
+import { Plus, Placeholder } from '@phosphor-icons/react';
 import React, { useCallback, type FC } from 'react';
 
 import { File as FileType, Stack as StackType, Folder } from '@braneframe/types';
@@ -136,18 +136,18 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
         items={items}
         separation={separation}
         transform={handleTransform}
-        onOver={handleOver}
         onDrop={handleDrop}
+        onOver={handleOver}
         onRemoveSection={handleRemove}
         onNavigateToSection={handleNavigate}
       />
 
-      <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
+      <div role='none' className='flex justify-center mt-4'>
         <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), staticDefaultButtonColors]}>
           <DropdownMenu.Root modal={false}>
             <DropdownMenu.Trigger asChild>
               <Button variant='ghost' data-testid='stack.createSection'>
-                <PlusCircle className={getSize(6)} />
+                <Plus className={getSize(6)} />
               </Button>
             </DropdownMenu.Trigger>
             <DropdownMenu.Content>
@@ -173,7 +173,6 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
               </DropdownMenu.Viewport>
             </DropdownMenu.Content>
           </DropdownMenu.Root>
-          {/* TODO(burdon): Surface? */}
           {handleFileUpload && (
             <FileUpload
               fileTypes={[...defaultFileTypes.images, ...defaultFileTypes.media, ...defaultFileTypes.text]}
