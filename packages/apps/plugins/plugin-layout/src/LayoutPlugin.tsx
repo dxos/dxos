@@ -59,7 +59,6 @@ export const LayoutPlugin = ({
   let currentUndoId: string | undefined;
 
   const settings = new LocalStorageStore<LayoutSettingsProps>(LAYOUT_PLUGIN, {
-    enableComplementarySidebar: true,
     showFooter: false,
   });
 
@@ -165,9 +164,7 @@ export const LayoutPlugin = ({
         .prop(layout.values.$sidebarOpen!, 'sidebar-open', LocalStorageStore.bool)
         .prop(layout.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool);
 
-      settings
-        .prop(settings.values.$enableComplementarySidebar!, 'enable-complementary-sidebar', LocalStorageStore.bool)
-        .prop(settings.values.$showFooter!, 'show-footer', LocalStorageStore.bool);
+      settings.prop(settings.values.$showFooter!, 'show-footer', LocalStorageStore.bool);
 
       // TODO(burdon): Create context and plugin.
       Keyboard.singleton.initialize();
@@ -306,7 +303,6 @@ export const LayoutPlugin = ({
               return (
                 <MainLayout
                   fullscreen={layout.values.fullscreen}
-                  showComplementarySidebar={settings.values.enableComplementarySidebar}
                   showHintsFooter={settings.values.showFooter}
                   toasts={layout.values.toasts}
                   onDismissToast={(id) => {

@@ -12,17 +12,13 @@ import {
   type IntentResolverProvides,
   type Plugin,
   type PluginDefinition,
-  type SettingsProvides,
-  type SurfaceProvides,
   type TranslationsProvides,
 } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
-import { LocalStorageStore } from '@dxos/local-storage';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
 import { type TypeCollection } from '@dxos/react-client/echo';
 
-import { ClientSettings } from './components';
 import meta, { CLIENT_PLUGIN } from './meta';
 import translations from './translations';
 
@@ -36,14 +32,8 @@ export enum ClientAction {
 
 export type ClientPluginOptions = ClientOptions & { appKey: string; debugIdentity?: boolean; types?: TypeCollection };
 
-export type ClientSettingsProps = {
-  automerge?: boolean;
-};
-
-export type ClientPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
+export type ClientPluginProvides = IntentResolverProvides &
   GraphBuilderProvides &
-  SettingsProvides<ClientSettingsProps> &
   TranslationsProvides & {
     client: Client;
 
@@ -66,7 +56,6 @@ export const ClientPlugin = ({
 > => {
   // TODO(burdon): Document.
   registerSignalFactory();
-  const settings = new LocalStorageStore<ClientSettingsProps>('dxos.org/settings', { automerge: true });
 
   let client: Client;
   let error: unknown = null;
@@ -102,11 +91,6 @@ export const ClientPlugin = ({
           await client.halo.createIdentity();
           // TODO(wittjosiah): Ideally this would be per app rather than per identity.
           firstRun = true;
-        } else if (client.halo.identity.get() && deviceInvitationCode) {
-          // Ignore device invitation if identity already exists.
-          // TODO(wittjosiah): Identity merging.
-          searchParams.delete('deviceInvitationCode');
-          window.history.replaceState({}, '', `${location.pathname}?${searchParams}`);
         } else if (deviceInvitationCode) {
           void client.shell.initializeIdentity({ invitationCode: deviceInvitationCode });
         }
@@ -144,25 +128,12 @@ export const ClientPlugin = ({
       if (error) {
         throw error;
       }
-
-      settings.prop(settings.values.$automerge!, 'automerge', LocalStorageStore.bool);
     },
     unload: async () => {
       await client.destroy();
     },
     provides: {
-      settings: settings.values,
       translations,
-      surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'settings':
-              return data.plugin === meta.id ? <ClientSettings settings={settings.values} /> : null;
-          }
-
-          return null;
-        },
-      },
       graph: {
         builder: ({ parent, plugins }) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
