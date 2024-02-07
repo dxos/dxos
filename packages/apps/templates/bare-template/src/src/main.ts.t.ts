@@ -37,7 +37,7 @@ export default template.define.text({
       // Grab a configuration with defaults and dynamic values from KUBE.
       const config = new Config(await Dynamics(), Local(), Defaults());
       // Create a client.
-      const client = new Client({ config, createWorker });
+      const client = new Client({ config, createWorker, shell: './shell.html' });
       // Initialize before using.
       await client.initialize();
     
