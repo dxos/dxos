@@ -12,6 +12,8 @@ import { AppManager } from './app-manager';
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
 //   https://github.com/microsoft/playwright/issues/2973
 test.describe('HALO tests', () => {
+  test.setTimeout(60_000);
+
   let host: AppManager;
   let guest: AppManager;
 
@@ -27,8 +29,6 @@ test.describe('HALO tests', () => {
   });
 
   test('join new identity', async () => {
-    test.setTimeout(60_000);
-
     await host.createSpace();
     await host.createSpace();
     await guest.createSpace();

@@ -45,7 +45,6 @@ test.describe('Basic tests', () => {
     if (browserName === 'firefox') {
       test.skip();
     }
-    test.slow();
 
     await host.enablePlugin('dxos.org/plugin/debug');
     await host.changeStorageVersionInMetadata(9999);
@@ -58,8 +57,6 @@ test.describe('Basic tests', () => {
     if (browserName !== 'chromium') {
       test.skip();
     }
-
-    test.slow();
 
     await host.createSpace();
     await host.createSpace();
