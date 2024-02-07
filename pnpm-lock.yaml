@@ -3955,6 +3955,9 @@ importers:
       deepsignal:
         specifier: 1.4.0-shallow.0
         version: 1.4.0-shallow.0(react@18.2.0)
+      localforage:
+        specifier: ^1.10.0
+        version: 1.10.0
     devDependencies:
       '@dxos/async':
         specifier: workspace:*
@@ -7534,6 +7537,9 @@ importers:
       base-x:
         specifier: ~3.0.9
         version: 3.0.9
+      localforage:
+        specifier: ^1.10.0
+        version: 1.10.0
       lodash.isequal:
         specifier: ^4.5.0
         version: 4.5.0
