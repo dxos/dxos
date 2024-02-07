@@ -4,6 +4,7 @@
 
 import '@dxosTheme';
 
+import localforage from 'localforage';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -44,12 +45,14 @@ import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
 import { types, Document } from '@braneframe/types';
 import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
+import { createStorageObjects } from '@dxos/client-services';
+import { defs } from '@dxos/config';
+import { log } from '@dxos/log';
 import { initializeAppObservability } from '@dxos/observability';
 import { createClientServices } from '@dxos/react-client';
 import { TextObject } from '@dxos/react-client/echo';
 import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
-
 import './globals';
 
 import { ResetDialog } from './components';
@@ -62,6 +65,12 @@ const main = async () => {
   const config = await setupConfig();
   // Intentially do not await, don't block app startup for telemetry.
   const observability = initializeAppObservability({ namespace: appKey, config });
+
+  if (await defaultStorageIsEmpty()) {
+    // NOTE: Set default for first time users to IDB (works better with automerge CRDTs).
+    await localforage.setItem('dxos.org/settings/storage-driver', defs.Runtime.Client.Storage.StorageDriver.IDB);
+  }
+
   const services = await createClientServices(
     config,
     config.values.runtime?.app?.env?.DX_HOST
@@ -227,6 +236,19 @@ const main = async () => {
       <App />
     </StrictMode>,
   );
+};
+
+const defaultStorageIsEmpty = async (): Promise<boolean> => {
+  try {
+    const storage = createStorageObjects({}).storage;
+    const metadataDir = storage.createDirectory('metadata');
+    const echoMetadata = metadataDir.getOrCreateFile('EchoMetadata');
+    const { size } = await echoMetadata.stat();
+    return size > 0;
+  } catch (err) {
+    log.warn('Error checking if default storage is empty', { err });
+    return false;
+  }
 };
 
 void main();

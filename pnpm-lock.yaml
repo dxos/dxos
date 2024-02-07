@@ -638,6 +638,9 @@ importers:
       isomorphic-fetch:
         specifier: ^3.0.0
         version: 3.0.0
+      localforage:
+        specifier: ^1.10.0
+        version: 1.10.0
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -3958,9 +3961,6 @@ importers:
       deepsignal:
         specifier: 1.4.0-shallow.0
         version: 1.4.0-shallow.0(react@18.2.0)
-      localforage:
-        specifier: ^1.10.0
-        version: 1.10.0
     devDependencies:
       '@dxos/async':
         specifier: workspace:*

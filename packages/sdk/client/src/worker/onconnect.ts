@@ -2,11 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import localforage from 'localforage';
-
 import { Trigger } from '@dxos/async';
 import { WorkerRuntime } from '@dxos/client-services';
-import { Config, type ConfigProto, Defaults, Envs, Local } from '@dxos/config';
+import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { log } from '@dxos/log';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
@@ -23,8 +21,7 @@ void navigator.locks.request(LOCK_KEY, (lock) => {
 
 const workerRuntime = new WorkerRuntime(
   async () => {
-    const storageConfig = await loadStorageConfig();
-    const config = new Config(storageConfig, Envs(), Local(), Defaults());
+    const config = new Config(await Storage(), Envs(), Local(), Defaults());
     log.config({ filter: config.get('runtime.client.log.filter'), prefix: config.get('runtime.client.log.prefix') });
     return config;
   },
@@ -76,17 +73,4 @@ export const onconnect = async (event: MessageEvent<any>) => {
     systemPort: createWorkerPort({ port: systemChannel.port2 }),
     appPort: createWorkerPort({ port: appChannel.port2 }),
   });
-};
-
-const loadStorageConfig = async (): Promise<ConfigProto> => {
-  // NOTE: Load the configuration which is set in `plugin-client` settings
-  try {
-    const storageAdapterOption = await localforage.getItem<number>('dxos.org/settings/storage-driver');
-    if (storageAdapterOption) {
-      return { runtime: { client: { storage: { dataStore: storageAdapterOption } } } };
-    }
-  } catch (err) {
-    log.warn('Failed to load storage-adapter option', { err });
-  }
-  return {};
 };

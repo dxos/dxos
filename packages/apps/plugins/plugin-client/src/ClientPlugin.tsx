@@ -3,7 +3,6 @@
 //
 
 import { AddressBook } from '@phosphor-icons/react';
-import localforage from 'localforage';
 import React, { useEffect, useState } from 'react';
 
 import {
@@ -17,11 +16,9 @@ import {
   type SurfaceProvides,
   type TranslationsProvides,
 } from '@dxos/app-framework';
-import { createStorageObjects } from '@dxos/client-services';
-import { Config, type ConfigProto, Defaults, Envs, Local, defs } from '@dxos/config';
+import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
 import { type TypeCollection } from '@dxos/react-client/echo';
 
@@ -69,8 +66,7 @@ export const ClientPlugin = ({
 > => {
   // TODO(burdon): Document.
   registerSignalFactory();
-  const settingsPrefix = 'dxos.org/settings';
-  const settings = new LocalStorageStore<ClientSettingsProps>(settingsPrefix, { automerge: true });
+  const settings = new LocalStorageStore<ClientSettingsProps>('dxos.org/settings', { automerge: true });
 
   let client: Client;
   let error: unknown = null;
@@ -80,15 +76,7 @@ export const ClientPlugin = ({
     initialize: async () => {
       let firstRun = false;
 
-      if (await defaultStorageIsEmpty()) {
-        // NOTE: Set default for first time users to IDB (works better with automerge CRDTs).
-        await localforage.setItem(`${settingsPrefix}/storage-driver`, defs.Runtime.Client.Storage.StorageDriver.IDB);
-      }
-
-      client = new Client({
-        config: new Config(configFromSettings(settings.values), Envs(), Local(), Defaults()),
-        ...options,
-      });
+      client = new Client({ config: new Config(await Storage(), Envs(), Local(), Defaults()), ...options });
 
       try {
         await client.initialize();
@@ -206,31 +194,6 @@ export const ClientPlugin = ({
               return { data };
             }
           }
-        },
-      },
-    },
-  };
-};
-
-const defaultStorageIsEmpty = async (): Promise<boolean> => {
-  try {
-    const storage = createStorageObjects({}).storage;
-    const metadataDir = storage.createDirectory('metadata');
-    const echoMetadata = metadataDir.getOrCreateFile('EchoMetadata');
-    const { size } = await echoMetadata.stat();
-    return size > 0;
-  } catch (err) {
-    log.warn('Error checking if default storage is empty', { err });
-    return false;
-  }
-};
-
-const configFromSettings = (settings: ClientSettingsProps): ConfigProto => {
-  return {
-    runtime: {
-      client: {
-        storage: {
-          dataStore: settings.storageDriver,
         },
       },
     },

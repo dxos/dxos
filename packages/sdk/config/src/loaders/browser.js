@@ -6,6 +6,8 @@
 
 /* global __DXOS_CONFIG__ __CONFIG_ENVS__ __CONFIG_DEFAULTS__ __CONFIG_LOCAL__ */
 
+import localforage from 'localforage';
+
 import { log } from '@dxos/log';
 
 const CONFIG_ENDPOINT = '/.well-known/dx/config';
@@ -36,4 +38,20 @@ export const Envs = () => {
 
 export const Defaults = () => {
   return __CONFIG_DEFAULTS__;
+};
+
+/**
+ * Settings config from browser storage.
+ */
+export const Storage = async () => {
+  // NOTE: Load the configuration which is set in `plugin-client` settings
+  try {
+    const storageAdapterOption = await localforage.getItem('dxos.org/settings/storage-driver');
+    if (storageAdapterOption) {
+      return { runtime: { client: { storage: { dataStore: storageAdapterOption } } } };
+    }
+  } catch (err) {
+    log.warn('Failed to load storage-adapter option', { err });
+  }
+  return {};
 };
