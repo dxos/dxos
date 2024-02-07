@@ -2,13 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-import { expect, describe, test } from 'vitest';
+import * as uuid from 'uuid';
+import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
 
-import { StorageType, type File, type Storage } from '../common';
+import { type File, type Storage, StorageType } from '../common';
 
-export const randomText = () => Math.random().toString(36).substring(2);
+export const randomText = () => uuid.v4();
 
 export const storageTests = (testGroupName: StorageType, createStorage: () => Storage) => {
   const writeAndCheck = async (file: File, data: Buffer, offset = 0) => {
@@ -51,7 +52,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       const directory = storage.createDirectory(directoryName);
 
       const count = 10;
-      const files = [...Array(count)].map((name) => directory.getOrCreateFile(randomText()));
+      const files = [...Array(count)].map(() => directory.getOrCreateFile(randomText()));
 
       {
         // Create and check files amount.
@@ -173,7 +174,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       const dir1 = storage.createDirectory('dir1');
       const dir2 = storage.createDirectory('dir2');
 
-      const fileName = 'file';
+      const fileName = randomText();
       const buffer1 = Buffer.from(randomText());
       const buffer2 = Buffer.from(randomText());
 
@@ -195,7 +196,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       const dir = storage.createDirectory('directory');
       const subDir = dir.createDirectory('subDirectory');
 
-      const file = subDir.getOrCreateFile('file');
+      const file = subDir.getOrCreateFile(randomText());
       const buffer = Buffer.from(randomText());
       await file.write(0, buffer);
 
@@ -204,10 +205,82 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       await file.close();
     });
 
+    test('all writes are flushed', async (t) => {
+      if (testGroupName === StorageType.RAM) {
+        t.skip();
+      }
+
+      const fileName = randomText();
+      {
+        const storage = createStorage();
+        const directory = storage.createDirectory();
+        const file = directory.getOrCreateFile(fileName);
+        await file.write(0, Buffer.alloc(10, '0'));
+        for (let i = 1; i <= 9; i++) {
+          void file.write(i, Buffer.from(String(i)));
+        }
+        await file.close();
+      }
+
+      {
+        const storage = createStorage();
+        const directory = storage.createDirectory();
+        const file = directory.getOrCreateFile(fileName);
+        const allContent = await file.read(0, (await file.stat()).size);
+        expect(allContent.toString()).toBe('0123456789');
+      }
+    });
+
+    test('flush interleaved with write', async (t) => {
+      if (testGroupName === StorageType.RAM) {
+        t.skip();
+      }
+
+      const fileName = randomText();
+      {
+        const storage = createStorage();
+        const directory = storage.createDirectory();
+        const file = directory.getOrCreateFile(fileName);
+        await file.write(0, Buffer.alloc(3, '0'));
+        await file.write(1, Buffer.from('1'));
+        void file.flush?.();
+        await file.write(2, Buffer.from('2'));
+        await file.close();
+      }
+
+      {
+        const storage = createStorage();
+        const directory = storage.createDirectory();
+        const file = directory.getOrCreateFile(fileName);
+        const allContent = await file.read(0, (await file.stat()).size);
+        expect(allContent.toString()).toBe('012');
+      }
+    });
+
+    test('operations on a destroyed file are rejected', async () => {
+      const storage = createStorage();
+      const directory = storage.createDirectory();
+      const file = directory.getOrCreateFile(randomText());
+
+      const buffer = Buffer.from(randomText());
+      await writeAndCheck(file, buffer);
+      await file.destroy();
+
+      expect(file.destroyed).toBeTruthy();
+      await expect(file.destroy()).resolves.toBeUndefined();
+      await expect(file.read(0, 1)).rejects.toThrow();
+      await expect(file.write(0, buffer)).rejects.toThrow();
+      await expect(file.del(0, 1)).rejects.toThrow();
+      await expect(file.stat()).rejects.toThrow();
+      if (file.truncate) {
+        await expect(file.truncate(0)).rejects.toThrow();
+      }
+    });
+
     test('delete directory', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory();
-      const file = directory.getOrCreateFile('file');
+      const file = directory.getOrCreateFile(randomText());
 
       const buffer = Buffer.from(randomText());
       await writeAndCheck(file, buffer);
@@ -363,6 +436,22 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       await directory.flush();
       const entries = await directory.list();
       expect(entries).toEqual(expect.arrayContaining(FILES));
+    });
+
+    test('getDiskInfo returns correct size', async (t) => {
+      const storage = createStorage();
+      if (storage.type === StorageType.IDB) {
+        t.skip();
+      }
+      await storage.reset();
+      const directory = storage.createDirectory('dir');
+      const file = directory.getOrCreateFile(randomText());
+      const content = 'Hello, world!';
+      await file.write(0, Buffer.from(content));
+      await file.close();
+      await expect(storage.getDiskInfo?.() ?? Promise.resolve(-1)).resolves.toEqual({
+        used: content.length,
+      });
     });
   });
 };
