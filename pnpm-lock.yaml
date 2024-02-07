@@ -1409,6 +1409,9 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -4659,11 +4662,11 @@ importers:
         specifier: ^2.1.10
         version: 2.1.10
       '@automerge/automerge-repo':
-        specifier: ^1.1.0
-        version: 1.1.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
+        specifier: ^1.1.1
+        version: 1.1.1(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
       '@automerge/automerge-repo-storage-indexeddb':
-        specifier: ^1.1.0
-        version: 1.1.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
+        specifier: ^1.1.1
+        version: 1.1.1(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
       '@automerge/automerge-wasm':
         specifier: ^0.9.0
         version: 0.9.0
@@ -4784,8 +4787,8 @@ importers:
         specifier: ^2.1.10
         version: 2.1.10
       '@automerge/automerge-repo':
-        specifier: ^1.1.0
-        version: 1.1.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
+        specifier: ^1.1.1
+        version: 1.1.1(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../../common/feed-store
@@ -7223,8 +7226,8 @@ importers:
   packages/gravity/kube-testing:
     dependencies:
       '@automerge/automerge-repo-network-websocket':
-        specifier: ^1.1.0
-        version: 1.1.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
+        specifier: ^1.1.1
+        version: 1.1.1(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -8648,8 +8651,8 @@ importers:
         version: 4.1.0
     devDependencies:
       '@automerge/automerge-repo-network-broadcastchannel':
-        specifier: ^1.1.0
-        version: 1.1.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
+        specifier: ^1.1.1
+        version: 1.1.1(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -9872,10 +9875,10 @@ packages:
       leven: 3.1.0
     dev: true
 
-  /@automerge/automerge-repo-network-broadcastchannel@1.1.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2):
-    resolution: {integrity: sha512-eYd8DnJI8UIcc8lXlRkKueSQ7njeHVzE/lviu5vno+oVIR920K4KZ3QHroO4W1X1UrDxxlc7oSXNEndLJT8w9g==}
+  /@automerge/automerge-repo-network-broadcastchannel@1.1.1(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-g0SDRwpb4u2ZzRpQXSHnozuAL0/uyuRovvGtRrbryh6SxO/QPPzgoGTcX5sHcloZ0nlQ50wE2hL2FL1UNcIV4Q==}
     dependencies:
-      '@automerge/automerge-repo': 1.1.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
+      '@automerge/automerge-repo': 1.1.1(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -9884,10 +9887,10 @@ packages:
       - typescript
     dev: true
 
-  /@automerge/automerge-repo-network-websocket@1.1.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2):
-    resolution: {integrity: sha512-D3k/RKI5xVPb+ZEmEmL/MiuGiu2vzujOloyHveLmd1R9BL2JakbKk1s4G2MhTBT1qF8Io02pIa1+lsaG9HlULA==}
+  /@automerge/automerge-repo-network-websocket@1.1.1(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-1KHMeeAagsptbwML6WUhcAyhFffy3RYBRUhZPZwB01Cj90S4DdAtHyAW7wgG8CTWIUNd9BaKex6ZmeMKhcgARw==}
     dependencies:
-      '@automerge/automerge-repo': 1.1.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
+      '@automerge/automerge-repo': 1.1.1(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
       cbor-x: 1.5.4
       debug: 4.3.4(supports-color@8.1.1)
       eventemitter3: 5.0.1
@@ -9903,10 +9906,10 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@automerge/automerge-repo-storage-indexeddb@1.1.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2):
-    resolution: {integrity: sha512-WbPTljuqCGGlgpKm6MWyLsl9P8wpBfaoxg29+E5NEIue/O5H2xTNvRASsUdv0V3tkp7cZB6DiDrD+q4BVonn5A==}
+  /@automerge/automerge-repo-storage-indexeddb@1.1.1(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-NCI8JNmOgJ/E1rwxHdo+yRXTA95CCf/gmQvrvK2ymI9onApJ6m835/tYtWFHm5TYA0f7c2K2J6GosL8+u6I9WA==}
     dependencies:
-      '@automerge/automerge-repo': 1.1.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
+      '@automerge/automerge-repo': 1.1.1(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -9915,8 +9918,8 @@ packages:
       - typescript
     dev: false
 
-  /@automerge/automerge-repo@1.1.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2):
-    resolution: {integrity: sha512-QRSt2s89Uhrlofbkipsb/9Alyp65/e1PocNzY+L4J7yDDXD7fbEW5uThXey2lSb1m98Fe0+NtzyKD1we6lvAkA==}
+  /@automerge/automerge-repo@1.1.1(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-fQq+4eUadubzHOUi2BIiC5f/XFUHixJ/kdfnbXRoh2xwzojMfQIlrRfZzxkuW5AdD9LOC2/LoWJs+ak4a9vq4Q==}
     dependencies:
       '@automerge/automerge': 2.1.10
       bs58check: 3.0.1
