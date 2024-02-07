@@ -3,7 +3,6 @@
 //
 
 import { ux } from '@oclif/core';
-import { CID } from 'ipfs-http-client';
 
 import type { ConfigProto } from '@dxos/config';
 
@@ -12,16 +11,17 @@ export type PackageRepo = NonNullable<NonNullable<ConfigProto['package']>['repos
 
 export type Logger = (message: string, ...args: any[]) => void;
 
-export const mapModules = (modules: PackageModule[]) => {
+export const mapModules = async (modules: PackageModule[]) => {
+  const { CID } = await import('kubo-rpc-client');
   return modules.map((mod) => ({
     key: mod.name,
     bundle: CID.decode(mod.bundle!).toString(),
   }));
 };
 
-export const printModules = (modules: PackageModule[], flags = {}) => {
+export const printModules = async (modules: PackageModule[], flags = {}) => {
   ux.table(
-    mapModules(modules),
+    await mapModules(modules),
     {
       key: {
         header: 'name',

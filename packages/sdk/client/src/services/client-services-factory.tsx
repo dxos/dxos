@@ -61,5 +61,5 @@ export const createClientServices = (
     }
   }
 
-  return createWorker ? fromWorker(config, { createWorker }) : fromHost(config);
+  return createWorker && typeof SharedWorker !== 'undefined' ? fromWorker(config, { createWorker }) : fromHost(config);
 };
