@@ -202,8 +202,12 @@ export class WebFile extends EventEmitter implements File {
   private _loadBufferPromise: Promise<void> | null = null;
 
   private _flushScheduled = false;
-
-  private _flushPromise: Promise<void> | null = null;
+  private _flushPromise: Promise<void> = Promise.resolve();
+  /**
+   * Used to discard unnecessary scheduled flushes.
+   * If _flushNow() is called with a lower sequence number it should early exit.
+   */
+  private _flushSequence = 0;
 
   //
   // Metrics
@@ -291,10 +295,11 @@ export class WebFile extends EventEmitter implements File {
   }
 
   // Do not call directly, use _flushLater or _flushNow.
-  private async _flushCache() {
-    if (this.destroyed) {
+  private async _flushCache(sequence: number) {
+    if (this.destroyed || sequence < this._flushSequence) {
       return;
     }
+    this._flushSequence = sequence + 1;
 
     this._flushes.inc();
 
@@ -312,33 +317,20 @@ export class WebFile extends EventEmitter implements File {
       return;
     }
 
+    const sequence = this._flushSequence;
     setTimeout(async () => {
       // Making sure only one flush can run at a time.
-      const promiseBefore = this._flushPromise;
       await this._flushPromise;
       this._flushScheduled = false;
-
-      // _flushNow might have been called. In that case we don't want to run the flush again.
-      if (promiseBefore !== this._flushPromise) {
-        return;
-      }
-
-      this._flushPromise = this._flushCache().catch((err) => log.warn(err));
+      this._flushPromise = this._flushCache(sequence).catch((err) => log.warn(err));
     });
 
     this._flushScheduled = true;
   }
 
   private async _flushNow() {
-    this._flushPromise = this._flushPromise ?? Promise.resolve();
-
-    try {
-      await this._flushCache();
-      this._flushPromise = null;
-    } catch (err) {
-      log.warn('flush error', { err });
-    }
-
+    await this._flushPromise;
+    this._flushPromise = this._flushCache(this._flushSequence).catch((err) => log.warn(err));
     await this._flushPromise;
   }
 

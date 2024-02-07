@@ -205,22 +205,56 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       await file.close();
     });
 
-    test('all writes are flushed', async () => {
-      const storage = createStorage();
-      const directory = storage.createDirectory();
-      const fileName = randomText();
-      const file = directory.getOrCreateFile(fileName);
-      await file.write(0, Buffer.alloc(10, '0'));
-      for (let i = 1; i <= 9; i++) {
-        void file.write(i, Buffer.from(String(i)));
+    test('all writes are flushed', async (t) => {
+      if (testGroupName === StorageType.RAM) {
+        t.skip();
       }
-      await file.close();
 
-      const newStorage = createStorage();
-      const directory2 = newStorage.createDirectory();
-      const fileToRead = directory2.getOrCreateFile(fileName);
-      const allContent = await fileToRead.read(0, (await fileToRead.stat()).size);
-      expect(allContent.toString()).toBe('0123456789');
+      const fileName = randomText();
+      {
+        const storage = createStorage();
+        const directory = storage.createDirectory();
+        const file = directory.getOrCreateFile(fileName);
+        await file.write(0, Buffer.alloc(10, '0'));
+        for (let i = 1; i <= 9; i++) {
+          void file.write(i, Buffer.from(String(i)));
+        }
+        await file.close();
+      }
+
+      {
+        const storage = createStorage();
+        const directory = storage.createDirectory();
+        const file = directory.getOrCreateFile(fileName);
+        const allContent = await file.read(0, (await file.stat()).size);
+        expect(allContent.toString()).toBe('0123456789');
+      }
+    });
+
+    test('flush interleaved with write', async (t) => {
+      if (testGroupName === StorageType.RAM) {
+        t.skip();
+      }
+
+      const fileName = randomText();
+      {
+        const storage = createStorage();
+        const directory = storage.createDirectory();
+        const file = directory.getOrCreateFile(fileName);
+        await file.write(0, Buffer.alloc(3, '0'));
+        await file.write(1, Buffer.from('1'));
+        void file.flush?.();
+        await file.write(2, Buffer.from('2'));
+        await file.close();
+      }
+
+      {
+        const storage = createStorage();
+        const directory = storage.createDirectory();
+        const file = directory.getOrCreateFile(fileName);
+        const allContent = await file.read(0, (await file.stat()).size);
+        expect(allContent.toString()).toBe('012');
+      }
     });
 
     test('operations on a destroyed file are rejected', async () => {
