@@ -46,6 +46,8 @@ test.describe('Basic tests', () => {
       test.skip();
     }
 
+    await host.openSettings();
+    await host.toggleExperimenalPlugins();
     await host.enablePlugin('dxos.org/plugin/debug');
     await host.changeStorageVersionInMetadata(9999);
     expect(await host.page.getByTestId('resetDialog').locator('p').innerText()).to.contain('9999');

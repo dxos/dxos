@@ -12,5 +12,7 @@ export const CHESS_PLUGIN = 'dxos.org/plugin/chess';
 export default pluginMeta({
   id: CHESS_PLUGIN,
   name: 'Chess',
+  description: 'Play chess.',
+  tags: ['experimental'],
   iconComponent: (props: IconProps) => <ShieldChevron {...props} />,
 });
