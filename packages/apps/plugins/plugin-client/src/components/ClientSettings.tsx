@@ -20,6 +20,7 @@ const StorageAdapters = {
 
 export const ClientSettings = ({ settings }: { settings: ClientSettingsProps }) => {
   const { t } = useTranslation(CLIENT_PLUGIN);
+  // TODO(mykola): Get updates from other places that change Config.
   const [storageConfig, setStorageConfig] = React.useState<ConfigProto>();
 
   useAsyncEffect(async () => {
