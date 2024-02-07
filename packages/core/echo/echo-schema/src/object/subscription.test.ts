@@ -73,7 +73,7 @@ describe('create subscription', () => {
 
     clearEffect();
     // NOTE: This order is required for input components in react to function properly when directly bound to ECHO objects.
-    expect(actions).to.deep.equal(['update', 'before', 'update', 'update', 'after']);
+    expect(actions).to.deep.equal(['update', 'before', 'update', 'after']);
   });
 
   test('latest value is available in subscription', async () => {
