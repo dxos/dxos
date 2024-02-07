@@ -110,6 +110,11 @@ export class AutomergeObjectCore {
   }
 
   bind(options: BindOptions) {
+    if (this.docHandle) {
+      // Dispose the subscription from the previous bind call.
+      this.docHandle.off('change', this._changeHandler);
+    }
+
     this.database = options.db;
     this.docHandle = options.docHandle;
     this.mountPath = options.path;
@@ -137,14 +142,16 @@ export class AutomergeObjectCore {
     }
 
     // TODO(dmaretskyi): Dispose this subscription.
-    this.docHandle.on('change', (event) => {
-      if (objectIsUpdated(this.id, event)) {
-        this.notifyUpdate();
-      }
-    });
+    this.docHandle.on('change', this._changeHandler);
 
     this.notifyUpdate();
   }
+
+  private _changeHandler = (event: DocHandleChangePayload<DocStructure>) => {
+    if (objectIsUpdated(this.id, event)) {
+      this.notifyUpdate();
+    }
+  };
 
   getDoc() {
     return this.doc ?? this.docHandle?.docSync() ?? failedInvariant('Invalid state');

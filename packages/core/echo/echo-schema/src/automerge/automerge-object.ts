@@ -384,3 +384,8 @@ export const getRawDoc = (obj: EchoObject, path?: string[]): DocAccessor => {
   invariant(isAutomergeObject(obj));
   return obj[base]._getRawDoc(path);
 };
+
+export const getAutomergeObjectCore = (obj: EchoObject): AutomergeObjectCore => {
+  invariant(isAutomergeObject(obj));
+  return obj[base]._core;
+};
