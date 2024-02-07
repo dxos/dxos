@@ -6,7 +6,7 @@ import chalk from 'chalk';
 import cliProgress from 'cli-progress';
 import fs from 'fs';
 import folderSize from 'get-folder-size';
-import { type CID } from 'ipfs-http-client';
+import { type CID } from 'kubo-rpc-client';
 import { join } from 'path';
 import { promisify } from 'util';
 
@@ -54,20 +54,30 @@ export const publish = async (
     throw new Error(`Publish failed. Build output folder does not exist: ${publishFolder}.`);
   }
 
+  const ipfsServer = config?.get('runtime.services.ipfs.server');
+  invariant(ipfsServer, 'Missing IPFS Server.');
+
   const total = await getFolderSize(publishFolder);
   if (verbose) {
-    log(`Publishing from: ${publishFolder}`);
+    log(`Publishing from: ${publishFolder} to: ${ipfsServer}`);
   }
 
   log('Uploading...');
   const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
   verbose && bar.start(total, 0);
 
-  const cid = await uploadToIPFS(publishFolder, config, {
-    timeout: timeout || '10m',
-    pin,
-    progress: verbose ? (bytes: any) => bar.update(bytes) : undefined,
-  });
+  let cid;
+  try {
+    cid = await uploadToIPFS(publishFolder, ipfsServer, {
+      timeout: timeout || '10m',
+      pin,
+      progress: verbose ? (bytes: any) => bar.update(bytes) : undefined,
+    });
+  } catch (err: any) {
+    // Avoid leaving user's terminal in a bad state.
+    bar.stop();
+    throw new Error(`Publish failed. ${err.message}`);
+  }
 
   verbose && bar.update(total);
   verbose && bar.stop();

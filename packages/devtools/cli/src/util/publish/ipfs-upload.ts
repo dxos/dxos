@@ -3,11 +3,9 @@
 //
 
 import fs from 'fs';
-import { type CID, create, globSource } from 'ipfs-http-client';
+import { type CID } from 'kubo-rpc-client';
 import { join } from 'path';
 
-import { type Config } from '@dxos/client';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 interface UploadOptions {
@@ -16,12 +14,10 @@ interface UploadOptions {
   pin?: boolean;
 }
 
-export const uploadToIPFS = async (path: string, config?: Config, options?: UploadOptions): Promise<CID> => {
+export const uploadToIPFS = async (path: string, ipfsServer: string, options?: UploadOptions): Promise<CID> => {
   const { timeout, pin = true, progress } = options || {};
 
-  const ipfsServer = config?.get('runtime.services.ipfs.server');
-  invariant(ipfsServer, 'Invalid IPFS Server.');
-
+  const { create, globSource } = await _importESM('kubo-rpc-client');
   const ipfsClient = create({
     url: ipfsServer,
     timeout: timeout || '1m',
@@ -67,3 +63,6 @@ export const uploadToIPFS = async (path: string, config?: Config, options?: Uplo
     return addResult.cid;
   }
 };
+
+// eslint-disable-next-line no-new-func
+const _importESM = new Function('modulePath', 'return import(modulePath)');
