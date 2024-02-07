@@ -4,15 +4,14 @@
 
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
-import { next as A, type ChangeFn, type Doc } from '@dxos/automerge/automerge';
+import { type ChangeFn, type Doc } from '@dxos/automerge/automerge';
 import { Reference } from '@dxos/document-model';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { TextModel } from '@dxos/text-model';
 
 import { AutomergeArray } from './automerge-array';
 import { assignDeep, AutomergeObjectCore, type BindOptions, type DocAccessor } from './automerge-object-core';
-import { REFERENCE_TYPE_TAG, type ObjectStructure, type ObjectSystem } from './types';
+import { REFERENCE_TYPE_TAG, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
 import {
   base,
@@ -366,18 +365,6 @@ const isRootDataObjectKey = (relativePath: string[], key: string | symbol) => {
     key === '__typename' ||
     key === '__deleted'
   );
-};
-
-// Deferred import to avoid circular dependency.
-let schemaProto: typeof Schema;
-const getSchemaProto = (): typeof Schema => {
-  if (!schemaProto) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { Schema } = require('../proto');
-    schemaProto = Schema;
-  }
-
-  return schemaProto;
 };
 
 export const getRawDoc = (obj: EchoObject, path?: string[]): DocAccessor => {

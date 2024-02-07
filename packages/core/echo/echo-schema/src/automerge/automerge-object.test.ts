@@ -2,17 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
+import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
 
+import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
+import { defer } from '@dxos/util';
 
 import { AutomergeObject, getAutomergeObjectCore } from './automerge-object';
 import { Expando, TypedObject, base } from '../object';
 import { TestBuilder, createDatabase } from '../testing';
 import { Contact, Task } from '../tests/proto';
-import { effect } from '@preact/signals-core';
-import { registerSignalRuntime } from '@dxos/echo-signals';
-import { defer } from '@dxos/util';
 
 describe('AutomergeObject', () => {
   test('objects become automerge objects when global flag is set', () => {

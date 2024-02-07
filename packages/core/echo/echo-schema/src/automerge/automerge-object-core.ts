@@ -9,6 +9,7 @@ import { Reference } from '@dxos/document-model';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { TextModel } from '@dxos/text-model';
 import { defer } from '@dxos/util';
 
 import { AutomergeArray } from './automerge-array';
@@ -23,10 +24,9 @@ import {
   decodeReference,
   type DecodedAutomergeValue,
 } from './types';
-import { base, TypedObjectOptions, type EchoObject, TextObject } from '../object';
+import { base, type TypedObjectOptions, type EchoObject, TextObject } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto'; // Keep type-only
-import { TextModel } from '@dxos/text-model';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
