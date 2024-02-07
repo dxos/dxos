@@ -4,15 +4,14 @@
 
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
-import { next as A, type ChangeFn, type Doc } from '@dxos/automerge/automerge';
+import { type ChangeFn, type Doc } from '@dxos/automerge/automerge';
 import { Reference } from '@dxos/document-model';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { TextModel } from '@dxos/text-model';
 
 import { AutomergeArray } from './automerge-array';
 import { assignDeep, AutomergeObjectCore, type BindOptions, type DocAccessor } from './automerge-object-core';
-import { REFERENCE_TYPE_TAG, type ObjectStructure, type ObjectSystem } from './types';
+import { REFERENCE_TYPE_TAG, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
 import {
   base,
@@ -45,7 +44,7 @@ export class AutomergeObject implements TypedObjectProperties {
   private readonly _immutable: boolean; // TODO(burdon): Not used.
 
   constructor(initialProps?: unknown, opts?: TypedObjectOptions) {
-    this._initNewObject(initialProps, opts);
+    this._core.initNewObject(initialProps, opts);
 
     if (opts?.schema) {
       this._schema = opts.schema;
@@ -177,31 +176,6 @@ export class AutomergeObject implements TypedObjectProperties {
     };
 
     return this[base]._core.updates.on(updatesListener);
-  }
-
-  private _initNewObject(initialProps?: unknown, opts?: TypedObjectOptions) {
-    invariant(!this[proxy]);
-    initialProps ??= {};
-
-    if (opts?.schema) {
-      for (const field of opts.schema.props) {
-        if (field.repeated) {
-          (initialProps as Record<string, any>)[field.id!] ??= [];
-        } else if (field.type === getSchemaProto().PropType.REF && field.refModelType === TextModel.meta.type) {
-          // TODO(dmaretskyi): Is this right? Should we init with empty string or an actual reference to a Text object?
-          (initialProps as Record<string, any>)[field.id!] ??= new TextObject();
-        }
-      }
-    }
-
-    this._core.doc = A.from<ObjectStructure>({
-      data: this._core.encode(initialProps as any),
-      meta: this._core.encode({
-        keys: [],
-        ...opts?.meta,
-      }),
-      system: {},
-    });
   }
 
   /**
@@ -393,19 +367,12 @@ const isRootDataObjectKey = (relativePath: string[], key: string | symbol) => {
   );
 };
 
-// Deferred import to avoid circular dependency.
-let schemaProto: typeof Schema;
-const getSchemaProto = (): typeof Schema => {
-  if (!schemaProto) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { Schema } = require('../proto');
-    schemaProto = Schema;
-  }
-
-  return schemaProto;
-};
-
 export const getRawDoc = (obj: EchoObject, path?: string[]): DocAccessor => {
   invariant(isAutomergeObject(obj));
   return obj[base]._getRawDoc(path);
+};
+
+export const getAutomergeObjectCore = (obj: EchoObject): AutomergeObjectCore => {
+  invariant(isAutomergeObject(obj));
+  return obj[base]._core;
 };

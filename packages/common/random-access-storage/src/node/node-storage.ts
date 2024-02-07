@@ -69,11 +69,11 @@ export class NodeStorage extends AbstractStorage implements Storage {
     const recurse = async (path: string) => {
       const pathStats = await stat(path);
 
-      used += pathStats.size;
-
       if (pathStats.isDirectory()) {
         const entries = await readdir(path);
         await Promise.all(entries.map((entry) => recurse(join(path, entry))));
+      } else {
+        used += pathStats.size;
       }
     };
 
