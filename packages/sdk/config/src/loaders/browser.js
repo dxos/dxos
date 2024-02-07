@@ -51,6 +51,6 @@ export const Storage = async () => {
     }
   } catch (err) {
     log.warn('Failed to load config', { err });
-    return {};
   }
+  return {};
 };
