@@ -10,6 +10,7 @@ import {
   NavigationAction,
   Surface,
   parseMetadataResolverPlugin,
+  parseFileManagerResolverPlugin,
   useIntent,
   usePlugin,
   useResolvePlugin,
@@ -41,6 +42,9 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
   const { dispatch } = useIntent();
   const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
+
+  // TODO(burdon): Get services.
+  const fileManagerPlugin = useResolvePlugin(parseFileManagerResolverPlugin);
 
   const id = `stack-${stack.id}`;
   const items = stack.sections
@@ -94,7 +98,8 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
   };
 
   const handleAdd = useCallback(
-    (sectionObject: StackType['sections'][0]['object']) => {
+    (sectionObject: StackType.Section['object']) => {
+      console.log('::::', sectionObject);
       stack.sections.push(new StackType.Section({ object: sectionObject }));
       // TODO(wittjosiah): Remove once stack items can be added to folders separately.
       folder?.objects.push(sectionObject);
@@ -161,7 +166,8 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
               </DropdownMenu.Viewport>
             </DropdownMenu.Content>
           </DropdownMenu.Root>
-          {true && (
+          {fileManagerPlugin && (
+            // TODO(burdon): Surface?
             <FileUpload
               classNames='p-2'
               fileTypes={[...defaultFileTypes.images, ...defaultFileTypes.media, ...defaultFileTypes.text]}
