@@ -24,7 +24,7 @@ void navigator.locks.request(LOCK_KEY, (lock) => {
 const workerRuntime = new WorkerRuntime(
   async () => {
     const storageConfig = await loadStorageConfig();
-    const config = new Config(await Envs(), Local(), Defaults(), storageConfig);
+    const config = new Config(storageConfig, Envs(), Local(), Defaults());
     log.config({ filter: config.get('runtime.client.log.filter'), prefix: config.get('runtime.client.log.prefix') });
     return config;
   },
@@ -79,6 +79,7 @@ export const onconnect = async (event: MessageEvent<any>) => {
 };
 
 const loadStorageConfig = async (): Promise<ConfigProto> => {
+  // NOTE: Load the configuration which is set in `plugin-client` settings
   try {
     const storageAdapterOption = await localforage.getItem<number>('dxos.org/settings/storage-driver');
     if (storageAdapterOption) {

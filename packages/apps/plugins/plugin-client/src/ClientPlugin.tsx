@@ -3,6 +3,7 @@
 //
 
 import { AddressBook } from '@phosphor-icons/react';
+import localforage from 'localforage';
 import React, { useEffect, useState } from 'react';
 
 import {
@@ -19,7 +20,7 @@ import {
 import { createStorageObjects } from '@dxos/client-services';
 import { Config, type ConfigProto, Defaults, Envs, Local, defs } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
-import { LocalForageStore } from '@dxos/local-storage';
+import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
 import { type TypeCollection } from '@dxos/react-client/echo';
@@ -40,7 +41,6 @@ export type ClientPluginOptions = ClientOptions & { appKey: string; debugIdentit
 
 export type ClientSettingsProps = {
   automerge?: boolean;
-  storageDriver?: defs.Runtime.Client.Storage.StorageDriver;
 };
 
 export type ClientPluginProvides = SurfaceProvides &
@@ -69,8 +69,8 @@ export const ClientPlugin = ({
 > => {
   // TODO(burdon): Document.
   registerSignalFactory();
-
-  const settings = new LocalForageStore<ClientSettingsProps>('dxos.org/settings', { automerge: true });
+  const settingsPrefix = 'dxos.org/settings';
+  const settings = new LocalStorageStore<ClientSettingsProps>(settingsPrefix, { automerge: true });
 
   let client: Client;
   let error: unknown = null;
@@ -80,13 +80,13 @@ export const ClientPlugin = ({
     initialize: async () => {
       let firstRun = false;
 
-      settings.prop(settings.values.$storageDriver!, 'storage-driver');
-      if (!settings.values.storageDriver && (await defaultStorageIsEmpty())) {
-        settings.values.storageDriver = defs.Runtime.Client.Storage.StorageDriver.IDB;
+      if (await defaultStorageIsEmpty()) {
+        // NOTE: Set default for first time users to IDB (works better with automerge CRDTs).
+        await localforage.setItem(`${settingsPrefix}/storage-driver`, defs.Runtime.Client.Storage.StorageDriver.IDB);
       }
 
       client = new Client({
-        config: new Config(await Envs(), Local(), Defaults(), configFromSettings(settings.values)),
+        config: new Config(configFromSettings(settings.values), Envs(), Local(), Defaults()),
         ...options,
       });
 
@@ -157,7 +157,7 @@ export const ClientPlugin = ({
         throw error;
       }
 
-      settings.prop(settings.values.$automerge!, 'automerge');
+      settings.prop(settings.values.$automerge!, 'automerge', LocalStorageStore.bool);
     },
     unload: async () => {
       await client.destroy();
