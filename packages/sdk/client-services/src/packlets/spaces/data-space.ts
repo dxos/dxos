@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, asyncTimeout, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
+import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context, ContextDisposedError } from '@dxos/context';
-import { timed } from '@dxos/debug';
+import { timed, warnAfterTimeout } from '@dxos/debug';
 import {
   type MetadataStore,
   type Space,
@@ -383,7 +383,13 @@ export class DataSpace {
 
     queueMicrotask(async () => {
       try {
-        await asyncTimeout(handle.whenReady(), 5_000);
+        await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
+          await cancelWithContext(this._ctx, handle.whenReady());
+        });
+        if (this._ctx.disposed) {
+          return;
+        }
+
         const doc = handle.docSync() ?? failedInvariant();
         if (!doc.experimental_spaceKey) {
           handle.change((doc: any) => {
@@ -391,6 +397,9 @@ export class DataSpace {
           });
         }
       } catch (err) {
+        if (err instanceof ContextDisposedError) {
+          return;
+        }
         log.warn('error loading automerge root doc', { space: this.key, rootUrl, err });
       }
     });

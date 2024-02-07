@@ -29,7 +29,8 @@ export default template.define
       <ErrorBoundary>
         <${ClientProvider}
           config={config}
-          createWorker={createWorker}${dxosUi ? plate`
+          createWorker={createWorker}
+          shell='./shell.html'${dxosUi ? plate`
           fallback={Loader}` : ''}
           onInitialized={async (client) => {
             ${proto && plate`client.addSchema(${types});`}

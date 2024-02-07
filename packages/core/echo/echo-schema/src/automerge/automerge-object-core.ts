@@ -10,7 +10,7 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { TextModel } from '@dxos/text-model';
-import { defer } from '@dxos/util';
+import { assignDeep, defer } from '@dxos/util';
 
 import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
@@ -412,21 +412,6 @@ export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<Doc
     return true;
   }
   return false;
-};
-
-/**
- * To be used inside doc.change callback to initialize a deeply nested object.
- * @returns The value of the prop after assignment.
- */
-export const assignDeep = <T>(doc: any, path: string[], value: T): T => {
-  invariant(path.length > 0);
-  let parent = doc;
-  for (const key of path.slice(0, -1)) {
-    parent[key] ??= {};
-    parent = parent[key];
-  }
-  parent[path.at(-1)!] = value;
-  return parent[path.at(-1)!]; // NOTE: We can't just return value here since doc's getter might return a different object.
 };
 
 // Deferred import to avoid circular dependency.

@@ -142,7 +142,7 @@ export class ClientServicesHost {
 
     // TODO(wittjosiah): If config is not defined here, system service will always have undefined config.
     this._systemService = new SystemServiceImpl({
-      config: this._config,
+      config: () => this._config,
       statusUpdate: this._statusUpdate,
       getCurrentStatus: () => (this.isOpen ? SystemStatus.ACTIVE : SystemStatus.INACTIVE),
       getDiagnostics: () => {

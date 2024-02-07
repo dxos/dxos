@@ -39,6 +39,7 @@ export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
       <Avatar.Root status={authorStatus ?? 'inactive'} size={avatarSize}>
         <div
           role='none'
+          data-testid='thread.message'
           {...rootProps}
           className={mx('grid grid-cols-subgrid col-span-2', classNames)}
           ref={forwardedRef}
