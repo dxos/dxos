@@ -15,9 +15,8 @@ export interface CursorConverter {
   fromCursor(cursor: string): number;
 }
 
-// TODO(mykola): Factor out.
+// TODO(burdon): Reconcile with cursorConverter.
 const cursorConverter = (handle: IDocHandle, path: Prop[]) => ({
-  // TODO(burdon): Handle assoc to associate with a previous character.
   toCursor: (pos: number): string => {
     const doc = handle.docSync();
     if (!doc) {

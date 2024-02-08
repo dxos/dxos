@@ -46,7 +46,13 @@ export const cursorConverter = (handle: IDocHandle, path: Prop[]): CursorConvert
       }
     }
 
-    // NOTE: Slice is needed because getCursor mutates the array.
-    return A.getCursorPosition(doc, path.slice(), cursor);
+    // TODO(burdon): Need to check that cursor is for the right document.
+    try {
+      // console.log(':::::', getDebugName(handle), cursor);
+      // NOTE: Slice is needed because getCursor mutates the array.
+      return A.getCursorPosition(doc, path.slice(), cursor);
+    } catch (err) {
+      return 0;
+    }
   },
 });

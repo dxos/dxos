@@ -18,6 +18,7 @@ import {
   resolvePlugin,
   useIntent,
   usePlugins,
+  IntentAction,
   LayoutAction,
   NavigationAction,
   Surface,
@@ -29,7 +30,6 @@ import {
   type GraphProvides,
   type SurfaceProps,
   type Layout,
-  IntentAction,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
@@ -169,8 +169,9 @@ export const LayoutPlugin = ({
       // TODO(burdon): Create context and plugin.
       Keyboard.singleton.initialize();
 
+      // TODO(burdon): Add option.
       if (!isSocket) {
-        checkAppScheme(appScheme);
+        // checkAppScheme(appScheme);
       }
     },
     unload: async () => {
