@@ -26,7 +26,7 @@ type Block = MessageType.Block;
 const messageControlClassNames = ['p-1 min-bs-0 mie-1 transition-opacity items-start', hoverableControlItem];
 
 const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
-  ({ draggableStyle, draggableProps, item, onRemove, active }, forwardedRef) => {
+  ({ draggableStyle, draggableProps, item, onDelete, active, ...props }, forwardedRef) => {
     const { t } = useTranslation(THREAD_PLUGIN);
     let title = item.name ?? item.title ?? item.__typename ?? 'Object';
     if (typeof title !== 'string') {
@@ -52,14 +52,15 @@ const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
         >
           <DotsSixVertical />
         </Button>
-        <div role='none' className={onRemove ? '' : 'col-span-2'}>
-          <Surface role='message-block' data={item} fallback={title} />
+        <div role='none' className={onDelete && 'col-span-2'}>
+          <Surface role='card' limit={1} data={{ content: item }} {...props} fallback={title} />
         </div>
-        {onRemove && (
+        {/* TODO(burdon): Rely on menu in card for delete? */}
+        {onDelete && (
           <Button
             variant='ghost'
             classNames={['p-1.5 min-bs-0 mie-1 transition-opacity items-start', hoverableControlItem]}
-            onClick={onRemove}
+            onClick={(event) => onDelete(event.metaKey)}
           >
             <X />
             <span className='sr-only'>{t('delete message block label')}</span>
@@ -117,7 +118,7 @@ const MessageBlock = ({ block, authorId, onBlockDelete }: MessageBlockProps<Bloc
         path={block.object.id}
         item={block.object}
         Component={ObjectBlockTile}
-        onRemove={onBlockDelete}
+        onDelete={onBlockDelete}
       />
     </Mosaic.Container>
   ) : block.content ? (
