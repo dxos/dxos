@@ -55,6 +55,7 @@ const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
         <div role='none' className={onDelete && 'col-span-2'}>
           <Surface role='card' limit={1} data={{ content: item }} {...props} fallback={title} />
         </div>
+        {/* TODO(burdon): Rely on menu in card for delete? */}
         {onDelete && (
           <Button
             variant='ghost'
