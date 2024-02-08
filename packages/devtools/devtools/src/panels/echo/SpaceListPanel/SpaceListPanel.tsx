@@ -115,7 +115,6 @@ export const SpaceListPanel: FC = () => {
             void handleBackup(context.row.original.key);
           }}
           classNames='flex shrink-0 m-1'
-          variant='primary'
         >
           {'Download backup'}
         </Button>

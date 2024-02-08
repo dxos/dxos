@@ -265,7 +265,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     const [start, end] = cursor.split(':');
                     const title = getTextInRange(doc.content, start, end);
                     // Only update if the title has changed, otherwise this will cause an infinite loop.
-                    if (title !== thread.title) {
+                    // Skip if the title is empty - this means comment text was deleted, but thread title should remain.
+                    if (title && title !== thread.title) {
                       thread.title = title;
                     }
                   }

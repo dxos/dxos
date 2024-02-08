@@ -15,7 +15,7 @@ export default class List extends BaseCommand<typeof List> {
     return await this.execWithPublisher(async (publisher: PublisherRpcPeer) => {
       const listResponse = await publisher.rpc.list();
       invariant(listResponse.modules!, 'Unable to list deploymemts.');
-      printModules(listResponse.modules!, this.flags);
+      await printModules(listResponse.modules!, this.flags);
     });
   }
 }

@@ -19,6 +19,7 @@ export const Thread = forwardRef<HTMLDivElement, ThreadProps>(
     return (
       <div
         role='group'
+        data-testid='thread'
         {...(current && { 'aria-current': typeof current === 'string' ? current : 'location' })}
         {...props}
         className={mx(
@@ -46,6 +47,7 @@ export const ThreadHeading = forwardRef<HTMLParagraphElement, ThreadHeadingProps
         </div>
         <p
           role='heading'
+          data-testid='thread.heading'
           {...props}
           className={mx(
             'fg-description font-medium truncate before:content-[open-quote] after:content-[close-quote]',

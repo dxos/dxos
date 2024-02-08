@@ -18,8 +18,7 @@ export default [
         'content fallback description':
           'No plugin had a response for the address you navigated to. Double-check the URL, and ensure you’ve enabled a plugin that supports the object.',
         'toggle fullscreen label': 'Toggle fullscreen',
-        'settings enable complementary sidebar label': 'Show context sidebar.',
-        'settings show footer label': 'Show footer.',
+        'settings show footer label': '[Experimental] Show footer',
         'undo available label': 'Click to undo previous action.',
         'undo action label': 'Undo',
         'undo action alt': 'Undo previous action',

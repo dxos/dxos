@@ -59,3 +59,8 @@ export const Envs = (basePath = DEFAULT_BASE_PATH): Partial<ConfigProto> => {
  */
 export const Defaults = (basePath = DEFAULT_BASE_PATH): Partial<ConfigProto> =>
   maybeLoadFile(path.resolve(basePath, FILE_DEFAULTS)) ?? {};
+
+/**
+ * Load config from storage.
+ */
+export const Storage = async (): Promise<Partial<ConfigProto>> => ({});
