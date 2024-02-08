@@ -966,15 +966,9 @@ importers:
 
   packages/apps/plugins/plugin-client:
     dependencies:
-      '@braneframe/plugin-settings':
-        specifier: workspace:*
-        version: link:../plugin-settings
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
-      '@dxos/client':
-        specifier: workspace:*
-        version: link:../../../sdk/client
       '@dxos/config':
         specifier: workspace:*
         version: link:../../../sdk/config
