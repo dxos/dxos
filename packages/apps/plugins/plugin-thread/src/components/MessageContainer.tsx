@@ -26,7 +26,7 @@ type Block = MessageType.Block;
 const messageControlClassNames = ['p-1 min-bs-0 mie-1 transition-opacity items-start', hoverableControlItem];
 
 const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
-  ({ draggableStyle, draggableProps, item, onDelete, active }, forwardedRef) => {
+  ({ draggableStyle, draggableProps, item, onDelete, active, ...props }, forwardedRef) => {
     const { t } = useTranslation(THREAD_PLUGIN);
     let title = item.name ?? item.title ?? item.__typename ?? 'Object';
     if (typeof title !== 'string') {
@@ -53,7 +53,7 @@ const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
           <DotsSixVertical />
         </Button>
         <div role='none' className={onDelete && 'col-span-2'}>
-          <Surface role='card' limit={1} data={{ content: item }} fallback={title} />
+          <Surface role='card' limit={1} data={{ content: item }} {...props} fallback={title} />
         </div>
         {onDelete && (
           <Button

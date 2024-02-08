@@ -30,6 +30,7 @@ const Wildcard: MosaicTileComponent<any> = forwardRef(
     // TODO(burdon): Parse schema.
     const label = getTextContent(object.title ?? object.label ?? object.name);
     const content = getTextContent(object.description ?? object.content);
+    console.log(':::', label);
 
     const handleSetLabel = (label: string) => {
       if (object.title) {
