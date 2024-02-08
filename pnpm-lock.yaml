@@ -4619,6 +4619,12 @@ importers:
         specifier: ^4.37.0
         version: 4.37.1
 
+  packages/core/echo/automerge-index:
+    dependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+
   packages/core/echo/document-model:
     dependencies:
       '@dxos/async':

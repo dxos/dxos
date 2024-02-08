@@ -399,6 +399,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/echo/automerge-index/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/document-model/package.json",
           "jsonpath": "$.version"
         },

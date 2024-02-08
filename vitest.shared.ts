@@ -62,7 +62,7 @@ const createBrowserConfig = (browserName: 'chrome') =>
 
 const resolveReporterConfig = (args: { browserMode: boolean }): UserConfig['test'] => {
   if (shouldCreateXmlReport) {
-    const vitestReportDir = `vitest${args.browserMode ? "-browser" : ""}-reports`;
+    const vitestReportDir = `vitest${args.browserMode ? '-browser' : ''}-reports`;
     return {
       reporters: ['junit', 'basic'],
       outputFile: join(__dirname, `test-results/${vitestReportDir}/${targetProject}/report.xml`),

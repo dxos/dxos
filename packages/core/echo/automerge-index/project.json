@@ -1,0 +1,23 @@
+{
+  "sourceRoot": "packages/core/echo/automerge-index/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/core/echo/automerge-index/src/index.ts"
+        ],
+        "injectGlobals": true
+      }
+    },
+    "lint": {},
+    "vitest": {}
+  },
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ],
+  "name": "automerge-index"
+}
