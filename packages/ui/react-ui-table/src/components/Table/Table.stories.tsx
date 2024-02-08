@@ -4,12 +4,12 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import { Plugs, PlugsConnected } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
+import { faker } from '@dxos/random';
 import { DensityProvider, AnchoredOverflow } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 import { range } from '@dxos/util';

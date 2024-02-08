@@ -2,36 +2,48 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, useEffect } from 'react';
+import React, { type FC, type HTMLAttributes } from 'react';
 
-import { ThreadAction } from '@braneframe/plugin-thread';
 import { type Document as DocumentType } from '@braneframe/types';
-import { useIntent } from '@dxos/app-framework';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { type Extension, useTextModel } from '@dxos/react-ui-editor';
+import { useTranslation } from '@dxos/react-ui';
+import { type Extension, MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
+import { attentionSurface, focusRing, mx } from '@dxos/react-ui-theme';
 
-import { EditorSection } from './EditorSection';
-import { type MarkdownSettingsProps } from '../types';
+import { MARKDOWN_PLUGIN } from '../meta';
 
-export const DocumentSection: FC<{
+const DocumentSection: FC<{
   document: DocumentType;
-  editorMode: MarkdownSettingsProps['editorMode'];
   extensions: Extension[];
-}> = ({ document, editorMode, extensions }) => {
-  const { dispatch } = useIntent();
+}> = ({ document, extensions }) => {
+  const { t } = useTranslation(MARKDOWN_PLUGIN);
   const identity = useIdentity();
   const space = getSpaceForObject(document);
   const model = useTextModel({ identity, space, text: document?.content });
-  useEffect(() => {
-    void dispatch({
-      action: ThreadAction.SELECT,
-    });
-  }, [document.id]);
 
   if (!model) {
     return null;
   }
 
-  return <EditorSection editorMode={editorMode} model={model} extensions={extensions} />;
+  return (
+    <MarkdownEditor
+      model={model}
+      extensions={extensions}
+      placeholder={t('editor placeholder')}
+      slots={{
+        root: {
+          className: mx('flex flex-col grow m-0.5', attentionSurface, focusRing),
+          'data-testid': 'composer.markdownRoot',
+        } as HTMLAttributes<HTMLDivElement>,
+        editor: {
+          className: 'h-full py-4',
+        },
+      }}
+    />
+  );
 };
+
+export default DocumentSection;
+
+export type DocumentSection = typeof DocumentSection;

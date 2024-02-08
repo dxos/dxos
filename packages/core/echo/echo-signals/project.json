@@ -8,13 +8,16 @@
         "entryPoints": [
           "packages/core/echo/echo-signals/src/core.ts",
           "packages/core/echo/echo-signals/src/index.ts",
-          "packages/core/echo/echo-signals/src/react.ts"
+          "packages/core/echo/echo-signals/src/react.ts",
+          "packages/core/echo/echo-signals/src/runtime/index.ts"
         ]
       }
     },
     "lint": {}
   },
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ]
+  ],
+  "name": "echo-signals"
 }

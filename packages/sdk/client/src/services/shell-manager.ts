@@ -62,16 +62,28 @@ export class ShellManager {
 
     const iframe = this._iframeManager.iframe;
     iframe!.setAttribute('style', shellStyles);
+    iframe!.setAttribute('name', 'dxos-shell');
     iframe!.setAttribute('data-testid', 'dxos-shell');
-    this.contextUpdate.on(({ display, spaceKey }) => {
+    this.contextUpdate.on(({ display, reload }) => {
+      if (reload) {
+        window.location.reload();
+      }
+
       iframe!.style.display = display === ShellDisplay.NONE ? 'none' : '';
       if (display === ShellDisplay.NONE) {
         iframe!.blur();
       }
     });
 
+    // TODO(wittjosiah): Remove. Workaround for socket runtime bug.
+    //   https://github.com/socketsupply/socket/issues/893
+    const origin =
+      this._iframeManager.source.origin === 'null'
+        ? this._iframeManager.source.toString().split('/').slice(0, 3).join('/')
+        : this._iframeManager.source.origin;
+
     const port = createIFramePort({
-      origin: this._iframeManager.source.origin,
+      origin,
       channel: this._channel,
       iframe: this._iframeManager.iframe,
     });

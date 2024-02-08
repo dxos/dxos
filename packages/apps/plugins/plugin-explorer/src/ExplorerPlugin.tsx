@@ -7,17 +7,13 @@ import React from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, View as ViewType } from '@braneframe/types';
-import { parseIntentPlugin, resolvePlugin, type PluginDefinition, LayoutAction } from '@dxos/app-framework';
+import { parseIntentPlugin, resolvePlugin, type PluginDefinition, NavigationAction } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { ExplorerMain } from './components';
 import meta, { EXPLORER_PLUGIN } from './meta';
 import translations from './translations';
 import { ExplorerAction, type ExplorerPluginProvides, isExplorer } from './types';
-
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[ViewType.name] = ViewType;
 
 export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
   return {
@@ -55,7 +51,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
                   data: { target: parent.data },
                 },
                 {
-                  action: LayoutAction.ACTIVATE,
+                  action: NavigationAction.ACTIVATE,
                 },
               ]),
             properties: {
@@ -78,7 +74,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ExplorerAction.CREATE: {
-              return { object: new ViewType() };
+              return { data: new ViewType() };
             }
           }
         },

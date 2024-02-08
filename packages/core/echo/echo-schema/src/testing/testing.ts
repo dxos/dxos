@@ -18,7 +18,6 @@ import { ComplexMap } from '@dxos/util';
 import { AutomergeContext } from '../automerge';
 import { EchoDatabase } from '../database';
 import { Hypergraph } from '../hypergraph';
-import { setGlobalAutomergePreference } from '../object';
 import { schemaBuiltin } from '../proto';
 
 /**
@@ -49,7 +48,10 @@ export class TestBuilder {
   public readonly defaultSpaceKey = PublicKey.random();
   public readonly automergeContext = new AutomergeContext();
 
-  constructor(public readonly graph = new Hypergraph(), public readonly base = new DatabaseTestBuilder()) {}
+  constructor(
+    public readonly graph = new Hypergraph(),
+    public readonly base = new DatabaseTestBuilder(),
+  ) {}
 
   public readonly peers = new ComplexMap<PublicKey, TestPeer>(PublicKey.hash);
 
@@ -102,23 +104,3 @@ export class TestPeer {
     await this.db.flush();
   }
 }
-
-export const testWithAutomerge = (tests: () => void) => {
-  describe('with automerge', () => {
-    before(() => {
-      setGlobalAutomergePreference(true);
-    });
-
-    after(() => {
-      setGlobalAutomergePreference(false);
-    });
-
-    setGlobalAutomergePreference(true);
-    tests();
-    setGlobalAutomergePreference(false);
-  });
-
-  describe('without automerge', () => {
-    tests();
-  });
-};

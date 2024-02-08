@@ -22,7 +22,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ModelFactory } from '@dxos/model-factory';
-import { ApiError, trace } from '@dxos/protocols';
+import { ApiError, trace as Trace } from '@dxos/protocols';
 import {
   GetDiagnosticsRequest,
   type QueryStatusResponse,
@@ -30,6 +30,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
+import { trace, TRACE_PROCESSOR } from '@dxos/tracing';
 import { type JsonKeyOptions, jsonKeyReplacer, type MaybePromise } from '@dxos/util';
 
 import { ClientRuntime } from './client-runtime';
@@ -54,15 +55,19 @@ export type ClientOptions = {
   types?: TypeCollection;
   /** Shell path. */
   shell?: string;
+  /** Create client worker. */
+  createWorker?: () => SharedWorker;
 };
 
 /**
  * The Client class encapsulates the core client-side API of DXOS.
  */
+@trace.resource()
 export class Client {
   /**
    * The version of this client API.
    */
+  @trace.info()
   readonly version = DXOS_VERSION;
 
   /**
@@ -73,13 +78,20 @@ export class Client {
   private readonly _options: ClientOptions;
   private _ctx = new Context();
   private _config?: Config;
+
+  @trace.info()
   private _services?: ClientServicesProvider;
+
   private _runtime?: ClientRuntime;
   // TODO(wittjosiah): Make `null` status part of enum.
   private readonly _statusUpdate = new Event<SystemStatus | null>();
 
+  @trace.info()
   private _initialized = false;
+
+  @trace.info()
   private _resetting = false;
+
   private _statusStream?: Stream<QueryStatusResponse>;
   private _statusTimeout?: NodeJS.Timeout;
   private _status = MulticastObservable.from(this._statusUpdate, null);
@@ -92,12 +104,14 @@ export class Client {
   /**
    * Unique id of the Client, local to the current peer.
    */
+  @trace.info()
   private readonly _instanceId = PublicKey.random().toHex();
 
   constructor(options: ClientOptions = {}) {
     if (
       typeof window !== 'undefined' &&
       window.location.protocol !== 'https:' &&
+      window.location.protocol !== 'socket:' &&
       !window.location.hostname.endsWith('localhost')
     ) {
       console.warn(
@@ -125,6 +139,7 @@ export class Client {
     return inspectObject(this);
   }
 
+  @trace.info({ depth: null })
   toJSON() {
     return {
       initialized: this.initialized,
@@ -227,14 +242,52 @@ export class Client {
    */
   async diagnostics(options: JsonKeyOptions = {}): Promise<any> {
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
-    const data = await this._services.services.SystemService.getDiagnostics({
+    const serviceDiagnostics = await this._services.services.SystemService.getDiagnostics({
       keys: options.humanize
         ? GetDiagnosticsRequest.KEY_OPTION.HUMANIZE
         : options.truncate
-        ? GetDiagnosticsRequest.KEY_OPTION.TRUNCATE
-        : undefined,
+          ? GetDiagnosticsRequest.KEY_OPTION.TRUNCATE
+          : undefined,
     });
-    return JSON.parse(JSON.stringify(data, jsonKeyReplacer(options)));
+
+    const clientDiagnostics = {
+      config: this._config?.values,
+      trace: TRACE_PROCESSOR.getDiagnostics(),
+    };
+
+    const diagnostics = {
+      client: clientDiagnostics,
+      services: serviceDiagnostics,
+    };
+
+    return JSON.parse(JSON.stringify(diagnostics, jsonKeyReplacer(options)));
+  }
+
+  /**
+   * Test and repair database.
+   */
+  async repair(): Promise<any> {
+    // TODO(burdon): Factor out.
+    const spaces = this.spaces.get();
+    const docs = spaces
+      .map((space) =>
+        (space as any)._data.pipeline.currentEpoch?.subject.assertion.automergeRoot.slice('automerge:'.length),
+      )
+      .filter(Boolean);
+
+    let removed = 0;
+    if (typeof navigator !== 'undefined' && navigator.storage) {
+      const dir = await navigator.storage.getDirectory();
+      for await (const filename of (dir as any)?.keys()) {
+        if (filename.includes('automerge_') && !docs.some((doc) => filename.includes(doc))) {
+          await dir.removeEntry(filename);
+          removed++;
+        }
+      }
+    }
+
+    log.info('Repair succeeded', { removed });
+    return { removed };
   }
 
   /**
@@ -247,14 +300,14 @@ export class Client {
       return;
     }
 
-    log.trace('dxos.sdk.client.open', trace.begin({ id: this._instanceId }));
+    log.trace('dxos.sdk.client.open', Trace.begin({ id: this._instanceId }));
 
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
 
     this._ctx = new Context();
     this._config = this._options.config ?? new Config();
     // NOTE: Must currently match the host.
-    this._services = await (this._options.services ?? createClientServices(this._config));
+    this._services = await (this._options.services ?? createClientServices(this._config, this._options.createWorker));
     this._iframeManager = this._options.shell
       ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })
       : undefined;
@@ -268,7 +321,7 @@ export class Client {
     }
 
     this._initialized = true;
-    log.trace('dxos.sdk.client.open', trace.end({ id: this._instanceId }));
+    log.trace('dxos.sdk.client.open', Trace.end({ id: this._instanceId }));
   }
 
   private async _open() {
@@ -345,13 +398,20 @@ export class Client {
     await this._iframeManager?.open();
     await this._shellManager?.open();
     if (this._iframeManager?.iframe) {
+      // TODO(wittjosiah): Remove. Workaround for socket runtime bug.
+      //   https://github.com/socketsupply/socket/issues/893
+      const origin =
+        this._iframeManager.source.origin === 'null'
+          ? this._iframeManager.source.toString().split('/').slice(0, 3).join('/')
+          : this._iframeManager.source.origin;
+
       this._shellClientProxy = createProtoRpcPeer({
         exposed: clientServiceBundle,
         handlers: this._services.services as ClientServices,
         port: createIFramePort({
           channel: DEFAULT_CLIENT_CHANNEL,
           iframe: this._iframeManager.iframe,
-          origin: this._iframeManager.source.origin,
+          origin,
         }),
       });
 

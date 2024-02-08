@@ -11,6 +11,11 @@
     },
     "lint": {},
     "test": {
+      "dependsOn": [
+        {
+          "target": "build"
+        }
+      ],
       "options": {
         "checkLeaks": false,
         "ciEnvironments": [
@@ -19,5 +24,7 @@
         "forceExit": true
       }
     }
-  }
+  },
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "hello-template"
 }

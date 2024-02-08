@@ -6,8 +6,8 @@ import get from 'lodash.get';
 
 import { type ThemeStyles, tokens } from '../styles';
 
-// TODO(burdon): Can we erase All of the default CM styles?
-// TODO(burdon): Theme styles seem to be added multiple times?
+// TODO(burdon): Can we use @apply and import css file?
+//  https://tailwindcss.com/docs/reusing-styles#extracting-classes-with-apply?
 
 /**
  * Minimal styles.
@@ -49,9 +49,11 @@ export const defaultTheme: ThemeStyles = {
   '&.cm-focused': {
     outline: 'none',
   },
+
   '.cm-scroller': {
-    overflow: 'visible',
+    // overflow: 'visible',
     fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
+    lineHeight: 1.4,
   },
 
   '.cm-content': {
@@ -60,11 +62,11 @@ export const defaultTheme: ThemeStyles = {
     fontSize: '16px',
   },
   '&light .cm-content': {
-    color: get(tokens, 'extend.colors.neutral.900', 'black'),
+    color: get(tokens, 'extend.semanticColors.base.fg.light', 'black'),
     caretColor: 'black',
   },
   '&dark .cm-content': {
-    color: get(tokens, 'extend.colors.neutral.100', 'white'),
+    color: get(tokens, 'extend.semanticColors.base.fg.dark', 'white'),
     caretColor: 'white',
   },
 
@@ -77,8 +79,11 @@ export const defaultTheme: ThemeStyles = {
   '&dark .cm-cursor, &dark .cm-dropCursor': {
     borderLeft: '2px solid white',
   },
-  '.cm-placeholder': {
-    fontWeight: 100,
+  '&light .cm-placeholder': {
+    color: get(tokens, 'extend.semanticColors.description.light', 'rgba(0,0,0,.2)'),
+  },
+  '&dark .cm-placeholder': {
+    color: get(tokens, 'extend.semanticColors.description.dark', 'rgba(255,255,255,.2)'),
   },
 
   //
@@ -88,7 +93,7 @@ export const defaultTheme: ThemeStyles = {
     paddingInline: 0,
   },
   '.cm-activeLine': {
-    background: 'inherit',
+    background: 'transparent',
   },
 
   //
@@ -117,36 +122,6 @@ export const defaultTheme: ThemeStyles = {
   },
   '&dark .cm-searchMatch': {
     backgroundColor: get(tokens, 'extend.colors.yellow.700'),
-  },
-
-  //
-  // collaboration
-  // TODO(burdon): Review classnames (YJS dependent?) Note: e2e tests depend on this class.
-  //
-
-  '&light .cm-ySelection, &light .cm-yLineSelection': {
-    mixBlendMode: 'multiply',
-  },
-  '&dark .cm-ySelection, &dark .cm-yLineSelection': {
-    mixBlendMode: 'screen',
-  },
-
-  '.cm-ySelectionInfo': {
-    padding: '2px 4px',
-    marginBlockStart: '-4px',
-  },
-  '.cm-ySelection, & .cm-selectionMatch': {
-    paddingBlockStart: '.15em',
-    paddingBlockEnd: '.15em',
-  },
-  '.cm-ySelectionCaret': {
-    display: 'inline-block',
-    insetBlockStart: '.1em',
-    blockSize: '1.4em',
-    verticalAlign: 'top',
-  },
-  '.cm-yLineSelection': {
-    margin: 0,
   },
 
   //
@@ -189,14 +164,6 @@ export const defaultTheme: ThemeStyles = {
   },
 
   //
-  // widgets
-  //
-  '.cm-widgetBuffer': {
-    display: 'none',
-    height: 0,
-  },
-
-  //
   // table
   //
   '.cm-table *': {
@@ -229,16 +196,17 @@ export const defaultTheme: ThemeStyles = {
 
   //
   // font size
-  // TODO(thure): This appears to be the best or only way to set selection caret heights, but it's far more verbose than it needs to be.
+  // TODO(thure): This appears to be the best or only way to set selection caret heights,
+  //  but it's far more verbose than it needs to be.
   //
-  ...Object.keys(get(tokens, 'extend.fontSize', {})).reduce((acc: Record<string, any>, fontSize) => {
-    const height = get(tokens, ['extend', 'fontSize', fontSize, 1, 'lineHeight']);
-
-    acc[`& .text-${fontSize} + .cm-ySelectionCaret`] = { height };
-    acc[`& .text-${fontSize} + .cm-ySelection + .cm-ySelectionCaret`] = { height };
-    acc[`& .text-${fontSize} + .cm-widgetBuffer + .cm-ySelectionCaret`] = { height };
-    return acc;
-  }, {}),
+  // ...Object.keys(get(tokens, 'extend.fontSize', {})).reduce((acc: Record<string, any>, fontSize) => {
+  //   const height = get(tokens, ['extend', 'fontSize', fontSize, 1, 'lineHeight']);
+  //
+  //   acc[`& .text-${fontSize} + .cm-ySelectionCaret`] = { height };
+  //   acc[`& .text-${fontSize} + .cm-ySelection + .cm-ySelectionCaret`] = { height };
+  //   acc[`& .text-${fontSize} + .cm-widgetBuffer + .cm-ySelectionCaret`] = { height };
+  //   return acc;
+  // }, {}),
 
   /**
    * Panels
@@ -292,7 +260,9 @@ export const textTheme: ThemeStyles = {
 };
 
 export const markdownTheme: ThemeStyles = {
-  // NOTE: Must leave base font family as is (i.e., monospace) due to fenced code blocks.
+  '.cm-scroller': {
+    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+  },
   '.cm-placeholder': {
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
   },

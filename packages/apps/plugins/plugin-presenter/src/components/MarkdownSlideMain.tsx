@@ -4,12 +4,22 @@
 
 import React, { type FC } from 'react';
 
+import { type Document as DocumentType } from '@braneframe/types';
+import { getTextContent } from '@dxos/react-client/echo';
+
 import { Container, Slide } from './Markdown';
 
-export const MarkdownSlideMain: FC<{ slide: any }> = ({ slide }) => {
+const MarkdownSlideMain: FC<{ document: DocumentType }> = ({ document }) => {
+  const content = getTextContent(document.content);
+  if (!content) {
+    return null;
+  }
+
   return (
     <Container>
-      <Slide content={String(slide.content)} />;
+      <Slide content={content} />;
     </Container>
   );
 };
+
+export default MarkdownSlideMain;

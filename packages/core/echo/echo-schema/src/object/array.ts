@@ -9,14 +9,11 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { AbstractEchoObject } from './object';
-import {
-  getGlobalAutomergePreference,
-  type AutomergeOptions,
-  type TypedObject,
-  isAutomergeObject,
-} from './typed-object';
+import { type AutomergeOptions, type TypedObject, isAutomergeObject } from './typed-object';
 import { base } from './types';
-import { AutomergeArray, REFERENCE_TYPE_TAG } from '../automerge';
+import { AutomergeArray } from '../automerge';
+import { REFERENCE_TYPE_TAG } from '../automerge/types';
+import { getGlobalAutomergePreference } from '../automerge-preference';
 
 const isIndex = (property: string | symbol): property is string =>
   typeof property === 'string' && parseInt(property).toString() === property;
@@ -59,22 +56,47 @@ export class EchoArray<T> implements Array<T> {
     this._uninitialized = [...items];
 
     // Change type returned by `new`.
-    return new Proxy(this, {
-      get: (target, property, receiver) => {
+    return new Proxy<EchoArray<T>>([] as any as EchoArray<T>, {
+      defineProperty: (_, property: string | symbol, attributes: PropertyDescriptor): boolean => {
+        Object.defineProperty(this, property, attributes);
+        return true;
+      },
+
+      deleteProperty: (_, p: string | symbol): boolean => {
+        return delete this[p as any];
+      },
+
+      get: (_, property, receiver) => {
         if (isIndex(property)) {
           return this._get(+property);
         } else {
-          return Reflect.get(target, property, receiver);
+          return Reflect.get(this, property, receiver);
         }
       },
 
-      set: (target, property, value, receiver) => {
+      set: (_, property, value, receiver) => {
         if (isIndex(property)) {
           this._set(+property, value);
           return true;
         } else {
-          return Reflect.set(target, property, value, receiver);
+          return Reflect.set(this, property, value, receiver);
         }
+      },
+
+      has: (_, symbol) => {
+        return this._has(symbol);
+      },
+
+      getOwnPropertyDescriptor: (_, p: string | symbol): PropertyDescriptor | undefined => {
+        return Object.getOwnPropertyDescriptor(this, p);
+      },
+
+      getPrototypeOf: (_): object | null => {
+        return Object.getPrototypeOf(this);
+      },
+
+      ownKeys: (_): ArrayLike<string | symbol> => {
+        return Reflect.ownKeys(this);
       },
     });
   }
@@ -408,6 +430,17 @@ export class EchoArray<T> implements Array<T> {
       invariant(this._uninitialized);
       return this._uninitialized[index];
     }
+  }
+
+  private _has(property: string | symbol) {
+    if (typeof property === 'symbol') {
+      return property in this;
+    }
+    const parsedIndex = parseInt(property);
+    if (!Number.isNaN(parsedIndex)) {
+      return parsedIndex < this.length;
+    }
+    return property in this;
   }
 
   private _set(index: number, value: T) {

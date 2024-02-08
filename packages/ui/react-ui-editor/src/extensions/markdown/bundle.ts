@@ -21,36 +21,33 @@ import {
 } from '@codemirror/view';
 
 import type { ThemeMode } from '@dxos/react-ui';
+import { isNotFalsy } from '@dxos/util';
 
 import { markdownHighlightStyle, markdownTagsExtensions } from './highlight';
+import { type TextEditorProps } from '../../components';
 
 export type MarkdownBundleOptions = {
-  readonly?: boolean;
   themeMode?: ThemeMode;
-  placeholder?: string;
-};
+} & Pick<TextEditorProps, 'placeholder' | 'lineWrapping'>;
 
 /**
  * Markdown bundle.
  * Refs:
- * https://github.com/codemirror/basic-setup
- * https://github.com/codemirror/basic-setup/blob/main/src/codemirror.ts#L50
  * https://codemirror.net/docs/community
  * https://codemirror.net/docs/ref/#codemirror.basicSetup
  */
 // TODO(burdon): Add Composer here: https://codemirror.net/docs/community
-export const markdownBundle = ({
-  readonly,
+export const createMarkdownExtensions = ({
   themeMode,
   placeholder: _placeholder,
-}: MarkdownBundleOptions): Extension[] => {
+  lineWrapping = true,
+}: MarkdownBundleOptions = {}): Extension[] => {
   return [
+    lineWrapping && EditorView.lineWrapping,
     EditorState.allowMultipleSelections.of(true),
     EditorState.tabSize.of(2),
-    EditorView.lineWrapping,
 
-    customKeymap(),
-
+    // https://github.com/codemirror/basic-setup
     bracketMatching(),
     closeBrackets(),
     crosshairCursor(),
@@ -86,21 +83,19 @@ export const markdownBundle = ({
     themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
 
     // Custom styles.
-    syntaxHighlighting(markdownHighlightStyle(readonly)),
-  ].filter(Boolean) as Extension[];
-};
+    syntaxHighlighting(markdownHighlightStyle()),
 
-// https://codemirror.net/docs/ref/#view.keymap
-const customKeymap = () =>
-  keymap.of([
-    // https://codemirror.net/docs/ref/#commands.indentWithTab
-    indentWithTab,
-    // https://codemirror.net/docs/ref/#commands.standardKeymap
-    ...standardKeymap,
-    // https://codemirror.net/docs/ref/#commands.historyKeymap
-    ...historyKeymap,
-    // https://codemirror.net/docs/ref/#autocomplete.closeBracketsKeymap
-    ...closeBracketsKeymap,
-    // https://codemirror.net/docs/ref/#search.searchKeymap
-    ...searchKeymap,
-  ]);
+    keymap.of([
+      // https://codemirror.net/docs/ref/#commands.indentWithTab
+      indentWithTab,
+      // https://codemirror.net/docs/ref/#autocomplete.closeBracketsKeymap
+      ...closeBracketsKeymap,
+      // https://codemirror.net/docs/ref/#commands.historyKeymap
+      ...historyKeymap,
+      // https://codemirror.net/docs/ref/#search.searchKeymap
+      ...searchKeymap,
+      // https://codemirror.net/docs/ref/#commands.standardKeymap
+      ...standardKeymap,
+    ]),
+  ].filter(isNotFalsy);
+};

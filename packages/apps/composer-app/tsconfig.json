@@ -25,10 +25,19 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/random"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
       "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
+      "path": "../../devtools/devtools"
     },
     {
       "path": "../../sdk/app-framework"
@@ -37,10 +46,16 @@
       "path": "../../sdk/app-graph"
     },
     {
+      "path": "../../sdk/client-services"
+    },
+    {
       "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/migrations"
+    },
+    {
+      "path": "../../sdk/observability"
     },
     {
       "path": "../../sdk/react-client"
@@ -85,9 +100,6 @@
       "path": "../plugins/plugin-debug"
     },
     {
-      "path": "../plugins/plugin-error"
-    },
-    {
       "path": "../plugins/plugin-explorer"
     },
     {
@@ -130,7 +142,13 @@
       "path": "../plugins/plugin-metadata"
     },
     {
+      "path": "../plugins/plugin-native"
+    },
+    {
       "path": "../plugins/plugin-navtree"
+    },
+    {
+      "path": "../plugins/plugin-observability"
     },
     {
       "path": "../plugins/plugin-outliner"
@@ -164,9 +182,6 @@
     },
     {
       "path": "../plugins/plugin-table"
-    },
-    {
-      "path": "../plugins/plugin-telemetry"
     },
     {
       "path": "../plugins/plugin-template"

@@ -4,15 +4,14 @@
 
 import { GithubLogo } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
-import React, { type RefObject } from 'react';
+import React from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
-import { isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
+import { isEditorModel, isMarkdownProperties } from '@braneframe/plugin-markdown';
 import { Folder, type Document } from '@braneframe/types';
 import { type PluginDefinition } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { getSpaceForObject, isTypedObject, SpaceState } from '@dxos/react-client/echo';
-import { type EditorView } from '@dxos/react-ui-editor';
 
 import {
   EmbeddedMain,
@@ -90,7 +89,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                 case 'dxos.org/plugin/github/BindDialog':
                   return isMarkdownProperties(data.properties) ? <UrlDialog properties={data.properties} /> : null;
                 case 'dxos.org/plugin/github/ExportDialog':
-                  return isMarkdown(data.model) ? (
+                  return isEditorModel(data.model) ? (
                     <ExportDialog
                       model={data.model}
                       type={data.type as ExportViewState}
@@ -102,19 +101,18 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                   return (
                     <ImportDialog
                       docGhId={data.docGhId as GhIdentifier}
-                      editorRef={data.editorRef as RefObject<EditorView>}
+                      onUpdate={(content) => {
+                        // TODO(burdon): Fire intent.
+                        console.log('onUpdate', content);
+                      }}
                     />
                   );
                 default:
                   return null;
               }
             case 'menuitem':
-              return isMarkdown(data.model) && isMarkdownProperties(data.properties) && !data.properties.readonly ? (
-                <MarkdownActions
-                  model={data.model}
-                  properties={data.properties}
-                  editorRef={data.editorRef as RefObject<EditorView>}
-                />
+              return isEditorModel(data.model) && isMarkdownProperties(data.properties) && !data.properties.readonly ? (
+                <MarkdownActions model={data.model} properties={data.properties} />
               ) : null;
             case 'settings':
               return data.plugin === meta.id ? <GitHubSettings /> : null;

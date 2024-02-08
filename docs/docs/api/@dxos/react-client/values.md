@@ -3,7 +3,7 @@ title: Values
 ---
 # Values 
 
-### [`ClientContext`](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L38)
+### [`ClientContext`](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L37)
 Type: Context&lt;[ClientContextProps](/api/@dxos/react-client/types/ClientContextProps) | undefined&gt;
 
 
@@ -15,6 +15,11 @@ Type: "https://halo.dxos.org"
 
 ### [`DEFAULT_VAULT_URL`]()
 Type: string
+
+
+
+### [`DXOS_VERSION`]()
+Type: "0.4.3"
 
 
 

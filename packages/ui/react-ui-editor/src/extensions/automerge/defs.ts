@@ -1,55 +1,34 @@
 //
 // Copyright 2023 DXOS.org
+// Copyright 2024 Automerge
 // Ref: https://github.com/automerge/automerge-codemirror
 //
 
-import {
-  Annotation,
-  StateEffect,
-  type StateField,
-  type EditorState,
-  type Transaction,
-  type TransactionSpec,
-} from '@codemirror/state';
+import { Annotation, StateEffect, type StateField, type EditorState, type Transaction } from '@codemirror/state';
 
 import { type ChangeFn, type ChangeOptions, type Doc, type Heads, type Prop } from '@dxos/automerge/automerge';
 
-export type Value = {
-  lastHeads: Heads;
+export type State = {
   path: Prop[];
+  lastHeads: Heads;
   unreconciledTransactions: Transaction[];
 };
 
-type UpdateHeads = {
+export const getPath = (state: EditorState, field: StateField<State>): Prop[] => state.field(field).path;
+export const getLastHeads = (state: EditorState, field: StateField<State>): Heads => state.field(field).lastHeads;
+
+export type UpdateHeads = {
   newHeads: Heads;
 };
 
-export const effectType = StateEffect.define<UpdateHeads>({});
+export const updateHeadsEffect = StateEffect.define<UpdateHeads>({});
 
-export const updateHeads = (newHeads: Heads): StateEffect<UpdateHeads> => effectType.of({ newHeads });
+export const updateHeads = (newHeads: Heads): StateEffect<UpdateHeads> => updateHeadsEffect.of({ newHeads });
 
-export const getLastHeads = (state: EditorState, field: StateField<Value>): Heads => state.field(field).lastHeads;
+export const reconcileAnnotation = Annotation.define<boolean>();
 
-export const getPath = (state: EditorState, field: StateField<Value>): Prop[] => state.field(field).path;
-
-export const reconcileAnnotationType = Annotation.define<unknown>();
-
-export const isReconcileTx = (tr: Transaction): boolean => !!tr.annotation(reconcileAnnotationType);
-
-export const makeReconcile = (tr: TransactionSpec) => {
-  if (tr.annotations != null) {
-    if (tr.annotations instanceof Array) {
-      tr.annotations = [...tr.annotations, reconcileAnnotationType.of({})];
-    } else {
-      tr.annotations = [tr.annotations, reconcileAnnotationType.of({})];
-    }
-  } else {
-    tr.annotations = [reconcileAnnotationType.of({})];
-  }
-  // return {
-  //   ...tr,
-  //   annotations: reconcileAnnotationType.of({})
-  // }
+export const isReconcile = (tr: Transaction): boolean => {
+  return !!tr.annotation(reconcileAnnotation);
 };
 
 export type IDocHandle<T = any> = {

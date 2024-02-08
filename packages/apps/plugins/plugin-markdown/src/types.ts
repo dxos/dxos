@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Document as DocumentType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -11,7 +12,7 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { type ObjectMeta } from '@dxos/react-client/echo';
-import { type EditorMode, type Extension } from '@dxos/react-ui-editor';
+import { type Extension, type EditorMode } from '@dxos/react-ui-editor';
 
 import { MARKDOWN_PLUGIN } from './meta';
 
@@ -19,7 +20,7 @@ const MARKDOWN_ACTION = `${MARKDOWN_PLUGIN}/action`;
 
 export enum MarkdownAction {
   CREATE = `${MARKDOWN_ACTION}/create`,
-  TOGGLE_VIEW = `${MARKDOWN_ACTION}/toggle-view`,
+  TOGGLE_READONLY = `${MARKDOWN_ACTION}/toggle-readonly`,
 }
 
 // TODO(burdon): Remove?
@@ -31,21 +32,14 @@ export type MarkdownProperties = {
   readonly?: boolean;
 };
 
-export type ExtensionsProvider = () => Extension[];
+export type ExtensionsProvider = (props: { document?: DocumentType }) => Extension[];
 export type OnChange = (text: string) => void;
 
-export type MarkdownProvides = {
+export type MarkdownExtensionProvides = {
   markdown: {
-    extensions?: ExtensionsProvider;
-
-    // TODO(burdon): Replace with `listener` extension?
-    onChange?: OnChange;
+    extensions: ExtensionsProvider;
   };
 };
-
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[DocumentType.name] = DocumentType;
 
 // TODO(wittjosiah): Factor out to graph plugin?
 type StackProvides = {
@@ -54,11 +48,18 @@ type StackProvides = {
   };
 };
 
+// TODO(burdon): Extend view mode per document to include scroll position, etc.
+type EditorState = {
+  readonly?: boolean;
+};
+
 export type MarkdownSettingsProps = {
-  viewMode: { [key: string]: boolean };
+  state: { [key: string]: EditorState };
   editorMode?: EditorMode;
   experimental?: boolean;
   debug?: boolean;
+  toolbar?: boolean;
+  typewriter?: string;
 };
 
 export type MarkdownPluginProvides = SurfaceProvides &

@@ -6,9 +6,9 @@ import {
   ClockCounterClockwise,
   Download,
   FloppyDisk,
+  FolderOpen,
   FolderPlus,
   PencilSimpleLine,
-  Planet,
   Plus,
   Placeholder,
   Trash,
@@ -24,16 +24,16 @@ import type { Graph, Node, NodeArg } from '@braneframe/plugin-graph';
 import { Folder } from '@braneframe/types';
 import { type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { clone } from '@dxos/echo-schema';
+import { clone, isTypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { Migrations } from '@dxos/migrations';
 import {
   EchoDatabase,
   type Space,
-  SpaceState,
-  TypedObject,
-  getSpaceForObject,
   SpaceProxy,
+  SpaceState,
+  type TypedObject,
+  getSpaceForObject,
 } from '@dxos/react-client/echo';
 
 import { SPACE_PLUGIN } from './meta';
@@ -51,10 +51,10 @@ export const getSpaceDisplayName = (space: Space): string | [string, { ns: strin
   return (space.properties.name?.length ?? 0) > 0
     ? space.properties.name
     : space.state.get() === SpaceState.CLOSED || space.state.get() === SpaceState.INACTIVE
-    ? ['closed space label', { ns: SPACE_PLUGIN }]
-    : space.state.get() !== SpaceState.READY
-    ? ['loading space label', { ns: SPACE_PLUGIN }]
-    : ['unnamed space label', { ns: SPACE_PLUGIN }];
+      ? ['closed space label', { ns: SPACE_PLUGIN }]
+      : space.state.get() !== SpaceState.READY
+        ? ['loading space label', { ns: SPACE_PLUGIN }]
+        : ['unnamed space label', { ns: SPACE_PLUGIN }];
 };
 
 const getFolderGraphNodePartials = ({
@@ -72,7 +72,8 @@ const getFolderGraphNodePartials = ({
         id: `${SPACE_PLUGIN}/create`,
         label: ['create object group label', { ns: SPACE_PLUGIN }],
         icon: (props) => <Plus {...props} />,
-        keyBinding: 'ctrl+n', // TODO(burdon): Not working since invoke is no-op.
+        // TODO(burdon): Not working since invoke is no-op.
+        // keyBinding: 'ctrl+n',
         invoke: () => {
           // No-op.
         },
@@ -87,6 +88,9 @@ const getFolderGraphNodePartials = ({
                 action: SpaceAction.ADD_OBJECT,
                 data: { target: folder, object: new Folder() },
               }),
+            properties: {
+              testId: 'spacePlugin.createFolder',
+            },
           },
         ],
         properties: {
@@ -174,7 +178,6 @@ export const spaceToGraphNode = ({
       id: space.key.toHex(),
       label: isPersonalSpace ? ['personal space label', { ns: SPACE_PLUGIN }] : getSpaceDisplayName(space),
       description: space.properties.description,
-      icon: (props) => <Planet {...props} />,
       data: space,
       ...partials,
       properties: {
@@ -228,7 +231,14 @@ export const spaceToGraphNode = ({
           label: ['save space to disk label', { ns: SPACE_PLUGIN }],
           icon: (props) => <FloppyDisk {...props} />,
           keyBinding: 'meta+s',
-          invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SAVE_TO_DISK, data: { space } }),
+          invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SAVE, data: { space } }),
+        },
+        {
+          id: 'load-space-from-disk',
+          label: ['load space from disk label', { ns: SPACE_PLUGIN }],
+          icon: (props) => <FolderOpen {...props} />,
+          keyBinding: 'meta+shift+l',
+          invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.LOAD, data: { space } }),
         },
       );
     } else if (space.state.get() === SpaceState.INACTIVE) {
@@ -309,7 +319,7 @@ export const objectToGraphNode = ({
       ...partials,
       properties: {
         ...partials.properties,
-        testId: object instanceof Folder ? 'spacePlugin.folder' : 'spacePlugin.object',
+        testId: 'spacePlugin.object',
         persistenceClass: 'folder',
       },
     });
@@ -325,6 +335,9 @@ export const objectToGraphNode = ({
             action: SpaceAction.RENAME_OBJECT,
             data: { object, ...params },
           }),
+        properties: {
+          testId: 'spacePlugin.renameObject',
+        },
       },
       {
         id: 'delete',
@@ -338,6 +351,9 @@ export const objectToGraphNode = ({
               data: { object, folder: parent.data, ...params },
             },
           ]),
+        properties: {
+          testId: 'spacePlugin.deleteObject',
+        },
       },
     );
 
@@ -366,13 +382,16 @@ export const objectToGraphNode = ({
   });
 };
 
+/**
+ * @deprecated
+ */
 export const getActiveSpace = (graph: Graph, active?: string) => {
   if (!active) {
     return;
   }
 
   const node = graph.findNode(active);
-  if (!node || !(node.data instanceof TypedObject)) {
+  if (!node || !isTypedObject(node.data)) {
     return;
   }
 

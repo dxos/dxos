@@ -15,7 +15,7 @@ import {
 } from 'xstate';
 
 import { log } from '@dxos/log';
-import type { Client } from '@dxos/react-client';
+import { type Client, AlreadyJoinedError } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 import { type AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
@@ -133,6 +133,12 @@ const getInvitationSubscribable = (
           }
         },
         (error: any) => {
+          if (error instanceof AlreadyJoinedError) {
+            log('[already joined]', { Kind, error });
+            next({ type: `success${Kind}Invitation`, invitation: invitation.get() });
+            return complete?.();
+          }
+
           log.error('[invitation errored]', { Kind, error });
           next({ type: `fail${Kind}Invitation`, reason: 'error' });
           return onError?.(error);
@@ -397,7 +403,7 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
           event.type.includes('Space') ? { ...context.space, invitation: event.invitation } : context.space,
       }),
       log: (context, event) => {
-        log.info('[transition]', {
+        log('[transition]', {
           event,
           haloInvitation: context.halo.invitation,
           spaceInvitation: context.space.invitation,
@@ -437,9 +443,8 @@ const useJoinMachine = (
     ({ halo }: JoinMachineContext) => {
       if (halo.unredeemedCode) {
         try {
-          const invitationObservable = client.halo.join(
-            InvitationEncoder.decode(defaultCodeFromUrl('halo', halo.unredeemedCode)),
-          );
+          const invitation = InvitationEncoder.decode(defaultCodeFromUrl('halo', halo.unredeemedCode));
+          const invitationObservable = client.halo.join(invitation);
           return {
             ...halo,
             invitationObservable,
@@ -461,20 +466,12 @@ const useJoinMachine = (
       if (space.unredeemedCode) {
         try {
           const invitation = InvitationEncoder.decode(defaultCodeFromUrl('space', space.unredeemedCode));
-          // Don’t join with the invitation if it has already succeeded.
-          if (space.succeededKeys?.has(invitation.spaceKey?.toHex() ?? 'never')) {
-            return {
-              ...space,
-              invitation,
-            };
-          } else {
-            const invitationObservable = client.spaces.join(invitation);
-            return {
-              ...space,
-              invitationObservable,
-              invitationSubscribable: getInvitationSubscribable('Space', invitationObservable),
-            };
-          }
+          const invitationObservable = client.spaces.join(invitation);
+          return {
+            ...space,
+            invitationObservable,
+            invitationSubscribable: getInvitationSubscribable('Space', invitationObservable),
+          };
         } catch (err) {
           log.error('Could not redeem space invitation code', err);
           return space;

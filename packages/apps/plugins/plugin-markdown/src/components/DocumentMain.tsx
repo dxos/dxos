@@ -2,53 +2,34 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, useEffect, useMemo, type RefCallback } from 'react';
+import React, { type FC, useMemo } from 'react';
 
-import { ThreadAction } from '@braneframe/plugin-thread';
 import { type Document as DocumentType } from '@braneframe/types';
-import { useIntent } from '@dxos/app-framework';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { type CommentRange, useTextModel, type EditorView, type Extension } from '@dxos/react-ui-editor';
+import { type Comment, useTextModel } from '@dxos/react-ui-editor';
 
-import { EditorMain, MainLayout } from './EditorMain';
-import type { MarkdownSettingsProps } from '../types';
+import EditorMain, { type EditorMainProps } from './EditorMain';
 
-export const DocumentMain: FC<{
-  document: DocumentType;
-  readonly: boolean;
-  editorMode: MarkdownSettingsProps['editorMode'];
-  extensions: Extension[];
-  editorRefCb: RefCallback<EditorView>;
-}> = ({ document, readonly, editorMode, extensions, editorRefCb }) => {
-  const { dispatch } = useIntent();
+const DocumentMain: FC<{ document: DocumentType } & Pick<EditorMainProps, 'toolbar' | 'readonly' | 'extensions'>> = ({
+  document,
+  ...props
+}) => {
   const identity = useIdentity();
   const space = getSpaceForObject(document);
   const model = useTextModel({ identity, space, text: document.content });
-  const comments = useMemo<CommentRange[]>(() => {
+
+  const comments = useMemo<Comment[]>(() => {
     return document.comments?.map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! }));
   }, [document.comments]);
-
-  useEffect(() => {
-    void dispatch({
-      action: ThreadAction.SELECT,
-    });
-  }, [document.id]);
 
   if (!model) {
     return null;
   }
 
-  return (
-    <MainLayout>
-      <EditorMain
-        readonly={readonly}
-        editorMode={editorMode}
-        model={model}
-        comments={comments}
-        extensions={extensions}
-        editorRefCb={editorRefCb}
-      />
-    </MainLayout>
-  );
+  return <EditorMain model={model} comments={comments} {...props} />;
 };
+
+export default DocumentMain;
+
+export type DocumentMain = typeof DocumentMain;

@@ -2,58 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { StateField, type Extension } from '@codemirror/state';
-import { useEffect, useState } from 'react';
-import type * as YP from 'y-protocols/awareness';
+import get from 'lodash.get';
+import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 
-import { isAutomergeObject, type DocAccessor, type Space, type TextObject } from '@dxos/react-client/echo';
+import { generateName } from '@dxos/display-name';
+import { type AutomergeTextCompat, getRawDoc } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
+import { isAutomergeObject, type Space, type TextObject } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
-import type { YText, YXmlFragment } from '@dxos/text-model';
 
-import { createAutomergeModel } from './automerge';
-import { createYjsModel } from './yjs';
-
-// TODO(burdon): Factor out defs.
-
-/**
- * State field makes the model available to other extensions.
- */
-export const modelState = StateField.define<EditorModel | undefined>({
-  create: () => undefined,
-  update: (model) => model,
-});
-
-export type Range = {
-  from: number;
-  to: number;
-};
-
-export type CommentRange = {
-  id: string;
-  cursor: string;
-};
-
-// TODO(wittjosiah): Factor out to common package? @dxos/react-client?
-export type EditorModel = {
-  id: string;
-  text: () => string;
-  extension?: Extension;
-
-  // TODO(burdon): Remove.
-  content: string | YText | YXmlFragment | DocAccessor;
-  /**
-   * @deprecated Use CursorConverter.
-   */
-  getCursorFromRange?: (value: Range) => string;
-  getRangeFromCursor?: (cursor: string) => Range | undefined;
-  // TODO(burdon): Move into extension.
-  awareness?: YP.Awareness;
-  // TODO(burdon): Remove.
-  peer?: {
-    id: string;
-    name?: string;
-  };
-};
+import { SpaceAwarenessProvider } from './awareness-provider';
+import { type EditorModel, modelState } from './defs';
+import { automerge, awareness } from '../extensions';
+import { cursorColor } from '../styles';
 
 // TODO(burdon): Remove space/identity dependency. Define interface for the framework re content and presence.
 export type UseTextModelProps = {
@@ -62,8 +23,6 @@ export type UseTextModelProps = {
   text?: TextObject;
 };
 
-// TODO(burdon): Remove YJS/Automerge deps (from UI component -- create abstraction; incl. all ECHO/Space deps).
-// TODO(wittjosiah): Factor out to common package? @dxos/react-client?
 export const useTextModel = (props: UseTextModelProps): EditorModel | undefined => {
   const { identity, space, text } = props;
   const [model, setModel] = useState<EditorModel | undefined>();
@@ -71,13 +30,61 @@ export const useTextModel = (props: UseTextModelProps): EditorModel | undefined 
   return model;
 };
 
-const createModel = (props: UseTextModelProps) => {
-  const { text } = props;
-  if (isAutomergeObject(text)) {
-    return createAutomergeModel(props);
-  } else if (text?.doc) {
-    return createYjsModel(props);
-  } else {
+/**
+ * For use primarily in stories & tests so the dependence on TextObject can be avoided.
+ * @param id
+ * @param defaultContent
+ */
+export const useInMemoryTextModel = ({
+  id,
+  defaultContent,
+}: {
+  id: string;
+  defaultContent?: string;
+}): EditorModel & { setContent: Dispatch<SetStateAction<string>> } => {
+  const [content, setContent] = useState(defaultContent ?? '');
+  return { id, content, setContent, text: () => content };
+};
+
+const createModel = ({ space, identity, text }: UseTextModelProps) => {
+  if (!text) {
     return undefined;
   }
+
+  invariant(isAutomergeObject(text));
+  const obj = text as any as AutomergeTextCompat;
+  const doc = getRawDoc(obj, [obj.field]);
+
+  const awarenessProvider =
+    space &&
+    new SpaceAwarenessProvider({
+      space,
+      channel: `automerge.awareness.${obj.id}`,
+      info: {
+        displayName: identity ? identity.profile?.displayName ?? generateName(identity.identityKey.toHex()) : undefined,
+        color: cursorColor.color,
+        lightColor: cursorColor.light,
+      },
+      peerId: identity?.identityKey.toHex() ?? 'Anonymous',
+    });
+
+  const extensions = [modelState.init(() => model), automerge({ handle: doc.handle, path: doc.path })];
+  if (awarenessProvider) {
+    extensions.push(awareness(awarenessProvider));
+  }
+
+  const model: EditorModel = {
+    id: obj.id,
+    content: doc,
+    text: () => get(doc.handle.docSync(), doc.path),
+    extension: extensions,
+    peer: identity
+      ? {
+          id: identity.identityKey.toHex(),
+          name: identity.profile?.displayName,
+        }
+      : undefined,
+  };
+
+  return model;
 };

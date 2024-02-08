@@ -5,21 +5,23 @@
 import { CaretDoubleLeft, List as MenuIcon } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework';
-import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/react-ui';
+import { Surface, type Toast as ToastSchema } from '@dxos/app-framework';
+import { Button, Main, Dialog, useTranslation, DensityProvider, Popover, Status } from '@dxos/react-ui';
 import { baseSurface, fixedInsetFlexLayout, getSize } from '@dxos/react-ui-theme';
 
-import { ContentFallback } from './ContentFallback';
 import { Fallback } from './Fallback';
+import { Toast } from './Toast';
 import { useLayout } from '../LayoutContext';
 import { LAYOUT_PLUGIN } from '../meta';
 
 export type MainLayoutProps = {
-  fullscreen?: boolean;
-  showComplementarySidebar?: boolean;
+  fullscreen: boolean;
+  showHintsFooter: boolean;
+  toasts: ToastSchema[];
+  onDismissToast: (id: string) => void;
 };
 
-export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: MainLayoutProps) => {
+export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast }: MainLayoutProps) => {
   const context = useLayout();
   const { complementarySidebarOpen, dialogOpen, dialogContent, popoverOpen, popoverContent, popoverAnchorId } = context;
   const { t } = useTranslation(LAYOUT_PLUGIN);
@@ -34,6 +36,7 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
 
   return (
     <Popover.Root
+      modal
       open={!!(popoverAnchorId && popoverOpen)}
       onOpenChange={(nextOpen) => {
         if (nextOpen && popoverAnchorId) {
@@ -62,9 +65,9 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
         </Main.NavigationSidebar>
 
         {/* Right Complementary sidebar. */}
-        {complementarySidebarOpen !== null && showComplementarySidebar && (
+        {complementarySidebarOpen !== null && (
           <Main.ComplementarySidebar classNames='overflow-hidden'>
-            <Surface role='context' name='complementary' />
+            <Surface role='complementary' name='context' />
           </Main.ComplementarySidebar>
         )}
 
@@ -86,7 +89,7 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
                 <div role='none' className='grow' />
                 <Surface role='navbar-end' direction='inline-reverse' />
 
-                {complementarySidebarOpen !== null && showComplementarySidebar && (
+                {complementarySidebarOpen !== null && (
                   <Button
                     onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
                     variant='ghost'
@@ -108,7 +111,17 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
         <Main.Overlay />
 
         {/* Main content surface. */}
-        <Surface role='main' limit={1} fallback={Fallback} contentFallback={ContentFallback} />
+        <Surface
+          role='main'
+          limit={1}
+          fallback={Fallback}
+          placeholder={
+            // TODO(wittjosiah): Better placeholder? Delay rendering?
+            <div className='flex bs-[100dvh] justify-center items-center'>
+              <Status indeterminate aria-label='Initializing' />
+            </div>
+          }
+        />
 
         {/* Status info. */}
         {/* TODO(burdon): Currently obscured by complementary sidebar. */}
@@ -118,9 +131,11 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
 
         {/* Help hints. */}
         {/* TODO(burdon): Make surface roles/names fully-qualified. */}
-        <div className='fixed bottom-0 left-0 right-0 z-[1] flex justify-center __pointer-events-none'>
-          <Surface role='hints' limit={1} />
-        </div>
+        {showHintsFooter && (
+          <div className='fixed bottom-0 left-0 right-0 h-[32px] z-[1] flex justify-center'>
+            <Surface role='hints' limit={1} />
+          </div>
+        )}
 
         {/* Global popovers. */}
         <Popover.Portal>
@@ -146,6 +161,21 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
             </Dialog.Overlay>
           </DensityProvider>
         </Dialog.Root>
+
+        {/* Global toasts. */}
+        {toasts?.map((toast) => (
+          <Toast
+            {...toast}
+            key={toast.id}
+            onOpenChange={(open) => {
+              if (!open) {
+                onDismissToast(toast.id);
+              }
+
+              return open;
+            }}
+          />
+        ))}
       </Main.Root>
     </Popover.Root>
   );

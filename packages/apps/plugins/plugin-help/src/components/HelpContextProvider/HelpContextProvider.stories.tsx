@@ -4,11 +4,11 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import { Circle } from '@phosphor-icons/react';
 import React, { type FC, useState } from 'react';
 import { type Step } from 'react-joyride';
 
+import { faker } from '@dxos/random';
 import { Button } from '@dxos/react-ui';
 import { type Meta, withTheme } from '@dxos/storybook-utils';
 

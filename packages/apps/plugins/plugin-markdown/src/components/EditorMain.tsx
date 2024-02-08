@@ -2,110 +2,103 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, {
-  type HTMLAttributes,
-  type RefCallback,
-  useRef,
-  type PropsWithChildren,
-  type MutableRefObject,
-} from 'react';
+import React, { type HTMLAttributes, useMemo, useEffect } from 'react';
 
 import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
-import { Main, useTranslation } from '@dxos/react-ui';
-import { type TextEditorProps, type EditorView, MarkdownEditor, setFocus } from '@dxos/react-ui-editor';
+import { useTranslation } from '@dxos/react-ui';
 import {
-  baseSurface,
-  focusRing,
-  inputSurface,
-  mx,
-  surfaceElevation,
-  textBlockWidth,
-  topbarBlockPaddingStart,
-} from '@dxos/react-ui-theme';
+  type TextEditorProps,
+  type Comment,
+  MarkdownEditor,
+  Toolbar,
+  focusComment,
+  useComments,
+  useEditorView,
+  useActionHandler,
+  useFormattingState,
+} from '@dxos/react-ui-editor';
+import { focusRing, attentionSurface, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
 import { MARKDOWN_PLUGIN } from '../meta';
 
-// TODO(burdon): Don't export ref.
 export type EditorMainProps = {
-  editorRefCb?: RefCallback<EditorView>;
-} & Pick<TextEditorProps, 'model' | 'readonly' | 'comments' | 'extensions' | 'editorMode'>;
+  comments?: Comment[];
+  toolbar?: boolean;
+} & Pick<TextEditorProps, 'model' | 'readonly' | 'extensions'>;
 
-export const EditorMain = ({ editorRefCb, ...props }: EditorMainProps) => {
+const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
 
-  // TODO(burdon): Reconcile refs.
-  const editorRef = useRef<EditorView>();
-  const setEditorRef: RefCallback<EditorView> = (ref) => {
-    editorRef.current = ref as any;
-    editorRefCb?.(ref);
-  };
+  const [editorRef, editorView] = useEditorView();
+  useComments(editorView, comments);
+  const handleAction = useActionHandler(editorView);
 
+  // Expose editor view for playwright tests.
+  // TODO(wittjosiah): Find a better way to expose this or find a way to limit it to test runs.
+  useEffect(() => {
+    const composer = (window as any).composer;
+    if (composer) {
+      composer.editorView = editorView;
+    }
+  }, [editorView]);
+
+  // Focus comment.
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
     switch (action) {
       case LayoutAction.FOCUS: {
-        const { object } = data;
-        setFocus(editorRef.current!, object);
+        const object = data?.object;
+        if (editorView) {
+          focusComment(editorView, object);
+          return { data: true };
+        }
+        break;
       }
     }
   });
 
+  // Toolbar state.
+  const [formattingState, formattingObserver] = useFormattingState();
+  const extensions = useMemo(() => [...(_extensions ?? []), formattingObserver], [_extensions, formattingObserver]);
+
   return (
-    <MarkdownEditor
-      {...props}
-      ref={setEditorRef}
-      slots={{
-        root: {
-          role: 'none',
-          className: mx(
-            focusRing,
-            inputSurface,
-            surfaceElevation({ elevation: 'group' }),
-            'flex flex-col shrink-0 grow pli-10 m-0.5 py-2',
-            'rounded',
-          ),
-          'data-testid': 'composer.markdownRoot',
-        } as HTMLAttributes<HTMLDivElement>,
-        editor: {
-          placeholder: t('editor placeholder'),
-          theme: {
-            '&, & .cm-scroller': {
-              display: 'flex',
-              flexDirection: 'column',
-              flex: '1 0 auto',
-              inlineSize: '100%',
-            },
-            '& .cm-content': {
-              flex: '1 0 auto',
-              inlineSize: '100%',
-              paddingBlock: '1rem',
-            },
+    <>
+      {toolbar && (
+        <Toolbar.Root
+          onAction={handleAction}
+          state={formattingState}
+          classNames='max-is-[60rem] justify-self-center border-be separator-separator'
+        >
+          <Toolbar.Markdown />
+          <Toolbar.Separator />
+          <Toolbar.Extended />
+        </Toolbar.Root>
+      )}
+      <MarkdownEditor
+        ref={editorRef}
+        autoFocus
+        placeholder={t('editor placeholder')}
+        extensions={extensions}
+        slots={{
+          root: {
+            className: mx(
+              focusRing,
+              'overflow-y-auto overscroll-auto scroll-smooth overflow-anchored after:block after:is-px after:bs-px after:overflow-anchor',
+            ),
+            'data-testid': 'composer.markdownRoot',
+          } as HTMLAttributes<HTMLDivElement>,
+          editor: {
+            className: mx(
+              attentionSurface,
+              textBlockWidth,
+              'is-full min-bs-[calc(100%-2rem)] pli-3 sm:pli-6 md:pli-10 py-4 mbe-[50dvh] border-be md:border-is md:border-ie separator-separator',
+              !toolbar && 'border-bs',
+            ),
           },
-        },
-      }}
-    />
+        }}
+        {...props}
+      />
+    </>
   );
 };
 
-// TODO(burdon): Factor out layout wrappers to be reusable across plugins.
-
-// TODO(wittjosiah): Remove ref.
-export const MainLayout = ({ children }: PropsWithChildren<{ editorRef?: MutableRefObject<EditorView> }>) => {
-  return (
-    <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
-      <div role='none' className={mx(textBlockWidth, 'pli-2')}>
-        <div role='none' className='flex flex-col min-bs-[calc(100dvh-var(--topbar-size))] pb-8'>
-          {children}
-        </div>
-
-        {/* Overscroll area. */}
-        <div role='none' className='bs-[50dvh]' />
-      </div>
-    </Main.Content>
-  );
-};
-
-// Used when the editor is embedded in another context (e.g., iframe) and has no topbar/sidebar/etc.
-// TODO(wittjosiah): What's the difference between this and Section/Card?
-export const EmbeddedLayout = ({ children }: PropsWithChildren<{}>) => {
-  return <Main.Content classNames='min-bs-[100dvh] flex flex-col p-0.5'>{children}</Main.Content>;
-};
+export default EditorMain;

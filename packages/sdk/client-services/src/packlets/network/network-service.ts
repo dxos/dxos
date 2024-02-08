@@ -12,13 +12,17 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 
 export class NetworkServiceImpl implements NetworkService {
-  constructor(private readonly networkManager: NetworkManager, private readonly signalManager: SignalManager) {}
+  constructor(
+    private readonly networkManager: NetworkManager,
+    private readonly signalManager: SignalManager,
+  ) {}
 
   queryStatus() {
     return new Stream<NetworkStatus>(({ next }) => {
       const update = () => {
         next({
           swarm: this.networkManager.connectionState,
+          connectionInfo: this.networkManager.connectionLog?.swarms,
           signaling: this.signalManager.getStatus().map(({ host, state }) => ({ server: host, state })),
         });
       };

@@ -13,7 +13,7 @@ import {
   type Plugin,
   type PluginDefinition,
   parseIntentPlugin,
-  LayoutAction,
+  NavigationAction,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy } from '@dxos/react-client/echo';
@@ -30,12 +30,8 @@ import {
   type StackSettingsProps,
 } from './types';
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[StackType.name] = StackType;
-
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
-  const settings = new LocalStorageStore<StackSettingsProps>(STACK_PLUGIN);
+  const settings = new LocalStorageStore<StackSettingsProps>(STACK_PLUGIN, { separation: true });
   const stackState: StackState = deepSignal({ creators: [] });
 
   return {
@@ -99,7 +95,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
                   data: { target: parent.data },
                 },
                 {
-                  action: LayoutAction.ACTIVATE,
+                  action: NavigationAction.ACTIVATE,
                 },
               ]),
             properties: {
@@ -127,7 +123,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case StackAction.CREATE: {
-              return { object: new StackType() };
+              return { data: new StackType() };
             }
           }
         },

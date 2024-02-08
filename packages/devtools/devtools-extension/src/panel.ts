@@ -6,7 +6,7 @@ import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
 
-import { waitForDXOS } from './utils';
+import { waitForClientHook } from './dxos-hook';
 
 log('Initialize panel starting...');
 
@@ -26,7 +26,7 @@ window.addEventListener('message', async (event) => {
 
   if (message.data === 'open-rpc') {
     log('Opening RPC Server...');
-    await waitForDXOS();
+    await waitForClientHook();
     await browser.devtools.inspectedWindow.eval('window.__DXOS__.openClientRpcServer()');
     sandbox.contentWindow?.postMessage({ data: 'open-rpc', source: 'panel' }, '*');
     return;

@@ -14,7 +14,7 @@ import { Layout, PageNumber, Pager, StartButton } from './Presenter';
 import { PRESENTER_PLUGIN } from '../meta';
 import { PresenterContext } from '../types';
 
-export const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
+const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
   const [slide, setSlide] = useState(0);
 
   // TODO(burdon): Should not depend on split screen.
@@ -32,8 +32,8 @@ export const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
         data: { state: running },
       },
       {
-        action: LayoutAction.TOGGLE_FULLSCREEN,
-        data: { state: running },
+        action: LayoutAction.SET_LAYOUT,
+        data: { element: 'fullscreen', state: running },
       },
     ]);
   };
@@ -53,8 +53,11 @@ export const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
           />
         }
       >
-        <Surface role='slide' data={{ slide: stack.sections[slide].object }} />
+        {/* TODO(wittjosiah): Better slide placeholder. */}
+        <Surface role='slide' data={{ slide: stack.sections[slide].object }} placeholder={<></>} />
       </Layout>
     </Main.Content>
   );
 };
+
+export default PresenterMain;

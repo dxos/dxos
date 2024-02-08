@@ -12,6 +12,7 @@ import { type LogFilter, parseFilter, log } from '@dxos/log';
 import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
 import { type ServiceBundle } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
+import { trace } from '@dxos/tracing';
 
 import { ClientServicesProxy } from './service-proxy';
 import { LOCK_KEY } from '../lock-key';
@@ -19,20 +20,8 @@ import { LOCK_KEY } from '../lock-key';
 /**
  * Creates services provider connected via worker.
  */
-export const fromWorker = async (
-  config: Config = new Config(),
-  options: Omit<WorkerClientServicesParams, 'config' | 'createWorker'> = {},
-) => {
-  return new WorkerClientServices({
-    config,
-    createWorker: () =>
-      new SharedWorker(new URL('./worker/shared-worker', import.meta.url), {
-        type: 'module',
-        name: 'dxos-client-worker',
-      }),
-    ...options,
-  });
-};
+export const fromWorker = async (config: Config = new Config(), options: Omit<WorkerClientServicesParams, 'config'>) =>
+  new WorkerClientServices({ config, ...options });
 
 export type WorkerClientServicesParams = {
   config: Config;
@@ -43,11 +32,14 @@ export type WorkerClientServicesParams = {
 /**
  * Proxy to host client service in worker.
  */
+@trace.resource()
 export class WorkerClientServices implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
   readonly joinedSpace = new Event<PublicKey>();
 
+  @trace.info()
   private _isOpen = false;
+
   private readonly _config: Config;
   private readonly _createWorker: () => SharedWorker;
   private readonly _logFilter: LogFilter[];
@@ -114,16 +106,16 @@ export class WorkerClientServices implements ClientServicesProvider {
     this._loggingStream.subscribe((entry) => {
       switch (entry.level) {
         case LogLevel.DEBUG:
-          log.debug(`[vault] ${entry.message}`, entry.context);
+          log.debug(`[worker] ${entry.message}`, entry.context);
           break;
         case LogLevel.INFO:
-          log.info(`[vault] ${entry.message}`, entry.context);
+          log.info(`[worker] ${entry.message}`, entry.context);
           break;
         case LogLevel.WARN:
-          log.warn(`[vault] ${entry.message}`, entry.context);
+          log.warn(`[worker] ${entry.message}`, entry.context);
           break;
         case LogLevel.ERROR:
-          log.error(`[vault] ${entry.message}`, entry.context);
+          log.error(`[worker] ${entry.message}`, entry.context);
           break;
       }
     });

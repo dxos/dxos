@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "0.3.10",
+  "version": "0.4.3",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -61,6 +61,12 @@
       "import": "./dist/lib/browser/testing/index.mjs",
       "require": "./dist/lib/node/testing/index.cjs",
       "node": "./dist/lib/node/testing/index.cjs"
+    },
+    "./worker": {
+      "browser": "./dist/lib/browser/worker/index.mjs",
+      "import": "./dist/lib/browser/worker/index.mjs",
+      "require": "./dist/lib/node/worker/index.cjs",
+      "node": "./dist/lib/node/worker/index.cjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -89,6 +95,9 @@
       ],
       "testing": [
         "dist/types/src/testing/index.d.ts"
+      ],
+      "worker": [
+        "dist/types/src/worker/index.d.ts"
       ]
     }
   },
@@ -121,6 +130,7 @@
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/timeframe": "workspace:*",
+    "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
     "base-x": "~3.0.9",

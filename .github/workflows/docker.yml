@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       # TODO(nf): share pnpm cache with main.yml?
       - name: Set variables
         shell: bash
@@ -71,6 +71,9 @@ jobs:
             type=ref,event=pr
             type=sha
             type=semver,pattern={{version}},value=${{ env.DX_VERSION }}
+          labels: |
+            org.opencontainers.image.title=DXOS Agent
+            org.opencontainers.image.description=The DXOS Agent provides offline backup and synchronization capabilities.
       - name: Docker meta for composer
         id: composer-meta
         uses: docker/metadata-action@v5
@@ -84,12 +87,20 @@ jobs:
             type=ref,event=pr
             type=sha
             type=semver,pattern={{version}},value=${{ env.DX_VERSION }}
+          labels: |
+            org.opencontainers.image.title=DXOS Composer
+            org.opencontainers.image.description=DXOS Composer
       - name: Build and push agent
         uses: docker/build-push-action@v5
         with:
+          context: .
           push: true
           target: agent
           tags: ${{ steps.agent-meta.outputs.tags }}
+          labels: ${{ steps.agent-meta.outputs.labels }}
+          annotations: ${{ steps.agent-meta.outputs.annotations }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             DX_ENVIRONMENT=${{ env.DX_ENVIRONMENT }}
             DX_VERSION=${{ env.DX_VERSION }}
@@ -97,14 +108,22 @@ jobs:
             DX_IPDATA_API_KEY=${{ secrets.IPDATA_API_KEY }}
             DX_SENTRY_DESTINATION=${{ secrets.CLI_SENTRY_DESTINATION }}
             DX_TELEMETRY_API_KEY=${{ secrets.CLI_SEGMENT_API_KEY }}
+            DX_DATADOG_API_KEY=${{ secrets.DATADOG_API_KEY }}
+            DX_DATADOG_APP_KEY=${{ secrets.DATADOG_APP_KEY }}
+            DX_DATADOG_PROXY=${{ secrets.DX_DATADOG_PROXY }}
             COMPOSER_DX_SENTRY_DESTINATION=${{ secrets.COMPOSER_APP_SENTRY_DESTINATION }}
             COMPOSER_DX_TELEMETRY_API_KEY=${{ secrets.COMPOSER_APP_SEGMENT_API_KEY }}
       - name: Build and push composer
         uses: docker/build-push-action@v5
         with:
+          context: .
           push: true
           target: composer-app
           tags: ${{ steps.composer-meta.outputs.tags }}
+          labels: ${{ steps.composer-meta.outputs.labels }}
+          annotations: ${{ steps.composer-meta.outputs.annotations }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             DX_ENVIRONMENT=${{ env.DX_ENVIRONMENT }}
             DX_VERSION=${{ env.DX_VERSION }}
@@ -112,11 +131,14 @@ jobs:
             DX_IPDATA_API_KEY=${{ secrets.IPDATA_API_KEY }}
             DX_SENTRY_DESTINATION=${{ secrets.CLI_SENTRY_DESTINATION }}
             DX_TELEMETRY_API_KEY=${{ secrets.CLI_SEGMENT_API_KEY }}
+            DX_DATADOG_API_KEY=${{ secrets.DATADOG_API_KEY }}
+            DX_DATADOG_APP_KEY=${{ secrets.DATADOG_APP_KEY }}
+            DX_DATADOG_PROXY=${{ secrets.DX_DATADOG_PROXY }}
             COMPOSER_DX_SENTRY_DESTINATION=${{ secrets.COMPOSER_APP_SENTRY_DESTINATION }}
             COMPOSER_DX_TELEMETRY_API_KEY=${{ secrets.COMPOSER_APP_SEGMENT_API_KEY }}
       - name: Update composer Docker Hub repo description
         if: github.ref_name == 'main' || github.ref_name == 'nf/agent-docker'
-        uses: peter-evans/dockerhub-description@v3
+        uses: peter-evans/dockerhub-description@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -124,11 +146,18 @@ jobs:
           short-description: Composer is a tool for collaboration powered by the DXOS developer platform.
           readme-filepath: packages/apps/composer-app/README.md
       - name: Update agent Docker Hub repo description
-        if: github.ref_name == 'main'
-        uses: peter-evans/dockerhub-description@v3
+        if: github.ref_name == 'main' || github.ref_name == 'nf/agent-docker'
+        uses: peter-evans/dockerhub-description@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: dxos/agent
           short-description: DXOS Agent provides offline backup and synchronization capabilities for DXOS applications.
           readme-filepath: packages/devtools/cli/README-docker.md
+      - name: Write summary
+        run: |-
+          echo "# Build successful" >> $GITHUB_STEP_SUMMARY
+          echo "Container version: ${{ env.DX_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "Agent tags: ${{ steps.agent-meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "Composer tags: ${{ steps.composer-meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "Time complete: $(date)" >> $GITHUB_STEP_SUMMARY

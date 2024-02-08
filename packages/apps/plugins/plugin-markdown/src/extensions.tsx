@@ -2,68 +2,69 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowSquareOut } from '@phosphor-icons/react';
+import { ArrowSquareDown, ArrowSquareOut, type Icon } from '@phosphor-icons/react';
 import React, { type AnchorHTMLAttributes, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { ThreadAction } from '@braneframe/plugin-thread';
-import { Document as DocumentType, Thread as ThreadType } from '@braneframe/types';
-import { type IntentDispatcher, LayoutAction } from '@dxos/app-framework';
+import { Document as DocumentType } from '@braneframe/types';
+import { type IntentDispatcher, NavigationAction } from '@dxos/app-framework';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import {
   type AutocompleteResult,
   type Extension,
-  type ListenerOptions,
+  type LinkOptions,
+  EditorModes,
   autocomplete,
-  comments,
+  code,
+  heading,
+  hr,
   image,
   link,
-  listener,
   table,
   tasklist,
   typewriter,
-  type LinkOptions,
+  formatting,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
+import type { MarkdownSettingsProps } from './types';
+
 export type ExtensionsOptions = {
+  settings?: MarkdownSettingsProps;
   document?: DocumentType;
   debug?: boolean;
   experimental?: boolean;
   dispatch?: IntentDispatcher;
-} & Pick<ListenerOptions, 'onChange'>;
+};
 
 /**
  * Create extension instances for editor.
  */
-export const getExtensions = ({
-  document,
-  debug,
-  experimental,
-  dispatch,
-  onChange,
-}: ExtensionsOptions): Extension[] => {
+export const getExtensions = ({ settings, document, dispatch }: ExtensionsOptions): Extension[] => {
   const space = document ? getSpaceForObject(document) : undefined;
 
   const extensions: Extension[] = [
     //
     // Common.
     //
+    code(),
+    formatting(),
+    heading(),
+    hr(),
     image(),
     table(),
     tasklist(),
   ];
 
   //
-  // Document change listener.
+  // Editor mode.
   //
-  if (onChange) {
-    extensions.push(
-      listener({
-        onChange,
-      }),
-    );
+  if (settings?.editorMode) {
+    const extension = EditorModes[settings.editorMode];
+    if (extension) {
+      extensions.push(extension);
+    }
   }
 
   //
@@ -75,7 +76,7 @@ export const getExtensions = ({
         onHover: onHoverLinkTooltip,
         onRender: onRenderLink((id: string) => {
           void dispatch({
-            action: LayoutAction.ACTIVATE,
+            action: NavigationAction.ACTIVATE,
             data: { id },
           });
         }),
@@ -106,53 +107,14 @@ export const getExtensions = ({
         },
       }),
     );
-
-    //
-    // Comment threads.
-    //
-    if (dispatch && document) {
-      extensions.push(
-        comments({
-          onCreate: (cursor: string) => {
-            // Create comment thread.
-            const thread = space.db.add(new ThreadType({ context: { object: document.id } }));
-            document.comments.push({ thread, cursor });
-            void dispatch([
-              {
-                action: ThreadAction.SELECT,
-                data: { active: thread.id, threads: [{ id: thread.id }] },
-              },
-              {
-                action: LayoutAction.TOGGLE_COMPLEMENTARY_SIDEBAR,
-                data: { state: true },
-              },
-            ]);
-
-            return thread.id;
-          },
-          onSelect: (state) => {
-            const { active, ranges } = state;
-            void dispatch([
-              {
-                action: ThreadAction.SELECT,
-                data: {
-                  active,
-                  threads: ranges?.map(({ id, location }) => ({ id, y: location?.top })) ?? [{ id: active }],
-                },
-              },
-            ]);
-          },
-        }),
-      );
-    }
   }
 
-  if (debug) {
-    const items = localStorage.getItem('dxos.composer.extension.demo');
-    extensions.push(...[items ? typewriter({ items: items!.split(',') }) : undefined].filter(nonNullable));
+  if (settings?.debug) {
+    const items = settings.typewriter ?? '';
+    extensions.push(...[items ? typewriter({ items: items.split(/[,\n]/) }) : undefined].filter(nonNullable));
   }
 
-  if (experimental) {
+  if (settings?.experimental) {
     extensions.push(...[].filter(nonNullable));
   }
 
@@ -176,10 +138,12 @@ const onRenderLink = (onSelectObject: (id: string) => void) => (el: Element, url
         target: '_blank',
       };
 
+  const LinkIcon: Icon = url.startsWith('/') ? ArrowSquareDown : ArrowSquareOut;
+
   createRoot(el).render(
     <StrictMode>
       <a {...options} className={hover}>
-        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 cursor-pointer')} />
+        <LinkIcon weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 cursor-pointer')} />
       </a>
     </StrictMode>,
   );

@@ -8,9 +8,10 @@ import React, { type FC, type MutableRefObject, type PropsWithChildren, useRef, 
 import { type Label } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
 import { Button, Dialog, DropdownMenu, ContextMenu, Tooltip, useTranslation } from '@dxos/react-ui';
-import { type MosaicActiveType } from '@dxos/react-ui-mosaic';
+import { type MosaicActiveType, useMosaic } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { descriptionText, getSize, hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
+import { getHostPlatform } from '@dxos/util';
 
 import { translationKey } from '../translations';
 import type { TreeNodeAction } from '../types';
@@ -73,30 +74,32 @@ export const NavTreeItemActionDropdownMenu = ({
       <DropdownMenu.Portal>
         <DropdownMenu.Content classNames='z-[31]'>
           <DropdownMenu.Viewport>
-            {actions?.map((action) => (
-              <DropdownMenu.Item
-                key={action.id}
-                onClick={(event) => {
-                  if (action.properties.disabled) {
-                    return;
-                  }
-                  event.stopPropagation();
-                  // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
-                  suppressNextTooltip.current = true;
-                  setOptionsMenuOpen(false);
-                  onAction?.(action);
-                }}
-                classNames='gap-2'
-                disabled={action.properties.disabled}
-                {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-              >
-                {action.icon && <action.icon className={mx(getSize(4), 'shrink-0')} />}
-                <span className='grow truncate'>{getLabel(action.label)}</span>
-                {action.keyBinding && (
-                  <span className={mx('shrink-0', descriptionText)}>{keySymbols(action.keyBinding).join('')}</span>
-                )}
-              </DropdownMenu.Item>
-            ))}
+            {actions?.map((action) => {
+              const shortcut =
+                typeof action.keyBinding === 'string' ? action.keyBinding : action.keyBinding?.[getHostPlatform()];
+              return (
+                <DropdownMenu.Item
+                  key={action.id}
+                  onClick={(event) => {
+                    if (action.properties.disabled) {
+                      return;
+                    }
+                    event.stopPropagation();
+                    // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
+                    suppressNextTooltip.current = true;
+                    setOptionsMenuOpen(false);
+                    onAction?.(action);
+                  }}
+                  classNames='gap-2'
+                  disabled={action.properties.disabled}
+                  {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
+                >
+                  {action.icon && <action.icon className={mx(getSize(4), 'shrink-0')} />}
+                  <span className='grow truncate'>{getLabel(action.label)}</span>
+                  {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
+                </DropdownMenu.Item>
+              );
+            })}
           </DropdownMenu.Viewport>
           <DropdownMenu.Arrow />
         </DropdownMenu.Content>
@@ -118,34 +121,38 @@ const NavTreeItemActionContextMenuImpl = ({
 }: PropsWithChildren<Pick<NavTreeItemActionProps, 'actions' | 'onAction'>>) => {
   const { t } = useTranslation(translationKey);
   const getLabel = (label: Label) => (Array.isArray(label) ? t(...label) : label);
+  const { activeItem } = useMosaic();
 
   return (
     <ContextMenu.Root>
       <ContextMenu.Trigger asChild>{children}</ContextMenu.Trigger>
       <ContextMenu.Portal>
-        <ContextMenu.Content classNames='z-[31]'>
+        {/* ContextMenu’s `open` state is not controllable, so if it happens to be/become open during dragging, the best we can do is hide it. */}
+        <ContextMenu.Content classNames={mx('z-[31]', activeItem && 'hidden')}>
           <ContextMenu.Viewport>
-            {actions?.map((action) => (
-              <ContextMenu.Item
-                key={action.id}
-                onClick={(event) => {
-                  if (action.properties.disabled) {
-                    return;
-                  }
-                  event.stopPropagation();
-                  onAction?.(action);
-                }}
-                classNames='gap-2'
-                disabled={action.properties.disabled}
-                {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-              >
-                {action.icon && <action.icon className={mx(getSize(4), 'shrink-0')} />}
-                <span className='grow truncate'>{getLabel(action.label)}</span>
-                {action.keyBinding && (
-                  <span className={mx('shrink-0', descriptionText)}>{keySymbols(action.keyBinding).join('')}</span>
-                )}
-              </ContextMenu.Item>
-            ))}
+            {actions?.map((action) => {
+              const shortcut =
+                typeof action.keyBinding === 'string' ? action.keyBinding : action.keyBinding?.[getHostPlatform()];
+              return (
+                <ContextMenu.Item
+                  key={action.id}
+                  onClick={(event) => {
+                    if (action.properties.disabled) {
+                      return;
+                    }
+                    event.stopPropagation();
+                    onAction?.(action);
+                  }}
+                  classNames='gap-2'
+                  disabled={action.properties.disabled}
+                  {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
+                >
+                  {action.icon && <action.icon className={mx(getSize(4), 'shrink-0')} />}
+                  <span className='grow truncate'>{getLabel(action.label)}</span>
+                  {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
+                </ContextMenu.Item>
+              );
+            })}
           </ContextMenu.Viewport>
           <ContextMenu.Arrow />
         </ContextMenu.Content>
@@ -227,9 +234,11 @@ export const NavTreeItemActionSearchList = ({
           <Dialog.Content classNames={['z-[31] is-full max-is-[24rem] px-2 py-1']}>
             <SearchList.Root label={t('tree item searchlist input placeholder')}>
               <SearchList.Input placeholder={t('tree item searchlist input placeholder')} classNames={mx('px-3')} />
-              <SearchList.Content classNames={['min-bs-[12rem] bs-[50dvh] max-bs-[20rem] overflow-auto']}>
+              <SearchList.Content classNames={['min-bs-[12rem] bs-[50dvh] max-bs-[30rem] overflow-auto']}>
                 {sortedActions?.map((action) => {
                   const label = getLabel(action.label);
+                  const shortcut =
+                    typeof action.keyBinding === 'string' ? action.keyBinding : action.keyBinding?.[getHostPlatform()];
                   return (
                     <SearchList.Item
                       value={label}
@@ -249,10 +258,8 @@ export const NavTreeItemActionSearchList = ({
                     >
                       {action.icon && <action.icon className={mx(getSize(4), 'shrink-0')} />}
                       <span className='grow truncate'>{label}</span>
-                      {action.keyBinding && (
-                        <span className={mx('shrink-0', descriptionText)}>
-                          {keySymbols(action.keyBinding).join('')}
-                        </span>
+                      {shortcut && (
+                        <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>
                       )}
                     </SearchList.Item>
                   );

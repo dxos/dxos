@@ -5,12 +5,11 @@
 import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { type Config, type ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
-import { isNode } from '@dxos/util';
 
 import { fromHost } from './local-client-services';
 import { fromSocket } from './socket';
 import { fromIFrame } from './utils';
-import { fromWorker } from './worker-client-services';
+import { type WorkerClientServicesParams, fromWorker } from './worker-client-services';
 
 // TODO(wittjosiah): Factor out to @dxos/config.
 export const Remote = (target: string | undefined): Partial<ConfigProto> => {
@@ -39,7 +38,10 @@ export const Remote = (target: string | undefined): Partial<ConfigProto> => {
 /**
  * Create services from config.
  */
-export const createClientServices = (config: Config): Promise<ClientServicesProvider> => {
+export const createClientServices = (
+  config: Config,
+  createWorker?: WorkerClientServicesParams['createWorker'],
+): Promise<ClientServicesProvider> => {
   const remote = config.values.runtime?.client?.remoteSource;
 
   if (remote) {
@@ -59,5 +61,5 @@ export const createClientServices = (config: Config): Promise<ClientServicesProv
     }
   }
 
-  return config.get('runtime.app.env.DX_HOST') || isNode() ? fromHost(config) : fromWorker(config);
+  return createWorker && typeof SharedWorker !== 'undefined' ? fromWorker(config, { createWorker }) : fromHost(config);
 };

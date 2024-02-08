@@ -9,15 +9,10 @@ import { type ItemID } from '@dxos/protocols';
 import { TextModel } from '@dxos/text-model';
 import { stripUndefinedValues } from '@dxos/util';
 
+import { getGlobalAutomergePreference } from './automerge-preference';
 import { type EchoDatabase } from './database';
-import {
-  base,
-  type EchoObject,
-  LEGACY_TEXT_TYPE,
-  TextObject,
-  TypedObject,
-  getGlobalAutomergePreference,
-} from './object';
+import { base, type EchoObject, LEGACY_TEXT_TYPE, TextObject, TypedObject, isAutomergeObject } from './object';
+import { AbstractEchoObject } from './object/object';
 import { Filter } from './query';
 
 /**
@@ -144,21 +139,13 @@ export class Serializer {
       invariant(data.field);
       obj = new TextObject(data[data.field], data.kind, data.field);
     } else {
-      let typeRef: Reference | undefined;
-      if (typeof type === 'object' && type !== null) {
-        typeRef = new Reference(type.itemId, type.protocol, type.host);
-      } else if (typeof type === 'string') {
-        // TODO(mykola): Never reached?
-        typeRef = Reference.fromLegacyTypename(type);
-      }
-
       obj = new TypedObject(Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@'))), {
         meta,
-        type: typeRef,
+        type: getTypeRef(type),
       });
     }
 
-    obj[base]._id = id;
+    setObjectId(obj, id);
     database.add(obj);
     if (deleted) {
       // Note: We support "soft" deletion. This is why adding and removing the object is not equal to no-op.
@@ -167,3 +154,24 @@ export class Serializer {
     await database.flush();
   }
 }
+
+export const getTypeRef = (type?: SerializedReference | string): Reference | undefined => {
+  if (typeof type === 'object' && type !== null) {
+    return new Reference(type.itemId, type.protocol, type.host);
+  } else if (typeof type === 'string') {
+    // TODO(mykola): Never reached?
+    return Reference.fromLegacyTypename(type);
+  }
+};
+
+/**
+ * Works with both automerge and legacy objects.
+ */
+const setObjectId = (obj: EchoObject, id: string) => {
+  if (isAutomergeObject(obj)) {
+    obj[base]._core.id = id;
+  } else {
+    invariant(obj[base] instanceof AbstractEchoObject);
+    obj[base]._id = id;
+  }
+};

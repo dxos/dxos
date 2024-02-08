@@ -7,17 +7,13 @@ import React from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder } from '@braneframe/types';
-import { resolvePlugin, parseIntentPlugin, LayoutAction, type PluginDefinition } from '@dxos/app-framework';
+import { resolvePlugin, parseIntentPlugin, NavigationAction, type PluginDefinition } from '@dxos/app-framework';
 import { Expando, SpaceProxy } from '@dxos/react-client/echo';
 
 import { TemplateMain } from './components';
 import meta, { TEMPLATE_PLUGIN } from './meta';
 import translations from './translations';
 import { TemplateAction, type TemplatePluginProvides, isObject } from './types';
-
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[Expando.name] = Expando;
 
 const typename = 'template'; // Type.schema.typename
 
@@ -58,7 +54,7 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
                   data: { target: parent.data },
                 },
                 {
-                  action: LayoutAction.ACTIVATE,
+                  action: NavigationAction.ACTIVATE,
                 },
               ]),
             properties: {
@@ -83,7 +79,7 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
           switch (intent.action) {
             case TemplateAction.CREATE: {
               // TODO(burdon): Set typename.
-              return { object: new Expando({ type: 'template' }) };
+              return { data: new Expando({ type: 'template' }) };
             }
           }
         },

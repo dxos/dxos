@@ -3,13 +3,13 @@
 //
 
 import { ArrowSquareOut, FileArrowDown, FileArrowUp, Link, LinkBreak } from '@phosphor-icons/react';
-import React, { type RefObject, useCallback } from 'react';
+import React, { useCallback } from 'react';
 
 import { type MarkdownProperties } from '@braneframe/plugin-markdown';
 import { LayoutAction, useIntent } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { DropdownMenu, useTranslation } from '@dxos/react-ui';
-import { type EditorModel, type EditorView } from '@dxos/react-ui-editor';
+import { type EditorModel } from '@dxos/react-ui-editor';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { useOctokitContext } from './GithubApiProviders';
@@ -18,15 +18,7 @@ import { GITHUB_PLUGIN } from '../meta';
 import { type GhIssueIdentifier } from '../types';
 
 // TODO(burdon): Where do "properties" come from? Is this the graph node datum?
-export const MarkdownActions = ({
-  model,
-  properties,
-  editorRef,
-}: {
-  model: EditorModel;
-  properties: MarkdownProperties;
-  editorRef: RefObject<EditorView>;
-}) => {
+export const MarkdownActions = ({ model, properties }: { model: EditorModel; properties: MarkdownProperties }) => {
   // TODO(burdon): Ad hoc assumption that underlying object is ECHO?
   const ghId = properties.__meta?.keys?.find((key) => key.source === 'github.com')?.id;
   const { octokit } = useOctokitContext();
@@ -52,8 +44,9 @@ export const MarkdownActions = ({
           data: { html_url: issueUrl },
         } = await updateIssueContent();
         await dispatch({
-          action: LayoutAction.OPEN_DIALOG,
+          action: LayoutAction.SET_LAYOUT,
           data: {
+            element: 'dialog',
             component: 'dxos.org/plugin/github/ExportDialog',
             subject: { type: 'response', target: issueUrl, model, docGhId },
           },
@@ -71,8 +64,9 @@ export const MarkdownActions = ({
       void exportGhIssueContent();
     } else if ('path' in docGhId!) {
       void dispatch({
-        action: LayoutAction.OPEN_DIALOG,
+        action: LayoutAction.SET_LAYOUT,
         data: {
+          element: 'dialog',
           component: 'dxos.org/plugin/github/ExportDialog',
           subject: { type: 'create-pr', model, docGhId },
         },
@@ -91,8 +85,8 @@ export const MarkdownActions = ({
             onClick={() =>
               // TODO(burdon): Intent should return content value from dialog.
               dispatch({
-                action: LayoutAction.OPEN_DIALOG,
-                data: { component: 'dxos.org/plugin/github/ImportDialog', subject: { docGhId, editorRef } },
+                action: LayoutAction.SET_LAYOUT,
+                data: { element: 'dialog', component: 'dxos.org/plugin/github/ImportDialog', subject: { docGhId } },
               })
             }
           >
@@ -127,8 +121,8 @@ export const MarkdownActions = ({
           classNames='gap-2'
           onClick={() =>
             dispatch({
-              action: LayoutAction.OPEN_DIALOG,
-              data: { component: 'dxos.org/plugin/github/BindDialog', subject: properties },
+              action: LayoutAction.SET_LAYOUT,
+              data: { element: 'dialog', component: 'dxos.org/plugin/github/BindDialog', subject: properties },
             })
           }
         >

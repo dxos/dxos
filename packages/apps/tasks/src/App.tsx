@@ -98,10 +98,18 @@ const router = createBrowserRouter([
   },
 ]);
 
+const createWorker = () =>
+  new SharedWorker(new URL('./shared-worker', import.meta.url), {
+    type: 'module',
+    name: 'dxos-client-worker',
+  });
+
 export const App = () => {
   return (
     <ClientProvider
       config={getConfig}
+      createWorker={createWorker}
+      shell='./shell.html'
       onInitialized={async (client) => {
         // TODO(wittjosiah): ClientProvider should support adding schemas.
         client.addSchema(types);

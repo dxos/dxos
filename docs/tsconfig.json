@@ -10,6 +10,7 @@
     "types": [
       "@vuepress/client/types",
       "node",
+      "sharedworker",
       "vite/client"
     ]
   },
@@ -30,9 +31,6 @@
       "path": "../packages/common/log"
     },
     {
-      "path": "../packages/common/telemetry"
-    },
-    {
       "path": "../packages/core/echo/echo-schema"
     },
     {
@@ -51,13 +49,13 @@
       "path": "../packages/sdk/examples"
     },
     {
+      "path": "../packages/sdk/observability"
+    },
+    {
       "path": "../packages/sdk/react-client"
     },
     {
       "path": "../packages/sdk/shell"
-    },
-    {
-      "path": "../packages/ui/react-appkit"
     },
     {
       "path": "../packages/ui/react-ui"

@@ -9,9 +9,23 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { runPlan, type RunPlanParams, readYAMLSpecFile, type TestPlan, runAgentForPlan } from './plan';
-import { ReplicationTestPlan, EmptyTestPlan, SignalTestPlan, TransportTestPlan, EchoTestPlan } from './spec';
-import { AutomergeTestPlan } from './spec/automerge';
+import {
+  runPlan,
+  type RunPlanParams,
+  readYAMLSpecFile,
+  type TestPlan,
+  runAgentForPlan,
+  type PlanOptions,
+} from './plan';
+import {
+  ReplicationTestPlan,
+  EmptyTestPlan,
+  SignalTestPlan,
+  TransportTestPlan,
+  EchoTestPlan,
+  AutomergeTestPlan,
+  StorageTestPlan,
+} from './spec';
 
 // eslint-disable-next-line unused-imports/no-unused-vars
 const DXOS_REPO = process.env.DXOS_REPO;
@@ -22,6 +36,7 @@ const plans: { [key: string]: () => TestPlan<any, any> } = {
   echo: () => new EchoTestPlan(),
   replication: () => new ReplicationTestPlan(),
   automerge: () => new AutomergeTestPlan(),
+  storage: () => new StorageTestPlan(),
   empty: () => new EmptyTestPlan(),
 };
 
@@ -62,6 +77,7 @@ const start = async () => {
       },
       staggerAgents: { type: 'number', default: 1000, describe: 'stagger agent start time (ms)' },
       profile: { type: 'boolean', default: false, describe: 'run the node profile for agents' },
+      headless: { type: 'boolean', default: true, describe: 'run browser agents in headless browsers' },
     })
     .demandCommand(1, `need to provide name of test to run\navailable tests: ${Object.keys(plans).join(', ')}`)
     .help().argv;
@@ -77,11 +93,12 @@ const start = async () => {
     return;
   }
 
-  const options = {
+  const options: PlanOptions = {
     staggerAgents: argv.staggerAgents,
     randomSeed: PublicKey.random().toHex(),
     repeatAnalysis: argv.repeatAnalysis,
     profile: argv.profile,
+    headless: argv.headless,
   };
 
   if (options.repeatAnalysis) {

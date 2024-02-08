@@ -4,12 +4,12 @@
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type Filter } from './filter';
 import { type EchoObject, type TypedObject } from '../object';
-import { compositeRuntime } from '../util';
 
 // TODO(burdon): Reconcile with echo-db/database/selection.
 
@@ -101,7 +101,10 @@ export class Query<T extends TypedObject = TypedObject> {
   private _resultCache: QueryResult<T>[] | undefined = undefined;
   private _objectCache: T[] | undefined = undefined;
 
-  constructor(private readonly _queryContext: QueryContext, filter: Filter) {
+  constructor(
+    private readonly _queryContext: QueryContext,
+    filter: Filter,
+  ) {
     this._filter = filter;
 
     this._queryContext.added.on((source) => {

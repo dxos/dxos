@@ -19,9 +19,6 @@
   ],
   "references": [
     {
-      "path": "../../apps/plugins/plugin-telemetry"
-    },
-    {
       "path": "../../apps/types"
     },
     {
@@ -41,9 +38,6 @@
     },
     {
       "path": "../../common/react-async"
-    },
-    {
-      "path": "../../common/sentry"
     },
     {
       "path": "../../common/timeframe"
@@ -80,6 +74,9 @@
     },
     {
       "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/observability"
     },
     {
       "path": "../../sdk/react-client"

@@ -2,26 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React from 'react';
 
 import { type Plugin, Surface, usePlugins } from '@dxos/app-framework';
 import { Button, Dialog, List, ListItem, useTranslation } from '@dxos/react-ui';
-import { ghostHover, ghostSelected, groupBorder, mx } from '@dxos/react-ui-theme';
+import { ghostHover, ghostSelected } from '@dxos/react-ui-theme';
 
 import { SETTINGS_PLUGIN } from '../meta';
 
-// TODO(burdon): Move into separate plugin.
-export const SettingsDialogContent = () => {
+export const SettingsDialog = ({ plugin, setPlugin }: { plugin: string; setPlugin: (plugin: string) => void }) => {
   const { t } = useTranslation(SETTINGS_PLUGIN);
-
-  // TODO(burdon): Store preview tab.
-  const [plugin, setPlugin] = useState<string>('dxos.org/plugin/registry');
   const { plugins, enabled } = usePlugins();
 
   const core = [
     'dxos.org/plugin/layout',
-    'dxos.org/plugin/client',
     'dxos.org/plugin/space',
+    'dxos.org/plugin/observability',
     'dxos.org/plugin/registry',
   ];
 
@@ -36,8 +32,8 @@ export const SettingsDialogContent = () => {
     <Dialog.Content classNames={['h-full md:max-is-[40rem] overflow-hidden']}>
       <Dialog.Title>{t('settings dialog title')}</Dialog.Title>
 
-      <div className='flex grow mlb-4 overflow-hidden'>
-        <div className={mx('flex flex-col w-[200px] space-y-4 pr-4 border-r overflow-y-auto', groupBorder)}>
+      <div className='grow mlb-4 overflow-hidden grid grid-cols-[minmax(min-content,1fr)_3fr] gap-1'>
+        <div className='flex flex-col p-1 gap-4 surface-input rounded place-self-start max-bs-[100%] is-full overflow-y-auto'>
           <PluginList
             title='Options'
             plugins={core.map((id) => plugins.find((p) => p.meta.id === id)!.meta)}
@@ -53,7 +49,7 @@ export const SettingsDialogContent = () => {
           />
         </div>
 
-        <div className={mx('flex flex-col w-full md:px-4 divide-y overflow-y-auto', groupBorder)}>
+        <div className='pli-1 md:pli-2 max-bs-[100%] overflow-y-auto'>
           <Surface role='settings' data={{ plugin }} />
         </div>
       </div>
@@ -80,14 +76,14 @@ const PluginList = ({
 }) => {
   return (
     <div role='none'>
-      <h2 className='my-1 px-2 text-sm text-neutral-500'>{title}</h2>
+      <h2 className='mlb-1 pli-2 text-sm text-neutral-500'>{title}</h2>
       <List selectable>
         {plugins.map((plugin) => (
           <ListItem.Root
             key={plugin.id}
             onClick={() => onSelect(plugin.id)}
             selected={plugin.id === selected}
-            classNames={['px-2 rounded', plugin.id === selected && ghostSelected, ghostHover]}
+            classNames={['px-2 rounded-sm', ghostSelected, ghostHover]}
           >
             <ListItem.Heading classNames={['flex w-full items-center cursor-pointer']}>{plugin.name}</ListItem.Heading>
           </ListItem.Root>

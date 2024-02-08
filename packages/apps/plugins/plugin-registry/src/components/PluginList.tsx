@@ -2,34 +2,33 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowSquareOut, Circle } from '@phosphor-icons/react';
+import { /* ArrowSquareOut, */ Circle } from '@phosphor-icons/react';
 import React from 'react';
 
 import type { Plugin } from '@dxos/app-framework';
 import {
-  type ChromaticPalette,
-  type NeutralPalette,
+  // type ChromaticPalette,
+  // type NeutralPalette,
   DensityProvider,
   Input,
   List,
   ListItem,
-  Tag,
   useTranslation,
-  Link,
+  // Link,
 } from '@dxos/react-ui';
 import { descriptionText, fineBlockSize, getSize, ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { REGISTRY_PLUGIN } from '../meta';
 
 // TODO(burdon): Reconcile with theme.
-const palette: { [tag: string]: ChromaticPalette | NeutralPalette } = {
-  default: 'neutral',
-  new: 'green',
-  beta: 'cyan',
-  alpha: 'purple',
-  experimental: 'indigo',
-  新発売: 'red',
-};
+// const palette: { [tag: string]: ChromaticPalette | NeutralPalette } = {
+//   default: 'neutral',
+//   new: 'green',
+//   beta: 'cyan',
+//   alpha: 'purple',
+//   experimental: 'indigo',
+//   新発売: 'red',
+// };
 
 export type PluginListProps = {
   plugins?: Plugin['meta'][];
@@ -44,7 +43,7 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange }
   return (
     <DensityProvider density='fine'>
       <List classNames='select-none'>
-        {plugins.map(({ id, name, description, homePage, tags, iconComponent: Icon = Circle }) => {
+        {plugins.map(({ id, name, description, homePage, tags = [], iconComponent: Icon = Circle }) => {
           const isEnabled = enabled.includes(id);
           const isLoaded = loaded.includes(id);
           const reloadRequired = isEnabled !== isLoaded;
@@ -56,6 +55,7 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange }
             <Input.Root key={id} id={inputId}>
               <ListItem.Root
                 labelId={labelId}
+                data-testid={`pluginList.${id}`}
                 aria-describedby={descriptionId}
                 classNames={['flex gap-2 cursor-pointer plb-2 pli-2 -mli-2 rounded', ghostHover]}
               >
@@ -67,7 +67,8 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange }
                   {(description || reloadRequired || homePage) && (
                     <div id={descriptionId} className='space-b-1 pbs-1 pbe-1'>
                       <p className={descriptionText}>{description}</p>
-                      {homePage && (
+                      {/* TODO(wittjosiah): Include once plugin docs are available. */}
+                      {/* {homePage && (
                         <Link
                           href={homePage}
                           target='_blank'
@@ -78,11 +79,12 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange }
                           {t('home page label')}
                           <ArrowSquareOut weight='bold' className={mx(getSize(3), 'inline-block leading-none mli-1')} />
                         </Link>
-                      )}
+                      )} */}
                       {reloadRequired && <p className='text-sm font-medium'>{t('reload required message')}</p>}
                     </div>
                   )}
-                  {tags?.length && (
+                  {/* TODO(wittjosiah): Tags are too noisy. */}
+                  {/* {tags.length > 0 && (
                     <div className='flex my-1'>
                       {tags.map((tag) => (
                         <Tag key={tag} palette={palette[tag] ?? palette.default}>
@@ -90,7 +92,7 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange }
                         </Tag>
                       ))}
                     </div>
-                  )}
+                  )} */}
                 </div>
                 <div className='pbs-1'>
                   <Input.Switch

@@ -99,17 +99,6 @@ message Script {
 /**
  *
  */
-// TODO(burdon): Remove (change plugin to provide Markdown extension).
-message Mermaid {
-  option (object) = true;
-
-  string title = 1;
-  dxos.schema.Text source = 2;
-}
-
-/**
- *
- */
 message Stack {
   option (object) = true;
 
@@ -255,9 +244,8 @@ message Message {
 
   message Block {
     string timestamp = 1;
-    string text = 2;
-    string data = 3; // JSON.
-    dxos.schema.Expando object = 4; // TODO(burdon): Change to TypedObject.
+    dxos.schema.Text content = 2;
+    dxos.schema.Expando object = 3; // TODO(burdon): Change to TypedObject.
   }
 
   // TODO(burdon): Promote to top-level (shared with Event).
@@ -348,11 +336,14 @@ message Chain {
       RETRIEVER = 2;
       FUNCTION = 3;
       QUERY = 4;
+      RESOLVER = 5;
+      CONTEXT = 6;
+      SCHEMA = 7;
     }
 
     string name = 1;
     Type type = 2;
-    dxos.schema.Text value = 3;
+    dxos.schema.Text value = 3; // TODO(burdon): String?
   }
 
   // TODO(burdon): Bug: Not reactive unless object?
@@ -368,3 +359,9 @@ message Chain {
   string title = 1;
   repeated Prompt prompts = 2;
 }
+
+message Map {
+  option (object) = true;
+
+  string title = 1;
+};

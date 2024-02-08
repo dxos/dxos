@@ -3,30 +3,37 @@
 //
 
 import { closeBrackets } from '@codemirror/autocomplete';
+import { history } from '@codemirror/commands';
 import { bracketMatching, defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
-import { drawSelection, EditorView, placeholder } from '@codemirror/view';
+import { drawSelection, EditorView, highlightActiveLine, placeholder } from '@codemirror/view';
 
-import type { ThemeMode } from '@dxos/react-ui';
+import { type ThemeMode } from '@dxos/react-ui';
+import { isNotFalsy } from '@dxos/util';
+
+import { type TextEditorProps } from '../components';
 
 export type BasicBundleOptions = {
-  readonly?: boolean;
   themeMode?: ThemeMode;
-  placeholder?: string;
-};
+} & Pick<TextEditorProps, 'placeholder' | 'lineWrapping'>;
 
-export const basicBundle = ({ readonly, themeMode, placeholder: _placeholder }: BasicBundleOptions): Extension[] =>
+export const createBasicBundle = ({
+  themeMode,
+  placeholder: _placeholder,
+  lineWrapping = true,
+}: BasicBundleOptions = {}): Extension[] =>
   [
-    EditorView.lineWrapping,
+    lineWrapping && EditorView.lineWrapping,
 
-    // TODO(burdon): Compare with minimalSetup.
     // https://codemirror.net/docs/ref/#codemirror.minimalSetup
     bracketMatching(),
     closeBrackets(),
     drawSelection(),
+    highlightActiveLine(),
+    history(),
     _placeholder && placeholder(_placeholder),
 
-    // TODO(burdon): Is this required?
+    // https://github.com/codemirror/theme-one-dark
     themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
-  ].filter(Boolean) as Extension[];
+  ].filter(isNotFalsy);

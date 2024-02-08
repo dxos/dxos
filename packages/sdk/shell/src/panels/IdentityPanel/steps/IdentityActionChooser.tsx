@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretRight, Devices, Plus, Power, UserGear } from '@phosphor-icons/react';
+import { CaretRight, Devices, Plus, Power, UserGear, HardDrive } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
 import { useClient } from '@dxos/react-client';
@@ -63,6 +63,11 @@ export const IdentityActionChooserImpl = ({
     <div role='none' className='grow flex flex-col gap-1'>
       <DensityProvider density='coarse'>
         <div className='grow justify-center flex flex-col gap-1'>
+          <Action data-testid='manage-agent' onClick={() => send?.({ type: 'chooseAgent' })} classNames='plb-4'>
+            <HardDrive className={getSize(6)} />
+            <span className='grow mli-3'>Manage Agent</span>
+            <CaretRight weight='bold' className={getSize(4)} />
+          </Action>
           <Action
             disabled={!active}
             data-testid='devices-panel.create-invitation'
@@ -84,9 +89,8 @@ export const IdentityActionChooserImpl = ({
             <CaretRight weight='bold' className={getSize(4)} />
           </Action>
           <Action
-            disabled
-            data-testid='sign-out'
-            onClick={() => {} /* send({ type: 'chooseSignOut' }) */}
+            data-testid='devices-panel.sign-out'
+            onClick={() => send?.({ type: 'chooseSignOut' })}
             classNames='plb-4'
           >
             <Power className={getSize(6)} />

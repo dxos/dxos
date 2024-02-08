@@ -28,7 +28,7 @@ export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>
-                {EditorModes.map((mode) => (
+                {Object.keys(EditorModes).map((mode) => (
                   <Select.Option key={mode} value={mode}>
                     {t(`settings editor mode ${mode} label`)}
                   </Select.Option>
@@ -38,14 +38,34 @@ export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps
           </Select.Portal>
         </Select.Root>
       </SettingsValue>
-      <SettingsValue label={t('settings markdown experimental label')}>
+
+      <SettingsValue label={t('settings toolbar label')}>
+        <Input.Switch checked={settings.toolbar} onCheckedChange={(checked) => (settings.toolbar = !!checked)} />
+      </SettingsValue>
+
+      <SettingsValue
+        label={t('settings debug label')}
+        secondary={
+          settings.debug ? (
+            <Input.Root>
+              <Input.TextArea
+                rows={5}
+                value={settings.typewriter}
+                onChange={({ target: { value } }) => (settings.typewriter = value)}
+                placeholder={t('settings debug placeholder')}
+              />
+            </Input.Root>
+          ) : undefined
+        }
+      >
+        <Input.Switch checked={settings.debug} onCheckedChange={(checked) => (settings.debug = !!checked)} />
+      </SettingsValue>
+
+      <SettingsValue label={t('settings experimental label')}>
         <Input.Switch
           checked={settings.experimental}
           onCheckedChange={(checked) => (settings.experimental = !!checked)}
         />
-      </SettingsValue>
-      <SettingsValue label={t('settings markdown debug label')}>
-        <Input.Switch checked={settings.debug} onCheckedChange={(checked) => (settings.debug = !!checked)} />
       </SettingsValue>
     </>
   );

@@ -2,31 +2,16 @@
 order: 15
 ---
 
-<!-- TODO(wittjosiah): Dedupe with ../typescript/shell.md -->
+# Shell
 
 The shell is a set of components and pre-built workflows for managing [ECHO](../platform) spaces, invitations, and identity.
 
-It runs and renders within an iframe managed by the DXOS client.
-
-The shell can be invoked via the client API.
-
-Scenarios:
-
-*   View and edit the user's basic profile
-*   Invite someone to a space
-*   Accept an invitation to join another space
-*   Join another device to the user's HALO identity
-*   Accept a device invitation to join the current device to an existing HALO identity
-
-The shell appears overtop the calling UI and looks like a full screen dialog panel.
-
-<div class="shell-images" style="display: flex; flex-direction: row; gap: 2em;">
-  <img class="light" src="./images/shell-panel-halo-light.png" alt="Shell profile panel" />
-  <img class="dark" src="./images/shell-panel-halo-dark.png" alt="Shell profile panel" />
-
-  <img class="dark" src="./images/shell-panel-halo-device-invite-dark.png" alt="Shell device invitation panel" />
-  <img class="light" src="./images/shell-panel-halo-device-invite-light.png" alt="Shell device invitation panel" />
+<div class="shell-images">
+  <img class="light" src="../platform/images/shell-light.png" alt="Shell profile panel" />
+  <img class="dark" src="../platform/images/shell-dark.png" alt="Shell profile panel" />
 </div>
+
+[Read more about Shell.](../platform/halo#shell)
 
 ## Installation
 
@@ -54,24 +39,30 @@ export default defineConfig({
 `shell.html`
 
 ```html
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,user-scalable=no"
+    />
     <style>
-      html, body {
+      html,
+      body {
         background: transparent !important;
       }
     </style>
     <script>
       function setTheme(darkMode) {
-        document.documentElement.classList[darkMode ? 'add' : 'remove']('dark')
+        document.documentElement.classList[darkMode ? 'add' : 'remove']('dark');
       }
-      setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches)
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
-        setTheme(e.matches)
-      });
+      setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
+      window
+        .matchMedia('(prefers-color-scheme: dark)')
+        .addEventListener('change', function (e) {
+          setTheme(e.matches);
+        });
     </script>
   </head>
   <body>
@@ -113,7 +104,7 @@ const Component = () => {
     <div
       onClick={async () => {
         // open the profile panel
-        client.shell.open();
+        await client.shell.open();
 
         // join another device using an invitation
         const { identity: id1 } = await client.shell.initializeIdentity({

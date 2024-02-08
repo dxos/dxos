@@ -17,6 +17,7 @@ import {
   performInvitation,
 } from '@dxos/client-services/testing';
 import { invariant } from '@dxos/invariant';
+import { AlreadyJoinedError } from '@dxos/protocols';
 import { ConnectionState, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest, describe, test } from '@dxos/test';
 
@@ -46,6 +47,7 @@ const successfulInvitation = async ({
   expect(guestError).to.be.undefined;
   expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
   expect(guestInvitation?.state).to.eq(Invitation.State.SUCCESS);
+  expect(guestInvitation!.target).to.eq(hostInvitation!.target);
 
   switch (hostInvitation!.kind) {
     case Invitation.Kind.SPACE:
@@ -81,6 +83,14 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
     await successfulInvitation({ host, guest, hostResult, guestResult });
   });
 
+  test('already joined', async () => {
+    const [host, guest] = getPeers();
+    const [hostResult, guestResult] = await Promise.all(performInvitation(getParams()));
+    await successfulInvitation({ host, guest, hostResult, guestResult });
+    const [_, result] = performInvitation(getParams());
+    expect((await result).error).to.be.instanceof(AlreadyJoinedError);
+  });
+
   test('with shared secret', async () => {
     const [host, guest] = getPeers();
     const params = getParams();
@@ -88,6 +98,19 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
       performInvitation({
         ...params,
         options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
+      }),
+    );
+
+    await successfulInvitation({ host, guest, hostResult, guestResult });
+  });
+
+  test('with target', async () => {
+    const [host, guest] = getPeers();
+    const params = getParams();
+    const [hostResult, guestResult] = await Promise.all(
+      performInvitation({
+        ...params,
+        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET, target: 'example' },
       }),
     );
 

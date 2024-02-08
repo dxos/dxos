@@ -48,12 +48,13 @@ export default class Publish extends BaseCommand<typeof Publish> {
       }
     }
 
-    this.addToTelemetryContext({
-      totalBundleSize: moduleConfig.values.package!.modules?.reduce(
-        (sum, { bundle }) => sum + (bundle?.length ?? 0),
-        0,
-      ),
-    });
+    const totalBundleSize = moduleConfig.values.package!.modules?.reduce(
+      (sum, { bundle }) => sum + (bundle?.length ?? 0),
+      0,
+    );
+
+    invariant(totalBundleSize, 'Missing bundle size');
+    this._observability?.setTag('totalBundleSize', totalBundleSize.toString(), 'telemetry');
 
     this.log('Publishing to KUBE...');
     return await this.execWithPublisher(async (publisher: PublisherRpcPeer) => {

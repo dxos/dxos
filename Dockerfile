@@ -7,7 +7,7 @@ ENV NX_DAEMON=false
 ENV NODE_OPTIONS="--max_old_space_size=12288"
 
 RUN npm install -g pnpm@8.9.2
-RUN --mount=type=cache,target=/var/cache/apt --mount=type=cache,target=/var/lib/apt DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y python3 make g++ libxtst-dev libpng++-dev libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y python3 make g++ libxtst-dev libpng++-dev libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
 
 COPY . /app
 WORKDIR /app
@@ -16,6 +16,9 @@ ARG DX_ENVIRONMENT
 ARG DX_IPDATA_API_KEY
 ARG DX_SENTRY_DESTINATION
 ARG DX_TELEMETRY_API_KEY
+ARG DX_DATADOG_API_KEY
+ARG DX_DATADOG_APP_KEY
+ARG DX_DATADOG_PROXY
 ARG DX_COMMIT_HASH
 ARG DX_VERSION
 
@@ -26,6 +29,9 @@ ENV SENTRY_RELEASE=$DX_VERSION
 ENV DX_IPDATA_API_KEY=$DX_IPDATA_API_KEY
 ENV DX_SENTRY_DESTINATION=$DX_SENTRY_DESTINATION
 ENV DX_TELEMETRY_API_KEY=$DX_TELEMETRY_API_KEY
+ENV DX_DATADOG_API_KEY=$DX_DATADOG_API_KEY
+ENV DX_DATADOG_APP_KEY=$DX_DATADOG_APP_KEY
+ENV DX_DATADOG_PROXY=$DX_DATADOG_PROXY
 
 ENV DX_BUILD_ROOT_DIR=/app
 ENV DX_COMMIT_HASH=$DX_COMMIT_HASH

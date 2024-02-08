@@ -189,7 +189,7 @@ export class TestAgent {
         credentialAuthenticator: MOCK_AUTH_VERIFIER,
       },
       memberKey: identityKey,
-      onNetworkConnection: (session) => {
+      onAuthorizedConnection: (session) => {
         session.addExtension(
           'dxos.mesh.teleport.gossip',
           this.createGossip().createExtension({ remotePeerId: session.remotePeerId }),

@@ -4,12 +4,13 @@
 
 import { Event, synchronized } from '@dxos/async';
 import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
-import type { ClientServicesHost, ClientServicesHostParams } from '@dxos/client-services';
+import { type ClientServicesHost, type ClientServicesHostParams } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import type { NetworkManagerOptions } from '@dxos/network-manager';
+import { type NetworkManagerOptions } from '@dxos/network-manager';
 import { type ServiceBundle } from '@dxos/rpc';
+import { trace } from '@dxos/tracing';
 
 /**
  * Creates stand-alone services without rpc.
@@ -63,11 +64,14 @@ const setupNetworking = async (config: Config, options: Partial<NetworkManagerOp
 /**
  * Starts a local instance of the service host.
  */
+@trace.resource()
 export class LocalClientServices implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
   private readonly _ctx = new Context();
   private readonly _params: ClientServicesHostParams;
   private _host?: ClientServicesHost;
+
+  @trace.info()
   private _isOpen = false;
 
   constructor(params: ClientServicesHostParams) {

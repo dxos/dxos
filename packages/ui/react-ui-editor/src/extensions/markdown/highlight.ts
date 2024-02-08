@@ -31,7 +31,6 @@ export const markdownTags = {
   CodeText: Tag.define(),
   EmphasisMark: Tag.define(),
   HeaderMark: Tag.define(),
-  // HorizontalRule: Tag.define(),
   InlineCode: Tag.define(),
   LinkLabel: Tag.define(),
   LinkReference: Tag.define(),
@@ -129,13 +128,13 @@ export const markdownHighlightStyle = (readonly?: boolean) => {
       // Markdown marks.
       {
         tag: [markdownTags.CodeMark, markdownTags.HeaderMark, markdownTags.QuoteMark, markdownTags.EmphasisMark],
-        class: readonly ? 'hidden' : mark,
+        class: mark,
       },
 
       // E.g., code block language (after ```).
       {
         tag: [tags.function(tags.variableName), tags.labelName],
-        class: readonly ? 'hidden' : codeMark,
+        class: codeMark,
       },
 
       {
@@ -144,12 +143,12 @@ export const markdownHighlightStyle = (readonly?: boolean) => {
       },
 
       // Headings.
-      { tag: tags.heading1, class: heading(1, readonly) },
-      { tag: tags.heading2, class: heading(2, readonly) },
-      { tag: tags.heading3, class: heading(3, readonly) },
-      { tag: tags.heading4, class: heading(4, readonly) },
-      { tag: tags.heading5, class: heading(5, readonly) },
-      { tag: tags.heading6, class: heading(6, readonly) },
+      { tag: tags.heading1, class: heading(1) },
+      { tag: tags.heading2, class: heading(2) },
+      { tag: tags.heading3, class: heading(3) },
+      { tag: tags.heading4, class: heading(4) },
+      { tag: tags.heading5, class: heading(5) },
+      { tag: tags.heading6, class: heading(6) },
 
       // Emphasis.
       { tag: tags.emphasis, class: italic },
@@ -166,7 +165,7 @@ export const markdownHighlightStyle = (readonly?: boolean) => {
       // However, since `codeLanguages` is also defined, the `lezer` will not parse fenced code blocks,
       // when a language is specified. In this case, the syntax highlighting extensions will colorize
       // the code, but all other CSS properties will be inherited.
-      // IMPORTANT: Therefore, the fenced code block will use the base editor font.
+      // IMPORTANT: Therefore, the fenced code block will use the base editor font unless changed by an extension.
       {
         tag: [markdownTags.CodeText, markdownTags.InlineCode],
         class: code,
@@ -177,23 +176,10 @@ export const markdownHighlightStyle = (readonly?: boolean) => {
         class: blockquote,
       },
 
-      // TODO(burdon): Replace with extension.
-      // {
-      //   tag: [markdownTags.HorizontalRule],
-      //   class: mx(horizontalRule, readonly && '-indent-[100rem]'),
-      // },
-
-      // TODO(burdon): Only if being edited.
       {
         tag: [markdownTags.TableCell],
         class: 'font-mono',
       },
-
-      // Main content, paragraphs, etc.
-      // {
-      //   tag: [tags.content],
-      //   fontFamily: getToken('fontFamily.body', []).join(','),
-      // },
     ],
     {
       scope: markdownLanguage,

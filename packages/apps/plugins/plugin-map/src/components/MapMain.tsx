@@ -11,12 +11,14 @@ import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxo
 
 import { MapControl } from './MapControl';
 
-export const MapMain: FC<{ map: TypedObject }> = ({ map }) => {
+const MapMain: FC<{ map: TypedObject }> = ({ map }) => {
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
-      <MapContainer className='flex-1 w-full h-screen border-t border-neutral-200 dark:border-neutral-800'>
+      <MapContainer className='flex-1 w-full h-full border-t border-neutral-200 dark:border-neutral-800'>
         <MapControl />
       </MapContainer>
     </Main.Content>
   );
 };
+
+export default MapMain;

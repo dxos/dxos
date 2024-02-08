@@ -5,10 +5,10 @@
 import get from 'lodash.get';
 
 import type { Prop } from '@dxos/automerge/automerge';
-import { next as automerge } from '@dxos/automerge/automerge';
+import { next as A } from '@dxos/automerge/automerge';
 
 import { type IDocHandle } from './defs';
-import { type CursorConverter } from '../../util';
+import { type CursorConverter } from '../cursor';
 
 export const cursorConverter = (handle: IDocHandle, path: Prop[]): CursorConverter => ({
   // TODO(burdon): Handle assoc to associate with a previous character.
@@ -24,8 +24,9 @@ export const cursorConverter = (handle: IDocHandle, path: Prop[]): CursorConvert
     }
 
     // NOTE: Slice is needed because getCursor mutates the array.
-    return automerge.getCursor(doc, path.slice(), pos);
+    return A.getCursor(doc, path.slice(), pos);
   },
+
   fromCursor: (cursor) => {
     if (cursor === '') {
       return 0;
@@ -46,6 +47,6 @@ export const cursorConverter = (handle: IDocHandle, path: Prop[]): CursorConvert
     }
 
     // NOTE: Slice is needed because getCursor mutates the array.
-    return automerge.getCursorPosition(doc, path.slice(), cursor);
+    return A.getCursorPosition(doc, path.slice(), cursor);
   },
 });

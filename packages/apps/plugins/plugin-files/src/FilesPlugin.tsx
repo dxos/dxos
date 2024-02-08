@@ -9,16 +9,17 @@ import localforage from 'localforage';
 import React from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
-import { type MarkdownProvides } from '@braneframe/plugin-markdown';
+import { type MarkdownExtensionProvides } from '@braneframe/plugin-markdown';
 import {
   resolvePlugin,
   type PluginDefinition,
-  parseLayoutPlugin,
   parseGraphPlugin,
   parseIntentPlugin,
-  LayoutAction,
+  NavigationAction,
+  parseNavigationPlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, Trigger } from '@dxos/async';
+import { listener } from '@dxos/react-ui-editor';
 
 import { LocalFileMain } from './components';
 import meta, { FILES_PLUGIN } from './meta';
@@ -38,7 +39,7 @@ import {
 
 // TODO(burdon): Rename package plugin-file (singular).
 
-export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, MarkdownProvides> => {
+export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, MarkdownExtensionProvides> => {
   let onFilesUpdate: ((node?: Node<LocalEntity>) => void) | undefined;
   const state = deepSignal<{ files: LocalEntity[]; current: LocalFile | undefined }>({
     files: [],
@@ -75,13 +76,17 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
 
       return {
         markdown: {
-          onChange: (text) => {
-            if (state.current) {
-              state.current.text = text.toString();
-              state.current.modified = true;
-              onFilesUpdate?.();
-            }
-          },
+          extensions: () => [
+            listener({
+              onChange: (text) => {
+                if (state.current) {
+                  state.current.text = text.toString();
+                  state.current.modified = true;
+                  onFilesUpdate?.();
+                }
+              },
+            }),
+          ],
         },
       };
     },
@@ -89,12 +94,12 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
       window.addEventListener('keydown', handleKeyDown);
 
       // Subscribe to graph to track the currently active file.
-      const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+      const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-      if (layoutPlugin && graphPlugin) {
+      if (navigationPlugin && graphPlugin) {
         subscriptions.add(
           effect(() => {
-            const active = layoutPlugin.provides.layout.active;
+            const active = navigationPlugin.provides.location.active;
             const path = active && graphPlugin.provides.graph.getPath(active)?.filter((id) => id.startsWith(PREFIX));
             const current = (active?.startsWith(PREFIX) && path && findFile(state.files, path)) || undefined;
             if (state.current !== current) {
@@ -151,7 +156,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   plugin: FILES_PLUGIN,
                   action: LocalFilesAction.OPEN_FILE,
                 },
-                { action: LayoutAction.ACTIVATE },
+                { action: NavigationAction.ACTIVATE },
               ]),
           });
 
@@ -166,7 +171,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                     plugin: FILES_PLUGIN,
                     action: LocalFilesAction.OPEN_DIRECTORY,
                   },
-                  { action: LayoutAction.ACTIVATE },
+                  { action: NavigationAction.ACTIVATE },
                 ]),
             });
           }
@@ -204,7 +209,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                 const file = await handleToLocalFile(handle);
                 state.files = [file, ...state.files];
 
-                return [file.id];
+                return { data: [file.id] };
               }
 
               const input = document.createElement('input');
@@ -220,18 +225,18 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                 }
               };
               input.click();
-              return await result;
+              return { data: await result };
             }
 
             case LocalFilesAction.OPEN_DIRECTORY: {
               const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
               const directory = await handleToLocalDirectory(handle);
               state.files = [...state.files, directory];
-              return [directory.id, directory.children[0]?.id];
+              return { data: [directory.id, directory.children[0]?.id] };
             }
 
             case LocalFilesAction.RECONNECT: {
-              const entity = state.files.find((entity) => entity.id === intent.data.id);
+              const entity = state.files.find((entity) => entity.id === intent.data?.id);
               if (!entity) {
                 break;
               }
@@ -253,24 +258,24 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                 }
               }
 
-              return true;
+              return { data: true };
             }
 
             case LocalFilesAction.SAVE: {
-              const file = findFile(state.files, intent.data.id);
+              const file = findFile(state.files, intent.data?.id);
               if (file) {
                 await handleSave(file);
                 onFilesUpdate?.();
-                return true;
+                return { data: true };
               }
               break;
             }
 
             case LocalFilesAction.CLOSE: {
-              if (typeof intent.data.id === 'string') {
-                state.files = state.files.filter((f) => f.id !== intent.data.id);
+              if (typeof intent.data?.id === 'string') {
+                state.files = state.files.filter((f) => f.id !== intent.data?.id);
                 onFilesUpdate?.();
-                return true;
+                return { data: true };
               }
               break;
             }
