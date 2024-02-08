@@ -16,6 +16,9 @@ import {
   useEditorView,
   useActionHandler,
   useFormattingState,
+  editorHalfViewportOverscrollContent,
+  editorFillLayoutEditor,
+  editorFillLayoutRoot,
 } from '@dxos/react-ui-editor';
 import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
@@ -90,15 +93,16 @@ const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: Ed
                 focusRing,
                 attentionSurface,
                 textBlockWidth,
-                'md:border-is md:border-ie separator-separator focus-visible:ring-inset min-bs-full grid grid-rows-subgrid',
+                editorFillLayoutRoot,
+                'md:border-is md:border-ie separator-separator focus-visible:ring-inset',
               ),
               'data-testid': 'composer.markdownRoot',
             } as HTMLAttributes<HTMLDivElement>,
             editor: {
-              className: mx('is-full pli-2 sm:pli-6 md:pli-8 py-2 pbe-[50dvh]', !toolbar && 'border-bs'),
+              className: mx(editorFillLayoutEditor, 'is-full pli-2 sm:pli-6 md:pli-8 py-2', !toolbar && 'border-bs'),
             },
             content: {
-              className: focusRing,
+              className: editorHalfViewportOverscrollContent,
             },
           }}
           {...props}
