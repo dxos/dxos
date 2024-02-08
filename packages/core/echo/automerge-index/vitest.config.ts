@@ -12,6 +12,10 @@ export default // configShared,
 defineProject({
   root: process.cwd(),
   test: {
+    coverage: {
+      enabled: false,
+    },
+    cache: false,
     include: [`src/sanity.test.ts`],
     name: 'automerge-index',
     root: '.',
