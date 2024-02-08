@@ -11,25 +11,25 @@ import { isDocument } from '@braneframe/plugin-markdown';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Thread as ThreadType } from '@braneframe/types';
 import {
-  LayoutAction,
   type GraphProvides,
   type IntentPluginProvides,
+  LayoutAction,
+  type LocationProvides,
+  NavigationAction,
   type Plugin,
   type PluginDefinition,
-  parseIntentPlugin,
   parseGraphPlugin,
-  resolvePlugin,
-  NavigationAction,
-  type LocationProvides,
+  parseIntentPlugin,
   parseNavigationPlugin,
+  resolvePlugin,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import {
-  type TypedObject,
   SpaceProxy,
-  isTypedObject,
+  type TypedObject,
   getSpaceForObject,
   getTextInRange,
+  isTypedObject,
 } from '@dxos/react-client/echo';
 import { comments, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
@@ -87,7 +87,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       },
       translations: [...translations, ...threadTranslations],
       graph: {
-        builder: ({ parent, plugins }) => {
+        builder: ({ parent }) => {
           if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
             return;
           }
@@ -134,17 +134,18 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             }
 
             case 'context-thread': {
+              const dispatch = intentPlugin?.provides.intent.dispatch;
               const graph = graphPlugin?.provides.graph;
               const location = navigationPlugin?.provides.location;
               const activeNode = location?.active ? graph?.findNode(location.active) : undefined;
               const active = activeNode?.data;
-              const space = isDocument(active) && getSpaceForObject(active);
+              const space = isTypedObject(active) && getSpaceForObject(active);
               if (!space) {
                 return null;
               }
 
               // TODO(burdon): Hack to detect comments.
-              if ((active as any)?.comments?.length) {
+              if (isDocument(active) && (active as any)?.comments?.length) {
                 // Sort threads by y-position.
                 // TODO(burdon): Should just use document position?
                 const threads = active.comments
@@ -163,8 +164,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     threads={threads}
                     detached={detached}
                     currentId={state.current}
-                    autoFocusCurrentTextbox={state.focus}
                     currentRelatedId={location?.active}
+                    autoFocusCurrentTextbox={state.focus}
                     onThreadAttend={(thread: ThreadType) => {
                       if (state.current !== thread.id) {
                         state.current = thread.id;
@@ -176,12 +177,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                         });
                       }
                     }}
-                    onThreadDelete={(thread: ThreadType) => {
-                      const index = active.comments.findIndex((comment) => comment.thread?.id === thread.id);
-                      if (index !== -1) {
-                        active.comments.splice(index, 1);
-                      }
-                    }}
+                    onThreadDelete={(thread: ThreadType) =>
+                      dispatch?.({
+                        plugin: THREAD_PLUGIN,
+                        action: ThreadAction.DELETE,
+                        data: { document: active, thread },
+                      })
+                    }
                   />
                 );
               }
@@ -221,6 +223,30 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               state.focus = intent.data?.focus;
               return { data: true };
             }
+
+            case ThreadAction.DELETE: {
+              const { document: doc, thread, cursor } = intent.data ?? {};
+              if (!isDocument(doc) || !isThread(thread)) {
+                return;
+              }
+
+              if (!intent.undo) {
+                const index = doc.comments.findIndex((comment) => comment.thread?.id === thread.id);
+                const cursor = doc.comments[index]?.cursor;
+                if (index !== -1) {
+                  doc.comments.splice(index, 1);
+                }
+                return {
+                  undoable: {
+                    message: translations[0]['en-US'][THREAD_PLUGIN]['thread deleted label'],
+                    data: { cursor },
+                  },
+                };
+              } else if (intent.undo && typeof cursor === 'string') {
+                doc.comments.push({ thread, cursor });
+                return { data: true };
+              }
+            }
           }
         },
       },
@@ -239,7 +265,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     const [start, end] = cursor.split(':');
                     const title = getTextInRange(doc.content, start, end);
                     // Only update if the title has changed, otherwise this will cause an infinite loop.
-                    if (title !== thread.title) {
+                    // Skip if the title is empty - this means comment text was deleted, but thread title should remain.
+                    if (title && title !== thread.title) {
                       thread.title = title;
                     }
                   }

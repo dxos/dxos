@@ -4,7 +4,7 @@
 
 import { Trigger } from '@dxos/async';
 import { WorkerRuntime } from '@dxos/client-services';
-import { Config, Defaults, Envs, Local } from '@dxos/config';
+import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { log } from '@dxos/log';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
@@ -21,7 +21,7 @@ void navigator.locks.request(LOCK_KEY, (lock) => {
 
 const workerRuntime = new WorkerRuntime(
   async () => {
-    const config = new Config(await Envs(), Local(), Defaults());
+    const config = new Config(await Storage(), Envs(), Local(), Defaults());
     log.config({ filter: config.get('runtime.client.log.filter'), prefix: config.get('runtime.client.log.prefix') });
     return config;
   },

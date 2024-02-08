@@ -28,7 +28,7 @@ export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>
-                {EditorModes.map((mode) => (
+                {Object.keys(EditorModes).map((mode) => (
                   <Select.Option key={mode} value={mode}>
                     {t(`settings editor mode ${mode} label`)}
                   </Select.Option>

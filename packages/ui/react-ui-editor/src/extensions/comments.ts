@@ -36,8 +36,11 @@ const styles = EditorView.baseTheme({
   },
 });
 
-const commentMark = Decoration.mark({ class: 'cm-comment' });
-const commentCurrentMark = Decoration.mark({ class: 'cm-comment-current' });
+const commentMark = Decoration.mark({ class: 'cm-comment', attributes: { 'data-testid': 'cm-comment' } });
+const commentCurrentMark = Decoration.mark({
+  class: 'cm-comment-current',
+  attributes: { 'data-testid': 'cm-comment' },
+});
 
 type CommentState = {
   comment: Comment;

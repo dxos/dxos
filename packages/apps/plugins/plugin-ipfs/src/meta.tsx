@@ -12,5 +12,7 @@ export const IPFS_PLUGIN = 'dxos.org/plugin/ipfs';
 export default pluginMeta({
   id: IPFS_PLUGIN,
   name: 'IPFS',
+  description: 'Upload & view files with IPFS.',
+  tags: ['experimental'],
   iconComponent: (props: IconProps) => <FileCloud {...props} />,
 });
