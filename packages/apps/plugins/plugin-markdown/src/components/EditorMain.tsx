@@ -17,7 +17,7 @@ import {
   useActionHandler,
   useFormattingState,
 } from '@dxos/react-ui-editor';
-import { focusRing, attentionSurface, mx, textBlockWidth } from '@dxos/react-ui-theme';
+import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
 import { MARKDOWN_PLUGIN } from '../meta';
 
@@ -73,30 +73,42 @@ const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: Ed
           <Toolbar.Extended />
         </Toolbar.Root>
       )}
-      <MarkdownEditor
-        ref={editorRef}
-        autoFocus
-        placeholder={t('editor placeholder')}
-        extensions={extensions}
-        slots={{
-          root: {
-            className: mx(
-              focusRing,
-              'overflow-y-auto overscroll-auto scroll-smooth overflow-anchored after:block after:is-px after:bs-px after:overflow-anchor',
-            ),
-            'data-testid': 'composer.markdownRoot',
-          } as HTMLAttributes<HTMLDivElement>,
-          editor: {
-            className: mx(
-              attentionSurface,
-              textBlockWidth,
-              'is-full min-bs-[calc(100%-2rem)] pli-3 sm:pli-6 md:pli-10 py-4 mbe-[50dvh] border-be md:border-is md:border-ie separator-separator',
-              !toolbar && 'border-bs',
-            ),
-          },
-        }}
-        {...props}
-      />
+      <div
+        role='none'
+        className='overflow-y-auto overscroll-auto scroll-smooth overflow-anchored after:block after:is-px after:bs-px after:overflow-anchor'
+      >
+        <div
+          role='none'
+          className={mx(
+            attentionSurface,
+            textBlockWidth,
+            'pli-0.5 -mbs-0.5 md:border-is md:border-ie separator-separator',
+          )}
+        >
+          <MarkdownEditor
+            ref={editorRef}
+            autoFocus
+            placeholder={t('editor placeholder')}
+            extensions={extensions}
+            slots={{
+              root: {
+                className: focusRing,
+                'data-testid': 'composer.markdownRoot',
+              } as HTMLAttributes<HTMLDivElement>,
+              editor: {
+                className: mx(
+                  'is-full min-bs-[calc(100%-2rem)] pli-2 sm:pli-6 md:pli-8 py-2 pbe-[50dvh]',
+                  !toolbar && 'border-bs',
+                ),
+              },
+              content: {
+                className: focusRing,
+              },
+            }}
+            {...props}
+          />
+        </div>
+      </div>
     </>
   );
 };
