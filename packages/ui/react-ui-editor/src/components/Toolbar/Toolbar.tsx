@@ -211,7 +211,7 @@ const MarkdownLists = () => {
   const { onAction, state } = useToolbarContext('MarkdownStyles');
   const { t } = useTranslation(translationKey);
   return (
-    <NaturalToolbar.ToggleGroup type='single' value={state?.listStyle ?? undefined}>
+    <NaturalToolbar.ToggleGroup type='multiple' value={state?.listStyle ? [`list-${state.listStyle}`] : []}>
       {markdownLists.map(({ type, getState, Icon }) => (
         <ToolbarButton
           key={type}
@@ -251,8 +251,7 @@ const MarkdownBlocks = () => {
   const { t } = useTranslation(translationKey);
   const value = markdownBlocks.find(({ getState }) => state && getState(state));
   return (
-    // TODO(burdon): Always shows last selected.
-    <NaturalToolbar.ToggleGroup type='single' value={value?.type}>
+    <NaturalToolbar.ToggleGroup type='multiple' value={value?.type ? [value.type] : []}>
       {markdownBlocks.map(({ type, disabled, getState, Icon }) => (
         <ToolbarButton
           key={type}
