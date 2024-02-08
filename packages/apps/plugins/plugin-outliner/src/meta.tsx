@@ -12,7 +12,7 @@ export const OUTLINER_PLUGIN = 'dxos.org/plugin/outliner';
 export default pluginMeta({
   id: OUTLINER_PLUGIN,
   name: 'Outliner',
-  tags: ['new'],
   description: 'Hierarchical note editor.',
+  tags: ['experimental'],
   iconComponent: (props: IconProps) => <TreeStructure {...props} />,
 });

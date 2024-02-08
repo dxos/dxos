@@ -196,8 +196,3 @@ module.exports = async (event, context) => {
     .succeed({ message: 'hello' })
 }
 ```
-
-### Running with automerge
-
-- `DXOS_FORCE_AUTOMERGE=true dx agent start -f --verbose --ws 1234`
-- `LOG_FILTER="info" DXOS_FORCE_AUTOMERGE=true dx function dev -r ts-node/register --verbose`

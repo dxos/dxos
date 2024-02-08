@@ -59,7 +59,6 @@ export const LayoutPlugin = ({
   let currentUndoId: string | undefined;
 
   const settings = new LocalStorageStore<LayoutSettingsProps>(LAYOUT_PLUGIN, {
-    enableComplementarySidebar: true,
     showFooter: false,
   });
 
@@ -132,6 +131,29 @@ export const LayoutPlugin = ({
     }
   };
 
+  const isSocket = !!(globalThis as any).__args;
+
+  // TODO factor out as part of NavigationPlugin.
+  const checkAppScheme = (url: string) => {
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+
+    iframe.src = url + window.location.pathname.replace(/^\/+/, '');
+
+    const timer = setTimeout(() => {
+      document.body.removeChild(iframe);
+    }, 3000);
+
+    window.addEventListener('pagehide', (event) => {
+      clearTimeout(timer);
+      document.body.removeChild(iframe);
+    });
+  };
+
+  // TODO(mjamesderocher) can we get this directly from Socket?
+  const appScheme = 'composer://';
+
   return {
     meta,
     ready: async (plugins) => {
@@ -142,12 +164,14 @@ export const LayoutPlugin = ({
         .prop(layout.values.$sidebarOpen!, 'sidebar-open', LocalStorageStore.bool)
         .prop(layout.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool);
 
-      settings
-        .prop(settings.values.$enableComplementarySidebar!, 'enable-complementary-sidebar', LocalStorageStore.bool)
-        .prop(settings.values.$showFooter!, 'show-footer', LocalStorageStore.bool);
+      settings.prop(settings.values.$showFooter!, 'show-footer', LocalStorageStore.bool);
 
       // TODO(burdon): Create context and plugin.
       Keyboard.singleton.initialize();
+
+      if (!isSocket) {
+        checkAppScheme(appScheme);
+      }
     },
     unload: async () => {
       Keyboard.singleton.destroy();
@@ -279,7 +303,6 @@ export const LayoutPlugin = ({
               return (
                 <MainLayout
                   fullscreen={layout.values.fullscreen}
-                  showComplementarySidebar={settings.values.enableComplementarySidebar}
                   showHintsFooter={settings.values.showFooter}
                   toasts={layout.values.toasts}
                   onDismissToast={(id) => {

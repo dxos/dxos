@@ -16,7 +16,7 @@
       content="
         connect-src https: file: ipc: socket: wss://*.dxos.org ws://localhost:* http://localhost:*;
         script-src https: socket: http://localhost:* 'unsafe-eval' 'unsafe-inline';
-        frame-src https: socket: http://localhost:*;
+        frame-src https: socket: http://localhost:* composer:;
         worker-src https: socket: http://localhost:*;
         img-src https: data: file: http://localhost:*;
         child-src 'none';
@@ -32,13 +32,6 @@
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (event) {
         setTheme(event.matches);
       });
-    </script>
-    <script>
-      // Load automerge settings.
-      const preference = localStorage.getItem('dxos.org/settings/automerge');
-      if (['true', 'false'].includes(preference)) {
-        DXOS_FORCE_AUTOMERGE = JSON.parse(preference);
-      }
     </script>
     <style>
       html {
