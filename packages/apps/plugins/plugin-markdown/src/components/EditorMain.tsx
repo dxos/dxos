@@ -75,35 +75,39 @@ const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: Ed
       )}
       <div
         role='none'
-        className='pli-2 overflow-y-auto overscroll-auto scroll-smooth overflow-anchored after:block after:is-px after:bs-px after:overflow-anchor'
+        className='overflow-y-auto overscroll-auto scroll-smooth overflow-anchored after:block after:is-px after:bs-px after:overflow-anchor'
       >
-        <MarkdownEditor
-          ref={editorRef}
-          autoFocus
-          placeholder={t('editor placeholder')}
-          extensions={extensions}
-          slots={{
-            root: {
-              className: mx(
-                focusRing,
-                attentionSurface,
-                textBlockWidth,
-                'md:border-is md:border-ie separator-separator',
-              ),
-              'data-testid': 'composer.markdownRoot',
-            } as HTMLAttributes<HTMLDivElement>,
-            editor: {
-              className: mx(
-                'is-full min-bs-[calc(100%-2rem)] pli-1 sm:pli-4 md:pli-8 py-2 pbe-[50dvh]',
-                !toolbar && 'border-bs',
-              ),
-            },
-            content: {
-              className: focusRing,
-            },
-          }}
-          {...props}
-        />
+        <div
+          role='none'
+          className={mx(
+            attentionSurface,
+            textBlockWidth,
+            'pli-0.5 -mbs-0.5 md:border-is md:border-ie separator-separator',
+          )}
+        >
+          <MarkdownEditor
+            ref={editorRef}
+            autoFocus
+            placeholder={t('editor placeholder')}
+            extensions={extensions}
+            slots={{
+              root: {
+                className: focusRing,
+                'data-testid': 'composer.markdownRoot',
+              } as HTMLAttributes<HTMLDivElement>,
+              editor: {
+                className: mx(
+                  'is-full min-bs-[calc(100%-2rem)] pli-2 sm:pli-6 md:pli-8 py-2 pbe-[50dvh]',
+                  !toolbar && 'border-bs',
+                ),
+              },
+              content: {
+                className: focusRing,
+              },
+            }}
+            {...props}
+          />
+        </div>
       </div>
     </>
   );
