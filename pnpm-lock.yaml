@@ -1638,9 +1638,15 @@ importers:
 
   packages/apps/plugins/plugin-ipfs:
     dependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -1653,6 +1659,9 @@ importers:
       deepsignal:
         specifier: 1.4.0-shallow.0
         version: 1.4.0-shallow.0(react@18.2.0)
+      kubo-rpc-client:
+        specifier: ^3.0.2
+        version: 3.0.3
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -2920,9 +2929,6 @@ importers:
       deepsignal:
         specifier: 1.4.0-shallow.0
         version: 1.4.0-shallow.0(react@18.2.0)
-      kubo-rpc-client:
-        specifier: ^3.0.2
-        version: 3.0.3
       node-fetch:
         specifier: ^2.6.0
         version: 2.6.7
@@ -6703,7 +6709,7 @@ importers:
         version: 0.0.26(discord.js@14.14.1)(faiss-node@0.5.1)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@20.0.1)
       '@langchain/core':
         specifier: ^0.1.22
-        version: 0.1.24
+        version: 0.1.23
       '@langchain/openai':
         specifier: ^0.0.14
         version: 0.0.14
@@ -6760,7 +6766,7 @@ importers:
         version: 4.1.0
       langchain:
         specifier: ^0.1.12
-        version: 0.1.14(discord.js@14.14.1)(faiss-node@0.5.1)(fast-xml-parser@4.3.2)(glob@7.1.7)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@20.0.1)
+        version: 0.1.13(discord.js@14.14.1)(faiss-node@0.5.1)(fast-xml-parser@4.3.2)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@20.0.1)
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -15679,7 +15685,7 @@ packages:
       ws:
         optional: true
     dependencies:
-      '@langchain/core': 0.1.24
+      '@langchain/core': 0.1.23
       '@langchain/openai': 0.0.14
       discord.js: 14.14.1
       faiss-node: 0.5.1
@@ -15696,8 +15702,8 @@ packages:
       - supports-color
     dev: false
 
-  /@langchain/core@0.1.24:
-    resolution: {integrity: sha512-MBsBMses4/6zUetPzZaw9FyRqCebvB+jqaZE+VNDK37wzW+W4hssxat6gyfFbqegOw2VUG64yy57velLbe8fCw==}
+  /@langchain/core@0.1.23:
+    resolution: {integrity: sha512-Kn2AiwEMHW9+o6bkKiEUbJ8abQMlEVoePTKw6axdnEOE9zX5Epl1iRCJo+Id5ajNYSYXjWky4puqz75OcFGD6w==}
     engines: {node: '>=18'}
     dependencies:
       ansi-styles: 5.2.0
@@ -15718,7 +15724,7 @@ packages:
     resolution: {integrity: sha512-co6nRylPrLGY/C3JYxhHt6cxLq07P086O7K3QaZH7SFFErIN9wSzJonpvhZR07DEUq6eK6wKgh2ORxA/NcjSRQ==}
     engines: {node: '>=18'}
     dependencies:
-      '@langchain/core': 0.1.24
+      '@langchain/core': 0.1.23
       js-tiktoken: 1.0.7
       openai: 4.26.1
       zod: 3.22.4
@@ -26298,7 +26304,7 @@ packages:
     engines: {node: '>=0.8'}
     hasBin: true
     dependencies:
-      commander: 11.1.0
+      commander: 12.0.0
     dev: false
 
   /cfb@1.2.2:
@@ -26880,7 +26886,7 @@ packages:
     engines: {node: '>=0.8'}
     hasBin: true
     dependencies:
-      commander: 11.1.0
+      commander: 12.0.0
       concat-stream: 2.0.0
       voc: 1.2.0
     dev: false
@@ -26997,6 +27003,11 @@ packages:
   /commander@11.1.0:
     resolution: {integrity: sha512-yPVavfyCcRhmorC7rWlkHn15b4wDVgVmBA7kV4QVBsF7kv/9TKJAbAXVTxvTnwP8HHKjRCJDClKbciiYS7p0DQ==}
     engines: {node: '>=16'}
+    dev: false
+
+  /commander@12.0.0:
+    resolution: {integrity: sha512-MwVNWlYjDTtOjX5PiD7o5pK0UrFU/OYgcJfjjK4RaHZETNtjJqrZa9Y9ds88+A+f+d5lv+561eZ+yCKoS3gbAA==}
+    engines: {node: '>=18'}
     dev: false
 
   /commander@2.17.1:
@@ -30350,7 +30361,6 @@ packages:
 
   /fast-fifo@1.3.2:
     resolution: {integrity: sha512-/d9sfos4yxzpwkDkuN7k2SqFKtYNmCTzgfEpz82x34IM9/zc8KGxQoXg1liNC/izpRM/MBdt44Nmx41ZWqk+FQ==}
-    dev: true
 
   /fast-glob@2.2.7:
     resolution: {integrity: sha512-g1KuQwHOZAmOZMuBtHdxDtju+T2RT8jgCC9aANsbpdiDDTSnjgfuVsIBNKbUeJI3oKMRExcfNDtJl4OhbffMsw==}
@@ -31851,7 +31861,7 @@ packages:
     dependencies:
       babyparse: 0.2.1
       codepage: 1.15.0
-      commander: 11.1.0
+      commander: 12.0.0
       ssf: 0.8.2
     dev: false
 
@@ -33761,7 +33771,7 @@ packages:
     resolution: {integrity: sha512-pLULMZMAB/+vbdvbZtebC0nWBTbG581lk6w8P7DfIIIKUfa8FbY7Oi0FxZcFPbxvISs7A9E+cMpLDBc1XhpAOA==}
     dependencies:
       buffer: 6.0.3
-      fast-fifo: 1.1.0
+      fast-fifo: 1.3.2
       get-iterator: 1.0.2
       p-defer: 3.0.0
       p-fifo: 1.0.0
@@ -35257,8 +35267,8 @@ packages:
     engines: {node: '>=14.16'}
     dev: true
 
-  /langchain@0.1.14(discord.js@14.14.1)(faiss-node@0.5.1)(fast-xml-parser@4.3.2)(glob@7.1.7)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@20.0.1):
-    resolution: {integrity: sha512-QL0Kp/8JANVHJosh8NB9bpINdvCgpE5ZZy1Lxrpc8owy/s9NqMuwEQ5rvnLYCnjGPBQxYK6NAh23NVP5ucQEBg==}
+  /langchain@0.1.13(discord.js@14.14.1)(faiss-node@0.5.1)(fast-xml-parser@4.3.2)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@20.0.1):
+    resolution: {integrity: sha512-A56Qi5Jlxc3b/G9ny/B6gsqujFp9dFpnT7HIKFCq/mS/5foCb0nQ8P2F/Pwv8COg6b/be9Gwu1WQ97L93uE+dw==}
     engines: {node: '>=18'}
     peerDependencies:
       '@aws-sdk/client-s3': ^3.310.0
@@ -35286,7 +35296,6 @@ packages:
       epub2: ^3.0.1
       faiss-node: '*'
       fast-xml-parser: ^4.2.7
-      glob: ^10.3.10
       google-auth-library: ^8.9.0
       handlebars: ^4.7.8
       html-to-text: ^9.0.5
@@ -35306,7 +35315,6 @@ packages:
       redis: ^4.6.4
       sonix-speech-recognition: ^2.1.1
       srt-parser-2: ^1.2.3
-      ts-morph: ^21.0.1
       typeorm: ^0.3.12
       vectordb: ^0.1.4
       weaviate-ts-client: ^1.4.0
@@ -35365,8 +35373,6 @@ packages:
         optional: true
       fast-xml-parser:
         optional: true
-      glob:
-        optional: true
       google-auth-library:
         optional: true
       handlebars:
@@ -35405,8 +35411,6 @@ packages:
         optional: true
       srt-parser-2:
         optional: true
-      ts-morph:
-        optional: true
       typeorm:
         optional: true
       vectordb:
@@ -35424,13 +35428,12 @@ packages:
     dependencies:
       '@anthropic-ai/sdk': 0.9.1
       '@langchain/community': 0.0.26(discord.js@14.14.1)(faiss-node@0.5.1)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@20.0.1)
-      '@langchain/core': 0.1.24
+      '@langchain/core': 0.1.23
       '@langchain/openai': 0.0.14
       binary-extensions: 2.2.0
       expr-eval: 2.0.2
       faiss-node: 0.5.1
       fast-xml-parser: 4.3.2
-      glob: 7.1.7
       google-auth-library: 8.9.0
       html-to-text: 9.0.5
       js-tiktoken: 1.0.7
@@ -35438,7 +35441,7 @@ packages:
       jsdom: 20.0.1
       jsonpointer: 5.0.1
       langchainhub: 0.0.6
-      langsmith: 0.0.67
+      langsmith: 0.0.66
       ml-distance: 4.0.1
       openapi-types: 12.1.3
       p-retry: 4.6.2
@@ -35522,8 +35525,8 @@ packages:
       uuid: 9.0.1
     dev: false
 
-  /langsmith@0.0.67:
-    resolution: {integrity: sha512-jhf+qZzchK/8cGKzhvLIQHTvskrSJ738XYSL3IXkGteG/o0K2gZ1QrueCeevgFvQh/YGfCnCTRgTwlIyxNSOAw==}
+  /langsmith@0.0.66:
+    resolution: {integrity: sha512-yextqrwQiN+2Y0WjHEjQmwS9V6886RIuUG8esibiSh6BTHrtt1WMCAPKJIy8E1+HQvVY7IzsuJ4vzpkKi0wcTQ==}
     hasBin: true
     dependencies:
       '@types/uuid': 9.0.7
@@ -38924,7 +38927,7 @@ packages:
   /p-fifo@1.0.0:
     resolution: {integrity: sha512-IjoCxXW48tqdtDFz6fqo5q1UfFVjjVZe8TC1QRflvNUJtNfCUhxOUw6MOVZhDPjqhSzc26xKdugsO17gmzd5+A==}
     dependencies:
-      fast-fifo: 1.1.0
+      fast-fifo: 1.3.2
       p-defer: 3.0.0
     dev: false
 
@@ -47058,7 +47061,7 @@ packages:
     dependencies:
       cfb: 0.11.1
       codepage: 1.15.0
-      commander: 11.1.0
+      commander: 12.0.0
       exit-on-epipe: 1.0.1
       ssf: 0.8.2
     dev: false
@@ -47094,7 +47097,7 @@ packages:
       adler-32: 1.3.1
       cfb: 1.2.2
       codepage: 1.3.8
-      commander: 11.1.0
+      commander: 12.0.0
       crc-32: 1.2.2
       jszip: 2.4.0
       ssf: 0.8.2
