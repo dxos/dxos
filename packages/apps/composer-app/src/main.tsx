@@ -75,7 +75,7 @@ const main = async () => {
     config = await setupConfig();
   }
 
-  // Intentially do not await, don't block app startup for telemetry.
+  // Intentionally do not await, don't block app startup for telemetry.
   const observability = initializeAppObservability({ namespace: appKey, config });
 
   const services = await createClientServices(
