@@ -8,7 +8,7 @@ import { type Callback, type RandomAccessStorage } from 'random-access-storage';
 import { arrayToBuffer } from '@dxos/util';
 
 import { AbstractStorage } from './abstract-storage';
-import { StorageType } from './storage';
+import { type DiskInfo, StorageType } from './storage';
 
 /**
  * Storage interface implementation for RAM.
@@ -41,5 +41,18 @@ export class MemoryStorage extends AbstractStorage {
       });
 
     return file;
+  }
+
+  async getDiskInfo(): Promise<DiskInfo> {
+    let used = 0;
+
+    for (const file of this._files.values()) {
+      const size = (file as any).length;
+      used += Number.isNaN(size) ? 0 : size;
+    }
+
+    return {
+      used,
+    };
   }
 }
