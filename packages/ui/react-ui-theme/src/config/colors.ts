@@ -7,7 +7,7 @@ import {
   paletteShadesFromCurve,
   hex_to_LCH as hexToLch,
   Lab_to_hex as labToHex,
-} from '@fluent-blocks/colors';
+} from '@ch-ui/colors';
 
 export type PaletteConfig = {
   keyColor: string;

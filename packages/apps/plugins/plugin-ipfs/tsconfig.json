@@ -21,6 +21,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/log"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {
@@ -43,6 +46,9 @@
     },
     {
       "path": "../../types"
+    },
+    {
+      "path": "../plugin-client"
     }
   ]
 }

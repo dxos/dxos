@@ -356,7 +356,6 @@ const snippets = {
     [
       //
       '```#{}',
-      '#{}',
       '```',
     ].join('\n'),
   ),
@@ -515,6 +514,7 @@ export const addLink: StateCommand = ({ state, dispatch }) => {
 // Lists
 //
 
+// TODO(burdon): Cursor is positioned incorrectly.
 export const addList =
   (type: List): StateCommand =>
   ({ state, dispatch }) => {
@@ -576,18 +576,21 @@ export const addList =
       // Insert a new list item if the selection is empty.
       const { from, to } = state.doc.lineAt(state.selection.main.anchor);
       if (from === to) {
+        const insert = type === List.Bullet ? '- ' : type === List.Ordered ? '1. ' : '- [ ] ';
         dispatch(
           state.update({
             changes: [
               {
                 from,
-                insert: type === List.Bullet ? '- ' : type === List.Ordered ? '1. ' : '- [ ] ',
+                insert,
               },
             ],
+            selection: { anchor: from + insert.length },
             userEvent: 'format.list.add',
             scrollIntoView: true,
           }),
         );
+
         return true;
       }
 

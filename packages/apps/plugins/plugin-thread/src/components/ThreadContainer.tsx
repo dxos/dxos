@@ -142,7 +142,12 @@ export const ThreadContainer = ({
           <ThreadHeading>{thread.title ?? t('thread title placeholder')}</ThreadHeading>
         )}
         {onDelete && (
-          <Button variant='ghost' onClick={onDelete} classNames={['min-bs-0 p-1 mie-1', hoverableControlItem]}>
+          <Button
+            variant='ghost'
+            data-testid='thread.delete'
+            onClick={onDelete}
+            classNames={['min-bs-0 p-1 mie-1', hoverableControlItem]}
+          >
             <X />
           </Button>
         )}

@@ -20,7 +20,7 @@ import { type Diagnostics } from '../services';
 import { getPlatform } from '../services/platform';
 
 export type SystemServiceOptions = {
-  config?: Config;
+  config?: () => MaybePromise<Config | undefined>;
   statusUpdate: Event<void>;
   getCurrentStatus: () => SystemStatus;
   getDiagnostics: () => Promise<Partial<Diagnostics['services']>>;
@@ -53,7 +53,7 @@ export class SystemServiceImpl implements SystemService {
   }
 
   async getConfig() {
-    return this._config?.values ?? {};
+    return (await this._config?.())?.values ?? {};
   }
 
   /**

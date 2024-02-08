@@ -1,6 +1,6 @@
 {
   "name": "@dxos/automerge",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Automerge adapter.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -109,8 +109,8 @@
   },
   "dependencies": {
     "@automerge/automerge": "^2.1.10",
-    "@automerge/automerge-repo": "^1.1.0",
-    "@automerge/automerge-repo-storage-indexeddb": "^1.1.0",
+    "@automerge/automerge-repo": "^1.1.1",
+    "@automerge/automerge-repo-storage-indexeddb": "^1.1.1",
     "@automerge/automerge-wasm": "^0.9.0",
     "bs58check": "^3.0.1",
     "cbor-x": "^1.5.4",

@@ -54,7 +54,7 @@ export const useActionHandler = (view?: EditorView | null): ToolbarProps['onActi
 
       case 'list-ordered':
       case 'list-bullet':
-      case 'list-tasks':
+      case 'list-task':
         listType =
           action.type === 'list-ordered' ? List.Ordered : action.type === 'list-bullet' ? List.Bullet : List.Task;
         (action.data === false

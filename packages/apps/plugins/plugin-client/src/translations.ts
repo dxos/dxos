@@ -9,7 +9,6 @@ export default [
     'en-US': {
       [CLIENT_PLUGIN]: {
         'open shell label': 'Open HALO',
-        'enable experimental automerge backend': 'Automerge backend (reload required).',
       },
     },
   },

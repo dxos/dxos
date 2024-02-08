@@ -5,6 +5,7 @@
 import { Event, asyncTimeout, synchronized } from '@dxos/async';
 import { type DocumentId, type DocHandle, type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
+import { warnAfterTimeout } from '@dxos/debug';
 import { type Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -70,7 +71,7 @@ export class AutomergeDb {
       await this._fallbackToNewDoc();
     } else {
       try {
-        await this._initDocHandle(spaceState.rootUrl);
+        this._docHandle = await this._initDocHandle(spaceState.rootUrl);
 
         const doc = this._docHandle.docSync();
         invariant(doc);
@@ -78,6 +79,10 @@ export class AutomergeDb {
         const ojectIds = Object.keys(doc.objects ?? {});
         this._createObjects(ojectIds);
       } catch (err) {
+        if (err instanceof ContextDisposedError) {
+          return;
+        }
+
         log.catch(err);
         if (getGlobalAutomergePreference()) {
           throw err;
@@ -115,22 +120,20 @@ export class AutomergeDb {
     this._ctx = undefined;
   }
 
-  private async _initDocHandle(rootUrl: string) {
-    this._docHandle = this.automerge.repo.find(rootUrl as DocumentId);
+  private async _initDocHandle(url: string) {
+    const docHandle = this.automerge.repo.find(url as DocumentId);
     // TODO(mykola): Remove check for global preference or timeout?
     if (getGlobalAutomergePreference()) {
       // Loop on timeout.
       while (true) {
         try {
-          await asyncTimeout(cancelWithContext(this._ctx!, this._docHandle.whenReady(['ready'])), 5_000); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
+          await warnAfterTimeout(5_000, 'Automerge root doc load timeout (AutomergeDb)', async () => {
+            await cancelWithContext(this._ctx!, docHandle.whenReady(['ready'])); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
+          });
           break;
         } catch (err) {
-          if (err instanceof ContextDisposedError) {
-            return;
-          }
-
           if (`${err}`.includes('Timeout')) {
-            log.info('wraparound', { id: this._docHandle.documentId, state: this._docHandle.state });
+            log.info('wraparound', { id: docHandle.documentId, state: docHandle.state });
             continue;
           }
 
@@ -138,16 +141,14 @@ export class AutomergeDb {
         }
       }
     } else {
-      await asyncTimeout(
-        this._docHandle.whenReady(['ready']),
-        1_000,
-        'short doc ready timeout with automerge disabled',
-      );
+      await asyncTimeout(docHandle.whenReady(['ready']), 1_000, 'short doc ready timeout with automerge disabled');
     }
 
-    if (this._docHandle.state === 'unavailable') {
+    if (docHandle.state === 'unavailable') {
       throw new Error('Automerge document is unavailable');
     }
+
+    return docHandle;
   }
 
   private async _fallbackToNewDoc() {
@@ -186,6 +187,7 @@ export class AutomergeDb {
       db: this,
       docHandle: this._docHandle,
       path: ['objects', obj.id],
+      assignFromLocalState: true,
     });
 
     return obj;
@@ -224,13 +226,13 @@ export class AutomergeDb {
     for (const id of objectIds) {
       invariant(!this._objects.has(id));
       const obj = new AutomergeObject();
-      obj[base]._id = id;
+      obj[base]._core.id = id;
       this._objects.set(obj.id, obj);
       (obj[base] as AutomergeObject)._bind({
         db: this,
         docHandle: this._docHandle,
         path: ['objects', obj.id],
-        ignoreCache: true,
+        assignFromLocalState: false,
       });
     }
   }

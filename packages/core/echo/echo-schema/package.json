@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-schema",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -48,6 +48,7 @@
     "@dxos/document-model": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-pipeline": "workspace:*",
+    "@dxos/echo-signals": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -63,6 +64,7 @@
   "devDependencies": {
     "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
+    "@preact/signals-core": "^1.5.0",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.get": "^4.4.7",
     "wait-for-expect": "^3.0.2"
