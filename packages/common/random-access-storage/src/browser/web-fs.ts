@@ -334,14 +334,17 @@ export class WebFile extends EventEmitter implements File {
     this._reads.inc();
     this._readBytes.inc(size);
 
-    const buffer = await this.requireBuffer();
+    if (!this._buffer) {
+      await this._loadBufferGuarded();
+      invariant(this._buffer);
+    }
 
-    if (offset + size > buffer.length) {
+    if (offset + size > this._buffer.length) {
       throw new Error('Read out of bounds');
     }
 
     // Copy data into a new buffer.
-    return Buffer.from(buffer.slice(offset, offset + size));
+    return Buffer.from(this._buffer.slice(offset, offset + size));
   }
 
   async write(offset: number, data: Buffer) {
@@ -351,14 +354,17 @@ export class WebFile extends EventEmitter implements File {
     this._writes.inc();
     this._writeBytes.inc(data.length);
 
-    const buffer = await this.requireBuffer();
+    if (!this._buffer) {
+      await this._loadBufferGuarded();
+      invariant(this._buffer);
+    }
 
-    if (offset + data.length <= buffer.length) {
-      buffer.set(data, offset);
+    if (offset + data.length <= this._buffer.length) {
+      this._buffer.set(data, offset);
     } else {
       // TODO(dmaretskyi): Optimize re-allocations.
       const newCache = new Uint8Array(offset + data.length);
-      newCache.set(buffer);
+      newCache.set(this._buffer);
       newCache.set(data, offset);
       this._buffer = newCache;
     }
@@ -375,15 +381,18 @@ export class WebFile extends EventEmitter implements File {
       return;
     }
 
-    const buffer = await this.requireBuffer();
-
-    let leftoverSize = 0;
-    if (offset + size < buffer.length) {
-      leftoverSize = buffer.length - (offset + size);
-      buffer.set(buffer.slice(offset + size, offset + size + leftoverSize), offset);
+    if (!this._buffer) {
+      await this._loadBufferGuarded();
+      invariant(this._buffer);
     }
 
-    this._buffer = buffer.slice(0, offset + leftoverSize);
+    let leftoverSize = 0;
+    if (offset + size < this._buffer.length) {
+      leftoverSize = this._buffer.length - (offset + size);
+      this._buffer.set(this._buffer.slice(offset + size, offset + size + leftoverSize), offset);
+    }
+
+    this._buffer = this._buffer.slice(0, offset + leftoverSize);
 
     this._flushLater();
   }
@@ -394,10 +403,13 @@ export class WebFile extends EventEmitter implements File {
     this._operations.inc();
 
     // NOTE: This will load all data from the file just to get it's size. While this is a lot of overhead, this works ok for out use cases.
-    const buffer = await this.requireBuffer();
+    if (!this._buffer) {
+      await this._loadBufferGuarded();
+      invariant(this._buffer);
+    }
 
     return {
-      size: buffer.length,
+      size: this._buffer.length,
     };
   }
 
@@ -406,7 +418,12 @@ export class WebFile extends EventEmitter implements File {
 
     this._operations.inc();
 
-    this._buffer = (await this.requireBuffer()).slice(0, offset);
+    if (!this._buffer) {
+      await this._loadBufferGuarded();
+      invariant(this._buffer);
+    }
+
+    this._buffer = this._buffer.slice(0, offset);
 
     this._flushLater();
   }
@@ -431,7 +448,6 @@ export class WebFile extends EventEmitter implements File {
   async destroy() {
     if (!this.destroyed) {
       this.destroyed = true;
-      await this._flushNow();
       return await this._destroy();
     }
   }
@@ -440,13 +456,5 @@ export class WebFile extends EventEmitter implements File {
     if (this.destroyed) {
       throw new Error(`${operation} on a destroyed or closed file`);
     }
-  }
-
-  private async requireBuffer(): Promise<Uint8Array> {
-    if (!this._buffer) {
-      await this._loadBufferGuarded();
-      invariant(this._buffer);
-    }
-    return this._buffer;
   }
 }
