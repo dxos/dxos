@@ -6,7 +6,7 @@ import * as AST from '@effect/schema/AST';
 import * as S from '@effect/schema/Schema';
 import { type Simplify } from 'effect/Types';
 
-import { compositeRuntime } from '../util';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
 
 /**
  * Reactive object.

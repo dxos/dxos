@@ -9,26 +9,9 @@ import { expect } from 'chai';
 import { test, describe } from '@dxos/test';
 
 import { reactive } from './reactive';
-import { registerSignalRuntime as registerRuntimeForEcho } from '../util/signal';
+import { registerSignalRuntime } from '@dxos/echo-signals';
 
-{
-  // TODO(dmaretskyi): Resolve circular dependency on @dxos/echo-signals.
-  registerRuntimeForEcho({
-    createSignal: () => {
-      const thisSignal = signal({});
-
-      return {
-        notifyRead: () => {
-          const _ = thisSignal.value;
-        },
-        notifyWrite: () => {
-          thisSignal.value = {};
-        },
-      };
-    },
-    batch,
-  });
-}
+registerSignalRuntime();
 
 describe.only('Reactive', () => {
   test('untyped', () => {

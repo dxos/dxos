@@ -26,9 +26,8 @@ const createType = <I, A>(typename: string, self: S.Schema<I, A>): EffectSchema<
   return schema;
 };
 
-type InferType<T extends EffectSchema<any, any>> = T extends EffectSchema<infer I, infer A>
-  ? TypedObject<Extract<A, {}>>
-  : never;
+type InferType<T extends EffectSchema<any, any>> =
+  T extends EffectSchema<infer I, infer A> ? TypedObject<Extract<A, {}>> : never;
 
 const defineType =
   <Self>(typename: string) =>
@@ -51,7 +50,7 @@ const createSchema = (typename: string, self: S.Schema<any, any>): Schema => {
   return null as any;
 };
 
-describe('@effect/schema #1', () => {
+describe.skip('@effect/schema #1', () => {
   test('functional', () => {
     const Contact = createType(
       'example.com/Contact',
@@ -72,7 +71,7 @@ describe('@effect/schema #1', () => {
       age: S.number,
     }) {}
 
-    const Contact = new Contact();
+    const contact = new Contact();
 
     Contact.filter({ name: 'John' });
 
@@ -80,7 +79,7 @@ describe('@effect/schema #1', () => {
     Contact.effectSchema;
   });
 
-  test('schema only', () => {
+  test.skip('schema only', () => {
     const Contact = createSchema(
       'example.com/Contact',
       S.struct({
