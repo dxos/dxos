@@ -42,7 +42,7 @@ export type StackSectionContent = MosaicDataItem & { title?: string };
 export type StackContextValue<TData extends StackSectionContent = StackSectionContent> = {
   SectionContent: FC<{ data: TData }>;
   transform?: (item: MosaicDataItem, type?: string) => StackSectionItem;
-  onRemoveSection?: (path: string) => void;
+  onDeleteSection?: (path: string) => void;
   onNavigateToSection?: (id: string) => void;
 };
 
@@ -67,14 +67,14 @@ export type SectionProps = PropsWithChildren<{
   active?: MosaicActiveType;
   draggableProps?: MosaicTileProps['draggableProps'];
   draggableStyle?: MosaicTileProps['draggableStyle'];
-  onRemove?: MosaicTileProps['onRemove'];
+  onDelete?: MosaicTileProps['onDelete'];
   onNavigate?: MosaicTileProps['onNavigate'];
 }>;
 
 export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElement>> = forwardRef<
   HTMLLIElement,
   SectionProps
->(({ id, title, separation, active, draggableProps, draggableStyle, onRemove, onNavigate, children }, forwardedRef) => {
+>(({ id, title, separation, active, draggableProps, draggableStyle, onDelete, onNavigate, children }, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
@@ -152,7 +152,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                       <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
                       <span className='grow'>{t('navigate to section label')}</span>
                     </DropdownMenu.Item>
-                    <DropdownMenu.Item onClick={onRemove} data-testid='section.remove'>
+                    <DropdownMenu.Item onClick={() => onDelete?.()} data-testid='section.remove'>
                       <X className={mx(getSize(5), 'mr-2')} />
                       <span className='grow'>{t('remove section label')}</span>
                     </DropdownMenu.Item>
@@ -174,7 +174,7 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
     const { activeItem } = useMosaic();
 
     const separation = !!itemContext?.separation;
-    const { transform, onRemoveSection, onNavigateToSection, SectionContent, ...contentItem } = {
+    const { transform, onDeleteSection, onNavigateToSection, SectionContent, ...contentItem } = {
       ...itemContext,
       ...item,
     };
@@ -199,7 +199,7 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
         active={active}
         draggableProps={draggableProps}
         draggableStyle={draggableStyle}
-        onRemove={() => onRemoveSection?.(path)}
+        onDelete={() => onDeleteSection?.(path)}
         onNavigate={() => onNavigateToSection?.(itemObject.id)}
       >
         {SectionContent && <SectionContent data={itemObject} />}
