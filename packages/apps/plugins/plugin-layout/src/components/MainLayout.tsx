@@ -17,18 +17,11 @@ import { LAYOUT_PLUGIN } from '../meta';
 export type MainLayoutProps = {
   fullscreen: boolean;
   showHintsFooter: boolean;
-  showComplementarySidebar: boolean;
   toasts: ToastSchema[];
   onDismissToast: (id: string) => void;
 };
 
-export const MainLayout = ({
-  fullscreen,
-  showHintsFooter,
-  showComplementarySidebar,
-  toasts,
-  onDismissToast,
-}: MainLayoutProps) => {
+export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast }: MainLayoutProps) => {
   const context = useLayout();
   const { complementarySidebarOpen, dialogOpen, dialogContent, popoverOpen, popoverContent, popoverAnchorId } = context;
   const { t } = useTranslation(LAYOUT_PLUGIN);
@@ -72,7 +65,7 @@ export const MainLayout = ({
         </Main.NavigationSidebar>
 
         {/* Right Complementary sidebar. */}
-        {complementarySidebarOpen !== null && showComplementarySidebar && (
+        {complementarySidebarOpen !== null && (
           <Main.ComplementarySidebar classNames='overflow-hidden'>
             <Surface role='complementary' name='context' />
           </Main.ComplementarySidebar>
@@ -96,7 +89,7 @@ export const MainLayout = ({
                 <div role='none' className='grow' />
                 <Surface role='navbar-end' direction='inline-reverse' />
 
-                {complementarySidebarOpen !== null && showComplementarySidebar && (
+                {complementarySidebarOpen !== null && (
                   <Button
                     onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
                     variant='ghost'

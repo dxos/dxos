@@ -13,5 +13,6 @@ export * from './cursor';
 export * from './listener';
 export * from './markdown';
 export * from './mention';
+export * from './modes';
 export * from './outliner';
 export * from './typewriter';

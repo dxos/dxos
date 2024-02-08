@@ -11,13 +11,6 @@
     <!-- <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
     <link rel="mask-icon" href="/mask-icon.svg" color="#FFFFFF"> -->
     <meta name="theme-color" content="#ffffff" />
-    <script>
-      // Load automerge settings.
-      const preference = localStorage.getItem('dxos.org/settings/automerge');
-      if (['true', 'false'].includes(preference)) {
-        DXOS_FORCE_AUTOMERGE = JSON.parse(preference);
-      }
-    </script>
   </head>
   <body>
     <div id="root"></div>

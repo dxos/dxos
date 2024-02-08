@@ -62,6 +62,30 @@ Arguments:
 `profile`: <code>string</code>
 
 
+### [SaveConfig(_)](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/savers/index.ts#L7)
+
+
+
+
+Returns: <code>Promise&lt;void&gt;</code>
+
+Arguments: 
+
+`_`: <code>[Config](/api/@dxos/config/interfaces/Config)</code>
+
+
+### [Storage()](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/loaders/index.ts#L66)
+
+
+Load config from storage.
+
+Returns: <code>Promise&lt;Partial&lt;[Config](/api/@dxos/config/interfaces/Config)&gt;&gt;</code>
+
+Arguments: none
+
+
+
+
 ### [definitions(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/plugin/definitions.ts#L19)
 
 

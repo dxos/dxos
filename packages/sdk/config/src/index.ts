@@ -9,5 +9,6 @@ export { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 
 export * from './config';
 export * from './loaders';
+export * from './savers';
 export * from './plugin';
 export * from './types';

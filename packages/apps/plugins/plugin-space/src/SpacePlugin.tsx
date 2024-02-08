@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, Folder as FolderIcon, Plus, SignIn, FolderOpen } from '@phosphor-icons/react';
+import { type IconProps, Folder as FolderIcon, Plus, SignIn } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import localforage from 'localforage';
@@ -341,7 +341,7 @@ export const SpacePlugin = ({
             actions: [
               {
                 id: 'create-space',
-                label: ['create space label', { ns: 'os' }],
+                label: ['create space label', { ns: SPACE_PLUGIN }],
                 icon: (props) => <Plus {...props} />,
                 properties: {
                   disposition: 'toolbar',
@@ -355,7 +355,7 @@ export const SpacePlugin = ({
               },
               {
                 id: 'join-space',
-                label: ['join space label', { ns: 'os' }],
+                label: ['join space label', { ns: SPACE_PLUGIN }],
                 icon: (props) => <SignIn {...props} />,
                 properties: {
                   testId: 'spacePlugin.joinSpace',
@@ -370,19 +370,6 @@ export const SpacePlugin = ({
                       action: NavigationAction.ACTIVATE,
                     },
                   ]),
-              },
-              {
-                id: 'load-directory',
-                label: ['load directory label', { ns: 'os' }],
-                icon: (props) => <FolderOpen {...props} />,
-                properties: {
-                  testId: 'spacePlugin.loadDirectory',
-                },
-                invoke: () =>
-                  dispatch({
-                    plugin: SPACE_PLUGIN,
-                    action: SpaceAction.LOAD,
-                  }),
               },
             ],
             properties: {

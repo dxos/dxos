@@ -228,11 +228,11 @@ export class EchoDatabase {
           continue;
         }
 
+        invariant(obj[base] instanceof AbstractEchoObject);
         obj[base]._id = object.id;
         log('add to set', { id: obj[base]._id, instance: getDebugName(obj) });
         invariant(!this._objects.has(object.id));
         this._objects.set(object.id, obj);
-        invariant(obj[base] instanceof AbstractEchoObject);
         obj[base]._database = this;
         obj[base]._beforeBind();
         obj[base]._bind(object);

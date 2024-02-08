@@ -5,11 +5,13 @@
 import { Plus, Placeholder } from '@phosphor-icons/react';
 import React, { useCallback, type FC } from 'react';
 
-import { Stack as StackType, type File as FileType, Folder } from '@braneframe/types';
+import { File as FileType, Stack as StackType, Folder } from '@braneframe/types';
 import {
   NavigationAction,
   Surface,
+  defaultFileTypes,
   parseMetadataResolverPlugin,
+  parseFileManagerPlugin,
   useIntent,
   usePlugin,
   useResolvePlugin,
@@ -27,7 +29,6 @@ import {
 } from '@dxos/react-ui-theme';
 
 import { FileUpload } from './FileUpload';
-import { defaultFileTypes } from '../hooks';
 import { STACK_PLUGIN } from '../meta';
 import { type StackPluginProvides, isStack } from '../types';
 
@@ -41,6 +42,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
   const { dispatch } = useIntent();
   const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
+  const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
 
   const id = `stack-${stack.id}`;
   const items = stack.sections
@@ -94,13 +96,23 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
   };
 
   const handleAdd = useCallback(
-    (sectionObject: StackType['sections'][0]['object']) => {
+    (sectionObject: StackType.Section['object']) => {
       stack.sections.push(new StackType.Section({ object: sectionObject }));
       // TODO(wittjosiah): Remove once stack items can be added to folders separately.
       folder?.objects.push(sectionObject);
     },
     [stack, stack.sections],
   );
+
+  const handleFileUpload = fileManagerPlugin?.provides.file.upload
+    ? async (file: File) => {
+        const filename = file.name.split('.')[0];
+        const info = await fileManagerPlugin.provides.file.upload?.(file);
+        if (info) {
+          handleAdd(new FileType({ type: file.type, title: filename, filename, cid: info.cid }));
+        }
+      }
+    : undefined;
 
   const handleNavigate = async (id: string) => {
     await dispatch({
@@ -124,18 +136,18 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
         items={items}
         separation={separation}
         transform={handleTransform}
-        onOver={handleOver}
         onDrop={handleDrop}
+        onOver={handleOver}
         onRemoveSection={handleRemove}
         onNavigateToSection={handleNavigate}
       />
 
-      <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
+      <div role='none' className='flex justify-center mt-4'>
         <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), staticDefaultButtonColors]}>
           <DropdownMenu.Root modal={false}>
             <DropdownMenu.Trigger asChild>
               <Button variant='ghost' data-testid='stack.createSection'>
-                <Plus className={getSize(5)} />
+                <Plus className={getSize(6)} />
               </Button>
             </DropdownMenu.Trigger>
             <DropdownMenu.Content>
@@ -153,7 +165,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
                         handleAdd(nextSection);
                       }}
                     >
-                      <Icon className={getSize(4)} />
+                      <Icon className={getSize(6)} />
                       <span>{typeof label === 'string' ? label : t(...(label as [string, { ns: string }]))}</span>
                     </DropdownMenu.Item>
                   );
@@ -161,13 +173,12 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
               </DropdownMenu.Viewport>
             </DropdownMenu.Content>
           </DropdownMenu.Root>
-          <FileUpload
-            classNames='p-2'
-            fileTypes={[...defaultFileTypes.images, ...defaultFileTypes.media, ...defaultFileTypes.text]}
-            onUpload={(file: FileType) => {
-              handleAdd(file);
-            }}
-          />
+          {handleFileUpload && (
+            <FileUpload
+              fileTypes={[...defaultFileTypes.images, ...defaultFileTypes.media, ...defaultFileTypes.text]}
+              onUpload={handleFileUpload}
+            />
+          )}
         </ButtonGroup>
       </div>
     </Main.Content>
