@@ -24,22 +24,22 @@ const createNodeConfig = () =>
 
 const createBrowserConfig = (browserName: 'chrome') =>
   defineConfig({
-    plugins: [nodePolyfills()],
-    resolve: {
-      alias: {
-        buffer: 'buffer/',
-      },
-    },
-    optimizeDeps: {
-      include: ['buffer/'],
-      esbuildOptions: {
-        plugins: [FixGracefulFsPlugin()],
-      },
-    },
+    // plugins: [nodePolyfills()],
+    // resolve: {
+    //   alias: {
+    //     buffer: 'buffer/',
+    //   },
+    // },
+    // optimizeDeps: {
+    //   include: ['buffer/'],
+    //   esbuildOptions: {
+    //     plugins: [FixGracefulFsPlugin()],
+    //   },
+    // },
     test: {
-      ...resolveReporterConfig({ browserMode: true }),
-      name: targetProject,
-      include: ['**/src/**/*.test.ts', '!**/src/**/*.node.test.ts'],
+      // ...resolveReporterConfig({ browserMode: true }),
+      // name: targetProject,
+      // include: [`src/**/*.test.ts`],
 
       testTimeout: isDebug ? 9999999 : 5000,
       inspect: isDebug,

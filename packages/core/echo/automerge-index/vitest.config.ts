@@ -2,10 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import { defineConfig, mergeConfig } from 'vitest/config';
+import { defineProject, mergeConfig } from 'vitest/config';
 
-import configShared from '../../../../vitest.shared';
+// import configShared from '../../../../vitest.shared';
 
-console.log(require('process').cwd());
+console.log(process.cwd());
 
-export default mergeConfig(configShared, defineConfig({}));
+export default // configShared,
+defineProject({
+  root: process.cwd(),
+  test: {
+    include: [`src/sanity.test.ts`],
+    name: 'automerge-index',
+    root: '.',
+    dir: '.',
+    browser: {
+      enabled: true,
+      name: 'chrome',
+    },
+  },
+});
