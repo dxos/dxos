@@ -19,6 +19,7 @@ export default [
           'No plugin had a response for the address you navigated to. Double-check the URL, and ensure you’ve enabled a plugin that supports the object.',
         'toggle fullscreen label': 'Toggle fullscreen',
         'settings show footer label': '[Experimental] Show footer',
+        'settings native redirect label': '[Experimental] Enable native url redirect',
         'undo available label': 'Click to undo previous action.',
         'undo action label': 'Undo',
         'undo action alt': 'Undo previous action',
