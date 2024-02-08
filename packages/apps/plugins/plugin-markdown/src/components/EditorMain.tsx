@@ -73,7 +73,10 @@ const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: Ed
           <Toolbar.Extended />
         </Toolbar.Root>
       )}
-      <div role='none' className='pli-2 overflow-y-auto overscroll-auto scroll-smooth overflow-anchored'>
+      <div
+        role='none'
+        className='pli-2 overflow-y-auto overscroll-auto scroll-smooth overflow-anchored after:block after:is-px after:bs-px after:overflow-anchor'
+      >
         <MarkdownEditor
           ref={editorRef}
           autoFocus
@@ -85,7 +88,7 @@ const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: Ed
                 focusRing,
                 attentionSurface,
                 textBlockWidth,
-                'md:border-is md:border-ie separator-separator after:block after:is-px after:bs-px after:overflow-anchor',
+                'md:border-is md:border-ie separator-separator',
               ),
               'data-testid': 'composer.markdownRoot',
             } as HTMLAttributes<HTMLDivElement>,
