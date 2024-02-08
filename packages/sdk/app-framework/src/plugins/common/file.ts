@@ -11,7 +11,7 @@ export const defaultFileTypes = {
 };
 
 export type FileInfo = {
-  cid: string; // TODO(burdon): Meta.
+  cid?: string; // TODO(burdon): Meta key? Or other common properties with other file management system?
 };
 
 export type FileUploader = (file: File) => Promise<FileInfo | undefined>;
@@ -22,7 +22,7 @@ export type FileManagerProvides = {
   };
 };
 
-// TODO(burdon): Better match against interface? and Return provided service type.
+// TODO(burdon): Better match against interface? and Return provided service type. What if multiple?
 export const parseFileManagerPlugin = (plugin: Plugin) => {
   return (plugin.provides as any).file ? (plugin as Plugin<FileManagerProvides>) : undefined;
 };
