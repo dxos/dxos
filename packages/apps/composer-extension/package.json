@@ -16,7 +16,7 @@
   "devDependencies": {
     "@types/webextension-polyfill": "^0.10.0",
     "typescript": "^5.2.2",
-    "vite": "^5.0.12",
+    "vite": "^5.1.0",
     "vite-plugin-web-extension": "^4.1.1",
     "webextension-polyfill": "^0.10.0"
   }
