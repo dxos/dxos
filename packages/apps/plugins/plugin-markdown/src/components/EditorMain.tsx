@@ -92,7 +92,7 @@ const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: Ed
             extensions={extensions}
             slots={{
               root: {
-                className: focusRing,
+                className: mx(focusRing, 'm-1'),
                 'data-testid': 'composer.markdownRoot',
               } as HTMLAttributes<HTMLDivElement>,
               editor: {

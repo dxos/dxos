@@ -171,6 +171,8 @@ export const getTextContent: {
   }
 };
 
+// TODO(burdon): Reconcile with cursorConverter.
+
 /**
  * TODO(dima?): This API will change.
  */
