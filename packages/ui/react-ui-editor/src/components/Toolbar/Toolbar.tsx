@@ -235,7 +235,7 @@ const markdownBlocks: ButtonProps[] = [
   {
     type: 'codeblock',
     Icon: CodeBlock,
-    getState: (state) => state.blockQuote,
+    getState: (state) => state.blockType === 'codeblock',
     disabled: (state) => !state.blankLine,
   },
   {
@@ -251,6 +251,7 @@ const MarkdownBlocks = () => {
   const { t } = useTranslation(translationKey);
   const value = markdownBlocks.find(({ getState }) => state && getState(state));
   return (
+    // TODO(burdon): Always shows last selected.
     <NaturalToolbar.ToggleGroup type='single' value={value?.type}>
       {markdownBlocks.map(({ type, disabled, getState, Icon }) => (
         <ToolbarButton
