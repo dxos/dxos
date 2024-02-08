@@ -6,46 +6,32 @@
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
-        "outputPath": "packages/sdk/shell/dist/bundle"
+        "outputPath": "packages/sdk/shell/dist/bundle",
+        "generatePackageJson": false
       },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      "outputs": ["{options.outputPath}"]
     },
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/sdk/shell/src/react.ts",
-          "packages/sdk/shell/src/testing/index.ts"
-        ],
-        "platforms": [
-          "browser"
-        ]
+        "entryPoints": ["packages/sdk/shell/src/react.ts", "packages/sdk/shell/src/testing/index.ts"],
+        "platforms": ["browser"]
       }
     },
     "e2e": {
       "options": {
         "playwrightConfigPath": "packages/sdk/shell/src/playwright/playwright.config.ts",
         "serve": "stories:storybook-e2e",
-        "testPatterns": [
-          "packages/sdk/shell/src/playwright/**/*.spec.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/sdk/shell/src/**/*"
-        ]
+        "testPatterns": ["packages/sdk/shell/src/playwright/**/*.spec.{ts,js}"],
+        "watchPatterns": ["packages/sdk/shell/src/**/*"]
       }
     },
     "lint": {
       "options": {
-        "lintFilePatterns": [
-          "packages/sdk/shell/src/**/*.{ts,tsx,js,jsx}"
-        ]
+        "lintFilePatterns": ["packages/sdk/shell/src/**/*.{ts,tsx,js,jsx}"]
       }
     }
   },
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild"
-  ],
+  "implicitDependencies": ["esbuild"],
   "name": "shell"
 }

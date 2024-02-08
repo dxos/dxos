@@ -6,31 +6,24 @@
       "options": {
         "main": "packages/apps/composer-app/src/index.ts",
         "outputPath": "packages/apps/composer-app/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "transformers": ["@dxos/log-hook/transformer"],
         "tsConfig": "packages/apps/composer-app/tsconfig.json"
       }
     },
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
-        "outputPath": "packages/apps/composer-app/out/composer"
+        "outputPath": "packages/apps/composer-app/out/composer",
+        "generatePackageJson": false
       },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      "outputs": ["{options.outputPath}"]
     },
     "e2e": {
       "options": {
         "playwrightConfigPath": "packages/apps/composer-app/src/playwright/playwright.config.ts",
         "serve": "composer-app:preview",
-        "testPatterns": [
-          "packages/apps/composer-app/src/playwright/**/*.spec.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/apps/composer-app/src/**/*"
-        ]
+        "testPatterns": ["packages/apps/composer-app/src/playwright/**/*.spec.{ts,js}"],
+        "watchPatterns": ["packages/apps/composer-app/src/**/*"]
       }
     },
     "lint": {},
@@ -65,8 +58,6 @@
     }
   },
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "test"
-  ],
+  "implicitDependencies": ["test"],
   "name": "composer-app"
 }

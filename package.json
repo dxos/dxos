@@ -60,7 +60,7 @@
     "@nx/js": "17.2.8",
     "@nx/linter": "17.2.8",
     "@nx/storybook": "17.2.8",
-    "@nx/vite": "17.2.8",
+    "@nx/vite": "17.3.2",
     "@nx/web": "17.2.8",
     "@nx/workspace": "17.2.8",
     "@playwright/test": "^1.36.2",
@@ -144,8 +144,7 @@
       "memdown@5.1.0": "patches/memdown@5.1.0.patch",
       "ts-node@10.9.1": "patches/ts-node@10.9.1.patch",
       "uuid@8.3.2": "patches/uuid@8.3.2.patch",
-      "@nx/js@17.2.8": "patches/@nx__js@17.2.8.patch",
-      "@nx/vite@17.2.8": "patches/@nx__vite@17.2.8.patch"
+      "@nx/js@17.2.8": "patches/@nx__js@17.2.8.patch"
     }
   }
 }
