@@ -82,6 +82,7 @@ const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: Ed
           root: {
             className: mx(
               focusRing,
+              'm-0.5 mx-1', // TODO(burdon): Standardize for focusRing. Just focus "paper" of document?
               'overflow-y-auto overscroll-auto scroll-smooth overflow-anchored after:block after:is-px after:bs-px after:overflow-anchor',
             ),
             'data-testid': 'composer.markdownRoot',
@@ -93,6 +94,9 @@ const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: Ed
               'is-full min-bs-[calc(100%-2rem)] pli-3 sm:pli-6 md:pli-10 py-4 mbe-[50dvh] border-be md:border-is md:border-ie separator-separator',
               !toolbar && 'border-bs',
             ),
+          },
+          content: {
+            className: focusRing,
           },
         }}
         {...props}

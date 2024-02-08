@@ -115,7 +115,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
           </div>
 
           {/* Main content */}
-          <div role='none' className='flex-1 min-is-0'>
+          <div role='none' className='flex flex-1 min-is-0'>
             {children}
           </div>
 
