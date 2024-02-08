@@ -52,8 +52,8 @@ const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
         >
           <DotsSixVertical />
         </Button>
-        <div role='none' className={onDelete ? '' : 'col-span-2'}>
-          <Surface role='message-block' data={item} fallback={title} />
+        <div role='none' className={onDelete && 'col-span-2'}>
+          <Surface role='card' limit={1} data={{ content: item }} fallback={title} />
         </div>
         {onDelete && (
           <Button

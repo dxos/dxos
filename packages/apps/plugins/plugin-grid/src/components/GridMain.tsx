@@ -101,7 +101,7 @@ const GridCard: MosaicTileComponent<GridDataItem> = forwardRef(({ item, ...props
   const content = parseData ? parseData(item, 'view-object') : item;
 
   // TODO(wittjosiah): Better card placeholder.
-  return <Surface role='card' ref={forwardRef} limit={1} placeholder={<></>} data={{ content }} {...props} />;
+  return <Surface ref={forwardRef} role='card' limit={1} data={{ content }} {...props} />;
 });
 
 export default GridMain;

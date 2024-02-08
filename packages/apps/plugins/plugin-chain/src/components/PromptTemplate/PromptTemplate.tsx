@@ -42,6 +42,10 @@ const inputTypes = [
     value: ChainType.Input.Type.CONTEXT,
     label: 'Context',
   },
+  {
+    value: ChainType.Input.Type.SCHEMA,
+    label: 'Schema',
+  },
 ];
 
 const getInputType = (type: string) => inputTypes.find(({ value }) => String(value) === type)?.value;
@@ -164,6 +168,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
                           ChainType.Input.Type.VALUE,
                           ChainType.Input.Type.CONTEXT,
                           ChainType.Input.Type.RESOLVER,
+                          ChainType.Input.Type.SCHEMA,
                         ].includes(input.type) && <ValueEditor input={input} />}
                       </td>
                     </tr>
