@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useRef, useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 
 import { Message as MessageType } from '@braneframe/types';
 import { TextObject, getTextContent, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useTranslation } from '@dxos/react-ui';
+import { ScrollArea, useTranslation } from '@dxos/react-ui';
 import { useTextModel } from '@dxos/react-ui-editor';
-import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter } from '@dxos/react-ui-thread';
+import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadLayout } from '@dxos/react-ui-thread';
 
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
@@ -35,6 +35,14 @@ export const ChatContainer = ({ space, thread, currentRelatedId, current, autoFo
   const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
   const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
   const autoFocusAfterSend = useRef<boolean>(false);
+  const textboxMetadata = useMessageMetadata(thread.id, identity);
+  const threadScrollRef = useRef<HTMLDivElement | null>(null);
+
+  useLayoutEffect(() => {
+    // TODO(thure): `flex-col-reverse` does not work to start the container scrolled to the end while also using
+    //  `ScrollArea`. This is the least-bad way I found to scroll to the end on mount.
+    setTimeout(() => threadScrollRef.current?.scrollIntoView({ behavior: 'instant', block: 'end' }), 0);
+  }, []);
 
   // TODO(burdon): Change to model.
   const handleCreate: MessageTextboxProps['onSend'] = () => {
@@ -76,15 +84,25 @@ export const ChatContainer = ({ space, thread, currentRelatedId, current, autoFo
     }
   };
 
-  const textboxMetadata = useMessageMetadata(thread.id, identity);
-
   return (
-    <Thread current={current} id={thread.id} classNames='bs-full grid-rows-[1fr_min-content_min-content]'>
-      <div className='grid grid-cols-subgrid col-span-2 overflow-anchored overflow-y after:block after:overflow-anchor after:is-px after:bs-px after:-mbs-px'>
-        {thread.messages.map((message) => (
-          <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
-        ))}
-      </div>
+    <Thread
+      current={current}
+      id={thread.id}
+      classNames='bs-full grid-rows-[1fr_min-content_min-content] overflow-hidden'
+    >
+      <ScrollArea.Root classNames='col-span-2'>
+        <ScrollArea.Viewport classNames='overflow-anchored after:overflow-anchor after:block after:bs-px'>
+          <div role='none' className={threadLayout}>
+            {thread.messages.map((message) => (
+              <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
+            ))}
+          </div>
+          <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
+          <ScrollArea.Scrollbar>
+            <ScrollArea.Thumb />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
       {nextMessageModel && (
         <>
           <MessageTextbox

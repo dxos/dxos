@@ -5,7 +5,8 @@ import React, { useEffect } from 'react';
 
 import { type Thread as ThreadType } from '@braneframe/types';
 
-import { CommentContainer, type ThreadContainerProps } from './CommentContainer';
+import { CommentContainer } from './CommentContainer';
+import { type ThreadContainerProps } from './types';
 
 export type ThreadsContainerProps = Omit<
   ThreadContainerProps,

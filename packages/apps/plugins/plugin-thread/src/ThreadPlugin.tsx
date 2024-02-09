@@ -31,6 +31,7 @@ import {
   getTextInRange,
   isTypedObject,
 } from '@dxos/react-client/echo';
+import { ScrollArea } from '@dxos/react-ui';
 import { comments, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
@@ -159,32 +160,40 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   .filter(nonNullable);
 
                 return (
-                  <CommentsContainer
-                    space={space}
-                    threads={threads}
-                    detached={detached}
-                    currentId={state.current}
-                    currentRelatedId={location?.active}
-                    autoFocusCurrentTextbox={state.focus}
-                    onThreadAttend={(thread: ThreadType) => {
-                      if (state.current !== thread.id) {
-                        state.current = thread.id;
-                        void intentPlugin?.provides.intent.dispatch({
-                          action: LayoutAction.FOCUS,
-                          data: {
-                            object: thread.id,
-                          },
-                        });
-                      }
-                    }}
-                    onThreadDelete={(thread: ThreadType) =>
-                      dispatch?.({
-                        plugin: THREAD_PLUGIN,
-                        action: ThreadAction.DELETE,
-                        data: { document: active, thread },
-                      })
-                    }
-                  />
+                  <ScrollArea.Root>
+                    <ScrollArea.Viewport>
+                      <CommentsContainer
+                        space={space}
+                        threads={threads}
+                        detached={detached}
+                        currentId={state.current}
+                        currentRelatedId={location?.active}
+                        autoFocusCurrentTextbox={state.focus}
+                        onThreadAttend={(thread: ThreadType) => {
+                          if (state.current !== thread.id) {
+                            state.current = thread.id;
+                            void intentPlugin?.provides.intent.dispatch({
+                              action: LayoutAction.FOCUS,
+                              data: {
+                                object: thread.id,
+                              },
+                            });
+                          }
+                        }}
+                        onThreadDelete={(thread: ThreadType) =>
+                          dispatch?.({
+                            plugin: THREAD_PLUGIN,
+                            action: ThreadAction.DELETE,
+                            data: { document: active, thread },
+                          })
+                        }
+                      />
+                      <div role='none' className='bs-10' />
+                      <ScrollArea.Scrollbar>
+                        <ScrollArea.Thumb />
+                      </ScrollArea.Scrollbar>
+                    </ScrollArea.Viewport>
+                  </ScrollArea.Root>
                 );
               }
 
