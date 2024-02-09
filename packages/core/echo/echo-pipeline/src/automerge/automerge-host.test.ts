@@ -7,7 +7,14 @@ import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
-import { type Message, NetworkAdapter, type PeerId, Repo, type HandleState } from '@dxos/automerge/automerge-repo';
+import {
+  type Message,
+  NetworkAdapter,
+  type PeerId,
+  Repo,
+  type HandleState,
+  type DocumentId,
+} from '@dxos/automerge/automerge-repo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
@@ -118,6 +125,56 @@ describe('AutomergeHost', () => {
       const docOnClient = client.find(handle.url);
       // TODO(mykola): We expect the document to be available here, but it's not.
       await asyncTimeout(docOnClient.whenReady(['unavailable']), 1000);
+    }
+  });
+
+  test('two documents and share policy switching', async () => {
+    const [hostAdapter, clientAdapter] = TestAdapter.createPair();
+    const allowedDocs: DocumentId[] = [];
+
+    const host: Repo = new Repo({
+      network: [hostAdapter],
+      peerId: 'host' as PeerId,
+      sharePolicy: async (_, docId) => (docId ? allowedDocs.includes(docId) && !!host.handles[docId] : false),
+    });
+
+    const client: Repo = new Repo({
+      network: [clientAdapter],
+      peerId: 'client' as PeerId,
+      sharePolicy: async (_, docId) => (docId ? allowedDocs.includes(docId) && !!client.handles[docId] : false),
+    });
+
+    const firstHandle = host.create();
+    firstHandle.change((doc: any) => (doc.text = 'Hello world'));
+    await host.find(firstHandle.url).whenReady();
+    allowedDocs.push(firstHandle.documentId);
+
+    {
+      // Initiate connection.
+      hostAdapter.ready();
+      clientAdapter.ready();
+      await hostAdapter.onConnect.wait();
+      await clientAdapter.onConnect.wait();
+      hostAdapter.peerCandidate(clientAdapter.peerId!);
+      clientAdapter.peerCandidate(hostAdapter.peerId!);
+    }
+
+    {
+      const firstDocOnClient = client.find(firstHandle.url);
+      await asyncTimeout(firstDocOnClient.whenReady(), 1000);
+      expect(firstDocOnClient.docSync().text).toEqual('Hello world');
+    }
+
+    const secondHandle = host.create();
+    secondHandle.change((doc: any) => (doc.text = 'Hello world'));
+    await host.find(secondHandle.url).whenReady();
+    // await sleep(100);
+    allowedDocs.push(secondHandle.documentId);
+
+    {
+      const secondDocOnClient = client.find(secondHandle.url);
+      await asyncTimeout(secondDocOnClient.whenReady(), 1000);
+      expect(secondDocOnClient.docSync().text).toEqual('Hello world');
     }
   });
 
