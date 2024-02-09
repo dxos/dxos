@@ -7,12 +7,12 @@ import { execSync } from 'child_process';
 import { Table } from 'console-table-printer';
 import deepEqual from 'deep-equal';
 import fs from 'fs';
+import globrex from 'globrex';
 import defaultsDeep from 'lodash.defaultsdeep';
 import pick from 'lodash.pick';
 import { inspect } from 'node:util';
 import { dirname, join, relative } from 'path';
 import sortPackageJson from 'sort-package-json';
-import globrex from 'globrex';
 
 import { loadJson, saveJson, sortJson } from './util';
 
@@ -357,7 +357,7 @@ class Toolbox {
         await Promise.all(
           includedPackages.map(async (project) => {
             const projectJson = await loadJson<ProjectJson>(join(project.path, 'project.json'));
-            const entryPoints = projectJson?.targets?.['compile']?.options?.entryPoints;
+            const entryPoints = projectJson?.targets?.compile?.options?.entryPoints;
             if (!Array.isArray(entryPoints)) {
               return [];
             }
