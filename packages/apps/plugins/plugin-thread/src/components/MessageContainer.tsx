@@ -45,27 +45,14 @@ const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
         style={draggableStyle}
         ref={forwardedRef}
       >
-        {/* <Button */}
-        {/*  variant='ghost' */}
-        {/*  classNames={['pli-0 plb-1 min-bs-0 transition-opacity', hoverableControlItem]} */}
-        {/*  {...draggableProps} */}
-        {/* > */}
-        {/*  <DotsSixVertical /> */}
-        {/* </Button> */}
-        {/* <div role='none' className={onDelete && 'col-span-2'}> */}
-        <Surface role='card' limit={1} data={{ content: item }} {...props} fallback={title} />
-        {/* </div> */}
-        {/* TODO(burdon): Rely on menu in card for delete? */}
-        {/* {onDelete && ( */}
-        {/*  <Button */}
-        {/*    variant='ghost' */}
-        {/*    classNames={['p-1.5 min-bs-0 mie-1 transition-opacity items-start', hoverableControlItem]} */}
-        {/*    onClick={(event) => onDelete(event.metaKey)} */}
-        {/*  > */}
-        {/*    <X /> */}
-        {/*    <span className='sr-only'>{t('delete message block label')}</span> */}
-        {/*  </Button> */}
-        {/* )} */}
+        <Surface
+          role='card'
+          limit={1}
+          data={{ content: item }}
+          {...props}
+          draggableProps={draggableProps}
+          fallback={title}
+        />
       </div>
     );
   },
