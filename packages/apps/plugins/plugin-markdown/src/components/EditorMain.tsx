@@ -13,12 +13,12 @@ import {
   Toolbar,
   focusComment,
   useComments,
-  useEditorView,
   useActionHandler,
   useFormattingState,
   editorHalfViewportOverscrollContent,
   editorFillLayoutEditor,
   editorFillLayoutRoot,
+  useEditorView,
 } from '@dxos/react-ui-editor';
 import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
@@ -29,29 +29,29 @@ export type EditorMainProps = {
   toolbar?: boolean;
 } & Pick<TextEditorProps, 'model' | 'readonly' | 'extensions'>;
 
-const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: EditorMainProps) => {
+const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
 
-  const [editorRef, editorView] = useEditorView();
-  useComments(editorView, comments);
-  const handleAction = useActionHandler(editorView);
+  const [editorRef, viewInvalidated] = useEditorView(model.id);
+  useComments(viewInvalidated ? null : editorRef.current, comments);
+  const handleAction = useActionHandler(editorRef.current);
 
   // Expose editor view for playwright tests.
   // TODO(wittjosiah): Find a better way to expose this or find a way to limit it to test runs.
   useEffect(() => {
     const composer = (window as any).composer;
     if (composer) {
-      composer.editorView = editorView;
+      composer.editorView = editorRef.current;
     }
-  }, [editorView]);
+  }, [editorRef.current]);
 
   // Focus comment.
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
     switch (action) {
       case LayoutAction.FOCUS: {
         const object = data?.object;
-        if (editorView) {
-          focusComment(editorView, object);
+        if (editorRef.current) {
+          focusComment(editorRef.current, object);
           return { data: true };
         }
         break;
@@ -84,6 +84,7 @@ const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: Ed
       >
         <MarkdownEditor
           ref={editorRef}
+          model={model}
           autoFocus
           placeholder={t('editor placeholder')}
           extensions={extensions}
