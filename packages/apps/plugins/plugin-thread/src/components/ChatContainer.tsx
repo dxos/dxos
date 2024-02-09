@@ -40,8 +40,9 @@ export const ChatContainer = ({ space, thread, currentRelatedId, current, autoFo
 
   useLayoutEffect(() => {
     // TODO(thure): `flex-col-reverse` does not work to start the container scrolled to the end while also using
-    //  `ScrollArea`. This is the least-bad way I found to scroll to the end on mount.
-    setTimeout(() => threadScrollRef.current?.scrollIntoView({ behavior: 'instant', block: 'end' }), 0);
+    //  `ScrollArea`. This is the least-bad way I found to scroll to the end on mount. Note that 0ms was insufficient
+    //  for the desired effect; this is likely hardware-dependent and should be reevaluated.
+    setTimeout(() => threadScrollRef.current?.scrollIntoView({ behavior: 'instant', block: 'end' }), 10);
   }, []);
 
   // TODO(burdon): Change to model.
@@ -69,7 +70,8 @@ export const ChatContainer = ({ space, thread, currentRelatedId, current, autoFo
       return { text: new TextObject() };
     });
 
-    // TODO(burdon): Scroll to bottom.
+    setTimeout(() => threadScrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 10);
+
     return true;
   };
 
@@ -91,12 +93,13 @@ export const ChatContainer = ({ space, thread, currentRelatedId, current, autoFo
       classNames='bs-full grid-rows-[1fr_min-content_min-content] overflow-hidden'
     >
       <ScrollArea.Root classNames='col-span-2'>
-        <ScrollArea.Viewport classNames='overflow-anchored after:overflow-anchor after:block after:bs-px'>
+        <ScrollArea.Viewport classNames='overflow-anchored after:overflow-anchor after:block after:bs-px after:-mbs-px'>
           <div role='none' className={threadLayout}>
             {thread.messages.map((message) => (
               <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
             ))}
           </div>
+          {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
           <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
           <ScrollArea.Scrollbar>
             <ScrollArea.Thumb />
