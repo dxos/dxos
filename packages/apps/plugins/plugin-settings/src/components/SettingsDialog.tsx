@@ -41,7 +41,7 @@ export const SettingsDialog = ({
         <div className='flex flex-col p-1 gap-4 surface-input rounded place-self-start max-bs-[100%] is-full overflow-y-auto'>
           <PluginList
             title='Options'
-            plugins={core.map((id) => plugins.find((p) => p.meta.id === id)!.meta)}
+            plugins={core.map((id) => plugins.find((plugin) => plugin.meta.id === id)!.meta)}
             selected={selected}
             onSelect={(plugin) => onSelected(plugin)}
           />
