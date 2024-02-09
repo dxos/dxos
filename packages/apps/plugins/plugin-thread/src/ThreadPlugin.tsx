@@ -231,7 +231,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               state.current = intent.data?.current;
               state.focus = intent.data?.focus;
               return { data: true };
-              break;
             }
 
             case ThreadAction.DELETE: {
@@ -287,7 +286,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               },
             }),
             comments({
-              id: doc.content.id, // TODO(burdon): ???
+              id: doc.content.id,
               onCreate: ({ cursor, location }) => {
                 // Create comment thread.
                 const [start, end] = cursor.split(':');
