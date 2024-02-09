@@ -13,8 +13,10 @@ import React, {
 } from 'react';
 import { createContext, useContext } from 'react';
 
+import { raise } from '@dxos/debug';
+
 import { ErrorBoundary } from './ErrorBoundary';
-import { type SurfaceComponent, useSurface, type SurfaceResult } from './SurfaceRootContext';
+import { type SurfaceComponent, type SurfaceResult, useSurfaceRoot } from './SurfaceRootContext';
 
 /**
  * Direction determines how multiple components are laid out.
@@ -97,8 +99,11 @@ export const Surface = forwardRef<HTMLElement, SurfaceProps>(
 
 const SurfaceContext = createContext<SurfaceProps | null>(null);
 
+export const useSurface = (): SurfaceProps =>
+  useContext(SurfaceContext) ?? raise(new Error('Surface context not found'));
+
 const SurfaceResolver = forwardRef<HTMLElement, SurfaceProps>((props, forwardedRef) => {
-  const { components } = useSurface();
+  const { components } = useSurfaceRoot();
   const parent = useContext(SurfaceContext);
   const nodes = resolveNodes(components, props, parent, forwardedRef);
   const currentContext: SurfaceProps = {
