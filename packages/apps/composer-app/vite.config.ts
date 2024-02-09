@@ -73,7 +73,9 @@ export default defineConfig({
     plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
   },
   plugins: [
-    tsconfigPaths({}),
+    tsconfigPaths({
+      projects: ['../../../tsconfig.paths.json'],
+    }),
     // Required for the script plugin.
     {
       name: 'sandbox-importmap-integration',
