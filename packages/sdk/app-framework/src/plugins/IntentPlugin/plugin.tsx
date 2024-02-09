@@ -42,7 +42,7 @@ const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
     ready: async (plugins) => {
       // Dispatch intent to associated plugin.
       const dispatch = async (intent: Intent) => {
-        log.info('dispatch', { intent });
+        log.info('dispatch', { action: intent.action, intent });
         if (intent.plugin) {
           for (const entry of dynamicResolvers) {
             if (entry.plugin === intent.plugin) {
