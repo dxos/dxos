@@ -37,10 +37,7 @@ export const CommentsContainer = ({
 }: ThreadsContainerProps) => {
   useEffect(() => {
     if (currentId) {
-      document
-        .getElementById(currentId)
-        ?.querySelector('[data-landmark="comment-footer"]')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      document.getElementById(currentId)?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
   }, [currentId]);
 

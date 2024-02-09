@@ -131,9 +131,7 @@ export const CommentContainer = ({
             model={nextMessageModel}
             extensions={[command]}
           />
-          <ThreadFooter activity={activity} data-landmark='comment-footer'>
-            {t('activity message')}
-          </ThreadFooter>
+          <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
           <AnchoredOverflow.Anchor />
         </>
       )}
