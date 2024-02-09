@@ -51,9 +51,6 @@ const cursorConverter = (handle: IDocHandle, path: Prop[]) => ({
       }
     }
 
-    const v = get(doc, path);
-    console.log('getCursorPosition==', cursor, typeof v, typeof v === 'string' ? v.length : -1);
-
     // NOTE: Slice is needed because getCursor mutates the array.
     return A.getCursorPosition(doc, path.slice(), cursor);
   },
