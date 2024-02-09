@@ -25,3 +25,7 @@ AGENT_HOSTING_TYPE:
 AGENT_HOSTING_SERVER:
   path: runtime.services.agentHosting.server
   type: string
+
+IPFS_API_SECRET:
+  path: runtime.services.ipfs.serverAuthSecret
+  type: string

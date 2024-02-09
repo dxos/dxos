@@ -3,11 +3,15 @@
 //
 
 import { Gift, DownloadSimple, FirstAidKit } from '@phosphor-icons/react';
-import { create } from 'kubo-rpc-client';
 import React, { useState } from 'react';
 
 import { SettingsValue } from '@braneframe/plugin-settings';
+<<<<<<< HEAD
 import { type ConfigProto, defs, SaveConfig } from '@dxos/config';
+=======
+import { parseFileManagerPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { type ConfigProto, defs, SaveConfig, Storage } from '@dxos/config';
+>>>>>>> db69ceb77 (WIP: support IPFS API authentication)
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useTranslation, Button, Toast, Input, useFileDownload, Select } from '@dxos/react-ui';
@@ -34,6 +38,12 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
   const download = useFileDownload();
   // TODO(mykola): Get updates from other places that change Config.
   const [storageConfig, setStorageConfig] = React.useState<ConfigProto>(client.config.values);
+  const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
+
+  useAsyncEffect(async () => {
+    const config = await Storage();
+    config && setStorageConfig(config);
+  }, []);
 
   const handleToast = (toast: Toast) => {
     setToast(toast);
@@ -44,12 +54,18 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
   const handleDownload = async () => {
     const data = await client.diagnostics();
     const file = new Blob([JSON.stringify(data, undefined, 2)], { type: 'text/plain' });
-    download(file, `composer-${new Date().toISOString().replace(/\W/g, '-')}.json`);
+    const fileName = `composer-${new Date().toISOString().replace(/\W/g, '-')}.json`;
+    download(file, fileName);
 
-    const server = client.config.values.runtime?.services?.ipfs?.server;
-    if (server) {
-      const ipfsClient = create({ url: server });
-      const info = await ipfsClient?.add(file);
+    if (fileManagerPlugin?.provides.file.upload) {
+      const info = await fileManagerPlugin.provides.file.upload(new File([file], fileName));
+      if (!info) {
+        log.error('diagnostics failed to upload to IPFS');
+        return;
+      }
+      handleToast({ title: t('settings uploaded'), description: t('settings uploaded to clipboard') });
+
+      // TODO(nf): move to IpfsPlugin?
       const url = client.config.values.runtime!.services!.ipfs!.gateway + '/' + info.cid;
       void navigator.clipboard.writeText(url);
       handleToast({ title: t('settings uploaded'), description: t('settings uploaded to clipboard') });
