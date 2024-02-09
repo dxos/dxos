@@ -11,6 +11,9 @@ import {
   type Comment,
   MarkdownEditor,
   Toolbar,
+  editorHalfViewportOverscrollContent,
+  editorFillLayoutEditor,
+  editorFillLayoutRoot,
   focusComment,
   useComments,
   useEditorView,
@@ -26,11 +29,12 @@ export type EditorMainProps = {
   toolbar?: boolean;
 } & Pick<TextEditorProps, 'model' | 'readonly' | 'extensions'>;
 
-const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: EditorMainProps) => {
+const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
 
   const [editorRef, editorView] = useEditorView();
-  useComments(editorView, comments);
+  // TODO(burdon): New comments but old view.
+  useComments(editorView, model.id, comments);
   const handleAction = useActionHandler(editorView);
 
   // Expose editor view for playwright tests.
@@ -75,39 +79,36 @@ const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: Ed
       )}
       <div
         role='none'
-        className='overflow-y-auto overscroll-auto scroll-smooth overflow-anchored after:block after:is-px after:bs-px after:overflow-anchor'
+        className={mx(
+          'is-full overflow-y-auto overflow-anchored after:block after:is-px after:bs-px after:overflow-anchor after:-mbs-px',
+        )}
       >
-        <div
-          role='none'
-          className={mx(
-            attentionSurface,
-            textBlockWidth,
-            'pli-0.5 -mbs-0.5 md:border-is md:border-ie separator-separator',
-          )}
-        >
-          <MarkdownEditor
-            ref={editorRef}
-            autoFocus
-            placeholder={t('editor placeholder')}
-            extensions={extensions}
-            slots={{
-              root: {
-                className: mx(focusRing, 'm-1'),
-                'data-testid': 'composer.markdownRoot',
-              } as HTMLAttributes<HTMLDivElement>,
-              editor: {
-                className: mx(
-                  'is-full min-bs-[calc(100%-2rem)] pli-2 sm:pli-6 md:pli-8 py-2 pbe-[50dvh]',
-                  !toolbar && 'border-bs',
-                ),
-              },
-              content: {
-                className: focusRing,
-              },
-            }}
-            {...props}
-          />
-        </div>
+        <MarkdownEditor
+          ref={editorRef}
+          autoFocus
+          placeholder={t('editor placeholder')}
+          model={model}
+          extensions={extensions}
+          slots={{
+            root: {
+              className: mx(
+                focusRing,
+                attentionSurface,
+                textBlockWidth,
+                editorFillLayoutRoot,
+                'md:border-is md:border-ie separator-separator focus-visible:ring-inset',
+              ),
+              'data-testid': 'composer.markdownRoot',
+            } as HTMLAttributes<HTMLDivElement>,
+            editor: {
+              className: mx(editorFillLayoutEditor, 'is-full pli-2 sm:pli-6 md:pli-8 py-2', !toolbar && 'border-bs'),
+            },
+            content: {
+              className: editorHalfViewportOverscrollContent,
+            },
+          }}
+          {...props}
+        />
       </div>
     </>
   );

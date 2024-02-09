@@ -18,7 +18,6 @@ import {
   resolvePlugin,
   useIntent,
   usePlugins,
-  IntentAction,
   LayoutAction,
   NavigationAction,
   Surface,
@@ -30,6 +29,7 @@ import {
   type GraphProvides,
   type SurfaceProps,
   type Layout,
+  IntentAction,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
@@ -38,10 +38,14 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { LayoutContext } from './LayoutContext';
 import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings, ContentFallback } from './components';
-import { activeToUri, uriToActive } from './helpers';
+import { activeToUri, checkAppScheme, uriToActive } from './helpers';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
 import { type LayoutPluginProvides, type LayoutSettingsProps } from './types';
+
+const isSocket = !!(globalThis as any).__args;
+// TODO(mjamesderocher): Can we get this directly from Socket?
+const appScheme = 'composer://';
 
 type NavigationState = Location & {
   activeNode: Node | undefined;
@@ -60,6 +64,7 @@ export const LayoutPlugin = ({
 
   const settings = new LocalStorageStore<LayoutSettingsProps>(LAYOUT_PLUGIN, {
     showFooter: false,
+    enableNativeRedirect: false,
   });
 
   const layout = new LocalStorageStore<Layout>(LAYOUT_PLUGIN, {
@@ -131,29 +136,6 @@ export const LayoutPlugin = ({
     }
   };
 
-  const isSocket = !!(globalThis as any).__args;
-
-  // TODO factor out as part of NavigationPlugin.
-  const checkAppScheme = (url: string) => {
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-
-    iframe.src = url + window.location.pathname.replace(/^\/+/, '');
-
-    const timer = setTimeout(() => {
-      document.body.removeChild(iframe);
-    }, 3000);
-
-    window.addEventListener('pagehide', (event) => {
-      clearTimeout(timer);
-      document.body.removeChild(iframe);
-    });
-  };
-
-  // TODO(mjamesderocher) can we get this directly from Socket?
-  const appScheme = 'composer://';
-
   return {
     meta,
     ready: async (plugins) => {
@@ -164,14 +146,15 @@ export const LayoutPlugin = ({
         .prop(layout.values.$sidebarOpen!, 'sidebar-open', LocalStorageStore.bool)
         .prop(layout.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool);
 
-      settings.prop(settings.values.$showFooter!, 'show-footer', LocalStorageStore.bool);
+      settings
+        .prop(settings.values.$showFooter!, 'show-footer', LocalStorageStore.bool)
+        .prop(settings.values.$enableNativeRedirect!, 'enable-native-redirect', LocalStorageStore.bool);
 
       // TODO(burdon): Create context and plugin.
       Keyboard.singleton.initialize();
 
-      // TODO(burdon): Add option.
-      if (!isSocket) {
-        // checkAppScheme(appScheme);
+      if (!isSocket && settings.values.enableNativeRedirect) {
+        checkAppScheme(appScheme);
       }
     },
     unload: async () => {

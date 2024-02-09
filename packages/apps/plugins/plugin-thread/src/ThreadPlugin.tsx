@@ -222,6 +222,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               state.current = intent.data?.current;
               state.focus = intent.data?.focus;
               return { data: true };
+              break;
             }
 
             case ThreadAction.DELETE: {
@@ -236,6 +237,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 if (index !== -1) {
                   doc.comments.splice(index, 1);
                 }
+
                 return {
                   undoable: {
                     message: translations[0]['en-US'][THREAD_PLUGIN]['thread deleted label'],
@@ -251,6 +253,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         },
       },
       markdown: {
+        // TODO(burdon): Factor out extension factory into separate file (for simplicity).
         extensions: ({ document: doc }) => {
           const space = doc && getSpaceForObject(doc);
           if (!doc || !space) {
@@ -264,6 +267,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   if (thread && cursor) {
                     const [start, end] = cursor.split(':');
                     const title = getTextInRange(doc.content, start, end);
+                    // TODO(burdon): This seems unsafe; review.
                     // Only update if the title has changed, otherwise this will cause an infinite loop.
                     // Skip if the title is empty - this means comment text was deleted, but thread title should remain.
                     if (title && title !== thread.title) {
@@ -274,6 +278,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               },
             }),
             comments({
+              id: doc.content.id, // TODO(burdon): ???
               onCreate: ({ cursor, location }) => {
                 // Create comment thread.
                 const [start, end] = cursor.split(':');

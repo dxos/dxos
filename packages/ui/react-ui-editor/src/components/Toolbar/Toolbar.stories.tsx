@@ -25,13 +25,13 @@ import {
   useFormattingState,
 } from '../../extensions';
 import { type Comment, useActionHandler, useEditorView, useTextModel } from '../../hooks';
-import { editorWithToolbarLayout } from '../../styles';
+import { editorFillLayoutEditor, editorFillLayoutRoot, editorWithToolbarLayout } from '../../styles';
 import translations from '../../translations';
 import { MarkdownEditor } from '../TextEditor';
 
 faker.seed(101);
 
-const Story: FC<{ content: string }> = ({ content }) => {
+const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) => {
   const [item] = useState({ text: new TextObject(content) });
   const [_comments, setComments] = useState<Comment[]>([]);
   const [editorRef, editorView] = useEditorView();
@@ -57,7 +57,7 @@ const Story: FC<{ content: string }> = ({ content }) => {
     [],
   );
 
-  useComments(editorView, _comments);
+  useComments(editorView, id, _comments);
   const handleAction = useActionHandler(editorView);
 
   if (!model) {
@@ -75,7 +75,10 @@ const Story: FC<{ content: string }> = ({ content }) => {
         ref={editorRef}
         model={model}
         extensions={extensions}
-        slots={{ root: { className: mx(textBlockWidth, 'pli-2') } }}
+        slots={{
+          root: { className: mx(textBlockWidth, editorFillLayoutRoot, 'pli-2') },
+          editor: { className: editorFillLayoutEditor },
+        }}
       />
     </div>
   );
