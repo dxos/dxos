@@ -19,18 +19,6 @@ import { type ThreadContainerProps } from './types';
 import { useStatus, useMessageMetadata } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
 
-/**
- * Component for connecting an ECHO Thread object to the UI component Thread.
- * @param space - the containing Space entity
- * @param thread - the Thread entity
- * @param detached - whether this thread is detached from the object
- * @param currentRelatedId - an entity’s id that this thread is related to
- * @param current - whether this thread is current (wrt ARIA) in the app
- * @param autoFocusTextBox - whether to set `autoFocus` on the thread’s textbox
- * @param onAttend - combined callback for `onClickCapture` and `onFocusCapture` within the thread
- * @param onDelete - callback for deleting the thread
- * @constructor
- */
 export const CommentContainer = ({
   space,
   thread,
