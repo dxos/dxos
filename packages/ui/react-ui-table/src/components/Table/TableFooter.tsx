@@ -8,14 +8,15 @@ import React from 'react';
 import { useTableContext } from './TableContext';
 import { tfootRoot, tfootTr, tfootTh } from '../../theme';
 
-export type TableFooterProps = {};
+type TableFooterProps = {};
 
-const TABLE_FOOTER_NAME = 'TableFooter';
+const TABLE_FOOT_NAME = 'TableFooter';
 
 const TableFooter = <TData extends RowData>(props: TableFooterProps) => {
-  const tableContext = useTableContext<TData>(TABLE_FOOTER_NAME);
+  const tableContext = useTableContext<TData>(TABLE_FOOT_NAME);
   const { table, expand, debug } = tableContext;
   const footers = table.getFooterGroups();
+
   return (
     <tfoot className={tfootRoot(props)}>
       {footers.map((footerGroup) => (
@@ -37,6 +38,8 @@ const TableFooter = <TData extends RowData>(props: TableFooterProps) => {
   );
 };
 
-TableFooter.displayName = TABLE_FOOTER_NAME;
+TableFooter.displayName = TABLE_FOOT_NAME;
 
 export { TableFooter };
+
+export type { TableFooterProps };

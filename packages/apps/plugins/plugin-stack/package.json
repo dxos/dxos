@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-stack",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "DXOS Surface plugin for Stack entities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -30,7 +30,6 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "deepsignal": "1.4.0-shallow.0",
-    "kubo-rpc-client": "^3.0.2",
     "node-fetch": "^2.6.0",
     "react-drag-drop-files": "^2.3.8",
     "react-is": "^18.2.0"
