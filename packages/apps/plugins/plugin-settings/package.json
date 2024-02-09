@@ -23,7 +23,7 @@
     "src"
   ],
   "dependencies": {
-    "deepsignal": "1.4.0-shallow.0"
+    "@dxos/local-storage": "workspace:*"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",
