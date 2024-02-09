@@ -11,7 +11,7 @@ import { type SpaceMember } from '@dxos/client/echo';
 import { PublicKey } from '@dxos/react-client';
 import { type Expando, getTextContent, type TextObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button, useTranslation } from '@dxos/react-ui';
+import { Button } from '@dxos/react-ui';
 import { TextEditor, useTextModel } from '@dxos/react-ui-editor';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
@@ -19,15 +19,12 @@ import { Message, type MessageBlockProps, type MessageProps } from '@dxos/react-
 
 import { command } from './command-extension';
 import { useMessageMetadata } from '../hooks';
-import { THREAD_ITEM, THREAD_PLUGIN } from '../meta';
-
-type Block = MessageType.Block;
+import { THREAD_ITEM } from '../meta';
 
 const messageControlClassNames = ['p-1 min-bs-0 mie-1 transition-opacity items-start', hoverableControlItem];
 
 const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
   ({ draggableStyle, draggableProps, item, onDelete, active, ...props }, forwardedRef) => {
-    const { t } = useTranslation(THREAD_PLUGIN);
     let title = item.name ?? item.title ?? item.__typename ?? 'Object';
     if (typeof title !== 'string') {
       title = getTextContent(title);
@@ -62,7 +59,7 @@ const TextboxBlock = ({
   text,
   authorId,
   onBlockDelete,
-}: { text: TextObject } & Pick<MessageBlockProps<Block>, 'authorId' | 'onBlockDelete'>) => {
+}: { text: TextObject } & Pick<MessageBlockProps<MessageType.Block>, 'authorId' | 'onBlockDelete'>) => {
   const identity = useIdentity();
   const model = useTextModel({ text });
   const textboxWidth = onBlockDelete ? 'col-span-2' : 'col-span-3';
@@ -97,7 +94,7 @@ const TextboxBlock = ({
   );
 };
 
-const MessageBlock = ({ block, authorId, onBlockDelete }: MessageBlockProps<Block>) => {
+const MessageBlock = ({ block, authorId, onBlockDelete }: MessageBlockProps<MessageType.Block>) => {
   return block.object ? (
     <Mosaic.Container id={block.object.id}>
       <Mosaic.DraggableTile
@@ -120,14 +117,14 @@ export const MessageContainer = ({
 }: {
   message: MessageType;
   members: SpaceMember[];
-  onDelete: MessageProps<Block>['onDelete'];
+  onDelete: MessageProps<MessageType.Block>['onDelete'];
 }) => {
   const identity = members.find(
     (member) => message.from.identityKey && PublicKey.equals(member.identity.identityKey, message.from.identityKey),
   )?.identity;
   const messageMetadata = useMessageMetadata(message.id, identity);
   return (
-    <Message<Block>
+    <Message<MessageType.Block>
       {...messageMetadata}
       onDelete={onDelete}
       blocks={message.blocks ?? []}

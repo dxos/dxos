@@ -167,7 +167,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                         threads={threads}
                         detached={detached}
                         currentId={state.current}
-                        currentRelatedId={location?.active}
+                        context={{ object: location?.active }}
                         autoFocusCurrentTextbox={state.focus}
                         onThreadAttend={(thread: ThreadType) => {
                           if (state.current !== thread.id) {
@@ -209,7 +209,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const { objects: threads } = space.db.query(ThreadType.filter((thread) => !thread.context));
               if (threads.length) {
                 const thread = threads[0];
-                return <ChatContainer space={space} thread={thread} currentRelatedId={location?.active} />;
+                return <ChatContainer space={space} thread={thread} context={{ object: location?.active }} />;
               }
 
               break;

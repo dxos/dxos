@@ -13,12 +13,12 @@ import { type GptSettingsProps } from '../types';
 export const GptSettings = ({ settings }: { settings: GptSettingsProps }) => {
   const { t } = useTranslation(GPT_PLUGIN);
 
-  // TODO(wittjosiah): Add skill test confirmation for entering vim mode.
   return (
     <>
       <SettingsValue label={t('settings api key')}>
         <Input.Root>
           <Input.TextInput
+            spellCheck={false}
             value={settings.apiKey ?? ''}
             onChange={({ target: { value } }) => (settings.apiKey = value)}
           />
