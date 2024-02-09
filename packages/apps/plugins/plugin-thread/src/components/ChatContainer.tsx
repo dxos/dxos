@@ -9,6 +9,7 @@ import { TextObject, getTextContent, useMembers } from '@dxos/react-client/echo'
 import { useIdentity } from '@dxos/react-client/halo';
 import { ScrollArea, useTranslation } from '@dxos/react-ui';
 import { useTextModel } from '@dxos/react-ui-editor';
+import { mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadLayout } from '@dxos/react-ui-thread';
 
 import { MessageContainer } from './MessageContainer';
@@ -93,8 +94,8 @@ export const ChatContainer = ({ space, thread, currentRelatedId, current, autoFo
       classNames='bs-full grid-rows-[1fr_min-content_min-content] overflow-hidden'
     >
       <ScrollArea.Root classNames='col-span-2'>
-        <ScrollArea.Viewport classNames='overflow-anchored after:overflow-anchor after:block after:bs-px after:-mbs-px'>
-          <div role='none' className={threadLayout}>
+        <ScrollArea.Viewport classNames='overflow-anchored after:overflow-anchor after:block after:bs-px after:-mbs-px [&>div]:min-bs-full [&>div]:!grid [&>div]:grid-rows-[1fr_0]'>
+          <div role='none' className={mx(threadLayout, 'place-self-end')}>
             {thread.messages.map((message) => (
               <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
             ))}
