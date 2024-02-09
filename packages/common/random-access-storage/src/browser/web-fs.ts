@@ -447,6 +447,9 @@ export class WebFile extends EventEmitter implements File {
   @synchronized
   async destroy() {
     if (!this.destroyed) {
+      // We need to flush the buffer before destroying a file so that the call to a storage API
+      // finds an entry for deletion
+      await this._flushNow();
       this.destroyed = true;
       return await this._destroy();
     }
