@@ -34,7 +34,7 @@ faker.seed(101);
 const Story: FC<{ content: string }> = ({ content }) => {
   const [item] = useState({ text: new TextObject(content) });
   const [_comments, setComments] = useState<Comment[]>([]);
-  const [editorRef, editorView] = useEditorView();
+  const [editorRef, viewInvalidated] = useEditorView(item.text.id);
   const model = useTextModel({ text: item.text });
   const [formattingState, formattingObserver] = useFormattingState();
   const extensions = useMemo(
@@ -57,8 +57,8 @@ const Story: FC<{ content: string }> = ({ content }) => {
     [],
   );
 
-  useComments(editorView, _comments);
-  const handleAction = useActionHandler(editorView);
+  useComments(viewInvalidated ? null : editorRef.current, _comments);
+  const handleAction = useActionHandler(editorRef.current);
 
   if (!model) {
     return null;
