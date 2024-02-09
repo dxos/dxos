@@ -11,6 +11,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import Inspect from 'vite-plugin-inspect';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
@@ -201,6 +202,7 @@ export default defineConfig({
         writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
       },
     },
+    // Inspect(),
   ],
 });
 
