@@ -10,14 +10,17 @@ import fs from 'fs';
 import defaultsDeep from 'lodash.defaultsdeep';
 import pick from 'lodash.pick';
 import { inspect } from 'node:util';
-import { join, relative } from 'path';
+import { dirname, join, relative } from 'path';
 import sortPackageJson from 'sort-package-json';
+import globrex from 'globrex';
 
 import { loadJson, saveJson, sortJson } from './util';
 
 const raise = (err: Error) => {
   throw err;
 };
+
+const JS_EXTENSIONS = ['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs', '.mts', '.cts'];
 
 export type ToolboxConfig = {
   project?: {
@@ -29,6 +32,12 @@ export type ToolboxConfig = {
   };
   tsconfig?: {
     fixedKeys?: string[];
+    pathMapping?: {
+      /**
+       * Array of globs for package names.
+       */
+      include: string[];
+    };
   };
 };
 
@@ -75,7 +84,7 @@ type PackageJson = {
 };
 
 type TsConfigJson = {
-  extends: string;
+  extends: string | string[];
   references: {
     path: string;
   }[];
@@ -330,6 +339,70 @@ class Toolbox {
     }
   }
 
+  async updateTsConfigPaths() {
+    const regexes = Array.from(this.config.tsconfig?.pathMapping?.include ?? []).map((pattern) =>
+      globrex(pattern, { extended: true, globstar: true }),
+    );
+
+    const includedPackages = this.projects.filter((project) =>
+      regexes.some((re) => {
+        console.log(project.path);
+        return relative(this.rootDir!, project.path).match(re.regex);
+      }),
+    );
+
+    const tsconfigPaths = await loadJson<TsConfigJson>(join(this.rootDir, 'tsconfig.paths.json'));
+    tsconfigPaths.compilerOptions.paths = Object.fromEntries(
+      (
+        await Promise.all(
+          includedPackages.map(async (project) => {
+            const projectJson = await loadJson<ProjectJson>(join(project.path, 'project.json'));
+            const entryPoints = projectJson?.targets?.['compile']?.options?.entryPoints;
+            if (!Array.isArray(entryPoints)) {
+              return [];
+            }
+            const entries = entryPoints.map((entryPoint) => {
+              console.log(project.path);
+              let entryId = relative(join(project.path, 'src'), entryPoint);
+              if (entryPoint.endsWith('index.ts')) {
+                entryId = dirname(entryId);
+              } else if (JS_EXTENSIONS.some((ext) => entryPoint.endsWith(ext))) {
+                entryId = entryId.slice(0, -JS_EXTENSIONS.find((ext) => entryPoint.endsWith(ext))!.length);
+              }
+
+              return { path: relative(project.path, entryPoint), entryId };
+            });
+            return entries.map(({ path, entryId }) => [
+              join(project.name, entryId),
+              [relative(this.rootDir, join(project.path, path))],
+            ]);
+          }),
+        )
+      ).flat(), // TODO(dmaretskyi): Entrypoints.
+    );
+    if (!Array.isArray(tsconfigPaths.extends)) {
+      tsconfigPaths.extends = [tsconfigPaths.extends];
+    }
+    for (const project of includedPackages) {
+      const tsconfig = await loadJson<TsConfigJson>(join(project.path, 'tsconfig.json'));
+
+      const relativeExtends = relative(project.path, join(this.rootDir, 'tsconfig.paths.json'));
+
+      if (tsconfig.extends) {
+        if (!Array.isArray(tsconfig.extends)) {
+          tsconfig.extends = [tsconfig.extends];
+        }
+        if (!tsconfig.extends.includes(relativeExtends)) {
+          tsconfig.extends.push(relativeExtends);
+        }
+      }
+
+      await saveJson(join(project.path, 'tsconfig.json'), tsconfig, this.options.verbose);
+    }
+
+    await saveJson(join(this.rootDir, 'tsconfig.paths.json'), tsconfigPaths, this.options.verbose);
+  }
+
   async printStats() {
     const stats: Record<
       string,
@@ -374,6 +447,7 @@ const run = async () => {
   await toolbox.updateProjects();
   await toolbox.updatePackages();
   await toolbox.updateTsConfig();
+  await toolbox.updateTsConfigPaths();
 
   // await toolbox.printStats();
 };
