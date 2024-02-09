@@ -7,7 +7,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
-import { mx, textBlockWidth } from '@dxos/react-ui-theme';
+import { attentionSurface, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { TextEditor } from './TextEditor';
@@ -24,7 +24,7 @@ import {
   useFormattingState,
 } from '../../extensions';
 import { createDataExtensions, createThemeExtensions, useActionHandler, useTextEditor } from '../../hooks';
-import { editorWithToolbarLayout } from '../../styles/layout';
+import { editorFillLayoutEditor, editorFillLayoutRoot, editorWithToolbarLayout } from '../../styles';
 import { markdownTheme } from '../../themes';
 import translations from '../../translations';
 import { Toolbar } from '../Toolbar';
@@ -55,7 +55,7 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
         themeMode,
         theme: markdownTheme,
         slots: {
-          editor: { className: 'min-bs-full' },
+          editor: { className: editorFillLayoutEditor },
         },
       }),
       // TODO(burdon): Move lineWrapping.
@@ -85,7 +85,7 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
       <div role='none' className='overflow-y-auto'>
         <div
           role='textbox'
-          className={mx(textBlockWidth, 'min-bs-full p-4 surface-attention fg-base')}
+          className={mx(textBlockWidth, attentionSurface, editorFillLayoutRoot, 'p-4')}
           ref={parentRef}
         />
       </div>

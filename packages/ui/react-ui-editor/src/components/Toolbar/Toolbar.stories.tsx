@@ -25,7 +25,7 @@ import {
   useFormattingState,
 } from '../../extensions';
 import { type Comment, useActionHandler, useEditorView, useTextModel } from '../../hooks';
-import { editorWithToolbarLayout } from '../../styles';
+import { editorFillLayoutEditor, editorFillLayoutRoot, editorWithToolbarLayout } from '../../styles';
 import translations from '../../translations';
 import { MarkdownEditor } from '../TextEditor';
 
@@ -75,7 +75,10 @@ const Story: FC<{ content: string }> = ({ content }) => {
         ref={editorRef}
         model={model}
         extensions={extensions}
-        slots={{ root: { className: mx(textBlockWidth, 'pli-2') } }}
+        slots={{
+          root: { className: mx(textBlockWidth, editorFillLayoutRoot, 'pli-2') },
+          editor: { className: editorFillLayoutEditor },
+        }}
       />
     </div>
   );

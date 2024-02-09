@@ -11,6 +11,12 @@ export { Doc, YText, YXmlFragment } from '@dxos/text-model';
 export * from './components';
 export * from './extensions';
 export * from './hooks';
-export { getToken, editorWithToolbarLayout } from './styles';
+export {
+  getToken,
+  editorWithToolbarLayout,
+  editorFillLayoutEditor,
+  editorFillLayoutRoot,
+  editorHalfViewportOverscrollContent,
+} from './styles';
 export * from './themes';
 export * from './util';
