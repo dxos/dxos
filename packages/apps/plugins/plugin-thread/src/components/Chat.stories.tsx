@@ -17,7 +17,7 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 import { Thread } from '@dxos/react-ui-thread';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { ThreadContainer } from './ThreadContainer';
+import { ChatContainer } from './ChatContainer';
 import { createChatThread } from './testing';
 import translations from '../translations';
 
@@ -55,7 +55,9 @@ const Story = () => {
       }}
     >
       <Mosaic.Root debug>
-        <main className='max-is-prose mli-auto'>{space && <ThreadContainer thread={thread} space={space} />}</main>
+        <main className='max-is-prose mli-auto bs-dvh overflow-hidden'>
+          {space && <ChatContainer thread={thread} space={space} />}
+        </main>
         <Mosaic.DragOverlay />
       </Mosaic.Root>
     </SurfaceProvider>
