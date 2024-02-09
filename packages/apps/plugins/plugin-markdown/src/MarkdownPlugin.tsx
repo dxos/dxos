@@ -92,7 +92,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-      // TODO(burdon): Extensions may be created out of sync.
       markdownExtensionPlugins(plugins).forEach((plugin) => {
         const { extensions } = plugin.provides.markdown;
         state.extensions.push(extensions);
