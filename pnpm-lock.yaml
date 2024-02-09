@@ -2756,9 +2756,9 @@ importers:
 
   packages/apps/plugins/plugin-settings:
     dependencies:
-      deepsignal:
-        specifier: 1.4.0-shallow.0
-        version: 1.4.0-shallow.0(react@18.2.0)
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
     devDependencies:
       '@dxos/app-framework':
         specifier: workspace:*

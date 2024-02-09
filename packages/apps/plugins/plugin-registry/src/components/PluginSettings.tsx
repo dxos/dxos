@@ -32,6 +32,10 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
     .filter((meta) => !installed.includes(meta) && meta.tags?.includes('experimental'))
     .sort(sort);
 
+  const handleReload = () => {
+    window.location.reload();
+  };
+
   return (
     <>
       <SettingsValue label={t('settings show experimental label')}>
@@ -48,6 +52,7 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
           loaded={plugins.map(({ meta }) => meta.id)}
           enabled={enabled}
           onChange={(id, enabled) => setPlugin(id, enabled)}
+          onReload={handleReload}
         />
       </Section>
 
@@ -57,6 +62,7 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
           loaded={plugins.map(({ meta }) => meta.id)}
           enabled={enabled}
           onChange={(id, enabled) => setPlugin(id, enabled)}
+          onReload={handleReload}
         />
       </Section>
 
@@ -67,6 +73,7 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
             loaded={plugins.map(({ meta }) => meta.id)}
             enabled={enabled}
             onChange={(id, enabled) => setPlugin(id, enabled)}
+            onReload={handleReload}
           />
         </Section>
       )}
