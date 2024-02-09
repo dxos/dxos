@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
+import { Event, Trigger, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context, ContextDisposedError } from '@dxos/context';
 import { timed, warnAfterTimeout } from '@dxos/debug';
@@ -13,6 +13,7 @@ import {
   type DataPipeline,
   type CreateEpochOptions,
   type AutomergeHost,
+  type DocumentId,
 } from '@dxos/echo-pipeline';
 import { type FeedStore } from '@dxos/feed-store';
 import { failedInvariant } from '@dxos/invariant';
@@ -289,7 +290,6 @@ export class DataSpace {
       ctx: this._ctx,
       breakOnStall: false,
     });
-
     this.metrics.dataPipelineReady = new Date();
 
     log('data pipeline ready');
@@ -378,10 +378,13 @@ export class DataSpace {
   }
 
   private _onNewAutomergeRoot(rootUrl: string) {
-    log('loading automerge root doc for space', { space: this.key, rootUrl });
-    const handle = this._automergeHost.repo.find(rootUrl as any);
-
     queueMicrotask(async () => {
+      log.info('loading automerge root doc for space', {
+        space: this.key,
+        rootUrl,
+        state: this._automergeHost.repo.handles[rootUrl.replace('automerge:', '') as DocumentId]?.state,
+      });
+      const handle = this._automergeHost.repo.find(rootUrl as any);
       try {
         await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
           await cancelWithContext(this._ctx, handle.whenReady());

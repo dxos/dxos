@@ -64,17 +64,20 @@ export class MeshNetworkAdapter extends NetworkAdapter {
             peerInfo = info;
             // TODO(mykola): Fix race condition?
             this._extensions.set(info.id, extension);
-          }
 
-          this.emit('peer-candidate', {
-            // TODO(mykola): Hack, stop abusing `peerMetadata` field.
-            peerMetadata: {
-              dxos_deviceKey: remotePeerId.toHex(),
-            } as any,
-            peerId: info.id as PeerId,
-          });
+            this.emit('peer-candidate', {
+              // TODO(mykola): Hack, stop abusing `peerMetadata` field.
+              peerMetadata: {
+                dxos_deviceKey: remotePeerId.toHex(),
+              } as any,
+              peerId: info.id as PeerId,
+            });
+          }
         },
         onSyncMessage: async ({ payload }) => {
+          if (!peerInfo) {
+            return;
+          }
           const message = cbor.decode(payload) as Message;
           // Note: automerge Repo dedup messages.
           this.emit('message', message);

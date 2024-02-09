@@ -517,4 +517,64 @@ describe('Spaces', () => {
       );
     });
   });
+
+  test.repeat(100)('share two spaces between clients', async () => {
+    const testBuilder = new TestBuilder();
+
+    const host = new Client({ services: testBuilder.createLocal() });
+    const guest = new Client({ services: testBuilder.createLocal() });
+    host.addTypes(types);
+    guest.addTypes(types);
+
+    await host.initialize();
+    await guest.initialize();
+
+    afterTest(() => host.destroy());
+    afterTest(() => guest.destroy());
+
+    await host.halo.createIdentity({ displayName: 'host' });
+    await guest.halo.createIdentity({ displayName: 'guest' });
+
+    {
+      const hostSpace = await host.spaces.create();
+      await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
+      const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
+
+      const hostDocument = hostSpace.db.add(new DocumentType());
+      await hostSpace.db.flush();
+
+      await waitForExpect(() => {
+        expect(guestSpace.db.getObjectById(hostDocument.id)).not.to.be.undefined;
+      });
+
+      (hostDocument.content as any).content = 'Hello, world!';
+
+      await waitForExpect(() => {
+        expect(getTextContent(guestSpace.db.getObjectById<DocumentType>(hostDocument.id)!.content)).to.equal(
+          'Hello, world!',
+        );
+      });
+    }
+
+    {
+      const hostSpace = await host.spaces.create();
+      await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
+      const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
+
+      const hostDocument = hostSpace.db.add(new DocumentType());
+      await hostSpace.db.flush();
+
+      await waitForExpect(() => {
+        expect(guestSpace.db.getObjectById(hostDocument.id)).not.to.be.undefined;
+      });
+
+      (hostDocument.content as any).content = 'Hello, world!';
+
+      await waitForExpect(() => {
+        expect(getTextContent(guestSpace.db.getObjectById<DocumentType>(hostDocument.id)!.content)).to.equal(
+          'Hello, world!',
+        );
+      });
+    }
+  });
 });

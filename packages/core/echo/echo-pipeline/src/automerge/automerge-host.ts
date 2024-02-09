@@ -49,8 +49,9 @@ export class AutomergeHost {
       // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
       // Hosts, running in the worker, don't share documents unless requested by other peers.
       sharePolicy: async (peerId /* device key */, documentId /* space key */) => {
-        if (peerId.startsWith('client-') && documentId) {
-          return true;
+        if (peerId.startsWith('client-')) {
+          // TODO(mykola): Is it correct?
+          return false;
         }
 
         if (!documentId) {
@@ -59,13 +60,13 @@ export class AutomergeHost {
 
         const doc = this._repo.handles[documentId]?.docSync();
         if (!doc) {
-          log('doc not found for share policy check', { peerId, documentId });
+          log.info('doc not found for share policy check', { peerId, documentId });
           return false;
         }
 
         try {
           if (!doc.experimental_spaceKey) {
-            log('space key not found for share policy check', { peerId, documentId });
+            log.info('space key not found for share policy check', { peerId, documentId });
             return false;
           }
 
@@ -75,13 +76,13 @@ export class AutomergeHost {
           // TODO(mykola): Hack, stop abusing `peerMetadata` field.
           const deviceKeyHex = (this.repo.peerMetadataByPeerId[peerId] as any)?.dxos_deviceKey;
           if (!deviceKeyHex) {
-            log('device key not found for share policy check', { peerId, documentId });
+            log.info('device key not found for share policy check', { peerId, documentId });
             return false;
           }
           const deviceKey = PublicKey.from(deviceKeyHex);
 
           const isAuthorized = authorizedDevices?.has(deviceKey) ?? false;
-          log('share policy check', { peerId, documentId, deviceKey, spaceKey, isAuthorized });
+          log.info('share policy check', { peerId, documentId, deviceKey, spaceKey, isAuthorized });
           return isAuthorized;
         } catch (err) {
           log.catch(err);
