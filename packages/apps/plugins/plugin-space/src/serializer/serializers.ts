@@ -15,9 +15,8 @@ export interface CursorConverter {
   fromCursor(cursor: string): number;
 }
 
-// TODO(mykola): Factor out.
+// TODO(burdon): Reconcile with cursorConverter.
 const cursorConverter = (handle: IDocHandle, path: Prop[]) => ({
-  // TODO(burdon): Handle assoc to associate with a previous character.
   toCursor: (pos: number): string => {
     const doc = handle.docSync();
     if (!doc) {
@@ -32,6 +31,7 @@ const cursorConverter = (handle: IDocHandle, path: Prop[]) => ({
     // NOTE: Slice is needed because getCursor mutates the array.
     return A.getCursor(doc, path.slice(), pos);
   },
+
   fromCursor: (cursor: string): number => {
     if (cursor === '') {
       return 0;
@@ -50,6 +50,9 @@ const cursorConverter = (handle: IDocHandle, path: Prop[]) => ({
         return 0;
       }
     }
+
+    const v = get(doc, path);
+    console.log('getCursorPosition==', cursor, typeof v, typeof v === 'string' ? v.length : -1);
 
     // NOTE: Slice is needed because getCursor mutates the array.
     return A.getCursorPosition(doc, path.slice(), cursor);

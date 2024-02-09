@@ -11,14 +11,14 @@ import {
   type Comment,
   MarkdownEditor,
   Toolbar,
-  focusComment,
-  useComments,
-  useActionHandler,
-  useFormattingState,
   editorHalfViewportOverscrollContent,
   editorFillLayoutEditor,
   editorFillLayoutRoot,
+  focusComment,
+  useComments,
   useEditorView,
+  useActionHandler,
+  useFormattingState,
 } from '@dxos/react-ui-editor';
 import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
@@ -33,7 +33,7 @@ const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...prop
   const { t } = useTranslation(MARKDOWN_PLUGIN);
 
   const [editorRef, viewInvalidated] = useEditorView(model.id);
-  useComments(viewInvalidated ? null : editorRef.current, comments);
+  useComments(viewInvalidated ? null : editorRef.current, model.id, comments);
   const handleAction = useActionHandler(editorRef.current);
 
   // Expose editor view for playwright tests.
@@ -84,9 +84,9 @@ const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...prop
       >
         <MarkdownEditor
           ref={editorRef}
-          model={model}
           autoFocus
           placeholder={t('editor placeholder')}
+          model={model}
           extensions={extensions}
           slots={{
             root: {
