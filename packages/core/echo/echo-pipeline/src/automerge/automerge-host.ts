@@ -32,6 +32,8 @@ export class AutomergeHost {
    */
   private readonly _authorizedDevices = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(PublicKey.hash);
 
+  public _requestedDocs = new Set<string>();
+
   constructor(storageDirectory: Directory) {
     this._meshNetwork = new MeshNetworkAdapter();
     this._clientNetwork = new LocalHostNetworkAdapter();
@@ -41,8 +43,9 @@ export class AutomergeHost {
       storageDirectory.type === StorageType.IDB
         ? new IndexedDBStorageAdapter(storageDirectory.path, 'data')
         : new AutomergeStorageAdapter(storageDirectory);
+    const localPeerId = `host-${PublicKey.random().toHex()}` as PeerId;
     this._repo = new Repo({
-      peerId: `host-${PublicKey.random().toHex()}` as PeerId,
+      peerId: localPeerId,
       network: [this._clientNetwork, this._meshNetwork],
       storage: this._storage,
 
@@ -61,7 +64,7 @@ export class AutomergeHost {
         const doc = this._repo.handles[documentId]?.docSync();
         if (!doc) {
           log.info('doc not found for share policy check', { peerId, documentId });
-          return false;
+          return this._requestedDocs.has(`automerge:${documentId}`);
         }
 
         try {
@@ -82,7 +85,14 @@ export class AutomergeHost {
           const deviceKey = PublicKey.from(deviceKeyHex);
 
           const isAuthorized = authorizedDevices?.has(deviceKey) ?? false;
-          log.info('share policy check', { peerId, documentId, deviceKey, spaceKey, isAuthorized });
+          log.info('share policy check', {
+            localPeer: localPeerId,
+            remotePeer: peerId,
+            documentId,
+            deviceKey,
+            spaceKey,
+            isAuthorized,
+          });
           return isAuthorized;
         } catch (err) {
           log.catch(err);
@@ -142,6 +152,7 @@ export class AutomergeHost {
   }
 
   authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey) {
+    log.info('authorizeDevice', { spaceKey, deviceKey });
     defaultMap(this._authorizedDevices, spaceKey, () => new ComplexSet(PublicKey.hash)).add(deviceKey);
   }
 }

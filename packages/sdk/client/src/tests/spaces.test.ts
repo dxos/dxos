@@ -557,7 +557,13 @@ describe('Spaces', () => {
     }
 
     {
+      log.break();
+      log.info('CREATING SPACE');
       const hostSpace = await host.spaces.create();
+
+      log.break();
+      log.info('INVITING PEER');
+
       await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
       const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
 

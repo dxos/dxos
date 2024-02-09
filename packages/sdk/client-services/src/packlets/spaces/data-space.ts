@@ -379,11 +379,12 @@ export class DataSpace {
 
   private _onNewAutomergeRoot(rootUrl: string) {
     queueMicrotask(async () => {
-      log.info('loading automerge root doc for space', {
-        space: this.key,
-        rootUrl,
-        state: this._automergeHost.repo.handles[rootUrl.replace('automerge:', '') as DocumentId]?.state,
-      });
+      // log.info('loading automerge root doc for space', {
+      //   space: this.key,
+      //   rootUrl,
+      //   state: this._automergeHost.repo.handles[rootUrl.replace('automerge:', '') as DocumentId]?.state,
+      // });
+      this._automergeHost._requestedDocs.add(rootUrl as any);
       const handle = this._automergeHost.repo.find(rootUrl as any);
       try {
         await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
@@ -392,6 +393,8 @@ export class DataSpace {
         if (this._ctx.disposed) {
           return;
         }
+
+        log.info('root doc loaded', { rootUrl });
 
         const doc = handle.docSync() ?? failedInvariant();
         if (!doc.experimental_spaceKey) {
