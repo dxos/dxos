@@ -5,7 +5,7 @@ import React, { useEffect } from 'react';
 
 import { type Thread as ThreadType } from '@braneframe/types';
 
-import { ThreadContainer, type ThreadContainerProps } from './ThreadContainer';
+import { CommentContainer, type ThreadContainerProps } from './CommentContainer';
 
 export type ThreadsContainerProps = Omit<
   ThreadContainerProps,
@@ -25,7 +25,7 @@ export type ThreadsContainerProps = Omit<
 /**
  * Comment threads.
  */
-export const ThreadsContainer = ({
+export const CommentsContainer = ({
   threads,
   detached = [],
   currentId,
@@ -44,7 +44,7 @@ export const ThreadsContainer = ({
   return (
     <>
       {threads.map((thread) => (
-        <ThreadContainer
+        <CommentContainer
           key={thread.id}
           thread={thread}
           current={currentId === thread.id}

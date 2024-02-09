@@ -35,7 +35,7 @@ import { comments, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
 
-import { ThreadContainer, ThreadMain, ThreadSettings, ThreadsContainer } from './components';
+import { ThreadMain, ThreadSettings, CommentsContainer, ChatContainer } from './components';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
 import { ThreadAction, type ThreadPluginProvides, isThread, type ThreadSettingsProps } from './types';
@@ -159,7 +159,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   .filter(nonNullable);
 
                 return (
-                  <ThreadsContainer
+                  <CommentsContainer
                     space={space}
                     threads={threads}
                     detached={detached}
@@ -200,7 +200,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const { objects: threads } = space.db.query(ThreadType.filter((thread) => !thread.context));
               if (threads.length) {
                 const thread = threads[0];
-                return <ThreadContainer space={space} thread={thread} currentRelatedId={location?.active} />;
+                return <ChatContainer space={space} thread={thread} currentRelatedId={location?.active} />;
               }
 
               break;
