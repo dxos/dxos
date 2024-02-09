@@ -14,7 +14,7 @@ import type { Range } from '../hooks';
  *  - https://github.com/yjs/yjs?tab=readme-ov-file#relative-positions
  *
  * @param {assoc} number Negative values will associate the cursor with the previous character
- *                       while positive - with the next one.
+ *  while positive - with the next one.
  */
 export interface CursorConverter {
   toCursor(position: number, assoc?: -1 | 1 | undefined): string;
@@ -28,7 +28,9 @@ const defaultCursorConverter: CursorConverter = {
 
 export class Cursor {
   static readonly converter = Facet.define<CursorConverter, CursorConverter>({
-    combine: (providers) => providers[0] ?? defaultCursorConverter,
+    combine: (providers) => {
+      return providers[0] ?? defaultCursorConverter;
+    },
   });
 
   static readonly getCursorFromRange = (state: EditorState, range: Range) => {

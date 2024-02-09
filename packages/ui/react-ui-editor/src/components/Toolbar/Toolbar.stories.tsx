@@ -31,7 +31,7 @@ import { MarkdownEditor } from '../TextEditor';
 
 faker.seed(101);
 
-const Story: FC<{ content: string }> = ({ content }) => {
+const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) => {
   const [item] = useState({ text: new TextObject(content) });
   const [_comments, setComments] = useState<Comment[]>([]);
   const [editorRef, editorView] = useEditorView();
@@ -57,7 +57,7 @@ const Story: FC<{ content: string }> = ({ content }) => {
     [],
   );
 
-  useComments(editorView, _comments);
+  useComments(editorView, id, _comments);
   const handleAction = useActionHandler(editorView);
 
   if (!model) {
