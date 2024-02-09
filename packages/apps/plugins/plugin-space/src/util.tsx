@@ -16,6 +16,7 @@ import {
   Upload,
   X,
   Database,
+  Copy,
 } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import React from 'react';
@@ -363,6 +364,20 @@ export const objectToGraphNode = ({
     );
 
     if (!(object instanceof Folder)) {
+      node.addAction({
+        id: 'duplicate',
+        label: ['duplicate object label', { ns: SPACE_PLUGIN }],
+        icon: (props) => <Copy {...props} />,
+        invoke: () =>
+          dispatch({
+            action: SpaceAction.DUPLICATE_OBJECT,
+            data: { object, target: parent.data },
+          }),
+        properties: {
+          testId: 'spacePlugin.duplicateObject',
+        },
+      });
+
       return;
     }
 

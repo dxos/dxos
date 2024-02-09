@@ -33,6 +33,7 @@ export enum SpaceAction {
   ADD_OBJECT = `${SPACE_ACTION}/add-object`,
   REMOVE_OBJECT = `${SPACE_ACTION}/remove-object`,
   RENAME_OBJECT = `${SPACE_ACTION}/rename-object`,
+  DUPLICATE_OBJECT = `${SPACE_ACTION}/duplicate-object`,
   WAIT_FOR_OBJECT = `${SPACE_ACTION}/wait-for-object`,
   TOGGLE_HIDDEN = `${SPACE_ACTION}/toggle-hidden`,
   SELECT_DIRECTORY = `${SPACE_ACTION}/select-directory`,
