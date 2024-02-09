@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@braneframe/plugin-client": ["./packages/apps/plugins/plugin-client/src/index.ts"]
+    }
+  }
+}

@@ -10,6 +10,7 @@ import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
@@ -71,6 +72,9 @@ export default defineConfig({
     plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
   },
   plugins: [
+    tsconfigPaths({
+      // projects: ['.'],
+    }),
     // Required for the script plugin.
     {
       name: 'sandbox-importmap-integration',
