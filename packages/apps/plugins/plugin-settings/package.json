@@ -23,11 +23,10 @@
     "src"
   ],
   "dependencies": {
-    "deepsignal": "1.4.0-shallow.0"
+    "@dxos/local-storage": "workspace:*"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",
-    "@dxos/local-storage": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
