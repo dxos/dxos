@@ -379,9 +379,7 @@ class Toolbox {
         )
       ).flat(), // TODO(dmaretskyi): Entrypoints.
     );
-    if (!Array.isArray(tsconfigPaths.extends)) {
-      tsconfigPaths.extends = [tsconfigPaths.extends];
-    }
+
     for (const project of includedPackages) {
       const tsconfig = await loadJson<TsConfigJson>(join(project.path, 'tsconfig.json'));
 
