@@ -18,7 +18,7 @@ import { type ThreadContainerProps } from './types';
 import { useStatus, useMessageMetadata } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
 
-export const ChatContainer = ({ space, thread, currentRelatedId, current, autoFocusTextBox }: ThreadContainerProps) => {
+export const ChatContainer = ({ space, thread, context, current, autoFocus }: ThreadContainerProps) => {
   const identity = useIdentity()!;
   const members = useMembers(space.key);
   const activity = useStatus(space, thread.id);
@@ -55,7 +55,7 @@ export const ChatContainer = ({ space, thread, currentRelatedId, current, autoFo
     thread.messages.push(
       new MessageType({
         from: { identityKey: identity.identityKey.toHex() },
-        context: { object: currentRelatedId },
+        context,
         blocks: [block],
       }),
     );
@@ -105,7 +105,7 @@ export const ChatContainer = ({ space, thread, currentRelatedId, current, autoFo
         <>
           <MessageTextbox
             onSend={handleCreate}
-            autoFocus={autoFocusAfterSend.current || autoFocusTextBox}
+            autoFocus={autoFocusAfterSend.current || autoFocus}
             placeholder={t('message placeholder')}
             {...textboxMetadata}
             model={nextMessageModel}

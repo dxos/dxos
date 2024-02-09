@@ -44,6 +44,12 @@
       "@braneframe/plugin-github/meta": [
         "packages/apps/plugins/plugin-github/src/meta.tsx"
       ],
+      "@braneframe/plugin-gpt": [
+        "packages/apps/plugins/plugin-gpt/src/index.ts"
+      ],
+      "@braneframe/plugin-gpt/meta": [
+        "packages/apps/plugins/plugin-gpt/src/meta.tsx"
+      ],
       "@braneframe/plugin-graph": [
         "packages/apps/plugins/plugin-graph/src/index.ts"
       ],

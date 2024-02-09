@@ -88,7 +88,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
     }
   };
 
-  const handleRemove = (path: string) => {
+  const handleDelete = (path: string) => {
     const index = stack.sections.findIndex((section) => section.id === Path.last(path));
     if (index >= 0) {
       stack.sections.splice(index, 1);
@@ -138,7 +138,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
         transform={handleTransform}
         onDrop={handleDrop}
         onOver={handleOver}
-        onRemoveSection={handleRemove}
+        onDeleteSection={handleDelete}
         onNavigateToSection={handleNavigate}
       />
 

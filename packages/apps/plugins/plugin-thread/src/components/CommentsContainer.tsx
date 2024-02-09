@@ -10,7 +10,7 @@ import { type ThreadContainerProps } from './types';
 
 export type ThreadsContainerProps = Omit<
   ThreadContainerProps,
-  'thread' | 'detached' | 'onAttend' | 'onDelete' | 'current' | 'autoFocusTextBox'
+  'thread' | 'detached' | 'onAttend' | 'onDelete' | 'current' | 'autoFocus'
 > & {
   threads: ThreadType[];
   /**
@@ -50,7 +50,7 @@ export const CommentsContainer = ({
           thread={thread}
           current={currentId === thread.id}
           detached={detached.includes(thread.id)}
-          autoFocusTextBox={autoFocusCurrentTextbox && currentId === thread.id}
+          autoFocus={autoFocusCurrentTextbox && currentId === thread.id}
           {...(onThreadAttend && { onAttend: () => onThreadAttend(thread) })}
           {...(onThreadDelete && { onDelete: () => onThreadDelete(thread) })}
           {...props}

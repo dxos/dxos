@@ -23,9 +23,9 @@ export const CommentContainer = ({
   space,
   thread,
   detached,
-  currentRelatedId,
+  context,
   current,
-  autoFocusTextBox,
+  autoFocus,
   onAttend,
   onDelete,
 }: ThreadContainerProps) => {
@@ -38,7 +38,6 @@ export const CommentContainer = ({
   const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
   const autoFocusAfterSend = useRef<boolean>(false);
 
-  // TODO(burdon): Change to model.
   const handleCreate: MessageTextboxProps['onSend'] = () => {
     const content = nextMessage.text;
     if (!getTextContent(content)) {
@@ -53,7 +52,7 @@ export const CommentContainer = ({
     thread.messages.push(
       new MessageType({
         from: { identityKey: identity.identityKey.toHex() },
-        context: { object: currentRelatedId },
+        context,
         blocks: [block],
       }),
     );
@@ -126,7 +125,7 @@ export const CommentContainer = ({
         <>
           <MessageTextbox
             onSend={handleCreate}
-            autoFocus={autoFocusAfterSend.current || autoFocusTextBox}
+            autoFocus={autoFocusAfterSend.current || autoFocus}
             placeholder={t('message placeholder')}
             {...textboxMetadata}
             model={nextMessageModel}
