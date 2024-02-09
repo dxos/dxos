@@ -13,6 +13,7 @@ import translations from './translations';
 
 export type WildcardPluginProvides = SurfaceProvides & TranslationsProvides;
 
+// TODO(burdon): Rename CardPlugin?
 export const WildcardPlugin = (): PluginDefinition<WildcardPluginProvides> => {
   return {
     meta,

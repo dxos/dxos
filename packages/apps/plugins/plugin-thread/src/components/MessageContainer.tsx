@@ -11,7 +11,7 @@ import { type SpaceMember } from '@dxos/client/echo';
 import { PublicKey } from '@dxos/react-client';
 import { type Expando, getTextContent, type TextObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button } from '@dxos/react-ui';
+import { Button, DensityProvider } from '@dxos/react-ui';
 import { TextEditor, useTextModel } from '@dxos/react-ui-editor';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
@@ -23,37 +23,44 @@ import { THREAD_ITEM } from '../meta';
 
 const messageControlClassNames = ['p-1 min-bs-0 mie-1 transition-opacity items-start', hoverableControlItem];
 
-const ObjectBlockTile: MosaicTileComponent<Expando> = forwardRef(
-  ({ draggableStyle, draggableProps, item, onDelete, active, ...props }, forwardedRef) => {
-    let title = item.name ?? item.title ?? item.__typename ?? 'Object';
-    if (typeof title !== 'string') {
-      title = getTextContent(title);
-    }
+export const MessageContainer = ({
+  message,
+  members,
+  onDelete,
+}: {
+  message: MessageType;
+  members: SpaceMember[];
+  onDelete: MessageProps<MessageType.Block>['onDelete'];
+}) => {
+  const identity = members.find(
+    (member) => message.from.identityKey && PublicKey.equals(member.identity.identityKey, message.from.identityKey),
+  )?.identity;
+  const messageMetadata = useMessageMetadata(message.id, identity);
+  return (
+    <Message<MessageType.Block>
+      {...messageMetadata}
+      onDelete={onDelete}
+      blocks={message.blocks ?? []}
+      MessageBlockComponent={MessageBlock}
+    />
+  );
+};
 
-    return (
-      <div
-        role='group'
-        className={mx(
-          'grid',
-          active === 'overlay' ? 'grid-cols-[min-content_1fr_min-content]' : 'col-span-3 grid-cols-subgrid',
-          hoverableControls,
-          hoverableFocusedWithinControls,
-        )}
-        style={draggableStyle}
-        ref={forwardedRef}
-      >
-        <Surface
-          role='card'
-          limit={1}
-          data={{ content: item }}
-          {...props}
-          draggableProps={draggableProps}
-          fallback={title}
-        />
-      </div>
-    );
-  },
-);
+const MessageBlock = ({ block, authorId, onBlockDelete }: MessageBlockProps<MessageType.Block>) => {
+  return block.object ? (
+    <Mosaic.Container id={block.object.id}>
+      <Mosaic.DraggableTile
+        type={THREAD_ITEM}
+        path={block.object.id}
+        item={block.object}
+        Component={MessageBlockObjectTile}
+        onDelete={onBlockDelete}
+      />
+    </Mosaic.Container>
+  ) : block.content ? (
+    <TextboxBlock text={block.content} authorId={authorId} onBlockDelete={onBlockDelete} />
+  ) : null;
+};
 
 const TextboxBlock = ({
   text,
@@ -94,41 +101,32 @@ const TextboxBlock = ({
   );
 };
 
-const MessageBlock = ({ block, authorId, onBlockDelete }: MessageBlockProps<MessageType.Block>) => {
-  return block.object ? (
-    <Mosaic.Container id={block.object.id}>
-      <Mosaic.DraggableTile
-        type={THREAD_ITEM}
-        path={block.object.id}
-        item={block.object}
-        Component={ObjectBlockTile}
-        onDelete={onBlockDelete}
-      />
-    </Mosaic.Container>
-  ) : block.content ? (
-    <TextboxBlock text={block.content} authorId={authorId} onBlockDelete={onBlockDelete} />
-  ) : null;
-};
+// TODO(burdon): Need delete button for message (not individual blocks)?
+const MessageBlockObjectTile: MosaicTileComponent<Expando> = forwardRef(
+  ({ draggableStyle, draggableProps, item, onDelete, active, ...props }, forwardedRef) => {
+    let title = item.name ?? item.title ?? item.__typename ?? 'Object';
+    if (typeof title !== 'string') {
+      title = getTextContent(title);
+    }
 
-export const MessageContainer = ({
-  message,
-  members,
-  onDelete,
-}: {
-  message: MessageType;
-  members: SpaceMember[];
-  onDelete: MessageProps<MessageType.Block>['onDelete'];
-}) => {
-  const identity = members.find(
-    (member) => message.from.identityKey && PublicKey.equals(member.identity.identityKey, message.from.identityKey),
-  )?.identity;
-  const messageMetadata = useMessageMetadata(message.id, identity);
-  return (
-    <Message<MessageType.Block>
-      {...messageMetadata}
-      onDelete={onDelete}
-      blocks={message.blocks ?? []}
-      MessageBlockComponent={MessageBlock}
-    />
-  );
-};
+    return (
+      <div
+        role='group'
+        className={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}
+        style={draggableStyle}
+        ref={forwardedRef}
+      >
+        <DensityProvider density='fine'>
+          <Surface
+            role='card'
+            limit={1}
+            data={{ content: item }}
+            draggableProps={draggableProps}
+            fallback={title}
+            {...props}
+          />
+        </DensityProvider>
+      </div>
+    );
+  },
+);

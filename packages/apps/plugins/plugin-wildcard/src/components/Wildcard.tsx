@@ -10,7 +10,6 @@ import { Card } from '@dxos/react-ui-card';
 import type { MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/react-ui-theme';
 
-// TODO(burdon): Export.
 const Wildcard: MosaicTileComponent<any> = forwardRef(
   (
     { classNames, isDragging, draggableStyle, draggableProps, item: object, grow, debug, onSelect, onAction },
@@ -61,7 +60,7 @@ const Wildcard: MosaicTileComponent<any> = forwardRef(
             </Card.Menu>
           </Card.Header>
           {(content && (
-            <Card.Body gutter classNames={'text-sm text-neutral-500'}>
+            <Card.Body gutter classNames={'pb-2 text-sm text-neutral-500'}>
               {content}
             </Card.Body>
           )) ||

@@ -174,8 +174,6 @@ export const presets = [
         ],
       }),
   },
-  // TODO(burdon): Extract schema to build model.
-  // TODO(burdon): Output objects.
   {
     id: 'dxos.org/prompt/extract',
     title: 'Extract',
@@ -185,7 +183,13 @@ export const presets = [
         source: new TextObject(
           str(
             //
-            'List all people and companies mentioned in the following text:',
+            'List all people and companies mentioned in the text below.',
+            '',
+            'You are a machine that only replies with valid, iterable RFC8259 compliant JSON in your responses.',
+            'Your entire response should be a map where the key is the type and the value is a single array of JSON objects conforming to the following types:',
+            '',
+            '{contact}',
+            '{company}',
             '',
             '---',
             '',
@@ -194,6 +198,16 @@ export const presets = [
         ),
         inputs: [
           //
+          new ChainType.Input({
+            type: ChainType.Input.Type.SCHEMA,
+            name: 'contact',
+            value: new TextObject('example.com/schema/contact'),
+          }),
+          new ChainType.Input({
+            type: ChainType.Input.Type.SCHEMA,
+            name: 'company',
+            value: new TextObject('example.com/schema/organization'),
+          }),
           new ChainType.Input({ name: 'input', type: ChainType.Input.Type.CONTEXT, value: new TextObject('text') }),
         ],
       }),
