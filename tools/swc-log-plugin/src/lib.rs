@@ -325,14 +325,33 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
 
 // fn test_factory(t: &mut Tester) -> impl Fold {
 //     as_folder(TransformVisitor {
+//         config: Config {
+//             filename: Some("input.js".into()),
+//             symbols: vec![
+//                 TransformedSymbol {
+//                     function: "log".into(),
+//                     package: "@dxos/log".into(),
+//                     param_index: 2,
+//                     include_args: false,
+//                     include_call_site: true,
+//                 },
+//                 TransformedSymbol {
+//                     function: "invariant".into(),
+//                     package: "@dxos/log".into(),
+//                     param_index: 2,
+//                     include_args: true,
+//                     include_call_site: false,
+//                 },
+//             ],
+//         },
 //         source_map: t.cm.clone(),
 //         log_ids: vec![],
 //     })
 // }
 
-// An example to test plugin transform.
-// Recommended strategy to test plugin's transform is verify
-// the Visitor's behavior, instead of trying to run `process_transform` with mocks
+// // An example to test plugin transform.
+// // Recommended strategy to test plugin's transform is verify
+// // the Visitor's behavior, instead of trying to run `process_transform` with mocks
 // // unless explicitly required to do so.
 // test!(
 //     Default::default(),
