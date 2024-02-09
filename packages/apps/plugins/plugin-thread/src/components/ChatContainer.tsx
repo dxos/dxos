@@ -30,11 +30,14 @@ export const ChatContainer = ({ space, thread, currentRelatedId, current, autoFo
   const textboxMetadata = useMessageMetadata(thread.id, identity);
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
 
+  // TODO(thure): `flex-col-reverse` does not work to start the container scrolled to the end while also using
+  //  `ScrollArea`. This is the least-bad way I found to scroll to the end on mount. Note that 0ms was insufficient
+  //  for the desired effect; this is likely hardware-dependent and should be reevaluated.
+  const scrollToEnd = (behavior: ScrollBehavior) =>
+    setTimeout(() => threadScrollRef.current?.scrollIntoView({ behavior, block: 'end' }), 10);
+
   useLayoutEffect(() => {
-    // TODO(thure): `flex-col-reverse` does not work to start the container scrolled to the end while also using
-    //  `ScrollArea`. This is the least-bad way I found to scroll to the end on mount. Note that 0ms was insufficient
-    //  for the desired effect; this is likely hardware-dependent and should be reevaluated.
-    setTimeout(() => threadScrollRef.current?.scrollIntoView({ behavior: 'instant', block: 'end' }), 10);
+    scrollToEnd('instant');
   }, []);
 
   // TODO(burdon): Change to model.
@@ -62,7 +65,7 @@ export const ChatContainer = ({ space, thread, currentRelatedId, current, autoFo
       return { text: new TextObject() };
     });
 
-    setTimeout(() => threadScrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 10);
+    scrollToEnd('smooth');
 
     return true;
   };
