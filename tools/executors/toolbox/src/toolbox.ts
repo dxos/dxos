@@ -362,7 +362,6 @@ class Toolbox {
               return [];
             }
             const entries = entryPoints.map((entryPoint) => {
-              console.log(project.path);
               let entryId = relative(join(project.path, 'src'), entryPoint);
               if (entryPoint.endsWith('index.ts')) {
                 entryId = dirname(entryId);
