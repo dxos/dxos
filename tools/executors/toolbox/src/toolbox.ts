@@ -380,23 +380,6 @@ class Toolbox {
       ).flat(), // TODO(dmaretskyi): Entrypoints.
     );
 
-    for (const project of includedPackages) {
-      const tsconfig = await loadJson<TsConfigJson>(join(project.path, 'tsconfig.json'));
-
-      const relativeExtends = relative(project.path, join(this.rootDir, 'tsconfig.paths.json'));
-
-      if (tsconfig.extends) {
-        if (!Array.isArray(tsconfig.extends)) {
-          tsconfig.extends = [tsconfig.extends];
-        }
-        if (!tsconfig.extends.includes(relativeExtends)) {
-          tsconfig.extends.push(relativeExtends);
-        }
-      }
-
-      await saveJson(join(project.path, 'tsconfig.json'), tsconfig, this.options.verbose);
-    }
-
     await saveJson(join(this.rootDir, 'tsconfig.paths.json'), tsconfigPaths, this.options.verbose);
   }
 
