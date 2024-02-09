@@ -376,7 +376,7 @@ export const SpacePlugin = ({
               testId: 'spacePlugin.sharedSpaces',
               role: 'branch',
               palette: 'pink',
-              childrenPersistenceClass: 'folder',
+              childrenPersistenceClass: 'echo',
               onRearrangeChildren: (nextOrder: Space[]) => {
                 if (!spacesOrder) {
                   const nextObjectOrder = new Expando({

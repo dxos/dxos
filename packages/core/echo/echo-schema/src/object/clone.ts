@@ -10,7 +10,8 @@ import { type AutomergeObject } from '../automerge';
 
 export type CloneOptions = {
   /**
-   * @default true
+   * @default false
+   * @deprecated This option is not fully functional, recommended not to use for now.
    */
   retainId?: boolean;
 
@@ -23,7 +24,7 @@ export type CloneOptions = {
 /**
  * Returns new unbound clone of the object.
  */
-export const clone = <T extends EchoObject>(obj: T, { retainId = true, additional = [] }: CloneOptions = {}): T => {
+export const clone = <T extends EchoObject>(obj: T, { retainId = false, additional = [] }: CloneOptions = {}): T => {
   if (retainId === false && additional.length > 0) {
     throw new Error('Updating ids is not supported when cloning with nested objects.');
   }

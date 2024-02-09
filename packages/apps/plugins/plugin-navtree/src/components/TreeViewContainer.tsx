@@ -140,12 +140,17 @@ export const TreeViewContainer = ({
         const overPath = trimPlaceholder(over.path);
         const overNode = graph.findNode(Path.last(overPath));
         const activeNode = graph.findNode(Path.last(active.path));
-        if (overNode && activeNode && activeNode.properties.persistenceClass) {
-          const activeClass = activeNode.properties.persistenceClass;
+        const activeClass = activeNode?.properties.persistenceClass;
+        const activeKey = activeNode?.properties.persistenceKey;
+        if (overNode && activeNode && activeClass && activeKey) {
           const overAcceptParent = overNode.properties.acceptPersistenceClass?.has(activeClass)
             ? overNode
             : getPersistenceParent(overNode, activeClass);
-          return overAcceptParent ? 'transfer' : 'reject';
+          return overAcceptParent
+            ? overAcceptParent.properties.acceptPersistenceKey?.has(activeKey)
+              ? 'transfer'
+              : 'copy'
+            : 'reject';
         } else {
           return 'reject';
         }
@@ -178,6 +183,14 @@ export const TreeViewContainer = ({
           if (destinationParent && originParent) {
             destinationParent.properties.onTransferStart(activeNode);
             originParent.properties.onTransferEnd(activeNode, destinationParent);
+          }
+        }
+        if (operation === 'copy') {
+          const destinationParent = overNode?.properties.acceptPersistenceClass?.has(activeClass)
+            ? overNode
+            : getPersistenceParent(overNode, activeClass);
+          if (destinationParent) {
+            destinationParent.properties.onCopy(activeNode);
           }
         }
       }
