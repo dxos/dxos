@@ -2,16 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { create } from 'ipfs-http-client';
+import { create } from 'kubo-rpc-client';
 import { useMemo } from 'react';
 
 import { useConfig } from '@dxos/react-client';
-
-export const defaultFileTypes = {
-  images: ['png', 'jpg', 'jpeg'],
-  media: ['mp3', 'mp4', 'mov', 'avi'],
-  text: ['pdf', 'txt', 'md'],
-};
 
 /**
  * IPFS

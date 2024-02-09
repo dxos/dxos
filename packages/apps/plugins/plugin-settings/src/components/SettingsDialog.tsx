@@ -16,7 +16,6 @@ export const SettingsDialog = ({ plugin, setPlugin }: { plugin: string; setPlugi
 
   const core = [
     'dxos.org/plugin/layout',
-    'dxos.org/plugin/client',
     'dxos.org/plugin/space',
     'dxos.org/plugin/observability',
     'dxos.org/plugin/registry',

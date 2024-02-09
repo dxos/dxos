@@ -38,10 +38,14 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { LayoutContext } from './LayoutContext';
 import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings, ContentFallback } from './components';
-import { activeToUri, uriToActive } from './helpers';
+import { activeToUri, checkAppScheme, uriToActive } from './helpers';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
 import { type LayoutPluginProvides, type LayoutSettingsProps } from './types';
+
+const isSocket = !!(globalThis as any).__args;
+// TODO(mjamesderocher): Can we get this directly from Socket?
+const appScheme = 'composer://';
 
 type NavigationState = Location & {
   activeNode: Node | undefined;
@@ -59,8 +63,8 @@ export const LayoutPlugin = ({
   let currentUndoId: string | undefined;
 
   const settings = new LocalStorageStore<LayoutSettingsProps>(LAYOUT_PLUGIN, {
-    enableComplementarySidebar: true,
     showFooter: false,
+    enableNativeRedirect: false,
   });
 
   const layout = new LocalStorageStore<Layout>(LAYOUT_PLUGIN, {
@@ -143,11 +147,15 @@ export const LayoutPlugin = ({
         .prop(layout.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool);
 
       settings
-        .prop(settings.values.$enableComplementarySidebar!, 'enable-complementary-sidebar', LocalStorageStore.bool)
-        .prop(settings.values.$showFooter!, 'show-footer', LocalStorageStore.bool);
+        .prop(settings.values.$showFooter!, 'show-footer', LocalStorageStore.bool)
+        .prop(settings.values.$enableNativeRedirect!, 'enable-native-redirect', LocalStorageStore.bool);
 
       // TODO(burdon): Create context and plugin.
       Keyboard.singleton.initialize();
+
+      if (!isSocket && settings.values.enableNativeRedirect) {
+        checkAppScheme(appScheme);
+      }
     },
     unload: async () => {
       Keyboard.singleton.destroy();
@@ -279,7 +287,6 @@ export const LayoutPlugin = ({
               return (
                 <MainLayout
                   fullscreen={layout.values.fullscreen}
-                  showComplementarySidebar={settings.values.enableComplementarySidebar}
                   showHintsFooter={settings.values.showFooter}
                   toasts={layout.values.toasts}
                   onDismissToast={(id) => {

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/labs-functions",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "private": true,
   "description": "Experimental functions.",
   "homepage": "https://dxos.org",
@@ -64,7 +64,6 @@
     "mailparser": "^3.6.4",
     "node-fetch": "^2.6.0",
     "open": "^9.1.0",
-    "openai": "^3.2.1",
     "server-destroy": "^1.0.1",
     "split2": "^4.1.0",
     "textract": "^2.5.0",

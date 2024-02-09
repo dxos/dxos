@@ -208,7 +208,7 @@ const MarkdownLists = () => {
   const { onAction, state } = useToolbarContext('MarkdownStyles');
   const { t } = useTranslation(translationKey);
   return (
-    <NaturalToolbar.ToggleGroup type='single' value={state?.listStyle ?? undefined}>
+    <NaturalToolbar.ToggleGroup type='single' value={state?.listStyle ? `list-${state.listStyle}` : ''}>
       {markdownLists.map(({ type, getState, Icon }) => (
         <ToolbarButton
           key={type}
@@ -232,7 +232,7 @@ const markdownBlocks: ButtonProps[] = [
   {
     type: 'codeblock',
     Icon: CodeBlock,
-    getState: (state) => state.blockQuote,
+    getState: (state) => state.blockType === 'codeblock',
     disabled: (state) => !state.blankLine,
   },
   {
@@ -248,7 +248,7 @@ const MarkdownBlocks = () => {
   const { t } = useTranslation(translationKey);
   const value = markdownBlocks.find(({ getState }) => state && getState(state));
   return (
-    <NaturalToolbar.ToggleGroup type='single' value={value?.type}>
+    <NaturalToolbar.ToggleGroup type='single' value={value?.type ?? ''}>
       {markdownBlocks.map(({ type, disabled, getState, Icon }) => (
         <ToolbarButton
           key={type}

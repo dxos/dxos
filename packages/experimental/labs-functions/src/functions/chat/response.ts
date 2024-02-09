@@ -4,7 +4,7 @@
 
 import { type Message as MessageType, Document as DocumentType, Stack as StackType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { Expando, TextObject } from '@dxos/echo-schema';
+import { Expando, Schema, TextObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -75,20 +75,24 @@ export class ResponseBuilder {
     //
     if (result.type === 'json') {
       const blocks: MessageType.Block[] = [];
-      Object.entries(data).forEach(([type, values]) => {
+      Object.entries(data).forEach(([type, array]) => {
         const schema = this._context.schema?.get(type);
         if (schema) {
-          for (const value of values as any[]) {
+          for (const obj of array as any[]) {
             const data: Record<string, any> = {
               '@type': schema.typename,
             };
 
-            for (const { id } of schema.props) {
+            for (const { id, type } of schema.props) {
               invariant(id);
-              if (value[id]) {
-                // TODO(burdon): Currently only handles string properties.
-                if (typeof value[id] === 'string') {
-                  data[id] = new TextObject(value[id]);
+              const value = obj[id];
+              if (value !== undefined && value !== null) {
+                switch (type) {
+                  // TODO(burdon): Currently only handles string properties.
+                  case Schema.PropType.STRING: {
+                    data[id] = new TextObject(value);
+                    break;
+                  }
                 }
               }
             }

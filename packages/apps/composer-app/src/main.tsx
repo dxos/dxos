@@ -14,6 +14,7 @@ import DebugMeta from '@braneframe/plugin-debug/meta';
 import ExplorerMeta from '@braneframe/plugin-explorer/meta';
 import FilesMeta from '@braneframe/plugin-files/meta';
 import GithubMeta from '@braneframe/plugin-github/meta';
+import GptMeta from '@braneframe/plugin-gpt/meta';
 import GraphMeta from '@braneframe/plugin-graph/meta';
 import GridMeta from '@braneframe/plugin-grid/meta';
 import HelpMeta from '@braneframe/plugin-help/meta';
@@ -75,7 +76,7 @@ const main = async () => {
     config = await setupConfig();
   }
 
-  // Intentially do not await, don't block app startup for telemetry.
+  // Intentionally do not await, don't block app startup for telemetry.
   const observability = initializeAppObservability({ namespace: appKey, config });
 
   const services = await createClientServices(
@@ -125,6 +126,7 @@ const main = async () => {
       FilesMeta,
       GithubMeta,
       IpfsMeta,
+      GptMeta,
 
       // Framework extensions
       // TODO(wittjosiah): Space plugin currently needs to be before the Graph plugin.
@@ -168,6 +170,7 @@ const main = async () => {
       [ExplorerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-explorer')),
       [FilesMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-files')),
       [GithubMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-github')),
+      [GptMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-gpt')),
       [GraphMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-graph')),
       [GridMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-grid')),
       [HelpMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-help'), {

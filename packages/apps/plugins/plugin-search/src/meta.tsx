@@ -13,5 +13,7 @@ export const SEARCH_RESULT = `${SEARCH_PLUGIN}/result`;
 export default pluginMeta({
   id: SEARCH_PLUGIN,
   name: 'Search',
+  description: 'Search ECHO spaces for content.',
+  tags: ['experimental'],
   iconComponent: (props: IconProps) => <MagnifyingGlass {...props} />,
 });

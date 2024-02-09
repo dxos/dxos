@@ -3,7 +3,7 @@
 //
 
 import { Gift, DownloadSimple, FirstAidKit } from '@phosphor-icons/react';
-import { create } from 'ipfs-http-client';
+import { create } from 'kubo-rpc-client';
 import React, { useState } from 'react';
 
 import { SettingsValue } from '@braneframe/plugin-settings';

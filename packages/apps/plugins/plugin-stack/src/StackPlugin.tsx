@@ -31,7 +31,7 @@ import {
 } from './types';
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
-  const settings = new LocalStorageStore<StackSettingsProps>(STACK_PLUGIN);
+  const settings = new LocalStorageStore<StackSettingsProps>(STACK_PLUGIN, { separation: true });
   const stackState: StackState = deepSignal({ creators: [] });
 
   return {

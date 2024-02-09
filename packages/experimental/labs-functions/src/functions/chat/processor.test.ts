@@ -144,7 +144,7 @@ describe.skip('RequestProcessor', () => {
                 [
                   'List all people and companies mentioned in the content section below.',
                   'You are a machine that only replies with valid, iterable RFC8259 compliant JSON in your responses.',
-                  'Your entire response should be a single JSON object containing arrays of objects for the following types:',
+                  'Your entire response should be a map where the key is the type and the value is a single array of JSON objects conforming to the following types:',
                   '{company}',
                   '{contact}',
                   '---',
