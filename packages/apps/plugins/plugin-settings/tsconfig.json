@@ -23,6 +23,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/local-storage"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {
