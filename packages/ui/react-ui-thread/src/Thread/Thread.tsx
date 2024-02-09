@@ -14,6 +14,8 @@ import type { ThreadEntity } from '../types';
 export type ThreadProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
   ThreadEntity & { current?: boolean | ComponentProps<'div'>['aria-current'] };
 
+export const threadLayout = 'is-full place-self-start grid grid-cols-[3rem_1fr]';
+
 export const Thread = forwardRef<HTMLDivElement, ThreadProps>(
   ({ current, children, classNames, ...props }, forwardedRef) => {
     return (
@@ -23,9 +25,9 @@ export const Thread = forwardRef<HTMLDivElement, ThreadProps>(
         {...(current && { 'aria-current': typeof current === 'string' ? current : 'location' })}
         {...props}
         className={mx(
-          'is-full place-self-start grid grid-cols-[3rem_1fr] bg-[var(--surface-bg)]',
-          'border-[color:var(--surface-separator)] border-bs border-be plb-1.5 attention attention-within attention-current [--controls-opacity:0]',
+          threadLayout,
           hoverableFocusedWithinControls,
+          'bg-[var(--surface-bg)] border-[color:var(--surface-separator)] border-bs border-be plb-1.5 attention attention-within attention-current [--controls-opacity:0]',
           classNames,
         )}
         ref={forwardedRef}

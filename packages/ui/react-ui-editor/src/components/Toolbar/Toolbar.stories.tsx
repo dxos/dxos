@@ -31,10 +31,10 @@ import { MarkdownEditor } from '../TextEditor';
 
 faker.seed(101);
 
-const Story: FC<{ content: string }> = ({ content }) => {
+const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) => {
   const [item] = useState({ text: new TextObject(content) });
   const [_comments, setComments] = useState<Comment[]>([]);
-  const [editorRef, editorView] = useEditorView();
+  const [editorRef, viewInvalidated] = useEditorView(id);
   const model = useTextModel({ text: item.text });
   const [formattingState, formattingObserver] = useFormattingState();
   const extensions = useMemo(
@@ -57,8 +57,8 @@ const Story: FC<{ content: string }> = ({ content }) => {
     [],
   );
 
-  useComments(editorView, _comments);
-  const handleAction = useActionHandler(editorView);
+  useComments(viewInvalidated ? null : editorRef.current, id, _comments);
+  const handleAction = useActionHandler(editorRef.current);
 
   if (!model) {
     return null;

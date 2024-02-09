@@ -65,7 +65,7 @@ export type TextEditorProps = {
  * Base text editor.
  */
 // TODO(burdon): Replace with useTextEditor.
-export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
+export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
   (
     { model, readonly, autoFocus, scrollTo, selection, theme, slots = defaultSlots, extensions = [], debug },
     forwardedRef,
@@ -202,7 +202,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
   },
 );
 
-export const TextEditor = forwardRef<EditorView, TextEditorProps>(
+export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
   ({ readonly, placeholder, lineWrapping, theme = textTheme, slots, extensions = [], ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const updatedSlots = defaultsDeep({}, slots, defaultTextSlots);
@@ -219,7 +219,7 @@ export const TextEditor = forwardRef<EditorView, TextEditorProps>(
   },
 );
 
-export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
+export const MarkdownEditor = forwardRef<EditorView | null, TextEditorProps>(
   ({ readonly, placeholder, theme = markdownTheme, slots, extensions = [], ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const updatedSlots = defaultsDeep({}, slots, defaultMarkdownSlots);
