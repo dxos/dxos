@@ -37,8 +37,7 @@ export const CommentsContainer = ({
 }: ThreadsContainerProps) => {
   useEffect(() => {
     if (currentId) {
-      const threadElement = document.getElementById(currentId);
-      threadElement?.scrollIntoView({ behavior: 'smooth' });
+      document.getElementById(currentId)?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
   }, [currentId]);
 
