@@ -190,7 +190,7 @@ export const TreeViewContainer = ({
             ? overNode
             : getPersistenceParent(overNode, activeClass);
           if (destinationParent) {
-            destinationParent.properties.onCopy(activeNode);
+            void destinationParent.properties.onCopy(activeNode);
           }
         }
       }

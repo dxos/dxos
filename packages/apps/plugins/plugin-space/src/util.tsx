@@ -24,12 +24,13 @@ import type { Graph, Node, NodeArg } from '@braneframe/plugin-graph';
 import { Folder } from '@braneframe/types';
 import { type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { clone, isTypedObject } from '@dxos/echo-schema';
+import { isTypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { Migrations } from '@dxos/migrations';
 import { EchoDatabase, type Space, SpaceState, type TypedObject, getSpaceForObject } from '@dxos/react-client/echo';
 
 import { SPACE_PLUGIN } from './meta';
+import { clone } from './serializer';
 import { SpaceAction } from './types';
 
 export const SHARED = 'shared-spaces';
@@ -138,16 +139,9 @@ const getFolderGraphNodePartials = ({
         //   childSpace.db.remove(child.data);
         // }
       },
-      onCopy: (child: Node<TypedObject>) => {
+      onCopy: async (child: Node<TypedObject>) => {
         // Create clone of child and add to destination space.
-        const newObject = clone(child.data, {
-          // TODO(wittjosiah): This needs to be generalized and not hardcoded here.
-          additional: [
-            child.data.content,
-            ...(child.data.objects ?? []),
-            ...(child.data.objects ?? []).map((object: TypedObject) => object.content),
-          ],
-        });
+        const newObject = await clone(child.data);
         space.db.add(newObject);
         folder.objects.push(newObject);
       },
