@@ -3,7 +3,7 @@
 //
 
 import get from 'lodash.get';
-import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
+import { type Dispatch, type SetStateAction, useState, useMemo } from 'react';
 
 import { generateName } from '@dxos/display-name';
 import { type AutomergeTextCompat, getRawDoc } from '@dxos/echo-schema';
@@ -27,14 +27,8 @@ export type UseTextModelProps = {
  * @deprecated
  */
 // TODO(burdon): Remove once automerge lands.
-export const useTextModel = (props: UseTextModelProps): EditorModel | undefined => {
-  const [model, setModel] = useState<EditorModel>();
-  const { identity, space, text } = props;
-  useEffect(() => {
-    setModel(createModel(props));
-  }, [identity, space, text]);
-  return model;
-};
+export const useTextModel = (props: UseTextModelProps): EditorModel | undefined =>
+  useMemo(() => createModel(props), Object.values(props));
 
 /**
  * For use primarily in stories & tests so the dependence on TextObject can be avoided.
