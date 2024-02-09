@@ -5,54 +5,21 @@
 import { X } from '@phosphor-icons/react';
 import React, { useRef, useState } from 'react';
 
-import { type Thread as ThreadType, Message as MessageType } from '@braneframe/types';
-import { TextObject, getTextContent } from '@dxos/react-client/echo';
-import { type Space, useMembers } from '@dxos/react-client/echo';
+import { Message as MessageType } from '@braneframe/types';
+import { TextObject, getTextContent, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { AnchoredOverflow, Button, Tooltip, useTranslation } from '@dxos/react-ui';
 import { useTextModel } from '@dxos/react-ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
-import {
-  MessageTextbox,
-  type MessageTextboxProps,
-  Thread,
-  ThreadFooter,
-  ThreadHeading,
-  type ThreadProps,
-} from '@dxos/react-ui-thread';
+import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, ThreadHeading } from '@dxos/react-ui-thread';
 
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
+import { type ThreadContainerProps } from './types';
 import { useStatus, useMessageMetadata } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
 
-export type ThreadContainerProps = {
-  space: Space;
-  thread: ThreadType;
-  currentRelatedId?: string;
-  autoFocusTextBox?: boolean;
-  detached?: boolean;
-  onAttend?: () => void;
-  onDelete?: () => void;
-} & Pick<ThreadProps, 'current'>;
-
-/**
- * Component for connecting an ECHO Thread object to the UI component Thread.
- * @param space - the containing Space entity
- * @param thread - the Thread entity
- * @param detached - whether this thread is detached from the object
- * @param currentRelatedId - an entity’s id that this thread is related to
- * @param current - whether this thread is current (wrt ARIA) in the app
- * @param autoFocusTextBox - whether to set `autoFocus` on the thread’s textbox
- * @param onAttend - combined callback for `onClickCapture` and `onFocusCapture` within the thread
- * @param onDelete - callback for deleting the thread
- * @constructor
- */
-// TODO(wittjosiah): Decide if chat & comment threads are similar enough to share a container.
-//  Either way they will be built with the same pure @dxos/react-ui-thread components.
-//  Currently this container is used for both, but is focused on comments.
-//  Comments-specific things right now are primarily how the header is setup.
-export const ThreadContainer = ({
+export const CommentContainer = ({
   space,
   thread,
   detached,
