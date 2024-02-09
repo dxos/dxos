@@ -103,7 +103,7 @@ const ViewportView = forwardRef<HTMLDivElement, ViewportScopedProps<ViewportView
     return (
       <section
         {...props}
-        {...(!isActive && { 'aria-hidden': true, inert: true })}
+        {...(!isActive && { 'aria-hidden': true })}
         className={mx('min-is-0 flex-1 flex flex-col', isActive ? 'order-2' : 'order-4 invisible', classNames)}
         ref={ref}
       >
