@@ -78,6 +78,47 @@ describe('AutomergeHost', () => {
     expect((await asyncTimeout(docOnClient.doc(), 1000)).text).toEqual(text);
   });
 
+  test('share policy gets enabled afterwards', async () => {
+    const [hostAdapter, clientAdapter] = TestAdapter.createPair();
+    let sharePolicy = false;
+
+    const host = new Repo({
+      network: [hostAdapter],
+      peerId: 'host' as PeerId,
+      sharePolicy: async () => sharePolicy,
+    });
+    const client = new Repo({
+      network: [clientAdapter],
+      peerId: 'client' as PeerId,
+      sharePolicy: async () => sharePolicy,
+    });
+    hostAdapter.ready();
+    clientAdapter.ready();
+    await hostAdapter.onConnect.wait();
+    await clientAdapter.onConnect.wait();
+    hostAdapter.peerCandidate(clientAdapter.peerId!);
+    clientAdapter.peerCandidate(hostAdapter.peerId!);
+
+    const handle = host.create();
+    const text = 'Hello world';
+    handle.change((doc: any) => {
+      doc.text = text;
+    });
+
+    {
+      const docOnClient = client.find(handle.url);
+      await asyncTimeout(docOnClient.whenReady(['unavailable']), 1000);
+    }
+
+    sharePolicy = true;
+
+    {
+      const docOnClient = client.find(handle.url);
+      // TODO(mykola): We expect the document to be available here, but it's not.
+      await asyncTimeout(docOnClient.whenReady(['unavailable']), 1000);
+    }
+  });
+
   test('recovering from a lost connection', async () => {
     let connectionState: 'on' | 'off' = 'on';
 
@@ -456,7 +497,7 @@ class TestAdapter extends NetworkAdapter {
   }
 
   override send(message: Message) {
-    log('send', { from: message.senderId, to: message.targetId, type: message.type });
+    log.info('send', { from: message.senderId, to: message.targetId, type: message.type });
     this._params.send(message);
   }
 
