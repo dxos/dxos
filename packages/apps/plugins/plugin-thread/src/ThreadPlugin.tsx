@@ -31,11 +31,12 @@ import {
   getTextInRange,
   isTypedObject,
 } from '@dxos/react-client/echo';
+import { ScrollArea } from '@dxos/react-ui';
 import { comments, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
 
-import { ThreadContainer, ThreadMain, ThreadSettings, ThreadsContainer } from './components';
+import { ThreadMain, ThreadSettings, CommentsContainer, ChatContainer } from './components';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
 import { ThreadAction, type ThreadPluginProvides, isThread, type ThreadSettingsProps } from './types';
@@ -159,32 +160,40 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   .filter(nonNullable);
 
                 return (
-                  <ThreadsContainer
-                    space={space}
-                    threads={threads}
-                    detached={detached}
-                    currentId={state.current}
-                    currentRelatedId={location?.active}
-                    autoFocusCurrentTextbox={state.focus}
-                    onThreadAttend={(thread: ThreadType) => {
-                      if (state.current !== thread.id) {
-                        state.current = thread.id;
-                        void intentPlugin?.provides.intent.dispatch({
-                          action: LayoutAction.FOCUS,
-                          data: {
-                            object: thread.id,
-                          },
-                        });
-                      }
-                    }}
-                    onThreadDelete={(thread: ThreadType) =>
-                      dispatch?.({
-                        plugin: THREAD_PLUGIN,
-                        action: ThreadAction.DELETE,
-                        data: { document: active, thread },
-                      })
-                    }
-                  />
+                  <ScrollArea.Root>
+                    <ScrollArea.Viewport>
+                      <CommentsContainer
+                        space={space}
+                        threads={threads}
+                        detached={detached}
+                        currentId={state.current}
+                        currentRelatedId={location?.active}
+                        autoFocusCurrentTextbox={state.focus}
+                        onThreadAttend={(thread: ThreadType) => {
+                          if (state.current !== thread.id) {
+                            state.current = thread.id;
+                            void intentPlugin?.provides.intent.dispatch({
+                              action: LayoutAction.FOCUS,
+                              data: {
+                                object: thread.id,
+                              },
+                            });
+                          }
+                        }}
+                        onThreadDelete={(thread: ThreadType) =>
+                          dispatch?.({
+                            plugin: THREAD_PLUGIN,
+                            action: ThreadAction.DELETE,
+                            data: { document: active, thread },
+                          })
+                        }
+                      />
+                      <div role='none' className='bs-10' />
+                      <ScrollArea.Scrollbar>
+                        <ScrollArea.Thumb />
+                      </ScrollArea.Scrollbar>
+                    </ScrollArea.Viewport>
+                  </ScrollArea.Root>
                 );
               }
 
@@ -200,7 +209,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const { objects: threads } = space.db.query(ThreadType.filter((thread) => !thread.context));
               if (threads.length) {
                 const thread = threads[0];
-                return <ThreadContainer space={space} thread={thread} currentRelatedId={location?.active} />;
+                return <ChatContainer space={space} thread={thread} currentRelatedId={location?.active} />;
               }
 
               break;
