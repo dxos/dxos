@@ -155,7 +155,7 @@ const DemoCard: MosaicTileComponent<DemoCardProps> = forwardRef(
 );
 
 const SurfaceCard: MosaicTileComponent<DemoCardProps> = forwardRef(({ item, ...props }, forwardRef) => {
-  return <Surface role='card' ref={forwardRef} data={{ object: item }} {...props} />;
+  return <Surface ref={forwardRef} role='card' data={{ content: item }} {...props} />;
 });
 
 export default {
