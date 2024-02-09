@@ -29,8 +29,8 @@ export const SettingsDialog = ({ plugin, setPlugin }: { plugin: string; setPlugi
 
   // TODO(burdon): Common treatment for dialogs (e.g., shrink height to fit, mobile, etc.)
   return (
-    <Dialog.Content classNames={['h-full md:max-is-[40rem] overflow-hidden']} style={{ background: 'red' }}>
-      <Dialog.Title>{t('settings dialog title')} 123 hello</Dialog.Title>
+    <Dialog.Content classNames={['h-full md:max-is-[40rem] overflow-hidden']}>
+      <Dialog.Title>{t('settings dialog title')}</Dialog.Title>
 
       <div className='grow mlb-4 overflow-hidden grid grid-cols-[minmax(min-content,1fr)_3fr] gap-1'>
         <div className='flex flex-col p-1 gap-4 surface-input rounded place-self-start max-bs-[100%] is-full overflow-y-auto'>
