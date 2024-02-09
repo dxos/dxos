@@ -48,12 +48,12 @@ type ThreadState = {
 };
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
+  const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
+  const state = deepSignal<ThreadState>({ threads: {} });
+
   let graphPlugin: Plugin<GraphProvides> | undefined;
   let navigationPlugin: Plugin<LocationProvides> | undefined;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
-
-  const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
-  const state = deepSignal<ThreadState>({ threads: {} });
 
   return {
     meta,
@@ -167,7 +167,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                         threads={threads}
                         detached={detached}
                         currentId={state.current}
-                        currentRelatedId={location?.active}
+                        context={{ object: location?.active }}
                         autoFocusCurrentTextbox={state.focus}
                         onThreadAttend={(thread: ThreadType) => {
                           if (state.current !== thread.id) {
@@ -209,7 +209,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const { objects: threads } = space.db.query(ThreadType.filter((thread) => !thread.context));
               if (threads.length) {
                 const thread = threads[0];
-                return <ChatContainer space={space} thread={thread} currentRelatedId={location?.active} />;
+                return <ChatContainer space={space} thread={thread} context={{ object: location?.active }} />;
               }
 
               break;

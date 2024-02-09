@@ -185,7 +185,7 @@ const DemoStack = ({
       items={items}
       onOver={handleOver}
       onDrop={handleDrop}
-      onRemoveSection={handleRemove}
+      onDeleteSection={handleRemove}
     />
   );
 };
