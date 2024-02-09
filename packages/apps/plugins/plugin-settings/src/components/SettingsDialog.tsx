@@ -10,7 +10,13 @@ import { ghostHover, ghostSelected } from '@dxos/react-ui-theme';
 
 import { SETTINGS_PLUGIN } from '../meta';
 
-export const SettingsDialog = ({ plugin, setPlugin }: { plugin: string; setPlugin: (plugin: string) => void }) => {
+export const SettingsDialog = ({
+  selected,
+  onSelected,
+}: {
+  selected: string;
+  onSelected: (plugin: string) => void;
+}) => {
   const { t } = useTranslation(SETTINGS_PLUGIN);
   const { plugins, enabled } = usePlugins();
 
@@ -27,7 +33,6 @@ export const SettingsDialog = ({ plugin, setPlugin }: { plugin: string; setPlugi
     .map((plugin) => plugin!.meta)
     .sort(({ name: a }, { name: b }) => a?.localeCompare(b ?? '') ?? 0);
 
-  // TODO(burdon): Common treatment for dialogs (e.g., shrink height to fit, mobile, etc.)
   return (
     <Dialog.Content classNames={['h-full md:max-is-[40rem] overflow-hidden']}>
       <Dialog.Title>{t('settings dialog title')}</Dialog.Title>
@@ -37,20 +42,20 @@ export const SettingsDialog = ({ plugin, setPlugin }: { plugin: string; setPlugi
           <PluginList
             title='Options'
             plugins={core.map((id) => plugins.find((p) => p.meta.id === id)!.meta)}
-            selected={plugin}
-            onSelect={(plugin) => setPlugin(plugin)}
+            selected={selected}
+            onSelect={(plugin) => onSelected(plugin)}
           />
 
           <PluginList
             title='Plugins'
             plugins={filteredPlugins}
-            selected={plugin}
-            onSelect={(plugin) => setPlugin(plugin)}
+            selected={selected}
+            onSelect={(plugin) => onSelected(plugin)}
           />
         </div>
 
         <div className='pli-1 md:pli-2 max-bs-[100%] overflow-y-auto'>
-          <Surface role='settings' data={{ plugin }} />
+          <Surface role='settings' data={{ plugin: selected }} />
         </div>
       </div>
 

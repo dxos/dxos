@@ -2763,6 +2763,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
