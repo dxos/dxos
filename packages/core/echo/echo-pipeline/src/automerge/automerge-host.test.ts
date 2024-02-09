@@ -15,7 +15,9 @@ import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/
 import { afterTest, describe, test } from '@dxos/test';
 import { arrayToBuffer, bufferToArray } from '@dxos/util';
 
-import { AutomergeHost, AutomergeStorageAdapter, MeshNetworkAdapter } from './automerge-host';
+import { AutomergeHost } from './automerge-host';
+import { AutomergeStorageAdapter } from './automerge-storage-adapter';
+import { MeshNetworkAdapter } from './mesh-network-adapter';
 
 describe('AutomergeHost', () => {
   test('can create documents', () => {
