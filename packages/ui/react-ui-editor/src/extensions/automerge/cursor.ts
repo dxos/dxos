@@ -23,8 +23,13 @@ export const cursorConverter = (handle: IDocHandle, path: Prop[]): CursorConvert
       return 'end';
     }
 
-    // NOTE: Slice is needed because getCursor mutates the array.
-    return A.getCursor(doc, path.slice(), pos);
+    try {
+      // NOTE: Slice is needed because getCursor mutates the array.
+      return A.getCursor(doc, path.slice(), pos);
+    } catch (err) {
+      // log.catch(err);
+      return ''; // In case of invalid request (e.g., wrong document).
+    }
   },
 
   fromCursor: (cursor) => {
@@ -46,7 +51,12 @@ export const cursorConverter = (handle: IDocHandle, path: Prop[]): CursorConvert
       }
     }
 
-    // NOTE: Slice is needed because getCursor mutates the array.
-    return A.getCursorPosition(doc, path.slice(), cursor);
+    try {
+      // NOTE: Slice is needed because getCursor mutates the array.
+      return A.getCursorPosition(doc, path.slice(), cursor);
+    } catch (err) {
+      // log.catch(err);
+      return 0; // In case of invalid request (e.g., wrong document).
+    }
   },
 });

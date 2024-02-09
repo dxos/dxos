@@ -23,10 +23,16 @@ export type UseTextModelProps = {
   text?: TextObject;
 };
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Remove once automerge lands.
 export const useTextModel = (props: UseTextModelProps): EditorModel | undefined => {
+  const [model, setModel] = useState<EditorModel>();
   const { identity, space, text } = props;
-  const [model, setModel] = useState<EditorModel | undefined>();
-  useEffect(() => setModel(createModel(props)), [identity, space, text]);
+  useEffect(() => {
+    setModel(createModel(props));
+  }, [identity, space, text]);
   return model;
 };
 

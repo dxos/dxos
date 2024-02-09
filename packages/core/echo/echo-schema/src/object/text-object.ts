@@ -171,11 +171,12 @@ export const getTextContent: {
   }
 };
 
-/**
- * TODO(dima?): This API will change.
- */
+// TODO(burdon): Reconcile with cursorConverter.
+
+const path = ['content'];
+
 export const toCursor = (object: TextObject, pos: number) => {
-  const accessor = getRawDoc(object, ['content']);
+  const accessor = getRawDoc(object, path);
   const doc = accessor.handle.docSync();
   if (!doc) {
     return '';
@@ -190,15 +191,12 @@ export const toCursor = (object: TextObject, pos: number) => {
   return A.getCursor(doc, accessor.path.slice(), pos);
 };
 
-/**
- * TODO(dima?): This API will change.
- */
 export const fromCursor = (object: TextObject, cursor: string) => {
   if (cursor === '') {
     return 0;
   }
 
-  const accessor = getRawDoc(object, ['content']);
+  const accessor = getRawDoc(object, path);
   const doc = accessor.handle.docSync();
   if (!doc) {
     return 0;

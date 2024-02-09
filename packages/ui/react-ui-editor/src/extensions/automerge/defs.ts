@@ -35,7 +35,6 @@ export type IDocHandle<T = any> = {
   docSync(): Doc<T> | undefined;
   change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
   changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): string[] | undefined;
-
   addListener(event: 'change', listener: () => void): void;
   removeListener(event: 'change', listener: () => void): void;
 };
