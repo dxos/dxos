@@ -13,6 +13,7 @@ import {
   type Chunk,
   type StorageKey,
   cbor,
+  type DocumentId,
 } from '@dxos/automerge/automerge-repo';
 import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
 import { Stream } from '@dxos/codec-protobuf';
@@ -93,7 +94,7 @@ export class AutomergeHost {
           log.catch(err);
           return false;
         }
-      }, // Share everything.
+      },
     });
     this._clientNetwork.ready();
     this._meshNetwork.ready();
@@ -305,18 +306,15 @@ export class MeshNetworkAdapter extends NetworkAdapter {
             peerInfo = info;
             // TODO(mykola): Fix race condition?
             this._extensions.set(info.id, extension);
-          } else {
-            // TODO(mykola): retry hack.
-            this.emit('peer-disconnected', { peerId: info.id as PeerId });
-          }
 
-          this.emit('peer-candidate', {
-            // TODO(mykola): Hack, stop abusing `peerMetadata` field.
-            peerMetadata: {
-              dxos_deviceKey: remotePeerId.toHex(),
-            } as any,
-            peerId: info.id as PeerId,
-          });
+            this.emit('peer-candidate', {
+              // TODO(mykola): Hack, stop abusing `peerMetadata` field.
+              peerMetadata: {
+                dxos_deviceKey: remotePeerId.toHex(),
+              } as any,
+              peerId: info.id as PeerId,
+            });
+          }
         },
         onSyncMessage: async ({ payload }) => {
           const message = cbor.decode(payload) as Message;
