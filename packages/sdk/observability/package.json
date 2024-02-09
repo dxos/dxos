@@ -33,6 +33,7 @@
     }
   },
   "browser": {
+    "./src/datadog/metrics.ts": "./src/datadog/browser.ts",
     "./src/datadog/node.ts": "./src/datadog/browser.ts",
     "./src/segment/node.ts": "./src/segment/browser.ts",
     "./src/sentry/node.ts": "./src/sentry/browser.ts",
