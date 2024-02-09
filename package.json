@@ -84,6 +84,7 @@
     "@types/zen-observable": "^0.8.3",
     "@typescript-eslint/eslint-plugin": "^6.20.0",
     "@typescript-eslint/parser": "^6.20.0",
+    "@vitejs/plugin-react-swc": "^3.6.0",
     "@vitest/browser": "^1.2.2",
     "@vitest/utils": "^1.2.2",
     "@vuepress/client": "2.0.0-rc.0",

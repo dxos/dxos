@@ -3,7 +3,7 @@
 //
 
 import { sentryVitePlugin } from '@sentry/vite-plugin';
-import ReactPlugin from '@vitejs/plugin-react';
+import ReactPlugin from '@vitejs/plugin-react-swc';
 import { join, resolve } from 'node:path';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
@@ -72,9 +72,7 @@ export default defineConfig({
     plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
   },
   plugins: [
-    tsconfigPaths({
-      // projects: ['.'],
-    }),
+    tsconfigPaths({}),
     // Required for the script plugin.
     {
       name: 'sandbox-importmap-integration',
@@ -111,7 +109,31 @@ export default defineConfig({
     TopLevelAwaitPlugin(),
     WasmPlugin(),
     // https://github.com/preactjs/signals/issues/269
-    ReactPlugin({ jsxRuntime: 'classic' }),
+    ReactPlugin({
+      plugins: [
+        [
+          '@dxos/swc-log-plugin',
+          {
+            symbols: [
+              {
+                function: 'log',
+                package: '@dxos/log',
+                param_index: 2,
+                include_args: false,
+                include_call_site: true,
+              },
+              {
+                function: 'invariant',
+                package: '@dxos/invariant',
+                param_index: 2,
+                include_args: true,
+                include_call_site: false,
+              },
+            ],
+          },
+        ],
+      ],
+    }),
     VitePWA({
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000,
