@@ -11,7 +11,7 @@ import type { ThreadProps } from '@dxos/react-ui-thread';
  * @param space - the containing Space entity
  * @param thread - the Thread entity
  * @param detached - whether this thread is detached from the object
- * @param currentRelatedId - an entity’s id that this thread is related to
+ * @param context - current application context
  * @param current - whether this thread is current (wrt ARIA) in the app
  * @param autoFocusTextBox - whether to set `autoFocus` on the thread’s textbox
  * @param onAttend - combined callback for `onClickCapture` and `onFocusCapture` within the thread
@@ -20,8 +20,8 @@ import type { ThreadProps } from '@dxos/react-ui-thread';
 export type ThreadContainerProps = {
   space: Space;
   thread: ThreadType;
-  currentRelatedId?: string;
-  autoFocusTextBox?: boolean;
+  context?: { object?: string };
+  autoFocus?: boolean;
   detached?: boolean;
   onAttend?: () => void;
   onDelete?: () => void;
