@@ -50,7 +50,7 @@ export const Stack = ({
   transform,
   onOver,
   onDrop,
-  onRemoveSection,
+  onDeleteSection,
   onNavigateToSection,
   ...props
 }: StackProps) => {
@@ -94,7 +94,7 @@ export const Stack = ({
           type={type}
           classNames={classNames}
           item={{ id, items: itemsWithPreview }}
-          itemContext={{ separation, transform, onRemoveSection, onNavigateToSection, SectionContent }}
+          itemContext={{ separation, transform, onDeleteSection, onNavigateToSection, SectionContent }}
           isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
           Component={StackTile}
         />

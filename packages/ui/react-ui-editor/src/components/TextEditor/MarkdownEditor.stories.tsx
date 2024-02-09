@@ -211,15 +211,16 @@ const onRenderLink: LinkOptions['onRender'] = (el, url) => {
 };
 
 type StoryProps = {
+  id?: string;
   text?: string;
   comments?: Comment[];
 } & Pick<TextEditorProps, 'readonly' | 'placeholder' | 'extensions'>;
 
-const Story = ({ text, comments, placeholder = 'New document.', ...props }: StoryProps) => {
+const Story = ({ id = 'test', text, comments, placeholder = 'New document.', ...props }: StoryProps) => {
   const [item] = useState({ text: new TextObject(text) });
   const view = useRef<EditorView>(null);
   const model = useTextModel({ text: item.text });
-  useComments(view.current, comments);
+  useComments(view.current, id, comments);
   if (!model) {
     return null;
   }

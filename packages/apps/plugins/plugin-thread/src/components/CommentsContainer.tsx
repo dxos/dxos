@@ -5,11 +5,12 @@ import React, { useEffect } from 'react';
 
 import { type Thread as ThreadType } from '@braneframe/types';
 
-import { ThreadContainer, type ThreadContainerProps } from './ThreadContainer';
+import { CommentContainer } from './CommentContainer';
+import { type ThreadContainerProps } from './types';
 
 export type ThreadsContainerProps = Omit<
   ThreadContainerProps,
-  'thread' | 'detached' | 'onAttend' | 'onDelete' | 'current' | 'autoFocusTextBox'
+  'thread' | 'detached' | 'onAttend' | 'onDelete' | 'current' | 'autoFocus'
 > & {
   threads: ThreadType[];
   /**
@@ -25,7 +26,7 @@ export type ThreadsContainerProps = Omit<
 /**
  * Comment threads.
  */
-export const ThreadsContainer = ({
+export const CommentsContainer = ({
   threads,
   detached = [],
   currentId,
@@ -44,12 +45,12 @@ export const ThreadsContainer = ({
   return (
     <>
       {threads.map((thread) => (
-        <ThreadContainer
+        <CommentContainer
           key={thread.id}
           thread={thread}
           current={currentId === thread.id}
           detached={detached.includes(thread.id)}
-          autoFocusTextBox={autoFocusCurrentTextbox && currentId === thread.id}
+          autoFocus={autoFocusCurrentTextbox && currentId === thread.id}
           {...(onThreadAttend && { onAttend: () => onThreadAttend(thread) })}
           {...(onThreadDelete && { onDelete: () => onThreadDelete(thread) })}
           {...props}

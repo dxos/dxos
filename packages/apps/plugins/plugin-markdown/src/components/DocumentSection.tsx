@@ -21,7 +21,6 @@ const DocumentSection: FC<{
   const identity = useIdentity();
   const space = getSpaceForObject(document);
   const model = useTextModel({ identity, space, text: document?.content });
-
   if (!model) {
     return null;
   }
@@ -33,7 +32,7 @@ const DocumentSection: FC<{
       placeholder={t('editor placeholder')}
       slots={{
         root: {
-          className: mx('flex flex-col grow m-0.5', attentionSurface, focusRing),
+          className: mx('flex flex-col grow m-0.5 min-bs-[8rem]', attentionSurface, focusRing),
           'data-testid': 'composer.markdownRoot',
         } as HTMLAttributes<HTMLDivElement>,
         editor: {

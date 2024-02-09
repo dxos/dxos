@@ -6,7 +6,7 @@ import { X } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { Button, ScrollArea } from '@dxos/react-ui';
+import { Button } from '@dxos/react-ui';
 
 import { useLayout } from '../LayoutContext';
 
@@ -29,14 +29,7 @@ export const ContextPanel = () => {
           <X />
         </Button>
       </div>
-      <ScrollArea.Root classNames='anchored-overflow'>
-        <ScrollArea.Viewport classNames='pbe-10'>
-          <Surface role={Role.THREAD} />
-          <ScrollArea.Scrollbar>
-            <ScrollArea.Thumb />
-          </ScrollArea.Scrollbar>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+      <Surface role={Role.THREAD} />
     </div>
   );
 };
