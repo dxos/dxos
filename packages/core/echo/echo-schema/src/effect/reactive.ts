@@ -4,65 +4,70 @@
 
 import * as AST from '@effect/schema/AST';
 import * as S from '@effect/schema/Schema';
-import { Types } from 'effect/Match';
 
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
-
-import Simplify = Types.Simplify;
 
 /**
  * Reactive object.
  * Accessing properties triggers signal semantics.
  */
-export type Re<T> = { [K in keyof T]: T[K] };
+export type ReactiveObject<T> = { [K in keyof T]: T[K] };
 
-// TODO(burdon): Build error when using S.Mutable.
-export type Mutable<T> = {
-  -readonly [P in keyof T]: T[P];
-};
+// TODO(burdon): Remove.
+// export type ReactiveFn = {
+//   <T extends {}>(obj: T): ReactiveObject<T>;
+//   <T>(schema: S.Schema<T>, obj: T): Mutable<T>;
+// };
 
-export type ReactiveFn = {
-  <T extends {}>(obj: T): Re<T>;
-  <T>(schema: S.Schema<T>, obj: T): Re<Simplify<Mutable<T>>>;
+/**
+ * Creates a reactive object from a plain Javascript object.
+ * Optionally provides a TS-effect schema.
+ */
+export class R {
+  // TODO(burdon): Option to return mutable object?
+  static object: {
+    <T extends {}>(obj: T): ReactiveObject<T>;
+    <T extends {}>(schema: S.Schema<T>, obj: T): ReactiveObject<T>;
+  } = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: T): ReactiveObject<T> => {
+    if (obj) {
+      const schema: S.Schema<T> = schemaOrObj as S.Schema<T>;
+      const _ = S.asserts(schema)(obj);
 
-  // typed: <T> (schema: S.Schema<T>) => (obj: T) => Re<T>;
-};
+      assignAstAnnotations(obj, schema.ast);
+      Object.defineProperty(obj, symbolSchema, {
+        enumerable: false,
+        value: schemaOrObj,
+      });
+
+      return createReactiveProxy(obj, new TypedReactiveHandler());
+    } else {
+      return createReactiveProxy(schemaOrObj as T, new UntypedReactiveHandler());
+    }
+  };
+
+  constructor() {
+    throw new Error('R is a static class and should not be instantiated.');
+  }
+}
+
+//
+// Proxied implementations.
+//
+
+const symbolSchema = Symbol('echo_schema');
+const symbolTypeAst = Symbol('echo_type_ast');
 
 interface ReactiveHandler<T extends object> extends ProxyHandler<T> {
   /**
    * Called when a proxy is created for this target.
    */
-  // TODO(burdon): Should interfaces have private methods?
+  // TODO(burdon): Interfaces shouldn't have private methods.
   _init(target: T): void;
 
   readonly _proxyMap: WeakMap<object, any>;
 }
 
-// TODO(burdon): Ambiguous name (Suitable?)
-const isSuitableProxyTarget = (value: any): value is object =>
-  typeof value === 'object' && value !== null && Object.getPrototypeOf(value) === Object.prototype;
-
-const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHandler<T>): Re<T> => {
-  if (!isSuitableProxyTarget(target)) {
-    throw new Error('Value cannot be made into a reactive object.');
-  }
-
-  const existingProxy = handler._proxyMap.get(target);
-  if (existingProxy) {
-    return existingProxy;
-  }
-
-  const mutableHandler: ReactiveHandler<T> = {} as any;
-  Object.setPrototypeOf(mutableHandler, handler);
-
-  const proxy = new Proxy(target, mutableHandler);
-  handler._init(target);
-
-  handler._proxyMap.set(target, proxy);
-  return proxy;
-};
-
-export class DefaultReactiveHandler implements ReactiveHandler<any> {
+export class UntypedReactiveHandler implements ReactiveHandler<any> {
   signal = compositeRuntime.createSignal();
 
   // TODO(burdon): Readonly?
@@ -88,13 +93,13 @@ export class DefaultReactiveHandler implements ReactiveHandler<any> {
   }
 }
 
-export class LoggingHandler implements ReactiveHandler<any> {
+export class LoggingReactiveHandler implements ReactiveHandler<any> {
   static symbolChangeLog = Symbol('changeLog');
 
   _proxyMap = new WeakMap<object, any>();
 
   _init(target: any): void {
-    target[LoggingHandler.symbolChangeLog] = [];
+    target[LoggingReactiveHandler.symbolChangeLog] = [];
   }
 
   get(target: any, prop: string | symbol, receiver: any) {
@@ -102,13 +107,10 @@ export class LoggingHandler implements ReactiveHandler<any> {
   }
 
   set(target: any, prop: string | symbol, value: any, receiver: any): boolean {
-    target[LoggingHandler.symbolChangeLog].push(prop);
+    target[LoggingReactiveHandler.symbolChangeLog].push(prop);
     return Reflect.set(target, prop, value, receiver);
   }
 }
-
-const symbolSchema = Symbol('echo_schema');
-const symbolTypeAst = Symbol('echo_type_ast');
 
 export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T> {
   signal = compositeRuntime.createSignal();
@@ -145,29 +147,32 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
   }
 }
 
-export const reactive: ReactiveFn = <T extends {}>(...args: any[]): Re<T> => {
-  switch (args.length) {
-    case 1: {
-      // Untyped
-      return createReactiveProxy(args[0], new DefaultReactiveHandler());
-    }
-    case 2: {
-      const [schema, obj] = args as [S.Schema<T>, T];
+//
+// Utils.
+//
 
-      // validate
-      const _ = S.asserts(schema)(obj);
+// TODO(burdon): Ambiguous name (Suitable?)
+const isSuitableProxyTarget = (value: any): value is object =>
+  typeof value === 'object' && value !== null && Object.getPrototypeOf(value) === Object.prototype;
 
-      assignAstAnnotations(obj, schema.ast);
-      Object.defineProperty(obj, symbolSchema, {
-        enumerable: false,
-        value: schema,
-      });
-      return createReactiveProxy(args[1], new TypedReactiveHandler());
-    }
-
-    default:
-      throw new Error('Invalid arguments.');
+const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHandler<T>): ReactiveObject<T> => {
+  if (!isSuitableProxyTarget(target)) {
+    throw new Error('Value cannot be made into a reactive object.');
   }
+
+  const existingProxy = handler._proxyMap.get(target);
+  if (existingProxy) {
+    return existingProxy;
+  }
+
+  const mutableHandler: ReactiveHandler<T> = {} as any;
+  Object.setPrototypeOf(mutableHandler, handler);
+
+  const proxy = new Proxy(target, mutableHandler);
+  handler._init(target);
+
+  handler._proxyMap.set(target, proxy);
+  return proxy;
 };
 
 const assignAstAnnotations = (obj: any, ast: AST.AST) => {

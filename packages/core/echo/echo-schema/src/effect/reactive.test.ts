@@ -10,7 +10,7 @@ import { type Mutable } from 'effect/Types';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { test, describe } from '@dxos/test';
 
-import { reactive } from './reactive';
+import { R } from './reactive';
 
 registerSignalRuntime();
 
@@ -18,8 +18,13 @@ const noop = (...args: any[]) => {};
 
 describe.only('reactive', () => {
   test('untyped', () => {
-    const person = reactive({ name: 'Satoshi', age: 42 });
+    const person = R.object({ name: 'Satoshi', age: 42 });
     expect(person.age).to.equal(42);
+
+    {
+      const value = JSON.stringify(person);
+      expect(value).to.equal(JSON.stringify({ name: 'Satoshi', age: 42 }));
+    }
 
     {
       person.age = 53;
@@ -44,7 +49,7 @@ describe.only('reactive', () => {
       number?: string;
     }
 
-    const person = reactive({
+    const person = R.object({
       name: 'Satoshi',
       age: 42,
       address: {
@@ -86,12 +91,12 @@ describe.only('reactive', () => {
 
     type Contact = S.Schema.To<typeof ContactDef>;
 
-    const person: Mutable<Contact> = reactive(ContactDef, {
+    const person: Mutable<Contact> = R.object(ContactDef, {
       name: 'Satoshi',
       age: 42,
       address: {
-        street: 'Main Street',
-        city: 'London',
+        street: '西麻布',
+        city: 'Tokyo',
       },
     });
 
