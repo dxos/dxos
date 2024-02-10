@@ -20,21 +20,18 @@ const UnusedRail = () => <div role='none' />;
 const InFlowSpaceActions = ({ actionsMap }: { actionsMap: Record<string, Action> }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   return (
-    <>
-      <section className='pli-2 mbe-2 col-start-1 col-end-4 md:col-end-5 grid gap-2 auto-rows-min grid-cols-[repeat(auto-fill,minmax(8rem,1fr))]'>
-        {Object.entries(actionsMap)
-          .filter(([_, { properties }]) => properties?.mainAreaDisposition === 'in-flow')
-          .map(([actionId, { icon: Icon, label, invoke }]) => {
-            return (
-              <Button key={actionId} classNames='block text-center plb-2 font-normal' onClick={() => invoke?.()}>
-                {Icon && <Icon className={mx(getSize(5), 'mli-auto')} />}
-                <p>{typeof label === 'string' ? label : t(...label)}</p>
-              </Button>
-            );
-          })}
-      </section>
-      <UnusedRail />
-    </>
+    <section className='pli-2 mbe-2 col-start-1 col-end-4 md:col-end-6 grid gap-2 auto-rows-min grid-cols-[repeat(auto-fill,minmax(8rem,1fr))]'>
+      {Object.entries(actionsMap)
+        .filter(([_, { properties }]) => properties?.mainAreaDisposition === 'in-flow')
+        .map(([actionId, { icon: Icon, label, invoke }]) => {
+          return (
+            <Button key={actionId} classNames='block text-center plb-2 font-normal' onClick={() => invoke?.()}>
+              {Icon && <Icon className={mx(getSize(5), 'mli-auto')} />}
+              <p>{typeof label === 'string' ? label : t(...label)}</p>
+            </Button>
+          );
+        })}
+    </section>
   );
 };
 
