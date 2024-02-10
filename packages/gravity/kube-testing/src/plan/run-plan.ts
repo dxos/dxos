@@ -18,6 +18,8 @@ import { WebSocketRedisProxy } from './env/websocket-redis-proxy';
 import { runNode, runBrowser } from './run-process';
 import { type PlanOptions, type AgentParams, type PlanResults, type TestPlan } from './spec';
 import { type ResourceUsageStats, analyzeResourceUsage } from '../analysys/resource-usage';
+import { Redis } from 'ioredis';
+import { REDIS_PORT } from './env';
 
 const SUMMARY_FILENAME = 'test.json';
 
@@ -33,7 +35,15 @@ type TestSummary = {
   };
   diagnostics: {
     resourceUsage: ResourceUsageStats;
+
+    /**
+     * @dxos/tracing diagnostics.
+     */
+    tracing: {
+      [agentId: string]: any;
+    }
   };
+
   agents: Record<string, any>;
 };
 
@@ -87,6 +97,8 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
     outDir,
   });
 
+  const redis = new Redis({ port: REDIS_PORT });
+
   const agentsArray = await plan.init({ spec, outDir, testId });
   const agents = Object.fromEntries(agentsArray.map((config) => [PublicKey.random().toHex(), config]));
 
@@ -111,6 +123,23 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
 
   // Start websocket REDIS proxy for browser tests.
   const server = new WebSocketRedisProxy();
+
+  const summary: TestSummary = {
+    options,
+    spec,
+    stats: null as any,
+    params: {
+      testId,
+      outDir,
+      planName: Object.getPrototypeOf(plan).constructor.name,
+    },
+    results: planResults,
+    diagnostics: {
+      resourceUsage: {},
+      tracing: {}
+    },
+    agents,
+  };
 
   {
     // stop the test when the plan fails (e.g. signal server dies)
@@ -160,8 +189,11 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
           : runBrowser(name, agentParams, options);
       killCallbacks.push(kill);
       promises.push(
-        result.then((result) => {
+        result.then(async (result) => {
           planResults.agents[agentId] = result;
+          
+          const diagnostics = await redis.get(`${testId}:__diagnostics:${agentId}`);
+          summary.diagnostics.tracing[agentId] = JSON.parse(diagnostics ?? '{}');
 
           agentComplete();
           log.info('agent process exited successfully', { agentId });
@@ -199,21 +231,8 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
     log.warn('error finishing plan', err);
   }
 
-  const summary: TestSummary = {
-    options,
-    spec,
-    stats,
-    params: {
-      testId,
-      outDir,
-      planName: Object.getPrototypeOf(plan).constructor.name,
-    },
-    results: planResults,
-    diagnostics: {
-      resourceUsage: resourceUsageStats ?? {},
-    },
-    agents,
-  };
+  summary.results = planResults;
+  summary.diagnostics.resourceUsage = resourceUsageStats ?? {};
 
   writeFileSync(join(outDir, SUMMARY_FILENAME), JSON.stringify(summary, null, 4));
   log.info('plan complete');

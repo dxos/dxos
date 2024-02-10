@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from 'esbuild';
+import { BuildResult, type Plugin } from 'esbuild';
 import wasm from 'esbuild-plugin-wasm';
 
 import {
@@ -12,7 +12,7 @@ import {
   NodeModulesPlugin,
 } from '@dxos/esbuild-plugins';
 
-export const buildBrowserBundle = async (outfile: string) => {
+export const buildBrowserBundle = async (outfile: string): Promise<BuildResult> => {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { build } = await import('esbuild');
   const result = await build({

@@ -4,12 +4,14 @@
 
 import { Server } from 'isomorphic-ws';
 
-import { Repo } from '@dxos/automerge/automerge-repo';
+import { sleep } from '@dxos/async';
+import { type Chunk, Repo, StorageAdapter, type StorageKey } from '@dxos/automerge/automerge-repo';
 import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
 import { Context } from '@dxos/context';
 import { AutomergeStorageAdapter } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { SpanTimeDistributionCounter, trace } from '@dxos/tracing';
 import { range } from '@dxos/util';
 
 import {
@@ -39,7 +41,7 @@ export type AutomergeTestSpec = {
   /**
    * Both server and client create docs.
    */
-  symetric: boolean;
+  symmetric: boolean;
   docCount: number;
   changeCount: number;
   contentKind: 'strings' | 'seq-numbers';
@@ -59,9 +61,9 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
 
       clientStorage: 'idb',
 
-      symetric: false,
+      symmetric: false,
       agents: 2,
-      docCount: 1000,
+      docCount: 10000,
       changeCount: 10,
       contentKind: 'strings',
 
@@ -90,7 +92,7 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
     const { config, spec } = env.params;
 
     performance.mark('create:begin');
-    const docsToCreate = spec.symetric || config.type === 'server' ? spec.docCount : 0;
+    const docsToCreate = spec.symmetric || config.type === 'server' ? spec.docCount : 0;
     const localDocs = range(docsToCreate).map((idx) => {
       const handle = this.repo.create();
       handle.change((doc: any) => {
@@ -132,24 +134,25 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
 
     performance.mark('ready:begin');
     const docs = docUrls.map((url) => this.repo.find(url));
-    await Promise.all(docs.map((doc) => doc.whenReady()));
+    await Promise.all(docs.map((doc) => doc.doc()));
     performance.mark('ready:end');
     log.info('docs ready', {
       from: config.type,
       count: docs.length,
       time: performance.measure('ready', 'ready:begin', 'ready:end').duration,
     });
+    await this._storageCtx.dispose();
+    this._storageCtx = new Context();
 
+    await sleep(1_000);
     await env.syncBarrier('docs ready');
 
     if (spec.reloadStep && config.type === 'client') {
-      await this._storageCtx.dispose();
-      this._storageCtx = new Context();
       await this._init(env, { network: false });
 
       performance.mark('load:begin');
       const docs = docUrls.map((url) => this.repo.find(url));
-      await Promise.all(docs.map((doc) => doc.whenReady()));
+      await Promise.all(docs.map((doc) => doc.doc()));
       performance.mark('load:end');
       log.info('docs ready after reload', {
         from: config.type,
@@ -206,11 +209,11 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
       case 'none':
         return undefined;
       case 'idb':
-        return new IndexedDBStorageAdapter();
+        return new MeteredStorageProxy(new IndexedDBStorageAdapter());
       case 'opfs': {
         const storage = createStorage({ type: StorageType.WEBFS });
         this._storageCtx.onDispose(() => storage.close());
-        return new AutomergeStorageAdapter(storage.createDirectory('automerge'));
+        return new MeteredStorageProxy(new AutomergeStorageAdapter(storage.createDirectory('automerge')));
       }
     }
   }
@@ -218,3 +221,55 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
 
 // eslint-disable-next-line no-new-func
 const importEsm = Function('path', 'return import(path)');
+
+@trace.resource()
+class MeteredStorageProxy extends StorageAdapter {
+  constructor(private readonly _storage: StorageAdapter) {
+    super();
+  }
+
+  @trace.info()
+  private get _driverName() {
+    return Object.getPrototypeOf(this._storage).constructor.name;
+  }
+
+  @trace.metricsCounter()
+  _loadMetrics = new SpanTimeDistributionCounter();
+
+  @trace.span({ metricsCounter: '_loadMetrics' })
+  override load(key: StorageKey): Promise<Uint8Array | undefined> {
+    return this._storage.load(key);
+  }
+
+  @trace.metricsCounter()
+  _saveMetrics = new SpanTimeDistributionCounter();
+
+  @trace.span({ metricsCounter: '_saveMetrics' })
+  override save(key: StorageKey, data: Uint8Array): Promise<void> {
+    return this._storage.save(key, data);
+  }
+
+  @trace.metricsCounter()
+  _removeMetrics = new SpanTimeDistributionCounter();
+
+  @trace.span({ metricsCounter: '_removeMetrics' })
+  override remove(key: StorageKey): Promise<void> {
+    return this._storage.remove(key);
+  }
+
+  @trace.metricsCounter()
+  _loadRangeMetrics = new SpanTimeDistributionCounter();
+
+  @trace.span({ metricsCounter: '_loadRangeMetrics' })
+  override loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
+    return this._storage.loadRange(keyPrefix);
+  }
+
+  @trace.metricsCounter()
+  _removeRangeMetrics = new SpanTimeDistributionCounter();
+
+  @trace.span({ metricsCounter: '_removeRangeMetrics' })
+  override removeRange(keyPrefix: StorageKey): Promise<void> {
+    return this._storage.removeRange(keyPrefix);
+  }
+}

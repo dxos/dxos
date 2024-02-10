@@ -5,7 +5,7 @@
 import { Context } from '@dxos/context';
 
 import { getTracingContext } from './symbols';
-import { TRACE_PROCESSOR } from './trace-processor';
+import { TRACE_PROCESSOR, TracingSpan } from './trace-processor';
 
 /**
  * Annotates a class as a tracked resource.
@@ -61,22 +61,33 @@ const mark = (name: string) => {
   performance.mark(name);
 };
 
-export type SpanOptions = {
+export interface SpanMetricsCounter {
+  beginSpan(span: TracingSpan): void;
+  endSpan(span: TracingSpan): void;
+}
+
+export type SpanOptions<T> = {
   showInBrowserTimeline?: boolean;
+
+  /**
+   * Instead of recording each span separately, use the provided metrics counter to record the span metrics.
+   */
+  metricsCounter?: keyof T;
 };
 
 const span =
-  ({ showInBrowserTimeline = false }: SpanOptions = {}) =>
-  (target: any, propertyKey: string, descriptor: TypedPropertyDescriptor<(...args: any) => any>) => {
+  <T>({ showInBrowserTimeline = false, metricsCounter }: SpanOptions<T> = {}) =>
+  (target: T, propertyKey: string, descriptor: TypedPropertyDescriptor<(...args: any) => any>) => {
     const method = descriptor.value!;
 
-    descriptor.value = async function (this: any, ...args: any) {
+    descriptor.value = async function (this: T, ...args: any) {
       const parentCtx = args[0] instanceof Context ? args[0] : null;
       const span = TRACE_PROCESSOR.traceSpan({
         parentCtx,
         methodName: propertyKey,
         instance: this,
         showInBrowserTimeline,
+        metricsCounter: (metricsCounter !== undefined ? (this[metricsCounter] as SpanMetricsCounter) : null) ?? null,
       });
 
       const callArgs = span.ctx ? [span.ctx, ...args.slice(1)] : args;
