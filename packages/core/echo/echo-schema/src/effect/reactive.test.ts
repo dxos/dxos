@@ -14,7 +14,7 @@ import { type Mutable } from 'effect/Types';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { test, describe } from '@dxos/test';
 
-import { R } from './reactive';
+import * as R from './reactive';
 
 registerSignalRuntime();
 
@@ -77,7 +77,7 @@ describe.only('reactive', () => {
       phone: new PhoneNumber(),
     });
 
-    expect(R.schema(person)).to.be.undefined;
+    expect(R.getSchema(person)).to.be.undefined;
 
     {
       let count = 0;
@@ -121,7 +121,7 @@ describe.only('reactive', () => {
       },
     });
 
-    expect(R.schema(person)).to.equal(ContactDef);
+    expect(R.getSchema(person)).to.equal(ContactDef);
 
     person.name = 'Satoshi Nakamoto';
     expect(() => {
@@ -139,7 +139,7 @@ describe.only('reactive', () => {
     });
 
     // NOTE: Will throw if identifiers are not given for each property.
-    const jsonSchema = JSONSchema.make(R.schema(person)!);
+    const jsonSchema = JSONSchema.make(R.getSchema(person)!);
     expect(jsonSchema.$schema).to.equal('http://json-schema.org/draft-07/schema#');
   });
 
@@ -159,13 +159,10 @@ describe.only('reactive', () => {
   });
 
   test('Indexing', () => {
-    const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
-    const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
-
     const ContactDef = S.struct({
       name: S.string.pipe(
         S.annotations({
-          [IndexAnnotation]: true,
+          [R.IndexAnnotation]: true,
         }),
       ),
       publicKey: S.string,
@@ -173,7 +170,7 @@ describe.only('reactive', () => {
 
     // TODO(burdon): Implement recursive visitor.
     const indexed = AST.getPropertySignatures(ContactDef.ast).filter((p) => {
-      const { indexed } = ReadonlyRecord.getSomes({ indexed: getIndexAnnotation(p.type) });
+      const { indexed } = ReadonlyRecord.getSomes({ indexed: R.getIndexAnnotation(p.type) });
       return indexed;
     });
 

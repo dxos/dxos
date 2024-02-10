@@ -14,52 +14,46 @@ import { invariant } from '@dxos/invariant';
  */
 export type ReactiveObject<T> = { [K in keyof T]: T[K] };
 
+export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
+export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
+
 /**
- * Reactive object factory.
+ * Creates a reactive object from a plain Javascript object.
+ * Optionally provides a TS-effect schema.
  */
-export class R {
-  /**
-   * Creates a reactive object from a plain Javascript object.
-   * Optionally provides a TS-effect schema.
-   */
-  // TODO(burdon): Option to return mutable object?
-  static object: {
-    <T extends {}>(obj: T): ReactiveObject<T>;
-    <T extends {}>(schema: S.Schema<T>, obj: T): ReactiveObject<T>;
-  } = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: T): ReactiveObject<T> => {
-    if (obj) {
-      const schema: S.Schema<T> = schemaOrObj as S.Schema<T>;
-      const _ = S.asserts(schema)(obj);
+// TODO(burdon): Option to return mutable object?
+export const object: {
+  <T extends {}>(obj: T): ReactiveObject<T>;
+  <T extends {}>(schema: S.Schema<T>, obj: T): ReactiveObject<T>;
+} = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: T): ReactiveObject<T> => {
+  if (obj) {
+    const schema: S.Schema<T> = schemaOrObj as S.Schema<T>;
+    const _ = S.asserts(schema)(obj);
 
-      assignAstAnnotations(obj, schema.ast);
-      Object.defineProperty(obj, symbolSchema, {
-        enumerable: false,
-        value: schema,
-      });
+    assignAstAnnotations(obj, schema.ast);
+    Object.defineProperty(obj, symbolSchema, {
+      enumerable: false,
+      value: schema,
+    });
 
-      return createReactiveProxy(obj, new TypedReactiveHandler());
-    } else {
-      return createReactiveProxy(schemaOrObj as T, new UntypedReactiveHandler());
-    }
-  };
+    return createReactiveProxy(obj, new TypedReactiveHandler());
+  } else {
+    return createReactiveProxy(schemaOrObj as T, new UntypedReactiveHandler());
+  }
+};
 
-  /**
-   * Returns the schema for the given object if one is defined.
-   */
-  static schema<T extends {}>(obj: T): S.Schema<T> | undefined {
-    const schema = (obj as any)[symbolSchema];
-    if (!schema) {
-      return undefined;
-    }
-
-    invariant(S.isSchema(schema), 'Invalid schema.');
-    return schema as S.Schema<T>;
+/**
+ * Returns the schema for the given object if one is defined.
+ */
+export const getSchema = <T extends {}>(obj: T): S.Schema<T> | undefined => {
+  const schema = (obj as any)[symbolSchema];
+  if (!schema) {
+    return undefined;
   }
 
-  constructor() {
-    throw new Error('R is a static class and should not be instantiated.');
-  }
-}
+  invariant(S.isSchema(schema), 'Invalid schema.');
+  return schema as S.Schema<T>;
+};
 
 //
 // Proxied implementations.
