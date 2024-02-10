@@ -171,6 +171,7 @@ describe.only('reactive', () => {
       publicKey: S.string,
     });
 
+    // TODO(burdon): Implement recursive visitor.
     const indexed = AST.getPropertySignatures(ContactDef.ast).filter((p) => {
       const { indexed } = ReadonlyRecord.getSomes({ indexed: getIndexAnnotation(p.type) });
       return indexed;
