@@ -14,10 +14,13 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 export type ReactiveObject<T> = { [K in keyof T]: T[K] };
 
 /**
- * Creates a reactive object from a plain Javascript object.
- * Optionally provides a TS-effect schema.
+ * Reactive object factory.
  */
 export class R {
+  /**
+   * Creates a reactive object from a plain Javascript object.
+   * Optionally provides a TS-effect schema.
+   */
   // TODO(burdon): Option to return mutable object?
   static object: {
     <T extends {}>(obj: T): ReactiveObject<T>;
@@ -30,7 +33,7 @@ export class R {
       assignAstAnnotations(obj, schema.ast);
       Object.defineProperty(obj, symbolSchema, {
         enumerable: false,
-        value: schemaOrObj,
+        value: schema,
       });
 
       return createReactiveProxy(obj, new TypedReactiveHandler());
@@ -38,6 +41,13 @@ export class R {
       return createReactiveProxy(schemaOrObj as T, new UntypedReactiveHandler());
     }
   };
+
+  /**
+   * Returns the schema for the given object if one is defined.
+   */
+  static schema<T extends {}>(obj: T): S.Schema<T> | undefined {
+    return (obj as any)[symbolSchema];
+  }
 
   constructor() {
     throw new Error('R is a static class and should not be instantiated.');

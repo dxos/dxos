@@ -67,6 +67,8 @@ describe.only('reactive', () => {
       phone: new PhoneNumber(),
     });
 
+    expect(R.schema(person)).to.be.undefined;
+
     {
       let count = 0;
       effect(() => {
@@ -79,6 +81,7 @@ describe.only('reactive', () => {
       expect(count).to.equal(2);
 
       // Non-plains objects are not reactive.
+      person.phone.countryCode = 1;
       person.phone.number = '800-100-1234';
       expect(count).to.equal(2);
 
@@ -108,28 +111,28 @@ describe.only('reactive', () => {
       },
     });
 
-    person.name = 'Satoshi Nakamoto';
+    expect(R.schema(person)).to.equal(ContactDef);
 
+    person.name = 'Satoshi Nakamoto';
     expect(() => {
       (person.address.city as any) = 42; // Runtime type error.
     }).to.throw();
   });
 
-  // test.skip('storing to echo', () => {
-  //   declare const db: any;
+  test.skip('ECHO insert and query', () => {
+    // declare const db: any;
 
-  //   const Person = S.struct({
-  //     name: S.string,
-  //     age: S.optional(S.number),
-  //   });
+    const ContactDef = S.struct({
+      name: S.string,
+      age: S.optional(S.number),
+    });
 
-  //   const person = reactive(Person, {
-  //     name: 'John',
-  //     age: 42,
-  //   });
+    const person = R.object(ContactDef, {
+      name: 'John',
+      age: 42,
+    });
 
-  //   db.add(person);
-
-  //   person.age = 53; // Automerge mutation.
-  // });
+    // db.add(person);
+    // person.age = 53; // Automerge mutation.
+  });
 });
