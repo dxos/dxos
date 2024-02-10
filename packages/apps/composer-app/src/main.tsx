@@ -223,6 +223,7 @@ const main = async () => {
       [WildcardMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-wildcard')),
     },
     core: [
+      //
       ClientMeta.id,
       GraphMeta.id,
       HelpMeta.id,
@@ -238,7 +239,13 @@ const main = async () => {
       WildcardMeta.id,
     ],
     // TODO(burdon): Add DebugMeta if dev build.
-    defaults: [MarkdownMeta.id, StackMeta.id, ThreadMeta.id, SketchMeta.id],
+    defaults: [
+      //
+      MarkdownMeta.id,
+      StackMeta.id,
+      ThreadMeta.id,
+      SketchMeta.id,
+    ],
   });
 
   createRoot(document.getElementById('root')!).render(
@@ -256,7 +263,7 @@ const defaultStorageIsEmpty = async (config?: defs.Runtime.Client.Storage): Prom
     const { size } = await echoMetadata.stat();
     return !(size > 0);
   } catch (err) {
-    log.warn('Error checking if default storage is empty', { err });
+    log.warn('Checking for empty default storage.', { err });
     return true;
   }
 };

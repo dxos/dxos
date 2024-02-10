@@ -8,11 +8,8 @@ import { type Extension } from '@codemirror/state';
 import { tags } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
-export const nameRegex = /\{([\w_]+)}/;
+export const nameRegex = /\{([\w-]+)}/;
 
-/**
- * https://github.com/codemirror/stream-parser/blob/main/test/test-stream-parser.ts
- */
 const parser = StreamLanguage.define({
   token: (stream) => {
     if (stream.eatSpace()) {
@@ -25,7 +22,7 @@ const parser = StreamLanguage.define({
       return 'lineComment';
     }
     if (stream.match(nameRegex)) {
-      return 'tagName';
+      return 'variableName';
     }
     stream.next();
     return null;
@@ -36,11 +33,11 @@ const parser = StreamLanguage.define({
  * https://codemirror.net/examples/styling
  * https://lezer.codemirror.net/docs/ref/#highlight
  */
-const styles = HighlightStyle.define([
+const highlightStyles = HighlightStyle.define([
   {
-    tag: tags.tagName,
-    class: mx('py-1 bg-neutral-100 dark:bg-neutral-900 text-black dark:text-white font-mono text-sm'),
+    tag: tags.variableName,
+    class: mx('rounded border border-yellow-500 bg-yellow-100 text-black font-mono text-sm'),
   },
 ]);
 
-export const promptExtension: Extension = [parser, syntaxHighlighting(styles)];
+export const promptExtension: Extension = [parser, syntaxHighlighting(highlightStyles)];
