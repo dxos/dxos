@@ -14,6 +14,7 @@ import DebugMeta from '@braneframe/plugin-debug/meta';
 import ExplorerMeta from '@braneframe/plugin-explorer/meta';
 import FilesMeta from '@braneframe/plugin-files/meta';
 import GithubMeta from '@braneframe/plugin-github/meta';
+import GptMeta from '@braneframe/plugin-gpt/meta';
 import GraphMeta from '@braneframe/plugin-graph/meta';
 import GridMeta from '@braneframe/plugin-grid/meta';
 import HelpMeta from '@braneframe/plugin-help/meta';
@@ -44,12 +45,14 @@ import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
 import { types, Document } from '@braneframe/types';
 import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
+import { createStorageObjects } from '@dxos/client-services';
+import { defs, SaveConfig } from '@dxos/config';
+import { log } from '@dxos/log';
 import { initializeAppObservability } from '@dxos/observability';
 import { createClientServices } from '@dxos/react-client';
 import { TextObject } from '@dxos/react-client/echo';
 import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
-
 import './globals';
 
 import { ResetDialog } from './components';
@@ -59,9 +62,23 @@ import { steps } from './help';
 import translations from './translations';
 
 const main = async () => {
-  const config = await setupConfig();
-  // Intentially do not await, don't block app startup for telemetry.
+  let config = await setupConfig();
+
+  if (
+    !config.values.runtime?.client?.storage?.dataStore &&
+    (await defaultStorageIsEmpty(config.values.runtime?.client?.storage))
+  ) {
+    // NOTE: Set default for first time users to IDB (works better with automerge CRDTs).
+    //       Needs to be done before worker is created.
+    await SaveConfig({
+      runtime: { client: { storage: { dataStore: defs.Runtime.Client.Storage.StorageDriver.IDB } } },
+    });
+    config = await setupConfig();
+  }
+
+  // Intentionally do not await, don't block app startup for telemetry.
   const observability = initializeAppObservability({ namespace: appKey, config });
+
   const services = await createClientServices(
     config,
     config.values.runtime?.app?.env?.DX_HOST
@@ -109,6 +126,7 @@ const main = async () => {
       FilesMeta,
       GithubMeta,
       IpfsMeta,
+      GptMeta,
 
       // Framework extensions
       // TODO(wittjosiah): Space plugin currently needs to be before the Graph plugin.
@@ -152,6 +170,7 @@ const main = async () => {
       [ExplorerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-explorer')),
       [FilesMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-files')),
       [GithubMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-github')),
+      [GptMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-gpt')),
       [GraphMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-graph')),
       [GridMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-grid')),
       [HelpMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-help'), {
@@ -204,6 +223,7 @@ const main = async () => {
       [WildcardMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-wildcard')),
     },
     core: [
+      //
       ClientMeta.id,
       GraphMeta.id,
       HelpMeta.id,
@@ -219,7 +239,13 @@ const main = async () => {
       WildcardMeta.id,
     ],
     // TODO(burdon): Add DebugMeta if dev build.
-    defaults: [MarkdownMeta.id, StackMeta.id, ThreadMeta.id, SketchMeta.id],
+    defaults: [
+      //
+      MarkdownMeta.id,
+      StackMeta.id,
+      ThreadMeta.id,
+      SketchMeta.id,
+    ],
   });
 
   createRoot(document.getElementById('root')!).render(
@@ -227,6 +253,19 @@ const main = async () => {
       <App />
     </StrictMode>,
   );
+};
+
+const defaultStorageIsEmpty = async (config?: defs.Runtime.Client.Storage): Promise<boolean> => {
+  try {
+    const storage = createStorageObjects(config ?? {}).storage;
+    const metadataDir = storage.createDirectory('metadata');
+    const echoMetadata = metadataDir.getOrCreateFile('EchoMetadata');
+    const { size } = await echoMetadata.stat();
+    return !(size > 0);
+  } catch (err) {
+    log.warn('Checking for empty default storage.', { err });
+    return true;
+  }
 };
 
 void main();

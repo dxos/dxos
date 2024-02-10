@@ -16,7 +16,80 @@ import { type Comment, type Range } from '../hooks';
 import { getToken } from '../styles';
 import { callbackWrapper } from '../util';
 
-// TODO(burdon): Reconcile with theme.
+//
+// State management.
+//
+
+const documentId = Facet.define<string | undefined, string | undefined>({ combine: (values) => values[0] });
+
+type CommentState = {
+  comment: Comment;
+  range: Range;
+  location?: Rect | null;
+};
+
+type SelectionState = {
+  current?: string;
+  closest?: string;
+};
+
+export type CommentsState = {
+  id?: string;
+  comments: CommentState[];
+  selection: SelectionState;
+};
+
+export const setComments = StateEffect.define<{ id: string; comments: Comment[] }>();
+
+export const setSelection = StateEffect.define<SelectionState>();
+
+const setCommentState = StateEffect.define<CommentsState>();
+
+/**
+ * State field (reducer) that tracks comment ranges.
+ * The ranges are tracked as Automerge cursors from which the absolute indexed ranges can be computed.
+ */
+const commentsState = StateField.define<CommentsState>({
+  create: (state) => ({ id: state.facet(documentId), comments: [], selection: {} }),
+  update: (value, tr) => {
+    for (const effect of tr.effects) {
+      // Update selection.
+      if (effect.is(setSelection)) {
+        return { ...value, selection: effect.value };
+      }
+
+      // Update range from store.
+      if (effect.is(setComments)) {
+        const { comments } = effect.value;
+        const commentStates: CommentState[] = comments
+          .map((comment) => {
+            // Skip cut/deleted comments.
+            if (!comment.cursor) {
+              return undefined;
+            }
+
+            const range = Cursor.getRangeFromCursor(tr.state, comment.cursor);
+            return range && { comment, range };
+          })
+          .filter(nonNullable);
+
+        return { ...value, comments: commentStates };
+      }
+
+      // Update entire state.
+      if (effect.is(setCommentState)) {
+        return effect.value;
+      }
+    }
+
+    return value;
+  },
+});
+
+//
+// UX
+//
+
 const styles = EditorView.baseTheme({
   '&light .cm-comment, &light .cm-comment-current': { mixBlendMode: 'darken' },
   '&dark .cm-comment, &dark .cm-comment-current': { mixBlendMode: 'plus-lighter' },
@@ -36,88 +109,10 @@ const styles = EditorView.baseTheme({
   },
 });
 
-const commentMark = Decoration.mark({ class: 'cm-comment' });
-const commentCurrentMark = Decoration.mark({ class: 'cm-comment-current' });
-
-type CommentState = {
-  comment: Comment;
-  range: Range;
-  location?: Rect | null;
-};
-
-type SelectionState = {
-  current?: string;
-  closest?: string;
-};
-
-export type CommentsState = {
-  comments: CommentState[];
-  selection: SelectionState;
-};
-
-export const focusComment = (view: EditorView, id: string, center = true) => {
-  const comment = view.state.field(commentsState).comments.find((range) => range.comment.id === id);
-  if (!comment?.comment.cursor) {
-    return;
-  }
-
-  const range = Cursor.getRangeFromCursor(view.state, comment.comment.cursor);
-  if (range) {
-    view.dispatch({
-      selection: { anchor: range.from },
-      effects: [
-        //
-        EditorView.scrollIntoView(range.from, center ? { y: 'center' } : undefined),
-        setSelection.of({ current: id }),
-      ],
-    });
-  }
-};
-
-export const setComments = StateEffect.define<Comment[]>();
-
-export const setSelection = StateEffect.define<SelectionState>();
-
-const setCommentState = StateEffect.define<CommentsState>();
-
-/**
- * State field (reducer) that tracks comment ranges.
- * The ranges are tracked as Automerge cursors from which the absolute indexed ranges can be computed.
- */
-const commentsState = StateField.define<CommentsState>({
-  create: () => ({ comments: [], selection: {} }),
-  update: (value, tr) => {
-    for (const effect of tr.effects) {
-      // Update selection.
-      if (effect.is(setSelection)) {
-        return { ...value, selection: effect.value };
-      }
-
-      // Update range from store.
-      if (effect.is(setComments)) {
-        const comments: CommentState[] = effect.value
-          .map((comment) => {
-            // Skip cut/deleted comments.
-            if (!comment.cursor) {
-              return undefined;
-            }
-
-            const range = Cursor.getRangeFromCursor(tr.state, comment.cursor);
-            return range && { comment, range };
-          })
-          .filter(nonNullable);
-
-        return { ...value, comments };
-      }
-
-      // Update entire state.
-      if (effect.is(setCommentState)) {
-        return effect.value;
-      }
-    }
-
-    return value;
-  },
+const commentMark = Decoration.mark({ class: 'cm-comment', attributes: { 'data-testid': 'cm-comment' } });
+const commentCurrentMark = Decoration.mark({
+  class: 'cm-comment-current',
+  attributes: { 'data-testid': 'cm-comment' },
 });
 
 /**
@@ -148,32 +143,9 @@ const commentsDecorations = EditorView.decorations.compute([commentsState], (sta
   return Decoration.set(decorations);
 });
 
-export type CommentsOptions = {
-  /**
-   * Key shortcut to create a new thread.
-   */
-  key?: string;
-  /**
-   * Called to create a new thread and return the thread id.
-   */
-  onCreate?: (params: { cursor: string; from: number; location?: Rect | null }) => string | undefined;
-  /**
-   * Selection cut/deleted.
-   */
-  onDelete?: (params: { id: string }) => void;
-  /**
-   * Called when a comment is moved.
-   */
-  onUpdate?: (params: { id: string; cursor: string }) => void;
-  /**
-   * Called to notify which thread is currently closest to the cursor.
-   */
-  onSelect?: (state: CommentsState) => void;
-  /**
-   * Called to render tooltip.
-   */
-  onHover?: (el: Element, shortcut: string) => void;
-};
+//
+// Cut-and-paste.
+//
 
 type TrackedComment = { id: string; from: number; to: number };
 
@@ -285,13 +257,11 @@ const mapTrackedComment = (comment: TrackedComment, changes: ChangeDesc) => ({
   to: changes.mapPos(comment.to, 1),
 });
 
-// These are attached to undone/redone transactions in the editor for the purpose of restoring comments
-// that were deleted by the original changes.
+/**
+ * These are attached to undone/redone transactions in the editor for the purpose of restoring comments
+ * that were deleted by the original changes.
+ */
 const restoreCommentEffect = StateEffect.define<TrackedComment>({ map: mapTrackedComment });
-
-const optionsFacet = Facet.define<CommentsOptions, CommentsOptions>({
-  combine: (providers) => providers[0],
-});
 
 /**
  * Create comment thread action.
@@ -331,6 +301,43 @@ export const createComment: Command = (view) => {
   return false;
 };
 
+//
+// Options
+//
+
+export type CommentsOptions = {
+  /**
+   * Document id.
+   */
+  id?: string;
+  /**
+   * Key shortcut to create a new thread.
+   */
+  key?: string;
+  /**
+   * Called to create a new thread and return the thread id.
+   */
+  onCreate?: (params: { cursor: string; from: number; location?: Rect | null }) => string | undefined;
+  /**
+   * Selection cut/deleted.
+   */
+  onDelete?: (params: { id: string }) => void;
+  /**
+   * Called when a comment is moved.
+   */
+  onUpdate?: (params: { id: string; cursor: string }) => void;
+  /**
+   * Called to notify which thread is currently closest to the cursor.
+   */
+  onSelect?: (state: CommentsState) => void;
+  /**
+   * Called to render tooltip.
+   */
+  onHover?: (el: Element, shortcut: string) => void;
+};
+
+const optionsFacet = Facet.define<CommentsOptions, CommentsOptions>({ combine: (providers) => providers[0] });
+
 /**
  * Comment threads.
  * 1). Updates the EditorModel to store relative selections for a set of comments threads.
@@ -349,6 +356,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
 
   return [
     optionsFacet.of(options),
+    documentId.of(options.id),
     commentsState,
     commentsDecorations,
     styles,
@@ -459,6 +467,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         // Update callback.
         handleSelect({
           selection,
+          id: state.facet(documentId),
           comments: comments.map(({ comment, range }) => ({
             comment,
             range,
@@ -472,15 +481,38 @@ export const comments = (options: CommentsOptions = {}): Extension => {
   ];
 };
 
+//
+// Utils.
+//
+
+export const focusComment = (view: EditorView, id: string, center = true) => {
+  const comment = view.state.field(commentsState).comments.find((range) => range.comment.id === id);
+  if (!comment?.comment.cursor) {
+    return;
+  }
+
+  const range = Cursor.getRangeFromCursor(view.state, comment.comment.cursor);
+  if (range) {
+    view.dispatch({
+      selection: { anchor: range.from },
+      effects: [
+        //
+        EditorView.scrollIntoView(range.from, center ? { y: 'center' } : undefined),
+        setSelection.of({ current: id }),
+      ],
+    });
+  }
+};
+
 /**
  * Update comments state field.
  */
-export const useComments = (view: EditorView | null, comments: Comment[] = []) => {
+export const useComments = (view: EditorView | null, id: string, comments: Comment[] = []) => {
   useEffect(() => {
     if (view) {
       view.dispatch({
-        effects: setComments.of(comments),
+        effects: setComments.of({ id, comments }),
       });
     }
-  }, [view, comments]);
+  }, [id, view, comments]);
 };

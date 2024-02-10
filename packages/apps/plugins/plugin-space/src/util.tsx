@@ -4,7 +4,6 @@
 
 import {
   ClockCounterClockwise,
-  Download,
   FloppyDisk,
   FolderOpen,
   FolderPlus,
@@ -13,7 +12,6 @@ import {
   Placeholder,
   Trash,
   Users,
-  Upload,
   X,
   Database,
 } from '@phosphor-icons/react';
@@ -253,21 +251,6 @@ export const spaceToGraphNode = ({
       });
     }
 
-    node.addAction(
-      {
-        id: 'backup-space',
-        label: ['export data label', { ns: SPACE_PLUGIN }],
-        icon: (props) => <Download {...props} />,
-        invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.EXPORT, data: { space } }),
-      },
-      {
-        id: 'restore-space',
-        label: ['import data label', { ns: SPACE_PLUGIN }],
-        icon: (props) => <Upload {...props} />,
-        invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.IMPORT, data: { space } }),
-      },
-    );
-
     if (!(folder instanceof Folder)) {
       return;
     }
@@ -319,7 +302,7 @@ export const objectToGraphNode = ({
       ...partials,
       properties: {
         ...partials.properties,
-        testId: object instanceof Folder ? 'spacePlugin.folder' : 'spacePlugin.object',
+        testId: 'spacePlugin.object',
         persistenceClass: 'folder',
       },
     });
@@ -335,6 +318,9 @@ export const objectToGraphNode = ({
             action: SpaceAction.RENAME_OBJECT,
             data: { object, ...params },
           }),
+        properties: {
+          testId: 'spacePlugin.renameObject',
+        },
       },
       {
         id: 'delete',

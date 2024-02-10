@@ -7,10 +7,17 @@ import React, { type PropsWithChildren, useEffect } from 'react';
 import { Chain as ChainType } from '@braneframe/types';
 import { TextObject, getTextContent } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select, useTranslation } from '@dxos/react-ui';
-import { TextEditor, useTextModel } from '@dxos/react-ui-editor';
+import {
+  BaseTextEditor,
+  createBasicBundle,
+  defaultTextSlots,
+  TextEditor,
+  textTheme,
+  useTextModel,
+} from '@dxos/react-ui-editor';
 import { groupBorder, mx } from '@dxos/react-ui-theme';
 
-import { nameRegex, promptExtension } from './extension';
+import { nameRegex, promptExtension } from './prompt-extension';
 import { CHAIN_PLUGIN } from '../../meta';
 
 const inputTypes = [
@@ -41,6 +48,10 @@ const inputTypes = [
   {
     value: ChainType.Input.Type.CONTEXT,
     label: 'Context',
+  },
+  {
+    value: ChainType.Input.Type.SCHEMA,
+    label: 'Schema',
   },
 ];
 
@@ -116,7 +127,15 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
         </Section>
 
         <Section title='Template'>
-          <TextEditor model={model} placeholder={t('template placeholder')} extensions={[promptExtension]} />
+          <BaseTextEditor
+            model={model}
+            extensions={[
+              createBasicBundle({ bracketMatching: false, placeholder: t('template placeholder') }),
+              promptExtension,
+            ]}
+            theme={textTheme}
+            slots={{ ...defaultTextSlots, editor: { className: 'p-3' } }}
+          />
         </Section>
 
         {prompt.inputs?.length > 0 && (
@@ -150,11 +169,12 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
                           </Select.Root>
                         </Input.Root>
                       </td>
-                      <td className='px-3 py-1.5'>
+                      <td className='px-3'>
                         {[
                           ChainType.Input.Type.VALUE,
                           ChainType.Input.Type.CONTEXT,
                           ChainType.Input.Type.RESOLVER,
+                          ChainType.Input.Type.SCHEMA,
                         ].includes(input.type) && <ValueEditor input={input} />}
                       </td>
                     </tr>
@@ -176,18 +196,8 @@ const ValueEditor = ({ input }: { input: ChainType.Input }) => {
     return null;
   }
 
-  return (
-    <TextEditor
-      model={model}
-      placeholder={t('value placeholder')}
-      lineWrapping={false}
-      slots={{
-        root: {
-          className: mx('w-full border-b', groupBorder),
-        },
-      }}
-    />
-  );
+  // TODO(burdon): String?
+  return <TextEditor model={model} placeholder={t('value placeholder')} lineWrapping={false} />;
 };
 
 export const Section = ({ title, actions, children }: PropsWithChildren<{ title: string; actions?: JSX.Element }>) => {

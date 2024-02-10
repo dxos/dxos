@@ -1,5 +1,7 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": [
+    "../../../../tsconfig.json"
+  ],
   "compilerOptions": {
     "lib": [
       "DOM",
@@ -33,9 +35,6 @@
       "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../../sdk/client"
-    },
-    {
       "path": "../../../sdk/config"
     },
     {
@@ -49,9 +48,6 @@
     },
     {
       "path": "../../types"
-    },
-    {
-      "path": "../plugin-settings"
     }
   ]
 }

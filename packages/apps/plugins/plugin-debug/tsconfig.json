@@ -1,5 +1,7 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": [
+    "../../../../tsconfig.json"
+  ],
   "compilerOptions": {
     "lib": [
       "DOM",
@@ -67,6 +69,9 @@
     },
     {
       "path": "../../../sdk/client-services"
+    },
+    {
+      "path": "../../../sdk/config"
     },
     {
       "path": "../../../sdk/react-client"

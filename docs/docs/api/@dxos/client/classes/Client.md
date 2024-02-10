@@ -25,7 +25,7 @@ Type: <code>Event&lt;void&gt;</code>
 Emitted after the client is reset and the services have finished restarting.
 
 ### [version](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L71)
-Type: <code>"0.4.1"</code>
+Type: <code>"0.4.3"</code>
 
 The version of this client API.
 

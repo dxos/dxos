@@ -3,7 +3,6 @@
 //
 
 import '@dxosTheme';
-
 import { type EditorView } from '@codemirror/view';
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import defaultsDeep from 'lodash.defaultsdeep';
@@ -14,7 +13,7 @@ import { TextObject } from '@dxos/echo-schema';
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
-import { fixedInsetFlexLayout, getSize, groupSurface, mx } from '@dxos/react-ui-theme';
+import { getSize, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor, type TextEditorProps } from './TextEditor';
@@ -36,8 +35,11 @@ import {
   typewriter,
   useComments,
   formatting,
+  annotations,
+  EditorModes,
 } from '../../extensions';
 import { type Comment, useTextModel } from '../../hooks';
+import translations from '../../translations';
 
 faker.seed(101);
 
@@ -110,7 +112,7 @@ const text = {
     `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
     `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
     `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
-    '', // TODO(burdon): Possible GFM parsing bug if no newline?
+    '',
   ),
 
   image: str('# Image', '', '![dxos](https://pbs.twimg.com/profile_banners/1268328127673044992/1684766689/1500x500)'),
@@ -209,27 +211,31 @@ const onRenderLink: LinkOptions['onRender'] = (el, url) => {
 };
 
 type StoryProps = {
+  id?: string;
   text?: string;
   comments?: Comment[];
-} & Pick<TextEditorProps, 'readonly' | 'placeholder' | 'slots' | 'extensions'>;
+} & Pick<TextEditorProps, 'readonly' | 'placeholder' | 'extensions'>;
 
-const Story = ({ text, comments, placeholder = 'New document.', ...props }: StoryProps) => {
+const Story = ({ id = 'test', text, comments, placeholder = 'New document.', ...props }: StoryProps) => {
   const [item] = useState({ text: new TextObject(text) });
   const view = useRef<EditorView>(null);
   const model = useTextModel({ text: item.text });
-  useComments(view.current, comments);
+  useComments(view.current, id, comments);
   if (!model) {
     return null;
   }
 
   return (
-    <div className={mx(fixedInsetFlexLayout, groupSurface)}>
-      <div className='flex h-full justify-center'>
-        <div className='flex flex-col h-full w-[800px]'>
-          <MarkdownEditor ref={view} model={model} placeholder={placeholder} {...props} />
-        </div>
-      </div>
-    </div>
+    <MarkdownEditor
+      ref={view}
+      model={model}
+      placeholder={placeholder}
+      slots={{
+        root: { className: mx(textBlockWidth, 'min-bs-dvh') },
+        editor: { className: 'min-bs-dvh p-2 bg-white dark:bg-black' },
+      }}
+      {...props}
+    />
   );
 };
 
@@ -238,6 +244,7 @@ export default {
   component: MarkdownEditor,
   decorators: [withTheme],
   render: Story,
+  parameters: { translations, layout: 'fullscreen' },
 };
 
 const defaults = [
@@ -382,6 +389,19 @@ export const HorizontalRule = {
       extensions={[hr()]}
     />
   ),
+};
+
+export const Vim = {
+  render: () => (
+    <Story
+      text={str('# Vim Mode', '', 'The distant future. The year 2000.', '', text.paragraphs)}
+      extensions={[defaults, EditorModes.vim]}
+    />
+  ),
+};
+
+export const Annotations = {
+  render: () => <Story text={str('# Annotations', '', large)} extensions={[annotations({ match: /volup/gi })]} />,
 };
 
 const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewriter')?.split(',');

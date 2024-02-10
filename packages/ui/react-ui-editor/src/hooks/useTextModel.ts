@@ -3,7 +3,7 @@
 //
 
 import get from 'lodash.get';
-import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
+import { type Dispatch, type SetStateAction, useState, useMemo } from 'react';
 
 import { generateName } from '@dxos/display-name';
 import { type AutomergeTextCompat, getRawDoc } from '@dxos/echo-schema';
@@ -23,12 +23,12 @@ export type UseTextModelProps = {
   text?: TextObject;
 };
 
-export const useTextModel = (props: UseTextModelProps): EditorModel | undefined => {
-  const { identity, space, text } = props;
-  const [model, setModel] = useState<EditorModel | undefined>();
-  useEffect(() => setModel(createModel(props)), [identity, space, text]);
-  return model;
-};
+/**
+ * @deprecated
+ */
+// TODO(burdon): Remove once automerge lands.
+export const useTextModel = (props: UseTextModelProps): EditorModel | undefined =>
+  useMemo(() => createModel(props), Object.values(props));
 
 /**
  * For use primarily in stories & tests so the dependence on TextObject can be avoided.
@@ -47,6 +47,10 @@ export const useInMemoryTextModel = ({
 };
 
 const createModel = ({ space, identity, text }: UseTextModelProps) => {
+  if (!text) {
+    return undefined;
+  }
+
   invariant(isAutomergeObject(text));
   const obj = text as any as AutomergeTextCompat;
   const doc = getRawDoc(obj, [obj.field]);
@@ -64,11 +68,7 @@ const createModel = ({ space, identity, text }: UseTextModelProps) => {
       peerId: identity?.identityKey.toHex() ?? 'Anonymous',
     });
 
-  const extensions = [
-    //
-    modelState.init(() => model),
-    automerge({ handle: doc.handle, path: doc.path }),
-  ];
+  const extensions = [modelState.init(() => model), automerge({ handle: doc.handle, path: doc.path })];
   if (awarenessProvider) {
     extensions.push(awareness(awarenessProvider));
   }

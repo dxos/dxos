@@ -5,7 +5,7 @@
 import { CaretDoubleLeft, List as MenuIcon } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Surface, type Toast as ToastSchema } from '@dxos/app-framework';
+import { Surface, useSurface, type Toast as ToastSchema } from '@dxos/app-framework';
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover, Status } from '@dxos/react-ui';
 import { baseSurface, fixedInsetFlexLayout, getSize } from '@dxos/react-ui-theme';
 
@@ -17,21 +17,16 @@ import { LAYOUT_PLUGIN } from '../meta';
 export type MainLayoutProps = {
   fullscreen: boolean;
   showHintsFooter: boolean;
-  showComplementarySidebar: boolean;
   toasts: ToastSchema[];
   onDismissToast: (id: string) => void;
 };
 
-export const MainLayout = ({
-  fullscreen,
-  showHintsFooter,
-  showComplementarySidebar,
-  toasts,
-  onDismissToast,
-}: MainLayoutProps) => {
+export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast }: MainLayoutProps) => {
   const context = useLayout();
   const { complementarySidebarOpen, dialogOpen, dialogContent, popoverOpen, popoverContent, popoverAnchorId } = context;
   const { t } = useTranslation(LAYOUT_PLUGIN);
+  const { surfaces } = useSurface();
+  const active = surfaces?.main?.data?.active;
 
   if (fullscreen) {
     return (
@@ -72,11 +67,11 @@ export const MainLayout = ({
         </Main.NavigationSidebar>
 
         {/* Right Complementary sidebar. */}
-        {complementarySidebarOpen !== null && showComplementarySidebar && (
+        {complementarySidebarOpen !== null && active ? (
           <Main.ComplementarySidebar classNames='overflow-hidden'>
             <Surface role='complementary' name='context' />
           </Main.ComplementarySidebar>
-        )}
+        ) : null}
 
         {/* Top (header) bar. */}
         <Main.Content classNames={['fixed inset-inline-0 block-start-0 z-[2]', baseSurface]} asChild>
@@ -96,19 +91,19 @@ export const MainLayout = ({
                 <div role='none' className='grow' />
                 <Surface role='navbar-end' direction='inline-reverse' />
 
-                {complementarySidebarOpen !== null && showComplementarySidebar && (
+                {complementarySidebarOpen !== null && active ? (
                   <Button
                     onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
                     variant='ghost'
                   >
                     <span className='sr-only'>{t('open complementary sidebar label')}</span>
                     <CaretDoubleLeft
-                      mirrored={!!context.complementarySidebarOpen}
+                      mirrored={context.complementarySidebarOpen}
                       weight='light'
                       className={getSize(4)}
                     />
                   </Button>
-                )}
+                ) : null}
               </DensityProvider>
             </div>
           </div>

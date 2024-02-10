@@ -10,18 +10,19 @@ import { useTableContext } from './TableContext';
 import { tbodyTr } from '../../theme';
 import { Cell } from '../Cell/Cell';
 
+const TABLE_BODY_NAME = 'TableBody';
+
 type TableBodyProps<TData extends RowData> = {
   rows: Row<TData>[];
 };
 
-const TABLE_BODY_NAME = 'TableBody';
-
 const TableBody = <TData extends RowData>({ rows }: TableBodyProps<TData>) => {
-  const tableContext = useTableContext<TData>(TABLE_BODY_NAME);
-  const { table, keyAccessor, debug, expand, isGrid, onDatumClick, currentDatum } = tableContext;
+  const { table, keyAccessor, currentDatum, debug, expand, isGrid, onDatumClick } =
+    useTableContext<TData>(TABLE_BODY_NAME);
   const rowSelection = table.getState().rowSelection;
   const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
   const canBeCurrent = !isGrid && !!onDatumClick;
+
   return (
     <tbody {...(isGrid && domAttributes)}>
       {rows.map((row) => {

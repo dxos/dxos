@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowBendLeftDown, DotsThreeOutline } from '@phosphor-icons/react';
+import { ArrowBendLeftDown, Spinner } from '@phosphor-icons/react';
 import React, { type ComponentProps, type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -14,16 +14,20 @@ import type { ThreadEntity } from '../types';
 export type ThreadProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
   ThreadEntity & { current?: boolean | ComponentProps<'div'>['aria-current'] };
 
+export const threadLayout = 'is-full place-self-start grid grid-cols-[3rem_1fr]';
+
 export const Thread = forwardRef<HTMLDivElement, ThreadProps>(
   ({ current, children, classNames, ...props }, forwardedRef) => {
     return (
       <div
         role='group'
+        data-testid='thread'
         {...(current && { 'aria-current': typeof current === 'string' ? current : 'location' })}
         {...props}
         className={mx(
-          'is-full place-self-start grid grid-cols-[3rem_1fr] bg-[var(--surface-bg)] border-[color:var(--surface-separator)] border-bs border-be plb-1.5 attention attention-within attention-current [--controls-opacity:0]',
+          threadLayout,
           hoverableFocusedWithinControls,
+          'bg-[var(--surface-bg)] border-[color:var(--surface-separator)] border-bs border-be plb-1.5 attention attention-within attention-current [--controls-opacity:0]',
           classNames,
         )}
         ref={forwardedRef}
@@ -45,6 +49,7 @@ export const ThreadHeading = forwardRef<HTMLParagraphElement, ThreadHeadingProps
         </div>
         <p
           role='heading'
+          data-testid='thread.heading'
           {...props}
           className={mx(
             'fg-description font-medium truncate before:content-[open-quote] after:content-[close-quote]',
@@ -72,10 +77,10 @@ export const ThreadFooter = forwardRef<HTMLDivElement, ThreadFooterProps>(
         className={mx('col-start-2 grid grid-cols-[min-content_1fr_max-content] text-xs fg-description', classNames)}
         ref={forwardedRef}
       >
-        <DotsThreeOutline
-          weight='fill'
+        <Spinner
+          weight='bold'
           data-visible={activity ? 'show' : 'hide'}
-          className='is-6 bs-4 invisible data-[visible=show]:visible'
+          className='is-6 bs-4 invisible data-[visible=show]:visible animate-spin-slow'
         />
         <span className='truncate min-is-0' aria-live='polite'>
           {activity ? children : null}

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowSquareOut } from '@phosphor-icons/react';
+import { ArrowSquareDown, ArrowSquareOut, type Icon } from '@phosphor-icons/react';
 import React, { type AnchorHTMLAttributes, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -13,6 +13,7 @@ import {
   type AutocompleteResult,
   type Extension,
   type LinkOptions,
+  EditorModes,
   autocomplete,
   code,
   heading,
@@ -55,6 +56,16 @@ export const getExtensions = ({ settings, document, dispatch }: ExtensionsOption
     table(),
     tasklist(),
   ];
+
+  //
+  // Editor mode.
+  //
+  if (settings?.editorMode) {
+    const extension = EditorModes[settings.editorMode];
+    if (extension) {
+      extensions.push(extension);
+    }
+  }
 
   //
   // Hyperlinks (external and internal object links).
@@ -127,10 +138,12 @@ const onRenderLink = (onSelectObject: (id: string) => void) => (el: Element, url
         target: '_blank',
       };
 
+  const LinkIcon: Icon = url.startsWith('/') ? ArrowSquareDown : ArrowSquareOut;
+
   createRoot(el).render(
     <StrictMode>
       <a {...options} className={hover}>
-        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 cursor-pointer')} />
+        <LinkIcon weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 cursor-pointer')} />
       </a>
     </StrictMode>,
   );

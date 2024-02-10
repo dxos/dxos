@@ -9,7 +9,7 @@ import React, { type FC, useMemo, useState } from 'react';
 import { TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
-import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
+import { mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Toolbar } from './Toolbar';
@@ -25,14 +25,16 @@ import {
   useFormattingState,
 } from '../../extensions';
 import { type Comment, useActionHandler, useEditorView, useTextModel } from '../../hooks';
+import { editorFillLayoutEditor, editorFillLayoutRoot, editorWithToolbarLayout } from '../../styles';
+import translations from '../../translations';
 import { MarkdownEditor } from '../TextEditor';
 
 faker.seed(101);
 
-const Story: FC<{ content: string }> = ({ content }) => {
+const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) => {
   const [item] = useState({ text: new TextObject(content) });
   const [_comments, setComments] = useState<Comment[]>([]);
-  const [editorRef, editorView] = useEditorView();
+  const [editorRef, viewInvalidated] = useEditorView(id);
   const model = useTextModel({ text: item.text });
   const [formattingState, formattingObserver] = useFormattingState();
   const extensions = useMemo(
@@ -55,25 +57,29 @@ const Story: FC<{ content: string }> = ({ content }) => {
     [],
   );
 
-  useComments(editorView, _comments);
-  const handleAction = useActionHandler(editorView);
+  useComments(viewInvalidated ? null : editorRef.current, id, _comments);
+  const handleAction = useActionHandler(editorRef.current);
 
   if (!model) {
     return null;
   }
 
   return (
-    <div className={mx(fixedInsetFlexLayout, groupSurface)}>
-      <div className='flex h-full justify-center'>
-        <div className='flex flex-col h-full w-[800px]'>
-          <Toolbar.Root onAction={handleAction} state={formattingState}>
-            <Toolbar.Markdown />
-            <Toolbar.Separator />
-            <Toolbar.Extended />
-          </Toolbar.Root>
-          <MarkdownEditor ref={editorRef} model={model} extensions={extensions} />
-        </div>
-      </div>
+    <div role='none' className={mx('fixed inset-0', editorWithToolbarLayout)}>
+      <Toolbar.Root onAction={handleAction} state={formattingState} classNames={textBlockWidth}>
+        <Toolbar.Markdown />
+        <Toolbar.Separator />
+        <Toolbar.Extended />
+      </Toolbar.Root>
+      <MarkdownEditor
+        ref={editorRef}
+        model={model}
+        extensions={extensions}
+        slots={{
+          root: { className: mx(textBlockWidth, editorFillLayoutRoot, 'pli-2') },
+          editor: { className: editorFillLayoutEditor },
+        }}
+      />
     </div>
   );
 };
@@ -83,10 +89,11 @@ export default {
   component: Toolbar,
   render: (args: any) => <Story {...args} />,
   decorators: [withTheme],
+  parameters: { translations, layout: 'fullscreen' },
 };
 
 const content = [
-  'Demo',
+  '# Demo',
   '',
   'The editor supports **Markdown** styles.',
   '',

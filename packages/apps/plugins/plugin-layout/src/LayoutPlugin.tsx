@@ -29,6 +29,7 @@ import {
   type GraphProvides,
   type SurfaceProps,
   type Layout,
+  IntentAction,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
@@ -37,10 +38,14 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { LayoutContext } from './LayoutContext';
 import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings, ContentFallback } from './components';
-import { activeToUri, uriToActive } from './helpers';
+import { activeToUri, checkAppScheme, uriToActive } from './helpers';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
 import { type LayoutPluginProvides, type LayoutSettingsProps } from './types';
+
+const isSocket = !!(globalThis as any).__args;
+// TODO(mjamesderocher): Can we get this directly from Socket?
+const appScheme = 'composer://';
 
 type NavigationState = Location & {
   activeNode: Node | undefined;
@@ -55,10 +60,11 @@ export const LayoutPlugin = ({
   let graphPlugin: Plugin<GraphProvides> | undefined;
   // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
+  let currentUndoId: string | undefined;
 
   const settings = new LocalStorageStore<LayoutSettingsProps>(LAYOUT_PLUGIN, {
-    enableComplementarySidebar: true,
     showFooter: false,
+    enableNativeRedirect: false,
   });
 
   const layout = new LocalStorageStore<Layout>(LAYOUT_PLUGIN, {
@@ -141,11 +147,15 @@ export const LayoutPlugin = ({
         .prop(layout.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool);
 
       settings
-        .prop(settings.values.$enableComplementarySidebar!, 'enable-complementary-sidebar', LocalStorageStore.bool)
-        .prop(settings.values.$showFooter!, 'show-footer', LocalStorageStore.bool);
+        .prop(settings.values.$showFooter!, 'show-footer', LocalStorageStore.bool)
+        .prop(settings.values.$enableNativeRedirect!, 'enable-native-redirect', LocalStorageStore.bool);
 
       // TODO(burdon): Create context and plugin.
       Keyboard.singleton.initialize();
+
+      if (!isSocket && settings.values.enableNativeRedirect) {
+        checkAppScheme(appScheme);
+      }
     },
     unload: async () => {
       Keyboard.singleton.destroy();
@@ -250,6 +260,9 @@ export const LayoutPlugin = ({
                   sidebar: {
                     data: { graph, activeId: location.active, popoverAnchorId: layout.values.popoverAnchorId },
                   },
+                  context: {
+                    data: { component: `${LAYOUT_PLUGIN}/ContextView` },
+                  },
                   main: {
                     data: location.active
                       ? { active: location.active }
@@ -274,14 +287,18 @@ export const LayoutPlugin = ({
               return (
                 <MainLayout
                   fullscreen={layout.values.fullscreen}
-                  showComplementarySidebar={settings.values.enableComplementarySidebar}
                   showHintsFooter={settings.values.showFooter}
                   toasts={layout.values.toasts}
                   onDismissToast={(id) => {
                     const index = layout.values.toasts.findIndex((toast) => toast.id === id);
                     if (index !== -1) {
                       // Allow time for the toast to animate out.
-                      setTimeout(() => layout.values.toasts.splice(index, 1), 1000);
+                      setTimeout(() => {
+                        if (layout.values.toasts[index].id === currentUndoId) {
+                          currentUndoId = undefined;
+                        }
+                        layout.values.toasts.splice(index, 1);
+                      }, 1000);
                     }
                   }}
                 />
@@ -313,6 +330,31 @@ export const LayoutPlugin = ({
           switch (intent.action) {
             case LayoutAction.SET_LAYOUT: {
               return intent.data && handleSetLayout(intent.data as LayoutAction.SetLayout);
+            }
+
+            case IntentAction.SHOW_UNDO: {
+              // TODO(wittjosiah): Support undoing further back than the last action.
+              if (currentUndoId) {
+                layout.values.toasts = layout.values.toasts.filter((toast) => toast.id !== currentUndoId);
+              }
+              currentUndoId = `${IntentAction.SHOW_UNDO}-${Date.now()}`;
+              const title =
+                // TODO(wittjosiah): How to handle chains better?
+                intent.data?.results?.[0]?.result?.undoable?.message ??
+                translations[0]['en-US']['dxos.org/plugin/layout']['undo available label'];
+              layout.values.toasts = [
+                ...layout.values.toasts,
+                {
+                  id: currentUndoId,
+                  title,
+                  duration: 10_000,
+                  actionLabel: translations[0]['en-US']['dxos.org/plugin/layout']['undo action label'],
+                  actionAlt: translations[0]['en-US']['dxos.org/plugin/layout']['undo action alt'],
+                  closeLabel: translations[0]['en-US']['dxos.org/plugin/layout']['undo close label'],
+                  onAction: () => intentPlugin?.provides.intent.undo?.(),
+                },
+              ];
+              return { data: true };
             }
 
             // TODO(wittjosiah): Factor out.

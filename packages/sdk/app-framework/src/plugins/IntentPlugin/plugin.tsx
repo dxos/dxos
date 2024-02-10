@@ -7,21 +7,33 @@ import React from 'react';
 
 import { log } from '@dxos/log';
 
-import { type IntentContext, IntentProvider } from './IntentContext';
-import type { Intent, IntentResolver, IntentResult } from './intent';
+import { type IntentContext, IntentProvider, type IntentExecution } from './IntentContext';
+import { isUndoable } from './helpers';
+import type { Intent, IntentResolver } from './intent';
 import IntentMeta from './meta';
-import { type IntentPluginProvides, type IntentResolverProvides, parseIntentResolverPlugin } from './provides';
+import {
+  type IntentPluginProvides,
+  type IntentResolverProvides,
+  parseIntentResolverPlugin,
+  IntentAction,
+} from './provides';
 import type { PluginDefinition } from '../PluginHost';
 import { filterPlugins, findPlugin } from '../helpers';
 
 const EXECUTION_LIMIT = 1000;
+const HISTORY_LIMIT = 100;
 
 /**
  * Allows plugins to register intent handlers and routes sent intents to the appropriate plugin.
  * Inspired by https://developer.android.com/reference/android/content/Intent.
  */
 const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
-  const state = deepSignal<IntentContext>({ dispatch: async () => ({}), registerResolver: () => () => {} });
+  const state = deepSignal<IntentContext>({
+    dispatch: async () => ({}),
+    undo: async () => ({}),
+    history: [],
+    registerResolver: () => () => {},
+  });
 
   const dynamicResolvers = new Set<{ plugin: string; resolver: IntentResolver }>();
 
@@ -30,6 +42,7 @@ const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
     ready: async (plugins) => {
       // Dispatch intent to associated plugin.
       const dispatch = async (intent: Intent) => {
+        log('dispatch', { action: intent.action, intent });
         if (intent.plugin) {
           for (const entry of dynamicResolvers) {
             if (entry.plugin === intent.plugin) {
@@ -77,24 +90,51 @@ const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
           };
         }
 
-        let result: IntentResult | undefined;
-        for (const intent of Array.isArray(intentOrArray) ? intentOrArray : [intentOrArray]) {
-          const data = intent.data ? { result: result?.data, ...intent.data } : result?.data;
-          result = (await dispatch({ ...intent, data })) ?? undefined;
+        const executionResults: IntentExecution[] = [];
+        const chain = Array.isArray(intentOrArray) ? intentOrArray : [intentOrArray];
+        for (const intent of chain) {
+          const { result: prevResult } = executionResults.at(-1) ?? {};
+          const data = intent.data ? { result: prevResult?.data, ...intent.data } : prevResult?.data;
+          const result = await dispatch({ ...intent, data });
 
-          if (result?.error) {
+          if (!result || result?.error) {
             break;
           }
 
+          executionResults.push({ intent, result });
+
+          // TODO(wittjosiah): How does undo work with returned intents?
           result?.intents?.forEach((intents) => {
             void dispatchChain(intents, depth + 1);
           });
         }
 
-        return result;
+        state.history = [...state.history.slice(0, HISTORY_LIMIT - 2), executionResults];
+
+        if (isUndoable(executionResults)) {
+          void dispatch({ action: IntentAction.SHOW_UNDO, data: { results: executionResults } });
+        }
+
+        return executionResults.at(-1)?.result;
+      };
+
+      const undo = async () => {
+        const last = state.history.findLastIndex(isUndoable);
+        const chain =
+          last !== -1 &&
+          state.history[last]?.map(({ intent, result }): Intent => {
+            const data = result.undoable?.data ? { ...intent.data, ...result.undoable.data } : intent.data;
+            return { ...intent, data, undo: true };
+          });
+        if (chain) {
+          const result = await dispatchChain(chain);
+          state.history = state.history.filter((_, index) => index !== last);
+          return result;
+        }
       };
 
       state.dispatch = dispatchChain;
+      state.undo = undo;
       state.registerResolver = (plugin, resolver) => {
         const entry = { plugin, resolver };
         dynamicResolvers.add(entry);

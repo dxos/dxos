@@ -35,7 +35,7 @@ export const autocomplete = ({ onSearch }: AutocompleteOptions) => {
     // https://codemirror.net/examples/autocompletion
     // https://codemirror.net/docs/ref/#autocomplete.autocompletion
     autocompletion({
-      activateOnTyping: true,
+      activateOnTyping: false,
 
       // closeOnBlur: false,
       // defaultKeymap: false,

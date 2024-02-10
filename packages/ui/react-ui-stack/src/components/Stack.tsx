@@ -50,7 +50,7 @@ export const Stack = ({
   transform,
   onOver,
   onDrop,
-  onRemoveSection,
+  onDeleteSection,
   onNavigateToSection,
   ...props
 }: StackProps) => {
@@ -94,7 +94,7 @@ export const Stack = ({
           type={type}
           classNames={classNames}
           item={{ id, items: itemsWithPreview }}
-          itemContext={{ separation, transform, onRemoveSection, onNavigateToSection, SectionContent }}
+          itemContext={{ separation, transform, onDeleteSection, onNavigateToSection, SectionContent }}
           isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
           Component={StackTile}
         />
@@ -116,7 +116,7 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
         ref={forwardedRef}
         classNames={mx(
           textBlockWidth,
-          'm-2 p-2 rounded-lg',
+          'mbs-1 mbe-2',
           !separation && ['divide-y', groupBorder],
           isOver && dropRing,
           classNames,

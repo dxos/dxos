@@ -7,7 +7,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
-import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
+import { attentionSurface, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { TextEditor } from './TextEditor';
@@ -24,7 +24,9 @@ import {
   useFormattingState,
 } from '../../extensions';
 import { createDataExtensions, createThemeExtensions, useActionHandler, useTextEditor } from '../../hooks';
+import { editorFillLayoutEditor, editorFillLayoutRoot, editorWithToolbarLayout } from '../../styles';
 import { markdownTheme } from '../../themes';
+import translations from '../../translations';
 import { Toolbar } from '../Toolbar';
 
 // TODO(burdon): Demo toolbar with hooks.
@@ -53,11 +55,7 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
         themeMode,
         theme: markdownTheme,
         slots: {
-          // TODO(burdon): Document classes re base theme.
-          //  Semantic tokens (e.g., replacement of input surface).
-          editor: {
-            className: 'h-full p-4 bg-white text-black dark:bg-black dark:text-white',
-          },
+          editor: { className: editorFillLayoutEditor },
         },
       }),
       // TODO(burdon): Move lineWrapping.
@@ -80,16 +78,16 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
   // FIXME This doesn't update the state on view changes. Also not
   // sure if view is even guaranteed to exist at this point.
   return (
-    <div className={mx(fixedInsetFlexLayout, groupSurface)}>
-      <div className='flex h-full justify-center'>
-        <div className='flex flex-col h-full w-[800px]'>
-          <Toolbar.Root onAction={handleAction} state={formattingState}>
-            <Toolbar.Markdown />
-          </Toolbar.Root>
-
-          {/* TODO(burdon): Handle scrolling in component wrapper (like this). */}
-          <div role='none' className='h-full overflow-y-auto' ref={parentRef} />
-        </div>
+    <div role='none' className={mx('fixed inset-0', editorWithToolbarLayout)}>
+      <Toolbar.Root onAction={handleAction} state={formattingState} classNames={textBlockWidth}>
+        <Toolbar.Markdown />
+      </Toolbar.Root>
+      <div role='none' className='overflow-y-auto'>
+        <div
+          role='textbox'
+          className={mx(textBlockWidth, attentionSurface, editorFillLayoutRoot, 'p-4')}
+          ref={parentRef}
+        />
       </div>
     </div>
   );
@@ -100,6 +98,7 @@ export default {
   component: TextEditor,
   decorators: [withTheme],
   render: (args: StoryProps) => <Story {...args} />,
+  parameters: { translations, layout: 'fullscreen' },
 };
 
 export const Default = {

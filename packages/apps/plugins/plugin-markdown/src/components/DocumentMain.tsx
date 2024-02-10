@@ -11,13 +11,13 @@ import { type Comment, useTextModel } from '@dxos/react-ui-editor';
 
 import EditorMain, { type EditorMainProps } from './EditorMain';
 
-const DocumentMain: FC<
-  { document: DocumentType } & Pick<EditorMainProps, 'toolbar' | 'readonly' | 'editorMode' | 'extensions'>
-> = ({ document, ...props }) => {
+const DocumentMain: FC<{ document: DocumentType } & Pick<EditorMainProps, 'toolbar' | 'readonly' | 'extensions'>> = ({
+  document,
+  ...props
+}) => {
   const identity = useIdentity();
   const space = getSpaceForObject(document);
   const model = useTextModel({ identity, space, text: document.content });
-
   const comments = useMemo<Comment[]>(() => {
     return document.comments?.map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! }));
   }, [document.comments]);

@@ -4,13 +4,12 @@
 
 import { EditorState, type Extension, type StateEffect } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-// import { useFocusableGroup } from '@fluentui/react-tabster';
-import { vim } from '@replit/codemirror-vim';
+import { useFocusableGroup } from '@fluentui/react-tabster';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, {
   type ComponentProps,
-  type KeyboardEvent,
   forwardRef,
+  type KeyboardEventHandler,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -20,18 +19,14 @@ import React, {
 
 import { log } from '@dxos/log';
 import { useThemeContext } from '@dxos/react-ui';
-import { focusRing, mx } from '@dxos/react-ui-theme';
+import { focusRing } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
 
-import { createBasicBundle, createMarkdownExtensions } from '../../extensions';
+import { createBasicBundle, createMarkdownExtensions, editorMode } from '../../extensions';
 import { type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
 import { defaultTheme, markdownTheme, textTheme } from '../../themes';
 import { logChanges } from '../../util';
-
-// TODO(burdon): Change to enum?
-export const EditorModes = ['default', 'vim'] as const;
-export type EditorMode = (typeof EditorModes)[number];
 
 export type CursorInfo = {
   from: number;
@@ -52,7 +47,6 @@ export type TextEditorSlots = {
   };
 };
 
-// TODO(burdon): Spellcheck?
 export type TextEditorProps = {
   model: EditorModel; // TODO(burdon): Optional (e.g., just provide content if readonly).
   readonly?: boolean; // TODO(burdon): Move into model.
@@ -60,7 +54,6 @@ export type TextEditorProps = {
   lineWrapping?: boolean;
   scrollTo?: StateEffect<any>; // TODO(burdon): Restore scroll position: scrollTo EditorView.scrollSnapshot().
   selection?: { anchor: number; head?: number };
-  editorMode?: EditorMode; // TODO(burdon): Factor out.
   placeholder?: string;
   theme?: ThemeStyles;
   slots?: TextEditorSlots;
@@ -71,28 +64,13 @@ export type TextEditorProps = {
 /**
  * Base text editor.
  */
-export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
+// TODO(burdon): Replace with useTextEditor.
+export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
   (
-    {
-      model,
-      readonly,
-      autoFocus,
-      scrollTo,
-      selection,
-      editorMode,
-      theme,
-      slots = defaultSlots,
-      extensions = [],
-      debug,
-    },
+    { model, readonly, autoFocus, scrollTo, selection, theme, slots = defaultSlots, extensions = [], debug },
     forwardedRef,
   ) => {
-    // TODO(burdon): Hook causes error even if properties are not spread into div.
-    //  Uncaught TypeError: Cannot read properties of undefined (reading 'relatedTarget')
-    //  Uses event.detail, which is deprecated (not event.details). At runtime the event has a property `details`.
-    //  https://github.com/microsoft/tabster/blob/master/src/State/FocusedElement.ts#L348 (e.detail.relatedTarget)
-    //  https://github.com/microsoft/keyborg/blob/49e49b2c3ba0a5f6cc518ac46825d7551def8109/src/FocusEvent.ts#L58
-    // const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
+    const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
     const { themeMode } = useThemeContext();
 
     const rootRef = useRef<HTMLDivElement>(null);
@@ -142,6 +120,15 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
           EditorView.editorAttributes.of({ class: slots.editor?.className ?? '' }),
           EditorView.contentAttributes.of({ class: slots.content?.className ?? '' }),
 
+          // Focus.
+          EditorView.updateListener.of((update) => {
+            update.transactions.forEach((transaction) => {
+              if (transaction.isUserEvent('focus.container')) {
+                rootRef.current?.focus();
+              }
+            });
+          }),
+
           // State.
           EditorView.editable.of(!readonly),
           EditorState.readOnly.of(!!readonly),
@@ -149,9 +136,6 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
           // Storage and replication.
           // NOTE: This must come before user extensions.
           model.extension,
-
-          // TODO(burdon): Factor out? (Requires special handling for Escape/Enter below).
-          editorMode === 'vim' && vim(),
 
           // Custom.
           ...extensions,
@@ -179,50 +163,46 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
       view?.destroy();
       setView(newView);
 
+      // Remove tabster attribute (rely on custom keymap).
+      if (state.facet(editorMode).noTabster) {
+        rootRef.current.removeAttribute('data-tabster');
+      }
+
       return () => {
         newView?.destroy();
         setView(null);
       };
-    }, [rootRef, model, readonly, editorMode, themeMode]);
+    }, [rootRef, model, readonly, themeMode]);
 
-    // Handles tab/focus.
-    // Pressing Escape focuses the outer div (to support tab navigation); pressing Enter refocuses the editor.
-    // TODO(burdon): Convert to keymap?
-    const handleKeyUp = useCallback(
-      (event: KeyboardEvent) => {
-        const { key, altKey, shiftKey, metaKey, ctrlKey } = event;
+    // Focus editor on Enter (e.g., when tabbing to this component).
+    const handleKeyUp = useCallback<KeyboardEventHandler<HTMLDivElement>>(
+      (event) => {
+        const { key } = event;
         switch (key) {
           case 'Enter': {
             view?.focus();
             break;
           }
-
-          case 'Escape': {
-            if (editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey)) {
-              view?.focus();
-            }
-            break;
-          }
         }
       },
-      [view, editorMode],
+      [view],
     );
 
     return (
       <div
-        key={model.id}
         role='none'
-        tabIndex={0}
-        {...slots.root}
-        // {...(editorMode !== 'vim' && tabsterDOMAttribute)}
-        onKeyUp={handleKeyUp}
         ref={rootRef}
+        key={model.id}
+        tabIndex={0}
+        onKeyUp={handleKeyUp}
+        {...slots.root}
+        {...tabsterDOMAttribute}
       />
     );
   },
 );
 
-export const TextEditor = forwardRef<EditorView, TextEditorProps>(
+export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
   ({ readonly, placeholder, lineWrapping, theme = textTheme, slots, extensions = [], ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const updatedSlots = defaultsDeep({}, slots, defaultTextSlots);
@@ -239,7 +219,7 @@ export const TextEditor = forwardRef<EditorView, TextEditorProps>(
   },
 );
 
-export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
+export const MarkdownEditor = forwardRef<EditorView | null, TextEditorProps>(
   ({ readonly, placeholder, theme = markdownTheme, slots, extensions = [], ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const updatedSlots = defaultsDeep({}, slots, defaultMarkdownSlots);
@@ -258,10 +238,10 @@ export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
 
 export const defaultSlots: TextEditorSlots = {
   root: {
-    className: mx('grow', focusRing),
+    className: focusRing,
   },
   editor: {
-    className: 'bs-full',
+    className: 'min-bs-full',
   },
 };
 

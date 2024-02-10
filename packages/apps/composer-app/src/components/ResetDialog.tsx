@@ -132,7 +132,7 @@ export const ResetDialog = ({
               </DropdownMenu.Portal>
             </DropdownMenu.Root>
             {needRefresh ? (
-              <Button variant='primary' onClick={() => updateServiceWorker()}>
+              <Button variant='primary' onClick={() => updateServiceWorker(true)}>
                 {t('update and reload page label')}
               </Button>
             ) : (

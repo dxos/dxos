@@ -18,6 +18,7 @@
     ],
     "production": [
       "default",
+      "!{projectRoot}/src/playwright/**/*.ts",
       "!{projectRoot}/**/*.spec.ts",
       "!{projectRoot}/**/*.test.ts",
       "!{projectRoot}/**/*.md",

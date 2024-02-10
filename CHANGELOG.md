@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.4.3](https://github.com/dxos/dxos/compare/v0.4.2...v0.4.3) (2024-02-08)
+
+
+### Features
+
+* **composer:** Add native URL redirection ([#5546](https://github.com/dxos/dxos/issues/5546)) ([37cf9a6](https://github.com/dxos/dxos/commit/37cf9a63201a4853b3bb14d242246d0f01b65a9e))
+* **composer:** Add storage adapter selector ([#5540](https://github.com/dxos/dxos/issues/5540)) ([73b84d9](https://github.com/dxos/dxos/commit/73b84d9fc481ef9ebf1762ea91868bd25b0e6f11))
+* ECHO objects can be bound again to a different DocHandle ([#5584](https://github.com/dxos/dxos/issues/5584)) ([085f4d3](https://github.com/dxos/dxos/commit/085f4d348857f6db4b93ce730aa7affba9cbab75))
+* Factor out vim mode. ([#5547](https://github.com/dxos/dxos/issues/5547)) ([a51bbee](https://github.com/dxos/dxos/commit/a51bbeef675acb3977b171c77b626da8dd8574a3))
+* Show stack file upload if IPFS is configured ([#5598](https://github.com/dxos/dxos/issues/5598)) ([308c191](https://github.com/dxos/dxos/commit/308c191e78fdef518a13a37e4bdc952d7b9b8d3b))
+
+
+### Bug Fixes
+
+* **bare-template:** build error for pwa output ([#5559](https://github.com/dxos/dxos/issues/5559)) ([1c093f6](https://github.com/dxos/dxos/commit/1c093f6b873aa83e7c05d25e05b0cf3a0a4de52a))
+* **bare-template:** configure shell for client ([#5583](https://github.com/dxos/dxos/issues/5583)) ([dda98d3](https://github.com/dxos/dxos/commit/dda98d35983edb135bc9cce6a867a1272852833c))
+* **client:** only use worker client services if shared worker is available ([#5599](https://github.com/dxos/dxos/issues/5599)) ([d01b40e](https://github.com/dxos/dxos/commit/d01b40e99165955603b5d80638491c6e98fffe9c))
+* Fix toolbar regression ([#5565](https://github.com/dxos/dxos/issues/5565)) ([ae16e35](https://github.com/dxos/dxos/commit/ae16e35cc18b9d88767a856e70636f19c9a80dd9))
+* Make updates synchronous again ([#5580](https://github.com/dxos/dxos/issues/5580)) ([3a01342](https://github.com/dxos/dxos/commit/3a01342fb0f3cf41ddd1a624ff75b82871a7e39c))
+* **plugin-client:** stop ignoring device invitation links ([#5596](https://github.com/dxos/dxos/issues/5596)) ([3e1206a](https://github.com/dxos/dxos/commit/3e1206a7b1b6df1e2277733ba40a24e24e2a7bf1))
+* **plugin-thread:** don't update thread title if comment is deleted ([#5591](https://github.com/dxos/dxos/issues/5591)) ([f97384b](https://github.com/dxos/dxos/commit/f97384b62a1adfbbdb34f2be7d772fc65c8fcd6c))
+* Remove agressive timeout when loading automerge docs ([#5588](https://github.com/dxos/dxos/issues/5588)) ([1216c5a](https://github.com/dxos/dxos/commit/1216c5a76184dbf58095e1589e28e14c89450556))
+* Remove recursive doc changes ([#5552](https://github.com/dxos/dxos/issues/5552)) ([38898ae](https://github.com/dxos/dxos/commit/38898ae68a56cc41ce985eb0ff0e0ef0b2d54d92))
+* restore visibility of chat thread ([#5550](https://github.com/dxos/dxos/issues/5550)) ([c13b549](https://github.com/dxos/dxos/commit/c13b549d57cf5d2a6986556279d0ac6392961011))
+* **shell:** don't use spotty device profile information ([#5597](https://github.com/dxos/dxos/issues/5597)) ([4eed300](https://github.com/dxos/dxos/commit/4eed3005a1a8bcc3bc0089990bb13912c1b8ad4c))
+* Table rendering and resizing bug ([#5592](https://github.com/dxos/dxos/issues/5592)) ([ebc6139](https://github.com/dxos/dxos/commit/ebc613908561656c16bc343836949d8c15974166))
+
+## [0.4.2](https://github.com/dxos/dxos/compare/v0.4.1...v0.4.2) (2024-02-05)
+
+
+### Features
+
+* Make thread processing animation more prominent. ([#5519](https://github.com/dxos/dxos/issues/5519)) ([022012d](https://github.com/dxos/dxos/commit/022012d0c6b0dd9d43500293cc65531b3a4a56f1))
+* Wire up editor toolbar ([#5513](https://github.com/dxos/dxos/issues/5513)) ([6ccea39](https://github.com/dxos/dxos/commit/6ccea3915668ab3ec4ddfb8eb95b5e2e3c6cdbbc))
+
 ## [0.4.1](https://github.com/dxos/dxos/compare/v0.4.0...v0.4.1) (2024-02-02)
 
 

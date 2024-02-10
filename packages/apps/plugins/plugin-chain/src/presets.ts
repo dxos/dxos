@@ -27,19 +27,21 @@ export const presets = [
         source: new TextObject(
           str(
             //
-            'Translate the following into {language}.',
+            'Translate the following into {language}:',
+            '',
             '---',
+            '',
             '{input}',
           ),
         ),
         inputs: [
           //
           new ChainType.Input({
-            type: ChainType.Input.Type.VALUE,
             name: 'language',
+            type: ChainType.Input.Type.VALUE,
             value: new TextObject('japanese'),
           }),
-          new ChainType.Input({ type: ChainType.Input.Type.PASS_THROUGH, name: 'input' }),
+          new ChainType.Input({ name: 'input', type: ChainType.Input.Type.PASS_THROUGH }),
         ],
       }),
   },
@@ -62,8 +64,8 @@ export const presets = [
         inputs: [
           //
           new ChainType.Input({
-            type: ChainType.Input.Type.CONTEXT,
             name: 'history',
+            type: ChainType.Input.Type.CONTEXT,
             value: new TextObject('object.pgn'),
           }),
         ],
@@ -78,15 +80,17 @@ export const presets = [
         source: new TextObject(
           str(
             //
-            'Create a valid mermaid diagram representing the text below.',
+            'Create a simplified mermaid graph representing the text below.',
             'Do not explain anything.',
+            '',
             '---',
+            '',
             '{input}',
           ),
         ),
         inputs: [
           //
-          new ChainType.Input({ type: ChainType.Input.Type.PASS_THROUGH, name: 'input' }),
+          new ChainType.Input({ name: 'input', type: ChainType.Input.Type.PASS_THROUGH }),
         ],
       }),
   },
@@ -100,22 +104,25 @@ export const presets = [
           str(
             //
             'You are a machine that only replies with valid, iterable RFC8259 compliant JSON in your responses.',
-            '',
             'Your entire response should be a single array of JSON objects.',
             '',
-            'Each item should contain the following fields: {schema}',
+            'Your entire response should be a map where the key is the type and the value is a single array of JSON objects conforming to the following types:',
+            '',
+            '{schema}',
+            '',
             '---',
+            '',
             '{question}',
           ),
         ),
         inputs: [
           //
           new ChainType.Input({
-            type: ChainType.Input.Type.CONTEXT,
+            type: ChainType.Input.Type.SCHEMA,
             name: 'schema',
-            value: new TextObject('schema.props'),
+            value: new TextObject('example.com/schema/project'),
           }),
-          new ChainType.Input({ type: ChainType.Input.Type.PASS_THROUGH, name: 'question' }),
+          new ChainType.Input({ name: 'question', type: ChainType.Input.Type.PASS_THROUGH }),
         ],
       }),
   },
@@ -132,14 +139,16 @@ export const presets = [
             // 'answer the question using the following context as well as your training data:',
             '',
             '{context}',
+            '',
             '---',
+            '',
             'question: {question}',
           ),
         ),
         inputs: [
           //
-          new ChainType.Input({ type: ChainType.Input.Type.RETRIEVER, name: 'context' }),
-          new ChainType.Input({ type: ChainType.Input.Type.PASS_THROUGH, name: 'question' }),
+          new ChainType.Input({ name: 'context', type: ChainType.Input.Type.RETRIEVER }),
+          new ChainType.Input({ name: 'question', type: ChainType.Input.Type.PASS_THROUGH }),
         ],
       }),
   },
@@ -153,13 +162,53 @@ export const presets = [
           str(
             //
             'Lookup and very briefly summarize the following topic in one or two sentences:',
+            '',
             '---',
+            '',
             '{input}',
           ),
         ),
         inputs: [
           //
-          new ChainType.Input({ type: ChainType.Input.Type.CONTEXT, name: 'input', value: new TextObject('text') }),
+          new ChainType.Input({ name: 'input', type: ChainType.Input.Type.CONTEXT, value: new TextObject('text') }),
+        ],
+      }),
+  },
+  {
+    id: 'dxos.org/prompt/extract',
+    title: 'Extract',
+    prompt: () =>
+      new ChainType.Prompt({
+        command: 'extract',
+        source: new TextObject(
+          str(
+            //
+            'List all people and companies mentioned in the text below.',
+            '',
+            'You are a machine that only replies with valid, iterable RFC8259 compliant JSON in your responses.',
+            'Your entire response should be a map where the key is the type and the value is a single array of JSON objects conforming to the following types:',
+            '',
+            '{contact}',
+            '{company}',
+            '',
+            '---',
+            '',
+            '{input}',
+          ),
+        ),
+        inputs: [
+          //
+          new ChainType.Input({
+            type: ChainType.Input.Type.SCHEMA,
+            name: 'contact',
+            value: new TextObject('example.com/schema/contact'),
+          }),
+          new ChainType.Input({
+            type: ChainType.Input.Type.SCHEMA,
+            name: 'company',
+            value: new TextObject('example.com/schema/organization'),
+          }),
+          new ChainType.Input({ name: 'input', type: ChainType.Input.Type.CONTEXT, value: new TextObject('text') }),
         ],
       }),
   },
@@ -173,15 +222,17 @@ export const presets = [
           str(
             //
             'Summarize what the team is working on and format it as a markdown table without any explanation.',
+            '',
             '---',
+            '',
             '{context}',
           ),
         ),
         inputs: [
           //
           new ChainType.Input({
-            type: ChainType.Input.Type.RESOLVER,
             name: 'context',
+            type: ChainType.Input.Type.RESOLVER,
             value: new TextObject('discord.messages.recent'),
           }),
         ],
