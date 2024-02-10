@@ -17,12 +17,10 @@ import { SPACE_PLUGIN } from '../meta';
 // TODO(thure): Sync with shell?
 const activeActionKeyStorageKey = 'dxos:react-shell/space-manager/active-action';
 
-const UnusedRail = () => <div role='none' />;
-
 const InFlowSpaceActions = ({ actionsMap }: { actionsMap: Record<string, Action> }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   return (
-    <section className='pli-2 mbe-4 col-start-1 col-end-4 md:col-end-6 grid gap-2 auto-rows-min grid-cols-[repeat(auto-fill,minmax(8rem,1fr))]'>
+    <section className='mbe-4 col-start-2 col-end-4 md:col-end-6 grid gap-2 auto-rows-min grid-cols-[repeat(auto-fill,minmax(8rem,1fr))]'>
       {Object.entries(actionsMap)
         .filter(([_, { properties }]) => properties?.mainAreaDisposition === 'in-flow')
         .map(([actionId, { icon: Icon, label, invoke }]) => {
@@ -128,13 +126,13 @@ const SpaceMembers = ({ space }: { space: Space }) => {
   );
 
   return (
-    <section className='mbe-4 grid gap-y-2 grid-cols-[var(--rail-size)_1fr_var(--rail-size)] col-span-3 md:col-span-2 auto-rows-min'>
+    <section className='mbe-4 col-span-3 grid gap-y-2 grid-cols-subgrid auto-rows-min'>
       <h2 className='contents'>
         <UsersThree weight='duotone' className={mx(getSize(5), 'place-self-center')} />
-        <span className='text-lg'>{t('space members label')}</span>
+        <span className='text-lg col-span-2'>{t('space members label')}</span>
       </h2>
-      <h3 className='pli-4 col-span-2 text-sm italic fg-description'>{t('invitations heading')}</h3>
-      <List classNames='pie-2 col-span-3 gap-y-2 grid grid-cols-[var(--rail-size)_1fr_var(--rail-action)_var(--rail-action)]'>
+      <h3 className='col-start-2 col-span-3 text-sm italic fg-description'>{t('invitations heading')}</h3>
+      <List classNames='col-start-2 col-span-2 gap-y-2 grid grid-cols-[var(--rail-size)_1fr_var(--rail-action)_var(--rail-action)]'>
         {invitations.map((invitation) => (
           <InvitationListItem
             reverseEffects
@@ -146,8 +144,8 @@ const SpaceMembers = ({ space }: { space: Space }) => {
           />
         ))}
       </List>
-      <ButtonGroup classNames='pli-2 grid col-span-3 grid-cols-subgrid place-self-grow gap-px'>
-        <Button classNames='col-span-2 grow gap-2' onClick={activeAction.onClick}>
+      <ButtonGroup classNames='col-start-2 col-end-4 grid grid-cols-[1fr_var(--rail-action)] place-self-grow gap-px'>
+        <Button classNames='gap-2' onClick={activeAction.onClick}>
           <activeAction.icon />
           <span>{activeAction.label}</span>
         </Button>
@@ -189,11 +187,11 @@ const SpaceMembers = ({ space }: { space: Space }) => {
           </DropdownMenu.Content>
         </DropdownMenu.Root>
       </ButtonGroup>
-      <h3 className='pli-4 col-span-3 text-sm italic fg-description'>
+      <h3 className='col-start-2 col-span-3 text-sm italic fg-description'>
         {t('active space members heading', { count: members[Presence.ONLINE].length })}
       </h3>
       <List classNames='contents' />
-      <h3 className='pli-4 col-span-3 text-sm italic fg-description'>
+      <h3 className='col-start-2 col-span-3 text-sm italic fg-description'>
         {t('inactive space members heading', { count: members[Presence.OFFLINE].length })}
       </h3>
     </section>
@@ -208,7 +206,9 @@ export const SpaceMain = ({ space }: { space: Space }) => {
     <Main.Content
       classNames={[
         topbarBlockPaddingStart,
-        'min-bs-dvh grid gap-y-2 auto-rows-min grid-cols-[var(--rail-size)_1fr_var(--rail-size)] md:grid-cols-[var(--rail-size)_1fr_var(--rail-size)_2fr_var(--rail-size)]',
+        'min-bs-dvh grid gap-y-2 auto-rows-min',
+        'grid-cols-[var(--rail-size)_var(--rail-size)_1fr_var(--rail-size)]',
+        'md:grid-cols-[var(--rail-size)_var(--rail-size)_1fr_var(--rail-size)_2fr_var(--rail-size)]',
       ]}
     >
       <h1 className='contents'>
@@ -217,7 +217,7 @@ export const SpaceMain = ({ space }: { space: Space }) => {
           <Input.Label srOnly>{t('rename space label')}</Input.Label>
           <Input.TextInput
             variant='subdued'
-            classNames='text-2xl text-light md:col-span-3'
+            classNames='text-2xl text-light col-span-2 md:col-span-3'
             value={space.properties.name ?? ''}
             onChange={({ target: { value } }) => (space.properties.name = value)}
             placeholder={space.key.truncate()}
