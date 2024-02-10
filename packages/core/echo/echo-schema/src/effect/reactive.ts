@@ -55,22 +55,19 @@ interface ReactiveHandler<T extends object> extends ProxyHandler<T> {
   /**
    * Called when a proxy is created for this target.
    */
-  // TODO(burdon): Interfaces shouldn't have private methods.
   _init(target: T): void;
 
   readonly _proxyMap: WeakMap<object, any>;
 }
 
 export class UntypedReactiveHandler implements ReactiveHandler<any> {
-  signal = compositeRuntime.createSignal();
-
-  // TODO(burdon): Readonly?
   _proxyMap = new WeakMap<object, any>();
+  _signal = compositeRuntime.createSignal();
 
   _init(target: any): void {}
 
   get(target: any, prop: string | symbol, receiver: any): any {
-    this.signal.notifyRead();
+    this._signal.notifyRead();
     const value = Reflect.get(target, prop, receiver);
 
     if (isSuitableProxyTarget(value)) {
@@ -82,7 +79,7 @@ export class UntypedReactiveHandler implements ReactiveHandler<any> {
 
   set(target: any, prop: string | symbol, value: any, receiver: any): boolean {
     const result = Reflect.set(target, prop, value, receiver);
-    this.signal.notifyWrite();
+    this._signal.notifyWrite();
     return result;
   }
 }
@@ -107,14 +104,13 @@ export class LoggingReactiveHandler implements ReactiveHandler<any> {
 }
 
 export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T> {
-  signal = compositeRuntime.createSignal();
-
   _proxyMap = new WeakMap<object, any>();
+  _signal = compositeRuntime.createSignal();
 
   _init(target: T): void {}
 
   get(target: any, prop: string | symbol, receiver: any): any {
-    this.signal.notifyRead();
+    this._signal.notifyRead();
     const value = Reflect.get(target, prop, receiver);
 
     if (isSuitableProxyTarget(value)) {
@@ -136,7 +132,7 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
     const _ = S.asserts(S.make(propSignature.type))(value);
 
     const result = Reflect.set(target, prop, value, receiver);
-    this.signal.notifyWrite();
+    this._signal.notifyWrite();
     return result;
   }
 }
