@@ -27,7 +27,7 @@ const SpacePanelHeading = ({ titleId, space, onDone }: SpacePanelHeadingProps) =
       corner={<CloseButton data-testid='identity-panel-done' onDone={onDone} />}
     >
       <div role='none' className='flex gap-4 items-center justify-center mlb-4'>
-        <Planet size={32} />
+        <Planet size={32} weight='light' />
         <div className='block text-start font-light text-xl'>{name ?? space.key.truncate()}</div>
       </div>
     </Heading>
@@ -49,7 +49,7 @@ export const SpacePanelImpl = (props: SpacePanelImplProps) => {
     <DensityProvider density='fine'>
       <SpacePanelHeading {...rest} {...{ titleId, space }} />
       <Viewport.Root activeView={activeView}>
-        <Viewport.Views {...(props.variant === 'main' && { classNames: 'bs-full' })}>
+        <Viewport.Views>
           <Viewport.View id='space manager' classNames={stepStyles}>
             <SpaceManagerComponent active={activeView === 'space manager'} space={space} target={target} {...rest} />
           </Viewport.View>

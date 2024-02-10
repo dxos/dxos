@@ -68,6 +68,7 @@ export default [
         'persisted locally message': 'All changes have been persisted to disk on this device.',
         'persistence pending label': 'Saving…',
         'persistence error label': 'Error saving changes.',
+        'more actions label': 'More actions',
       },
     },
   },
