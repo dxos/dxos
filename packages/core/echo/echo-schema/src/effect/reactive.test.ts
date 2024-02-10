@@ -16,6 +16,14 @@ registerSignalRuntime();
 
 const noop = (...args: any[]) => {};
 
+// TODO(burdon): Get schema from object.
+// TODO(burdon): Convert schema to JSON schema.
+// TODO(burdon): References.
+// TODO(burdon): Mutable/immutable.
+// TODO(burdon): Queries.
+// TODO(burdon): Annotations (e.g., indexed).
+// TODO(burdon): Stringify.
+
 describe.only('reactive', () => {
   test('untyped', () => {
     const person = R.object({ name: 'Satoshi', age: 42 });

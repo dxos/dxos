@@ -13,12 +13,6 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
  */
 export type ReactiveObject<T> = { [K in keyof T]: T[K] };
 
-// TODO(burdon): Remove.
-// export type ReactiveFn = {
-//   <T extends {}>(obj: T): ReactiveObject<T>;
-//   <T>(schema: S.Schema<T>, obj: T): Mutable<T>;
-// };
-
 /**
  * Creates a reactive object from a plain Javascript object.
  * Optionally provides a TS-effect schema.
