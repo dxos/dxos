@@ -4,19 +4,26 @@
 
 import * as AST from '@effect/schema/AST';
 import * as S from '@effect/schema/Schema';
-import { type Simplify } from 'effect/Types';
+import { Types } from 'effect/Match';
 
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
+
+import Simplify = Types.Simplify;
 
 /**
  * Reactive object.
  * Accessing properties triggers signal semantics.
  */
-export type Re<T> = { [K in keyof T]: T[K] }; //
+export type Re<T> = { [K in keyof T]: T[K] };
+
+// TODO(burdon): Build error when using S.Mutable.
+export type Mutable<T> = {
+  -readonly [P in keyof T]: T[P];
+};
 
 export type ReactiveFn = {
   <T extends {}>(obj: T): Re<T>;
-  <T>(schema: S.Schema<T>, obj: T): Re<Simplify<S.Mutable<T>>>;
+  <T>(schema: S.Schema<T>, obj: T): Re<Simplify<Mutable<T>>>;
 
   // typed: <T> (schema: S.Schema<T>) => (obj: T) => Re<T>;
 };
@@ -31,7 +38,7 @@ interface ReactiveHandler<T extends object> extends ProxyHandler<T> {
   readonly _proxyMap: WeakMap<object, any>;
 }
 
-// TODO(burdon): Suitable? (not a good name).
+// TODO(burdon): Ambiguous name (Suitable?)
 const isSuitableProxyTarget = (value: any): value is object =>
   typeof value === 'object' && value !== null && Object.getPrototypeOf(value) === Object.prototype;
 
