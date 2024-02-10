@@ -62,7 +62,7 @@ export const CopyButtonIconOnly = ({ value, classNames, iconProps, variant, ...p
         asChild
       >
         <Button variant={variant} classNames={['inline-flex flex-col justify-center', classNames]}>
-          <Copy className={getSize(5)} weight='bold' {...iconProps} />
+          <Copy className={getSize(5)} {...iconProps} />
         </Button>
       </Tooltip.Trigger>
     </Tooltip.Root>
