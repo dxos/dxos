@@ -6,6 +6,7 @@ import * as AST from '@effect/schema/AST';
 import * as S from '@effect/schema/Schema';
 
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
+import { invariant } from '@dxos/invariant';
 
 /**
  * Reactive object.
@@ -46,7 +47,13 @@ export class R {
    * Returns the schema for the given object if one is defined.
    */
   static schema<T extends {}>(obj: T): S.Schema<T> | undefined {
-    return (obj as any)[symbolSchema];
+    const schema = (obj as any)[symbolSchema];
+    if (!schema) {
+      return undefined;
+    }
+
+    invariant(S.isSchema(schema), 'Invalid schema.');
+    return schema as S.Schema<T>;
   }
 
   constructor() {

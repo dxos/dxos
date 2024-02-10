@@ -2,10 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as AST from '@effect/schema/AST';
 import * as JSONSchema from '@effect/schema/JSONSchema';
+import * as Pretty from '@effect/schema/Pretty';
 import * as S from '@effect/schema/Schema';
 import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
+import { ReadonlyRecord } from 'effect';
 import { type Mutable } from 'effect/Types';
 
 import { registerSignalRuntime } from '@dxos/echo-signals';
@@ -17,10 +20,19 @@ registerSignalRuntime();
 
 const noop = (...args: any[]) => {};
 
+// https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#introduction
+
 // TODO(burdon): References.
-// TODO(burdon): Mutable/immutable.
-// TODO(burdon): Queries.
+// TODO(burdon): Mutable/immutable objects.
+// TODO(burdon): Structured queries (and index).
 // TODO(burdon): Annotations (e.g., indexed).
+// TODO(burdon): Identifier annotations for recursive schemas: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#recursive-and-mutually-recursive-schemas
+// TODO(burdon): Decode unknown: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#decoding-from-unknown
+// TODO(burdon): Handle async: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#handling-async-transformations
+// TODO(burdon): Branded types.
+// TODO(burdon): S.instanceOf.
+// TODO(burdon): Transformations: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#transformations
+// TODO(burdon): New data types: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#understanding-schema-declaration-for-new-data-types
 
 describe.only('reactive', () => {
   test('untyped', () => {
@@ -127,8 +139,44 @@ describe.only('reactive', () => {
     });
 
     // NOTE: Will throw if identifiers are not given for each property.
-    const schema = JSONSchema.make(R.schema(person)!);
-    expect(schema.$schema).to.equal('http://json-schema.org/draft-07/schema#');
+    const jsonSchema = JSONSchema.make(R.schema(person)!);
+    expect(jsonSchema.$schema).to.equal('http://json-schema.org/draft-07/schema#');
+  });
+
+  test('Pretty', () => {
+    const ContactDef = S.struct({
+      name: S.string.pipe(S.identifier('name')),
+    });
+
+    const ContactPretty = Pretty.make(ContactDef);
+
+    const person = R.object(ContactDef, {
+      name: 'Satoshi',
+    });
+
+    const pretty = ContactPretty(person);
+    expect(pretty).to.equal('{ "name": "Satoshi" }');
+  });
+
+  test('Indexing', () => {
+    const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
+    const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
+
+    const ContactDef = S.struct({
+      name: S.string.pipe(
+        S.annotations({
+          [IndexAnnotation]: true,
+        }),
+      ),
+      publicKey: S.string,
+    });
+
+    const indexed = AST.getPropertySignatures(ContactDef.ast).filter((p) => {
+      const { indexed } = ReadonlyRecord.getSomes({ indexed: getIndexAnnotation(p.type) });
+      return indexed;
+    });
+
+    expect(indexed).to.have.length(1);
   });
 
   test.skip('ECHO insert and query', () => {
