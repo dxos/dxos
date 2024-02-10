@@ -140,11 +140,11 @@ describe.only('reactive', () => {
     });
 
     const person = R.object(ContactDef, {
-      name: 'John',
+      name: 'Satoshi',
       age: 42,
     });
 
     // db.add(person);
-    // person.age = 53; // Automerge mutation.
+    expect(person).to.exist;
   });
 });
