@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as JSONSchema from '@effect/schema/JSONSchema';
 import * as S from '@effect/schema/Schema';
 import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
@@ -16,13 +17,10 @@ registerSignalRuntime();
 
 const noop = (...args: any[]) => {};
 
-// TODO(burdon): Get schema from object.
-// TODO(burdon): Convert schema to JSON schema.
 // TODO(burdon): References.
 // TODO(burdon): Mutable/immutable.
 // TODO(burdon): Queries.
 // TODO(burdon): Annotations (e.g., indexed).
-// TODO(burdon): Stringify.
 
 describe.only('reactive', () => {
   test('untyped', () => {
@@ -117,6 +115,20 @@ describe.only('reactive', () => {
     expect(() => {
       (person.address.city as any) = 42; // Runtime type error.
     }).to.throw();
+  });
+
+  test('JSON schema', () => {
+    const ContactDef = S.struct({
+      name: S.string.pipe(S.identifier('name')),
+    });
+
+    const person = R.object(ContactDef, {
+      name: 'Satoshi',
+    });
+
+    // NOTE: Will throw if identifiers are not given for each property.
+    const schema = JSONSchema.make(R.schema(person)!);
+    expect(schema.$schema).to.equal('http://json-schema.org/draft-07/schema#');
   });
 
   test.skip('ECHO insert and query', () => {
