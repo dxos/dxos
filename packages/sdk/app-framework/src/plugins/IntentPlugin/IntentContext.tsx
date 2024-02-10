@@ -30,11 +30,10 @@ const IntentContext: Context<IntentContext> = createContext<IntentContext>({
 
 /**
  * @deprecated Prefer granular hooks.
- * TODO(burdon): Remove. Use useIntentDispatcher.
  */
+// TODO(burdon): Remove. Use useIntentDispatcher.
 export const useIntent = () => useContext(IntentContext);
 
-// TODO(burdon): Rename useIntentDispatch.
 export const useIntentDispatcher = (): IntentDispatcher => {
   const { dispatch } = useIntent();
   return dispatch;

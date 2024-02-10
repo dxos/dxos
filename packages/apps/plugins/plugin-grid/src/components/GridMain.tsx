@@ -98,10 +98,10 @@ const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
 const GridCard: MosaicTileComponent<GridDataItem> = forwardRef(({ item, ...props }, forwardRef) => {
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
   const parseData = props.type && metadataPlugin?.provides.metadata.resolver(props.type)?.parse;
-  const content = parseData ? parseData(item, 'view-object') : item;
+  const object = parseData ? parseData(item, 'view-object') : item;
 
   // TODO(wittjosiah): Better card placeholder.
-  return <Surface role='card' ref={forwardRef} limit={1} placeholder={<></>} data={{ content }} {...props} />;
+  return <Surface ref={forwardRef} role='card' limit={1} data={{ content: object }} {...props} />;
 });
 
 export default GridMain;

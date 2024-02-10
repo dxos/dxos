@@ -47,6 +47,7 @@ export const isDocument = (data: unknown): data is DocumentType =>
   isTypedObject(data) && DocumentType.schema.typename === data.__typename;
 
 export type MarkdownPluginState = {
+  // Codemirror extensions provided by other plugins.
   extensions: NonNullable<ExtensionsProvider>[];
 };
 
@@ -61,6 +62,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
+  // TODO(burdon): Cant this be memoized?
   const getCustomExtensions = (document?: DocumentType) => {
     // Configure extensions.
     const extensions = getExtensions({
@@ -197,7 +199,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 isMarkdownProperties(data.properties)
               ) {
                 const main = <EditorMain model={data.model} extensions={getCustomExtensions()} />;
-
                 if ('view' in data && data.view === 'embedded') {
                   return <EmbeddedLayout>{main}</EmbeddedLayout>;
                 } else {
