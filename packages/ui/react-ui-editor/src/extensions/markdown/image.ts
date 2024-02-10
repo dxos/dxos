@@ -26,7 +26,7 @@ export const image = (options: ImageOptions = {}): Extension => {
         from = Math.min(from, fromB);
         to = Math.max(to, toB);
       });
-      // Expand to cover lines
+      // Expand to cover lines.
       from = tr.state.doc.lineAt(from).from;
       to = tr.state.doc.lineAt(to).to;
       return value.map(tr.changes).update({
