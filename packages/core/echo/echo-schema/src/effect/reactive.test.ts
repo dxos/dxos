@@ -10,6 +10,7 @@ import { expect } from 'chai';
 import { ReadonlyRecord } from 'effect';
 import { type Mutable } from 'effect/Types';
 import get from 'lodash.get';
+import set from 'lodash.set';
 
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
@@ -102,10 +103,12 @@ describe.only('reactive', () => {
     const Contact = S.struct({
       name: S.string,
       age: S.optional(S.number),
-      address: S.struct({
-        street: S.string,
-        city: S.string,
-      }), // .pipe(S.optional), // TODO(burdon): optional doesn't build.
+      address: S.optional(
+        S.struct({
+          street: S.string,
+          city: S.string,
+        }),
+      ),
     });
 
     type Contact = S.Schema.To<typeof Contact>;
@@ -123,7 +126,7 @@ describe.only('reactive', () => {
 
     person.name = 'Satoshi Nakamoto';
     expect(() => {
-      (person.address.city as any) = 42; // Runtime type error.
+      set(person, 'address.city', 42); // Runtime type error.
     }).to.throw();
   });
 
@@ -166,7 +169,7 @@ describe.only('reactive', () => {
       ),
       address: S.optional(
         S.struct({
-          street: S.string,
+          street: S.optional(S.string),
           city: S.string.pipe(
             S.annotations({
               [R.IndexAnnotation]: true,
@@ -193,17 +196,23 @@ describe.only('reactive', () => {
       const person = R.object(Contact, {
         publicKey: PublicKey.random().toHex(),
         name: 'Satoshi',
+        address: {
+          city: 'Tokyo',
+        },
       });
 
-      const values: { key: string; value: any }[] = [];
+      const values: { path: string; value: any }[] = [];
       for (const prop of properties) {
         const value = get(person, prop);
         if (value !== undefined) {
-          values.push({ key: prop, value });
+          values.push({ path: prop, value });
         }
       }
 
-      expect(values).to.deep.eq([{ key: 'name', value: 'Satoshi' }]);
+      expect(values).to.deep.eq([
+        { path: 'name', value: 'Satoshi' },
+        { path: 'address.city', value: 'Tokyo' },
+      ]);
     }
   });
 });

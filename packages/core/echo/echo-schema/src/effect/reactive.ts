@@ -160,6 +160,7 @@ export const visitProperties = (
     const path = [...rootPath, property.name];
     visitor(property, path);
 
+    // Recursively visit properties.
     if (AST.isUnion(property.type)) {
       property.type.types.forEach((type) => {
         if (AST.isTypeLiteral(type)) {
@@ -196,26 +197,21 @@ const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHandler<T
 
 // TODO(burdon): Why is this required?
 const assignAstAnnotations = (obj: any, ast: AST.AST) => {
-  // console.log(inspect(ast, { depth: null, colors: true  }))
-  switch (ast._tag) {
-    // TODO(burdon): Use AST.isTypeLiteral.
-    case 'TypeLiteral': {
-      for (const property of ast.propertySignatures) {
-        const value = obj[property.name];
-        if (typeof value === 'object' && value !== null) {
-          assignAstAnnotations(value, property.type);
-        }
+  if (AST.isTypeLiteral(ast)) {
+    for (const property of ast.propertySignatures) {
+      const value = obj[property.name];
+      if (isValidProxyTarget(value)) {
+        assignAstAnnotations(value, property.type);
       }
-
-      Object.defineProperty(obj, symbolTypeAst, {
-        enumerable: false,
-        value: ast,
-      });
-
-      break;
     }
 
-    default:
-      throw new Error(`Not implemented: ${ast._tag}`);
+    Object.defineProperty(obj, symbolTypeAst, {
+      enumerable: false,
+      value: ast,
+    });
+  } else if (AST.isUnion(ast)) {
+    // TODO(burdon): Handle AST.isUnion?
+  } else {
+    throw new Error(`Not implemented: ${ast._tag}`);
   }
 };
