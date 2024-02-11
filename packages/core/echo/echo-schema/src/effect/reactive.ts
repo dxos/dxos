@@ -159,7 +159,14 @@ export const visitProperties = (
   AST.getPropertySignatures(root).forEach((property) => {
     const path = [...rootPath, property.name];
     visitor(property, path);
-    if (AST.isTypeLiteral(property.type)) {
+
+    if (AST.isUnion(property.type)) {
+      property.type.types.forEach((type) => {
+        if (AST.isTypeLiteral(type)) {
+          visitProperties(type, visitor, path);
+        }
+      });
+    } else if (AST.isTypeLiteral(property.type)) {
       visitProperties(property.type, visitor, path);
     }
   });

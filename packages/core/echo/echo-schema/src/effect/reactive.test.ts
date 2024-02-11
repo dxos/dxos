@@ -9,8 +9,10 @@ import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
 import { ReadonlyRecord } from 'effect';
 import { type Mutable } from 'effect/Types';
+import get from 'lodash.get';
 
 import { registerSignalRuntime } from '@dxos/echo-signals';
+import { PublicKey } from '@dxos/keys';
 import { test, describe } from '@dxos/test';
 
 import { visitProperties } from './reactive';
@@ -29,9 +31,9 @@ const noop = (...args: any[]) => {};
 // TODO(burdon): Identifier annotations for recursive schemas: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#recursive-and-mutually-recursive-schemas
 // TODO(burdon): Decode unknown: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#decoding-from-unknown
 // TODO(burdon): Handle async: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#handling-async-transformations
-// TODO(burdon): Branded types.
 // TODO(burdon): Transformations: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#transformations
 // TODO(burdon): New data types (e.g., for identifiers, blobs): https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#understanding-schema-declaration-for-new-data-types
+// TODO(burdon): Branded types.
 
 describe.only('reactive', () => {
   test('untyped', () => {
@@ -89,18 +91,15 @@ describe.only('reactive', () => {
       person.address.city = 'New York';
       expect(count).to.equal(2);
 
-      // Non-plains objects are not reactive.
+      // Non-plain objects are not reactive.
       person.phone.countryCode = 1;
       person.phone.number = '800-100-1234';
       expect(count).to.equal(2);
-
-      // TODO(burdon): ???
-      // expect(person.address === person.address, 'Proxies have stable references').to.be.true;
     }
   });
 
   test('typed', () => {
-    const ContactDef = S.struct({
+    const Contact = S.struct({
       name: S.string,
       age: S.optional(S.number),
       address: S.struct({
@@ -109,9 +108,9 @@ describe.only('reactive', () => {
       }), // .pipe(S.optional), // TODO(burdon): optional doesn't build.
     });
 
-    type Contact = S.Schema.To<typeof ContactDef>;
+    type Contact = S.Schema.To<typeof Contact>;
 
-    const person: Mutable<Contact> = R.object(ContactDef, {
+    const person: Mutable<Contact> = R.object(Contact, {
       name: 'Satoshi',
       age: 42,
       address: {
@@ -120,7 +119,7 @@ describe.only('reactive', () => {
       },
     });
 
-    expect(R.getSchema(person)).to.equal(ContactDef);
+    expect(R.getSchema(person)).to.equal(Contact);
 
     person.name = 'Satoshi Nakamoto';
     expect(() => {
@@ -129,11 +128,11 @@ describe.only('reactive', () => {
   });
 
   test('JSON schema', () => {
-    const ContactDef = S.struct({
+    const Contact = S.struct({
       name: S.string.pipe(S.identifier('name')),
     });
 
-    const person = R.object(ContactDef, {
+    const person = R.object(Contact, {
       name: 'Satoshi',
     });
 
@@ -143,13 +142,13 @@ describe.only('reactive', () => {
   });
 
   test('Pretty', () => {
-    const ContactDef = S.struct({
+    const Contact = S.struct({
       name: S.string.pipe(S.identifier('name')),
     });
 
-    const ContactPretty = Pretty.make(ContactDef);
+    const ContactPretty = Pretty.make(Contact);
 
-    const person = R.object(ContactDef, {
+    const person = R.object(Contact, {
       name: 'Satoshi',
     });
 
@@ -158,31 +157,53 @@ describe.only('reactive', () => {
   });
 
   test('Indexing', () => {
-    const ContactDef = S.struct({
+    const Contact = S.struct({
       publicKey: S.string,
       name: S.string.pipe(
         S.annotations({
           [R.IndexAnnotation]: true,
         }),
       ),
-      address: S.struct({
-        street: S.string,
-        city: S.string.pipe(
-          S.annotations({
-            [R.IndexAnnotation]: true,
-          }),
-        ),
-      }),
+      address: S.optional(
+        S.struct({
+          street: S.string,
+          city: S.string.pipe(
+            S.annotations({
+              [R.IndexAnnotation]: true,
+            }),
+          ),
+        }),
+      ),
     });
 
-    const properties: PropertyKey[] = [];
-    visitProperties(ContactDef.ast, (p, path) => {
-      const { indexed } = ReadonlyRecord.getSomes({ indexed: R.getIndexAnnotation(p.type) });
-      if (indexed) {
-        properties.push(path.join('.'));
+    const properties: string[] = [];
+
+    {
+      visitProperties(Contact.ast, (p, path) => {
+        const { indexed } = ReadonlyRecord.getSomes({ indexed: R.getIndexAnnotation(p.type) });
+        if (indexed) {
+          properties.push(path.join('.'));
+        }
+      });
+
+      expect(properties).to.deep.eq(['name', 'address.city']);
+    }
+
+    {
+      const person = R.object(Contact, {
+        publicKey: PublicKey.random().toHex(),
+        name: 'Satoshi',
+      });
+
+      const values: { key: string; value: any }[] = [];
+      for (const prop of properties) {
+        const value = get(person, prop);
+        if (value !== undefined) {
+          values.push({ key: prop, value });
+        }
       }
-    });
 
-    expect(properties).to.deep.eq(['name', 'address.city']);
+      expect(values).to.deep.eq([{ key: 'name', value: 'Satoshi' }]);
+    }
   });
 });
