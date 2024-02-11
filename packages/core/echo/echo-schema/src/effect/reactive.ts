@@ -75,13 +75,13 @@ export class UntypedReactiveHandler implements ReactiveHandler<any> {
   _proxyMap = new WeakMap<object, any>();
   _signal = compositeRuntime.createSignal();
 
-  _init(target: any): void {}
+  _init(): void {}
 
   get(target: any, prop: string | symbol, receiver: any): any {
     this._signal.notifyRead();
     const value = Reflect.get(target, prop, receiver);
 
-    if (isSuitableProxyTarget(value)) {
+    if (isValidProxyTarget(value)) {
       return createReactiveProxy(value, this);
     }
 
@@ -118,13 +118,13 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
   _proxyMap = new WeakMap<object, any>();
   _signal = compositeRuntime.createSignal();
 
-  _init(target: T): void {}
+  _init(): void {}
 
   get(target: any, prop: string | symbol, receiver: any): any {
     this._signal.notifyRead();
     const value = Reflect.get(target, prop, receiver);
 
-    if (isSuitableProxyTarget(value)) {
+    if (isValidProxyTarget(value)) {
       return createReactiveProxy(value, this);
     }
 
@@ -152,12 +152,25 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
 // Utils.
 //
 
-// TODO(burdon): Ambiguous name (Suitable?)
-const isSuitableProxyTarget = (value: any): value is object =>
+export const visitProperties = (
+  root: AST.AST,
+  visitor: (property: AST.PropertySignature, path: PropertyKey[]) => void,
+  rootPath: PropertyKey[] = [],
+): void => {
+  AST.getPropertySignatures(root).forEach((property) => {
+    const path = [...rootPath, property.name];
+    visitor(property, path);
+    if (AST.isTypeLiteral(property.type)) {
+      visitProperties(property.type, visitor, path);
+    }
+  });
+};
+
+const isValidProxyTarget = (value: any): value is object =>
   typeof value === 'object' && value !== null && Object.getPrototypeOf(value) === Object.prototype;
 
 const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHandler<T>): ReactiveObject<T> => {
-  if (!isSuitableProxyTarget(target)) {
+  if (!isValidProxyTarget(target)) {
     throw new Error('Value cannot be made into a reactive object.');
   }
 
@@ -171,14 +184,15 @@ const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHandler<T
 
   const proxy = new Proxy(target, mutableHandler);
   handler._init(target);
-
   handler._proxyMap.set(target, proxy);
   return proxy;
 };
 
+// TODO(burdon): Why is this required?
 const assignAstAnnotations = (obj: any, ast: AST.AST) => {
   // console.log(inspect(ast, { depth: null, colors: true  }))
   switch (ast._tag) {
+    // TODO(burdon): Use AST.isTypeLiteral.
     case 'TypeLiteral': {
       for (const property of ast.propertySignatures) {
         const value = obj[property.name];
@@ -186,10 +200,12 @@ const assignAstAnnotations = (obj: any, ast: AST.AST) => {
           assignAstAnnotations(value, property.type);
         }
       }
+
       Object.defineProperty(obj, symbolTypeAst, {
         enumerable: false,
         value: ast,
       });
+
       break;
     }
 

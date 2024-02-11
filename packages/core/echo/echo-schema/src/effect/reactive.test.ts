@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as AST from '@effect/schema/AST';
 import * as JSONSchema from '@effect/schema/JSONSchema';
 import * as Pretty from '@effect/schema/Pretty';
 import * as S from '@effect/schema/Schema';
@@ -14,6 +13,7 @@ import { type Mutable } from 'effect/Types';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { test, describe } from '@dxos/test';
 
+import { visitProperties } from './reactive';
 import * as R from './reactive';
 
 registerSignalRuntime();
@@ -165,16 +165,26 @@ describe.only('reactive', () => {
           [R.IndexAnnotation]: true,
         }),
       ),
+      address: S.struct({
+        street: S.string,
+        city: S.string.pipe(
+          S.annotations({
+            [R.IndexAnnotation]: true,
+          }),
+        ),
+      }),
       publicKey: S.string,
     });
 
-    // TODO(burdon): Implement recursive visitor.
-    const indexed = AST.getPropertySignatures(ContactDef.ast).filter((p) => {
+    const properties: PropertyKey[] = [];
+    visitProperties(ContactDef.ast, (p, path) => {
       const { indexed } = ReadonlyRecord.getSomes({ indexed: R.getIndexAnnotation(p.type) });
-      return indexed;
+      if (indexed) {
+        properties.push(path.join('.'));
+      }
     });
 
-    expect(indexed).to.have.length(1);
+    expect(properties).to.deep.eq(['name', 'address.city']);
   });
 
   test.skip('ECHO insert and query', () => {
