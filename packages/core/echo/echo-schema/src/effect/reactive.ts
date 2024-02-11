@@ -14,6 +14,7 @@ import { invariant } from '@dxos/invariant';
  */
 export type ReactiveObject<T> = { [K in keyof T]: T[K] };
 
+// TODO(burdon): Index type?
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
 

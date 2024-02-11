@@ -30,9 +30,8 @@ const noop = (...args: any[]) => {};
 // TODO(burdon): Decode unknown: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#decoding-from-unknown
 // TODO(burdon): Handle async: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#handling-async-transformations
 // TODO(burdon): Branded types.
-// TODO(burdon): S.instanceOf.
 // TODO(burdon): Transformations: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#transformations
-// TODO(burdon): New data types: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#understanding-schema-declaration-for-new-data-types
+// TODO(burdon): New data types (e.g., for identifiers, blobs): https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#understanding-schema-declaration-for-new-data-types
 
 describe.only('reactive', () => {
   test('untyped', () => {
@@ -160,6 +159,7 @@ describe.only('reactive', () => {
 
   test('Indexing', () => {
     const ContactDef = S.struct({
+      publicKey: S.string,
       name: S.string.pipe(
         S.annotations({
           [R.IndexAnnotation]: true,
@@ -173,7 +173,6 @@ describe.only('reactive', () => {
           }),
         ),
       }),
-      publicKey: S.string,
     });
 
     const properties: PropertyKey[] = [];
