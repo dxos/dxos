@@ -6795,6 +6795,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.62.1
+        version: 0.62.1(effect@2.3.1)(fast-check@3.15.1)
       '@langchain/community':
         specifier: ^0.0.26
         version: 0.0.26(discord.js@14.14.1)(faiss-node@0.5.1)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@20.0.1)
@@ -6828,6 +6831,9 @@ importers:
       discord.js:
         specifier: ^14.14.1
         version: 14.14.1
+      effect:
+        specifier: ^2.3.1
+        version: 2.3.1
       email-addresses:
         specifier: ^5.0.0
         version: 5.0.0
@@ -6932,6 +6938,9 @@ importers:
       '@types/textract':
         specifier: ^2.4.5
         version: 2.4.5
+      fast-check:
+        specifier: ^3.15.1
+        version: 3.15.1
       ts-node:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
