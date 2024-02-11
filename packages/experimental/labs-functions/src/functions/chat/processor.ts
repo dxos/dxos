@@ -114,6 +114,7 @@ export class RequestProcessor {
       inputs[input.name] = await this.getTemplateInput(space, input, context);
     }
 
+    // TODO(burdon): Test using JSON schema.
     // TODO(burdon): OpenAI-specific kwargs.
     const withSchema = false;
     const customArgs: any = withSchema && {
