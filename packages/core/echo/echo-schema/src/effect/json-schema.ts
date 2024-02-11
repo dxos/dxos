@@ -49,7 +49,6 @@ export interface JsonSchema {
  */
 export const getTypename = (schema: JsonSchema): string | undefined => {
   const match = schema.$ref?.match(/#\/\$defs\/(.+)/);
-  console.log(match);
   if (match) {
     return match[1];
   } else {

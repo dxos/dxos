@@ -3,11 +3,13 @@
 //
 
 import * as JSONSchema from '@effect/schema/JSONSchema';
+import type * as S from '@effect/schema/Schema';
 import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
 import { getTypename, toEffectSchema, toJsonSchema } from './json-schema';
+import { getSchema, object } from './reactive';
 import { Expando } from '../object';
 import { Schema } from '../proto';
 
@@ -42,7 +44,7 @@ describe('JSON Schema', () => {
     }
   });
 
-  test.only('convert schema to ts-effect schema', async () => {
+  test('convert schema to ts-effect schema', async () => {
     const echoSchema = new Schema({
       typename: 'example.com/schema/contact',
       props: [
@@ -64,9 +66,21 @@ describe('JSON Schema', () => {
       ],
     });
 
-    const effectSchema = toEffectSchema(echoSchema);
-    const jsonSchema = JSONSchema.make(effectSchema);
-    console.log(JSON.stringify(jsonSchema, undefined, 2));
+    // Convert to ts-effect schema.
+    const Contact = toEffectSchema(echoSchema);
+    type Contact = S.Schema.To<typeof Contact>;
+
+    const person: Contact = object(Contact, {
+      name: 'Satoshi',
+      active: true,
+      activity: 100,
+    });
+
+    expect(getSchema(person)).to.equal(Contact);
+
+    // Convert to JSON schema.
+    const jsonSchema = JSONSchema.make(Contact);
+    // console.log('JSON schema', JSON.stringify(jsonSchema, undefined, 2));
     expect(jsonSchema.$schema).to.eq('http://json-schema.org/draft-07/schema#');
     expect(getTypename(jsonSchema as any)).to.eq('example.com/schema/contact');
   });
