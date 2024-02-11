@@ -28,7 +28,6 @@ const noop = (...args: any[]) => {};
 // TODO(burdon): References.
 // TODO(burdon): Mutable/immutable objects.
 // TODO(burdon): Structured queries (and index).
-// TODO(burdon): Annotations (e.g., indexed).
 // TODO(burdon): Identifier annotations for recursive schemas: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#recursive-and-mutually-recursive-schemas
 // TODO(burdon): Decode unknown: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#decoding-from-unknown
 // TODO(burdon): Handle async: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#handling-async-transformations
