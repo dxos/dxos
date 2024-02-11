@@ -137,7 +137,7 @@ describe.only('reactive', () => {
   });
 
   test('validation', () => {
-    // TODO(burdon): Create type lib (email, key, etc.)
+    // TODO(burdon): Create type lib (email, url, key, etc.)
     const Email = S.pattern(/^(?!\.)(?!.*\.\.)([A-Z0-9_+-.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-9-]*\.)+[A-Z]{2,}$/i);
 
     const Contact = S.struct({
