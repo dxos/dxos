@@ -154,7 +154,7 @@ describe.only('reactive', () => {
 
     expect(() => {
       // Runtime type error.
-      person.email = 'invalid';
+      person.email = 'invalid-email-address';
     }).to.throw();
   });
 
