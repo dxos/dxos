@@ -81,7 +81,6 @@ export class UntypedReactiveHandler implements ReactiveHandler<any> {
   get(target: any, prop: string | symbol, receiver: any): any {
     this._signal.notifyRead();
     const value = Reflect.get(target, prop, receiver);
-
     if (isValidProxyTarget(value)) {
       return createReactiveProxy(value, this);
     }
@@ -124,7 +123,6 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
   get(target: any, prop: string | symbol, receiver: any): any {
     this._signal.notifyRead();
     const value = Reflect.get(target, prop, receiver);
-
     if (isValidProxyTarget(value)) {
       return createReactiveProxy(value, this);
     }
@@ -134,13 +132,12 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
 
   set(target: any, prop: string | symbol, value: any, receiver: any): boolean {
     const ast = target[symbolTypeAst] as AST.AST;
-
-    const propSignature = AST.getPropertySignatures(ast).find((property) => property.name === prop);
-    if (!propSignature) {
-      throw new Error(`Property ${prop.toString()} is not defined in the schema.`);
+    const properties = AST.getPropertySignatures(ast).find((property) => property.name === prop);
+    if (!properties) {
+      throw new Error(`Invalid property: ${prop.toString()}`);
     }
 
-    const _ = S.asserts(S.make(propSignature.type))(value);
+    const _ = S.asserts(S.make(properties.type))(value);
     const result = Reflect.set(target, prop, value, receiver);
     this._signal.notifyWrite();
     return result;
