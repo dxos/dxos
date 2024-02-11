@@ -138,7 +138,7 @@ describe.only('reactive', () => {
   });
 
   test('validation', () => {
-    // TODO(burdon): Create type lib (email, url, key, etc.)
+    // TODO(burdon): Factor out type defs (email, url, key, etc.)
     const Email = S.pattern(/^(?!\.)(?!.*\.\.)([A-Z0-9_+-.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-9-]*\.)+[A-Z]{2,}$/i);
 
     const StringKey: S.Schema<string> = S.string.pipe(S.length(64)).pipe(S.identifier('PublicKey'));
