@@ -7,7 +7,7 @@ import { type Chat } from 'openai/resources';
 
 import { type Document as DocumentType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { getTextContent, toJsonSchema, Schema, Expando, TextObject } from '@dxos/echo-schema';
+import { getTextContent, toJsonSchema, Schema, Expando, TextObject, getTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 export type GptAnalyzerOptions = {
@@ -66,8 +66,6 @@ export class GptAnalyzer {
       },
     ];
 
-    console.log(JSON.stringify(messages, null, 2));
-
     console.info('requesting...', { length: text?.length, schema: schemas.length });
     const response = await this._client.chat.completions.create({ model: 'gpt-4', messages });
     console.log('processing', { choices: response.choices.length });
@@ -76,7 +74,7 @@ export class GptAnalyzer {
       if (result.message.content) {
         const data = JSON.parse(result.message.content);
         for (const obj of data) {
-          const schema = schemas.find((schema) => schema.typename === obj.$id);
+          const schema = schemas.find((schema) => schema.typename === getTypename(obj));
           if (!schema) {
             console.warn('invalid object', obj);
             continue;

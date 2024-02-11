@@ -232,7 +232,7 @@ describe.skip('LangChain', () => {
   // TODO(burdon): How to make prompt satisfy all fields?
   // TODO(burdon): Metadata for zod: https://github.com/colinhacks/zod/issues/273
   //
-  test('functions', async () => {
+  test.only('functions', async () => {
     const defs = S.struct({
       company: S.array(
         S.struct({
@@ -251,9 +251,6 @@ describe.skip('LangChain', () => {
     });
 
     const jsonSchema: Record<string, unknown> = JSONSchema.make(defs) as any;
-    console.log(jsonSchema);
-
-    console.log(JSON.stringify(jsonSchema, null, 2));
     const model = createModel().bind({
       function_call: { name: 'output_formatter' },
       functions: [

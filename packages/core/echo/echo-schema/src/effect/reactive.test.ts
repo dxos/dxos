@@ -25,6 +25,9 @@ const noop = (...args: any[]) => {};
 
 // https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#introduction
 
+// TODO(burdon): Future proof protocol (vs. schema migration after integration with ts-effect)?
+//  types, fields vs. properties, encoding, migration plan, etc.
+
 // TODO(burdon): References.
 // TODO(burdon): Indexer (strings, numbers).
 // TODO(burdon): Identifier annotations for recursive schemas: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#recursive-and-mutually-recursive-schemas
@@ -34,7 +37,7 @@ const noop = (...args: any[]) => {};
 // TODO(burdon): New data types (e.g., for identifiers, blobs): https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#understanding-schema-declaration-for-new-data-types
 // TODO(burdon): Branded types.
 
-describe.only('reactive', () => {
+describe('reactive', () => {
   test('untyped', () => {
     const person = R.object({ name: 'Satoshi', age: 42 });
     expect(person.age).to.equal(42);

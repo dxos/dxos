@@ -210,7 +210,7 @@ export class RequestProcessor {
         const { objects: schemas } = space.db.query(Schema.filter());
         const schema = schemas.find((schema) => schema.typename === type);
         if (schema) {
-          // TODO(burdon): Use annotations.
+          // TODO(burdon): Use effect schema to generate JSON schema.
           const name = schema.typename.split(/[.-/]/).pop();
           const fields = schema.props.filter(({ type }) => type === Schema.PropType.STRING).map(({ id }) => id);
           return () => `${name}: ${fields.join(', ')}`;
