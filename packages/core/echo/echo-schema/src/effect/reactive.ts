@@ -8,15 +8,15 @@ import * as S from '@effect/schema/Schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
+export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
+export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
+
 /**
  * Reactive object.
  * Accessing properties triggers signal semantics.
  */
+// TODO(burdon): Is the type needed?
 export type ReactiveObject<T> = { [K in keyof T]: T[K] };
-
-// TODO(burdon): Index type?
-export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
-export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
 
 /**
  * Creates a reactive object from a plain Javascript object.
@@ -30,11 +30,8 @@ export const object: {
     const schema: S.Schema<T> = schemaOrObj as S.Schema<T>;
     const _ = S.asserts(schema)(obj);
 
-    assignAstAnnotations(obj, schema.ast);
-    Object.defineProperty(obj, symbolSchema, {
-      enumerable: false,
-      value: schema,
-    });
+    Object.defineProperty(obj, symbolSchema, { enumerable: false, value: schema });
+    setAstProperty(obj, schema.ast);
 
     return createReactiveProxy(obj, new TypedReactiveHandler());
   } else {
@@ -59,8 +56,8 @@ export const getSchema = <T extends {}>(obj: T): S.Schema<T> | undefined => {
 // Proxied implementations.
 //
 
-const symbolSchema = Symbol('echo_schema');
-const symbolTypeAst = Symbol('echo_type_ast');
+const symbolSchema = Symbol.for('@dxos/schema');
+const symbolTypeAst = Symbol.for('@dxos/type/AST');
 
 interface ReactiveHandler<T extends object> extends ProxyHandler<T> {
   /**
@@ -95,7 +92,7 @@ export class UntypedReactiveHandler implements ReactiveHandler<any> {
 }
 
 export class LoggingReactiveHandler implements ReactiveHandler<any> {
-  static symbolChangeLog = Symbol('changeLog');
+  static symbolChangeLog = Symbol.for('ChangeLog');
 
   _proxyMap = new WeakMap<object, any>();
 
@@ -147,28 +144,6 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
 // Utils.
 //
 
-export const visitProperties = (
-  root: AST.AST,
-  visitor: (property: AST.PropertySignature, path: PropertyKey[]) => void,
-  rootPath: PropertyKey[] = [],
-): void => {
-  AST.getPropertySignatures(root).forEach((property) => {
-    const path = [...rootPath, property.name];
-    visitor(property, path);
-
-    // Recursively visit properties.
-    if (AST.isUnion(property.type)) {
-      property.type.types.forEach((type) => {
-        if (AST.isTypeLiteral(type)) {
-          visitProperties(type, visitor, path);
-        }
-      });
-    } else if (AST.isTypeLiteral(property.type)) {
-      visitProperties(property.type, visitor, path);
-    }
-  });
-};
-
 const isValidProxyTarget = (value: any): value is object =>
   typeof value === 'object' && value !== null && Object.getPrototypeOf(value) === Object.prototype;
 
@@ -191,23 +166,48 @@ const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHandler<T
   return proxy;
 };
 
-// TODO(burdon): Why is this required?
-const assignAstAnnotations = (obj: any, ast: AST.AST) => {
+/**
+ * Recursively set AST property on the object.
+ */
+// TODO(burdon): Use visitProperties.
+const setAstProperty = (obj: any, ast: AST.AST) => {
   if (AST.isTypeLiteral(ast)) {
-    for (const property of ast.propertySignatures) {
-      const value = obj[property.name];
-      if (isValidProxyTarget(value)) {
-        assignAstAnnotations(value, property.type);
-      }
-    }
-
     Object.defineProperty(obj, symbolTypeAst, {
       enumerable: false,
       value: ast,
     });
-  } else if (AST.isUnion(ast)) {
-    // TODO(burdon): Handle AST.isUnion?
-  } else {
-    throw new Error(`Not implemented: ${ast._tag}`);
+
+    for (const property of ast.propertySignatures) {
+      const value = obj[property.name];
+      if (isValidProxyTarget(value)) {
+        setAstProperty(value, property.type);
+      }
+    }
   }
+};
+
+/**
+ * Recursively visit properties of the given object.
+ */
+// TODO(burdon): Ref unist-util-visit (e.g., specify filter).
+export const visitProperties = (
+  root: AST.AST,
+  visitor: (property: AST.PropertySignature, path: PropertyKey[]) => void,
+  rootPath: PropertyKey[] = [],
+): void => {
+  AST.getPropertySignatures(root).forEach((property) => {
+    const path = [...rootPath, property.name];
+    visitor(property, path);
+
+    // Recursively visit properties.
+    if (AST.isUnion(property.type)) {
+      property.type.types.forEach((type) => {
+        if (AST.isTypeLiteral(type)) {
+          visitProperties(type, visitor, path);
+        }
+      });
+    } else if (AST.isTypeLiteral(property.type)) {
+      visitProperties(property.type, visitor, path);
+    }
+  });
 };

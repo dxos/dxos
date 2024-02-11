@@ -25,8 +25,7 @@ const noop = (...args: any[]) => {};
 // https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#introduction
 
 // TODO(burdon): References.
-// TODO(burdon): Mutable/immutable objects.
-// TODO(burdon): Structured queries (and index).
+// TODO(burdon): Indexer (strings, numbers).
 // TODO(burdon): Identifier annotations for recursive schemas: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#recursive-and-mutually-recursive-schemas
 // TODO(burdon): Decode unknown: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#decoding-from-unknown
 // TODO(burdon): Handle async: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#handling-async-transformations
@@ -103,7 +102,7 @@ describe.only('reactive', () => {
       age: S.optional(S.number),
       address: S.optional(
         S.struct({
-          street: S.string,
+          street: S.optional(S.string),
           city: S.string,
         }),
       ),
@@ -125,8 +124,14 @@ describe.only('reactive', () => {
     {
       const mutable: Mutable<Contact> = person;
       mutable.name = 'Satoshi Nakamoto';
+      mutable.address = { city: 'London' };
       expect(() => {
-        set(mutable, 'address.city', 42); // Runtime type error.
+        // Runtime type error.
+        mutable.address = {} as Contact['address'];
+      }).to.throw();
+      expect(() => {
+        // Runtime type error.
+        set(mutable, 'address.city', 42);
       }).to.throw();
     }
   });
