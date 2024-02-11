@@ -111,7 +111,7 @@ describe.only('reactive', () => {
 
     type Contact = S.Schema.To<typeof Contact>;
 
-    const person: Mutable<Contact> = R.object(Contact, {
+    const person: Contact = R.object(Contact, {
       name: 'Satoshi',
       age: 42,
       address: {
@@ -122,10 +122,13 @@ describe.only('reactive', () => {
 
     expect(R.getSchema(person)).to.equal(Contact);
 
-    person.name = 'Satoshi Nakamoto';
-    expect(() => {
-      set(person, 'address.city', 42); // Runtime type error.
-    }).to.throw();
+    {
+      const mutable: Mutable<Contact> = person;
+      mutable.name = 'Satoshi Nakamoto';
+      expect(() => {
+        set(mutable, 'address.city', 42); // Runtime type error.
+      }).to.throw();
+    }
   });
 
   test('JSON schema', () => {

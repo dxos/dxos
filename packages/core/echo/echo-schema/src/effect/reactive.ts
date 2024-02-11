@@ -22,7 +22,6 @@ export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
  * Creates a reactive object from a plain Javascript object.
  * Optionally provides a TS-effect schema.
  */
-// TODO(burdon): Option to return mutable object?
 export const object: {
   <T extends {}>(obj: T): ReactiveObject<T>;
   <T extends {}>(schema: S.Schema<T>, obj: T): ReactiveObject<T>;
