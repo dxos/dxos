@@ -139,9 +139,7 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
       throw new Error(`Property ${prop.toString()} is not defined in the schema.`);
     }
 
-    // TODO(burdon): Void.
     const _ = S.asserts(S.make(propSignature.type))(value);
-
     const result = Reflect.set(target, prop, value, receiver);
     this._signal.notifyWrite();
     return result;

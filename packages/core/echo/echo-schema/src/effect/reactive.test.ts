@@ -45,8 +45,8 @@ describe.only('reactive', () => {
     }
 
     {
-      person.age = 53;
-      expect(person.age).to.equal(53);
+      person.age = 43;
+      expect(person.age).to.equal(43);
     }
 
     {
@@ -56,7 +56,7 @@ describe.only('reactive', () => {
         count++;
       });
 
-      person.age = 54;
+      person.age = 44;
       expect(count).to.equal(2);
     }
   });
@@ -185,22 +185,5 @@ describe.only('reactive', () => {
     });
 
     expect(properties).to.deep.eq(['name', 'address.city']);
-  });
-
-  test.skip('ECHO insert and query', () => {
-    // declare const db: any;
-
-    const ContactDef = S.struct({
-      name: S.string,
-      age: S.optional(S.number),
-    });
-
-    const person = R.object(ContactDef, {
-      name: 'Satoshi',
-      age: 42,
-    });
-
-    // db.add(person);
-    expect(person).to.exist;
   });
 });
