@@ -11,6 +11,8 @@ import { invariant } from '@dxos/invariant';
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
 
+// https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#introduction
+
 /**
  * Reactive object.
  * Accessing properties triggers signal semantics.

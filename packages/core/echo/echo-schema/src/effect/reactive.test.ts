@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { ParseResult } from '@effect/schema';
 import * as JSONSchema from '@effect/schema/JSONSchema';
 import * as Pretty from '@effect/schema/Pretty';
 import * as S from '@effect/schema/Schema';
@@ -28,8 +29,8 @@ const noop = (...args: any[]) => {};
 // TODO(burdon): Indexer (strings, numbers).
 // TODO(burdon): Identifier annotations for recursive schemas: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#recursive-and-mutually-recursive-schemas
 // TODO(burdon): Decode unknown: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#decoding-from-unknown
-// TODO(burdon): Handle async: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#handling-async-transformations
 // TODO(burdon): Transformations: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#transformations
+// TODO(burdon): Handle async: https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#handling-async-transformations
 // TODO(burdon): New data types (e.g., for identifiers, blobs): https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#understanding-schema-declaration-for-new-data-types
 // TODO(burdon): Branded types.
 
@@ -140,17 +141,57 @@ describe.only('reactive', () => {
     // TODO(burdon): Create type lib (email, url, key, etc.)
     const Email = S.pattern(/^(?!\.)(?!.*\.\.)([A-Z0-9_+-.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-9-]*\.)+[A-Z]{2,}$/i);
 
+    const StringKey: S.Schema<string> = S.string.pipe(S.length(64)).pipe(S.identifier('PublicKey'));
+
+    // TODO(burdon): Test.
+    const isPublicKey = (input: unknown): input is PublicKey => input instanceof PublicKey;
+    const PublicKeyFromSelf: S.Schema<PublicKey> = S.declare(isPublicKey, {
+      identifier: 'PublicKeyFromSelf',
+    });
+    const PublicKeyFromString: S.Schema<PublicKey, string> = S.transform(
+      S.string,
+      PublicKeyFromSelf,
+      (s) => PublicKey.from(s),
+      (value) => value.toHex(),
+    );
+
+    // TODO(burdon): Test.
+    const TypedKey: S.Schema<PublicKey, PublicKey> = S.transformOrFail(
+      S.any,
+      S.any,
+      (s, _, ast) => {
+        return ParseResult.try({
+          try: () => PublicKey.fromHex(s),
+          catch: () => ParseResult.type(ast, s),
+        });
+      },
+      (value) => {
+        return ParseResult.succeed(String(value));
+      },
+    );
+
     const Contact = S.struct({
+      timestamp: S.DateFromSelf,
+      key1: S.optional(StringKey),
+      key2: S.optional(TypedKey),
+      // key3: S.optional(PublicKeyFromString),
       name: S.string,
       email: S.optional(S.string.pipe(Email)),
     });
 
     type Contact = S.Schema.To<typeof Contact>;
+    const ContactPretty = Pretty.make(Contact);
 
     const person: Mutable<Contact> = R.object(Contact, {
+      timestamp: new Date(),
+      key1: PublicKey.random().toHex(),
+      key2: PublicKey.random(),
+      // key3: PublicKey.random(),
       name: 'Satoshi',
       email: 'satoshi@bitcoin.com',
     });
+
+    console.log(ContactPretty(person));
 
     expect(() => {
       // Runtime type error.
