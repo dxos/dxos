@@ -136,6 +136,33 @@ describe.only('reactive', () => {
     }
   });
 
+  test('references', () => {
+    const Organization = S.struct({
+      name: S.string,
+      website: S.optional(S.string),
+    });
+
+    const Contact = S.struct({
+      name: S.string,
+      employer: S.optional(Organization),
+    });
+
+    const org = R.object(Organization, {
+      name: 'DXOS',
+    });
+
+    const person = R.object(Contact, {
+      name: 'Satoshi',
+      employer: org,
+    });
+
+    expect(person.employer).to.deep.eq(org);
+
+    // TODO(burdon): Should equal by reference.
+    //  TypeError: 'get' on proxy: property 'Symbol(@dxos/type/AST)' is a read-only and non-configurable data property on the proxy target but the proxy did not return its actual value (expected '#<Object>' but got '#<Object>')
+    // expect(person.employer).to.eq(org);
+  });
+
   test('JSON schema', () => {
     const Contact = S.struct({
       name: S.string.pipe(S.identifier('name')),
@@ -150,7 +177,7 @@ describe.only('reactive', () => {
     expect(jsonSchema.$schema).to.equal('http://json-schema.org/draft-07/schema#');
   });
 
-  test('Pretty', () => {
+  test('pretty', () => {
     const Contact = S.struct({
       name: S.string.pipe(S.identifier('name')),
     });
@@ -165,7 +192,7 @@ describe.only('reactive', () => {
     expect(pretty).to.equal('{ "name": "Satoshi" }');
   });
 
-  test('Indexing', () => {
+  test('indexing', () => {
     const Contact = S.struct({
       publicKey: S.string,
       name: S.string.pipe(
