@@ -16,7 +16,6 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { test, describe } from '@dxos/test';
 
-import { visitProperties } from './reactive';
 import * as R from './reactive';
 
 registerSignalRuntime();
@@ -181,7 +180,7 @@ describe.only('reactive', () => {
     const properties: string[] = [];
 
     {
-      visitProperties(Contact.ast, (p, path) => {
+      R.visitProperties(Contact.ast, (p, path) => {
         const { indexed } = ReadonlyRecord.getSomes({ indexed: R.getIndexAnnotation(p.type) });
         if (indexed) {
           properties.push(path.join('.'));
