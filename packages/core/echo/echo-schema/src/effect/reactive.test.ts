@@ -91,7 +91,7 @@ describe.only('reactive', () => {
 
       // Non-plain objects are not reactive.
       person.phone.countryCode = 1;
-      person.phone.number = '800-100-1234';
+      person.phone.number = '(800) 100-1234';
       expect(count).to.equal(2);
     }
   });
@@ -134,6 +134,28 @@ describe.only('reactive', () => {
         set(mutable, 'address.city', 42);
       }).to.throw();
     }
+  });
+
+  test('validation', () => {
+    // TODO(burdon): Create type lib (email, key, etc.)
+    const Email = S.pattern(/^(?!\.)(?!.*\.\.)([A-Z0-9_+-.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-9-]*\.)+[A-Z]{2,}$/i);
+
+    const Contact = S.struct({
+      name: S.string,
+      email: S.optional(S.string.pipe(Email)),
+    });
+
+    type Contact = S.Schema.To<typeof Contact>;
+
+    const person: Mutable<Contact> = R.object(Contact, {
+      name: 'Satoshi',
+      email: 'satoshi@bitcoin.com',
+    });
+
+    expect(() => {
+      // Runtime type error.
+      person.email = 'invalid';
+    }).to.throw();
   });
 
   test('references', () => {
