@@ -22,6 +22,7 @@ export type ReactiveObject<T> = { [K in keyof T]: T[K] };
  * Creates a reactive object from a plain Javascript object.
  * Optionally provides a TS-effect schema.
  */
+// TODO(burdon): Option to return mutable object.
 export const object: {
   <T extends {}>(obj: T): ReactiveObject<T>;
   <T extends {}>(schema: S.Schema<T>, obj: T): ReactiveObject<T>;
@@ -200,14 +201,14 @@ export const visitProperties = (
     visitor(property, path);
 
     // Recursively visit properties.
-    if (AST.isUnion(property.type)) {
+    if (AST.isTypeLiteral(property.type)) {
+      visitProperties(property.type, visitor, path);
+    } else if (AST.isUnion(property.type)) {
       property.type.types.forEach((type) => {
         if (AST.isTypeLiteral(type)) {
           visitProperties(type, visitor, path);
         }
       });
-    } else if (AST.isTypeLiteral(property.type)) {
-      visitProperties(property.type, visitor, path);
     }
   });
 };
