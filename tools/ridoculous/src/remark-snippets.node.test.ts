@@ -5,10 +5,10 @@
 import expect from 'expect';
 import * as fs from 'fs';
 import { toMarkdown } from 'mdast-util-to-markdown';
-import { test } from 'vitest';
 import * as path from 'path';
 import { remark } from 'remark';
 import { u } from 'unist-builder';
+import { test } from 'vitest';
 
 import { remarkSnippets } from './remark-snippets.js';
 import { removeTrailing } from './util.js';
