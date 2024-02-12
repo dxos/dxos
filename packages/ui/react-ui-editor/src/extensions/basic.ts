@@ -16,18 +16,20 @@ import { type TextEditorProps } from '../components';
 
 export type BasicBundleOptions = {
   themeMode?: ThemeMode;
+  bracketMatching?: boolean;
 } & Pick<TextEditorProps, 'placeholder' | 'lineWrapping'>;
 
 export const createBasicBundle = ({
   themeMode,
   placeholder: _placeholder,
   lineWrapping = true,
+  bracketMatching: _bracketMatching = true,
 }: BasicBundleOptions = {}): Extension[] =>
   [
     lineWrapping && EditorView.lineWrapping,
 
     // https://codemirror.net/docs/ref/#codemirror.minimalSetup
-    bracketMatching(),
+    _bracketMatching && bracketMatching(),
     closeBrackets(),
     drawSelection(),
     highlightActiveLine(),

@@ -7,10 +7,17 @@ import React, { type PropsWithChildren, useEffect } from 'react';
 import { Chain as ChainType } from '@braneframe/types';
 import { TextObject, getTextContent } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select, useTranslation } from '@dxos/react-ui';
-import { TextEditor, useTextModel } from '@dxos/react-ui-editor';
+import {
+  BaseTextEditor,
+  createBasicBundle,
+  defaultTextSlots,
+  TextEditor,
+  textTheme,
+  useTextModel,
+} from '@dxos/react-ui-editor';
 import { groupBorder, mx } from '@dxos/react-ui-theme';
 
-import { nameRegex, promptExtension } from './extension';
+import { nameRegex, promptExtension } from './prompt-extension';
 import { CHAIN_PLUGIN } from '../../meta';
 
 const inputTypes = [
@@ -120,15 +127,14 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
         </Section>
 
         <Section title='Template'>
-          <TextEditor
+          <BaseTextEditor
             model={model}
-            placeholder={t('template placeholder')}
-            slots={{
-              editor: {
-                className: 'p-3',
-              },
-            }}
-            extensions={[promptExtension]}
+            extensions={[
+              createBasicBundle({ bracketMatching: false, placeholder: t('template placeholder') }),
+              promptExtension,
+            ]}
+            theme={textTheme}
+            slots={{ ...defaultTextSlots, editor: { className: 'p-3' } }}
           />
         </Section>
 

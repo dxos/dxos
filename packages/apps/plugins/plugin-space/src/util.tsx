@@ -4,7 +4,6 @@
 
 import {
   ClockCounterClockwise,
-  Download,
   FloppyDisk,
   FolderOpen,
   FolderPlus,
@@ -13,7 +12,6 @@ import {
   Placeholder,
   Trash,
   Users,
-  Upload,
   X,
   Database,
   Copy,
@@ -257,21 +255,6 @@ export const spaceToGraphNode = ({
         },
       });
     }
-
-    node.addAction(
-      {
-        id: 'backup-space',
-        label: ['export data label', { ns: SPACE_PLUGIN }],
-        icon: (props) => <Download {...props} />,
-        invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.EXPORT, data: { space } }),
-      },
-      {
-        id: 'restore-space',
-        label: ['import data label', { ns: SPACE_PLUGIN }],
-        icon: (props) => <Upload {...props} />,
-        invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.IMPORT, data: { space } }),
-      },
-    );
 
     if (!(folder instanceof Folder)) {
       return;
