@@ -13,17 +13,10 @@ import { DeviceKind, type NetworkStatus, Platform } from '@dxos/protocols/proto/
 import { isNode } from '@dxos/util';
 
 import buildSecrets from './cli-observability-secrets.json';
-import { DatadogMetrics } from './datadog';
+import { type DatadogMetrics } from './datadog';
 import { type IPData, getTelemetryIdentifier, mapSpaces } from './helpers';
-import { SegmentTelemetry, type EventOptions, type PageOptions } from './segment';
-import {
-  captureException as sentryCaptureException,
-  enableSentryLogProcessor,
-  configureTracing as sentryConfigureTracing,
-  init as sentryInit,
-  type InitOptions,
-  setTag as sentrySetTag,
-} from './sentry';
+import { type SegmentTelemetry, type EventOptions, type PageOptions } from './segment';
+import { type InitOptions, type captureException as SentryCaptureException } from './sentry';
 
 const SPACE_METRICS_MIN_INTERVAL = 1000 * 60;
 // const DATADOG_IDLE_INTERVAL = 1000 * 60 * 5;
@@ -77,6 +70,8 @@ export class Observability {
   // TODO(wittjosiah): Generic error logging interface.
   private _errorReportingOptions?: InitOptions;
   private _errorLogProcessor: boolean;
+  private _captureException?: typeof SentryCaptureException;
+  private _setTag?: (key: string, value: string) => void;
 
   private _secrets: ObservabilitySecrets;
   private _namespace: string;
@@ -139,10 +134,10 @@ export class Observability {
     }
   }
 
-  initialize() {
-    this._initMetrics();
-    this._initTelemetry();
-    this._initErrorLogs();
+  async initialize() {
+    await this._initMetrics();
+    await this._initTelemetry();
+    await this._initErrorLogs();
   }
 
   async close() {
@@ -173,7 +168,7 @@ export class Observability {
 
   setTag(key: string, value: string, scope?: TagScope) {
     if (this.enabled && (scope === undefined || scope === 'all' || scope === 'errors')) {
-      sentrySetTag(key, value);
+      this._setTag?.(key, value);
     }
     if (!scope) {
       scope = 'all';
@@ -227,8 +222,9 @@ export class Observability {
   // Metrics
   //
 
-  private _initMetrics() {
+  private async _initMetrics() {
     if (this.enabled && this._secrets.DATADOG_API_KEY) {
+      const { DatadogMetrics } = await import('./datadog');
       this._metrics = new DatadogMetrics({
         apiKey: this._secrets.DATADOG_API_KEY,
         getTags: () =>
@@ -396,8 +392,9 @@ export class Observability {
   // Telemetry
   //
 
-  private _initTelemetry() {
+  private async _initTelemetry() {
     if (this._secrets.TELEMETRY_API_KEY && this._mode !== 'disabled') {
+      const { SegmentTelemetry } = await import('./segment');
       this._telemetry = new SegmentTelemetry({
         apiKey: this._secrets.TELEMETRY_API_KEY,
         batchSize: this._telemetryBatchSize,
@@ -437,20 +434,24 @@ export class Observability {
   // Error Logs
   //
 
-  private _initErrorLogs() {
+  private async _initErrorLogs() {
     if (this._secrets.SENTRY_DESTINATION && this._mode !== 'disabled') {
+      const { captureException, enableSentryLogProcessor, configureTracing, init, setTag } = await import('./sentry');
+      this._captureException = captureException;
+      this._setTag = setTag;
+
       // TODO(nf): refactor package into this one?
       log.info('Initializing Sentry', {
         dest: this._secrets.SENTRY_DESTINATION,
         options: this._errorReportingOptions,
       });
-      sentryInit({
+      init({
         ...this._errorReportingOptions,
         destination: this._secrets.SENTRY_DESTINATION,
         scrubFilenames: this._mode !== 'full',
       });
       if (this._errorReportingOptions?.tracing) {
-        sentryConfigureTracing();
+        configureTracing();
       }
       // TODO(nf): set platform at instantiation? needed for node.
       if (this._errorLogProcessor) {
@@ -459,7 +460,7 @@ export class Observability {
       // TODO(nf): is this different than passing as properties in options?
       this._tags.forEach((v, k) => {
         if (v.scope === 'all' || v.scope === 'errors') {
-          sentrySetTag(k, v.value);
+          setTag(k, v.value);
         }
       });
     } else {
@@ -474,7 +475,7 @@ export class Observability {
    */
   captureException(err: any) {
     if (this.enabled) {
-      sentryCaptureException(err);
+      this._captureException?.(err);
     }
   }
 }
