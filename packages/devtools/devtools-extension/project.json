@@ -5,6 +5,7 @@
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
+        "generatePackageJson": false,
         "outputPath": "packages/devtools/devtools-extension/out/devtools-extension"
       },
       "outputs": [

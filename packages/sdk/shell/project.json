@@ -6,6 +6,7 @@
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
+        "generatePackageJson": false,
         "outputPath": "packages/sdk/shell/dist/bundle"
       },
       "outputs": [

@@ -107,7 +107,7 @@ export default class Start extends BaseCommand<typeof Start> {
     if (this._observability?.enabled) {
       this.log('Metrics initialized!');
 
-      this._observability.initialize();
+      await this._observability.initialize();
       await this._observability.setIdentityTags(this._agent.client!);
       await this._observability.startNetworkMetrics(this._agent.client!);
       await this._observability.startSpacesMetrics(this._agent.client!, 'cli');

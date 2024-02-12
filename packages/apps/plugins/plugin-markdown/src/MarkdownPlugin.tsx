@@ -183,7 +183,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               if (isDocument(data.active)) {
                 const { readonly } = settings.values.state[data.active.id] ?? {};
                 return (
-                  <MainLayout>
+                  <MainLayout toolbar={settings.values.toolbar}>
                     <DocumentMain
                       toolbar={settings.values.toolbar}
                       readonly={readonly}
