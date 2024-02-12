@@ -3,7 +3,7 @@
 //
 
 import { type Signal } from '@preact/signals-core';
-import { type DeepSignal, deepSignal } from 'deepsignal';
+import { type DeepSignal, deepSignal } from 'deepsignal/react';
 
 import type { UnsubscribeCallback } from '@dxos/async';
 

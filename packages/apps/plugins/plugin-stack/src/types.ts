@@ -3,7 +3,7 @@
 //
 
 import type { IconProps } from '@phosphor-icons/react';
-import type { DeepSignal } from 'deepsignal';
+import type { DeepSignal } from 'deepsignal/react';
 import type { FC } from 'react';
 
 import { Stack as StackType } from '@braneframe/types';
