@@ -6,24 +6,32 @@
       "options": {
         "main": "packages/e2e/rpc-tunnel-e2e/src/index.ts",
         "outputPath": "packages/e2e/rpc-tunnel-e2e/dist",
-        "transformers": ["@dxos/log-hook/transformer"],
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
         "tsConfig": "packages/e2e/rpc-tunnel-e2e/tsconfig.json"
       }
     },
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
-        "outputPath": "packages/e2e/rpc-tunnel-e2e/out",
-        "generatePackageJson": false
+        "generatePackageJson": false,
+        "outputPath": "packages/e2e/rpc-tunnel-e2e/out"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "e2e": {
       "options": {
         "playwrightConfigPath": "packages/e2e/rpc-tunnel-e2e/src/playwright/playwright.config.ts",
         "serve": "rpc-tunnel-e2e:serve",
-        "testPatterns": ["packages/e2e/rpc-tunnel-e2e/src/playwright/**/*.spec.{ts,js}"],
-        "watchPatterns": ["packages/e2e/rpc-tunnel-e2e/src/**/*"]
+        "testPatterns": [
+          "packages/e2e/rpc-tunnel-e2e/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/e2e/rpc-tunnel-e2e/src/**/*"
+        ]
       }
     },
     "lint": {},
@@ -35,6 +43,8 @@
     }
   },
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": ["test"],
+  "implicitDependencies": [
+    "test"
+  ],
   "name": "rpc-tunnel-e2e"
 }

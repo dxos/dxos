@@ -15,19 +15,25 @@
         "outputPath": "packages/devtools/devtools/out/dxos/storybook/devtools",
         "uiFramework": "@storybook/react"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
-        "outputPath": "packages/devtools/devtools/out/devtools",
-        "generatePackageJson": false
+        "generatePackageJson": false,
+        "outputPath": "packages/devtools/devtools/out/devtools"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "compile": {
       "options": {
-        "entryPoints": ["packages/devtools/devtools/src/index.ts"]
+        "entryPoints": [
+          "packages/devtools/devtools/src/index.ts"
+        ]
       }
     },
     "lint": {},
@@ -42,6 +48,8 @@
     }
   },
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": ["esbuild"],
+  "implicitDependencies": [
+    "esbuild"
+  ],
   "name": "devtools"
 }

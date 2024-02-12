@@ -5,23 +5,31 @@
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
-        "outputPath": "{projectRoot}/out/demo",
-        "generatePackageJson": false
+        "generatePackageJson": false,
+        "outputPath": "{projectRoot}/out/demo"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "e2e": {
       "options": {
         "playwrightConfigPath": "{projectRoot}/src/playwright/playwright.config.ts",
         "serve": "examples:preview",
-        "testPatterns": ["{projectRoot}/src/playwright/**/*.spec.{ts,js}"],
-        "watchPatterns": ["{projectRoot}/src/**/*"]
+        "testPatterns": [
+          "{projectRoot}/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "watchPatterns": [
+          "{projectRoot}/src/**/*"
+        ]
       }
     },
     "lint": {
       "options": {
         "format": "unix",
-        "lintFilePatterns": ["{projectRoot}/**/*.{ts,tsx,js,jsx}"],
+        "lintFilePatterns": [
+          "{projectRoot}/**/*.{ts,tsx,js,jsx}"
+        ],
         "quiet": true
       }
     },
@@ -30,7 +38,9 @@
       "options": {
         "script": "prebuild"
       },
-      "outputs": ["{projectRoot}/src/proto/gen"]
+      "outputs": [
+        "{projectRoot}/src/proto/gen"
+      ]
     },
     "preview": {
       "executor": "@nx/web:file-server",

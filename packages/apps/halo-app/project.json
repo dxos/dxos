@@ -4,24 +4,38 @@
   "targets": {
     "build": {
       "options": {
-        "transformers": ["@dxos/log-hook/transformer"]
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       }
     },
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
-        "outputPath": "packages/apps/halo-app/out/halo",
-        "generatePackageJson": false
+        "generatePackageJson": false,
+        "outputPath": "packages/apps/halo-app/out/halo"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "e2e": {
       "options": {
-        "ciEnvironments": ["android", "chromium", "firefox", "ios", "webkit"],
+        "ciEnvironments": [
+          "android",
+          "chromium",
+          "firefox",
+          "ios",
+          "webkit"
+        ],
         "playwrightConfigPath": "packages/apps/halo-app/src/playwright/playwright.config.ts",
         "serve": "halo-app:preview",
-        "testPatterns": ["packages/apps/halo-app/src/playwright/**/*.spec.{ts,js}"],
-        "watchPatterns": ["packages/apps/halo-app/src/**/*"]
+        "testPatterns": [
+          "packages/apps/halo-app/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/apps/halo-app/src/**/*"
+        ]
       }
     },
     "lint": {},

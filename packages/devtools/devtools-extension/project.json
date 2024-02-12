@@ -5,25 +5,42 @@
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
-        "outputPath": "packages/devtools/devtools-extension/out/devtools-extension",
-        "generatePackageJson": false
+        "generatePackageJson": false,
+        "outputPath": "packages/devtools/devtools-extension/out/devtools-extension"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "e2e": {
-      "dependsOn": ["^build", "bundle", "prebuild"],
+      "dependsOn": [
+        "^build",
+        "bundle",
+        "prebuild"
+      ],
       "options": {
         "extensionPath": "packages/devtools/devtools-extension/out/devtools-extension",
         "headless": false,
         "playwrightConfigPath": "packages/devtools/devtools-extension/src/playwright/playwright.config.ts",
-        "testPatterns": ["packages/devtools/devtools-extension/src/playwright/**/*.spec.{ts,js}"],
-        "watchPatterns": ["packages/devtools/devtools-extension/src/**/*"]
+        "testPatterns": [
+          "packages/devtools/devtools-extension/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/devtools/devtools-extension/src/**/*"
+        ]
       },
-      "outputs": ["{options.coveragePath}", "{options.extensionPath}", "{options.outputPath}", "{options.resultsPath}"]
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.extensionPath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
     },
     "lint": {}
   },
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": ["test"],
+  "implicitDependencies": [
+    "test"
+  ],
   "name": "devtools-extension"
 }

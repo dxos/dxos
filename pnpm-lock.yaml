@@ -9653,9 +9653,6 @@ importers:
       '@types/js-yaml':
         specifier: ^4.0.5
         version: 4.0.5
-      '@types/mocha':
-        specifier: ^8.2.2
-        version: 8.2.3
       '@types/node':
         specifier: ^18.11.9
         version: 18.11.9
