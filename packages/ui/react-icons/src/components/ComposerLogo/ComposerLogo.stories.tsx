@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+import '@fontsource/k2d/100-italic.css';
 
 import { Ghost, Square } from '@phosphor-icons/react';
 import React, { useRef, useState } from 'react';
