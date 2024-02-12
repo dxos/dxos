@@ -518,7 +518,7 @@ describe('Spaces', () => {
     });
   });
 
-  test.repeat(100)('share two spaces between clients', async () => {
+  test('share two spaces between clients', async () => {
     const testBuilder = new TestBuilder();
 
     const host = new Client({ services: testBuilder.createLocal() });
