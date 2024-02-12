@@ -3,7 +3,12 @@
 //
 
 import { asyncTimeout, Event, synchronized } from '@dxos/async';
-import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
+import {
+  isValidAutomergeUrl,
+  type DocHandle,
+  type DocHandleChangePayload,
+  type DocumentId,
+} from '@dxos/automerge/automerge-repo';
 import { cancelWithContext, Context, ContextDisposedError } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
 import { type Reference } from '@dxos/document-model';
@@ -27,6 +32,7 @@ export type SpaceState = {
 
 export class AutomergeDb {
   private spaceRootDocHandle!: DocHandle<SpaceDoc>;
+  private objectDocumentHandles = new Map<string, DocHandle<SpaceDoc>>();
 
   /**
    * @internal
@@ -63,6 +69,7 @@ export class AutomergeDb {
       return;
     }
     this._ctx = new Context();
+    this._ctx.onDispose(this._onDispose.bind(this));
 
     if (!spaceState.rootUrl) {
       if (getGlobalAutomergePreference()) {
@@ -80,8 +87,9 @@ export class AutomergeDb {
           this._initDocAccess(this.spaceRootDocHandle);
         }
 
-        const ojectIds = Object.keys(doc.objects ?? {});
-        this._createInlineObjects(ojectIds);
+        const objectIds = Object.keys(doc.objects ?? {});
+        this._createInlineObjects(objectIds);
+        this._subscribeToLinkedObjects(doc.links);
       } catch (err) {
         if (err instanceof ContextDisposedError) {
           return;
@@ -96,16 +104,7 @@ export class AutomergeDb {
       }
     }
 
-    const update = (event: DocHandleChangePayload<SpaceDoc>) => {
-      const updatedObjects = getUpdatedObjects(event);
-      this._createInlineObjects(updatedObjects.filter((id) => !this._objects.has(id)));
-      this._emitUpdateEvent(updatedObjects);
-    };
-
-    this.spaceRootDocHandle.on('change', update);
-    this._ctx.onDispose(() => {
-      this.spaceRootDocHandle.off('change', update);
-    });
+    this.spaceRootDocHandle.on('change', this._onDocumentUpdate.bind(this));
 
     const elapsed = performance.now() - start;
     if (elapsed > 1000) {
@@ -244,6 +243,40 @@ export class AutomergeDb {
     });
   }
 
+  private _subscribeToLinkedObjects(links: SpaceDoc['links']) {
+    if (!links) {
+      return;
+    }
+    for (const [objectId, automergeUrl] of Object.entries(links)) {
+      if (this.objectDocumentHandles.has(objectId)) {
+        return;
+      }
+      const handle = this.automerge.repo.find<SpaceDoc>(automergeUrl as DocumentId);
+      this.objectDocumentHandles.set(objectId, handle);
+      handle.on('change', this._onDocumentUpdate.bind(this));
+    }
+  }
+
+  private _onDocumentUpdate(event: DocHandleChangePayload<SpaceDoc>) {
+    const { updatedObjects, linkedDocuments } = processDocumentUpdate(event);
+    log('update', {
+      event,
+      updatedObjects,
+      linkedDocuments,
+      created: updatedObjects.filter((id) => !this._objects.has(id)),
+    });
+    this._subscribeToLinkedObjects(linkedDocuments);
+    this._createInlineObjects(updatedObjects.filter((id) => !this._objects.has(id)));
+    this._emitUpdateEvent(updatedObjects);
+  }
+
+  private _onDispose() {
+    this.spaceRootDocHandle?.off('change');
+    for (const docHandle of Object.values(this.objectDocumentHandles)) {
+      docHandle.off('change');
+    }
+  }
+
   /**
    * Loads all objects on open and handles objects that are being created not by this client.
    */
@@ -264,16 +297,28 @@ export class AutomergeDb {
   }
 }
 
-const getUpdatedObjects = (event: DocHandleChangePayload<SpaceDoc>): string[] => {
-  const updatedObjects = event.patches
-    .map(({ path }: { path: string[] }) => {
-      if (path.length >= 2 && path[0] === 'objects') {
-        return path[1];
-      }
-      return undefined;
-    })
-    .filter(Boolean);
-
-  // Remove duplicates.
-  return Array.from(new Set(updatedObjects)) as string[];
+const processDocumentUpdate = (event: DocHandleChangePayload<SpaceDoc>) => {
+  const updatedObjectIds = new Set<string>();
+  const linkedDocuments: SpaceDoc['links'] = {};
+  for (const { path, value } of event.patches) {
+    if (path.length < 2) {
+      continue;
+    }
+    switch (path[0]) {
+      case 'objects':
+        if (path.length >= 2) {
+          updatedObjectIds.add(path[1]);
+        }
+        break;
+      case 'links':
+        if (path.length >= 2 && typeof value === 'string' && isValidAutomergeUrl(value)) {
+          linkedDocuments[path[1]] = value;
+        }
+        break;
+    }
+  }
+  return {
+    updatedObjects: [...updatedObjectIds],
+    linkedDocuments,
+  };
 };
