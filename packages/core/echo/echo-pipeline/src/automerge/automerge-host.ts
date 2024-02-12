@@ -53,8 +53,7 @@ export class AutomergeHost {
       // Hosts, running in the worker, don't share documents unless requested by other peers.
       sharePolicy: async (peerId /* device key */, documentId /* space key */) => {
         if (peerId.startsWith('client-')) {
-          // TODO(mykola): Is it correct?
-          return false;
+          return true;
         }
 
         if (!documentId) {
