@@ -378,11 +378,6 @@ export class DataSpace {
 
   private _onNewAutomergeRoot(rootUrl: string) {
     queueMicrotask(async () => {
-      // log.info('loading automerge root doc for space', {
-      //   space: this.key,
-      //   rootUrl,
-      //   state: this._automergeHost.repo.handles[rootUrl.replace('automerge:', '') as DocumentId]?.state,
-      // });
       this._automergeHost._requestedDocs.add(rootUrl as any);
       const handle = this._automergeHost.repo.find(rootUrl as any);
       try {
