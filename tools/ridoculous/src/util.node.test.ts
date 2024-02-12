@@ -3,7 +3,7 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
+import { test } from 'vitest';
 import { u } from 'unist-builder';
 import { visit } from 'unist-util-visit';
 

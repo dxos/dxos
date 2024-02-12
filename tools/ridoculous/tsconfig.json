@@ -7,23 +7,16 @@
     "module": "ESNext",
     "moduleResolution": "node",
     "outDir": "dist",
-    "target": "ESNext"
+    "target": "ESNext",
   },
-  "exclude": [
-    "dist",
-    "node_modules",
-    "out"
-  ],
-  "include": [
-    "src/**/*",
-    "testing/**/*"
-  ],
+  "exclude": ["dist", "node_modules", "out"],
+  "include": ["src/**/*", "testing/**/*"],
   "references": [
     {
-      "path": "../../packages/common/esbuild-plugins"
+      "path": "../../packages/common/esbuild-plugins",
     },
     {
-      "path": "../../packages/common/protobuf-compiler"
-    }
-  ]
+      "path": "../../packages/common/protobuf-compiler",
+    },
+  ],
 }

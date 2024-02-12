@@ -5,7 +5,7 @@
 import { diffWords } from 'diff';
 import expect from 'expect';
 import { toMarkdown } from 'mdast-util-to-markdown';
-import { it as test } from 'mocha';
+import { test } from 'vitest';
 import { remark } from 'remark';
 import { u } from 'unist-builder';
 import { visit } from 'unist-util-visit';
