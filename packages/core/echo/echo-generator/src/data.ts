@@ -177,6 +177,7 @@ export const createTestObjectGenerator = () => new TestObjectGenerator(testSchem
 export const createSpaceObjectGenerator = (space: Space) =>
   new SpaceObjectGenerator(space, testSchemas(), testObjectGenerators);
 
+// TODO(burdon): Move to @dxos/random.
 const locations = [
   { lat: 139.74946157054467, lng: 35.686962764371174 },
   { lat: -73.98196278740681, lng: 40.75192492259464 },
