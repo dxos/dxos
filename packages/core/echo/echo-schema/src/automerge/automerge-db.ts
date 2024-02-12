@@ -72,7 +72,6 @@ export class AutomergeDb {
     } else {
       try {
         this._docHandle = await this._initDocHandle(spaceState.rootUrl);
-        log.info('Automerge document ready', { docId: spaceState.rootUrl });
 
         const doc = this._docHandle.docSync();
         invariant(doc);
