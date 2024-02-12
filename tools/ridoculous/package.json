@@ -16,13 +16,8 @@
   "scripts": {
     "build": "rm -rf ./dist && tsc",
     "info": "tsc --showConfig | jq",
-    "test": "mocha",
     "update:docs": "ts-node --esm ./src/main.ts --files ./testing/docs/**/*.md --auto-number --dry-run",
     "update:test": "rm -rf ./out && DEBUG='dxos:ridoculous:*' ts-node --esm ./src/main.ts --files 'testing/**/*.md' --verbose"
-  },
-  "mocha": {
-    "loader": "ts-node/esm",
-    "spec": "src/**/*.test.ts"
   },
   "dependencies": {
     "@microsoft/tsdoc": "~0.14.1",
@@ -51,7 +46,6 @@
     "@types/diff": "^5.0.2",
     "@types/glob": "~7.1.3",
     "@types/js-yaml": "^4.0.5",
-    "@types/mocha": "^8.2.2",
     "@types/node": "^18.11.9",
     "@types/protocol-buffers-schema": "^3.4.1",
     "@types/yargs": "~16.0.1",
