@@ -12,6 +12,7 @@
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
+        "generatePackageJson": false,
         "outputPath": "packages/apps/halo-app/out/halo"
       },
       "outputs": [
