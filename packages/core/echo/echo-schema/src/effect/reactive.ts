@@ -160,10 +160,11 @@ const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHandler<T
     return existingProxy;
   }
 
-  const mutableHandler: ReactiveHandler<T> = {} as any;
-  Object.setPrototypeOf(mutableHandler, handler);
+  // TODO(dmaretskyi): in future this should be mutable to allow replacing the handler on the fly while maintaining the proxy identity
+  const handlerSlot: ReactiveHandler<T> = {} as any;
+  Object.setPrototypeOf(handlerSlot, handler);
 
-  const proxy = new Proxy(target, mutableHandler);
+  const proxy = new Proxy(target, handlerSlot);
   handler._init(target);
   handler._proxyMap.set(target, proxy);
   return proxy;
