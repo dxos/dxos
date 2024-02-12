@@ -10,11 +10,19 @@ type MochaHooks = {
 
 export const mochaHooks: MochaHooks = {
   afterAll: async () => {
-    console.log('Will check for leaks in 1000ms...');
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
+      console.log(
+        "\n\n WARNING: It looks like the process didn't exit after running tests.\n Here are the open handles:\n",
+      );
+
       (global as any).dxDumpLeaks?.();
       console.log('\n\n');
       wtf.dump();
     }, 1000);
+
+    // Don't prevent the process from exiting.
+    if (typeof timeoutId === 'object' && 'unref' in timeoutId) {
+      timeoutId.unref();
+    }
   },
 };

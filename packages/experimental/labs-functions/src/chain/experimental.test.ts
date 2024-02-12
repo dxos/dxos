@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as JSONSchema from '@effect/schema/JSONSchema';
+import * as S from '@effect/schema/Schema';
 import { SerpAPI } from '@langchain/community/tools/serpapi';
 import { HNSWLib } from '@langchain/community/vectorstores/hnswlib';
 import { StringOutputParser } from '@langchain/core/output_parsers';
@@ -35,7 +37,6 @@ import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 import fs from 'node:fs';
 import path from 'node:path';
 import { z } from 'zod';
-import { zodToJsonSchema } from 'zod-to-json-schema';
 
 import { describe, test } from '@dxos/test';
 
@@ -231,37 +232,32 @@ describe.skip('LangChain', () => {
   // TODO(burdon): How to make prompt satisfy all fields?
   // TODO(burdon): Metadata for zod: https://github.com/colinhacks/zod/issues/273
   //
-  test('functions', async () => {
-    const defs = z.object({
-      company: z
-        .array(
-          z.object({
-            name: z.string().describe('The name of the company'),
-            website: z.string().describe('The URL of the company website'),
-            public: z.boolean().describe('Public company'),
-          }),
-        )
-        .describe('An array of companies mentioned in the text'),
+  test.only('functions', async () => {
+    const defs = S.struct({
+      company: S.array(
+        S.struct({
+          name: S.string.pipe(S.description('The name of the company')),
+          website: S.string.pipe(S.description('The URL of the company website')),
+          public: S.boolean.pipe(S.description('Public company')),
+        }),
+      ).pipe(S.description('An array of companies mentioned in the text')),
 
-      person: z
-        .array(
-          z.object({
-            name: z.string().describe('The name of the person'),
-            wiki: z.string().describe('The persons wikipedia article'),
-          }),
-        )
-        .describe('An array of people mentioned in the text'),
+      person: S.array(
+        S.struct({
+          name: S.string.pipe(S.description('The name of the person')),
+          wiki: S.string.pipe(S.description('The persons wikipedia article')),
+        }),
+      ).pipe(S.description('An array of people mentioned in the text')),
     });
 
-    const schema = zodToJsonSchema(defs);
-    console.log(JSON.stringify(schema, null, 2));
+    const jsonSchema: Record<string, unknown> = JSONSchema.make(defs) as any;
     const model = createModel().bind({
       function_call: { name: 'output_formatter' },
       functions: [
         {
           name: 'output_formatter',
           description: 'Should always be used to properly format output.',
-          parameters: schema,
+          parameters: jsonSchema,
         },
       ],
     });
