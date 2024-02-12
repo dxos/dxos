@@ -7,7 +7,14 @@ import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
-import { type Message, NetworkAdapter, type PeerId, Repo, type HandleState } from '@dxos/automerge/automerge-repo';
+import {
+  type Message,
+  NetworkAdapter,
+  type PeerId,
+  Repo,
+  type HandleState,
+  type DocumentId,
+} from '@dxos/automerge/automerge-repo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
@@ -15,7 +22,9 @@ import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/
 import { afterTest, describe, test } from '@dxos/test';
 import { arrayToBuffer, bufferToArray } from '@dxos/util';
 
-import { AutomergeHost, AutomergeStorageAdapter, MeshNetworkAdapter } from './automerge-host';
+import { AutomergeHost } from './automerge-host';
+import { AutomergeStorageAdapter } from './automerge-storage-adapter';
+import { MeshNetworkAdapter } from './mesh-network-adapter';
 
 describe('AutomergeHost', () => {
   test('can create documents', () => {
@@ -76,6 +85,97 @@ describe('AutomergeHost', () => {
 
     const docOnClient = client.find(handle.url);
     expect((await asyncTimeout(docOnClient.doc(), 1000)).text).toEqual(text);
+  });
+
+  test('share policy gets enabled afterwards', async () => {
+    const [hostAdapter, clientAdapter] = TestAdapter.createPair();
+    let sharePolicy = false;
+
+    const host = new Repo({
+      network: [hostAdapter],
+      peerId: 'host' as PeerId,
+      sharePolicy: async () => sharePolicy,
+    });
+    const client = new Repo({
+      network: [clientAdapter],
+      peerId: 'client' as PeerId,
+      sharePolicy: async () => sharePolicy,
+    });
+    hostAdapter.ready();
+    clientAdapter.ready();
+    await hostAdapter.onConnect.wait();
+    await clientAdapter.onConnect.wait();
+    hostAdapter.peerCandidate(clientAdapter.peerId!);
+    clientAdapter.peerCandidate(hostAdapter.peerId!);
+
+    const handle = host.create();
+    const text = 'Hello world';
+    handle.change((doc: any) => {
+      doc.text = text;
+    });
+
+    {
+      const docOnClient = client.find(handle.url);
+      await asyncTimeout(docOnClient.whenReady(['unavailable']), 1000);
+    }
+
+    sharePolicy = true;
+
+    {
+      const docOnClient = client.find(handle.url);
+      // TODO(mykola): We expect the document to be available here, but it's not.
+      await asyncTimeout(docOnClient.whenReady(['unavailable']), 1000);
+    }
+  });
+
+  test('two documents and share policy switching', async () => {
+    const [hostAdapter, clientAdapter] = TestAdapter.createPair();
+    const allowedDocs: DocumentId[] = [];
+
+    const host: Repo = new Repo({
+      network: [hostAdapter],
+      peerId: 'host' as PeerId,
+      sharePolicy: async (_, docId) => (docId ? allowedDocs.includes(docId) && !!host.handles[docId] : false),
+    });
+
+    const client: Repo = new Repo({
+      network: [clientAdapter],
+      peerId: 'client' as PeerId,
+      sharePolicy: async (_, docId) => (docId ? allowedDocs.includes(docId) && !!client.handles[docId] : false),
+    });
+
+    const firstHandle = host.create();
+    firstHandle.change((doc: any) => (doc.text = 'Hello world'));
+    await host.find(firstHandle.url).whenReady();
+    allowedDocs.push(firstHandle.documentId);
+
+    {
+      // Initiate connection.
+      hostAdapter.ready();
+      clientAdapter.ready();
+      await hostAdapter.onConnect.wait();
+      await clientAdapter.onConnect.wait();
+      hostAdapter.peerCandidate(clientAdapter.peerId!);
+      clientAdapter.peerCandidate(hostAdapter.peerId!);
+    }
+
+    {
+      const firstDocOnClient = client.find(firstHandle.url);
+      await asyncTimeout(firstDocOnClient.whenReady(), 1000);
+      expect(firstDocOnClient.docSync().text).toEqual('Hello world');
+    }
+
+    const secondHandle = host.create();
+    secondHandle.change((doc: any) => (doc.text = 'Hello world'));
+    await host.find(secondHandle.url).whenReady();
+    // await sleep(100);
+    allowedDocs.push(secondHandle.documentId);
+
+    {
+      const secondDocOnClient = client.find(secondHandle.url);
+      await asyncTimeout(secondDocOnClient.whenReady(), 1000);
+      expect(secondDocOnClient.docSync().text).toEqual('Hello world');
+    }
   });
 
   test('recovering from a lost connection', async () => {

@@ -289,7 +289,6 @@ export class DataSpace {
       ctx: this._ctx,
       breakOnStall: false,
     });
-
     this.metrics.dataPipelineReady = new Date();
 
     log('data pipeline ready');
@@ -379,6 +378,7 @@ export class DataSpace {
 
   private _onNewAutomergeRoot(rootUrl: string) {
     log('loading automerge root doc for space', { space: this.key, rootUrl });
+    this._automergeHost._requestedDocs.add(rootUrl as any);
     const handle = this._automergeHost.repo.find(rootUrl as any);
 
     queueMicrotask(async () => {
