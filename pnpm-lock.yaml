@@ -8353,6 +8353,9 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../storybook-utils
+      '@fontsource/k2d':
+        specifier: ^5.0.18
+        version: 5.0.18
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -9126,9 +9129,6 @@ importers:
       '@fontsource-variable/jetbrains-mono':
         specifier: ^5.0.16
         version: 5.0.19
-      '@fontsource/k2d':
-        specifier: ^5.0.18
-        version: 5.0.18
       '@tailwindcss/forms':
         specifier: ^0.5.3
         version: 0.5.3(tailwindcss@3.4.1)
@@ -15157,7 +15157,7 @@ packages:
 
   /@fontsource/k2d@5.0.18:
     resolution: {integrity: sha512-MVcwXx0d8vAC8U9hdHyYbcP7oy234FJfdMwpuM5kXkiIDradVu9WSW1TYG3z4rQKvZbiIzCOgBovCmxcqR1aCg==}
-    dev: false
+    dev: true
 
   /@gar/promisify@1.1.3:
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
