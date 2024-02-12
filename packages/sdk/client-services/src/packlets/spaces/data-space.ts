@@ -380,6 +380,7 @@ export class DataSpace {
     log('loading automerge root doc for space', { space: this.key, rootUrl });
     this._automergeHost._requestedDocs.add(rootUrl as any);
     const handle = this._automergeHost.repo.find(rootUrl as any);
+
     queueMicrotask(async () => {
       try {
         await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
