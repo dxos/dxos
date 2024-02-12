@@ -14,6 +14,7 @@ import {
   type CreateEpochOptions,
   type AutomergeHost,
 } from '@dxos/echo-pipeline';
+import { type SpaceDoc } from '@dxos/echo-schema/dist/types/src/automerge/types';
 import { type FeedStore } from '@dxos/feed-store';
 import { failedInvariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -379,7 +380,7 @@ export class DataSpace {
 
   private _onNewAutomergeRoot(rootUrl: string) {
     log('loading automerge root doc for space', { space: this.key, rootUrl });
-    const handle = this._automergeHost.repo.find(rootUrl as any);
+    const handle = this._automergeHost.repo.find<SpaceDoc>(rootUrl as any);
 
     queueMicrotask(async () => {
       try {
@@ -391,9 +392,9 @@ export class DataSpace {
         }
 
         const doc = handle.docSync() ?? failedInvariant();
-        if (!doc.experimental_spaceKey) {
-          handle.change((doc: any) => {
-            doc.experimental_spaceKey = this.key.toHex();
+        if (!doc.access.spaceKey) {
+          handle.change((doc: SpaceDoc) => {
+            doc.access = { spaceKey: this.key.toHex() };
           });
         }
       } catch (err) {
