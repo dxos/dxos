@@ -556,7 +556,7 @@ class TestAdapter extends NetworkAdapter {
   }
 
   override send(message: Message) {
-    log.info('send', { from: message.senderId, to: message.targetId, type: message.type });
+    log('send', { from: message.senderId, to: message.targetId, type: message.type });
     this._params.send(message);
   }
 
