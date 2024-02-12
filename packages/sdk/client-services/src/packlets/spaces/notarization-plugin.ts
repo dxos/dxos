@@ -133,7 +133,7 @@ export class NotarizationPlugin implements CredentialProcessor {
         // Pick a peer that we haven't tried yet.
         const peer = [...this._extensions].find((peer) => !peersTried.has(peer));
         if (!peer) {
-          log.warn('Exhausted all peers to notarize with', { retryIn: retryTimeout });
+          log.info('Exhausted all peers to notarize with', { retryIn: retryTimeout });
           peersTried.clear();
           scheduleTask(ctx, () => notarizeTask.schedule(), retryTimeout); // retry with all peers again
           return;
@@ -148,7 +148,7 @@ export class NotarizationPlugin implements CredentialProcessor {
         await sleep(successDelay); // wait before trying with a new peer
       } catch (err: any) {
         if (!ctx.disposed && !err.message.includes(WRITER_NOT_SET_ERROR_CODE)) {
-          log.warn('error notarizing (recoverable)', err);
+          log.info('error notarizing (recoverable)', err);
         }
         notarizeTask.schedule(); // retry immediately with next peer
       }
