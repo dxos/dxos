@@ -1,7 +1,13 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import * as AST from '@effect/schema/AST';
 import * as S from '@effect/schema/Schema';
+
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
-import { ReactiveHandler, createReactiveProxy, isValidProxyTarget } from './proxy';
+
+import { type ReactiveHandler, createReactiveProxy, isValidProxyTarget } from './proxy';
 
 export const symbolSchema = Symbol.for('@dxos/schema');
 export const symbolTypeAst = Symbol.for('@dxos/type/AST');

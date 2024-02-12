@@ -1,4 +1,8 @@
-import { ReactiveHandler } from './proxy';
+//
+// Copyright 2024 DXOS.org
+//
+
+import { type ReactiveHandler } from './proxy';
 
 export class LoggingReactiveHandler implements ReactiveHandler<any> {
   static symbolChangeLog = Symbol.for('ChangeLog');

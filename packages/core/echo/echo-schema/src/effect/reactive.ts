@@ -5,9 +5,9 @@
 import * as AST from '@effect/schema/AST';
 import * as S from '@effect/schema/Schema';
 
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { createReactiveProxy, isValidProxyTarget } from './proxy';
+
+import { createReactiveProxy } from './proxy';
 import { TypedReactiveHandler, setAstProperty, symbolSchema } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 

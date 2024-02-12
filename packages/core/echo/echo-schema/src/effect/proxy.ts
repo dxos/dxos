@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { type ReactiveObject } from './reactive';
 
 export const isValidProxyTarget = (value: any): value is object =>

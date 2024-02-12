@@ -1,5 +1,10 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
-import { ReactiveHandler, createReactiveProxy, isValidProxyTarget } from './proxy';
+
+import { type ReactiveHandler, createReactiveProxy, isValidProxyTarget } from './proxy';
 
 export class UntypedReactiveHandler implements ReactiveHandler<any> {
   _proxyMap = new WeakMap<object, any>();
