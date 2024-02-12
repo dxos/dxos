@@ -149,7 +149,7 @@ describe('reactive', () => {
     // TODO(burdon): Test.
     const isPublicKey = (input: unknown): input is PublicKey => input instanceof PublicKey;
     const PublicKeyFromSelf: S.Schema<PublicKey> = S.declare(isPublicKey, { identifier: 'PublicKeyFromSelf' });
-    const PublicKeyFromString: S.Schema<PublicKey, string> = S.transform(
+    const _PublicKeyFromString: S.Schema<PublicKey, string> = S.transform(
       S.string,
       PublicKeyFromSelf,
       (s) => PublicKey.from(s),

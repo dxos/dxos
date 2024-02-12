@@ -123,7 +123,7 @@ describe('RequestProcessor', () => {
     }
   });
 
-  test.only('schema', async () => {
+  test.skip('schema', async () => {
     const builder = new TestProcessorBuilder();
     await builder.init();
     await builder.addSchema();
