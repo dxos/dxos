@@ -89,7 +89,7 @@ export class AutomergeDb {
 
         const objectIds = Object.keys(doc.objects ?? {});
         this._createInlineObjects(objectIds);
-        this._subscribeToLinkedObjects(doc.links);
+        this._loadLinkedObjects(doc.links);
       } catch (err) {
         if (err instanceof ContextDisposedError) {
           return;
@@ -199,6 +199,8 @@ export class AutomergeDb {
 
     this._linkObjectDocument(obj, spaceDocHandle);
 
+    spaceDocHandle.on('change', this._onDocumentUpdate.bind(this));
+
     return obj;
   }
 
@@ -234,6 +236,7 @@ export class AutomergeDb {
   }
 
   private _linkObjectDocument(object: AutomergeObject, handle: DocHandle<SpaceDoc>) {
+    this.objectDocumentHandles.set(object.id, handle);
     this.spaceRootDocHandle.change((newDoc: SpaceDoc) => {
       if (newDoc.links) {
         newDoc.links[object.id] = handle.url;
@@ -243,7 +246,7 @@ export class AutomergeDb {
     });
   }
 
-  private _subscribeToLinkedObjects(links: SpaceDoc['links']) {
+  private _loadLinkedObjects(links: SpaceDoc['links']) {
     if (!links) {
       return;
     }
@@ -252,20 +255,16 @@ export class AutomergeDb {
         return;
       }
       const handle = this.automerge.repo.find<SpaceDoc>(automergeUrl as DocumentId);
+      log.debug('document loading triggered', { objectId, automergeUrl });
       this.objectDocumentHandles.set(objectId, handle);
+      this._createObjectOnDocumentLoad(objectId, handle);
       handle.on('change', this._onDocumentUpdate.bind(this));
     }
   }
 
   private _onDocumentUpdate(event: DocHandleChangePayload<SpaceDoc>) {
     const { updatedObjects, linkedDocuments } = processDocumentUpdate(event);
-    log('update', {
-      event,
-      updatedObjects,
-      linkedDocuments,
-      created: updatedObjects.filter((id) => !this._objects.has(id)),
-    });
-    this._subscribeToLinkedObjects(linkedDocuments);
+    this._loadLinkedObjects(linkedDocuments);
     this._createInlineObjects(updatedObjects.filter((id) => !this._objects.has(id)));
     this._emitUpdateEvent(updatedObjects);
   }
@@ -284,16 +283,44 @@ export class AutomergeDb {
     invariant(this.spaceRootDocHandle);
     for (const id of objectIds) {
       invariant(!this._objects.has(id));
-      const obj = new AutomergeObject();
-      obj[base]._core.id = id;
-      this._objects.set(obj.id, obj);
-      (obj[base] as AutomergeObject)._bind({
-        db: this,
-        docHandle: this.spaceRootDocHandle,
-        path: ['objects', obj.id],
-        assignFromLocalState: false,
-      });
+      this._createObjectInDocument(id, this.spaceRootDocHandle);
     }
+  }
+
+  private _createObjectOnDocumentLoad(objectId: string, handle: DocHandle<SpaceDoc>) {
+    handle
+      .doc(['ready'])
+      .then(() => {
+        if (this._ctx?.disposed ?? true) {
+          log.warn('document loaded after database was closed');
+          return;
+        }
+        this._createObjectInDocument(objectId, handle);
+        this._emitUpdateEvent([objectId]);
+      })
+      .catch((err) => {
+        log.warn('failed to load a document', {
+          objectId,
+          automergeUrl: handle.url,
+          contextDisposed: this._ctx?.disposed ?? true,
+          err,
+        });
+        if (!this._ctx?.disposed) {
+          this._createObjectOnDocumentLoad(objectId, handle);
+        }
+      });
+  }
+
+  private _createObjectInDocument(objectId: string, docHandle: DocHandle<SpaceDoc>) {
+    const obj = new AutomergeObject();
+    obj[base]._core.id = objectId;
+    this._objects.set(obj.id, obj);
+    (obj[base] as AutomergeObject)._bind({
+      db: this,
+      docHandle,
+      path: ['objects', obj.id],
+      assignFromLocalState: false,
+    });
   }
 }
 
