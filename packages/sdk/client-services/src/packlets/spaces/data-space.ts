@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, Trigger, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
+import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context, ContextDisposedError } from '@dxos/context';
 import { timed, warnAfterTimeout } from '@dxos/debug';
@@ -13,7 +13,6 @@ import {
   type DataPipeline,
   type CreateEpochOptions,
   type AutomergeHost,
-  type DocumentId,
 } from '@dxos/echo-pipeline';
 import { type FeedStore } from '@dxos/feed-store';
 import { failedInvariant } from '@dxos/invariant';
@@ -393,8 +392,6 @@ export class DataSpace {
         if (this._ctx.disposed) {
           return;
         }
-
-        log.info('root doc loaded', { rootUrl });
 
         const doc = handle.docSync() ?? failedInvariant();
         if (!doc.experimental_spaceKey) {

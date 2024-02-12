@@ -63,13 +63,14 @@ export class AutomergeHost {
 
         const doc = this._repo.handles[documentId]?.docSync();
         if (!doc) {
-          log.info('doc not found for share policy check', { peerId, documentId });
-          return this._requestedDocs.has(`automerge:${documentId}`);
+          const isRequested = this._requestedDocs.has(`automerge:${documentId}`);
+          log('doc share policy check', { peerId, documentId, isRequested });
+          return isRequested;
         }
 
         try {
           if (!doc.experimental_spaceKey) {
-            log.info('space key not found for share policy check', { peerId, documentId });
+            log('space key not found for share policy check', { peerId, documentId });
             return false;
           }
 
@@ -79,13 +80,13 @@ export class AutomergeHost {
           // TODO(mykola): Hack, stop abusing `peerMetadata` field.
           const deviceKeyHex = (this.repo.peerMetadataByPeerId[peerId] as any)?.dxos_deviceKey;
           if (!deviceKeyHex) {
-            log.info('device key not found for share policy check', { peerId, documentId });
+            log('device key not found for share policy check', { peerId, documentId });
             return false;
           }
           const deviceKey = PublicKey.from(deviceKeyHex);
 
           const isAuthorized = authorizedDevices?.has(deviceKey) ?? false;
-          log.info('share policy check', {
+          log('share policy check', {
             localPeer: localPeerId,
             remotePeer: peerId,
             documentId,
