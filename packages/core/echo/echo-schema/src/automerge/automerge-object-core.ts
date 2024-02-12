@@ -18,11 +18,11 @@ import { AutomergeObject } from './automerge-object';
 import { docChangeSemaphore } from './doc-semaphore';
 import {
   encodeReference,
-  type DocStructure,
   type ObjectStructure,
   isEncodedReferenceObject,
   decodeReference,
   type DecodedAutomergeValue,
+  type SpaceDoc,
 } from './types';
 import { base, type TypedObjectOptions, type EchoObject, TextObject } from '../object';
 import { AbstractEchoObject } from '../object/object';
@@ -43,7 +43,7 @@ export class AutomergeObjectCore {
   // TODO(dmaretskyi): Create a discriminated union for the bound/not bound states.
 
   /**
-   * Set if when the object is not bound to a database.
+   * Set if when the object is bound to a database.
    */
   public database?: AutomergeDb | undefined;
 
@@ -55,7 +55,7 @@ export class AutomergeObjectCore {
   /**
    * Set if when the object is bound to a database.
    */
-  public docHandle?: DocHandle<DocStructure> = undefined;
+  public docHandle?: DocHandle<SpaceDoc> = undefined;
 
   /**
    * Until object is persisted in the database, the linked object references are stored in this cache.
@@ -136,7 +136,7 @@ export class AutomergeObjectCore {
       // Prevent recursive change calls.
       using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
-      this.docHandle.change((newDoc: DocStructure) => {
+      this.docHandle.change((newDoc: SpaceDoc) => {
         assignDeep(newDoc, this.mountPath, doc);
       });
     }
@@ -147,7 +147,7 @@ export class AutomergeObjectCore {
     this.notifyUpdate();
   }
 
-  private _changeHandler = (event: DocHandleChangePayload<DocStructure>) => {
+  private _changeHandler = (event: DocHandleChangePayload<SpaceDoc>) => {
     if (objectIsUpdated(this.id, event)) {
       this.notifyUpdate();
     }
@@ -394,7 +394,7 @@ export type IDocHandle<T = any> = {
 
 export type BindOptions = {
   db: AutomergeDb;
-  docHandle: DocHandle<DocStructure>;
+  docHandle: DocHandle<SpaceDoc>;
   path: string[];
 
   /**
@@ -407,7 +407,7 @@ export const isDocAccessor = (obj: any): obj is DocAccessor => {
   return !!obj?.isAutomergeDocAccessor;
 };
 
-export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<DocStructure>) => {
+export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<SpaceDoc>) => {
   if (event.patches.some((patch) => patch.path[0] === 'objects' && patch.path[1] === objId)) {
     return true;
   }

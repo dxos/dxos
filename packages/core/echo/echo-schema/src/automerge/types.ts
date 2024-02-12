@@ -7,9 +7,23 @@ import { Reference } from '@dxos/document-model';
 import { type ObjectMeta, type EchoObject } from '../object';
 import { type Schema } from '../proto';
 
-export interface DocStructure {
-  objects: {
+type AutomergeUrl = string;
+
+export interface SpaceDoc {
+  access: {
+    spaceKey: string;
+  };
+  /**
+   * Objects inlined in the current doc, new objects are created as separate automerge documents
+   * and pointed to via links.
+   * @deprecated
+   */
+  objects?: {
     [key: string]: ObjectStructure;
+  };
+
+  links?: {
+    [echoId: string]: AutomergeUrl;
   };
 }
 
