@@ -19,3 +19,10 @@ export const defaultOptions = ({ apiKey, config, host }: DatadogOptions) => {
     },
   };
 };
+
+// TODO(wittjosiah): This is a stub for now.
+//   We need a browser version of the datadog metrics that doesn't bundle everything under the sun.
+export class DatadogMetrics {
+  gauge(name: string, value: number, tags?: any) {}
+  flush() {}
+}
