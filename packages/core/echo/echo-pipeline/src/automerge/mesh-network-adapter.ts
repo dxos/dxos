@@ -67,13 +67,13 @@ export class MeshNetworkAdapter extends NetworkAdapter {
           // - swarm 1 gets disconnected
           // - automerge repo thinks that peer 2 got disconnected even though swarm 2 is still active
 
-          log.info('onStartReplication', { id: info.id, thisPeerId: this.peerId, remotePeerId: remotePeerId.toHex() });
+          log('onStartReplication', { id: info.id, thisPeerId: this.peerId, remotePeerId: remotePeerId.toHex() });
           if (!this._extensions.has(info.id)) {
             peerInfo = info;
             // TODO(mykola): Fix race condition?
             this._extensions.set(info.id, extension);
 
-            log.info('peer-candidate', { id: info.id, thisPeerId: this.peerId, remotePeerId: remotePeerId.toHex() });
+            log('peer-candidate', { id: info.id, thisPeerId: this.peerId, remotePeerId: remotePeerId.toHex() });
             this.emit('peer-candidate', {
               // TODO(mykola): Hack, stop abusing `peerMetadata` field.
               peerMetadata: {
