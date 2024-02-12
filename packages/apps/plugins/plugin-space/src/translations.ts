@@ -73,6 +73,7 @@ export default [
         'persistence error label': 'Error saving changes.',
         'more actions label': 'More actions',
         'invitations heading': 'Invitations',
+        'keyshortcuts label': 'Keyboard shortcuts',
       },
     },
   },

@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDown, Check, Planet, UserPlus, UsersThree } from '@phosphor-icons/react';
+import { CaretDown, Check, Command, Planet, UserPlus, UsersThree } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 
 import { type Action, useGraph } from '@braneframe/plugin-graph';
+import { Surface } from '@dxos/app-framework';
 import { type Space, useMembers, SpaceMember, useSpaceInvitations } from '@dxos/react-client/echo';
 import { Invitation } from '@dxos/react-client/invitations';
 import { Button, Main, useTranslation, Input, DropdownMenu, ButtonGroup, List } from '@dxos/react-ui';
@@ -198,6 +199,21 @@ const SpaceMembers = ({ space }: { space: Space }) => {
   );
 };
 
+const KeyShortcuts = () => {
+  const { t } = useTranslation(SPACE_PLUGIN);
+  return (
+    <section className='mbe-4 col-span-3 grid grid-cols-subgrid gap-y-2 auto-rows-min'>
+      <h2 className='contents'>
+        <Command weight='duotone' className={mx(getSize(5), 'place-self-center')} />
+        <span className='text-lg col-span-2'>{t('keyshortcuts label')}</span>
+      </h2>
+      <div role='none' className='col-start-2'>
+        <Surface role='keyshortcuts' />
+      </div>
+    </section>
+  );
+};
+
 export const SpaceMain = ({ space }: { space: Space }) => {
   const { graph } = useGraph();
   const actionsMap = graph.findNode(space.key.toHex())?.actionsMap;
@@ -208,7 +224,7 @@ export const SpaceMain = ({ space }: { space: Space }) => {
         topbarBlockPaddingStart,
         'min-bs-dvh grid gap-y-2 auto-rows-min',
         'grid-cols-[var(--rail-size)_var(--rail-size)_1fr_var(--rail-size)]',
-        'md:grid-cols-[var(--rail-size)_var(--rail-size)_1fr_var(--rail-size)_2fr_var(--rail-size)]',
+        'md:grid-cols-[var(--rail-size)_var(--rail-size)_2fr_var(--rail-size)_1fr_var(--rail-size)]',
       ]}
     >
       <h1 className='contents'>
@@ -226,6 +242,7 @@ export const SpaceMain = ({ space }: { space: Space }) => {
       </h1>
       {actionsMap && <InFlowSpaceActions actionsMap={actionsMap} />}
       <SpaceMembers space={space} />
+      <KeyShortcuts />
     </Main.Content>
   );
 };
