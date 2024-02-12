@@ -12,7 +12,8 @@
         "tsConfig": "tools/ridoculous/tsconfig.json"
       }
     },
-    "lint": {}
+    "lint": {},
+    "vitest": {}
   },
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "ridoculous"
