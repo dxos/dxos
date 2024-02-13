@@ -28,7 +28,7 @@
     "@dxos/keyboard": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "deepsignal": "1.4.0-shallow.0",
+    "deepsignal": "^1.5.0",
     "lodash.get": "^4.4.2",
     "react-joyride": "^2.7.2"
   },

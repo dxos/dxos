@@ -62,6 +62,24 @@ export const publish = async (
     log(`Publishing from: ${publishFolder} to: ${ipfsServer}`);
   }
 
+  let authorizationHeader;
+  // TODO(nf): make CLI support dx-env.yml
+  const serverAuthSecret = process.env.IPFS_API_SECRET ?? config?.get('runtime.services.ipfs.serverAuthSecret');
+  if (serverAuthSecret) {
+    const splitSecret = serverAuthSecret.split(':');
+    switch (splitSecret[0]) {
+      case 'basic':
+        authorizationHeader = 'Basic ' + Buffer.from(splitSecret[1] + ':' + splitSecret[2]).toString('base64');
+        break;
+      case 'bearer':
+        authorizationHeader = 'Bearer ' + splitSecret[1];
+        break;
+      default:
+        throw new Error(`Unsupported authType: ${splitSecret[0]}`);
+    }
+    log(`using server authorization ${splitSecret[0]}`);
+  }
+
   log('Uploading...');
   const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
   verbose && bar.start(total, 0);
@@ -72,6 +90,7 @@ export const publish = async (
       timeout: timeout || '10m',
       pin,
       progress: verbose ? (bytes: any) => bar.update(bytes) : undefined,
+      ...(authorizationHeader ? { authorizationHeader } : {}),
     });
   } catch (err: any) {
     // Avoid leaving user's terminal in a bad state.
