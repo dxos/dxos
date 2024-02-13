@@ -5,7 +5,7 @@
 import '@dxosTheme';
 
 import { Plugs, PlugsConnected } from '@phosphor-icons/react';
-import { deepSignal } from 'deepsignal';
+import { deepSignal } from 'deepsignal/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';

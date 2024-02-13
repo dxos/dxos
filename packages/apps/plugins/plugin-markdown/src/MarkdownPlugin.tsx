@@ -4,7 +4,7 @@
 
 import { ArticleMedium, type IconProps } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
-import { deepSignal } from 'deepsignal';
+import { deepSignal } from 'deepsignal/react';
 import React, { type Ref } from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
@@ -183,7 +183,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               if (isDocument(data.active)) {
                 const { readonly } = settings.values.state[data.active.id] ?? {};
                 return (
-                  <MainLayout>
+                  <MainLayout toolbar={settings.values.toolbar}>
                     <DocumentMain
                       toolbar={settings.values.toolbar}
                       readonly={readonly}

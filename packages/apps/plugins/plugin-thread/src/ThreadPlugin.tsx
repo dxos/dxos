@@ -4,7 +4,7 @@
 
 import { Chat, type IconProps } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
-import { deepSignal } from 'deepsignal';
+import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { isDocument } from '@braneframe/plugin-markdown';
