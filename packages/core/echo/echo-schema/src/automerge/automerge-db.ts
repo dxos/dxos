@@ -185,12 +185,13 @@ export class AutomergeDb {
 
     invariant(isAutomergeObject(obj));
     invariant(!this._objects.has(obj.id));
-    this._objects.set(obj.id, obj);
 
     const spaceDocHandle = this.automerge.repo.create<SpaceDoc>();
     this._initDocAccess(spaceDocHandle);
-    this._linkObjectDocument(obj, spaceDocHandle);
+
+    this._objects.set(obj.id, obj);
     spaceDocHandle.on('change', this._onDocumentUpdate.bind(this));
+    this._linkObjectDocument(obj, spaceDocHandle);
 
     (obj[base] as AutomergeObject)._bind({
       db: this,
@@ -259,7 +260,6 @@ export class AutomergeDb {
       log.debug('document loading triggered', { objectId, automergeUrl });
       this.objectDocumentHandles.set(objectId, handle);
       this._createObjectOnDocumentLoad(objectId, handle);
-      handle.on('change', this._onDocumentUpdate.bind(this));
     }
   }
 
@@ -275,7 +275,7 @@ export class AutomergeDb {
 
   private _onDispose() {
     this.spaceRootDocHandle?.off('change');
-    for (const docHandle of Object.values(this.objectDocumentHandles)) {
+    for (const docHandle of this.objectDocumentHandles.values()) {
       docHandle.off('change');
     }
   }
@@ -298,6 +298,7 @@ export class AutomergeDb {
           log.warn('document loaded after database was closed');
           return;
         }
+        handle.on('change', this._onDocumentUpdate.bind(this));
         this._createObjectInDocument(objectId, handle);
         this._emitUpdateEvent([objectId]);
       })
