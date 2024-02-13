@@ -5,6 +5,11 @@
 import { describe, test } from '@dxos/test';
 import * as R from './reactive';
 import { expect } from 'chai';
+import { registerSignalRuntime } from '@dxos/echo-signals';
+import { effect } from '@preact/signals-core';
+import { defer } from '@dxos/util';
+
+registerSignalRuntime();
 
 describe('Proxy properties', () => {
   test('object initializer', () => {
@@ -42,15 +47,11 @@ describe('Proxy properties', () => {
   });
 
   test('can assign class instances', () => {
-    class MyClass {
-      field = 'bar';
-    }
-
     const obj = R.object<any>({});
 
     const classInstance = new MyClass();
     obj.instance = classInstance;
-    expect(obj.instance.field).to.eq('bar');
+    expect(obj.instance.field).to.eq('value');
     expect(obj.instance instanceof MyClass).to.eq(true);
     expect(obj.instance === classInstance).to.be.true;
 
@@ -65,13 +66,69 @@ describe('Proxy properties', () => {
     expect(obj.object === obj.object).to.be.true;
   });
 
-  test('can assign array values');
-  test('can assign arrays with objects');
-  test('can assign arrays with arrays');
+  test('can assign array values', () => {
+    const obj = R.object<any>({});
+
+    obj.array = [1, 2, 3];
+    expect(obj.array).to.deep.eq([1, 2, 3]);
+
+    obj.array[0] = 4;
+    expect(obj.array).to.deep.eq([4, 2, 3]);
+  });
+
+  test('can assign arrays with objects', () => {
+    const obj = R.object<any>({});
+
+    obj.array = [{ field: 'bar' }, { field: 'baz' }];
+    expect(obj.array[0].field).to.eq('bar');
+
+    obj.array[0].field = 'baz';
+    expect(obj.array[0].field).to.eq('baz');
+
+    obj.array[1].field = 'bar';
+    expect(obj.array[1].field).to.eq('bar');
+  });
+
+  test('can assign arrays with arrays', () => {
+    const obj = R.object<any>({});
+
+    obj.array = [
+      [1, 2, 3],
+      [4, 5, 6],
+    ];
+    expect(obj.array[0][0]).to.eq(1);
+
+    obj.array[0][0] = 4;
+    expect(obj.array[0][0]).to.eq(4);
+  });
+
   test('array sub-proxies maintain their identity');
-  test('assigning another reactive object');
-  test('signal updates are synchronous');
-  test('signal updates in nested elements');
+  test('assigning another reactive object', () => {
+    const obj = R.object<any>({});
+
+    const other = R.object({ field: 'bar' });
+    obj.other = other;
+    expect(obj.other.field).to.eq('bar');
+
+    obj.other.field = 'baz';
+    expect(obj.other.field).to.eq('baz');
+
+    other.field = 'qux';
+    expect(obj.other.field).to.eq('qux');
+
+    using updates = updateCounter(() => {
+      obj.other.field;
+    });
+
+    expect(updates.count).to.eq(0);
+    other.field = 'quux';
+    expect(updates.count).to.eq(1);
+
+    obj.other = { field: 'bar' };
+    expect(obj.other.field).to.eq('bar');
+    expect(updates.count).to.eq(2);
+  });
+
   test('keys enumeration');
   test('has');
   test('instanceof');
@@ -79,6 +136,81 @@ describe('Proxy properties', () => {
   test('toString');
   test('toJSON');
   test('chai deep equal works', () => {});
+
+  describe('signal updates', () => {
+    test('are synchronous', () => {
+      const obj = R.object({ field: 'bar' });
+
+      using updates = updateCounter(() => {
+        obj.field;
+      });
+
+      expect(updates.count).to.eq(0);
+      obj.field = 'baz';
+      expect(updates.count).to.eq(1);
+    });
+
+    test('in nested objects', () => {
+      const obj = R.object({ object: { field: 'bar' } });
+
+      using updates = updateCounter(() => {
+        obj.object.field;
+      });
+
+      expect(updates.count).to.eq(0);
+      obj.object.field = 'baz';
+      expect(updates.count).to.eq(1);
+    });
+
+    test('not in nested class instances', () => {
+      const obj = R.object({ instance: new MyClass() });
+
+      using updates = updateCounter(() => {
+        obj.instance.field;
+      });
+
+      expect(updates.count).to.eq(0);
+      obj.instance.field = 'baz';
+      expect(updates.count).to.eq(0);
+    });
+
+    test('in nested arrays', () => {
+      const obj = R.object({ array: ['bar'] });
+
+      using updates = updateCounter(() => {
+        obj.array[0];
+      });
+
+      expect(updates.count).to.eq(0);
+      obj.array[0] = 'baz';
+      expect(updates.count).to.eq(1);
+    });
+
+    test('in nested arrays with objects', () => {
+      const obj = R.object({ array: [{ field: 'bar' }] });
+
+      using updates = updateCounter(() => {
+        obj.array[0].field;
+      });
+
+      expect(updates.count).to.eq(0);
+      obj.array[0].field = 'baz';
+      expect(updates.count).to.eq(1);
+    });
+
+    test('in nested arrays with arrays', () => {
+      const obj = R.object({ array: [[1, 2, 3]] });
+
+      using updates = updateCounter(() => {
+        obj.array[0][0];
+      });
+
+      expect(updates.count).to.eq(0);
+      obj.array[0][0] = 4;
+      expect(updates.count).to.eq(1);
+    });
+  });
+
   describe('array operations', () => {
     test('push');
     test('pop');
@@ -94,3 +226,24 @@ describe('Proxy properties', () => {
     test('spreading');
   });
 });
+
+// For testing.
+class MyClass {
+  field = 'value';
+}
+
+const updateCounter = (touch: () => void) => {
+  let updateCount = -1;
+  const clear = effect(() => {
+    touch();
+    updateCount++;
+  });
+
+  return {
+    get count() {
+      return updateCount;
+    },
+    // https://github.com/tc39/proposal-explicit-resource-management
+    [Symbol.dispose]: clear,
+  };
+};
