@@ -28,7 +28,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/util": "workspace:*",
-    "deepsignal": "1.4.0-shallow.0"
+    "deepsignal": "^1.5.0"
   },
   "devDependencies": {
     "@braneframe/plugin-search": "workspace:*",

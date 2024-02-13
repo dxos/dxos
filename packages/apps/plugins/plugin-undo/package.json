@@ -24,7 +24,7 @@
   ],
   "dependencies": {
     "@dxos/react-client": "workspace:*",
-    "deepsignal": "1.4.0-shallow.0",
+    "deepsignal": "^1.5.0",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
