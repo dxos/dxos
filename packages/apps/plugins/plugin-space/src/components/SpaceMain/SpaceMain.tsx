@@ -89,7 +89,7 @@ export const SpaceMain = ({ space }: { space: Space }) => {
         topbarBlockPaddingStart,
         'min-bs-dvh grid gap-y-2 auto-rows-min',
         'grid-cols-[var(--rail-size)_var(--rail-size)_1fr_var(--rail-size)]',
-        'md:grid-cols-[var(--rail-size)_var(--rail-size)_minmax(max-content,2fr)_var(--rail-size)_var(--rail-size)_minmax(max-content,1fr)_var(--rail-size)]',
+        'md:grid-cols-[var(--rail-size)_var(--rail-size)_minmax(max-content,1fr)_var(--rail-size)_var(--rail-size)_minmax(max-content,2fr)_var(--rail-size)]',
       ]}
     >
       <h1 className='contents'>

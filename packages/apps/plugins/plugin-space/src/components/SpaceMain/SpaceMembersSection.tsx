@@ -9,7 +9,7 @@ import { type Space, useMembers, SpaceMember, useSpaceInvitations } from '@dxos/
 import { Invitation } from '@dxos/react-client/invitations';
 import { Button, ButtonGroup, DropdownMenu, List, useTranslation } from '@dxos/react-ui';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
-import { InvitationListItem } from '@dxos/shell/react';
+import { InvitationListItem, IdentityListItem } from '@dxos/shell/react';
 
 import { SPACE_PLUGIN } from '../../meta';
 
@@ -20,6 +20,21 @@ const Presence = SpaceMember.PresenceState;
 
 const handleSend = () => {};
 const handleCreateInvitationUrl = (invitationCode: string) => `${origin}?spaceInvitationCode=${invitationCode}`;
+
+const SpaceMemberList = ({ members }: { members: SpaceMember[] }) => {
+  return members.length > 0 ? (
+    <List classNames='col-start-2 col-end-5 gap-y-1 grid grid-cols-subgrid items-center'>
+      {members.map((member) => (
+        <IdentityListItem
+          classNames='contents'
+          key={member.identity.identityKey.toHex()}
+          identity={member.identity}
+          presence={member.presence}
+        />
+      ))}
+    </List>
+  ) : null;
+};
 
 export const SpaceMembersSection = ({ space }: { space: Space }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
@@ -81,22 +96,24 @@ export const SpaceMembersSection = ({ space }: { space: Space }) => {
         <span className='text-lg col-span-2'>{t('space members label')}</span>
       </h2>
       <h3 className='col-start-2 col-span-3 text-sm italic fg-description'>{t('invitations heading')}</h3>
-      <List classNames='col-start-2 col-span-2 gap-y-2 grid grid-cols-[var(--rail-size)_1fr_var(--rail-action)_var(--rail-action)]'>
-        {invitations.map((invitation) => (
-          <InvitationListItem
-            reverseEffects
-            classNames='pis-0 pie-0 gap-0 col-span-4 grid grid-cols-subgrid'
-            key={invitation.get().invitationId}
-            invitation={invitation}
-            send={handleSend}
-            createInvitationUrl={handleCreateInvitationUrl}
-          />
-        ))}
-      </List>
+      {invitations.length > 0 && (
+        <List classNames='col-start-2 col-span-2 gap-y-2 grid grid-cols-[var(--rail-size)_1fr_var(--rail-action)_var(--rail-action)]'>
+          {invitations.map((invitation) => (
+            <InvitationListItem
+              reverseEffects
+              classNames='pis-0 pie-0 gap-0 col-span-4 grid grid-cols-subgrid'
+              key={invitation.get().invitationId}
+              invitation={invitation}
+              send={handleSend}
+              createInvitationUrl={handleCreateInvitationUrl}
+            />
+          ))}
+        </List>
+      )}
       <ButtonGroup classNames='col-start-2 col-end-4 grid grid-cols-[1fr_var(--rail-action)] place-self-grow gap-px'>
         <Button classNames='gap-2' onClick={activeAction.onClick}>
           <activeAction.icon />
-          <span>{activeAction.label}</span>
+          <span>{t(activeAction.label)}</span>
         </Button>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
@@ -118,10 +135,10 @@ export const SpaceMembersSection = ({ space }: { space: Space }) => {
                   >
                     {action.icon && <action.icon className={getSize(5)} />}
                     <div role='none' className='flex-1 min-is-0 space-b-1'>
-                      <p id={`${id}__label`}>{action.label}</p>
+                      <p id={`${id}__label`}>{t(action.label)}</p>
                       {action.description && (
                         <p id={`${id}__description`} className={descriptionText}>
-                          {action.description}
+                          {t(action.description)}
                         </p>
                       )}
                     </div>
@@ -136,13 +153,20 @@ export const SpaceMembersSection = ({ space }: { space: Space }) => {
           </DropdownMenu.Content>
         </DropdownMenu.Root>
       </ButtonGroup>
-      <h3 className='col-start-2 col-span-3 text-sm italic fg-description'>
-        {t('active space members heading', { count: members[Presence.ONLINE].length })}
-      </h3>
-      <List classNames='contents' />
-      <h3 className='col-start-2 col-span-3 text-sm italic fg-description'>
-        {t('inactive space members heading', { count: members[Presence.OFFLINE].length })}
-      </h3>
+      {members[Presence.ONLINE].length + members[Presence.OFFLINE].length < 1 ? (
+        <p className={mx(descriptionText, 'text-center is-full mlb-2')}>{t('empty space members message')}</p>
+      ) : (
+        <>
+          <h3 className='col-start-2 col-end-5 text-sm italic fg-description'>
+            {t('active space members heading', { count: members[Presence.ONLINE].length })}
+          </h3>
+          <SpaceMemberList members={members[Presence.ONLINE]} />
+          <h3 className='col-start-2 col-end-5 text-sm italic fg-description'>
+            {t('inactive space members heading', { count: members[Presence.OFFLINE].length })}
+          </h3>
+          <SpaceMemberList members={members[Presence.OFFLINE]} />
+        </>
+      )}
     </section>
   );
 };
