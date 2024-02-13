@@ -16,7 +16,7 @@ import {
   Database,
   Copy,
 } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-react';
+import { effect } from '@preact/signals-core';
 import React from 'react';
 
 import type { Graph, Node, NodeArg } from '@braneframe/plugin-graph';

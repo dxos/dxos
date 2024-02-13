@@ -3,7 +3,7 @@
 //
 
 import { type IconProps, Folder as FolderIcon, Plus, SignIn } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-react';
+import { effect } from '@preact/signals-core';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import localforage from 'localforage';
 import React from 'react';

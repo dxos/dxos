@@ -7,6 +7,8 @@ import { expect } from 'chai';
 import { platform } from 'node:os';
 import waitForExpect from 'wait-for-expect';
 
+import { sleep } from '@dxos/async';
+
 import { AppManager } from './app-manager';
 import { Markdown } from './plugins';
 
@@ -46,7 +48,7 @@ test.describe('Collaboration tests', () => {
 
     await Markdown.waitForMarkdownTextbox(guest.page);
     await waitForExpect(async () => {
-      expect(await host.page.url()).to.include(await guest.page.url());
+      expect(await host.page.url()).to.equal(await guest.page.url());
     });
 
     await waitForExpect(async () => {
@@ -123,5 +125,42 @@ test.describe('Collaboration tests', () => {
     const hostContent = await Markdown.getMarkdownActiveLineText(host.page);
     const guestContent = await Markdown.getMarkdownActiveLineText(guest.page);
     expect(hostContent).to.equal(guestContent);
+  });
+
+  test('guest can jump to document host is viewing', async () => {
+    // TODO(wittjosiah): Remove.
+    test.setTimeout(120_000);
+
+    await host.createSpace();
+    await host.createObject('markdownPlugin');
+    await Markdown.waitForMarkdownTextbox(host.page);
+    await perfomInvitation(host, guest);
+    await Markdown.waitForMarkdownTextbox(guest.page);
+    // TODO(wittjosiah): Initial viewing state is slow.
+    await waitForExpect(async () => {
+      expect(await host.page.url()).to.equal(await guest.page.url());
+      expect((await host.getSpacePresenceCount()).viewing).to.equal(1);
+      expect((await guest.getSpacePresenceCount()).viewing).to.equal(1);
+    }, 30_000);
+
+    await host.createObject('markdownPlugin');
+    // TODO(wittjosiah): Remove. Caused by https://github.com/dxos/dxos/issues/5658.
+    {
+      await sleep(5000); // Wait for replication.
+      await guest.page.reload();
+      await sleep(30_000); // Initial viewing state is slow.
+    }
+    await waitForExpect(async () => {
+      expect(await host.page.url()).not.to.equal(await guest.page.url());
+      expect((await host.getSpacePresenceCount()).active).to.equal(1);
+      expect((await guest.getSpacePresenceCount()).active).to.equal(1);
+    });
+
+    await guest.getSpacePresenceMembers().first().click();
+    await waitForExpect(async () => {
+      expect(await host.page.url()).to.equal(await guest.page.url());
+      expect((await host.getSpacePresenceCount()).viewing).to.equal(1);
+      expect((await guest.getSpacePresenceCount()).viewing).to.equal(1);
+    });
   });
 });

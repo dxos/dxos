@@ -3,7 +3,7 @@
 //
 
 import { ArrowsOut } from '@phosphor-icons/react';
-import { batch } from '@preact/signals-react';
+import { batch } from '@preact/signals-core';
 import { type RevertDeepSignal } from 'deepsignal/react';
 import { deepSignal } from 'deepsignal/react';
 import React, { type PropsWithChildren, useEffect } from 'react';
