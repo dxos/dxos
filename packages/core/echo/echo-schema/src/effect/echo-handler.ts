@@ -10,6 +10,8 @@ type ProxyTarget = {
   [symbolPath]: PropPath;
 } & (object | any[]);
 
+// TODO(dmaretskyi): Unfinished code.
+
 export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   _proxyMap = new WeakMap<object, any>();
 

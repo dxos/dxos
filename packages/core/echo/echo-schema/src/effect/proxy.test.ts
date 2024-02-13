@@ -8,6 +8,7 @@ import { expect } from 'chai';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { effect } from '@preact/signals-core';
 import { defer } from '@dxos/util';
+import { inspect } from 'util';
 
 registerSignalRuntime();
 
@@ -102,7 +103,13 @@ describe('Proxy properties', () => {
     expect(obj.array[0][0]).to.eq(4);
   });
 
-  test('array sub-proxies maintain their identity');
+  test('array sub-proxies maintain their identity', () => {
+    const obj = R.object<any>({});
+
+    obj.array = [{ field: 'bar' }];
+    expect(obj.array === obj.array).to.be.true;
+  });
+
   test('assigning another reactive object', () => {
     const obj = R.object<any>({});
 
@@ -129,13 +136,62 @@ describe('Proxy properties', () => {
     expect(updates.count).to.eq(2);
   });
 
-  test('keys enumeration');
-  test('has');
-  test('instanceof');
-  test('inspect');
-  test('toString');
-  test('toJSON');
-  test('chai deep equal works', () => {});
+  test('keys enumeration', () => {
+    const obj = R.object<any>({ field: 'bar' });
+    expect(Object.keys(obj)).to.deep.eq(['field']);
+
+    obj.field2 = 'baz';
+    expect(Object.keys(obj)).to.deep.eq(['field', 'field2']);
+  });
+
+  test('has', () => {
+    const obj = R.object<any>({ field: 'bar' });
+    expect('field' in obj).to.be.true;
+    expect('field2' in obj).to.be.false;
+
+    obj.field2 = 'baz';
+    expect('field2' in obj).to.be.true;
+  });
+
+  test('Array.isArray', () => {
+    const obj = R.object<any>({ array: [1, 2, 3] });
+    expect(Array.isArray(obj.array)).to.be.true;
+  });
+
+  test('instanceof', () => {
+    const obj = R.object<any>({ array: [1, 2, 3], obj: { field: 'foo' } });
+
+    expect(obj instanceof Object).to.be.true;
+    expect(obj instanceof Array).to.be.false;
+    expect(obj.array instanceof Object).to.be.true;
+    expect(obj.array instanceof Array).to.be.true;
+    expect(obj.obj instanceof Object).to.be.true;
+    expect(obj.obj instanceof Array).to.be.false;
+  });
+
+  test('inspect', () => {
+    const obj = R.object({ field: 'bar' });
+
+    const str = inspect(obj, { colors: false });
+    expect(str).to.eq("{ field: 'bar' }");
+  });
+
+  test('toString', () => {
+    const obj = R.object({ field: 'bar' });
+    expect(obj.toString()).to.eq('[object Object]'); // TODO(dmaretskyi): Change to `[object ECHO]`?
+  });
+
+  test('toJSON', () => {
+    const obj = R.object(TEST_OBJECT);
+    expect(JSON.stringify(obj)).to.eq(JSON.stringify(TEST_OBJECT));
+  });
+
+  test('chai deep equal works', () => {
+    const obj = R.object(TEST_OBJECT);
+
+    expect(obj).to.deep.eq(TEST_OBJECT);
+    expect(obj).to.not.deep.eq({ ...TEST_OBJECT, number: 11 });
+  });
 
   describe('signal updates', () => {
     test('are synchronous', () => {
@@ -212,6 +268,9 @@ describe('Proxy properties', () => {
   });
 
   describe('array operations', () => {
+    test('set by index');
+    test('length');
+    test('set length');
     test('push');
     test('pop');
     test('shift');
@@ -230,6 +289,10 @@ describe('Proxy properties', () => {
 // For testing.
 class MyClass {
   field = 'value';
+
+  toJSON() {
+    return { field: this.field };
+  }
 }
 
 const updateCounter = (touch: () => void) => {
@@ -246,4 +309,15 @@ const updateCounter = (touch: () => void) => {
     // https://github.com/tc39/proposal-explicit-resource-management
     [Symbol.dispose]: clear,
   };
+};
+
+const TEST_OBJECT = {
+  string: 'foo',
+  number: 42,
+  boolean: true,
+  null: null,
+  undefined: undefined,
+  array: [1, 2, 3],
+  object: { field: 'bar' },
+  classInstance: new MyClass(),
 };
