@@ -10,18 +10,18 @@ import { type Schema } from '../proto';
 type AutomergeUrl = string;
 
 export interface SpaceDoc {
-  access: {
+  access?: {
     spaceKey: string;
   };
   /**
-   * Objects inlined in the current doc, new objects are created as separate automerge documents
-   * and pointed to via links.
-   * @deprecated
+   * Objects inlined in the current document.
    */
   objects?: {
     [key: string]: ObjectStructure;
   };
-
+  /**
+   * Objects stored as separate automerge documents.
+   */
   links?: {
     [echoId: string]: AutomergeUrl;
   };

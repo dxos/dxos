@@ -71,7 +71,7 @@ export class AutomergeHost {
 
         try {
           // experimental_spaceKey is set on old documents, new ones are created with doc.access.spaceKey
-          const rawSpaceKey = doc.access.spaceKey ?? doc.experimental_spaceKey;
+          const rawSpaceKey = doc.access?.spaceKey ?? doc.experimental_spaceKey;
           if (!rawSpaceKey) {
             log('space key not found for share policy check', { peerId, documentId });
             return false;
