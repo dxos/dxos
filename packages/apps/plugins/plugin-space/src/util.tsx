@@ -202,6 +202,7 @@ export const spaceToGraphNode = ({
         label: ['migrate space label', { ns: SPACE_PLUGIN }],
         icon: (props) => <Database {...props} />,
         invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.MIGRATE, data: { space } }),
+        properties: { mainAreaDisposition: 'in-flow' },
       });
     }
 
@@ -214,6 +215,7 @@ export const spaceToGraphNode = ({
           keyBinding: 'shift+F6',
           invoke: (params) =>
             dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.RENAME, data: { space, ...params } }),
+          properties: { mainAreaDisposition: 'absent' },
         },
         {
           id: 'share-space',
@@ -222,12 +224,14 @@ export const spaceToGraphNode = ({
           keyBinding: 'meta+.',
           invoke: () =>
             dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { spaceKey: space.key.toHex() } }),
+          properties: { mainAreaDisposition: 'absent' },
         },
         {
           id: 'close-space',
           label: ['close space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <X {...props} />,
           invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.CLOSE, data: { space } }),
+          properties: { mainAreaDisposition: 'menu' },
         },
         {
           id: 'save-space-to-disk',
@@ -235,6 +239,7 @@ export const spaceToGraphNode = ({
           icon: (props) => <FloppyDisk {...props} />,
           keyBinding: 'meta+s',
           invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SAVE, data: { space } }),
+          properties: { mainAreaDisposition: 'in-flow' },
         },
         {
           id: 'load-space-from-disk',
@@ -242,6 +247,7 @@ export const spaceToGraphNode = ({
           icon: (props) => <FolderOpen {...props} />,
           keyBinding: 'meta+shift+l',
           invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.LOAD, data: { space } }),
+          properties: { mainAreaDisposition: 'in-flow' },
         },
       );
     } else if (space.state.get() === SpaceState.INACTIVE) {
@@ -252,6 +258,7 @@ export const spaceToGraphNode = ({
         invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.OPEN, data: { space } }),
         properties: {
           disposition: 'toolbar',
+          mainAreaDisposition: 'in-flow',
         },
       });
     }

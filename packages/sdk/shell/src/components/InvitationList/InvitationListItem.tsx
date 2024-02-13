@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 import { X } from '@phosphor-icons/react';
-import React, { useCallback } from 'react';
+import React, { type ComponentPropsWithoutRef, useCallback } from 'react';
 
 import {
   type CancellableInvitationObservable,
@@ -18,6 +18,7 @@ import {
   useThemeContext,
   type AvatarRootProps,
   Tooltip,
+  type ThemedClassName,
 } from '@dxos/react-ui';
 import { focusRing, getSize, mx } from '@dxos/react-ui-theme';
 
@@ -26,14 +27,15 @@ import { toEmoji } from '../../util';
 import { AuthCode } from '../AuthCode';
 import { CopyButtonIconOnly } from '../Clipboard';
 
-export interface InvitationListItemProps extends SharedInvitationListProps {
+export type InvitationListItemProps = SharedInvitationListProps & {
   invitation: CancellableInvitationObservable;
   onClickRemove?: (invitation: CancellableInvitationObservable) => void;
-}
+  reverseEffects?: boolean;
+} & ThemedClassName<ComponentPropsWithoutRef<'li'>>;
 
-export interface InvitationListItemImplProps extends InvitationListItemProps {
+export type InvitationListItemImplProps = InvitationListItemProps & {
   invitationStatus: InvitationStatus;
-}
+};
 
 export const InvitationListItem = (props: InvitationListItemProps) => {
   const { invitation } = props;
@@ -43,13 +45,21 @@ export const InvitationListItem = (props: InvitationListItemProps) => {
 
 const avatarProps: Pick<AvatarRootProps, 'size' | 'variant'> = { size: 10, variant: 'circle' };
 
-const AvatarStackEffect = ({ animation, status }: Pick<AvatarRootProps, 'status' | 'animation'>) => {
+const AvatarStackEffect = ({
+  animation,
+  status,
+  reverseEffects,
+}: Pick<AvatarRootProps, 'status' | 'animation'> & Pick<InvitationListItemProps, 'reverseEffects'>) => {
   const { tx } = useThemeContext();
   return (
     <>
       <span
         role='none'
-        className={mx('absolute inline-start-1 inline-end-auto opacity-20', getSize(avatarProps.size!))}
+        className={mx(
+          'absolute inline-end-auto opacity-20',
+          reverseEffects ? 'inline-start-3' : 'inline-start-1',
+          getSize(avatarProps.size!),
+        )}
       >
         <span
           role='none'
@@ -59,7 +69,11 @@ const AvatarStackEffect = ({ animation, status }: Pick<AvatarRootProps, 'status'
       </span>
       <span
         role='none'
-        className={mx('absolute inline-start-2 inline-end-auto opacity-50', getSize(avatarProps.size!))}
+        className={mx(
+          'absolute inline-end-auto opacity-50',
+          reverseEffects ? 'inline-start-2' : 'inline-start-2',
+          getSize(avatarProps.size!),
+        )}
       >
         <span
           role='none'
@@ -77,6 +91,8 @@ export const InvitationListItemImpl = ({
   send,
   onClickRemove,
   createInvitationUrl,
+  reverseEffects,
+  ...props
 }: InvitationListItemImplProps) => {
   const { t } = useTranslation('os');
   const { cancel, status: invitationStatus, invitationCode, authCode, type } = propsInvitationStatus;
@@ -120,15 +136,21 @@ export const InvitationListItemImpl = ({
   const avatarStatus = avatarError ? 'error' : avatarGreen ? 'active' : 'inactive';
 
   return (
-    <ListItem.Root id={invitationCode} classNames='flex gap-2 pis-3 pie-1 items-center relative'>
+    <ListItem.Root
+      id={invitationCode}
+      {...props}
+      classNames={['flex gap-2 pis-3 pie-1 items-center relative', props.classNames]}
+    >
       <ListItem.Heading classNames='sr-only'>
         {t(type === Invitation.Type.MULTIUSE ? 'invite many list item label' : 'invite one list item label')}
       </ListItem.Heading>
-      {type === Invitation.Type.MULTIUSE && <AvatarStackEffect status={avatarStatus} animation={avatarAnimation} />}
+      {type === Invitation.Type.MULTIUSE && (
+        <AvatarStackEffect status={avatarStatus} animation={avatarAnimation} reverseEffects={reverseEffects} />
+      )}
       <Tooltip.Root>
         <Avatar.Root {...avatarProps} animation={avatarAnimation} status={avatarStatus}>
           <Tooltip.Trigger asChild>
-            <Avatar.Frame tabIndex={0} classNames={[focusRing, 'relative rounded-full']}>
+            <Avatar.Frame tabIndex={0} classNames={[focusRing, 'relative rounded-full place-self-center']}>
               <Avatar.Fallback text={toEmoji(invitationId)} />
             </Avatar.Frame>
           </Tooltip.Trigger>
@@ -168,14 +190,19 @@ export const InvitationListItemImpl = ({
         <span className='grow'> </span>
       )}
       {isCancellable ? (
-        <Button variant='ghost' classNames='flex gap-1' onClick={cancel} data-testid='cancel-invitation'>
+        <Button variant='ghost' classNames='flex gap-1 pli-0' onClick={cancel} data-testid='cancel-invitation'>
           <span className='sr-only'>{t('cancel invitation label')}</span>
-          <X className={getSize(5)} weight='bold' />
+          <X className={getSize(4)} />
         </Button>
       ) : (
-        <Button variant='ghost' classNames='flex gap-1' onClick={handleClickRemove} data-testid='remove-invitation'>
+        <Button
+          variant='ghost'
+          classNames='flex gap-1 pli-0'
+          onClick={handleClickRemove}
+          data-testid='remove-invitation'
+        >
           <span className='sr-only'>{t('remove invitation label')}</span>
-          <X className={getSize(5)} weight='bold' />
+          <X className={getSize(4)} />
         </Button>
       )}
     </ListItem.Root>

@@ -28,7 +28,7 @@ const Story = () => {
   });
 
   return (
-    <div className='grid grid-cols-[3rem_1fr]'>
+    <div className='grid grid-cols-[var(--rail-size)_1fr]'>
       <Message {...message} />
     </div>
   );
