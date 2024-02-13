@@ -31,8 +31,8 @@ export type SpaceState = {
 };
 
 export class AutomergeDb {
-  private spaceRootDocHandle!: DocHandle<SpaceDoc>;
-  private objectDocumentHandles = new Map<string, DocHandle<SpaceDoc>>();
+  private _spaceRootDocHandle!: DocHandle<SpaceDoc>;
+  private _objectDocumentHandles = new Map<string, DocHandle<SpaceDoc>>();
 
   /**
    * @internal
@@ -78,17 +78,17 @@ export class AutomergeDb {
       await this._fallbackToNewDoc();
     } else {
       try {
-        this.spaceRootDocHandle = await this._initDocHandle(spaceState.rootUrl);
+        this._spaceRootDocHandle = await this._initDocHandle(spaceState.rootUrl);
 
-        const doc = this.spaceRootDocHandle.docSync();
+        const doc = this._spaceRootDocHandle.docSync();
         invariant(doc);
 
         if (doc.access == null) {
-          this._initDocAccess(this.spaceRootDocHandle);
+          this._initDocAccess(this._spaceRootDocHandle);
         }
 
         const objectIds = Object.keys(doc.objects ?? {});
-        this._createInlineObjects(this.spaceRootDocHandle, objectIds);
+        this._createInlineObjects(this._spaceRootDocHandle, objectIds);
         this._loadLinkedObjects(doc.links);
       } catch (err) {
         if (err instanceof ContextDisposedError) {
@@ -104,7 +104,7 @@ export class AutomergeDb {
       }
     }
 
-    this.spaceRootDocHandle.on('change', this._onDocumentUpdate.bind(this));
+    this._spaceRootDocHandle.on('change', this._onDocumentUpdate.bind(this));
 
     const elapsed = performance.now() - start;
     if (elapsed > 1000) {
@@ -155,9 +155,9 @@ export class AutomergeDb {
   }
 
   private async _fallbackToNewDoc() {
-    this.spaceRootDocHandle = this.automerge.repo.create();
+    this._spaceRootDocHandle = this.automerge.repo.create();
     this._ctx!.onDispose(() => {
-      this.spaceRootDocHandle.delete();
+      this._spaceRootDocHandle.delete();
     });
   }
 
@@ -238,8 +238,8 @@ export class AutomergeDb {
   }
 
   private _linkObjectDocument(object: AutomergeObject, handle: DocHandle<SpaceDoc>) {
-    this.objectDocumentHandles.set(object.id, handle);
-    this.spaceRootDocHandle.change((newDoc: SpaceDoc) => {
+    this._objectDocumentHandles.set(object.id, handle);
+    this._spaceRootDocHandle.change((newDoc: SpaceDoc) => {
       if (newDoc.links) {
         newDoc.links[object.id] = handle.url;
       } else {
@@ -253,12 +253,12 @@ export class AutomergeDb {
       return;
     }
     for (const [objectId, automergeUrl] of Object.entries(links)) {
-      if (this.objectDocumentHandles.has(objectId)) {
+      if (this._objectDocumentHandles.has(objectId)) {
         return;
       }
       const handle = this.automerge.repo.find<SpaceDoc>(automergeUrl as DocumentId);
       log.debug('document loading triggered', { objectId, automergeUrl });
-      this.objectDocumentHandles.set(objectId, handle);
+      this._objectDocumentHandles.set(objectId, handle);
       this._createObjectOnDocumentLoad(objectId, handle);
     }
   }
@@ -274,8 +274,8 @@ export class AutomergeDb {
   }
 
   private _onDispose() {
-    this.spaceRootDocHandle?.off('change');
-    for (const docHandle of this.objectDocumentHandles.values()) {
+    this._spaceRootDocHandle?.off('change');
+    for (const docHandle of this._objectDocumentHandles.values()) {
       docHandle.off('change');
     }
   }
