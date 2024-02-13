@@ -10,7 +10,8 @@ export const symbolIsProxy = Symbol('isProxy');
 export const isValidProxyTarget = (value: any): value is object =>
   typeof value === 'object' &&
   value !== null &&
-  (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === Array.prototype);
+  (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === Array.prototype) &&
+  !value[symbolIsProxy];
 
 export const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHandler<T>): ReactiveObject<T> => {
   if (!isValidProxyTarget(target)) {
