@@ -112,13 +112,13 @@ export const SpaceMembersSection = ({ space }: { space: Space }) => {
       )}
       <ButtonGroup classNames='col-start-2 col-end-4 grid grid-cols-[1fr_var(--rail-action)] place-self-grow gap-px'>
         <Button classNames='gap-2' onClick={activeAction.onClick}>
-          <activeAction.icon />
+          <activeAction.icon className={getSize(5)} />
           <span>{t(activeAction.label)}</span>
         </Button>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <Button classNames='pli-0'>
-              <CaretDown />
+              <CaretDown className={getSize(4)} />
             </Button>
           </DropdownMenu.Trigger>
           <DropdownMenu.Content>
@@ -143,7 +143,7 @@ export const SpaceMembersSection = ({ space }: { space: Space }) => {
                       )}
                     </div>
                     <DropdownMenu.ItemIndicator asChild>
-                      <Check />
+                      <Check className={getSize(4)} />
                     </DropdownMenu.ItemIndicator>
                   </DropdownMenu.CheckboxItem>
                 );

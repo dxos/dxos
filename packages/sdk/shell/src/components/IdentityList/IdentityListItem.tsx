@@ -34,7 +34,7 @@ export const IdentityListItem = forwardRef<
       ref={forwardedRef}
     >
       <Avatar.Root status={presence === SpaceMember.PresenceState.ONLINE ? 'active' : 'inactive'} labelId={labelId}>
-        <Avatar.Frame>
+        <Avatar.Frame classNames='place-self-center'>
           <Avatar.Fallback href={jdenticon} />
         </Avatar.Frame>
         <Avatar.Label classNames='text-sm truncate pli-2'>{displayName}</Avatar.Label>

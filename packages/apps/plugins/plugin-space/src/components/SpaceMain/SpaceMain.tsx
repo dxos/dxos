@@ -17,7 +17,7 @@ import { SPACE_PLUGIN } from '../../meta';
 const InFlowSpaceActions = ({ actionsMap }: { actionsMap: Record<string, Action> }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   return (
-    <section className='mbe-4 col-start-2 col-end-4 md:col-end-6 grid gap-2 auto-rows-min grid-cols-[repeat(auto-fill,minmax(8rem,1fr))]'>
+    <section className='mbe-4 col-start-2 col-end-4 md:col-end-7 grid gap-2 auto-rows-min grid-cols-[repeat(auto-fill,minmax(8rem,1fr))]'>
       {Object.entries(actionsMap)
         .filter(([_, { properties }]) => properties?.mainAreaDisposition === 'in-flow')
         .map(([actionId, { icon: Icon, label, invoke }]) => {
