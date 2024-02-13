@@ -6,12 +6,8 @@ import { Gift, DownloadSimple, FirstAidKit } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import { SettingsValue } from '@braneframe/plugin-settings';
-<<<<<<< HEAD
-import { type ConfigProto, defs, SaveConfig } from '@dxos/config';
-=======
 import { parseFileManagerPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { type ConfigProto, defs, SaveConfig, Storage } from '@dxos/config';
->>>>>>> db69ceb77 (WIP: support IPFS API authentication)
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useTranslation, Button, Toast, Input, useFileDownload, Select } from '@dxos/react-ui';
