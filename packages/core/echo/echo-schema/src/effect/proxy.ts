@@ -19,6 +19,8 @@ export const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHa
 
   // TODO(dmaretskyi): in future this should be mutable to allow replacing the handler on the fly while maintaining the proxy identity
   const handlerSlot: ReactiveHandler<T> = {} as any;
+  // TODO(dmaretskyi): Setting the handler instance by prototype is likely to cause issues related to handler properties vs properties of the `mutableHandler` which is gonna be passed as `this` to the handler functions.
+  // TODO(dmaretskyi): Replace with an object that proxies those calls.
   Object.setPrototypeOf(handlerSlot, handler);
 
   const proxy = new Proxy(target, handlerSlot);
