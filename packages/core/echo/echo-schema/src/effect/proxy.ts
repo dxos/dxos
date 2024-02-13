@@ -2,7 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Ref } from 'effect';
 import { type ReactiveObject } from './reactive';
+
+export const symbolIsProxy = Symbol('isProxy');
 
 export const isValidProxyTarget = (value: any): value is object =>
   typeof value === 'object' &&
@@ -20,10 +23,8 @@ export const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHa
   }
 
   // TODO(dmaretskyi): in future this should be mutable to allow replacing the handler on the fly while maintaining the proxy identity
-  const handlerSlot: ReactiveHandler<T> = {} as any;
-  // TODO(dmaretskyi): Setting the handler instance by prototype is likely to cause issues related to handler properties vs properties of the `mutableHandler` which is gonna be passed as `this` to the handler functions.
-  // TODO(dmaretskyi): Replace with an object that proxies those calls.
-  Object.setPrototypeOf(handlerSlot, handler);
+  const handlerSlot = new ProxyHandlerSlot<T>();
+  handlerSlot.handler = handler;
 
   const proxy = new Proxy(target, handlerSlot);
   handler._init(target);
@@ -38,4 +39,52 @@ export interface ReactiveHandler<T extends object> extends ProxyHandler<T> {
   _init(target: T): void;
 
   readonly _proxyMap: WeakMap<object, any>;
+}
+
+class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
+  public handler?: ReactiveHandler<T> = undefined;
+
+  get(target: T, prop: string | symbol, receiver: any): any {
+    if (prop === symbolIsProxy) {
+      return true;
+    }
+
+    if (!this.handler || !this.handler.get) {
+      return Reflect.get(target, prop, receiver);
+    }
+
+    return this.handler.get(target, prop, receiver);
+  }
+}
+
+const TRAPS: (keyof ProxyHandler<any>)[] = [
+  'apply',
+  'construct',
+  'defineProperty',
+  'deleteProperty',
+  'get',
+  'getOwnPropertyDescriptor',
+  'getPrototypeOf',
+  'has',
+  'isExtensible',
+  'ownKeys',
+  'preventExtensions',
+  'set',
+  'setPrototypeOf',
+];
+
+for (const trap of TRAPS) {
+  if (trap === 'get') {
+    continue;
+  }
+
+  Object.defineProperty(ProxyHandlerSlot.prototype, trap, {
+    value: function (this: ProxyHandlerSlot<any>, ...args: any[]) {
+      if (!this.handler || !this.handler[trap]) {
+        return (Reflect[trap] as Function)(...args);
+      }
+
+      return (this.handler[trap] as Function).apply(this.handler, args);
+    },
+  });
 }
