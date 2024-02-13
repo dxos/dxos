@@ -95,7 +95,7 @@
     "trackLeakedResource": {
       "type": "boolean",
       "description": "Track resources that are not cleaned up after tests",
-      "default": false
+      "default": true
     },
     "checkLeaks": {
       "type": "boolean",
@@ -160,10 +160,5 @@
       "default": false
     }
   },
-  "required": [
-    "testPatterns",
-    "outputPath",
-    "resultsPath",
-    "coveragePath"
-  ]
+  "required": ["testPatterns", "outputPath", "resultsPath", "coveragePath"]
 }

@@ -74,7 +74,7 @@ class TestProcessorBuilder {
   }
 }
 
-describe.skip('RequestProcessor', () => {
+describe('RequestProcessor', () => {
   // TODO(burdon): Create test prompt.
   test('translate', async () => {
     const builder = new TestProcessorBuilder();
@@ -123,7 +123,7 @@ describe.skip('RequestProcessor', () => {
     }
   });
 
-  test.only('schema', async () => {
+  test.skip('schema', async () => {
     const builder = new TestProcessorBuilder();
     await builder.init();
     await builder.addSchema();
@@ -143,8 +143,10 @@ describe.skip('RequestProcessor', () => {
               source: new TextObject(
                 [
                   'List all people and companies mentioned in the content section below.',
+                  '',
                   'You are a machine that only replies with valid, iterable RFC8259 compliant JSON in your responses.',
                   'Your entire response should be a map where the key is the type and the value is a single array of JSON objects conforming to the following types:',
+                  '',
                   '{company}',
                   '{contact}',
                   '---',
