@@ -25,5 +25,6 @@ runtime:
         username: dxos
         credential: dxos
     ipfs:
+      # TODO(nf): why is this dev?
       server: https://dev.kube.dxos.org/ipfs/api
       gateway: https://dev.kube.dxos.org/ipfs/gateway
