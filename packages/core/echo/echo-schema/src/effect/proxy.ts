@@ -5,7 +5,9 @@
 import { type ReactiveObject } from './reactive';
 
 export const isValidProxyTarget = (value: any): value is object =>
-  typeof value === 'object' && value !== null && Object.getPrototypeOf(value) === Object.prototype;
+  typeof value === 'object' &&
+  value !== null &&
+  (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === Array.prototype);
 
 export const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHandler<T>): ReactiveObject<T> => {
   if (!isValidProxyTarget(target)) {
