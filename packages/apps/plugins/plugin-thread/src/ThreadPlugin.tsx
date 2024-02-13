@@ -3,7 +3,7 @@
 //
 
 import { Chat, type IconProps } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-react';
+import { effect } from '@preact/signals-core';
 import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 

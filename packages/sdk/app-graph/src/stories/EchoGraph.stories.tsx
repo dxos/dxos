@@ -5,7 +5,7 @@
 import '@dxosTheme';
 
 import { Pause, Play, Plus, Timer } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-react';
+import { effect } from '@preact/signals-core';
 import React, { useEffect, useState } from 'react';
 
 import { EventSubscriptions } from '@dxos/async';

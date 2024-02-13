@@ -115,6 +115,24 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
+  getSpacePresenceMembers() {
+    return this.page.getByTestId('spacePlugin.presence.member');
+  }
+
+  // TODO(wittjosiah): Include members in the tooltip.
+  getSpacePresenceCount() {
+    return this.page.getByTestId('spacePlugin.presence.member').evaluateAll((elements) => {
+      console.log({ elements, statuses: elements.map((element) => element.getAttribute('data-status')) });
+      const viewing = elements.filter((element) => element.getAttribute('data-status') === 'current').length;
+      const active = elements.filter((element) => element.getAttribute('data-status') === 'active').length;
+
+      return {
+        viewing,
+        active,
+      };
+    });
+  }
+
   toggleSpaceCollapsed(nth = 0) {
     return this.page.getByTestId('spacePlugin.space').nth(nth).getByRole('button').first().click();
   }

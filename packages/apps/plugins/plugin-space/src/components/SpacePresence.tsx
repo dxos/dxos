@@ -118,7 +118,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
   }
 
   return (
-    <AvatarGroup.Root size={size} classNames='mbs-2 mie-4'>
+    <AvatarGroup.Root size={size} classNames='mbs-2 mie-4' data-testid='spacePlugin.presence'>
       {members.slice(0, 3).map((member, i) => (
         <Tooltip.Root key={member.identity.identityKey.toHex()}>
           <Tooltip.Trigger>
@@ -152,7 +152,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
           <Tooltip.Portal>
             <Tooltip.Content side='bottom'>
               <Tooltip.Arrow />
-              <List classNames='max-h-56 overflow-scroll flex flex-col gap-2'>
+              <List classNames='max-h-56 overflow-y-auto gap-2'>
                 {members.map((member) => (
                   <ListItem.Root
                     key={member.identity.identityKey.toHex()}
@@ -187,8 +187,13 @@ const PrensenceAvatar = ({ identity, showName, match, group, index, onClick }: P
   const status = match ? 'current' : 'active';
   const jdenticon = useJdenticonHref(memberHex ?? '', 12);
   return (
-    <Root color={getColorForValue({ value: memberHex, type: 'color' })} status={status}>
-      <Avatar.Frame style={{ zIndex: index }} onClick={() => onClick?.()}>
+    <Root status={status}>
+      <Avatar.Frame
+        data-testid='spacePlugin.presence.member'
+        data-status={status}
+        {...(index ? { style: { zIndex: index } } : {})}
+        onClick={() => onClick?.()}
+      >
         <Avatar.Fallback href={jdenticon} />
       </Avatar.Frame>
       {showName && <Avatar.Label classNames='text-sm truncate pli-2'>{getName(identity)}</Avatar.Label>}

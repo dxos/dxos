@@ -46,7 +46,7 @@ test.describe('Collaboration tests', () => {
 
     await Markdown.waitForMarkdownTextbox(guest.page);
     await waitForExpect(async () => {
-      expect(await host.page.url()).to.include(await guest.page.url());
+      expect(await host.page.url()).to.equal(await guest.page.url());
     });
 
     await waitForExpect(async () => {
@@ -123,5 +123,36 @@ test.describe('Collaboration tests', () => {
     const hostContent = await Markdown.getMarkdownActiveLineText(host.page);
     const guestContent = await Markdown.getMarkdownActiveLineText(guest.page);
     expect(hostContent).to.equal(guestContent);
+  });
+
+  test('guest can jump to document host is viewing', async () => {
+    await host.createSpace();
+    await host.createObject('markdownPlugin');
+    await Markdown.waitForMarkdownTextbox(host.page);
+    await perfomInvitation(host, guest);
+    await Markdown.waitForMarkdownTextbox(guest.page);
+    // TODO(wittjosiah): Initial viewing state is slow.
+    await waitForExpect(async () => {
+      expect(await host.page.url()).to.equal(await guest.page.url());
+      expect((await host.getSpacePresenceCount()).viewing).to.equal(1);
+      expect((await guest.getSpacePresenceCount()).viewing).to.equal(1);
+    }, 30_000);
+
+    await host.createObject('markdownPlugin');
+    // TODO(wittjosiah): Remove. Caused by https://github.com/dxos/dxos/issues/5658.
+    await guest.page.reload();
+    // Wait for app to load and connect.
+    await waitForExpect(async () => {
+      expect(await host.page.url()).not.to.equal(await guest.page.url());
+      expect((await host.getSpacePresenceCount()).active).to.equal(1);
+      expect((await guest.getSpacePresenceCount()).active).to.equal(1);
+    }, 10_000);
+
+    await guest.getSpacePresenceMembers().first().click();
+    await waitForExpect(async () => {
+      expect(await host.page.url()).to.equal(await guest.page.url());
+      expect((await host.getSpacePresenceCount()).viewing).to.equal(1);
+      expect((await guest.getSpacePresenceCount()).viewing).to.equal(1);
+    });
   });
 });
