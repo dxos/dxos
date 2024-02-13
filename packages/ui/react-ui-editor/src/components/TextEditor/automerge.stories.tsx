@@ -133,7 +133,7 @@ export const WithEcho = {
             }),
           );
         }}
-        Component={EchoStory}
+        component={EchoStory}
       />
     );
   },

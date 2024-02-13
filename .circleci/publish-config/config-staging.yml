@@ -8,8 +8,8 @@ runtime:
 
   services:
     ipfs:
-      server: http://staging.kube.dxos.org:5001/
-      gateway: http://staging.kube.dxos.org:8888/ipfs
+      server: https://staging.kube.dxos.org/ipfs/api
+      gateway: https://staging.kube.dxos.org/ipfs/gateway
     signaling:
       - server: wss://staging.kube.dxos.org/.well-known/dx/signal
       - server: wss://dx.dev.kube.dxos.org/.well-known/dx/signal

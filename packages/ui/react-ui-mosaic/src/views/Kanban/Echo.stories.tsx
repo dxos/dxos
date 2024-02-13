@@ -58,7 +58,7 @@ export default {
         // TODO(burdon): Batch API.
         objects.forEach((object) => space.db.add(object));
       }}
-      Component={Story}
+      component={Story}
       createSpace
     />
   ),

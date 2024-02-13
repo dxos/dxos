@@ -53,7 +53,7 @@ const Story = ({ spaceKey }: { spaceKey: PublicKey }) => {
 export default {
   title: 'plugin-thread/Comments',
   component: Thread,
-  render: () => <ClientRepeater Component={Story} types={types} createIdentity createSpace />,
+  render: () => <ClientRepeater component={Story} types={types} createIdentity createSpace />,
   decorators: [withTheme],
   parameters: { translations },
 };
