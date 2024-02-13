@@ -34,7 +34,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/text-model": "workspace:*",
-    "deepsignal": "1.4.0-shallow.0",
+    "deepsignal": "^1.5.0",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {

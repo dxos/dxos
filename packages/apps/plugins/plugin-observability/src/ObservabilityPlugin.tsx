@@ -58,7 +58,7 @@ export const ObservabilityPlugin = (options: {
   observability: () => Promise<Observability>;
 }): PluginDefinition<ObservabilityPluginProvides> => {
   const settings = deepSignal<ObservabilitySettingsProps>({});
-  const state = new LocalStorageStore<ObservabilityPluginState>(OBSERVABILITY_PLUGIN, {});
+  const state = new LocalStorageStore<ObservabilityPluginState>(OBSERVABILITY_PLUGIN);
   const subscriptions = new EventSubscriptions();
   let observability: Observability | undefined;
 
