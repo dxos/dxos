@@ -34,13 +34,13 @@ const getProps = (size: number, [a, b, c]: string[]): Props[] => {
   return [
     {
       inset: 0,
-      spin: 'animate-spin-logo-1',
+      spin: 'animate-[spin_2s_linear_infinite]',
       style: {},
       className: a,
     },
     {
       inset: size / 6,
-      spin: 'animate-spin-logo-2',
+      spin: 'animate-[spin_2s_linear_infinite]',
       style: {
         animationDirection: 'reverse',
       },
@@ -48,7 +48,7 @@ const getProps = (size: number, [a, b, c]: string[]): Props[] => {
     },
     {
       inset: size / 3.6,
-      spin: 'animate-spin-logo-3',
+      spin: 'animate-[spin_1s_linear_infinite]',
       style: {},
       className: c,
     },
