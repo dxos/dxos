@@ -3,7 +3,7 @@
 //
 
 import { Info, Keyboard as KeyboardIcon } from '@phosphor-icons/react';
-import { deepSignal } from 'deepsignal';
+import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 import { type Step } from 'react-joyride';
 
