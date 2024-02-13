@@ -6,6 +6,7 @@ import React from 'react';
 
 import { NavigationAction, useIntentDispatcher, usePlugin } from '@dxos/app-framework';
 import { generateName } from '@dxos/display-name';
+import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import { type TypedObject, getSpaceForObject, useSpace, useMembers, type SpaceMember } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
@@ -85,6 +86,8 @@ export const SpacePresence = ({ object, spaceKey }: { object: TypedObject; space
             action: NavigationAction.ACTIVATE,
             data: { id: viewing },
           });
+        } else {
+          log.warn('No viewing object found for member');
         }
       }}
     />
