@@ -127,13 +127,13 @@ describe('Proxy properties', () => {
       obj.other.field;
     });
 
-    expect(updates.count).to.eq(0);
+    expect(updates.count, 'update count').to.eq(0);
     other.field = 'quux';
-    expect(updates.count).to.eq(1);
+    expect(updates.count, 'update count').to.eq(1);
 
     obj.other = { field: 'bar' };
     expect(obj.other.field).to.eq('bar');
-    expect(updates.count).to.eq(2);
+    expect(updates.count, 'update count').to.eq(2);
   });
 
   test('keys enumeration', () => {
@@ -200,10 +200,10 @@ describe('Proxy properties', () => {
       using updates = updateCounter(() => {
         obj.field;
       });
+      expect(updates.count, 'update count').to.eq(0);
 
-      expect(updates.count).to.eq(0);
       obj.field = 'baz';
-      expect(updates.count).to.eq(1);
+      expect(updates.count, 'update count').to.eq(1);
     });
 
     test('in nested objects', () => {
@@ -212,10 +212,10 @@ describe('Proxy properties', () => {
       using updates = updateCounter(() => {
         obj.object.field;
       });
+      expect(updates.count, 'update count').to.eq(0);
 
-      expect(updates.count).to.eq(0);
       obj.object.field = 'baz';
-      expect(updates.count).to.eq(1);
+      expect(updates.count, 'update count').to.eq(1);
     });
 
     test('not in nested class instances', () => {
@@ -224,10 +224,10 @@ describe('Proxy properties', () => {
       using updates = updateCounter(() => {
         obj.instance.field;
       });
+      expect(updates.count, 'update count').to.eq(0);
 
-      expect(updates.count).to.eq(0);
       obj.instance.field = 'baz';
-      expect(updates.count).to.eq(0);
+      expect(updates.count, 'update count').to.eq(0);
     });
 
     test('in nested arrays', () => {
@@ -236,10 +236,10 @@ describe('Proxy properties', () => {
       using updates = updateCounter(() => {
         obj.array[0];
       });
+      expect(updates.count, 'update count').to.eq(0);
 
-      expect(updates.count).to.eq(0);
       obj.array[0] = 'baz';
-      expect(updates.count).to.eq(1);
+      expect(updates.count, 'update count').to.eq(1);
     });
 
     test('in nested arrays with objects', () => {
@@ -248,10 +248,10 @@ describe('Proxy properties', () => {
       using updates = updateCounter(() => {
         obj.array[0].field;
       });
+      expect(updates.count, 'update count').to.eq(0);
 
-      expect(updates.count).to.eq(0);
       obj.array[0].field = 'baz';
-      expect(updates.count).to.eq(1);
+      expect(updates.count, 'update count').to.eq(1);
     });
 
     test('in nested arrays with arrays', () => {
@@ -260,17 +260,48 @@ describe('Proxy properties', () => {
       using updates = updateCounter(() => {
         obj.array[0][0];
       });
+      expect(updates.count, 'update count').to.eq(0);
 
-      expect(updates.count).to.eq(0);
       obj.array[0][0] = 4;
-      expect(updates.count).to.eq(1);
+      expect(updates.count, 'update count').to.eq(1);
     });
   });
 
   describe('array operations', () => {
-    test('set by index');
-    test('length');
-    test('set length');
+    test('set by index', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      array[0] = 2;
+      expect(array[0]).to.eq(2);
+      expect(updates.count, 'update count').to.eq(1);
+    });
+
+    test('length', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+      expect(array.length).to.eq(3);
+
+      array.push(4);
+      expect(array.length).to.eq(4);
+      expect(updates.count, 'update count').to.eq(1);
+    });
+
+    test('set length', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      array.length = 2;
+      expect(array.length).to.eq(2);
+      expect(updates.count, 'update count').to.eq(1);
+    });
+
     test('push');
     test('pop');
     test('shift');
