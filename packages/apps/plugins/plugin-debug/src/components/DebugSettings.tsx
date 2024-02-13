@@ -7,9 +7,8 @@ import { create } from 'kubo-rpc-client';
 import React, { useState } from 'react';
 
 import { SettingsValue } from '@braneframe/plugin-settings';
-import { type ConfigProto, defs, SaveConfig, Storage } from '@dxos/config';
+import { type ConfigProto, defs, SaveConfig } from '@dxos/config';
 import { log } from '@dxos/log';
-import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
 import { useTranslation, Button, Toast, Input, useFileDownload, Select } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -34,12 +33,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
   const client = useClient();
   const download = useFileDownload();
   // TODO(mykola): Get updates from other places that change Config.
-  const [storageConfig, setStorageConfig] = React.useState<ConfigProto>();
-
-  useAsyncEffect(async () => {
-    const config = await Storage();
-    config && setStorageConfig(config);
-  }, []);
+  const [storageConfig, setStorageConfig] = React.useState<ConfigProto>(client.config.values);
 
   const handleToast = (toast: Toast) => {
     setToast(toast);
