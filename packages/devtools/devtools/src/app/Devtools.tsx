@@ -70,6 +70,17 @@ export const Devtools: FC<{
     },
   });
 
+  // TODO: remove hardcoded themeMode when Devtools dark mode support is ready
+  useEffect(() => {
+    const isDarkMode = document.documentElement.classList.contains('dark');
+    if (isDarkMode) {
+      document.documentElement.classList.remove('dark');
+      return () => {
+        document.documentElement.classList.add('dark');
+      };
+    }
+  });
+
   return (
     <ThemeProvider {...{ tx: devtoolsTx, themeMode: state.themeMode }}>
       <DensityProvider density='fine'>
