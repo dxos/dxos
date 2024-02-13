@@ -5,7 +5,9 @@
 import { CaretDown, Check, UserPlus, UsersThree } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 
+import { LayoutAction, useIntent } from '@dxos/app-framework';
 import { type Space, useMembers, SpaceMember, useSpaceInvitations } from '@dxos/react-client/echo';
+import { type CancellableInvitationObservable, InvitationEncoder } from '@dxos/react-client/invitations';
 import { Invitation } from '@dxos/react-client/invitations';
 import { Button, ButtonGroup, DropdownMenu, List, useTranslation } from '@dxos/react-ui';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
@@ -18,7 +20,6 @@ const activeActionKeyStorageKey = 'dxos:react-shell/space-manager/active-action'
 
 const Presence = SpaceMember.PresenceState;
 
-const handleSend = () => {};
 const handleCreateInvitationUrl = (invitationCode: string) => `${origin}?spaceInvitationCode=${invitationCode}`;
 
 const SpaceMemberList = ({ members }: { members: SpaceMember[] }) => {
@@ -39,6 +40,33 @@ const SpaceMemberList = ({ members }: { members: SpaceMember[] }) => {
 export const SpaceMembersSection = ({ space }: { space: Space }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const invitations = useSpaceInvitations(space.key);
+  const { dispatch } = useIntent();
+
+  const handleCloseDialog = () =>
+    dispatch({ action: LayoutAction.SET_LAYOUT, data: { element: 'dialog', state: false } });
+
+  const handleInvitationSelect = ({
+    invitation: invitationObservable,
+  }: {
+    invitation: CancellableInvitationObservable;
+  }) => {
+    const invitation = invitationObservable.get();
+    void dispatch({
+      action: LayoutAction.SET_LAYOUT,
+      data: {
+        element: 'dialog',
+        component: 'dxos.org/plugin/space/InvitationManagerDialog',
+        subject: {
+          invitationUrl: handleCreateInvitationUrl(InvitationEncoder.encode(invitation)),
+          send: handleCloseDialog,
+          status: invitation.state,
+          type: invitation.type,
+          authCode: invitation.authCode,
+          id: invitation.invitationId,
+        },
+      },
+    });
+  };
 
   const inviteActions = {
     inviteOne: {
@@ -104,7 +132,7 @@ export const SpaceMembersSection = ({ space }: { space: Space }) => {
               classNames='pis-0 pie-0 gap-0 col-span-4 grid grid-cols-subgrid'
               key={invitation.get().invitationId}
               invitation={invitation}
-              send={handleSend}
+              send={handleInvitationSelect}
               createInvitationUrl={handleCreateInvitationUrl}
             />
           ))}
@@ -113,7 +141,7 @@ export const SpaceMembersSection = ({ space }: { space: Space }) => {
       <ButtonGroup classNames='col-start-2 col-end-4 grid grid-cols-[1fr_var(--rail-action)] place-self-grow gap-px'>
         <Button classNames='gap-2' onClick={activeAction.onClick}>
           <activeAction.icon className={getSize(5)} />
-          <span>{t(activeAction.label)}</span>
+          <span>{t(activeAction.label, { ns: 'os' })}</span>
         </Button>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
@@ -135,10 +163,10 @@ export const SpaceMembersSection = ({ space }: { space: Space }) => {
                   >
                     {action.icon && <action.icon className={getSize(5)} />}
                     <div role='none' className='flex-1 min-is-0 space-b-1'>
-                      <p id={`${id}__label`}>{t(action.label)}</p>
+                      <p id={`${id}__label`}>{t(action.label, { ns: 'os' })}</p>
                       {action.description && (
                         <p id={`${id}__description`} className={descriptionText}>
-                          {t(action.description)}
+                          {t(action.description, { ns: 'os' })}
                         </p>
                       )}
                     </div>
