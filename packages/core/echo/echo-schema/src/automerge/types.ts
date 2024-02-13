@@ -7,8 +7,6 @@ import { Reference } from '@dxos/document-model';
 import { type ObjectMeta, type EchoObject } from '../object';
 import { type Schema } from '../proto';
 
-type AutomergeUrl = string;
-
 export interface SpaceDoc {
   access?: {
     spaceKey: string;
@@ -20,10 +18,10 @@ export interface SpaceDoc {
     [key: string]: ObjectStructure;
   };
   /**
-   * Objects stored as separate automerge documents.
+   * Object id points to an automerge doc url where the object is embedded.
    */
   links?: {
-    [echoId: string]: AutomergeUrl;
+    [echoId: string]: string;
   };
 }
 

@@ -12,7 +12,6 @@ import {
   type Space,
   type SpaceManager,
 } from '@dxos/echo-pipeline';
-import { type SpaceDoc } from '@dxos/echo-schema/dist/types/src/automerge/types';
 import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -143,8 +142,8 @@ export class DataSpaceManager {
     log('creating space...', { spaceKey });
     const space = await this._constructSpace(metadata);
 
-    const automergeRoot = this._automergeHost.repo.create<SpaceDoc>();
-    automergeRoot.change((doc: SpaceDoc) => {
+    const automergeRoot = this._automergeHost.repo.create();
+    automergeRoot.change((doc: any) => {
       doc.access = { spaceKey: spaceKey.toHex() };
     });
 
