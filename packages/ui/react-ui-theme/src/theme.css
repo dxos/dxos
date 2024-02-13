@@ -6,7 +6,6 @@
 @import '@fontsource-variable/jetbrains-mono/wght-italic.css';
 @import '@fontsource-variable/jetbrains-mono/wght.css';
 @import '@fontsource-variable/inter/slnt.css';
-@import '@fontsource/k2d/100-italic.css';
 
 @tailwind base;
 @tailwind utilities;
