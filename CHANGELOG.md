@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.4.4](https://github.com/dxos/dxos/compare/v0.4.3...v0.4.4) (2024-02-13)
+
+
+### Features
+
+* Effect Schema + Proxy reactivity prototype ([#4972](https://github.com/dxos/dxos/issues/4972)) ([d3e62a4](https://github.com/dxos/dxos/commit/d3e62a41e1517b1810e18f8fa453faaefeed2fbb))
+* Experimental GPT plugin ([#5563](https://github.com/dxos/dxos/issues/5563)) ([01e2847](https://github.com/dxos/dxos/commit/01e284727d4defc68477645f77fa0aff72bc43e0))
+* Interactive page for Spaces ([#5602](https://github.com/dxos/dxos/issues/5602)) ([e0df51e](https://github.com/dxos/dxos/commit/e0df51e770820088812bcddead4d5f7a75a8c395))
+* IPFS authentication ([#5634](https://github.com/dxos/dxos/issues/5634)) ([6614402](https://github.com/dxos/dxos/commit/6614402d0c131f819bc3cbe698e68919284ba20f))
+* **plugin-layout:** add setting for native app redirect ([#5622](https://github.com/dxos/dxos/issues/5622)) ([9f75c97](https://github.com/dxos/dxos/commit/9f75c97cb17cc95113141f78bab2b139f704977e))
+* **plugin-space:** navigate to peer on click ([#5647](https://github.com/dxos/dxos/issues/5647)) ([8d0e03e](https://github.com/dxos/dxos/commit/8d0e03e45b689dee5de513406714048d4f7dc733))
+* Settings reload button (and memo last selected tab). ([#5632](https://github.com/dxos/dxos/issues/5632)) ([9b77980](https://github.com/dxos/dxos/commit/9b7798078d8d17e971a25d751aa535e9285e2172))
+
+
+### Bug Fixes
+
+* ensure always using the same deepsignal entrypoint ([#5645](https://github.com/dxos/dxos/issues/5645)) ([6e43997](https://github.com/dxos/dxos/commit/6e4399778023656def38b0844175d5b95e641bc1))
+* Fix markdown codeblock formatting and selection ([#5603](https://github.com/dxos/dxos/issues/5603)) ([b30fc36](https://github.com/dxos/dxos/commit/b30fc36696e0cd148a772ccf86964252cbeb9b0c))
+* Fix space not loading on invitation ([#5628](https://github.com/dxos/dxos/issues/5628)) ([fb26545](https://github.com/dxos/dxos/commit/fb265457f13ef5ddd366ca7aa9a34a5d63ac32ae))
+* Fix warning on Storage config loading ([#5657](https://github.com/dxos/dxos/issues/5657)) ([2f28b7a](https://github.com/dxos/dxos/commit/2f28b7a8b6a92965edd5e7ffd3a5347b69a9b4d1))
+* Layout issues when Editor toolbar is disabled ([#5652](https://github.com/dxos/dxos/issues/5652)) ([103e8e7](https://github.com/dxos/dxos/commit/103e8e7d9bcdfb9604924474c4b7971573a5886b))
+* Mitigate render failure when switching between documents. ([#5623](https://github.com/dxos/dxos/issues/5623)) ([3a00f69](https://github.com/dxos/dxos/commit/3a00f692bb78a9647f1a7380fde0b25650091c3f))
+* **plugin-layout:** only show context when something is active ([#5611](https://github.com/dxos/dxos/issues/5611)) ([62445ee](https://github.com/dxos/dxos/commit/62445ee103a674e2730ad06e4689ae371e05feb3))
+* **plugin-markdown:** `EditorMain` grid layout ([#5618](https://github.com/dxos/dxos/issues/5618)) ([0a4a46e](https://github.com/dxos/dxos/commit/0a4a46ead8b8a4169bba44d04a33c58fd4a29e52))
+* **plugin-space:** copy between spaces ([#5627](https://github.com/dxos/dxos/issues/5627)) ([03ed207](https://github.com/dxos/dxos/commit/03ed207780f0400b1cd978d8a31ccbcc0bc04366))
+* **plugin-thread:** Chat layout ([#5624](https://github.com/dxos/dxos/issues/5624)) ([2a45fa8](https://github.com/dxos/dxos/commit/2a45fa851803d845ec4c5ccf1a3d080efa5f80cc))
+* **plugin-thread:** handle EditorView being out of sync w/ model ([#5629](https://github.com/dxos/dxos/issues/5629)) ([10c7143](https://github.com/dxos/dxos/commit/10c7143ec83f0b55911727aead553a6a24ce534e))
+* **plugin-thread:** Refine scrollIntoView ([#5633](https://github.com/dxos/dxos/issues/5633)) ([e05bf88](https://github.com/dxos/dxos/commit/e05bf8883ed9ee4940a103cab92ac061bc63471a))
+* Prompt editor styles ([#5636](https://github.com/dxos/dxos/issues/5636)) ([4dba395](https://github.com/dxos/dxos/commit/4dba3952a0b2db9f4d77ebc281284f56213d2f43))
+* **react-ui-editor:** Export layout fragments, remove unneeded styles ([#5621](https://github.com/dxos/dxos/issues/5621)) ([20c0bd9](https://github.com/dxos/dxos/commit/20c0bd96c2e64aeba3c6e52baa32123960c3096d))
+* remove custom font from theme for logo demo ([#5653](https://github.com/dxos/dxos/issues/5653)) ([4468a54](https://github.com/dxos/dxos/commit/4468a54fa67bfaba7de0bcecf658628a8a3eaaed))
+* **shell:** add pending state after reset confirmation ([#5609](https://github.com/dxos/dxos/issues/5609)) ([385c016](https://github.com/dxos/dxos/commit/385c016d65f5ae672aa7e94f4c4bd27c66f8771c))
+* **tools:** don't pass testPatterns flag to mocha test runner from pl… ([#5655](https://github.com/dxos/dxos/issues/5655)) ([c5da621](https://github.com/dxos/dxos/commit/c5da621625025468aa2af9050c75886482b8b9a3))
+
 ## [0.4.3](https://github.com/dxos/dxos/compare/v0.4.2...v0.4.3) (2024-02-08)
 
 
