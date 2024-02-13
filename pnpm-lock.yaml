@@ -8087,9 +8087,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
       '@dxos/text-model':
         specifier: workspace:*
         version: link:../../core/echo/text-model
@@ -8097,6 +8094,9 @@ importers:
         specifier: ^13.6.10
         version: 13.6.10
     devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme

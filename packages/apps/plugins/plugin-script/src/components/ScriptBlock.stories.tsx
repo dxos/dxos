@@ -57,7 +57,7 @@ const Story = () => {
 export default {
   title: 'plugin-script/ScriptBlock',
   component: ScriptBlock,
-  render: () => <ClientRepeater Component={Story} createSpace />,
+  render: () => <ClientRepeater component={Story} createSpace />,
   decorators: [],
   parameters: {
     layout: 'fullscreen',

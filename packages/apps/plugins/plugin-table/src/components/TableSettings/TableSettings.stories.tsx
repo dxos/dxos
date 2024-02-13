@@ -48,7 +48,7 @@ const Story = () => {
 export default {
   title: 'plugin-table/TableSettings',
   component: TableSettings,
-  render: () => <ClientRepeater Component={Story} createSpace />,
+  render: () => <ClientRepeater component={Story} createSpace />,
   decorators: [withTheme],
 };
 
