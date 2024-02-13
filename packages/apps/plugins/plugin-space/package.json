@@ -37,6 +37,7 @@
     "@dxos/migrations": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/shell": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.5.1",

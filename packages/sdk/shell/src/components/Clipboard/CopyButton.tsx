@@ -30,11 +30,11 @@ export const CopyButton = ({ value, classNames, iconProps, ...props }: CopyButto
     >
       <div role='none' className={mx('flex gap-1 items-center', isCopied && inactiveLabelStyles)}>
         <span className='pli-1'>{t('copy invitation code label')}</span>
-        <Copy className={getSize(4)} weight='bold' {...iconProps} />
+        <Copy className={getSize(5)} {...iconProps} />
       </div>
       <div role='none' className={mx('flex gap-1 items-center', !isCopied && inactiveLabelStyles)}>
         <span className='pli-1'>{t('copy invitation code success label')}</span>
-        <Check className={getSize(4)} weight='bold' {...iconProps} />
+        <Check className={getSize(5)} {...iconProps} />
       </div>
     </Button>
   );
@@ -62,7 +62,7 @@ export const CopyButtonIconOnly = ({ value, classNames, iconProps, variant, ...p
         asChild
       >
         <Button variant={variant} classNames={['inline-flex flex-col justify-center', classNames]}>
-          <Copy className={getSize(5)} weight='bold' {...iconProps} />
+          <Copy className={getSize(5)} {...iconProps} />
         </Button>
       </Tooltip.Trigger>
     </Tooltip.Root>
