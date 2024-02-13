@@ -41,6 +41,10 @@ export interface ReactiveHandler<T extends object> extends ProxyHandler<T> {
   readonly _proxyMap: WeakMap<object, any>;
 }
 
+/**
+ * Passed as the handler to the Proxy constructor.
+ * Maintains a mutable slot for the actual handler.
+ */
 class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
   public handler?: ReactiveHandler<T> = undefined;
 
