@@ -21,7 +21,7 @@ export default {
   decorators: [FullscreenDecorator()],
 };
 
-export const Default = () => <ClientRepeater Component={DefaultStory} types={types} />;
+export const Default = () => <ClientRepeater component={DefaultStory} types={types} />;
 const DefaultStory = () => {
   const [data, setData] = useState<{ cities: any }>();
   useEffect(() => {
