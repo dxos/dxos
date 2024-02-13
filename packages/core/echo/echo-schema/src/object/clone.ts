@@ -22,6 +22,7 @@ export type CloneOptions = {
 
 /**
  * Returns new unbound clone of the object.
+ * @deprecated
  */
 export const clone = <T extends EchoObject>(obj: T, { retainId = true, additional = [] }: CloneOptions = {}): T => {
   if (retainId === false && additional.length > 0) {

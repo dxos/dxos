@@ -3,7 +3,10 @@
 //
 
 import { type Signal } from '@preact/signals-core';
-import { type DeepSignal, deepSignal } from 'deepsignal';
+// NOTE: This needs to use the react entrypoint to be compatible with react-based plugins.
+// The different deepsignal entrypoints are not compatible with each other.
+// Each entrypoint has its own weakmap for tracking instances.
+import { type DeepSignal, deepSignal } from 'deepsignal/react';
 
 import type { UnsubscribeCallback } from '@dxos/async';
 
@@ -18,7 +21,7 @@ type PropType<T> = {
  * DevTools > Application > Local Storage
  */
 export class LocalStorageStore<T extends object> {
-  static string: PropType<string> = {
+  static string: PropType<string | undefined> = {
     get: (key) => {
       const value = localStorage.getItem(key);
       return value === null ? undefined : value;
@@ -32,7 +35,7 @@ export class LocalStorageStore<T extends object> {
     },
   };
 
-  static number: PropType<number> = {
+  static number: PropType<number | undefined> = {
     get: (key) => {
       const value = parseInt(localStorage.getItem(key) ?? '');
       return isNaN(value) ? undefined : value;
@@ -46,7 +49,7 @@ export class LocalStorageStore<T extends object> {
     },
   };
 
-  static bool: PropType<boolean> = {
+  static bool: PropType<boolean | undefined> = {
     get: (key) => {
       const value = localStorage.getItem(key);
       return value === 'true' ? true : value === 'false' ? false : undefined;
@@ -60,7 +63,7 @@ export class LocalStorageStore<T extends object> {
     },
   };
 
-  static json: PropType<object> = {
+  static json: PropType<object | undefined> = {
     get: (key) => {
       const value = localStorage.getItem(key);
       return value ? JSON.parse(value) : undefined;
@@ -90,7 +93,7 @@ export class LocalStorageStore<T extends object> {
   /**
    * Binds signal property to local storage key.
    */
-  prop<T>(prop: Signal<T | undefined>, lkey: string, type: PropType<T>) {
+  prop<T>(prop: Signal<T>, lkey: string, type: PropType<T>) {
     const key = this._prefix + '/' + lkey;
     if (this._subscriptions.has(key)) {
       return this;

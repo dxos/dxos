@@ -49,7 +49,7 @@ import {
   SpaceSettings,
 } from './components';
 import meta, { SPACE_PLUGIN } from './meta';
-import { saveSpaceToDisk, loadSpaceFromDisk } from './serializer';
+import { saveSpaceToDisk, loadSpaceFromDisk, clone } from './serializer';
 import translations from './translations';
 import {
   SpaceAction,
@@ -376,7 +376,7 @@ export const SpacePlugin = ({
               testId: 'spacePlugin.sharedSpaces',
               role: 'branch',
               palette: 'pink',
-              childrenPersistenceClass: 'folder',
+              childrenPersistenceClass: 'echo',
               onRearrangeChildren: (nextOrder: Space[]) => {
                 if (!spacesOrder) {
                   const nextObjectOrder = new Expando({
@@ -649,6 +649,18 @@ export const SpacePlugin = ({
                 };
               }
               break;
+            }
+
+            case SpaceAction.DUPLICATE_OBJECT: {
+              const originalObject = intent.data?.object ?? intent.data?.result;
+              if (!(originalObject instanceof TypedObject)) {
+                return;
+              }
+
+              const newObject = await clone(originalObject);
+              return {
+                intent: [{ action: SpaceAction.ADD_OBJECT, data: { object: newObject, target: intent.data?.target } }],
+              };
             }
 
             case SpaceAction.TOGGLE_HIDDEN: {

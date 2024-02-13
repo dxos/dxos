@@ -25,19 +25,19 @@ YELLOW=16776960
 function notifySuccess() {
   if [ -z "$DX_DISCORD_WEBHOOK_URL" ]; then return; fi
   MESSAGE='{ "embeds": [{ "title": "Deploy successful", "description": "'$1' ('${DX_ENVIRONMENT-}')", "color": '$GREEN' }] }'
-  curl -H "Content-Type: application/json" -d "${MESSAGE-}" $DX_DISCORD_WEBHOOK_URL
+  curl -H "Content-Type: application/json" -d "${MESSAGE-}" "$DX_DISCORD_WEBHOOK_URL"
 }
 
 function notifyFailure() {
   if [ -z "$DX_DISCORD_WEBHOOK_URL" ]; then return; fi
   MESSAGE='{ "embeds": [{ "title": "Deploy failed", "description": "'$1' ('${DX_ENVIRONMENT-}')", "color": '$RED' }] }'
-  curl -H "Content-Type: application/json" -d "${MESSAGE-}" $DX_DISCORD_WEBHOOK_URL
+  curl -H "Content-Type: application/json" -d "${MESSAGE-}" "$DX_DISCORD_WEBHOOK_URL"
 }
 
 function notifyStart() {
   if [ -z "$DX_DISCORD_WEBHOOK_URL" ]; then return; fi
   MESSAGE='{ "embeds": [{ "title": "Deploy started", "description": "Environment: '${DX_ENVIRONMENT-}'", "color": '$YELLOW' }] }'
-  curl -H "Content-Type: application/json" -d "${MESSAGE-}" $DX_DISCORD_WEBHOOK_URL
+  curl -H "Content-Type: application/json" -d "${MESSAGE-}" "$DX_DISCORD_WEBHOOK_URL"
 }
 
 if [[ $BRANCH = "production" || $BRANCH = "staging" ]]; then
@@ -50,26 +50,26 @@ devel_succeded=""
 devel_failed=""
 
 for APP in "${APPS[@]}"; do
-  pushd $APP
+  pushd "$APP"
 
   PACKAGE=${PWD##*/}
   PACKAGE_CAPS=${PACKAGE^^}
   PACKAGE_ENV=${PACKAGE_CAPS//-/_}
 
-  if [ $BRANCH = "production" ]; then
+  if [ "$BRANCH" = "production" ]; then
     export DX_ENVIRONMENT=production
     export LOG_FILTER=error
     DX_CONFIG="$ROOT/.circleci/publish-config/config-production.yml"
     VERSION=$(cat package.json | jq -r ".version")
 
     set +e
-    eval "export DX_SENTRY_DESTINATION=$"${PACKAGE_ENV}_SENTRY_DSN""
-    eval "export DX_TELEMETRY_API_KEY=$"${PACKAGE_ENV}_SEGMENT_API_KEY""
+    eval "export DX_SENTRY_DESTINATION=$""${PACKAGE_ENV}"_SENTRY_DSN""
+    eval "export DX_TELEMETRY_API_KEY=$""${PACKAGE_ENV}"_SEGMENT_API_KEY""
 
-    $ROOT/packages/devtools/cli/bin/dx app publish \
-      --config=$DX_CONFIG \
-      --accessToken=$KUBE_ACCESS_TOKEN \
-      --version=$VERSION \
+    "$ROOT"/packages/devtools/cli/bin/dx app publish \
+      --config="$DX_CONFIG" \
+      --accessToken="$KUBE_ACCESS_TOKEN" \
+      --version="$VERSION" \
       --skipExisting \
       --verbose
     if [[ $? -eq 0 ]]; then
@@ -78,17 +78,17 @@ for APP in "${APPS[@]}"; do
       failed="${failed:+$failed,}$PACKAGE"
     fi
     set -e
-  elif [ $BRANCH = "staging" ]; then
+  elif [ "$BRANCH" = "staging" ]; then
     export DX_ENVIRONMENT=staging
     export LOG_FILTER=error
     DX_CONFIG="$ROOT/.circleci/publish-config/config-staging.yml"
     VERSION=$(cat package.json | jq -r ".version")
 
     set +e
-    $ROOT/packages/devtools/cli/bin/dx app publish \
-      --config=$DX_CONFIG \
-      --accessToken=$KUBE_ACCESS_TOKEN \
-      --version=$VERSION \
+    "$ROOT"/packages/devtools/cli/bin/dx app publish \
+      --config="$DX_CONFIG" \
+      --accessToken="$KUBE_ACCESS_TOKEN" \
+      --version="$VERSION" \
       --verbose
     if [[ $? -eq 0 ]]; then
       succeded="${succeded:+$succeded,}$PACKAGE"
@@ -105,9 +105,13 @@ for APP in "${APPS[@]}"; do
     DX_CONFIG="$ROOT/.circleci/publish-config/config-development.yml"
 
     set +e
-    $ROOT/packages/devtools/cli/bin/dx app publish \
-      --config=$DX_CONFIG \
-      --accessToken=$KUBE_ACCESS_TOKEN \
+    # Include segment key for development environment.
+    # Intentionally omit sentry key for development environment.
+    eval "export DX_TELEMETRY_API_KEY=$""${PACKAGE_ENV}"_SEGMENT_API_KEY""
+
+    "$ROOT"/packages/devtools/cli/bin/dx app publish \
+      --config="$DX_CONFIG" \
+      --accessToken="$KUBE_ACCESS_TOKEN" \
       --verbose
     if [[ $? -eq 0 ]]; then
       devel_succeded="${devel_succeded:+$devel_succeded,}$PACKAGE"
@@ -120,10 +124,10 @@ for APP in "${APPS[@]}"; do
 done
 
 if [[ -n "$succeded" ]]; then
-  notifySuccess $succeded
+  notifySuccess "$succeded"
 fi
 if [[ -n "$failed" ]]; then
-  notifyFailure $failed
+  notifyFailure "$failed"
 fi
 
 if [[ -n "$failed" ]] || [[ -n "$devel_failed" ]]; then

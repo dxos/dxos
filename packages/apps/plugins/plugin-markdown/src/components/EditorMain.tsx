@@ -78,8 +78,9 @@ const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...prop
       )}
       <div
         role='none'
+        data-toolbar={toolbar ? 'enabled' : 'disabled'}
         className={mx(
-          'is-full overflow-y-auto overflow-anchored after:block after:is-px after:bs-px after:overflow-anchor after:-mbs-px',
+          'is-full overflow-y-auto overflow-anchored after:block after:is-px after:bs-px after:overflow-anchor after:-mbs-px data-[toolbar=disabled]:pbs-8',
         )}
       >
         <MarkdownEditor

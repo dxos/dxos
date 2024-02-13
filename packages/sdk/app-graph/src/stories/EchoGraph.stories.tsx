@@ -231,5 +231,5 @@ const EchoGraphStory = () => {
 };
 
 export const Default = {
-  render: () => <ClientRepeater Component={EchoGraphStory} clients={[client]} className='flex flex-col' />,
+  render: () => <ClientRepeater component={EchoGraphStory} clients={[client]} className='flex flex-col' />,
 };

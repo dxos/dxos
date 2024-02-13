@@ -14,6 +14,7 @@ import {
   Users,
   X,
   Database,
+  Copy,
 } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import React from 'react';
@@ -22,19 +23,13 @@ import type { Graph, Node, NodeArg } from '@braneframe/plugin-graph';
 import { Folder } from '@braneframe/types';
 import { type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { clone, isTypedObject } from '@dxos/echo-schema';
+import { isTypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { Migrations } from '@dxos/migrations';
-import {
-  EchoDatabase,
-  type Space,
-  SpaceProxy,
-  SpaceState,
-  type TypedObject,
-  getSpaceForObject,
-} from '@dxos/react-client/echo';
+import { EchoDatabase, type Space, SpaceState, type TypedObject, getSpaceForObject } from '@dxos/react-client/echo';
 
 import { SPACE_PLUGIN } from './meta';
+import { clone } from './serializer';
 import { SpaceAction } from './types';
 
 export const SHARED = 'shared-spaces';
@@ -99,30 +94,33 @@ const getFolderGraphNodePartials = ({
       },
     ],
     properties: {
-      acceptPersistenceClass: new Set(['folder']),
+      acceptPersistenceClass: new Set(['echo']),
+      acceptPersistenceKey: new Set([space.key.toHex()]),
       role: 'branch',
       onRearrangeChildren: (nextOrder: TypedObject[]) => {
         folder.objects = nextOrder;
       },
       onTransferStart: (child: Node<TypedObject>) => {
-        const childSpace = getSpaceForObject(child.data);
-        if (space && childSpace && !childSpace.key.equals(space.key)) {
-          // Create clone of child and add to destination space.
-          const newObject = clone(child.data, {
-            retainId: true,
-            // TODO(wittjosiah): This needs to be generalized and not hardcoded here.
-            additional: [
-              child.data.content,
-              ...(child.data.objects ?? []),
-              ...(child.data.objects ?? []).map((object: TypedObject) => object.content),
-            ],
-          });
-          space.db.add(newObject);
-          folder.objects.push(newObject);
-        } else {
-          // Add child to destination folder.
-          folder.objects.push(child.data);
-        }
+        // TODO(wittjosiah): Support transfer between spaces.
+        // const childSpace = getSpaceForObject(child.data);
+        // if (space && childSpace && !childSpace.key.equals(space.key)) {
+        //   // Create clone of child and add to destination space.
+        //   const newObject = clone(child.data, {
+        //     // TODO(wittjosiah): This needs to be generalized and not hardcoded here.
+        //     additional: [
+        //       child.data.content,
+        //       ...(child.data.objects ?? []),
+        //       ...(child.data.objects ?? []).map((object: TypedObject) => object.content),
+        //     ],
+        //   });
+        //   space.db.add(newObject);
+        //   folder.objects.push(newObject);
+        // } else {
+
+        // Add child to destination folder.
+        folder.objects.push(child.data);
+
+        // }
       },
       onTransferEnd: (child: Node<TypedObject>, destination: Node) => {
         // Remove child from origin folder.
@@ -131,13 +129,20 @@ const getFolderGraphNodePartials = ({
           folder.objects.splice(index, 1);
         }
 
-        const childSpace = getSpaceForObject(child.data);
-        const destinationSpace =
-          destination.data instanceof SpaceProxy ? destination.data : getSpaceForObject(destination.data);
-        if (destinationSpace && childSpace && !childSpace.key.equals(destinationSpace.key)) {
-          // Mark child as deleted in origin space.
-          childSpace.db.remove(child.data);
-        }
+        // TODO(wittjosiah): Support transfer between spaces.
+        // const childSpace = getSpaceForObject(child.data);
+        // const destinationSpace =
+        //   destination.data instanceof SpaceProxy ? destination.data : getSpaceForObject(destination.data);
+        // if (destinationSpace && childSpace && !childSpace.key.equals(destinationSpace.key)) {
+        //   // Mark child as deleted in origin space.
+        //   childSpace.db.remove(child.data);
+        // }
+      },
+      onCopy: async (child: Node<TypedObject>) => {
+        // Create clone of child and add to destination space.
+        const newObject = await clone(child.data);
+        space.db.add(newObject);
+        folder.objects.push(newObject);
       },
     },
   };
@@ -303,7 +308,8 @@ export const objectToGraphNode = ({
       properties: {
         ...partials.properties,
         testId: 'spacePlugin.object',
-        persistenceClass: 'folder',
+        persistenceClass: 'echo',
+        persistenceKey: space?.key.toHex(),
       },
     });
 
@@ -341,6 +347,20 @@ export const objectToGraphNode = ({
     );
 
     if (!(object instanceof Folder)) {
+      node.addAction({
+        id: 'duplicate',
+        label: ['duplicate object label', { ns: SPACE_PLUGIN }],
+        icon: (props) => <Copy {...props} />,
+        invoke: () =>
+          dispatch({
+            action: SpaceAction.DUPLICATE_OBJECT,
+            data: { object, target: parent.data },
+          }),
+        properties: {
+          testId: 'spacePlugin.duplicateObject',
+        },
+      });
+
       return;
     }
 

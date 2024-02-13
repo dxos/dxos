@@ -46,6 +46,7 @@ export default [
         'save files to directory label': 'Save files to disk',
         'select path label': 'Select path',
         'rename object label': 'Rename item',
+        'duplicate object label': 'Duplicate item',
         'delete object label': 'Delete item',
         'go to object label': 'Open item',
         'found object label': 'Ready.',

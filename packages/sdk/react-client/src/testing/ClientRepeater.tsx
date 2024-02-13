@@ -6,11 +6,9 @@ import React, { useState, type FC, useEffect } from 'react';
 
 import { Client, type PublicKey } from '@dxos/client';
 import { type SpaceProxy, type Space, type TypeCollection } from '@dxos/client/echo';
-import { ConnectionState } from '@dxos/client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
-import { Input } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
 import { ClientContext } from '../client';
@@ -20,13 +18,13 @@ const testBuilder = new TestBuilder();
 export type RepeatedComponentProps = { id: number; count: number };
 
 export type ClientRepeaterProps<P extends RepeatedComponentProps> = {
+  component: FC<any>;
+  controls?: FC<{ clients: Client[] }>;
   clients?: Client[];
   count?: number;
   registerSignalFactory?: boolean;
   className?: string;
-  Component: FC<any>;
   types?: TypeCollection;
-  networkToggle?: boolean;
   createIdentity?: boolean;
   createSpace?: boolean;
   onCreateSpace?: (space: Space) => MaybePromise<void>;
@@ -44,10 +42,10 @@ export type ClientRepeaterProps<P extends RepeatedComponentProps> = {
 // TODO(wittjosiah): Rename.
 export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRepeaterProps<P>) => {
   const {
+    component: Component,
+    controls: Controls,
     count = 1,
     className = 'flex w-full place-content-evenly',
-    Component,
-    networkToggle,
     types,
     createIdentity,
     createSpace,
@@ -91,7 +89,7 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
 
   return (
     <>
-      {networkToggle && <ToggleNetwork clients={clients} />}
+      {Controls && <Controls clients={clients} />}
       <div className={className}>
         {clients.map((client, index) => (
           <ClientContext.Provider key={index} value={{ client }}>
@@ -100,32 +98,5 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
         ))}
       </div>
     </>
-  );
-};
-
-const ToggleNetwork = ({ clients }: { clients: Client[] }) => {
-  const toggleNetwork = async (checked: boolean) => {
-    const mode = checked ? ConnectionState.OFFLINE : ConnectionState.ONLINE;
-    await Promise.all(clients.map((client) => client.mesh.updateConfig(mode)));
-  };
-
-  return (
-    <div className='flex'>
-      <Input.Root>
-        <Input.Checkbox classNames='me-2' onCheckedChange={toggleNetwork} />
-        <Input.Label>
-          Disable{' '}
-          <a
-            href='https://docs.dxos.org/guide/platform/'
-            target='_blank'
-            rel='noreferrer'
-            className='text-primary-600 dark:text-primary-400'
-          >
-            replication
-          </a>{' '}
-          (go offline)
-        </Input.Label>
-      </Input.Root>
-    </div>
   );
 };
