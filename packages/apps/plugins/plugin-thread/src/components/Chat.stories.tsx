@@ -67,7 +67,7 @@ const Story = () => {
 export default {
   title: 'plugin-thread/Chat',
   component: Thread,
-  render: () => <ClientRepeater Component={Story} types={types} createIdentity createSpace />,
+  render: () => <ClientRepeater component={Story} types={types} createIdentity createSpace />,
   decorators: [withTheme],
   parameters: { translations, layout: 'fullscreen' },
 };

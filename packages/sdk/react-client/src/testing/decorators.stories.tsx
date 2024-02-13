@@ -39,7 +39,7 @@ const ClientStory = () => {
 };
 
 export const WithClient = {
-  render: () => <ClientRepeater Component={ClientStory} count={2} />,
+  render: () => <ClientRepeater component={ClientStory} count={2} />,
 };
 
 const ClientSpace = ({ spaceKey }: { spaceKey: PublicKey }) => {
@@ -59,9 +59,5 @@ const ClientSpace = ({ spaceKey }: { spaceKey: PublicKey }) => {
 };
 
 export const WithClientSpace = {
-  render: () => <ClientRepeater Component={ClientSpace} count={2} createSpace />,
-};
-
-export const WithNetworkToggle = {
-  render: () => <ClientRepeater Component={ClientSpace} count={2} createSpace networkToggle />,
+  render: () => <ClientRepeater component={ClientSpace} count={2} createSpace />,
 };
