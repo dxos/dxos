@@ -152,11 +152,11 @@ export const FullPresence = (props: MemberPresenceProps) => {
           <Tooltip.Portal>
             <Tooltip.Content side='bottom'>
               <Tooltip.Arrow />
-              <List classNames='max-h-56 overflow-y-auto gap-2'>
+              <List classNames='max-h-56 overflow-y-auto'>
                 {members.map((member) => (
                   <ListItem.Root
                     key={member.identity.identityKey.toHex()}
-                    classNames='flex gap-2 items-center cursor-pointer'
+                    classNames='flex gap-2 items-center cursor-pointer mbe-2'
                     onClick={() => onMemberClick?.(member)}
                     data-testid='identity-list-item'
                   >
