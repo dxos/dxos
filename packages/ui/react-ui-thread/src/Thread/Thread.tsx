@@ -14,7 +14,7 @@ import type { ThreadEntity } from '../types';
 export type ThreadProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
   ThreadEntity & { current?: boolean | ComponentProps<'div'>['aria-current'] };
 
-export const threadLayout = 'is-full place-self-start grid grid-cols-[3rem_1fr]';
+export const threadLayout = 'is-full place-self-start grid grid-cols-[var(--rail-size)_1fr]';
 
 export const Thread = forwardRef<HTMLDivElement, ThreadProps>(
   ({ current, children, classNames, ...props }, forwardedRef) => {
