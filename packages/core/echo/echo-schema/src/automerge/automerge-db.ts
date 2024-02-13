@@ -88,7 +88,7 @@ export class AutomergeDb {
         }
 
         const objectIds = Object.keys(doc.objects ?? {});
-        this._createInlineObjects(objectIds);
+        this._createInlineObjects(this.spaceRootDocHandle, objectIds);
         this._loadLinkedObjects(doc.links);
       } catch (err) {
         if (err instanceof ContextDisposedError) {
@@ -189,6 +189,8 @@ export class AutomergeDb {
 
     const spaceDocHandle = this.automerge.repo.create<SpaceDoc>();
     this._initDocAccess(spaceDocHandle);
+    this._linkObjectDocument(obj, spaceDocHandle);
+    spaceDocHandle.on('change', this._onDocumentUpdate.bind(this));
 
     (obj[base] as AutomergeObject)._bind({
       db: this,
@@ -196,10 +198,6 @@ export class AutomergeDb {
       path: ['objects', obj.id],
       assignFromLocalState: true,
     });
-
-    this._linkObjectDocument(obj, spaceDocHandle);
-
-    spaceDocHandle.on('change', this._onDocumentUpdate.bind(this));
 
     return obj;
   }
@@ -211,6 +209,9 @@ export class AutomergeDb {
   }
 
   private _emitUpdateEvent(itemsUpdated: string[]) {
+    if (itemsUpdated.length === 0) {
+      return;
+    }
     this._updateEvent.emit({
       spaceKey: this.spaceKey,
       itemsUpdated: itemsUpdated.map((id) => ({ id })),
@@ -265,7 +266,10 @@ export class AutomergeDb {
   private _onDocumentUpdate(event: DocHandleChangePayload<SpaceDoc>) {
     const { updatedObjects, linkedDocuments } = processDocumentUpdate(event);
     this._loadLinkedObjects(linkedDocuments);
-    this._createInlineObjects(updatedObjects.filter((id) => !this._objects.has(id)));
+    this._createInlineObjects(
+      event.handle,
+      updatedObjects.filter((id) => !this._objects.has(id)),
+    );
     this._emitUpdateEvent(updatedObjects);
   }
 
@@ -279,11 +283,10 @@ export class AutomergeDb {
   /**
    * Loads all objects on open and handles objects that are being created not by this client.
    */
-  private _createInlineObjects(objectIds: string[]) {
-    invariant(this.spaceRootDocHandle);
+  private _createInlineObjects(docHandle: DocHandle<SpaceDoc>, objectIds: string[]) {
     for (const id of objectIds) {
       invariant(!this._objects.has(id));
-      this._createObjectInDocument(id, this.spaceRootDocHandle);
+      this._createObjectInDocument(id, docHandle);
     }
   }
 
