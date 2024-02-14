@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Ref } from 'effect';
 import { type ReactiveObject } from './reactive';
 
 export const symbolIsProxy = Symbol('isProxy');

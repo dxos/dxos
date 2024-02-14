@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { describe, test } from '@dxos/test';
-import * as R from './reactive';
-import { expect } from 'chai';
-import { registerSignalRuntime } from '@dxos/echo-signals';
 import { effect } from '@preact/signals-core';
-import { defer } from '@dxos/util';
+import { expect } from 'chai';
 import { inspect } from 'util';
+
+import { registerSignalRuntime } from '@dxos/echo-signals';
+import { describe, test } from '@dxos/test';
+
+import * as R from './reactive';
 
 registerSignalRuntime();
 
@@ -64,6 +65,7 @@ describe('Proxy properties', () => {
     const obj = R.object<any>({});
 
     obj.object = { field: 'bar' };
+    // eslint-disable-next-line no-self-compare
     expect(obj.object === obj.object).to.be.true;
   });
 
@@ -107,6 +109,7 @@ describe('Proxy properties', () => {
     const obj = R.object<any>({});
 
     obj.array = [{ field: 'bar' }];
+    // eslint-disable-next-line no-self-compare
     expect(obj.array === obj.array).to.be.true;
   });
 
@@ -348,7 +351,7 @@ const TEST_OBJECT = {
   number: 42,
   boolean: true,
   null: null,
-  undefined: undefined,
+  undefined,
   array: [1, 2, 3],
   object: { field: 'bar' },
   classInstance: new MyClass(),
