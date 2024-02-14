@@ -4,6 +4,7 @@
 
 import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
+import jestExpect from 'expect';
 import { inspect } from 'util';
 
 import { registerSignalRuntime } from '@dxos/echo-signals';
@@ -196,6 +197,37 @@ describe('Proxy properties', () => {
     expect(obj).to.not.deep.eq({ ...TEST_OBJECT, number: 11 });
   });
 
+  test('jest deep equal works', () => {
+    const obj = R.object(TEST_OBJECT);
+
+    jestExpect(obj).toEqual(TEST_OBJECT);
+    jestExpect(obj).not.toEqual({ ...TEST_OBJECT, number: 11 });
+  });
+
+  // Not a typical use case, but might come up when interacting with 3rd party libraries.
+  test('defineProperty', () => {
+    const obj = R.object<any>({});
+    using updates = updateCounter(() => {
+      obj.field;
+    });
+
+    Object.defineProperty(obj, 'field', { value: 'bar' });
+    expect(obj.field).to.eq('bar');
+    expect(updates.count, 'update count').to.eq(1);
+  });
+
+  test('getOwnPropertyDescriptor', () => {
+    const obj = R.object<any>({ field: 'bar' });
+    const descriptor = Object.getOwnPropertyDescriptor(obj, 'field');
+
+    expect(descriptor).to.deep.eq({
+      value: 'bar',
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    });
+  });
+
   describe('signal updates', () => {
     test('are synchronous', () => {
       const obj = R.object({ field: 'bar' });
@@ -282,8 +314,7 @@ describe('Proxy properties', () => {
       expect(updates.count, 'update count').to.eq(1);
     });
 
-    // TODO(dmaretskyi): Fix array operations.
-    test.skip('length', () => {
+    test('length', () => {
       const { array } = R.object({ array: [1, 2, 3] });
       using updates = updateCounter(() => {
         array[0];
@@ -306,18 +337,182 @@ describe('Proxy properties', () => {
       expect(updates.count, 'update count').to.eq(1);
     });
 
-    test('push');
-    test('pop');
-    test('shift');
-    test('unshift');
-    test('splice');
-    test('sort');
-    test('reverse');
-    test('map');
-    test('flatMap');
-    test('flat');
-    test('forEach');
-    test('spreading');
+    test('push', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      array.push(4);
+      expect(array).to.deep.eq([1, 2, 3, 4]);
+      expect(updates.count, 'update count').to.eq(1);
+    });
+
+    test('pop', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      const value = array.pop();
+      expect(value).to.eq(3);
+      expect(array).to.deep.eq([1, 2]);
+      expect(updates.count, 'update count').to.eq(1);
+    });
+
+    test('shift', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      const value = array.shift();
+      expect(value).to.eq(1);
+      expect(array).to.deep.eq([2, 3]);
+      expect(updates.count, 'update count').to.eq(1);
+    });
+
+    test('unshift', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      const newLength = array.unshift(0);
+      expect(newLength).to.eq(4);
+      expect(array).to.deep.eq([0, 1, 2, 3]);
+      expect(updates.count, 'update count').to.eq(1);
+    });
+
+    test('splice', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      const removed = array.splice(1, 1, 4);
+      expect(removed).to.deep.eq([2]);
+      expect(array).to.deep.eq([1, 4, 3]);
+      expect(updates.count, 'update count').to.eq(1);
+    });
+
+    test('sort', () => {
+      const { array } = R.object({ array: [3, 2, 1] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      const returnValue = array.sort();
+      expect(returnValue === array).to.be.true;
+      expect(array).to.deep.eq([1, 2, 3]);
+      expect(updates.count, 'update count').to.eq(1);
+    });
+
+    test('reverse', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      const returnValue = array.reverse();
+      expect(returnValue === array).to.be.true;
+      expect(array).to.deep.eq([3, 2, 1]);
+      expect(updates.count, 'update count').to.eq(1);
+    });
+
+    test('map', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      const result = array.map((value) => value * 2);
+      expect(Array.isArray(result)).to.be.true;
+      expect(Object.getPrototypeOf(result)).to.eq(Array.prototype);
+      expect(result).to.deep.eq([2, 4, 6]);
+      expect(updates.count, 'update count').to.eq(0);
+    });
+
+    test('flatMap', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      const result = array.flatMap((value) => [value, value * 2]);
+      expect(Array.isArray(result)).to.be.true;
+      expect(Object.getPrototypeOf(result)).to.eq(Array.prototype);
+      expect(result).to.deep.eq([1, 2, 2, 4, 3, 6]);
+      expect(updates.count, 'update count').to.eq(0);
+    });
+
+    test('flat', () => {
+      const { array } = R.object({ array: [[1], [2, 3]] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      const result = array.flat();
+      expect(Array.isArray(result)).to.be.true;
+      expect(Object.getPrototypeOf(result)).to.eq(Array.prototype);
+      expect(result).to.deep.eq([1, 2, 3]);
+      expect(updates.count, 'update count').to.eq(0);
+    });
+
+    test('forEach', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      let sum = 0;
+      array.forEach((value) => {
+        sum += value;
+      });
+      expect(sum).to.eq(6);
+      expect(updates.count, 'update count').to.eq(0);
+    });
+
+    test('spreading', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      const result = [...array];
+      expect(Array.isArray(result)).to.be.true;
+      expect(Object.getPrototypeOf(result)).to.eq(Array.prototype);
+      expect(result).to.deep.eq([1, 2, 3]);
+      expect(updates.count, 'update count').to.eq(0);
+    });
+
+    test('values', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      const result = array.values();
+      expect(result.next().value).to.eq(1);
+      expect(result.next().value).to.eq(2);
+      expect(result.next().value).to.eq(3);
+      expect(result.next().done).to.be.true;
+      expect(updates.count, 'update count').to.eq(0);
+    });
+
+    test('for loop', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      let sum = 0;
+      for (const value of array) {
+        sum += value;
+      }
+      expect(sum).to.eq(6);
+      expect(updates.count, 'update count').to.eq(0);
+    });
   });
 });
 
