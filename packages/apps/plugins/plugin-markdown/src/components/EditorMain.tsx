@@ -79,9 +79,7 @@ const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...prop
       <div
         role='none'
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
-        className={mx(
-          'is-full overflow-y-auto overflow-anchored after:block after:is-px after:bs-px after:overflow-anchor after:-mbs-px data-[toolbar=disabled]:pbs-8',
-        )}
+        className='is-full overflow-y-auto overflow-anchored after:block after:is-px after:bs-px after:overflow-anchor after:-mbs-px data-[toolbar=disabled]:pbs-8'
       >
         <MarkdownEditor
           ref={editorRef}
@@ -101,7 +99,11 @@ const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...prop
               'data-testid': 'composer.markdownRoot',
             } as HTMLAttributes<HTMLDivElement>,
             editor: {
-              className: mx(editorFillLayoutEditor, 'is-full pli-2 sm:pli-6 md:pli-8 py-2', !toolbar && 'border-bs'),
+              className: mx(
+                editorFillLayoutEditor,
+                'is-full [&>.cm-scroller]:overflow-visible [&>.cm-scroller]:p-2 [&>.cm-scroller]:sm:p-6 [&>.cm-scroller]:md:p-8',
+                !toolbar && 'border-bs',
+              ),
             },
             content: {
               className: editorHalfViewportOverscrollContent,
