@@ -87,7 +87,7 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
             <ProfileForm
               send={rest.send}
               active={activeView === 'update profile form'}
-              profile={identity.profile}
+              identity={identity}
               onUpdateProfile={onUpdateProfile}
             />
           </Viewport.View>
