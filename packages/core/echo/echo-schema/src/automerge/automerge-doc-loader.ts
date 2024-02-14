@@ -124,11 +124,53 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   }
 
   public loadLinkedObjects(links: SpaceDocumentLinks) {
-    return this._loadLinkedObjects(links);
+    if (!links) {
+      return;
+    }
+    for (const [objectId, automergeUrl] of Object.entries(links)) {
+      const logMeta = { objectId, automergeUrl };
+      const objectDocumentHandle = this._objectDocumentHandles.get(objectId);
+      if (objectDocumentHandle != null && objectDocumentHandle.url !== automergeUrl) {
+        log.warn('object already inlined in a different document, ignoring the link', {
+          ...logMeta,
+          actualDocumentUrl: objectDocumentHandle.url,
+        });
+        continue;
+      }
+      if (objectDocumentHandle?.url === automergeUrl) {
+        log.warn('object document was already loaded', logMeta);
+        continue;
+      }
+      const handle = this._automerge.repo.find<SpaceDoc>(automergeUrl as DocumentId);
+      log.debug('document loading triggered', logMeta);
+      this._objectDocumentHandles.set(objectId, handle);
+      void this._createObjectOnDocumentLoad(handle, objectId);
+    }
   }
 
   public processDocumentUpdate(event: DocHandleChangePayload<SpaceDoc>) {
-    return this._processDocumentChanges(event);
+    const { inlineChangedObjects, linkedDocuments } = this._getInlineAndLinkChanges(event);
+    const createdObjectIds: string[] = [];
+    const objectsToRebind: string[] = [];
+    for (const updatedObject of inlineChangedObjects) {
+      const docHandle = this._objectDocumentHandles.get(updatedObject);
+      if (!this._createdObjectIds.has(updatedObject)) {
+        createdObjectIds.push(updatedObject);
+      } else if (docHandle?.url !== event.handle.url) {
+        log.warn('object bound to incorrect document, going to rebind', {
+          updatedObject,
+          documentUrl: docHandle?.url,
+          actualUrl: event.handle.url,
+        });
+        objectsToRebind.push(updatedObject);
+      }
+    }
+    return {
+      updatedObjectIds: inlineChangedObjects,
+      objectsToRebind,
+      createdObjectIds,
+      linkedDocuments,
+    };
   }
 
   private async _initDocHandle(ctx: Context, url: string) {
@@ -176,31 +218,6 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     });
   }
 
-  private _loadLinkedObjects(links: SpaceDocumentLinks) {
-    if (!links) {
-      return;
-    }
-    for (const [objectId, automergeUrl] of Object.entries(links)) {
-      const logMeta = { objectId, automergeUrl };
-      const objectDocumentHandle = this._objectDocumentHandles.get(objectId);
-      if (objectDocumentHandle != null && objectDocumentHandle.url !== automergeUrl) {
-        log.warn('object already inlined in a different document, ignoring the link', {
-          ...logMeta,
-          actualDocumentUrl: objectDocumentHandle.url,
-        });
-        continue;
-      }
-      if (objectDocumentHandle?.url === automergeUrl) {
-        log.warn('object document was already loaded', logMeta);
-        continue;
-      }
-      const handle = this._automerge.repo.find<SpaceDoc>(automergeUrl as DocumentId);
-      log.debug('document loading triggered', logMeta);
-      this._objectDocumentHandles.set(objectId, handle);
-      void this._createObjectOnDocumentLoad(handle, objectId);
-    }
-  }
-
   private async _createObjectOnDocumentLoad(handle: DocHandle<SpaceDoc>, objectId: string) {
     try {
       await handle.doc(['ready']);
@@ -228,31 +245,6 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
         await this._createObjectOnDocumentLoad(handle, objectId);
       }
     }
-  }
-
-  private _processDocumentChanges(event: DocHandleChangePayload<SpaceDoc>): DocumentChanges {
-    const { inlineChangedObjects, linkedDocuments } = this._getInlineAndLinkChanges(event);
-    const createdObjectIds: string[] = [];
-    const objectsToRebind: string[] = [];
-    for (const updatedObject of inlineChangedObjects) {
-      const docHandle = this._objectDocumentHandles.get(updatedObject);
-      if (!this._createdObjectIds.has(updatedObject)) {
-        createdObjectIds.push(updatedObject);
-      } else if (docHandle?.url !== event.handle.url) {
-        log.warn('object bound to incorrect document, going to rebind', {
-          updatedObject,
-          documentUrl: docHandle?.url,
-          actualUrl: event.handle.url,
-        });
-        objectsToRebind.push(updatedObject);
-      }
-    }
-    return {
-      updatedObjectIds: inlineChangedObjects,
-      objectsToRebind,
-      createdObjectIds,
-      linkedDocuments,
-    };
   }
 
   private _getInlineAndLinkChanges(event: DocHandleChangePayload<SpaceDoc>) {
