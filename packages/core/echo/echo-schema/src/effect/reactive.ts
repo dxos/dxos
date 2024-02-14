@@ -20,7 +20,7 @@ export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
  * Reactive object.
  * Accessing properties triggers signal semantics.
  */
-// TODO(burdon): Is the type needed?
+// This type doesn't change the shape of the object, it is rather used as an indicator that the object is reactive.
 export type ReactiveObject<T> = { [K in keyof T]: T[K] };
 
 /**
