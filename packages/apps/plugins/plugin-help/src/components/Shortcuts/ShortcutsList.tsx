@@ -24,11 +24,11 @@ export const ShortcutsList = () => {
   });
 
   return (
-    <dl className='is-fit grid grid-cols-[min-content_max-content] gap-2 mlb-4'>
+    <dl className='is-fit grid grid-cols-[min-content_minmax(12rem,1fr)] gap-2 mlb-4'>
       {bindings.map((binding, i) => (
         <Fragment key={i}>
           <Key binding={binding.shortcut} />
-          <span role='definition' aria-labelledby={binding.shortcut} className='truncate'>
+          <span role='definition' aria-labelledby={binding.shortcut}>
             {toString(binding.data as Label)}
           </span>
         </Fragment>
