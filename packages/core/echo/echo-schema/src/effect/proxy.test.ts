@@ -205,9 +205,29 @@ describe.only('Proxy properties', () => {
     jestExpect(obj).not.toEqual({ ...TEST_OBJECT, number: 11 });
   });
 
-  test('defineProperty');
+  // Not a typical use case, but might come up when interacting with 3rd party libraries.
+  test('defineProperty', () => {
+    const obj = R.object<any>({});
+    using updates = updateCounter(() => {
+      obj.field;
+    });
 
-  test('getOwnPropertyDescriptor');
+    Object.defineProperty(obj, 'field', { value: 'bar' });
+    expect(obj.field).to.eq('bar');
+    expect(updates.count, 'update count').to.eq(1);
+  });
+
+  test('getOwnPropertyDescriptor', () => {
+    const obj = R.object<any>({ field: 'bar' });
+    const descriptor = Object.getOwnPropertyDescriptor(obj, 'field');
+
+    expect(descriptor).to.deep.eq({
+      value: 'bar',
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    });
+  });
 
   describe('signal updates', () => {
     test('are synchronous', () => {
