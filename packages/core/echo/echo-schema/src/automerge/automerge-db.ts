@@ -31,7 +31,7 @@ export class AutomergeDb {
   /**
    * @internal
    */
-  readonly _objects = new Map<string, EchoObject>();
+  readonly _objects = new Map<string, AutomergeObject>();
   readonly _objectsSystem = new Map<string, EchoObject>();
 
   readonly _updateEvent = new Event<{ spaceKey: PublicKey; itemsUpdated: { id: string }[] }>();
@@ -94,7 +94,8 @@ export class AutomergeDb {
 
     const update = (event: DocHandleChangePayload<DocStructure>) => {
       const updatedObjects = getUpdatedObjects(event);
-      this._createObjects(updatedObjects.filter((id) => !this._objects.has(id)));
+      const absentObjects = updatedObjects.filter((id) => !this._objects.has(id));
+      absentObjects.length > 0 && this._createObjects(absentObjects);
       this._emitUpdateEvent(updatedObjects);
     };
 
@@ -204,6 +205,12 @@ export class AutomergeDb {
       spaceKey: this.spaceKey,
       itemsUpdated: itemsUpdated.map((id) => ({ id })),
     });
+    for (const id of itemsUpdated) {
+      const obj = this._objects.get(id);
+      if (obj) {
+        obj[base]._core.notifyUpdate();
+      }
+    }
   }
 
   /**

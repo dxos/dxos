@@ -40,9 +40,31 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
         upload: async (file) => {
           try {
             const config = clientPlugin?.provides.client.config;
+
+            // TODO(nf): dedupe with publish.ts in @dxos/cli
             const server = config?.values.runtime?.services?.ipfs?.server;
             if (server) {
-              const ipfsClient = createIpfsClient({ url: server, timeout: 30_000 });
+              let authorizationHeader;
+              const serverAuthSecret = config?.get('runtime.services.ipfs.serverAuthSecret');
+              if (serverAuthSecret) {
+                const splitSecret = serverAuthSecret.split(':');
+                switch (splitSecret[0]) {
+                  case 'basic':
+                    authorizationHeader =
+                      'Basic ' + Buffer.from(splitSecret[1] + ':' + splitSecret[2]).toString('base64');
+                    break;
+                  case 'bearer':
+                    authorizationHeader = 'Bearer ' + splitSecret[1];
+                    break;
+                  default:
+                    throw new Error(`Unsupported authType: ${splitSecret[0]}`);
+                }
+              }
+              const ipfsClient = createIpfsClient({
+                url: server,
+                timeout: 30_000,
+                ...(authorizationHeader ? { headers: { authorization: authorizationHeader } } : {}),
+              });
               const { cid } = await ipfsClient.add(file);
               return {
                 cid: cid.toString(),

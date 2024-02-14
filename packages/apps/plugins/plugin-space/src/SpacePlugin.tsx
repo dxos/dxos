@@ -3,7 +3,7 @@
 //
 
 import { type IconProps, Folder as FolderIcon, Plus, SignIn } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-react';
+import { effect } from '@preact/signals-core';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import localforage from 'localforage';
 import React from 'react';
@@ -31,6 +31,8 @@ import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
 import { type Space, SpaceProxy, getSpaceForObject, type PropertiesProps } from '@dxos/react-client/echo';
+import { Dialog } from '@dxos/react-ui';
+import { InvitationManager, type InvitationManagerProps, osTranslations } from '@dxos/shell/react';
 import { inferRecordOrder } from '@dxos/util';
 
 import {
@@ -219,7 +221,7 @@ export const SpacePlugin = ({
     provides: {
       space: state as RevertDeepSignal<PluginState>,
       settings: settings.values,
-      translations,
+      translations: [...translations, osTranslations],
       root: () => (state.awaiting ? <AwaitingObject id={state.awaiting} /> : null),
       metadata: {
         records: {
@@ -250,6 +252,16 @@ export const SpacePlugin = ({
                   return <EmptySpace />;
                 default:
                   return null;
+              }
+            case 'dialog':
+              if (data.component === 'dxos.org/plugin/space/InvitationManagerDialog') {
+                return (
+                  <Dialog.Content>
+                    <InvitationManager active {...(data.subject as InvitationManagerProps)} />
+                  </Dialog.Content>
+                );
+              } else {
+                return null;
               }
             case 'popover':
               if (data.component === 'dxos.org/plugin/space/RenameSpacePopover' && isSpace(data.subject)) {

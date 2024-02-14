@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { untracked } from '@preact/signals-react';
+import { untracked } from '@preact/signals-core';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 
 import { EventSubscriptions } from '@dxos/async';

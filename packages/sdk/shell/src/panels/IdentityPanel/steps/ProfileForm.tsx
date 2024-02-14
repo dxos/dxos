@@ -9,14 +9,14 @@ import { log } from '@dxos/log';
 import { type Identity } from '@dxos/react-client/halo';
 import { useTranslation } from '@dxos/react-ui';
 
-import { Action, Actions, StepHeading, Input } from '../../../components';
+import { Action, Actions, StepHeading, Input, useClipboardContext } from '../../../components';
 import { type IdentityPanelStepProps } from '../IdentityPanelProps';
 import { type IdentityEvent } from '../identityMachine';
 
 export interface ProfileFormProps extends Omit<IdentityPanelStepProps, 'send'> {
   send?: (event: SingleOrArray<Event<IdentityEvent>>) => void;
   onUpdateProfile?: (profile: NonNullable<Identity['profile']>) => Promise<void>;
-  profile?: Identity['profile'];
+  identity?: Identity;
 }
 
 export type ProfileFormImplProps = ProfileFormProps & {
@@ -38,10 +38,14 @@ export const ProfileForm = (props: ProfileFormProps) => {
 
 // TODO(zhenyasav): impl shouldn't need send()
 const ProfileFormImpl = (props: ProfileFormImplProps) => {
-  const { active, profile, send, onUpdateProfile, validationMessage } = props;
+  const { active, identity, send, onUpdateProfile, validationMessage } = props;
+  const profile = identity?.profile;
   const disabled = !active;
   const { t } = useTranslation('os');
   const [inputValue, setInputValue] = useState(profile?.displayName ?? '');
+  const { textValue, setTextValue } = useClipboardContext();
+  const identityHex = identity?.identityKey.toHex();
+  const copied = textValue === identityHex;
   return (
     <>
       <div role='none' className='grow flex flex-col justify-center'>
@@ -60,8 +64,20 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
         <Action
           variant='ghost'
           disabled={disabled}
+          onClick={() => {
+            if (identityHex) {
+              void setTextValue(identityHex);
+            }
+          }}
+          data-testid='update-profile-form-copy-key'
+        >
+          {t(copied ? 'copy success label' : 'copy self public key label')}
+        </Action>
+        <Action
+          variant='ghost'
+          disabled={disabled}
           onClick={() => send?.({ type: 'unchooseAction' })}
-          data-testid={'update-profile-form-back'}
+          data-testid='update-profile-form-back'
         >
           {t('back label')}
         </Action>
@@ -69,7 +85,7 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
           variant='primary'
           disabled={disabled}
           onClick={() => onUpdateProfile?.({ displayName: inputValue })}
-          data-testid={'update-profile-form-continue'}
+          data-testid='update-profile-form-continue'
         >
           {t('done label')}
         </Action>

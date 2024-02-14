@@ -24,7 +24,7 @@ export default {
   decorators: [FullscreenDecorator()],
 };
 
-export const Default = () => <ClientRepeater Component={DefaultStory} types={types} createSpace />;
+export const Default = () => <ClientRepeater component={DefaultStory} types={types} createSpace />;
 
 const DefaultStory = () => {
   const [data, setData] = useState<{ world: any; cities: any }>();
@@ -51,7 +51,7 @@ const DefaultStory = () => {
   return <Globe items={cities} />;
 };
 
-export const Extended = () => <ClientRepeater Component={ExtendedStory} types={types} createSpace />;
+export const Extended = () => <ClientRepeater component={ExtendedStory} types={types} createSpace />;
 const ExtendedStory = () => {
   const [data, setData] = useState<{ world: any; cities: any }>();
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector({ refreshRate: 200 });

@@ -3,7 +3,7 @@
 //
 
 import { Bug, type IconProps } from '@phosphor-icons/react';
-import { batch } from '@preact/signals-react';
+import { batch } from '@preact/signals-core';
 import React, { useEffect, useState } from 'react';
 
 import { type ClientPluginProvides } from '@braneframe/plugin-client';
