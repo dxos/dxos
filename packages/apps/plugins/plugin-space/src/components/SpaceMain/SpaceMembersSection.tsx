@@ -182,7 +182,9 @@ export const SpaceMembersSection = ({ space }: { space: Space }) => {
         </DropdownMenu.Root>
       </ButtonGroup>
       {members[Presence.ONLINE].length + members[Presence.OFFLINE].length < 1 ? (
-        <p className={mx(descriptionText, 'text-center is-full mlb-2')}>{t('empty space members message')}</p>
+        <p className={mx(descriptionText, 'text-center is-full mlb-2')}>
+          {t('empty space members message', { ns: 'os' })}
+        </p>
       ) : (
         <>
           <h3 className='col-start-2 col-end-5 text-sm italic fg-description'>
