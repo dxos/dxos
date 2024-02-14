@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 
 registerSignalRuntime();
 
-describe('Proxy properties', () => {
+describe.only('Proxy properties', () => {
   test('object initializer', () => {
     const obj = R.object({ field: 'bar' });
     expect(obj.field).to.eq('bar');
@@ -406,8 +406,33 @@ describe('Proxy properties', () => {
       expect(updates.count, 'update count').to.eq(0);
     });
 
-    test('flatMap');
-    test('flat');
+    test('flatMap', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      const result = array.flatMap((value) => [value, value * 2]);
+      expect(Array.isArray(result)).to.be.true;
+      expect(Object.getPrototypeOf(result)).to.eq(Array.prototype);
+      expect(result).to.deep.eq([1, 2, 2, 4, 3, 6]);
+      expect(updates.count, 'update count').to.eq(0);
+    });
+
+    test('flat', () => {
+      const { array } = R.object({ array: [[1], [2, 3]] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      debugger;
+      const result = array.flat();
+      expect(Array.isArray(result)).to.be.true;
+      expect(Object.getPrototypeOf(result)).to.eq(Array.prototype);
+      expect(result).to.deep.eq([1, 2, 3]);
+      expect(updates.count, 'update count').to.eq(0);
+    });
+
     test('forEach');
     test('spreading');
   });

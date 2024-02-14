@@ -5,6 +5,7 @@
 import { GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 
 import { createReactiveProxy, isValidProxyTarget, symbolIsProxy, type ReactiveHandler } from './proxy';
+import { log } from '@dxos/log';
 
 /**
  * Untyped in-memory reactive store.
@@ -19,7 +20,7 @@ export class UntypedReactiveHandler implements ReactiveHandler<any> {
   _init(target: any): void {
     if (typeof target === 'object' && target !== null) {
       for (const key in target) {
-        if (Array.isArray(target[key])) {
+        if (Array.isArray(target[key]) && !(target instanceof ReactiveArray)) {
           target[key] = new ReactiveArray(...target[key]);
         }
       }
@@ -70,13 +71,16 @@ class ReactiveArray<T> extends Array<T> {
     const BATCHED_METHODS = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'] as const;
 
     for (const method of BATCHED_METHODS) {
-      ReactiveArray.prototype[method] = function (this: ReactiveArray<any>, ...args: any[]) {
-        let result!: any;
-        compositeRuntime.batch(() => {
-          result = Array.prototype[method].apply(this, args);
-        });
-        return result;
-      };
+      Object.defineProperty(this.prototype, method, {
+        enumerable: false,
+        value: function (this: ReactiveArray<any>, ...args: any[]) {
+          let result!: any;
+          compositeRuntime.batch(() => {
+            result = Array.prototype[method].apply(this, args);
+          });
+          return result;
+        },
+      });
     }
   }
 }

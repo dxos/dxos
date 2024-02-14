@@ -62,38 +62,41 @@ class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
 
     return this.handler.get(target, prop, receiver);
   }
-}
 
-const TRAPS: (keyof ProxyHandler<any>)[] = [
-  'apply',
-  'construct',
-  'defineProperty',
-  'deleteProperty',
-  'get',
-  'getOwnPropertyDescriptor',
-  'getPrototypeOf',
-  'has',
-  'isExtensible',
-  'ownKeys',
-  'preventExtensions',
-  'set',
-  'setPrototypeOf',
-];
+  static {
+    const TRAPS: (keyof ProxyHandler<any>)[] = [
+      'apply',
+      'construct',
+      'defineProperty',
+      'deleteProperty',
+      'get',
+      'getOwnPropertyDescriptor',
+      'getPrototypeOf',
+      'has',
+      'isExtensible',
+      'ownKeys',
+      'preventExtensions',
+      'set',
+      'setPrototypeOf',
+    ];
 
-for (const trap of TRAPS) {
-  if (trap === 'get') {
-    continue;
-  }
-
-  Object.defineProperty(ProxyHandlerSlot.prototype, trap, {
-    value: function (this: ProxyHandlerSlot<any>, ...args: any[]) {
-      // log.info('trap', { trap, args });
-
-      if (!this.handler || !this.handler[trap]) {
-        return (Reflect[trap] as Function)(...args);
+    for (const trap of TRAPS) {
+      if (trap === 'get') {
+        continue;
       }
 
-      return (this.handler[trap] as Function).apply(this.handler, args);
-    },
-  });
+      Object.defineProperty(this.prototype, trap, {
+        enumerable: false,
+        value: function (this: ProxyHandlerSlot<any>, ...args: any[]) {
+          // log.info('trap', { trap, args });
+
+          if (!this.handler || !this.handler[trap]) {
+            return (Reflect[trap] as Function)(...args);
+          }
+
+          return (this.handler[trap] as Function).apply(this.handler, args);
+        },
+      });
+    }
+  }
 }
