@@ -578,4 +578,49 @@ describe('Spaces', () => {
       });
     }
   });
+
+  test('object receives updates from another peer', async () => {
+    const testBuilder = new TestBuilder();
+
+    const host = new Client({ services: testBuilder.createLocal() });
+    const guest = new Client({ services: testBuilder.createLocal() });
+
+    await host.initialize();
+    await guest.initialize();
+
+    afterTest(() => host.destroy());
+    afterTest(() => guest.destroy());
+
+    await host.halo.createIdentity({ displayName: 'host' });
+    await guest.halo.createIdentity({ displayName: 'guest' });
+
+    const hostSpace = await host.spaces.create();
+    await hostSpace.waitUntilReady();
+    await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
+    const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
+    await guestSpace.waitUntilReady();
+
+    {
+      const done = new Trigger();
+      const hostRoot = hostSpace.db.add(new Expando({ entries: [new Expando({ name: 'first' })] }));
+      await hostSpace.db.flush();
+
+      await waitForExpect(() => {
+        expect(guestSpace.db.getObjectById(hostRoot.id)).not.to.be.undefined;
+      });
+      const guestRoot = guestSpace.db.getObjectById(hostRoot.id)!;
+
+      const unsub = guestRoot[subscribe](() => {
+        expect(guestRoot.entries.length).to.eq(2);
+        expect(guestRoot.entries[0].name).to.eq('first');
+        expect(guestRoot.entries[1].name).to.eq('second');
+        done.wake();
+      });
+
+      afterTest(() => unsub());
+
+      hostRoot.entries.push(new Expando({ name: 'second' }));
+      await done.wait();
+    }
+  });
 });
