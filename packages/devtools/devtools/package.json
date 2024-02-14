@@ -64,6 +64,7 @@
     "ws": "^8.14.2"
   },
   "devDependencies": {
+    "@babel/core": "^7.18.13",
     "@dxos/config": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
@@ -84,5 +85,8 @@
     "vite-plugin-top-level-await": "^1.4.1",
     "vite-plugin-wasm": "^3.3.0",
     "workbox-window": "^7.0.0"
+  },
+  "peerDependencies": {
+    "@babel/core": "^7.18.13"
   }
 }

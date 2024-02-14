@@ -50,6 +50,7 @@
     "react-is": "^18.2.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.18.13",
     "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-layout": "workspace:*",
@@ -68,6 +69,7 @@
     "vite": "^5.0.12"
   },
   "peerDependencies": {
+    "@babel/core": "^7.18.13",
     "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-layout": "workspace:*",

@@ -35,6 +35,7 @@
     "react-is": "^18.2.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.18.13",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
@@ -49,6 +50,7 @@
     "vite": "^5.0.12"
   },
   "peerDependencies": {
+    "@babel/core": "^7.18.13",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
