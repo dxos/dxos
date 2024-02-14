@@ -59,20 +59,24 @@ export class UntypedReactiveHandler implements ReactiveHandler<any> {
 /**
  * Extends the native array to make sure that arrays methods are correctly reactive.
  */
-class ReactiveArray<T> extends Array<T> {}
+class ReactiveArray<T> extends Array<T> {
+  static [Symbol.species] = Array;
 
-/**
- * These methods will trigger proxy traps like `set` and `defineProperty` and emit signal notifications.
- * We wrap them in a batch to avoid unnecessary signal notifications.
- */
-const BATCHED_METHODS = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'] as const;
+  static {
+    /**
+     * These methods will trigger proxy traps like `set` and `defineProperty` and emit signal notifications.
+     * We wrap them in a batch to avoid unnecessary signal notifications.
+     */
+    const BATCHED_METHODS = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'] as const;
 
-for (const method of BATCHED_METHODS) {
-  ReactiveArray.prototype[method] = function (this: ReactiveArray<any>, ...args: any[]) {
-    let result!: any;
-    compositeRuntime.batch(() => {
-      result = Array.prototype[method].apply(this, args);
-    });
-    return result;
-  };
+    for (const method of BATCHED_METHODS) {
+      ReactiveArray.prototype[method] = function (this: ReactiveArray<any>, ...args: any[]) {
+        let result!: any;
+        compositeRuntime.batch(() => {
+          result = Array.prototype[method].apply(this, args);
+        });
+        return result;
+      };
+    }
+  }
 }
