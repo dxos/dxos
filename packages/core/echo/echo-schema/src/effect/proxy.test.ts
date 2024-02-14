@@ -425,7 +425,6 @@ describe.only('Proxy properties', () => {
         array[0];
       });
 
-      debugger;
       const result = array.flat();
       expect(Array.isArray(result)).to.be.true;
       expect(Object.getPrototypeOf(result)).to.eq(Array.prototype);
@@ -433,8 +432,60 @@ describe.only('Proxy properties', () => {
       expect(updates.count, 'update count').to.eq(0);
     });
 
-    test('forEach');
-    test('spreading');
+    test('forEach', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      let sum = 0;
+      array.forEach((value) => {
+        sum += value;
+      });
+      expect(sum).to.eq(6);
+      expect(updates.count, 'update count').to.eq(0);
+    });
+
+    test('spreading', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      const result = [...array];
+      expect(Array.isArray(result)).to.be.true;
+      expect(Object.getPrototypeOf(result)).to.eq(Array.prototype);
+      expect(result).to.deep.eq([1, 2, 3]);
+      expect(updates.count, 'update count').to.eq(0);
+    });
+
+    test('values', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      const result = array.values();
+      expect(result.next().value).to.eq(1);
+      expect(result.next().value).to.eq(2);
+      expect(result.next().value).to.eq(3);
+      expect(result.next().done).to.be.true;
+      expect(updates.count, 'update count').to.eq(0);
+    });
+
+    test('for loop', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      let sum = 0;
+      for (const value of array) {
+        sum += value;
+      }
+      expect(sum).to.eq(6);
+      expect(updates.count, 'update count').to.eq(0);
+    });
   });
 });
 
