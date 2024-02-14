@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { log } from '@dxos/log';
 import { type ReactiveObject } from './reactive';
 
 export const symbolIsProxy = Symbol('isProxy');

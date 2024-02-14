@@ -7,7 +7,7 @@ import * as S from '@effect/schema/Schema';
 
 import { invariant } from '@dxos/invariant';
 
-import { ReactiveHandler, createReactiveProxy, isValidProxyTarget } from './proxy';
+import { type ReactiveHandler, createReactiveProxy, isValidProxyTarget } from './proxy';
 import { TypedReactiveHandler, setAstProperty, symbolSchema } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 

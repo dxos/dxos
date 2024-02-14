@@ -4,7 +4,7 @@
 
 import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
-import { default as jestExpect } from 'expect';
+import jestExpect from 'expect';
 import { inspect } from 'util';
 
 import { registerSignalRuntime } from '@dxos/echo-signals';

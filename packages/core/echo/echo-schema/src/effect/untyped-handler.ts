@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
+import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
+import { invariant } from '@dxos/invariant';
 
 import { createReactiveProxy, isValidProxyTarget, symbolIsProxy, type ReactiveHandler } from './proxy';
-import { invariant } from '@dxos/invariant';
 
 const symbolSignal = Symbol('signal');
 
