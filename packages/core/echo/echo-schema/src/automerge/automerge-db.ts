@@ -104,7 +104,7 @@ export class AutomergeDb {
       }
     }
 
-    this._spaceRootDocHandle.on('change', this._onDocumentUpdate.bind(this));
+    this._spaceRootDocHandle.on('change', this._onDocumentUpdate);
 
     const elapsed = performance.now() - start;
     if (elapsed > 1000) {
@@ -190,7 +190,7 @@ export class AutomergeDb {
     this._initDocAccess(spaceDocHandle);
 
     this._objects.set(obj.id, obj);
-    spaceDocHandle.on('change', this._onDocumentUpdate.bind(this));
+    spaceDocHandle.on('change', this._onDocumentUpdate);
     this._linkObjectDocument(obj, spaceDocHandle);
 
     (obj[base] as AutomergeObject)._bind({
@@ -240,11 +240,8 @@ export class AutomergeDb {
   private _linkObjectDocument(object: AutomergeObject, handle: DocHandle<SpaceDoc>) {
     this._objectDocumentHandles.set(object.id, handle);
     this._spaceRootDocHandle.change((newDoc: SpaceDoc) => {
-      if (newDoc.links) {
-        newDoc.links[object.id] = handle.url;
-      } else {
-        newDoc.links = { [object.id]: handle.url };
-      }
+      newDoc.links ??= {};
+      newDoc.links[object.id] = handle.url;
     });
   }
 
@@ -263,7 +260,10 @@ export class AutomergeDb {
     }
   }
 
-  private _onDocumentUpdate(event: DocHandleChangePayload<SpaceDoc>) {
+  /**
+   * Keep as field to have a reference to pass for unsubscribing from handle changes.
+   */
+  private readonly _onDocumentUpdate = (event: DocHandleChangePayload<SpaceDoc>) => {
     const { updatedObjects, linkedDocuments } = processDocumentUpdate(event);
     this._loadLinkedObjects(linkedDocuments);
     this._createInlineObjects(
@@ -271,12 +271,12 @@ export class AutomergeDb {
       updatedObjects.filter((id) => !this._objects.has(id)),
     );
     this._emitUpdateEvent(updatedObjects);
-  }
+  };
 
   private _onDispose() {
-    this._spaceRootDocHandle?.off('change');
+    this._spaceRootDocHandle?.off('change', this._onDocumentUpdate);
     for (const docHandle of this._objectDocumentHandles.values()) {
-      docHandle.off('change');
+      docHandle.off('change', this._onDocumentUpdate);
     }
   }
 
@@ -298,7 +298,7 @@ export class AutomergeDb {
           log.warn('document loaded after database was closed');
           return;
         }
-        handle.on('change', this._onDocumentUpdate.bind(this));
+        handle.on('change', this._onDocumentUpdate);
         this._createObjectInDocument(objectId, handle);
         this._emitUpdateEvent([objectId]);
       })
