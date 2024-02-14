@@ -579,7 +579,7 @@ describe('Spaces', () => {
     }
   });
 
-  test.only('object receives updates from another peer', async () => {
+  test('object receives updates from another peer', async () => {
     const testBuilder = new TestBuilder();
 
     const host = new Client({ services: testBuilder.createLocal() });
@@ -599,6 +599,7 @@ describe('Spaces', () => {
     const hostRoot = hostSpace.db.add(new Expando({ entries: [new Expando({ name: 'first' })] }));
 
     await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
+
     const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
     await guestSpace.waitUntilReady();
 
