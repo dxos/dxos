@@ -13,6 +13,10 @@ export const isValidProxyTarget = (value: any): value is object =>
   (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === Array.prototype) &&
   !value[symbolIsProxy];
 
+/**
+ *
+ * @param target Object or array. Passing in array will enable array methods.
+ */
 export const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHandler<T>): ReactiveObject<T> => {
   if (!isValidProxyTarget(target)) {
     throw new Error('Value cannot be made into a reactive object.');
@@ -29,17 +33,19 @@ export const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHa
 
   const proxy = new Proxy(target, handlerSlot);
   handler._init(target);
+
+  // TODO(dmaretskyi): Check if this will actually work - maybe a global WeakMap is better?
   handler._proxyMap.set(target, proxy);
   return proxy;
 };
 
 export interface ReactiveHandler<T extends object> extends ProxyHandler<T> {
+  readonly _proxyMap: WeakMap<object, any>;
+
   /**
    * Called when a proxy is created for this target.
    */
   _init(target: T): void;
-
-  readonly _proxyMap: WeakMap<object, any>;
 }
 
 /**
