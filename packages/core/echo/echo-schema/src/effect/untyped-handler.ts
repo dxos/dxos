@@ -19,6 +19,8 @@ type ProxyTarget = {
  * Target can be an array or object with any type of values including other reactive proxies.
  */
 export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
+  static instance = new UntypedReactiveHandler();
+
   // TODO(dmaretskyi): Does this work? Should this be a global variable instead?
   _proxyMap = new WeakMap<object, any>();
 

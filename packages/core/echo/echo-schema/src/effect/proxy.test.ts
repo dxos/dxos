@@ -11,11 +11,10 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
 import * as R from './reactive';
-import { log } from '@dxos/log';
 
 registerSignalRuntime();
 
-describe.only('Proxy properties', () => {
+describe('Proxy properties', () => {
   test('object initializer', () => {
     const obj = R.object({ field: 'bar' });
     expect(obj.field).to.eq('bar');

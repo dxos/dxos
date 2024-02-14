@@ -7,7 +7,7 @@ import * as S from '@effect/schema/Schema';
 
 import { invariant } from '@dxos/invariant';
 
-import { createReactiveProxy, isValidProxyTarget } from './proxy';
+import { ReactiveHandler, createReactiveProxy, isValidProxyTarget } from './proxy';
 import { TypedReactiveHandler, setAstProperty, symbolSchema } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 
@@ -50,7 +50,7 @@ export const object: {
     }
 
     // untyped case
-    return createReactiveProxy(schemaOrObj as T, new UntypedReactiveHandler());
+    return createReactiveProxy(schemaOrObj as T, UntypedReactiveHandler.instance as ReactiveHandler<any>);
   }
 };
 
