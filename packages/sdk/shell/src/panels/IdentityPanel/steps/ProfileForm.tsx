@@ -65,8 +65,8 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
           variant='ghost'
           disabled={disabled}
           onClick={() => {
-            if (identity) {
-              void setTextValue(identity.identityKey.toHex());
+            if (identityHex) {
+              void setTextValue(identityHex);
             }
           }}
           data-testid='update-profile-form-copy-key'
