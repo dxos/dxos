@@ -21,7 +21,6 @@ export class UntypedReactiveHandler implements ReactiveHandler<any> {
       for (const key in target) {
         if (Array.isArray(target[key])) {
           target[key] = new ReactiveArray(...target[key]);
-          target[key]._signal = this._signal;
         }
       }
     }
@@ -43,7 +42,6 @@ export class UntypedReactiveHandler implements ReactiveHandler<any> {
     // Convert arrays to reactive arrays on write.
     if (Array.isArray(value)) {
       value = new ReactiveArray(...value);
-      value._signal = this._signal;
     }
 
     const result = Reflect.set(target, prop, value);
@@ -61,9 +59,7 @@ export class UntypedReactiveHandler implements ReactiveHandler<any> {
 /**
  * Extends the native array to make sure that arrays methods are correctly reactive.
  */
-class ReactiveArray<T> extends Array<T> {
-  _signal!: GenericSignal;
-}
+class ReactiveArray<T> extends Array<T> {}
 
 const BATCHED_METHODS = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'] as const;
 
