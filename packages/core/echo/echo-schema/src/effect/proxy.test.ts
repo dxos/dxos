@@ -369,8 +369,30 @@ describe('Proxy properties', () => {
       expect(updates.count, 'update count').to.eq(1);
     });
 
-    test('sort');
-    test('reverse');
+    test('sort', () => {
+      const { array } = R.object({ array: [3, 2, 1] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      const returnValue = array.sort();
+      expect(returnValue === array).to.be.true;
+      expect(array).to.deep.eq([1, 2, 3]);
+      expect(updates.count, 'update count').to.eq(1);
+    });
+
+    test('reverse', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      const returnValue = array.reverse();
+      expect(returnValue === array).to.be.true;
+      expect(array).to.deep.eq([3, 2, 1]);
+      expect(updates.count, 'update count').to.eq(1);
+    });
+
     test('map');
     test('flatMap');
     test('flat');
