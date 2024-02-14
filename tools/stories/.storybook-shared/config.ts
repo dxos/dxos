@@ -25,7 +25,9 @@ export const config = (
   typescript: { reactDocgen: false },
   framework: {
     name: '@storybook/react-vite',
-    options: {},
+    options: {
+      strictMode: true,
+    },
   },
   viteFinal: async (config, { configType }) => {
     return mergeConfig(
