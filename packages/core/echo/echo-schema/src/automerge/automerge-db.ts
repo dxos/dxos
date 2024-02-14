@@ -248,7 +248,7 @@ export class AutomergeDb {
 const getUpdatedObjects = (event: DocHandleChangePayload<DocStructure>): string[] => {
   const updatedObjects = event.patches
     .map(({ path }: { path: string[] }) => {
-      if (path.length >= 2 && path[0] === 'objects' && path[1] !== 'undefined') {
+      if (path.length >= 2 && path[0] === 'objects') {
         return path[1];
       }
       return undefined;
