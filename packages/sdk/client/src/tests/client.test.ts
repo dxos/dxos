@@ -8,7 +8,7 @@ import { rmSync } from 'node:fs';
 import waitForExpect from 'wait-for-expect';
 
 import { Message, Thread } from '@braneframe/types';
-import { Trigger } from '@dxos/async';
+import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { TextObject } from '@dxos/echo-schema';
 import { describe, test, afterTest } from '@dxos/test';
@@ -34,6 +34,16 @@ describe('Client', () => {
     await client.initialize();
     afterTest(() => client.destroy());
     expect(client.initialized).to.be.true;
+  });
+
+  test('default space loads', async () => {
+    const testBuilder = new TestBuilder();
+    afterTest(() => testBuilder.destroy());
+
+    const client = new Client({ services: testBuilder.createLocal() });
+    await asyncTimeout(client.initialize(), 2_000);
+    await asyncTimeout(client.halo.createIdentity(), 2_000);
+    await asyncTimeout(client.spaces.isReady.wait(), 2_000);
   });
 
   test('initialize and destroy multiple times', async () => {

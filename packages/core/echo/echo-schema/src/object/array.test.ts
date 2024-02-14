@@ -6,7 +6,7 @@ import { effect } from '@preact/signals-core';
 import expect from 'expect'; // TODO(burdon): Can't use chai with wait-for-expect?
 import { inspect } from 'util';
 
-import { sleep } from '@dxos/async';
+import { Trigger, sleep } from '@dxos/async';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
@@ -172,12 +172,30 @@ describe('Arrays', () => {
       }
     });
 
-    log.info('set');
     root.foo = leaf;
 
     await sleep(10);
     clearEffect();
     expect(broken).toBeFalsy();
+  });
+
+  test('array receives updates', async () => {
+    registerSignalRuntime();
+
+    const done = new Trigger();
+    const { db } = await createDatabase();
+    const root = db.add(new Expando({ entries: [new Expando({ name: 'first' })] }));
+    log.info('root', { entries: root.id });
+
+    const clearEffect = effect(() => {
+      if (root.entries.length === 2) {
+        done.wake();
+      }
+    });
+
+    root.entries.push(new Expando({ name: 'second' }));
+    await done.wait();
+    clearEffect();
   });
 
   test.skip('inspect array elements', () => {
