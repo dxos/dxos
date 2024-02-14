@@ -4,11 +4,15 @@
 
 import { GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 
-import { type ReactiveHandler, createReactiveProxy, isValidProxyTarget, symbolIsProxy } from './proxy';
-import { log } from '@dxos/log';
-import { invariant } from '@dxos/invariant';
+import { createReactiveProxy, isValidProxyTarget, symbolIsProxy, type ReactiveHandler } from './proxy';
 
+/**
+ * Untyped in-memory reactive store.
+ *
+ * Target can be an array or object with any type of values including other reactive proxies.
+ */
 export class UntypedReactiveHandler implements ReactiveHandler<any> {
+  // TODO(dmaretskyi): Does this work? Should this be a global variable instead?
   _proxyMap = new WeakMap<object, any>();
   _signal = compositeRuntime.createSignal();
 
@@ -28,6 +32,7 @@ export class UntypedReactiveHandler implements ReactiveHandler<any> {
     const value = Reflect.get(target, prop);
 
     if ((value instanceof ReactiveArray || isValidProxyTarget(value)) && !(value as any)[symbolIsProxy]) {
+      // Note: Need to pass in `this` instance to createReactiveProxy to ensure that the same proxy is used for target.
       return createReactiveProxy(value, this);
     }
 
