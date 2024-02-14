@@ -42,7 +42,7 @@ export interface AutomergeDocumentLoader {
  * Manages object <-> docHandle binding and automerge document loading.
  */
 export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
-  private _spaceRootDocHandle?: DocHandle<SpaceDoc>;
+  private _spaceRootDocHandle: DocHandle<SpaceDoc> | null = null;
   /**
    * An object id pointer to a handle of the document where the object is stored inline.
    */
@@ -63,14 +63,14 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   ) {}
 
   public async loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void> {
-    if (this._isDocHandleInitialized(this._spaceRootDocHandle)) {
+    if (this._spaceRootDocHandle != null) {
       return;
     }
     if (!spaceState.rootUrl) {
       if (getGlobalAutomergePreference()) {
         log.error('Database opened with no rootUrl');
       }
-      this._spaceRootDocHandle = this._createContextBoundDocument(ctx);
+      this._createContextBoundSpaceRootDocument(ctx);
     } else {
       try {
         const existingDocHandle = await this._initDocHandle(ctx, spaceState.rootUrl);
@@ -85,13 +85,13 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
           throw err;
         }
         log.warn('falling back to a temporary document on loading error', { err, space: this._spaceKey });
-        this._spaceRootDocHandle = this._createContextBoundDocument(ctx);
+        this._createContextBoundSpaceRootDocument(ctx);
       }
     }
   }
 
   public getSpaceRootDocHandle(): DocHandle<SpaceDoc> {
-    invariant(this._isDocHandleInitialized(this._spaceRootDocHandle));
+    invariant(this._spaceRootDocHandle);
     return this._spaceRootDocHandle;
   }
 
@@ -115,14 +115,13 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     this._objectDocumentHandles.set(objectId, handle);
   }
 
-  setDocumentLoadingListener(listener: DocumentLoadingListener | null) {
+  public setDocumentLoadingListener(listener: DocumentLoadingListener | null) {
     this._documentLoadingListener = listener;
   }
 
   public getDocumentHandles(): Iterable<DocHandle<SpaceDoc>> {
-    return this._spaceRootDocHandle
-      ? [this._spaceRootDocHandle, ...this._objectDocumentHandles.values()]
-      : this._objectDocumentHandles.values();
+    invariant(this._spaceRootDocHandle);
+    return [this._spaceRootDocHandle, ...this._objectDocumentHandles.values()];
   }
 
   public loadLinkedObjects(links: SpaceDocumentLinks) {
@@ -206,12 +205,13 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     return docHandle;
   }
 
-  private _createContextBoundDocument(ctx: Context) {
-    const handle = this._automerge.repo.create();
+  private _createContextBoundSpaceRootDocument(ctx: Context) {
+    const docHandle = this._automerge.repo.create<SpaceDoc>();
+    this._spaceRootDocHandle = docHandle;
     ctx.onDispose(() => {
-      handle.delete();
+      docHandle.delete();
+      this._spaceRootDocHandle = null;
     });
-    return handle;
   }
 
   private _initDocAccess(handle: DocHandle<SpaceDoc>) {
@@ -273,10 +273,6 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       inlineChangedObjects: [...inlineChangedObjectIds],
       linkedDocuments,
     };
-  }
-
-  private _isDocHandleInitialized(docHandle?: DocHandle<SpaceDoc>): docHandle is DocHandle<SpaceDoc> {
-    return docHandle != null && !docHandle.isDeleted();
   }
 }
 
