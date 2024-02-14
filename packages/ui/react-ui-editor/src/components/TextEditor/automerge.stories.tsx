@@ -8,7 +8,7 @@ import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-networ
 import '@preact/signals-react';
 import { EditorView } from '@codemirror/view'; // Register react integration.
 import get from 'lodash.get';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { type Prop } from '@dxos/automerge/automerge';
 import { Repo, type DocHandle } from '@dxos/automerge/automerge-repo';
@@ -37,17 +37,20 @@ type EditorProps = {
 };
 
 const Editor = ({ handle, path = ['text'] }: EditorProps) => {
-  const { parentRef } = useTextEditor({
-    autoFocus: true,
-    doc: get(handle.docSync()!, path),
-    extensions: [
-      //
+  const extensions = useMemo(
+    () => [
       EditorView.baseTheme(defaultTheme),
       EditorView.editorAttributes.of({ class: 'p-2 bg-white' }),
       createBasicBundle({ placeholder: 'Type here...' }),
       automerge({ handle, path }),
       awareness(),
     ],
+    [handle, path],
+  );
+  const { parentRef } = useTextEditor({
+    autoFocus: true,
+    doc: get(handle.docSync()!, path),
+    extensions,
   });
 
   return <div ref={parentRef} />;

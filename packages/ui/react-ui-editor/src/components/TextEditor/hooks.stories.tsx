@@ -4,14 +4,16 @@
 
 import '@dxosTheme';
 
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 
-import { useThemeContext } from '@dxos/react-ui';
+import { Toolbar as NaturalToolbar, Select, useThemeContext } from '@dxos/react-ui';
 import { attentionSurface, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { TextEditor } from './TextEditor';
 import {
+  type EditorMode,
+  EditorModes,
   code,
   createMarkdownExtensions,
   formatting,
@@ -45,11 +47,11 @@ type StoryProps = {
 const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
   const { themeMode } = useThemeContext();
   const [formattingState, trackFormatting] = useFormattingState();
-  const { parentRef, view } = useTextEditor({
-    autoFocus,
-    doc,
-    extensions: [
+  const [editorMode, setEditorMode] = useState<EditorMode>('default');
+  const extensions = useMemo(
+    () => [
       //
+      editorMode ? EditorModes[editorMode] : [],
       createDataExtensions({ readonly }),
       createThemeExtensions({
         themeMode,
@@ -71,7 +73,9 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
       tasklist(),
       trackFormatting,
     ],
-  });
+    [editorMode, themeMode, placeholder, trackFormatting, readonly],
+  );
+  const { parentRef, view } = useTextEditor({ autoFocus, doc, extensions });
 
   const handleAction = useActionHandler(view);
 
@@ -81,6 +85,7 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
     <div role='none' className={mx('fixed inset-0', editorWithToolbarLayout)}>
       <Toolbar.Root onAction={handleAction} state={formattingState} classNames={textBlockWidth}>
         <Toolbar.Markdown />
+        <EditorModeToolbar editorMode={editorMode} setEditorMode={setEditorMode} />
       </Toolbar.Root>
       <div role='none' className='overflow-y-auto'>
         <div
@@ -90,6 +95,36 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
         />
       </div>
     </div>
+  );
+};
+
+const EditorModeToolbar = ({
+  editorMode,
+  setEditorMode,
+}: {
+  editorMode: EditorMode;
+  setEditorMode: (mode: EditorMode) => void;
+}) => {
+  return (
+    <Select.Root value={editorMode} onValueChange={(value) => setEditorMode(value as EditorMode)}>
+      <NaturalToolbar.Button asChild>
+        <Select.TriggerButton variant='ghost'>{editorMode}</Select.TriggerButton>
+      </NaturalToolbar.Button>
+      <Select.Portal>
+        <Select.Content>
+          <Select.ScrollUpButton />
+          <Select.Viewport>
+            {['default', 'vim'].map((mode) => (
+              <Select.Option key={mode} value={mode}>
+                {mode}
+              </Select.Option>
+            ))}
+          </Select.Viewport>
+          <Select.ScrollDownButton />
+          <Select.Arrow />
+        </Select.Content>
+      </Select.Portal>
+    </Select.Root>
   );
 };
 
