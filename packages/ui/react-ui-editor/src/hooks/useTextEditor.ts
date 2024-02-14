@@ -48,47 +48,44 @@ export const useTextEditor = ({
   const parentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!parentRef.current) {
-      return;
+    let view: EditorView;
+    if (parentRef.current) {
+      // https://codemirror.net/docs/ref/#state.EditorStateConfig
+      const state = EditorState.create({
+        doc,
+        selection,
+        extensions: [
+          // TODO(burdon): Doesn't catch errors in keymap functions.
+          EditorView.exceptionSink.of((err) => {
+            log.catch(err);
+          }),
+          extensions,
+          EditorView.updateListener.of(() => {
+            onUpdate.current?.();
+          }),
+        ].filter(isNotFalsy),
+      });
+
+      // https://codemirror.net/docs/ref/#view.EditorViewConfig
+      view = new EditorView({
+        parent: parentRef.current,
+        scrollTo,
+        state,
+        // NOTE: Uncomment to debug/monitor all transactions.
+        // https://codemirror.net/docs/ref/#view.EditorView.dispatch
+        dispatchTransactions: (trs, view) => {
+          if (debug) {
+            logChanges(trs);
+          }
+          view.update(trs);
+        },
+      });
+
+      setView(view);
     }
-
-    // https://codemirror.net/docs/ref/#state.EditorStateConfig
-    const state = EditorState.create({
-      doc,
-      selection,
-      extensions: [
-        // TODO(burdon): Doesn't catch errors in keymap functions.
-        EditorView.exceptionSink.of((err) => {
-          log.catch(err);
-        }),
-        extensions,
-        EditorView.updateListener.of(() => {
-          onUpdate.current?.();
-        }),
-      ].filter(isNotFalsy),
-    });
-
-    // https://codemirror.net/docs/ref/#view.EditorViewConfig
-    const newView = new EditorView({
-      parent: parentRef.current,
-      scrollTo,
-      state,
-      // NOTE: Uncomment to debug/monitor all transactions.
-      // https://codemirror.net/docs/ref/#view.EditorView.dispatch
-      dispatchTransactions: (trs, view) => {
-        if (debug) {
-          logChanges(trs);
-        }
-        view.update(trs);
-      },
-    });
-
-    view?.destroy();
-    setView(newView);
 
     return () => {
       view?.destroy();
-      setView(undefined);
     };
     // TODO(wittjosiah): Does `parentRef` ever change? Only `.current` changes?
   }, [parentRef, extensions]);

@@ -50,7 +50,6 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
   const [editorMode, setEditorMode] = useState<EditorMode>('default');
   const extensions = useMemo(
     () => [
-      //
       editorMode ? EditorModes[editorMode] : [],
       createDataExtensions({ readonly }),
       createThemeExtensions({
@@ -79,8 +78,8 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
 
   const handleAction = useActionHandler(view);
 
-  // FIXME This doesn't update the state on view changes. Also not
-  // sure if view is even guaranteed to exist at this point.
+  // TODO(marijn) This doesn't update the state on view changes.
+  //  Also not sure if view is even guaranteed to exist at this point.
   return (
     <div role='none' className={mx('fixed inset-0', editorWithToolbarLayout)}>
       <Toolbar.Root onAction={handleAction} state={formattingState} classNames={textBlockWidth}>
