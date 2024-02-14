@@ -310,11 +310,65 @@ describe('Proxy properties', () => {
       expect(updates.count, 'update count').to.eq(1);
     });
 
-    test('push');
-    test('pop');
-    test('shift');
-    test('unshift');
-    test('splice');
+    test('push', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      array.push(4);
+      expect(array).to.deep.eq([1, 2, 3, 4]);
+      expect(updates.count, 'update count').to.eq(1);
+    });
+
+    test('pop', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      const value = array.pop();
+      expect(value).to.eq(3);
+      expect(array).to.deep.eq([1, 2]);
+      expect(updates.count, 'update count').to.eq(1);
+    });
+
+    test('shift', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      const value = array.shift();
+      expect(value).to.eq(1);
+      expect(array).to.deep.eq([2, 3]);
+      expect(updates.count, 'update count').to.eq(1);
+    });
+
+    test('unshift', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      const newLength = array.unshift(0);
+      expect(newLength).to.eq(4);
+      expect(array).to.deep.eq([0, 1, 2, 3]);
+      expect(updates.count, 'update count').to.eq(1);
+    });
+
+    test('splice', () => {
+      const { array } = R.object({ array: [1, 2, 3] });
+      using updates = updateCounter(() => {
+        array[0];
+      });
+
+      const removed = array.splice(1, 1, 4);
+      expect(removed).to.deep.eq([2]);
+      expect(array).to.deep.eq([1, 4, 3]);
+      expect(updates.count, 'update count').to.eq(1);
+    });
+
     test('sort');
     test('reverse');
     test('map');

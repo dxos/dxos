@@ -63,12 +63,16 @@ export class UntypedReactiveHandler implements ReactiveHandler<any> {
  */
 class ReactiveArray<T> extends Array<T> {
   _signal!: GenericSignal;
+}
 
-  override push(...items: T[]): number {
-    let result!: number;
+const BATCHED_METHODS = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'] as const;
+
+for (const method of BATCHED_METHODS) {
+  ReactiveArray.prototype[method] = function (this: ReactiveArray<any>, ...args: any[]) {
+    let result!: any;
     compositeRuntime.batch(() => {
-      result = super.push(...items);
+      result = Array.prototype[method].apply(this, args);
     });
     return result;
-  }
+  };
 }
