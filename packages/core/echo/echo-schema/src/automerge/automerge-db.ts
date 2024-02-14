@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { asyncTimeout, Event, synchronized } from '@dxos/async';
-import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
-import { cancelWithContext, Context, ContextDisposedError } from '@dxos/context';
-import { warnAfterTimeout } from '@dxos/debug';
+import { Event, synchronized } from '@dxos/async';
+import { type DocHandle, type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
+import { Context, ContextDisposedError } from '@dxos/context';
 import { type Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -15,7 +14,6 @@ import { type AutomergeContext } from './automerge-context';
 import { type AutomergeDocumentLoader, AutomergeDocumentLoaderImpl } from './automerge-doc-loader';
 import { AutomergeObject, getAutomergeObjectCore } from './automerge-object';
 import { type SpaceDoc } from './types';
-import { getGlobalAutomergePreference } from '../automerge-preference';
 import { type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
 import { base, type EchoObject, isActualTextObject, isActualTypedObject, isAutomergeObject } from '../object';
@@ -27,7 +25,6 @@ export type SpaceState = {
 };
 
 export class AutomergeDb {
-  private _spaceRootDocHandle!: DocHandle<SpaceDoc>;
   /**
    * @internal
    */
@@ -50,7 +47,7 @@ export class AutomergeDb {
     echoDatabase: EchoDatabase,
   ) {
     this._echoDatabase = echoDatabase;
-    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(automerge, this._onObjectDocumentLoaded.bind(this));
+    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this.spaceKey, automerge);
   }
 
   get spaceKey() {
@@ -66,42 +63,23 @@ export class AutomergeDb {
     }
     this._ctx = new Context();
     this._ctx.onDispose(this._onDispose.bind(this));
-    this._automergeDocLoader.open();
+    this._automergeDocLoader.setDocumentLoadingListener(this._onObjectDocumentLoaded.bind(this));
 
-    if (!spaceState.rootUrl) {
-      if (getGlobalAutomergePreference()) {
-        log.error('Database opened with no rootUrl');
+    try {
+      const spaceRootDocHandle = await this._automergeDocLoader.loadSpaceRootDocHandle(this._ctx, spaceState);
+      const spaceRootDoc = spaceRootDocHandle.docSync();
+      invariant(spaceRootDoc);
+      const objectIds = Object.keys(spaceRootDoc.objects ?? {});
+      this._createInlineObjects(spaceRootDocHandle, objectIds);
+      this._automergeDocLoader.loadLinkedObjects(spaceRootDoc.links);
+      spaceRootDocHandle.on('change', this._onDocumentUpdate);
+    } catch (err) {
+      if (err instanceof ContextDisposedError) {
+        return;
       }
-      await this._fallbackToNewDoc();
-    } else {
-      try {
-        this._spaceRootDocHandle = await this._initDocHandle(spaceState.rootUrl);
-
-        const doc = this._spaceRootDocHandle.docSync();
-        invariant(doc);
-
-        if (doc.access == null) {
-          this._initDocAccess(this._spaceRootDocHandle);
-        }
-
-        const objectIds = Object.keys(doc.objects ?? {});
-        this._createInlineObjects(this._spaceRootDocHandle, objectIds);
-        this._automergeDocLoader.loadLinkedObjects(doc.links);
-      } catch (err) {
-        if (err instanceof ContextDisposedError) {
-          return;
-        }
-
-        log.catch(err);
-        if (getGlobalAutomergePreference()) {
-          throw err;
-        } else {
-          await this._fallbackToNewDoc();
-        }
-      }
+      log.catch(err);
+      throw err;
     }
-
-    this._spaceRootDocHandle.on('change', this._onDocumentUpdate);
 
     const elapsed = performance.now() - start;
     if (elapsed > 1000) {
@@ -116,47 +94,9 @@ export class AutomergeDb {
       return;
     }
 
-    this._automergeDocLoader.close();
+    this._automergeDocLoader.setDocumentLoadingListener(null);
     void this._ctx.dispose();
     this._ctx = undefined;
-  }
-
-  private async _initDocHandle(url: string) {
-    const docHandle = this.automerge.repo.find(url as DocumentId);
-    // TODO(mykola): Remove check for global preference or timeout?
-    if (getGlobalAutomergePreference()) {
-      // Loop on timeout.
-      while (true) {
-        try {
-          await warnAfterTimeout(5_000, 'Automerge root doc load timeout (AutomergeDb)', async () => {
-            await cancelWithContext(this._ctx!, docHandle.whenReady(['ready'])); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
-          });
-          break;
-        } catch (err) {
-          if (`${err}`.includes('Timeout')) {
-            log.info('wraparound', { id: docHandle.documentId, state: docHandle.state });
-            continue;
-          }
-
-          throw err;
-        }
-      }
-    } else {
-      await asyncTimeout(docHandle.whenReady(['ready']), 1_000, 'short doc ready timeout with automerge disabled');
-    }
-
-    if (docHandle.state === 'unavailable') {
-      throw new Error('Automerge document is unavailable');
-    }
-
-    return docHandle;
-  }
-
-  private async _fallbackToNewDoc() {
-    this._spaceRootDocHandle = this.automerge.repo.create();
-    this._ctx!.onDispose(() => {
-      this._spaceRootDocHandle.delete();
-    });
   }
 
   getObjectById(id: string): EchoObject | undefined {
@@ -185,11 +125,8 @@ export class AutomergeDb {
     invariant(!this._objects.has(obj.id));
     this._objects.set(obj.id, obj);
 
-    const spaceDocHandle = this.automerge.repo.create<SpaceDoc>();
-    this._initDocAccess(spaceDocHandle);
-
+    const spaceDocHandle = this._automergeDocLoader.createDocumentForObject(obj.id);
     spaceDocHandle.on('change', this._onDocumentUpdate);
-    this._linkObjectDocument(obj, spaceDocHandle);
 
     (obj[base] as AutomergeObject)._bind({
       db: this,
@@ -229,20 +166,6 @@ export class AutomergeDb {
     }
   }
 
-  private _initDocAccess(handle: DocHandle<SpaceDoc>) {
-    handle.change((newDoc: SpaceDoc) => {
-      newDoc.access = { spaceKey: this.spaceKey.toHex() };
-    });
-  }
-
-  private _linkObjectDocument(object: AutomergeObject, handle: DocHandle<SpaceDoc>) {
-    this._automergeDocLoader.onObjectCreatedInDocument(handle, object.id);
-    this._spaceRootDocHandle.change((newDoc: SpaceDoc) => {
-      newDoc.links ??= {};
-      newDoc.links[object.id] = handle.url;
-    });
-  }
-
   /**
    * Keep as field to have a reference to pass for unsubscribing from handle changes.
    */
@@ -255,7 +178,6 @@ export class AutomergeDb {
   };
 
   private _onDispose() {
-    this._spaceRootDocHandle?.off('change', this._onDocumentUpdate);
     for (const docHandle of this._automergeDocLoader.getDocumentHandles()) {
       docHandle.off('change', this._onDocumentUpdate);
     }

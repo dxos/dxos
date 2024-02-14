@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { asyncTimeout } from '@dxos/async';
 import {
   type DocHandle,
   type AutomergeUrl,
@@ -9,29 +10,38 @@ import {
   type DocumentId,
   isValidAutomergeUrl,
 } from '@dxos/automerge/automerge-repo';
+import { cancelWithContext, type Context, ContextDisposedError } from '@dxos/context';
+import { warnAfterTimeout } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import type { AutomergeContext } from './automerge-context';
+import { type SpaceState } from './automerge-db';
 import { type SpaceDoc } from './types';
+import { getGlobalAutomergePreference } from '../automerge-preference';
 
 type SpaceDocumentLinks = SpaceDoc['links'];
 
+type DocumentLoadingListener = (handle: DocHandle<SpaceDoc>, objectId: string) => void;
+
 export interface AutomergeDocumentLoader {
+  loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<DocHandle<SpaceDoc>>;
+  createDocumentForObject(objectId: string): DocHandle<SpaceDoc>;
   loadLinkedObjects(links: SpaceDocumentLinks): void;
   onObjectCreatedInDocument(handle: DocHandle<SpaceDoc>, objectId: string): void;
   onObjectRebound(handle: DocHandle<SpaceDoc>, objectId: string): void;
   processDocumentUpdate(event: DocHandleChangePayload<SpaceDoc>): DocumentChanges;
   getDocumentHandles(): Iterable<DocHandle<SpaceDoc>>;
 
-  open(): void;
-  close(): void;
+  setDocumentLoadingListener(listener: DocumentLoadingListener | null): void;
 }
 
 /**
  * Manages object <-> docHandle binding and automerge document loading.
  */
 export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
+  private _spaceRootDocHandle?: DocHandle<SpaceDoc>;
   /**
    * An object id pointer to a handle of the document where the object is stored inline.
    */
@@ -41,13 +51,58 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
    * a document handle.
    */
   private readonly _createdObjectIds = new Set<string>();
-
-  private _isOpen = false;
+  /**
+   * If set when document handle loading finishes and the object is still bound to this document.
+   */
+  private _documentLoadingListener: DocumentLoadingListener | null = null;
 
   constructor(
+    private readonly _spaceKey: PublicKey,
     private readonly _automerge: AutomergeContext,
-    private readonly _onObjectDocumentLoaded: (handle: DocHandle<SpaceDoc>, objectId: string) => void,
   ) {}
+
+  public async loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<DocHandle<SpaceDoc>> {
+    if (this._spaceRootDocHandle != null && !this._spaceRootDocHandle.isDeleted()) {
+      return this._spaceRootDocHandle;
+    }
+    if (!spaceState.rootUrl) {
+      if (getGlobalAutomergePreference()) {
+        log.error('Database opened with no rootUrl');
+      }
+      this._spaceRootDocHandle = this._createContextBoundDocument(ctx);
+      return this._spaceRootDocHandle;
+    } else {
+      try {
+        const existingDocHandle = await this._initDocHandle(ctx, spaceState.rootUrl);
+        const doc = existingDocHandle.docSync();
+        invariant(doc);
+        if (doc.access == null) {
+          this._initDocAccess(existingDocHandle);
+        }
+        this._spaceRootDocHandle = existingDocHandle;
+        return existingDocHandle;
+      } catch (err) {
+        if (err instanceof ContextDisposedError || getGlobalAutomergePreference()) {
+          throw err;
+        }
+        log.warn('falling back to a temporary document on loading error', { err, space: this._spaceKey });
+        this._spaceRootDocHandle = this._createContextBoundDocument(ctx);
+        return this._spaceRootDocHandle;
+      }
+    }
+  }
+
+  public createDocumentForObject(objectId: string): DocHandle<SpaceDoc> {
+    invariant(this._spaceRootDocHandle);
+    const spaceDocHandle = this._automerge.repo.create<SpaceDoc>();
+    this._initDocAccess(spaceDocHandle);
+    this.onObjectCreatedInDocument(spaceDocHandle, objectId);
+    this._spaceRootDocHandle.change((newDoc: SpaceDoc) => {
+      newDoc.links ??= {};
+      newDoc.links[objectId] = spaceDocHandle.url;
+    });
+    return spaceDocHandle;
+  }
 
   public onObjectCreatedInDocument(handle: DocHandle<SpaceDoc>, objectId: string) {
     this._objectDocumentHandles.set(objectId, handle);
@@ -58,18 +113,14 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     this._objectDocumentHandles.set(objectId, handle);
   }
 
-  public open() {
-    invariant(!this._isOpen);
-    this._isOpen = true;
-  }
-
-  public close() {
-    invariant(this._isOpen);
-    this._isOpen = false;
+  setDocumentLoadingListener(listener: DocumentLoadingListener | null) {
+    this._documentLoadingListener = listener;
   }
 
   public getDocumentHandles(): Iterable<DocHandle<SpaceDoc>> {
-    return this._objectDocumentHandles.values();
+    return this._spaceRootDocHandle
+      ? [this._spaceRootDocHandle, ...this._objectDocumentHandles.values()]
+      : this._objectDocumentHandles.values();
   }
 
   public loadLinkedObjects(links: SpaceDocumentLinks) {
@@ -78,6 +129,51 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
 
   public processDocumentUpdate(event: DocHandleChangePayload<SpaceDoc>) {
     return this._processDocumentChanges(event);
+  }
+
+  private async _initDocHandle(ctx: Context, url: string) {
+    const docHandle = this._automerge.repo.find(url as DocumentId);
+    // TODO(mykola): Remove check for global preference or timeout?
+    if (getGlobalAutomergePreference()) {
+      // Loop on timeout.
+      while (true) {
+        try {
+          await warnAfterTimeout(5_000, 'Automerge root doc load timeout (AutomergeDb)', async () => {
+            await cancelWithContext(ctx, docHandle.whenReady(['ready'])); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
+          });
+          break;
+        } catch (err) {
+          if (`${err}`.includes('Timeout')) {
+            log.info('wraparound', { id: docHandle.documentId, state: docHandle.state });
+            continue;
+          }
+
+          throw err;
+        }
+      }
+    } else {
+      await asyncTimeout(docHandle.whenReady(['ready']), 1_000, 'short doc ready timeout with automerge disabled');
+    }
+
+    if (docHandle.state === 'unavailable') {
+      throw new Error('Automerge document is unavailable');
+    }
+
+    return docHandle;
+  }
+
+  private _createContextBoundDocument(ctx: Context) {
+    const handle = this._automerge.repo.create();
+    ctx.onDispose(() => {
+      handle.delete();
+    });
+    return handle;
+  }
+
+  private _initDocAccess(handle: DocHandle<SpaceDoc>) {
+    handle.change((newDoc: SpaceDoc) => {
+      newDoc.access = { spaceKey: this._spaceKey.toHex() };
+    });
   }
 
   private _loadLinkedObjects(links: SpaceDocumentLinks) {
@@ -109,8 +205,9 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     try {
       await handle.doc(['ready']);
       const logMeta = { objectId, docUrl: handle.url };
-      if (!this._isOpen) {
-        log.warn('document loaded after loader was closed, ignoring', logMeta);
+      const listener = this._documentLoadingListener;
+      if (listener == null) {
+        log.warn('document loaded after a listener was removed, ignoring', logMeta);
         return;
       }
       const objectDocHandle = this._objectDocumentHandles.get(objectId);
@@ -118,15 +215,16 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
         log.warn('object was rebound while a document was loading, discarding handle', logMeta);
         return;
       }
-      this._onObjectDocumentLoaded(handle, objectId);
+      listener(handle, objectId);
     } catch (err) {
+      const shouldRetryLoading = this._documentLoadingListener != null;
       log.warn('failed to load a document', {
         objectId,
         automergeUrl: handle.url,
-        retryLoading: this._isOpen,
+        retryLoading: shouldRetryLoading,
         err,
       });
-      if (this._isOpen) {
+      if (shouldRetryLoading) {
         await this._createObjectOnDocumentLoad(handle, objectId);
       }
     }
