@@ -87,8 +87,7 @@ for (const trap of TRAPS) {
 
   Object.defineProperty(ProxyHandlerSlot.prototype, trap, {
     value: function (this: ProxyHandlerSlot<any>, ...args: any[]) {
-      debugger;
-      log.info('trap', { trap, args });
+      // log.info('trap', { trap, args });
 
       if (!this.handler || !this.handler[trap]) {
         return (Reflect[trap] as Function)(...args);
