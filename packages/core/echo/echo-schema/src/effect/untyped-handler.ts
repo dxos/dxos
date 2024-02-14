@@ -5,30 +5,44 @@
 import { GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 
 import { createReactiveProxy, isValidProxyTarget, symbolIsProxy, type ReactiveHandler } from './proxy';
-import { log } from '@dxos/log';
+import { invariant } from '@dxos/invariant';
+
+const symbolSignal = Symbol('signal');
+
+type ProxyTarget = {
+  [symbolSignal]: GenericSignal;
+} & ({ [key: keyof any]: any } | any[]);
 
 /**
  * Untyped in-memory reactive store.
  *
  * Target can be an array or object with any type of values including other reactive proxies.
  */
-export class UntypedReactiveHandler implements ReactiveHandler<any> {
+export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   // TODO(dmaretskyi): Does this work? Should this be a global variable instead?
   _proxyMap = new WeakMap<object, any>();
-  _signal = compositeRuntime.createSignal();
 
-  _init(target: any): void {
-    if (typeof target === 'object' && target !== null) {
-      for (const key in target) {
-        if (Array.isArray(target[key]) && !(target instanceof ReactiveArray)) {
-          target[key] = new ReactiveArray(...target[key]);
-        }
+  _init(target: ProxyTarget): void {
+    invariant(typeof target === 'object' && target !== null);
+
+    if (!(symbolSignal in target)) {
+      Object.defineProperty(target, symbolSignal, {
+        value: compositeRuntime.createSignal(),
+        enumerable: false,
+        writable: true,
+        configurable: true,
+      });
+    }
+
+    for (const key in target) {
+      if (Array.isArray(target[key]) && !(target instanceof ReactiveArray)) {
+        target[key] = new ReactiveArray(...target[key]);
       }
     }
   }
 
-  get(target: any, prop: string | symbol, receiver: any): any {
-    this._signal.notifyRead();
+  get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
+    target[symbolSignal].notifyRead();
     const value = Reflect.get(target, prop);
 
     if ((value instanceof ReactiveArray || isValidProxyTarget(value)) && !(value as any)[symbolIsProxy]) {
@@ -39,20 +53,20 @@ export class UntypedReactiveHandler implements ReactiveHandler<any> {
     return value;
   }
 
-  set(target: any, prop: string | symbol, value: any, receiver: any): boolean {
+  set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
     // Convert arrays to reactive arrays on write.
     if (Array.isArray(value)) {
       value = new ReactiveArray(...value);
     }
 
     const result = Reflect.set(target, prop, value);
-    this._signal.notifyWrite();
+    target[symbolSignal].notifyWrite();
     return result;
   }
 
-  defineProperty(target: any, property: string | symbol, attributes: PropertyDescriptor): boolean {
+  defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
     const result = Reflect.defineProperty(target, property, attributes);
-    this._signal.notifyWrite();
+    target[symbolSignal].notifyWrite();
     return result;
   }
 }
