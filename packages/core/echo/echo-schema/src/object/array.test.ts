@@ -8,11 +8,11 @@ import { inspect } from 'util';
 
 import { Trigger, sleep } from '@dxos/async';
 import { registerSignalRuntime } from '@dxos/echo-signals';
+import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 import { EchoArray } from './array';
 import { Expando, TypedObject } from './typed-object';
-import { subscribe } from './types';
 import { createDatabase } from '../testing';
 
 describe('Arrays', () => {
@@ -180,17 +180,22 @@ describe('Arrays', () => {
   });
 
   test('array receives updates', async () => {
+    registerSignalRuntime();
+
     const done = new Trigger();
     const { db } = await createDatabase();
     const root = db.add(new Expando({ entries: [new Expando({ name: 'first' })] }));
+    log.info('root', { entries: root.id });
 
-    root[subscribe](() => {
-      expect(root.entries.length).toEqual(2);
-      done.wake();
+    const clearEffect = effect(() => {
+      if (root.entries.length === 2) {
+        done.wake();
+      }
     });
 
     root.entries.push(new Expando({ name: 'second' }));
     await done.wait();
+    clearEffect();
   });
 
   test.skip('inspect array elements', () => {
