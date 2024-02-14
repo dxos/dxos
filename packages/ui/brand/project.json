@@ -1,12 +1,12 @@
 {
-  "sourceRoot": "packages/ui/react-icons/src",
+  "sourceRoot": "packages/ui/brand/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/ui/react-icons/src/index.ts"
+          "packages/ui/brand/src/index.ts"
         ],
         "platforms": [
           "browser"
