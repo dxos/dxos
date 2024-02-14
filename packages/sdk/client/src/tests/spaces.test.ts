@@ -609,7 +609,7 @@ describe('Spaces', () => {
       await waitForExpect(() => {
         expect(guestSpace.db.getObjectById(hostRoot.id)).not.to.be.undefined;
       });
-      const guestRoot = guestSpace.db.getObjectById(hostRoot.id)!;
+      const guestRoot: Expando = guestSpace.db.getObjectById(hostRoot.id)!;
 
       const unsub = guestRoot[subscribe](() => {
         expect([...guestRoot.entries].length).to.equal(2);
