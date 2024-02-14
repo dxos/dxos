@@ -7,7 +7,7 @@ import * as S from '@effect/schema/Schema';
 
 import { invariant } from '@dxos/invariant';
 
-import { createReactiveProxy } from './proxy';
+import { createReactiveProxy, isValidProxyTarget } from './proxy';
 import { TypedReactiveHandler, setAstProperty, symbolSchema } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 
@@ -33,6 +33,9 @@ export const object: {
   <T extends {}>(schema: S.Schema<T>, obj: T): ReactiveObject<T>;
 } = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: T): ReactiveObject<T> => {
   if (obj) {
+    if (!isValidProxyTarget(obj)) {
+      throw new Error('Value cannot be made into a reactive object.');
+    }
     // typed case
     const schema: S.Schema<T> = schemaOrObj as S.Schema<T>;
     const _ = S.asserts(schema)(obj);
@@ -42,6 +45,10 @@ export const object: {
 
     return createReactiveProxy(obj, new TypedReactiveHandler());
   } else {
+    if (!isValidProxyTarget(schemaOrObj)) {
+      throw new Error('Value cannot be made into a reactive object.');
+    }
+
     // untyped case
     return createReactiveProxy(schemaOrObj as T, new UntypedReactiveHandler());
   }

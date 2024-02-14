@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { log } from '@dxos/log';
 import { type ReactiveObject } from './reactive';
 
 export const symbolIsProxy = Symbol('isProxy');
@@ -17,10 +18,6 @@ export const isValidProxyTarget = (value: any): value is object =>
  * @param target Object or array. Passing in array will enable array methods.
  */
 export const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHandler<T>): ReactiveObject<T> => {
-  if (!isValidProxyTarget(target)) {
-    throw new Error('Value cannot be made into a reactive object.');
-  }
-
   const existingProxy = handler._proxyMap.get(target);
   if (existingProxy) {
     return existingProxy;
@@ -90,6 +87,9 @@ for (const trap of TRAPS) {
 
   Object.defineProperty(ProxyHandlerSlot.prototype, trap, {
     value: function (this: ProxyHandlerSlot<any>, ...args: any[]) {
+      debugger;
+      log.info('trap', { trap, args });
+
       if (!this.handler || !this.handler[trap]) {
         return (Reflect[trap] as Function)(...args);
       }

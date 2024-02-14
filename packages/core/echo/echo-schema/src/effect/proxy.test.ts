@@ -10,6 +10,7 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
 import * as R from './reactive';
+import { log } from '@dxos/log';
 
 registerSignalRuntime();
 
@@ -196,6 +197,10 @@ describe('Proxy properties', () => {
     expect(obj).to.not.deep.eq({ ...TEST_OBJECT, number: 11 });
   });
 
+  test('defineProperty');
+
+  test('getOwnPropertyDescriptor');
+
   describe('signal updates', () => {
     test('are synchronous', () => {
       const obj = R.object({ field: 'bar' });
@@ -282,8 +287,7 @@ describe('Proxy properties', () => {
       expect(updates.count, 'update count').to.eq(1);
     });
 
-    // TODO(dmaretskyi): Fix array operations.
-    test.skip('length', () => {
+    test('length', () => {
       const { array } = R.object({ array: [1, 2, 3] });
       using updates = updateCounter(() => {
         array[0];
