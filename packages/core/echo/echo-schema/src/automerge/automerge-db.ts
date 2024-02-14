@@ -11,7 +11,11 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type AutomergeContext } from './automerge-context';
-import { type AutomergeDocumentLoader, AutomergeDocumentLoaderImpl } from './automerge-doc-loader';
+import {
+  type AutomergeDocumentLoader,
+  AutomergeDocumentLoaderImpl,
+  type ObjectDocumentLoaded,
+} from './automerge-doc-loader';
 import { AutomergeObject, getAutomergeObjectCore } from './automerge-object';
 import { type SpaceDoc } from './types';
 import { type EchoDatabase } from '../database';
@@ -70,7 +74,7 @@ export class AutomergeDb {
     }
     this._ctx = new Context();
     this._ctx.onDispose(this._onDispose.bind(this));
-    this._automergeDocLoader.setDocumentLoadingListener(this._onObjectDocumentLoaded.bind(this));
+    this._automergeDocLoader.onObjectDocumentLoaded.on(this._ctx, this._onObjectDocumentLoaded.bind(this));
 
     try {
       await this._automergeDocLoader.loadSpaceRootDocHandle(this._ctx, spaceState);
@@ -102,7 +106,6 @@ export class AutomergeDb {
       return;
     }
 
-    this._automergeDocLoader.setDocumentLoadingListener(null);
     void this._ctx.dispose();
     this._ctx = undefined;
   }
@@ -138,7 +141,7 @@ export class AutomergeDb {
     // All objects should be created linked to root space doc after query indexing is ready to make them
     // discoverable.
     let spaceDocHandle: DocHandle<SpaceDoc>;
-    if (obj.__system?.type?.itemId === LEGACY_TEXT_TYPE) {
+    if (obj.__typename === LEGACY_TEXT_TYPE) {
       spaceDocHandle = this._automergeDocLoader.createDocumentForObject(obj.id);
       spaceDocHandle.on('change', this._onDocumentUpdate);
     } else {
@@ -197,12 +200,12 @@ export class AutomergeDb {
   };
 
   private _onDispose() {
-    for (const docHandle of this._automergeDocLoader.getDocumentHandles()) {
+    for (const docHandle of Object.values(this.automerge.repo.handles)) {
       docHandle.off('change', this._onDocumentUpdate);
     }
   }
 
-  private _onObjectDocumentLoaded(handle: DocHandle<SpaceDoc>, objectId: string) {
+  private _onObjectDocumentLoaded({ handle, objectId }: ObjectDocumentLoaded) {
     handle.on('change', this._onDocumentUpdate);
     this._createObjectInDocument(handle, objectId);
     this._emitUpdateEvent([objectId]);

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { asyncTimeout } from '@dxos/async';
+import { asyncTimeout, Event } from '@dxos/async';
 import {
   type DocHandle,
   type AutomergeUrl,
@@ -23,9 +23,9 @@ import { getGlobalAutomergePreference } from '../automerge-preference';
 
 type SpaceDocumentLinks = SpaceDoc['links'];
 
-type DocumentLoadingListener = (handle: DocHandle<SpaceDoc>, objectId: string) => void;
-
 export interface AutomergeDocumentLoader {
+  onObjectDocumentLoaded: Event<ObjectDocumentLoaded>;
+
   loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void>;
   getSpaceRootDocHandle(): DocHandle<SpaceDoc>;
   createDocumentForObject(objectId: string): DocHandle<SpaceDoc>;
@@ -33,9 +33,6 @@ export interface AutomergeDocumentLoader {
   onObjectCreatedInDocument(handle: DocHandle<SpaceDoc>, objectId: string): void;
   onObjectRebound(handle: DocHandle<SpaceDoc>, objectId: string): void;
   processDocumentUpdate(event: DocHandleChangePayload<SpaceDoc>): DocumentChanges;
-  getDocumentHandles(): Iterable<DocHandle<SpaceDoc>>;
-
-  setDocumentLoadingListener(listener: DocumentLoadingListener | null): void;
 }
 
 /**
@@ -52,10 +49,8 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
    * a document handle.
    */
   private readonly _createdObjectIds = new Set<string>();
-  /**
-   * If set when document handle loading finishes and the object is still bound to this document.
-   */
-  private _documentLoadingListener: DocumentLoadingListener | null = null;
+
+  public readonly onObjectDocumentLoaded = new Event<ObjectDocumentLoaded>();
 
   constructor(
     private readonly _spaceKey: PublicKey,
@@ -115,10 +110,6 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     this._objectDocumentHandles.set(objectId, handle);
   }
 
-  public setDocumentLoadingListener(listener: DocumentLoadingListener | null) {
-    this._documentLoadingListener = listener;
-  }
-
   public getDocumentHandles(): Iterable<DocHandle<SpaceDoc>> {
     invariant(this._spaceRootDocHandle);
     return [this._spaceRootDocHandle, ...this._objectDocumentHandles.values()];
@@ -149,7 +140,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     }
   }
 
-  public processDocumentUpdate(event: DocHandleChangePayload<SpaceDoc>) {
+  public processDocumentUpdate(event: DocHandleChangePayload<SpaceDoc>): DocumentChanges {
     const { inlineChangedObjects, linkedDocuments } = this._getInlineAndLinkChanges(event);
     const createdObjectIds: string[] = [];
     const objectsToRebind: string[] = [];
@@ -224,9 +215,8 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     try {
       await handle.doc(['ready']);
       const logMeta = { objectId, docUrl: handle.url };
-      const listener = this._documentLoadingListener;
-      if (listener == null) {
-        log.warn('document loaded after a listener was removed, ignoring', logMeta);
+      if (this.onObjectDocumentLoaded.listenerCount() === 0) {
+        log.info('document loaded after all listeners were removed', logMeta);
         return;
       }
       const objectDocHandle = this._objectDocumentHandles.get(objectId);
@@ -234,9 +224,9 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
         log.warn('object was rebound while a document was loading, discarding handle', logMeta);
         return;
       }
-      listener(handle, objectId);
+      this.onObjectDocumentLoaded.emit({ handle, objectId });
     } catch (err) {
-      const shouldRetryLoading = this._documentLoadingListener != null;
+      const shouldRetryLoading = this.onObjectDocumentLoaded.listenerCount() > 0;
       log.warn('failed to load a document', {
         objectId,
         automergeUrl: handle.url,
@@ -274,6 +264,11 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       linkedDocuments,
     };
   }
+}
+
+export interface ObjectDocumentLoaded {
+  handle: DocHandle<SpaceDoc>;
+  objectId: string;
 }
 
 export interface DocumentChanges {
