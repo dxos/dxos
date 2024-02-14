@@ -33,7 +33,7 @@ export const CopyButton = ({ value, classNames, iconProps, ...props }: CopyButto
         <Copy className={getSize(5)} {...iconProps} />
       </div>
       <div role='none' className={mx('flex gap-1 items-center', !isCopied && inactiveLabelStyles)}>
-        <span className='pli-1'>{t('copy invitation code success label')}</span>
+        <span className='pli-1'>{t('copy success label')}</span>
         <Check className={getSize(5)} {...iconProps} />
       </div>
     </Button>
@@ -44,7 +44,7 @@ export const CopyButtonIconOnly = ({ value, classNames, iconProps, variant, ...p
   const { t } = useTranslation('os');
   const { textValue, setTextValue } = useClipboardContext();
   const isCopied = textValue === value;
-  const label = isCopied ? t('copy invitation code success label') : t('copy invitation code label');
+  const label = isCopied ? t('copy success label') : t('copy invitation code label');
   const [open, setOpen] = useState(false);
   return (
     <Tooltip.Root delayDuration={1500} open={open} onOpenChange={setOpen}>
