@@ -152,14 +152,12 @@ export const spaceToGraphNode = ({
   space,
   parent,
   hidden,
-  version,
   dispatch,
   resolve,
 }: {
   space: Space;
   parent: Node;
   hidden?: boolean;
-  version?: string;
   dispatch: IntentDispatcher;
   resolve: MetadataResolver;
 }): UnsubscribeCallback => {
@@ -195,7 +193,7 @@ export const spaceToGraphNode = ({
     if (
       space.state.get() === SpaceState.READY &&
       Migrations.versionProperty &&
-      space.properties[Migrations.versionProperty] !== version
+      space.properties[Migrations.versionProperty] !== Migrations.targetVersion
     ) {
       node.addAction({
         id: 'migrate-space',
