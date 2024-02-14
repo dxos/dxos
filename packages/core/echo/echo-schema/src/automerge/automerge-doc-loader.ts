@@ -26,7 +26,8 @@ type SpaceDocumentLinks = SpaceDoc['links'];
 type DocumentLoadingListener = (handle: DocHandle<SpaceDoc>, objectId: string) => void;
 
 export interface AutomergeDocumentLoader {
-  loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<DocHandle<SpaceDoc>>;
+  loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void>;
+  getSpaceRootDocHandle(): DocHandle<SpaceDoc>;
   createDocumentForObject(objectId: string): DocHandle<SpaceDoc>;
   loadLinkedObjects(links: SpaceDocumentLinks): void;
   onObjectCreatedInDocument(handle: DocHandle<SpaceDoc>, objectId: string): void;
@@ -61,16 +62,15 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     private readonly _automerge: AutomergeContext,
   ) {}
 
-  public async loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<DocHandle<SpaceDoc>> {
-    if (this._spaceRootDocHandle != null && !this._spaceRootDocHandle.isDeleted()) {
-      return this._spaceRootDocHandle;
+  public async loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void> {
+    if (this._isDocHandleInitialized(this._spaceRootDocHandle)) {
+      return;
     }
     if (!spaceState.rootUrl) {
       if (getGlobalAutomergePreference()) {
         log.error('Database opened with no rootUrl');
       }
       this._spaceRootDocHandle = this._createContextBoundDocument(ctx);
-      return this._spaceRootDocHandle;
     } else {
       try {
         const existingDocHandle = await this._initDocHandle(ctx, spaceState.rootUrl);
@@ -80,23 +80,25 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
           this._initDocAccess(existingDocHandle);
         }
         this._spaceRootDocHandle = existingDocHandle;
-        return existingDocHandle;
       } catch (err) {
         if (err instanceof ContextDisposedError || getGlobalAutomergePreference()) {
           throw err;
         }
         log.warn('falling back to a temporary document on loading error', { err, space: this._spaceKey });
         this._spaceRootDocHandle = this._createContextBoundDocument(ctx);
-        return this._spaceRootDocHandle;
       }
     }
+  }
+
+  public getSpaceRootDocHandle(): DocHandle<SpaceDoc> {
+    invariant(this._isDocHandleInitialized(this._spaceRootDocHandle));
+    return this._spaceRootDocHandle;
   }
 
   public createDocumentForObject(objectId: string): DocHandle<SpaceDoc> {
     invariant(this._spaceRootDocHandle);
     const spaceDocHandle = this._automerge.repo.create<SpaceDoc>();
     this._initDocAccess(spaceDocHandle);
-    this.onObjectCreatedInDocument(spaceDocHandle, objectId);
     this._spaceRootDocHandle.change((newDoc: SpaceDoc) => {
       newDoc.links ??= {};
       newDoc.links[objectId] = spaceDocHandle.url;
@@ -271,6 +273,10 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       inlineChangedObjects: [...inlineChangedObjectIds],
       linkedDocuments,
     };
+  }
+
+  private _isDocHandleInitialized(docHandle?: DocHandle<SpaceDoc>): docHandle is DocHandle<SpaceDoc> {
+    return docHandle != null && !docHandle.isDeleted();
   }
 }
 

@@ -16,7 +16,14 @@ import { AutomergeObject, getAutomergeObjectCore } from './automerge-object';
 import { type SpaceDoc } from './types';
 import { type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
-import { base, type EchoObject, isActualTextObject, isActualTypedObject, isAutomergeObject } from '../object';
+import {
+  base,
+  type EchoObject,
+  isActualTextObject,
+  isActualTypedObject,
+  isAutomergeObject,
+  LEGACY_TEXT_TYPE,
+} from '../object';
 import { type Schema } from '../proto';
 
 export type SpaceState = {
@@ -66,7 +73,8 @@ export class AutomergeDb {
     this._automergeDocLoader.setDocumentLoadingListener(this._onObjectDocumentLoaded.bind(this));
 
     try {
-      const spaceRootDocHandle = await this._automergeDocLoader.loadSpaceRootDocHandle(this._ctx, spaceState);
+      await this._automergeDocLoader.loadSpaceRootDocHandle(this._ctx, spaceState);
+      const spaceRootDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
       const spaceRootDoc = spaceRootDocHandle.docSync();
       invariant(spaceRootDoc);
       const objectIds = Object.keys(spaceRootDoc.objects ?? {});
@@ -125,8 +133,19 @@ export class AutomergeDb {
     invariant(!this._objects.has(obj.id));
     this._objects.set(obj.id, obj);
 
-    const spaceDocHandle = this._automergeDocLoader.createDocumentForObject(obj.id);
-    spaceDocHandle.on('change', this._onDocumentUpdate);
+    // TODO: create all objects as linked.
+    // This is a temporary solution to get quick benefit from lazily-loaded separate-document objects.
+    // All objects should be created linked to root space doc after query indexing is ready to make them
+    // discoverable.
+    let spaceDocHandle: DocHandle<SpaceDoc>;
+    if (obj.__system?.type?.itemId === LEGACY_TEXT_TYPE) {
+      spaceDocHandle = this._automergeDocLoader.createDocumentForObject(obj.id);
+      spaceDocHandle.on('change', this._onDocumentUpdate);
+    } else {
+      spaceDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
+    }
+
+    this._automergeDocLoader.onObjectCreatedInDocument(spaceDocHandle, obj.id);
 
     (obj[base] as AutomergeObject)._bind({
       db: this,
