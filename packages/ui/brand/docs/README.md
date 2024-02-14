@@ -1,4 +1,4 @@
-# @dxos/react-icons
+# @dxos/brand
 
 Digital assets.
 
@@ -20,7 +20,7 @@ subgraph apps [apps]
 
   subgraph patterns [patterns]
     style patterns fill:transparent
-    dxos/assets("@dxos/react-icons"):::root
+    dxos/assets("@dxos/brand"):::root
     click dxos/assets "dxos/dxos/tree/main/packages/apps/patterns/assets/docs"
   end
 end

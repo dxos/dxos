@@ -7,7 +7,7 @@ import * as S from '@effect/schema/Schema';
 
 import { invariant } from '@dxos/invariant';
 
-import { createReactiveProxy } from './proxy';
+import { type ReactiveHandler, createReactiveProxy, isValidProxyTarget } from './proxy';
 import { TypedReactiveHandler, setAstProperty, symbolSchema } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 
@@ -20,7 +20,7 @@ export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
  * Reactive object.
  * Accessing properties triggers signal semantics.
  */
-// TODO(burdon): Is the type needed?
+// This type doesn't change the shape of the object, it is rather used as an indicator that the object is reactive.
 export type ReactiveObject<T> = { [K in keyof T]: T[K] };
 
 /**
@@ -33,6 +33,9 @@ export const object: {
   <T extends {}>(schema: S.Schema<T>, obj: T): ReactiveObject<T>;
 } = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: T): ReactiveObject<T> => {
   if (obj) {
+    if (!isValidProxyTarget(obj)) {
+      throw new Error('Value cannot be made into a reactive object.');
+    }
     // typed case
     const schema: S.Schema<T> = schemaOrObj as S.Schema<T>;
     const _ = S.asserts(schema)(obj);
@@ -42,8 +45,12 @@ export const object: {
 
     return createReactiveProxy(obj, new TypedReactiveHandler());
   } else {
+    if (!isValidProxyTarget(schemaOrObj)) {
+      throw new Error('Value cannot be made into a reactive object.');
+    }
+
     // untyped case
-    return createReactiveProxy(schemaOrObj as T, new UntypedReactiveHandler());
+    return createReactiveProxy(schemaOrObj as T, UntypedReactiveHandler.instance as ReactiveHandler<any>);
   }
 };
 

@@ -32,7 +32,7 @@ import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
 import { type Space, SpaceProxy, getSpaceForObject, type PropertiesProps } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
-import { InvitationManager, type InvitationManagerProps, osTranslations } from '@dxos/shell/react';
+import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
 import { inferRecordOrder } from '@dxos/util';
 
 import {
@@ -257,7 +257,9 @@ export const SpacePlugin = ({
               if (data.component === 'dxos.org/plugin/space/InvitationManagerDialog') {
                 return (
                   <Dialog.Content>
-                    <InvitationManager active {...(data.subject as InvitationManagerProps)} />
+                    <ClipboardProvider>
+                      <InvitationManager active {...(data.subject as InvitationManagerProps)} />
+                    </ClipboardProvider>
                   </Dialog.Content>
                 );
               } else {
@@ -341,7 +343,7 @@ export const SpacePlugin = ({
           graphSubscriptions.get(client.spaces.default.key.toHex())?.();
           graphSubscriptions.set(
             client.spaces.default.key.toHex(),
-            spaceToGraphNode({ space: client.spaces.default, parent, version, dispatch, resolve }),
+            spaceToGraphNode({ space: client.spaces.default, parent, dispatch, resolve }),
           );
 
           // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
@@ -429,7 +431,6 @@ export const SpacePlugin = ({
                   space,
                   parent: space === client.spaces.default ? parent : groupNode,
                   hidden: settings.values.showHidden,
-                  version,
                   dispatch,
                   resolve,
                 }),
@@ -472,6 +473,9 @@ export const SpacePlugin = ({
               const folder = new Folder();
               space.properties[Folder.schema.typename] = folder;
               sharedSpacesFolder?.objects.push(folder);
+              if (Migrations.versionProperty) {
+                space.properties[Migrations.versionProperty] = Migrations.targetVersion;
+              }
               return { data: { space, id: space.key.toHex() } };
             }
 
