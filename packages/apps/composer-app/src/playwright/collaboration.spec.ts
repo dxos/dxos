@@ -7,8 +7,6 @@ import { expect } from 'chai';
 import { platform } from 'node:os';
 import waitForExpect from 'wait-for-expect';
 
-import { sleep } from '@dxos/async';
-
 import { AppManager } from './app-manager';
 import { Markdown } from './plugins';
 
@@ -46,12 +44,16 @@ test.describe('Collaboration tests', () => {
     await host.createObject('markdownPlugin');
     await perfomInvitation(host, guest);
 
+    await guest.waitForSpaceReady();
+    await waitForExpect(async () => {
+      expect(await guest.getObjectsCount()).to.equal(2);
+    });
+
+    await guest.getObjectLinks().last().click();
     await Markdown.waitForMarkdownTextbox(guest.page);
     await waitForExpect(async () => {
       expect(await host.page.url()).to.equal(await guest.page.url());
-    });
 
-    await waitForExpect(async () => {
       const hostLink = await host.getObjectLinks().last().getAttribute('data-itemid');
       const guestLink = await guest.getObjectLinks().last().getAttribute('data-itemid');
       expect(hostLink).to.equal(guestLink);
@@ -64,7 +66,7 @@ test.describe('Collaboration tests', () => {
     await Markdown.waitForMarkdownTextbox(host.page);
     await perfomInvitation(host, guest);
 
-    await Markdown.waitForMarkdownTextbox(guest.page);
+    await guest.waitForSpaceReady();
     await waitForExpect(async () => {
       expect(await guest.getObjectsCount()).to.equal(2);
     });
@@ -97,7 +99,7 @@ test.describe('Collaboration tests', () => {
     ];
     const allParts = parts.join('');
 
-    await Markdown.waitForMarkdownTextbox(guest.page);
+    await guest.waitForSpaceReady();
     await waitForExpect(async () => {
       expect(await guest.getObjectsCount()).to.equal(2);
     });
@@ -128,13 +130,16 @@ test.describe('Collaboration tests', () => {
   });
 
   test('guest can jump to document host is viewing', async () => {
-    // TODO(wittjosiah): Remove.
-    test.setTimeout(120_000);
-
     await host.createSpace();
     await host.createObject('markdownPlugin');
     await Markdown.waitForMarkdownTextbox(host.page);
     await perfomInvitation(host, guest);
+    await guest.waitForSpaceReady();
+    await waitForExpect(async () => {
+      expect(await guest.getObjectsCount()).to.equal(2);
+    });
+
+    await guest.getObjectLinks().last().click();
     await Markdown.waitForMarkdownTextbox(guest.page);
     // TODO(wittjosiah): Initial viewing state is slow.
     await waitForExpect(async () => {
@@ -144,12 +149,6 @@ test.describe('Collaboration tests', () => {
     }, 30_000);
 
     await host.createObject('markdownPlugin');
-    // TODO(wittjosiah): Remove. Caused by https://github.com/dxos/dxos/issues/5658.
-    {
-      await sleep(5000); // Wait for replication.
-      await guest.page.reload();
-      await sleep(30_000); // Initial viewing state is slow.
-    }
     await waitForExpect(async () => {
       expect(await host.page.url()).not.to.equal(await guest.page.url());
       expect((await host.getSpacePresenceCount()).active).to.equal(1);

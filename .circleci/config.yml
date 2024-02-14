@@ -202,7 +202,6 @@ jobs:
   publish:
     docker:
       - *docker_image_default
-    # TODO(wittjosiah): Using because of kai bundling memory usage.
     resource_class: xlarge
     steps:
       - checkout
