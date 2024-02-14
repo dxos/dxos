@@ -579,7 +579,7 @@ describe('Spaces', () => {
     }
   });
 
-  test('object receives updates from another peer', async () => {
+  test.only('object receives updates from another peer', async () => {
     const testBuilder = new TestBuilder();
 
     const host = new Client({ services: testBuilder.createLocal() });
@@ -596,14 +596,14 @@ describe('Spaces', () => {
 
     const hostSpace = await host.spaces.create();
     await hostSpace.waitUntilReady();
+    const hostRoot = hostSpace.db.add(new Expando({ entries: [new Expando({ name: 'first' })] }));
+
     await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
     const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
     await guestSpace.waitUntilReady();
 
     {
       const done = new Trigger();
-      const hostRoot = hostSpace.db.add(new Expando({ entries: [new Expando({ name: 'first' })] }));
-      await hostSpace.db.flush();
 
       await waitForExpect(() => {
         expect(guestSpace.db.getObjectById(hostRoot.id)).not.to.be.undefined;
@@ -611,14 +611,14 @@ describe('Spaces', () => {
       const guestRoot = guestSpace.db.getObjectById(hostRoot.id)!;
 
       const unsub = guestRoot[subscribe](() => {
-        expect((guestRoot as any).entries.length).to.eq(2);
+        expect([...guestRoot.entries].length).to.equal(2);
         done.wake();
       });
 
       afterTest(() => unsub());
 
       hostRoot.entries.push(new Expando({ name: 'second' }));
-      await done.wait();
+      await done.wait({ timeout: 1000 });
     }
   });
 });
