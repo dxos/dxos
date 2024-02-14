@@ -10,6 +10,7 @@ import { Surface } from '@dxos/app-framework';
 import { type Space } from '@dxos/react-client/echo';
 import { Button, Main, useTranslation, Input, DropdownMenu } from '@dxos/react-ui';
 import { getSize, mx, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
+import { ClipboardProvider } from '@dxos/shell/react';
 
 import { SpaceMembersSection } from './SpaceMembersSection';
 import { SPACE_PLUGIN } from '../../meta';
@@ -84,30 +85,32 @@ export const SpaceMain = ({ space }: { space: Space }) => {
   const actionsMap = graph.findNode(space.key.toHex())?.actionsMap;
   const { t } = useTranslation(SPACE_PLUGIN);
   return (
-    <Main.Content
-      classNames={[
-        topbarBlockPaddingStart,
-        'min-bs-dvh grid gap-y-2 auto-rows-min',
-        'grid-cols-[var(--rail-size)_var(--rail-size)_1fr_var(--rail-size)]',
-        'md:grid-cols-[var(--rail-size)_var(--rail-size)_minmax(max-content,1fr)_var(--rail-size)_var(--rail-size)_minmax(max-content,2fr)_var(--rail-size)]',
-      ]}
-    >
-      <h1 className='contents'>
-        <MenuSpaceActions actionsMap={actionsMap} />
-        <Input.Root>
-          <Input.Label srOnly>{t('rename space label')}</Input.Label>
-          <Input.TextInput
-            variant='subdued'
-            classNames='text-2xl text-light col-span-3 md:col-span-4'
-            value={space.properties.name ?? ''}
-            onChange={({ target: { value } }) => (space.properties.name = value)}
-            placeholder={space.key.truncate()}
-          />
-        </Input.Root>
-      </h1>
-      {actionsMap && <InFlowSpaceActions actionsMap={actionsMap} />}
-      <SpaceMembersSection space={space} />
-      <KeyShortcuts />
-    </Main.Content>
+    <ClipboardProvider>
+      <Main.Content
+        classNames={[
+          topbarBlockPaddingStart,
+          'min-bs-dvh grid gap-y-2 auto-rows-min',
+          'grid-cols-[var(--rail-size)_var(--rail-size)_1fr_var(--rail-size)]',
+          'md:grid-cols-[var(--rail-size)_var(--rail-size)_minmax(max-content,1fr)_var(--rail-size)_var(--rail-size)_minmax(max-content,2fr)_var(--rail-size)]',
+        ]}
+      >
+        <h1 className='contents'>
+          <MenuSpaceActions actionsMap={actionsMap} />
+          <Input.Root>
+            <Input.Label srOnly>{t('rename space label')}</Input.Label>
+            <Input.TextInput
+              variant='subdued'
+              classNames='text-2xl text-light col-span-3 md:col-span-4'
+              value={space.properties.name ?? ''}
+              onChange={({ target: { value } }) => (space.properties.name = value)}
+              placeholder={space.key.truncate()}
+            />
+          </Input.Root>
+        </h1>
+        {actionsMap && <InFlowSpaceActions actionsMap={actionsMap} />}
+        <SpaceMembersSection space={space} />
+        <KeyShortcuts />
+      </Main.Content>
+    </ClipboardProvider>
   );
 };

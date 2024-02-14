@@ -32,7 +32,7 @@ import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
 import { type Space, SpaceProxy, getSpaceForObject, type PropertiesProps } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
-import { InvitationManager, type InvitationManagerProps, osTranslations } from '@dxos/shell/react';
+import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
 import { inferRecordOrder } from '@dxos/util';
 
 import {
@@ -257,7 +257,9 @@ export const SpacePlugin = ({
               if (data.component === 'dxos.org/plugin/space/InvitationManagerDialog') {
                 return (
                   <Dialog.Content>
-                    <InvitationManager active {...(data.subject as InvitationManagerProps)} />
+                    <ClipboardProvider>
+                      <InvitationManager active {...(data.subject as InvitationManagerProps)} />
+                    </ClipboardProvider>
                   </Dialog.Content>
                 );
               } else {
