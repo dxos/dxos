@@ -200,7 +200,6 @@ const main = async () => {
       [SettingsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-settings')),
       [SketchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-sketch')),
       [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {
-        version: '1',
         onFirstRun: ({ personalSpaceFolder, dispatch }) => {
           const document = new Document({ title: INITIAL_TITLE, content: new TextObject(INITIAL_CONTENT) });
           personalSpaceFolder.objects.push(document);
