@@ -341,7 +341,7 @@ export const SpacePlugin = ({
           graphSubscriptions.get(client.spaces.default.key.toHex())?.();
           graphSubscriptions.set(
             client.spaces.default.key.toHex(),
-            spaceToGraphNode({ space: client.spaces.default, parent, version, dispatch, resolve }),
+            spaceToGraphNode({ space: client.spaces.default, parent, dispatch, resolve }),
           );
 
           // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
@@ -429,7 +429,6 @@ export const SpacePlugin = ({
                   space,
                   parent: space === client.spaces.default ? parent : groupNode,
                   hidden: settings.values.showHidden,
-                  version,
                   dispatch,
                   resolve,
                 }),
@@ -472,6 +471,9 @@ export const SpacePlugin = ({
               const folder = new Folder();
               space.properties[Folder.schema.typename] = folder;
               sharedSpacesFolder?.objects.push(folder);
+              if (Migrations.versionProperty) {
+                space.properties[Migrations.versionProperty] = Migrations.targetVersion;
+              }
               return { data: { space, id: space.key.toHex() } };
             }
 
