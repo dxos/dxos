@@ -4,6 +4,7 @@
 
 import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
+import { default as jestExpect } from 'expect';
 import { inspect } from 'util';
 
 import { registerSignalRuntime } from '@dxos/echo-signals';
@@ -195,6 +196,13 @@ describe.only('Proxy properties', () => {
 
     expect(obj).to.deep.eq(TEST_OBJECT);
     expect(obj).to.not.deep.eq({ ...TEST_OBJECT, number: 11 });
+  });
+
+  test('jest deep equal works', () => {
+    const obj = R.object(TEST_OBJECT);
+
+    jestExpect(obj).toEqual(TEST_OBJECT);
+    jestExpect(obj).not.toEqual({ ...TEST_OBJECT, number: 11 });
   });
 
   test('defineProperty');
