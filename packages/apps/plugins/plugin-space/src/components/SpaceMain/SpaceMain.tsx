@@ -7,7 +7,7 @@ import React from 'react';
 
 import { type Action, useGraph } from '@braneframe/plugin-graph';
 import { Surface } from '@dxos/app-framework';
-import { type Space } from '@dxos/react-client/echo';
+import { SpaceState, type Space } from '@dxos/react-client/echo';
 import { Button, Main, useTranslation, Input, DropdownMenu } from '@dxos/react-ui';
 import { getSize, mx, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
@@ -80,9 +80,11 @@ const KeyShortcuts = () => {
 };
 
 export const SpaceMain = ({ space }: { space: Space }) => {
+  const { t } = useTranslation(SPACE_PLUGIN);
   const { graph } = useGraph();
   const actionsMap = graph.findNode(space.key.toHex())?.actionsMap;
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const state = space.state.get();
+  const ready = state === SpaceState.READY;
   return (
     <Main.Content
       classNames={[
@@ -91,6 +93,7 @@ export const SpaceMain = ({ space }: { space: Space }) => {
         'grid-cols-[var(--rail-size)_var(--rail-size)_1fr_var(--rail-size)]',
         'md:grid-cols-[var(--rail-size)_var(--rail-size)_minmax(max-content,1fr)_var(--rail-size)_var(--rail-size)_minmax(max-content,2fr)_var(--rail-size)]',
       ]}
+      data-testid='spacePlugin.main'
     >
       <h1 className='contents'>
         <MenuSpaceActions actionsMap={actionsMap} />
@@ -99,14 +102,16 @@ export const SpaceMain = ({ space }: { space: Space }) => {
           <Input.TextInput
             variant='subdued'
             classNames='text-2xl text-light col-span-3 md:col-span-4'
+            data-testid='spacePlugin.main.name'
+            disabled={!ready}
             value={space.properties.name ?? ''}
             onChange={({ target: { value } }) => (space.properties.name = value)}
-            placeholder={space.key.truncate()}
+            placeholder={ready ? t('unnamed space label') : t('loading space label')}
           />
         </Input.Root>
       </h1>
       {actionsMap && <InFlowSpaceActions actionsMap={actionsMap} />}
-      <SpaceMembersSection space={space} />
+      {ready && <SpaceMembersSection space={space} />}
       <KeyShortcuts />
     </Main.Content>
   );
