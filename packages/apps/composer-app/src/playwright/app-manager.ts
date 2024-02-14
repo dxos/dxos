@@ -115,6 +115,10 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
+  waitForSpaceReady(params: { interval?: number; timeout?: number } = {}) {
+    return waitFor(() => this.page.getByTestId('spacePlugin.main.name').isEnabled(), params);
+  }
+
   getSpacePresenceMembers() {
     return this.page.getByTestId('spacePlugin.presence.member');
   }
@@ -220,3 +224,24 @@ export class AppManager {
     await this.page.getByTestId('resetDialog').waitFor();
   }
 }
+
+// TODO(wittjosiah): Factor out.
+const waitFor = (
+  cb: () => Promise<boolean>,
+  { interval: _interval = 1000, timeout: _timeout = 10_000 } = {},
+): Promise<void> =>
+  new Promise<void>((resolve, reject) => {
+    const interval = setInterval(async () => {
+      const res = await cb();
+      if (res) {
+        clearTimeout(timeout);
+        clearInterval(interval);
+        resolve();
+      }
+    }, _interval);
+
+    const timeout = setTimeout(() => {
+      clearInterval(interval);
+      reject(new Error('Timeout waiting for condition.'));
+    }, _timeout);
+  });
