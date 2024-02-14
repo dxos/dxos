@@ -61,6 +61,10 @@ export class UntypedReactiveHandler implements ReactiveHandler<any> {
  */
 class ReactiveArray<T> extends Array<T> {}
 
+/**
+ * These methods will trigger proxy traps like `set` and `defineProperty` and emit signal notifications.
+ * We wrap them in a batch to avoid unnecessary signal notifications.
+ */
 const BATCHED_METHODS = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'] as const;
 
 for (const method of BATCHED_METHODS) {
