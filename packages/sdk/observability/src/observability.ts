@@ -42,6 +42,8 @@ export type ObservabilityOptions = {
   namespace: string;
   // TODO(nf): make platform a required extension?
   // platform: Platform;
+  release?: string;
+  environment?: string;
   config?: Config;
   secrets?: Record<string, string>;
   group?: string;
@@ -83,7 +85,17 @@ export class Observability {
   private _tags = new Map<string, { value: string; scope: TagScope }>();
 
   // TODO(nf): make platform a required extension?
-  constructor({ namespace, config, secrets, group, mode, telemetry, errorLog }: ObservabilityOptions) {
+  constructor({
+    namespace,
+    environment,
+    release,
+    config,
+    secrets,
+    group,
+    mode,
+    telemetry,
+    errorLog,
+  }: ObservabilityOptions) {
     this._namespace = namespace;
     this._config = config;
     this._mode = mode ?? 'disabled';
@@ -97,10 +109,9 @@ export class Observability {
       this.setTag('group', this._group);
     }
     this.setTag('namespace', this._namespace);
-
-    if (this._mode === 'full') {
-      // TODO(nf): set group and hostname?
-    }
+    environment && this.setTag('environment', environment);
+    release && this.setTag('release', release);
+    this.setTag('mode', this._mode);
   }
 
   private _loadSecrets(config: Config | undefined, secrets?: Record<string, string>) {
