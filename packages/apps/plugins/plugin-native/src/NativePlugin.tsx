@@ -49,15 +49,13 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
   // System menu.
   //
 
-  let itemsMac = '';
-  // TODO(mjamesderocher) This isn't working
-  if (process.platform === 'darwin') {
-    itemsMac = `
-      Hide ${appName}: h + CommandOrControl
-      Hide Others: h + Control + Meta
-      ---
-    `;
-  }
+  // TODO(mjamesderocher) make this conditional with `if (process.platform === 'darwin')`
+  // https://github.com/dxos/dxos/issues/5689 has been opened to fix how we implement `process`.
+  const itemsMac = `
+    Hide ${appName}: h + CommandOrControl
+    Hide Others: h + Control + Meta
+    ---
+  `;
 
   // TODO(mjamesderocher) Change menu names to use translations
   const menu = `
