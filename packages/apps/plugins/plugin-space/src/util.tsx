@@ -23,7 +23,7 @@ import type { Graph, Node, NodeArg } from '@braneframe/plugin-graph';
 import { Folder } from '@braneframe/types';
 import { type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { isTypedObject } from '@dxos/echo-schema';
+import { EchoLegacyDatabase, isTypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { Migrations } from '@dxos/migrations';
 import { EchoDatabase, type Space, SpaceState, type TypedObject, getSpaceForObject } from '@dxos/react-client/echo';
@@ -37,7 +37,7 @@ export const HIDDEN = 'hidden-spaces';
 
 export const isSpace = (data: unknown): data is Space =>
   data && typeof data === 'object'
-    ? 'key' in data && data.key instanceof PublicKey && 'db' in data && data.db instanceof EchoDatabase
+    ? 'key' in data && data.key instanceof PublicKey && 'db' in data && data.db instanceof EchoLegacyDatabase // TODO(dmaretskyi): No doing duck typing.
     : false;
 
 export const getSpaceDisplayName = (space: Space): string | [string, { ns: string }] => {

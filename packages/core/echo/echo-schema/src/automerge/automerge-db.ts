@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import { type AutomergeContext } from './automerge-context';
 import { AutomergeObject } from './automerge-object';
 import { type DocStructure } from './types';
-import { type EchoDatabase } from '../database';
+import { EchoLegacyDatabase, type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
 import { type EchoObject, base, isActualTypedObject, isAutomergeObject, isActualTextObject } from '../object';
 import { type Schema } from '../proto';
@@ -40,12 +40,12 @@ export class AutomergeDb {
   /**
    * @internal
    */
-  readonly _echoDatabase: EchoDatabase;
+  readonly _echoDatabase: EchoLegacyDatabase;
 
   constructor(
     public readonly graph: Hypergraph,
     public readonly automerge: AutomergeContext,
-    echoDatabase: EchoDatabase,
+    echoDatabase: EchoLegacyDatabase,
   ) {
     this._echoDatabase = echoDatabase;
   }

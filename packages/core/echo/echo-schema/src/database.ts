@@ -19,12 +19,67 @@ import { TypedObject } from './object';
 import { AbstractEchoObject } from './object/object';
 import { type Schema } from './proto';
 import { type FilterSource, type Query } from './query';
+import { PublicKey } from '@dxos/keys';
+
+export interface EchoDatabase {
+  get graph(): Hypergraph;
+
+  get spaceKey(): PublicKey;
+
+  getObjectById<T extends EchoObject>(id: string): T | undefined;
+
+  /**
+   * Adds object to the database.
+   */
+  add<T extends EchoObject>(obj: T): T;
+
+  /**
+   * Removes object from the database.
+   */
+  remove<T extends EchoObject>(obj: T): void;
+
+  /**
+   * Query objects.
+   */
+  query<T extends TypedObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T>;
+
+  /**
+   * Wait for all pending changes to be saved to disk.
+   */
+  flush(): Promise<void>;
+
+  /**
+   * All loaded objects.
+   * @deprecated Use query instead.
+   */
+  get objects(): EchoObject[];
+
+  /**
+   * @deprecated
+   */
+  readonly pendingBatch: ReadOnlyEvent<BatchUpdate>;
+
+  /**
+   * @deprecated
+   */
+  readonly automerge: AutomergeDb;
+
+  /**
+   * @deprecated
+   */
+  readonly _backend: DatabaseProxy;
+
+  /**
+   * @deprecated
+   */
+  clone<T extends EchoObject>(obj: T): void;
+}
 
 /**
  * Database wrapper.
  */
 // TODO(dmaretskyi): Extract interface.
-export class EchoDatabase {
+export class EchoLegacyDatabase implements EchoDatabase {
   /**
    * @internal
    */

@@ -14,7 +14,7 @@ import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
 import { type AutomergeDb } from './automerge';
-import { type EchoDatabase } from './database';
+import { EchoLegacyDatabase, type EchoDatabase } from './database';
 import { type EchoObject, type TypedObject } from './object';
 import {
   filterMatch,
@@ -31,7 +31,7 @@ import { TypeCollection } from './type-collection';
  * Manages cross-space database interactions.
  */
 export class Hypergraph {
-  private readonly _databases = new ComplexMap<PublicKey, EchoDatabase>(PublicKey.hash);
+  private readonly _databases = new ComplexMap<PublicKey, EchoLegacyDatabase>(PublicKey.hash);
   // TODO(burdon): Rename.
   private readonly _owningObjects = new ComplexMap<PublicKey, unknown>(PublicKey.hash);
   private readonly _types = new TypeCollection();
@@ -54,7 +54,7 @@ export class Hypergraph {
    * @param owningObject Database owner, usually a space.
    */
   // TODO(burdon): When is the owner not a space?
-  _register(spaceKey: PublicKey, database: EchoDatabase, owningObject?: unknown) {
+  _register(spaceKey: PublicKey, database: EchoLegacyDatabase, owningObject?: unknown) {
     this._databases.set(spaceKey, database);
     this._owningObjects.set(spaceKey, owningObject);
     database._updateEvent.on(this._onUpdate.bind(this));
@@ -209,7 +209,7 @@ class SpaceQuerySource implements QuerySource {
   private _filter: Filter | undefined = undefined;
   private _results?: QueryResult<EchoObject>[] = undefined;
 
-  constructor(private readonly _database: EchoDatabase) {}
+  constructor(private readonly _database: EchoLegacyDatabase) {}
 
   get spaceKey() {
     return this._database.spaceKey;
