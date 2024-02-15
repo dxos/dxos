@@ -77,7 +77,9 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
  * Extends the native array to make sure that arrays methods are correctly reactive.
  */
 class ReactiveArray<T> extends Array<T> {
-  static [Symbol.species] = Array;
+  static get [Symbol.species]() {
+    return Array;
+  }
 
   static {
     /**
