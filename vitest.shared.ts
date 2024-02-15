@@ -15,6 +15,9 @@ const shouldCreateXmlReport = Boolean(process.env.VITEST_XML_REPORT);
 
 const createNodeConfig = () =>
   defineConfig({
+    esbuild: {
+      target: 'es2020',
+    },
     test: {
       ...resolveReporterConfig({ browserMode: false }),
       environment: 'node',
@@ -35,6 +38,9 @@ const createBrowserConfig = (browserName: 'chrome') =>
       esbuildOptions: {
         plugins: [FixGracefulFsPlugin()],
       },
+    },
+    esbuild: {
+      target: 'es2020',
     },
     test: {
       ...resolveReporterConfig({ browserMode: true }),
@@ -62,7 +68,7 @@ const createBrowserConfig = (browserName: 'chrome') =>
 
 const resolveReporterConfig = (args: { browserMode: boolean }): UserConfig['test'] => {
   if (shouldCreateXmlReport) {
-    const vitestReportDir = `vitest${args.browserMode ? "-browser" : ""}-reports`;
+    const vitestReportDir = `vitest${args.browserMode ? '-browser' : ''}-reports`;
     return {
       reporters: ['junit', 'verbose'],
       outputFile: join(__dirname, `test-results/${vitestReportDir}/${targetProject}/report.xml`),

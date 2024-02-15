@@ -5,19 +5,15 @@
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/common/util/src/index.ts"
-        ],
+        "entryPoints": ["packages/common/util/src/index.ts"],
         "injectGlobals": true
       }
     },
     "lint": {},
-    "test": {}
+    "test": {},
+    "vitest": {}
   },
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ],
+  "implicitDependencies": ["esbuild", "test"],
   "name": "util"
 }
