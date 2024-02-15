@@ -2178,6 +2178,12 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
     devDependencies:
+      '@braneframe/plugin-help':
+        specifier: workspace:*
+        version: link:../plugin-help
+      '@braneframe/plugin-navtree':
+        specifier: workspace:*
+        version: link:../plugin-navtree
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework

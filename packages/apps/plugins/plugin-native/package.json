@@ -27,10 +27,14 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
+    "@braneframe/plugin-help": "workspace:*",
+    "@braneframe/plugin-navtree": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "vite": "^5.0.12"
   },
   "peerDependencies": {
+    "@braneframe/plugin-help": "workspace:*",
+    "@braneframe/plugin-navtree": "workspace:*",
     "@dxos/app-framework": "workspace:*"
   },
   "publishConfig": {
