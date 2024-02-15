@@ -18,7 +18,7 @@ enum Role {
 export const ContextPanel = () => {
   const layout = useLayout();
   return (
-    <div role='none' className='bs-full grid grid-cols-1 grid-rows-[min-content_1fr]'>
+    <div role='none' className='bs-full overflow-hidden grid grid-cols-1 grid-rows-[min-content_1fr]'>
       <div role='none' className='grid grid-cols-[1fr_3rem] border-be -mbe-px separator-separator'>
         <Surface role={Role.SEARCH} />
         <Button

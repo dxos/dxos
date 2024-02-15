@@ -62,9 +62,12 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
         })}
       >
         {/* Left navigation sidebar. */}
-        <Main.NavigationSidebar classNames='overflow-hidden'>
+        <Main.NavigationSidebar>
           <Surface role='navigation' name='sidebar' />
         </Main.NavigationSidebar>
+
+        {/* Notch */}
+        <Main.Notch />
 
         {/* Right Complementary sidebar. */}
         {complementarySidebarOpen !== null && active ? (

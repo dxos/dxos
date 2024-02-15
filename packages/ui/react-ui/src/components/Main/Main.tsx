@@ -146,12 +146,9 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
         <Root
           {...(!isLg && { forceMount: true, tabIndex: -1, onOpenAutoFocus: onOpenAutoFocus ?? handleOpenAutoFocus })}
           {...props}
-          className={tx(
-            'main.sidebar',
-            'main__sidebar',
-            { isLg, [side === 'inline-end' ? 'inlineEndSidebarOpen' : 'inlineStartSidebarOpen']: open, side },
-            classNames,
-          )}
+          data-side={side === 'inline-end' ? 'ie' : 'is'}
+          data-state={open ? 'open' : 'closed'}
+          className={tx('main.sidebar', 'main__sidebar', {}, classNames)}
           {...(!open && { inert: 'true' })}
           ref={ref}
         >
@@ -200,7 +197,6 @@ type MainProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & 
 
 const MainContent = forwardRef<HTMLDivElement, MainProps>(
   ({ asChild, classNames, bounce, children, ...props }: MainProps, forwardedRef) => {
-    const [isLg] = useMediaQuery('lg', { ssr: false });
     const { navigationSidebarOpen, complementarySidebarOpen } = useMainContext(MAIN_NAME);
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : 'main';
@@ -208,17 +204,9 @@ const MainContent = forwardRef<HTMLDivElement, MainProps>(
     return (
       <Root
         {...props}
-        className={tx(
-          'main.content',
-          'main',
-          {
-            isLg,
-            inlineStartSidebarOpen: navigationSidebarOpen,
-            inlineEndSidebarOpen: complementarySidebarOpen,
-            bounce,
-          },
-          classNames,
-        )}
+        data-sidebar-inline-start-state={navigationSidebarOpen ? 'open' : 'closed'}
+        data-sidebar-inline-end-state={complementarySidebarOpen ? 'open' : 'closed'}
+        className={tx('main.content', 'main', { bounce }, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -249,9 +237,24 @@ const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ classNames, 
         { isLg, inlineStartSidebarOpen: navigationSidebarOpen, inlineEndSidebarOpen: complementarySidebarOpen },
         classNames,
       )}
-      data-open={navigationSidebarOpen}
+      data-state={navigationSidebarOpen || complementarySidebarOpen ? 'open' : 'closed'}
       aria-hidden='true'
-      data-aria-hidden='true'
+      ref={forwardedRef}
+    />
+  );
+});
+
+type MainNotchProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>>;
+
+const MainNotch = forwardRef<HTMLDivElement, MainNotchProps>(({ classNames, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  const { navigationSidebarOpen } = useMainContext(MAIN_NAME);
+  // Notch is concerned with the nav sidebar, whichever side it might be on.
+  return (
+    <nav
+      {...props}
+      data-nav-sidebar-state={navigationSidebarOpen ? 'open' : 'closed'}
+      className={tx('main.notch', 'main__notch', {}, classNames)}
       ref={forwardedRef}
     />
   );
@@ -263,6 +266,7 @@ export const Main = {
   Overlay: MainOverlay,
   NavigationSidebar: MainNavigationSidebar,
   ComplementarySidebar: MainComplementarySidebar,
+  Notch: MainNotch,
 };
 
 export { useMainContext, useSidebars };
