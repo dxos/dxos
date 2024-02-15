@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { HELP_PLUGIN } from '@braneframe/plugin-help/meta';
+import { NAVTREE_PLUGIN } from '@braneframe/plugin-navtree/meta';
 import type { Plugin, PluginDefinition } from '@dxos/app-framework';
 import { NavigationAction, SettingsAction, LayoutAction, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
 import { log } from '@dxos/log';
@@ -51,7 +53,7 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
   // TODO(mjamesderocher) This isn't working
   if (process.platform === 'darwin') {
     itemsMac = `
-      Hide: h + CommandOrControl
+      Hide ${appName}: h + CommandOrControl
       Hide Others: h + Control + Meta
       ---
     `;
@@ -87,8 +89,7 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
       case 'App Name:Search commands': {
         void intentPlugin?.provides.intent.dispatch({
           action: LayoutAction.SET_LAYOUT,
-          // TODO(mjamesderocher) Is there a better way to get the ID of the plugin?
-          data: { element: 'dialog', component: 'dxos.org/plugin/navtree/Commands' },
+          data: { element: 'dialog', component: `${NAVTREE_PLUGIN}/Commands` },
         });
         break;
       }
@@ -103,8 +104,7 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
           action: LayoutAction.SET_LAYOUT,
           data: {
             element: 'dialog',
-            // TODO(mjamesderocher) Is there a better way to get the ID of the plugin?
-            component: 'dxos.org/plugin/help/Shortcuts',
+            component: `${HELP_PLUGIN}/Shortcuts`,
           },
         });
         break;
