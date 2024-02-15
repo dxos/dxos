@@ -4,17 +4,17 @@
 
 import {
   ClockCounterClockwise,
+  Copy,
+  Database,
   FloppyDisk,
   FolderOpen,
   FolderPlus,
   PencilSimpleLine,
-  Plus,
   Placeholder,
+  Plus,
   Trash,
   Users,
   X,
-  Database,
-  Copy,
 } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
 import React from 'react';
@@ -23,10 +23,10 @@ import type { Graph, Node, NodeArg } from '@braneframe/plugin-graph';
 import { Folder } from '@braneframe/types';
 import { type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { isTypedObject } from '@dxos/echo-schema';
+import { EchoDatabaseImpl, isTypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { Migrations } from '@dxos/migrations';
-import { EchoDatabase, type Space, SpaceState, type TypedObject, getSpaceForObject } from '@dxos/react-client/echo';
+import { SpaceState, getSpaceForObject, type Space, type TypedObject } from '@dxos/react-client/echo';
 
 import { SPACE_PLUGIN } from './meta';
 import { clone } from './serializer';
@@ -37,7 +37,7 @@ export const HIDDEN = 'hidden-spaces';
 
 export const isSpace = (data: unknown): data is Space =>
   data && typeof data === 'object'
-    ? 'key' in data && data.key instanceof PublicKey && 'db' in data && data.db instanceof EchoDatabase
+    ? 'key' in data && data.key instanceof PublicKey && 'db' in data && data.db instanceof EchoDatabaseImpl // TODO(dmaretskyi): No doing duck typing.
     : false;
 
 export const getSpaceDisplayName = (space: Space): string | [string, { ns: string }] => {
