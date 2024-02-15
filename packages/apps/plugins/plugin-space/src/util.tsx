@@ -88,7 +88,8 @@ const getFolderGraphNodePartials = ({
         ],
         properties: {
           disposition: 'toolbar',
-          mainAreaDisposition: 'in-flow',
+          // TODO(wittjosiah): This is currently a navtree feature. Address this with cmd+k integration.
+          // mainAreaDisposition: 'in-flow',
           menuType: 'searchList',
           testId: 'spacePlugin.createObject',
         },
