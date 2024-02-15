@@ -115,7 +115,7 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
-  waitForSpaceReady(params: { interval?: number; timeout?: number } = {}) {
+  waitForSpaceReady(params: { interval?: number; timeout?: number } = { timeout: 30_000 }) {
     return waitFor(() => this.page.getByTestId('spacePlugin.main.name').isEnabled(), params);
   }
 
@@ -228,7 +228,7 @@ export class AppManager {
 // TODO(wittjosiah): Factor out.
 const waitFor = (
   cb: () => Promise<boolean>,
-  { interval: _interval = 1000, timeout: _timeout = 10_000 } = {},
+  { interval: _interval = 1000, timeout: _timeout = 5_000 } = {},
 ): Promise<void> =>
   new Promise<void>((resolve, reject) => {
     const interval = setInterval(async () => {
