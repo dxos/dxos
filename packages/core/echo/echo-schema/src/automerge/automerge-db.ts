@@ -3,7 +3,7 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
-import { type DocHandle, type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
+import { type DocHandle, type DocHandleChangePayload, isValidAutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { type Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
@@ -14,6 +14,7 @@ import { type AutomergeContext } from './automerge-context';
 import {
   type AutomergeDocumentLoader,
   AutomergeDocumentLoaderImpl,
+  type DocumentChanges,
   type ObjectDocumentLoaded,
 } from './automerge-doc-loader';
 import { AutomergeObject, getAutomergeObjectCore } from './automerge-object';
@@ -198,12 +199,38 @@ export class AutomergeDb {
    * Keep as field to have a reference to pass for unsubscribing from handle changes.
    */
   private readonly _onDocumentUpdate = (event: DocHandleChangePayload<SpaceDoc>) => {
-    const documentChanges = this._automergeDocLoader.processDocumentUpdate(event);
+    const documentChanges = this._processDocumentUpdate(event);
     this._rebindObjects(event.handle, documentChanges.objectsToRebind);
     this._automergeDocLoader.loadLinkedObjects(documentChanges.linkedDocuments);
     this._createInlineObjects(event.handle, documentChanges.createdObjectIds);
     this._emitUpdateEvent(documentChanges.updatedObjectIds);
   };
+
+  private _processDocumentUpdate(event: DocHandleChangePayload<SpaceDoc>): DocumentChanges {
+    const { inlineChangedObjects, linkedDocuments } = getInlineAndLinkChanges(event);
+    const createdObjectIds: string[] = [];
+    const objectsToRebind: string[] = [];
+    for (const updatedObject of inlineChangedObjects) {
+      const echoObject = this._objects.get(updatedObject);
+      const objectCore = echoObject ? getAutomergeObjectCore(echoObject) : null;
+      if (echoObject == null) {
+        createdObjectIds.push(updatedObject);
+      } else if (objectCore?.docHandle && objectCore.docHandle.url !== event.handle.url) {
+        log.warn('object bound to incorrect document, going to rebind', {
+          updatedObject,
+          documentUrl: objectCore.docHandle.url,
+          actualUrl: event.handle.url,
+        });
+        objectsToRebind.push(updatedObject);
+      }
+    }
+    return {
+      updatedObjectIds: inlineChangedObjects,
+      objectsToRebind,
+      createdObjectIds,
+      linkedDocuments,
+    };
+  }
 
   private _onDispose() {
     for (const docHandle of Object.values(this.automerge.repo.handles)) {
@@ -255,3 +282,29 @@ export class AutomergeDb {
     }
   }
 }
+
+const getInlineAndLinkChanges = (event: DocHandleChangePayload<SpaceDoc>) => {
+  const inlineChangedObjectIds = new Set<string>();
+  const linkedDocuments: DocumentChanges['linkedDocuments'] = {};
+  for (const { path, value } of event.patches) {
+    if (path.length < 2) {
+      continue;
+    }
+    switch (path[0]) {
+      case 'objects':
+        if (path.length >= 2) {
+          inlineChangedObjectIds.add(path[1]);
+        }
+        break;
+      case 'links':
+        if (path.length >= 2 && typeof value === 'string' && isValidAutomergeUrl(value)) {
+          linkedDocuments[path[1]] = value;
+        }
+        break;
+    }
+  }
+  return {
+    inlineChangedObjects: [...inlineChangedObjectIds],
+    linkedDocuments,
+  };
+};

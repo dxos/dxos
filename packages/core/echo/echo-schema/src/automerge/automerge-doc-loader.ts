@@ -3,13 +3,7 @@
 //
 
 import { asyncTimeout, Event } from '@dxos/async';
-import {
-  type DocHandle,
-  type AutomergeUrl,
-  type DocHandleChangePayload,
-  type DocumentId,
-  isValidAutomergeUrl,
-} from '@dxos/automerge/automerge-repo';
+import { type DocHandle, type AutomergeUrl, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { cancelWithContext, type Context, ContextDisposedError } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -32,7 +26,6 @@ export interface AutomergeDocumentLoader {
   loadLinkedObjects(links: SpaceDocumentLinks): void;
   onObjectCreatedInDocument(handle: DocHandle<SpaceDoc>, objectId: string): void;
   onObjectRebound(handle: DocHandle<SpaceDoc>, objectId: string): void;
-  processDocumentUpdate(event: DocHandleChangePayload<SpaceDoc>): DocumentChanges;
 }
 
 /**
@@ -44,11 +37,6 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
    * An object id pointer to a handle of the document where the object is stored inline.
    */
   private readonly _objectDocumentHandles = new Map<string, DocHandle<SpaceDoc>>();
-  /**
-   * _objectDocumentHandles contain both created object ids and those for which we're still loading
-   * a document handle.
-   */
-  private readonly _createdObjectIds = new Set<string>();
 
   public readonly onObjectDocumentLoaded = new Event<ObjectDocumentLoaded>();
 
@@ -103,7 +91,6 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
 
   public onObjectCreatedInDocument(handle: DocHandle<SpaceDoc>, objectId: string) {
     this._objectDocumentHandles.set(objectId, handle);
-    this._createdObjectIds.add(objectId);
   }
 
   public onObjectRebound(handle: DocHandle<SpaceDoc>, objectId: string) {
@@ -138,31 +125,6 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       this._objectDocumentHandles.set(objectId, handle);
       void this._createObjectOnDocumentLoad(handle, objectId);
     }
-  }
-
-  public processDocumentUpdate(event: DocHandleChangePayload<SpaceDoc>): DocumentChanges {
-    const { inlineChangedObjects, linkedDocuments } = this._getInlineAndLinkChanges(event);
-    const createdObjectIds: string[] = [];
-    const objectsToRebind: string[] = [];
-    for (const updatedObject of inlineChangedObjects) {
-      const docHandle = this._objectDocumentHandles.get(updatedObject);
-      if (!this._createdObjectIds.has(updatedObject)) {
-        createdObjectIds.push(updatedObject);
-      } else if (docHandle?.url !== event.handle.url) {
-        log.warn('object bound to incorrect document, going to rebind', {
-          updatedObject,
-          documentUrl: docHandle?.url,
-          actualUrl: event.handle.url,
-        });
-        objectsToRebind.push(updatedObject);
-      }
-    }
-    return {
-      updatedObjectIds: inlineChangedObjects,
-      objectsToRebind,
-      createdObjectIds,
-      linkedDocuments,
-    };
   }
 
   private async _initDocHandle(ctx: Context, url: string) {
@@ -237,32 +199,6 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
         await this._createObjectOnDocumentLoad(handle, objectId);
       }
     }
-  }
-
-  private _getInlineAndLinkChanges(event: DocHandleChangePayload<SpaceDoc>) {
-    const inlineChangedObjectIds = new Set<string>();
-    const linkedDocuments: DocumentChanges['linkedDocuments'] = {};
-    for (const { path, value } of event.patches) {
-      if (path.length < 2) {
-        continue;
-      }
-      switch (path[0]) {
-        case 'objects':
-          if (path.length >= 2) {
-            inlineChangedObjectIds.add(path[1]);
-          }
-          break;
-        case 'links':
-          if (path.length >= 2 && typeof value === 'string' && isValidAutomergeUrl(value)) {
-            linkedDocuments[path[1]] = value;
-          }
-          break;
-      }
-    }
-    return {
-      inlineChangedObjects: [...inlineChangedObjectIds],
-      linkedDocuments,
-    };
   }
 }
 
