@@ -51,18 +51,6 @@ export const getObservabilityState = async (configDir: string): Promise<Persiste
   return initializeState(idPath);
 };
 
-export type TelemetryContext = {
-  mode: Mode;
-  installationId?: string;
-  group?: string;
-  timezone: string;
-  runtime: string;
-  os: string;
-  arch: string;
-  ci: boolean;
-  [key: string]: any;
-};
-
 export type PersistentObservabilityState = {
   installationId: string;
   group?: string;
@@ -101,6 +89,7 @@ export type NodeObservabilityOptions = {
   installationId: string;
   group?: string;
   namespace: string;
+  version: string;
   config: Config;
   mode?: Mode;
   tracingEnable?: boolean;
@@ -110,6 +99,7 @@ export type NodeObservabilityOptions = {
 
 export const initializeNodeObservability = async ({
   namespace,
+  version,
   config,
   installationId,
   group,
@@ -119,11 +109,13 @@ export const initializeNodeObservability = async ({
 }: NodeObservabilityOptions): Promise<Observability> => {
   log('initializeCliObservability', { config });
 
-  const release = `${namespace}@${config.get('runtime.app.build.version')}`;
-  const environment = config.get('runtime.app.env.DX_ENVIRONMENT');
+  const release = `${namespace}@${version}`;
+  const environment = process.env.DX_ENVIRONMENT ?? 'unknown';
 
   const observability = new Observability({
     namespace,
+    release,
+    environment,
     group,
     mode,
     errorLog: {

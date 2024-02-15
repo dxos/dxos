@@ -202,7 +202,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     const { mode, installationId, group } = observabilityState;
 
     if (mode === 'disabled') {
-      this.log('telemetry disabled by config');
+      this.log('observability disabled by config');
       return;
     }
     {
