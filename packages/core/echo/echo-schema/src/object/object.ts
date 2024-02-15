@@ -17,7 +17,8 @@ import {
 } from '@dxos/model-factory';
 
 import { type EchoObject, base, debug, db, subscribe } from './types';
-import { EchoLegacyDatabase, type EchoDatabase } from '../database';
+import { type EchoDatabase } from '../database';
+import { EchoLegacyDatabase } from '../legacy-database';
 
 /**
  * Base class for all echo objects.

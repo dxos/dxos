@@ -3,7 +3,8 @@
 //
 
 import { AutomergeArray, AutomergeDb, AutomergeObject } from './automerge';
-import { EchoDatabaseImpl, EchoLegacyDatabase } from './database';
+import { EchoDatabaseImpl } from './database';
+import { EchoLegacyDatabase } from './legacy-database';
 import { Expando, TextObject, TypedObject } from './object';
 import { linkDeferred } from './type-collection';
 

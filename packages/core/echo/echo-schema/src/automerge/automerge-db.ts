@@ -14,10 +14,10 @@ import { log } from '@dxos/log';
 import { type AutomergeContext } from './automerge-context';
 import { AutomergeObject } from './automerge-object';
 import { type DocStructure } from './types';
-import { EchoLegacyDatabase, type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
 import { type EchoObject, base, isActualTypedObject, isAutomergeObject, isActualTextObject } from '../object';
 import { type Schema } from '../proto';
+import { EchoLegacyDatabase } from '../legacy-database';
 
 export type SpaceState = {
   // Url of the root automerge document.
