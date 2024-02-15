@@ -24,6 +24,10 @@ export class Migrations {
     return this.namespace && `${this.namespace}.version`;
   }
 
+  static get targetVersion() {
+    return this.migrations[this.migrations.length - 1].version;
+  }
+
   static define(namespace: string, migrations: Migration[]) {
     this.namespace = namespace;
     this.migrations = migrations;

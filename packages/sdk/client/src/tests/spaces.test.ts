@@ -517,4 +517,109 @@ describe('Spaces', () => {
       );
     });
   });
+
+  test('share two spaces between clients', async () => {
+    const testBuilder = new TestBuilder();
+
+    const host = new Client({ services: testBuilder.createLocal() });
+    const guest = new Client({ services: testBuilder.createLocal() });
+    host.addTypes(types);
+    guest.addTypes(types);
+
+    await host.initialize();
+    await guest.initialize();
+
+    afterTest(() => host.destroy());
+    afterTest(() => guest.destroy());
+
+    await host.halo.createIdentity({ displayName: 'host' });
+    await guest.halo.createIdentity({ displayName: 'guest' });
+
+    {
+      const hostSpace = await host.spaces.create();
+      await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
+      const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
+
+      const hostDocument = hostSpace.db.add(new DocumentType());
+      await hostSpace.db.flush();
+
+      await waitForExpect(() => {
+        expect(guestSpace.db.getObjectById(hostDocument.id)).not.to.be.undefined;
+      });
+
+      (hostDocument.content as any).content = 'Hello, world!';
+
+      await waitForExpect(() => {
+        expect(getTextContent(guestSpace.db.getObjectById<DocumentType>(hostDocument.id)!.content)).to.equal(
+          'Hello, world!',
+        );
+      });
+    }
+
+    {
+      const hostSpace = await host.spaces.create();
+
+      await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
+      const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
+
+      const hostDocument = hostSpace.db.add(new DocumentType());
+      await hostSpace.db.flush();
+
+      await waitForExpect(() => {
+        expect(guestSpace.db.getObjectById(hostDocument.id)).not.to.be.undefined;
+      });
+
+      (hostDocument.content as any).content = 'Hello, world!';
+
+      await waitForExpect(() => {
+        expect(getTextContent(guestSpace.db.getObjectById<DocumentType>(hostDocument.id)!.content)).to.equal(
+          'Hello, world!',
+        );
+      });
+    }
+  });
+
+  test('object receives updates from another peer', async () => {
+    const testBuilder = new TestBuilder();
+
+    const host = new Client({ services: testBuilder.createLocal() });
+    const guest = new Client({ services: testBuilder.createLocal() });
+
+    await host.initialize();
+    await guest.initialize();
+
+    afterTest(() => host.destroy());
+    afterTest(() => guest.destroy());
+
+    await host.halo.createIdentity({ displayName: 'host' });
+    await guest.halo.createIdentity({ displayName: 'guest' });
+
+    const hostSpace = await host.spaces.create();
+    await hostSpace.waitUntilReady();
+    const hostRoot = hostSpace.db.add(new Expando({ entries: [new Expando({ name: 'first' })] }));
+
+    await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
+
+    const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
+    await guestSpace.waitUntilReady();
+
+    {
+      const done = new Trigger();
+
+      await waitForExpect(() => {
+        expect(guestSpace.db.getObjectById(hostRoot.id)).not.to.be.undefined;
+      });
+      const guestRoot: Expando = guestSpace.db.getObjectById(hostRoot.id)!;
+
+      const unsub = guestRoot[subscribe](() => {
+        expect([...guestRoot.entries].length).to.equal(2);
+        done.wake();
+      });
+
+      afterTest(() => unsub());
+
+      hostRoot.entries.push(new Expando({ name: 'second' }));
+      await done.wait({ timeout: 1000 });
+    }
+  });
 });

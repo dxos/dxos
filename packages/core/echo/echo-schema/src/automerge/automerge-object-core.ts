@@ -110,11 +110,6 @@ export class AutomergeObjectCore {
   }
 
   bind(options: BindOptions) {
-    if (this.docHandle) {
-      // Dispose the subscription from the previous bind call.
-      this.docHandle.off('change', this._changeHandler);
-    }
-
     this.database = options.db;
     this.docHandle = options.docHandle;
     this.mountPath = options.path;
@@ -141,17 +136,8 @@ export class AutomergeObjectCore {
       });
     }
 
-    // TODO(dmaretskyi): Dispose this subscription.
-    this.docHandle.on('change', this._changeHandler);
-
     this.notifyUpdate();
   }
-
-  private _changeHandler = (event: DocHandleChangePayload<SpaceDoc>) => {
-    if (objectIsUpdated(this.id, event)) {
-      this.notifyUpdate();
-    }
-  };
 
   getDoc() {
     return this.doc ?? this.docHandle?.docSync() ?? failedInvariant('Invalid state');
@@ -176,7 +162,7 @@ export class AutomergeObjectCore {
     } else {
       invariant(this.docHandle);
       this.docHandle.change(changeFn, options);
-      // Note: We don't need to notify listeners here, since `change` event is already emitted by the doc handle.
+      // Note: We don't need to notify listeners here, since `change` event is already processed by DB.
     }
   }
 
@@ -204,7 +190,7 @@ export class AutomergeObjectCore {
     } else {
       invariant(this.docHandle);
       result = this.docHandle.changeAt(heads, callback, options);
-      // Note: We don't need to notify listeners here, since `change` event is already emitted by the doc handle.
+      // Note: We don't need to notify listeners here, since `change` event is already processed by DB.
     }
 
     return result;

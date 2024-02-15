@@ -87,7 +87,7 @@ export const CommentContainer = ({
       <div
         role='none'
         className={mx(
-          'col-span-2 grid grid-cols-[3rem_1fr_min-content]',
+          'col-span-2 grid grid-cols-[var(--rail-size)_1fr_min-content]',
           hoverableControls,
           hoverableFocusedWithinControls,
         )}

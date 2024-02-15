@@ -33,6 +33,7 @@
     }
   },
   "browser": {
+    "./src/datadog/metrics.ts": "./src/datadog/browser.ts",
     "./src/datadog/node.ts": "./src/datadog/browser.ts",
     "./src/segment/node.ts": "./src/segment/browser.ts",
     "./src/sentry/node.ts": "./src/sentry/browser.ts",
@@ -74,10 +75,10 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
     "@segment/snippet": "^4.15.3",
-    "@sentry/browser": "^7.98.0",
-    "@sentry/integrations": "7.98.0",
-    "@sentry/node": "^7.98.0",
-    "@sentry/tracing": "^7.98.0",
+    "@sentry/browser": "^7.100.1",
+    "@sentry/integrations": "7.100.1",
+    "@sentry/node": "^7.100.1",
+    "@sentry/tracing": "^7.100.1",
     "analytics-node": "^6.2.0",
     "datadog-metrics": "^0.11.1",
     "debug": "^4.3.4",
@@ -86,7 +87,7 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "@sentry/types": "^7.98.0",
+    "@sentry/types": "^7.100.1",
     "@types/analytics-node": "^3.1.9",
     "@types/debug": "^4.1.10",
     "@types/js-yaml": "^4.0.5",

@@ -24,7 +24,7 @@ class TestBuilder {
     exclude?: TestEnvironment[];
   } = {};
 
-  constructor(public readonly body: Func | AsyncFunc) {}
+  constructor(public readonly body?: Func | AsyncFunc) {}
 
   get info() {
     return {
@@ -62,8 +62,8 @@ class TestBuilder {
 }
 
 interface TestFunction {
-  (name: string, body: Func): Test;
-  (name: string, body: AsyncFunc): Test;
+  (name: string, body?: Func): Test;
+  (name: string, body?: AsyncFunc): Test;
 
   only: TestFunction;
   skip: TestFunction;
@@ -89,7 +89,7 @@ type TestParams = {
 
 const testBase =
   (mochaFn: NaturalTestFunction, params: TestParams = {}) =>
-  (name: string, body: Func | AsyncFunc) => {
+  (name: string, body?: Func | AsyncFunc) => {
     const builder = new TestBuilder(body);
 
     if (params.repeat) {
@@ -103,27 +103,31 @@ const testBase =
     }
 
     function defineTest(name: string) {
-      (mochaFn as NaturalTestFunction)(name, async function (...args) {
-        const { timeout, retries, tags, environments } = builder.info;
+      (mochaFn as NaturalTestFunction)(
+        name,
+        builder.body &&
+          async function (...args) {
+            const { timeout, retries, tags, environments } = builder.info;
 
-        if (timeout) {
-          this.timeout(timeout);
-        }
+            if (timeout) {
+              this.timeout(timeout);
+            }
 
-        if (retries) {
-          this.retries(retries);
-        }
+            if (retries) {
+              this.retries(retries);
+            }
 
-        const skip =
-          tags.filter((tag) => mochaExecutor.tags.includes(tag)).length === 0 ||
-          (environments.include && !environments.include.includes(mochaExecutor.environment)) ||
-          (environments.exclude && environments.exclude.includes(mochaExecutor.environment));
-        if (skip) {
-          this.skip();
-        }
+            const skip =
+              tags.filter((tag) => mochaExecutor.tags.includes(tag)).length === 0 ||
+              (environments.include && !environments.include.includes(mochaExecutor.environment)) ||
+              (environments.exclude && environments.exclude.includes(mochaExecutor.environment));
+            if (skip) {
+              this.skip();
+            }
 
-        await builder.body.bind(this)(...args);
-      });
+            await builder.body!.bind(this)(...args);
+          },
+      );
     }
 
     return builder;

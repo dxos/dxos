@@ -8,12 +8,18 @@ import { ClientRepeater } from '@dxos/react-client/testing';
 import { ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
-import { Demo } from './components';
+import { Demo, NetworkToggle } from './components';
 
 const App = () => {
   return (
     <ThemeProvider tx={defaultTx}>
-      <ClientRepeater className='flex place-content-evenly' Component={Demo} count={2} createSpace networkToggle />
+      <ClientRepeater
+        className='flex place-content-evenly'
+        component={Demo}
+        count={2}
+        createSpace
+        controls={NetworkToggle}
+      />
     </ThemeProvider>
   );
 };

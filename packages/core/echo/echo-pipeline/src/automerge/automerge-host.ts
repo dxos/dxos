@@ -2,29 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Trigger } from '@dxos/async';
 import { next as automerge } from '@dxos/automerge/automerge';
-import {
-  Repo,
-  NetworkAdapter,
-  StorageAdapter,
-  type Message,
-  type PeerId,
-  type Chunk,
-  type StorageKey,
-  cbor,
-} from '@dxos/automerge/automerge-repo';
+import { Repo, type StorageAdapter, type PeerId, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
-import { Stream } from '@dxos/codec-protobuf';
-import { invariant } from '@dxos/invariant';
+import { type Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type HostInfo, type SyncRepoRequest, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
-import { type PeerInfo } from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
 import { StorageType, type Directory } from '@dxos/random-access-storage';
-import { AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
+import { type AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
 import { trace } from '@dxos/tracing';
-import { ComplexMap, ComplexSet, arrayToBuffer, bufferToArray, defaultMap, mapValues } from '@dxos/util';
+import { ComplexMap, ComplexSet, defaultMap, mapValues } from '@dxos/util';
+
+import { AutomergeStorageAdapter } from './automerge-storage-adapter';
+import { LocalHostNetworkAdapter } from './local-host-network-adapter';
+import { MeshNetworkAdapter } from './mesh-network-adapter';
+
+export type { DocumentId };
 
 @trace.resource()
 export class AutomergeHost {
@@ -38,6 +32,8 @@ export class AutomergeHost {
    */
   private readonly _authorizedDevices = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(PublicKey.hash);
 
+  public _requestedDocs = new Set<string>();
+
   constructor(storageDirectory: Directory) {
     this._meshNetwork = new MeshNetworkAdapter();
     this._clientNetwork = new LocalHostNetworkAdapter();
@@ -47,8 +43,9 @@ export class AutomergeHost {
       storageDirectory.type === StorageType.IDB
         ? new IndexedDBStorageAdapter(storageDirectory.path, 'data')
         : new AutomergeStorageAdapter(storageDirectory);
+    const localPeerId = `host-${PublicKey.random().toHex()}` as PeerId;
     this._repo = new Repo({
-      peerId: `host-${PublicKey.random().toHex()}` as PeerId,
+      peerId: localPeerId,
       network: [this._clientNetwork, this._meshNetwork],
       storage: this._storage,
 
@@ -65,8 +62,9 @@ export class AutomergeHost {
 
         const doc = this._repo.handles[documentId]?.docSync();
         if (!doc) {
-          log('doc not found for share policy check', { peerId, documentId });
-          return false;
+          const isRequested = this._requestedDocs.has(`automerge:${documentId}`);
+          log('doc share policy check', { peerId, documentId, isRequested });
+          return isRequested;
         }
 
         try {
@@ -89,13 +87,20 @@ export class AutomergeHost {
           const deviceKey = PublicKey.from(deviceKeyHex);
 
           const isAuthorized = authorizedDevices?.has(deviceKey) ?? false;
-          log('share policy check', { peerId, documentId, deviceKey, spaceKey, isAuthorized });
+          log('share policy check', {
+            localPeer: localPeerId,
+            remotePeer: peerId,
+            documentId,
+            deviceKey,
+            spaceKey,
+            isAuthorized,
+          });
           return isAuthorized;
         } catch (err) {
           log.catch(err);
           return false;
         }
-      }, // Share everything.
+      },
     });
     this._clientNetwork.ready();
     this._meshNetwork.ready();
@@ -149,288 +154,7 @@ export class AutomergeHost {
   }
 
   authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey) {
+    log('authorizeDevice', { spaceKey, deviceKey });
     defaultMap(this._authorizedDevices, spaceKey, () => new ComplexSet(PublicKey.hash)).add(deviceKey);
-  }
-}
-
-type ClientSyncState = {
-  connected: boolean;
-  send: (message: Message) => void;
-  disconnect: () => void;
-};
-
-/**
- * Used to replicate with apps running on the same device.
- */
-class LocalHostNetworkAdapter extends NetworkAdapter {
-  private readonly _peers: Map<PeerId, ClientSyncState> = new Map();
-
-  /**
-   * Emits `ready` event. That signals to `Repo` that it can start using the adapter.
-   */
-  ready() {
-    // NOTE: Emitting `ready` event in NetworkAdapter`s constructor causes a race condition
-    //       because `Repo` waits for `ready` event (which it never receives) before it starts using the adapter.
-    this.emit('ready', {
-      network: this,
-    });
-  }
-
-  private _connected = new Trigger();
-
-  override connect(peerId: PeerId): void {
-    this.peerId = peerId;
-    this._connected.wake();
-    // No-op. Client always connects first
-  }
-
-  override send(message: Message): void {
-    const peer = this._peers.get(message.targetId);
-    invariant(peer, 'Peer not found.');
-    peer.send(message);
-  }
-
-  async close() {
-    this._peers.forEach((peer) => peer.disconnect());
-    this.emit('close');
-  }
-
-  override disconnect(): void {
-    // TODO(mykola): `disconnect` is not used anywhere in `Repo` from `@automerge/automerge-repo`. Should we remove it?
-    // No-op
-  }
-
-  syncRepo({ id, syncMessage }: SyncRepoRequest): Stream<SyncRepoResponse> {
-    const peerId = this._getPeerId(id);
-
-    return new Stream(({ next, close }) => {
-      invariant(!this._peers.has(peerId), 'Peer already connected.');
-      this._peers.set(peerId, {
-        connected: true,
-        send: (message) => {
-          next({
-            syncMessage: cbor.encode(message),
-          });
-        },
-        disconnect: () => {
-          this._peers.delete(peerId);
-          close();
-          this.emit('peer-disconnected', {
-            peerId,
-          });
-        },
-      });
-
-      this._connected
-        .wait({ timeout: 1_000 })
-        .then(() => {
-          this.emit('peer-candidate', {
-            peerMetadata: {},
-            peerId,
-          });
-        })
-        .catch((err) => log.catch(err));
-    });
-  }
-
-  async sendSyncMessage({ id, syncMessage }: SyncRepoRequest): Promise<void> {
-    await this._connected.wait({ timeout: 1_000 });
-    const message = cbor.decode(syncMessage!) as Message;
-    this.emit('message', message);
-  }
-
-  async getHostInfo(): Promise<HostInfo> {
-    await this._connected.wait({ timeout: 1_000 });
-    invariant(this.peerId, 'Peer id not set.');
-    return {
-      peerId: this.peerId,
-    };
-  }
-
-  private _getPeerId(id: string): PeerId {
-    return id as PeerId;
-  }
-}
-
-/**
- * Used to replicate with other peers over the network.
- */
-export class MeshNetworkAdapter extends NetworkAdapter {
-  private readonly _extensions: Map<string, AutomergeReplicator> = new Map();
-  private _connected = new Trigger();
-
-  /**
-   * Emits `ready` event. That signals to `Repo` that it can start using the adapter.
-   */
-  ready() {
-    // NOTE: Emitting `ready` event in NetworkAdapter`s constructor causes a race condition
-    //       because `Repo` waits for `ready` event (which it never receives) before it starts using the adapter.
-    this.emit('ready', {
-      network: this,
-    });
-  }
-
-  override connect(peerId: PeerId): void {
-    this.peerId = peerId;
-    this._connected.wake();
-  }
-
-  override send(message: Message): void {
-    const receiverId = message.targetId;
-    const extension = this._extensions.get(receiverId);
-    invariant(extension, 'Extension not found.');
-    extension.sendSyncMessage({ payload: cbor.encode(message) }).catch((err) => log.catch(err));
-  }
-
-  override disconnect(): void {
-    // No-op
-  }
-
-  createExtension(): AutomergeReplicator {
-    invariant(this.peerId, 'Peer id not set.');
-
-    let peerInfo: PeerInfo;
-    const extension = new AutomergeReplicator(
-      {
-        peerId: this.peerId,
-      },
-      {
-        onStartReplication: async (info, remotePeerId /** Teleport ID */) => {
-          await this._connected.wait();
-
-          // Note: We store only one extension per peer.
-          //       There can be a case where two connected peers have more than one teleport connection between them
-          //       and each of them uses different teleport connections to send messages.
-          //       It works because we receive messages from all teleport connections and Automerge Repo dedup them.
-          // TODO(mykola): Use only one teleport connection per peer.
-          if (!this._extensions.has(info.id)) {
-            peerInfo = info;
-            // TODO(mykola): Fix race condition?
-            this._extensions.set(info.id, extension);
-          } else {
-            // TODO(mykola): retry hack.
-            this.emit('peer-disconnected', { peerId: info.id as PeerId });
-          }
-
-          this.emit('peer-candidate', {
-            // TODO(mykola): Hack, stop abusing `peerMetadata` field.
-            peerMetadata: {
-              dxos_deviceKey: remotePeerId.toHex(),
-            } as any,
-            peerId: info.id as PeerId,
-          });
-        },
-        onSyncMessage: async ({ payload }) => {
-          const message = cbor.decode(payload) as Message;
-          // Note: automerge Repo dedup messages.
-          this.emit('message', message);
-        },
-        onClose: async () => {
-          if (!peerInfo) {
-            return;
-          }
-          this.emit('peer-disconnected', {
-            peerId: peerInfo.id as PeerId,
-          });
-          this._extensions.delete(peerInfo.id);
-        },
-      },
-    );
-    return extension;
-  }
-}
-
-export class AutomergeStorageAdapter extends StorageAdapter {
-  // TODO(mykola): Hack for restricting automerge Repo to access storage if Host is `closed`.
-  //               Automerge Repo do not have any lifetime management.
-  private _state: 'opened' | 'closed' = 'opened';
-
-  constructor(private readonly _directory: Directory) {
-    super();
-  }
-
-  override async load(key: StorageKey): Promise<Uint8Array | undefined> {
-    if (this._state !== 'opened') {
-      return undefined;
-    }
-    const filename = this._getFilename(key);
-    const file = this._directory.getOrCreateFile(filename);
-    const { size } = await file.stat();
-    if (!size || size === 0) {
-      return undefined;
-    }
-    const buffer = await file.read(0, size);
-    return bufferToArray(buffer);
-  }
-
-  override async save(key: StorageKey, data: Uint8Array): Promise<void> {
-    if (this._state !== 'opened') {
-      return undefined;
-    }
-    const filename = this._getFilename(key);
-    const file = this._directory.getOrCreateFile(filename);
-    await file.write(0, arrayToBuffer(data));
-    await file.truncate?.(data.length);
-
-    await file.flush?.();
-  }
-
-  override async remove(key: StorageKey): Promise<void> {
-    if (this._state !== 'opened') {
-      return undefined;
-    }
-    // TODO(dmaretskyi): Better deletion.
-    const filename = this._getFilename(key);
-    const file = this._directory.getOrCreateFile(filename);
-    await file.destroy();
-  }
-
-  override async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
-    if (this._state !== 'opened') {
-      return [];
-    }
-    const filename = this._getFilename(keyPrefix);
-    const entries = await this._directory.list();
-    return Promise.all(
-      entries
-        .filter((entry) => entry.startsWith(filename))
-        .map(async (entry): Promise<Chunk> => {
-          const file = this._directory.getOrCreateFile(entry);
-          const { size } = await file.stat();
-          const buffer = await file.read(0, size);
-          return {
-            key: this._getKeyFromFilename(entry),
-            data: bufferToArray(buffer),
-          };
-        }),
-    );
-  }
-
-  override async removeRange(keyPrefix: StorageKey): Promise<void> {
-    if (this._state !== 'opened') {
-      return undefined;
-    }
-    const filename = this._getFilename(keyPrefix);
-    const entries = await this._directory.list();
-    await Promise.all(
-      entries
-        .filter((entry) => entry.startsWith(filename))
-        .map(async (entry): Promise<void> => {
-          const file = this._directory.getOrCreateFile(entry);
-          await file.destroy();
-        }),
-    );
-  }
-
-  async close(): Promise<void> {
-    this._state = 'closed';
-  }
-
-  private _getFilename(key: StorageKey): string {
-    return key.map((k) => k.replaceAll('%', '%25').replaceAll('-', '%2D')).join('-');
-  }
-
-  private _getKeyFromFilename(filename: string): StorageKey {
-    return filename.split('-').map((k) => k.replaceAll('%2D', '-').replaceAll('%25', '%'));
   }
 }

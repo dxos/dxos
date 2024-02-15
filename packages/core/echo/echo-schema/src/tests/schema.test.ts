@@ -7,8 +7,8 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Container, Task, types } from './proto';
+import { toJsonSchema } from '../effect/json-schema';
 import { immutable, Expando } from '../object';
-import { toJsonSchema } from '../object/json-schema';
 import { Schema } from '../proto';
 import { Filter } from '../query';
 import { TestBuilder, createDatabase } from '../testing';

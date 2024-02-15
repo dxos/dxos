@@ -95,6 +95,7 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
                   <Button
                     onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
                     variant='ghost'
+                    classNames='p-0 bs-[var(--rail-action)] is-[var(--rail-action)]'
                   >
                     <span className='sr-only'>{t('open complementary sidebar label')}</span>
                     <CaretDoubleLeft

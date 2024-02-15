@@ -3,9 +3,9 @@
 //
 
 import { ArticleMedium, type IconProps } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-react';
-import { deepSignal } from 'deepsignal';
-import React, { type Ref } from 'react';
+import { effect } from '@preact/signals-core';
+import { deepSignal } from 'deepsignal/react';
+import React, { useMemo, type Ref } from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Document as DocumentType, Folder } from '@braneframe/types';
@@ -177,18 +177,30 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       },
       surface: {
         component: ({ data, role, ...props }, forwardedRef) => {
+          // TODO(wittjosiah): Ideally this should only be called when the editor is actually being used.
+          //   We probably want a better pattern for splitting this surface resolver up.
+          const extensions = useMemo(
+            () =>
+              isDocument(data.active)
+                ? getCustomExtensions(data.active)
+                : isDocument(data.object)
+                  ? getCustomExtensions(data.object)
+                  : getCustomExtensions(),
+            [data.active, data.object, settings.values.editorMode],
+          );
+
           switch (role) {
             // TODO(burdon): Normalize layout (reduce variants).
             case 'main': {
               if (isDocument(data.active)) {
                 const { readonly } = settings.values.state[data.active.id] ?? {};
                 return (
-                  <MainLayout>
+                  <MainLayout toolbar={settings.values.toolbar}>
                     <DocumentMain
                       toolbar={settings.values.toolbar}
                       readonly={readonly}
                       document={data.active}
-                      extensions={getCustomExtensions(data.active)}
+                      extensions={extensions}
                     />
                   </MainLayout>
                 );
@@ -198,7 +210,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 'properties' in data &&
                 isMarkdownProperties(data.properties)
               ) {
-                const main = <EditorMain model={data.model} extensions={getCustomExtensions()} />;
+                const main = <EditorMain model={data.model} extensions={extensions} />;
                 if ('view' in data && data.view === 'embedded') {
                   return <EmbeddedLayout>{main}</EmbeddedLayout>;
                 } else {
@@ -210,7 +222,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
             case 'section': {
               if (isDocument(data.object)) {
-                return <DocumentSection document={data.object} extensions={getCustomExtensions(data.object)} />;
+                return <DocumentSection document={data.object} extensions={extensions} />;
               }
               break;
             }

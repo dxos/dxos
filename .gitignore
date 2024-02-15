@@ -122,7 +122,6 @@ packages/sdk/observability/src/cli-observability-secrets.json
 
 # Bot temp files
 dxos-tmp
-template
 build
 .secrets
 

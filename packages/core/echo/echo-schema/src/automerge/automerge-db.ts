@@ -39,7 +39,7 @@ export class AutomergeDb {
   /**
    * @internal
    */
-  readonly _objects = new Map<string, EchoObject>();
+  readonly _objects = new Map<string, AutomergeObject>();
   readonly _objectsSystem = new Map<string, EchoObject>();
 
   readonly _updateEvent = new Event<{ spaceKey: PublicKey; itemsUpdated: { id: string }[] }>();
@@ -174,6 +174,12 @@ export class AutomergeDb {
       spaceKey: this.spaceKey,
       itemsUpdated: itemsUpdated.map((id) => ({ id })),
     });
+    for (const id of itemsUpdated) {
+      const obj = this._objects.get(id);
+      if (obj) {
+        obj[base]._core.notifyUpdate();
+      }
+    }
   }
 
   /**
