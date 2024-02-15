@@ -131,6 +131,12 @@ const document = str(
   '',
   '> This is a block quote.',
   '',
+  '> This is a long wrapping block quote. Neque reiciendis ullam quae error labore sit, at, et, nulla, aut at nostrum omnis quas nostrum, at consectetur vitae eos asperiores non omnis ullam in beatae at vitae deserunt asperiores sapiente.',
+  '',
+  '> This is',
+  '> a multi-line',
+  '> block quote.',
+  '',
   'This is all about https://dxos.org and related technologies.',
   '',
   'This this is **bold**, ~~strikethrough~~, _italic_, and `f(INLINE)`.',
@@ -211,15 +217,16 @@ const onRenderLink: LinkOptions['onRender'] = (el, url) => {
 };
 
 type StoryProps = {
+  id?: string;
   text?: string;
   comments?: Comment[];
 } & Pick<TextEditorProps, 'readonly' | 'placeholder' | 'extensions'>;
 
-const Story = ({ text, comments, placeholder = 'New document.', ...props }: StoryProps) => {
+const Story = ({ id = 'test', text, comments, placeholder = 'New document.', ...props }: StoryProps) => {
   const [item] = useState({ text: new TextObject(text) });
   const view = useRef<EditorView>(null);
   const model = useTextModel({ text: item.text });
-  useComments(view.current, comments);
+  useComments(view.current, id, comments);
   if (!model) {
     return null;
   }

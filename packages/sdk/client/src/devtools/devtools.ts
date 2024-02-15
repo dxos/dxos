@@ -3,7 +3,7 @@
 //
 
 import { type Space } from '@dxos/client-protocol';
-import type { ClientServicesHost, DataSpace, Diagnostics } from '@dxos/client-services';
+import type { ClientServicesHost, DataSpace } from '@dxos/client-services';
 import { DocumentModel, type DocumentModelState } from '@dxos/document-model';
 import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
@@ -32,7 +32,7 @@ export interface DevtoolsHook {
 
   openDevtoolsApp?: () => void;
 
-  getDiagnostics?: () => Promise<Diagnostics>;
+  downloadDiagnostics?: () => Promise<void>;
 
   reset: () => void;
 }
@@ -113,9 +113,14 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
       window.open(devtoolsUrl, '_blank');
     };
 
-    hook.getDiagnostics = async () => {
-      const diagnostics = await client.diagnostics();
-      return diagnostics;
+    hook.downloadDiagnostics = async () => {
+      const diagnostics = JSON.stringify(await client.diagnostics(), null, 4);
+      const url = URL.createObjectURL(new Blob([diagnostics], { type: 'application/json' }));
+      const element = document.createElement('a');
+      element.setAttribute('href', url);
+      element.setAttribute('download', `diagnostics-${window.location.hostname}-${new Date().toISOString()}.json`);
+      element.setAttribute('target', 'download');
+      element.click();
     };
   }
   if (host) {

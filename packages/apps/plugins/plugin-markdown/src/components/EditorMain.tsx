@@ -11,13 +11,16 @@ import {
   type Comment,
   MarkdownEditor,
   Toolbar,
+  editorHalfViewportOverscrollContent,
+  editorFillLayoutEditor,
+  editorFillLayoutRoot,
   focusComment,
   useComments,
   useEditorView,
   useActionHandler,
   useFormattingState,
 } from '@dxos/react-ui-editor';
-import { focusRing, attentionSurface, mx, textBlockWidth } from '@dxos/react-ui-theme';
+import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
 import { MARKDOWN_PLUGIN } from '../meta';
 
@@ -26,29 +29,29 @@ export type EditorMainProps = {
   toolbar?: boolean;
 } & Pick<TextEditorProps, 'model' | 'readonly' | 'extensions'>;
 
-const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: EditorMainProps) => {
+const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
 
-  const [editorRef, editorView] = useEditorView();
-  useComments(editorView, comments);
-  const handleAction = useActionHandler(editorView);
+  const [editorRef, viewInvalidated] = useEditorView(model.id);
+  useComments(viewInvalidated ? null : editorRef.current, model.id, comments);
+  const handleAction = useActionHandler(editorRef.current);
 
   // Expose editor view for playwright tests.
   // TODO(wittjosiah): Find a better way to expose this or find a way to limit it to test runs.
   useEffect(() => {
     const composer = (window as any).composer;
     if (composer) {
-      composer.editorView = editorView;
+      composer.editorView = editorRef.current;
     }
-  }, [editorView]);
+  }, [editorRef.current]);
 
   // Focus comment.
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
     switch (action) {
       case LayoutAction.FOCUS: {
         const object = data?.object;
-        if (editorView) {
-          focusComment(editorView, object);
+        if (editorRef.current) {
+          focusComment(editorRef.current, object);
           return { data: true };
         }
         break;
@@ -73,30 +76,42 @@ const EditorMain = ({ comments, toolbar, extensions: _extensions, ...props }: Ed
           <Toolbar.Extended />
         </Toolbar.Root>
       )}
-      <MarkdownEditor
-        ref={editorRef}
-        autoFocus
-        placeholder={t('editor placeholder')}
-        extensions={extensions}
-        slots={{
-          root: {
-            className: mx(
-              focusRing,
-              'overflow-y-auto overscroll-auto scroll-smooth overflow-anchored after:block after:is-px after:bs-px after:overflow-anchor',
-            ),
-            'data-testid': 'composer.markdownRoot',
-          } as HTMLAttributes<HTMLDivElement>,
-          editor: {
-            className: mx(
-              attentionSurface,
-              textBlockWidth,
-              'is-full min-bs-[calc(100%-2rem)] pli-3 sm:pli-6 md:pli-10 py-4 mbe-[50dvh] border-be md:border-is md:border-ie separator-separator',
-              !toolbar && 'border-bs',
-            ),
-          },
-        }}
-        {...props}
-      />
+      <div
+        role='none'
+        data-toolbar={toolbar ? 'enabled' : 'disabled'}
+        className='is-full overflow-y-auto overflow-anchored after:block after:is-px after:bs-px after:overflow-anchor after:-mbs-px data-[toolbar=disabled]:pbs-8'
+      >
+        <MarkdownEditor
+          ref={editorRef}
+          autoFocus
+          placeholder={t('editor placeholder')}
+          model={model}
+          extensions={extensions}
+          slots={{
+            root: {
+              className: mx(
+                focusRing,
+                attentionSurface,
+                textBlockWidth,
+                editorFillLayoutRoot,
+                'md:border-is md:border-ie separator-separator focus-visible:ring-inset',
+              ),
+              'data-testid': 'composer.markdownRoot',
+            } as HTMLAttributes<HTMLDivElement>,
+            editor: {
+              className: mx(
+                editorFillLayoutEditor,
+                'is-full [&>.cm-scroller]:overflow-visible [&>.cm-scroller]:p-2 [&>.cm-scroller]:sm:p-6 [&>.cm-scroller]:md:p-8',
+                !toolbar && 'border-bs',
+              ),
+            },
+            content: {
+              className: editorHalfViewportOverscrollContent,
+            },
+          }}
+          {...props}
+        />
+      </div>
     </>
   );
 };

@@ -31,7 +31,7 @@ const Story: FC = () => {
 export default {
   title: 'plugin-debug/DebugSpace',
   component: DebugSpace,
-  render: () => <ClientRepeater Component={Story} createSpace />,
+  render: () => <ClientRepeater component={Story} createSpace />,
   parameters: {
     layout: 'fullscreen',
   },

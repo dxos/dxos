@@ -3,7 +3,7 @@
 //
 
 import { type IconProps, Folder as FolderIcon, Plus, SignIn } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-react';
+import { effect } from '@preact/signals-core';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import localforage from 'localforage';
 import React from 'react';
@@ -31,6 +31,8 @@ import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
 import { type Space, SpaceProxy, getSpaceForObject, type PropertiesProps } from '@dxos/react-client/echo';
+import { Dialog } from '@dxos/react-ui';
+import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
 import { inferRecordOrder } from '@dxos/util';
 
 import {
@@ -49,7 +51,7 @@ import {
   SpaceSettings,
 } from './components';
 import meta, { SPACE_PLUGIN } from './meta';
-import { saveSpaceToDisk, loadSpaceFromDisk } from './serializer';
+import { saveSpaceToDisk, loadSpaceFromDisk, clone } from './serializer';
 import translations from './translations';
 import {
   SpaceAction,
@@ -219,7 +221,7 @@ export const SpacePlugin = ({
     provides: {
       space: state as RevertDeepSignal<PluginState>,
       settings: settings.values,
-      translations,
+      translations: [...translations, osTranslations],
       root: () => (state.awaiting ? <AwaitingObject id={state.awaiting} /> : null),
       metadata: {
         records: {
@@ -250,6 +252,18 @@ export const SpacePlugin = ({
                   return <EmptySpace />;
                 default:
                   return null;
+              }
+            case 'dialog':
+              if (data.component === 'dxos.org/plugin/space/InvitationManagerDialog') {
+                return (
+                  <Dialog.Content>
+                    <ClipboardProvider>
+                      <InvitationManager active {...(data.subject as InvitationManagerProps)} />
+                    </ClipboardProvider>
+                  </Dialog.Content>
+                );
+              } else {
+                return null;
               }
             case 'popover':
               if (data.component === 'dxos.org/plugin/space/RenameSpacePopover' && isSpace(data.subject)) {
@@ -329,7 +343,7 @@ export const SpacePlugin = ({
           graphSubscriptions.get(client.spaces.default.key.toHex())?.();
           graphSubscriptions.set(
             client.spaces.default.key.toHex(),
-            spaceToGraphNode({ space: client.spaces.default, parent, version, dispatch, resolve }),
+            spaceToGraphNode({ space: client.spaces.default, parent, dispatch, resolve }),
           );
 
           // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
@@ -376,7 +390,7 @@ export const SpacePlugin = ({
               testId: 'spacePlugin.sharedSpaces',
               role: 'branch',
               palette: 'pink',
-              childrenPersistenceClass: 'folder',
+              childrenPersistenceClass: 'echo',
               onRearrangeChildren: (nextOrder: Space[]) => {
                 if (!spacesOrder) {
                   const nextObjectOrder = new Expando({
@@ -417,7 +431,6 @@ export const SpacePlugin = ({
                   space,
                   parent: space === client.spaces.default ? parent : groupNode,
                   hidden: settings.values.showHidden,
-                  version,
                   dispatch,
                   resolve,
                 }),
@@ -460,6 +473,9 @@ export const SpacePlugin = ({
               const folder = new Folder();
               space.properties[Folder.schema.typename] = folder;
               sharedSpacesFolder?.objects.push(folder);
+              if (Migrations.versionProperty) {
+                space.properties[Migrations.versionProperty] = Migrations.targetVersion;
+              }
               return { data: { space, id: space.key.toHex() } };
             }
 
@@ -649,6 +665,18 @@ export const SpacePlugin = ({
                 };
               }
               break;
+            }
+
+            case SpaceAction.DUPLICATE_OBJECT: {
+              const originalObject = intent.data?.object ?? intent.data?.result;
+              if (!(originalObject instanceof TypedObject)) {
+                return;
+              }
+
+              const newObject = await clone(originalObject);
+              return {
+                intent: [{ action: SpaceAction.ADD_OBJECT, data: { object: newObject, target: intent.data?.target } }],
+              };
             }
 
             case SpaceAction.TOGGLE_HIDDEN: {

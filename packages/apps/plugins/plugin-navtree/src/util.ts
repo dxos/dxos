@@ -27,7 +27,6 @@ export const sortActions = (actions: Action[]): Action[] =>
     return 1;
   });
 
-// TODO(wittjosiah): Why fallbackTitle?
 export const getTreeItemLabel = (node: Node, t: TFunction) =>
   Array.isArray(node.label) ? t(...node.label) : node.label;
 

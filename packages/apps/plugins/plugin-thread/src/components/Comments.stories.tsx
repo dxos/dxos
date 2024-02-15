@@ -16,7 +16,7 @@ import { Tooltip } from '@dxos/react-ui';
 import { Thread } from '@dxos/react-ui-thread';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { ThreadsContainer } from './ThreadsContainer';
+import { CommentsContainer } from './CommentsContainer';
 import { createCommentThread } from './testing';
 import translations from '../translations';
 
@@ -45,7 +45,7 @@ const Story = ({ spaceKey }: { spaceKey: PublicKey }) => {
   // TODO(wittjosiah): Include Tooltip.Provider in `withTheme` decorator?
   return (
     <Tooltip.Provider>
-      <ThreadsContainer threads={threads} detached={detached} space={space} onThreadDelete={console.log} />
+      <CommentsContainer threads={threads} detached={detached} space={space} onThreadDelete={console.log} />
     </Tooltip.Provider>
   );
 };
@@ -53,7 +53,7 @@ const Story = ({ spaceKey }: { spaceKey: PublicKey }) => {
 export default {
   title: 'plugin-thread/Comments',
   component: Thread,
-  render: () => <ClientRepeater Component={Story} types={types} createIdentity createSpace />,
+  render: () => <ClientRepeater component={Story} types={types} createIdentity createSpace />,
   decorators: [withTheme],
   parameters: { translations },
 };

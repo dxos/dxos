@@ -34,6 +34,7 @@ export type UseTextEditor = {
 /**
  * Hook for creating editor.
  */
+// TODO(wittjosiah): Does not work in strict mode.
 export const useTextEditor = ({
   autoFocus,
   scrollTo,
@@ -45,7 +46,9 @@ export const useTextEditor = ({
   const onUpdate = useRef<() => void>();
   const [view, setView] = useState<EditorView>();
   const parentRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
+    let view: EditorView;
     if (parentRef.current) {
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
       const state = EditorState.create({
@@ -64,7 +67,7 @@ export const useTextEditor = ({
       });
 
       // https://codemirror.net/docs/ref/#view.EditorViewConfig
-      const view = new EditorView({
+      view = new EditorView({
         parent: parentRef.current,
         scrollTo,
         state,
@@ -84,7 +87,8 @@ export const useTextEditor = ({
     return () => {
       view?.destroy();
     };
-  }, [parentRef]);
+    // TODO(wittjosiah): Does `parentRef` ever change? Only `.current` changes?
+  }, [parentRef, extensions]);
 
   useEffect(() => {
     if (view) {

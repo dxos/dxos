@@ -4,7 +4,7 @@
 
 import { X } from '@phosphor-icons/react';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
-import React, { type ComponentPropsWithRef, type FC, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, type FC, forwardRef, useMemo } from 'react';
 
 import { Avatar, Button, type ThemedClassName, useJdenticonHref, useTranslation } from '@dxos/react-ui';
 import { TextEditor, type TextEditorProps, keymap, type EditorView, listener } from '@dxos/react-ui-editor';
@@ -84,7 +84,7 @@ const DefaultMessageBlock = ({ block, onBlockDelete }: MessageBlockProps<{ data?
         <Button
           variant='ghost'
           classNames={['p-1.5 min-bs-0 mie-1 items-start transition-opacity', hoverableControlItem]}
-          onClick={onBlockDelete}
+          onClick={() => onBlockDelete()}
         >
           <X />
         </Button>
@@ -140,9 +140,57 @@ export type MessageTextboxProps = {
 
 export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
   (
-    { onSend, onClear, onEditorFocus, authorId, authorName, authorImgSrc, disabled, extensions = [], ...editorProps },
+    {
+      onSend,
+      onClear,
+      onEditorFocus,
+      authorId,
+      authorName,
+      authorImgSrc,
+      disabled,
+      extensions: _extensions,
+      ...editorProps
+    },
     forwardedRef,
   ) => {
+    const extensions = useMemo(
+      () => [
+        ...(_extensions ?? []),
+        keymap.of([
+          {
+            key: 'Enter',
+            run: () => {
+              if (onSend) {
+                onSend();
+                return true;
+              } else {
+                return false;
+              }
+            },
+          },
+          {
+            key: 'Meta+Backspace',
+            run: () => {
+              if (onClear) {
+                onClear();
+                return true;
+              } else {
+                return false;
+              }
+            },
+          },
+        ]),
+        listener({
+          onFocus: (focused) => {
+            if (focused) {
+              onEditorFocus?.();
+            }
+          },
+        }),
+      ],
+      [_extensions, onSend, onClear, onEditorFocus],
+    );
+
     return (
       <MessageMeta
         {...{ id: editorProps.model.id, authorId, authorName, authorImgSrc }}
@@ -152,40 +200,7 @@ export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
         <TextEditor
           slots={{ root: { className: mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50') } }}
           readonly={disabled}
-          extensions={[
-            ...extensions,
-            keymap.of([
-              {
-                key: 'Enter',
-                run: () => {
-                  if (onSend) {
-                    onSend();
-                    return true;
-                  } else {
-                    return false;
-                  }
-                },
-              },
-              {
-                key: 'Meta+Backspace',
-                run: () => {
-                  if (onClear) {
-                    onClear();
-                    return true;
-                  } else {
-                    return false;
-                  }
-                },
-              },
-            ]),
-            listener({
-              onFocus: (focused) => {
-                if (focused) {
-                  onEditorFocus?.();
-                }
-              },
-            }),
-          ]}
+          extensions={extensions}
           {...editorProps}
           ref={forwardedRef}
         />

@@ -15,6 +15,7 @@ import React, {
   useImperativeHandle,
   useRef,
   useState,
+  useMemo,
 } from 'react';
 
 import { log } from '@dxos/log';
@@ -65,7 +66,7 @@ export type TextEditorProps = {
  * Base text editor.
  */
 // TODO(burdon): Replace with useTextEditor.
-export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
+export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
   (
     { model, readonly, autoFocus, scrollTo, selection, theme, slots = defaultSlots, extensions = [], debug },
     forwardedRef,
@@ -172,7 +173,8 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         newView?.destroy();
         setView(null);
       };
-    }, [rootRef, model, readonly, themeMode]);
+      // TODO(wittjosiah): Does `rootRef` ever change? Only `.current` changes?
+    }, [rootRef, extensions, model, readonly, themeMode]);
 
     // Focus editor on Enter (e.g., when tabbing to this component).
     const handleKeyUp = useCallback<KeyboardEventHandler<HTMLDivElement>>(
@@ -202,15 +204,22 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
   },
 );
 
-export const TextEditor = forwardRef<EditorView, TextEditorProps>(
-  ({ readonly, placeholder, lineWrapping, theme = textTheme, slots, extensions = [], ...props }, forwardedRef) => {
+export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
+  (
+    { readonly, placeholder, lineWrapping, theme = textTheme, slots, extensions: _extensions, ...props },
+    forwardedRef,
+  ) => {
     const { themeMode } = useThemeContext();
     const updatedSlots = defaultsDeep({}, slots, defaultTextSlots);
+    const extensions = useMemo(
+      () => [createBasicBundle({ themeMode, placeholder, lineWrapping }), ...(_extensions ?? [])],
+      [themeMode, placeholder, lineWrapping, _extensions],
+    );
     return (
       <BaseTextEditor
         ref={forwardedRef}
         readonly={readonly}
-        extensions={[createBasicBundle({ themeMode, placeholder, lineWrapping }), ...extensions]}
+        extensions={extensions}
         theme={theme}
         slots={updatedSlots}
         {...props}
@@ -219,15 +228,19 @@ export const TextEditor = forwardRef<EditorView, TextEditorProps>(
   },
 );
 
-export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
-  ({ readonly, placeholder, theme = markdownTheme, slots, extensions = [], ...props }, forwardedRef) => {
+export const MarkdownEditor = forwardRef<EditorView | null, TextEditorProps>(
+  ({ readonly, placeholder, theme = markdownTheme, slots, extensions: _extensions, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const updatedSlots = defaultsDeep({}, slots, defaultMarkdownSlots);
+    const extensions = useMemo(
+      () => [createMarkdownExtensions({ themeMode, placeholder }), ...(_extensions ?? [])],
+      [themeMode, placeholder, _extensions],
+    );
     return (
       <BaseTextEditor
         ref={forwardedRef}
         readonly={readonly}
-        extensions={[createMarkdownExtensions({ themeMode, placeholder }), ...extensions]}
+        extensions={extensions}
         theme={theme}
         slots={updatedSlots}
         {...props}

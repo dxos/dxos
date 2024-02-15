@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-template",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "Template for new plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -25,7 +25,7 @@
   "dependencies": {
     "@braneframe/types": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "deepsignal": "1.4.0-shallow.0",
+    "deepsignal": "^1.5.0",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {

@@ -66,14 +66,14 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
         variant={variant}
         onClick={activeAction.onClick}
       >
-        {activeAction.icon && <activeAction.icon />}
+        {activeAction.icon && <activeAction.icon className={getSize(5)} />}
         <span>{activeAction.label}</span>
       </Button>
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
           <Button classNames={['bs-11 flex-none rounded-is-none', classNames]}>
             <span className='sr-only'>{t('invite options label')}</span>
-            <CaretDown />
+            <CaretDown className={getSize(4)} />
           </Button>
         </DropdownMenu.Trigger>
         {/* TODO(thure): Putting `DropdownMenu.Portal` here breaks highlighting and focus. Why? */}
@@ -99,7 +99,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
                     )}
                   </div>
                   <DropdownMenu.ItemIndicator asChild>
-                    <Check />
+                    <Check weight='bold' className={getSize(4)} />
                   </DropdownMenu.ItemIndicator>
                 </DropdownMenu.CheckboxItem>
               );
