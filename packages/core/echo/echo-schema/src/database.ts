@@ -76,6 +76,91 @@ export interface EchoDatabase {
 }
 
 /**
+ * API for the database.
+ * Implements EchoDatabase interface.
+ */
+export class EchoDatabaseImpl implements EchoDatabase {
+  /**
+   * @internal
+   */
+  _legacy: EchoLegacyDatabase;
+
+  constructor(itemManager: ItemManager, backend: DatabaseProxy, graph: Hypergraph, automergeContext: AutomergeContext) {
+    this._legacy = new EchoLegacyDatabase(itemManager, backend, graph, automergeContext);
+  }
+
+  get graph(): Hypergraph {
+    return this._legacy.graph;
+  }
+
+  get spaceKey(): PublicKey {
+    return this._legacy.spaceKey;
+  }
+
+  getObjectById<T extends EchoObject>(id: string): T | undefined {
+    return this._legacy.getObjectById(id);
+  }
+
+  add<T extends EchoObject>(obj: T): T {
+    return this._legacy.add(obj);
+  }
+
+  remove<T extends EchoObject>(obj: T): void {
+    return this._legacy.remove(obj);
+  }
+
+  query<T extends TypedObject>(filter?: FilterSource<T> | undefined, options?: QueryOptions | undefined): Query<T> {
+    return this._legacy.query(filter, options);
+  }
+
+  flush(): Promise<void> {
+    return this._legacy.flush();
+  }
+
+  /**
+   * @internal
+   */
+  get _updateEvent(): Event<UpdateEvent> {
+    return this._legacy._updateEvent;
+  }
+
+  /**
+   * @deprecated
+   */
+  get objects(): EchoObject[] {
+    return this._legacy.objects;
+  }
+
+  /**
+   * @deprecated
+   */
+  get pendingBatch(): ReadOnlyEvent<BatchUpdate> {
+    return this._legacy.pendingBatch;
+  }
+
+  /**
+   * @deprecated
+   */
+  get automerge(): AutomergeDb {
+    return this._legacy.automerge;
+  }
+
+  /**
+   * @deprecated
+   */
+  get _backend(): DatabaseProxy {
+    return this._legacy._backend;
+  }
+
+  /**
+   * @deprecated
+   */
+  clone<T extends EchoObject>(obj: T): void {
+    return this._legacy.clone(obj);
+  }
+}
+
+/**
  * Database wrapper.
  */
 // TODO(dmaretskyi): Extract interface.

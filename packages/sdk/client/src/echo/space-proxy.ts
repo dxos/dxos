@@ -18,7 +18,7 @@ import {
   type AutomergeContext,
   type Hypergraph,
   type TypedObject,
-  EchoLegacyDatabase,
+  EchoDatabaseImpl,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -75,7 +75,7 @@ export class SpaceProxy implements Space {
   @trace.info()
   _initialized = false;
 
-  private readonly _db!: EchoLegacyDatabase;
+  private readonly _db!: EchoDatabaseImpl;
   private readonly _internal!: SpaceInternal;
   private readonly _dbBackend: DatabaseProxy;
   private readonly _itemManager: ItemManager;
@@ -111,7 +111,7 @@ export class SpaceProxy implements Space {
       itemManager: this._itemManager,
       spaceKey: this.key,
     });
-    this._db = new EchoLegacyDatabase(this._itemManager, this._dbBackend, graph, automergeContext);
+    this._db = new EchoDatabaseImpl(this._itemManager, this._dbBackend, graph, automergeContext);
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;

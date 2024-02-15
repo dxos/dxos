@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { AutomergeArray, AutomergeObject } from './automerge';
-import { EchoLegacyDatabase } from './database';
+import { AutomergeArray, AutomergeDb, AutomergeObject } from './automerge';
+import { EchoDatabaseImpl, EchoLegacyDatabase } from './database';
 import { Expando, TextObject, TypedObject } from './object';
 import { linkDeferred } from './type-collection';
 
@@ -24,7 +24,9 @@ linkDeferred();
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[EchoDatabaseImpl.name] = EchoDatabaseImpl;
 (globalThis as any)[EchoLegacyDatabase.name] = EchoLegacyDatabase;
+(globalThis as any)[AutomergeDb.name] = AutomergeDb;
 (globalThis as any)[Expando.name] = Expando;
 (globalThis as any)[TextObject.name] = TextObject;
 (globalThis as any)[TypedObject.name] = TypedObject;
