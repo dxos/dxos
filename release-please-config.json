@@ -69,6 +69,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-gpt/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-graph/package.json",
           "jsonpath": "$.version"
         },
@@ -684,6 +689,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/brand/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/primitives/react-hooks/package.json",
           "jsonpath": "$.version"
         },
@@ -695,11 +705,6 @@
         {
           "type": "json",
           "path": "packages/ui/primitives/react-list/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/react-icons/package.json",
           "jsonpath": "$.version"
         },
         {

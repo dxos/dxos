@@ -15,6 +15,7 @@
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
+        "generatePackageJson": false,
         "outputPath": "packages/e2e/rpc-tunnel-e2e/out"
       },
       "outputs": [

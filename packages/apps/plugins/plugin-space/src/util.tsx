@@ -4,7 +4,6 @@
 
 import {
   ClockCounterClockwise,
-  Download,
   FloppyDisk,
   FolderOpen,
   FolderPlus,
@@ -13,30 +12,24 @@ import {
   Placeholder,
   Trash,
   Users,
-  Upload,
   X,
   Database,
+  Copy,
 } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-react';
+import { effect } from '@preact/signals-core';
 import React from 'react';
 
 import type { Graph, Node, NodeArg } from '@braneframe/plugin-graph';
 import { Folder } from '@braneframe/types';
 import { type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { clone, isTypedObject } from '@dxos/echo-schema';
+import { isTypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { Migrations } from '@dxos/migrations';
-import {
-  EchoDatabase,
-  type Space,
-  SpaceProxy,
-  SpaceState,
-  type TypedObject,
-  getSpaceForObject,
-} from '@dxos/react-client/echo';
+import { EchoDatabase, type Space, SpaceState, type TypedObject, getSpaceForObject } from '@dxos/react-client/echo';
 
 import { SPACE_PLUGIN } from './meta';
+import { clone } from './serializer';
 import { SpaceAction } from './types';
 
 export const SHARED = 'shared-spaces';
@@ -95,36 +88,41 @@ const getFolderGraphNodePartials = ({
         ],
         properties: {
           disposition: 'toolbar',
+          // TODO(wittjosiah): This is currently a navtree feature. Address this with cmd+k integration.
+          // mainAreaDisposition: 'in-flow',
           menuType: 'searchList',
           testId: 'spacePlugin.createObject',
         },
       },
     ],
     properties: {
-      acceptPersistenceClass: new Set(['folder']),
+      acceptPersistenceClass: new Set(['echo']),
+      acceptPersistenceKey: new Set([space.key.toHex()]),
       role: 'branch',
       onRearrangeChildren: (nextOrder: TypedObject[]) => {
         folder.objects = nextOrder;
       },
       onTransferStart: (child: Node<TypedObject>) => {
-        const childSpace = getSpaceForObject(child.data);
-        if (space && childSpace && !childSpace.key.equals(space.key)) {
-          // Create clone of child and add to destination space.
-          const newObject = clone(child.data, {
-            retainId: true,
-            // TODO(wittjosiah): This needs to be generalized and not hardcoded here.
-            additional: [
-              child.data.content,
-              ...(child.data.objects ?? []),
-              ...(child.data.objects ?? []).map((object: TypedObject) => object.content),
-            ],
-          });
-          space.db.add(newObject);
-          folder.objects.push(newObject);
-        } else {
-          // Add child to destination folder.
-          folder.objects.push(child.data);
-        }
+        // TODO(wittjosiah): Support transfer between spaces.
+        // const childSpace = getSpaceForObject(child.data);
+        // if (space && childSpace && !childSpace.key.equals(space.key)) {
+        //   // Create clone of child and add to destination space.
+        //   const newObject = clone(child.data, {
+        //     // TODO(wittjosiah): This needs to be generalized and not hardcoded here.
+        //     additional: [
+        //       child.data.content,
+        //       ...(child.data.objects ?? []),
+        //       ...(child.data.objects ?? []).map((object: TypedObject) => object.content),
+        //     ],
+        //   });
+        //   space.db.add(newObject);
+        //   folder.objects.push(newObject);
+        // } else {
+
+        // Add child to destination folder.
+        folder.objects.push(child.data);
+
+        // }
       },
       onTransferEnd: (child: Node<TypedObject>, destination: Node) => {
         // Remove child from origin folder.
@@ -133,13 +131,20 @@ const getFolderGraphNodePartials = ({
           folder.objects.splice(index, 1);
         }
 
-        const childSpace = getSpaceForObject(child.data);
-        const destinationSpace =
-          destination.data instanceof SpaceProxy ? destination.data : getSpaceForObject(destination.data);
-        if (destinationSpace && childSpace && !childSpace.key.equals(destinationSpace.key)) {
-          // Mark child as deleted in origin space.
-          childSpace.db.remove(child.data);
-        }
+        // TODO(wittjosiah): Support transfer between spaces.
+        // const childSpace = getSpaceForObject(child.data);
+        // const destinationSpace =
+        //   destination.data instanceof SpaceProxy ? destination.data : getSpaceForObject(destination.data);
+        // if (destinationSpace && childSpace && !childSpace.key.equals(destinationSpace.key)) {
+        //   // Mark child as deleted in origin space.
+        //   childSpace.db.remove(child.data);
+        // }
+      },
+      onCopy: async (child: Node<TypedObject>) => {
+        // Create clone of child and add to destination space.
+        const newObject = await clone(child.data);
+        space.db.add(newObject);
+        folder.objects.push(newObject);
       },
     },
   };
@@ -149,14 +154,12 @@ export const spaceToGraphNode = ({
   space,
   parent,
   hidden,
-  version,
   dispatch,
   resolve,
 }: {
   space: Space;
   parent: Node;
   hidden?: boolean;
-  version?: string;
   dispatch: IntentDispatcher;
   resolve: MetadataResolver;
 }): UnsubscribeCallback => {
@@ -192,13 +195,14 @@ export const spaceToGraphNode = ({
     if (
       space.state.get() === SpaceState.READY &&
       Migrations.versionProperty &&
-      space.properties[Migrations.versionProperty] !== version
+      space.properties[Migrations.versionProperty] !== Migrations.targetVersion
     ) {
       node.addAction({
         id: 'migrate-space',
         label: ['migrate space label', { ns: SPACE_PLUGIN }],
         icon: (props) => <Database {...props} />,
         invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.MIGRATE, data: { space } }),
+        properties: { mainAreaDisposition: 'in-flow' },
       });
     }
 
@@ -211,6 +215,7 @@ export const spaceToGraphNode = ({
           keyBinding: 'shift+F6',
           invoke: (params) =>
             dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.RENAME, data: { space, ...params } }),
+          properties: { mainAreaDisposition: 'absent' },
         },
         {
           id: 'share-space',
@@ -219,12 +224,14 @@ export const spaceToGraphNode = ({
           keyBinding: 'meta+.',
           invoke: () =>
             dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { spaceKey: space.key.toHex() } }),
+          properties: { mainAreaDisposition: 'absent' },
         },
         {
           id: 'close-space',
           label: ['close space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <X {...props} />,
           invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.CLOSE, data: { space } }),
+          properties: { mainAreaDisposition: 'menu' },
         },
         {
           id: 'save-space-to-disk',
@@ -232,6 +239,7 @@ export const spaceToGraphNode = ({
           icon: (props) => <FloppyDisk {...props} />,
           keyBinding: 'meta+s',
           invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SAVE, data: { space } }),
+          properties: { mainAreaDisposition: 'in-flow' },
         },
         {
           id: 'load-space-from-disk',
@@ -239,6 +247,7 @@ export const spaceToGraphNode = ({
           icon: (props) => <FolderOpen {...props} />,
           keyBinding: 'meta+shift+l',
           invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.LOAD, data: { space } }),
+          properties: { mainAreaDisposition: 'in-flow' },
         },
       );
     } else if (space.state.get() === SpaceState.INACTIVE) {
@@ -249,24 +258,10 @@ export const spaceToGraphNode = ({
         invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.OPEN, data: { space } }),
         properties: {
           disposition: 'toolbar',
+          mainAreaDisposition: 'in-flow',
         },
       });
     }
-
-    node.addAction(
-      {
-        id: 'backup-space',
-        label: ['export data label', { ns: SPACE_PLUGIN }],
-        icon: (props) => <Download {...props} />,
-        invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.EXPORT, data: { space } }),
-      },
-      {
-        id: 'restore-space',
-        label: ['import data label', { ns: SPACE_PLUGIN }],
-        icon: (props) => <Upload {...props} />,
-        invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.IMPORT, data: { space } }),
-      },
-    );
 
     if (!(folder instanceof Folder)) {
       return;
@@ -320,7 +315,8 @@ export const objectToGraphNode = ({
       properties: {
         ...partials.properties,
         testId: 'spacePlugin.object',
-        persistenceClass: 'folder',
+        persistenceClass: 'echo',
+        persistenceKey: space?.key.toHex(),
       },
     });
 
@@ -358,6 +354,20 @@ export const objectToGraphNode = ({
     );
 
     if (!(object instanceof Folder)) {
+      node.addAction({
+        id: 'duplicate',
+        label: ['duplicate object label', { ns: SPACE_PLUGIN }],
+        icon: (props) => <Copy {...props} />,
+        invoke: () =>
+          dispatch({
+            action: SpaceAction.DUPLICATE_OBJECT,
+            data: { object, target: parent.data },
+          }),
+        properties: {
+          testId: 'spacePlugin.duplicateObject',
+        },
+      });
+
       return;
     }
 

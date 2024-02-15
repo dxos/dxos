@@ -45,7 +45,7 @@ export default {
   title: 'react-ui-mosaic/Demo',
   render: () => (
     <ClientRepeater
-      Component={Story}
+      component={Story}
       onCreateSpace={async (space) => {
         const factory = generator.factories.project;
         const objects = [

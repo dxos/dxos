@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { /* ArrowSquareOut, */ Circle } from '@phosphor-icons/react';
+import { ArrowClockwise, Circle } from '@phosphor-icons/react';
 import React from 'react';
 
 import type { Plugin } from '@dxos/app-framework';
 import {
+  Button,
   // type ChromaticPalette,
   // type NeutralPalette,
   DensityProvider,
@@ -35,9 +36,10 @@ export type PluginListProps = {
   loaded?: string[];
   enabled?: string[];
   onChange?: (id: string, enabled: boolean) => void;
+  onReload?: () => void;
 };
 
-export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange }: PluginListProps) => {
+export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange, onReload }: PluginListProps) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
 
   return (
@@ -80,19 +82,14 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange }
                           <ArrowSquareOut weight='bold' className={mx(getSize(3), 'inline-block leading-none mli-1')} />
                         </Link>
                       )} */}
-                      {reloadRequired && <p className='text-sm font-medium'>{t('reload required message')}</p>}
+                      {reloadRequired && (
+                        <Button variant='ghost' classNames='p-0 gap-2' onClick={onReload}>
+                          <ArrowClockwise />
+                          <p className='text-sm font-medium'>{t('reload required message')}</p>
+                        </Button>
+                      )}
                     </div>
                   )}
-                  {/* TODO(wittjosiah): Tags are too noisy. */}
-                  {/* {tags.length > 0 && (
-                    <div className='flex my-1'>
-                      {tags.map((tag) => (
-                        <Tag key={tag} palette={palette[tag] ?? palette.default}>
-                          {tag}
-                        </Tag>
-                      ))}
-                    </div>
-                  )} */}
                 </div>
                 <div className='pbs-1'>
                   <Input.Switch
