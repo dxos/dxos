@@ -135,7 +135,8 @@ message SignPresentationRequest {
 
 message CreateIdentityRequest {
   optional halo.credentials.ProfileDocument profile = 1;
-  optional bool use_automerge = 2;
+
+  reserved 2; // Removed use_automerge flag.
 }
 
 // TODO(wittjosiah): Align pluralization with other services.

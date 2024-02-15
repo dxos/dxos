@@ -8,7 +8,7 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { DocumentModel } from '@dxos/document-model';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
-import { type TypedObject, base, getRawDoc } from '@dxos/echo-schema';
+import { type TypedObject, base, getRawDoc, type DocStructure } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -17,10 +17,10 @@ import { ModelFactory } from '@dxos/model-factory';
 import { createSimplePeerTransportFactory, NetworkManager, type TransportFactory } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { type EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import { type Storage } from '@dxos/random-access-storage';
 import { TextModel } from '@dxos/text-model';
 import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
+import { assignDeep } from '@dxos/util';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 import { createDiagnostics } from './diagnostics';
@@ -40,21 +40,6 @@ import { SystemServiceImpl } from '../system';
 // TODO(burdon): Factor out to spaces.
 export const createDefaultModelFactory = () => {
   return new ModelFactory().registerModel(DocumentModel).registerModel(TextModel);
-};
-
-// TODO(wittjosiah): Factor out.
-const createGenesisMutationFromTypedObject = (obj: TypedObject): EchoObject => {
-  const snapshot = obj[base]._createSnapshot();
-
-  return {
-    objectId: obj[base]._id,
-    genesis: {
-      modelType: obj[base]._modelConstructor.meta.type,
-    },
-    snapshot: {
-      model: snapshot,
-    },
-  };
 };
 
 export type ClientServicesHostParams = {
@@ -260,7 +245,7 @@ export class ClientServicesHost {
       SystemService: this._systemService,
 
       IdentityService: new IdentityServiceImpl(
-        (params, useAutomerge) => this._createIdentity(params, useAutomerge),
+        (params) => this._createIdentity(params),
         this._serviceContext.identityManager,
         this._serviceContext.keyring,
         (profile) => this._serviceContext.broadcastProfileUpdate(profile),
@@ -351,36 +336,24 @@ export class ClientServicesHost {
     await this._callbacks?.onReset?.();
   }
 
-  private async _createIdentity(params: CreateIdentityOptions, useAutomerge: boolean) {
+  private async _createIdentity(params: CreateIdentityOptions) {
     const identity = await this._serviceContext.createIdentity(params);
 
     // Setup default space.
     await this._serviceContext.initialized.wait();
     const space = await this._serviceContext.dataSpaceManager!.createSpace();
 
-    const obj: TypedObject = new Properties(undefined, { automerge: useAutomerge });
+    const obj: TypedObject = new Properties(undefined);
     obj[defaultKey] = identity.identityKey.toHex();
 
-    if (!useAutomerge) {
-      await this._serviceRegistry.services.DataService!.write({
-        spaceKey: space.key,
-        batch: {
-          objects: [createGenesisMutationFromTypedObject(obj)],
-        },
-      });
-      await this._serviceRegistry.services.DataService!.flush({ spaceKey: space.key });
-    } else {
-      // TODO(dmaretskyi): Refactor this.
-      const automergeIndex = space.automergeSpaceState.rootUrl;
-      invariant(automergeIndex);
-      const document = await this._serviceContext.automergeHost.repo.find(automergeIndex as any);
-      await document.whenReady();
+    const automergeIndex = space.automergeSpaceState.rootUrl;
+    invariant(automergeIndex);
+    const document = await this._serviceContext.automergeHost.repo.find<DocStructure>(automergeIndex as any);
+    await document.whenReady();
 
-      document.change((doc: any) => {
-        doc.objects ??= {};
-        doc.objects[obj[base]._id] = getRawDoc(obj).handle.docSync();
-      });
-    }
+    document.change((doc: DocStructure) => {
+      assignDeep(doc, ['objects', obj[base]._id], getRawDoc(obj).handle.docSync());
+    });
 
     return identity;
   }
