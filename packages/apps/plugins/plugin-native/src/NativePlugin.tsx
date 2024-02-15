@@ -3,7 +3,7 @@
 //
 
 import type { Plugin, PluginDefinition } from '@dxos/app-framework';
-import { NavigationAction, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
+import { NavigationAction, SettingsAction, LayoutAction, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { safeParseJson } from '@dxos/util';
 
@@ -48,6 +48,7 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
   //
 
   let itemsMac = '';
+  // TODO(mjamesderocher) This isn't working
   if (process.platform === 'darwin') {
     itemsMac = `
       Hide: h + CommandOrControl
@@ -56,10 +57,14 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
     `;
   }
 
+  // TODO(mjamesderocher) Change menu names to use translations
   const menu = `
     App Name:
       About ${appName}: _
       Settings...: , + CommandOrControl
+      ---
+      Show shortcuts: / + CommandOrControl
+      Search commands: k + CommandOrControl
       ---
       ${itemsMac}
       Quit: q + CommandOrControl
@@ -79,6 +84,31 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
   window.addEventListener('menuItemSelected', async (event: any) => {
     const id = `${event.detail.parent}:${event.detail.title}`;
     switch (id) {
+      case 'App Name:Search commands': {
+        void intentPlugin?.provides.intent.dispatch({
+          action: LayoutAction.SET_LAYOUT,
+          // TODO(mjamesderocher) Is there a better way to get the ID of the plugin?
+          data: { element: 'dialog', component: 'dxos.org/plugin/navtree/Commands' },
+        });
+        break;
+      }
+      case 'App Name:Settings...': {
+        void intentPlugin?.provides.intent.dispatch({
+          action: SettingsAction.OPEN,
+        });
+        break;
+      }
+      case 'App Name:Show shortcuts': {
+        void intentPlugin?.provides.intent.dispatch({
+          action: LayoutAction.SET_LAYOUT,
+          data: {
+            element: 'dialog',
+            // TODO(mjamesderocher) Is there a better way to get the ID of the plugin?
+            component: 'dxos.org/plugin/help/Shortcuts',
+          },
+        });
+        break;
+      }
       case 'App Name:Quit': {
         await app.exit();
         break;
@@ -98,8 +128,6 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
   // TODO(burdon): Initial url has index.html, which must be caught/redirected.
   log.info('native setup complete');
 };
-
-// 855-451-6753
 
 export const NativePlugin = (): PluginDefinition => ({
   meta,
