@@ -55,9 +55,12 @@ export class TestBuilder {
 
   public readonly peers = new ComplexMap<PublicKey, TestPeer>(PublicKey.hash);
 
-  async createPeer(spaceKey = this.defaultSpaceKey): Promise<TestPeer> {
+  async createPeer(
+    spaceKey = this.defaultSpaceKey,
+    automergeDocUrl: string = this.automergeContext.repo.create().url,
+  ): Promise<TestPeer> {
     const base = await this.base.createPeer(spaceKey);
-    const peer = new TestPeer(this, base, spaceKey, this.automergeContext.repo.create().url);
+    const peer = new TestPeer(this, base, spaceKey, automergeDocUrl);
     this.peers.set(peer.base.key, peer);
     await peer.db.automerge.open({
       rootUrl: peer.automergeDocId,
