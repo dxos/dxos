@@ -241,7 +241,7 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
       }
 
       // TODO(burdon): Comment.
-      if (!compareType(filter.type, type, getDatabaseFromObject(object)?._backend?.spaceKey)) {
+      if (!compareType(filter.type, type, getDatabaseFromObject(object)?.spaceKey)) {
         return false;
       }
     }
