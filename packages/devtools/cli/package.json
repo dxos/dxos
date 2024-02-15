@@ -26,6 +26,7 @@
     "bin": "./bin/dx",
     "prepack": "oclif manifest && oclif readme --multi",
     "postpack": "shx rm -f oclif.manifest.json",
+    "prepublishOnly": "scripts/patch_dx_environment.sh",
     "readme": "oclif readme --multi"
   },
   "dependencies": {

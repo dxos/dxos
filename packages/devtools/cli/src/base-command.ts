@@ -223,6 +223,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     this._observability = await initializeNodeObservability({
       namespace,
+      version: this.config.version,
       installationId,
       group,
       config: this._clientConfig!,
