@@ -5,17 +5,9 @@
 import { CaretDoubleLeft, GearSix } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { parseObservabilityPlugin } from '@braneframe/plugin-observability';
-import {
-  LayoutAction,
-  NavigationAction,
-  SettingsAction,
-  Surface,
-  useIntent,
-  useResolvePlugin,
-} from '@dxos/app-framework';
+import { LayoutAction, NavigationAction, SettingsAction, Surface, useIntent } from '@dxos/app-framework';
 import { type Node, type Graph, isGraphNode } from '@dxos/app-graph';
-import { useClient, useConfig } from '@dxos/react-client';
+import { useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, ElevationProvider, Tooltip, useMediaQuery, useSidebars, useTranslation } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
@@ -29,7 +21,6 @@ import {
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { arrayMove } from '@dxos/util';
 
-import { HaloButton } from './HaloButton';
 import { VersionInfo } from './VersionInfo';
 import { NAVTREE_PLUGIN } from '../meta';
 import { getPersistenceParent } from '../util';
@@ -60,10 +51,8 @@ export const NavTreeContainer = ({
   activeId?: string;
   popoverAnchorId?: string;
 }) => {
-  const client = useClient();
   const config = useConfig();
   const identity = useIdentity();
-  const observabilityPlugin = useResolvePlugin(parseObservabilityPlugin);
 
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const { navigationSidebarOpen, closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
@@ -197,12 +186,6 @@ export const NavTreeContainer = ({
                     They should probably be rendered via surfaces or exposed as root graph actions instead. */}
         {identity && (
           <div role='none' className='flex items-center gap-1 pis-3 pie-1 plb-1 bs-[--topbar-size]'>
-            <HaloButton
-              size={6}
-              identityKey={identity?.identityKey.toHex()}
-              internal={observabilityPlugin?.provides?.observability?.group === 'dxos'}
-              onClick={() => client.shell.shareIdentity()}
-            />
             <div role='none' className='grow' />
             <Tooltip.Root>
               <Tooltip.Trigger asChild>

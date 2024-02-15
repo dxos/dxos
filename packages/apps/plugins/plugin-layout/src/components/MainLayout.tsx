@@ -67,7 +67,18 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
         </Main.NavigationSidebar>
 
         {/* Notch */}
-        <Main.Notch />
+        <Main.Notch>
+          <Surface role='notch-start' />
+          <Button
+            onClick={() => (context.sidebarOpen = !context.sidebarOpen)}
+            variant='ghost'
+            classNames='p-0 is-[--rail-action] border-bs-4 border-be-4 border-transparent bg-clip-padding'
+          >
+            <span className='sr-only'>{t('open navigation sidebar label')}</span>
+            <MenuIcon weight='light' className={getSize(4)} />
+          </Button>
+          <Surface role='notch-end' />
+        </Main.Notch>
 
         {/* Right Complementary sidebar. */}
         {complementarySidebarOpen !== null && active ? (
@@ -81,15 +92,6 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
           <div aria-label={t('main header label')} role='none'>
             <div role='none' className={'flex gap-1 p-1 bs-[--topbar-size]'}>
               <DensityProvider density='coarse'>
-                <Button
-                  onClick={() => (context.sidebarOpen = !context.sidebarOpen)}
-                  variant='ghost'
-                  classNames='pli-2.5'
-                >
-                  <span className='sr-only'>{t('open navigation sidebar label')}</span>
-                  <MenuIcon weight='light' className={getSize(4)} />
-                </Button>
-
                 <Surface role='navbar-start' />
                 <div role='none' className='grow' />
                 <Surface role='navbar-end' direction='inline-reverse' />

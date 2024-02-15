@@ -21,7 +21,14 @@ import {
 import { Graph, type Node } from '@dxos/app-graph';
 import { Keyboard } from '@dxos/keyboard';
 
-import { CommandsDialogContent, NODE_TYPE, NavBarStart, NavTreeContainer, NavTreeDocumentTitle } from './components';
+import {
+  CommandsDialogContent,
+  NODE_TYPE,
+  NavBarStart,
+  NavTreeContainer,
+  NavTreeDocumentTitle,
+  NotchStart,
+} from './components';
 import meta, { NAVTREE_PLUGIN } from './meta';
 import translations from './translations';
 
@@ -105,6 +112,8 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                 };
               }
               break;
+            case 'notch-start':
+              return <NotchStart />;
           }
 
           return null;

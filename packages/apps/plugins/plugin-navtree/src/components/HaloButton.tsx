@@ -19,15 +19,12 @@ export const HaloButton = (props: HaloButtonProps) => {
   const { onClick, identityKey, internal, size = 8 } = props;
   const jdenticon = useJdenticonHref(identityKey ?? '', 24);
   return (
-    <Avatar.Root size={size} variant='circle' status={internal ? 'internal' : 'active'}>
-      <Avatar.Frame
-        data-testid='treeView.haloButton'
-        data-joyride='welcome/halo'
-        classNames='cursor-pointer'
-        onClick={onClick}
-      >
-        {internal ? <Avatar.Image href={INTERNAL} /> : <Avatar.Fallback href={jdenticon} />}
-      </Avatar.Frame>
-    </Avatar.Root>
+    <button className='grid place-items-center' onClick={onClick}>
+      <Avatar.Root size={size} variant='circle' status={internal ? 'internal' : 'active'}>
+        <Avatar.Frame data-testid='treeView.haloButton' data-joyride='welcome/halo'>
+          {internal ? <Avatar.Image href={INTERNAL} /> : <Avatar.Fallback href={jdenticon} />}
+        </Avatar.Frame>
+      </Avatar.Root>
+    </button>
   );
 };

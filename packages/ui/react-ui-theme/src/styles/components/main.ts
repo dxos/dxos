@@ -20,6 +20,7 @@ const sidebarSlots = {
     width: 'sm:data-[side=is]:is-[271px]',
     sidebar: 'sm:data-[side=is]:-inline-start-[271px]',
     content: 'lg:data-[sidebar-inline-start-state=open]:pis-[270px]',
+    notch: 'max-is-[270px]',
   },
   // TODO(burdon): Maximal size for phone.
   end: {
@@ -62,8 +63,10 @@ export const mainOverlay: ComponentFunction<MainStyleProps> = (_, ...etc) =>
 
 export const mainNotch: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx(
-    'fixed z-[11] block-end-0 inline-start-0 rounded-se-lg min-bs-[var(--rail-size)]  min-is-[var(--rail-size)] separator-separator surface-base',
-    'transition-[border-width] border-bs-[.25rem] border-ie-[.25rem] data-[nav-sidebar-state=open]:border-bs-0 data-[nav-sidebar-state=open]:border-ie-0',
+    'fixed z-[11] block-end-0 inline-start-0 rounded-se-lg min-bs-[var(--rail-size)] is-fit separator-separator surface-base',
+    'transition-[border-width] box-content border-bs border-ie data-[nav-sidebar-state=open]:border-bs-0 data-[nav-sidebar-state=open]:border-ie-0',
+    'grid grid-rows-1 pli-1 grid-cols-[repeat(auto-fit,var(--rail-action))]',
+    sidebarSlots.start.notch,
     ...etc,
   );
 
