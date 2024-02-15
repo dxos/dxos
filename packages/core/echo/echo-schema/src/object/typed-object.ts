@@ -27,7 +27,6 @@ import {
 } from './types';
 import { AutomergeObject } from '../automerge';
 import { REFERENCE_TYPE_TAG } from '../automerge/types';
-import { getGlobalAutomergePreference } from '../automerge-preference';
 import { type Schema } from '../proto'; // NOTE: Keep as type-import.
 import { isReferenceLike, getBody, getHeader } from '../util';
 
@@ -117,7 +116,8 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
   constructor(initialProps?: T, opts?: TypedObjectOptions) {
     super(DocumentModel);
 
-    if (opts?.automerge ?? getGlobalAutomergePreference()) {
+    // Redirect to AutomergeObject by default.
+    if (opts?.automerge ?? true) {
       return new AutomergeObject(initialProps, opts) as any;
     }
 
