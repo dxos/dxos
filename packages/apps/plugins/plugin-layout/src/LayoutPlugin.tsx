@@ -142,13 +142,15 @@ export const LayoutPlugin = ({
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
 
+      // prettier-ignore
       layout
-        .prop(layout.values.$sidebarOpen!, 'sidebar-open', LocalStorageStore.bool)
-        .prop(layout.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool);
+        .prop('sidebarOpen', LocalStorageStore.bool())
+        .prop('complementarySidebarOpen', LocalStorageStore.bool());
 
+      // prettier-ignore
       settings
-        .prop(settings.values.$showFooter!, 'show-footer', LocalStorageStore.bool)
-        .prop(settings.values.$enableNativeRedirect!, 'enable-native-redirect', LocalStorageStore.bool);
+        .prop('showFooter', LocalStorageStore.bool())
+        .prop('enableNativeRedirect', LocalStorageStore.bool());
 
       // TODO(burdon): Create context and plugin.
       Keyboard.singleton.initialize();

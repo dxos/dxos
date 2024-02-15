@@ -68,7 +68,7 @@ export const ObservabilityPlugin = (options: {
       settings.enabled = !(await isObservabilityDisabled(options.namespace));
       state.values.group = await getObservabilityGroup(options.namespace);
 
-      state.prop(state.values.$notified!, 'notified', LocalStorageStore.bool);
+      state.prop('notified', LocalStorageStore.bool({ allowUndefined: true }));
     },
     ready: async (plugins) => {
       const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);

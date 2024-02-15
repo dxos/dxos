@@ -20,6 +20,7 @@ import {
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
+import { type EditorMode } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import {
@@ -84,11 +85,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     meta,
     ready: async (plugins) => {
       settings
-        .prop(settings.values.$editorMode!, 'editor-mode', LocalStorageStore.string)
-        .prop(settings.values.$toolbar!, 'toolbar', LocalStorageStore.bool)
-        .prop(settings.values.$experimental!, 'experimental', LocalStorageStore.bool)
-        .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool)
-        .prop(settings.values.$typewriter!, 'typewriter', LocalStorageStore.string);
+        .prop('editorMode', LocalStorageStore.enum<EditorMode>({ allowUndefined: true }))
+        .prop('toolbar', LocalStorageStore.bool({ allowUndefined: true }))
+        .prop('experimental', LocalStorageStore.bool({ allowUndefined: true }))
+        .prop('debug', LocalStorageStore.bool({ allowUndefined: true }))
+        .prop('typewriter', LocalStorageStore.string({ allowUndefined: true }));
 
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 

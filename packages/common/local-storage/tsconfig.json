@@ -8,6 +8,9 @@
   ],
   "references": [
     {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
       "path": "../async"
     },
     {

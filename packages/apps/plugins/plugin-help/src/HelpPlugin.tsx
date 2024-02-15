@@ -26,9 +26,10 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
   return {
     meta,
     ready: async () => {
+      // prettier-ignore
       settings
-        .prop(settings.values.$showHints!, 'show-hints', LocalStorageStore.bool)
-        .prop(settings.values.$showWelcome!, 'show-welcome', LocalStorageStore.bool);
+        .prop('showHints', LocalStorageStore.bool({ allowUndefined: true }))
+        .prop('showWelcome', LocalStorageStore.bool({ allowUndefined: true }));
     },
     provides: {
       context: ({ children }) => {

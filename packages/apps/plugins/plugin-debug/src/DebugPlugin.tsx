@@ -3,7 +3,7 @@
 //
 
 import { Bug, type IconProps } from '@phosphor-icons/react';
-import { batch } from '@preact/signals-core';
+import { batch, effect } from '@preact/signals-core';
 import React, { useEffect, useState } from 'react';
 
 import { type ClientPluginProvides } from '@braneframe/plugin-client';
@@ -40,9 +40,10 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
   return {
     meta,
     ready: async () => {
+      // prettier-ignore
       settings
-        .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool)
-        .prop(settings.values.$devtools!, 'devtools', LocalStorageStore.bool);
+        .prop('debug', LocalStorageStore.bool({ allowUndefined: true }))
+        .prop('devtools', LocalStorageStore.bool({ allowUndefined: true }));
 
       // TODO(burdon): Remove hacky dependency on global variable?
       // Used to test how composer handles breaking protocol changes.
@@ -89,12 +90,14 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             return;
           }
 
+          intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
+          const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
           const subscriptions: (() => void)[] = [];
 
-          // Devtools node.
           subscriptions.push(
-            settings.values.$devtools!.subscribe((debug) => {
-              if (debug) {
+            effect(() => {
+              // Devtools node.
+              if (settings.values.devtools) {
                 parent.addNode(DEBUG_PLUGIN, {
                   id: 'devtools',
                   label: ['devtools label', { ns: DEBUG_PLUGIN }],
@@ -104,17 +107,10 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               } else {
                 parent.removeNode('devtools');
               }
-            }),
-          );
 
-          const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-          intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
-
-          // Root debug node.
-          subscriptions.push(
-            settings.values.$debug!.subscribe((debug) => {
+              // Root debug node.
               const nodeId = 'debug';
-              if (debug) {
+              if (settings.values.debug) {
                 const [root] = parent.addNode(DEBUG_PLUGIN, {
                   id: nodeId,
                   label: ['debug label', { ns: DEBUG_PLUGIN }],
