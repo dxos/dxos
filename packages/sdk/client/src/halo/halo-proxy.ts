@@ -179,7 +179,6 @@ export class HaloProxy implements Halo {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identity = await this._serviceProvider.services.IdentityService.createIdentity({
       profile,
-      useAutomerge: true,
     });
     this._identityChanged.emit(identity);
     return identity;

@@ -36,6 +36,8 @@ import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
+import { assignDeep } from '@dxos/util';
+import { DocStructure } from '@dxos/echo-schema/src/automerge/types';
 
 // TODO(burdon): Factor out to spaces.
 export const createDefaultModelFactory = () => {
@@ -260,7 +262,7 @@ export class ClientServicesHost {
       SystemService: this._systemService,
 
       IdentityService: new IdentityServiceImpl(
-        (params, useAutomerge) => this._createIdentity(params, useAutomerge),
+        (params) => this._createIdentity(params),
         this._serviceContext.identityManager,
         this._serviceContext.keyring,
         (profile) => this._serviceContext.broadcastProfileUpdate(profile),
@@ -351,36 +353,24 @@ export class ClientServicesHost {
     await this._callbacks?.onReset?.();
   }
 
-  private async _createIdentity(params: CreateIdentityOptions, useAutomerge: boolean) {
+  private async _createIdentity(params: CreateIdentityOptions) {
     const identity = await this._serviceContext.createIdentity(params);
 
     // Setup default space.
     await this._serviceContext.initialized.wait();
     const space = await this._serviceContext.dataSpaceManager!.createSpace();
 
-    const obj: TypedObject = new Properties(undefined, { automerge: useAutomerge });
+    const obj: TypedObject = new Properties(undefined);
     obj[defaultKey] = identity.identityKey.toHex();
 
-    if (!useAutomerge) {
-      await this._serviceRegistry.services.DataService!.write({
-        spaceKey: space.key,
-        batch: {
-          objects: [createGenesisMutationFromTypedObject(obj)],
-        },
-      });
-      await this._serviceRegistry.services.DataService!.flush({ spaceKey: space.key });
-    } else {
-      // TODO(dmaretskyi): Refactor this.
-      const automergeIndex = space.automergeSpaceState.rootUrl;
-      invariant(automergeIndex);
-      const document = await this._serviceContext.automergeHost.repo.find(automergeIndex as any);
-      await document.whenReady();
+    const automergeIndex = space.automergeSpaceState.rootUrl;
+    invariant(automergeIndex);
+    const document = await this._serviceContext.automergeHost.repo.find<DocStructure>(automergeIndex as any);
+    await document.whenReady();
 
-      document.change((doc: any) => {
-        doc.objects ??= {};
-        doc.objects[obj[base]._id] = getRawDoc(obj).handle.docSync();
-      });
-    }
+    document.change((doc: DocStructure) => {
+      assignDeep(doc, ['objects', obj[base]._id], getRawDoc(obj).handle.docSync());
+    });
 
     return identity;
   }
