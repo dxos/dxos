@@ -73,6 +73,7 @@ test.describe('Collaboration tests', () => {
 
     await guest.getObjectLinks().last().click();
     await Markdown.waitForMarkdownTextbox(guest.page);
+    await Markdown.getMarkdownTextbox(guest.page).blur();
     await waitForExpect(async () => {
       expect(await Markdown.getCollaboratorCursors(host.page).count()).to.equal(0);
       expect(await Markdown.getCollaboratorCursors(guest.page).count()).to.equal(0);
