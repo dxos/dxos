@@ -15,9 +15,9 @@ import { type AutomergeContext } from './automerge-context';
 import { AutomergeObject } from './automerge-object';
 import { type DocStructure } from './types';
 import { type Hypergraph } from '../hypergraph';
+import { type EchoLegacyDatabase } from '../legacy-database';
 import { type EchoObject, base, isActualTypedObject, isAutomergeObject, isActualTextObject } from '../object';
 import { type Schema } from '../proto';
-import { EchoLegacyDatabase } from '../legacy-database';
 
 export type SpaceState = {
   // Url of the root automerge document.

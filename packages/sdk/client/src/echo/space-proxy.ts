@@ -12,7 +12,7 @@ import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
 import {
-  EchoDatabase,
+  type EchoDatabase,
   forceUpdate,
   setStateFromSnapshot,
   type AutomergeContext,

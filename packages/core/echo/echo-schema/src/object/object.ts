@@ -18,7 +18,7 @@ import {
 
 import { type EchoObject, base, debug, db, subscribe } from './types';
 import { type EchoDatabase } from '../database';
-import { EchoLegacyDatabase } from '../legacy-database';
+import { type EchoLegacyDatabase } from '../legacy-database';
 
 /**
  * Base class for all echo objects.

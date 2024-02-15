@@ -2,15 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, type ReadOnlyEvent } from '@dxos/async';
-import { UpdateEvent, type BatchUpdate, type DatabaseProxy, type ItemManager } from '@dxos/echo-db';
+import { type Event, type ReadOnlyEvent } from '@dxos/async';
+import { type UpdateEvent, type BatchUpdate, type DatabaseProxy, type ItemManager } from '@dxos/echo-db';
+import { type PublicKey } from '@dxos/keys';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { PublicKey } from '@dxos/keys';
-import { AutomergeDb, type AutomergeContext } from './automerge';
+import { type AutomergeDb, type AutomergeContext } from './automerge';
 import { type Hypergraph } from './hypergraph';
 import { EchoLegacyDatabase } from './legacy-database';
-import { TypedObject, type EchoObject } from './object';
+import { type TypedObject, type EchoObject } from './object';
 import { type FilterSource, type Query } from './query';
 
 export interface EchoDatabase {
