@@ -6,6 +6,7 @@ import { effect } from '@preact/signals-core';
 
 import type { UnsubscribeCallback } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
+import { registerSignalRuntime } from '@dxos/echo-signals';
 
 type PropType<T> = {
   get: (key: string) => T | undefined;
@@ -110,6 +111,7 @@ export class LocalStorageStore<T extends object> {
     private readonly _prefix: string,
     defaults?: T,
   ) {
+    registerSignalRuntime();
     this.values = E.object(defaults ?? ({} as T));
   }
 
