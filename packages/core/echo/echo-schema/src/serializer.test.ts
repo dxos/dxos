@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
-import { afterTest, describe, test } from '@dxos/test';
+import { describe, test } from '@dxos/test';
 
 import {
   LEGACY_TEXT_TYPE,

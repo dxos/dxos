@@ -8,7 +8,7 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { DocumentModel } from '@dxos/document-model';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
-import { type TypedObject, base, getRawDoc } from '@dxos/echo-schema';
+import { type TypedObject, base, getRawDoc, type DocStructure } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -17,10 +17,10 @@ import { ModelFactory } from '@dxos/model-factory';
 import { createSimplePeerTransportFactory, NetworkManager, type TransportFactory } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { type EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import { type Storage } from '@dxos/random-access-storage';
 import { TextModel } from '@dxos/text-model';
 import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
+import { assignDeep } from '@dxos/util';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 import { createDiagnostics } from './diagnostics';
@@ -36,27 +36,10 @@ import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
-import { assignDeep } from '@dxos/util';
-import { DocStructure } from '@dxos/echo-schema/src/automerge/types';
 
 // TODO(burdon): Factor out to spaces.
 export const createDefaultModelFactory = () => {
   return new ModelFactory().registerModel(DocumentModel).registerModel(TextModel);
-};
-
-// TODO(wittjosiah): Factor out.
-const createGenesisMutationFromTypedObject = (obj: TypedObject): EchoObject => {
-  const snapshot = obj[base]._createSnapshot();
-
-  return {
-    objectId: obj[base]._id,
-    genesis: {
-      modelType: obj[base]._modelConstructor.meta.type,
-    },
-    snapshot: {
-      model: snapshot,
-    },
-  };
 };
 
 export type ClientServicesHostParams = {

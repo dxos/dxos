@@ -130,7 +130,7 @@ export class Serializer {
   }
 
   private async _importObject(database: EchoDatabase, object: SerializedObject) {
-    const { '@id': id, '@type': type, '@model': model, '@deleted': deleted, '@meta': meta, ...data } = object;
+    const { '@id': id, '@type': type, '@deleted': deleted, '@meta': meta, ...data } = object;
 
     const obj = new TypedObject(Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@'))), {
       meta,
