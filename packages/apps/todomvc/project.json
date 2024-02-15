@@ -20,6 +20,7 @@
       ],
       "executor": "@nx/vite:build",
       "options": {
+        "generatePackageJson": false,
         "outputPath": "packages/apps/todomvc/out/todomvc"
       },
       "outputs": [

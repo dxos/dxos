@@ -41,8 +41,7 @@ const Story = () => {
 export default {
   title: 'plugin-table/ObjectTable',
   component: ObjectTable,
-  // TODO(burdon): createIdentity doesn't work.
-  render: () => <ClientRepeater Component={Story} createIdentity createSpace />,
+  render: () => <ClientRepeater component={Story} createIdentity createSpace />,
   decorators: [withTheme, FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',

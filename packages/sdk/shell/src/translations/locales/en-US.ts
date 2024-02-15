@@ -7,7 +7,8 @@ export const os = {
   'identity offline description': 'Offline',
   'sidebar label': 'DXOS sidebar',
   'copy invitation code label': 'Copy URL',
-  'copy invitation code success label': 'Copied',
+  'copy success label': 'Copied',
+  'copy self public key label': 'Copy public key',
   'open share panel label': 'View QR code',
   'joining space heading': 'Joining space',
   'join space heading': 'Enter space invitation',
@@ -94,6 +95,7 @@ export const os = {
   'invite many qr label': 'Multiple-use',
   'invite many list item label': 'Active multiple-use invitation',
   'invite options label': 'Change the active invite option.',
+  'reset in progress label': 'Resetting...',
   'confirm label': 'Confirm',
   'reset identity input label':
     'This will clear this device and all associated data. Type {{confirmationValue}} and confirm to continue.',

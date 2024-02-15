@@ -219,7 +219,7 @@ export const Default = {
   render: (args: { id: number }) => (
     <ClipboardProvider>
       <Tooltip.Provider>
-        <ClientRepeater Component={Invitations} count={3} />
+        <ClientRepeater component={Invitations} count={3} />
       </Tooltip.Provider>
     </ClipboardProvider>
   ),

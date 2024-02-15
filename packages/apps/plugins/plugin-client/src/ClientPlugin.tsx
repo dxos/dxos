@@ -92,7 +92,7 @@ export const ClientPlugin = ({
           // TODO(wittjosiah): Ideally this would be per app rather than per identity.
           firstRun = true;
         } else if (deviceInvitationCode) {
-          void client.shell.initializeIdentity({ invitationCode: deviceInvitationCode });
+          await client.shell.initializeIdentity({ invitationCode: deviceInvitationCode });
         }
 
         if (client.halo.identity.get()) {

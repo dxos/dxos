@@ -15,6 +15,7 @@
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
+        "generatePackageJson": false,
         "outputPath": "packages/apps/composer-app/out/composer"
       },
       "outputs": [

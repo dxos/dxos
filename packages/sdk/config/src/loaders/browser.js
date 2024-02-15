@@ -38,18 +38,21 @@ export const Defaults = () => {
   return __CONFIG_DEFAULTS__;
 };
 
+let localforage = null;
 /**
  * Settings config from browser storage.
  */
 export const Storage = async () => {
   try {
-    const localforage = await import('localforage');
+    if (!localforage) {
+      localforage = await import('localforage');
+    }
     const config = await localforage.getItem('dxos.org/settings/config');
     if (config) {
       return config;
     }
   } catch (err) {
-    log.warn('Failed to load config', { err });
+    log('Failed to load config', { err });
   }
   return {};
 };

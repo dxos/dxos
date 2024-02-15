@@ -47,7 +47,7 @@ export class RequestProcessor {
         .join('\n');
 
       // Match prompt, and include content over multiple lines.
-      const match = text.match(/\/(\w+)\s*(.+)/s);
+      const match = text.match(/\/([\w-]+)\s*(.*)/s);
       if (match) {
         start();
 
@@ -114,6 +114,7 @@ export class RequestProcessor {
       inputs[input.name] = await this.getTemplateInput(space, input, context);
     }
 
+    // TODO(burdon): Test using JSON schema.
     // TODO(burdon): OpenAI-specific kwargs.
     const withSchema = false;
     const customArgs: any = withSchema && {
@@ -210,7 +211,7 @@ export class RequestProcessor {
         const { objects: schemas } = space.db.query(Schema.filter());
         const schema = schemas.find((schema) => schema.typename === type);
         if (schema) {
-          // TODO(burdon): Use annotations.
+          // TODO(burdon): Use effect schema to generate JSON schema.
           const name = schema.typename.split(/[.-/]/).pop();
           const fields = schema.props.filter(({ type }) => type === Schema.PropType.STRING).map(({ id }) => id);
           return () => `${name}: ${fields.join(', ')}`;

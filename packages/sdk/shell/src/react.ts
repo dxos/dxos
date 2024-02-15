@@ -5,5 +5,6 @@
 export * from './components';
 export * from './composites';
 export * from './panels';
+export * from './steps';
 export * from './styles';
 export * from './translations';

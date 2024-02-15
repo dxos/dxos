@@ -18,7 +18,6 @@ const DocumentMain: FC<{ document: DocumentType } & Pick<EditorMainProps, 'toolb
   const identity = useIdentity();
   const space = getSpaceForObject(document);
   const model = useTextModel({ identity, space, text: document.content });
-
   const comments = useMemo<Comment[]>(() => {
     return document.comments?.map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! }));
   }, [document.comments]);

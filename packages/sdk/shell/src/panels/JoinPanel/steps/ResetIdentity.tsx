@@ -17,6 +17,7 @@ export type ResetIdentityProps = JoinStepProps & {
 
 export type ResetIdentityImplProps = {
   disabled?: boolean;
+  pending?: boolean;
   validationMessage?: string;
   onConfirm?: () => void;
 };
@@ -25,21 +26,29 @@ export const ResetIdentity = ({ send, active }: ResetIdentityProps) => {
   const client = useClient();
   const { t } = useTranslation('os');
   const [validationMessage, setValidationMessage] = useState('');
+  const [pending, setPending] = useState(false);
   const resetIdentity = () => {
+    setPending(true);
     void client.reset().then(
       () => send?.({ type: 'resetIdentity' }),
       (error) => {
         log.catch(error);
         setValidationMessage(t('failed to reset identity message'));
+        setPending(false);
       },
     );
   };
   return (
-    <ResetIdentityImpl disabled={!active} validationMessage={validationMessage} onConfirm={() => resetIdentity()} />
+    <ResetIdentityImpl
+      disabled={!active}
+      pending={pending}
+      validationMessage={validationMessage}
+      onConfirm={() => resetIdentity()}
+    />
   );
 };
 
-export const ResetIdentityImpl = ({ disabled, validationMessage, onConfirm }: ResetIdentityImplProps) => {
+export const ResetIdentityImpl = ({ disabled, pending, validationMessage, onConfirm }: ResetIdentityImplProps) => {
   const { t } = useTranslation('os');
   const confirmationValue = t('confirmation value');
   const [inputValue, setInputValue] = useState('');
@@ -59,11 +68,11 @@ export const ResetIdentityImpl = ({ disabled, validationMessage, onConfirm }: Re
         <Action
           // TODO(wittjosiah): Probably make this red?
           variant='primary'
-          disabled={disabled || inputValue !== confirmationValue}
+          disabled={disabled || pending || inputValue !== confirmationValue}
           onClick={() => onConfirm?.()}
           data-testid='reset-identity-input-confirm'
         >
-          {t('confirm label')}
+          {pending ? t('reset in progress label') : t('confirm label')}
         </Action>
       </Actions>
     </>

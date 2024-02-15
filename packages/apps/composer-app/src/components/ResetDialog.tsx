@@ -9,12 +9,12 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { Config, Defaults } from '@dxos/react-client';
 import {
   AlertDialog,
-  Button,
-  Message,
-  useTranslation,
-  DropdownMenu,
   type AlertDialogRootProps,
+  Button,
+  DropdownMenu,
+  Message,
   Tooltip,
+  useTranslation,
 } from '@dxos/react-ui';
 import { type Provider } from '@dxos/util';
 

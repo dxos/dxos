@@ -40,6 +40,7 @@ const authorId = PublicKey.random().toHex();
 //
 
 const Editor: FC<{
+  id?: string;
   item: { text: TextObject };
   comments: Comment[];
   selected?: string;
@@ -48,6 +49,7 @@ const Editor: FC<{
   onUpdateComment: CommentsOptions['onUpdate'];
   onSelectComment: CommentsOptions['onSelect'];
 }> = ({
+  id = 'test',
   item,
   selected: selectedValue,
   comments: commentRanges,
@@ -68,7 +70,7 @@ const Editor: FC<{
     }
   }, [selected, commentRanges, selectedValue]);
 
-  useComments(view.current, commentRanges);
+  useComments(view.current, id, commentRanges);
 
   const extensions = useMemo(() => {
     return [
