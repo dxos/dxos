@@ -109,6 +109,7 @@ export const initializeNodeObservability = async ({
 }: NodeObservabilityOptions): Promise<Observability> => {
   log('initializeCliObservability', { config });
 
+  // TODO(nf): make CLI build populate runtime.app.build config?
   const release = `${namespace}@${version}`;
   const environment = process.env.DX_ENVIRONMENT ?? 'unknown';
 
@@ -131,6 +132,7 @@ export const initializeNodeObservability = async ({
 
   observability.setTag('installationId', installationId);
 
+  // TODO(nf): cache ipdata to avoid repeated requests
   const IPDATA_API_KEY = config.get('runtime.app.env.DX_IPDATA_API_KEY');
   try {
     const res = await fetch(`https://api.ipdata.co/?api-key=${IPDATA_API_KEY}`);

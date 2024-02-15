@@ -1,7 +1,7 @@
 #!/usr/bin/env -S node --no-warnings
 
-# The following line may have been overridden at the time of `npm publish` or `pnpm deploy`.
-process.env.DX_ENVIRONMENT = process.env.DX_ENVIRONMENT ?? 'production'
+# Note: `npm publish` or `pnpm deploy` will change the default depending on the DX_ENVIRONMENT at time of invocation.
+process.env.DX_ENVIRONMENT = process.env.DX_ENVIRONMENT ?? 'development'
 
 const oclif = require('@oclif/core')
 
