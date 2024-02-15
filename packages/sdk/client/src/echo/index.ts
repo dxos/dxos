@@ -15,7 +15,7 @@ export {
   createSubscription,
   hasType,
   isTypedObject,
-  EchoDatabase,
+  type EchoDatabase,
   Expando,
   Filter,
   Query,
