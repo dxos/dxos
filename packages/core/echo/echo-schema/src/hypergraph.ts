@@ -14,12 +14,12 @@ import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
 import { type AutomergeDb } from './automerge';
-import { type EchoDatabase } from './database';
+import { type EchoDatabaseImpl, type EchoDatabase } from './database';
 import { type EchoObject, type TypedObject } from './object';
 import {
-  filterMatch,
   Filter,
   Query,
+  filterMatch,
   type FilterSource,
   type QueryContext,
   type QueryResult,
@@ -31,7 +31,7 @@ import { TypeCollection } from './type-collection';
  * Manages cross-space database interactions.
  */
 export class Hypergraph {
-  private readonly _databases = new ComplexMap<PublicKey, EchoDatabase>(PublicKey.hash);
+  private readonly _databases = new ComplexMap<PublicKey, EchoDatabaseImpl>(PublicKey.hash);
   // TODO(burdon): Rename.
   private readonly _owningObjects = new ComplexMap<PublicKey, unknown>(PublicKey.hash);
   private readonly _types = new TypeCollection();
@@ -54,7 +54,7 @@ export class Hypergraph {
    * @param owningObject Database owner, usually a space.
    */
   // TODO(burdon): When is the owner not a space?
-  _register(spaceKey: PublicKey, database: EchoDatabase, owningObject?: unknown) {
+  _register(spaceKey: PublicKey, database: EchoDatabaseImpl, owningObject?: unknown) {
     this._databases.set(spaceKey, database);
     this._owningObjects.set(spaceKey, owningObject);
     database._updateEvent.on(this._onUpdate.bind(this));
@@ -209,7 +209,7 @@ class SpaceQuerySource implements QuerySource {
   private _filter: Filter | undefined = undefined;
   private _results?: QueryResult<EchoObject>[] = undefined;
 
-  constructor(private readonly _database: EchoDatabase) {}
+  constructor(private readonly _database: EchoDatabaseImpl) {}
 
   get spaceKey() {
     return this._database.spaceKey;
@@ -225,8 +225,8 @@ class SpaceQuerySource implements QuerySource {
       return (
         !this._results ||
         this._results.find((result) => result.id === object.id) ||
-        (this._database._objects.has(object.id) &&
-          filterMatch(this._filter!, this._database._objects.get(object.id)!)) ||
+        (this._database._legacy._objects.has(object.id) &&
+          filterMatch(this._filter!, this._database._legacy._objects.get(object.id)!)) ||
         (this._database.automerge._objects.has(object.id) &&
           filterMatch(this._filter!, this._database.automerge._objects.get(object.id)!))
       );
@@ -244,7 +244,7 @@ class SpaceQuerySource implements QuerySource {
     }
 
     if (!this._results) {
-      this._results = [...this._database._objects.values(), ...this._database.automerge._objects.values()]
+      this._results = [...this._database._legacy._objects.values(), ...this._database.automerge._objects.values()]
         .filter((object) => filterMatch(this._filter!, object))
         .map((object) => ({
           id: object.id,

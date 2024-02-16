@@ -19,18 +19,16 @@ import { type Presentation, type ProfileDocument } from '@dxos/protocols/proto/d
 
 import { type CreateIdentityOptions, type IdentityManager } from './identity-manager';
 
-const CREATE_PROFILE_WITH_AUTOMERGE_DEFAULT = true;
-
 export class IdentityServiceImpl implements IdentityService {
   constructor(
-    private readonly _createIdentity: (params: CreateIdentityOptions, useAutomerge: boolean) => Promise<Identity>,
+    private readonly _createIdentity: (params: CreateIdentityOptions) => Promise<Identity>,
     private readonly _identityManager: IdentityManager,
     private readonly _keyring: Keyring,
     private readonly _onProfileUpdate?: (profile: ProfileDocument | undefined) => Promise<void>,
   ) {}
 
   async createIdentity(request: CreateIdentityRequest): Promise<Identity> {
-    await this._createIdentity(request.profile ?? {}, request.useAutomerge ?? CREATE_PROFILE_WITH_AUTOMERGE_DEFAULT);
+    await this._createIdentity(request.profile ?? {});
     return this._getIdentity()!;
   }
 

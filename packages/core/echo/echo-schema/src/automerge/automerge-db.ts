@@ -3,7 +3,7 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
-import { type DocHandle, type DocHandleChangePayload, isValidAutomergeUrl } from '@dxos/automerge/automerge-repo';
+import { isValidAutomergeUrl, type DocHandle, type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { type Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
@@ -19,8 +19,8 @@ import {
 } from './automerge-doc-loader';
 import { AutomergeObject, getAutomergeObjectCore } from './automerge-object';
 import { type SpaceDoc } from './types';
-import { type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
+import { type EchoLegacyDatabase } from '../legacy-database';
 import {
   base,
   type EchoObject,
@@ -50,13 +50,13 @@ export class AutomergeDb {
   /**
    * @internal
    */
-  readonly _echoDatabase: EchoDatabase;
+  readonly _echoDatabase: EchoLegacyDatabase;
   private readonly _automergeDocLoader: AutomergeDocumentLoader;
 
   constructor(
     public readonly graph: Hypergraph,
     public readonly automerge: AutomergeContext,
-    echoDatabase: EchoDatabase,
+    echoDatabase: EchoLegacyDatabase,
   ) {
     this._echoDatabase = echoDatabase;
     this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this.spaceKey, automerge);

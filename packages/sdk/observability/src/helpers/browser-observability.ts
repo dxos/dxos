@@ -90,6 +90,8 @@ export const initializeAppObservability = async ({
   // TODO(nf): configure mode
   const observability = new Observability({
     namespace,
+    release,
+    environment,
     group,
     mode,
     config,

@@ -5,9 +5,9 @@
 import { DocumentModel } from '@dxos/document-model';
 import { type DatabaseProxy } from '@dxos/echo-db';
 import {
+  DatabaseTestBuilder,
   createMemoryDatabase,
   createRemoteDatabaseFromDataServiceHost,
-  DatabaseTestBuilder,
   type DatabaseTestPeer as BasePeer,
 } from '@dxos/echo-pipeline/testing';
 import { PublicKey } from '@dxos/keys';
@@ -16,7 +16,7 @@ import { TextModel } from '@dxos/text-model';
 import { ComplexMap } from '@dxos/util';
 
 import { AutomergeContext } from '../automerge';
-import { EchoDatabase } from '../database';
+import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 import { schemaBuiltin } from '../proto';
 
@@ -36,7 +36,7 @@ export const createDatabase = async (graph = new Hypergraph()) => {
   const host = await createMemoryDatabase(modelFactory);
   const proxy = await createRemoteDatabaseFromDataServiceHost(modelFactory, host.backend.createDataServiceHost());
   const automergeContext = new AutomergeContext();
-  const db = new EchoDatabase(proxy.itemManager, proxy.backend as DatabaseProxy, graph, automergeContext);
+  const db = new EchoDatabaseImpl(proxy.itemManager, proxy.backend as DatabaseProxy, graph, automergeContext);
   await db.automerge.open({
     rootUrl: automergeContext.repo.create().url,
   });
@@ -77,7 +77,7 @@ export class TestBuilder {
 }
 
 export class TestPeer {
-  public db = new EchoDatabase(this.base.items, this.base.proxy, this.builder.graph, this.builder.automergeContext);
+  public db = new EchoDatabaseImpl(this.base.items, this.base.proxy, this.builder.graph, this.builder.automergeContext);
 
   constructor(
     public readonly builder: TestBuilder,
@@ -88,7 +88,7 @@ export class TestPeer {
 
   async reload() {
     await this.base.reload();
-    this.db = new EchoDatabase(this.base.items, this.base.proxy, this.builder.graph, this.builder.automergeContext);
+    this.db = new EchoDatabaseImpl(this.base.items, this.base.proxy, this.builder.graph, this.builder.automergeContext);
     await this.db.automerge.open({
       rootUrl: this.automergeDocId,
     });

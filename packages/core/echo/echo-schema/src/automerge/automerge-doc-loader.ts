@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { asyncTimeout, Event } from '@dxos/async';
+import { Event } from '@dxos/async';
 import { type DocHandle, type AutomergeUrl, type DocumentId } from '@dxos/automerge/automerge-repo';
-import { cancelWithContext, type Context, ContextDisposedError } from '@dxos/context';
+import { cancelWithContext, type Context } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -13,7 +13,6 @@ import { log } from '@dxos/log';
 import type { AutomergeContext } from './automerge-context';
 import { type SpaceState } from './automerge-db';
 import { type SpaceDoc } from './types';
-import { getGlobalAutomergePreference } from '../automerge-preference';
 
 type SpaceDocumentLinks = SpaceDoc['links'];
 
@@ -50,26 +49,16 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       return;
     }
     if (!spaceState.rootUrl) {
-      if (getGlobalAutomergePreference()) {
-        log.error('Database opened with no rootUrl');
-      }
+      log.error('Database opened with no rootUrl', { spaceKey: this._spaceKey });
       this._createContextBoundSpaceRootDocument(ctx);
     } else {
-      try {
-        const existingDocHandle = await this._initDocHandle(ctx, spaceState.rootUrl);
-        const doc = existingDocHandle.docSync();
-        invariant(doc);
-        if (doc.access == null) {
-          this._initDocAccess(existingDocHandle);
-        }
-        this._spaceRootDocHandle = existingDocHandle;
-      } catch (err) {
-        if (err instanceof ContextDisposedError || getGlobalAutomergePreference()) {
-          throw err;
-        }
-        log.warn('falling back to a temporary document on loading error', { err, space: this._spaceKey });
-        this._createContextBoundSpaceRootDocument(ctx);
+      const existingDocHandle = await this._initDocHandle(ctx, spaceState.rootUrl);
+      const doc = existingDocHandle.docSync();
+      invariant(doc);
+      if (doc.access == null) {
+        this._initDocAccess(existingDocHandle);
       }
+      this._spaceRootDocHandle = existingDocHandle;
     }
   }
 
@@ -130,25 +119,20 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   private async _initDocHandle(ctx: Context, url: string) {
     const docHandle = this._automerge.repo.find(url as DocumentId);
     // TODO(mykola): Remove check for global preference or timeout?
-    if (getGlobalAutomergePreference()) {
-      // Loop on timeout.
-      while (true) {
-        try {
-          await warnAfterTimeout(5_000, 'Automerge root doc load timeout (AutomergeDb)', async () => {
-            await cancelWithContext(ctx, docHandle.whenReady(['ready'])); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
-          });
-          break;
-        } catch (err) {
-          if (`${err}`.includes('Timeout')) {
-            log.info('wraparound', { id: docHandle.documentId, state: docHandle.state });
-            continue;
-          }
-
-          throw err;
+    while (true) {
+      try {
+        await warnAfterTimeout(5_000, 'Automerge root doc load timeout (AutomergeDb)', async () => {
+          await cancelWithContext(ctx, docHandle.whenReady(['ready'])); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
+        });
+        break;
+      } catch (err) {
+        if (`${err}`.includes('Timeout')) {
+          log.info('wraparound', { id: docHandle.documentId, state: docHandle.state });
+          continue;
         }
+
+        throw err;
       }
-    } else {
-      await asyncTimeout(docHandle.whenReady(['ready']), 1_000, 'short doc ready timeout with automerge disabled');
     }
 
     if (docHandle.state === 'unavailable') {

@@ -61,7 +61,7 @@ export class SegmentTelemetry {
     try {
       this._analytics.track({
         ...options,
-        context: this._getTags(),
+        properties: { ...options.properties, ...this._getTags() },
         userId,
         anonymousId: anonymousId!,
         event,
