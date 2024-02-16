@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "messenger-model",
   "sourceRoot": "packages/core/echo/messenger-model/src",
   "projectType": "library",
   "targets": {
@@ -13,10 +15,8 @@
     "lint": {},
     "test": {}
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "name": "messenger-model"
+  ]
 }
