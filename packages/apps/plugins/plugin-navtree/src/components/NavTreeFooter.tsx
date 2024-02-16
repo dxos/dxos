@@ -8,7 +8,7 @@ import React from 'react';
 
 import { SettingsAction, useIntent } from '@dxos/app-framework';
 import { useConfig } from '@dxos/react-client';
-import { Button, Tooltip, Popover, useSidebars, useTranslation, useThemeContext, Link, Message } from '@dxos/react-ui';
+import { Button, Tooltip, Popover, useSidebars, useTranslation, Link, Message, Trans } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { NAVTREE_PLUGIN } from '../meta';
@@ -22,7 +22,6 @@ export const NavTreeFooter = () => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const { navigationSidebarOpen } = useSidebars(NAVTREE_PLUGIN);
   const { dispatch } = useIntent();
-  const { tx } = useThemeContext();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
 
   const releaseUrl =
@@ -50,24 +49,42 @@ export const NavTreeFooter = () => {
                 <Message.Body>
                   {t('technology preview message')}
                   <br />
-                  <Link href='https://docs.dxos.org/composer#technology-preview' target='_blank' rel='noreferrer'>
+                  <Link
+                    href='https://docs.dxos.org/composer#technology-preview'
+                    target='_blank'
+                    rel='noreferrer'
+                    variant='neutral'
+                  >
                     {t('learn more label')}
                     <ArrowSquareOut className='inline mis-1' weight='bold' />
                   </Link>
                 </Message.Body>
               </Message.Root>
-              {timestamp && (
-                <p className='text-sm plb-4 pli-5'>
-                  {t('released message', {
-                    released: formatDistance(new Date(timestamp), new Date(), { addSuffix: true }),
-                  })}
-                  <br />
-                  <Link href={releaseUrl} target='_blank' rel='noreferrer'>
-                    {t('see release label')}
-                    <ArrowSquareOut className='inline mis-1' weight='bold' />
-                  </Link>
+              <div role='none' className='plb-4 pli-5 space-b-2 text-base'>
+                {timestamp && (
+                  <p>
+                    {t('released message', {
+                      released: formatDistance(new Date(timestamp), new Date(), { addSuffix: true }),
+                    })}
+                    <br />
+                    <Link href={releaseUrl} target='_blank' rel='noreferrer' variant='neutral'>
+                      {t('see release label')}
+                      <ArrowSquareOut className='inline mis-1' weight='bold' />
+                    </Link>
+                  </p>
+                )}
+                <p>
+                  <Trans
+                    {...{
+                      t,
+                      i18nKey: 'powered by dxos message',
+                      components: {
+                        dxosLink: <Link href='https://dxos.org' target='_blank' rel='noreferrer' variant='neutral' />,
+                      },
+                    }}
+                  />
                 </p>
-              )}
+              </div>
               <Popover.Arrow />
             </Popover.Content>
           </Popover.Portal>

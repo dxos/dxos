@@ -20,6 +20,7 @@ export default [
         'learn more label': 'Learn more',
         'released message': 'This version released {{released}}.',
         'see release label': 'See release on GitHub',
+        'powered by dxos message': 'Powered by <dxosLink>DXOS</dxosLink>',
       },
     },
   },
