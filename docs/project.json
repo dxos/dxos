@@ -1,4 +1,6 @@
 {
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "name": "docs",
   "projectType": "application",
   "targets": {
     "apidoc": {
@@ -79,7 +81,5 @@
         "{projectRoot}/apidoc.json"
       ]
     }
-  },
-  "$schema": "../node_modules/nx/schemas/project-schema.json",
-  "name": "docs"
+  }
 }

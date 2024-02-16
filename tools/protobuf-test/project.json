@@ -1,4 +1,6 @@
 {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "protobuf-test",
   "sourceRoot": "tools/protobuf-test/src",
   "projectType": "library",
   "targets": {
@@ -14,7 +16,5 @@
         "{projectRoot}/dist"
       ]
     }
-  },
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "name": "protobuf-test"
+  }
 }

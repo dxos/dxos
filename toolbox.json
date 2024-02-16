@@ -4,6 +4,8 @@
       "@dxos/dxos"
     ],
     "fixedKeys": [
+      "$schema",
+      "name",
       "sourceRoot",
       "projectType",
       "targets"
