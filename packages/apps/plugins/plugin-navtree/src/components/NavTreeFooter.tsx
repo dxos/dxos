@@ -42,9 +42,9 @@ export const NavTreeFooter = () => {
           </Popover.Trigger>
           <Popover.Portal>
             <Popover.Content side='top' role='message' classNames='z-[12] bg-warning-500 max-is-prose'>
-              <Message.Root valence='warning' className='rounded-be-none'>
+              <Message.Root valence='warning' className='rounded-be-none p-5'>
                 <Message.Title>
-                  <Warning weight='duotone' className='inline mie-2 is-5 bs-5' />
+                  <Warning weight='duotone' className='inline mie-2 is-6 bs-6' />
                   <span>{t('data loss message')}</span>
                 </Message.Title>
                 <Message.Body>
@@ -57,7 +57,7 @@ export const NavTreeFooter = () => {
                 </Message.Body>
               </Message.Root>
               {timestamp && (
-                <p className='text-sm p-4'>
+                <p className='text-sm plb-4 pli-5'>
                   {t('released message', {
                     released: formatDistance(new Date(timestamp), new Date(), { addSuffix: true }),
                   })}
