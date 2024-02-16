@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDoubleLeft, GearSix } from '@phosphor-icons/react';
+import { CaretDoubleLeft } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { LayoutAction, NavigationAction, SettingsAction, Surface, useIntent } from '@dxos/app-framework';
+import { LayoutAction, NavigationAction, Surface, useIntent } from '@dxos/app-framework';
 import { type Node, type Graph, isGraphNode } from '@dxos/app-graph';
-import { useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, ElevationProvider, Tooltip, useMediaQuery, useSidebars, useTranslation } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
@@ -18,10 +17,10 @@ import {
   type NavTreeProps,
   emptyBranchDroppableId,
 } from '@dxos/react-ui-navtree';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { getSize } from '@dxos/react-ui-theme';
 import { arrayMove } from '@dxos/util';
 
-import { VersionInfo } from './VersionInfo';
+import { NavTreeFooter } from './NavTreeFooter';
 import { NAVTREE_PLUGIN } from '../meta';
 import { getPersistenceParent } from '../util';
 
@@ -51,7 +50,6 @@ export const NavTreeContainer = ({
   activeId?: string;
   popoverAnchorId?: string;
 }) => {
-  const config = useConfig();
   const identity = useIdentity();
 
   const { t } = useTranslation(NAVTREE_PLUGIN);
@@ -189,28 +187,6 @@ export const NavTreeContainer = ({
             <div role='none' className='grow' />
             <Tooltip.Root>
               <Tooltip.Trigger asChild>
-                {/* TODO(burdon): Reconcile with action created by LayoutPlugin. */}
-                <Button
-                  data-joyride='welcome/settings'
-                  variant='ghost'
-                  classNames='pli-2.5'
-                  data-testid='treeView.openSettings'
-                  {...(!navigationSidebarOpen && { tabIndex: -1 })}
-                  onClick={() => dispatch({ action: SettingsAction.OPEN })}
-                >
-                  <span className='sr-only'>{t('open settings label', { ns: NAVTREE_PLUGIN })}</span>
-                  <GearSix className={mx(getSize(4), 'rotate-90')} />
-                </Button>
-              </Tooltip.Trigger>
-              <Tooltip.Portal>
-                <Tooltip.Content classNames='z-[70]'>
-                  {t('open settings label', { ns: NAVTREE_PLUGIN })}
-                  <Tooltip.Arrow />
-                </Tooltip.Content>
-              </Tooltip.Portal>
-            </Tooltip.Root>
-            <Tooltip.Root>
-              <Tooltip.Trigger asChild>
                 <Button
                   variant='ghost'
                   classNames='lg:hidden pli-2 pointer-fine:pli-1'
@@ -248,7 +224,7 @@ export const NavTreeContainer = ({
             renderPresence={renderPresence}
           />
         </div>
-        <VersionInfo config={config} />
+        <NavTreeFooter />
       </div>
     </ElevationProvider>
   );

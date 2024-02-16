@@ -65,7 +65,7 @@ export const mainNotch: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx(
     'fixed z-[11] block-end-0 inline-start-0 rounded-se-lg min-bs-[var(--rail-size)] is-fit separator-separator surface-base',
     'transition-[border-width] box-content border-bs border-ie data-[nav-sidebar-state=open]:border-bs-0 data-[nav-sidebar-state=open]:border-ie-0',
-    'grid grid-rows-1 pli-1 grid-cols-[repeat(auto-fit,var(--rail-action))]',
+    'pli-1 grid grid-cols-[repeat(auto-fit,var(--rail-action))]',
     sidebarSlots.start.notch,
     ...etc,
   );
