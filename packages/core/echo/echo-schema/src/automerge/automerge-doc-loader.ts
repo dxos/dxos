@@ -23,8 +23,7 @@ export interface AutomergeDocumentLoader {
   getSpaceRootDocHandle(): DocHandle<SpaceDoc>;
   createDocumentForObject(objectId: string): DocHandle<SpaceDoc>;
   loadLinkedObjects(links: SpaceDocumentLinks): void;
-  onObjectCreatedInDocument(handle: DocHandle<SpaceDoc>, objectId: string): void;
-  onObjectRebound(handle: DocHandle<SpaceDoc>, objectId: string): void;
+  onObjectBoundToDocument(handle: DocHandle<SpaceDoc>, objectId: string): void;
 }
 
 /**
@@ -71,6 +70,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     invariant(this._spaceRootDocHandle);
     const spaceDocHandle = this._automerge.repo.create<SpaceDoc>();
     this._initDocAccess(spaceDocHandle);
+    this.onObjectBoundToDocument(spaceDocHandle, objectId);
     this._spaceRootDocHandle.change((newDoc: SpaceDoc) => {
       newDoc.links ??= {};
       newDoc.links[objectId] = spaceDocHandle.url;
@@ -78,17 +78,8 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     return spaceDocHandle;
   }
 
-  public onObjectCreatedInDocument(handle: DocHandle<SpaceDoc>, objectId: string) {
+  public onObjectBoundToDocument(handle: DocHandle<SpaceDoc>, objectId: string) {
     this._objectDocumentHandles.set(objectId, handle);
-  }
-
-  public onObjectRebound(handle: DocHandle<SpaceDoc>, objectId: string) {
-    this._objectDocumentHandles.set(objectId, handle);
-  }
-
-  public getDocumentHandles(): Iterable<DocHandle<SpaceDoc>> {
-    invariant(this._spaceRootDocHandle);
-    return [this._spaceRootDocHandle, ...this._objectDocumentHandles.values()];
   }
 
   public loadLinkedObjects(links: SpaceDocumentLinks) {

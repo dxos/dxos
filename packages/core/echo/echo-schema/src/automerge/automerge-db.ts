@@ -147,9 +147,8 @@ export class AutomergeDb {
       spaceDocHandle.on('change', this._onDocumentUpdate);
     } else {
       spaceDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
+      this._automergeDocLoader.onObjectBoundToDocument(spaceDocHandle, obj.id);
     }
-
-    this._automergeDocLoader.onObjectCreatedInDocument(spaceDocHandle, obj.id);
 
     (obj[base] as AutomergeObject)._bind({
       db: this,
@@ -255,10 +254,11 @@ export class AutomergeDb {
   }
 
   private _createObjectInDocument(docHandle: DocHandle<SpaceDoc>, objectId: string) {
+    invariant(!this._objects.get(objectId));
     const obj = new AutomergeObject();
     obj[base]._core.id = objectId;
     this._objects.set(obj.id, obj);
-    this._automergeDocLoader.onObjectCreatedInDocument(docHandle, objectId);
+    this._automergeDocLoader.onObjectBoundToDocument(docHandle, objectId);
     (obj[base] as AutomergeObject)._bind({
       db: this,
       docHandle,
@@ -278,7 +278,7 @@ export class AutomergeDb {
         path: automergeObjectCore.mountPath,
         assignFromLocalState: false,
       });
-      this._automergeDocLoader.onObjectRebound(docHandle, objectId);
+      this._automergeDocLoader.onObjectBoundToDocument(docHandle, objectId);
     }
   }
 }
