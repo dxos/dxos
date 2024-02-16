@@ -40,7 +40,11 @@ export const NavTreeFooter = () => {
             </Button>
           </Popover.Trigger>
           <Popover.Portal>
-            <Popover.Content side='top' role='message' classNames='z-[12] bg-warning-500 max-is-prose'>
+            <Popover.Content
+              side='top'
+              role='message'
+              classNames='z-[12] bg-warning-500 max-is-[min(calc(100vw-16px),40ch)]'
+            >
               <Message.Root valence='warning' className='rounded-be-none p-5'>
                 <Message.Title>
                   <Warning weight='duotone' className='inline mie-2 is-6 bs-6' />
