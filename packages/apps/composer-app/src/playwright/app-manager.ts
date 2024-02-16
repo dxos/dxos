@@ -111,7 +111,7 @@ export class AppManager {
   }
 
   async joinSpace() {
-    await this.page.getByTestId('navtree.treeItem.actionsLevel0').nth(1).click({ button: 'right' });
+    await this.page.getByTestId('navtree.treeItem.actionsLevel0').nth(1).click();
     return this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
@@ -159,14 +159,24 @@ export class AppManager {
   }
 
   async renameObject(newName: string, nth = 0) {
-    await this.page.getByTestId('spacePlugin.object').nth(nth).click({ button: 'right' });
+    await this.page
+      .getByTestId('spacePlugin.object')
+      .nth(nth)
+      .getByTestId('navtree.treeItem.actionsLevel2')
+      .first()
+      .click();
     await this.page.getByTestId('spacePlugin.renameObject').last().click();
     await this.page.getByTestId('spacePlugin.renameObject.input').fill(newName);
     await this.page.getByTestId('spacePlugin.renameObject.input').press('Enter');
   }
 
   async deleteObject(nth = 0) {
-    await this.page.getByTestId('spacePlugin.object').nth(nth).click({ button: 'right' });
+    await this.page
+      .getByTestId('spacePlugin.object')
+      .nth(nth)
+      .getByTestId('navtree.treeItem.actionsLevel2')
+      .first()
+      .click();
     await this.page.getByTestId('spacePlugin.deleteObject').last().click();
     await this.page.getByTestId('spacePlugin.confirmDeleteObject').last().click();
   }
