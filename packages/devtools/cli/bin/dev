@@ -5,6 +5,7 @@ const oclif = require('@oclif/core')
 const path = require('path')
 const project = path.join(__dirname, '..', 'tsconfig.json')
 
+process.env.DX_ENVIRONMENT = process.env.DX_ENVIRONMENT ?? 'development'
 process.env.NODE_ENV = 'development'
 
 // In dev mode, use ts-node and dev plugins.

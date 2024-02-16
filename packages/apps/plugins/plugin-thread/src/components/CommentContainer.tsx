@@ -3,7 +3,7 @@
 //
 
 import { X } from '@phosphor-icons/react';
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Message as MessageType } from '@braneframe/types';
 import { TextObject, getTextContent, useMembers } from '@dxos/react-client/echo';
@@ -33,12 +33,13 @@ export const CommentContainer = ({
   const members = useMembers(space.key);
   const activity = useStatus(space, thread.id);
   const { t } = useTranslation(THREAD_PLUGIN);
+  const extensions = useMemo(() => [command], []);
 
   const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
   const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
   const autoFocusAfterSend = useRef<boolean>(false);
 
-  const handleCreate: MessageTextboxProps['onSend'] = () => {
+  const handleCreate: MessageTextboxProps['onSend'] = useCallback(() => {
     const content = nextMessage.text;
     if (!getTextContent(content)) {
       return false;
@@ -64,7 +65,7 @@ export const CommentContainer = ({
 
     // TODO(burdon): Scroll to bottom.
     return true;
-  };
+  }, [nextMessage, thread, identity]);
 
   const handleDelete = (id: string, index: number) => {
     const messageIndex = thread.messages.findIndex((message) => message.id === id);
@@ -129,7 +130,7 @@ export const CommentContainer = ({
             placeholder={t('message placeholder')}
             {...textboxMetadata}
             model={nextMessageModel}
-            extensions={[command]}
+            extensions={extensions}
           />
           <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
           <AnchoredOverflow.Anchor />

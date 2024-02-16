@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Message as MessageType } from '@braneframe/types';
 import { TextObject, getTextContent, useMembers } from '@dxos/react-client/echo';
@@ -23,6 +23,7 @@ export const ChatContainer = ({ space, thread, context, current, autoFocus }: Th
   const members = useMembers(space.key);
   const activity = useStatus(space, thread.id);
   const { t } = useTranslation(THREAD_PLUGIN);
+  const extensions = useMemo(() => [command], []);
 
   const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
   const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
@@ -109,7 +110,7 @@ export const ChatContainer = ({ space, thread, context, current, autoFocus }: Th
             placeholder={t('message placeholder')}
             {...textboxMetadata}
             model={nextMessageModel}
-            extensions={[command]}
+            extensions={extensions}
           />
           <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
         </>

@@ -66,6 +66,7 @@ export const NavTreeItemActionDropdownMenu = ({
               active === 'overlay' && 'invisible',
             ]}
             data-testid={testId}
+            aria-label={t('tree item actions label')}
           >
             <Icon className={getSize(4)} />
           </Button>
