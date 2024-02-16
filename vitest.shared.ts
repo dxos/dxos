@@ -5,6 +5,10 @@
 import { join } from 'path';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { defineConfig, type UserConfig } from 'vitest/config';
+import { type Plugin } from 'vite';
+// import Inspect from 'vite-plugin-inspect';
+import inject from '@rollup/plugin-inject';
+import { GLOBALS, MODULES } from '@dxos/node-std/_/config';
 
 import { FixGracefulFsPlugin } from '@dxos/esbuild-plugins';
 
@@ -27,12 +31,10 @@ const createNodeConfig = () =>
 
 const createBrowserConfig = (browserName: 'chrome') =>
   defineConfig({
-    plugins: [nodePolyfills()],
-    resolve: {
-      alias: {
-        buffer: 'buffer/',
-      },
-    },
+    plugins: [
+      nodeStdPlugin(),
+      // Inspect()
+    ],
     optimizeDeps: {
       include: ['buffer/'],
       esbuildOptions: {
@@ -41,6 +43,9 @@ const createBrowserConfig = (browserName: 'chrome') =>
     },
     esbuild: {
       target: 'es2020',
+
+      // TODO(dmaretskyi): Move into nodeStd plugin.
+      banner: 'import "@dxos/node-std/globals";',
     },
     test: {
       ...resolveReporterConfig({ browserMode: true }),
@@ -93,3 +98,25 @@ const resolveConfig = () => {
 };
 
 export default resolveConfig();
+
+// TODO(dmaretskyi): Extract.
+/**
+ * Replaces node built-in modules with their browser equivalents.
+ */
+function nodeStdPlugin(): Plugin {
+  return {
+    name: 'node-std',
+    resolveId: {
+      order: 'pre',
+      async handler(source, importer, options) {
+        if (source.startsWith('node:')) {
+          return this.resolve('@dxos/node-std/' + source.slice('node:'.length), importer, options);
+        }
+
+        if (MODULES.includes(source)) {
+          return this.resolve('@dxos/node-std/' + source, importer, options);
+        }
+      },
+    },
+  };
+}
