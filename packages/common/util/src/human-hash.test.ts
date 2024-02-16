@@ -3,10 +3,10 @@
 //
 
 import { expect } from 'chai';
+import { test } from 'vitest';
 
 import { createKeyPair, createId } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
-import { test } from 'vitest';
 
 import { humanize } from './human-hash';
 

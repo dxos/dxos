@@ -3,7 +3,6 @@
 //
 
 import { expect } from 'chai';
-
 import { describe, test } from 'vitest';
 
 import { createBucketReducer, numericalValues, reduceGroupBy, reduceSeries, reduceSet } from './reducers';

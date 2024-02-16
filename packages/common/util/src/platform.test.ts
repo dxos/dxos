@@ -3,7 +3,6 @@
 //
 
 import { expect } from 'chai';
-
 import { test } from 'vitest';
 
 import { isNode } from './platform';

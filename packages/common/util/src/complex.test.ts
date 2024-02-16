@@ -3,9 +3,9 @@
 //
 
 import { expect } from 'chai';
+import { test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
-import { test } from 'vitest';
 
 import { makeSet, makeMap } from './complex';
 

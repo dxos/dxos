@@ -3,9 +3,8 @@
 //
 
 import { expect } from 'chai';
-import waitForExpect from 'wait-for-expect';
-
 import { test, describe } from 'vitest';
+import waitForExpect from 'wait-for-expect';
 
 import { WeakDictionary } from './weak';
 

@@ -3,7 +3,6 @@
 //
 
 import { expect } from 'chai';
-
 import { describe, test } from 'vitest';
 
 import { compareMulti, compareScalar, compareObject, compareString } from './sort';
