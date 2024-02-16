@@ -7,12 +7,16 @@
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": ["packages/common/keys/src/index.ts"],
+        "entryPoints": [
+          "packages/common/keys/src/index.ts"
+        ],
         "injectGlobals": false
       }
     },
     "lint": {},
     "vitest": {}
   },
-  "implicitDependencies": ["esbuild"]
+  "implicitDependencies": [
+    "esbuild"
+  ]
 }

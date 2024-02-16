@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "shell",
   "sourceRoot": "packages/sdk/shell/src",
   "projectType": "library",
   "targets": {
@@ -44,9 +46,7 @@
       }
     }
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ],
-  "name": "shell"
+  ]
 }
