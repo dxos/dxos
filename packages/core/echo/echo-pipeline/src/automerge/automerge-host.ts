@@ -68,12 +68,14 @@ export class AutomergeHost {
         }
 
         try {
-          if (!doc.experimental_spaceKey) {
+          // experimental_spaceKey is set on old documents, new ones are created with doc.access.spaceKey
+          const rawSpaceKey = doc.access?.spaceKey ?? doc.experimental_spaceKey;
+          if (!rawSpaceKey) {
             log('space key not found for share policy check', { peerId, documentId });
             return false;
           }
 
-          const spaceKey = PublicKey.from(doc.experimental_spaceKey);
+          const spaceKey = PublicKey.from(rawSpaceKey);
           const authorizedDevices = this._authorizedDevices.get(spaceKey);
 
           // TODO(mykola): Hack, stop abusing `peerMetadata` field.
