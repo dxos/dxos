@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "composer-app",
   "sourceRoot": "packages/apps/composer-app/src",
   "projectType": "library",
   "targets": {
@@ -65,9 +67,7 @@
       }
     }
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "test"
-  ],
-  "name": "composer-app"
+  ]
 }

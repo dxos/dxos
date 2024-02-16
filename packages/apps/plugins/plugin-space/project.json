@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "plugin-space",
   "sourceRoot": "packages/apps/plugins/plugin-space/src",
   "projectType": "library",
   "targets": {
@@ -27,9 +29,7 @@
       }
     }
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ],
-  "name": "plugin-space"
+  ]
 }

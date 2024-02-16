@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "chess-app",
   "sourceRoot": "packages/experimental/chess-app/src",
   "projectType": "application",
   "targets": {
@@ -35,9 +37,7 @@
       }
     }
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "test"
-  ],
-  "name": "chess-app"
+  ]
 }

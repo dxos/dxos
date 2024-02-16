@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "migrations",
   "sourceRoot": "packages/sdk/migrations/src",
   "projectType": "library",
   "targets": {
@@ -17,10 +19,8 @@
       }
     }
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "name": "migrations"
+  ]
 }

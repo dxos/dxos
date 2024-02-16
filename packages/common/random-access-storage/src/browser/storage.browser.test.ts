@@ -2,8 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import 'source-map-support/register';
-
 import { expect, describe, test } from 'vitest';
 
 import { createStorage } from './storage';
