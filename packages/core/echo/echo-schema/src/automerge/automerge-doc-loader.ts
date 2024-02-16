@@ -153,7 +153,8 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
 
   private _initDocAccess(handle: DocHandle<SpaceDoc>) {
     handle.change((newDoc: SpaceDoc) => {
-      newDoc.access = { spaceKey: this._spaceKey.toHex() };
+      newDoc.access ??= { spaceKey: this._spaceKey.toHex() };
+      newDoc.access.spaceKey = this._spaceKey.toHex();
     });
   }
 
