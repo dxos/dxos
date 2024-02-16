@@ -3,7 +3,6 @@
 //
 
 import { join } from 'path';
-import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { defineConfig, type UserConfig } from 'vitest/config';
 import { type Plugin } from 'vite';
 // import Inspect from 'vite-plugin-inspect';
