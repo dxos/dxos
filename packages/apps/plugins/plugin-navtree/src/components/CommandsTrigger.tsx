@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Terminal } from '@phosphor-icons/react';
+import { MagnifyingGlass } from '@phosphor-icons/react';
 import React from 'react';
 
 import { LayoutAction, useIntent } from '@dxos/app-framework';
@@ -16,7 +16,7 @@ export const CommandsTrigger = () => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   return (
     <Button
-      classNames='pli-2 gap-2 m-2 min-bs-0 bs-[calc(var(--rail-action)-.5rem)] rounded-sm justify-start'
+      classNames='pis-3 pie-2 gap-2 mli-1 mbs-1 min-bs-0 bs-[--rail-action] rounded-sm justify-start'
       onClick={() =>
         dispatch({
           action: LayoutAction.SET_LAYOUT,
@@ -24,8 +24,8 @@ export const CommandsTrigger = () => {
         })
       }
     >
-      <Terminal className={getSize(5)} />
-      <span className='fg-description'>{t('commandlist input placeholder')}</span>
+      <span className='fg-description text-base font-normal grow text-start'>{t('commandlist input placeholder')}</span>
+      <MagnifyingGlass className={getSize(5)} />
     </Button>
   );
 };
