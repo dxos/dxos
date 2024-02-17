@@ -2,13 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDoubleLeft } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { LayoutAction, NavigationAction, Surface, useIntent } from '@dxos/app-framework';
+import { NavigationAction, Surface, useIntent } from '@dxos/app-framework';
 import { type Node, type Graph, isGraphNode } from '@dxos/app-graph';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button, ElevationProvider, Tooltip, useMediaQuery, useSidebars, useTranslation } from '@dxos/react-ui';
+import { ElevationProvider, useMediaQuery, useSidebars, useTranslation } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import {
   NavTree,
@@ -17,7 +16,6 @@ import {
   type NavTreeProps,
   emptyBranchDroppableId,
 } from '@dxos/react-ui-navtree';
-import { getSize } from '@dxos/react-ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { NavTreeFooter } from './NavTreeFooter';
@@ -180,37 +178,7 @@ export const NavTreeContainer = ({
   return (
     <ElevationProvider elevation='chrome'>
       <div role='none' className='bs-full overflow-hidden grid grid-cols-1 grid-rows-[min-content_1fr_min-content]'>
-        {/* TODO(wittjosiah): HALO button and settings button are not specific to the navtree plugin.
-                    They should probably be rendered via surfaces or exposed as root graph actions instead. */}
-        {identity && (
-          <div role='none' className='flex items-center gap-1 pis-3 pie-1 plb-1 bs-[--topbar-size]'>
-            <div role='none' className='grow' />
-            <Tooltip.Root>
-              <Tooltip.Trigger asChild>
-                <Button
-                  variant='ghost'
-                  classNames='lg:hidden pli-2 pointer-fine:pli-1'
-                  {...(!navigationSidebarOpen && { tabIndex: -1 })}
-                  onClick={() =>
-                    dispatch({
-                      action: LayoutAction.SET_LAYOUT,
-                      data: { element: 'sidebar', state: false },
-                    })
-                  }
-                >
-                  <span className='sr-only'>{t('close sidebar label', { ns: 'os' })}</span>
-                  <CaretDoubleLeft className={getSize(4)} />
-                </Button>
-              </Tooltip.Trigger>
-              <Tooltip.Portal>
-                <Tooltip.Content classNames='z-[70]'>
-                  {t('close sidebar label', { ns: 'os' })}
-                  <Tooltip.Arrow />
-                </Tooltip.Content>
-              </Tooltip.Portal>
-            </Tooltip.Root>
-          </div>
-        )}
+        <Surface role='search-input' limit={1} />
         <div role='none' className='overflow-y-auto p-0.5'>
           <NavTree
             node={graph.root}

@@ -29,6 +29,7 @@ import {
   NavTreeDocumentTitle,
   NotchStart,
 } from './components';
+import { CommandsTrigger } from './components/CommandsTrigger';
 import meta, { NAVTREE_PLUGIN } from './meta';
 import translations from './translations';
 
@@ -112,8 +113,15 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                 };
               }
               break;
+
             case 'notch-start':
               return <NotchStart />;
+
+            case 'search-input':
+              return {
+                node: <CommandsTrigger />,
+                disposition: 'fallback',
+              };
           }
 
           return null;
