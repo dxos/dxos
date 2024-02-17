@@ -6,8 +6,7 @@ import React, { useCallback } from 'react';
 
 import { NavigationAction, Surface, useIntent } from '@dxos/app-framework';
 import { type Node, type Graph, isGraphNode } from '@dxos/app-graph';
-import { useIdentity } from '@dxos/react-client/halo';
-import { ElevationProvider, useMediaQuery, useSidebars, useTranslation } from '@dxos/react-ui';
+import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import {
   NavTree,
@@ -48,10 +47,7 @@ export const NavTreeContainer = ({
   activeId?: string;
   popoverAnchorId?: string;
 }) => {
-  const identity = useIdentity();
-
-  const { t } = useTranslation(NAVTREE_PLUGIN);
-  const { navigationSidebarOpen, closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
+  const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
   const [isLg] = useMediaQuery('lg', { ssr: false });
   const { dispatch } = useIntent();
 
