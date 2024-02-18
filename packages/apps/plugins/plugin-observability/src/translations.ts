@@ -9,7 +9,7 @@ export default [
     'en-US': {
       [OBSERVABILITY_PLUGIN]: {
         'plugin name': 'Telemetry',
-        'observability toast label': 'Telemetry Notice',
+        'observability toast label': 'Privacy Notice',
         'observability toast description':
           'Composer collects basic usage and performance metrics to improve the product. No private data is collected.',
         'observability toast action label': 'Settings',
