@@ -11,7 +11,14 @@ import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
 
 export const useAgentHostingProviderClient = (config: Config): AgentHostingProviderClient | null => {
-  // TODO: Dynamically discover
+  // TODO: Dynamically discover based on runtime config
+  if (
+    config.get('runtime.app.env.DX_ENVIRONMENT') !== 'development' &&
+    localStorage.getItem('dxos.org/shell/features/agentHosting') !== 'true'
+  ) {
+    log.info('agent hosting disabled');
+    return null;
+  }
 
   const agentHostingConfig = config.get('runtime.services.agentHosting');
   if (!agentHostingConfig) {
