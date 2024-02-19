@@ -135,7 +135,7 @@ export type MessageTextboxProps = {
   onClear?: () => void;
   onEditorFocus?: () => void;
   disabled?: boolean;
-  autoFocus?: MutableRefObject<boolean>;
+  autoFocusRef?: MutableRefObject<boolean>;
 } & Omit<MessageMetadata, 'id' | 'authorStatus'> &
   Omit<TextEditorProps, 'autoFocus'>;
 
@@ -149,7 +149,7 @@ export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
       authorName,
       authorImgSrc,
       disabled,
-      autoFocus,
+      autoFocusRef,
       extensions: _extensions,
       ...editorProps
     },
@@ -185,8 +185,8 @@ export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
         listener({
           onFocus: (focused) => {
             if (focused) {
-              if (autoFocus) {
-                autoFocus.current = false;
+              if (autoFocusRef) {
+                autoFocusRef.current = false;
               }
               onEditorFocus?.();
             }
@@ -206,7 +206,7 @@ export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
           slots={{ root: { className: mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50') } }}
           readonly={disabled}
           extensions={extensions}
-          autoFocus={autoFocus?.current ?? false}
+          autoFocus={autoFocusRef?.current ?? false}
           {...editorProps}
           ref={forwardedRef}
         />

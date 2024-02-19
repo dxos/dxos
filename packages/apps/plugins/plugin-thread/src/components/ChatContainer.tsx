@@ -33,7 +33,7 @@ export const ChatContainer = ({
 
   const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
   const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
-  const autoFocus = useRef<boolean>(!!initialAutoFocus);
+  const autoFocusRef = useRef<boolean>(!!initialAutoFocus);
   const textboxMetadata = useMessageMetadata(thread.id, identity);
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -68,7 +68,7 @@ export const ChatContainer = ({
     );
 
     setNextMessage(() => {
-      autoFocus.current = true;
+      autoFocusRef.current = true;
       return { text: new TextObject() };
     });
 
@@ -112,7 +112,7 @@ export const ChatContainer = ({
         <>
           <MessageTextbox
             onSend={handleCreate}
-            autoFocus={autoFocus}
+            autoFocusRef={autoFocusRef}
             placeholder={t('message placeholder')}
             {...textboxMetadata}
             model={nextMessageModel}
