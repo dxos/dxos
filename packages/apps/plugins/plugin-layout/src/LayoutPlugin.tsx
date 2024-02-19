@@ -37,7 +37,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { LayoutContext } from './LayoutContext';
-import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings, ContentFallback } from './components';
+import { MainLayout, ContentEmpty, LayoutSettings, ContentFallback } from './components';
 import { activeToUri, checkAppScheme, uriToActive } from './helpers';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
@@ -70,7 +70,9 @@ export const LayoutPlugin = ({
   const layout = new LocalStorageStore<Layout>(LAYOUT_PLUGIN, {
     fullscreen: false,
     sidebarOpen: true,
+
     complementarySidebarOpen: false,
+    complementarySidebarContent: 'never',
 
     dialogContent: 'never',
     dialogOpen: false,
@@ -110,7 +112,8 @@ export const LayoutPlugin = ({
       }
 
       case 'complementary': {
-        layout.values.complementarySidebarOpen = state ?? !layout.values.complementarySidebarOpen;
+        layout.values.complementarySidebarOpen = state ?? Boolean(component);
+        layout.values.complementarySidebarContent = component ? { component, subject } : null;
         return { data: true };
       }
 
@@ -142,9 +145,7 @@ export const LayoutPlugin = ({
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
 
-      layout
-        .prop(layout.values.$sidebarOpen!, 'sidebar-open', LocalStorageStore.bool)
-        .prop(layout.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool);
+      layout.prop(layout.values.$sidebarOpen!, 'sidebar-open', LocalStorageStore.bool);
 
       settings
         .prop(settings.values.$showFooter!, 'show-footer', LocalStorageStore.bool)
@@ -242,9 +243,6 @@ export const LayoutPlugin = ({
                     sidebar: {
                       data: { graph, activeId: location.active, popoverAnchorId: layout.values.popoverAnchorId },
                     },
-                    context: {
-                      data: { component: `${LAYOUT_PLUGIN}/ContextView`, active: location.activeNode.data },
-                    },
                     main: { data: { active: location.activeNode.data } },
                     'navbar-start': {
                       data: { activeNode: location.activeNode, popoverAnchorId: layout.values.popoverAnchorId },
@@ -259,9 +257,6 @@ export const LayoutPlugin = ({
                 surfaces: {
                   sidebar: {
                     data: { graph, activeId: location.active, popoverAnchorId: layout.values.popoverAnchorId },
-                  },
-                  context: {
-                    data: { component: `${LAYOUT_PLUGIN}/ContextView` },
                   },
                   main: {
                     data: location.active
@@ -306,9 +301,6 @@ export const LayoutPlugin = ({
 
             case `${LAYOUT_PLUGIN}/ContentEmpty`:
               return <ContentEmpty />;
-
-            case `${LAYOUT_PLUGIN}/ContextView`:
-              return <ContextPanel />;
           }
 
           switch (role) {

@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDoubleLeft, List as MenuIcon } from '@phosphor-icons/react';
+import { List as MenuIcon, X } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Surface, useSurface, type Toast as ToastSchema } from '@dxos/app-framework';
+import { Surface, type Toast as ToastSchema } from '@dxos/app-framework';
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover, Status } from '@dxos/react-ui';
 import { baseSurface, fixedInsetFlexLayout, getSize } from '@dxos/react-ui-theme';
 
@@ -23,10 +23,16 @@ export type MainLayoutProps = {
 
 export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast }: MainLayoutProps) => {
   const context = useLayout();
-  const { complementarySidebarOpen, dialogOpen, dialogContent, popoverOpen, popoverContent, popoverAnchorId } = context;
+  const {
+    complementarySidebarOpen,
+    complementarySidebarContent,
+    dialogOpen,
+    dialogContent,
+    popoverOpen,
+    popoverContent,
+    popoverAnchorId,
+  } = context;
   const { t } = useTranslation(LAYOUT_PLUGIN);
-  const { surfaces } = useSurface();
-  const active = surfaces?.main?.data?.active;
 
   if (fullscreen) {
     return (
@@ -81,35 +87,25 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
         </Main.Notch>
 
         {/* Right Complementary sidebar. */}
-        {complementarySidebarOpen !== null && active ? (
-          <Main.ComplementarySidebar classNames='overflow-hidden'>
-            <Surface role='complementary' name='context' />
-          </Main.ComplementarySidebar>
-        ) : null}
+        <Main.ComplementarySidebar classNames='overflow-hidden grid grid-cols-1 grid-rows-[var(--rail-size)_1fr]'>
+          <Button
+            variant='ghost'
+            classNames='absolute block-start-1 inline-end-1 p-0 bs-[--rail-action] is-[--rail-action]'
+            onClick={() => (context.complementarySidebarOpen = false)}
+          >
+            <X />
+          </Button>
+          <Surface role='complementary' data={complementarySidebarContent} />
+        </Main.ComplementarySidebar>
 
         {/* Top (header) bar. */}
         <Main.Content classNames={['fixed inset-inline-0 block-start-0 z-[2]', baseSurface]} asChild>
           <div aria-label={t('main header label')} role='none'>
-            <div role='none' className={'flex gap-1 p-1 bs-[--topbar-size]'}>
+            <div role='none' className='flex gap-1 p-1 bs-[--topbar-size]'>
               <DensityProvider density='coarse'>
                 <Surface role='navbar-start' />
                 <div role='none' className='grow' />
                 <Surface role='navbar-end' direction='inline-reverse' />
-
-                {complementarySidebarOpen !== null && active ? (
-                  <Button
-                    onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
-                    variant='ghost'
-                    classNames='p-0 bs-[var(--rail-action)] is-[var(--rail-action)]'
-                  >
-                    <span className='sr-only'>{t('open complementary sidebar label')}</span>
-                    <CaretDoubleLeft
-                      mirrored={context.complementarySidebarOpen}
-                      weight='light'
-                      className={getSize(4)}
-                    />
-                  </Button>
-                ) : null}
               </DensityProvider>
             </div>
           </div>
