@@ -4,7 +4,7 @@
 
 import { enUS as dtLocaleEnUs, type Locale } from 'date-fns/locale';
 import i18Next, { type Resource } from 'i18next';
-import React, { type ReactNode, useEffect, createContext, useState, Suspense, useContext } from 'react';
+import React, { type ReactNode, Suspense, useEffect, createContext, useState, useContext } from 'react';
 import { initReactI18next, useTranslation as useI18NextTranslation } from 'react-i18next';
 
 const initialLng = 'en-US';
@@ -68,6 +68,7 @@ export const TranslationsProvider = ({
         });
       });
     }
+
     setLoaded(true);
   }, [resourceExtensions]);
 

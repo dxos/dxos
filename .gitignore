@@ -143,3 +143,7 @@ tools/intellij-plugin/build/
 
 # Obsidian
 **/.obsidian**
+
+# Socket supply
+.sscrc
+

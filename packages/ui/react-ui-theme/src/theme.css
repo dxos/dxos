@@ -3,9 +3,9 @@
  * https://fontsource.org/?category=sans-serif&variable=true
  */
 
-@import '@fontsource-variable/jetbrains-mono/wght-italic.css';
-@import '@fontsource-variable/jetbrains-mono/wght.css';
 @import '@fontsource-variable/inter/slnt.css';
+@import '@fontsource-variable/jetbrains-mono/wght.css';
+@import '@fontsource-variable/jetbrains-mono/wght-italic.css';
 
 @tailwind base;
 @tailwind utilities;
