@@ -4,7 +4,7 @@
 
 import { X } from '@phosphor-icons/react';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
-import React, { type ComponentPropsWithRef, type FC, forwardRef, useMemo } from 'react';
+import React, { type ComponentPropsWithRef, type FC, forwardRef, type MutableRefObject, useMemo } from 'react';
 
 import { Avatar, Button, type ThemedClassName, useJdenticonHref, useTranslation } from '@dxos/react-ui';
 import { TextEditor, type TextEditorProps, keymap, type EditorView, listener } from '@dxos/react-ui-editor';
@@ -135,8 +135,9 @@ export type MessageTextboxProps = {
   onClear?: () => void;
   onEditorFocus?: () => void;
   disabled?: boolean;
+  autoFocusRef?: MutableRefObject<boolean>;
 } & Omit<MessageMetadata, 'id' | 'authorStatus'> &
-  TextEditorProps;
+  Omit<TextEditorProps, 'autoFocus'>;
 
 export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
   (
@@ -148,6 +149,7 @@ export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
       authorName,
       authorImgSrc,
       disabled,
+      autoFocusRef,
       extensions: _extensions,
       ...editorProps
     },
@@ -183,6 +185,9 @@ export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
         listener({
           onFocus: (focused) => {
             if (focused) {
+              if (autoFocusRef) {
+                autoFocusRef.current = false;
+              }
               onEditorFocus?.();
             }
           },
@@ -201,6 +206,7 @@ export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
           slots={{ root: { className: mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50') } }}
           readonly={disabled}
           extensions={extensions}
+          autoFocus={autoFocusRef?.current ?? false}
           {...editorProps}
           ref={forwardedRef}
         />

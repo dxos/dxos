@@ -43,7 +43,7 @@ export class AutomergeDb {
   readonly _objects = new Map<string, AutomergeObject>();
   readonly _objectsSystem = new Map<string, EchoObject>();
 
-  readonly _updateEvent = new Event<{ spaceKey: PublicKey; itemsUpdated: { id: string }[] }>();
+  readonly _updateEvent = new Event<ItemsUpdatedEvent>();
 
   private _ctx?: Context = undefined;
 
@@ -308,3 +308,8 @@ const getInlineAndLinkChanges = (event: DocHandleChangePayload<SpaceDoc>) => {
     linkedDocuments,
   };
 };
+
+export interface ItemsUpdatedEvent {
+  spaceKey: PublicKey;
+  itemsUpdated: Array<{ id: string }>;
+}
