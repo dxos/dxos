@@ -37,7 +37,7 @@ export const CommentContainer = ({
 
   const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
   const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
-  const autoFocusAfterSend = useRef<boolean>(false);
+  const autoFocusRef = useRef<boolean>(autoFocus ?? false);
 
   const handleCreate: MessageTextboxProps['onSend'] = useCallback(() => {
     const content = nextMessage.text;
@@ -59,7 +59,7 @@ export const CommentContainer = ({
     );
 
     setNextMessage(() => {
-      autoFocusAfterSend.current = true;
+      autoFocusRef.current = true;
       return { text: new TextObject() };
     });
 
@@ -126,7 +126,7 @@ export const CommentContainer = ({
         <>
           <MessageTextbox
             onSend={handleCreate}
-            autoFocus={autoFocusAfterSend.current || autoFocus}
+            autoFocusRef={autoFocusRef}
             placeholder={t('message placeholder')}
             {...textboxMetadata}
             model={nextMessageModel}
