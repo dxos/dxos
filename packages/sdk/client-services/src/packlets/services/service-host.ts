@@ -8,7 +8,7 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { DocumentModel } from '@dxos/document-model';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
-import { type TypedObject, base, getRawDoc, type SpaceDoc } from '@dxos/echo-schema';
+import { type TypedObject, base, getRawDoc, type DocStructure } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -348,10 +348,10 @@ export class ClientServicesHost {
 
     const automergeIndex = space.automergeSpaceState.rootUrl;
     invariant(automergeIndex);
-    const document = await this._serviceContext.automergeHost.repo.find<SpaceDoc>(automergeIndex as any);
+    const document = await this._serviceContext.automergeHost.repo.find<DocStructure>(automergeIndex as any);
     await document.whenReady();
 
-    document.change((doc: SpaceDoc) => {
+    document.change((doc: DocStructure) => {
       assignDeep(doc, ['objects', obj[base]._id], getRawDoc(obj).handle.docSync());
     });
 

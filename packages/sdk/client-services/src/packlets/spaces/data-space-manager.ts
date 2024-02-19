@@ -143,7 +143,7 @@ export class DataSpaceManager {
 
     const automergeRoot = this._automergeHost.repo.create();
     automergeRoot.change((doc: any) => {
-      doc.access = { spaceKey: spaceKey.toHex() };
+      doc.experimental_spaceKey = spaceKey.toHex();
     });
 
     const space = await this._constructSpace(metadata);
