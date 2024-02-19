@@ -19,19 +19,13 @@ import { mapValues } from '@dxos/util';
 @trace.resource()
 export class AutomergeContext {
   private _repo: Repo;
-
-  @trace.info()
   private _adapter?: LocalClientNetworkAdapter = undefined;
 
-  @trace.info()
-  private readonly _peerId: string;
-
   constructor(dataService: DataService | undefined = undefined) {
-    this._peerId = `client-${PublicKey.random().toHex()}` as PeerId;
     if (dataService) {
       this._adapter = new LocalClientNetworkAdapter(dataService);
       this._repo = new Repo({
-        peerId: this._peerId as PeerId,
+        peerId: `client-${PublicKey.random().toHex()}` as PeerId,
         network: [this._adapter],
         sharePolicy: async () => true,
       });
@@ -51,23 +45,6 @@ export class AutomergeContext {
       state: handle.state,
       hasDoc: !!handle.docSync(),
       heads: handle.docSync() ? automerge.getHeads(handle.docSync()) : null,
-      data:
-        handle.docSync()?.doc &&
-        mapValues(handle.docSync()?.doc, (value, key) => {
-          try {
-            switch (key) {
-              case 'access':
-              case 'links':
-                return value;
-              case 'objects':
-                return Object.keys(value as any);
-              default:
-                return `${value}`;
-            }
-          } catch (err) {
-            return `${err}`;
-          }
-        }),
     }));
   }
 
@@ -84,15 +61,11 @@ export class AutomergeContext {
 /**
  * Used to replicate with apps running on the same device.
  */
-@trace.resource()
 class LocalClientNetworkAdapter extends NetworkAdapter {
   /**
    * Own peer id given by automerge repo.
    */
-  @trace.info()
   private _hostInfo?: HostInfo = undefined;
-
-  @trace.info()
   private _stream?: Stream<SyncRepoResponse> | undefined = undefined;
 
   constructor(private readonly _dataService: DataService) {
