@@ -27,6 +27,9 @@ export class AutomergeHost {
   private readonly _clientNetwork: LocalHostNetworkAdapter;
   private readonly _storage: StorageAdapter;
 
+  @trace.info()
+  private readonly _peerId: string;
+
   /**
    * spaceKey -> deviceKey[]
    */
@@ -43,9 +46,9 @@ export class AutomergeHost {
       storageDirectory.type === StorageType.IDB
         ? new IndexedDBStorageAdapter(storageDirectory.path, 'data')
         : new AutomergeStorageAdapter(storageDirectory);
-    const localPeerId = `host-${PublicKey.random().toHex()}` as PeerId;
+    this._peerId = `host-${PublicKey.random().toHex()}` as PeerId;
     this._repo = new Repo({
-      peerId: localPeerId,
+      peerId: this._peerId as PeerId,
       network: [this._clientNetwork, this._meshNetwork],
       storage: this._storage,
 
@@ -88,7 +91,7 @@ export class AutomergeHost {
 
           const isAuthorized = authorizedDevices?.has(deviceKey) ?? false;
           log('share policy check', {
-            localPeer: localPeerId,
+            localPeer: this._peerId,
             remotePeer: peerId,
             documentId,
             deviceKey,
@@ -116,6 +119,23 @@ export class AutomergeHost {
       state: handle.state,
       hasDoc: !!handle.docSync(),
       heads: handle.docSync() ? automerge.getHeads(handle.docSync()) : null,
+      data:
+        handle.docSync()?.doc &&
+        mapValues(handle.docSync()?.doc, (value, key) => {
+          try {
+            switch (key) {
+              case 'access':
+              case 'links':
+                return value;
+              case 'objects':
+                return Object.keys(value as any);
+              default:
+                return `${value}`;
+            }
+          } catch (err) {
+            return `${err}`;
+          }
+        }),
     }));
   }
 
