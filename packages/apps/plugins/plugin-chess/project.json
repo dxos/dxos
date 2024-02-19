@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "plugin-chess",
   "sourceRoot": "packages/apps/plugins/plugin-chess/src",
   "projectType": "library",
   "targets": {
@@ -16,9 +18,7 @@
     },
     "lint": {}
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ],
-  "name": "plugin-chess"
+  ]
 }

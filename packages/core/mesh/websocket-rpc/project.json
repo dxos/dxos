@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "websocket-rpc",
   "sourceRoot": "packages/core/mesh/websocket-rpc/src",
   "projectType": "library",
   "targets": {
@@ -20,10 +22,8 @@
       }
     }
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "name": "websocket-rpc"
+  ]
 }

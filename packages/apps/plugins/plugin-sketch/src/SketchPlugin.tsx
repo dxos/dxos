@@ -8,7 +8,7 @@ import React from 'react';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Sketch as SketchType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
-import { Expando, SpaceProxy, getGlobalAutomergePreference } from '@dxos/react-client/echo';
+import { Expando, SpaceProxy } from '@dxos/react-client/echo';
 
 import { SketchMain, SketchComponent } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
@@ -104,7 +104,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             case SketchAction.CREATE: {
               return {
                 data: new SketchType({
-                  data: getGlobalAutomergePreference() ? (new Expando() as any) : undefined,
+                  data: new Expando() as any,
                 }),
               };
             }

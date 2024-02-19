@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-ipfs",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "IPFS file management plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -45,7 +45,7 @@
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "vite": "^5.0.12"
+    "vite": "^5.1.3"
   },
   "peerDependencies": {
     "@dxos/app-framework": "workspace:*",

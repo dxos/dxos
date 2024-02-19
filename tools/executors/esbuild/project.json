@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "esbuild",
   "sourceRoot": "tools/executors/esbuild/src",
   "targets": {
     "compile": {
@@ -14,9 +16,7 @@
     },
     "lint": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "log-hook"
-  ],
-  "name": "esbuild"
+  ]
 }

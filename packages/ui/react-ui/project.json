@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "react-ui",
   "sourceRoot": "packages/ui/react-ui/src",
   "projectType": "library",
   "targets": {
@@ -21,9 +23,7 @@
       }
     }
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ],
-  "name": "react-ui"
+  ]
 }
