@@ -26,7 +26,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@fluentui/react-tabster": "^9.18.0",
+    "@fluentui/react-tabster": "^9.19.0",
     "react-resize-detector": "^7.1.2"
   },
   "devDependencies": {
