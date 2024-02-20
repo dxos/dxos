@@ -53,6 +53,7 @@ const config: UserConfig = defineUserConfig({
     sidebar: sidebar({
       '/guide/': 'structure',
       '/api/': await apiSidebar(),
+      '/composer/': 'structure',
     }),
     navbarLayout: {
       start: ['Brand', 'Links'],
@@ -68,6 +69,10 @@ const config: UserConfig = defineUserConfig({
       {
         text: 'API',
         link: '/api/',
+      },
+      {
+        text: 'Composer',
+        link: '/composer/',
       },
     ],
     plugins: {
