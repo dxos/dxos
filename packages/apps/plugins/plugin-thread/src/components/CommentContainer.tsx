@@ -37,7 +37,8 @@ export const CommentContainer = ({
 
   const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
   const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
-  const autoFocusRef = useRef<boolean>(autoFocus ?? false);
+  const autoFocusRef = useRef<boolean>(false);
+  autoFocusRef.current = !!autoFocus;
 
   const handleCreate: MessageTextboxProps['onSend'] = useCallback(() => {
     const content = nextMessage.text;
