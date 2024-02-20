@@ -113,8 +113,9 @@ export const ObservabilityPlugin = (options: {
         observability = obs;
 
         // Ensure errors are tagged with enabled plugins to help with reproductions.
-        const pluginsEnabled = pluginHost?.provides?.plugins?.enabled?.join(',');
-        pluginsEnabled && observability.setTag('pluginsEnabled', pluginsEnabled, 'errors');
+        pluginHost?.provides?.plugins?.enabled?.map((plugin) =>
+          observability?.setTag(`pluginEnabled-${plugin}`, 'true', 'errors'),
+        );
 
         // Start client observability (i.e. not running as shared worker)
         // TODO(nf): how to prevent multiple instances for single shared worker?
