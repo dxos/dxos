@@ -40,7 +40,7 @@ export const cursorLineMargin: Extension = EditorView.updateListener.of(
     // line with main selection
     const mainLine = lineAtPos(s, main.head);
     // top most visible line
-    const visTopLine = lineAtPos(s, view.lineBlockAtHeight(viewportTop).from);
+    const _visTopLine = lineAtPos(s, view.lineBlockAtHeight(viewportTop).from);
 
     // bottom most visible line
     // NOTE: calculating this is slightly more complex - if the editor is
