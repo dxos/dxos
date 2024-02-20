@@ -276,7 +276,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   },
                   {
                     action: LayoutAction.SET_LAYOUT,
-                    data: { element: 'complementary', state: true },
+                    data: { element: 'complementary', subject: doc, state: true },
                   },
                 ]);
 

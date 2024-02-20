@@ -39,7 +39,7 @@ const DocumentMain: FC<{ document: DocumentType } & Pick<EditorMainProps, 'toolb
         data: { element: 'complementary', subject: null, state: false },
       });
     };
-  }, [document]);
+  }, [document.id]);
 
   return <EditorMain model={model} comments={comments} {...props} />;
 };
