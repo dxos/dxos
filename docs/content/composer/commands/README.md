@@ -1,6 +1,6 @@
 ---
 dir:
   text: Commands
-  order: 5
+  order: 7
 ---
 # Command Palette

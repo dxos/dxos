@@ -1,7 +1,7 @@
 ---
 dir:
   text: Sharing
-  order: 4
+  order: 6
 ---
 # Spaces
 

@@ -1,7 +1,7 @@
 ---
 dir:
   text: Authoring
-  order: 3
+  order: 4
 ---
 # Text
 
