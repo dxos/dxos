@@ -26,6 +26,9 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/random"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -33,9 +36,6 @@
     },
     {
       "path": "../react-ui-searchlist"
-    },
-    {
-      "path": "../react-ui-theme"
     },
     {
       "path": "../react-ui-theme"

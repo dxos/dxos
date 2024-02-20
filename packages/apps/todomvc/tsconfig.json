@@ -6,9 +6,11 @@
       "DOM",
       "ESNext"
     ],
+    "module": "ESNext",
     "outDir": "dist",
     "types": [
-      "node"
+      "node",
+      "sharedworker"
     ]
   },
   "exclude": [
@@ -34,22 +36,16 @@
       "path": "../../core/echo/echo-typegen"
     },
     {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/client-services"
-    },
-    {
       "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/observability"
     },
     {
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/vault"
-    },
-    {
-      "path": "../plugins/plugin-telemetry"
+      "path": "../../sdk/shell"
     }
   ]
 }

@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "teleport-extension-replicator",
   "sourceRoot": "packages/core/mesh/teleport-extension-replicator/src",
   "projectType": "library",
   "targets": {

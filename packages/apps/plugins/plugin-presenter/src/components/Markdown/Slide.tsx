@@ -26,7 +26,7 @@ export const Slide = ({ content = '', classes = theme.nodes }: SlideProps) => {
     <ReactMarkdown
       components={components}
       // Markdown to HTML.
-      remarkPlugins={[[remarkFrontmatter, 'yaml'], remarkParseFrontmatter]}
+      remarkPlugins={[[remarkFrontmatter, 'yaml'], remarkParseFrontmatter as any]}
       // HTML processing.
       rehypePlugins={[highlight, [addClasses, classes], slideLayout]}
     >

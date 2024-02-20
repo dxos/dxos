@@ -91,8 +91,8 @@ const getEnvironments = (options: MochaExecutorOptions): TestEnvironment[] => {
     return options.environments.includes('all')
       ? Array.from(TestEnvironments)
       : options.environments.includes('core')
-      ? ['nodejs', ...Array.from(BrowserTypes)]
-      : (options.environments as TestEnvironment[]);
+        ? ['nodejs', ...Array.from(BrowserTypes)]
+        : (options.environments as TestEnvironment[]);
   } else if (process.env.CI) {
     return options.ciEnvironments;
   } else if (options.devEnvironments) {
@@ -113,13 +113,14 @@ export type RunTestsOptions = Omit<MochaExecutorOptions, 'environments'> & {
 // TODO(wittjosiah): Run all even if there are failures.
 const runTests = async (options: RunTestsOptions, context: ExecutorContext) => {
   if (options.playwrightConfigPath) {
-    const exitCode = await runPlaywright(context, options);
+    const { exitCode } = await runPlaywright(context, options);
     return exitCode === 0;
   }
 
   let success = true;
   for (const env of options.environments) {
-    let exitCode: number | null;
+    let exitCode: number | null | undefined;
+    let signal: NodeJS.Signals | null | undefined;
 
     switch (env) {
       case 'chromium':
@@ -135,7 +136,7 @@ const runTests = async (options: RunTestsOptions, context: ExecutorContext) => {
       }
 
       case 'nodejs': {
-        exitCode = await runNode(context, options);
+        ({ exitCode, signal } = await runNode(context, options));
         break;
       }
 
@@ -147,10 +148,10 @@ const runTests = async (options: RunTestsOptions, context: ExecutorContext) => {
     if (exitCode === 0) {
       logger.log(chalk`\n{green Passed in {blue {bold ${env}}}}\n`);
     } else if (!exitCode || exitCode > 0) {
-      logger.log(chalk`\n{red Failed with exit code ${exitCode} in {blue {bold ${env}}}}\n`);
+      logger.log(chalk`\n{red Failed with exit code ${exitCode} (signal ${signal}) in {blue {bold ${env}}}}\n`);
     }
 
-    success &&= exitCode === null ? false : exitCode <= 0;
+    success &&= exitCode === null || exitCode === undefined ? false : exitCode <= 0;
   }
 
   return success;

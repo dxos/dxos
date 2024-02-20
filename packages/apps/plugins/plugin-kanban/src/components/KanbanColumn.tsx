@@ -10,7 +10,7 @@ import React, { type FC } from 'react';
 
 import { type Kanban as KanbanType } from '@braneframe/types';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
-import { chromeSurface, getSize, groupSurface, mx } from '@dxos/react-ui-theme';
+import { modalSurface, getSize, groupSurface, mx } from '@dxos/react-ui-theme';
 
 import { KanbanCardComponent } from './KanbanCard';
 import { useSubscription } from './util';
@@ -95,7 +95,7 @@ export const KanbanColumnComponent: FC<{
       <div
         className={mx(
           'flex flex-col py-2 overflow-hidden shadow rounded w-[300px] min-h-[300px]',
-          isDragging ? chromeSurface : groupSurface,
+          isDragging ? modalSurface : groupSurface,
         )}
       >
         <div className='flex items-center mb-2 px-2'>

@@ -1,7 +1,14 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "create-bare",
   "sourceRoot": "packages/devtools/initializers/create-bare/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "options": {
+        "outputPath": "packages/devtools/initializers/create-bare/dist"
+      }
+    },
     "lint": {}
   }
 }

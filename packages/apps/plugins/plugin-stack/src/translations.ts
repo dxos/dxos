@@ -14,6 +14,7 @@ export default [
         'create stack label': 'Create stack',
         'stack title placeholder': 'New stack',
         'delete stack label': 'Delete',
+        'settings separation label': 'Separate stack sections',
       },
     },
   },

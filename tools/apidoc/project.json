@@ -1,4 +1,6 @@
 {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "apidoc",
   "sourceRoot": "tools/apidoc/src",
   "targets": {
     "build": {

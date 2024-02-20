@@ -6,9 +6,12 @@ import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { type Config, type ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
 
+import { fromHost } from './local-client-services';
 import { fromSocket } from './socket';
-import { fromHost, fromIFrame } from './utils';
+import { fromIFrame } from './utils';
+import { type WorkerClientServicesParams, fromWorker } from './worker-client-services';
 
+// TODO(wittjosiah): Factor out to @dxos/config.
 export const Remote = (target: string | undefined): Partial<ConfigProto> => {
   if (!target) {
     return {};
@@ -35,7 +38,10 @@ export const Remote = (target: string | undefined): Partial<ConfigProto> => {
 /**
  * Create services from config.
  */
-export const createClientServices = async (config: Config): Promise<ClientServicesProvider> => {
+export const createClientServices = (
+  config: Config,
+  createWorker?: WorkerClientServicesParams['createWorker'],
+): Promise<ClientServicesProvider> => {
   const remote = config.values.runtime?.client?.remoteSource;
 
   if (remote) {
@@ -44,15 +50,16 @@ export const createClientServices = async (config: Config): Promise<ClientServic
     switch (protocol) {
       case 'ws':
       case 'wss': {
-        return await fromSocket(remote);
+        return fromSocket(remote);
       }
 
       case 'http':
       case 'https': {
-        return await fromIFrame(config);
+        log.warn('IFrame services deprecated.');
+        return fromIFrame(config);
       }
     }
   }
 
-  return await fromHost(config);
+  return createWorker && typeof SharedWorker !== 'undefined' ? fromWorker(config, { createWorker }) : fromHost(config);
 };

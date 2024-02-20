@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "automerge",
   "sourceRoot": "packages/core/echo/automerge/src",
   "projectType": "library",
   "targets": {
@@ -13,7 +15,7 @@
         "script": "compile"
       },
       "outputs": [
-        "packages/core/echo/automerge/dist/lib"
+        "{projectRoot}/dist/lib"
       ]
     },
     "lint": {}

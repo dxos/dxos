@@ -16,6 +16,7 @@ import { AbstractEchoObject } from './object';
 import {
   base,
   data,
+  debug,
   immutable,
   meta,
   proxy,
@@ -23,9 +24,9 @@ import {
   type EchoObject,
   type ObjectMeta,
   type TypedObjectProperties,
-  debug,
 } from './types';
-import { AutomergeObject, REFERENCE_TYPE_TAG } from '../automerge';
+import { AutomergeObject } from '../automerge';
+import { REFERENCE_TYPE_TAG } from '../automerge/types';
 import { type Schema } from '../proto'; // NOTE: Keep as type-import.
 import { isReferenceLike, getBody, getHeader } from '../util';
 
@@ -47,6 +48,20 @@ const isValidKey = (key: string | symbol) => {
 
 export const isTypedObject = (object: unknown): object is TypedObject =>
   typeof object === 'object' && object !== null && !!(object as any)[base];
+
+/**
+ * @deprecated Temporary.
+ */
+export const isActualTypedObject = (object: unknown): object is TypedObject => {
+  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === TypedObject.prototype;
+};
+
+/**
+ * @deprecated Temporary.
+ */
+export const isAutomergeObject = (object: unknown | undefined | null): object is AutomergeObject => {
+  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === AutomergeObject.prototype;
+};
 
 export type ConvertVisitors = {
   onRef?: (id: string, obj?: EchoObject) => any;
@@ -75,7 +90,7 @@ export type TypedObjectOptions = {
 } & AutomergeOptions;
 
 export type AutomergeOptions = {
-  useAutomergeBackend?: boolean;
+  automerge?: boolean;
 };
 
 /**
@@ -86,22 +101,23 @@ export type AutomergeOptions = {
  */
 class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements TypedObjectProperties {
   static [Symbol.hasInstance](instance: any) {
-    return !!instance?.[base] && (isActualTypedObject(instance) || isActualAutomergeObject(instance));
+    return !!instance?.[base] && (isActualTypedObject(instance) || isAutomergeObject(instance));
   }
 
   /**
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * @internal
    */
-  _linkCache: Map<string, EchoObject> | undefined = new Map<string, EchoObject>();
-
+  private _linkCache: Map<string, EchoObject> | undefined = new Map<string, EchoObject>();
   private _schema?: Schema;
   private readonly _immutable;
+  private _updateDepth = 0;
 
   constructor(initialProps?: T, opts?: TypedObjectOptions) {
     super(DocumentModel);
 
-    if (opts?.useAutomergeBackend ?? getGlobalAutomergePreference()) {
+    // Redirect to AutomergeObject by default.
+    if (opts?.automerge ?? true) {
       return new AutomergeObject(initialProps, opts) as any;
     }
 
@@ -132,7 +148,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
     if (this._schema) {
       for (const field of this._schema.props) {
         if (field.repeated) {
-          this._set(field.id!, new EchoArray([], { useAutomergeBackend: false }));
+          this._set(field.id!, new EchoArray([], { automerge: false }));
         } else if (field.type === getSchemaProto().PropType.REF && field.refModelType === TextModel.meta.type) {
           // eslint-disable-next-line @typescript-eslint/no-var-requires
           const { TextObject } = require('./text-object');
@@ -273,8 +289,10 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    * @internal
    */
   override _itemUpdate(): void {
-    super._itemUpdate();
-    this._signal.notifyWrite();
+    if (this._updateDepth <= 1) {
+      super._itemUpdate();
+      this._signal.notifyWrite();
+    }
   }
 
   private _transform(value: any, visitors: ConvertVisitors = {}) {
@@ -363,7 +381,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
       case 'object':
         return this._createProxy({}, key, meta);
       case 'array':
-        return new EchoArray([], { useAutomergeBackend: false })._attach(this[base], key, meta);
+        return new EchoArray([], { automerge: false })._attach(this[base], key, meta);
       default:
         return value;
     }
@@ -389,50 +407,58 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    * @internal
    */
   private _set(key: string, value: any, meta?: boolean) {
-    this._inBatch(() => {
-      if (value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
-        const ref = this._linkObject(value);
-        this._mutate(this._model.builder().set(key, ref).build(meta));
-      } else if (value instanceof EchoArray) {
-        const values = value.map((item) => {
-          if (item instanceof AbstractEchoObject) {
-            return this._linkObject(item);
-          } else if (isReferenceLike(item)) {
+    try {
+      this._updateDepth++;
+      this._inBatch(() => {
+        if (value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
+          const ref = this._linkObject(value);
+          this._mutate(this._model.builder().set(key, ref).build(meta));
+        } else if (value instanceof EchoArray) {
+          const values = value.map((item) => {
+            if (item instanceof AbstractEchoObject) {
+              return this._linkObject(item);
+            } else if (isReferenceLike(item)) {
+              // Old reference format.
+              return new Reference(item['@id']);
+            } else if (typeof item === 'object' && item !== null && item['@type'] === REFERENCE_TYPE_TAG) {
+              return new Reference(item.itemId, item.protocol, item.host);
+            } else {
+              return item;
+            }
+          });
+          this._mutate(this._model.builder().set(key, OrderedArray.fromValues(values)).build(meta));
+          value._attach(this[base], key);
+        } else if (Array.isArray(value)) {
+          // TODO(dmaretskyi): Make a single mutation.
+          this._mutate(this._model.builder().set(key, OrderedArray.fromValues([])).build(meta));
+          this._get(key, meta).push(...value);
+        } else if (typeof value === 'object' && value !== null) {
+          if (Object.getOwnPropertyNames(value).length === 1 && value['@id']) {
+            // Special case for assigning unresolved references in the form of { '@id': '0x123' }
             // Old reference format.
-            return new Reference(item['@id']);
-          } else if (typeof item === 'object' && item !== null && item['@type'] === REFERENCE_TYPE_TAG) {
-            return new Reference(item.itemId, item.protocol, item.host);
+            this._mutate(this._model.builder().set(key, new Reference(value['@id'])).build(meta));
+          } else if (value['@type'] === REFERENCE_TYPE_TAG) {
+            // Special case for assigning unresolved references in the form of { '@id': '0x123' }
+            this._mutate(
+              this._model
+                .builder()
+                .set(key, new Reference(value.itemId, value.protocol, value.host))
+                .build(meta),
+            );
           } else {
-            return item;
+            const sub = this._createProxy({}, key);
+            this._mutate(this._model.builder().set(key, {}).build(meta));
+            for (const [subKey, subValue] of Object.entries(value)) {
+              sub[subKey] = subValue;
+            }
           }
-        });
-        this._mutate(this._model.builder().set(key, OrderedArray.fromValues(values)).build(meta));
-        value._attach(this[base], key);
-      } else if (Array.isArray(value)) {
-        // TODO(dmaretskyi): Make a single mutation.
-        this._mutate(this._model.builder().set(key, OrderedArray.fromValues([])).build(meta));
-        this._get(key, meta).push(...value);
-      } else if (typeof value === 'object' && value !== null) {
-        if (Object.getOwnPropertyNames(value).length === 1 && value['@id']) {
-          // Special case for assigning unresolved references in the form of { '@id': '0x123' }
-          // Old reference format.
-          this._mutate(this._model.builder().set(key, new Reference(value['@id'])).build(meta));
-        } else if (value['@type'] === REFERENCE_TYPE_TAG) {
-          // Special case for assigning unresolved references in the form of { '@id': '0x123' }
-          this._mutate(
-            this._model.builder().set(key, new Reference(value.itemId, value.protocol, value.host)).build(meta),
-          );
         } else {
-          const sub = this._createProxy({}, key);
-          this._mutate(this._model.builder().set(key, {}).build(meta));
-          for (const [subKey, subValue] of Object.entries(value)) {
-            sub[subKey] = subValue;
-          }
+          this._mutate(this._model.builder().set(key, value).build(meta));
         }
-      } else {
-        this._mutate(this._model.builder().set(key, value).build(meta));
-      }
-    });
+      });
+    } finally {
+      this._updateDepth--;
+    }
   }
 
   private _inBatch(cb: () => void) {
@@ -668,40 +694,4 @@ const getSchemaProto = (): typeof Schema => {
   }
 
   return schemaProto;
-};
-
-// TODO(dmaretskyi): Remove once migration is complete.
-let globalAutomergePreference: boolean | undefined;
-
-/**
- * @deprecated Temporary.
- */
-export const setGlobalAutomergePreference = (useAutomerge: boolean) => {
-  globalAutomergePreference = useAutomerge;
-};
-
-/**
- * @deprecated Temporary.
- */
-export const getGlobalAutomergePreference = () => {
-  return (
-    globalAutomergePreference ??
-    (globalThis as any).DXOS_FORCE_AUTOMERGE ??
-    (globalThis as any).process?.env?.DXOS_FORCE_AUTOMERGE ??
-    false
-  );
-};
-
-/**
- * @deprecated Temporary.
- */
-export const isActualTypedObject = (object: unknown): object is TypedObject => {
-  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === TypedObject.prototype;
-};
-
-/**
- * @deprecated Temporary.
- */
-export const isActualAutomergeObject = (object: unknown): object is AutomergeObject => {
-  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === AutomergeObject.prototype;
 };

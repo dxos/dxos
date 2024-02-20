@@ -362,7 +362,7 @@ describe('Messenger', () => {
   describe('load', () => {
     test('many connections to KUBE', async () => {
       // let numReceived = 0;
-      range(100).map(async () => {
+      void range(100).map(async () => {
         const peerId = PublicKey.random();
         const newLocal = new WebsocketSignalManager([{ server: 'wss://dev.kube.dxos.org/.well-known/dx/signal' }]);
         await newLocal.open();

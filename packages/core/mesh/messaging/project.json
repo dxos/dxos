@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "messaging",
   "sourceRoot": "packages/core/mesh/messaging/src",
   "projectType": "library",
   "targets": {

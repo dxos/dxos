@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "text-model",
   "sourceRoot": "packages/core/echo/text-model/src",
   "projectType": "library",
   "targets": {

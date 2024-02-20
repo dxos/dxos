@@ -43,7 +43,7 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
 
     // TODO(burdon): Generalize events via onAction?
     onSelect?: () => void;
-    onRemove?: () => void;
+    onDelete?: (force?: boolean) => void;
     onNavigate?: () => void;
     onAction?: (action: MosaicTileAction) => void;
   };
@@ -59,7 +59,8 @@ export type MosaicTileComponentProps<TData extends MosaicDataItem = MosaicDataIt
 export type MosaicTileComponent<
   TData extends MosaicDataItem = MosaicDataItem,
   TElement extends HTMLElement = HTMLDivElement,
-> = ForwardRefExoticComponent<RefAttributes<TElement> & MosaicTileComponentProps<TData>>;
+  TProps = {},
+> = ForwardRefExoticComponent<RefAttributes<TElement> & MosaicTileComponentProps<TData> & TProps>;
 
 /**
  * Basic draggable mosaic tile.

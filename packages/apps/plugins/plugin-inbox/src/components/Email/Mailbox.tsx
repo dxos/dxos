@@ -33,7 +33,7 @@ export type MailboxProps = {
   options?: MailboxOptions;
 };
 
-export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
+const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
   const [selected, setSelected] = useState<MessageType>();
   const tRef = useRef<ReturnType<typeof setTimeout>>();
   useEffect(() => {
@@ -71,10 +71,12 @@ export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
       <div className={mx('flex grow overflow-hidden border-t', fixedBorder)}>
-        <MasterDetail detail={selected && <pre className='text-sm'>{selected.blocks[0].text}</pre>}>
+        <MasterDetail detail={selected && <pre className='text-sm'>{selected.blocks[0].content?.text}</pre>}>
           <MessageList messages={messages} selected={selected?.id} onSelect={setSelected} onAction={handleAction} />
         </MasterDetail>
       </div>
     </Main.Content>
   );
 };
+
+export default Mailbox;

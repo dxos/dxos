@@ -1,9 +1,10 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "bare-template",
   "sourceRoot": "packages/apps/templates/bare-template/src",
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/apps/templates/bare-template/src/config.t.ts",
         "outputPath": "packages/apps/templates/bare-template/dist",
@@ -16,7 +17,7 @@
         "script": "gen"
       },
       "outputs": [
-        "packages/apps/templates/bare-template/test/variants"
+        "{projectRoot}/test/variants"
       ]
     },
     "lint": {},

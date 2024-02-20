@@ -1,6 +1,7 @@
 <component name="ProjectDictionaryState">
   <dictionary name="burdon">
     <words>
+      <w>alexjg</w>
       <w>automerge</w>
       <w>blueyard</w>
       <w>bot's</w>
@@ -9,6 +10,8 @@
       <w>burdon</w>
       <w>cairan</w>
       <w>callbackfn</w>
+      <w>codeblock</w>
+      <w>collab</w>
       <w>containerd</w>
       <w>crdt</w>
       <w>ctors</w>
@@ -41,6 +44,7 @@
       <w>lezer</w>
       <w>libsodium</w>
       <w>lichess</w>
+      <w>listbox</w>
       <w>localizer</w>
       <w>loopback</w>
       <w>memdown</w>
@@ -50,9 +54,11 @@
       <w>minsize</w>
       <w>mkcert</w>
       <w>multipass</w>
+      <w>nadella</w>
       <w>nanoerror</w>
       <w>nanomessage</w>
       <w>nanoresource</w>
+      <w>navtree</w>
       <w>noreferrer</w>
       <w>observablehq</w>
       <w>oclif</w>
@@ -89,11 +95,13 @@
       <w>riohacha</w>
       <w>rpcs</w>
       <w>seedphrase</w>
+      <w>seedrandom</w>
       <w>statable</w>
       <w>streamx</w>
       <w>stringified</w>
       <w>subtiles</w>
       <w>svg's</w>
+      <w>tablecell</w>
       <w>tabster</w>
       <w>tasklist</w>
       <w>testbench</w>

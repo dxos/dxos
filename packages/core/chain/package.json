@@ -1,6 +1,6 @@
 {
   "name": "@dxos/chain",
-  "version": "0.3.9",
+  "version": "0.4.4",
   "private": false,
   "description": "AI chain.",
   "homepage": "https://github.com/dxos/dxos/tree/master/packages/protocols",
@@ -26,7 +26,7 @@
     "@types/node": "^18.11.9"
   },
   "devDependencies": {
-    "@faker-js/faker": "^8.0.2"
+    "@dxos/random": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

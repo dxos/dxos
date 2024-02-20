@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "composer-extension",
   "sourceRoot": "packages/apps/composer-extension/src",
   "projectType": "application",
   "targets": {
@@ -43,7 +45,7 @@
         "script": "bundle"
       },
       "outputs": [
-        "packages/apps/composer-extension/out/composer-extension"
+        "{projectRoot}/out/composer-extension"
       ]
     },
     "lint": {},

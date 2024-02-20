@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "react-ui-navtree",
   "sourceRoot": "packages/ui/react-ui-navtree/src",
   "projectType": "library",
   "targets": {

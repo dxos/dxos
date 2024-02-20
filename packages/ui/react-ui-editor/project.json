@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "react-ui-editor",
   "sourceRoot": "packages/ui/react-ui-editor/src",
   "projectType": "library",
   "targets": {
@@ -14,15 +16,7 @@
       }
     },
     "lint": {},
-    "prebuild": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "prebuild"
-      },
-      "outputs": [
-        "packages/ui/react-ui-editor/src/testing/proto/gen"
-      ]
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild"

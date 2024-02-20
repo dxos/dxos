@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "gem-spore",
   "sourceRoot": "packages/experimental/gem-spore/src",
   "projectType": "library",
   "targets": {

@@ -54,23 +54,16 @@ jobs:
           DX_SENTRY_DESTINATION: ${{ secrets.CLI_SENTRY_DESTINATION }}
           DX_TELEMETRY_API_KEY: ${{ secrets.CLI_SEGMENT_API_KEY }}
 
-      - name: Bundle Vault
-        run: pnpm nx bundle vault --parallel 3
+      - name: Bundle Shell
+        run: pnpm nx bundle shell
         env:
           NODE_ENV: production
-          # TODO(wittjosiah): Remove.
-          NODE_OPTIONS: --max_old_space_size=8192
           DX_ENVIRONMENT: production
-          DX_IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
-          DX_SENTRY_DESTINATION: ${{ secrets.VAULT_SENTRY_DESTINATION }}
-          DX_TELEMETRY_API_KEY: ${{ secrets.VAULT_SEGMENT_API_KEY }}
-          SENTRY_RELEASE_AUTH_TOKEN: ${{ secrets.SENTRY_RELEASE_AUTH_TOKEN }}
 
       - name: Publish to NPM
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc
-          pnpm --filter-prod="./packages/**" publish --no-git-checks --tag=latest
+        run: ./.github/workflows/scripts/publish.sh
         env:
+          DX_ENVIRONMENT: production
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Bundle

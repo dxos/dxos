@@ -17,6 +17,7 @@ const Story = () => {
 };
 
 export default {
+  title: 'plugin-inbox/MessageList',
   component: MessageList,
   render: Story,
   decorators: [FullscreenDecorator()],

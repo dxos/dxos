@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "metagraph",
   "sourceRoot": "packages/experimental/metagraph/src",
   "projectType": "library",
   "targets": {

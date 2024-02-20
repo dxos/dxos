@@ -287,6 +287,6 @@ Returns: <code>string</code>
 
 Arguments: 
 
-`key`: <code>Uint8Array | Buffer | ArrayBuffer</code>
+`key`: <code>Buffer | Uint8Array | ArrayBuffer</code>
 
 

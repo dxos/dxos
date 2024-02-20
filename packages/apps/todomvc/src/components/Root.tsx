@@ -5,21 +5,25 @@
 import React from 'react';
 import { generatePath, useNavigate } from 'react-router-dom';
 
-import { Config, Defaults, Dynamics, Envs, Local, fromIFrame, fromHost, ClientProvider } from '@dxos/react-client';
+import { ClientProvider } from '@dxos/react-client';
 
 import { Main } from './Main';
+import { getConfig } from '../config';
 import { types } from '../proto';
 
-const configProvider = async () => new Config(await Dynamics(), await Envs(), Local(), Defaults());
-const servicesProvider = (config?: Config) =>
-  config?.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config);
+const createWorker = () =>
+  new SharedWorker(new URL('../shared-worker', import.meta.url), {
+    type: 'module',
+    name: 'dxos-client-worker',
+  });
 
 export const Root = () => {
   const navigate = useNavigate();
   return (
     <ClientProvider
-      config={configProvider}
-      services={servicesProvider}
+      config={getConfig}
+      createWorker={createWorker}
+      shell='./shell.html'
       onInitialized={async (client) => {
         client.addSchema(types);
 

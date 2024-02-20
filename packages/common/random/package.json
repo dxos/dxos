@@ -1,0 +1,31 @@
+{
+  "name": "@dxos/random",
+  "version": "0.4.4",
+  "description": "Random data generator.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/node-std": "workspace:*",
+    "@ngneat/falso": "^7.1.1",
+    "seedrandom": "^3.0.5",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/seedrandom": "^3.0.5",
+    "@types/uuid": "^8.3.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "observability",
+  "sourceRoot": "packages/sdk/observability/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/sdk/observability/src/datadog/index.ts",
+          "packages/sdk/observability/src/index.ts",
+          "packages/sdk/observability/src/segment/index.ts",
+          "packages/sdk/observability/src/sentry/index.ts"
+        ]
+      }
+    },
+    "lint": {},
+    "prebuild": {
+      "executor": "nx:run-script",
+      "inputs": [
+        {
+          "env": "NODE_ENV"
+        },
+        {
+          "env": "DX_ENVIRONMENT"
+        },
+        {
+          "env": "DX_IPDATA_API_KEY"
+        },
+        {
+          "env": "DX_SENTRY_DESTINATION"
+        },
+        {
+          "env": "DX_TELEMETRY_API_KEY"
+        },
+        "^production",
+        "default"
+      ],
+      "options": {
+        "script": "api-keys"
+      },
+      "outputs": [
+        "{projectRoot}/src/cli-observability-secrets.json"
+      ]
+    },
+    "test": {
+      "options": {
+        "checkLeaks": false
+      }
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

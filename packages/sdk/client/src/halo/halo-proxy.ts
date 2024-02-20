@@ -18,7 +18,7 @@ import { inspectObject } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ApiError, trace } from '@dxos/protocols';
+import { ApiError, trace as Trace } from '@dxos/protocols';
 import {
   type Contact,
   type Device,
@@ -27,9 +27,11 @@ import {
   Invitation,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential, type Presentation, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { trace } from '@dxos/tracing';
 
 import { InvitationsProxy } from '../invitations';
 
+@trace.resource()
 export class HaloProxy implements Halo {
   private readonly _instanceId = PublicKey.random().toHex();
 
@@ -55,6 +57,7 @@ export class HaloProxy implements Halo {
     return inspectObject(this);
   }
 
+  @trace.info({ depth: null })
   toJSON() {
     return {
       identityKey: this._identity.get()?.identityKey.truncate(),
@@ -87,6 +90,7 @@ export class HaloProxy implements Halo {
   }
 
   // TODO(burdon): Standardize isOpen, etc.
+  @trace.info()
   get opened() {
     return this._invitationProxy !== undefined;
   }
@@ -97,7 +101,7 @@ export class HaloProxy implements Halo {
    * @internal
    */
   async _open() {
-    log.trace('dxos.sdk.halo-proxy.open', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
+    log.trace('dxos.sdk.halo-proxy.open', Trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     const gotIdentity = this._identityChanged.waitForCount(1);
     // const gotContacts = this._contactsChanged.waitForCount(1);
 
@@ -118,6 +122,7 @@ export class HaloProxy implements Halo {
         });
       this._identityChanged.emit(data.identity ?? null);
     });
+    this._subscriptions.add(() => identityStream.close());
 
     invariant(this._serviceProvider.services.DevicesService, 'DevicesService not available');
     const devicesStream = this._serviceProvider.services.DevicesService.queryDevices();
@@ -131,18 +136,16 @@ export class HaloProxy implements Halo {
         });
       }
     });
-
-    this._subscriptions.add(() => identityStream.close());
+    this._subscriptions.add(() => devicesStream.close());
 
     // const contactsStream = this._serviceProvider.services.HaloService.subscribeContacts();
     // contactsStream.subscribe(data => {
     //   this._contacts = data.contacts as SpaceMember[];
     //   this._contactsChanged.emit();
     // });
-
     // this._subscriptions.add(() => contactsStream.close());
 
-    log.trace('dxos.sdk.halo-proxy.open', trace.end({ id: this._instanceId }));
+    log.trace('dxos.sdk.halo-proxy.open', Trace.end({ id: this._instanceId }));
     await Promise.all([gotIdentity]);
   }
 
@@ -174,7 +177,9 @@ export class HaloProxy implements Halo {
    */
   async createIdentity(profile: ProfileDocument = {}): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
-    const identity = await this._serviceProvider.services.IdentityService.createIdentity(profile);
+    const identity = await this._serviceProvider.services.IdentityService.createIdentity({
+      profile,
+    });
     this._identityChanged.emit(identity);
     return identity;
   }

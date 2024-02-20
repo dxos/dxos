@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "plugin-kanban",
   "sourceRoot": "packages/apps/plugins/plugin-kanban/src",
   "projectType": "library",
   "targets": {

@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "node-std",
   "sourceRoot": "packages/common/node-std/src",
   "projectType": "library",
   "targets": {
@@ -7,6 +9,8 @@
         "bundlePackages": [
           "assert",
           "available-typed-arrays",
+          "base64-js",
+          "buffer",
           "call-bind",
           "define-data-property",
           "define-properties",
@@ -23,6 +27,7 @@
           "has-symbols",
           "has-tostringtag",
           "hasown",
+          "ieee754",
           "inherits",
           "is-arguments",
           "is-callable",
@@ -39,10 +44,13 @@
           "which-typed-array"
         ],
         "entryPoints": [
+          "packages/common/node-std/src/_/config.js",
           "packages/common/node-std/src/assert.js",
+          "packages/common/node-std/src/buffer.js",
           "packages/common/node-std/src/crypto.js",
           "packages/common/node-std/src/events.js",
           "packages/common/node-std/src/fs.js",
+          "packages/common/node-std/src/fs/promises.js",
           "packages/common/node-std/src/globals.js",
           "packages/common/node-std/src/inject-globals.js",
           "packages/common/node-std/src/path.js",
@@ -50,7 +58,8 @@
           "packages/common/node-std/src/util.js"
         ],
         "platforms": [
-          "browser"
+          "browser",
+          "node"
         ]
       }
     },

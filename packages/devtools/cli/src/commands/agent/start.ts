@@ -10,6 +10,7 @@ import {
   Agent,
   ChainPlugin,
   DashboardPlugin,
+  DiscordPlugin,
   EchoProxyPlugin,
   EpochMonitorPlugin,
   FunctionsPlugin,
@@ -19,7 +20,7 @@ import {
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
-import * as Telemetry from '@dxos/telemetry';
+import { type Platform } from '@dxos/protocols/proto/dxos/client/services';
 
 import { BaseCommand } from '../../base-command';
 
@@ -55,6 +56,7 @@ export default class Start extends BaseCommand<typeof Start> {
   ];
 
   private readonly _ctx = new Context();
+  private _agent?: Agent;
 
   async run(): Promise<any> {
     if (this.flags.foreground) {
@@ -73,7 +75,7 @@ export default class Start extends BaseCommand<typeof Start> {
       rmSync(path, { force: true });
     }
 
-    const agent = new Agent({
+    this._agent = new Agent({
       config: this.clientConfig,
       profile: this.flags.profile,
       metrics: this.flags.metrics,
@@ -84,6 +86,7 @@ export default class Start extends BaseCommand<typeof Start> {
       plugins: [
         new ChainPlugin(),
         new DashboardPlugin(),
+        new DiscordPlugin(),
         new EchoProxyPlugin(),
         new EpochMonitorPlugin(),
         new FunctionsPlugin(),
@@ -91,10 +94,27 @@ export default class Start extends BaseCommand<typeof Start> {
       ],
     });
 
-    await agent.start();
+    await this._agent.start();
     this.log('Agent started... (ctrl-c to exit)');
 
-    this._sendTelemetry();
+    await this._sendTelemetry();
+    const platform = (await this._agent.client!.services.services.SystemService?.getPlatform()) as Platform;
+    if (!platform) {
+      this.log('failed to get platform, could not initialize observability');
+      return undefined;
+    }
+
+    if (this._observability?.enabled) {
+      this.log('Metrics initialized!');
+
+      await this._observability.initialize();
+      await this._observability.setIdentityTags(this._agent.client!);
+      await this._observability.startNetworkMetrics(this._agent.client!);
+      await this._observability.startSpacesMetrics(this._agent.client!, 'cli');
+      await this._observability.startRuntimeMetrics(this._agent.client!);
+      // initAgentMetrics(this._ctx, this._observability, this._startTime);
+      //  initClientMetrics(this._ctx, this._observability, this._agent!);
+    }
 
     if (this.flags.ws) {
       this.log(`Open devtools: https://devtools.dxos.org?target=ws://localhost:${this.flags.ws}`);
@@ -124,14 +144,17 @@ export default class Start extends BaseCommand<typeof Start> {
     }, system);
   }
 
-  private _sendTelemetry() {
+  private async _sendTelemetry() {
     const sendTelemetry = async () => {
-      Telemetry.event({
-        installationId: this._telemetryContext?.installationId,
+      // TODO(nf): move to observability
+      const installationId = this._observability?.getTag('installationId');
+      const userId = this._observability?.getTag('identityKey');
+      this._observability?.event({
+        installationId: installationId?.value,
+        identityId: userId?.value,
         name: 'cli.command.run.agent',
         properties: {
           profile: this.flags.profile,
-          ...this._telemetryContext,
           duration: this.duration,
         },
       });

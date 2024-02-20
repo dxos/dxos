@@ -2,207 +2,247 @@
 // Copyright 2023 DXOS.org
 //
 
-import { EditorState, type Extension } from '@codemirror/state';
+import { EditorState, type Extension, type StateEffect } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
-import { vim } from '@replit/codemirror-vim';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, {
   type ComponentProps,
-  type KeyboardEvent,
   forwardRef,
+  type KeyboardEventHandler,
   useCallback,
   useEffect,
   useImperativeHandle,
+  useRef,
   useState,
+  useMemo,
 } from 'react';
 
-import { generateName } from '@dxos/display-name';
+import { log } from '@dxos/log';
 import { useThemeContext } from '@dxos/react-ui';
-import { getColorForValue, inputSurface, mx } from '@dxos/react-ui-theme';
+import { focusRing } from '@dxos/react-ui-theme';
+import { isNotFalsy } from '@dxos/util';
 
-import { basicBundle, markdownBundle } from './extensions';
-import { defaultTheme, markdownTheme, textTheme } from './themes';
+import { createBasicBundle, createMarkdownExtensions, editorMode } from '../../extensions';
 import { type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
-
-export const EditorModes = ['default', 'vim'] as const;
-export type EditorMode = (typeof EditorModes)[number];
+import { defaultTheme, markdownTheme, textTheme } from '../../themes';
+import { logChanges } from '../../util';
 
 export type CursorInfo = {
   from: number;
   to: number;
   line: number;
   lines: number;
+  length: number;
   after?: string;
-};
-
-export type TextEditorRef = {
-  root: HTMLDivElement | null;
-  state?: EditorState;
-  view?: EditorView;
 };
 
 export type TextEditorSlots = {
   root?: Omit<ComponentProps<'div'>, 'ref'>;
   editor?: {
     className?: string;
-    placeholder?: string;
-    spellCheck?: boolean;
-    tabIndex?: number;
-    theme?: ThemeStyles;
+  };
+  content?: {
+    className?: string;
   };
 };
 
 export type TextEditorProps = {
-  model: EditorModel;
-  readonly?: boolean;
-  editorMode?: EditorMode;
-  extensions?: Extension[];
+  model: EditorModel; // TODO(burdon): Optional (e.g., just provide content if readonly).
+  readonly?: boolean; // TODO(burdon): Move into model.
+  autoFocus?: boolean;
+  lineWrapping?: boolean;
+  scrollTo?: StateEffect<any>; // TODO(burdon): Restore scroll position: scrollTo EditorView.scrollSnapshot().
+  selection?: { anchor: number; head?: number };
+  placeholder?: string;
+  theme?: ThemeStyles;
   slots?: TextEditorSlots;
+  extensions?: Extension[];
+  debug?: boolean;
 };
 
 /**
  * Base text editor.
- * NOTE: Rather than adding properties, try to create extensions that can be reused.
  */
-export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ model, readonly, editorMode, extensions = [], slots = defaultSlots }, forwardedRef) => {
-    const { themeMode } = useThemeContext();
+// TODO(burdon): Replace with useTextEditor.
+export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
+  (
+    { model, readonly, autoFocus, scrollTo, selection, theme, slots = defaultSlots, extensions = [], debug },
+    forwardedRef,
+  ) => {
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
+    const { themeMode } = useThemeContext();
 
-    const [root, setRoot] = useState<HTMLDivElement | null>(null);
-    const [state, setState] = useState<EditorState>();
-    const [view, setView] = useState<EditorView>();
-    useImperativeHandle(forwardedRef, () => ({ root, state, view }), [view, state, root]);
+    const rootRef = useRef<HTMLDivElement>(null);
+    const [view, setView] = useState<EditorView | null>(null);
 
-    // TODO(burdon): Factor out?
-    const { awareness, peer } = model;
+    // The view ref can be used to focus the editor.
+    // NOTE: This does not cause the parent to re-render, so the ref is not available immediately.
+    useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => view, [view]);
+
+    // Set focus.
     useEffect(() => {
-      if (awareness && peer) {
-        awareness.setLocalStateField('user', {
-          name: peer.name ?? generateName(peer.id),
-          color: getColorForValue({ value: peer.id, type: 'color' }),
-          colorLight: getColorForValue({ value: peer.id, themeMode, type: 'highlight' }),
-        });
+      if (autoFocus && !view?.hasFocus) {
+        if (view?.state.selection.main?.from === 0) {
+          // Start at end of line.
+          const { to } = view.state.doc.lineAt(0);
+          view?.dispatch({ selection: { anchor: to } });
+        }
+        view?.focus();
       }
-    }, [awareness, peer, themeMode]);
+    }, [view, autoFocus]);
 
-    // TODO(burdon): Get from model.
-    // useHighlights(view, [
-    //   { id: 'c-1', from: 0, to: 20 },
-    //   { id: 'c-2', from: 100, to: 120 },
-    // ]);
-
+    // Create editor state and view.
+    // The view is recreated if the model or extensions are changed.
     useEffect(() => {
-      if (!root) {
+      if (!model || !rootRef.current) {
         return;
       }
 
+      //
+      // EditorState
+      // https://codemirror.net/docs/ref/#state.EditorStateConfig
+      //
       const state = EditorState.create({
         doc: model.text(),
+        selection,
         extensions: [
-          readonly && EditorState.readOnly.of(readonly),
-
-          // TODO(burdon): Factor out VIM mode?
-          editorMode === 'vim' && vim(),
+          // TODO(burdon): Doesn't catch errors in keymap functions.
+          EditorView.exceptionSink.of((err) => {
+            log.catch(err);
+          }),
 
           // Theme.
-          // TODO(burdon): Make optional.
+          // TODO(burdon): Make configurable.
           EditorView.baseTheme(defaultTheme),
-          EditorView.theme(slots?.editor?.theme ?? {}),
-          // TODO(burdon): themeMode doesn't change in storybooks.
+          EditorView.theme(theme ?? {}),
           EditorView.darkTheme.of(themeMode === 'dark'),
+          EditorView.editorAttributes.of({ class: slots.editor?.className ?? '' }),
+          EditorView.contentAttributes.of({ class: slots.content?.className ?? '' }),
+
+          // Focus.
+          EditorView.updateListener.of((update) => {
+            update.transactions.forEach((transaction) => {
+              if (transaction.isUserEvent('focus.container')) {
+                rootRef.current?.focus();
+              }
+            });
+          }),
+
+          // State.
+          EditorView.editable.of(!readonly),
+          EditorState.readOnly.of(!!readonly),
 
           // Storage and replication.
+          // NOTE: This must come before user extensions.
           model.extension,
 
           // Custom.
           ...extensions,
-        ].filter(Boolean) as Extension[],
+        ].filter(isNotFalsy),
       });
 
-      // NOTE: This repaints the editor.
-      // If the new state is derived from the old state, it will likely not be visible other than the cursor resetting.
-      // Ideally this should not be hit except when changing between text objects.
+      //
+      // EditorView
+      // https://codemirror.net/docs/ref/#view.EditorViewConfig
+      //
+      const newView = new EditorView({
+        state,
+        parent: rootRef.current,
+        scrollTo,
+        // NOTE: Uncomment to debug/monitor all transactions.
+        // https://codemirror.net/docs/ref/#view.EditorView.dispatch
+        dispatchTransactions: (trs, view) => {
+          if (debug) {
+            logChanges(trs);
+          }
+          view.update(trs);
+        },
+      });
+
       view?.destroy();
-      setView(
-        new EditorView({
-          state,
-          parent: root,
-          // NOTE: Uncomment to spy on all transactions.
-          // https://codemirror.net/docs/ref/#view.EditorView.dispatch
-          // dispatch: (transaction, view) => {
-          //   view.update([transaction]);
-          // },
-        }),
-      );
-      setState(state);
+      setView(newView);
+
+      // Remove tabster attribute (rely on custom keymap).
+      if (state.facet(editorMode).noTabster) {
+        rootRef.current.removeAttribute('data-tabster');
+      }
 
       return () => {
-        view?.destroy();
-        setView(undefined);
-        setState(undefined);
+        newView?.destroy();
+        setView(null);
       };
-    }, [root, model, themeMode, readonly, editorMode]);
+      // TODO(wittjosiah): Does `rootRef` ever change? Only `.current` changes?
+    }, [rootRef, extensions, model, readonly, themeMode]);
 
-    const handleKeyUp = useCallback(
-      (event: KeyboardEvent) => {
-        const { key, altKey, shiftKey, metaKey, ctrlKey } = event;
+    // Focus editor on Enter (e.g., when tabbing to this component).
+    const handleKeyUp = useCallback<KeyboardEventHandler<HTMLDivElement>>(
+      (event) => {
+        const { key } = event;
         switch (key) {
           case 'Enter': {
-            view?.contentDOM.focus();
-            break;
-          }
-
-          case 'Escape': {
-            editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey) && root?.focus();
+            view?.focus();
             break;
           }
         }
       },
-      [view, editorMode],
+      [view],
     );
 
     return (
       <div
+        role='none'
+        ref={rootRef}
         key={model.id}
-        ref={setRoot}
         tabIndex={0}
-        {...slots?.root}
-        {...(editorMode !== 'vim' && tabsterDOMAttribute)}
         onKeyUp={handleKeyUp}
+        {...slots.root}
+        {...tabsterDOMAttribute}
       />
     );
   },
 );
 
-export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ readonly, extensions = [], slots: _slots, ...props }, forwardedRef) => {
+export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
+  (
+    { readonly, placeholder, lineWrapping, theme = textTheme, slots, extensions: _extensions, ...props },
+    forwardedRef,
+  ) => {
     const { themeMode } = useThemeContext();
-    const slots = defaultsDeep({}, _slots, defaultTextSlots);
+    const updatedSlots = defaultsDeep({}, slots, defaultTextSlots);
+    const extensions = useMemo(
+      () => [createBasicBundle({ themeMode, placeholder, lineWrapping }), ...(_extensions ?? [])],
+      [themeMode, placeholder, lineWrapping, _extensions],
+    );
     return (
       <BaseTextEditor
         ref={forwardedRef}
         readonly={readonly}
-        extensions={[basicBundle({ readonly, themeMode, placeholder: slots?.editor?.placeholder }), ...extensions]}
-        slots={slots}
+        extensions={extensions}
+        theme={theme}
+        slots={updatedSlots}
         {...props}
       />
     );
   },
 );
 
-export const MarkdownEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ readonly, extensions = [], slots: _slots, ...props }, forwardedRef) => {
+export const MarkdownEditor = forwardRef<EditorView | null, TextEditorProps>(
+  ({ readonly, placeholder, theme = markdownTheme, slots, extensions: _extensions, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
-    const slots = defaultsDeep({}, _slots, defaultMarkdownSlots);
+    const updatedSlots = defaultsDeep({}, slots, defaultMarkdownSlots);
+    const extensions = useMemo(
+      () => [createMarkdownExtensions({ themeMode, placeholder }), ...(_extensions ?? [])],
+      [themeMode, placeholder, _extensions],
+    );
     return (
       <BaseTextEditor
         ref={forwardedRef}
         readonly={readonly}
-        extensions={[markdownBundle({ readonly, themeMode, placeholder: slots?.editor?.placeholder }), ...extensions]}
-        slots={slots}
+        extensions={extensions}
+        theme={theme}
+        slots={updatedSlots}
         {...props}
       />
     );
@@ -211,20 +251,17 @@ export const MarkdownEditor = forwardRef<TextEditorRef, TextEditorProps>(
 
 export const defaultSlots: TextEditorSlots = {
   root: {
-    className: mx('p-2', inputSurface),
+    className: focusRing,
+  },
+  editor: {
+    className: 'min-bs-full',
   },
 };
 
 export const defaultTextSlots: TextEditorSlots = {
   ...defaultSlots,
-  editor: {
-    theme: textTheme,
-  },
 };
 
 export const defaultMarkdownSlots: TextEditorSlots = {
   ...defaultSlots,
-  editor: {
-    theme: markdownTheme,
-  },
 };

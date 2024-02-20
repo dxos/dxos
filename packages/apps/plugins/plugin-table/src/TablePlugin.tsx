@@ -7,17 +7,13 @@ import React from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Table as TableType, Folder } from '@braneframe/types';
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { TableMain, TableSection, TableSlide } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
 import translations from './translations';
 import { TableAction, type TablePluginProvides, isTable } from './types';
-
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[TableType.name] = TableType;
 
 export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
   return {
@@ -55,7 +51,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                   data: { target: parent.data },
                 },
                 {
-                  action: LayoutAction.ACTIVATE,
+                  action: NavigationAction.ACTIVATE,
                 },
               ]),
             properties: {
@@ -82,7 +78,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case TableAction.CREATE: {
-              return { object: new TableType() };
+              return { data: new TableType() };
             }
           }
         },

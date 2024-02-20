@@ -16,7 +16,10 @@ export class ObjectSyncer<T extends TypedObject> {
 
   private _subscription?: Subscription;
 
-  constructor(private readonly _filter: Filter<T>, private readonly _indexer: ObjectIndexer<T>) {}
+  constructor(
+    private readonly _filter: Filter<T>,
+    private readonly _indexer: ObjectIndexer<T>,
+  ) {}
 
   async open(space: Space) {
     await this.close();

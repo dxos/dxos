@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "log",
   "sourceRoot": "packages/common/log/src",
   "projectType": "library",
   "targets": {

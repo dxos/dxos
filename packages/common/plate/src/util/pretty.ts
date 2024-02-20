@@ -4,7 +4,7 @@
 
 import prettier from 'prettier';
 
-export const pretty = (content: string, path: string) => {
+export const pretty = async (content: string, path: string): Promise<string> => {
   const map = {
     '.ts': 'typescript',
     '.tsx': 'typescript',
@@ -19,9 +19,15 @@ export const pretty = (content: string, path: string) => {
   };
   for (const ext in map) {
     if (path.endsWith(ext)) {
-      return prettier.format(content, {
-        parser: (map as any)[ext],
-      });
+      try {
+        return prettier.format(content, {
+          parser: (map as any)[ext],
+        });
+      } catch (err) {
+        console.error(`Plate template error formatting '${path}'`);
+        console.error(err);
+        return content;
+      }
     }
   }
   return content;

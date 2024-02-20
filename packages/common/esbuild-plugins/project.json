@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "esbuild-plugins",
   "sourceRoot": "packages/common/esbuild-plugins/src",
   "projectType": "library",
   "targets": {

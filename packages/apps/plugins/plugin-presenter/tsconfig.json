@@ -1,5 +1,7 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": [
+    "../../../../tsconfig.json"
+  ],
   "compilerOptions": {
     "lib": [
       "DOM",
@@ -21,7 +23,13 @@
   ],
   "references": [
     {
+      "path": "../../../common/random"
+    },
+    {
       "path": "../../../sdk/app-framework"
+    },
+    {
+      "path": "../../../sdk/react-client"
     },
     {
       "path": "../../../ui/react-ui"

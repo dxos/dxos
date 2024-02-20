@@ -32,18 +32,21 @@ const SelectPortal = SelectPrimitive.Portal;
 
 type SelectTriggerButtonProps = Omit<ButtonProps, 'children'> & Pick<SelectValueProps, 'placeholder'>;
 
-const SelectTriggerButton = forwardRef<HTMLButtonElement, ButtonProps>(({ placeholder, ...props }, forwardedRef) => {
-  return (
-    <SelectPrimitive.Trigger asChild ref={forwardedRef}>
-      <Button {...props}>
-        <SelectPrimitive.Value placeholder={placeholder} />
-        <SelectPrimitive.Icon className='pis-2'>
-          <CaretDown weight='bold' />
-        </SelectPrimitive.Icon>
-      </Button>
-    </SelectPrimitive.Trigger>
-  );
-});
+const SelectTriggerButton = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ children, placeholder, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    return (
+      <SelectPrimitive.Trigger asChild ref={forwardedRef}>
+        <Button {...props}>
+          <SelectPrimitive.Value placeholder={placeholder}>{children}</SelectPrimitive.Value>
+          <SelectPrimitive.Icon asChild>
+            <CaretDown className={tx('select.triggerIcon', 'select__trigger__icon', {})} weight='bold' />
+          </SelectPrimitive.Icon>
+        </Button>
+      </SelectPrimitive.Trigger>
+    );
+  },
+);
 
 type SelectContentProps = ThemedClassName<SelectPrimitive.SelectContentProps>;
 

@@ -324,6 +324,9 @@ message Runtime {
     message Ipfs {
       optional string server = 1;
       optional string gateway = 2;
+      /// Used for IPFS API authentication, regardless if server is direct KUBO API (e.g. path of '/api/v0') or a reverse proxy
+      /// Same secret format as https://github.com/ipfs/kubo/blob/master/docs/config.md#apiauthorizations
+      optional string server_auth_secret = 3;
     }
 
     message Signal {
@@ -367,6 +370,12 @@ message Runtime {
       optional string username = 2;
       optional string password = 3;
     }
+    // TODO(nf): Set API version, authentication scheme, etc.
+    message AgentHosting {
+      // TODO(nf): read enum from yml?
+      optional string server = 1;
+      optional string type = 2;
+    }
 
     optional Kube kube = 1;
     optional AppServer app = 2;
@@ -380,6 +389,7 @@ message Runtime {
     optional Supervisor supervisor = 10; // TODO(burdon): Promote to 1; start others at 10.
     optional Tunneling tunneling = 11;
     optional Faasd faasd = 12;
+    optional AgentHosting agent_hosting = 13;
   }
 
   message Keys {

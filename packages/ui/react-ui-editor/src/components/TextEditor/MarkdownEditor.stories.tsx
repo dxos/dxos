@@ -3,43 +3,45 @@
 //
 
 import '@dxosTheme';
-
-import { EditorView } from '@codemirror/view';
-import { faker } from '@faker-js/faker';
+import { type EditorView } from '@codemirror/view';
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { StrictMode, useRef, useState } from 'react';
+import React, { type FC, StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { TextObject } from '@dxos/echo-schema';
+import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
-import { fixedInsetFlexLayout, getSize, groupSurface, mx } from '@dxos/react-ui-theme';
+import { faker } from '@dxos/random';
+import { getSize, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { MarkdownEditor, type TextEditorProps, type TextEditorRef } from './TextEditor';
+import { MarkdownEditor, type TextEditorProps } from './TextEditor';
 import {
-  autocomplete,
-  listener,
-  link,
-  tasklist,
-  tooltip,
-  type TooltipOptions,
+  type CommentsOptions,
   type LinkOptions,
-  comments,
-  table,
-  image,
-  mention,
+  autocomplete,
   blast,
-  demo,
-  defaultOptions,
-  highlight,
   code,
-} from './extensions';
-import { useTextModel } from '../../hooks';
+  comments,
+  defaultOptions,
+  heading,
+  hr,
+  image,
+  link,
+  mention,
+  table,
+  tasklist,
+  typewriter,
+  useComments,
+  formatting,
+  annotations,
+  EditorModes,
+} from '../../extensions';
+import { type Comment, useTextModel } from '../../hooks';
+import translations from '../../translations';
 
-// Extensions:
-// TODO(burdon): Table of contents.
-// TODO(burdon): Front-matter
+faker.seed(101);
 
 const str = (...lines: string[]) => lines.join('\n');
 
@@ -53,8 +55,9 @@ const text = {
     '- [x] decorator',
     '- [ ] checkbox',
     '  - [ ] state',
-    '  - [ ] indent',
-    '  - [x] style',
+    '    - [ ] indent',
+    '    - [x] style',
+    '',
   ),
 
   list: str(
@@ -63,6 +66,7 @@ const text = {
     '- new york',
     '- london',
     '- tokyo',
+    '',
   ),
 
   numbered: str(
@@ -78,7 +82,7 @@ const text = {
     '## Code',
     '',
     '```',
-    'const x = 100;',
+    '$ ls -las',
     '```',
     '',
     '```tsx',
@@ -87,8 +91,8 @@ const text = {
     '',
     '  return () => <div>Test</div>;',
     '};',
+    '```',
     '',
-    '```'
   ),
 
   links: str(
@@ -103,12 +107,12 @@ const text = {
   table: str(
     '# Table',
     '',
-    `| ${faker.lorem.word().padStart(8)} | ${faker.lorem.word().padStart(8)} | ${faker.lorem.word().padStart(8)} |`,
-    '|----------|----------|----------|',
-    `| ${num().padStart(8)} | ${num().padStart(8)} | ${num().padStart(8)} |`,
-    `| ${num().padStart(8)} | ${num().padStart(8)} | ${num().padStart(8)} |`,
-    `| ${num().padStart(8)} | ${num().padStart(8)} | ${num().padStart(8)} |`,
-    '', // TODO(burdon): Possible GFM parsing bug if no newline?
+    `| ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} |`,
+    `|-${''.padStart(12, '-')}-|-${''.padStart(12, '-')}-|-${''.padStart(12, '-')}-|`,
+    `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
+    `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
+    `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
+    '',
   ),
 
   image: str('# Image', '', '![dxos](https://pbs.twimg.com/profile_banners/1268328127673044992/1684766689/1500x500)'),
@@ -126,6 +130,12 @@ const document = str(
   '# Markdown',
   '',
   '> This is a block quote.',
+  '',
+  '> This is a long wrapping block quote. Neque reiciendis ullam quae error labore sit, at, et, nulla, aut at nostrum omnis quas nostrum, at consectetur vitae eos asperiores non omnis ullam in beatae at vitae deserunt asperiores sapiente.',
+  '',
+  '> This is',
+  '> a multi-line',
+  '> block quote.',
   '',
   'This is all about https://dxos.org and related technologies.',
   '',
@@ -147,7 +157,6 @@ const document = str(
   text.table,
   '---',
   text.image,
-  '',
   text.footer,
 );
 
@@ -159,10 +168,12 @@ const links = [
   { label: 'StackEdit', apply: '[StackEdit](https://stackedit.io/app)' },
 ];
 
+const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', 'shoko'];
+
 const hover =
   'rounded-sm text-base text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
-const onHover: TooltipOptions['onHover'] = (el, url) => {
+const onHoverLinkTooltip: LinkOptions['onHover'] = (el, url) => {
   const web = new URL(url);
   createRoot(el).render(
     <StrictMode>
@@ -174,38 +185,63 @@ const onHover: TooltipOptions['onHover'] = (el, url) => {
   );
 };
 
-const onRender: LinkOptions['onRender'] = (el, url) => {
+const Key: FC<{ char: string }> = ({ char }) => (
+  <span className='flex justify-center items-center w-[24px] h-[24px] rounded text-xs bg-neutral-200 text-black'>
+    {char}
+  </span>
+);
+
+const onCommentsHover: CommentsOptions['onHover'] = (el, shortcut) => {
+  createRoot(el).render(
+    <StrictMode>
+      <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded'>
+        <div>Create comment</div>
+        <div className='flex gap-1'>
+          {keySymbols(parseShortcut(shortcut)).map((char) => (
+            <Key key={char} char={char} />
+          ))}
+        </div>
+      </div>
+    </StrictMode>,
+  );
+};
+
+const onRenderLink: LinkOptions['onRender'] = (el, url) => {
   createRoot(el).render(
     <StrictMode>
       <a href={url} target='_blank' rel='noreferrer' className={hover}>
-        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 mb-1')} />
+        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 mb-[2px]')} />
       </a>
     </StrictMode>,
   );
 };
 
-// TODO(burdon): Pass in model.
-const Story = ({
-  text,
-  automerge,
-  ...props
-}: { text?: string; automerge?: boolean } & Pick<TextEditorProps, 'readonly' | 'extensions' | 'slots'>) => {
-  const ref = useRef<TextEditorRef>(null);
-  const [item] = useState({ text: new TextObject(text, undefined, undefined, { useAutomergeBackend: automerge }) });
+type StoryProps = {
+  id?: string;
+  text?: string;
+  comments?: Comment[];
+} & Pick<TextEditorProps, 'readonly' | 'placeholder' | 'extensions'>;
+
+const Story = ({ id = 'test', text, comments, placeholder = 'New document.', ...props }: StoryProps) => {
+  const [item] = useState({ text: new TextObject(text) });
+  const view = useRef<EditorView>(null);
   const model = useTextModel({ text: item.text });
+  useComments(view.current, id, comments);
   if (!model) {
     return null;
   }
 
   return (
-    <div className={mx(fixedInsetFlexLayout, groupSurface)}>
-      <div className='flex justify-center overflow-y-scroll'>
-        <div className='flex flex-col w-[800px] py-16'>
-          <MarkdownEditor ref={ref} model={model} {...props} />
-          <div className='flex shrink-0 h-[300px]'></div>
-        </div>
-      </div>
-    </div>
+    <MarkdownEditor
+      ref={view}
+      model={model}
+      placeholder={placeholder}
+      slots={{
+        root: { className: mx(textBlockWidth, 'min-bs-dvh') },
+        editor: { className: 'min-bs-dvh p-2 bg-white dark:bg-black' },
+      }}
+      {...props}
+    />
   );
 };
 
@@ -214,70 +250,87 @@ export default {
   component: MarkdownEditor,
   decorators: [withTheme],
   render: Story,
+  parameters: { translations, layout: 'fullscreen' },
 };
 
-const extensions = [
+const defaults = [
   autocomplete({
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
   code(),
+  formatting(),
+  heading(),
+  hr(),
   image(),
-  link({ onRender }),
+  link({ onRender: onRenderLink, onHover: onHoverLinkTooltip }),
   table(),
   tasklist(),
-  tooltip({ onHover }),
 ];
 
 export const Default = {
-  render: () => <Story text={document} extensions={extensions} />,
+  render: () => <Story text={document} extensions={defaults} />,
 };
 
 export const Readonly = {
-  render: () => <Story text={document} extensions={extensions} readonly />,
+  render: () => <Story text={document} extensions={defaults} readonly />,
 };
 
-export const Tooltips = {
-  render: () => <Story text={str(text.links, text.footer)} extensions={[tooltip({ onHover })]} />,
+export const NoExtensions = {
+  render: () => <Story text={document} />,
+};
+
+const large = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
+
+export const Empty = {
+  render: () => <Story />,
+};
+
+export const Scrolling = {
+  render: () => <Story text={str('# Large Document', '', large)} extensions={[]} />,
 };
 
 export const Links = {
-  render: () => <Story text={str(text.links, text.footer)} extensions={[link({ onRender })]} />,
+  render: () => (
+    <Story
+      text={str(text.links, text.footer)}
+      extensions={[link({ onHover: onHoverLinkTooltip, onRender: onRenderLink })]}
+    />
+  ),
 };
 
 export const Code = {
-  render: () => <Story text={str(text.code, text.footer)} extensions={[code()]} readonly />,
+  render: () => <Story text={str(text.code, text.footer)} extensions={[code()]} />,
+};
+
+export const Image = {
+  render: () => <Story text={str(text.image, text.footer)} extensions={[image()]} />,
+};
+
+export const Lists = {
+  render: () => (
+    <Story text={str(text.tasks, '', text.list, '', text.numbered, text.footer)} extensions={[tasklist()]} />
+  ),
 };
 
 export const Table = {
   render: () => <Story text={str(text.table, text.footer)} extensions={[table()]} />,
 };
 
-export const Image = {
-  render: () => <Story text={str(text.image, text.footer)} readonly extensions={[image()]} />,
-};
-
-export const TaskList = {
-  render: () => (
-    <Story
-      text={str(text.tasks, '', text.list, text.footer)}
-      extensions={[
-        tasklist(),
-        listener({
-          onChange: (text) => {
-            console.log(text);
-          },
-        }),
-      ]}
-    />
-  ),
-};
+// export const Outliner = {
+//   render: () => (
+//     <Story
+//       text={str('# Outliner', '', 'Block', ': this is a block', ': with multiple lines', text.footer)}
+//       extensions={[outliner()]}
+//     />
+//   ),
+// };
 
 export const Autocomplete = {
   render: () => (
     <Story
-      text={str('# Autocomplete', '', 'Press CTRL-SPACE', text.footer)}
+      text={str('# Autocomplete', '', 'Press Ctrl-Space...', text.footer)}
       extensions={[
-        link({ onRender }),
+        link({ onRender: onRenderLink }),
         autocomplete({
           onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
         }),
@@ -285,8 +338,6 @@ export const Autocomplete = {
     />
   ),
 };
-
-const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', 'shoko'];
 
 export const Mention = {
   render: () => (
@@ -301,50 +352,81 @@ export const Mention = {
   ),
 };
 
-const mark = () => `[^${PublicKey.random().toHex()}]`;
 export const Comments = {
+  render: () => {
+    const [_comments, setComments] = useState<Comment[]>([]);
+
+    return (
+      <Story
+        text={str('# Comments', '', text.paragraphs, text.footer)}
+        comments={_comments}
+        extensions={[
+          comments({
+            onHover: onCommentsHover,
+            onCreate: ({ cursor }) => {
+              const id = PublicKey.random().toHex();
+              setComments((commentRanges) => [...commentRanges, { id, cursor }]);
+              return id;
+            },
+            onSelect: (state) => {
+              const debug = false;
+              if (debug) {
+                console.log(
+                  'update',
+                  JSON.stringify({
+                    comments: state.comments.length,
+                    active: state.selection.current?.slice(0, 8),
+                    closest: state.selection.closest?.slice(0, 8),
+                  }),
+                );
+              }
+            },
+          }),
+        ]}
+      />
+    );
+  },
+};
+
+export const HorizontalRule = {
   render: () => (
     <Story
-      text={str(text.paragraphs, mark(), '', mark(), text.footer)}
-      extensions={[
-        comments({
-          onCreate: () => PublicKey.random().toHex(),
-          onUpdate: (info) => {
-            // console.log('update', info);
-          },
-        }),
-        highlight(),
-      ]}
+      text={str('# Horizontal Rule', '', text.paragraphs, '---', text.paragraphs, '---', text.paragraphs)}
+      extensions={[hr()]}
     />
   ),
 };
 
-export const Diagnostics = {
+export const Vim = {
   render: () => (
     <Story
-      text={document}
-      extensions={[
-        // Cursor moved.
-        EditorView.updateListener.of((update) => {
-          console.log('update', update.view.state.selection.main.head);
-        }),
-      ]}
+      text={str('# Vim Mode', '', 'The distant future. The year 2000.', '', text.paragraphs)}
+      extensions={[defaults, EditorModes.vim]}
     />
   ),
 };
 
-export const Demo = {
-  render: () => <Story text={str(text.paragraphs, text.footer)} extensions={[demo()]} />,
+export const Annotations = {
+  render: () => <Story text={str('# Annotations', '', large)} extensions={[annotations({ match: /volup/gi })]} />,
+};
+
+const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewriter')?.split(',');
+
+export const Typewriter = {
+  render: () => (
+    <Story
+      text={str('# Typewriter', '', text.paragraphs, text.footer)}
+      extensions={[typewriter({ items: typewriterItems })]}
+    />
+  ),
 };
 
 export const Blast = {
   render: () => (
     <Story
-      text={str(text.paragraphs, text.code, text.paragraphs)}
+      text={str('# Blast', '', text.paragraphs, text.code, text.paragraphs)}
       extensions={[
-        demo({
-          items: localStorage.getItem('dxos.composer.extension.demo')?.split(','),
-        }),
+        typewriter({ items: typewriterItems }),
         blast(
           defaultsDeep(
             {
@@ -360,8 +442,4 @@ export const Blast = {
       ]}
     />
   ),
-};
-
-export const NoExtensions = {
-  render: () => <Story text={document} />,
 };

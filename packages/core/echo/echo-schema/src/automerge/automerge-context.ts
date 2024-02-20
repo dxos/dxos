@@ -2,16 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
+import { next as automerge } from '@dxos/automerge/automerge';
 import { type Message, NetworkAdapter, type PeerId, Repo, cbor } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type HostInfo, type DataService, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
+import { trace } from '@dxos/tracing';
+import { mapValues } from '@dxos/util';
 
 /**
  * Shared context for all spaces in the client.
  * Hosts the automerege repo.
  */
+@trace.resource()
 export class AutomergeContext {
   private _repo: Repo;
   private _adapter?: LocalClientNetworkAdapter = undefined;
@@ -20,7 +25,9 @@ export class AutomergeContext {
     if (dataService) {
       this._adapter = new LocalClientNetworkAdapter(dataService);
       this._repo = new Repo({
+        peerId: `client-${PublicKey.random().toHex()}` as PeerId,
         network: [this._adapter],
+        sharePolicy: async () => true,
       });
       this._adapter.ready();
     } else {
@@ -30,6 +37,20 @@ export class AutomergeContext {
 
   get repo(): Repo {
     return this._repo;
+  }
+
+  @trace.info({ depth: null })
+  private _automergeDocs() {
+    return mapValues(this._repo.handles, (handle) => ({
+      state: handle.state,
+      hasDoc: !!handle.docSync(),
+      heads: handle.docSync() ? automerge.getHeads(handle.docSync()) : null,
+    }));
+  }
+
+  @trace.info({ depth: null })
+  private _automergePeers() {
+    return this._repo.peers;
   }
 
   async close() {
@@ -93,6 +114,7 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
       .then((hostInfo) => {
         this._hostInfo = hostInfo;
         this.emit('peer-candidate', {
+          peerMetadata: {},
           peerId: this._hostInfo.peerId as PeerId,
         });
       })
@@ -104,10 +126,13 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
   override send(message: Message): void {
     invariant(this.peerId);
     void this._dataService
-      .sendSyncMessage({
-        id: this.peerId,
-        syncMessage: cbor.encode(message),
-      })
+      .sendSyncMessage(
+        {
+          id: this.peerId,
+          syncMessage: cbor.encode(message),
+        },
+        { timeout: 5_000 },
+      )
       .catch((err) => {
         log.catch(err);
       });

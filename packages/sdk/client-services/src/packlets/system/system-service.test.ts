@@ -32,7 +32,7 @@ describe('SystemService', () => {
     reset = new Trigger<boolean>();
 
     systemService = new SystemServiceImpl({
-      config,
+      config: () => config,
       statusUpdate,
       getCurrentStatus: () => currentStatus,
       getDiagnostics: async () => ({}),

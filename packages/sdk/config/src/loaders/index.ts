@@ -28,8 +28,17 @@ const maybeLoadFile = (file: string): any => {
 //
 
 /**
+ * Profile
+ */
+export const Profile = (profile = 'default') => {
+  const configFile = path.join(process.env.HOME ?? '~', `.config/dx/profile/${profile}.yml`);
+  return maybeLoadFile(configFile) as ConfigProto;
+};
+
+/**
  * Development config.
  */
+// TODO(burdon): Rename or reconcile with Profile above?
 export const Local = (): Partial<ConfigProto> => ({});
 
 /**
@@ -50,3 +59,8 @@ export const Envs = (basePath = DEFAULT_BASE_PATH): Partial<ConfigProto> => {
  */
 export const Defaults = (basePath = DEFAULT_BASE_PATH): Partial<ConfigProto> =>
   maybeLoadFile(path.resolve(basePath, FILE_DEFAULTS)) ?? {};
+
+/**
+ * Load config from storage.
+ */
+export const Storage = async (): Promise<Partial<ConfigProto>> => ({});

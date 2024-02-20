@@ -5,11 +5,13 @@
 import { Plus, Placeholder } from '@phosphor-icons/react';
 import React, { useCallback, type FC } from 'react';
 
-import { Stack as StackType, type File as FileType, Folder } from '@braneframe/types';
+import { File as FileType, Stack as StackType, Folder } from '@braneframe/types';
 import {
-  LayoutAction,
+  NavigationAction,
   Surface,
+  defaultFileTypes,
   parseMetadataResolverPlugin,
+  parseFileManagerPlugin,
   useIntent,
   usePlugin,
   useResolvePlugin,
@@ -27,19 +29,20 @@ import {
 } from '@dxos/react-ui-theme';
 
 import { FileUpload } from './FileUpload';
-import { defaultFileTypes } from '../hooks';
 import { STACK_PLUGIN } from '../meta';
 import { type StackPluginProvides, isStack } from '../types';
 
 const SectionContent: StackProps['SectionContent'] = ({ data }) => {
-  return <Surface role='section' data={{ object: data }} />;
+  // TODO(wittjosiah): Better section placeholder.
+  return <Surface role='section' data={{ object: data }} placeholder={<></>} />;
 };
 
-export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
+const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, separation }) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const { dispatch } = useIntent();
   const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
+  const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
 
   const id = `stack-${stack.id}`;
   const items = stack.sections
@@ -85,7 +88,7 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
     }
   };
 
-  const handleRemove = (path: string) => {
+  const handleDelete = (path: string) => {
     const index = stack.sections.findIndex((section) => section.id === Path.last(path));
     if (index >= 0) {
       stack.sections.splice(index, 1);
@@ -93,7 +96,7 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
   };
 
   const handleAdd = useCallback(
-    (sectionObject: StackType['sections'][0]['object']) => {
+    (sectionObject: StackType.Section['object']) => {
       stack.sections.push(new StackType.Section({ object: sectionObject }));
       // TODO(wittjosiah): Remove once stack items can be added to folders separately.
       folder?.objects.push(sectionObject);
@@ -101,9 +104,19 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
     [stack, stack.sections],
   );
 
+  const handleFileUpload = fileManagerPlugin?.provides.file.upload
+    ? async (file: File) => {
+        const filename = file.name.split('.')[0];
+        const info = await fileManagerPlugin.provides.file.upload?.(file);
+        if (info) {
+          handleAdd(new FileType({ type: file.type, title: filename, filename, cid: info.cid }));
+        }
+      }
+    : undefined;
+
   const handleNavigate = async (id: string) => {
     await dispatch({
-      action: LayoutAction.ACTIVATE,
+      action: NavigationAction.ACTIVATE,
       data: { id },
     });
   };
@@ -121,19 +134,20 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
         SectionContent={SectionContent}
         type={StackType.Section.schema.typename}
         items={items}
+        separation={separation}
         transform={handleTransform}
-        onOver={handleOver}
         onDrop={handleDrop}
-        onRemoveSection={handleRemove}
+        onOver={handleOver}
+        onDeleteSection={handleDelete}
         onNavigateToSection={handleNavigate}
       />
 
-      <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
+      <div role='none' className='flex justify-center mt-4'>
         <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), staticDefaultButtonColors]}>
           <DropdownMenu.Root modal={false}>
             <DropdownMenu.Trigger asChild>
               <Button variant='ghost' data-testid='stack.createSection'>
-                <Plus className={getSize(5)} />
+                <Plus className={getSize(6)} />
               </Button>
             </DropdownMenu.Trigger>
             <DropdownMenu.Content>
@@ -147,11 +161,11 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
                       id={id}
                       data-testid={testId}
                       onClick={async () => {
-                        const { object: nextSection } = await dispatch(intent);
+                        const { data: nextSection } = (await dispatch(intent)) ?? {};
                         handleAdd(nextSection);
                       }}
                     >
-                      <Icon className={getSize(4)} />
+                      <Icon className={getSize(6)} />
                       <span>{typeof label === 'string' ? label : t(...(label as [string, { ns: string }]))}</span>
                     </DropdownMenu.Item>
                   );
@@ -159,15 +173,16 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
               </DropdownMenu.Viewport>
             </DropdownMenu.Content>
           </DropdownMenu.Root>
-          <FileUpload
-            classNames='p-2'
-            fileTypes={[...defaultFileTypes.images, ...defaultFileTypes.media, ...defaultFileTypes.text]}
-            onUpload={(file: FileType) => {
-              handleAdd(file);
-            }}
-          />
+          {handleFileUpload && (
+            <FileUpload
+              fileTypes={[...defaultFileTypes.images, ...defaultFileTypes.media, ...defaultFileTypes.text]}
+              onUpload={handleFileUpload}
+            />
+          )}
         </ButtonGroup>
       </div>
     </Main.Content>
   );
 };
+
+export default StackMain;

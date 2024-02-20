@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "react-ui-card",
   "sourceRoot": "packages/ui/react-ui-card/src",
   "projectType": "library",
   "targets": {

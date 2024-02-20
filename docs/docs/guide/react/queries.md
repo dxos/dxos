@@ -67,8 +67,8 @@ DXOS provides a tool to generate these types from a schema definition file.
 
 ::: details Benefits of schema declarations
 
-*   ability to generate type-safe data access code, which makes development faster and safer.
-    :::
+* ability to generate type-safe data access code, which makes development faster and safer.
+  :::
 
 [`Protobuf`](https://protobuf.dev/) is well oriented towards schema migrations, while at the same time being compact and efficient on the wire and in-memory.
 
@@ -108,7 +108,9 @@ npm install --save-dev @dxos/echo-typegen
 
 Install base types for the generated code:
 
-    npm install @dxos/echo-schema
+```
+npm install @dxos/echo-schema
+```
 
 Now scripts have access to `dxtype`:
 

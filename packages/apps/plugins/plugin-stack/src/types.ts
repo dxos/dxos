@@ -3,18 +3,20 @@
 //
 
 import type { IconProps } from '@phosphor-icons/react';
-import type { DeepSignal } from 'deepsignal';
+import type { DeepSignal } from 'deepsignal/react';
 import type { FC } from 'react';
 
-import type { Stack as StackType } from '@braneframe/types';
+import { Stack as StackType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   Intent,
   IntentResolverProvides,
   MetadataRecordsProvides,
+  SettingsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
+import { TypedObject } from '@dxos/react-client/echo';
 
 import { STACK_PLUGIN } from './meta';
 
@@ -33,7 +35,7 @@ type StackSectionAction = {
 };
 
 export type StackSectionCreator = StackSectionAction & {
-  intent: Intent;
+  intent: Intent | Intent[];
 };
 
 export type StackProvides = {
@@ -46,17 +48,14 @@ export type StackState = DeepSignal<{
   creators: StackSectionCreator[];
 }>;
 
+export type StackSettingsProps = { separation: boolean };
+
 export type StackPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
+  SettingsProvides<StackSettingsProps> &
   TranslationsProvides & { stack: StackState };
 
-// TODO(wittjosiah): Assume typed object and just check for typename?
 export const isStack = (data: unknown): data is StackType =>
-  data && typeof data === 'object'
-    ? 'id' in data &&
-      typeof data.id === 'string' &&
-      typeof (data as { [key: string]: any }).sections === 'object' &&
-      typeof (data as { [key: string]: any }).sections?.length === 'number'
-    : false;
+  data instanceof TypedObject && data.__typename === StackType.schema.typename;

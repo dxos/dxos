@@ -7,17 +7,13 @@ import React from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Grid as GridType } from '@braneframe/types';
-import { LayoutAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
+import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { GridMain } from './components';
 import meta, { GRID_PLUGIN } from './meta';
 import translations from './translations';
 import { GridAction, type GridPluginProvides, isGrid } from './types';
-
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[GridType.name] = GridType;
 
 export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
   return {
@@ -67,7 +63,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
                   data: { target: parent.data },
                 },
                 {
-                  action: LayoutAction.ACTIVATE,
+                  action: NavigationAction.ACTIVATE,
                 },
               ]),
             properties: {
@@ -90,7 +86,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case GridAction.CREATE: {
-              return { object: new GridType() };
+              return { data: new GridType() };
             }
           }
         },

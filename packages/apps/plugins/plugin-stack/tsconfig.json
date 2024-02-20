@@ -1,5 +1,7 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": [
+    "../../../../tsconfig.json"
+  ],
   "compilerOptions": {
     "lib": [
       "DOM",
@@ -20,6 +22,9 @@
     "src/*.ts"
   ],
   "references": [
+    {
+      "path": "../../../common/local-storage"
+    },
     {
       "path": "../../../common/util"
     },
@@ -46,6 +51,9 @@
     },
     {
       "path": "../../types"
+    },
+    {
+      "path": "../plugin-settings"
     },
     {
       "path": "../plugin-space"

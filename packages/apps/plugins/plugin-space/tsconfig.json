@@ -1,5 +1,7 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": [
+    "../../../../tsconfig.json"
+  ],
   "compilerOptions": {
     "lib": [
       "DOM",
@@ -24,6 +26,9 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/display-name"
+    },
+    {
       "path": "../../../common/invariant"
     },
     {
@@ -37,6 +42,9 @@
     },
     {
       "path": "../../../common/util"
+    },
+    {
+      "path": "../../../core/echo/automerge"
     },
     {
       "path": "../../../core/echo/echo-schema"
@@ -55,6 +63,9 @@
     },
     {
       "path": "../../../sdk/react-client"
+    },
+    {
+      "path": "../../../sdk/shell"
     },
     {
       "path": "../../../ui/react-ui"
@@ -82,6 +93,9 @@
     },
     {
       "path": "../plugin-metadata"
+    },
+    {
+      "path": "../plugin-settings"
     }
   ]
 }

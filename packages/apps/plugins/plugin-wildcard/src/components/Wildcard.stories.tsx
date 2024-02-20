@@ -6,9 +6,10 @@ import '@dxosTheme';
 
 import { TypedObject } from '@dxos/react-client/echo';
 
-import { Wildcard } from './Wildcard';
+import Wildcard from './Wildcard';
 
 export default {
+  title: 'plugin-wildcard/Wildcard',
   component: Wildcard,
   args: {
     item: { id: 'test', object: new TypedObject({ title: 'Test', other: 'details' }) },

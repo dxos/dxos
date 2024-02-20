@@ -7,7 +7,7 @@ import React from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder } from '@braneframe/types';
-import { type PluginDefinition, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { type PluginDefinition, resolvePlugin, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
 import { Game } from '@dxos/chess-app';
 import { SpaceProxy } from '@dxos/react-client/echo';
 
@@ -15,10 +15,6 @@ import { ChessMain } from './components';
 import meta, { CHESS_PLUGIN } from './meta';
 import translations from './translations';
 import { ChessAction, type ChessPluginProvides, isObject } from './types';
-
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[Game.name] = Game;
 
 export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
   return {
@@ -55,7 +51,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
                   data: { target: parent.data },
                 },
                 {
-                  action: LayoutAction.ACTIVATE,
+                  action: NavigationAction.ACTIVATE,
                 },
               ]),
             properties: {
@@ -79,7 +75,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ChessAction.CREATE: {
-              return { object: new Game() };
+              return { data: new Game() };
             }
           }
         },

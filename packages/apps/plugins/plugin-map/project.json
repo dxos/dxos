@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "plugin-map",
   "sourceRoot": "packages/apps/plugins/plugin-map/src",
   "projectType": "library",
   "targets": {

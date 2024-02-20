@@ -3,16 +3,18 @@
 //
 
 import { sentryVitePlugin } from '@sentry/vite-plugin';
-import ReactPlugin from '@vitejs/plugin-react';
+import ReactPlugin from '@vitejs/plugin-react-swc';
 import { join, resolve } from 'node:path';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
+import WasmPlugin from 'vite-plugin-wasm';
+import tsconfigPaths from 'vite-tsconfig-paths';
+import Inspect from 'vite-plugin-inspect';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-
-const { osThemeExtension } = require('@dxos/react-shell/theme-extensions');
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -36,9 +38,13 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
+    minify: process.env.DX_ENVIRONMENT === 'development' ? false : undefined,
     rollupOptions: {
       input: {
+        internal: resolve(__dirname, './internal.html'),
         main: resolve(__dirname, './index.html'),
+        shell: resolve(__dirname, './shell.html'),
+        devtools: resolve(__dirname, './devtools.html'),
         'script-frame': resolve(__dirname, './script-frame/index.html'),
       },
       output: {
@@ -54,7 +60,7 @@ export default defineConfig({
       external: [
         // Provided at runtime by socket supply shell.
         'socket:application',
-      ]
+      ],
     },
   },
   resolve: {
@@ -64,47 +70,73 @@ export default defineConfig({
   },
   worker: {
     format: 'es',
+    plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
   },
   plugins: [
+    tsconfigPaths({
+      projects: ['../../../tsconfig.paths.json'],
+    }),
     // Required for the script plugin.
     {
       name: 'sandbox-importmap-integration',
       transformIndexHtml() {
-        return [{
-          tag: 'script',
-          injectTo: 'head-prepend', // Inject before vite's built-in scripts.
-          children: `
+        return [
+          {
+            tag: 'script',
+            injectTo: 'head-prepend', // Inject before vite's built-in scripts.
+            children: `
             if (window.location.hash.includes('importMap')) {
               const urlParams = new URLSearchParams(window.location.hash.slice(1));
               if (urlParams.get('importMap')) {
                 const importMap = JSON.parse(decodeURIComponent(urlParams.get('importMap')));
                 const mapElement = document.createElement('script');
-                mapElement.type = 'importmap';
+                mapElement.type = 'importmap'; 
                 mapElement.textContent = JSON.stringify(importMap, null, 2);
                 document.head.appendChild(mapElement);
               }
             }
-          `
-        }];
-      }
+          `,
+          },
+        ];
+      },
     },
-    ConfigPlugin({
-      env: [
-        'DX_DEBUG', 'DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT'
-      ],
-    }),
+    ConfigPlugin(),
     ThemePlugin({
-      extensions: [osThemeExtension],
       root: __dirname,
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/app-framework/src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, '../plugins/*/src/**/*.{js,ts,jsx,tsx}'),
       ],
     }),
+    TopLevelAwaitPlugin(),
+    WasmPlugin(),
     // https://github.com/preactjs/signals/issues/269
-    ReactPlugin({ jsxRuntime: 'classic' }),
+    ReactPlugin({
+      plugins: [
+        [
+          '@dxos/swc-log-plugin',
+          {
+            symbols: [
+              {
+                function: 'log',
+                package: '@dxos/log',
+                param_index: 2,
+                include_args: false,
+                include_call_site: true,
+              },
+              {
+                function: 'invariant',
+                package: '@dxos/invariant',
+                param_index: 2,
+                include_args: true,
+                include_call_site: false,
+              },
+            ],
+          },
+        ],
+      ],
+    }),
     VitePWA({
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000,
@@ -172,26 +204,23 @@ export default defineConfig({
         writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
       },
     },
+    // Inspect(),
   ],
 });
 
-function chunkFileNames (chunkInfo) {
-  if(chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index.[^\/]+$/gm)) {
+function chunkFileNames(chunkInfo) {
+  if (chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index.[^\/]+$/gm)) {
     let segments = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
     const nodeModulesIdx = segments.indexOf('node_modules');
     if (nodeModulesIdx !== -1) {
       segments = segments.slice(0, nodeModulesIdx);
     }
-    const ignoredNames = [
-      'dist',
-      'lib',
-      'browser'
-    ]
-    const significantSegment = segments.find(segment => !ignoredNames.includes(segment));
+    const ignoredNames = ['dist', 'lib', 'browser'];
+    const significantSegment = segments.find((segment) => !ignoredNames.includes(segment));
     if (significantSegment) {
       return `assets/${significantSegment}-[hash].js`;
     }
   }
 
   return 'assets/[name]-[hash].js';
-};
+}

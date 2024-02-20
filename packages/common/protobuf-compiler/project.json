@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "protobuf-compiler",
   "sourceRoot": "packages/common/protobuf-compiler/src",
   "projectType": "library",
   "targets": {
@@ -24,7 +26,7 @@
         "script": "prebuild"
       },
       "outputs": [
-        "packages/common/protobuf-compiler/test/proto/gen"
+        "{projectRoot}/test/proto/gen"
       ]
     },
     "test": {
@@ -36,6 +38,5 @@
         "script": "test"
       }
     }
-  },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json"
+  }
 }

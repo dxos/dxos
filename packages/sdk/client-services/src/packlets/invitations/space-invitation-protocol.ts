@@ -8,6 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { AlreadyJoinedError } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -76,6 +77,12 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     };
   }
 
+  checkInvitation(invitation: Partial<Invitation>) {
+    if (invitation.spaceKey && this._spaceManager.spaces.has(invitation.spaceKey)) {
+      return new AlreadyJoinedError('Already joined space.');
+    }
+  }
+
   createIntroduction(): IntroductionRequest {
     return {
       profile: this._signingContext.getProfile(),
@@ -103,6 +110,10 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     const assertion = getCredentialAssertion(credential);
     invariant(assertion['@type'] === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
     invariant(credential.subject.id.equals(this._signingContext.identityKey));
+
+    if (this._spaceManager.spaces.has(assertion.spaceKey)) {
+      throw new AlreadyJoinedError('Already joined space.');
+    }
 
     // Create local space.
     await this._spaceManager.acceptSpace({

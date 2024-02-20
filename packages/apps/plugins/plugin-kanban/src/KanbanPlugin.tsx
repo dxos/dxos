@@ -7,17 +7,13 @@ import React from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Kanban as KanbanType } from '@braneframe/types';
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { KanbanMain } from './components';
 import meta, { KANBAN_PLUGIN } from './meta';
 import translations from './translations';
 import { KanbanAction, type KanbanPluginProvides, isKanban } from './types';
-
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[KanbanType.name] = KanbanType;
 
 export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
   return {
@@ -55,7 +51,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
                   data: { target: parent.data },
                 },
                 {
-                  action: LayoutAction.ACTIVATE,
+                  action: NavigationAction.ACTIVATE,
                 },
               ]),
             properties: {
@@ -78,7 +74,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case KanbanAction.CREATE: {
-              return { object: new KanbanType() };
+              return { data: new KanbanType() };
             }
           }
         },

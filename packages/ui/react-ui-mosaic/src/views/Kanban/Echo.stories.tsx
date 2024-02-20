@@ -35,7 +35,7 @@ const Story = ({
 };
 
 export default {
-  title: 'Views/Kanban',
+  title: 'react-ui-mosaic/Kanban',
   component: Kanban,
   render: () => (
     <ClientRepeater
@@ -58,7 +58,7 @@ export default {
         // TODO(burdon): Batch API.
         objects.forEach((object) => space.db.add(object));
       }}
-      Component={Story}
+      component={Story}
       createSpace
     />
   ),

@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "async",
   "sourceRoot": "packages/common/async/src",
   "projectType": "library",
   "targets": {

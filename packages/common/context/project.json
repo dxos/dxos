@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "context",
   "sourceRoot": "packages/common/context/src",
   "projectType": "library",
   "targets": {

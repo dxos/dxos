@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "plugin-wildcard",
   "sourceRoot": "packages/apps/plugins/plugin-wildcard/src",
   "projectType": "library",
   "targets": {

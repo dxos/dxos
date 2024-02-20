@@ -3,9 +3,9 @@
 //
 
 import { DotsThreeVertical, Placeholder } from '@phosphor-icons/react';
-import React, { type ForwardedRef, forwardRef, Fragment, useEffect, useState } from 'react';
+import React, { type ForwardedRef, forwardRef, Fragment, useEffect, useRef, useState } from 'react';
 
-import { DensityProvider, Tree, TreeItem as TreeItemComponent, TreeItem, useTranslation } from '@dxos/react-ui';
+import { Tooltip, Popover, Tree, TreeItem as TreeItemComponent, TreeItem, useTranslation } from '@dxos/react-ui';
 import { Mosaic, useContainer, type MosaicTileComponent, Path, useItemsWithOrigin } from '@dxos/react-ui-mosaic';
 import {
   descriptionText,
@@ -20,7 +20,7 @@ import {
 } from '@dxos/react-ui-theme';
 
 import { useNavTree } from './NavTreeContext';
-import { NavTreeItemAction } from './NavTreeItemAction';
+import { NavTreeItemAction, NavTreeItemActionDropdownMenu } from './NavTreeItemAction';
 import { NavTreeItemHeading } from './NavTreeItemHeading';
 import { levelPadding, topLevelCollapsibleSpacing } from './navtree-fragments';
 import { translationKey } from '../translations';
@@ -95,8 +95,10 @@ export const NavTreeMosaicComponent: MosaicTileComponent<NavTreeItemData, HTMLLI
 
 export type NavTreeItemData = TreeNode & { level: number };
 
-// TODO(burdon): Disabled until working.
+// TODO(burdon): Disabled until working and UX review.
 const presence = false;
+
+export const NAV_TREE_ITEM = 'NavTreeItem';
 
 export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = forwardRef(
   ({ item, draggableProps, draggableStyle, active, path, position }, forwardedRef) => {
@@ -109,6 +111,8 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
     const { t } = useTranslation(translationKey);
     const { current, popoverAnchorId, onSelect, isOver, renderPresence } = useNavTree();
     const [open, setOpen] = useState(level < 1);
+    const suppressNextTooltip = useRef<boolean>(false);
+    const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
 
     useEffect(() => {
       if (current && Path.onPath(current, node.id)) {
@@ -120,11 +124,22 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
     const forceCollapse = active === 'overlay' || active === 'destination' || active === 'rearrange' || disabled;
 
     const Root = active === 'overlay' ? Tree.Root : Fragment;
+    const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${node.id}` ? Popover.Anchor : Fragment;
 
     const isOverCurrent = isOver(path);
 
     return (
-      <DensityProvider density='fine'>
+      <Tooltip.Root
+        open={tooltipOpen}
+        onOpenChange={(nextOpen) => {
+          if (nextOpen && suppressNextTooltip.current) {
+            suppressNextTooltip.current = false;
+            return setTooltipOpen(false);
+          } else {
+            return setTooltipOpen(nextOpen);
+          }
+        }}
+      >
         <Root>
           <TreeItem.Root
             collapsible={isBranch}
@@ -146,71 +161,57 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
             ref={forwardedRef}
             role='treeitem'
           >
-            <div
-              role='none'
-              className={mx(
-                'flex items-start rounded',
-                levelPadding(level),
-                hoverableControls,
-                hoverableFocusedWithinControls,
-                hoverableDescriptionIcons,
-                level < 1 && topLevelCollapsibleSpacing,
-                staticGhostSelectedCurrent({ current: (active && active !== 'overlay') || path === current }),
-              )}
-            >
-              <NavTreeItemHeading
-                {...{
-                  id: node.id,
-                  level,
-                  label: Array.isArray(node.label) ? t(...node.label) : node.label,
-                  icon: node.icon,
-                  open,
-                  current: path === current,
-                  branch: node.properties?.role === 'branch' || node.children?.length > 0,
-                  disabled: !!node.properties?.disabled,
-                  error: !!node.properties?.error,
-                  modified: node.properties?.modified ?? false,
-                  palette: node.properties?.palette,
-                  onSelect: () => onSelect?.({ path, node, level, position: position as number }),
-                }}
-              />
-              {/*
-              TODO(wittjosiah): Primary action should come at the end.
-              However, currently if it does then the triple dots menus don't line up for nodes without primary actions. */}
-              {primaryAction?.properties.disposition === 'toolbar' && (
-                <NavTreeItemAction
-                  id={node.id}
-                  label={Array.isArray(primaryAction.label) ? t(...primaryAction.label) : primaryAction.label}
-                  icon={primaryAction.icon ?? Placeholder}
-                  action={primaryAction.actions.length === 0 ? primaryAction : undefined}
-                  actions={primaryAction.actions}
-                  level={level}
-                  active={active}
-                  popoverAnchorId={popoverAnchorId}
-                  testId={primaryAction.properties.testId}
-                  menuType={primaryAction.properties.menuType}
+            <ActionRoot>
+              <div
+                role='none'
+                className={mx(
+                  'flex items-start rounded',
+                  levelPadding(level),
+                  hoverableControls,
+                  hoverableFocusedWithinControls,
+                  hoverableDescriptionIcons,
+                  level < 1 && topLevelCollapsibleSpacing,
+                  staticGhostSelectedCurrent({ current: (active && active !== 'overlay') || path === current }),
+                )}
+              >
+                <NavTreeItemHeading
+                  {...{
+                    id: node.id,
+                    level,
+                    label: Array.isArray(node.label) ? t(...node.label) : node.label,
+                    icon: node.icon,
+                    open,
+                    current: path === current,
+                    branch: node.properties?.role === 'branch' || node.children?.length > 0,
+                    disabled: !!node.properties?.disabled,
+                    error: !!node.properties?.error,
+                    modified: node.properties?.modified ?? false,
+                    palette: node.properties?.palette,
+                    onSelect: () => onSelect?.({ path, node, level, position: position as number }),
+                  }}
                 />
-              )}
-              {actions.length > 0 && (
-                <NavTreeItemAction
-                  id={node.id}
-                  label={
-                    node.properties?.actionMenuLabel
-                      ? Array.isArray(node.properties?.actionMenuLabel)
-                        ? t(...(node.properties.actionMenuLabel as [string, { ns: string; count?: number }]))
-                        : node.properties.actionMenuLabel
-                      : t('tree item actions label')
-                  }
+                {primaryAction?.properties.disposition === 'toolbar' && (
+                  <NavTreeItemAction
+                    label={Array.isArray(primaryAction.label) ? t(...primaryAction.label) : primaryAction.label}
+                    icon={primaryAction.icon ?? Placeholder}
+                    action={primaryAction.actions.length === 0 ? primaryAction : undefined}
+                    actions={primaryAction.actions}
+                    active={active}
+                    testId={primaryAction.properties.testId}
+                    menuType={primaryAction.properties.menuType}
+                    caller={NAV_TREE_ITEM}
+                  />
+                )}
+                <NavTreeItemActionDropdownMenu
                   icon={DotsThreeVertical}
                   actions={actions}
-                  level={level}
-                  active={active}
-                  popoverAnchorId={popoverAnchorId}
+                  suppressNextTooltip={suppressNextTooltip}
+                  onAction={(action) => action.invoke?.({ caller: NAV_TREE_ITEM })}
                   testId={`navtree.treeItem.actionsLevel${level}`}
                 />
-              )}
-              {presence && renderPresence?.(node)}
-            </div>
+                {presence && renderPresence?.(node)}
+              </div>
+            </ActionRoot>
             {!active &&
               isBranch &&
               (node.children?.length > 0 ? (
@@ -220,7 +221,13 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
               ))}
           </TreeItem.Root>
         </Root>
-      </DensityProvider>
+        <Tooltip.Portal>
+          <Tooltip.Content side='bottom' classNames='z-[12]'>
+            {t('tree item actions label')}
+            <Tooltip.Arrow />
+          </Tooltip.Content>
+        </Tooltip.Portal>
+      </Tooltip.Root>
     );
   },
 );

@@ -1,7 +1,14 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "create-tasks",
   "sourceRoot": "packages/devtools/initializers/create-tasks/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "options": {
+        "outputPath": "packages/devtools/initializers/create-tasks/dist"
+      }
+    },
     "lint": {}
   }
 }

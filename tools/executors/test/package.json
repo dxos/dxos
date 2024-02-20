@@ -1,16 +1,25 @@
 {
   "name": "@dxos/test",
-  "version": "0.3.9",
+  "version": "0.4.4",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/src/index.js",
-  "types": "index.d.ts",
-  "scripts": {
-    "test": "mocha -r @swc-node/register ./src/**/*.test.ts"
+  "exports": {
+    ".": "./dist/src/index.js",
+    "./package.json": "./package.json",
+    "./playwright": "./dist/src/playwright.js"
   },
+  "types": "index.d.ts",
+  "typesVersions": {
+    "*": {
+      "playwright": [
+        "dist/src/playwright.d.ts"
+      ]
+    }
+  },
+  "scripts": {},
   "dependencies": {
     "@types/wtfnode": "^0.7.0",
     "wtfnode": "^0.9.1"

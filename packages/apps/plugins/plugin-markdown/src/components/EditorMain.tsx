@@ -2,81 +2,118 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type HTMLAttributes, type RefCallback } from 'react';
+import React, { type HTMLAttributes, useMemo, useEffect } from 'react';
 
+import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
 import { useTranslation } from '@dxos/react-ui';
-import { type TextEditorProps, type TextEditorRef, MarkdownEditor } from '@dxos/react-ui-editor';
-import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
+import {
+  type TextEditorProps,
+  type Comment,
+  MarkdownEditor,
+  Toolbar,
+  editorHalfViewportOverscrollContent,
+  editorFillLayoutEditor,
+  editorFillLayoutRoot,
+  focusComment,
+  useComments,
+  useEditorView,
+  useActionHandler,
+  useFormattingState,
+} from '@dxos/react-ui-editor';
+import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
-import { EmbeddedLayout } from './EmbeddedLayout';
-import { StandaloneLayout } from './StandaloneLayout';
-import { useExtensions, type UseExtensionsOptions } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
-import type { MarkdownProperties } from '../types';
-
-export type SearchResult = {
-  text: string;
-  url: string;
-};
 
 export type EditorMainProps = {
-  editorRefCb?: RefCallback<TextEditorRef>;
-  properties: MarkdownProperties;
-  layout: 'standalone' | 'embedded';
-  extensions?: UseExtensionsOptions;
-} & Pick<TextEditorProps, 'readonly' | 'model' | 'editorMode'>;
+  comments?: Comment[];
+  toolbar?: boolean;
+} & Pick<TextEditorProps, 'model' | 'readonly' | 'extensions'>;
 
-export const EditorMain = ({
-  editorRefCb,
-  properties,
-  layout,
-  extensions: _extensions,
-  readonly,
-  model,
-  editorMode,
-}: EditorMainProps) => {
+const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
-  const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
-  const extensions = useExtensions(_extensions);
+
+  const [editorRef, viewInvalidated] = useEditorView(model.id);
+  useComments(viewInvalidated ? null : editorRef.current, model.id, comments);
+  const handleAction = useActionHandler(editorRef.current);
+
+  // Expose editor view for playwright tests.
+  // TODO(wittjosiah): Find a better way to expose this or find a way to limit it to test runs.
+  useEffect(() => {
+    const composer = (window as any).composer;
+    if (composer) {
+      composer.editorView = editorRef.current;
+    }
+  }, [editorRef.current]);
+
+  // Focus comment.
+  useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
+    switch (action) {
+      case LayoutAction.FOCUS: {
+        const object = data?.object;
+        if (editorRef.current) {
+          focusComment(editorRef.current, object);
+          return { data: true };
+        }
+        break;
+      }
+    }
+  });
+
+  // Toolbar state.
+  const [formattingState, formattingObserver] = useFormattingState();
+  const extensions = useMemo(() => [...(_extensions ?? []), formattingObserver], [_extensions, formattingObserver]);
 
   return (
-    <Root properties={properties} model={model}>
-      <MarkdownEditor
-        ref={editorRefCb}
-        model={model}
-        readonly={readonly}
-        editorMode={editorMode}
-        extensions={extensions}
-        slots={{
-          root: {
-            role: 'none',
-            className: mx(
-              focusRing,
-              inputSurface,
-              surfaceElevation({ elevation: 'group' }),
-              layout !== 'embedded' && 'rounded',
-              'flex flex-col shrink-0 grow pli-10 m-0.5 py-2',
-            ),
-            'data-testid': 'composer.markdownRoot',
-          } as HTMLAttributes<HTMLDivElement>,
-          editor: {
-            placeholder: t('editor placeholder'),
-            theme: {
-              '&, & .cm-scroller': {
-                display: 'flex',
-                flexDirection: 'column',
-                flex: '1 0 auto',
-                inlineSize: '100%',
-              },
-              '& .cm-content': {
-                flex: '1 0 auto',
-                inlineSize: '100%',
-                paddingBlock: '1rem',
-              },
+    <>
+      {toolbar && (
+        <Toolbar.Root
+          onAction={handleAction}
+          state={formattingState}
+          classNames='max-is-[60rem] justify-self-center border-be separator-separator'
+        >
+          <Toolbar.Markdown />
+          <Toolbar.Separator />
+          <Toolbar.Extended />
+        </Toolbar.Root>
+      )}
+      <div
+        role='none'
+        data-toolbar={toolbar ? 'enabled' : 'disabled'}
+        className='is-full overflow-y-auto overflow-anchored after:block after:is-px after:bs-px after:overflow-anchor after:-mbs-px data-[toolbar=disabled]:pbs-8'
+      >
+        <MarkdownEditor
+          ref={editorRef}
+          autoFocus
+          placeholder={t('editor placeholder')}
+          model={model}
+          extensions={extensions}
+          slots={{
+            root: {
+              className: mx(
+                focusRing,
+                attentionSurface,
+                textBlockWidth,
+                editorFillLayoutRoot,
+                'md:border-is md:border-ie separator-separator focus-visible:ring-inset',
+              ),
+              'data-testid': 'composer.markdownRoot',
+            } as HTMLAttributes<HTMLDivElement>,
+            editor: {
+              className: mx(
+                editorFillLayoutEditor,
+                'is-full [&>.cm-scroller]:overflow-visible [&>.cm-scroller]:p-2 [&>.cm-scroller]:sm:p-6 [&>.cm-scroller]:md:p-8',
+                !toolbar && 'border-bs',
+              ),
             },
-          },
-        }}
-      />
-    </Root>
+            content: {
+              className: editorHalfViewportOverscrollContent,
+            },
+          }}
+          {...props}
+        />
+      </div>
+    </>
   );
 };
+
+export default EditorMain;

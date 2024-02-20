@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "react-ui-searchlist",
   "sourceRoot": "packages/ui/react-ui-searchlist/src",
   "projectType": "library",
   "targets": {

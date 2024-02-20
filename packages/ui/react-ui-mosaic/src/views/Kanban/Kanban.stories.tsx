@@ -4,9 +4,9 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import React from 'react';
 
+import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Kanban } from './Kanban';
@@ -17,6 +17,7 @@ import { ComplexCard, FullscreenDecorator, SimpleCard } from '../../testing';
 faker.seed(3);
 
 export default {
+  title: 'react-ui-mosaic/Kanban',
   component: Kanban,
   render: (args: DemoKanbanProps) => {
     return (

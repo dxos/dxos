@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "devtools",
   "sourceRoot": "packages/devtools/devtools/src",
   "projectType": "application",
   "targets": {
@@ -22,6 +24,7 @@
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
+        "generatePackageJson": false,
         "outputPath": "packages/devtools/devtools/out/devtools"
       },
       "outputs": [

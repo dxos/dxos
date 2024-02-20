@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "chess-app",
   "sourceRoot": "packages/experimental/chess-app/src",
   "projectType": "application",
   "targets": {
@@ -18,7 +20,7 @@
         "script": "prebuild"
       },
       "outputs": [
-        "packages/experimental/chess-app/src/proto/gen"
+        "{projectRoot}/src/proto/gen"
       ]
     },
     "serve": {

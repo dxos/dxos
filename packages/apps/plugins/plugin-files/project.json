@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "plugin-files",
   "sourceRoot": "packages/apps/plugins/plugin-files/src",
   "projectType": "library",
   "targets": {

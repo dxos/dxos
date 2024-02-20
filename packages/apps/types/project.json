@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "types",
   "sourceRoot": "packages/apps/types/src",
   "projectType": "library",
   "targets": {
@@ -18,7 +20,7 @@
         "script": "prebuild"
       },
       "outputs": [
-        "packages/apps/types/src/proto/gen"
+        "{projectRoot}/src/proto/gen"
       ]
     }
   }

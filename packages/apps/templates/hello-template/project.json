@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "hello-template",
   "sourceRoot": "packages/apps/templates/hello-template/src",
   "projectType": "library",
   "targets": {
@@ -11,6 +13,11 @@
     },
     "lint": {},
     "test": {
+      "dependsOn": [
+        {
+          "target": "build"
+        }
+      ],
       "options": {
         "checkLeaks": false,
         "ciEnvironments": [

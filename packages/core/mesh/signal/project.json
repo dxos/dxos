@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "signal",
   "sourceRoot": "packages/core/mesh/signal/src",
   "projectType": "library",
   "targets": {

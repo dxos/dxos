@@ -3,7 +3,7 @@
 To run the app with HALO.
 
 ```bash
-pnpm -w nx run composer-app:serve-with-vault
+pnpm -w nx run composer-app:serve
 ```
 
 ## Native Bundling
@@ -17,8 +17,7 @@ SSC needs to be installed globally:
 Before running SSC, Composer must be built using:
 
 ```bash
-NODE_OPTIONS=--max_old_space_size=8192
-pnpm nx bundle composer-app
+DX_HOST=true pnpm -w nx bundle composer-app
 ```
 
 Then, to bundle the native app, in this directory, run:
@@ -34,7 +33,25 @@ To open the app:
 To run against the vite dev server:
 
 ```bash
-pnpm nx serve-with-vault composer-app
+pnpm nx serve composer-app
 ssc build -r --port 5173
 ```
+
 To reset the app, inspect and delete local storage properties.
+
+## Dependencies
+
+To view dependencies and build sizes using bundle buddy, upload pairs of javascript and source map files from
+`out/assets` to https://bundle-buddy.com (via the rollup upload).
+
+## Docker
+
+Note: experimental.
+
+The app can be run using Docker.
+
+`docker run -it -p 80:80 dxos/composer-app:latest`
+
+# License
+
+[MIT](https://github.com/dxos/dxos/blob/main/LICENSE) Copyright 2023 © DXOS

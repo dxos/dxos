@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "react-ui-stack",
   "sourceRoot": "packages/ui/react-ui-stack/src",
   "projectType": "library",
   "targets": {

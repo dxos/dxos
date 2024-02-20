@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "todomvc",
   "sourceRoot": "packages/apps/todomvc/src",
   "projectType": "library",
   "targets": {
@@ -13,8 +15,14 @@
       }
     },
     "bundle": {
+      "dependsOn": [
+        "^build",
+        "^bundle",
+        "prebuild"
+      ],
       "executor": "@nx/vite:build",
       "options": {
+        "generatePackageJson": false,
         "outputPath": "packages/apps/todomvc/out/todomvc"
       },
       "outputs": [
@@ -24,10 +32,7 @@
     "e2e": {
       "options": {
         "playwrightConfigPath": "packages/apps/todomvc/src/playwright/playwright.config.ts",
-        "serve": "todomvc:serve-with-vault",
-        "serveOptions": {
-          "serveTarget": "preview"
-        },
+        "serve": "todomvc:preview",
         "testPatterns": [
           "packages/apps/todomvc/src/playwright/**/*.spec.{ts,js}"
         ],
@@ -43,7 +48,7 @@
         "script": "prebuild"
       },
       "outputs": [
-        "packages/apps/todomvc/src/proto/gen"
+        "{projectRoot}/src/proto/gen"
       ]
     },
     "preview": {
@@ -58,12 +63,6 @@
       "options": {
         "buildTarget": "todomvc:bundle"
       }
-    },
-    "serve-with-vault": {
-      "executor": "@dxos/serve-with-vault:run"
     }
-  },
-  "implicitDependencies": [
-    "serve-with-vault"
-  ]
+  }
 }

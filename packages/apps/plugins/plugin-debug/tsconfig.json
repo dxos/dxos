@@ -1,5 +1,7 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": [
+    "../../../../tsconfig.json"
+  ],
   "compilerOptions": {
     "lib": [
       "DOM",
@@ -36,6 +38,9 @@
       "path": "../../../common/log"
     },
     {
+      "path": "../../../common/random"
+    },
+    {
       "path": "../../../common/react-async"
     },
     {
@@ -43,6 +48,9 @@
     },
     {
       "path": "../../../core/echo/echo-generator"
+    },
+    {
+      "path": "../../../core/echo/echo-pipeline"
     },
     {
       "path": "../../../core/echo/echo-schema"
@@ -60,7 +68,10 @@
       "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../../sdk/client"
+      "path": "../../../sdk/client-services"
+    },
+    {
+      "path": "../../../sdk/config"
     },
     {
       "path": "../../../sdk/react-client"
@@ -91,6 +102,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-settings"
     },
     {
       "path": "../plugin-space"

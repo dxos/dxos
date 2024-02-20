@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "client-services",
   "sourceRoot": "packages/sdk/client-services/src",
   "projectType": "library",
   "targets": {

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/automerge",
-  "version": "0.3.9",
+  "version": "0.4.4",
   "description": "Automerge adapter.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,8 +8,8 @@
   "author": "info@dxos.org",
   "imports": {
     "#automerge-wasm": {
-      "browser": "./dist/lib/browser/automerge-wasm.js",
-      "import": "./dist/lib/browser/automerge-wasm.js",
+      "browser": "./exports/browser/automerge-wasm.mjs",
+      "import": "./exports/browser/automerge-wasm.mjs",
       "require": "./exports/node/automerge-wasm.cjs",
       "node": "./exports/node/automerge-wasm.cjs",
       "types": "./dist/types/src/automerge-wasm.d.ts"
@@ -27,12 +27,26 @@
       "require": "./dist/lib/node/automerge/next.cjs",
       "node": "./dist/lib/node/automerge/next.cjs",
       "types": "./dist/types/src/automerge/next.d.ts"
+    },
+    "#automerge-repo": {
+      "browser": "./dist/lib/browser/automerge-repo.js",
+      "import": "./dist/lib/browser/automerge-repo.js",
+      "require": "./dist/lib/node/automerge-repo.cjs",
+      "node": "./dist/lib/node/automerge-repo.cjs",
+      "types": "./dist/types/src/automerge-repo.d.ts"
+    },
+    "#automerge-repo-storage-indexeddb": {
+      "browser": "./dist/lib/browser/automerge-repo-storage-indexeddb.js",
+      "import": "./dist/lib/browser/automerge-repo-storage-indexeddb.js",
+      "require": "./dist/lib/node/automerge-repo-storage-indexeddb.cjs",
+      "node": "./dist/lib/node/automerge-repo-storage-indexeddb.cjs",
+      "types": "./dist/types/src/automerge-repo-storage-indexeddb.d.ts"
     }
   },
   "exports": {
     "./automerge-wasm": {
-      "browser": "./dist/lib/browser/automerge-wasm.js",
-      "import": "./dist/lib/browser/automerge-wasm.js",
+      "browser": "./exports/browser/automerge-wasm.mjs",
+      "import": "./exports/browser/automerge-wasm.mjs",
       "require": "./exports/node/automerge-wasm.cjs",
       "node": "./exports/node/automerge-wasm.cjs",
       "types": "./dist/types/src/automerge-wasm.d.ts"
@@ -57,6 +71,13 @@
       "require": "./dist/lib/node/automerge-repo.cjs",
       "node": "./dist/lib/node/automerge-repo.cjs",
       "types": "./dist/types/src/automerge-repo.d.ts"
+    },
+    "./automerge-repo-storage-indexeddb": {
+      "browser": "./dist/lib/browser/automerge-repo-storage-indexeddb.js",
+      "import": "./dist/lib/browser/automerge-repo-storage-indexeddb.js",
+      "require": "./dist/lib/node/automerge-repo-storage-indexeddb.cjs",
+      "node": "./dist/lib/node/automerge-repo-storage-indexeddb.cjs",
+      "types": "./dist/types/src/automerge-repo-storage-indexeddb.d.ts"
     }
   },
   "typesVersions": {
@@ -72,6 +93,9 @@
       ],
       "automerge-wasm": [
         "dist/types/src/automerge-wasm.d.ts"
+      ],
+      "automerge-repo-storage-indexeddb": [
+        "dist/types/src/automerge-repo-storage-indexeddb.d.ts"
       ]
     }
   },
@@ -84,9 +108,10 @@
     "compile": "tsx scripts/compile.mts"
   },
   "dependencies": {
-    "@automerge/automerge": "^2.1.7",
-    "@automerge/automerge-repo": "^1.0.19",
-    "@automerge/automerge-wasm": "^0.5.0",
+    "@automerge/automerge": "^2.1.10",
+    "@automerge/automerge-repo": "^1.1.1",
+    "@automerge/automerge-repo-storage-indexeddb": "^1.1.1",
+    "@automerge/automerge-wasm": "^0.9.0",
     "bs58check": "^3.0.1",
     "cbor-x": "^1.5.4",
     "debug": "^4.3.4",
@@ -94,7 +119,6 @@
     "fast-sha256": "^1.3.0",
     "xstate": "^4.37.0"
   },
-  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   },

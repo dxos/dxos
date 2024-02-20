@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "display-name",
   "sourceRoot": "packages/common/display-name/src",
   "projectType": "library",
   "targets": {

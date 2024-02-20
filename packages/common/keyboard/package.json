@@ -1,6 +1,6 @@
 {
   "name": "@dxos/keyboard",
-  "version": "0.3.9",
+  "version": "0.4.4",
   "description": "Keyboard bindings",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,7 +17,8 @@
   ],
   "dependencies": {
     "@dxos/invariant": "workspace:*",
-    "@dxos/node-std": "workspace:*"
+    "@dxos/node-std": "workspace:*",
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

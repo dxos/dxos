@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "random-access-storage",
   "sourceRoot": "packages/common/random-access-storage/src",
   "projectType": "library",
   "targets": {
@@ -12,7 +14,7 @@
       }
     },
     "lint": {},
-    "test": {}
+    "vitest": {}
   },
   "implicitDependencies": [
     "esbuild",

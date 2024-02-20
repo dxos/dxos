@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "agent",
   "sourceRoot": "packages/core/agent/src",
   "projectType": "library",
   "targets": {

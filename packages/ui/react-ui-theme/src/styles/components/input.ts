@@ -53,16 +53,16 @@ export const warningInputValence = 'shadow-warning-500/50 dark:shadow-warning-60
 export const errorInputValence = 'shadow-error-500/50 dark:shadow-error-600/50';
 
 const textInputSurfaceFocus =
-  'transition-colors bg-[--input-bg] focus:bg-white dark:focus:bg-neutral-925 border-transparent focus:border-transparent';
+  'transition-colors bg-[--input-bg] focus:surface-attention border-transparent focus:border-transparent';
 
 const textInputSurfaceHover =
-  'hover:bg-[--input-bg-hover] dark:hover:bg-[--input-bg-hover] focus:hover:bg-white dark:focus:hover:bg-neutral-925';
+  'hover:bg-[--input-bg-hover] dark:hover:bg-[--input-bg-hover] focus:hover:surface-attention';
 
 const booleanInputSurface =
-  'shadow-inner transition-colors bg-neutral-150 dark:bg-neutral-700 aria-checked:bg-primary-550 dark:aria-checked:bg-primary-550 aria-[checked=mixed]:bg-primary-550 dark:aria-[checked=mixed]:bg-primary-550';
+  'shadow-inner transition-colors surface-unAccent aria-checked:surface-accent aria-[checked=mixed]:surface-accent';
 
 const booleanInputSurfaceHover =
-  'hover:bg-neutral-200 dark:hover:bg-neutral-650 hover:aria-checked:bg-primary-600 dark:hover:aria-checked:bg-primary-600 hover:aria-[checked=mixed]:bg-primary-600 dark:hover:aria-[checked=mixed]:bg-primary-600';
+  'hover:surface-unAccentHover hover:aria-checked:surface-accentHover hover:aria-[checked=mixed]:surface-accentHover';
 
 export const inputValence = (valence?: MessageValence) => {
   switch (valence) {
@@ -100,7 +100,7 @@ const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   'is-full text-base rounded text-[color:var(--surface-text)]',
   textInputSurfaceFocus,
   textInputSurfaceHover,
-  props.focused && 'bg-white dark:bg-neutral-925',
+  props.focused && 'surface-attention',
   placeholderText,
   inputValence(props.validationValence),
   props.disabled && staticDisabled,
@@ -111,13 +111,13 @@ export const inputInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   props.variant === 'subdued'
     ? mx(...sharedSubduedInputStyles(props), ...etc)
     : props.variant === 'static'
-    ? mx(...sharedStaticInputStyles(props), ...etc)
-    : mx(
-        ...sharedDefaultInputStyles(props),
-        !props.disabled && focusRing,
-        inputValence(props.validationValence) || neutralInputValence,
-        ...etc,
-      );
+      ? mx(...sharedStaticInputStyles(props), ...etc)
+      : mx(
+          ...sharedDefaultInputStyles(props),
+          !props.disabled && focusRing,
+          inputValence(props.validationValence) || neutralInputValence,
+          ...etc,
+        );
 
 export const inputCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5, disabled }, ...etc) =>
   mx(
@@ -138,7 +138,8 @@ export const inputSwitch: ComponentFunction<InputStyleProps> = ({ size = 5, disa
     getSizeWidth(computeSize(sizeValue(size) * 1.75, 9)),
     booleanInputSurface,
     !disabled && booleanInputSurfaceHover,
-    'cursor-pointer shrink-0 rounded-full pli-1 relative',
+    // TODO(burdon): Added m-1 margin to make 40px width to align with 40px icon button.
+    'cursor-pointer shrink-0 rounded-full pli-1 mx-1 relative',
     focusRing,
     ...etc,
   );
@@ -146,7 +147,7 @@ export const inputSwitch: ComponentFunction<InputStyleProps> = ({ size = 5, disa
 export const inputSwitchThumb: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
   mx(
     getSize(size === 'px' ? 'px' : ((size - 2) as Size)),
-    'block bg-white rounded-full border-neutral-100 transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[100%]',
+    'block bg-white rounded-full separator-separator transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[100%]',
     ...etc,
   );
 
@@ -154,7 +155,7 @@ export const inputWithSegmentsInput: ComponentFunction<InputStyleProps> = (props
   mx('font-mono selection:bg-transparent mli-auto', props.disabled && 'cursor-not-allowed', ...etc);
 
 export const inputLabel: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
-  mx('block text-sm font-medium text-neutral-900 dark:text-neutral-100', props.srOnly && 'sr-only', ...etc);
+  mx('block text-sm font-medium', props.srOnly && 'sr-only', ...etc);
 
 export const inputDescription: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx(descriptionText, props.srOnly && 'sr-only', ...etc);

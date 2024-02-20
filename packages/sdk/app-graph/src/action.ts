@@ -10,6 +10,22 @@ import type { MaybePromise } from '@dxos/util';
 // TODO(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures.
 export type Label = string | [string, { ns: string; count?: number }];
 
+export type InvokeParams = Partial<{
+  caller: string;
+}>;
+
+/**
+ * Platform-specific key binding.
+ */
+// NOTE: Keys come from `getHostPlatform` in `@dxos/util`.
+export type KeyBinding = {
+  windows?: string;
+  macos?: string;
+  ios?: string;
+  linux?: string;
+  unknown?: string;
+};
+
 /**
  * An action on a node in the graph which may be invoked by sending the associated intent.
  */
@@ -35,9 +51,10 @@ export type Action<TProperties extends Record<string, any> = Record<string, any>
 
   /**
    * Key binding.
-   * NOTE: Alphanumeric characters should be declared in lowercase.
    */
-  keyBinding?: string;
+  // TODO(wittjosiah): Factor out.
+  // TODO(burdon): Rename shortcut.
+  keyBinding?: string | KeyBinding;
 
   /**
    * Properties of the node relevant to displaying the action.
@@ -57,7 +74,7 @@ export type Action<TProperties extends Record<string, any> = Record<string, any>
   // TODO(burdon): Why get vs. prop?
   get actions(): Action[];
 
-  invoke: () => MaybePromise<any>;
+  invoke: (params?: InvokeParams) => MaybePromise<any>;
 
   addProperty(key: string, value: any): void;
   removeProperty(key: string): void;

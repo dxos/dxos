@@ -4,9 +4,9 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import React from 'react';
 
+import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Tree } from './Tree';
@@ -70,6 +70,7 @@ const testItems2 = [
 ];
 
 export default {
+  title: 'react-ui-mosaic/Tree',
   component: Tree,
   render: (args: DemoTreeProps) => {
     return (

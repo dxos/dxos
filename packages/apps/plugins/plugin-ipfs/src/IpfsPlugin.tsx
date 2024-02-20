@@ -3,10 +3,13 @@
 //
 
 import { FileCloud, type IconProps } from '@phosphor-icons/react';
+import { create as createIpfsClient } from 'kubo-rpc-client';
 import React, { type Ref } from 'react';
 
+import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { File } from '@braneframe/types';
-import { type PluginDefinition, isObject } from '@dxos/app-framework';
+import { type Plugin, type PluginDefinition, isObject, resolvePlugin } from '@dxos/app-framework';
+import { log } from '@dxos/log';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import { FileCard, FileMain, FileSection, FileSlide } from './components';
@@ -15,8 +18,13 @@ import translations from './translations';
 import { type IpfsPluginProvides, isFile } from './types';
 
 export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
+  let clientPlugin: Plugin<ClientPluginProvides> | undefined;
+
   return {
     meta,
+    ready: async (plugins) => {
+      clientPlugin = resolvePlugin(plugins, parseClientPlugin);
+    },
     provides: {
       translations,
       metadata: {
@@ -25,6 +33,48 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
             placeholder: ['file title placeholder', { ns: IPFS_PLUGIN }],
             icon: (props: IconProps) => <FileCloud {...props} />,
           },
+        },
+      },
+      // TODO(burdon): Add intent to upload file.
+      file: {
+        upload: async (file) => {
+          try {
+            const config = clientPlugin?.provides.client.config;
+
+            // TODO(nf): dedupe with publish.ts in @dxos/cli
+            const server = config?.values.runtime?.services?.ipfs?.server;
+            if (server) {
+              let authorizationHeader;
+              const serverAuthSecret = config?.get('runtime.services.ipfs.serverAuthSecret');
+              if (serverAuthSecret) {
+                const splitSecret = serverAuthSecret.split(':');
+                switch (splitSecret[0]) {
+                  case 'basic':
+                    authorizationHeader =
+                      'Basic ' + Buffer.from(splitSecret[1] + ':' + splitSecret[2]).toString('base64');
+                    break;
+                  case 'bearer':
+                    authorizationHeader = 'Bearer ' + splitSecret[1];
+                    break;
+                  default:
+                    throw new Error(`Unsupported authType: ${splitSecret[0]}`);
+                }
+              }
+              const ipfsClient = createIpfsClient({
+                url: server,
+                timeout: 30_000,
+                ...(authorizationHeader ? { headers: { authorization: authorizationHeader } } : {}),
+              });
+              const { cid } = await ipfsClient.add(file);
+              return {
+                cid: cid.toString(),
+              };
+            }
+          } catch (err) {
+            log.catch(err);
+          }
+
+          return undefined;
         },
       },
       surface: {

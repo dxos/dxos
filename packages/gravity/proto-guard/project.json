@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "proto-guard",
   "sourceRoot": "packages/gravity/proto-guard/src",
   "projectType": "library",
   "targets": {
@@ -23,6 +25,11 @@
       }
     },
     "test": {
+      "dependsOn": [
+        {
+          "target": "build"
+        }
+      ],
       "options": {
         "environments": [
           "nodejs"

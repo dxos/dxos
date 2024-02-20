@@ -16,11 +16,12 @@ import { Chart } from './Chart';
 // TODO(burdon): How to provide geo service via agent?
 
 export default {
+  title: 'plugin-explorer/Chart',
   component: Plot,
   decorators: [FullscreenDecorator()],
 };
 
-export const Default = () => <ClientRepeater Component={DefaultStory} types={types} />;
+export const Default = () => <ClientRepeater component={DefaultStory} types={types} />;
 const DefaultStory = () => {
   const [data, setData] = useState<{ cities: any }>();
   useEffect(() => {

@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "rpc-tunnel-e2e",
   "sourceRoot": "packages/e2e/rpc-tunnel-e2e/src",
   "projectType": "library",
   "targets": {
@@ -15,6 +17,7 @@
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
+        "generatePackageJson": false,
         "outputPath": "packages/e2e/rpc-tunnel-e2e/out"
       },
       "outputs": [

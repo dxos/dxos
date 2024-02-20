@@ -1,9 +1,12 @@
 {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "stories",
   "sourceRoot": "tools/stories/src",
   "projectType": "library",
   "targets": {
     "chromatic": {
       "dependsOn": [
+        "chromatic-examples",
         "chromatic-shell",
         "chromatic-ui"
       ],
@@ -102,7 +105,7 @@
         }
       },
       "dependsOn": [
-        "examples:compile"
+        "examples:prebuild"
       ],
       "executor": "@nx/storybook:build",
       "options": {

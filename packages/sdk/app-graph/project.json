@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "app-graph",
   "sourceRoot": "packages/sdk/app-graph/src",
   "projectType": "library",
   "targets": {

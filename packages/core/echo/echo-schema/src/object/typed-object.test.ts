@@ -8,7 +8,7 @@ import { devtoolsFormatter } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
-import { Expando, TypedObject, getGlobalAutomergePreference } from './typed-object';
+import { Expando, TypedObject } from './typed-object';
 
 describe('TypedObject', () => {
   test('instance of TypedObject', async () => {
@@ -42,23 +42,20 @@ describe('TypedObject', () => {
 
   test('keys', () => {
     const obj = new Expando({ title: 'hello world', priority: 1 });
-    expect(Object.keys(obj)).to.deep.equal(['title', 'priority']);
+    // Key order is not guaranteed.
+    expect(Object.keys(obj).sort()).to.deep.equal(['title', 'priority'].sort());
   });
 
-  describe('meta', () => {
-    test('meta keys', () => {
-      const obj = new TypedObject();
-      expect(Object.keys(obj.__meta)).to.deep.equal(['keys']);
-    });
+  test('meta keys', () => {
+    const obj = new TypedObject();
+    expect(Object.keys(obj.__meta)).to.deep.equal(['keys']);
   });
 
-  if (!getGlobalAutomergePreference()) {
-    test('devtools formatter', () => {
-      const obj = new TypedObject({ title: 'hello world' });
+  test.skip('devtools formatter', () => {
+    const obj = new TypedObject({ title: 'hello world' });
 
-      expect(obj[devtoolsFormatter].header()).to.not.be.undefined;
-      expect(obj[devtoolsFormatter].hasBody!()).to.be.true;
-      expect(obj[devtoolsFormatter].body!()).to.not.be.undefined;
-    });
-  }
+    expect(obj[devtoolsFormatter].header()).to.not.be.undefined;
+    expect(obj[devtoolsFormatter].hasBody!()).to.be.true;
+    expect(obj[devtoolsFormatter].body!()).to.not.be.undefined;
+  });
 });

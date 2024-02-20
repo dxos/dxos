@@ -4,9 +4,9 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import React from 'react';
 
+import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Grid, type GridLayout } from './Grid';
@@ -32,6 +32,7 @@ const testLayout = testItems.reduce<GridLayout>((map, item) => {
 }, {});
 
 export default {
+  title: 'react-ui-mosaic/Grid',
   component: Grid,
   render: () => {
     return (

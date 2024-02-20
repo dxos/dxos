@@ -3,28 +3,24 @@
 //
 
 import fs from 'fs';
-import { type CID, create, globSource } from 'ipfs-http-client';
+import { type CID } from 'kubo-rpc-client';
 import { join } from 'path';
-
-import { type Config } from '@dxos/client';
-import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 
 interface UploadOptions {
   timeout: string | number;
   progress?: (bytes: number, path?: string) => void;
   pin?: boolean;
+  authorizationHeader?: string;
 }
 
-export const uploadToIPFS = async (path: string, config?: Config, options?: UploadOptions): Promise<CID> => {
-  const { timeout, pin = true, progress } = options || {};
+export const uploadToIPFS = async (path: string, ipfsServer: string, options?: UploadOptions): Promise<CID> => {
+  const { timeout, pin = true, progress, authorizationHeader } = options || {};
 
-  const ipfsServer = config?.get('runtime.services.ipfs.server');
-  invariant(ipfsServer, 'Invalid IPFS Server.');
-
+  const { create, globSource } = await _importESM('kubo-rpc-client');
   const ipfsClient = create({
     url: ipfsServer,
     timeout: timeout || '1m',
+    ...(authorizationHeader ? { headers: { authorization: authorizationHeader } } : {}),
   });
 
   if (!fs.existsSync(path)) {
@@ -49,11 +45,13 @@ export const uploadToIPFS = async (path: string, config?: Config, options?: Uplo
         const localContent = fs.readFileSync(fullPath);
 
         if (!localContent.equals(remoteContent)) {
-          log.error('file content mismatch', {
-            path: fullPath,
-            cid: file.cid.toString(),
-            localSize: localContent.length,
-            remoteSize: remoteContent.length,
+          throw new Error('file content mismatch', {
+            cause: {
+              path: fullPath,
+              cid: file.cid.toString(),
+              localSize: localContent.length,
+              remoteSize: remoteContent.length,
+            },
           });
         }
       }
@@ -67,3 +65,6 @@ export const uploadToIPFS = async (path: string, config?: Config, options?: Uplo
     return addResult.cid;
   }
 };
+
+// eslint-disable-next-line no-new-func
+const _importESM = new Function('modulePath', 'return import(modulePath)');

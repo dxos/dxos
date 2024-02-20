@@ -1,5 +1,5 @@
 # Class `Shell`
-<sub>Declared in [packages/sdk/client/dist/types/src/services/shell.d.ts:32]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/services/shell.d.ts:33]()</sub>
 
 
 Interface for controlling the shell.

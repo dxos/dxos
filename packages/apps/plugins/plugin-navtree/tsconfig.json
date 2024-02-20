@@ -1,5 +1,7 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": [
+    "../../../../tsconfig.json"
+  ],
   "compilerOptions": {
     "lib": [
       "DOM",
@@ -30,6 +32,9 @@
       "path": "../../../common/keyboard"
     },
     {
+      "path": "../../../common/random"
+    },
+    {
       "path": "../../../common/util"
     },
     {
@@ -54,6 +59,9 @@
       "path": "../../../ui/react-ui-navtree"
     },
     {
+      "path": "../../../ui/react-ui-searchlist"
+    },
+    {
       "path": "../../../ui/react-ui-theme"
     },
     {
@@ -64,6 +72,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-observability"
     },
     {
       "path": "../plugin-theme"

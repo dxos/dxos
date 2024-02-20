@@ -6,7 +6,7 @@
 version: 2.1
 
 orbs:
-  nx: nrwl/nx@1.6.1
+  nx: nrwl/nx@1.6.2
 
 parameters:
   mode:
@@ -17,9 +17,16 @@ parameters:
     type: boolean
     default: false
 
+  vitest-browser:
+    type: boolean
+    default: false
+
 aliases:
-  - &docker_image
-    image: ghcr.io/dxos/circleci-node:latest
+  # https://github.com/dxos/dxos/issues/4946
+  # - &node-version [ "18.19.0", "20.10.0", "21.4.0" ]
+  - &node-version [ "18.19.0", "20.10.0"]
+  - &docker_image_default
+    image: ghcr.io/dxos/circleci-node:18.19.0
     auth:
       username: dxos-bot
       password: $GH_TOKEN
@@ -67,37 +74,57 @@ aliases:
   - &install_datadog
     run:
       name: Install Datadog
-      command: npm install -g @datadog/datadog-ci 
+      command: npm install -g @datadog/datadog-ci
+
+commands:
+  vitest-affected:
+    parameters:
+      mode:
+        description: "Test execution environment, incompatible tests will be ignored"
+        type: enum
+        enum: [ "node", "chrome" ]
+        default: "node"
+    steps:
+      - run:
+          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=vitest
+          environment:
+            VITEST_XML_REPORT: true
+            VITEST_ENV: << parameters.mode >>
 
 jobs:
   #
   # NOTE: This job is required to complete before ALL PRs can be merged to main.
   #
   check:
+    parameters:
+      node-version:
+        type: string
     docker:
-      - *docker_image
+      - image: ghcr.io/dxos/circleci-node:<< parameters.node-version >>
+        auth:
+          username: dxos-bot
+          password: $GH_TOKEN
     # https://circleci.com/docs/configuration-reference/#docker-execution-environment
     resource_class: xlarge
     environment:
       DX_ENVIRONMENT: circleci
-    
+
     # Run the job on ramdisk for optimal performance.
     # https://support.circleci.com/hc/en-us/articles/360056323651-How-to-optimize-the-restore-cache-step-for-Node-projects
-    working_directory: /mnt/ramdisk/work
-
     steps:
-      - *ram_cache_configure
       - checkout
-      - *ram_cache_restore
+      - *cache_restore
       - run: pnpm set verify-store-integrity false
       - run: pnpm install --prefer-offline
       - run: pnpm install-playwright
-      - *ram_cache_save
+      - *cache_save
       - nx/set-shas
       - run: pnpm check-dependencies
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --coverage --xmlReport --environments=nodejs
+      - vitest-affected:
+          mode: node
       - when:
           condition:
             equal: [ main, <<pipeline.git.branch>> ]
@@ -105,6 +132,7 @@ jobs:
             - run: pnpm nx run-many --target=lint
             - run: pnpm nx run-many --target=build
             - run: pnpm nx run-many --target=test --skip-nx-cache --coverage --xmlReport --environments=nodejs
+            - run: VITEST_XML_REPORT=true pnpm nx run-many --target=vitest --skip-nx-cache
       - *send_test_report
       - *codecov_upload
       - *store_test_results
@@ -114,8 +142,7 @@ jobs:
   #
   e2e:
     docker:
-      - *docker_image
-    # TODO(wittjosiah): Using because of kai bundling memory usage.
+      - *docker_image_default
     resource_class: xlarge
     steps:
       - checkout
@@ -124,24 +151,10 @@ jobs:
       - run: pnpm install-playwright
       - *cache_save
       - nx/set-shas
-      # TODO(wittjosiah): Apps can't be bundled in parallel currently due to memory usage.
-      - run:
-          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=1
-          environment:
-            REMOTE_SOURCE: http://localhost:3967/vault.html
-            # TODO(wittjosiah): Remove. Currently needed for building Vite apps.
-            NODE_OPTIONS: --max_old_space_size=10240
-      - run:
-          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1 --xmlReport
-          environment:
-            REMOTE_SOURCE: http://localhost:3967/vault.html
-            # TODO(wittjosiah): Remove. Currently need because e2e seems to be re-running bundling.
-            NODE_OPTIONS: --max_old_space_size=10240
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1 --xmlReport
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=chromatic
-          environment:
-            # TODO(wittjosiah): Remove? Seems to be needed after automerge was added.
-            NODE_OPTIONS: --max_old_space_size=10240
           when: always
       - *send_test_report
       - *codecov_upload
@@ -155,7 +168,7 @@ jobs:
   #
   flaky:
     docker:
-      - *docker_image
+      - *docker_image_default
     steps:
       - checkout
       - *cache_restore
@@ -168,12 +181,27 @@ jobs:
       - *store_test_results
 
   #
+  # Vitest headless browser tests.
+  #
+  vitest-browser:
+    docker:
+      - *docker_image_default
+    steps:
+      - checkout
+      - *cache_restore
+      - run: pnpm install
+      - *cache_save
+      - nx/set-shas
+      - vitest-affected:
+          mode: chrome
+      - *store_test_results
+
+  #
   # Publish applications.
   #
   publish:
     docker:
-      - *docker_image
-    # TODO(wittjosiah): Using because of kai bundling memory usage.
+      - *docker_image_default
     resource_class: xlarge
     steps:
       - checkout
@@ -185,20 +213,37 @@ jobs:
           command: ./.circleci/scripts/publish.sh
           environment:
             NODE_ENV: production
-            NODE_OPTIONS: --max_old_space_size=10240
       - run:
           command: ./.circleci/scripts/publish-extension.sh
           environment:
             NODE_ENV: production
+  clean_pnpm_cache:
+    docker:
+      - *docker_image_default
+    environment:
+      DX_ENVIRONMENT: circleci
+    steps:
+      - checkout
+      - *cache_restore
+      - run: rm -rf $(pnpm store path) && mkdir -p $(pnpm store path)
+      # Ensure a new cache key is generated that a cache miss will fallback to.
+      - run: date +%s > "pnpm-lock.yaml"
+      - *cache_save
 
 workflows:
   default:
+    when:
+      not:
+        equal: [ clear_pnpm_cache, << pipeline.schedule.name >> ]
     jobs:
       - check:
           context:
             - Github
+          matrix:
+            parameters:
+              node-version: *node-version
+      # Only run e2e and browser tests on pushes to main & release branches.
       - e2e:
-          # Only run e2e tests on pushes to main & release branches.
           filters:
             branches:
               only:
@@ -206,17 +251,47 @@ workflows:
                 - /^rc-.*/
                 - /^hotfix-.*/
                 - /^release-please-.*/
+                - nf/circleci-docker
+          context:
+            - Github
+      - vitest-browser:
+          filters:
+            branches:
+              only:
+                - main
+                - /^rc-.*/
+                - /^hotfix-.*/
+                - /^release-please-.*/
+                - nf/circleci-docker
           context:
             - Github
 
   e2e:
-    when: << pipeline.parameters.e2e >>
+    when:
+      and:
+        - << pipeline.parameters.e2e >>
+        - not:
+          equal: [ clear_pnpm_cache, << pipeline.schedule.name >> ]
     jobs:
       - e2e:
           context:
             - Github
 
+  vitest-browser:
+    when:
+      and:
+        - << pipeline.parameters.vitest-browser >>
+        - not:
+          equal: [ clear_pnpm_cache, << pipeline.schedule.name >> ]
+    jobs:
+      - vitest-browser:
+          context:
+            - Github
+
   deploy:
+    when:
+      not:
+        equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
     jobs:
       - publish:
           filters:
@@ -227,5 +302,13 @@ workflows:
                 - staging
           context:
             - Github
-
+  clear_pnpm_cache:
+    when:
+      and:
+        - equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
+        - equal: [ clear_pnpm_cache, << pipeline.schedule.name >> ]
+    jobs:
+      - clean_pnpm_cache:
+          context:
+            - Github
 # VS Code Extension Version: 1.5.1

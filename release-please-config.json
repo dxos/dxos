@@ -54,11 +54,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/plugins/plugin-error/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/plugins/plugin-explorer/package.json",
           "jsonpath": "$.version"
         },
@@ -70,6 +65,11 @@
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-github/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-gpt/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -129,7 +129,17 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-native/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-navtree/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-observability/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -164,6 +174,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-settings/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-sketch/package.json",
           "jsonpath": "$.version"
         },
@@ -184,11 +199,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/plugins/plugin-telemetry/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/plugins/plugin-template/package.json",
           "jsonpath": "$.version"
         },
@@ -200,6 +210,11 @@
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-thread/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-undo/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -339,22 +354,17 @@
         },
         {
           "type": "json",
+          "path": "packages/common/random/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/random-access-storage/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/common/react-async/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/common/sentry/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/common/telemetry/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -564,6 +574,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/discord-bot/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/gem-core/package.json",
           "jsonpath": "$.version"
         },
@@ -659,17 +674,22 @@
         },
         {
           "type": "json",
+          "path": "packages/sdk/observability/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/sdk/react-client/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/sdk/react-shell/package.json",
+          "path": "packages/sdk/shell/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/sdk/vault/package.json",
+          "path": "packages/ui/brand/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -685,16 +705,6 @@
         {
           "type": "json",
           "path": "packages/ui/primitives/react-list/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/react-appkit/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/react-icons/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -740,6 +750,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-theme/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-thread/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -810,11 +825,6 @@
         {
           "type": "json",
           "path": "tools/log-hook/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/presenter/package.json",
           "jsonpath": "$.version"
         },
         {

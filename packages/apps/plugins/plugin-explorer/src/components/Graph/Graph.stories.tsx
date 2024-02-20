@@ -4,11 +4,11 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import React, { useEffect, useState } from 'react';
 
 import { View as ViewType, types } from '@braneframe/types';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
+import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
@@ -42,8 +42,9 @@ const Story = () => {
 };
 
 export default {
+  title: 'plugin-explorer/Graph',
   component: Graph,
-  render: () => <ClientRepeater Component={Story} createSpace types={types} />,
+  render: () => <ClientRepeater component={Story} createSpace types={types} />,
   decorators: [FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',

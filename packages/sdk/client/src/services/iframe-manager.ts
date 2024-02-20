@@ -9,8 +9,8 @@ import { type MaybePromise } from '@dxos/util';
 export class IFrameManager {
   private _iframe?: HTMLIFrameElement;
   private readonly _source: URL;
-  private readonly _onOpen: () => MaybePromise<void>;
-  private readonly _onMessage: (event: MessageEvent) => MaybePromise<void>;
+  private readonly _onOpen?: () => MaybePromise<void>;
+  private readonly _onMessage?: (event: MessageEvent) => MaybePromise<void>;
 
   constructor({
     source,
@@ -18,8 +18,8 @@ export class IFrameManager {
     onMessage,
   }: {
     source: URL;
-    onOpen: () => MaybePromise<void>;
-    onMessage: (event: MessageEvent) => MaybePromise<void>;
+    onOpen?: () => MaybePromise<void>;
+    onMessage?: (event: MessageEvent) => MaybePromise<void>;
   }) {
     this._source = source;
     this._onOpen = onOpen;
@@ -44,7 +44,7 @@ export class IFrameManager {
     const iframeId = `__DXOS_CLIENT_${PublicKey.random().toHex()}__`;
     this._iframe = createIFrame(this._source.toString(), iframeId, { allow: 'clipboard-read; clipboard-write' });
 
-    await this._onOpen();
+    await this._onOpen?.();
   }
 
   async close() {
@@ -54,6 +54,6 @@ export class IFrameManager {
   }
 
   private async _messageHandler(event: MessageEvent) {
-    void this._onMessage(event);
+    void this._onMessage?.(event);
   }
 }

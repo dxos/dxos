@@ -1,21 +1,36 @@
 {
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "name": "examples",
   "projectType": "application",
   "targets": {
     "build": {},
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
-        "outputPath": "packages/sdk/examples/out/demo"
+        "generatePackageJson": false,
+        "outputPath": "{projectRoot}/out/demo"
       },
       "outputs": [
         "{options.outputPath}"
       ]
     },
+    "e2e": {
+      "options": {
+        "playwrightConfigPath": "{projectRoot}/src/playwright/playwright.config.ts",
+        "serve": "examples:preview",
+        "testPatterns": [
+          "{projectRoot}/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "watchPatterns": [
+          "{projectRoot}/src/**/*"
+        ]
+      }
+    },
     "lint": {
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/sdk/examples/**/*.{ts,tsx,js,jsx}"
+          "{projectRoot}/**/*.{ts,tsx,js,jsx}"
         ],
         "quiet": true
       }
@@ -26,8 +41,15 @@
         "script": "prebuild"
       },
       "outputs": [
-        "packages/sdk/examples/src/proto/gen"
+        "{projectRoot}/src/proto/gen"
       ]
+    },
+    "preview": {
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "examples:bundle",
+        "staticFilePath": "{projectRoot}/out/demo"
+      }
     },
     "serve": {
       "executor": "@nx/vite:dev-server",
@@ -35,7 +57,5 @@
         "buildTarget": "examples:bundle"
       }
     }
-  },
-  "$schema": "../node_modules/nx/schemas/project-schema.json",
-  "root": "packages/sdk/examples"
+  }
 }

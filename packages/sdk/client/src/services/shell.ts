@@ -30,6 +30,7 @@ type ShareSpaceResult = ShellResult & {
 
 type JoinSpaceResult = ShellResult & {
   space?: Space;
+  target?: string;
 };
 
 type ShellParams = {
@@ -71,10 +72,6 @@ export class Shell {
    * @returns Shell result with the new identity.
    */
   async initializeIdentity({ invitationCode }: { invitationCode?: string } = {}): Promise<InitializeIdentityResult> {
-    if (this._identity.get()) {
-      throw new Error('Identity already exists');
-    }
-
     await this._shellManager.setLayout({ layout: ShellLayout.INITIALIZE_IDENTITY, invitationCode });
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {
@@ -122,10 +119,11 @@ export class Shell {
    * Opens the shell to the specified space, showing current members and allowing new members to be invited.
    *
    * @param options.spaceKey The space to share.
+   * @param options.target The target location to share with new members.
    *
    * @returns Shell result with any new members that join while the shell is open.
    */
-  async shareSpace({ spaceKey }: { spaceKey: PublicKey }): Promise<ShareSpaceResult> {
+  async shareSpace({ spaceKey, target }: { spaceKey: PublicKey; target?: string }): Promise<ShareSpaceResult> {
     if (!this._identity.get()) {
       return { error: new Error('Identity does not exist'), cancelled: false };
     }
@@ -139,7 +137,7 @@ export class Shell {
       (key) => key.toHex(),
       space.members.get().map((member) => member.identity.identityKey),
     );
-    await this._shellManager.setLayout({ layout: ShellLayout.SPACE, spaceKey });
+    await this._shellManager.setLayout({ layout: ShellLayout.SPACE, spaceKey, target });
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {
         if (context.display === ShellDisplay.NONE) {
@@ -169,7 +167,7 @@ export class Shell {
       this._shellManager.contextUpdate.on((context) => {
         const space = context.spaceKey && this._spaces.get().find((space) => context.spaceKey?.equals(space.key));
         if (space) {
-          resolve({ space, cancelled: false });
+          resolve({ space, target: context.target, cancelled: false });
         }
 
         if (context.display === ShellDisplay.NONE) {

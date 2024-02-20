@@ -25,6 +25,7 @@ const Story = () => {
 };
 
 export default {
+  title: 'plugin-script/Splitter',
   component: Splitter,
   render: Story,
   parameters: {

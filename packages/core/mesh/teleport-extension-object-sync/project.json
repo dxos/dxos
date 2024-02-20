@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "teleport-extension-object-sync",
   "sourceRoot": "packages/core/mesh/teleport-extension-object-sync/src",
   "projectType": "library",
   "targets": {

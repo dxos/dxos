@@ -1,5 +1,7 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": [
+    "../../../../tsconfig.json"
+  ],
   "compilerOptions": {
     "lib": [
       "DOM",
@@ -49,6 +51,12 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-observability"
+    },
+    {
+      "path": "../plugin-settings"
     },
     {
       "path": "../plugin-theme"

@@ -4,10 +4,10 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import React, { type FC, useEffect, useState } from 'react';
 
 import { types, Tree as TreeType } from '@braneframe/types';
+import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
 
@@ -94,8 +94,9 @@ const Story: FC<{ type?: TreeComponentProps<any>['variant'] }> = ({ type } = {})
 };
 
 export default {
+  title: 'plugin-explorer/Tree',
   component: Tree,
-  render: () => <ClientRepeater Component={Story} types={types} createSpace />,
+  render: () => <ClientRepeater component={Story} types={types} createSpace />,
   decorators: [FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',

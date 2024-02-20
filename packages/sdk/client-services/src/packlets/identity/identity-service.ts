@@ -8,6 +8,7 @@ import { todo } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import {
+  type CreateIdentityRequest,
   type Identity,
   type IdentityService,
   type QueryIdentityResponse,
@@ -20,14 +21,14 @@ import { type CreateIdentityOptions, type IdentityManager } from './identity-man
 
 export class IdentityServiceImpl implements IdentityService {
   constructor(
-    private readonly _createIdentity: (params?: CreateIdentityOptions) => Promise<Identity>,
+    private readonly _createIdentity: (params: CreateIdentityOptions) => Promise<Identity>,
     private readonly _identityManager: IdentityManager,
     private readonly _keyring: Keyring,
     private readonly _onProfileUpdate?: (profile: ProfileDocument | undefined) => Promise<void>,
   ) {}
 
-  async createIdentity(request: ProfileDocument): Promise<Identity> {
-    await this._createIdentity(request);
+  async createIdentity(request: CreateIdentityRequest): Promise<Identity> {
+    await this._createIdentity(request.profile ?? {});
     return this._getIdentity()!;
   }
 

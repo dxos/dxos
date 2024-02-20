@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "util",
   "sourceRoot": "packages/common/util/src",
   "projectType": "library",
   "targets": {
@@ -12,10 +14,9 @@
       }
     },
     "lint": {},
-    "test": {}
+    "vitest": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "test"
+    "esbuild"
   ]
 }

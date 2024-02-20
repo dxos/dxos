@@ -43,6 +43,9 @@
       "path": "../../common/node-std"
     },
     {
+      "path": "../../common/random"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -50,9 +53,6 @@
     },
     {
       "path": "../../core/echo/document-model"
-    },
-    {
-      "path": "../../core/echo/echo-generator"
     },
     {
       "path": "../../core/echo/echo-generator"

@@ -1,5 +1,7 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": [
+    "../../../../tsconfig.json"
+  ],
   "compilerOptions": {
     "lib": [
       "DOM",
@@ -40,6 +42,9 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-stack"
     }
   ]
 }
