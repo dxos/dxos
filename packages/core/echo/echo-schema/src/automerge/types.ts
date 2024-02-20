@@ -7,9 +7,21 @@ import { Reference } from '@dxos/document-model';
 import { type ObjectMeta, type EchoObject } from '../object';
 import { type Schema } from '../proto';
 
-export interface DocStructure {
-  objects: {
+export interface SpaceDoc {
+  access?: {
+    spaceKey: string;
+  };
+  /**
+   * Objects inlined in the current document.
+   */
+  objects?: {
     [key: string]: ObjectStructure;
+  };
+  /**
+   * Object id points to an automerge doc url where the object is embedded.
+   */
+  links?: {
+    [echoId: string]: string;
   };
 }
 
