@@ -37,6 +37,7 @@ export const ChatContainer = ({
   const textboxMetadata = useMessageMetadata(thread.id, identity);
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
 
+  // TODO(thure): Factor out.
   // TODO(thure): `flex-col-reverse` does not work to start the container scrolled to the end while also using
   //  `ScrollArea`. This is the least-bad way I found to scroll to the end on mount. Note that 0ms was insufficient
   //  for the desired effect; this is likely hardware-dependent and should be reevaluated.
@@ -92,7 +93,7 @@ export const ChatContainer = ({
     <Thread
       current={current}
       id={thread.id}
-      classNames='bs-full grid-rows-[1fr_min-content_min-content] overflow-hidden'
+      classNames='bs-full grid-rows-[1fr_min-content_min-content] overflow-hidden transition-[padding-block-end] pbe-[--rail-size] [[data-sidebar-inline-start-state=open]_&]:lg:pbe-0'
     >
       <ScrollArea.Root classNames='col-span-2'>
         <ScrollArea.Viewport classNames='overflow-anchored after:overflow-anchor after:block after:bs-px after:-mbs-px [&>div]:min-bs-full [&>div]:!grid [&>div]:grid-rows-[1fr_0]'>
