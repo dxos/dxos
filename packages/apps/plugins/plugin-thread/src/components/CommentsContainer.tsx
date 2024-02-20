@@ -30,11 +30,14 @@ export type ThreadsContainerProps = Omit<
 export const CommentsHeading = () => {
   const { t } = useTranslation(THREAD_PLUGIN);
   return (
-    <div role='none' className='grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)] items-center'>
-      <Button variant='primary'>
+    <div
+      role='none'
+      className='grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)] items-center border-be separator-separator -mbe-px'
+    >
+      <Button variant='primary' classNames='m-1 pli-0 is-[--rail-action] bs-[--rail-action] rounded-sm'>
         <Quotes weight='duotone' className={getSize(5)} />
       </Button>
-      <h1 className='font-medium fg-accent pli-2 truncate'>{t('comments heading')}</h1>
+      <h1 className='font-medium fg-accent pli-1 truncate'>{t('comments heading')}</h1>
     </div>
   );
 };

@@ -54,8 +54,6 @@ export const cursorLineMargin: Extension = EditorView.updateListener.of(
         ? visBotLineDoc
         : visBotLineDoc + Math.floor((viewportBottom - botLineBlk.bottom) / view.defaultLineHeight);
 
-    console.log('[view.dom]', mainLine, visTopLine, visBotLine, cursorLineMargin);
-
     // const needsScrollTop = mainLine <= visTopLine + cursorLineMargin;
     const needsScrollTop = false;
     const needsScrollBot = mainLine >= visBotLine - cursorLineMargin;

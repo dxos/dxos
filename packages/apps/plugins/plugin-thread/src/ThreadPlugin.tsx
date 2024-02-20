@@ -124,24 +124,24 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             }
 
             case 'complementary': {
-              console.log('[complementary]', data);
               const dispatch = intentPlugin?.provides.intent.dispatch;
               const location = navigationPlugin?.provides.location;
 
               // TODO(burdon): Hack to detect comments.
-              if (isDocument(data) && data.comments && data.comments.length) {
-                const space = getSpaceForObject(data);
+              if (isDocument(data.subject)) {
+                const comments = data.subject.comments;
+                const space = getSpaceForObject(data.subject);
                 if (!space) {
                   return null;
                 } else {
                   // Sort threads by y-position.
                   // TODO(burdon): Should just use document position?
-                  const threads = data.comments
+                  const threads = comments
                     .map(({ thread }) => thread)
                     .filter(nonNullable)
                     .toSorted((a, b) => state.threads[a.id] - state.threads[b.id]);
 
-                  const detached = data.comments
+                  const detached = comments
                     .filter(({ cursor }) => !cursor)
                     .map(({ thread }) => thread?.id)
                     .filter(nonNullable);

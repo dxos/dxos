@@ -72,7 +72,7 @@ export const LayoutPlugin = ({
     sidebarOpen: true,
 
     complementarySidebarOpen: false,
-    complementarySidebarContent: 'never',
+    complementarySidebarContent: null,
 
     dialogContent: 'never',
     dialogOpen: false,
@@ -112,8 +112,8 @@ export const LayoutPlugin = ({
       }
 
       case 'complementary': {
-        layout.values.complementarySidebarOpen = state ?? Boolean(component);
-        layout.values.complementarySidebarContent = component ? { component, subject } : null;
+        layout.values.complementarySidebarOpen = !!state;
+        layout.values.complementarySidebarContent = component || subject ? { component, subject } : null;
         return { data: true };
       }
 

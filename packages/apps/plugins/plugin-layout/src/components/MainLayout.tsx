@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { List as MenuIcon, X } from '@phosphor-icons/react';
+import { CaretDoubleLeft, List as MenuIcon, X } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Surface, type Toast as ToastSchema } from '@dxos/app-framework';
@@ -106,6 +106,16 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
                 <Surface role='navbar-start' />
                 <div role='none' className='grow' />
                 <Surface role='navbar-end' direction='inline-reverse' />
+                {complementarySidebarContent && (
+                  <Button
+                    onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
+                    variant='ghost'
+                    classNames='p-0 bs-[var(--rail-action)] is-[var(--rail-action)]'
+                  >
+                    <span className='sr-only'>{t('open complementary sidebar label')}</span>
+                    <CaretDoubleLeft mirrored={context.complementarySidebarOpen} className={getSize(4)} />
+                  </Button>
+                )}
               </DensityProvider>
             </div>
           </div>
