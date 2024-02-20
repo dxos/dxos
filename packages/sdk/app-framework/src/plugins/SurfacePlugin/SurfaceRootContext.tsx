@@ -39,6 +39,6 @@ export type SurfaceRootContext = {
 
 const SurfaceRootContext: Context<SurfaceRootContext> = createContext<SurfaceRootContext>({ components: {} });
 
-export const useSurface = () => useContext(SurfaceRootContext);
+export const useSurfaceRoot = () => useContext(SurfaceRootContext);
 
 export const SurfaceProvider: Provider<SurfaceRootContext> = SurfaceRootContext.Provider;

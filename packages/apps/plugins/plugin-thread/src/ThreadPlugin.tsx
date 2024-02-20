@@ -3,8 +3,8 @@
 //
 
 import { Chat, type IconProps } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-react';
-import { deepSignal } from 'deepsignal';
+import { effect } from '@preact/signals-core';
+import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { isDocument } from '@braneframe/plugin-markdown';
@@ -31,11 +31,12 @@ import {
   getTextInRange,
   isTypedObject,
 } from '@dxos/react-client/echo';
+import { ScrollArea } from '@dxos/react-ui';
 import { comments, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
 
-import { ThreadContainer, ThreadMain, ThreadSettings, ThreadsContainer } from './components';
+import { ThreadMain, ThreadSettings, CommentsContainer, ChatContainer } from './components';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
 import { ThreadAction, type ThreadPluginProvides, isThread, type ThreadSettingsProps } from './types';
@@ -47,12 +48,12 @@ type ThreadState = {
 };
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
+  const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
+  const state = deepSignal<ThreadState>({ threads: {} });
+
   let graphPlugin: Plugin<GraphProvides> | undefined;
   let navigationPlugin: Plugin<LocationProvides> | undefined;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
-
-  const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
-  const state = deepSignal<ThreadState>({ threads: {} });
 
   return {
     meta,
@@ -159,32 +160,40 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   .filter(nonNullable);
 
                 return (
-                  <ThreadsContainer
-                    space={space}
-                    threads={threads}
-                    detached={detached}
-                    currentId={state.current}
-                    currentRelatedId={location?.active}
-                    autoFocusCurrentTextbox={state.focus}
-                    onThreadAttend={(thread: ThreadType) => {
-                      if (state.current !== thread.id) {
-                        state.current = thread.id;
-                        void intentPlugin?.provides.intent.dispatch({
-                          action: LayoutAction.FOCUS,
-                          data: {
-                            object: thread.id,
-                          },
-                        });
-                      }
-                    }}
-                    onThreadDelete={(thread: ThreadType) =>
-                      dispatch?.({
-                        plugin: THREAD_PLUGIN,
-                        action: ThreadAction.DELETE,
-                        data: { document: active, thread },
-                      })
-                    }
-                  />
+                  <ScrollArea.Root>
+                    <ScrollArea.Viewport>
+                      <CommentsContainer
+                        space={space}
+                        threads={threads}
+                        detached={detached}
+                        currentId={state.current}
+                        context={{ object: location?.active }}
+                        autoFocusCurrentTextbox={state.focus}
+                        onThreadAttend={(thread: ThreadType) => {
+                          if (state.current !== thread.id) {
+                            state.current = thread.id;
+                            void intentPlugin?.provides.intent.dispatch({
+                              action: LayoutAction.FOCUS,
+                              data: {
+                                object: thread.id,
+                              },
+                            });
+                          }
+                        }}
+                        onThreadDelete={(thread: ThreadType) =>
+                          dispatch?.({
+                            plugin: THREAD_PLUGIN,
+                            action: ThreadAction.DELETE,
+                            data: { document: active, thread },
+                          })
+                        }
+                      />
+                      <div role='none' className='bs-10' />
+                      <ScrollArea.Scrollbar>
+                        <ScrollArea.Thumb />
+                      </ScrollArea.Scrollbar>
+                    </ScrollArea.Viewport>
+                  </ScrollArea.Root>
                 );
               }
 
@@ -200,7 +209,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const { objects: threads } = space.db.query(ThreadType.filter((thread) => !thread.context));
               if (threads.length) {
                 const thread = threads[0];
-                return <ThreadContainer space={space} thread={thread} currentRelatedId={location?.active} />;
+                return <ChatContainer space={space} thread={thread} context={{ object: location?.active }} />;
               }
 
               break;
@@ -236,6 +245,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 if (index !== -1) {
                   doc.comments.splice(index, 1);
                 }
+
                 return {
                   undoable: {
                     message: translations[0]['en-US'][THREAD_PLUGIN]['thread deleted label'],
@@ -251,6 +261,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         },
       },
       markdown: {
+        // TODO(burdon): Factor out extension factory into separate file (for simplicity).
         extensions: ({ document: doc }) => {
           const space = doc && getSpaceForObject(doc);
           if (!doc || !space) {
@@ -264,6 +275,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   if (thread && cursor) {
                     const [start, end] = cursor.split(':');
                     const title = getTextInRange(doc.content, start, end);
+                    // TODO(burdon): This seems unsafe; review.
                     // Only update if the title has changed, otherwise this will cause an infinite loop.
                     // Skip if the title is empty - this means comment text was deleted, but thread title should remain.
                     if (title && title !== thread.title) {
@@ -274,6 +286,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               },
             }),
             comments({
+              id: doc.content?.id,
               onCreate: ({ cursor, location }) => {
                 // Create comment thread.
                 const [start, end] = cursor.split(':');

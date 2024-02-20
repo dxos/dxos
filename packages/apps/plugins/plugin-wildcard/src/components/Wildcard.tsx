@@ -4,23 +4,15 @@
 
 import React, { forwardRef } from 'react';
 
-import { type TypedObject, getTextContent } from '@dxos/react-client/echo';
+import { getTextContent } from '@dxos/react-client/echo';
 import { DropdownMenu, Input } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-card';
 import type { MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/react-ui-theme';
 
-export type WildcardProps = {
-  id: string;
-  object: TypedObject;
-};
-
-// TODO(wittjosiah): Instead of title, look for first field with type string.
-// TODO(wittjosiah): Instead of JSON view, show some high-level info about the object (e.g. type/icon, description, etc)
-//  JSON view can be an advanced secondary view behind an info button.
 const Wildcard: MosaicTileComponent<any> = forwardRef(
   (
-    { classNames, isDragging, draggableStyle, draggableProps, item: { id, object }, grow, debug, onSelect, onAction },
+    { classNames, isDragging, draggableStyle, draggableProps, item: object, grow, debug, onSelect, onAction },
     forwardRef,
   ) => {
     if (!object) {
@@ -41,6 +33,7 @@ const Wildcard: MosaicTileComponent<any> = forwardRef(
       }
     };
 
+    // TODO(burdon): Should this include the drag handle or just the content?
     return (
       <div role='none' ref={forwardRef} className='flex w-full' style={draggableStyle}>
         <Card.Root classNames={mx('w-full snap-center', isDragging && 'opacity-20', classNames)} grow={grow}>
@@ -58,16 +51,16 @@ const Wildcard: MosaicTileComponent<any> = forwardRef(
             )}
             <Card.Menu>
               {/* TODO(burdon): Handle events/intents? */}
-              <DropdownMenu.Item onClick={() => onAction?.({ id, action: 'delete' })}>
+              <DropdownMenu.Item onClick={() => onAction?.({ id: object.id, action: 'delete' })}>
                 <span className='grow'>Delete</span>
               </DropdownMenu.Item>
-              <DropdownMenu.Item onClick={() => onAction?.({ id, action: 'set-color' })}>
+              <DropdownMenu.Item onClick={() => onAction?.({ id: object.id, action: 'set-color' })}>
                 <span className='grow'>Change color</span>
               </DropdownMenu.Item>
             </Card.Menu>
           </Card.Header>
           {(content && (
-            <Card.Body gutter classNames={'text-sm text-neutral-500'}>
+            <Card.Body gutter classNames={'pb-2 text-sm text-neutral-500'}>
               {content}
             </Card.Body>
           )) ||

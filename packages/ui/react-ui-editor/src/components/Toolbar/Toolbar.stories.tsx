@@ -25,16 +25,16 @@ import {
   useFormattingState,
 } from '../../extensions';
 import { type Comment, useActionHandler, useEditorView, useTextModel } from '../../hooks';
-import { editorWithToolbarLayout } from '../../styles';
+import { editorFillLayoutEditor, editorFillLayoutRoot, editorWithToolbarLayout } from '../../styles';
 import translations from '../../translations';
 import { MarkdownEditor } from '../TextEditor';
 
 faker.seed(101);
 
-const Story: FC<{ content: string }> = ({ content }) => {
+const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) => {
   const [item] = useState({ text: new TextObject(content) });
   const [_comments, setComments] = useState<Comment[]>([]);
-  const [editorRef, editorView] = useEditorView();
+  const [editorRef, viewInvalidated] = useEditorView(id);
   const model = useTextModel({ text: item.text });
   const [formattingState, formattingObserver] = useFormattingState();
   const extensions = useMemo(
@@ -57,8 +57,8 @@ const Story: FC<{ content: string }> = ({ content }) => {
     [],
   );
 
-  useComments(editorView, _comments);
-  const handleAction = useActionHandler(editorView);
+  useComments(viewInvalidated ? null : editorRef.current, id, _comments);
+  const handleAction = useActionHandler(editorRef.current);
 
   if (!model) {
     return null;
@@ -75,7 +75,10 @@ const Story: FC<{ content: string }> = ({ content }) => {
         ref={editorRef}
         model={model}
         extensions={extensions}
-        slots={{ root: { className: mx(textBlockWidth, 'pli-2') } }}
+        slots={{
+          root: { className: mx(textBlockWidth, editorFillLayoutRoot, 'pli-2') },
+          editor: { className: editorFillLayoutEditor },
+        }}
       />
     </div>
   );

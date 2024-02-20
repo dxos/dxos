@@ -40,6 +40,7 @@ const authorId = PublicKey.random().toHex();
 //
 
 const Editor: FC<{
+  id?: string;
   item: { text: TextObject };
   comments: Comment[];
   selected?: string;
@@ -48,6 +49,7 @@ const Editor: FC<{
   onUpdateComment: CommentsOptions['onUpdate'];
   onSelectComment: CommentsOptions['onSelect'];
 }> = ({
+  id = 'test',
   item,
   selected: selectedValue,
   comments: commentRanges,
@@ -68,7 +70,7 @@ const Editor: FC<{
     }
   }, [selected, commentRanges, selectedValue]);
 
-  useComments(view.current, commentRanges);
+  useComments(view.current, id, commentRanges);
 
   const extensions = useMemo(() => {
     return [
@@ -112,7 +114,7 @@ const StoryThread: FC<{
   onSelect: () => void;
   onResolve: () => void;
 }> = ({ thread, selected, onSelect, onResolve }) => {
-  const [autoFocus, setAutoFocus] = useState(false);
+  const autoFocusRef = useRef(false);
   const [item, setItem] = useState({ text: new TextObject() });
   const model = useTextModel({ text: item.text });
   const editorRef = useRef<EditorView>(null);
@@ -123,7 +125,7 @@ const StoryThread: FC<{
     if (selected) {
       containerRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
       if (thread.messages.length === 0) {
-        setAutoFocus(true);
+        autoFocusRef.current = true;
       }
     }
   }, [selected]);
@@ -137,7 +139,7 @@ const StoryThread: FC<{
         blocks: [{ text: item.text, timestamp: new Date().toISOString() }],
       });
       setItem({ text: new TextObject() });
-      setAutoFocus(true);
+      autoFocusRef.current = true;
     }
   };
 
@@ -165,7 +167,7 @@ const StoryThread: FC<{
         <MessageTextbox
           authorId={authorId}
           ref={editorRef}
-          autoFocus={autoFocus}
+          autoFocusRef={autoFocusRef}
           onEditorFocus={onSelect}
           model={model}
           onSend={handleCreateMessage}

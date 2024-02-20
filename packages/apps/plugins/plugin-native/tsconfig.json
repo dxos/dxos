@@ -1,5 +1,7 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": [
+    "../../../../tsconfig.json"
+  ],
   "compilerOptions": {
     "lib": [
       "DOM",
@@ -28,6 +30,12 @@
     },
     {
       "path": "../../../sdk/app-framework"
+    },
+    {
+      "path": "../plugin-help"
+    },
+    {
+      "path": "../plugin-navtree"
     }
   ]
 }

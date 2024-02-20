@@ -1,10 +1,13 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "devtools-extension",
   "sourceRoot": "packages/devtools/devtools-extension/src",
   "projectType": "application",
   "targets": {
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
+        "generatePackageJson": false,
         "outputPath": "packages/devtools/devtools-extension/out/devtools-extension"
       },
       "outputs": [
@@ -37,9 +40,7 @@
     },
     "lint": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "test"
-  ],
-  "name": "devtools-extension"
+  ]
 }

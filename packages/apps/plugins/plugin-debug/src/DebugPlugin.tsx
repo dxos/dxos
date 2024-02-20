@@ -3,7 +3,7 @@
 //
 
 import { Bug, type IconProps } from '@phosphor-icons/react';
-import { batch } from '@preact/signals-react';
+import { batch } from '@preact/signals-core';
 import React, { useEffect, useState } from 'react';
 
 import { type ClientPluginProvides } from '@braneframe/plugin-client';
@@ -44,6 +44,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool)
         .prop(settings.values.$devtools!, 'devtools', LocalStorageStore.bool);
 
+      // TODO(burdon): Remove hacky dependency on global variable?
       // Used to test how composer handles breaking protocol changes.
       (window as any).changeStorageVersionInMetadata = async (version: number) => {
         const client: Client = (window as any).dxos.client;

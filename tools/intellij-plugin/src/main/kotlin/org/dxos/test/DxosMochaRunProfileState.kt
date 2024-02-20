@@ -60,10 +60,6 @@ class DxosMochaRunProfileState(
         val reporterFile = NodeJsCodeLocator.getFileRelativeToJsDir("mocha-intellij/lib/mochaIntellijReporter.js")
         cmd += listOf("--reporter", reporterFile.absolutePath)
 
-        getTestPattern()?.let { testPattern ->
-            cmd += listOf("--testPatterns", testPattern)
-        }
-
         getGrepPattern()?.let { grepPattern ->
             cmd += listOf("--grep", grepPattern)
         }

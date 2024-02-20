@@ -111,8 +111,29 @@ export class AppManager {
   }
 
   async joinSpace() {
-    await this.page.getByTestId('navtree.treeItem.actionsLevel0').nth(1).click({ button: 'right' });
+    await this.page.getByTestId('navtree.treeItem.actionsLevel0').nth(1).click();
     return this.page.getByTestId('spacePlugin.joinSpace').click();
+  }
+
+  waitForSpaceReady(params: { interval?: number; timeout?: number } = { timeout: 30_000 }) {
+    return waitFor(() => this.page.getByTestId('spacePlugin.main.name').isEnabled(), params);
+  }
+
+  getSpacePresenceMembers() {
+    return this.page.getByTestId('spacePlugin.presence.member');
+  }
+
+  // TODO(wittjosiah): Include members in the tooltip.
+  getSpacePresenceCount() {
+    return this.page.getByTestId('spacePlugin.presence.member').evaluateAll((elements) => {
+      const viewing = elements.filter((element) => element.getAttribute('data-status') === 'current').length;
+      const active = elements.filter((element) => element.getAttribute('data-status') === 'active').length;
+
+      return {
+        viewing,
+        active,
+      };
+    });
   }
 
   toggleSpaceCollapsed(nth = 0) {
@@ -138,14 +159,24 @@ export class AppManager {
   }
 
   async renameObject(newName: string, nth = 0) {
-    await this.page.getByTestId('spacePlugin.object').nth(nth).click({ button: 'right' });
+    await this.page
+      .getByTestId('spacePlugin.object')
+      .nth(nth)
+      .getByTestId('navtree.treeItem.actionsLevel2')
+      .first()
+      .click();
     await this.page.getByTestId('spacePlugin.renameObject').last().click();
     await this.page.getByTestId('spacePlugin.renameObject.input').fill(newName);
     await this.page.getByTestId('spacePlugin.renameObject.input').press('Enter');
   }
 
   async deleteObject(nth = 0) {
-    await this.page.getByTestId('spacePlugin.object').nth(nth).click({ button: 'right' });
+    await this.page
+      .getByTestId('spacePlugin.object')
+      .nth(nth)
+      .getByTestId('navtree.treeItem.actionsLevel2')
+      .first()
+      .click();
     await this.page.getByTestId('spacePlugin.deleteObject').last().click();
     await this.page.getByTestId('spacePlugin.confirmDeleteObject').last().click();
   }
@@ -203,3 +234,24 @@ export class AppManager {
     await this.page.getByTestId('resetDialog').waitFor();
   }
 }
+
+// TODO(wittjosiah): Factor out.
+const waitFor = (
+  cb: () => Promise<boolean>,
+  { interval: _interval = 1000, timeout: _timeout = 5_000 } = {},
+): Promise<void> =>
+  new Promise<void>((resolve, reject) => {
+    const interval = setInterval(async () => {
+      const res = await cb();
+      if (res) {
+        clearTimeout(timeout);
+        clearInterval(interval);
+        resolve();
+      }
+    }, _interval);
+
+    const timeout = setTimeout(() => {
+      clearInterval(interval);
+      reject(new Error('Timeout waiting for condition.'));
+    }, _timeout);
+  });

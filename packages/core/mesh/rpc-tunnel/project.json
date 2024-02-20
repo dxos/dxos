@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "rpc-tunnel",
   "sourceRoot": "packages/core/mesh/rpc-tunnel/src",
   "projectType": "library",
   "targets": {
@@ -12,9 +14,7 @@
     },
     "lint": {}
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ],
-  "name": "rpc-tunnel"
+  ]
 }

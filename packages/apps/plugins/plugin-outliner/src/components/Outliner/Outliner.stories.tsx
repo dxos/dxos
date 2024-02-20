@@ -4,7 +4,7 @@
 
 import '@dxosTheme';
 
-import { deepSignal, type RevertDeepSignal } from 'deepsignal';
+import { deepSignal, type RevertDeepSignal } from 'deepsignal/react';
 import React, { useState } from 'react';
 
 import { TextObject } from '@dxos/client/echo';

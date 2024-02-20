@@ -1,10 +1,13 @@
 {
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "name": "examples",
   "projectType": "application",
   "targets": {
     "build": {},
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
+        "generatePackageJson": false,
         "outputPath": "{projectRoot}/out/demo"
       },
       "outputs": [
@@ -54,7 +57,5 @@
         "buildTarget": "examples:bundle"
       }
     }
-  },
-  "$schema": "../node_modules/nx/schemas/project-schema.json",
-  "name": "examples"
+  }
 }

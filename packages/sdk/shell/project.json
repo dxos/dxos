@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "shell",
   "sourceRoot": "packages/sdk/shell/src",
   "projectType": "library",
   "targets": {
@@ -6,6 +8,7 @@
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
+        "generatePackageJson": false,
         "outputPath": "packages/sdk/shell/dist/bundle"
       },
       "outputs": [
@@ -43,9 +46,7 @@
       }
     }
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ],
-  "name": "shell"
+  ]
 }

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event, asyncTimeout, synchronized } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import { type DocumentId, type DocHandle, type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
@@ -14,9 +14,8 @@ import { log } from '@dxos/log';
 import { type AutomergeContext } from './automerge-context';
 import { AutomergeObject } from './automerge-object';
 import { type DocStructure } from './types';
-import { getGlobalAutomergePreference } from '../automerge-preference';
-import { type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
+import { type EchoLegacyDatabase } from '../legacy-database';
 import { type EchoObject, base, isActualTypedObject, isAutomergeObject, isActualTextObject } from '../object';
 import { type Schema } from '../proto';
 
@@ -31,7 +30,7 @@ export class AutomergeDb {
   /**
    * @internal
    */
-  readonly _objects = new Map<string, EchoObject>();
+  readonly _objects = new Map<string, AutomergeObject>();
   readonly _objectsSystem = new Map<string, EchoObject>();
 
   readonly _updateEvent = new Event<{ spaceKey: PublicKey; itemsUpdated: { id: string }[] }>();
@@ -41,12 +40,12 @@ export class AutomergeDb {
   /**
    * @internal
    */
-  readonly _echoDatabase: EchoDatabase;
+  readonly _echoDatabase: EchoLegacyDatabase;
 
   constructor(
     public readonly graph: Hypergraph,
     public readonly automerge: AutomergeContext,
-    echoDatabase: EchoDatabase,
+    echoDatabase: EchoLegacyDatabase,
   ) {
     this._echoDatabase = echoDatabase;
   }
@@ -65,9 +64,8 @@ export class AutomergeDb {
     this._ctx = new Context();
 
     if (!spaceState.rootUrl) {
-      if (getGlobalAutomergePreference()) {
-        log.error('Database opened with no rootUrl');
-      }
+      // TODO(dmaretskyi): Should be a critical error.
+      log.error('Database opened with no rootUrl', { spaceKey: this.spaceKey });
       await this._fallbackToNewDoc();
     } else {
       try {
@@ -84,17 +82,14 @@ export class AutomergeDb {
         }
 
         log.catch(err);
-        if (getGlobalAutomergePreference()) {
-          throw err;
-        } else {
-          await this._fallbackToNewDoc();
-        }
+        throw err;
       }
     }
 
     const update = (event: DocHandleChangePayload<DocStructure>) => {
       const updatedObjects = getUpdatedObjects(event);
-      this._createObjects(updatedObjects.filter((id) => !this._objects.has(id)));
+      const absentObjects = updatedObjects.filter((id) => !this._objects.has(id));
+      absentObjects.length > 0 && this._createObjects(absentObjects);
       this._emitUpdateEvent(updatedObjects);
     };
 
@@ -122,26 +117,21 @@ export class AutomergeDb {
 
   private async _initDocHandle(url: string) {
     const docHandle = this.automerge.repo.find(url as DocumentId);
-    // TODO(mykola): Remove check for global preference or timeout?
-    if (getGlobalAutomergePreference()) {
-      // Loop on timeout.
-      while (true) {
-        try {
-          await warnAfterTimeout(5_000, 'Automerge root doc load timeout (AutomergeDb)', async () => {
-            await cancelWithContext(this._ctx!, docHandle.whenReady(['ready'])); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
-          });
-          break;
-        } catch (err) {
-          if (`${err}`.includes('Timeout')) {
-            log.info('wraparound', { id: docHandle.documentId, state: docHandle.state });
-            continue;
-          }
-
-          throw err;
+    // Loop on timeout.
+    while (true) {
+      try {
+        await warnAfterTimeout(5_000, 'Automerge root doc load timeout (AutomergeDb)', async () => {
+          await cancelWithContext(this._ctx!, docHandle.whenReady(['ready'])); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
+        });
+        break;
+      } catch (err) {
+        if (`${err}`.includes('Timeout')) {
+          log.info('wraparound', { id: docHandle.documentId, state: docHandle.state });
+          continue;
         }
+
+        throw err;
       }
-    } else {
-      await asyncTimeout(docHandle.whenReady(['ready']), 1_000, 'short doc ready timeout with automerge disabled');
     }
 
     if (docHandle.state === 'unavailable') {
@@ -204,6 +194,12 @@ export class AutomergeDb {
       spaceKey: this.spaceKey,
       itemsUpdated: itemsUpdated.map((id) => ({ id })),
     });
+    for (const id of itemsUpdated) {
+      const obj = this._objects.get(id);
+      if (obj) {
+        obj[base]._core.notifyUpdate();
+      }
+    }
   }
 
   /**

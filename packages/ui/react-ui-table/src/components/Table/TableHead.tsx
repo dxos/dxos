@@ -10,7 +10,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { useTableContext } from './TableContext';
 import { theadResizeRoot, theadResizeThumb, theadRoot, theadTh, theadTr } from '../../theme';
 
-const TABLE_HEAD_NAME = 'TableHead';
+const TABLE_HEAD_NAME = 'TableHeader';
 
 type TableHeadProps = {};
 
@@ -18,6 +18,7 @@ const TableHead = <TData extends RowData>(_props: TableHeadProps) => {
   const tableContext = useTableContext<TData>(TABLE_HEAD_NAME);
   const headerGroups = tableContext.table.getHeaderGroups();
   const state = tableContext.table.getState();
+
   return (
     <thead className={theadRoot(tableContext)}>
       {headerGroups.map((headerGroup) => {
@@ -64,6 +65,7 @@ const TableHead = <TData extends RowData>(_props: TableHeadProps) => {
                 </th>
               );
             })}
+
             {tableContext.expand && <th />}
           </tr>
         );

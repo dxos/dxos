@@ -3,27 +3,29 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import { type RefCallback, useState } from 'react';
+import { type MutableRefObject, useRef, useState } from 'react';
 
 /**
  * Hook for accessing the editor view.
  *
  * ```tsx
  * const Test = () => {
- *   const [editorRef, editorView] = useEditorView();
+ *   const [editorRef, viewInvalidated] = useEditorView();
  *   useEffect(() => {
- *     editorView?.focus();
+ *     if (editorRef.current && !viewInvalidated) {
+ *       editorView?.focus();
+ *     }
  *   }, [editorView]);
  *   return <TextEditor ref={editorRef} />;
  * };
  * ```
  */
-export const useEditorView = (): [RefCallback<EditorView | null>, EditorView | null] => {
-  const [view, setView] = useState<EditorView | null>(null);
-  return [
-    (ref: EditorView | null) => {
-      setView(ref);
-    },
-    view,
-  ];
+export const useEditorView = (id: string): [MutableRefObject<EditorView | null>, boolean] => {
+  const editorRef = useRef<EditorView | null>(null);
+  const [prev, setPrev] = useState<[EditorView | null, string]>([null, '']);
+  if (prev[0] !== editorRef.current) {
+    setPrev([editorRef.current, id]);
+  }
+
+  return [editorRef, prev[1] !== id];
 };

@@ -21,7 +21,7 @@ export default defineClientConfig({
       namespace: 'docs',
       secrets: { TELEMETRY_API_KEY },
     });
-    observability.initialize();
+    await observability.initialize();
 
     router.afterEach((to, from, failure) => {
       if (!isNavigationFailure(failure)) {

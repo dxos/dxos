@@ -4,6 +4,8 @@
       "@dxos/dxos"
     ],
     "fixedKeys": [
+      "$schema",
+      "name",
       "sourceRoot",
       "projectType",
       "targets"
@@ -21,6 +23,11 @@
     "fixedKeys": [
       "extends",
       "compilerOptions"
-    ]
+    ],
+    "pathMapping": {
+      "include": [
+        "packages/apps/plugins/*"
+      ]
+    }
   }
 }

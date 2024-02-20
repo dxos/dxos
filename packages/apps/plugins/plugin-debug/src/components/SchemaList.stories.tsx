@@ -36,7 +36,7 @@ const Story: FC = () => {
 export default {
   title: 'plugin-debug/SchemaList',
   component: SchemaList,
-  render: () => <ClientRepeater Component={Story} createSpace />,
+  render: () => <ClientRepeater component={Story} createSpace />,
   parameters: {
     layout: 'fullscreen',
   },

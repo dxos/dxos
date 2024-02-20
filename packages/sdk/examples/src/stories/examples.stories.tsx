@@ -10,6 +10,7 @@ import { ClientRepeater } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { TaskListExample } from '../examples';
+import { NetworkToggle } from '../template/src/components';
 
 export default {
   title: 'examples/DXOS',
@@ -17,7 +18,7 @@ export default {
 };
 
 export const TaskList = {
-  render: () => <ClientRepeater count={2} Component={TaskListExample} networkToggle createSpace />,
+  render: () => <ClientRepeater count={2} component={TaskListExample} controls={NetworkToggle} createSpace />,
 };
 
 // TODO(wittjosiah): Migrate main to story.

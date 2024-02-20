@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "composer-app",
   "sourceRoot": "packages/apps/composer-app/src",
   "projectType": "library",
   "targets": {
@@ -15,6 +17,7 @@
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
+        "generatePackageJson": false,
         "outputPath": "packages/apps/composer-app/out/composer"
       },
       "outputs": [
@@ -64,9 +67,7 @@
       }
     }
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "test"
-  ],
-  "name": "composer-app"
+  ]
 }
