@@ -74,10 +74,10 @@ export const LayoutPlugin = ({
     complementarySidebarOpen: false,
     complementarySidebarContent: null,
 
-    dialogContent: 'never',
+    dialogContent: null,
     dialogOpen: false,
 
-    popoverContent: 'never',
+    popoverContent: null,
     popoverAnchorId: undefined,
     popoverOpen: false,
 
