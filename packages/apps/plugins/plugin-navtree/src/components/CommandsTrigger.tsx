@@ -11,6 +11,7 @@ import { getSize } from '@dxos/react-ui-theme';
 
 import { NAVTREE_PLUGIN } from '../meta';
 
+// TODO(thure): Refactor to be handled by a more appropriate plugin.
 export const CommandsTrigger = () => {
   const { dispatch } = useIntent();
   const { t } = useTranslation(NAVTREE_PLUGIN);

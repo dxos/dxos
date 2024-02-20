@@ -11,6 +11,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 
 import { HaloButton } from './HaloButton';
 
+// TODO(thure): Refactor to be handled by a more appropriate plugin (ClientPlugin?).
 export const NotchStart = () => {
   const client = useClient();
   const identity = useIdentity();
