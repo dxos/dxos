@@ -6,7 +6,7 @@ import { MagnifyingGlass } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { Input, type TextInputProps } from '@dxos/react-ui';
-import { getSize, attentionSurface, mx } from '@dxos/react-ui-theme';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 export type SearchbarProps = Pick<TextInputProps, 'variant' | 'placeholder'> & {
   classes?: {
@@ -35,7 +35,7 @@ export const Searchbar = ({ classes, variant, placeholder, value, onChange }: Se
   };
 
   return (
-    <div className={mx('flex w-full items-center', attentionSurface, classes?.root)}>
+    <div className='flex w-full items-center pli-1 pbs-1'>
       <Input.Root>
         <Input.TextInput
           ref={inputRef}
