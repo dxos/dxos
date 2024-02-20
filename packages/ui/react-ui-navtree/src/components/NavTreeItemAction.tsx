@@ -65,13 +65,16 @@ export const NavTreeItemActionDropdownMenu = ({
               'shrink-0 pli-2 pointer-fine:pli-1',
               hoverableControlItem,
               hoverableOpenControlItem,
-              variant === 'plank-heading' && 'is-[--rail-action] rounded-sm',
+              variant === 'plank-heading' && 'is-[--rail-action] rounded-sm pli-0',
               active === 'overlay' && 'invisible',
             ]}
             data-testid={testId}
             aria-label={t('tree item actions label')}
           >
-            <Icon className={getSize(variant === 'plank-heading' ? 5 : 4)} />
+            <Icon
+              className={getSize(variant === 'plank-heading' ? 5 : 4)}
+              weight={variant === 'plank-heading' ? 'duotone' : 'regular'}
+            />
           </Button>
         </DropdownMenu.Trigger>
       </Tooltip.Trigger>
