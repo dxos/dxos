@@ -675,7 +675,9 @@ export const SpacePlugin = ({
 
               const newObject = await clone(originalObject);
               return {
-                intent: [{ action: SpaceAction.ADD_OBJECT, data: { object: newObject, target: intent.data?.target } }],
+                intents: [
+                  [{ action: SpaceAction.ADD_OBJECT, data: { object: newObject, target: intent.data?.target } }],
+                ],
               };
             }
 
