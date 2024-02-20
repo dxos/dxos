@@ -101,7 +101,7 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
         {/* Top (header) bar. */}
         <Main.Content classNames={['fixed inset-inline-0 block-start-0 z-[2]', baseSurface]} asChild>
           <div aria-label={t('main header label')} role='none'>
-            <div role='none' className='flex gap-1 p-1 bs-[--topbar-size]'>
+            <div role='none' className='flex items-center gap-1 p-1 bs-[--rail-size]'>
               <DensityProvider density='coarse'>
                 <Surface role='navbar-start' />
                 <div role='none' className='grow' />
