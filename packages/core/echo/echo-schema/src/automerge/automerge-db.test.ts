@@ -14,8 +14,21 @@ import { TestBuilder, type TestPeer } from '../testing';
 
 describe('AutomergeDb', () => {
   describe('space fragmentation', () => {
-    test('non-text objects are created inline in space root doc', async () => {
+    const createSpaceFragmentationTestBuilder = () => new TestBuilder({ spaceFragmentationEnabled: true });
+
+    test('text objects are created inline if space fragmentation is disabled', async () => {
       const testBuilder = new TestBuilder();
+      const testPeer = await testBuilder.createPeer();
+      const object = new TextObject();
+      testPeer.db.add(object);
+      const docHandles = getDocHandles(testPeer);
+      expect(docHandles.linkedDocHandles.length).to.eq(0);
+      const rootDoc = docHandles.spaceRootHandle.docSync();
+      expect(rootDoc?.objects[object.id]).not.to.be.undefined;
+    });
+
+    test('non-text objects are created inline in space root doc', async () => {
+      const testBuilder = createSpaceFragmentationTestBuilder();
       const testPeer = await testBuilder.createPeer();
       const object = new TypedObject();
       testPeer.db.add(object);
@@ -26,7 +39,7 @@ describe('AutomergeDb', () => {
     });
 
     test('text objects are created in a separate doc and link from the root doc is added', async () => {
-      const testBuilder = new TestBuilder();
+      const testBuilder = createSpaceFragmentationTestBuilder();
       const testPeer = await testBuilder.createPeer();
       const object = new TextObject();
       testPeer.db.add(object);
@@ -36,7 +49,7 @@ describe('AutomergeDb', () => {
     });
 
     test("separate-doc object is treated as inline if it's both linked and inline", async () => {
-      const testBuilder = new TestBuilder();
+      const testBuilder = createSpaceFragmentationTestBuilder();
       const firstPeer = await testBuilder.createPeer();
       const object = new TextObject();
       firstPeer.db.add(object);

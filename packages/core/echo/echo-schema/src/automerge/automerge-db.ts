@@ -142,7 +142,7 @@ export class AutomergeDb {
     // All objects should be created linked to root space doc after query indexing is ready to make them
     // discoverable.
     let spaceDocHandle: DocHandle<SpaceDoc>;
-    if (obj.__typename === LEGACY_TEXT_TYPE) {
+    if (obj.__typename === LEGACY_TEXT_TYPE && this.automerge.spaceFragmentationEnabled) {
       spaceDocHandle = this._automergeDocLoader.createDocumentForObject(obj.id);
       spaceDocHandle.on('change', this._onDocumentUpdate);
     } else {
