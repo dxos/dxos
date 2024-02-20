@@ -25,7 +25,7 @@ export const NavTreeFooter = () => {
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
 
   const releaseUrl =
-    config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'development'
+    config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'production'
       ? `${repo}/releases/tag/v${version}`
       : `${repo}/commit/${commitHash}`;
 
@@ -34,7 +34,6 @@ export const NavTreeFooter = () => {
       <div role='none' className='grid grid-cols-[repeat(2,minmax(var(--rail-action),min-content))]'>
         <Popover.Root>
           <Popover.Trigger asChild>
-            {/* TODO(burdon): Reconcile with action created by LayoutPlugin. */}
             <Button variant='ghost' classNames={buttonStyles} {...(!navigationSidebarOpen && { tabIndex: -1 })}>
               v{version}
             </Button>
