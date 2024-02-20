@@ -28,18 +28,24 @@ const DocumentMain: FC<{ document: DocumentType } & Pick<EditorMainProps, 'toolb
     return null;
   }
 
+  const hasComments = comments.length > 0;
+
+  // TODO(thure): once Deck is available, this should be refactored so the plugin responsible for related content can
+  //   handle its own rendering.
   useEffect(() => {
-    void dispatch({
-      action: LayoutAction.SET_LAYOUT,
-      data: { element: 'complementary', subject: document, state: true },
-    });
+    if (hasComments) {
+      void dispatch({
+        action: LayoutAction.SET_LAYOUT,
+        data: { element: 'complementary', subject: document, state: true },
+      });
+    }
     return () => {
       void dispatch({
         action: LayoutAction.SET_LAYOUT,
         data: { element: 'complementary', subject: null, state: false },
       });
     };
-  }, [document.id]);
+  }, [document.id, hasComments]);
 
   return <EditorMain model={model} comments={comments} {...props} />;
 };
