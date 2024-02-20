@@ -5,6 +5,7 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Reference } from '@dxos/document-model';
+import { type UpdateEvent } from '@dxos/echo-db';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -12,7 +13,7 @@ import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
-import { type AutomergeDb, type ItemsUpdatedEvent } from './automerge';
+import { type AutomergeDb } from './automerge';
 import { type EchoDatabaseImpl, type EchoDatabase } from './database';
 import { type EchoObject, type TypedObject } from './object';
 import {
@@ -34,7 +35,7 @@ export class Hypergraph {
   // TODO(burdon): Rename.
   private readonly _owningObjects = new ComplexMap<PublicKey, unknown>(PublicKey.hash);
   private readonly _types = new TypeCollection();
-  private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
+  private readonly _updateEvent = new Event<UpdateEvent>();
   private readonly _resolveEvents = new ComplexMap<PublicKey, Map<string, Event<EchoObject>>>(PublicKey.hash);
   private readonly _queryContexts = new WeakDictionary<{}, GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
@@ -57,7 +58,6 @@ export class Hypergraph {
     this._databases.set(spaceKey, database);
     this._owningObjects.set(spaceKey, owningObject);
     database._updateEvent.on(this._onUpdate.bind(this));
-    database.automerge._updateEvent.on(this._onUpdate.bind(this));
 
     const map = this._resolveEvents.get(spaceKey);
     if (map) {
@@ -110,16 +110,19 @@ export class Hypergraph {
       }
     }
 
-    const spaceKey = ref.host ? PublicKey.from(ref.host) : from?.spaceKey;
+    if (!ref.host) {
+      // No space key.
+      log('no space key', { ref });
+      return undefined;
+    }
 
-    if (ref.host) {
-      const remoteDb = this._databases.get(spaceKey);
-      if (remoteDb) {
-        // Resolve remote reference.
-        const remote = remoteDb.getObjectById(ref.itemId);
-        if (remote) {
-          return remote;
-        }
+    const spaceKey = PublicKey.from(ref.host);
+    const remoteDb = this._databases.get(spaceKey);
+    if (remoteDb) {
+      // Resolve remote reference.
+      const remote = remoteDb.getObjectById(ref.itemId);
+      if (remote) {
+        return remote;
       }
     }
 
@@ -138,7 +141,7 @@ export class Hypergraph {
     }
   }
 
-  private _onUpdate(updateEvent: ItemsUpdatedEvent) {
+  private _onUpdate(updateEvent: UpdateEvent) {
     const listenerMap = this._resolveEvents.get(updateEvent.spaceKey);
     if (listenerMap) {
       compositeRuntime.batch(() => {
@@ -162,6 +165,7 @@ export class Hypergraph {
         }
       });
     }
+
     this._updateEvent.emit(updateEvent);
   }
 
@@ -211,7 +215,7 @@ class SpaceQuerySource implements QuerySource {
     return this._database.spaceKey;
   }
 
-  private _onUpdate = (updateEvent: ItemsUpdatedEvent) => {
+  private _onUpdate = (updateEvent: { spaceKey: PublicKey; itemsUpdated: { id: string }[] }) => {
     if (!this._filter) {
       return;
     }

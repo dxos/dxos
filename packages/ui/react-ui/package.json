@@ -17,7 +17,7 @@
     "@dxos/react-input": "workspace:*",
     "@dxos/react-list": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
-    "@fluentui/react-tabster": "^9.18.0",
+    "@fluentui/react-tabster": "^9.19.0",
     "@radix-ui/react-alert-dialog": "^1.0.3",
     "@radix-ui/react-avatar": "^1.0.2",
     "@radix-ui/react-checkbox": "^1.0.3",
