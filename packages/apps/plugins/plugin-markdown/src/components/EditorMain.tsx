@@ -19,6 +19,7 @@ import {
   useEditorView,
   useActionHandler,
   useFormattingState,
+  cursorLineMargin,
 } from '@dxos/react-ui-editor';
 import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
@@ -61,7 +62,10 @@ const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...prop
 
   // Toolbar state.
   const [formattingState, formattingObserver] = useFormattingState();
-  const extensions = useMemo(() => [...(_extensions ?? []), formattingObserver], [_extensions, formattingObserver]);
+  const extensions = useMemo(
+    () => [...(_extensions ?? []), formattingObserver, cursorLineMargin],
+    [_extensions, formattingObserver],
+  );
 
   return (
     <>
@@ -79,7 +83,7 @@ const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...prop
       <div
         role='none'
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
-        className='is-full overflow-y-auto overflow-anchored after:block after:is-px after:bs-px after:overflow-anchor after:-mbs-px data-[toolbar=disabled]:pbs-8'
+        className='is-full bs-full overflow-hidden data-[toolbar=disabled]:pbs-8'
       >
         <MarkdownEditor
           ref={editorRef}
@@ -99,14 +103,11 @@ const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...prop
               'data-testid': 'composer.markdownRoot',
             } as HTMLAttributes<HTMLDivElement>,
             editor: {
-              className: mx(
-                editorFillLayoutEditor,
-                'is-full [&>.cm-scroller]:overflow-visible [&>.cm-scroller]:p-2 [&>.cm-scroller]:sm:p-6 [&>.cm-scroller]:md:p-8',
-                !toolbar && 'border-bs',
-              ),
+              className: mx(editorFillLayoutEditor, !toolbar && 'border-bs'),
             },
             content: {
-              className: editorHalfViewportOverscrollContent,
+              // after:block after:is-px after:bs-px after:overflow-anchor after:-mbs-px
+              className: mx(editorHalfViewportOverscrollContent, '!p-2 sm:!p-6 md:!p-8'),
             },
           }}
           {...props}

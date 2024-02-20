@@ -192,6 +192,10 @@ export const semanticColors = {
     dark: physicalColors.neutral['850'],
     fg: { light: '#000000', dark: '#ffffff' },
   },
+  fgHover: {
+    light: physicalColors.neutral['900'],
+    dark: physicalColors.neutral['100'],
+  },
   description: {
     light: physicalColors.neutral['300'],
     dark: physicalColors.neutral['500'],
