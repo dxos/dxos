@@ -142,7 +142,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
         onNavigateToSection={handleNavigate}
       />
 
-      <div role='none' className='flex justify-center mt-4'>
+      <div role='none' className='flex justify-center mlb-4'>
         <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), staticDefaultButtonColors]}>
           <DropdownMenu.Root modal={false}>
             <DropdownMenu.Trigger asChild>
