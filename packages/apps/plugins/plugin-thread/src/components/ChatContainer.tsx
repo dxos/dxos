@@ -32,8 +32,8 @@ export const ChatContainer = ({
   const extensions = useMemo(() => [command], []);
 
   const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
+  const [autoFocus, setAutoFocus] = useState(initialAutoFocus);
   const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
-  const autoFocusRef = useRef<boolean>(!!initialAutoFocus);
   const textboxMetadata = useMessageMetadata(thread.id, identity);
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -69,9 +69,10 @@ export const ChatContainer = ({
     );
 
     setNextMessage(() => {
-      autoFocusRef.current = true;
       return { text: new TextObject() };
     });
+
+    setAutoFocus(true);
 
     scrollToEnd('smooth');
 
@@ -113,11 +114,11 @@ export const ChatContainer = ({
         <>
           <MessageTextbox
             onSend={handleCreate}
-            autoFocusRef={autoFocusRef}
             placeholder={t('message placeholder')}
             {...textboxMetadata}
             model={nextMessageModel}
             extensions={extensions}
+            autoFocus={autoFocus}
           />
           <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
         </>
