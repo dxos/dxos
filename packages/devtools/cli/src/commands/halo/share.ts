@@ -21,6 +21,9 @@ export default class Share extends BaseCommand<typeof Share> {
       description: 'Flag that specifies if secret auth code is not required',
       default: false,
     }),
+    origin: Flags.string({
+      description: 'Base URL of the application to join the invitation, e.g. https://composer.dxos.org',
+    }),
   };
 
   async run(): Promise<any> {
@@ -39,6 +42,12 @@ export default class Share extends BaseCommand<typeof Share> {
           onConnecting: async () => {
             const invitationCode = InvitationEncoder.encode(observable.get());
             this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
+            if (this.flags.origin) {
+              const invitationUrl = new URL(this.flags.origin);
+              // TODO: dedupe name of search param with Shell?
+              invitationUrl.searchParams.append('deviceInvitationCode', invitationCode);
+              this.log(chalk`{blue URL}: ${invitationUrl}`);
+            }
             !this.flags.noCode && this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
           },
         },

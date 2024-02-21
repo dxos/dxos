@@ -14,9 +14,14 @@ import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
+import { type Device, DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type IdentityRecord, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AdmittedFeed, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  AdmittedFeed,
+  type DeviceProfileDocument,
+  type ProfileDocument,
+} from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { trace as Trace } from '@dxos/tracing';
 import { deferFunction } from '@dxos/util';
@@ -222,6 +227,27 @@ export class IdentityManager {
     await this._identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
     this.stateUpdate.emit();
     return profile;
+  }
+
+  async updateDeviceProfile(profile: DeviceProfileDocument): Promise<Device> {
+    invariant(this._identity, 'Identity not initialized.');
+
+    // TODO(nf): CredentialGenerator doesn't work when not updating own device.
+    // const generator = new CredentialGenerator(this._keyring, this._identity.identityKey, this._identity.deviceKey);
+    // const credential = await generator.createDeviceProfile(profile);
+
+    const credential = await this._identity.getIdentityCredentialSigner().createCredential({
+      subject: this._identity.deviceKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.DeviceProfile',
+        profile,
+      },
+    });
+
+    const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential } });
+    await this._identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
+    this.stateUpdate.emit();
+    return { deviceKey: this._identity.deviceKey, kind: DeviceKind.CURRENT, profile };
   }
 
   private async _constructIdentity(identityRecord: IdentityRecord) {
