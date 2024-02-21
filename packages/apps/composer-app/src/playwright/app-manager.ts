@@ -116,7 +116,14 @@ export class AppManager {
   }
 
   waitForSpaceReady(params: { interval?: number; timeout?: number } = { timeout: 30_000 }) {
-    return waitFor(() => this.page.getByTestId('spacePlugin.main.name').isEnabled(), params);
+    return waitFor(
+      () =>
+        this.page
+          .getByTestId('spacePlugin.main')
+          .getAttribute('data-isready')
+          .then((value) => value === 'true'),
+      params,
+    );
   }
 
   getSpacePresenceMembers() {

@@ -17,15 +17,15 @@ export type MainStyleProps = Partial<{
 // Sidebar widths (used by main and complementary sidebar).
 const sidebarSlots = {
   start: {
-    width: 'sm:data-[side=is]:is-[271px]',
-    sidebar: 'sm:data-[side=is]:-inline-start-[271px]',
+    width: 'sm:data-[side=is]:is-[270px]',
+    sidebar: 'sm:data-[side=is]:-inline-start-[270px]',
     content: 'lg:data-[sidebar-inline-start-state=open]:pis-[270px]',
     notch: 'max-is-[270px]',
   },
   // TODO(burdon): Maximal size for phone.
   end: {
-    width: 'sm:data-[side=ie]:is-[361px]',
-    sidebar: 'sm:data-[side=ie]:-inline-end-[361px]',
+    width: 'sm:data-[side=ie]:is-[360px]',
+    sidebar: 'sm:data-[side=ie]:-inline-end-[360px]',
     content: 'lg:data-[sidebar-inline-end-state=open]:pie-[360px]',
   },
 };
@@ -33,7 +33,7 @@ const sidebarSlots = {
 export const mainSidebar: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx(
     'fixed block-start-0 block-end-0 is-[100vw] z-10 overscroll-contain overflow-x-hidden overflow-y-auto',
-    'transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
+    'transition-[inset-inline-start,inset-inline-end] duration-0 data-[resizing=false]:duration-200 ease-in-out',
     `data-[side=is]:-inline-start-[100vw] ${sidebarSlots.start.width} ${sidebarSlots.start.sidebar}`,
     `data-[side=ie]:-inline-end-[100vw] ${sidebarSlots.end.width} ${sidebarSlots.end.sidebar}`,
     'data-[side=is]:data-[state=open]:inline-start-0 data-[side=ie]:data-[state=open]:inline-end-0',
