@@ -68,7 +68,7 @@ export const CommentsContainer = ({
           thread={thread}
           current={currentId === thread.id}
           detached={detached.includes(thread.id)}
-          autoFocus={autoFocusCurrentTextbox && currentId === thread.id}
+          autoFocusTextbox={autoFocusCurrentTextbox && currentId === thread.id}
           {...(onThreadAttend && { onAttend: () => onThreadAttend(thread) })}
           {...(onThreadDelete && { onDelete: () => onThreadDelete(thread) })}
           {...props}

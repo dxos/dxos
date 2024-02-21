@@ -3,7 +3,7 @@
 //
 
 import { X } from '@phosphor-icons/react';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Message as MessageType } from '@braneframe/types';
 import { TextObject, getTextContent, useMembers } from '@dxos/react-client/echo';
@@ -25,7 +25,7 @@ export const CommentContainer = ({
   detached,
   context,
   current,
-  autoFocus,
+  autoFocusTextbox,
   onAttend,
   onDelete,
 }: ThreadContainerProps) => {
@@ -38,8 +38,14 @@ export const CommentContainer = ({
 
   const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
   const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
-  const autoFocusRef = useRef<boolean>(false);
-  autoFocusRef.current = !!autoFocus;
+  const [autoFocus, setAutoFocus] = useState(!!autoFocusTextbox);
+
+  // TODO(thure): Because of the way the `autoFocus` property is handled by TextEditor, this is the least-bad way of
+  //   moving focus at the right time, though it is an antipattern. Refactor to behave more like <input/>’s `autoFocus`
+  //   or `autofocus` (yes, they’re different).
+  useEffect(() => {
+    setAutoFocus(!!autoFocusTextbox);
+  }, [autoFocusTextbox]);
 
   // TODO(thure): Factor out.
   const scrollToEnd = (behavior: ScrollBehavior) =>
@@ -65,9 +71,10 @@ export const CommentContainer = ({
     );
 
     setNextMessage(() => {
-      autoFocusRef.current = true;
       return { text: new TextObject() };
     });
+
+    setAutoFocus(true);
 
     scrollToEnd('instant');
 
@@ -134,7 +141,7 @@ export const CommentContainer = ({
         <>
           <MessageTextbox
             onSend={handleCreate}
-            autoFocusRef={autoFocusRef}
+            autoFocus={autoFocus}
             placeholder={t('message placeholder')}
             {...textboxMetadata}
             model={nextMessageModel}
