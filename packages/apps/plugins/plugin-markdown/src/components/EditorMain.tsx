@@ -44,6 +44,10 @@ const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...prop
     if (composer) {
       composer.editorView = editorRef.current;
     }
+    // TODO(thure): What is scrolling when CM starts?
+    if (editorRef.current?.scrollDOM) {
+      editorRef.current?.scrollDOM.scrollTo(0, 0);
+    }
   }, [editorRef.current]);
 
   // Focus comment.

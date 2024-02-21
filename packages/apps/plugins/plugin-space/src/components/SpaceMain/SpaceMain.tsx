@@ -63,6 +63,7 @@ export const SpaceMain = ({ space }: { space: Space }) => {
           'md:grid-cols-[var(--rail-size)_var(--rail-size)_minmax(max-content,1fr)_var(--rail-size)_var(--rail-size)_minmax(max-content,2fr)_var(--rail-size)]',
         ]}
         data-testid='spacePlugin.main'
+        data-isready={ready ? 'true' : 'false'}
       >
         {/* {actionsMap && <InFlowSpaceActions actionsMap={actionsMap} />} */}
         {ready && <SpaceMembersSection space={space} />}
