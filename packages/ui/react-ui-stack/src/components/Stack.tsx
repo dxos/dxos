@@ -16,7 +16,7 @@ import {
   useItemsWithPreview,
   useMosaic,
 } from '@dxos/react-ui-mosaic';
-import { dropRing, groupBorder, mx, textBlockWidth } from '@dxos/react-ui-theme';
+import { dropRingInner, groupBorder, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
 import {
   SectionTile,
@@ -116,9 +116,9 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
         ref={forwardedRef}
         classNames={mx(
           textBlockWidth,
-          'mbs-1 mbe-2',
+          'mbs-1 mbe-2 rounded-sm',
           !separation && ['divide-y', groupBorder],
-          isOver && dropRing,
+          isOver && dropRingInner,
           classNames,
         )}
         {...domAttributes}
