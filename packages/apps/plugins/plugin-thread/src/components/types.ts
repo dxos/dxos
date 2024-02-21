@@ -10,10 +10,11 @@ import type { ThreadProps } from '@dxos/react-ui-thread';
  * Props for components which connect an ECHO Thread object to the UI component Thread.
  * @param space - the containing Space entity
  * @param thread - the Thread entity
- * @param detached - whether this thread is detached from the object
  * @param context - current application context
  * @param current - whether this thread is current (wrt ARIA) in the app
- * @param autoFocusTextBox - whether to set `autoFocus` on the thread’s textbox
+ * @param autoFocusTextbox - whether to set `autoFocus` on the thread’s textbox
+ * @param onTextboxFocus - a callback for when the textbox is focused
+ * @param detached - whether this thread is detached from the object
  * @param onAttend - combined callback for `onClickCapture` and `onFocusCapture` within the thread
  * @param onDelete - callback for deleting the thread
  */
@@ -21,7 +22,8 @@ export type ThreadContainerProps = {
   space: Space;
   thread: ThreadType;
   context?: { object?: string };
-  autoFocus?: boolean;
+  autoFocusTextbox?: boolean;
+  onTextboxFocus?: () => void;
   detached?: boolean;
   onAttend?: () => void;
   onDelete?: () => void;

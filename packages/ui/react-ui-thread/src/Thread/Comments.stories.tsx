@@ -114,7 +114,7 @@ const StoryThread: FC<{
   onSelect: () => void;
   onResolve: () => void;
 }> = ({ thread, selected, onSelect, onResolve }) => {
-  const autoFocusRef = useRef(false);
+  const [autoFocus, setAutoFocus] = useState(false);
   const [item, setItem] = useState({ text: new TextObject() });
   const model = useTextModel({ text: item.text });
   const editorRef = useRef<EditorView>(null);
@@ -125,7 +125,7 @@ const StoryThread: FC<{
     if (selected) {
       containerRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
       if (thread.messages.length === 0) {
-        autoFocusRef.current = true;
+        setAutoFocus(true);
       }
     }
   }, [selected]);
@@ -139,7 +139,7 @@ const StoryThread: FC<{
         blocks: [{ text: item.text, timestamp: new Date().toISOString() }],
       });
       setItem({ text: new TextObject() });
-      autoFocusRef.current = true;
+      setAutoFocus(true);
     }
   };
 
@@ -167,7 +167,7 @@ const StoryThread: FC<{
         <MessageTextbox
           authorId={authorId}
           ref={editorRef}
-          autoFocusRef={autoFocusRef}
+          autoFocus={autoFocus}
           onEditorFocus={onSelect}
           model={model}
           onSend={handleCreateMessage}
