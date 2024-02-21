@@ -11,6 +11,7 @@ import {
   FolderPlus,
   PencilSimpleLine,
   Placeholder,
+  Planet,
   Plus,
   Trash,
   Users,
@@ -182,6 +183,7 @@ export const spaceToGraphNode = ({
       label: isPersonalSpace ? ['personal space label', { ns: SPACE_PLUGIN }] : getSpaceDisplayName(space),
       description: space.properties.description,
       data: space,
+      icon: (props) => <Planet {...props} />,
       ...partials,
       properties: {
         ...partials.properties,
