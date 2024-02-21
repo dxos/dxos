@@ -26,8 +26,12 @@ export class AutomergeContext {
   @trace.info()
   private readonly _peerId: string;
 
-  constructor(dataService: DataService | undefined = undefined) {
+  @trace.info()
+  public readonly spaceFragmentationEnabled: boolean;
+
+  constructor(dataService: DataService | undefined = undefined, config: AutomergeContextConfig = {}) {
     this._peerId = `client-${PublicKey.random().toHex()}` as PeerId;
+    this.spaceFragmentationEnabled = config.spaceFragmentationEnabled ?? false;
     if (dataService) {
       this._adapter = new LocalClientNetworkAdapter(dataService);
       this._repo = new Repo({
@@ -175,4 +179,8 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
     // TODO(mykola): `disconnect` is not used anywhere in `Repo` from `@automerge/automerge-repo`. Should we remove it?
     // No-op
   }
+}
+
+export interface AutomergeContextConfig {
+  spaceFragmentationEnabled?: boolean;
 }
