@@ -2,219 +2,241 @@
 // Copyright 2023 DXOS.org
 //
 
+import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { GraphBuilder } from './graph-builder';
-import { createTestNodeBuilder } from './testing';
+import { Graph, type Node } from './graph';
+
+const longestPaths = new Map<string, string[]>();
+
+const parseLongestPath = (node: Node, connectedNode: Node) => {
+  const longestPath = longestPaths.get(node.id);
+  if (!longestPath) {
+    return undefined;
+  }
+
+  if (longestPath[longestPath.length - 2] !== connectedNode.id) {
+    return undefined;
+  }
+
+  return node;
+};
 
 describe('Graph', () => {
-  test('returns root node', () => {
-    const graph = new GraphBuilder().build();
-    expect(graph.root).to.not.be.undefined;
-    expect(graph.root.id).to.equal('root');
-  });
+  test('add node', () => {
+    const graph = new Graph();
 
-  test('root node unmodified without builders', () => {
-    const graph = new GraphBuilder().build();
-    expect(graph.root.properties).to.be.empty;
-    expect(graph.root.children).to.be.empty;
-    expect(graph.root.actions).to.be.empty;
-  });
-
-  test('builder can add children to root node', () => {
-    const builder = new GraphBuilder();
-    const testNode = { id: 'test', label: 'Test', data: null };
-    const id = 'test';
-    builder.addNodeBuilder(id, (parent) => {
-      if (parent.id === 'root') {
-        parent.addNode(id, testNode);
-      }
+    const [root] = graph.addNode({
+      id: 'root',
+      nodes: [{ id: 'test1' }, { id: 'test2' }],
     });
 
-    const graph = builder.build();
-    expect(graph.root.childrenMap.test.id).to.equal(testNode.id);
-    expect(graph.root.childrenMap.test.parent!.id).to.equal(graph.root.id);
+    expect(root.id).to.equal('root');
+    expect(root.nodes()).to.have.length(2);
+    expect(graph.getNode('test1')?.id).to.equal('test1');
+    expect(graph.getNode('test2')?.id).to.equal('test2');
+    expect(graph.getNode('test1')?.nodes()).to.be.empty;
+    expect(graph.getNode('test2')?.nodes()).to.be.empty;
+    expect(graph.getNode('test1')?.nodes({ direction: 'inbound' })).to.have.length(1);
+    expect(graph.getNode('test2')?.nodes({ direction: 'inbound' })).to.have.length(1);
   });
 
-  test('builder can add actions to root node', () => {
-    const builder = new GraphBuilder();
-    const testAction = { id: 'test', label: 'Test', invoke: () => {} };
-    builder.addNodeBuilder('test', (parent) => {
-      if (parent.id === 'root') {
-        parent.addAction(testAction);
-      }
+  test('remove node', () => {
+    const graph = new Graph();
+
+    const [root] = graph.addNode({
+      id: 'root',
+      nodes: [{ id: 'test1' }, { id: 'test2' }],
     });
 
-    const graph = builder.build();
-    expect(graph.root.actionsMap.test.id).to.equal(testAction.id);
+    expect(root.id).to.equal('root');
+    expect(root.nodes()).to.have.length(2);
+    expect(graph.getNode('test1')?.id).to.equal('test1');
+    expect(graph.getNode('test2')?.id).to.equal('test2');
+
+    graph.removeNode('test1');
+    expect(graph.getNode('test1')).to.be.undefined;
+    expect(root.nodes()).to.have.length(1);
   });
 
-  test('multiple builders can add children to root node', () => {
-    const builder = new GraphBuilder();
-    builder.addNodeBuilder('test1', createTestNodeBuilder('test1').nodeBuilder);
-    builder.addNodeBuilder('test2', createTestNodeBuilder('test2').nodeBuilder);
+  test('add edge', () => {
+    const graph = new Graph();
 
-    const graph = builder.build();
-    expect(Object.keys(graph.root.childrenMap)).to.deep.equal(['root-test1', 'root-test2']);
-    for (const node of graph.root.children) {
-      expect(graph.root.id).to.equal(node.parent!.id);
-    }
-  });
-
-  test('multiple builders can add actions to root node', () => {
-    const builder = new GraphBuilder();
-    builder.addNodeBuilder('test1', createTestNodeBuilder('test1').nodeBuilder);
-    builder.addNodeBuilder('test2', createTestNodeBuilder('test2').nodeBuilder);
-
-    const graph = builder.build();
-    expect(Object.keys(graph.root.actionsMap)).to.deep.equal(['root-test1', 'root-test2']);
-  });
-
-  test('builders can add children to child node', () => {
-    const builder = new GraphBuilder();
-    builder.addNodeBuilder('test1', createTestNodeBuilder('test1', 2).nodeBuilder);
-    builder.addNodeBuilder('test2', createTestNodeBuilder('test2').nodeBuilder);
-
-    const graph = builder.build();
-    expect(Object.keys(graph.root.childrenMap['root-test1'].children)).to.be.empty;
-    expect(Object.keys(graph.root.childrenMap['root-test2'].childrenMap)).to.deep.equal(['root-test2-test1']);
-    for (const node of graph.root.childrenMap['root-test2'].children) {
-      expect(graph.root.childrenMap['root-test2'].id).to.equal(node.parent!.id);
-    }
-  });
-
-  test('builders can add actions to child node', () => {
-    const builder = new GraphBuilder();
-    builder.addNodeBuilder('test1', createTestNodeBuilder('test1', 2).nodeBuilder);
-    builder.addNodeBuilder('test2', createTestNodeBuilder('test2').nodeBuilder);
-
-    const graph = builder.build();
-    expect(Object.keys(graph.root.childrenMap['root-test1'].actionsMap)).to.be.empty;
-    expect(Object.keys(graph.root.childrenMap['root-test2'].actionsMap)).to.deep.equal(['root-test2-test1']);
-  });
-
-  test('builders can add actions to action sets', () => {
-    const builder = new GraphBuilder();
-    builder.addNodeBuilder('test', (parent) => {
-      const [set] = parent.addAction({ id: 'test-set', label: 'Test Set', invoke: () => {} });
-      set.addAction({ id: 'test-action', label: 'Test', invoke: () => {} });
+    graph.addNode({
+      id: 'root',
+      nodes: [{ id: 'test1' }, { id: 'test2' }],
     });
+    graph.addEdge('test1', 'test2');
 
-    const graph = builder.build();
-    expect(Object.keys(graph.root.actionsMap['test-set'].actionsMap)).to.deep.equal(['test-action']);
+    expect(graph.getNode('test1')?.nodes()).to.have.length(1);
+    expect(graph.getNode('test2')?.nodes({ direction: 'inbound' })).to.have.length(2);
   });
 
-  test('is updated when nodes change', async () => {
-    const builder = new GraphBuilder();
+  test('remove edge', () => {
+    const graph = new Graph();
 
-    // TODO(burdon): Return TestNodeBuilder object.
-    const { nodeBuilder, addNode, removeNode, addAction, removeAction, addProperty, removeProperty } =
-      createTestNodeBuilder('test1', 2);
-    builder.addNodeBuilder('test1', nodeBuilder);
+    graph.addNode({
+      id: 'root',
+      nodes: [{ id: 'test1' }, { id: 'test2' }],
+    });
+    graph.removeEdge('root', 'test1');
 
-    const graph = builder.build();
-    expect(graph.root.children).to.have.length(1);
-    addNode('root', { id: 'root-test2', label: 'root-test2' });
-    expect(graph.root.children).to.have.length(2);
-    expect(graph.root.childrenMap['root-test2'].children).to.have.length(0);
-
-    expect(graph.root.childrenMap['root-test1'].children).to.have.length(0);
-    addNode('root-test1', { id: 'root-test1-test2', label: 'root-test1-test2' });
-    expect(graph.root.childrenMap['root-test1'].children).to.have.length(1);
-    expect(graph.root.childrenMap['root-test1'].childrenMap['root-test1-test2'].children).to.have.length(0);
-
-    expect(graph.root.actions).to.have.length(1);
-    addAction('root', { id: 'root-test2', label: 'root-test2', invoke: () => {} });
-    expect(graph.root.actions).to.have.length(2);
-
-    expect(graph.root.childrenMap['root-test1'].properties).to.not.have.property('test');
-    addProperty('root-test1', 'test', 'test');
-    expect(graph.root.childrenMap['root-test1'].properties.test).to.equal('test');
-
-    expect(graph.root.children).to.have.length(2);
-    removeNode('root', 'root-test2');
-    expect(graph.root.children).to.have.length(1);
-
-    expect(graph.root.childrenMap['root-test1'].children).to.have.length(1);
-    removeNode('root-test1', 'root-test1-test2');
-    expect(graph.root.childrenMap['root-test1'].children).to.have.length(0);
-
-    expect(graph.root.actions).to.have.length(2);
-    removeAction('root', 'root-test2');
-    expect(graph.root.actions).to.have.length(1);
-
-    expect(graph.root.childrenMap['root-test1'].properties.test).to.equal('test');
-    removeProperty('root-test1', 'test');
-    expect(graph.root.childrenMap['root-test1'].properties).to.not.have.property('test');
+    expect(graph.getNode('root')?.nodes()).to.have.length(1);
+    expect(graph.getNode('test1')?.nodes({ direction: 'inbound' })).to.be.empty;
   });
 
-  test.skip('node builder unsubscribe is called when builder is re-run', async () => {
-    // TODO(wittjosiah): Implement.
-  });
+  test('toJSON', () => {
+    const graph = new Graph();
 
-  test('can find nodes', () => {
-    const builder = new GraphBuilder();
-    builder.addNodeBuilder('test1', createTestNodeBuilder('test1', 2).nodeBuilder);
-    builder.addNodeBuilder('test2', createTestNodeBuilder('test2').nodeBuilder);
+    graph.addNode({
+      id: 'root',
+      nodes: [{ id: 'test1' }, { id: 'test2' }],
+    });
+    graph.addEdge('test1', 'test2');
 
-    const graph = builder.build();
-    expect(graph.findNode('root-test1')?.id).to.equal('root-test1');
-    expect(graph.findNode('root-test2-test1')?.id).to.equal('root-test2-test1');
+    const json = graph.toJSON();
+    expect(json).to.deep.equal({
+      id: 'root',
+      nodes: [{ id: 'test1', nodes: [{ id: 'test2' }] }, { id: 'test2' }],
+    });
   });
 
   test('can be traversed', () => {
-    const builder = new GraphBuilder();
-    builder.addNodeBuilder('test1', createTestNodeBuilder('test1', 2).nodeBuilder);
-    builder.addNodeBuilder('test2', createTestNodeBuilder('test2').nodeBuilder);
+    const graph = new Graph();
 
-    const graph = builder.build();
+    const [root] = graph.addNode({
+      id: 'root',
+      nodes: [{ id: 'test1' }, { id: 'test2' }],
+    });
+
     const nodes: string[] = [];
-    graph.traverse({ visitor: (node) => nodes.push(node.id) });
-    expect(nodes).to.deep.equal(['root', 'root-test1', 'root-test2', 'root-test2-test1']);
+    graph.traverse({ node: root, visitor: (node) => nodes.push(node.id) });
+    expect(nodes).to.deep.equal(['root', 'test1', 'test2']);
   });
 
   test('traversal can be limited by predicate', () => {
-    const builder = new GraphBuilder();
-    builder.addNodeBuilder('test1', createTestNodeBuilder('test1', 2).nodeBuilder);
-    builder.addNodeBuilder('test2', createTestNodeBuilder('test2').nodeBuilder);
+    const graph = new Graph();
 
-    const graph = builder.build();
+    const [root] = graph.addNode({
+      id: 'root',
+      nodes: [{ id: 'test1' }, { id: 'test2' }, { id: 'test3' }, { id: 'test4' }],
+    });
+
     const nodes: string[] = [];
     graph.traverse({
-      filter: (node) => node.id.includes('test1'),
+      node: root,
       visitor: (node) => nodes.push(node.id),
+      filter: (node) => {
+        try {
+          const id = parseInt(node.id.replace('test', ''), 10);
+          return id % 2 === 0;
+        } catch (e) {
+          return false;
+        }
+      },
     });
-    expect(nodes).to.deep.equal(['root-test1', 'root-test2-test1']);
+    expect(nodes).to.deep.equal(['test2', 'test4']);
   });
 
   test('traversal can be started from any node', () => {
-    const builder = new GraphBuilder();
-    builder.addNodeBuilder('test1', createTestNodeBuilder('test1', 2).nodeBuilder);
-    builder.addNodeBuilder('test2', createTestNodeBuilder('test2').nodeBuilder);
+    const graph = new Graph();
 
-    const graph = builder.build();
+    graph.addNode({
+      id: 'root',
+      nodes: [{ id: 'test1', nodes: [{ id: 'test2', nodes: [{ id: 'test3' }] }] }],
+    });
+
     const nodes: string[] = [];
     graph.traverse({
-      node: graph.root.childrenMap['root-test2'],
+      node: graph.getNode('test2')!,
       visitor: (node) => nodes.push(node.id),
     });
-    expect(nodes).to.deep.equal(['root-test2', 'root-test2-test1']);
+    expect(nodes).to.deep.equal(['test2', 'test3']);
   });
 
-  test('can traverse up', () => {
-    const builder = new GraphBuilder();
-    builder.addNodeBuilder('test1', createTestNodeBuilder('test1', 2).nodeBuilder);
-    builder.addNodeBuilder('test2', createTestNodeBuilder('test2').nodeBuilder);
+  test('traversal can follow inbound edges', () => {
+    const graph = new Graph();
 
-    const graph = builder.build();
+    graph.addNode({
+      id: 'root',
+      nodes: [{ id: 'test1', nodes: [{ id: 'test2', nodes: [{ id: 'test3' }] }] }],
+    });
+
     const nodes: string[] = [];
     graph.traverse({
-      direction: 'up',
-      node: graph.root.childrenMap['root-test2'].childrenMap['root-test2-test1'],
+      node: graph.getNode('test2')!,
+      direction: 'inbound',
       visitor: (node) => nodes.push(node.id),
     });
-    expect(nodes).to.deep.equal(['root-test2-test1', 'root-test2', 'root']);
+    expect(nodes).to.deep.equal(['test2', 'test1', 'root']);
+  });
+
+  test('can filter to longest pathes', () => {
+    const graph = new Graph();
+
+    graph.addNode({
+      id: 'root',
+      nodes: [{ id: 'test1' }, { id: 'test2' }],
+    });
+    graph.addEdge('test1', 'test2');
+
+    graph.traverse({
+      node: graph.getNode('root')!,
+      visitor: (node, path) => {
+        if (!longestPaths.has(node.id) || longestPaths.get(node.id)!.length < path.length) {
+          longestPaths.set(node.id, path);
+        }
+      },
+    });
+
+    expect(longestPaths.get('root')).to.deep.equal(['root']);
+    expect(longestPaths.get('test1')).to.deep.equal(['root', 'test1']);
+    expect(longestPaths.get('test2')).to.deep.equal(['root', 'test1', 'test2']);
+    expect(graph.getNode('root')?.nodes({ parseNode: parseLongestPath })).to.have.length(1);
+    expect(graph.getNode('test1')?.nodes({ parseNode: parseLongestPath })).to.have.length(1);
+    expect(graph.getNode('test2')?.nodes({ parseNode: parseLongestPath })).to.be.empty;
+
+    longestPaths.clear();
+  });
+
+  test('traversing the graph subscribes to changes', () => {
+    const graph = new Graph();
+
+    graph.addNode({
+      id: 'root',
+      nodes: [{ id: 'test1' }, { id: 'test2' }],
+    });
+
+    const dispose = effect(() => {
+      graph.traverse({
+        node: graph.getNode('root')!,
+        visitor: (node, path) => {
+          if (!longestPaths.has(node.id) || longestPaths.get(node.id)!.length < path.length) {
+            longestPaths.set(node.id, path);
+          }
+        },
+      });
+    });
+
+    expect(longestPaths.get('root')).to.deep.equal(['root']);
+    expect(longestPaths.get('test1')).to.deep.equal(['root', 'test1']);
+    expect(longestPaths.get('test2')).to.deep.equal(['root', 'test2']);
+    expect(graph.getNode('root')?.nodes({ parseNode: parseLongestPath })).to.have.length(2);
+    expect(graph.getNode('test1')?.nodes({ parseNode: parseLongestPath })).to.be.empty;
+    expect(graph.getNode('test2')?.nodes({ parseNode: parseLongestPath })).to.be.empty;
+
+    graph.addEdge('test1', 'test2');
+
+    expect(longestPaths.get('root')).to.deep.equal(['root']);
+    expect(longestPaths.get('test1')).to.deep.equal(['root', 'test1']);
+    expect(longestPaths.get('test2')).to.deep.equal(['root', 'test1', 'test2']);
+    expect(graph.getNode('root')?.nodes({ parseNode: parseLongestPath })).to.have.length(1);
+    expect(graph.getNode('test1')?.nodes({ parseNode: parseLongestPath })).to.have.length(1);
+    expect(graph.getNode('test2')?.nodes({ parseNode: parseLongestPath })).to.be.empty;
+
+    dispose();
+    longestPaths.clear();
   });
 });

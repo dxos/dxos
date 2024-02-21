@@ -7503,12 +7503,18 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.62.1
+        version: 0.62.6(effect@2.3.5)(fast-check@3.15.1)
       '@preact/signals-core':
         specifier: ^1.5.1
         version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
         version: 1.5.0(@preact/signals-core@1.5.1)
+      effect:
+        specifier: ^2.3.1
+        version: 2.3.5
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
