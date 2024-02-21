@@ -116,6 +116,20 @@ describe('Graph', () => {
     expect(nodes).to.deep.equal(['root', 'test1', 'test2']);
   });
 
+  test('traversal breaks cycles', () => {
+    const graph = new Graph();
+
+    const [root] = graph.addNode({
+      id: 'root',
+      nodes: [{ id: 'test1' }, { id: 'test2' }],
+    });
+    graph.addEdge('test1', 'root');
+
+    const nodes: string[] = [];
+    graph.traverse({ node: root, visitor: (node) => nodes.push(node.id) });
+    expect(nodes).to.deep.equal(['root', 'test1', 'test2']);
+  });
+
   test('traversal can be limited by predicate', () => {
     const graph = new Graph();
 

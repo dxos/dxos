@@ -213,6 +213,11 @@ export class Graph {
    * Recursive breadth-first traversal.
    */
   traverse({ node, direction = 'outbound', filter, visitor }: TraversalOptions, path: string[] = []): void {
+    // Break cycles.
+    if (path.includes(node.id)) {
+      return;
+    }
+
     if (!filter || filter(node)) {
       visitor?.(node, [...path, node.id]);
     }
