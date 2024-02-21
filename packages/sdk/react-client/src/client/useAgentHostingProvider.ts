@@ -10,6 +10,10 @@ import {
 import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
 
+/*
+ * Interface for invoking the agent hosting provider client.
+ * @experimental
+ */
 export const useAgentHostingProviderClient = (config: Config): AgentHostingProviderClient | null => {
   // TODO: Dynamically discover based on runtime config
   if (
