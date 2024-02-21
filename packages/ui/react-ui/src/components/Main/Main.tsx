@@ -86,6 +86,8 @@ type MainRootProps = PropsWithChildren<{
   onComplementarySidebarOpenChange?: (nextOpen: boolean) => void;
 }>;
 
+const resizeDebounce = 3000;
+
 const MainRoot = ({
   navigationSidebarOpen: propsNavigationSidebarOpen,
   defaultNavigationSidebarOpen,
@@ -152,7 +154,7 @@ const handleOpenAutoFocus = (event: Event) => {
 type MainSidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContent>> & {
   swipeToDismiss?: boolean;
   open: boolean;
-  resizing: boolean;
+  resizing?: boolean;
   setOpen: Dispatch<SetStateAction<boolean | undefined>>;
   side: 'inline-start' | 'inline-end';
 };
@@ -227,8 +229,6 @@ const MainComplementarySidebar = forwardRef<HTMLDivElement, MainComplementarySid
 MainNavigationSidebar.displayName = NAVIGATION_SIDEBAR_NAME;
 
 type MainProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & { asChild?: boolean; bounce?: boolean };
-
-const resizeDebounce = 3000;
 
 const MainContent = forwardRef<HTMLDivElement, MainProps>(
   ({ asChild, classNames, bounce, children, ...props }: MainProps, forwardedRef) => {
