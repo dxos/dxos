@@ -18,13 +18,7 @@ import { type ThreadContainerProps } from './types';
 import { useStatus, useMessageMetadata } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
 
-export const ChatContainer = ({
-  space,
-  thread,
-  context,
-  current,
-  autoFocus: initialAutoFocus,
-}: ThreadContainerProps) => {
+export const ChatContainer = ({ space, thread, context, current, autoFocusTextbox }: ThreadContainerProps) => {
   const identity = useIdentity()!;
   const members = useMembers(space.key);
   const activity = useStatus(space, thread.id);
@@ -32,7 +26,7 @@ export const ChatContainer = ({
   const extensions = useMemo(() => [command], []);
 
   const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
-  const [autoFocus, setAutoFocus] = useState(initialAutoFocus);
+  const [autoFocus, setAutoFocus] = useState(autoFocusTextbox);
   const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
   const textboxMetadata = useMessageMetadata(thread.id, identity);
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
