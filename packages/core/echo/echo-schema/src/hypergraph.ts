@@ -188,7 +188,7 @@ export interface QuerySourceProvider {
   create(): QuerySource;
 }
 
-class GraphQueryContext implements QueryContext {
+export class GraphQueryContext implements QueryContext {
   public added = new Event<QuerySource>();
   public removed = new Event<QuerySource>();
 
