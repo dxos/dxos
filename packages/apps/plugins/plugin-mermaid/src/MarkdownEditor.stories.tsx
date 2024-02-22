@@ -7,8 +7,7 @@ import '@dxosTheme';
 import React, { useState } from 'react';
 
 import { TextObject } from '@dxos/echo-schema';
-import { code, MarkdownEditor, type TextEditorProps } from '@dxos/react-ui-editor';
-import { useTextModel } from '@dxos/react-ui-editor';
+import { decorateMarkdown, MarkdownEditor, type TextEditorProps, useTextModel } from '@dxos/react-ui-editor';
 import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
 import { type Meta, withTheme } from '@dxos/storybook-utils';
 
@@ -68,7 +67,7 @@ export const Mermaid = {
         'Inside a markdown document.',
         '',
       )}
-      extensions={[code(), mermaid()]}
+      extensions={[decorateMarkdown(), mermaid()]}
     />
   ),
 };
@@ -89,7 +88,7 @@ export const Error = {
         '',
         '',
       )}
-      extensions={[code(), mermaid()]}
+      extensions={[decorateMarkdown(), mermaid()]}
     />
   ),
 };
