@@ -94,6 +94,7 @@ export const setHeading =
     const changes: ChangeSpec[] = [];
     let prevBlock = -1;
     for (const range of ranges) {
+      let sawBlock = false;
       syntaxTree(state).iterate({
         from: range.from,
         to: range.to,
@@ -101,6 +102,7 @@ export const setHeading =
           if (!Object.hasOwn(Textblocks, node.name) || prevBlock === node.from) {
             return;
           }
+          sawBlock = true;
           prevBlock = node.from;
           const blockType = Textblocks[node.name];
           const isHeading = /heading(\d)/.exec(blockType);
@@ -129,13 +131,25 @@ export const setHeading =
           }
         },
       });
+      let line;
+      if (!sawBlock && range.empty && level > 0 && !/\S/.test((line = state.doc.lineAt(range.from)).text)) {
+        changes.push({ from: line.from, to: line.to, insert: '#'.repeat(level) + ' ' });
+      }
     }
 
     if (!changes.length) {
       return false;
     }
 
-    dispatch(state.update({ changes, userEvent: 'format.setHeading', scrollIntoView: true }));
+    const changeSet = state.changes(changes);
+    dispatch(
+      state.update({
+        changes: changeSet,
+        selection: state.selection.map(changeSet, 1),
+        userEvent: 'format.setHeading',
+        scrollIntoView: true,
+      }),
+    );
     return true;
   };
 
@@ -174,8 +188,8 @@ export const setStyle =
       const changesAtEnd: ChangeSpec[] = [];
       let blockStart = -1;
       let blockEnd = -1;
-      let startCovered: boolean | 'adjacent' = false;
-      let endCovered: boolean | 'adjacent' = false;
+      let startCovered: boolean | { from: number; to: number } = false;
+      let endCovered: boolean | { from: number; to: number } = false;
       let { from, to } = range;
       // Iterate the selected range. For each textblock, determine a
       // start and end position, the overlap of the selected range and
@@ -218,10 +232,16 @@ export const setStyle =
             // by this.
             if (markType === type) {
               if (openEnd <= from && closeStart >= from) {
-                startCovered = openEnd === from ? 'adjacent' : true;
+                startCovered =
+                  !enable && openEnd === skipMarkers(from, node.node, -1, openEnd)
+                    ? { from: node.from, to: openEnd }
+                    : true;
               }
               if (openEnd <= to && closeStart >= to) {
-                endCovered = closeStart === to ? 'adjacent' : true;
+                endCovered =
+                  !enable && closeStart === skipMarkers(to, node.node, 1, closeStart)
+                    ? { from: closeStart, to: node.to }
+                    : true;
               }
             }
             // Marks of the same type in range, or any mark if we're
@@ -263,13 +283,13 @@ export const setStyle =
                 changes.push({ from: rangeEnd, insert: marker });
               }
             } else {
-              if (startCovered === 'adjacent') {
-                changes.push({ from: from - marker.length, to: from });
+              if (typeof startCovered === 'object') {
+                changes.push(startCovered);
               } else if (startCovered) {
                 changes.push({ from: skipSpaces(rangeStart, state.doc, -1, blockStart), insert: marker });
               }
-              if (endCovered === 'adjacent') {
-                changes.push({ from: to, to: to + marker.length });
+              if (typeof endCovered === 'object') {
+                changes.push(endCovered);
               } else if (endCovered) {
                 changes.push({ from: skipSpaces(rangeEnd, state.doc, 1, blockEnd), insert: marker });
               }
@@ -277,6 +297,12 @@ export const setStyle =
           }
         },
       });
+      if (blockStart < 0 && range.empty && enable && !/\S/.test(state.doc.lineAt(range.from).text)) {
+        return {
+          changes: { from: range.head, insert: marker + marker },
+          range: EditorSelection.cursor(range.head + marker.length),
+        };
+      }
       const changeSet = state.changes(changes.concat(changesAtEnd));
       return {
         changes: changeSet,
@@ -348,6 +374,20 @@ const skipSpaces = (pos: number, doc: Text, dir: -1 | 1, limit?: number) => {
     pos += dir;
   }
   return pos;
+};
+
+const skipMarkers = (pos: number, tree: SyntaxNode, dir: -1 | 1, limit?: number) => {
+  for (;;) {
+    const next = tree.resolve(pos, dir);
+    if (!IgnoreInline.has(next.name)) {
+      return pos;
+    }
+    const moveTo = dir < 0 ? next.from : next.to;
+    if (limit != null && (dir < 0 ? moveTo < limit : moveTo > limit)) {
+      return pos;
+    }
+    pos = moveTo;
+  }
 };
 
 // TODO(burdon): Define and trigger snippets for codeblock, table, etc.
@@ -515,7 +555,6 @@ export const addLink: StateCommand = ({ state, dispatch }) => {
 // Lists
 //
 
-// TODO(burdon): Cursor is positioned incorrectly.
 export const addList =
   (type: List): StateCommand =>
   ({ state, dispatch }) => {
@@ -654,7 +693,15 @@ export const addList =
       }
     }
 
-    dispatch(state.update({ changes, userEvent: 'format.list.add', scrollIntoView: true }));
+    const changeSet = state.changes(changes);
+    dispatch(
+      state.update({
+        changes: changeSet,
+        selection: state.selection.map(changeSet, 1),
+        userEvent: 'format.list.add',
+        scrollIntoView: true,
+      }),
+    );
     return true;
   };
 
@@ -751,6 +798,7 @@ export const setBlockquote =
     const lines: Line[] = [];
     let lastBlock = -1;
     for (const { from, to } of state.selection.ranges) {
+      const sawBlock = false;
       syntaxTree(state).iterate({
         from,
         to,
@@ -786,6 +834,10 @@ export const setBlockquote =
           }
         },
       });
+      let line;
+      if (!sawBlock && enable && from === to && !/\S/.test((line = state.doc.lineAt(from)).text)) {
+        lines.push(line);
+      }
     }
 
     const changes: ChangeSpec[] = [];
@@ -803,9 +855,11 @@ export const setBlockquote =
       return false;
     }
 
+    const changeSet = state.changes(changes);
     dispatch(
       state.update({
-        changes,
+        changes: changeSet,
+        selection: state.selection.map(changeSet, 1),
         userEvent: enable ? 'format.blockquote.add' : 'format.blockquote.remove',
         scrollIntoView: true,
       }),
