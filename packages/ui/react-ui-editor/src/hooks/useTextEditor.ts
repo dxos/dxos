@@ -89,7 +89,7 @@ export const useTextEditor = ({
       view?.destroy();
     };
     // TODO(wittjosiah): Does `parentRef` ever change? Only `.current` changes?
-  }, [parentRef, extensions]);
+  }, [parentRef, doc, extensions]);
 
   useEffect(() => {
     if (view) {

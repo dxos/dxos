@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Monaco } from '@monaco-editor/react';
 import { Play } from '@phosphor-icons/react';
 // @ts-ignore
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
@@ -79,27 +78,6 @@ export const ScriptBlock = ({
     [source, view],
   );
 
-  const handleBeforeMount = (monaco: Monaco) => {
-    // TODO(burdon): Module resolution: https://github.com/lukasbach/monaco-editor-auto-typings
-    //  https://stackoverflow.com/questions/52290727/adding-typescript-type-declarations-to-monaco-editor
-    //  https://stackoverflow.com/questions/43058191/how-to-use-addextralib-in-monaco-with-an-external-type-definition
-    //  Temporarily disable diagnostics (to hide import errors).
-    monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
-      noSemanticValidation: true,
-    });
-
-    // https://microsoft.github.io/monaco-editor/typedoc/interfaces/languages.typescript.CompilerOptions.html
-    monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-      // module: monaco.languages.typescript.ModuleKind.CommonJS,
-      // moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
-      // noEmit: true,
-      // noLib: true,
-      // target: monaco.languages.typescript.ScriptTarget.ESNext,
-      // typeRoots: ['node_modules/@types'],
-      jsx: monaco.languages.typescript.JsxEmit.React,
-    });
-  };
-
   if (!source) {
     return null;
   }
@@ -119,13 +97,7 @@ export const ScriptBlock = ({
       )}
 
       <Splitter view={view}>
-        <ScriptEditor
-          id={id}
-          source={source}
-          themeMode={themeMode}
-          language='typescript'
-          onBeforeMount={handleBeforeMount}
-        />
+        <ScriptEditor source={source} themeMode={themeMode} />
         {result && <FrameContainer key={id} result={result} containerUrl={containerUrl} />}
       </Splitter>
     </div>

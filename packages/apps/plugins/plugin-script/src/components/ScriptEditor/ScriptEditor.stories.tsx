@@ -2,6 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
+// TODO(burdon): Typescript.
+// TODO(burdon): Effect schema.
+// TODO(burdon): JSX.
+// TODO(burdon): react-buddy for storybook?
+
+// Marijn
+// - language support for S
+// - hierarchical editor (DND)
+// - virtual document image rendering
+// - mobile rendering error
+
 import '@dxosTheme';
 
 import React, { useEffect, useState } from 'react';
@@ -11,23 +22,36 @@ import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 import { ScriptEditor } from './ScriptEditor';
 
-// prettier-ignore
-const code = [
+const example1 = [
+  //
   'export default function() {',
   '  const value = 100',
   '  return <div>{value}</div>;',
   '}',
 ].join('\n');
 
+const example2 = [
+  //
+  '// Example schema.',
+  'S.struct({',
+  '  timestamp: S.Date,',
+  '  title: S.string,',
+  '  content: R.Text,',
+  "}).pipe(S.identifier('dxos.org/schema/Test'))",
+  '',
+].join('\n');
+
 const Story = () => {
   const [source, setSource] = useState<TextObject>();
   useEffect(() => {
-    setSource(new TextObject(code, TextKind.PLAIN));
+    setSource(new TextObject(example2, TextKind.PLAIN));
   }, []);
 
   return (
-    <div className={'flex fixed inset-0'}>
-      <ScriptEditor id='test' source={source} />
+    <div className='flex fixed inset-0 bg-neutral-50'>
+      <div className='flex w-[700px] mx-auto'>
+        <ScriptEditor source={source} className='bg-white text-lg' />
+      </div>
     </div>
   );
 };

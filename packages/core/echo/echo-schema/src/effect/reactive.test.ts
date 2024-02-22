@@ -172,6 +172,7 @@ describe('reactive', () => {
     );
 
     const Contact = S.struct({
+      d: S.Date,
       timestamp: S.DateFromSelf,
       key1: S.optional(StringKey),
       key2: S.optional(TypedKey),
