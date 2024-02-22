@@ -12,6 +12,7 @@ import React, {
   type PropsWithChildren,
 } from 'react';
 
+import { type Node } from '@dxos/app-graph';
 import { Button, DensityProvider, DropdownMenu, List, ListItem, useTranslation } from '@dxos/react-ui';
 import {
   type MosaicActiveType,
@@ -51,9 +52,7 @@ export type StackItem = MosaicDataItem &
     items: StackSectionItem[];
   };
 
-export type StackSectionItem = MosaicDataItem & {
-  object: StackSectionContent;
-};
+export type StackSectionItem = Pick<Node, 'id' | 'label' | 'properties' | 'icon' | 'data'>;
 
 export type StackSectionItemWithContext = StackSectionItem & StackContextValue;
 
@@ -187,22 +186,25 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
         )
       : contentItem;
 
-    // TODO(thure): When `item` is a preview, it is a Graph.Node and has `data` instead of `object`.
-    const itemObject = transformedItem.object ?? (transformedItem as unknown as { data: StackSectionContent }).data;
+    const title = transformedItem?.label
+      ? typeof transformedItem.label === 'string'
+        ? transformedItem.label
+        : t(...transformedItem.label)
+      : t('untitled section title');
 
     const section = (
       <Section
         ref={forwardedRef}
         id={transformedItem.id}
-        title={itemObject?.title ?? t('untitled section title')}
+        title={title}
         separation={separation}
         active={active}
         draggableProps={draggableProps}
         draggableStyle={draggableStyle}
         onDelete={() => onDeleteSection?.(path)}
-        onNavigate={() => onNavigateToSection?.(itemObject.id)}
+        onNavigate={() => onNavigateToSection?.(transformedItem.id)}
       >
-        {SectionContent && <SectionContent data={itemObject} />}
+        {SectionContent && <SectionContent data={transformedItem} />}
       </Section>
     );
 

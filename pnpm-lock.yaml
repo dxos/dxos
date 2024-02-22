@@ -9012,6 +9012,9 @@ importers:
 
   packages/ui/react-ui-stack:
     dependencies:
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../sdk/app-graph
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui

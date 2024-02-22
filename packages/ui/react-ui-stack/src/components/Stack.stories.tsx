@@ -127,7 +127,12 @@ const DemoStack = ({
 }: DemoStackProps) => {
   const [items, setItems] = useState<StackSectionItem[]>(() => {
     const generator = new TestObjectGenerator({ types });
-    return generator.createObjects({ length: count }).map((object) => ({ id: faker.string.uuid(), object }));
+    return generator.createObjects({ length: count }).map((object) => ({
+      id: faker.string.uuid(),
+      label: faker.commerce.productName(),
+      properties: {},
+      data: object,
+    }));
   });
 
   const itemsRef = useRef(items);

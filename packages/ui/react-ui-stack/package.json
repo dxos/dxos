@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/app-graph": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
