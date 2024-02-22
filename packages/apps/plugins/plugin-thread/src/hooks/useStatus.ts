@@ -7,9 +7,13 @@ import { useEffect, useState } from 'react';
 import { type Space } from '@dxos/react-client/echo';
 
 // TODO(burdon): Generalize and factor out.
-export const useStatus = (space: Space, channel: string) => {
+export const useStatus = (space?: Space, channel?: string) => {
   const [processing, setProcessing] = useState(false);
   useEffect(() => {
+    if (!space || !channel) {
+      return;
+    }
+
     const unsubscribe = space.listen(`status/${channel}`, (status) => {
       const { event } = status.payload ?? {};
       setProcessing(event === 'processing');
@@ -29,7 +33,7 @@ export const useStatus = (space: Space, channel: string) => {
       unsubscribe();
       clearInterval(t);
     };
-  }, [space]);
+  }, [space, channel]);
 
   return processing;
 };
