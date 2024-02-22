@@ -10,7 +10,7 @@ import { IndexSchema } from './index-schema';
 import { type Filter } from '../query';
 
 describe('IndexSchema', () => {
-  test.only('basic', async () => {
+  test('basic', async () => {
     const index = new IndexSchema();
 
     const schemaURI = 'dxos.org/test/Contact';

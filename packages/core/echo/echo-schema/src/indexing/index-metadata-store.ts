@@ -59,8 +59,8 @@ export class IndexMetadataStore {
       try {
         const file = this._directory.getOrCreateFile(id);
         const { size } = await file.stat();
-        const serializedData = await file.read(0, size);
-        const metadata: DocumentMetadata = serializedData ? JSON.parse(serializedData.toString()) : { id };
+        const serializedData = (await file.read(0, size)).toString();
+        const metadata: DocumentMetadata = serializedData.length !== 0 ? JSON.parse(serializedData) : { id };
         this._metadata.set(id, metadata);
         return metadata;
       } catch (err) {
