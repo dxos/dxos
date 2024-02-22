@@ -20,3 +20,17 @@ export interface Index {
 
   serialize(): Promise<string>;
 }
+
+export type LoadParams = { serialized: string; indexKind: IndexKind };
+
+export interface IndexStaticProps {
+  new (kind: IndexKind): Index;
+  load(params: LoadParams): Promise<Index>;
+}
+
+/* class decorator */
+export const staticImplements =
+  <T>() =>
+  <U extends T>(constructor: U) => {
+    constructor;
+  };

@@ -6,9 +6,17 @@ import * as orama from '@orama/orama';
 import { Event } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 
-import { type IndexingType, type Index, type IndexKind } from './types';
+import {
+  type IndexingType,
+  type Index,
+  type IndexKind,
+  staticImplements,
+  type IndexStaticProps,
+  type LoadParams,
+} from './types';
 import { type Filter } from '../query';
 
+@staticImplements<IndexStaticProps>()
 export class IndexSchema implements Index {
   public readonly kind: IndexKind = { kind: 'SCHEMA_MATCH' };
   public readonly updated = new Event<void>();
@@ -52,8 +60,8 @@ export class IndexSchema implements Index {
     return JSON.stringify(await orama.save(await this._orama), null, 2);
   }
 
-  static async load(blob: string): Promise<IndexSchema> {
-    const deserialized = JSON.parse(blob);
+  static async load({ serialized }: LoadParams): Promise<IndexSchema> {
+    const deserialized = JSON.parse(serialized);
 
     const index = new IndexSchema();
     await orama.load(await index._orama, deserialized);

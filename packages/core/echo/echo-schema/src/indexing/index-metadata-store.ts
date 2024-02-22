@@ -6,7 +6,9 @@ import { synchronized } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type Directory } from '@dxos/random-access-storage';
 
-export type IndexMetadataStoreOptions = {
+import { overrideFile } from './util';
+
+export type IndexMetadataStoreParams = {
   directory: Directory;
 };
 
@@ -21,7 +23,7 @@ export class IndexMetadataStore {
   /** map objectId -> index metadata */
   private readonly _metadata: Map<string, DocumentMetadata> = new Map();
 
-  constructor({ directory }: IndexMetadataStoreOptions) {
+  constructor({ directory }: IndexMetadataStoreParams) {
     this._directory = directory;
   }
 
@@ -74,13 +76,8 @@ export class IndexMetadataStore {
   @synchronized
   private async _setMetadata(id: string, metadata: DocumentMetadata): Promise<boolean> {
     try {
-      const serializedData = Buffer.from(JSON.stringify(metadata));
       const file = this._directory.getOrCreateFile(id);
-      const { size } = await file.stat();
-      if (serializedData.length > size) {
-        await file.del(serializedData.length, size - serializedData.length);
-      }
-      await file.write(0, serializedData);
+      await overrideFile(file, Buffer.from(JSON.stringify(metadata)));
       this._metadata.set(id, metadata);
       return true;
     } catch (err) {
