@@ -137,7 +137,7 @@ export const NetworkPanel = () => {
     <PanelContainer
       toolbar={
         <Toolbar.Root>
-          <SpaceSelector />
+          <SpaceSelector includeHalo={true} />
         </Toolbar.Root>
       }
     >

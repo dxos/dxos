@@ -27,14 +27,14 @@ const columns: TableColumnDef<Credential, any>[] = [
 ];
 
 export const CredentialsPanel = () => {
-  const { space } = useDevtoolsState();
-  const credentials = useCredentials({ spaceKey: space?.key });
+  const { space, haloSpaceKey, useHaloSpaceKey } = useDevtoolsState();
+  const credentials = useCredentials({ spaceKey: useHaloSpaceKey ? haloSpaceKey : space?.key });
 
   return (
     <PanelContainer
       toolbar={
         <Toolbar.Root>
-          <SpaceSelector />
+          <SpaceSelector includeHalo={true} />
         </Toolbar.Root>
       }
     >

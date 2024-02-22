@@ -25,7 +25,7 @@ export const SpaceListPanel: FC = () => {
   const download = useFileDownload();
 
   const handleSelect = (selection: Space | undefined) => {
-    setState((state) => ({ ...state, space: selection }));
+    setState((state) => ({ ...state, space: selection, useHaloSpaceKey: false }));
     navigate('/echo/space');
   };
 
@@ -107,7 +107,7 @@ export const SpaceListPanel: FC = () => {
       maxSize: 60,
     }),
     helper.display({
-      id: 'open',
+      id: 'backup',
       cell: (context) => (
         <Button
           onClick={(event) => {
