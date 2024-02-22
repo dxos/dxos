@@ -303,6 +303,10 @@ export const Image = {
   render: () => <Story text={str(text.image, text.footer)} extensions={[image()]} />,
 };
 
+export const Code = {
+  render: () => <Story text={str(text.code, text.footer)} extensions={[decorateMarkdown()]} />,
+};
+
 export const Lists = {
   render: () => (
     <Story text={str(text.tasks, '', text.list, '', text.numbered, text.footer)} extensions={[decorateMarkdown()]} />
