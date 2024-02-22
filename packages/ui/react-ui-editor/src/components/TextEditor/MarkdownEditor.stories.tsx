@@ -286,9 +286,10 @@ export const Empty = {
 };
 
 export const Scrolling = {
-  render: () => <Story text={str('# Large Document', '', large)} extensions={[]} />,
+  render: () => <Story text={str('# Large Document', '', large)} />,
 };
 
+<<<<<<< Updated upstream
 export const Links = {
   render: () => (
     <Story
@@ -296,6 +297,10 @@ export const Links = {
       extensions={[link({ onHover: onHoverLinkTooltip, onRender: onRenderLink })]}
     />
   ),
+=======
+export const ScrollingWithImages = {
+  render: () => <Story text={str('# Large Document', '', largeWithImages)} extensions={[image()]} readonly />,
+>>>>>>> Stashed changes
 };
 
 export const Code = {
