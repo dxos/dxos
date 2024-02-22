@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 describe('Orama', () => {
-  test.only('basic', async () => {
+  test('basic', async () => {
     const db: orama.Orama<
       {
         schema: string;
@@ -56,7 +56,6 @@ describe('Orama', () => {
 
     {
       const result = await orama.search(db, { term: '@dxos.org/examples/product', exact: true, threshold: 0 });
-      log.info('result', result);
       expect(result.hits.length).to.equal(3);
     }
 

@@ -31,11 +31,6 @@ export class IndexSchema implements Index {
     });
   }
 
-  async addObject(id: string, object: IndexingType) {
-    await orama.insert<any>(await this._orama, { id, ...object });
-    this.updated.emit();
-  }
-
   async removeObject(id: string) {
     await orama.remove(await this._orama, id);
   }

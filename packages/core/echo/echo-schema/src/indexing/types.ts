@@ -13,7 +13,6 @@ export type IndexingType = Record<string, any>;
 export interface Index {
   kind: IndexKind;
   updated: Event;
-  addObject: (id: string, object: IndexingType) => Promise<void>;
   removeObject: (id: string) => Promise<void>;
   updateObject: (id: string, object: IndexingType) => Promise<void>;
 
