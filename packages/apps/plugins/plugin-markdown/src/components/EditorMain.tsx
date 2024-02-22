@@ -44,12 +44,6 @@ const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...prop
     if (composer) {
       composer.editorView = editorRef.current;
     }
-
-    // TODO(thure): What is scrolling when CM starts?
-    if (editorRef.current?.scrollDOM) {
-      console.log('!!');
-      // editorRef.current?.scrollDOM.scrollTo(0, 0);
-    }
   }, [editorRef.current]);
 
   // Focus comment.
@@ -112,7 +106,6 @@ const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...prop
               className: mx(editorFillLayoutEditor, !toolbar && 'border-bs separator-separator'),
             },
             content: {
-              // after:block after:is-px after:bs-px after:overflow-anchor after:-mbs-px
               className: mx(editorHalfViewportOverscrollContent, '!p-2 sm:!p-6 md:!p-8'),
             },
           }}

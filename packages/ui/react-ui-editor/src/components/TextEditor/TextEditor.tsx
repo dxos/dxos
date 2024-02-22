@@ -84,12 +84,15 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
     // Set focus.
     useEffect(() => {
       if (autoFocus && !view?.hasFocus) {
+        view?.focus();
         if (view?.state.selection.main?.from === 0) {
           // Start at end of line.
-          const { to } = view.state.doc.lineAt(0);
-          view?.dispatch({ selection: { anchor: to } });
+          // TODO(burdon): Better way to do this?
+          setTimeout(() => {
+            const { to } = view.state.doc.lineAt(0);
+            view?.dispatch({ selection: { anchor: to } });
+          });
         }
-        view?.focus();
       }
     }, [view, autoFocus]);
 
