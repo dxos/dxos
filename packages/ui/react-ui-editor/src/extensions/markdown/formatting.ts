@@ -7,14 +7,13 @@ import { syntaxTree } from '@codemirror/language';
 import {
   type Extension,
   type StateCommand,
-  RangeSetBuilder,
   type EditorState,
   type ChangeSpec,
   type Text,
   EditorSelection,
   type Line,
 } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, keymap, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { EditorView, keymap } from '@codemirror/view';
 import { type SyntaxNodeRef, type SyntaxNode } from '@lezer/common';
 import { useState, useMemo } from 'react';
 
@@ -996,68 +995,6 @@ export const formatting = (options: FormattingOptions = {}): Extension => {
         run: toggleStrong,
       },
     ]),
-    styling(),
-  ];
-};
-
-const styling = (): Extension => {
-  const buildDecorations = (view: EditorView): DecorationSet => {
-    const builder = new RangeSetBuilder<Decoration>();
-    const { state } = view;
-    const cursor = state.selection.main.head;
-
-    // TODO(burdon): Bug if '***foo***' (since StrongEmphasis is nested inside EmphasisMark).
-    //  Ranges must be added sorted by `from` position and `startSide`.
-    const replace = (node: SyntaxNodeRef, marks: SyntaxNode[]) => {
-      if (cursor <= node.from || cursor >= node.to) {
-        for (const mark of marks) {
-          builder.add(mark.from, mark.to, Decoration.replace({}));
-        }
-      }
-    };
-
-    for (const { from, to } of view.visibleRanges) {
-      syntaxTree(state).iterate({
-        enter: (node) => {
-          switch (node.name) {
-            case 'Emphasis':
-            case 'StrongEmphasis': {
-              const marks = node.node.getChildren('EmphasisMark');
-              replace(node, marks);
-              break;
-            }
-
-            case 'Strikethrough': {
-              const marks = node.node.getChildren('StrikethroughMark');
-              replace(node, marks);
-              break;
-            }
-          }
-        },
-        from,
-        to,
-      });
-    }
-
-    return builder.finish();
-  };
-
-  return [
-    ViewPlugin.fromClass(
-      class {
-        decorations: DecorationSet;
-        constructor(view: EditorView) {
-          this.decorations = buildDecorations(view);
-        }
-
-        update(update: ViewUpdate) {
-          this.decorations = buildDecorations(update.view);
-        }
-      },
-      {
-        decorations: (value) => value.decorations,
-      },
-    ),
   ];
 };
 

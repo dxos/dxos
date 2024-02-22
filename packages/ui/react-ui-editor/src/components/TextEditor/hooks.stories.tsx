@@ -14,15 +14,11 @@ import { TextEditor } from './TextEditor';
 import {
   type EditorMode,
   EditorModes,
-  code,
+  decorateMarkdown,
   createMarkdownExtensions,
   formatting,
-  heading,
-  hr,
   image,
-  link,
   table,
-  tasklist,
   useFormattingState,
 } from '../../extensions';
 import { createDataExtensions, createThemeExtensions, useActionHandler, useTextEditor } from '../../hooks';
@@ -62,14 +58,10 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
       // TODO(burdon): Move lineWrapping.
       createMarkdownExtensions({ placeholder, lineWrapping: true }),
       // TODO(burdon): Move into markdown bundle (with React callbacks).
-      code(),
+      decorateMarkdown(),
       formatting(),
-      heading(),
-      hr(),
       image(),
-      link(),
       table(),
-      tasklist(),
       trackFormatting,
     ],
     [editorMode, themeMode, placeholder, trackFormatting, readonly],
