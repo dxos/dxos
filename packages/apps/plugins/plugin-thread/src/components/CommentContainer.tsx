@@ -6,7 +6,7 @@ import { X } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Message as MessageType } from '@braneframe/types';
-import { TextObject, getTextContent, useMembers } from '@dxos/react-client/echo';
+import { TextObject, getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, Tooltip, useTranslation } from '@dxos/react-ui';
 import { useTextModel } from '@dxos/react-ui-editor';
@@ -20,7 +20,6 @@ import { useStatus, useMessageMetadata } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
 
 export const CommentContainer = ({
-  space,
   thread,
   detached,
   context,
@@ -30,7 +29,8 @@ export const CommentContainer = ({
   onDelete,
 }: ThreadContainerProps) => {
   const identity = useIdentity()!;
-  const members = useMembers(space.key);
+  const space = getSpaceForObject(thread);
+  const members = useMembers(space?.key);
   const activity = useStatus(space, thread.id);
   const { t } = useTranslation(THREAD_PLUGIN);
   const extensions = useMemo(() => [command], []);
