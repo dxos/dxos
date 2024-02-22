@@ -15,15 +15,15 @@ import {
   type LinkOptions,
   EditorModes,
   autocomplete,
-  code,
-  heading,
-  hr,
-  image,
   link,
-  table,
-  tasklist,
   typewriter,
+  tasklist,
+  table,
+  image,
+  hr,
+  heading,
   formatting,
+  code,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';

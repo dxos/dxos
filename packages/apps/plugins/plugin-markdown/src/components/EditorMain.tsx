@@ -11,7 +11,6 @@ import {
   type Comment,
   MarkdownEditor,
   Toolbar,
-  editorHalfViewportOverscrollContent,
   editorFillLayoutEditor,
   editorFillLayoutRoot,
   focusComment,
@@ -20,6 +19,7 @@ import {
   useActionHandler,
   useFormattingState,
   cursorLineMargin,
+  editorHalfViewportOverscrollContent,
 } from '@dxos/react-ui-editor';
 import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
@@ -44,9 +44,11 @@ const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...prop
     if (composer) {
       composer.editorView = editorRef.current;
     }
+
     // TODO(thure): What is scrolling when CM starts?
     if (editorRef.current?.scrollDOM) {
-      editorRef.current?.scrollDOM.scrollTo(0, 0);
+      console.log('!!');
+      // editorRef.current?.scrollDOM.scrollTo(0, 0);
     }
   }, [editorRef.current]);
 
@@ -107,7 +109,7 @@ const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...prop
               'data-testid': 'composer.markdownRoot',
             } as HTMLAttributes<HTMLDivElement>,
             editor: {
-              className: mx(editorFillLayoutEditor, !toolbar && 'border-bs'),
+              className: mx(editorFillLayoutEditor, !toolbar && 'border-bs separator-separator'),
             },
             content: {
               // after:block after:is-px after:bs-px after:overflow-anchor after:-mbs-px

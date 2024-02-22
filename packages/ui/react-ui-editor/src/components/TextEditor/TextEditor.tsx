@@ -8,8 +8,8 @@ import { useFocusableGroup } from '@fluentui/react-tabster';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, {
   type ComponentProps,
-  forwardRef,
   type KeyboardEventHandler,
+  forwardRef,
   useCallback,
   useEffect,
   useImperativeHandle,
