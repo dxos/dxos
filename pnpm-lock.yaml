@@ -8763,8 +8763,11 @@ importers:
       '@types/react-test-renderer':
         specifier: ^17.0.2
         version: 17.0.9
+      '@vitest/browser':
+        specifier: ^1.2.2
+        version: 1.2.2(vitest@1.2.2)(webdriverio@8.29.3)
       '@vitest/ui':
-        specifier: ^1.2.1
+        specifier: ^1.2.2
         version: 1.2.2(vitest@1.2.2)
       deepsignal:
         specifier: ^1.5.0
@@ -30580,7 +30583,7 @@ packages:
     resolution: {integrity: sha512-dm9s5Pw7Jc0GvMYbshN6zchCA9RgQlzzEZX3vylR9IqFfS8XciblUXOKfW6SiuJ0e13eDYZoZV5wdrev7P3Nwg==}
     engines: {node: ^10.12.0 || >=12.0.0}
     dependencies:
-      flatted: 3.2.7
+      flatted: 3.2.9
       rimraf: 3.0.2
 
   /flat-tree@1.9.0:
@@ -30591,12 +30594,8 @@ packages:
     resolution: {integrity: sha512-b6suED+5/3rTpUBdG1gupIl8MPFCAMA0QXwmljLhvCUKcUvdE4gWky9zpuGCcXHOsz4J9wPGNWq6OKpmIzz3hQ==}
     hasBin: true
 
-  /flatted@3.2.7:
-    resolution: {integrity: sha512-5nqDSxl8nn5BSNxyR3n4I6eDmbolI6WT+QqR547RwxQapgjQBmtktdP+HTBb/a/zLsbzERTONyUB5pefh5TtjQ==}
-
   /flatted@3.2.9:
     resolution: {integrity: sha512-36yxDn5H7OFZQla0/jFJmbIKTdZAQHngCedGxiMmpNfEZM0sdEeT+WczLQrjK6D7o2aiyLYDnkw0R3JK0Qv1RQ==}
-    dev: true
 
   /flow-parser@0.190.0:
     resolution: {integrity: sha512-9jxaqkeeARD//nhwDoN//j+EFcwzKJCGPtTQzUdKZdlZG3JmUdbV6XJFLD9sbWFPUmcCT1mblwILwdoq0mKWQw==}
