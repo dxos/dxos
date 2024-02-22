@@ -96,7 +96,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             settings.values.$devtools!.subscribe((debug) => {
               if (debug) {
                 parent.addNode(DEBUG_PLUGIN, {
-                  id: 'devtools',
+                  id: 'devtools-debug-plugin',
                   label: ['devtools label', { ns: DEBUG_PLUGIN }],
                   icon: (props) => <Bug {...props} />,
                   data: 'devtools',
