@@ -2,14 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Chat } from '@phosphor-icons/react';
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Message as MessageType } from '@braneframe/types';
-import { TextObject, getTextContent, useMembers } from '@dxos/react-client/echo';
+import { TextObject, getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Button, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { useTextModel } from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+import { getSize, mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadLayout } from '@dxos/react-ui-thread';
 
 import { MessageContainer } from './MessageContainer';
@@ -18,9 +19,25 @@ import { type ThreadContainerProps } from './types';
 import { useStatus, useMessageMetadata } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
 
-export const ChatContainer = ({ space, thread, context, current, autoFocusTextbox }: ThreadContainerProps) => {
+export const ChatHeading = () => {
+  const { t } = useTranslation(THREAD_PLUGIN);
+  return (
+    <div
+      role='none'
+      className='grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)] items-center border-be separator-separator -mbe-px'
+    >
+      <Button variant='primary' classNames='m-1 pli-0 is-[--rail-action] bs-[--rail-action] rounded-sm'>
+        <Chat weight='duotone' className={getSize(5)} />
+      </Button>
+      <h1 className='font-medium fg-accent pli-1 truncate'>{t('chat heading')}</h1>
+    </div>
+  );
+};
+
+export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: ThreadContainerProps) => {
   const identity = useIdentity()!;
-  const members = useMembers(space.key);
+  const space = getSpaceForObject(thread);
+  const members = useMembers(space?.key);
   const activity = useStatus(space, thread.id);
   const { t } = useTranslation(THREAD_PLUGIN);
   const extensions = useMemo(() => [command], []);

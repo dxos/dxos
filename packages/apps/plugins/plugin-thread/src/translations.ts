@@ -21,6 +21,7 @@ export default [
         'detached thread label': 'Referenced content was removed',
         'thread deleted label': 'You deleted a thread.',
         'comments heading': 'Comments',
+        'chat heading': 'Chat',
       },
     },
   },
