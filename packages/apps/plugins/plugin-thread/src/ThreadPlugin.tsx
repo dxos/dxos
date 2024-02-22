@@ -67,7 +67,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       // TODO(wittjosiah): This is a hack to make standalone threads work in the c11y sidebar.
       //  This should have a better solution when deck is introduced.
       unsubscribe = effect(() => {
-        console.log('...');
         const active = navigationPlugin?.provides.location.active;
         const activeNode = active ? graphPlugin?.provides.graph.findNode(active) : undefined;
         const space = activeNode
@@ -77,7 +76,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           : undefined;
         untracked(() => {
           const [thread] = space?.db.query(ThreadType.filter((thread) => !thread.context)).objects ?? [];
-          if (isDocument(activeNode?.data) && activeNode.data.comments.length > 0) {
+          if (activeNode && isDocument(activeNode?.data) && activeNode.data.comments.length > 0) {
             void intentPlugin?.provides.intent.dispatch({
               action: LayoutAction.SET_LAYOUT,
               data: { element: 'complementary', subject: activeNode.data, state: true },
