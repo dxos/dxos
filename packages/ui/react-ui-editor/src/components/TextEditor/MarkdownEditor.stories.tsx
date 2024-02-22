@@ -19,19 +19,15 @@ import { withTheme } from '@dxos/storybook-utils';
 import { MarkdownEditor, type TextEditorProps } from './TextEditor';
 import {
   type CommentsOptions,
-  type LinkOptions,
   autocomplete,
   blast,
-  code,
+  decorateMarkdown,
   comments,
   defaultOptions,
-  heading,
-  hr,
   image,
-  link,
+  linkTooltip,
   mention,
   table,
-  tasklist,
   typewriter,
   useComments,
   formatting,
@@ -173,7 +169,7 @@ const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', '
 const hover =
   'rounded-sm text-base text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
-const onHoverLinkTooltip: LinkOptions['onHover'] = (el, url) => {
+const renderLinkTooltip = (el: Element, url: string) => {
   const web = new URL(url);
   createRoot(el).render(
     <StrictMode>
@@ -206,7 +202,7 @@ const onCommentsHover: CommentsOptions['onHover'] = (el, shortcut) => {
   );
 };
 
-const onRenderLink: LinkOptions['onRender'] = (el, url) => {
+const renderLinkButton = (el: Element, url: string) => {
   createRoot(el).render(
     <StrictMode>
       <a href={url} target='_blank' rel='noreferrer' className={hover}>
@@ -257,14 +253,11 @@ const defaults = [
   autocomplete({
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
-  code(),
+  decorateMarkdown({ renderLinkButton }),
   formatting(),
-  heading(),
-  hr(),
   image(),
-  link({ onRender: onRenderLink, onHover: onHoverLinkTooltip }),
+  linkTooltip(renderLinkTooltip),
   table(),
-  tasklist(),
 ];
 
 export const Default = {
@@ -290,16 +283,7 @@ export const Scrolling = {
 };
 
 export const Links = {
-  render: () => (
-    <Story
-      text={str(text.links, text.footer)}
-      extensions={[link({ onHover: onHoverLinkTooltip, onRender: onRenderLink })]}
-    />
-  ),
-};
-
-export const Code = {
-  render: () => <Story text={str(text.code, text.footer)} extensions={[code()]} />,
+  render: () => <Story text={str(text.links, text.footer)} extensions={[linkTooltip(renderLinkTooltip)]} />,
 };
 
 export const Image = {
@@ -308,7 +292,7 @@ export const Image = {
 
 export const Lists = {
   render: () => (
-    <Story text={str(text.tasks, '', text.list, '', text.numbered, text.footer)} extensions={[tasklist()]} />
+    <Story text={str(text.tasks, '', text.list, '', text.numbered, text.footer)} extensions={[decorateMarkdown()]} />
   ),
 };
 
@@ -330,7 +314,7 @@ export const Autocomplete = {
     <Story
       text={str('# Autocomplete', '', 'Press Ctrl-Space...', text.footer)}
       extensions={[
-        link({ onRender: onRenderLink }),
+        decorateMarkdown({ renderLinkButton }),
         autocomplete({
           onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
         }),
@@ -386,15 +370,6 @@ export const Comments = {
       />
     );
   },
-};
-
-export const HorizontalRule = {
-  render: () => (
-    <Story
-      text={str('# Horizontal Rule', '', text.paragraphs, '---', text.paragraphs, '---', text.paragraphs)}
-      extensions={[hr()]}
-    />
-  ),
 };
 
 export const Vim = {
