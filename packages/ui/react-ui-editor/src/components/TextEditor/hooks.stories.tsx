@@ -26,7 +26,7 @@ import {
   useFormattingState,
 } from '../../extensions';
 import { createDataExtensions, createThemeExtensions, useActionHandler, useTextEditor } from '../../hooks';
-import { editorFillLayoutEditor, editorFillLayoutRoot, editorWithToolbarLayout } from '../../styles';
+import { editorFillLayoutEditor, editorWithToolbarLayout } from '../../styles';
 import { markdownTheme } from '../../themes';
 import translations from '../../translations';
 import { Toolbar } from '../Toolbar';
@@ -56,7 +56,7 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
         themeMode,
         theme: markdownTheme,
         slots: {
-          editor: { className: editorFillLayoutEditor },
+          content: { className: '!p-4' },
         },
       }),
       // TODO(burdon): Move lineWrapping.
@@ -87,11 +87,7 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
         <EditorModeToolbar editorMode={editorMode} setEditorMode={setEditorMode} />
       </Toolbar.Root>
       <div role='none' className='overflow-y-auto'>
-        <div
-          role='textbox'
-          className={mx(textBlockWidth, attentionSurface, editorFillLayoutRoot, 'p-4')}
-          ref={parentRef}
-        />
+        <div role='textbox' className={mx(textBlockWidth, attentionSurface, editorFillLayoutEditor)} ref={parentRef} />
       </div>
     </div>
   );

@@ -83,7 +83,7 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
           const graph = graphPlugin?.provides.graph;
           const space = graph && location ? getActiveSpace(graph, location.active) : undefined;
           switch (role) {
-            case 'context-search':
+            case 'search-input':
               return space ? <SearchMain space={space} /> : null;
           }
 
