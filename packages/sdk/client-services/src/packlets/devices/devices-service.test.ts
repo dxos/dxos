@@ -27,7 +27,18 @@ describe('DevicesService', () => {
     await serviceContext.close();
   });
 
-  describe.skip('updateDevice', () => {});
+  describe('updateDevice', () => {
+    test.skip('updates device profile', async () => {
+      const query = devicesService.queryDevices();
+      const device = await devicesService.updateDevice({ label: 'test-device' });
+      const result = new Trigger<Device[] | undefined>();
+      query.subscribe(({ devices }) => {
+        result.wake(devices);
+      });
+      afterTest(() => query.close());
+      expect(device.profile?.label).to.equal('test-device');
+    });
+  });
 
   describe('queryDevices', () => {
     test('returns empty list if no identity is available', async () => {
