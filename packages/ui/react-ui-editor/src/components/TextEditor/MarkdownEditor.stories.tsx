@@ -43,9 +43,11 @@ const str = (...lines: string[]) => lines.join('\n');
 
 const num = () => faker.number.int({ min: 0, max: 9999 }).toLocaleString();
 
-// prettier-ignore
+const img = '![dxos](https://pbs.twimg.com/profile_banners/1268328127673044992/1684766689/1500x500)';
+
 const text = {
   tasks: str(
+    //
     '## Tasks',
     '',
     '- [x] decorator',
@@ -57,6 +59,7 @@ const text = {
   ),
 
   list: str(
+    //
     '## List',
     '',
     '- new york',
@@ -66,12 +69,13 @@ const text = {
   ),
 
   numbered: str(
+    //
     '## Numbered',
     '',
     '1. one',
     '2. two',
     '3. three',
-    ''
+    '',
   ),
 
   code: str(
@@ -111,7 +115,7 @@ const text = {
     '',
   ),
 
-  image: str('# Image', '', '![dxos](https://pbs.twimg.com/profile_banners/1268328127673044992/1684766689/1500x500)'),
+  image: str('# Image', '', img),
 
   headings: str(
     ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
@@ -119,7 +123,7 @@ const text = {
 
   paragraphs: str(...faker.helpers.multiple(() => [faker.lorem.paragraph(), ''], { count: 3 }).flat()),
 
-  footer: str('', '', '', '', '')
+  footer: str('', '', '', '', ''),
 };
 
 const document = str(
@@ -274,12 +278,21 @@ export const NoExtensions = {
 
 const large = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
 
+const largeWithImages = faker.helpers
+  .multiple(() => [faker.lorem.paragraph({ min: 12, max: 16 }), img], { count: 20 })
+  .flatMap((x) => x)
+  .join('\n\n');
+
 export const Empty = {
   render: () => <Story />,
 };
 
 export const Scrolling = {
   render: () => <Story text={str('# Large Document', '', large)} extensions={[]} />,
+};
+
+export const ScrollingWithImages = {
+  render: () => <Story text={str('# Large Document', '', largeWithImages)} extensions={[image()]} />,
 };
 
 export const Links = {
