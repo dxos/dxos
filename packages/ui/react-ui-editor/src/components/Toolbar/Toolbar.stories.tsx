@@ -76,8 +76,9 @@ const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) =
         model={model}
         extensions={extensions}
         slots={{
-          root: { className: mx(textBlockWidth, editorFillLayoutRoot, 'pli-2') },
+          root: { className: mx(textBlockWidth, editorFillLayoutRoot) },
           editor: { className: editorFillLayoutEditor },
+          content: { className: '!pli-2' },
         }}
       />
     </div>

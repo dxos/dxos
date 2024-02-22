@@ -53,10 +53,9 @@ export const warningInputValence = 'shadow-warning-500/50 dark:shadow-warning-60
 export const errorInputValence = 'shadow-error-500/50 dark:shadow-error-600/50';
 
 const textInputSurfaceFocus =
-  'transition-colors bg-[--input-bg] focus:surface-attention border-transparent focus:border-transparent';
+  'transition-colors surface-input focus:surface-attention border-transparent focus:border-transparent';
 
-const textInputSurfaceHover =
-  'hover:bg-[--input-bg-hover] dark:hover:bg-[--input-bg-hover] focus:hover:surface-attention';
+const textInputSurfaceHover = 'hover:surface-hover focus:hover:surface-attention';
 
 const booleanInputSurface =
   'shadow-inner transition-colors surface-unAccent aria-checked:surface-accent aria-[checked=mixed]:surface-accent';

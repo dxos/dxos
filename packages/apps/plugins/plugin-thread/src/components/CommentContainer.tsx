@@ -3,12 +3,12 @@
 //
 
 import { X } from '@phosphor-icons/react';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Message as MessageType } from '@braneframe/types';
 import { TextObject, getTextContent, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { AnchoredOverflow, Button, Tooltip, useTranslation } from '@dxos/react-ui';
+import { Button, Tooltip, useTranslation } from '@dxos/react-ui';
 import { useTextModel } from '@dxos/react-ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, ThreadHeading } from '@dxos/react-ui-thread';
@@ -25,7 +25,7 @@ export const CommentContainer = ({
   detached,
   context,
   current,
-  autoFocus,
+  autoFocusTextbox,
   onAttend,
   onDelete,
 }: ThreadContainerProps) => {
@@ -34,10 +34,22 @@ export const CommentContainer = ({
   const activity = useStatus(space, thread.id);
   const { t } = useTranslation(THREAD_PLUGIN);
   const extensions = useMemo(() => [command], []);
+  const threadScrollRef = useRef<HTMLDivElement | null>(null);
 
   const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
   const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
-  const autoFocusRef = useRef<boolean>(autoFocus ?? false);
+  const [autoFocus, setAutoFocus] = useState(!!autoFocusTextbox);
+
+  // TODO(thure): Because of the way the `autoFocus` property is handled by TextEditor, this is the least-bad way of
+  //   moving focus at the right time, though it is an antipattern. Refactor to behave more like <input/>’s `autoFocus`
+  //   or `autofocus` (yes, they’re different).
+  useEffect(() => {
+    setAutoFocus(!!autoFocusTextbox);
+  }, [autoFocusTextbox]);
+
+  // TODO(thure): Factor out.
+  const scrollToEnd = (behavior: ScrollBehavior) =>
+    setTimeout(() => threadScrollRef.current?.scrollIntoView({ behavior, block: 'end' }), 10);
 
   const handleCreate: MessageTextboxProps['onSend'] = useCallback(() => {
     const content = nextMessage.text;
@@ -59,9 +71,12 @@ export const CommentContainer = ({
     );
 
     setNextMessage(() => {
-      autoFocusRef.current = true;
       return { text: new TextObject() };
     });
+
+    setAutoFocus(true);
+
+    scrollToEnd('instant');
 
     // TODO(burdon): Scroll to bottom.
     return true;
@@ -126,14 +141,15 @@ export const CommentContainer = ({
         <>
           <MessageTextbox
             onSend={handleCreate}
-            autoFocusRef={autoFocusRef}
+            autoFocus={autoFocus}
             placeholder={t('message placeholder')}
             {...textboxMetadata}
             model={nextMessageModel}
             extensions={extensions}
           />
           <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
-          <AnchoredOverflow.Anchor />
+          {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
+          <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
         </>
       )}
     </Thread>

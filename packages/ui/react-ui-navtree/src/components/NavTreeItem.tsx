@@ -5,7 +5,15 @@
 import { DotsThreeVertical, Placeholder } from '@phosphor-icons/react';
 import React, { type ForwardedRef, forwardRef, Fragment, useEffect, useRef, useState } from 'react';
 
-import { Tooltip, Popover, Tree, TreeItem as TreeItemComponent, TreeItem, useTranslation } from '@dxos/react-ui';
+import {
+  Tooltip,
+  Popover,
+  Tree,
+  TreeItem as TreeItemComponent,
+  TreeItem,
+  useTranslation,
+  DensityProvider,
+} from '@dxos/react-ui';
 import { Mosaic, useContainer, type MosaicTileComponent, Path, useItemsWithOrigin } from '@dxos/react-ui-mosaic';
 import {
   descriptionText,
@@ -140,87 +148,90 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
           }
         }}
       >
-        <Root>
-          <TreeItem.Root
-            collapsible={isBranch}
-            open={!forceCollapse && open}
-            onOpenChange={(nextOpen) => setOpen(forceCollapse ? false : nextOpen)}
-            classNames={[
-              'rounded block relative transition-opacity',
-              hoverableFocusedKeyboardControls,
-              active && active !== 'overlay' && 'opacity-0',
-              focusRing,
-              isOverCurrent && dropRing,
-              isOverCurrent && 'z-[1]',
-              level === 0 && 'mbs-4 first:mbs-0',
-            ]}
-            {...draggableProps}
-            data-itemid={item.id}
-            data-testid={node.properties.testId}
-            style={draggableStyle}
-            ref={forwardedRef}
-            role='treeitem'
-          >
-            <ActionRoot>
-              <div
-                role='none'
-                className={mx(
-                  'flex items-start rounded',
-                  levelPadding(level),
-                  hoverableControls,
-                  hoverableFocusedWithinControls,
-                  hoverableDescriptionIcons,
-                  level < 1 && topLevelCollapsibleSpacing,
-                  staticGhostSelectedCurrent({ current: (active && active !== 'overlay') || path === current }),
-                )}
-              >
-                <NavTreeItemHeading
-                  {...{
-                    id: node.id,
-                    level,
-                    label: Array.isArray(node.label) ? t(...node.label) : node.label,
-                    icon: node.icon,
-                    open,
-                    current: path === current,
-                    branch: node.properties?.role === 'branch' || node.children?.length > 0,
-                    disabled: !!node.properties?.disabled,
-                    error: !!node.properties?.error,
-                    modified: node.properties?.modified ?? false,
-                    palette: node.properties?.palette,
-                    onSelect: () => onSelect?.({ path, node, level, position: position as number }),
-                  }}
-                />
-                {primaryAction?.properties.disposition === 'toolbar' && (
-                  <NavTreeItemAction
-                    label={Array.isArray(primaryAction.label) ? t(...primaryAction.label) : primaryAction.label}
-                    icon={primaryAction.icon ?? Placeholder}
-                    action={primaryAction.actions.length === 0 ? primaryAction : undefined}
-                    actions={primaryAction.actions}
-                    active={active}
-                    testId={primaryAction.properties.testId}
-                    menuType={primaryAction.properties.menuType}
-                    caller={NAV_TREE_ITEM}
+        <DensityProvider density='fine'>
+          <Root>
+            <TreeItem.Root
+              collapsible={isBranch}
+              open={!forceCollapse && open}
+              onOpenChange={(nextOpen) => setOpen(forceCollapse ? false : nextOpen)}
+              classNames={[
+                'rounded block relative transition-opacity',
+                hoverableFocusedKeyboardControls,
+                active && active !== 'overlay' && 'opacity-0',
+                focusRing,
+                isOverCurrent && dropRing,
+                isOverCurrent && 'z-[1]',
+                level === 0 && 'mbs-4 first:mbs-0',
+              ]}
+              {...draggableProps}
+              data-itemid={item.id}
+              data-testid={node.properties.testId}
+              style={draggableStyle}
+              ref={forwardedRef}
+              role='treeitem'
+            >
+              <ActionRoot>
+                <div
+                  role='none'
+                  className={mx(
+                    'flex items-start rounded',
+                    levelPadding(level),
+                    hoverableControls,
+                    hoverableFocusedWithinControls,
+                    hoverableDescriptionIcons,
+                    level < 1 && topLevelCollapsibleSpacing,
+                    staticGhostSelectedCurrent({ current: (active && active !== 'overlay') || path === current }),
+                  )}
+                >
+                  <NavTreeItemHeading
+                    {...{
+                      id: node.id,
+                      level,
+                      label: Array.isArray(node.label) ? t(...node.label) : node.label,
+                      icon: node.icon,
+                      open,
+                      current: path === current,
+                      branch: node.properties?.role === 'branch' || node.children?.length > 0,
+                      disabled: !!node.properties?.disabled,
+                      error: !!node.properties?.error,
+                      modified: node.properties?.modified ?? false,
+                      palette: node.properties?.palette,
+                      onSelect: () => onSelect?.({ path, node, level, position: position as number }),
+                    }}
                   />
-                )}
-                <NavTreeItemActionDropdownMenu
-                  icon={DotsThreeVertical}
-                  actions={actions}
-                  suppressNextTooltip={suppressNextTooltip}
-                  onAction={(action) => action.invoke?.({ caller: NAV_TREE_ITEM })}
-                  testId={`navtree.treeItem.actionsLevel${level}`}
-                />
-                {presence && renderPresence?.(node)}
-              </div>
-            </ActionRoot>
-            {!active &&
-              isBranch &&
-              (node.children?.length > 0 ? (
-                <NavTreeBranch path={path} nodes={node.children} level={level + 1} />
-              ) : (
-                <NavTreeEmptyBranch path={path} level={level + 1} />
-              ))}
-          </TreeItem.Root>
-        </Root>
+                  {primaryAction?.properties.disposition === 'toolbar' && (
+                    <NavTreeItemAction
+                      label={Array.isArray(primaryAction.label) ? t(...primaryAction.label) : primaryAction.label}
+                      icon={primaryAction.icon ?? Placeholder}
+                      action={primaryAction.actions.length === 0 ? primaryAction : undefined}
+                      actions={primaryAction.actions}
+                      active={active}
+                      testId={primaryAction.properties.testId}
+                      menuType={primaryAction.properties.menuType}
+                      caller={NAV_TREE_ITEM}
+                    />
+                  )}
+                  <NavTreeItemActionDropdownMenu
+                    icon={DotsThreeVertical}
+                    actions={actions}
+                    suppressNextTooltip={suppressNextTooltip}
+                    onAction={(action) => action.invoke?.({ caller: NAV_TREE_ITEM })}
+                    testId={`navtree.treeItem.actionsLevel${level}`}
+                  />
+                  {presence && renderPresence?.(node)}
+                </div>
+              </ActionRoot>
+              {!active &&
+                isBranch &&
+                (node.children?.length > 0 ? (
+                  <NavTreeBranch path={path} nodes={node.children} level={level + 1} />
+                ) : (
+                  <NavTreeEmptyBranch path={path} level={level + 1} />
+                ))}
+            </TreeItem.Root>
+          </Root>
+        </DensityProvider>
+
         <Tooltip.Portal>
           <Tooltip.Content side='bottom' classNames='z-[12]'>
             {t('tree item actions label')}

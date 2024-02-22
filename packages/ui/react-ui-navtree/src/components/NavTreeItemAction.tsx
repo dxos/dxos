@@ -19,6 +19,7 @@ import type { TreeNodeAction } from '../types';
 type NavTreeItemActionProps = {
   label?: string;
   icon: FC<IconProps>;
+  variant?: 'plank-heading' | 'tree-item';
   action?: TreeNodeAction;
   actions?: TreeNodeAction[];
   active?: MosaicActiveType;
@@ -30,12 +31,13 @@ type NavTreeItemActionProps = {
 
 export const NavTreeItemActionDropdownMenu = ({
   icon: Icon,
+  variant,
   active,
   testId,
   actions,
   suppressNextTooltip,
   onAction,
-}: Pick<NavTreeItemActionProps, 'icon' | 'actions' | 'testId' | 'active' | 'onAction'> & {
+}: Pick<NavTreeItemActionProps, 'icon' | 'variant' | 'actions' | 'testId' | 'active' | 'onAction'> & {
   suppressNextTooltip: MutableRefObject<boolean>;
 }) => {
   const { t } = useTranslation(translationKey);
@@ -58,17 +60,21 @@ export const NavTreeItemActionDropdownMenu = ({
       <Tooltip.Trigger asChild>
         <DropdownMenu.Trigger asChild>
           <Button
-            variant='ghost'
+            variant={variant === 'plank-heading' ? 'primary' : 'ghost'}
             classNames={[
               'shrink-0 pli-2 pointer-fine:pli-1',
               hoverableControlItem,
               hoverableOpenControlItem,
+              variant === 'plank-heading' && 'is-[--rail-action] rounded-sm pli-0',
               active === 'overlay' && 'invisible',
             ]}
             data-testid={testId}
             aria-label={t('tree item actions label')}
           >
-            <Icon className={getSize(4)} />
+            <Icon
+              className={getSize(variant === 'plank-heading' ? 5 : 4)}
+              weight={variant === 'plank-heading' ? 'duotone' : 'regular'}
+            />
           </Button>
         </DropdownMenu.Trigger>
       </Tooltip.Trigger>
@@ -280,6 +286,7 @@ export const NavTreeItemActionSearchList = ({
 export const NavTreeItemAction = ({
   label,
   icon: Icon,
+  variant,
   action,
   actions,
   active,
@@ -313,7 +320,6 @@ export const NavTreeItemAction = ({
       {action ? (
         <Tooltip.Trigger asChild>
           <Button
-            variant='ghost'
             classNames={[
               'shrink-0 pli-2 pointer-fine:pli-1',
               hoverableControlItem,
@@ -349,6 +355,7 @@ export const NavTreeItemAction = ({
           active={active}
           suppressNextTooltip={suppressNextTooltip}
           icon={Icon}
+          variant={variant}
           onAction={(action) => action.invoke(caller ? { caller } : undefined)}
         />
       )}
