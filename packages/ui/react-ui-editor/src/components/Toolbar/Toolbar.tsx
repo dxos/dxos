@@ -233,7 +233,6 @@ const markdownBlocks: ButtonProps[] = [
     type: 'codeblock',
     Icon: CodeBlock,
     getState: (state) => state.blockType === 'codeblock',
-    disabled: (state) => !state.blankLine,
   },
   {
     type: 'table',
