@@ -3258,6 +3258,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.23.0
         version: 6.23.1
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../../common/display-name
