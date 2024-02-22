@@ -25,10 +25,10 @@ const parseLongestPath = (node: Node, connectedNode: Node) => {
 };
 
 describe('Graph', () => {
-  test('add node', () => {
+  test('add nodes', () => {
     const graph = new Graph();
 
-    const [root] = graph.addNode({
+    const [root] = graph.addNodes({
       id: 'root',
       nodes: [{ id: 'test1' }, { id: 'test2' }],
     });
@@ -43,10 +43,27 @@ describe('Graph', () => {
     expect(graph.getNode('test2')?.nodes({ direction: 'inbound' })).to.have.length(1);
   });
 
+  test('add nodes updates existing nodes', () => {
+    const graph = new Graph();
+
+    graph.addNodes({
+      id: 'root',
+      nodes: [{ id: 'test1' }, { id: 'test2' }],
+    });
+    graph.addNodes({
+      id: 'root',
+      nodes: [{ id: 'test1' }, { id: 'test2' }],
+    });
+
+    expect(graph._nodes).to.have.length(3);
+    expect(Object.keys(graph._edges)).to.have.length(3);
+    expect(graph.getNode('root')?.nodes()).to.have.length(2);
+  });
+
   test('remove node', () => {
     const graph = new Graph();
 
-    const [root] = graph.addNode({
+    const [root] = graph.addNodes({
       id: 'root',
       nodes: [{ id: 'test1' }, { id: 'test2' }],
     });
@@ -64,7 +81,7 @@ describe('Graph', () => {
   test('add edge', () => {
     const graph = new Graph();
 
-    graph.addNode({
+    graph.addNodes({
       id: 'root',
       nodes: [{ id: 'test1' }, { id: 'test2' }],
     });
@@ -74,10 +91,24 @@ describe('Graph', () => {
     expect(graph.getNode('test2')?.nodes({ direction: 'inbound' })).to.have.length(2);
   });
 
+  test('add edges is idempontent', () => {
+    const graph = new Graph();
+
+    graph.addNodes({
+      id: 'root',
+      nodes: [{ id: 'test1' }, { id: 'test2' }],
+    });
+    graph.addEdge('test1', 'test2');
+    graph.addEdge('test1', 'test2');
+
+    expect(graph.getNode('test1')?.nodes()).to.have.length(1);
+    expect(graph.getNode('test2')?.nodes({ direction: 'inbound' })).to.have.length(2);
+  });
+
   test('remove edge', () => {
     const graph = new Graph();
 
-    graph.addNode({
+    graph.addNodes({
       id: 'root',
       nodes: [{ id: 'test1' }, { id: 'test2' }],
     });
@@ -90,7 +121,7 @@ describe('Graph', () => {
   test('toJSON', () => {
     const graph = new Graph();
 
-    graph.addNode({
+    graph.addNodes({
       id: 'root',
       nodes: [{ id: 'test1' }, { id: 'test2' }],
     });
@@ -106,7 +137,7 @@ describe('Graph', () => {
   test('can be traversed', () => {
     const graph = new Graph();
 
-    const [root] = graph.addNode({
+    const [root] = graph.addNodes({
       id: 'root',
       nodes: [{ id: 'test1' }, { id: 'test2' }],
     });
@@ -119,7 +150,7 @@ describe('Graph', () => {
   test('traversal breaks cycles', () => {
     const graph = new Graph();
 
-    const [root] = graph.addNode({
+    const [root] = graph.addNodes({
       id: 'root',
       nodes: [{ id: 'test1' }, { id: 'test2' }],
     });
@@ -133,7 +164,7 @@ describe('Graph', () => {
   test('traversal can be limited by predicate', () => {
     const graph = new Graph();
 
-    const [root] = graph.addNode({
+    const [root] = graph.addNodes({
       id: 'root',
       nodes: [{ id: 'test1' }, { id: 'test2' }, { id: 'test3' }, { id: 'test4' }],
     });
@@ -157,7 +188,7 @@ describe('Graph', () => {
   test('traversal can be started from any node', () => {
     const graph = new Graph();
 
-    graph.addNode({
+    graph.addNodes({
       id: 'root',
       nodes: [{ id: 'test1', nodes: [{ id: 'test2', nodes: [{ id: 'test3' }] }] }],
     });
@@ -173,7 +204,7 @@ describe('Graph', () => {
   test('traversal can follow inbound edges', () => {
     const graph = new Graph();
 
-    graph.addNode({
+    graph.addNodes({
       id: 'root',
       nodes: [{ id: 'test1', nodes: [{ id: 'test2', nodes: [{ id: 'test3' }] }] }],
     });
@@ -190,7 +221,7 @@ describe('Graph', () => {
   test('can filter to longest pathes', () => {
     const graph = new Graph();
 
-    graph.addNode({
+    graph.addNodes({
       id: 'root',
       nodes: [{ id: 'test1' }, { id: 'test2' }],
     });
@@ -218,7 +249,7 @@ describe('Graph', () => {
   test('traversing the graph subscribes to changes', () => {
     const graph = new Graph();
 
-    graph.addNode({
+    graph.addNodes({
       id: 'root',
       nodes: [{ id: 'test1' }, { id: 'test2' }],
     });

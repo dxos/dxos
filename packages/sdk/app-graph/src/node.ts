@@ -9,7 +9,7 @@
 //   properties = S.struct({}),
 // }: {
 //   data: S.Schema<unknown, unknown, unknown>;
-//   properties: S.Schema.From<Record<string, any>>;
+//   properties: S.Schema<unknown, unknown, unknown>;
 // }) =>
 //   S.struct({
 //     id: S.string,
@@ -20,7 +20,7 @@
 /**
  * Represents a node in the graph.
  */
-export type NodeBase<TData = any, TProperties extends Record<string, any> = Record<string, any>> = Readonly<{
+export type NodeBase<TData = any, TProperties extends Record<string, any> = Record<string, any>> = {
   /**
    * Globally unique ID.
    */
@@ -37,7 +37,7 @@ export type NodeBase<TData = any, TProperties extends Record<string, any> = Reco
   // TODO(burdon): Type system (e.g., minimally provide identifier string vs. TypedObject vs. Graph mixin type system)?
   //  type field would prevent convoluted sniffing of object properties. And allow direct pass-through for ECHO TypedObjects.
   data: TData;
-}>;
+};
 
 export const isGraphNode = (data: unknown): data is Node =>
   data && typeof data === 'object' && 'id' in data && 'properties' in data && data.properties

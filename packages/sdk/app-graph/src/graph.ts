@@ -35,25 +35,24 @@ export type TraversalOptions = {
   visitor?: (node: Node, path: string[]) => void;
 };
 
-export type Node<TData = any, TProperties extends Record<string, any> = Record<string, any>> = Omit<
-  NodeBase<TData, TProperties>,
-  'properties'
-> & {
-  properties: Readonly<TProperties>;
+export type Node<TData = any, TProperties extends Record<string, any> = Record<string, any>> = Readonly<
+  Omit<NodeBase<TData, TProperties>, 'properties'> & {
+    properties: Readonly<TProperties>;
 
-  /**
-   * Nodes that this node is connected to in default order.
-   */
-  nodes<T = any, U extends Record<string, any> = Record<string, any>>(params?: {
-    direction?: EdgeDirection;
-    parseNode?: (node: Node<unknown, Record<string, any>>, connectedNode: Node) => Node<T, U> | undefined;
-  }): Node<T>[];
+    /**
+     * Nodes that this node is connected to in default order.
+     */
+    nodes<T = any, U extends Record<string, any> = Record<string, any>>(params?: {
+      direction?: EdgeDirection;
+      parseNode?: (node: Node<unknown, Record<string, any>>, connectedNode: Node) => Node<T, U> | undefined;
+    }): Node<T>[];
 
-  /**
-   * Get a specific connected node by id.
-   */
-  node(id: string): Node | undefined;
-};
+    /**
+     * Get a specific connected node by id.
+     */
+    node(id: string): Node | undefined;
+  }
+>;
 
 export type NodeArg<TData, TProperties extends Record<string, any> = Record<string, any>> = {
   id: NodeBase['id'];
@@ -70,9 +69,15 @@ export type NodeArg<TData, TProperties extends Record<string, any> = Record<stri
  */
 export class Graph {
   // Explicit type required because TS says this is not portable.
-  readonly nodes: DeepSignal<NodeBase[]> = deepSignal([]);
+  /**
+   * @internal
+   */
+  readonly _nodes: DeepSignal<NodeBase[]> = deepSignal([]);
+  /**
+   * @internal
+   */
   // Key is the `${node.id}-${direction}` and value is an ordered list of node ids.
-  readonly edges: DeepSignal<Record<string, string[]>> = deepSignal({});
+  readonly _edges: DeepSignal<Record<string, string[]>> = deepSignal({});
 
   toJSON(id = 'root') {
     const toJSON = (node: Node): any => {
@@ -96,7 +101,7 @@ export class Graph {
    * Get the node with the given id in the graph.
    */
   getNode(id: string): Node | undefined {
-    const nodeBase = this.nodes.find((node) => node.id === id);
+    const nodeBase = this._nodes.find((node) => node.id === id);
     if (!nodeBase) {
       return undefined;
     }
@@ -118,7 +123,7 @@ export class Graph {
   }
 
   private _getNodes({ id, direction = 'outbound' }: { id: string; direction?: EdgeDirection }): Node[] {
-    const edges = this.edges[this.getEdgeKey(id, direction)];
+    const edges = this._edges[this.getEdgeKey(id, direction)];
     if (!edges) {
       return [];
     }
@@ -130,7 +135,7 @@ export class Graph {
     return `${id}-${direction}`;
   }
 
-  addNode<TData = null, TProperties extends Record<string, any> = Record<string, any>>(
+  addNodes<TData = null, TProperties extends Record<string, any> = Record<string, any>>(
     ...nodes: NodeArg<TData, TProperties>[]
   ): Node<TData, TProperties>[] {
     return nodes.map((node) => this._addNode(node));
@@ -140,7 +145,13 @@ export class Graph {
     nodes,
     ...node
   }: NodeArg<TData, TProperties>): Node<TData, TProperties> {
-    this.nodes.push({ data: null, properties: {}, ...node });
+    const index = this._nodes.findIndex(({ id }) => id === node.id);
+    if (index === -1) {
+      this._nodes.push({ data: null, properties: {}, ...node });
+    } else {
+      node.properties && this.addProperties(node.id, node.properties);
+      node.data && (this._nodes[index].data = node.data);
+    }
 
     if (nodes) {
       nodes.forEach((subNode) => {
@@ -163,49 +174,51 @@ export class Graph {
     this._getNodes({ id, direction: 'inbound' }).forEach((node) => this.removeEdge(node.id, id));
 
     // Remove node.
-    const index = this.nodes.findIndex((node) => node.id === id);
+    const index = this._nodes.findIndex((node) => node.id === id);
     if (index !== -1) {
-      this.nodes.splice(index, 1);
+      this._nodes.splice(index, 1);
     }
   }
 
   addEdge(from: string, to: string) {
-    const outbound = this.edges[this.getEdgeKey(from, 'outbound')];
+    const outbound = this._edges[this.getEdgeKey(from, 'outbound')];
     if (!outbound) {
-      this.edges[this.getEdgeKey(from, 'outbound')] = [to];
+      this._edges[this.getEdgeKey(from, 'outbound')] = [to];
     } else if (!outbound.includes(to)) {
       outbound.push(to);
     }
 
-    const inbound = this.edges[this.getEdgeKey(to, 'inbound')];
+    const inbound = this._edges[this.getEdgeKey(to, 'inbound')];
     if (!inbound) {
-      this.edges[this.getEdgeKey(to, 'inbound')] = [from];
+      this._edges[this.getEdgeKey(to, 'inbound')] = [from];
     } else if (!inbound.includes(from)) {
       inbound.push(from);
     }
   }
 
   removeEdge(from: string, to: string) {
-    const outboundIndex = this.edges[this.getEdgeKey(from, 'outbound')]?.findIndex((id) => id === to);
+    const outboundIndex = this._edges[this.getEdgeKey(from, 'outbound')]?.findIndex((id) => id === to);
     if (outboundIndex !== -1) {
-      this.edges[this.getEdgeKey(from, 'outbound')].splice(outboundIndex, 1);
+      this._edges[this.getEdgeKey(from, 'outbound')].splice(outboundIndex, 1);
     }
 
-    const inboundIndex = this.edges[this.getEdgeKey(to, 'inbound')]?.findIndex((id) => id === from);
+    const inboundIndex = this._edges[this.getEdgeKey(to, 'inbound')]?.findIndex((id) => id === from);
     if (inboundIndex !== -1) {
-      this.edges[this.getEdgeKey(to, 'inbound')].splice(inboundIndex, 1);
+      this._edges[this.getEdgeKey(to, 'inbound')].splice(inboundIndex, 1);
     }
   }
 
-  addProperty(nodeId: string, key: string, value: any) {
-    const node = this.nodes.find((node) => node.id === nodeId);
+  addProperties(nodeId: string, properties: Record<string, any>) {
+    const node = this._nodes.find((node) => node.id === nodeId);
     if (node) {
-      node.properties[key] = value;
+      Object.entries(properties).forEach(([key, value]) => {
+        node.properties[key] = value;
+      });
     }
   }
 
   removeProperty(nodeId: string, key: string) {
-    const node = this.nodes.find((node) => node.id === nodeId);
+    const node = this._nodes.find((node) => node.id === nodeId);
     delete node?.properties[key];
   }
 

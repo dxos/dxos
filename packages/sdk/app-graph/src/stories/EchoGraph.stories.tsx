@@ -11,7 +11,7 @@ import React, { useEffect, useState } from 'react';
 import { EventSubscriptions } from '@dxos/async';
 import { faker } from '@dxos/random';
 import { Client } from '@dxos/react-client';
-import { Expando, type Space, SpaceProxy, SpaceState } from '@dxos/react-client/echo';
+import { Expando, type Space, SpaceState } from '@dxos/react-client/echo';
 import { ClientRepeater, TestBuilder } from '@dxos/react-client/testing';
 import { Button, DensityProvider, Input, Select } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -19,8 +19,8 @@ import { withTheme } from '@dxos/storybook-utils';
 import { safeParseInt } from '@dxos/util';
 
 import { Tree } from './Tree';
+import { type Graph } from '../graph';
 import { GraphBuilder } from '../graph-builder';
-import { type Node } from '../node';
 
 export default {
   title: 'app-graph/EchoGraph',
@@ -36,11 +36,7 @@ await client.halo.createIdentity();
 await client.spaces.create();
 await client.spaces.create();
 
-const spaceNodeBuilder = (parent: Node) => {
-  if (parent.id !== 'root') {
-    return;
-  }
-
+const spaceBuilderExtension = (graph: Graph) => {
   const subscriptions = new EventSubscriptions();
   const { unsubscribe } = client.spaces.subscribe((spaces) => {
     subscriptions.clear();
@@ -48,10 +44,21 @@ const spaceNodeBuilder = (parent: Node) => {
       subscriptions.add(
         effect(() => {
           if (space.state.get() === SpaceState.READY) {
-            parent.addNode('space', { id: space.key.toHex(), label: space.properties.name, data: space });
+            console.log('add space');
+            graph.addNodes({ id: space.key.toHex(), properties: { label: space.properties.name }, data: space });
+            graph.addEdge('root', space.key.toHex());
           } else {
-            parent.removeNode(space.key.toHex());
+            graph.removeNode(space.key.toHex());
           }
+        }),
+      );
+
+      const query = space.db.query();
+      subscriptions.add(
+        effect(() => {
+          query.objects.forEach((object) => {
+            graph.addEdge(space.key.toHex(), object.id);
+          });
         }),
       );
     });
@@ -63,29 +70,56 @@ const spaceNodeBuilder = (parent: Node) => {
   };
 };
 
-const objectNodeBuilder = (parent: Node) => {
-  if (!(parent.data instanceof SpaceProxy)) {
-    return;
-  }
+// TODO(wittjosiah): Hypergraph query isn't working.
+// const objectBuilderExtension = (graph: Graph) => {
+//   const query = client.spaces.query({ type: 'test' });
+//   let previousObjects: Expando[] = [];
+//   return effect(() => {
+//     const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+//     previousObjects = query.objects;
 
-  const space = parent.data;
-  const query = space.db.query({ type: 'test' });
-  let previousObjects: Expando[] = [];
-  return effect(() => {
-    const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-    previousObjects = query.objects;
+//     removedObjects.forEach((object) => graph.removeNode(object.id));
+//     query.objects.forEach((object) => {
+//       console.log('add object');
+//       graph.addNodes({ id: object.id, properties: { label: object.name }, data: object });
+//     });
+//   });
+// };
 
-    removedObjects.forEach((object) => parent.removeNode(object.id));
-    query.objects.forEach((expando) =>
-      parent.addNode('object', { id: expando.id, label: expando.name, data: expando }),
-    );
+const objectBuilderExtension = (graph: Graph) => {
+  const subscriptions = new EventSubscriptions();
+  const { unsubscribe } = client.spaces.subscribe((spaces) => {
+    subscriptions.clear();
+    spaces.forEach((space) => {
+      const query = client.spaces.query({ type: 'test' });
+      let previousObjects: Expando[] = [];
+      subscriptions.add(
+        effect(() => {
+          const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+          previousObjects = query.objects;
+
+          removedObjects.forEach((object) => graph.removeNode(object.id));
+          query.objects.forEach((object) => {
+            console.log('add object');
+            graph.addNodes({ id: object.id, properties: { label: object.name }, data: object });
+          });
+        }),
+      );
+    });
   });
+
+  return () => {
+    unsubscribe();
+    subscriptions.clear();
+  };
 };
 
 const graph = new GraphBuilder()
-  .addNodeBuilder('space', spaceNodeBuilder)
-  .addNodeBuilder('object', objectNodeBuilder)
+  .addExtension('space', spaceBuilderExtension)
+  .addExtension('object', objectBuilderExtension)
   .build();
+
+graph.addNodes({ id: 'root' });
 
 enum Action {
   CREATE_SPACE = 'CREATE_SPACE',
