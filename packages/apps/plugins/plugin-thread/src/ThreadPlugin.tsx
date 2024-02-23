@@ -201,7 +201,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                           onThreadAttend={(thread: ThreadType) => {
                             if (state.current !== thread.id) {
                               state.current = thread.id;
-                              void intentPlugin?.provides.intent.dispatch({
+                              void dispatch?.({
                                 action: LayoutAction.FOCUS,
                                 data: {
                                   object: thread.id,
@@ -213,7 +213,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                             dispatch?.({
                               plugin: THREAD_PLUGIN,
                               action: ThreadAction.DELETE,
-                              data: { document, thread },
+                              data: { document: data.subject, thread },
                             })
                           }
                         />
