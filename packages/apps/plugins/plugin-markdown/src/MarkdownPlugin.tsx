@@ -20,6 +20,7 @@ import {
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
+import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import {
@@ -107,7 +108,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           },
         },
       },
-      translations,
+      translations: [...translations, ...editorTranslations],
       graph: {
         builder: ({ parent }) => {
           if (parent.data instanceof Folder || parent.data instanceof SpaceProxy) {
