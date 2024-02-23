@@ -52,7 +52,7 @@ export type StackItem = MosaicDataItem &
     items: StackSectionItem[];
   };
 
-export type StackSectionItem = Pick<Node, 'id' | 'data'> & Partial<Pick<Node, 'label' | 'properties' | 'icon'>>;
+export type StackSectionItem = Pick<Node, 'id' | 'label' | 'icon' | 'data' | 'actions' | 'children' | 'properties'>;
 
 export type StackSectionItemWithContext = StackSectionItem & StackContextValue;
 

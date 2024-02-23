@@ -17,5 +17,8 @@ export const echoSectionToNodeSection = (
     label: metadata.label,
     icon: metadata.icon,
     data: object,
+    actions: [],
+    children: [],
+    properties: {},
   };
 };
