@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/react-ui-card",
+  "name": "@dxos/react-ui-deck",
   "version": "0.4.4",
-  "description": "An opinionated card component.",
+  "description": "Layout and signifier components to facilitate multitasking.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
