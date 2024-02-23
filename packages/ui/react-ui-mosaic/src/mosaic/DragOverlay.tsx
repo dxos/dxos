@@ -31,7 +31,7 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
   const timer = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
-    if (activeItem) {
+    if (activeItem && operation !== 'reject') {
       let container: MosaicContainerProps<any> | undefined;
       let OverlayComponent: MosaicTileComponent<any> | undefined;
       if (overItem?.path) {
