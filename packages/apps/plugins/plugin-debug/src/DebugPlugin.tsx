@@ -121,6 +121,8 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                   data: { graph: graphPlugin?.provides.graph },
                 });
 
+                // TODO(burdon): Move menu here.
+
                 root.addAction({
                   id: 'open-devtools',
                   label: ['open devtools label', { ns: DEBUG_PLUGIN }],
