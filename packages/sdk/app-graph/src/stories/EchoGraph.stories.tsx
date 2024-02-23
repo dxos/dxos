@@ -91,7 +91,7 @@ const objectBuilderExtension = (graph: Graph) => {
   const { unsubscribe } = client.spaces.subscribe((spaces) => {
     subscriptions.clear();
     spaces.forEach((space) => {
-      const query = client.spaces.query({ type: 'test' });
+      const query = space.db.query({ type: 'test' });
       let previousObjects: Expando[] = [];
       subscriptions.add(
         effect(() => {
@@ -118,8 +118,6 @@ const graph = new GraphBuilder()
   .addExtension('space', spaceBuilderExtension)
   .addExtension('object', objectBuilderExtension)
   .build();
-
-graph.addNodes({ id: 'root' });
 
 enum Action {
   CREATE_SPACE = 'CREATE_SPACE',

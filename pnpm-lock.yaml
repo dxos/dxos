@@ -897,7 +897,7 @@ importers:
         version: link:../../../core/echo/text-model
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -961,7 +961,7 @@ importers:
         version: 1.0.0-alpha.0
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
     devDependencies:
       '@braneframe/plugin-space':
         specifier: workspace:*
@@ -1286,7 +1286,7 @@ importers:
         version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-core@1.5.1)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -1447,7 +1447,7 @@ importers:
         version: link:../../../sdk/react-client
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -1536,7 +1536,7 @@ importers:
         version: link:../../../sdk/react-client
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -1621,7 +1621,7 @@ importers:
         version: link:../../../sdk/react-client
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -1758,7 +1758,7 @@ importers:
         version: link:../../../ui/react-ui-mosaic
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       kubo-rpc-client:
         specifier: ^3.0.2
         version: 3.0.3
@@ -1895,7 +1895,7 @@ importers:
         version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-core@1.5.1)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
     devDependencies:
       '@braneframe/plugin-graph':
         specifier: workspace:*
@@ -1947,7 +1947,7 @@ importers:
         version: link:../../../sdk/react-client
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       leaflet:
         specifier: ^1.9.3
         version: 1.9.3
@@ -2041,7 +2041,7 @@ importers:
         version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-core@1.5.1)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
     devDependencies:
       '@braneframe/plugin-client':
         specifier: workspace:*
@@ -2157,7 +2157,7 @@ importers:
     dependencies:
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
     devDependencies:
       '@dxos/app-framework':
         specifier: workspace:*
@@ -2246,7 +2246,7 @@ importers:
         version: 3.3.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-core@1.5.1)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -2325,7 +2325,7 @@ importers:
         version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-core@1.5.1)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -2417,7 +2417,7 @@ importers:
         version: 18.0.6
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -2435,7 +2435,7 @@ importers:
         version: link:../../../sdk/react-client
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       hastscript:
         specifier: ^7.1.0
         version: 7.1.0
@@ -2946,7 +2946,7 @@ importers:
         version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-core@1.5.1)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
@@ -3040,7 +3040,7 @@ importers:
         version: link:../../../common/util
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       node-fetch:
         specifier: ^2.6.0
         version: 2.6.7
@@ -3110,7 +3110,7 @@ importers:
         version: link:../../../common/util
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
     devDependencies:
       '@braneframe/plugin-search':
         specifier: workspace:*
@@ -3165,7 +3165,7 @@ importers:
         version: link:../../../sdk/react-client
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -3211,7 +3211,7 @@ importers:
     dependencies:
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       i18next:
         specifier: ^21.10.0
         version: 21.10.0
@@ -3290,7 +3290,7 @@ importers:
         version: 3.3.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-core@1.5.1)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -3319,52 +3319,6 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../../ui/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
-      '@types/react':
-        specifier: ^18.0.21
-        version: 18.0.21
-      '@types/react-dom':
-        specifier: ^18.0.6
-        version: 18.0.6
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
-
-  packages/apps/plugins/plugin-undo:
-    dependencies:
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../../sdk/react-client
-      deepsignal:
-        specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-    devDependencies:
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../../sdk/app-framework
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
@@ -4059,7 +4013,7 @@ importers:
         version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-core@1.5.1)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
     devDependencies:
       '@dxos/async':
         specifier: workspace:*
@@ -5255,7 +5209,7 @@ importers:
         version: 3.1.6
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-core@1.5.1)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       express:
         specifier: ^4.17.1
         version: 4.18.2
@@ -6218,7 +6172,7 @@ importers:
         version: 3.3.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       flame-chart-js:
         specifier: ^2.3.1
         version: 2.3.1
@@ -7474,7 +7428,7 @@ importers:
         version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-core@1.5.1)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       zod:
         specifier: ^3.22.4
         version: 3.22.4
@@ -7511,7 +7465,7 @@ importers:
         version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-core@1.5.1)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       effect:
         specifier: ^2.3.1
         version: 2.3.5
@@ -8768,7 +8722,7 @@ importers:
         version: 1.2.2(vitest@1.2.2)
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       happy-dom:
         specifier: ^13.3.1
         version: 13.3.4
@@ -8843,7 +8797,7 @@ importers:
         version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-core@1.5.1)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -8875,6 +8829,9 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@preact/signals-react':
+        specifier: ^1.3.8
+        version: 1.3.8(react@18.2.0)
       '@types/d3':
         specifier: ^7.4.2
         version: 7.4.2
@@ -8929,6 +8886,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
+      deepsignal:
+        specifier: ^1.5.0
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
     devDependencies:
       '@dnd-kit/core':
         specifier: ^6.0.5
@@ -8945,12 +8908,18 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/lodash.get':
+        specifier: ^4.3.7
+        version: 4.4.7
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
       '@types/react-dom':
         specifier: ^18.0.6
         version: 18.0.6
+      lodash.get:
+        specifier: ^4.3.2
+        version: 4.4.2
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -9124,7 +9093,7 @@ importers:
         version: 18.0.6
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8)
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -28119,7 +28088,7 @@ packages:
     resolution: {integrity: sha512-3sUqbMEc77XqpdNO7FRyRog+eW3ph+GYCbj+rK+uYyRMuwsVy0rMiVtPn+QJlKFvWP/1PYpapqYn0Me2knFn+A==}
     engines: {node: '>=0.10.0'}
 
-  /deepsignal@1.5.0(@preact/signals-core@1.5.1):
+  /deepsignal@1.5.0(@preact/signals-core@1.5.1)(@preact/signals-react@1.3.8):
     resolution: {integrity: sha512-bFywDpBUUWMs576H2dgLFLLFuQ/UWXbzHfKD98MZTfGsl7+twIzvz4ihCNrRrZ/Emz3kqJaNIAp5eBWUEWhnAw==}
     peerDependencies:
       '@preact/signals': ^1.1.4
@@ -28137,25 +28106,6 @@ packages:
         optional: true
     dependencies:
       '@preact/signals-core': 1.5.1
-    dev: false
-
-  /deepsignal@1.5.0(@preact/signals-react@1.3.8):
-    resolution: {integrity: sha512-bFywDpBUUWMs576H2dgLFLLFuQ/UWXbzHfKD98MZTfGsl7+twIzvz4ihCNrRrZ/Emz3kqJaNIAp5eBWUEWhnAw==}
-    peerDependencies:
-      '@preact/signals': ^1.1.4
-      '@preact/signals-core': ^1.5.1
-      '@preact/signals-react': ^1.3.8 || ^2.0.0
-      preact: '*'
-    peerDependenciesMeta:
-      '@preact/signals':
-        optional: true
-      '@preact/signals-core':
-        optional: true
-      '@preact/signals-react':
-        optional: true
-      preact:
-        optional: true
-    dependencies:
       '@preact/signals-react': 1.3.8(react@18.2.0)
 
   /default-browser-id@3.0.0:
