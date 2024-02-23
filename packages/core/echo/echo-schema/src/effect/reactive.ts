@@ -15,6 +15,7 @@ export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
 
 // https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#introduction
+// https://effect-ts.github.io/effect/schema/Schema.ts.html
 
 /**
  * Reactive object.
