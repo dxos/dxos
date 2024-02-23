@@ -123,7 +123,9 @@
     background-color: theme(colors.neutral.900);
     --surface-bg: theme(colors.neutral.900);
   }
+}
 
+@layer components {
   /* FEATURES */
 
   .overflow-anchored * {
@@ -186,8 +188,8 @@
   --description-text: theme(colors.neutral.300);
   --topbar-size: theme(spacing.12);
   --sticky-top: 0;
-  --rail-size: 3rem;
-  --rail-action: 2.5rem;
+  --rail-size: 48px;
+  --rail-action: 40px;
 }
 
 .dark {

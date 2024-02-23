@@ -14,7 +14,9 @@ import React, {
   type PropsWithChildren,
   type SetStateAction,
   useCallback,
+  useEffect,
   useRef,
+  useState,
 } from 'react';
 
 import { useMediaQuery, useForwardedRef } from '@dxos/react-hooks';
@@ -31,6 +33,7 @@ const MAIN_NAME = 'Main';
 const GENERIC_CONSUMER_NAME = 'GenericConsumer';
 
 type MainContextValue = {
+  resizing: boolean;
   navigationSidebarOpen: boolean;
   setNavigationSidebarOpen: Dispatch<SetStateAction<boolean | undefined>>;
   complementarySidebarOpen: boolean;
@@ -38,6 +41,7 @@ type MainContextValue = {
 };
 
 const [MainProvider, useMainContext] = createContext<MainContextValue>(MAIN_NAME, {
+  resizing: false,
   navigationSidebarOpen: false,
   setNavigationSidebarOpen: (nextOpen) => {
     // TODO(burdon): Standardize with other context missing errors using raise.
@@ -82,6 +86,8 @@ type MainRootProps = PropsWithChildren<{
   onComplementarySidebarOpenChange?: (nextOpen: boolean) => void;
 }>;
 
+const resizeDebounce = 3000;
+
 const MainRoot = ({
   navigationSidebarOpen: propsNavigationSidebarOpen,
   defaultNavigationSidebarOpen,
@@ -103,6 +109,26 @@ const MainRoot = ({
     defaultProp: defaultComplementarySidebarOpen,
     onChange: onComplementarySidebarOpenChange,
   });
+
+  const [resizing, setResizing] = useState(false);
+  const resizeInterval = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleResize = useCallback(() => {
+    setResizing(true);
+    if (resizeInterval.current) {
+      clearTimeout(resizeInterval.current);
+    }
+    resizeInterval.current = setTimeout(() => {
+      setResizing(false);
+      resizeInterval.current = null;
+    }, resizeDebounce);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [handleResize]);
+
   return (
     <MainProvider
       {...props}
@@ -112,6 +138,7 @@ const MainRoot = ({
         complementarySidebarOpen,
         setComplementarySidebarOpen,
       }}
+      resizing={resizing}
     >
       {children}
     </MainProvider>
@@ -127,12 +154,16 @@ const handleOpenAutoFocus = (event: Event) => {
 type MainSidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContent>> & {
   swipeToDismiss?: boolean;
   open: boolean;
+  resizing?: boolean;
   setOpen: Dispatch<SetStateAction<boolean | undefined>>;
   side: 'inline-start' | 'inline-end';
 };
 
 const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
-  ({ classNames, children, swipeToDismiss, onOpenAutoFocus, open, setOpen, side, ...props }, forwardedRef) => {
+  (
+    { classNames, children, swipeToDismiss, onOpenAutoFocus, open, resizing, setOpen, side, ...props },
+    forwardedRef,
+  ) => {
     const [isLg] = useMediaQuery('lg', { ssr: false });
     const { tx } = useThemeContext();
     const ref = useForwardedRef(forwardedRef);
@@ -146,12 +177,10 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
         <Root
           {...(!isLg && { forceMount: true, tabIndex: -1, onOpenAutoFocus: onOpenAutoFocus ?? handleOpenAutoFocus })}
           {...props}
-          className={tx(
-            'main.sidebar',
-            'main__sidebar',
-            { isLg, [side === 'inline-end' ? 'inlineEndSidebarOpen' : 'inlineStartSidebarOpen']: open, side },
-            classNames,
-          )}
+          data-side={side === 'inline-end' ? 'ie' : 'is'}
+          data-state={open ? 'open' : 'closed'}
+          data-resizing={resizing ? 'true' : 'false'}
+          className={tx('main.sidebar', 'main__sidebar', {}, classNames)}
           {...(!open && { inert: 'true' })}
           ref={ref}
         >
@@ -165,12 +194,13 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
 type MainNavigationSidebarProps = Omit<MainSidebarProps, 'open' | 'setOpen' | 'side'>;
 
 const MainNavigationSidebar = forwardRef<HTMLDivElement, MainNavigationSidebarProps>((props, forwardedRef) => {
-  const { navigationSidebarOpen, setNavigationSidebarOpen } = useMainContext(NAVIGATION_SIDEBAR_NAME);
+  const { navigationSidebarOpen, setNavigationSidebarOpen, resizing } = useMainContext(NAVIGATION_SIDEBAR_NAME);
   return (
     <MainSidebar
       {...props}
       open={navigationSidebarOpen}
       setOpen={setNavigationSidebarOpen}
+      resizing={resizing}
       side='inline-start'
       ref={forwardedRef}
     />
@@ -182,12 +212,14 @@ MainNavigationSidebar.displayName = NAVIGATION_SIDEBAR_NAME;
 type MainComplementarySidebarProps = Omit<MainSidebarProps, 'open' | 'setOpen' | 'side'>;
 
 const MainComplementarySidebar = forwardRef<HTMLDivElement, MainComplementarySidebarProps>((props, forwardedRef) => {
-  const { complementarySidebarOpen, setComplementarySidebarOpen } = useMainContext(COMPLEMENTARY_SIDEBAR_NAME);
+  const { complementarySidebarOpen, setComplementarySidebarOpen, resizing } =
+    useMainContext(COMPLEMENTARY_SIDEBAR_NAME);
   return (
     <MainSidebar
       {...props}
       open={complementarySidebarOpen}
       setOpen={setComplementarySidebarOpen}
+      resizing={resizing}
       side='inline-end'
       ref={forwardedRef}
     />
@@ -200,7 +232,6 @@ type MainProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & 
 
 const MainContent = forwardRef<HTMLDivElement, MainProps>(
   ({ asChild, classNames, bounce, children, ...props }: MainProps, forwardedRef) => {
-    const [isLg] = useMediaQuery('lg', { ssr: false });
     const { navigationSidebarOpen, complementarySidebarOpen } = useMainContext(MAIN_NAME);
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : 'main';
@@ -208,17 +239,9 @@ const MainContent = forwardRef<HTMLDivElement, MainProps>(
     return (
       <Root
         {...props}
-        className={tx(
-          'main.content',
-          'main',
-          {
-            isLg,
-            inlineStartSidebarOpen: navigationSidebarOpen,
-            inlineEndSidebarOpen: complementarySidebarOpen,
-            bounce,
-          },
-          classNames,
-        )}
+        data-sidebar-inline-start-state={navigationSidebarOpen ? 'open' : 'closed'}
+        data-sidebar-inline-end-state={complementarySidebarOpen ? 'open' : 'closed'}
+        className={tx('main.content', 'main', { bounce }, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -249,9 +272,24 @@ const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ classNames, 
         { isLg, inlineStartSidebarOpen: navigationSidebarOpen, inlineEndSidebarOpen: complementarySidebarOpen },
         classNames,
       )}
-      data-open={navigationSidebarOpen}
+      data-state={navigationSidebarOpen || complementarySidebarOpen ? 'open' : 'closed'}
       aria-hidden='true'
-      data-aria-hidden='true'
+      ref={forwardedRef}
+    />
+  );
+});
+
+type MainNotchProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>>;
+
+const MainNotch = forwardRef<HTMLDivElement, MainNotchProps>(({ classNames, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  const { navigationSidebarOpen } = useMainContext(MAIN_NAME);
+  // Notch is concerned with the nav sidebar, whichever side it might be on.
+  return (
+    <nav
+      {...props}
+      data-nav-sidebar-state={navigationSidebarOpen ? 'open' : 'closed'}
+      className={tx('main.notch', 'main__notch', {}, classNames)}
       ref={forwardedRef}
     />
   );
@@ -263,6 +301,7 @@ export const Main = {
   Overlay: MainOverlay,
   NavigationSidebar: MainNavigationSidebar,
   ComplementarySidebar: MainComplementarySidebar,
+  Notch: MainNotch,
 };
 
 export { useMainContext, useSidebars };
