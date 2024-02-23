@@ -52,7 +52,7 @@ export type StackItem = MosaicDataItem &
     items: StackSectionItem[];
   };
 
-export type StackSectionItem = Pick<Node, 'id' | 'label' | 'properties' | 'icon' | 'data'>;
+export type StackSectionItem = Pick<Node, 'id' | 'data'> & Partial<Pick<Node, 'label' | 'properties' | 'icon'>>;
 
 export type StackSectionItemWithContext = StackSectionItem & StackContextValue;
 
@@ -204,7 +204,7 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
         onDelete={() => onDeleteSection?.(path)}
         onNavigate={() => onNavigateToSection?.(transformedItem.id)}
       >
-        {SectionContent && <SectionContent data={transformedItem} />}
+        {SectionContent && <SectionContent {...transformedItem} />}
       </Section>
     );
 

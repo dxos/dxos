@@ -31,6 +31,7 @@ import {
 import { FileUpload } from './FileUpload';
 import { STACK_PLUGIN } from '../meta';
 import { type StackPluginProvides, isStack } from '../types';
+import { echoSectionToNodeSection } from '../util';
 
 const SectionContent: StackProps['SectionContent'] = ({ data }) => {
   // TODO(wittjosiah): Better section placeholder.
@@ -48,7 +49,8 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
   const items = stack.sections
     // TODO(wittjosiah): Should the database handle this differently?
     // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
-    .filter(({ object }) => Boolean(object));
+    .filter(({ object }) => Boolean(object))
+    .map((section) => echoSectionToNodeSection(section, t, metadataPlugin?.provides.metadata.resolver));
   const space = getSpaceForObject(stack);
   const [folder] = useQuery(space, Folder.filter());
 
