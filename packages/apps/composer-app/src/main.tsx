@@ -239,11 +239,11 @@ const main = async () => {
     ],
     // TODO(burdon): Add DebugMeta if dev build.
     defaults: [
-      //
       MarkdownMeta.id,
-      StackMeta.id,
-      ThreadMeta.id,
-      SketchMeta.id,
+      // TODO(wittjosiah): Enable when ready.
+      // StackMeta.id,
+      // ThreadMeta.id,
+      // SketchMeta.id,
     ],
   });
 

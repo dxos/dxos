@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { NavigationAction, Surface, useIntent } from '@dxos/app-framework';
-import { type Node, type Graph, isGraphNode } from '@dxos/app-graph';
+import { type Graph, isGraphNode } from '@dxos/app-graph';
 import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import {
@@ -24,8 +24,8 @@ import { getPersistenceParent } from '../util';
 export const NODE_TYPE = 'dxos/app-graph/node';
 
 const getMosaicPath = (graph: Graph, id: string) => {
-  const parts = graph.getPath(id)?.filter((part) => part !== 'childrenMap');
-  return parts ? Path.create('root', ...parts) : undefined;
+  const parts = graph.getPath({ to: id });
+  return parts ? Path.create(...parts) : undefined;
 };
 
 const trimPlaceholder = (path: string) => (Path.last(path) === emptyBranchDroppableId ? Path.parent(path) : path);
@@ -39,10 +39,12 @@ const renderPresence = (node: TreeNode) => {
 };
 
 export const NavTreeContainer = ({
+  root,
   graph,
   activeId,
   popoverAnchorId,
 }: {
+  root: TreeNode;
   graph: Graph;
   activeId?: string;
   popoverAnchorId?: string;
@@ -52,7 +54,8 @@ export const NavTreeContainer = ({
   const { dispatch } = useIntent();
 
   const handleSelect: NavTreeContextType['onSelect'] = async ({ node }: { node: TreeNode }) => {
-    if (!(node as Node).data) {
+    const graphNode = graph.findNode(node.id);
+    if (!graphNode?.data) {
       return;
     }
 
@@ -64,7 +67,9 @@ export const NavTreeContainer = ({
     });
 
     const defaultAction = node.actions.find((action) => action.properties.disposition === 'default');
-    void defaultAction?.invoke();
+    if (defaultAction && 'invoke' in defaultAction) {
+      void defaultAction.invoke();
+    }
     !isLg && closeNavigationSidebar();
   };
 
@@ -140,11 +145,12 @@ export const NavTreeContainer = ({
       if (activeNode && overNode) {
         const activeClass = activeNode.properties.persistenceClass;
         if (operation === 'rearrange') {
-          const ids = Object.keys(activeNode.parent!.childrenMap);
-          const nodes = Object.values(activeNode.parent!.childrenMap).map(({ data }) => data);
+          const activeParent = activeNode.nodes({ direction: 'inbound' })[0];
+          const ids = activeParent.nodes().map((node) => node.id);
+          const nodes = activeParent.nodes().map(({ data }) => data);
           const activeIndex = ids.indexOf(activeNode.id);
           const overIndex = ids.indexOf(overNode.id);
-          activeNode.parent!.properties.onRearrangeChildren(
+          activeParent.properties.onRearrangeChildren(
             arrayMove(nodes, activeIndex, overIndex > -1 ? overIndex : ids.length - 1),
           );
         }
@@ -177,7 +183,7 @@ export const NavTreeContainer = ({
         <Surface role='search-input' limit={1} />
         <div role='none' className='overflow-y-auto p-0.5'>
           <NavTree
-            node={graph.root}
+            node={root}
             current={currentPath}
             type={NODE_TYPE}
             onSelect={handleSelect}

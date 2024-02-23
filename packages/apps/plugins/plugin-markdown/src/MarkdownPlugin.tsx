@@ -7,19 +7,19 @@ import { effect } from '@preact/signals-core';
 import { deepSignal } from 'deepsignal/react';
 import React, { useMemo, type Ref } from 'react';
 
-import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
-import { Document as DocumentType, Folder } from '@braneframe/types';
+import { parseClientPlugin } from '@braneframe/plugin-client';
+import { Document as DocumentType } from '@braneframe/types';
 import {
   isObject,
   parseIntentPlugin,
   resolvePlugin,
-  NavigationAction,
   type IntentPluginProvides,
   type Plugin,
   type PluginDefinition,
 } from '@dxos/app-framework';
+import { EventSubscriptions } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
+import { isTypedObject } from '@dxos/react-client/echo';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import {
@@ -109,56 +109,122 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       },
       translations,
       graph: {
-        builder: ({ parent }) => {
-          if (parent.data instanceof Folder || parent.data instanceof SpaceProxy) {
-            parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
-              id: `${MARKDOWN_PLUGIN}/create`,
-              label: ['create document label', { ns: MARKDOWN_PLUGIN }],
-              icon: (props) => <ArticleMedium {...props} />,
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch([
-                  {
-                    plugin: MARKDOWN_PLUGIN,
-                    action: MarkdownAction.CREATE,
-                  },
-                  {
-                    action: SpaceAction.ADD_OBJECT,
-                    data: { target: parent.data },
-                  },
-                  {
-                    action: NavigationAction.ACTIVATE,
-                  },
-                ]),
-              properties: {
-                testId: 'markdownPlugin.createObject',
-              },
-            });
-          } else if (parent.data instanceof DocumentType) {
-            parent.addAction({
-              id: `${MARKDOWN_PLUGIN}/toggle-readonly`,
-              label: ['toggle view mode label', { ns: MARKDOWN_PLUGIN }],
-              icon: (props) => <ArticleMedium {...props} />,
-              keyBinding: 'shift+F5',
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch([
-                  {
-                    plugin: MARKDOWN_PLUGIN,
-                    action: MarkdownAction.TOGGLE_READONLY,
-                    data: {
-                      objectId: parent.data.id,
-                    },
-                  },
-                ]),
-            });
-
-            if (!parent.data.title) {
-              effect(() => {
-                const document = parent.data;
-                parent.label = document.title ||
-                  getFallbackTitle(document) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }];
-              });
-            }
+        builder: (plugins, graph) => {
+          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+          if (!client) {
+            return;
           }
+
+          const subscriptions = new EventSubscriptions();
+          const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            spaces.forEach((space) => {
+              // TODO(wittjosiah): Adding this causes graph to slow down/crash.
+              // manageNodes({
+              //   graph,
+              //   condition: space.state.get() === SpaceState.READY,
+              //   nodes: [
+              //     {
+              //       id: `${MARKDOWN_PLUGIN}/create/${space.key.toHex()}`,
+              //       data: () =>
+              //         intentPlugin?.provides.intent.dispatch([
+              //           {
+              //             plugin: MARKDOWN_PLUGIN,
+              //             action: MarkdownAction.CREATE,
+              //           },
+              //           {
+              //             action: SpaceAction.ADD_OBJECT,
+              //             data: { target: space },
+              //           },
+              //           {
+              //             action: NavigationAction.ACTIVATE,
+              //           },
+              //         ]),
+              //       properties: {
+              //         label: ['create document label', { ns: MARKDOWN_PLUGIN }],
+              //         icon: (props: IconProps) => <ArticleMedium {...props} />,
+              //         testId: 'markdownPlugin.createObject',
+              //       },
+              //       edges: [[`${SpaceAction.ADD_OBJECT}/${space.key.toHex()}`, 'inbound']],
+              //     },
+              //   ],
+              // });
+
+              const query = space.db.query(DocumentType.filter());
+              let previousObjects: DocumentType[] = [];
+              subscriptions.add(
+                effect(() => {
+                  const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+                  previousObjects = query.objects;
+                  removedObjects.forEach((object) => graph.removeNode(object.id));
+                  query.objects.forEach((object) => {
+                    graph.addNodes({
+                      id: object.id,
+                      data: object,
+                      properties: {
+                        label: object.title ||
+                          getFallbackTitle(object) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
+                        icon: (props: IconProps) => <ArticleMedium {...props} />,
+                      },
+                    });
+                  });
+                }),
+              );
+            });
+          });
+
+          return () => {
+            unsubscribe();
+            subscriptions.clear();
+          };
+
+          //   if (parent.data instanceof Folder || parent.data instanceof SpaceProxy) {
+          //     parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
+          //       id: `${MARKDOWN_PLUGIN}/create`,
+          //       label: ['create document label', { ns: MARKDOWN_PLUGIN }],
+          //       icon: (props) => <ArticleMedium {...props} />,
+          //       invoke: () =>
+          //         intentPlugin?.provides.intent.dispatch([
+          //           {
+          //             plugin: MARKDOWN_PLUGIN,
+          //             action: MarkdownAction.CREATE,
+          //           },
+          //           {
+          //             action: SpaceAction.ADD_OBJECT,
+          //             data: { target: parent.data },
+          //           },
+          //           {
+          //             action: NavigationAction.ACTIVATE,
+          //           },
+          //         ]),
+          //       properties: {
+          //         testId: 'markdownPlugin.createObject',
+          //       },
+          //     });
+          //   } else if (parent.data instanceof DocumentType) {
+          //     parent.addAction({
+          //       id: `${MARKDOWN_PLUGIN}/toggle-readonly`,
+          //       label: ['toggle view mode label', { ns: MARKDOWN_PLUGIN }],
+          //       icon: (props) => <ArticleMedium {...props} />,
+          //       keyBinding: 'shift+F5',
+          //       invoke: () =>
+          //         intentPlugin?.provides.intent.dispatch([
+          //           {
+          //             plugin: MARKDOWN_PLUGIN,
+          //             action: MarkdownAction.TOGGLE_READONLY,
+          //             data: {
+          //               objectId: parent.data.id,
+          //             },
+          //           },
+          //         ]),
+          //     });
+          //     if (!parent.data.title) {
+          //       effect(() => {
+          //         const document = parent.data;
+          //         parent.label = document.title ||
+          //           getFallbackTitle(document) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }];
+          //       });
+          //     }
+          //   }
         },
       },
       stack: {

@@ -6,21 +6,21 @@ import { DotsThreeVertical } from '@phosphor-icons/react';
 import React, { Fragment } from 'react';
 
 import { KEY_BINDING, useGraph } from '@braneframe/plugin-graph';
-import { type Node } from '@dxos/app-graph';
 import { Keyboard } from '@dxos/keyboard';
 import { Popover, useTranslation } from '@dxos/react-ui';
-import { NavTreeItemAction } from '@dxos/react-ui-navtree';
+import { NavTreeItemAction, type TreeNode } from '@dxos/react-ui-navtree';
 
 import { NAVTREE_PLUGIN } from '../meta';
 import { getTreeItemLabel } from '../util';
 
 const TREE_ITEM_MAIN_HEADING = 'TreeItemMainHeading';
 
-export const NavBarStart = ({ activeNode, popoverAnchorId }: { activeNode: Node; popoverAnchorId?: string }) => {
+export const NavBarStart = ({ activeNode, popoverAnchorId }: { activeNode: TreeNode; popoverAnchorId?: string }) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
 
   const { graph } = useGraph();
-  const context = graph.getPath(activeNode.id)?.join('/');
+  const context = graph.getPath({ to: activeNode.id })?.join('/');
+  // TODO(wittjosiah): Why is this happening here?
   Keyboard.singleton.setCurrentContext(context);
 
   const ActionRoot =
@@ -35,7 +35,7 @@ export const NavBarStart = ({ activeNode, popoverAnchorId }: { activeNode: Node;
         <NavTreeItemAction
           variant='plank-heading'
           label={t('node actions menu invoker label')}
-          actions={activeNode.actions}
+          actions={activeNode.actions.flatMap((action) => ('invoke' in action ? [action] : []))}
           onAction={(action) => action.invoke?.({ caller: TREE_ITEM_MAIN_HEADING })}
           icon={activeNode.icon ?? DotsThreeVertical}
           caller={TREE_ITEM_MAIN_HEADING}

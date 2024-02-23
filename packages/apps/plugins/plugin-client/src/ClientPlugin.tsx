@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AddressBook } from '@phosphor-icons/react';
+import { AddressBook, type IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import {
@@ -135,22 +135,21 @@ export const ClientPlugin = ({
     provides: {
       translations,
       graph: {
-        builder: ({ parent, plugins }) => {
+        builder: (plugins, graph) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
-          if (parent.id === 'root') {
-            parent.addAction({
-              id: `${CLIENT_PLUGIN}/open-shell`,
+          const id = `${CLIENT_PLUGIN}/open-shell`;
+          graph.addNodes({
+            id,
+            data: () =>
+              intentPlugin?.provides.intent.dispatch([{ plugin: CLIENT_PLUGIN, action: ClientAction.OPEN_SHELL }]),
+            properties: {
               label: ['open shell label', { ns: CLIENT_PLUGIN }],
-              icon: (props) => <AddressBook {...props} />,
+              icon: (props: IconProps) => <AddressBook {...props} />,
               keyBinding: 'meta+shift+.',
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch([{ plugin: CLIENT_PLUGIN, action: ClientAction.OPEN_SHELL }]),
-              properties: {
-                testId: 'clientPlugin.openShell',
-              },
-            });
-          }
+              testId: 'clientPlugin.openShell',
+            },
+            edges: [['root', 'inbound']],
+          });
         },
       },
       intent: {

@@ -5,7 +5,7 @@
 import { DotOutline } from '@phosphor-icons/react';
 import React, { useMemo, useRef, useState } from 'react';
 
-import { KEY_BINDING, type Action, type Graph, type Label } from '@dxos/app-graph';
+import { KEY_BINDING, type Graph, type ActionLike, isActionGroup, isAction } from '@dxos/app-graph';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { Button, Dialog, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
@@ -13,15 +13,12 @@ import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
 import { NAVTREE_PLUGIN } from '../meta';
+import { getTreeItemLabel } from '../util';
 
 // TODO(wittjosiah): This probably deserves its own plugin but for now it lives here w/ other navigation UI.
 export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Graph; selected?: string }) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const [selected, setSelected] = useState<string | undefined>(initial);
-
-  // TODO(burdon): Factor out.
-  // TODO(burdon): How to access all translations across plugins?
-  const toString = (label: Label) => (Array.isArray(label) ? t(...label) : label);
 
   // Traverse graph.
   // TODO(burdon): Factor out commonality with shortcut dialog.
@@ -29,11 +26,11 @@ export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Gr
     // TODO(burdon): Get from navtree (not keyboard).
     const current = Keyboard.singleton.getCurrentContext();
     const actionMap = new Set<string>();
-    const actions: Action[] = [];
+    const actions: ActionLike[] = [];
     graph?.traverse({
       visitor: (node, path) => {
         if (current.startsWith(path.join('/'))) {
-          node.actions.forEach((action) => {
+          node.actions().forEach((action) => {
             if (!actionMap.has(action.id)) {
               actionMap.add(action.id);
               actions.push(action);
@@ -43,15 +40,16 @@ export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Gr
       },
     });
 
-    actions.sort(({ label: a }, { label: b }) => {
-      return toString(a)?.toLowerCase().localeCompare(toString(b)?.toLowerCase());
+    actions.sort(({ properties: a }, { properties: b }) => {
+      return getTreeItemLabel(a.label, t)?.toLowerCase().localeCompare(getTreeItemLabel(b.label, t)?.toLowerCase());
     });
 
     // console.log(JSON.stringify(actions, undefined, 2));
     return actions;
   }, [graph]);
 
-  const actions = selected ? allActions.find(({ id }) => id === selected)?.actions : allActions;
+  const group = allActions.find(({ id }) => id === selected);
+  const actions = isActionGroup(group) ? group.actions() : allActions;
 
   // TODO(burdon): Remove.
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -65,10 +63,12 @@ export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Gr
         <SearchList.Input placeholder={t('commandlist input placeholder')} classNames={mx('px-1 my-2')} />
         <SearchList.Content classNames={['max-bs-[30rem] overflow-auto']}>
           {actions?.map((action) => {
-            const label = toString(action.label);
+            const label = getTreeItemLabel(action.properties.label, t);
             const shortcut =
-              typeof action.keyBinding === 'string' ? action.keyBinding : action.keyBinding?.[getHostPlatform()];
-            const Icon = action.icon ?? DotOutline;
+              typeof action.properties.keyBinding === 'string'
+                ? action.properties.keyBinding
+                : action.properties.keyBinding?.[getHostPlatform()];
+            const Icon = action.properties.icon ?? DotOutline;
             return (
               <SearchList.Item
                 value={label}
@@ -78,7 +78,7 @@ export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Gr
                     return;
                   }
 
-                  if (action.actions.length > 0) {
+                  if (isActionGroup(action)) {
                     setSelected(action.id);
                     return;
                   }
@@ -86,14 +86,14 @@ export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Gr
                   // TODO(burdon): Remove hack to close dialog (via hook?)
                   buttonRef.current?.click();
                   setTimeout(() => {
-                    void action.invoke({ caller: KEY_BINDING });
+                    isAction(action) && action.data({ caller: KEY_BINDING });
                   });
                 }}
                 classNames='flex items-center gap-2'
                 disabled={action.properties.disabled}
                 {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
               >
-                <Icon className={mx(getSize(4), 'shrink-0', !action.icon && 'invisible')} />
+                <Icon className={mx(getSize(4), 'shrink-0', !action.properties.icon && 'invisible')} />
                 <span className='grow truncate'>{label}</span>
                 {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
               </SearchList.Item>

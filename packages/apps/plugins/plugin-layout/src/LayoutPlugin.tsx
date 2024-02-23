@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowsOut } from '@phosphor-icons/react';
+import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-core';
 import { type RevertDeepSignal } from 'deepsignal/react';
 import { deepSignal } from 'deepsignal/react';
@@ -168,22 +168,22 @@ export const LayoutPlugin = ({
       location: location as RevertDeepSignal<Location>,
       translations,
       graph: {
-        builder: ({ parent }) => {
-          if (parent.id === 'root') {
-            // TODO(burdon): Root menu isn't visible so nothing bound.
-            parent.addAction({
-              id: `${LayoutAction.SET_LAYOUT}/fullscreen`,
+        builder: (_, graph) => {
+          // TODO(burdon): Root menu isn't visible so nothing bound.
+          graph.addNodes({
+            id: `${LayoutAction.SET_LAYOUT}/fullscreen`,
+            data: () =>
+              intentPlugin?.provides.intent.dispatch({
+                plugin: LAYOUT_PLUGIN,
+                action: LayoutAction.SET_LAYOUT,
+                data: { element: 'fullscreen' },
+              }),
+            properties: {
               label: ['toggle fullscreen label', { ns: LAYOUT_PLUGIN }],
-              icon: (props) => <ArrowsOut {...props} />,
+              icon: (props: IconProps) => <ArrowsOut {...props} />,
               keyBinding: 'ctrl+meta+f',
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch({
-                  plugin: LAYOUT_PLUGIN,
-                  action: LayoutAction.SET_LAYOUT,
-                  data: { element: 'fullscreen' },
-                }),
-            });
-          }
+            },
+          });
         },
       },
       context: (props: PropsWithChildren) => (
@@ -352,7 +352,7 @@ export const LayoutPlugin = ({
             // TODO(wittjosiah): Factor out.
             case NavigationAction.ACTIVATE: {
               const id = intent.data?.id ?? intent.data?.result?.id;
-              const path = id && graphPlugin?.provides.graph.getPath(id);
+              const path = id && graphPlugin?.provides.graph.getPath({ to: id });
               if (path) {
                 Keyboard.singleton.setCurrentContext(path.join('/'));
               }

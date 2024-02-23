@@ -5,7 +5,7 @@
 import { Command } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type Action, useGraph } from '@braneframe/plugin-graph';
+import { type Action } from '@braneframe/plugin-graph';
 import { Surface } from '@dxos/app-framework';
 import { SpaceState, type Space } from '@dxos/react-client/echo';
 import { Button, Main, useTranslation } from '@dxos/react-ui';
@@ -21,11 +21,13 @@ const _InFlowSpaceActions = ({ actionsMap }: { actionsMap: Record<string, Action
     <section className='mbe-4 col-start-2 col-end-4 md:col-end-7 grid gap-2 auto-rows-min grid-cols-[repeat(auto-fill,minmax(8rem,1fr))]'>
       {Object.entries(actionsMap)
         .filter(([_, { properties }]) => properties?.mainAreaDisposition === 'in-flow')
-        .map(([actionId, { icon: Icon, label, invoke }]) => {
+        .map(([actionId, { data: invoke, properties }]) => {
+          const Icon = properties?.icon;
+          const label = properties?.label;
           return (
             <Button key={actionId} classNames='block text-center plb-2 font-normal' onClick={() => invoke?.()}>
               {Icon && <Icon className={mx(getSize(5), 'mli-auto')} />}
-              <p>{typeof label === 'string' ? label : t(...label)}</p>
+              <p>{Array.isArray(label) ? t(label[0], label[1]) : label}</p>
             </Button>
           );
         })}
@@ -49,8 +51,8 @@ const KeyShortcuts = () => {
 };
 
 export const SpaceMain = ({ space }: { space: Space }) => {
-  const { graph } = useGraph();
-  const _actionsMap = graph.findNode(space.key.toHex())?.actionsMap;
+  // const { graph } = useGraph();
+  // const _actionsMap = graph.findNode(space.key.toHex())?.actionsMap;
   const state = space.state.get();
   const ready = state === SpaceState.READY;
   return (

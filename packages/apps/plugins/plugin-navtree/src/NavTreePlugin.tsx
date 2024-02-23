@@ -2,7 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MagnifyingGlass } from '@phosphor-icons/react';
+import { MagnifyingGlass, type IconProps } from '@phosphor-icons/react';
+import { effect } from '@preact/signals-core';
+import { deepSignal, type RevertDeepSignal } from 'deepsignal/react';
+import get from 'lodash.get';
 import React from 'react';
 
 import {
@@ -18,8 +21,9 @@ import {
   type GraphProvides,
   parseGraphPlugin,
 } from '@dxos/app-framework';
-import { Graph, type Node } from '@dxos/app-graph';
+import { isGraphNode, type Node, type NodeFilter } from '@dxos/app-graph';
 import { Keyboard } from '@dxos/keyboard';
+import { treeNodeFromGraphNode, type TreeNode, getTreePath } from '@dxos/react-ui-navtree';
 
 import {
   CommandsDialogContent,
@@ -39,12 +43,40 @@ export type NavTreePluginProvides = SurfaceProvides &
   TranslationsProvides;
 
 export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
+  const state = deepSignal<{ root?: TreeNode; longestPaths: Record<string, string[]> }>({ longestPaths: {} });
   let graphPlugin: Plugin<GraphProvides> | undefined;
+
+  const filterLongestPath: NodeFilter = (node, connectedNode): node is Node => {
+    const longestPath = state.longestPaths[node.id];
+    if (!longestPath) {
+      return false;
+    }
+
+    if (longestPath[longestPath.length - 2] !== connectedNode.id) {
+      return false;
+    }
+
+    return true;
+  };
 
   return {
     meta,
     ready: async (plugins) => {
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+
+      effect(() => {
+        graphPlugin?.provides.graph.traverse({
+          visitor: (node, path) => {
+            if (!(node.id in state.longestPaths) || state.longestPaths[node.id].length < path.length) {
+              state.longestPaths[node.id] = path;
+            }
+          },
+        });
+      });
+
+      if (graphPlugin) {
+        state.root = treeNodeFromGraphNode(graphPlugin?.provides.graph.root, { filter: filterLongestPath });
+      }
 
       // TODO(burdon): Create context and plugin.
       Keyboard.singleton.initialize();
@@ -81,10 +113,11 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
 
           switch (role) {
             case 'navigation':
-              if ('graph' in data && data.graph instanceof Graph) {
+              if (graphPlugin && state.root) {
                 return (
                   <NavTreeContainer
-                    graph={data.graph}
+                    root={state.root as RevertDeepSignal<TreeNode>}
+                    graph={graphPlugin.provides.graph}
                     activeId={data.activeId as string}
                     popoverAnchorId={data.popoverAnchorId as string}
                   />
@@ -92,20 +125,31 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
               }
               break;
 
-            case 'document-title':
-              return <NavTreeDocumentTitle activeNode={data.activeNode as Node | undefined} />;
+            case 'document-title': {
+              const graphNode = isGraphNode(data.activeNode) ? data.activeNode : undefined;
+              const path =
+                graphNode?.id &&
+                getTreePath({
+                  graph: graphPlugin!.provides.graph,
+                  tree: state.root as RevertDeepSignal<TreeNode>,
+                  to: graphNode?.id,
+                });
+              const activeNode = path ? get(state.root, path) : undefined;
+              return <NavTreeDocumentTitle activeNode={activeNode} />;
+            }
 
             case 'navbar-start':
-              if (
-                data.activeNode &&
-                typeof data.activeNode === 'object' &&
-                'label' in data.activeNode &&
-                'parent' in data.activeNode
-              ) {
+              if (isGraphNode(data.activeNode)) {
+                const path = getTreePath({
+                  graph: graphPlugin!.provides.graph,
+                  tree: state.root as RevertDeepSignal<TreeNode>,
+                  to: data.activeNode.id,
+                });
+
                 return {
                   node: (
                     <NavBarStart
-                      activeNode={data.activeNode as Node}
+                      activeNode={get(state.root, path)}
                       popoverAnchorId={data.popoverAnchorId as string | undefined}
                     />
                   ),
@@ -128,23 +172,21 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
         },
       },
       graph: {
-        builder: ({ parent, plugins }) => {
-          if (parent.id !== 'root') {
-            return;
-          }
-
+        builder: (plugins, graph) => {
           // TODO(burdon): Move to separate plugin (for keys and command k). Move bindings from LayoutPlugin.
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-          parent.addAction({
+          graph.addNodes({
             id: 'dxos.org/plugin/navtree/open-commands',
-            label: ['open commands label', { ns: NAVTREE_PLUGIN }],
-            icon: (props) => <MagnifyingGlass {...props} />,
-            keyBinding: 'meta+k',
-            invoke: () =>
+            data: () =>
               intentPlugin?.provides.intent.dispatch({
                 action: LayoutAction.SET_LAYOUT,
                 data: { element: 'dialog', component: `${NAVTREE_PLUGIN}/Commands` },
               }),
+            properties: {
+              label: ['open commands label', { ns: NAVTREE_PLUGIN }],
+              icon: (props: IconProps) => <MagnifyingGlass {...props} />,
+              keyBinding: 'meta+k',
+            },
           });
         },
       },

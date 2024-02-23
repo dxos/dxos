@@ -205,7 +205,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                     <NavTreeItemAction
                       label={Array.isArray(primaryAction.label) ? t(...primaryAction.label) : primaryAction.label}
                       icon={primaryAction.icon ?? Placeholder}
-                      action={'invoke' in primaryAction ? primaryAction : primaryAction.actions[0]}
+                      action={'invoke' in primaryAction ? primaryAction : undefined}
                       actions={
                         'actions' in primaryAction
                           ? primaryAction.actions.flatMap((action) => ('invoke' in action ? [action] : []))

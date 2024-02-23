@@ -4,8 +4,6 @@
 
 import '@dxosTheme';
 
-import { computed } from '@preact/signals-core';
-import get from 'lodash.get';
 import React from 'react';
 
 import { Graph } from '@dxos/app-graph';
@@ -16,7 +14,6 @@ import { arrayMove } from '@dxos/util';
 
 import { NavTree } from './NavTree';
 import { treeNodeFromGraphNode } from '../helpers';
-import { type TreeNode } from '../types';
 
 faker.seed(3);
 
@@ -42,53 +39,8 @@ const createGraph = () => {
   return graph;
 };
 
-// TODO(wittjosiah): Compute incrementally.
-const createTree = (graph: Graph) => {
-  const tree = computed(() => {
-    let data: TreeNode | undefined;
-    const node = graph.findNode(ROOT_ID)!;
-    graph.traverse({
-      node,
-      visitor: (node, path) => {
-        const { icon, label, ...properties } = node.properties;
-        if (node.id === ROOT_ID) {
-          data = {
-            id: node.id,
-            label,
-            icon,
-            properties,
-            children: [],
-            actions: [],
-          };
-        } else {
-          let prev = data;
-          const p = path.slice(1, -1).flatMap((id) => {
-            if (!prev) {
-              return [];
-            }
-            const children = prev.children;
-            const i = children.findIndex((c) => c.id === id);
-            if (i === -1) {
-              return [];
-            }
-            prev = children![i];
-            return ['children', i];
-          });
-          const q = get(data, [...p, 'children']);
-          q?.push({ id: node.id, label, icon, properties, children: [], actions: [] });
-        }
-      },
-    });
-
-    return data;
-  });
-
-  return tree;
-};
-
 const ROOT_ID = 'root';
 const graph = createGraph();
-// const tree = createTree(graph);
 const tree = treeNodeFromGraphNode(graph.root);
 
 const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {

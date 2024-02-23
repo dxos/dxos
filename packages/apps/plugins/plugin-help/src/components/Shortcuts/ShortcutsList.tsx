@@ -4,7 +4,6 @@
 
 import React, { Fragment } from 'react';
 
-import type { Label } from '@dxos/app-graph';
 import { Keyboard } from '@dxos/keyboard';
 import { useTranslation } from '@dxos/react-ui';
 
@@ -16,7 +15,7 @@ export const ShortcutsList = () => {
   const bindings = Keyboard.singleton.getBindings();
 
   // TODO(burdon): Factor out.
-  const toString = (label: Label) => (Array.isArray(label) ? t(...label) : label);
+  const toString = (label: any) => (Array.isArray(label) ? t(label[0], label[1]) : label);
 
   // TODO(burdon): Get shortcuts from TextEditor.
   bindings.sort((a, b) => {
@@ -29,7 +28,7 @@ export const ShortcutsList = () => {
         <Fragment key={i}>
           <Key binding={binding.shortcut} />
           <span role='definition' aria-labelledby={binding.shortcut}>
-            {toString(binding.data as Label)}
+            {toString(binding.data)}
           </span>
         </Fragment>
       ))}

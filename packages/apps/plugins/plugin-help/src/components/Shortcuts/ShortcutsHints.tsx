@@ -5,7 +5,6 @@
 import { X } from '@phosphor-icons/react';
 import React from 'react';
 
-import type { Label } from '@dxos/app-graph';
 import { type KeyBinding, Keyboard } from '@dxos/keyboard';
 import { Button, DensityProvider, useTranslation } from '@dxos/react-ui';
 import { fixedBorder, groupSurface, mx } from '@dxos/react-ui-theme';
@@ -22,7 +21,7 @@ export const ShortcutsHints = ({ onClose }: { onClose: () => void }) => {
 
   // TODO(burdon): Factor out.
   // TODO(burdon): How to access all translations across plugins?
-  const toString = (label: Label) => (Array.isArray(label) ? t(...label) : label);
+  const toString = (label: any) => (Array.isArray(label) ? t(label[0], label[1]) : label);
 
   const Shortcut = ({ binding }: { binding: KeyBinding }) => {
     return (

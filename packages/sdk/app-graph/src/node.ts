@@ -95,14 +95,17 @@ export type NodeArg<TData, TProperties extends Record<string, any> = Record<stri
 // Actions
 //
 
-export type InvokeParams = Partial<{
-  caller: string;
-}>;
+export type InvokeParams = {
+  /** Node the invoked action is connected to. */
+  node: Node;
+
+  caller?: string;
+};
 
 export type Action<TProperties extends Record<string, any> = Record<string, any>> = Readonly<
   Omit<NodeBase<(params?: InvokeParams) => MaybePromise<any>, TProperties>, 'properties'> & {
     properties: Readonly<TProperties>;
-  }
+  } & ConnectedNodes
 >;
 
 export const isAction = (data: unknown): data is Action =>
