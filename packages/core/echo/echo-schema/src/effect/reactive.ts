@@ -37,7 +37,8 @@ export const object: {
     if (!isValidProxyTarget(obj)) {
       throw new Error('Value cannot be made into a reactive object.');
     }
-    // typed case
+
+    // Typed.
     const schema: S.Schema<T> = schemaOrObj as S.Schema<T>;
     const _ = S.asserts(schema)(obj);
 
@@ -50,7 +51,7 @@ export const object: {
       throw new Error('Value cannot be made into a reactive object.');
     }
 
-    // untyped case
+    // Untyped.
     return createReactiveProxy(schemaOrObj as T, UntypedReactiveHandler.instance as ReactiveHandler<any>);
   }
 };
@@ -73,7 +74,6 @@ export type PropertyVisitor<T> = (property: AST.PropertySignature, path: Propert
 /**
  * Recursively visit properties of the given object.
  */
-// TODO(burdon): Create test.
 // TODO(burdon): Ref unist-util-visit (e.g., specify filter).
 export const visit = (root: AST.AST, visitor: PropertyVisitor<void>, rootPath: PropertyKey[] = []): void => {
   AST.getPropertySignatures(root).forEach((property) => {

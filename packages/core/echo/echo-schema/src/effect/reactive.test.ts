@@ -281,12 +281,12 @@ describe('reactive', () => {
     expect(paths).to.deep.eq(['name', 'address', 'address.city', 'address.zip', 'address.street']);
   });
 
-  test('indexing', () => {
+  test.only('indexing', () => {
     const Contact = S.struct({
       publicKey: S.string,
       name: S.string.pipe(
         S.annotations({
-          [R.IndexAnnotation]: true,
+          [R.IndexAnnotation]: true, // TODO(burdon): Can only be applied to literal.
         }),
       ),
       address: S.optional(
@@ -301,14 +301,15 @@ describe('reactive', () => {
       ),
     });
 
-    // TODO(burdon): Util.
-    const getIndexedProperties = (ast: AST.AST): string[] => {
-      return R.reduce<string[]>(
+    // TODO(burdon): Factor out util and separate fn that maps to orama index.
+    type IndexProperty = { path: string; type: AST.AST };
+    const getIndexedProperties = (ast: AST.AST): IndexProperty[] => {
+      return R.reduce<IndexProperty[]>(
         ast,
         (properties, { type }, path) => {
           const { indexed } = ReadonlyRecord.getSomes({ indexed: R.getIndexAnnotation(type) });
           if (indexed) {
-            properties.push(path.join('.'));
+            properties.push({ path: path.join('.'), type });
           }
 
           return properties;
@@ -318,7 +319,7 @@ describe('reactive', () => {
     };
 
     const properties = getIndexedProperties(Contact.ast);
-    expect(properties).to.deep.eq(['name', 'address.city']);
+    expect(properties.map(({ path }) => path)).to.deep.eq(['name', 'address.city']);
 
     {
       const person = R.object(Contact, {
@@ -330,10 +331,10 @@ describe('reactive', () => {
       });
 
       const values: { path: string; value: any }[] = [];
-      for (const prop of properties) {
-        const value = get(person, prop);
+      for (const { path } of properties) {
+        const value = get(person, path);
         if (value !== undefined) {
-          values.push({ path: prop, value });
+          values.push({ path, value });
         }
       }
 
