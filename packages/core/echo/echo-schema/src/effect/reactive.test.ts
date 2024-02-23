@@ -281,7 +281,7 @@ describe('reactive', () => {
     expect(paths).to.deep.eq(['name', 'address', 'address.city', 'address.zip', 'address.street']);
   });
 
-  test.only('indexing', () => {
+  test('indexing', () => {
     const Contact = S.struct({
       publicKey: S.string,
       name: S.string.pipe(
