@@ -9,8 +9,7 @@
       <excludeFolder url="file://$MODULE_DIR$/packages/apps/composer-app/build" />
       <excludeFolder url="file://$MODULE_DIR$/.nx" />
       <excludeFolder url="file://$MODULE_DIR$/.swc" />
-      <excludeFolder url="file://$MODULE_DIR$/**/dist" />
-      <excludeFolder url="file://$MODULE_DIR$/**/out" />
+      <excludePattern pattern="dist" />
       <excludePattern pattern="gen" />
       <excludePattern pattern="out" />
       <excludePattern pattern="tmp" />
