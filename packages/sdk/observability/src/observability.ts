@@ -40,6 +40,7 @@ export type TagScope = 'errors' | 'telemetry' | 'metrics' | 'all';
 export type ObservabilityOptions = {
   /// The webapp (e.g. 'composer.dxos.org'), 'cli', or 'agent'.
   namespace: string;
+  mode: Mode;
   // TODO(nf): make platform a required extension?
   // platform: Platform;
   release?: string;
@@ -47,7 +48,6 @@ export type ObservabilityOptions = {
   config?: Config;
   secrets?: Record<string, string>;
   group?: string;
-  mode?: Mode;
 
   telemetry?: {
     batchSize?: number;
@@ -77,8 +77,8 @@ export class Observability {
 
   private _secrets: ObservabilitySecrets;
   private _namespace: string;
+  private _mode: Mode;
   private _config?: Config;
-  private _mode: Mode = 'disabled';
   private _group?: string;
   // TODO(nf): accept upstream context?
   private _ctx = new Context();
@@ -97,8 +97,8 @@ export class Observability {
     errorLog,
   }: ObservabilityOptions) {
     this._namespace = namespace;
+    this._mode = mode;
     this._config = config;
-    this._mode = mode ?? 'disabled';
     this._group = group;
     this._secrets = this._loadSecrets(config, secrets);
     this._telemetryBatchSize = telemetry?.batchSize ?? 30;
