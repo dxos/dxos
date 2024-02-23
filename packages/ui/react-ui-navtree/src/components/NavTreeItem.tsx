@@ -115,7 +115,9 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
     const [primaryAction, ...secondaryActions] = [...node.actions].sort((a, b) =>
       a.properties.disposition === 'toolbar' ? -1 : 1,
     );
-    const actions = primaryAction?.properties.disposition === 'toolbar' ? secondaryActions : node.actions;
+    const actions = (primaryAction?.properties.disposition === 'toolbar' ? secondaryActions : node.actions).flatMap(
+      (action) => ('invoke' in action ? [action] : []),
+    );
     const { t } = useTranslation(translationKey);
     const { current, popoverAnchorId, onSelect, isOver, renderPresence } = useNavTree();
     const [open, setOpen] = useState(level < 1);
@@ -203,8 +205,12 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                     <NavTreeItemAction
                       label={Array.isArray(primaryAction.label) ? t(...primaryAction.label) : primaryAction.label}
                       icon={primaryAction.icon ?? Placeholder}
-                      action={primaryAction.actions.length === 0 ? primaryAction : undefined}
-                      actions={primaryAction.actions}
+                      action={'invoke' in primaryAction ? primaryAction : primaryAction.actions[0]}
+                      actions={
+                        'actions' in primaryAction
+                          ? primaryAction.actions.flatMap((action) => ('invoke' in action ? [action] : []))
+                          : []
+                      }
                       active={active}
                       testId={primaryAction.properties.testId}
                       menuType={primaryAction.properties.menuType}

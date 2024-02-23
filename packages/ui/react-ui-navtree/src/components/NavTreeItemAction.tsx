@@ -5,7 +5,6 @@
 import { type IconProps } from '@phosphor-icons/react';
 import React, { type FC, type MutableRefObject, type PropsWithChildren, useRef, useState } from 'react';
 
-import { type Label } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
 import { Button, Dialog, DropdownMenu, ContextMenu, Tooltip, useTranslation } from '@dxos/react-ui';
 import { type MosaicActiveType, useMosaic } from '@dxos/react-ui-mosaic';
@@ -14,7 +13,7 @@ import { descriptionText, getSize, hoverableControlItem, hoverableOpenControlIte
 import { getHostPlatform } from '@dxos/util';
 
 import { translationKey } from '../translations';
-import type { TreeNodeAction } from '../types';
+import type { Label, TreeNodeAction } from '../types';
 
 type NavTreeItemActionProps = {
   label?: string;

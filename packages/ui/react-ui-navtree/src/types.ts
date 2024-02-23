@@ -2,11 +2,44 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Node, type Action } from '@dxos/app-graph';
+import { type IconProps } from '@phosphor-icons/react';
+import { type FC } from 'react';
 
-export type TreeNodeAction = Pick<Action, 'id' | 'label' | 'invoke' | 'actions' | 'properties' | 'icon' | 'keyBinding'>;
+import { type Action, type ActionGroup, type Node } from '@dxos/app-graph';
 
-export type TreeNode = Pick<Node, 'id' | 'label' | 'properties' | 'icon'> & {
-  children: TreeNode[];
+export type TreeNodeAction = Pick<Action, 'id' | 'properties'> & {
+  label: Label;
+  icon?: FC<IconProps>;
+  keyBinding?: string | KeyBinding;
+  invoke: Action['data'];
+};
+export type TreeNodeActionGroup = Pick<ActionGroup, 'id' | 'properties'> & {
+  label: Label;
+  icon?: FC<IconProps>;
+  keyBinding?: string | KeyBinding;
+  // TODO(wittjosiah): Support nested groups.
   actions: TreeNodeAction[];
+};
+export type TreeNodeActionLike = TreeNodeAction | TreeNodeActionGroup;
+
+export type TreeNode = Pick<Node, 'id' | 'properties'> & {
+  label: Label;
+  icon?: FC<IconProps>;
+  children: TreeNode[];
+  actions: TreeNodeActionLike[];
+};
+
+// TODO(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures.
+export type Label = string | [string, { ns: string; count?: number }];
+
+/**
+ * Platform-specific key binding.
+ */
+// NOTE: Keys come from `getHostPlatform` in `@dxos/util`.
+export type KeyBinding = {
+  windows?: string;
+  macos?: string;
+  ios?: string;
+  linux?: string;
+  unknown?: string;
 };

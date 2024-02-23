@@ -34,7 +34,7 @@ const meta: Meta = {
   ],
 };
 
-// TODO(burdon): Required otherwise ID complains with `Inferred type...` error.
+// // TODO(burdon): Required otherwise ID complains with `Inferred type...` error.
 export default meta;
 
 export const Default = {
@@ -45,7 +45,6 @@ export const Default = {
         id: faker.string.uuid(),
         label: faker.lorem.words(2),
         icon: Circle,
-        actions: [],
         invoke: () => {
           console.log('invoke');
         },
