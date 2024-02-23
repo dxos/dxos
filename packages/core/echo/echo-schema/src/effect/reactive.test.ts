@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ParseResult } from '@effect/schema';
+import { type AST, ParseResult } from '@effect/schema';
 import * as JSONSchema from '@effect/schema/JSONSchema';
 import * as Pretty from '@effect/schema/Pretty';
 import * as S from '@effect/schema/Schema';
@@ -172,7 +172,6 @@ describe('reactive', () => {
     );
 
     const Contact = S.struct({
-      d: S.Date,
       timestamp: S.DateFromSelf,
       key1: S.optional(StringKey),
       key2: S.optional(TypedKey),
@@ -257,6 +256,31 @@ describe('reactive', () => {
     expect(pretty).to.equal('{ "name": "Satoshi" }');
   });
 
+  test('reduce', () => {
+    const Contact = S.struct({
+      name: S.string,
+      address: S.optional(
+        S.struct({
+          street: S.optional(S.string),
+          city: S.string,
+          zip: S.string,
+        }),
+      ),
+    });
+
+    const paths = R.reduce<string[]>(
+      Contact.ast,
+      (paths, _, path) => {
+        paths.push(path.join('.'));
+        return paths;
+      },
+      [],
+    );
+
+    // TODO(burdon): Order?
+    expect(paths).to.deep.eq(['name', 'address', 'address.city', 'address.zip', 'address.street']);
+  });
+
   test('indexing', () => {
     const Contact = S.struct({
       publicKey: S.string,
@@ -277,18 +301,24 @@ describe('reactive', () => {
       ),
     });
 
-    const properties: string[] = [];
+    // TODO(burdon): Util.
+    const getIndexedProperties = (ast: AST.AST): string[] => {
+      return R.reduce<string[]>(
+        ast,
+        (properties, { type }, path) => {
+          const { indexed } = ReadonlyRecord.getSomes({ indexed: R.getIndexAnnotation(type) });
+          if (indexed) {
+            properties.push(path.join('.'));
+          }
 
-    {
-      R.visitProperties(Contact.ast, (p, path) => {
-        const { indexed } = ReadonlyRecord.getSomes({ indexed: R.getIndexAnnotation(p.type) });
-        if (indexed) {
-          properties.push(path.join('.'));
-        }
-      });
+          return properties;
+        },
+        [],
+      );
+    };
 
-      expect(properties).to.deep.eq(['name', 'address.city']);
-    }
+    const properties = getIndexedProperties(Contact.ast);
+    expect(properties).to.deep.eq(['name', 'address.city']);
 
     {
       const person = R.object(Contact, {

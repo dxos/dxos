@@ -67,28 +67,41 @@ export const getSchema = <T extends {}>(obj: T): S.Schema<T> | undefined => {
   return schema as S.Schema<T>;
 };
 
+export type PropertyVisitor<T> = (property: AST.PropertySignature, path: PropertyKey[]) => T;
+
 /**
  * Recursively visit properties of the given object.
  */
+// TODO(burdon): Create test.
 // TODO(burdon): Ref unist-util-visit (e.g., specify filter).
-export const visitProperties = (
-  root: AST.AST,
-  visitor: (property: AST.PropertySignature, path: PropertyKey[]) => void,
-  rootPath: PropertyKey[] = [],
-): void => {
+export const visit = (root: AST.AST, visitor: PropertyVisitor<void>, rootPath: PropertyKey[] = []): void => {
   AST.getPropertySignatures(root).forEach((property) => {
     const path = [...rootPath, property.name];
     visitor(property, path);
 
     // Recursively visit properties.
-    if (AST.isTypeLiteral(property.type)) {
-      visitProperties(property.type, visitor, path);
-    } else if (AST.isUnion(property.type)) {
-      property.type.types.forEach((type) => {
+    const { type } = property;
+    if (AST.isTypeLiteral(type)) {
+      visit(type, visitor, path);
+    } else if (AST.isUnion(type)) {
+      type.types.forEach((type) => {
         if (AST.isTypeLiteral(type)) {
-          visitProperties(type, visitor, path);
+          visit(type, visitor, path);
         }
       });
     }
   });
+};
+
+export const reduce = <T>(
+  root: AST.AST,
+  visitor: (acc: T, property: AST.PropertySignature, path: PropertyKey[]) => T,
+  initialValue: T,
+): T => {
+  let acc = initialValue;
+  visit(root, (property, path) => {
+    acc = visitor(acc, property, path);
+  });
+
+  return acc;
 };
