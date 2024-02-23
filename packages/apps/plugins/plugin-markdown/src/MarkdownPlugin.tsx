@@ -8,6 +8,8 @@ import { deepSignal } from 'deepsignal/react';
 import React, { useMemo, type Ref } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
+import { manageNodes } from '@braneframe/plugin-graph';
+import { SpaceAction } from '@braneframe/plugin-space';
 import { Document as DocumentType } from '@braneframe/types';
 import {
   isObject,
@@ -16,10 +18,11 @@ import {
   type IntentPluginProvides,
   type Plugin,
   type PluginDefinition,
+  NavigationAction,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { isTypedObject } from '@dxos/react-client/echo';
+import { SpaceState, isTypedObject } from '@dxos/react-client/echo';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import {
@@ -118,36 +121,35 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           const subscriptions = new EventSubscriptions();
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
             spaces.forEach((space) => {
-              // TODO(wittjosiah): Adding this causes graph to slow down/crash.
-              // manageNodes({
-              //   graph,
-              //   condition: space.state.get() === SpaceState.READY,
-              //   nodes: [
-              //     {
-              //       id: `${MARKDOWN_PLUGIN}/create/${space.key.toHex()}`,
-              //       data: () =>
-              //         intentPlugin?.provides.intent.dispatch([
-              //           {
-              //             plugin: MARKDOWN_PLUGIN,
-              //             action: MarkdownAction.CREATE,
-              //           },
-              //           {
-              //             action: SpaceAction.ADD_OBJECT,
-              //             data: { target: space },
-              //           },
-              //           {
-              //             action: NavigationAction.ACTIVATE,
-              //           },
-              //         ]),
-              //       properties: {
-              //         label: ['create document label', { ns: MARKDOWN_PLUGIN }],
-              //         icon: (props: IconProps) => <ArticleMedium {...props} />,
-              //         testId: 'markdownPlugin.createObject',
-              //       },
-              //       edges: [[`${SpaceAction.ADD_OBJECT}/${space.key.toHex()}`, 'inbound']],
-              //     },
-              //   ],
-              // });
+              manageNodes({
+                graph,
+                condition: space.state.get() === SpaceState.READY,
+                nodes: [
+                  {
+                    id: `${MARKDOWN_PLUGIN}/create/${space.key.toHex()}`,
+                    data: () =>
+                      intentPlugin?.provides.intent.dispatch([
+                        {
+                          plugin: MARKDOWN_PLUGIN,
+                          action: MarkdownAction.CREATE,
+                        },
+                        {
+                          action: SpaceAction.ADD_OBJECT,
+                          data: { target: space },
+                        },
+                        {
+                          action: NavigationAction.ACTIVATE,
+                        },
+                      ]),
+                    properties: {
+                      label: ['create document label', { ns: MARKDOWN_PLUGIN }],
+                      icon: (props: IconProps) => <ArticleMedium {...props} />,
+                      testId: 'markdownPlugin.createObject',
+                    },
+                    edges: [[`${SpaceAction.ADD_OBJECT}/${space.key.toHex()}`, 'inbound']],
+                  },
+                ],
+              });
 
               const query = space.db.query(DocumentType.filter());
               let previousObjects: DocumentType[] = [];

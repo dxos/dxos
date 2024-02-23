@@ -42,15 +42,18 @@ export type TraversalOptions = {
  * The Graph represents the structure of the application constructed via plugins.
  */
 export class Graph {
-  // Explicit type required because TS says this is not portable.
   /**
    * @internal
    */
-  readonly _nodes: DeepSignal<NodeBase[]> = deepSignal([{ id: ROOT_ID, properties: {}, data: null }]);
+  readonly _nodes = deepSignal<Record<string, NodeBase>>({
+    [ROOT_ID]: { id: ROOT_ID, properties: {}, data: null },
+  });
+
   /**
    * @internal
    */
   // Key is the `${node.id}-${direction}` and value is an ordered list of node ids.
+  // Explicit type required because TS says this is not portable.
   readonly _edges: DeepSignal<Record<string, string[]>> = deepSignal({});
 
   get root() {
@@ -79,7 +82,7 @@ export class Graph {
    * Find the node with the given id in the graph.
    */
   findNode(id: string): Node | undefined {
-    const nodeBase = this._nodes.find((node) => node.id === id);
+    const nodeBase = this._nodes[id];
     if (!nodeBase) {
       return undefined;
     }
@@ -137,8 +140,7 @@ export class Graph {
     const node = { data: null, properties: {}, ..._node };
 
     untracked(() => {
-      this.removeNode(node.id);
-      this._nodes.push(node);
+      this._nodes[node.id] = node;
 
       if (nodes) {
         nodes.forEach((subNode) => {
@@ -175,10 +177,7 @@ export class Graph {
       }
 
       // Remove node.
-      const index = this._nodes.findIndex((node) => node.id === id);
-      if (index !== -1) {
-        this._nodes.splice(index, 1);
-      }
+      delete this._nodes[id];
     });
   }
 

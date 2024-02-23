@@ -56,7 +56,7 @@ describe('Graph', () => {
       nodes: [{ id: 'test1' }, { id: 'test2' }],
     });
 
-    expect(graph._nodes).to.have.length(3);
+    expect(Object.keys(graph._nodes)).to.have.length(3);
     expect(Object.keys(graph._edges)).to.have.length(3);
     expect(graph.root.nodes()).to.have.length(2);
   });
