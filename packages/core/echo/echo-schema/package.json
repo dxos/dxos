@@ -66,6 +66,7 @@
   "devDependencies": {
     "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
+    "@orama/orama": "^2.0.8",
     "@preact/signals-core": "^1.5.1",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.get": "^4.4.7",

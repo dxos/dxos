@@ -4982,8 +4982,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/node-std
       '@orama/orama':
-        specifier: ^2.0.0-beta.1
-        version: 2.0.0-beta.3
+        specifier: ^2.0.8
+        version: 2.0.8
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -5067,6 +5067,9 @@ importers:
       '@dxos/echo-typegen':
         specifier: workspace:*
         version: link:../echo-typegen
+      '@orama/orama':
+        specifier: ^2.0.8
+        version: 2.0.8
       '@preact/signals-core':
         specifier: ^1.5.1
         version: 1.5.1
@@ -17756,10 +17759,9 @@ packages:
       aggregate-error: 3.1.0
     dev: false
 
-  /@orama/orama@2.0.0-beta.3:
-    resolution: {integrity: sha512-yii79NdmyoshM0IsgJN2CgytXv41pmXpITuzczKnwhrLJWd94p/Dzqp7ljUa1Rz6c91yzItfSnFOTq2Tj+7Zow==}
+  /@orama/orama@2.0.8:
+    resolution: {integrity: sha512-qaku4eOWLH80pneJ/PtqvF/VXGO3b1W1X6NSji3Yh6s3BNuoyprOifNfSWEkIbymzT89/B+ZFoq6PKG43fW6PA==}
     engines: {node: '>= 16.0.0'}
-    dev: false
 
   /@phenomnomnominal/tsquery@5.0.1(typescript@5.2.2):
     resolution: {integrity: sha512-3nVv+e2FQwsW8Aw6qTU6f+1rfcJ3hrcnvH/mu9i8YhxO+9sqbOfpL8m6PbET5+xKOlz/VSbp0RoYWYCtIsnmuA==}
