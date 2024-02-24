@@ -2,14 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, scheduleTask } from '@dxos/async';
 import { type AuthenticatingInvitation, type CancellableInvitation } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
+import { type MetadataStore } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import {
   type AuthenticationRequest,
   type AcceptInvitationRequest,
+  type GetPersistentInvitationsResponse,
   Invitation,
   type InvitationsService,
   QueryInvitationsResponse,
@@ -32,6 +35,8 @@ export class InvitationsServiceImpl implements InvitationsService {
   constructor(
     private readonly _invitationsHandler: InvitationsHandler,
     private readonly _getHandler: (invitation: Invitation) => InvitationProtocol,
+    // TODO(nf): avoid making InvitationManager?
+    private readonly _metadataStore: MetadataStore,
   ) {}
 
   // TODO(burdon): Guest/host label.
@@ -44,6 +49,7 @@ export class InvitationsServiceImpl implements InvitationsService {
   createInvitation(options: Invitation): Stream<Invitation> {
     let invitation: CancellableInvitation;
 
+    const savePersistentInvitationCtx = new Context();
     const existingInvitation = this._createInvitations.get(options.invitationId);
     if (existingInvitation) {
       invitation = existingInvitation;
@@ -52,6 +58,12 @@ export class InvitationsServiceImpl implements InvitationsService {
       invitation = this._invitationsHandler.createInvitation(handler, options);
       this._createInvitations.set(invitation.get().invitationId, invitation);
       this._invitationCreated.emit(invitation.get());
+
+      if (invitation.get().persistent) {
+        scheduleTask(savePersistentInvitationCtx, async () =>
+          this._metadataStore.addPersistentInvitation(invitation.get()),
+        );
+      }
     }
 
     return new Stream<Invitation>(({ next, close }) => {
@@ -59,11 +71,17 @@ export class InvitationsServiceImpl implements InvitationsService {
         (invitation) => {
           next(invitation);
         },
-        (err: Error) => {
+        async (err: Error) => {
+          await savePersistentInvitationCtx.dispose();
           close(err);
         },
-        () => {
+        async () => {
           close();
+          if (invitation.get().persistent) {
+            await savePersistentInvitationCtx.dispose();
+            await this._metadataStore.removePersistentInvitation(invitation.get().invitationId);
+          }
+
           this._createInvitations.delete(invitation.get().invitationId);
           if (invitation.get().type !== Invitation.Type.MULTIUSE) {
             this._removedCreated.emit(invitation.get());
@@ -71,6 +89,22 @@ export class InvitationsServiceImpl implements InvitationsService {
         },
       );
     });
+  }
+
+  async getPersistentInvitations(): Promise<GetPersistentInvitationsResponse> {
+    const persistentInvitations = this._metadataStore.getPersistentInvitations();
+
+    // get saved persistent invitations, filter and remove from storage those that have expired.
+    const freshInvitations = persistentInvitations.filter(async (invitation) => {
+      if (invitation.persistenceExpiry && Date.now() > invitation.persistenceExpiry.getTime()) {
+        log('removing expired persistent invitation', { invitation });
+        await this._metadataStore.removePersistentInvitation(invitation.invitationId);
+        return false;
+      }
+      return true;
+    });
+
+    return { invitations: freshInvitations };
   }
 
   acceptInvitation({ invitation: options, deviceProfile }: AcceptInvitationRequest): Stream<Invitation> {
@@ -130,6 +164,9 @@ export class InvitationsServiceImpl implements InvitationsService {
       await created.cancel();
       this._createInvitations.delete(invitationId);
       this._removedCreated.emit(created.get());
+      if (created.get().persistent) {
+        await this._metadataStore.removeInvitation(created.get().invitationId);
+      }
     } else if (accepted) {
       await accepted.cancel();
       this._acceptInvitations.delete(invitationId);
@@ -185,6 +222,8 @@ export class InvitationsServiceImpl implements InvitationsService {
         type: QueryInvitationsResponse.Type.ACCEPTED,
         invitations: Array.from(this._acceptInvitations.values()).map((invitation) => invitation.get()),
       });
+
+      // TODO(nf): expired invitations?
     });
   }
 }

@@ -16,9 +16,11 @@ import {
   createPeers,
   performInvitation,
 } from '@dxos/client-services/testing';
+import { MetadataStore } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { ConnectionState, Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Client } from '../client';
@@ -300,17 +302,23 @@ describe('Invitations', () => {
       let space: DataSpace;
 
       beforeEach(async () => {
+        const hostMetadata = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory());
+        const guestMetadata = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory());
         const peers = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
         hostContext = peers[0];
         guestContext = peers[1];
         invariant(hostContext.dataSpaceManager);
         invariant(guestContext.dataSpaceManager);
 
-        const hostService = new InvitationsServiceImpl(hostContext.invitations, (invitation) =>
-          hostContext.getInvitationHandler(invitation),
+        const hostService = new InvitationsServiceImpl(
+          hostContext.invitations,
+          (invitation) => hostContext.getInvitationHandler(invitation),
+          hostMetadata,
         );
-        const guestService = new InvitationsServiceImpl(guestContext.invitations, (invitation) =>
-          guestContext.getInvitationHandler(invitation),
+        const guestService = new InvitationsServiceImpl(
+          guestContext.invitations,
+          (invitation) => guestContext.getInvitationHandler(invitation),
+          guestMetadata,
         );
 
         space = await hostContext.dataSpaceManager.createSpace();
@@ -336,18 +344,24 @@ describe('Invitations', () => {
       let guest: InvitationsProxy;
 
       beforeEach(async () => {
+        const hostMetadata = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory());
+        const guestMetadata = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory());
         const peers = await asyncChain<ServiceContext>([closeAfterTest])(createPeers(2));
         hostContext = peers[0];
         guestContext = peers[1];
 
         await hostContext.identityManager.createIdentity();
 
-        const hostService = new InvitationsServiceImpl(hostContext.invitations, (invitation) =>
-          hostContext.getInvitationHandler(invitation),
+        const hostService = new InvitationsServiceImpl(
+          hostContext.invitations,
+          (invitation) => hostContext.getInvitationHandler(invitation),
+          hostMetadata,
         );
 
-        const guestService = new InvitationsServiceImpl(guestContext.invitations, (invitation) =>
-          guestContext.getInvitationHandler(invitation),
+        const guestService = new InvitationsServiceImpl(
+          guestContext.invitations,
+          (invitation) => guestContext.getInvitationHandler(invitation),
+          guestMetadata,
         );
 
         host = new InvitationsProxy(hostService, undefined, () => ({ kind: Invitation.Kind.DEVICE }));

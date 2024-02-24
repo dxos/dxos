@@ -256,8 +256,10 @@ export class ClientServicesHost {
         (profile) => this._serviceContext.broadcastProfileUpdate(profile),
       ),
 
-      InvitationsService: new InvitationsServiceImpl(this._serviceContext.invitations, (invitation) =>
-        this._serviceContext.getInvitationHandler(invitation),
+      InvitationsService: new InvitationsServiceImpl(
+        this._serviceContext.invitations,
+        (invitation) => this._serviceContext.getInvitationHandler(invitation),
+        this._serviceContext.metadataStore,
       ),
 
       DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager),

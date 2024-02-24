@@ -74,6 +74,8 @@ export class InvitationsHandler {
       state = Invitation.State.INIT,
       timeout = INVITATION_TIMEOUT,
       swarmKey = PublicKey.random(),
+      persistent = false,
+      persistenceExpiry = undefined,
     } = options ?? {};
     const authCode =
       options?.authCode ??
@@ -88,6 +90,8 @@ export class InvitationsHandler {
       swarmKey,
       authCode,
       timeout,
+      persistent,
+      persistenceExpiry,
       ...protocol.getInvitationContext(),
     };
 
@@ -182,6 +186,13 @@ export class InvitationsHandler {
     };
 
     let swarmConnection: SwarmConnection;
+
+    // TODO(nf): cancel invitations when the persistence deadline is reached.
+    // TODO(nf): honor some deadline for non-persistent invitations as well?
+
+    const invitationLabel =
+      'invitation host for ' +
+      (invitation.kind === Invitation.Kind.DEVICE ? 'device' : `space ${invitation.spaceKey?.truncate()}`);
     scheduleTask(ctx, async () => {
       const topic = invitation.swarmKey!;
       swarmConnection = await this._networkManager.joinSwarm({
@@ -191,7 +202,7 @@ export class InvitationsHandler {
           teleport.addExtension('dxos.halo.invitations', createExtension());
         }),
         topology: new StarTopology(topic),
-        label: 'invitation host',
+        label: invitationLabel,
       });
       ctx.onDispose(() => swarmConnection.close());
 

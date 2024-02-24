@@ -10,13 +10,13 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataCorruptionError, STORAGE_VERSION, schema } from '@dxos/protocols';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { type Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import {
+  type ControlPipelineSnapshot,
   EchoMetadata,
   type SpaceMetadata,
   type IdentityRecord,
   type SpaceCache,
-  type ControlPipelineSnapshot,
   LargeSpaceMetadata,
 } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type Directory, type File } from '@dxos/random-access-storage';
@@ -243,6 +243,29 @@ export class MetadataStore {
     invariant(!this._metadata.identity, 'Cannot overwrite existing identity in metadata');
 
     this._metadata.identity = record;
+    await this._save();
+    await this.flush();
+  }
+
+  getPersistentInvitations(): Invitation[] {
+    return this._metadata.persistentInvitations ?? [];
+  }
+
+  async addPersistentInvitation(invitation: Invitation) {
+    // TODO(nf): lock?
+    if (this._metadata.persistentInvitations?.find((i) => i.invitationId === invitation.invitationId)) {
+      return;
+    }
+
+    (this._metadata.persistentInvitations ??= []).push(invitation);
+    await this._save();
+    await this.flush();
+  }
+
+  async removePersistentInvitation(invitationId: string) {
+    this._metadata.persistentInvitations = (this._metadata.persistentInvitations ?? []).filter(
+      (i) => i.invitationId !== invitationId,
+    );
     await this._save();
     await this.flush();
   }

@@ -450,6 +450,12 @@ message Invitation {
 
   /// Path or identifier to navigate to after successful authentication.
   optional string target = 11;
+
+  /// Host should resume invitation on startup until timeout.
+  optional bool persistent = 12;
+
+  /// Host should resume invitation on startup until expiry.
+  optional google.protobuf.Timestamp persistence_expiry = 13;
 }
 
 message AcceptInvitationRequest {
@@ -489,12 +495,17 @@ message QueryInvitationsResponse {
   repeated Invitation invitations = 3;
 }
 
+message GetPersistentInvitationsResponse {
+  repeated Invitation invitations = 1;
+}
+
 service InvitationsService {
   rpc CreateInvitation(Invitation) returns (stream Invitation);
   rpc AcceptInvitation(AcceptInvitationRequest) returns (stream Invitation);
   rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
   rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
   rpc QueryInvitations(google.protobuf.Empty) returns (stream QueryInvitationsResponse);
+  rpc GetPersistentInvitations(google.protobuf.Empty) returns (GetPersistentInvitationsResponse);
 }
 
 //

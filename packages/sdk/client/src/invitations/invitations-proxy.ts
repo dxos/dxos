@@ -159,6 +159,24 @@ export class InvitationsProxy implements Invitations {
     return observable;
   }
 
+  async resumePersistentInvitations() {
+    const invitations = await this._invitationsService.getPersistentInvitations();
+    for (const invitation of invitations.invitations ?? []) {
+      const observable = new CancellableInvitation({
+        initialInvitation: invitation,
+        subscriber: createObservable(this._invitationsService.createInvitation(invitation)),
+        onCancel: async () => {
+          const invitationId = observable.get().invitationId;
+          invariant(invitationId, 'Invitation missing identifier');
+          await this._invitationsService.cancelInvitation({ invitationId });
+        },
+      });
+      this._createdUpdate.emit([...this._created.get(), observable]);
+
+      // TODO: cancel invitations at persistence expiry.
+    }
+  }
+
   join(invitation: Invitation | string, deviceProfile?: DeviceProfileDocument): AuthenticatingInvitation {
     if (typeof invitation === 'string') {
       invitation = InvitationEncoder.decode(invitation);
