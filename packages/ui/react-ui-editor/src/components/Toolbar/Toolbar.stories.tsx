@@ -14,13 +14,11 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { Toolbar } from './Toolbar';
 import {
-  code,
+  decorateMarkdown,
   comments,
   formatting,
-  heading,
   image,
   table,
-  tasklist,
   useComments,
   useFormattingState,
 } from '../../extensions';
@@ -39,7 +37,7 @@ const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) =
   const [formattingState, formattingObserver] = useFormattingState();
   const extensions = useMemo(
     () => [
-      code(),
+      decorateMarkdown(),
       comments({
         onCreate: ({ cursor }) => {
           const id = PublicKey.random().toHex();
@@ -48,10 +46,8 @@ const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) =
         },
       }),
       formatting(),
-      heading(),
       image(),
       table(),
-      tasklist(),
       formattingObserver,
     ],
     [],

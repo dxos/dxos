@@ -3,7 +3,7 @@
 //
 
 import { Chat, type IconProps } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-core';
+import { effect, untracked } from '@preact/signals-core';
 import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
@@ -20,7 +20,9 @@ import {
   parseIntentPlugin,
   parseNavigationPlugin,
   resolvePlugin,
+  parseGraphPlugin,
 } from '@dxos/app-framework';
+import { type UnsubscribeCallback } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, type TypedObject, getSpaceForObject, getTextInRange } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
@@ -28,7 +30,14 @@ import { comments, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
 
-import { ThreadMain, ThreadSettings, CommentsContainer, CommentsHeading } from './components';
+import {
+  ThreadMain,
+  ThreadSettings,
+  CommentsContainer,
+  CommentsHeading,
+  ChatContainer,
+  ChatHeading,
+} from './components';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
 import { ThreadAction, type ThreadPluginProvides, isThread, type ThreadSettingsProps } from './types';
@@ -45,6 +54,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
   let navigationPlugin: Plugin<LocationProvides> | undefined;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
+  let unsubscribe: UnsubscribeCallback | undefined;
 
   return {
     meta,
@@ -52,6 +62,41 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       settings.prop(settings.values.$standalone!, 'standalone', LocalStorageStore.bool);
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
+      const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+
+      // TODO(wittjosiah): This is a hack to make standalone threads work in the c11y sidebar.
+      //  This should have a better solution when deck is introduced.
+      unsubscribe = effect(() => {
+        const active = navigationPlugin?.provides.location.active;
+        const activeNode = active ? graphPlugin?.provides.graph.findNode(active) : undefined;
+        const space = activeNode
+          ? activeNode.data instanceof SpaceProxy
+            ? activeNode.data
+            : getSpaceForObject(activeNode.data)
+          : undefined;
+        untracked(() => {
+          const [thread] = space?.db.query(ThreadType.filter((thread) => !thread.context)).objects ?? [];
+          if (activeNode && isDocument(activeNode?.data) && activeNode.data.comments.length > 0) {
+            void intentPlugin?.provides.intent.dispatch({
+              action: LayoutAction.SET_LAYOUT,
+              data: { element: 'complementary', subject: activeNode.data, state: true },
+            });
+          } else if (settings.values.standalone && thread && !isThread(activeNode?.data)) {
+            void intentPlugin?.provides.intent.dispatch({
+              action: LayoutAction.SET_LAYOUT,
+              data: { element: 'complementary', subject: thread, state: true },
+            });
+          } else {
+            void intentPlugin?.provides.intent.dispatch({
+              action: LayoutAction.SET_LAYOUT,
+              data: { element: 'complementary', subject: null, state: false },
+            });
+          }
+        });
+      });
+    },
+    unload: async () => {
+      unsubscribe?.();
     },
     provides: {
       settings: settings.values,
@@ -130,65 +175,64 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               // TODO(burdon): Hack to detect comments.
               if (isDocument(data.subject)) {
                 const comments = data.subject.comments;
-                const space = getSpaceForObject(data.subject);
-                if (!space) {
-                  return null;
-                } else {
-                  // Sort threads by y-position.
-                  // TODO(burdon): Should just use document position?
-                  const threads = comments
-                    .map(({ thread }) => thread)
-                    .filter(nonNullable)
-                    .toSorted((a, b) => state.threads[a.id] - state.threads[b.id]);
+                // Sort threads by y-position.
+                // TODO(burdon): Should just use document position?
+                const threads = comments
+                  .map(({ thread }) => thread)
+                  .filter(nonNullable)
+                  .toSorted((a, b) => state.threads[a.id] - state.threads[b.id]);
 
-                  const detached = comments
-                    .filter(({ cursor }) => !cursor)
-                    .map(({ thread }) => thread?.id)
-                    .filter(nonNullable);
+                const detached = comments
+                  .filter(({ cursor }) => !cursor)
+                  .map(({ thread }) => thread?.id)
+                  .filter(nonNullable);
 
-                  return (
-                    <>
-                      <CommentsHeading />
-                      <ScrollArea.Root>
-                        <ScrollArea.Viewport>
-                          <CommentsContainer
-                            space={space}
-                            threads={threads}
-                            detached={detached}
-                            currentId={state.current}
-                            context={{ object: location?.active }}
-                            autoFocusCurrentTextbox={state.focus}
-                            onThreadAttend={(thread: ThreadType) => {
-                              if (state.current !== thread.id) {
-                                state.current = thread.id;
-                                void intentPlugin?.provides.intent.dispatch({
-                                  action: LayoutAction.FOCUS,
-                                  data: {
-                                    object: thread.id,
-                                  },
-                                });
-                              }
-                            }}
-                            onThreadDelete={(thread: ThreadType) =>
-                              dispatch?.({
-                                plugin: THREAD_PLUGIN,
-                                action: ThreadAction.DELETE,
-                                data: { document, thread },
-                              })
+                return (
+                  <>
+                    <CommentsHeading />
+                    <ScrollArea.Root>
+                      <ScrollArea.Viewport>
+                        <CommentsContainer
+                          threads={threads}
+                          detached={detached}
+                          currentId={state.current}
+                          context={{ object: location?.active }}
+                          autoFocusCurrentTextbox={state.focus}
+                          onThreadAttend={(thread: ThreadType) => {
+                            if (state.current !== thread.id) {
+                              state.current = thread.id;
+                              void dispatch?.({
+                                action: LayoutAction.FOCUS,
+                                data: {
+                                  object: thread.id,
+                                },
+                              });
                             }
-                          />
-                          <div role='none' className='bs-10' />
-                          <ScrollArea.Scrollbar>
-                            <ScrollArea.Thumb />
-                          </ScrollArea.Scrollbar>
-                        </ScrollArea.Viewport>
-                      </ScrollArea.Root>
-                    </>
-                  );
-                }
+                          }}
+                          onThreadDelete={(thread: ThreadType) =>
+                            dispatch?.({
+                              plugin: THREAD_PLUGIN,
+                              action: ThreadAction.DELETE,
+                              data: { document: data.subject, thread },
+                            })
+                          }
+                        />
+                        <div role='none' className='bs-10' />
+                        <ScrollArea.Scrollbar>
+                          <ScrollArea.Thumb />
+                        </ScrollArea.Scrollbar>
+                      </ScrollArea.Viewport>
+                    </ScrollArea.Root>
+                  </>
+                );
+              } else if (isThread(data.subject)) {
+                return (
+                  <>
+                    <ChatHeading />
+                    <ChatContainer thread={data.subject} context={{ object: location?.active }} />
+                  </>
+                );
               }
-
-              break;
             }
           }
 

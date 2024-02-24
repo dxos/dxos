@@ -3,7 +3,6 @@
 //
 
 import type { Thread as ThreadType } from '@braneframe/types';
-import { type Space } from '@dxos/react-client/echo';
 import type { ThreadProps } from '@dxos/react-ui-thread';
 
 /**
@@ -19,7 +18,6 @@ import type { ThreadProps } from '@dxos/react-ui-thread';
  * @param onDelete - callback for deleting the thread
  */
 export type ThreadContainerProps = {
-  space: Space;
   thread: ThreadType;
   context?: { object?: string };
   autoFocusTextbox?: boolean;
