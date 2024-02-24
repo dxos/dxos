@@ -74,28 +74,32 @@ describe('Halo', () => {
     afterTest(() => client2.destroy());
     await client2.initialize();
 
-    const defaultDeviceProfile = await client2.services.services?.DevicesService?.createDeviceProfile({});
-    expect(defaultDeviceProfile).exist;
     const trigger = new Trigger();
     client1.halo.devices.subscribe((devices) => {
       // TODO(nf): deepEquals?
       if (
         devices.find((device) => device.deviceKey !== client1.halo.device?.deviceKey)?.profile?.label ===
-        defaultDeviceProfile!.label
+        'guest-device-label'
       ) {
         trigger.wake();
       }
     });
 
-    await Promise.all(performInvitation({ host: client1.halo, guest: client2.halo }));
+    await Promise.all(
+      performInvitation({
+        host: client1.halo,
+        guest: client2.halo,
+        guestDeviceProfile: { label: 'guest-device-label' },
+      }),
+    );
 
     expect(await client1.halo.devices.get()).to.have.lengthOf(2);
     expect(await client2.halo.devices.get()).to.have.lengthOf(2);
-    expect(client2.halo.device?.profile?.label).to.equal(defaultDeviceProfile!.label);
+    expect(client2.halo.device?.profile?.label).to.equal('guest-device-label');
     await trigger.wait();
     const client2DeviceOnClient1 = client1.halo.devices.get().find((device) => device.kind !== DeviceKind.CURRENT);
     expect(client2DeviceOnClient1).exist;
-    expect(client2DeviceOnClient1?.profile?.label).to.equal(defaultDeviceProfile!.label);
+    expect(client2DeviceOnClient1?.profile?.label).to.equal('guest-device-label');
   });
 
   test('device invitation with custom guest device profile', async () => {
@@ -114,7 +118,6 @@ describe('Halo', () => {
     afterTest(() => client2.destroy());
     await client2.initialize();
     // TODO(nf): how to test halo.join() more directly?
-    await client2.services.services?.IdentityService?.setCurrentDeviceProfile({ label: 'guest-device-profile' });
 
     const trigger = new Trigger();
     client1.halo.devices.subscribe((devices) => {
@@ -126,7 +129,13 @@ describe('Halo', () => {
       }
     });
 
-    await Promise.all(performInvitation({ host: client1.halo, guest: client2.halo }));
+    await Promise.all(
+      performInvitation({
+        host: client1.halo,
+        guest: client2.halo,
+        guestDeviceProfile: { label: 'guest-device-profile' },
+      }),
+    );
 
     expect(await client1.halo.devices.get()).to.have.lengthOf(2);
     expect(await client2.halo.devices.get()).to.have.lengthOf(2);

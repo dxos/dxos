@@ -15,11 +15,7 @@ import {
   type RecoverIdentityRequest,
   type SignPresentationRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
-import {
-  type Presentation,
-  type ProfileDocument,
-  type DeviceProfileDocument,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Presentation, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { type CreateIdentityOptions, type IdentityManager } from './identity-manager';
 
@@ -66,12 +62,6 @@ export class IdentityServiceImpl implements IdentityService {
     await this._identityManager.updateProfile(profile);
     await this._onProfileUpdate?.(this._identityManager.identity.profileDocument);
     return this._getIdentity()!;
-  }
-
-  // set device profile used for when joining existing identity.
-  async setCurrentDeviceProfile(profile: DeviceProfileDocument) {
-    invariant(this._identityManager, 'Identity not initialized.');
-    this._identityManager.currentDeviceProfile = profile;
   }
 
   async signPresentation({ presentation, nonce }: SignPresentationRequest): Promise<Presentation> {

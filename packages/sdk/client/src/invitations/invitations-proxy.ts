@@ -174,7 +174,7 @@ export class InvitationsProxy implements Invitations {
 
     const observable = new AuthenticatingInvitation({
       initialInvitation: invitation,
-      subscriber: createObservable(this._invitationsService.acceptInvitation({ ...invitation })),
+      subscriber: createObservable(this._invitationsService.acceptInvitation({ invitation, deviceProfile })),
       onCancel: async () => {
         const invitationId = observable.get().invitationId;
         invariant(invitationId, 'Invitation missing identifier');
@@ -183,15 +183,6 @@ export class InvitationsProxy implements Invitations {
       onAuthenticate: async (authCode: string) => {
         const invitationId = observable.get().invitationId;
         invariant(invitationId, 'Invitation missing identifier');
-
-        if (deviceProfile) {
-          invariant(
-            this._getInvitationContext().kind === Invitation.Kind.DEVICE,
-            'deviceProfile provided for non-device invitation',
-          );
-          invariant(this._identityService);
-          await this._identityService.setCurrentDeviceProfile(deviceProfile);
-        }
 
         await this._invitationsService.authenticate({ invitationId, authCode });
       },

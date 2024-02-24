@@ -147,7 +147,6 @@ service IdentityService {
   rpc QueryIdentity(google.protobuf.Empty) returns (stream QueryIdentityResponse);
   rpc UpdateProfile(halo.credentials.ProfileDocument) returns (Identity);
   rpc SignPresentation(SignPresentationRequest) returns (dxos.halo.credentials.Presentation);
-  rpc SetCurrentDeviceProfile(halo.credentials.DeviceProfileDocument) returns (google.protobuf.Empty);
 }
 
 //
@@ -170,18 +169,7 @@ message QueryDevicesResponse {
   repeated Device devices = 1;
 }
 
-enum CreateDeviceProfileContext {
-  INITIAL_DEVICE = 0;
-  ADDITIONAL_DEVICE = 1;
-}
-message CreateDeviceProfileRequest {
-  optional CreateDeviceProfileContext context = 1;
-  /// Override parts of the default device profile.
-  optional halo.credentials.DeviceProfileDocument profile_override = 2;
-}
-
 service DevicesService {
-  rpc CreateDeviceProfile(CreateDeviceProfileRequest) returns (halo.credentials.DeviceProfileDocument);
   rpc UpdateDevice(halo.credentials.DeviceProfileDocument) returns (Device);
   rpc QueryDevices(google.protobuf.Empty) returns (stream QueryDevicesResponse);
 }
@@ -457,6 +445,11 @@ message Invitation {
   optional string target = 11;
 }
 
+message AcceptInvitationRequest {
+  Invitation invitation = 1;
+  optional dxos.credentials.DeviceProfileDocument device_profile = 2;
+}
+
 message AuthenticationRequest {
   string invitation_id = 1;
   string auth_code = 2;
@@ -491,7 +484,7 @@ message QueryInvitationsResponse {
 
 service InvitationsService {
   rpc CreateInvitation(Invitation) returns (stream Invitation);
-  rpc AcceptInvitation(Invitation) returns (stream Invitation);
+  rpc AcceptInvitation(AcceptInvitationRequest) returns (stream Invitation);
   rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
   rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
   rpc QueryInvitations(google.protobuf.Empty) returns (stream QueryInvitationsResponse);

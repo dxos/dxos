@@ -13,7 +13,7 @@ import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
-import { type Device, DeviceKind, CreateDeviceProfileContext } from '@dxos/protocols/proto/dxos/client/services';
+import { type Device, DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type IdentityRecord, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
@@ -48,6 +48,8 @@ export type JoinIdentityParams = {
    * We will try to catch up to this timeframe before starting the data pipeline.
    */
   controlTimeframe?: Timeframe;
+  // Custom device profile, merged with defaults, to be applied once the identity is accepted.
+  deviceProfile?: DeviceProfileDocument;
 };
 
 export type CreateIdentityOptions = {
@@ -62,8 +64,6 @@ export class IdentityManager {
   readonly stateUpdate = new Event();
 
   private _identity?: Identity;
-  // hack to set device profile after joining an existing identity.
-  currentDeviceProfile?: DeviceProfileDocument;
 
   // TODO(burdon): IdentityManagerParams.
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
@@ -104,10 +104,6 @@ export class IdentityManager {
   }
 
   async createIdentity({ displayName, deviceProfile }: CreateIdentityOptions = {}) {
-    // If no device profile is supplied when asked to create identity, create one from defaults.
-    if (!deviceProfile) {
-      deviceProfile = this.createDeviceProfile({ context: CreateDeviceProfileContext.INITIAL_DEVICE });
-    }
 
     // TODO(nf): populate using context from ServiceContext?
     invariant(!this._identity, 'Identity already exists.');
@@ -153,7 +149,12 @@ export class IdentityManager {
       credentials.push(await generator.createDeviceAuthorization(identityRecord.deviceKey));
 
       // Write device metadata to profile.
-      credentials.push(await generator.createDeviceProfile(deviceProfile));
+      credentials.push(
+        await generator.createDeviceProfile({
+          ...this.createDefaultDeviceProfile(),
+          ...deviceProfile,
+        }),
+      );
       for (const credential of credentials) {
         await identity.controlPipeline.writer.write({
           credential: { credential },
@@ -174,19 +175,16 @@ export class IdentityManager {
     });
     this.stateUpdate.emit();
 
-    log('created identity', { identityKey: identity.identityKey, deviceKey: identity.deviceKey });
+    log('created identity', {
+      identityKey: identity.identityKey,
+      deviceKey: identity.deviceKey,
+      profile: identity.profileDocument,
+    });
     return identity;
   }
 
-  // Note: also exposed through DeviceService for clients to use.
   // TODO(nf): receive platform info rather than generating it here.
-  createDeviceProfile({
-    context,
-    deviceProfileOverride,
-  }: {
-    context?: CreateDeviceProfileContext;
-    deviceProfileOverride?: DeviceProfileDocument;
-  } = {}): DeviceProfileDocument {
+  createDefaultDeviceProfile(): DeviceProfileDocument {
     let type: DeviceType;
     // TODO(nf): call Platform service instead?
     if (isNode()) {
@@ -201,17 +199,14 @@ export class IdentityManager {
       }
     }
 
-    const defaultDeviceProfile = {
+    return {
       type,
-      label: context === CreateDeviceProfileContext.INITIAL_DEVICE ? 'initial identity device' : 'additional device',
       platform: platform.name,
       platformVersion: platform.version,
       architecture: typeof platform.os?.architecture === 'number' ? String(platform.os.architecture) : undefined,
       os: platform.os?.family,
       osVersion: platform.os?.version,
     };
-
-    return { ...defaultDeviceProfile, ...deviceProfileOverride };
   }
 
   /**
@@ -243,13 +238,10 @@ export class IdentityManager {
       displayName: this._identity.profileDocument?.displayName,
     });
 
-    if (!this.currentDeviceProfile) {
-      this.currentDeviceProfile = this.createDeviceProfile({
-        context: CreateDeviceProfileContext.ADDITIONAL_DEVICE,
-      });
-    }
-    await this.updateDeviceProfile(this.currentDeviceProfile!);
-
+    await this.updateDeviceProfile({
+      ...this.createDefaultDeviceProfile(),
+      ...params.deviceProfile,
+    });
     this.stateUpdate.emit();
     log('accepted identity', { identityKey: identity.identityKey, deviceKey: identity.deviceKey });
     return identity;
@@ -336,11 +328,7 @@ export class IdentityManager {
       identity.controlPipeline.state.setTargetTimeframe(identityRecord.haloSpace.controlTimeframe);
     }
 
-    identity.stateUpdate.on(() => {
-      log('identityManager received identity.stateUpdate, forwarding');
-      this.stateUpdate.emit();
-    });
-
+    identity.stateUpdate.on(() => this.stateUpdate.emit());
     return identity;
   }
 

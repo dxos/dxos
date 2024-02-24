@@ -183,15 +183,21 @@ export class HaloProxy implements Halo {
   /**
    * Create Identity.
    * Then initializes profile with given display name.
+   * @param profile - optional display name
+   * @param deviceProfile - optional device profile that will be merged with defaults
    */
   async createIdentity(
     profile: ProfileDocument = {},
     deviceProfile: DeviceProfileDocument | undefined = undefined,
   ): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
+    const deviceProfileWithDefaults = {
+      ...deviceProfile,
+      ...(deviceProfile?.label ? { label: deviceProfile.label } : { label: 'initial identity device' }),
+    };
     const identity = await this._serviceProvider.services.IdentityService.createIdentity({
       profile,
-      deviceProfile,
+      deviceProfile: deviceProfileWithDefaults,
     });
     this._identityChanged.emit(identity);
     return identity;
@@ -277,14 +283,19 @@ export class HaloProxy implements Halo {
 
   /**
    * Initiates accepting invitation.
+   * @param invitation
+   * @param deviceProfile - optional device profile that will be merged with defaults
    */
   join(invitation: Invitation | string, deviceProfile?: DeviceProfileDocument) {
     if (!this.opened) {
       throw new ApiError('Client not open.');
     }
 
-    log('accept invitation', invitation);
-    return this._invitationProxy!.join(invitation, deviceProfile);
+    const deviceProfileWithDefaults = {
+      ...deviceProfile,
+      ...(deviceProfile?.label ? { label: deviceProfile.label } : { label: 'additional device' }),
+    };
+    return this._invitationProxy!.join(invitation, deviceProfileWithDefaults);
   }
 
   /**
