@@ -43,6 +43,8 @@ const config: UserConfig = defineUserConfig({
   },
   theme: hopeTheme({
     hostname: process.env.HOSTNAME ?? 'https://docs.dxos.org',
+    iconAssets: 'https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css',
+    iconPrefix: 'ph ph-',
     // Header logotype.
     logo: '/images/logotype/dxos-horizontal.svg',
     logoDark: '/images/logotype/dxos-horizontal-white.svg',

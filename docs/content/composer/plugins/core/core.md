@@ -1,15 +1,13 @@
 ---
-order: 3
+order: 2
 ---
 # Core Plugins
-
-Composer is made up of a core set of plugins that provide the basic functionality of the application.
 
 ## Theme
 
 Provides a default DXOS UI theme to the rest of the app's components.
 
-## Surface
+## [Surface](surfaces)
 
 Defines a component `<Surface />` that allows developers to delegate presentation of arbitrary content to plugins. The entire user interface of Composer is constructed of Surfaces, and the core plugins `provide` components that fulfill them.
 

@@ -1,8 +1,7 @@
 ---
-dir:
-  text: Sharing
-  order: 6
+order: 4
 ---
+
 # Spaces
 
 Spaces are collections of content that can be shared with others.
