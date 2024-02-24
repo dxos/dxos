@@ -218,6 +218,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
       () => [createBasicBundle({ themeMode, placeholder, lineWrapping }), ...(_extensions ?? [])],
       [themeMode, placeholder, lineWrapping, _extensions],
     );
+
     return (
       <BaseTextEditor
         ref={forwardedRef}
@@ -239,6 +240,7 @@ export const MarkdownEditor = forwardRef<EditorView | null, TextEditorProps>(
       () => [createMarkdownExtensions({ themeMode, placeholder }), ...(_extensions ?? [])],
       [themeMode, placeholder, _extensions],
     );
+
     return (
       <BaseTextEditor
         ref={forwardedRef}
