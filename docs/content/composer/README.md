@@ -7,12 +7,13 @@ Composer is a free, open-source, multiplayer, local-first knowledge environment 
 
 Developers can replace or extend any of Composer's functionality through plugins - every feature of composer is implemented as a plugin that can be swapped or extended. Community contributions are most welcome.
 
-Try [Composer](https://composer.dxos.org).
+[Try Composer](https://composer.dxos.org){class="button"}
 
-::: warning Caution
-## Technology Preview
+<a id="technology-preview"></a>
+::: warning Technology Preview
+Composer is not yet ready for production. There are bugs, and breaking changes may occur. Migration guides will be provided for version updates in the [release notes](https://github.com/dxos/dxos/releases). 
 
-Composer is in technology preview, not yet ready for production. Feedback is sought to refine the product, and breaking changes may occur. Migration guides will be provided for version updates in the [release notes](https://github.com/dxos/dxos/releases). Talk to us on [Discord](https://discord.gg/eXVfryv3sW) with any feedback.
+All your feedback is most welcome on [Discord](https://discord.gg/eXVfryv3sW).
 :::
 
 ## Key Features

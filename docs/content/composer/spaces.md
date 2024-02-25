@@ -4,7 +4,8 @@ order: 4
 
 # Spaces
 
-Spaces are collections of content that can be shared with others.
+::: info Spaces are collections of content that can be shared with others.
+:::
 
 ### Personal Space
 

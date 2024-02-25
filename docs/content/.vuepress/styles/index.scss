@@ -325,26 +325,29 @@ a.button {
   text-decoration: none;
   transition: 0.2s;
   html[data-theme='light'] & {
-    background-color: $zinc-500;
+    color: $zinc-100;
+    background-color: $emerald-500;
   }
   html[data-theme='dark'] & {
     background-color: $zinc-700;
   }
   &:hover {
+    color: white;
+    text-decoration: none;
     html[data-theme='light'] & {
-      background-color: $emerald-500;
+      color: white;
+      background-color: $emerald-400;
     }
     html[data-theme='dark'] & {
       background-color: $emerald-500;
     }
-    color: white;
-    text-decoration: none;
   }
   &.disabled {
     pointer-events: none;
     opacity: 0.5;
     html[data-theme='light'] & {
       color: $zinc-500;
+      background-color: $zinc-300;
     }
     html[data-theme='dark'] & {
       color: $zinc-500;

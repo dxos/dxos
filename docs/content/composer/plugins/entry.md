@@ -1,6 +1,5 @@
 ---
 order: 2
-next: core/
 ---
 # Entry point
 
