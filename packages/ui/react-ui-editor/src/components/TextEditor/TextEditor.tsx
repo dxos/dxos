@@ -88,10 +88,10 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
         if (view?.state.selection.main?.from === 0) {
           // Start at end of line.
           // TODO(burdon): Better way to do this?
-          setTimeout(() => {
-            const { to } = view.state.doc.lineAt(0);
-            view?.dispatch({ selection: { anchor: to } });
-          });
+          // setTimeout(() => {
+          //   const { to } = view.state.doc.lineAt(0);
+          //   view?.dispatch({ selection: { anchor: to } });
+          // });
         }
       }
     }, [view, autoFocus]);
@@ -136,6 +136,9 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
           // State.
           EditorView.editable.of(!readonly),
           EditorState.readOnly.of(!!readonly),
+
+          // TODO(burdon): Option.
+          // scrollPastEnd(),
 
           // Storage and replication.
           // NOTE: This must come before user extensions.

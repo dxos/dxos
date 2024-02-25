@@ -11,15 +11,13 @@ import {
   type Comment,
   MarkdownEditor,
   Toolbar,
-  editorFillLayoutEditor,
-  editorFillLayoutRoot,
   focusComment,
   useComments,
   useEditorView,
   useActionHandler,
   useFormattingState,
   cursorLineMargin,
-  editorHalfViewportOverscrollContent,
+  editorFillLayoutRoot,
 } from '@dxos/react-ui-editor';
 import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
@@ -71,9 +69,9 @@ const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...prop
     <>
       {toolbar && (
         <Toolbar.Root
-          onAction={handleAction}
-          state={formattingState}
           classNames='max-is-[60rem] justify-self-center border-be separator-separator'
+          state={formattingState}
+          onAction={handleAction}
         >
           <Toolbar.Markdown />
           <Toolbar.Separator />
@@ -103,10 +101,13 @@ const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...prop
               'data-testid': 'composer.markdownRoot',
             } as HTMLAttributes<HTMLDivElement>,
             editor: {
-              className: mx(editorFillLayoutEditor, !toolbar && 'border-bs separator-separator'),
+              className: 'h-full',
+              // className: mx(editorFillLayoutEditor, !toolbar && 'border-bs separator-separator'),
             },
             content: {
-              className: mx(editorHalfViewportOverscrollContent, '!p-2 sm:!p-6 md:!p-8'),
+              className: '!p-2',
+              // className: '!p-2 sm:!p-6 md:!p-8',
+              // className: mx(editorHalfViewportOverscrollContent, '!p-2 sm:!p-6 md:!p-8'),
             },
           }}
           {...props}

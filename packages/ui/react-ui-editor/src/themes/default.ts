@@ -50,8 +50,9 @@ export const defaultTheme: ThemeStyles = {
     outline: 'none',
   },
 
+  // NOTE: See https://codemirror.net/docs/guide (DOM Structure).
   '.cm-scroller': {
-    // overflow: 'visible',
+    overflowY: 'auto',
     fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
     lineHeight: 1.4,
   },

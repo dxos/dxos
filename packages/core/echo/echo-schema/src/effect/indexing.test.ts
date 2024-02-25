@@ -22,8 +22,6 @@ describe('Schema indexing through orama', () => {
 
     type Contact = S.Schema.To<typeof Contact>;
 
-
-
     const db = await create({
       schema: {
         // TODO(burdon): Index TypedObject using schema; separate db for each schema?
@@ -36,6 +34,3 @@ describe('Schema indexing through orama', () => {
     });
   });
 });
-
-
-const effectToOramaSchema = (schema: S.Schema):OramaSchema
