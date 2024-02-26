@@ -31,6 +31,19 @@ describe.only('ECHO backed reactive objects', () => {
     expect(updates.count).to.equal(1);
   });
 
+  test('nested', () => {
+    const obj = createEchoReactiveObject({ nested: { prop: 'foo' } });
+    expect(obj.nested.prop).to.equal('foo');
+
+    using updates = updateCounter(() => {
+      obj.nested.prop;
+    });
+
+    obj.nested.prop = 'bar';
+    expect(obj.nested.prop).to.equal('bar');
+    expect(updates.count).to.equal(1);
+  });
+
   test.skip('array', () => {
     const obj = createEchoReactiveObject({ arr: [1, 2, 3] });
     expect(obj.arr).to.deep.equal([1, 2, 3]);

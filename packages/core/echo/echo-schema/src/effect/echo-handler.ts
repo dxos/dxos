@@ -8,8 +8,9 @@ import { ReactiveObject } from './reactive';
 import { EchoDatabase } from '../database';
 import { TypedObject } from '../object';
 import { invariant } from '@dxos/invariant';
-import { assignDeep } from '@dxos/util';
+import { ComplexMap, assignDeep, defaultMap } from '@dxos/util';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
+import { log } from '@dxos/log';
 
 const symbolPath = Symbol('path');
 
@@ -33,9 +34,17 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   private _signal = compositeRuntime.createSignal();
 
+  private _targetsMap = new ComplexMap<PropPath, ProxyTarget>((key) => JSON.stringify(key));
+
   _init(target: ProxyTarget): void {
     invariant(!(target as any)[symbolIsProxy]);
-    this._objectCore.initNewObject(target);
+    invariant(Array.isArray(target[symbolPath]));
+
+    if (target[symbolPath].length === 0) {
+      this._objectCore.initNewObject(target);
+    }
+
+    // Clear extra keys
     for (const key in target) {
       if (typeof key !== 'symbol') {
         delete (target as any)[key];
@@ -46,12 +55,20 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
     invariant(Array.isArray(target[symbolPath]));
     invariant(typeof prop === 'string');
-    const fullPath = [DATA_NAMESPACE, ...target[symbolPath], prop];
 
+    this._signal.notifyRead();
+
+    const dataPath = [...target[symbolPath], prop];
+    const fullPath = [DATA_NAMESPACE, ...dataPath];
     const value = this._objectCore.get(fullPath);
     const decoded = this._objectCore.decode(value);
 
-    this._signal.notifyRead();
+    // TODO(dmaretskyi): Handle references and arrays.
+    if (typeof decoded === 'object' && decoded !== null) {
+      // TODO(dmaretskyi): Materialize properties for easier debugging.
+      const target = defaultMap(this._targetsMap, dataPath, (): ProxyTarget => ({ [symbolPath]: dataPath }));
+      return createReactiveProxy(target, this);
+    }
 
     return decoded;
   }
