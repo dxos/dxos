@@ -348,7 +348,7 @@ export const SpacePlugin = ({
           // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
           //  Instead, we store order as an array of space keys.
           let spacesOrder: Expando | undefined;
-          /* const [groupNode] = */ graph.addNodes({
+          const [groupNode] = graph.addNodes({
             id: SHARED,
             properties: {
               label: ['shared spaces label', { ns: SPACE_PLUGIN }],
@@ -408,11 +408,12 @@ export const SpacePlugin = ({
           });
 
           const updateSpacesOrder = (spacesOrder?: Expando) => {
-            // if (!spacesOrder) {
-            //   return;
-            // }
-            // TODO(wittjosiah): Handle re-arrange.
-            // groupNode.childrenMap = inferRecordOrder(groupNode.childrenMap, spacesOrder.order);
+            if (!spacesOrder) {
+              return;
+            }
+
+            const unordered = groupNode.edges().filter((edge) => !spacesOrder.order.includes(edge));
+            graph.setEdges(groupNode.id, 'outbound', [...spacesOrder.order, ...unordered]);
           };
           const spacesOrderQuery = client.spaces.default.db.query({ key: SHARED });
           spacesOrder = spacesOrderQuery.objects[0];

@@ -27,8 +27,6 @@ export const GraphPlugin = (): PluginDefinition<GraphProvides> => {
       );
 
       builder.build(graph);
-      // TODO(wittjosiah): Remove.
-      console.log(JSON.stringify(graph.toJSON(), null, 2));
     },
     provides: {
       graph,

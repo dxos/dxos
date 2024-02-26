@@ -32,8 +32,8 @@ export const sortActions = (actions: Action[]): Action[] =>
 export const getTreeItemLabel = (node: TreeNode, t: TFunction) =>
   Array.isArray(node.label) ? t(...node.label) : node.label;
 
-export const getPersistenceParent = (node: Node, persistenceClass: string): Node | null => {
-  const parent = node.nodes({ direction: 'inbound' })[0];
+export const getPersistenceParent = (node: TreeNode, persistenceClass: string): TreeNode | null => {
+  const parent = node.parent;
   if (!node || !parent) {
     return null;
   }

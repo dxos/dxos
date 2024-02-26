@@ -5,8 +5,8 @@
 import { type IconProps } from '@phosphor-icons/react';
 import { type FC } from 'react';
 
-import { type InvokeParams, type Action, type ActionGroup, type Node } from '@dxos/app-graph';
-import { type MaybePromise } from '@dxos/util';
+import { type InvokeParams, type Action, type ActionGroup, type NodeBase } from '@dxos/app-graph';
+import { type MakeOptional, type MaybePromise } from '@dxos/util';
 
 export type TreeNodeAction = Pick<Action, 'id' | 'properties'> & {
   label: Label;
@@ -23,9 +23,10 @@ export type TreeNodeActionGroup = Pick<ActionGroup, 'id' | 'properties'> & {
 };
 export type TreeNodeActionLike = TreeNodeAction | TreeNodeActionGroup;
 
-export type TreeNode = Pick<Node, 'id' | 'properties'> & {
+export type TreeNode = MakeOptional<NodeBase, 'data'> & {
   label: Label;
   icon?: FC<IconProps>;
+  parent: TreeNode | null;
   children: TreeNode[];
   actions: TreeNodeActionLike[];
 };

@@ -5,7 +5,6 @@
 import { MagnifyingGlass, type IconProps } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
 import { deepSignal, type RevertDeepSignal } from 'deepsignal/react';
-import get from 'lodash.get';
 import React from 'react';
 
 import {
@@ -23,7 +22,7 @@ import {
 } from '@dxos/app-framework';
 import { isGraphNode, type Node, type NodeFilter } from '@dxos/app-graph';
 import { Keyboard } from '@dxos/keyboard';
-import { treeNodeFromGraphNode, type TreeNode, getTreePath } from '@dxos/react-ui-navtree';
+import { treeNodeFromGraphNode, type TreeNode, getTreeNode } from '@dxos/react-ui-navtree';
 
 import {
   CommandsDialogContent,
@@ -43,11 +42,12 @@ export type NavTreePluginProvides = SurfaceProvides &
   TranslationsProvides;
 
 export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
-  const state = deepSignal<{ root?: TreeNode; longestPaths: Record<string, string[]> }>({ longestPaths: {} });
+  const longestPaths = new Map<string, string[]>();
+  const state = deepSignal<{ root?: TreeNode }>({});
   let graphPlugin: Plugin<GraphProvides> | undefined;
 
   const filterLongestPath: NodeFilter = (node, connectedNode): node is Node => {
-    const longestPath = state.longestPaths[node.id];
+    const longestPath = longestPaths.get(node.id);
     if (!longestPath) {
       return false;
     }
@@ -65,10 +65,12 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
 
       effect(() => {
+        longestPaths.clear();
         graphPlugin?.provides.graph.traverse({
           visitor: (node, path) => {
-            if (!(node.id in state.longestPaths) || state.longestPaths[node.id].length < path.length) {
-              state.longestPaths[node.id] = path;
+            const longestPath = longestPaths.get(node.id)?.length ?? 0;
+            if (longestPath < path.length) {
+              longestPaths.set(node.id, path);
             }
           },
         });
@@ -117,6 +119,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                 return (
                   <NavTreeContainer
                     root={state.root as RevertDeepSignal<TreeNode>}
+                    paths={longestPaths}
                     graph={graphPlugin.provides.graph}
                     activeId={data.activeId as string}
                     popoverAnchorId={data.popoverAnchorId as string}
@@ -127,36 +130,25 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
 
             case 'document-title': {
               const graphNode = isGraphNode(data.activeNode) ? data.activeNode : undefined;
-              const path =
-                graphNode?.id &&
-                getTreePath({
-                  graph: graphPlugin!.provides.graph,
-                  tree: state.root as RevertDeepSignal<TreeNode>,
-                  to: graphNode?.id,
-                });
-              const activeNode = path ? get(state.root, path) : undefined;
+              const path = graphNode?.id ? longestPaths.get(graphNode.id) : undefined;
+              const activeNode = path ? getTreeNode(state.root as RevertDeepSignal<TreeNode>, path) : undefined;
               return <NavTreeDocumentTitle activeNode={activeNode} />;
             }
 
-            case 'navbar-start':
-              if (isGraphNode(data.activeNode)) {
-                const path = getTreePath({
-                  graph: graphPlugin!.provides.graph,
-                  tree: state.root as RevertDeepSignal<TreeNode>,
-                  to: data.activeNode.id,
-                });
+            case 'navbar-start': {
+              const path = isGraphNode(data.activeNode) && longestPaths.get(data.activeNode.id);
+              if (path) {
+                const activeNode = getTreeNode(state.root as RevertDeepSignal<TreeNode>, path);
 
                 return {
                   node: (
-                    <NavBarStart
-                      activeNode={get(state.root, path)}
-                      popoverAnchorId={data.popoverAnchorId as string | undefined}
-                    />
+                    <NavBarStart activeNode={activeNode} popoverAnchorId={data.popoverAnchorId as string | undefined} />
                   ),
                   disposition: 'hoist',
                 };
               }
               break;
+            }
 
             case 'notch-start':
               return <NotchStart />;

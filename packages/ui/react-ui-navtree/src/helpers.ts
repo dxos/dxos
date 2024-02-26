@@ -4,7 +4,7 @@
 
 import { deepSignal, type RevertDeepSignal } from 'deepsignal/react';
 
-import { type Action, type ActionGroup, isAction, type Node, type NodeFilter, type Graph } from '@dxos/app-graph';
+import { type Action, type ActionGroup, isAction, type Node, type NodeFilter } from '@dxos/app-graph';
 
 import { type TreeNodeAction, type TreeNode, type TreeNodeActionLike, type TreeNodeActionGroup } from './types';
 
@@ -13,21 +13,22 @@ export type TreeNodeFromGraphNodeOptions = {
   path?: string[];
 };
 
-export const getTreePath = ({ graph, tree, to }: { graph: Graph; tree: TreeNode; to: string }): (string | number)[] => {
-  let prev = tree;
-  const path = graph.getPath({ to })?.flatMap((part) => {
-    if (!prev) {
-      return [];
-    }
-    const children = prev.children;
+export const getTreeNode = (tree: TreeNode, path?: string[]): TreeNode => {
+  if (!path) {
+    return tree;
+  }
+
+  let node = tree;
+  path.slice(1).forEach((part) => {
+    const children = node.children;
     const i = children.findIndex((child) => child.id === part);
     if (i === -1) {
       return [];
     }
-    prev = children[i];
-    return ['children', i];
+    node = children[i];
   });
-  return path ?? [];
+
+  return node;
 };
 
 /**
@@ -42,6 +43,12 @@ export const treeNodeFromGraphNode = (node: Node, options: TreeNodeFromGraphNode
     label,
     icon,
     properties,
+    data: node.data,
+    get parent() {
+      const parentId = path[path.length - 1];
+      const parent = node.nodes({ direction: 'inbound' }).find((n) => n.id === parentId);
+      return parent ? treeNodeFromGraphNode(parent, { ...options, path: path.slice(0, -1) }) : null;
+    },
     get children() {
       return node.nodes({ filter }).map((n) => treeNodeFromGraphNode(n, { ...options, path: [...path, node.id] }));
     },

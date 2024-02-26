@@ -2247,9 +2247,6 @@ importers:
       deepsignal:
         specifier: ^1.5.0
         version: 1.5.0(@preact/signals-core@1.5.1)
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
     devDependencies:
       '@braneframe/plugin-theme':
         specifier: workspace:*
@@ -2272,9 +2269,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21

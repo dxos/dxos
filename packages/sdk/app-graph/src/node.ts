@@ -50,6 +50,11 @@ export type EdgeDirection = 'outbound' | 'inbound';
 
 export type ConnectedNodes = {
   /**
+   * Edges that this node is connected to in default order.
+   */
+  edges(params?: { direction?: EdgeDirection }): Readonly<string[]>;
+
+  /**
    * Nodes that this node is connected to in default order.
    */
   nodes<T = any, U extends Record<string, any> = Record<string, any>>(params?: {

@@ -9,7 +9,6 @@ import {
   FolderPlus,
   type IconProps,
   PencilSimpleLine,
-  Placeholder,
   Planet,
   Plus,
   Trash,
@@ -20,16 +19,9 @@ import {
 import { effect } from '@preact/signals-core';
 import React from 'react';
 
-import {
-  actionGroupSymbol,
-  type InvokeParams,
-  type Graph,
-  type Node,
-  type NodeArg,
-  manageNodes,
-} from '@braneframe/plugin-graph';
+import { actionGroupSymbol, type InvokeParams, type Graph, type Node, manageNodes } from '@braneframe/plugin-graph';
 import { Folder } from '@braneframe/types';
-import { type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
+import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { EchoDatabaseImpl, isTypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
@@ -58,68 +50,58 @@ export const getSpaceDisplayName = (space: Space): string | [string, { ns: strin
         : ['unnamed space label', { ns: SPACE_PLUGIN }];
 };
 
-const getFolderGraphNodePartials = ({
-  folder,
-  space,
-  dispatch,
-}: {
-  folder: Folder;
-  space: Space;
-  dispatch: IntentDispatcher;
-}): Partial<NodeArg<null>> => {
+const getFolderGraphNodePartials = ({ graph, folder, space }: { graph: Graph; folder: Folder; space: Space }) => {
   return {
-    data: null,
-    properties: {
-      acceptPersistenceClass: new Set(['echo']),
-      acceptPersistenceKey: new Set([space.key.toHex()]),
-      role: 'branch',
-      onRearrangeChildren: (nextOrder: TypedObject[]) => {
-        folder.objects = nextOrder;
-      },
-      onTransferStart: (child: Node<TypedObject>) => {
-        // TODO(wittjosiah): Support transfer between spaces.
-        // const childSpace = getSpaceForObject(child.data);
-        // if (space && childSpace && !childSpace.key.equals(space.key)) {
-        //   // Create clone of child and add to destination space.
-        //   const newObject = clone(child.data, {
-        //     // TODO(wittjosiah): This needs to be generalized and not hardcoded here.
-        //     additional: [
-        //       child.data.content,
-        //       ...(child.data.objects ?? []),
-        //       ...(child.data.objects ?? []).map((object: TypedObject) => object.content),
-        //     ],
-        //   });
-        //   space.db.add(newObject);
-        //   folder.objects.push(newObject);
-        // } else {
+    acceptPersistenceClass: new Set(['echo']),
+    acceptPersistenceKey: new Set([space.key.toHex()]),
+    role: 'branch',
+    onRearrangeChildren: (nextOrder: TypedObject[]) => {
+      // Change on disk.
+      folder.objects = nextOrder;
+    },
+    onTransferStart: (child: Node<TypedObject>) => {
+      // TODO(wittjosiah): Support transfer between spaces.
+      // const childSpace = getSpaceForObject(child.data);
+      // if (space && childSpace && !childSpace.key.equals(space.key)) {
+      //   // Create clone of child and add to destination space.
+      //   const newObject = clone(child.data, {
+      //     // TODO(wittjosiah): This needs to be generalized and not hardcoded here.
+      //     additional: [
+      //       child.data.content,
+      //       ...(child.data.objects ?? []),
+      //       ...(child.data.objects ?? []).map((object: TypedObject) => object.content),
+      //     ],
+      //   });
+      //   space.db.add(newObject);
+      //   folder.objects.push(newObject);
+      // } else {
 
-        // Add child to destination folder.
-        folder.objects.push(child.data);
+      // Add child to destination folder.
+      folder.objects.push(child.data);
 
-        // }
-      },
-      onTransferEnd: (child: Node<TypedObject>, destination: Node) => {
-        // Remove child from origin folder.
-        const index = folder.objects.indexOf(child.data);
-        if (index > -1) {
-          folder.objects.splice(index, 1);
-        }
+      // }
+    },
+    onTransferEnd: (child: Node<TypedObject>, destination: Node) => {
+      // Remove child from origin folder.
+      const index = folder.objects.indexOf(child.data);
+      if (index > -1) {
+        folder.objects.splice(index, 1);
+      }
 
-        // TODO(wittjosiah): Support transfer between spaces.
-        // const childSpace = getSpaceForObject(child.data);
-        // const destinationSpace =
-        //   destination.data instanceof SpaceProxy ? destination.data : getSpaceForObject(destination.data);
-        // if (destinationSpace && childSpace && !childSpace.key.equals(destinationSpace.key)) {
-        //   // Mark child as deleted in origin space.
-        //   childSpace.db.remove(child.data);
-        // }
-      },
-      onCopy: async (child: Node<TypedObject>) => {
-        // Create clone of child and add to destination space.
-        const newObject = await clone(child.data);
-        space.db.add(newObject);
-        folder.objects.push(newObject);
-      },
+      // TODO(wittjosiah): Support transfer between spaces.
+      // const childSpace = getSpaceForObject(child.data);
+      // const destinationSpace =
+      //   destination.data instanceof SpaceProxy ? destination.data : getSpaceForObject(destination.data);
+      // if (destinationSpace && childSpace && !childSpace.key.equals(destinationSpace.key)) {
+      //   // Mark child as deleted in origin space.
+      //   childSpace.db.remove(child.data);
+      // }
+    },
+    onCopy: async (child: Node<TypedObject>) => {
+      // Create clone of child and add to destination space.
+      const newObject = await clone(child.data);
+      space.db.add(newObject);
+      folder.objects.push(newObject);
     },
   };
 };
@@ -140,27 +122,24 @@ export const updateGraphWithSpace = ({
   resolve: MetadataResolver;
 }): UnsubscribeCallback => {
   const getId = (id: string) => `${id}/${space.key.toHex()}`;
-  const query = space.db.query();
-  let previousObjects: TypedObject[] = [];
-  return effect(() => {
+
+  const unsubscribeSpace = effect(() => {
     const folder = space.properties[Folder.schema.typename];
-    // TODO(wittjosiah): Nested action nodes from partials won't be removed by manageNodes.
     const partials =
       space.state.get() === SpaceState.READY && folder instanceof Folder
-        ? getFolderGraphNodePartials({ folder, space, dispatch })
+        ? getFolderGraphNodePartials({ graph, folder, space })
         : {};
 
     manageNodes({
       graph,
-      condition: hidden ? space.state.get() !== SpaceState.INACTIVE : true,
+      condition: hidden ? true : space.state.get() !== SpaceState.INACTIVE,
       removeEdges: true,
       nodes: [
         {
-          ...partials,
           id: space.key.toHex(),
           data: space,
           properties: {
-            ...partials.properties,
+            ...partials,
             label: isPersonalSpace ? ['personal space label', { ns: SPACE_PLUGIN }] : getSpaceDisplayName(space),
             description: space.properties.description,
             icon: (props: IconProps) => <Planet {...props} />,
@@ -176,7 +155,7 @@ export const updateGraphWithSpace = ({
 
     manageNodes({
       graph,
-      condition: hidden ? space.state.get() !== SpaceState.INACTIVE : true,
+      condition: folder instanceof Folder && (hidden ? true : space.state.get() !== SpaceState.INACTIVE),
       removeEdges: true,
       nodes: [
         {
@@ -198,7 +177,7 @@ export const updateGraphWithSpace = ({
 
     manageNodes({
       graph,
-      condition: hidden ? space.state.get() !== SpaceState.INACTIVE : true,
+      condition: folder instanceof Folder && (hidden ? true : space.state.get() !== SpaceState.INACTIVE),
       removeEdges: true,
       nodes: [
         {
@@ -322,43 +301,111 @@ export const updateGraphWithSpace = ({
         },
       ],
     });
+  });
 
-    // if (!(folder instanceof Folder)) {
-    //   return;
-    // }
+  // Update graph with all objects in the space.
+  const query = space.db.query();
+  const previousObjects = new Map<string, TypedObject[]>();
+  const unsubscribeQuery = effect(() => {
+    const folder = space.properties[Folder.schema.typename];
+    const removedObjects =
+      previousObjects.get(space.key.toHex())?.filter((object) => !query.objects.includes(object)) ?? [];
+    previousObjects.set(space.key.toHex(), [...query.objects]);
+    const unsortedObjects = query.objects.filter((object) => !folder.objects.includes(object));
+    const objects = [...folder.objects, ...unsortedObjects];
 
-    // const childSubscriptions = new EventSubscriptions();
-    // const removedObjects = previousObjects.filter((object) => !folder.objects.includes(object));
-    // previousObjects = folder.objects;
-
-    // removedObjects.forEach((object) => parent.removeNode(object.id));
-    // folder.objects.forEach((object) => {
-    //   if (!object) {
-    //     return;
-    //   }
-
-    //   const unsubscribe = objectToGraphNode({ object, parent: node, dispatch, resolve });
-    //   if (unsubscribe) {
-    //     childSubscriptions.add(unsubscribe);
-    //   }
-    // });
-
-    // return () => childSubscriptions.clear();
-
-    const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-    previousObjects = query.objects;
-
+    // Cleanup when objects removed from space.
     removedObjects.forEach((object) => {
       const getId = (id: string) => `${id}/${object.id}`;
+      if (object instanceof Folder) {
+        graph.removeNode(object.id);
+        graph.removeNode(getId(SpaceAction.ADD_OBJECT));
+        graph.removeNode(getId(SpaceAction.ADD_OBJECT.replace('object', 'folder')));
+      }
       graph.removeEdge(space.key.toHex(), object.id);
       [SpaceAction.RENAME_OBJECT, SpaceAction.REMOVE_OBJECT].forEach((action) => {
         graph.removeNode(getId(action));
       });
     });
-    query.objects.forEach((object) => {
+
+    objects.forEach((object) => {
       const getId = (id: string) => `${id}/${object.id}`;
 
+      // For all folders, including the root folder.
+      if (object instanceof Folder) {
+        const removedObjects = previousObjects.get(object.id)?.filter((o) => !object.objects.includes(o)) ?? [];
+        // TODO(wittjosiah): Not speading here results in empty array being stored.
+        previousObjects.set(object.id, [...object.objects]);
+
+        // Remove objects no longer in folder.
+        removedObjects.forEach((child) => graph.removeEdge(object.id, child.id));
+
+        // Add new objects to folder.
+        object.objects.forEach((child) => graph.addEdge(object.id, child.id));
+
+        // Set order of objects in folder.
+        graph.setEdges(
+          object.id,
+          'outbound',
+          object.objects.map((o) => o.id),
+        );
+      }
+
+      // When object is a folder but not the root folder.
+      if (object instanceof Folder && object !== folder) {
+        const partials = getFolderGraphNodePartials({ graph, folder: object, space });
+
+        graph.addNodes({
+          id: object.id,
+          data: object,
+          properties: {
+            ...partials,
+            label: object.name ?? ['unnamed folder label', { ns: SPACE_PLUGIN }],
+            icon: (props: IconProps) => <FolderOpen {...props} />,
+            testId: 'spacePlugin.object',
+            persistenceClass: 'echo',
+            persistenceKey: space.key.toHex(),
+          },
+        });
+
+        graph.addNodes({
+          id: getId(SpaceAction.ADD_OBJECT),
+          data: actionGroupSymbol,
+          properties: {
+            label: ['create object group label', { ns: SPACE_PLUGIN }],
+            icon: (props: IconProps) => <Plus {...props} />,
+            disposition: 'toolbar',
+            // TODO(wittjosiah): This is currently a navtree feature. Address this with cmd+k integration.
+            // mainAreaDisposition: 'in-flow',
+            menuType: 'searchList',
+            testId: 'spacePlugin.createObject',
+          },
+          edges: [[object.id, 'inbound']],
+        });
+
+        graph.addNodes({
+          id: getId(SpaceAction.ADD_OBJECT.replace('object', 'folder')),
+          data: () =>
+            dispatch({
+              plugin: SPACE_PLUGIN,
+              action: SpaceAction.ADD_OBJECT,
+              data: { target: folder, object: new Folder() },
+            }),
+          properties: {
+            label: ['create folder label', { ns: SPACE_PLUGIN }],
+            icon: (props: IconProps) => <FolderPlus {...props} />,
+            testId: 'spacePlugin.createFolder',
+          },
+          edges: [[getId(SpaceAction.ADD_OBJECT), 'inbound']],
+        });
+      }
+
+      // Add an edge for every object. Depends on other presentation plugins to add the node itself.
       graph.addEdge(space.key.toHex(), object.id);
+
+      // Add basic rename and delete actions to every object.
+      // TODO(wittjosiah): Rename should be customizable.
+      //  Probably done by popping open create dialog (https://github.com/dxos/dxos/issues/5191).
       graph.addNodes(
         {
           id: getId(SpaceAction.RENAME_OBJECT),
@@ -396,115 +443,101 @@ export const updateGraphWithSpace = ({
         },
       );
     });
+
+    // Set order of objects in space.
+    graph.setEdges(
+      space.key.toHex(),
+      'outbound',
+      objects.map((o) => o.id),
+    );
   });
+
+  return () => {
+    unsubscribeSpace();
+    unsubscribeQuery();
+  };
 };
 
-export const objectToGraphNode = ({
+/**
+ * Adds an action for creating a specific object type to a space and all its folders.
+ *
+ * @returns Unsubscribe callback.
+ */
+// TODO(wittjosiah): Consider ways to make this helper not necessary.
+//   Could there be a special node in the graph which actions get added to and
+//   the navtree applies them to all collection nodes?
+export const updateGraphWithAddObjectAction = ({
   graph,
-  object,
+  space,
   dispatch,
-  resolve,
+  plugin,
+  action,
+  properties,
 }: {
   graph: Graph;
-  object: TypedObject;
+  space: Space;
   dispatch: IntentDispatcher;
-  resolve: MetadataResolver;
-}): UnsubscribeCallback => {
-  const getId = (id: string) => `${id}/${object.id}`;
-  const space = getSpaceForObject(object);
-  const metadata = object.__typename ? resolve(object.__typename) : object.type ? resolve(object.type) : {};
-  const partials =
-    space && object instanceof Folder ? getFolderGraphNodePartials({ folder: object, space, dispatch }) : {};
-
-  // let previousObjects: TypedObject[] = [];
-  return effect(() => {
-    // TODO(wittjosiah): Remove from graph condition?
-    graph.addNodes({
-      id: object.id,
-      data: object,
-      ...partials,
-      properties: {
-        ...partials.properties,
-        label: object.name || object.title || metadata.placeholder || ['unnamed object label', { ns: SPACE_PLUGIN }],
-        description: object.description,
-        icon: metadata.icon ?? ((props: IconProps) => <Placeholder {...props} />),
-        testId: 'spacePlugin.object',
-        persistenceClass: 'echo',
-        persistenceKey: space?.key.toHex(),
-      },
-    });
-
-    // TODO(wittjosiah): Nest above?
-    graph.addNodes(
+  plugin: string;
+  action: string;
+  properties: Record<string, any>;
+}) => {
+  // Include the create document action on all spaces.
+  manageNodes({
+    graph,
+    condition: space.state.get() === SpaceState.READY,
+    nodes: [
       {
-        id: getId(SpaceAction.RENAME_OBJECT),
-        data: (params: InvokeParams) =>
-          dispatch({
-            action: SpaceAction.RENAME_OBJECT,
-            data: { object, ...params },
-          }),
-        properties: {
-          label: ['rename object label', { ns: SPACE_PLUGIN }],
-          icon: (props: IconProps) => <PencilSimpleLine {...props} />,
-          keyBinding: 'shift+F6',
-          testId: 'spacePlugin.renameObject',
-        },
-      },
-      {
-        id: getId(SpaceAction.REMOVE_OBJECT),
-        data: (params) =>
+        id: `${plugin}/create/${space.key.toHex()}`,
+        data: () =>
           dispatch([
             {
-              action: SpaceAction.REMOVE_OBJECT,
-              // TODO(wittjosiah): Parent.
-              data: { object, /* folder: parent.data, */ ...params },
+              plugin,
+              action,
+            },
+            {
+              action: SpaceAction.ADD_OBJECT,
+              data: { target: space },
+            },
+            {
+              action: NavigationAction.ACTIVATE,
             },
           ]),
-        properties: {
-          label: ['delete object label', { ns: SPACE_PLUGIN }],
-          icon: (props) => <Trash {...props} />,
-          keyBinding: 'shift+meta+Backspace',
-          testId: 'spacePlugin.deleteObject',
-        },
+        properties,
+        edges: [[`${SpaceAction.ADD_OBJECT}/${space.key.toHex()}`, 'inbound']],
       },
-    );
+    ],
+  });
 
-    // if (!(object instanceof Folder)) {
-    //   node.addAction({
-    //     id: 'duplicate',
-    //     label: ['duplicate object label', { ns: SPACE_PLUGIN }],
-    //     icon: (props) => <Copy {...props} />,
-    //     invoke: () =>
-    //       dispatch({
-    //         action: SpaceAction.DUPLICATE_OBJECT,
-    //         data: { object, target: parent.data },
-    //       }),
-    //     properties: {
-    //       testId: 'spacePlugin.duplicateObject',
-    //     },
-    //   });
-
-    //   return;
-    // }
-
-    // const folder = object;
-    // const childSubscriptions = new EventSubscriptions();
-    // const removedObjects = previousObjects.filter((object) => !folder.objects.includes(object));
-    // previousObjects = folder.objects;
-
-    // removedObjects.forEach((object) => parent.removeNode(object.id));
-    // folder.objects.forEach((object) => {
-    //   if (!object) {
-    //     return;
-    //   }
-
-    //   const unsubscribe = objectToGraphNode({ object, parent: node, dispatch, resolve });
-    //   if (unsubscribe) {
-    //     childSubscriptions.add(unsubscribe);
-    //   }
-    // });
-
-    // return () => childSubscriptions.clear();
+  // Include the create document action on all folders.
+  const folderQuery = space.db.query(Folder.filter());
+  let previousFolders: Folder[] = [];
+  return effect(() => {
+    const removedFolders = previousFolders.filter((folder) => !folderQuery.objects.includes(folder));
+    previousFolders = folderQuery.objects;
+    removedFolders.forEach((folder) => {
+      graph.removeNode(`${plugin}/create/${folder.id}`, true);
+    });
+    folderQuery.objects.forEach((folder) => {
+      graph.addNodes({
+        id: `${plugin}/create/${folder.id}`,
+        data: () =>
+          dispatch([
+            {
+              plugin,
+              action,
+            },
+            {
+              action: SpaceAction.ADD_OBJECT,
+              data: { target: folder },
+            },
+            {
+              action: NavigationAction.ACTIVATE,
+            },
+          ]),
+        properties,
+        edges: [[`${SpaceAction.ADD_OBJECT}/${folder.id}`, 'inbound']],
+      });
+    });
   });
 };
 

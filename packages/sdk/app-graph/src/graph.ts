@@ -93,18 +93,18 @@ export class Graph {
   private _constructNode = (nodeBase: NodeBase): Node => {
     const node: Node = {
       ...nodeBase,
-      // TODO(wittjosiah): add actions api?
+      edges: ({ direction = 'outbound' } = {}) => {
+        return this._edges[this.getEdgeKey(node.id, direction)];
+      },
       nodes: ({ direction, filter } = {}) => {
-        const nodes = this._getNodes({ id: node.id, direction });
-        return filter ? nodes.filter((n) => !isActionLike(n)).filter((n) => filter(n, node)) : nodes;
+        const nodes = this._getNodes({ id: node.id, direction }).filter((n) => !isActionLike(n));
+        return filter ? nodes.filter((n) => filter(n, node)) : nodes;
       },
       node: (id: string) => {
-        const nodes = this._getNodes({ id });
-        return nodes.find((node) => node.id === id);
+        return this._getNodes({ id }).find((node) => node.id === id);
       },
       actions: () => {
-        const nodes = this._getNodes({ id: node.id });
-        return nodes.filter(isActionLike);
+        return this._getNodes({ id: node.id }).filter(isActionLike);
       },
     };
 

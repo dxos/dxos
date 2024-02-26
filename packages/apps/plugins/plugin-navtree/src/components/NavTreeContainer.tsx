@@ -14,6 +14,7 @@ import {
   type TreeNode,
   type NavTreeProps,
   emptyBranchDroppableId,
+  getTreeNode,
 } from '@dxos/react-ui-navtree';
 import { arrayMove } from '@dxos/util';
 
@@ -40,11 +41,13 @@ const renderPresence = (node: TreeNode) => {
 
 export const NavTreeContainer = ({
   root,
+  paths,
   graph,
   activeId,
   popoverAnchorId,
 }: {
   root: TreeNode;
+  paths: Map<string, string[]>;
   graph: Graph;
   activeId?: string;
   popoverAnchorId?: string;
@@ -76,8 +79,8 @@ export const NavTreeContainer = ({
   const currentPath = (activeId && getMosaicPath(graph, activeId)) ?? 'never';
 
   const isOver: NavTreeProps['isOver'] = ({ path, operation, activeItem, overItem }) => {
-    const activeNode = activeItem && graph.findNode(Path.last(activeItem.path));
-    const overNode = overItem && graph.findNode(Path.last(trimPlaceholder(overItem.path)));
+    const activeNode = activeItem && getTreeNode(root, paths.get(Path.last(activeItem.path)));
+    const overNode = overItem && getTreeNode(root, paths.get(Path.last(trimPlaceholder(overItem.path))));
     if (
       !activeNode ||
       !overNode ||
@@ -116,8 +119,8 @@ export const NavTreeContainer = ({
       else {
         // Adjust overPath if over is empty placeholder.
         const overPath = trimPlaceholder(over.path);
-        const overNode = graph.findNode(Path.last(overPath));
-        const activeNode = graph.findNode(Path.last(active.path));
+        const overNode = getTreeNode(root, paths.get(Path.last(overPath)));
+        const activeNode = getTreeNode(root, paths.get(Path.last(active.path)));
         const activeClass = activeNode?.properties.persistenceClass;
         const activeKey = activeNode?.properties.persistenceKey;
         if (overNode && activeNode && activeClass && activeKey) {
@@ -134,20 +137,20 @@ export const NavTreeContainer = ({
         }
       }
     },
-    [graph],
+    [graph, root],
   );
 
   const handleDrop = useCallback(
     ({ operation, active, over }: MosaicDropEvent<number>) => {
       const overPath = trimPlaceholder(over.path);
-      const activeNode = graph.findNode(Path.last(active.path));
-      const overNode = graph.findNode(Path.last(overPath));
+      const activeNode = getTreeNode(root, paths.get(Path.last(active.path)));
+      const overNode = getTreeNode(root, paths.get(Path.last(overPath)));
       if (activeNode && overNode) {
         const activeClass = activeNode.properties.persistenceClass;
-        if (operation === 'rearrange') {
-          const activeParent = activeNode.nodes({ direction: 'inbound' })[0];
-          const ids = activeParent.nodes().map((node) => node.id);
-          const nodes = activeParent.nodes().map(({ data }) => data);
+        const activeParent = activeNode.parent;
+        if (activeParent && operation === 'rearrange') {
+          const ids = activeParent.children.map((node) => node.id);
+          const nodes = activeParent.children.map(({ data }) => data);
           const activeIndex = ids.indexOf(activeNode.id);
           const overIndex = ids.indexOf(overNode.id);
           activeParent.properties.onRearrangeChildren(
@@ -174,7 +177,7 @@ export const NavTreeContainer = ({
         }
       }
     },
-    [graph],
+    [graph, root],
   );
 
   return (
