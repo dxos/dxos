@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { useMemo, useState } from 'react';
 
-import { Toolbar as NaturalToolbar, Select, useThemeContext } from '@dxos/react-ui';
+import { Toolbar as NaturalToolbar, Select, useThemeContext, Tooltip } from '@dxos/react-ui';
 import { attentionSurface, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -118,7 +118,11 @@ export default {
   title: 'react-ui-editor/useTextEditor',
   component: TextEditor,
   decorators: [withTheme],
-  render: (args: StoryProps) => <Story {...args} />,
+  render: (args: StoryProps) => (
+    <Tooltip.Provider>
+      <Story {...args} />
+    </Tooltip.Provider>
+  ),
   parameters: { translations, layout: 'fullscreen' },
 };
 

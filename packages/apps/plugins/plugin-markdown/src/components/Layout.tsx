@@ -10,7 +10,11 @@ import { topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
 export const MainLayout = ({ children }: PropsWithChildren) => {
   return (
-    <Main.Content bounce classNames={[topbarBlockPaddingStart, editorWithToolbarLayout]}>
+    <Main.Content
+      bounce
+      data-toolbar={toolbar ? 'enabled' : 'disabled'}
+      classNames={[topbarBlockPaddingStart, editorWithToolbarLayout]}
+    >
       {children}
     </Main.Content>
   );

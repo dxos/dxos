@@ -9,6 +9,7 @@ import React, { type FC, useMemo, useState } from 'react';
 import { TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
+import { Tooltip } from '@dxos/react-ui';
 import { mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -82,7 +83,11 @@ const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) =
 export default {
   title: 'react-ui-editor/Toolbar',
   component: Toolbar,
-  render: (args: any) => <Story {...args} />,
+  render: (args: any) => (
+    <Tooltip.Provider>
+      <Story {...args} />
+    </Tooltip.Provider>
+  ),
   decorators: [withTheme],
   parameters: { translations, layout: 'fullscreen' },
 };

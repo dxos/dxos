@@ -272,7 +272,7 @@ export const defaultSlots: TextEditorSlots = {
     className: focusRing,
   },
   editor: {
-    className: 'h-full overflow-scroll',
+    className: 'bs-full',
   },
 };
 
