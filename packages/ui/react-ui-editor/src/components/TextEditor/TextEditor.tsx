@@ -3,7 +3,7 @@
 //
 
 import { EditorState, type Extension, type StateEffect } from '@codemirror/state';
-import { EditorView, scrollPastEnd, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { EditorView, scrollPastEnd } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, {
@@ -74,8 +74,8 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
       model,
       readonly,
       autoFocus,
-      scrollTo= EditorView.scrollIntoView(0),
-      moveToEndOfLine = true,
+      scrollTo = EditorView.scrollIntoView(0),
+      moveToEndOfLine,
       selection,
       theme,
       slots = defaultSlots,
@@ -123,26 +123,15 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
           }),
 
           // Theme.
-          // TODO(burdon): Make configurable.
+          // TODO(burdon): Make base theme configurable.
           EditorView.baseTheme(defaultTheme),
-          EditorView.theme(theme ?? {}),
+          theme && EditorView.theme(theme),
           EditorView.darkTheme.of(themeMode === 'dark'),
-          EditorView.editorAttributes.of({ class: slots.editor?.className ?? '' }),
-          // NOTE: Must not set vertical padding or margins.
-          EditorView.contentAttributes.of({ class: slots.content?.className ?? '' }),
-          _scrollPastEnd && scrollPastEnd(),
+          slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
+          slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
 
-          // TODO(burdon): Assumes default line height?
+          // NOTE: Assumes default line height.
           _scrollPastEnd && scrollPastEnd(),
-          ViewPlugin.fromClass(
-            class {
-              update(update: ViewUpdate) {
-                const { view } = update;
-                const height = (view as any).viewState.editorHeight;
-                console.log(height, view.scaleY, view.defaultLineHeight, view.documentPadding);
-              }
-            },
-          ),
 
           // Focus.
           EditorView.updateListener.of((update) => {
@@ -156,9 +145,6 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
           // State.
           EditorView.editable.of(!readonly),
           EditorState.readOnly.of(!!readonly),
-
-          // TODO(burdon): Option.
-          // scrollPastEnd(),
 
           // Storage and replication.
           // NOTE: This must come before user extensions.
@@ -187,7 +173,6 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
         },
       });
 
-      // view?.destroy();
       setView(view);
 
       if (moveToEndOfLine) {
