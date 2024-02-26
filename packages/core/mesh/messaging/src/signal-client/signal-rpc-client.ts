@@ -4,14 +4,17 @@
 
 import WebSocket from 'isomorphic-ws';
 
-import { Trigger } from '@dxos/async';
+import { scheduleTaskInterval, Trigger } from '@dxos/async';
 import { type Any, type Stream } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema, trace } from '@dxos/protocols';
 import { type Message as SignalMessage, type Signal } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
+
+const SIGNAL_KEEPALIVE_INTERVAL = 10000;
 
 interface Services {
   Signal: Signal;
@@ -38,6 +41,7 @@ export class SignalRPCClient {
   private _socket?: WebSocket;
   private _rpc?: ProtoRpcPeer<Services>;
   private readonly _connectTrigger = new Trigger();
+  private _keepaliveCtx?: Context;
 
   private _closed = false;
 
@@ -89,6 +93,16 @@ export class SignalRPCClient {
         log(`RPC open ${this._url}`);
         this._callbacks.onConnected?.();
         this._connectTrigger.wake();
+        this._keepaliveCtx = new Context();
+        scheduleTaskInterval(
+          this._keepaliveCtx,
+          async () => {
+            // TODO(nf): use RFC6455 ping/pong once implemented in the browser?
+            // TODO(nf): check for pong response from server (once implemented)
+            this._socket?.send('__ping__');
+          },
+          SIGNAL_KEEPALIVE_INTERVAL,
+        );
       } catch (err: any) {
         this._callbacks.onError?.(err);
       }
@@ -123,6 +137,7 @@ export class SignalRPCClient {
   }
 
   async close() {
+    await this._keepaliveCtx?.dispose();
     this._closed = true;
     try {
       await this._rpc?.close();
