@@ -5,7 +5,8 @@
 import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
-import { createReactiveProxy, isValidProxyTarget, symbolIsProxy, type ReactiveHandler } from './proxy';
+import { createReactiveProxy, isValidProxyTarget, type ReactiveHandler } from './proxy';
+import { ReactiveArray } from './reactive-array';
 
 const symbolSignal = Symbol('signal');
 
@@ -37,8 +38,8 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     for (const key in target) {
-      if (Array.isArray(target[key]) && !(target instanceof ReactiveArray)) {
-        target[key] = new ReactiveArray(...target[key]);
+      if (Array.isArray(target[key]) && !(target[key] instanceof ReactiveArray)) {
+        target[key] = ReactiveArray.from(target[key]);
       }
     }
   }
@@ -47,7 +48,7 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     target[symbolSignal].notifyRead();
     const value = Reflect.get(target, prop);
 
-    if ((value instanceof ReactiveArray || isValidProxyTarget(value)) && !(value as any)[symbolIsProxy]) {
+    if (isValidProxyTarget(value)) {
       // Note: Need to pass in `this` instance to createReactiveProxy to ensure that the same proxy is used for target.
       return createReactiveProxy(value, this);
     }
@@ -70,33 +71,5 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const result = Reflect.defineProperty(target, property, attributes);
     target[symbolSignal].notifyWrite();
     return result;
-  }
-}
-
-/**
- * Extends the native array to make sure that arrays methods are correctly reactive.
- */
-class ReactiveArray<T> extends Array<T> {
-  static [Symbol.species] = Array;
-
-  static {
-    /**
-     * These methods will trigger proxy traps like `set` and `defineProperty` and emit signal notifications.
-     * We wrap them in a batch to avoid unnecessary signal notifications.
-     */
-    const BATCHED_METHODS = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'] as const;
-
-    for (const method of BATCHED_METHODS) {
-      Object.defineProperty(this.prototype, method, {
-        enumerable: false,
-        value: function (this: ReactiveArray<any>, ...args: any[]) {
-          let result!: any;
-          compositeRuntime.batch(() => {
-            result = Array.prototype[method].apply(this, args);
-          });
-          return result;
-        },
-      });
-    }
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-editor",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "Document editing experience within a DXOS shell.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -18,6 +18,7 @@
   "dependencies": {
     "@codemirror/autocomplete": "^6.12.0",
     "@codemirror/commands": "^6.3.3",
+    "@codemirror/lang-javascript": "^6.2.2",
     "@codemirror/lang-markdown": "^6.2.4",
     "@codemirror/language": "^6.10.1",
     "@codemirror/language-data": "^6.3.1",
@@ -46,7 +47,7 @@
     "@lezer/markdown": "^1.2.0",
     "@radix-ui/react-context": "^1.0.0",
     "@replit/codemirror-vim": "^6.0.14",
-    "codemirror": "6.0.1",
+    "codemirror": "^6.0.1",
     "lib0": "^0.2.65",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",

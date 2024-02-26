@@ -50,14 +50,18 @@ export const defaultTheme: ThemeStyles = {
     outline: 'none',
   },
 
+  // NOTE: See https://codemirror.net/docs/guide (DOM Structure).
   '.cm-scroller': {
-    // overflow: 'visible',
+    // TODO(burdon): Reconcile with docs: https://codemirror.net/docs/guide
+    //  Inside of that is the scroller element. If the editor has its own scrollbar, this one should be styled with overflow: auto. But it doesn't have to—the editor also supports growing to accomodate its content, or growing up to a certain max-height and then scrolling.
+    overflowY: 'auto',
     fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
-    lineHeight: 1.4,
+    lineHeight: 1.5,
   },
 
   '.cm-content': {
-    padding: 0,
+    // TODO(burdon): Is it possible to remove the padding value from CM's default theme?
+    // padding: 'unset',
     // NOTE: Base font size (otherwise defined by HTML tag, which might be different for storybook).
     fontSize: '16px',
   },
