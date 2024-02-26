@@ -3,7 +3,7 @@
 //
 
 import { Code, type IconProps } from '@phosphor-icons/react';
-import React from 'react';
+import React, { type FC, useEffect, useMemo } from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Script as ScriptType } from '@braneframe/types';
@@ -100,24 +100,17 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
           switch (role) {
             case 'main':
               return isObject(data.active, ScriptType.schema, ScriptType.filter()) ? (
-                <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
-                  <ScriptBlock
-                    id={(data.active as any).id}
-                    source={createDocAccessor((data.active as ScriptType).source)}
-                    classes={{ toolbar: 'px-2' }}
-                    containerUrl={containerUrl}
-                  />
-                </Main.Content>
+                <Editor script={data.active as ScriptType} containerUrl={containerUrl} />
               ) : null;
             case 'slide':
               return isObject(data.slide, ScriptType.schema, ScriptType.filter()) ? (
                 <ScriptBlock
                   id={(data.slide as any).id}
                   source={createDocAccessor((data.slide as ScriptType).source)}
+                  containerUrl={containerUrl}
                   classes={{ root: 'p-24' }}
                   view='preview'
                   hideSelector
-                  containerUrl={containerUrl}
                 />
               ) : null;
             case 'section':
@@ -159,3 +152,32 @@ const example = [
   '  return <Chart items={objects} accessor={object => ({ x: object.lat, y: object.lng })} />',
   '}',
 ].join('\n');
+
+let lastSource;
+let lastObj;
+let lastScript;
+
+const Editor: FC<{ script: ScriptType; containerUrl: string }> = ({ script, containerUrl }) => {
+  const source = useMemo(() => createDocAccessor(script.source), [script.source]);
+
+  console.log('Editor', {
+    scriptId: script.id,
+    script,
+    source: source === lastSource,
+    obj: lastObj === script.source,
+    scriptCh: lastScript === script,
+  });
+  lastSource = source;
+  lastObj = script.source;
+  lastScript = script;
+
+  useEffect(() => {
+    console.log('mount editor');
+  }, []);
+
+  return (
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
+      <ScriptBlock id={script.id} source={source} classes={{ toolbar: 'px-2' }} containerUrl={containerUrl} />
+    </Main.Content>
+  );
+};

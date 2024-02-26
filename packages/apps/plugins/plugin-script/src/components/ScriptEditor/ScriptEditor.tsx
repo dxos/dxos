@@ -10,7 +10,7 @@ import React, { useMemo } from 'react';
 
 import { DocAccessor } from '@dxos/echo-schema';
 import { type ThemeMode } from '@dxos/react-ui';
-import { automerge, useTextEditor } from '@dxos/react-ui-editor';
+import { automerge, defaultTheme, useTextEditor } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
 export type ScriptEditorProps = {
@@ -22,15 +22,24 @@ export type ScriptEditorProps = {
 // TODO(burdon): https://davidmyers.dev/blog/how-to-build-a-code-editor-with-codemirror-6-and-typescript/introduction
 
 export const ScriptEditor = ({ source, themeMode, className }: ScriptEditorProps) => {
+  console.log('::::', source);
   const extensions = useMemo(
     () => [
+      // TODO(burdon): Use basic set-up (e.g., bracket matching).
+      // TODO(burdon): Use this in text editor (cancels highlight current line)
       // basicSetup,
-      minimalSetup, // TODO(burdon): Use this in text editor (cancels highlight current line)???
+      minimalSetup,
+
       lineNumbers(),
       javascript({ typescript: true }),
       autocompletion({ activateOnTyping: false }),
       keymap.of([...completionKeymap]),
+
+      EditorView.baseTheme(defaultTheme),
       EditorView.darkTheme.of(themeMode === 'dark'),
+      EditorView.contentAttributes.of({ class: '!px-2' }),
+
+      // TODO(burdon): Presence.
       automerge(source),
     ],
     [source, themeMode],

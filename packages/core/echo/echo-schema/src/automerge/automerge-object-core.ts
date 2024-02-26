@@ -372,7 +372,7 @@ export interface DocAccessor<T = any> {
 }
 
 export const DocAccessor = {
-  getValue: (accessor: DocAccessor) => get(accessor.handle, accessor.path),
+  getValue: (accessor: DocAccessor) => get(accessor.handle.docSync(), accessor.path),
 };
 
 /**
