@@ -318,8 +318,6 @@ export class AutomergeObjectCore {
       return values;
     }
     if (typeof value === 'object' && value !== null) {
-      // TODO(dmaretskyi): Why do we freeze it?
-      Object.freeze(value);
       return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this.encode(value)]));
     }
 
@@ -358,6 +356,25 @@ export class AutomergeObjectCore {
     }
 
     return value;
+  }
+
+  get(path: (string | number)[]) {
+    const fullPath = [...this.mountPath, ...path];
+
+    let value = this.getDoc();
+    for (const key of fullPath) {
+      value = value?.[key];
+    }
+
+    return value;
+  }
+
+  set(path: (string | number)[], value: any) {
+    const fullPath = [...this.mountPath, ...path];
+
+    this.change((doc) => {
+      assignDeep(doc, fullPath, value);
+    });
   }
 }
 
