@@ -8,13 +8,9 @@ import { Main } from '@dxos/react-ui';
 import { editorWithToolbarLayout } from '@dxos/react-ui-editor';
 import { topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
-export const MainLayout = ({ children, toolbar }: PropsWithChildren<{ toolbar?: boolean }>) => {
+export const MainLayout = ({ children }: PropsWithChildren) => {
   return (
-    <Main.Content
-      bounce
-      classNames={[topbarBlockPaddingStart, editorWithToolbarLayout]}
-      data-toolbar={toolbar ? 'enabled' : 'disabled'}
-    >
+    <Main.Content bounce classNames={[topbarBlockPaddingStart, editorWithToolbarLayout]}>
       {children}
     </Main.Content>
   );

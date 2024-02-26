@@ -124,11 +124,11 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
 
           // Theme.
           // TODO(burdon): Make base theme configurable.
-          slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
-          slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
           EditorView.baseTheme(defaultTheme),
           theme && EditorView.theme(theme),
           EditorView.darkTheme.of(themeMode === 'dark'),
+          slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
+          slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
 
           // NOTE: Assumes default line height.
           _scrollPastEnd && scrollPastEnd(),
@@ -272,7 +272,7 @@ export const defaultSlots: TextEditorSlots = {
     className: focusRing,
   },
   editor: {
-    className: 'h-full overflow-scroll',
+    className: 'bs-full',
   },
 };
 
