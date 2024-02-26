@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { effect } from '@preact/signals-core';
 
 export const updateCounter = (touch: () => void) => {

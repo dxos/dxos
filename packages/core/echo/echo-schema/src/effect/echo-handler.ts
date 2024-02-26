@@ -2,15 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createReactiveProxy, symbolIsProxy, type ReactiveHandler } from './proxy';
-import { AutomergeObjectCore, getAutomergeObjectCore } from '../automerge';
-import { ReactiveObject } from './reactive';
-import { EchoDatabase } from '../database';
-import { TypedObject } from '../object';
-import { invariant } from '@dxos/invariant';
-import { ComplexMap, assignDeep, defaultMap, getDeep } from '@dxos/util';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
-import { log } from '@dxos/log';
+import { invariant } from '@dxos/invariant';
+import { ComplexMap, defaultMap, getDeep } from '@dxos/util';
+
+import { createReactiveProxy, symbolIsProxy, type ReactiveHandler } from './proxy';
+import { type ReactiveObject } from './reactive';
+import { AutomergeObjectCore } from '../automerge';
 
 const symbolPath = Symbol('path');
 const symbolHandler = Symbol('handler');
