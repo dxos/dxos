@@ -291,7 +291,6 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    */
   override catch(err: string | Error, options?: any): never;
   override catch(err: string | Error, options?: any): void {
-    log.info('Error base command');
     // Will only submit if API key exists (i.e., prod).
     this._observability?.captureException(err);
 
