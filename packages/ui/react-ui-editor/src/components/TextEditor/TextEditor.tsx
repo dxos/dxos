@@ -3,7 +3,7 @@
 //
 
 import { EditorState, type Extension, type StateEffect } from '@codemirror/state';
-import { EditorView, scrollPastEnd } from '@codemirror/view';
+import { EditorView, scrollPastEnd, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, {
@@ -53,6 +53,7 @@ export type TextEditorProps = {
   readonly?: boolean; // TODO(burdon): Move into model.
   autoFocus?: boolean;
   scrollPastEnd?: boolean;
+  moveToEndOfLine?: boolean;
   lineWrapping?: boolean;
   scrollTo?: StateEffect<any>; // TODO(burdon): Restore scroll position: scrollTo EditorView.scrollSnapshot().
   selection?: { anchor: number; head?: number };
@@ -73,7 +74,8 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
       model,
       readonly,
       autoFocus,
-      scrollTo,
+      scrollTo= EditorView.scrollIntoView(0),
+      moveToEndOfLine = true,
       selection,
       theme,
       slots = defaultSlots,
@@ -95,16 +97,8 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
 
     // Set focus.
     useEffect(() => {
-      if (autoFocus && !view?.hasFocus) {
+      if (autoFocus) {
         view?.focus();
-        if (view?.state.selection.main?.from === 0) {
-          // Start at end of line.
-          // TODO(burdon): Better way to do this?
-          // setTimeout(() => {
-          //   const { to } = view.state.doc.lineAt(0);
-          //   view?.dispatch({ selection: { anchor: to } });
-          // });
-        }
       }
     }, [view, autoFocus]);
 
@@ -138,6 +132,18 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
           EditorView.contentAttributes.of({ class: slots.content?.className ?? '' }),
           _scrollPastEnd && scrollPastEnd(),
 
+          // TODO(burdon): Assumes default line height?
+          _scrollPastEnd && scrollPastEnd(),
+          ViewPlugin.fromClass(
+            class {
+              update(update: ViewUpdate) {
+                const { view } = update;
+                const height = (view as any).viewState.editorHeight;
+                console.log(height, view.scaleY, view.defaultLineHeight, view.documentPadding);
+              }
+            },
+          ),
+
           // Focus.
           EditorView.updateListener.of((update) => {
             update.transactions.forEach((transaction) => {
@@ -167,7 +173,7 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
       // EditorView
       // https://codemirror.net/docs/ref/#view.EditorViewConfig
       //
-      const newView = new EditorView({
+      const view = new EditorView({
         state,
         parent: rootRef.current,
         scrollTo,
@@ -181,8 +187,13 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
         },
       });
 
-      view?.destroy();
-      setView(newView);
+      // view?.destroy();
+      setView(view);
+
+      if (moveToEndOfLine) {
+        const { to } = view.state.doc.lineAt(0);
+        view?.dispatch({ selection: { anchor: to } });
+      }
 
       // Remove tabster attribute (rely on custom keymap).
       if (state.facet(editorMode).noTabster) {
@@ -190,7 +201,7 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
       }
 
       return () => {
-        newView?.destroy();
+        view?.destroy();
         setView(null);
       };
       // TODO(wittjosiah): Does `rootRef` ever change? Only `.current` changes?
