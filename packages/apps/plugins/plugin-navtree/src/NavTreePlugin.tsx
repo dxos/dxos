@@ -115,12 +115,11 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
 
           switch (role) {
             case 'navigation':
-              if (graphPlugin && state.root) {
+              if (state.root) {
                 return (
                   <NavTreeContainer
                     root={state.root as RevertDeepSignal<TreeNode>}
                     paths={longestPaths}
-                    graph={graphPlugin.provides.graph}
                     activeId={data.activeId as string}
                     popoverAnchorId={data.popoverAnchorId as string}
                   />

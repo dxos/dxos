@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { NavigationAction, Surface, useIntent } from '@dxos/app-framework';
-import { type Graph, isGraphNode } from '@dxos/app-graph';
+import { isGraphNode } from '@dxos/app-graph';
 import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import {
@@ -24,8 +24,8 @@ import { getPersistenceParent } from '../util';
 
 export const NODE_TYPE = 'dxos/app-graph/node';
 
-const getMosaicPath = (graph: Graph, id: string) => {
-  const parts = graph.getPath({ to: id });
+const getMosaicPath = (paths: Map<string, string[]>, id: string) => {
+  const parts = paths.get(id);
   return parts ? Path.create(...parts) : undefined;
 };
 
@@ -42,13 +42,11 @@ const renderPresence = (node: TreeNode) => {
 export const NavTreeContainer = ({
   root,
   paths,
-  graph,
   activeId,
   popoverAnchorId,
 }: {
   root: TreeNode;
   paths: Map<string, string[]>;
-  graph: Graph;
   activeId?: string;
   popoverAnchorId?: string;
 }) => {
@@ -57,8 +55,7 @@ export const NavTreeContainer = ({
   const { dispatch } = useIntent();
 
   const handleSelect: NavTreeContextType['onSelect'] = async ({ node }: { node: TreeNode }) => {
-    const graphNode = graph.findNode(node.id);
-    if (!graphNode?.data) {
+    if (!node.data) {
       return;
     }
 
@@ -76,7 +73,7 @@ export const NavTreeContainer = ({
     !isLg && closeNavigationSidebar();
   };
 
-  const currentPath = (activeId && getMosaicPath(graph, activeId)) ?? 'never';
+  const currentPath = (activeId && getMosaicPath(paths, activeId)) ?? 'never';
 
   const isOver: NavTreeProps['isOver'] = ({ path, operation, activeItem, overItem }) => {
     const activeNode = activeItem && getTreeNode(root, paths.get(Path.last(activeItem.path)));
@@ -84,7 +81,7 @@ export const NavTreeContainer = ({
     if (
       !activeNode ||
       !overNode ||
-      !Path.hasRoot(overItem.path, graph.root.id) ||
+      !Path.hasRoot(overItem.path, root.id) ||
       (operation !== 'transfer' && operation !== 'copy')
     ) {
       return false;
@@ -95,25 +92,27 @@ export const NavTreeContainer = ({
       return trimPlaceholder(overItem.path) === path;
     } else {
       const overAcceptParent = getPersistenceParent(overNode, activeClass);
-      return overAcceptParent ? getMosaicPath(graph, overAcceptParent.id) === path : false;
+      return overAcceptParent ? getMosaicPath(paths, overAcceptParent.id) === path : false;
     }
   };
 
   const handleOver = useCallback(
     ({ active, over }: MosaicMoveEvent<number>) => {
-      // Reject all operations that don’t match the graph’s root id
-      if (Path.first(active.path) !== graph.root.id || Path.first(over.path) !== Path.first(active.path)) {
+      // Reject all operations that don’t match the root's id
+      if (Path.first(active.path) !== root.id || Path.first(over.path) !== Path.first(active.path)) {
         return 'reject';
       }
       // Rearrange if rearrange is supported and active and over are siblings
       else if (Path.siblings(over.path, active.path)) {
-        return graph.findNode(Path.last(Path.parent(over.path)))?.properties.onRearrangeChildren
+        return getTreeNode(root, paths.get(Path.last(Path.parent(over.path))))?.properties.onRearrangeChildren
           ? 'rearrange'
           : 'reject';
       }
       // Rearrange if rearrange is supported and active is or would be a child of over
       else if (Path.hasChild(over.path, active.path)) {
-        return graph.findNode(Path.last(over.path))?.properties.onRearrangeChildren ? 'rearrange' : 'reject';
+        return getTreeNode(root, paths.get(Path.last(over.path)))?.properties.onRearrangeChildren
+          ? 'rearrange'
+          : 'reject';
       }
       // Check if transfer is supported
       else {
@@ -137,7 +136,7 @@ export const NavTreeContainer = ({
         }
       }
     },
-    [graph, root],
+    [root, paths],
   );
 
   const handleDrop = useCallback(
@@ -177,7 +176,7 @@ export const NavTreeContainer = ({
         }
       }
     },
-    [graph, root],
+    [root, paths],
   );
 
   return (
