@@ -3,15 +3,21 @@
 //
 
 import { invariant } from '@dxos/invariant';
+
 import { type ReactiveObject } from './reactive';
+import { ReactiveArray } from './reactive-array';
 
 export const symbolIsProxy = Symbol('isProxy');
 
-export const isValidProxyTarget = (value: any): value is object =>
-  typeof value === 'object' &&
-  value !== null &&
-  (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === Array.prototype) &&
-  !value[symbolIsProxy];
+export const isValidProxyTarget = (value: any): value is object => {
+  if (value == null || value[symbolIsProxy]) {
+    return false;
+  }
+  if (value instanceof ReactiveArray) {
+    return true;
+  }
+  return typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype;
+};
 
 /**
  *
