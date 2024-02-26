@@ -24,7 +24,7 @@ export default class List extends BaseCommand<typeof List> {
     return await this.execWithClient(async (client: Client) => {
       const identity = client.halo.identity;
       if (!identity) {
-        this.error('Profile not initialized.');
+        this.catch('Profile not initialized.');
       }
 
       const credentials = await queryCredentials(client, this.flags.type);
