@@ -8,7 +8,7 @@ import * as S from '@effect/schema/Schema';
 import { invariant } from '@dxos/invariant';
 
 import { type ReactiveHandler, createReactiveProxy, isValidProxyTarget } from './proxy';
-import { TypedReactiveHandler, setAstProperty, symbolSchema } from './typed-handler';
+import { TypedReactiveHandler, setSchemaProperties, symbolSchema } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
@@ -40,8 +40,7 @@ export const object: {
     const schema: S.Schema<T> = schemaOrObj as S.Schema<T>;
     const _ = S.asserts(schema)(obj);
 
-    Object.defineProperty(obj, symbolSchema, { enumerable: false, value: schema });
-    setAstProperty(obj, schema.ast);
+    setSchemaProperties(obj, schema);
 
     return createReactiveProxy(obj, new TypedReactiveHandler());
   } else {
