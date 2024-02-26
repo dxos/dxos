@@ -167,7 +167,7 @@ export class RequestProcessor {
       // Predefined value.
       //
       case ChainType.Input.Type.VALUE: {
-        return () => getTextContent(value);
+        return () => value;
       }
 
       //
@@ -189,7 +189,7 @@ export class RequestProcessor {
       // Retrieve external data.
       //
       case ChainType.Input.Type.RESOLVER: {
-        const type = getTextContent(value);
+        const type = value;
         if (!type) {
           return null;
         }
@@ -203,7 +203,7 @@ export class RequestProcessor {
       // Schema
       //
       case ChainType.Input.Type.SCHEMA: {
-        const type = getTextContent(value);
+        const type = value;
         if (!type) {
           return null;
         }
@@ -226,8 +226,7 @@ export class RequestProcessor {
       case ChainType.Input.Type.CONTEXT: {
         return () => {
           if (value) {
-            const text = getTextContent(value);
-            return text ? get(context, text) : undefined;
+            return value ? get(context, value) : undefined;
           }
 
           return context.text;

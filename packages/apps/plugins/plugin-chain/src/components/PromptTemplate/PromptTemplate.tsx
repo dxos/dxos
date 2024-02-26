@@ -7,10 +7,10 @@ import { EditorView } from '@codemirror/view';
 import React, { type PropsWithChildren, useEffect, useMemo } from 'react';
 
 import { Chain as ChainType } from '@braneframe/types';
-import { TextObject, getTextContent } from '@dxos/react-client/echo';
+import { getTextContent } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { createBasicBundle, TextEditor, useTextEditor, useTextModel } from '@dxos/react-ui-editor';
-import { groupBorder, mx } from '@dxos/react-ui-theme';
+import { createBasicBundle, useTextEditor, useTextModel } from '@dxos/react-ui-editor';
+import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
 
 import { nameRegex, promptExtension } from './prompt-extension';
 import { CHAIN_PLUGIN } from '../../meta';
@@ -80,7 +80,7 @@ const usePromptInputs = (prompt: ChainType.Prompt) => {
       if (next) {
         next.name = name;
       } else {
-        prompt.inputs.push(new ChainType.Input({ name, value: new TextObject() }));
+        prompt.inputs.push(new ChainType.Input({ name }));
       }
     });
 
@@ -116,7 +116,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
             model.extension!,
           ]
         : [],
-    [model],
+    [model, themeMode],
   );
   const doc = useMemo(() => getTextContent(prompt.source), [prompt]);
   const { parentRef } = useTextEditor({ doc, extensions });
@@ -146,7 +146,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
         </Section>
 
         <Section title='Template'>
-          <div ref={parentRef} />
+          <div ref={parentRef} className={attentionSurface} />
         </Section>
 
         {prompt.inputs?.length > 0 && (
@@ -186,7 +186,18 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
                           ChainType.Input.Type.CONTEXT,
                           ChainType.Input.Type.RESOLVER,
                           ChainType.Input.Type.SCHEMA,
-                        ].includes(input.type) && <ValueEditor input={input} />}
+                        ].includes(input.type) && (
+                          <Input.Root>
+                            <Input.TextInput
+                              placeholder={t('command placeholder')}
+                              classNames={mx('is-full bg-transparent m-2')}
+                              value={input.value ?? ''}
+                              onChange={(event) => {
+                                input.value = event.target.value;
+                              }}
+                            />
+                          </Input.Root>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -198,17 +209,6 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
       </div>
     </DensityProvider>
   );
-};
-
-const ValueEditor = ({ input }: { input: ChainType.Input }) => {
-  const { t } = useTranslation(CHAIN_PLUGIN);
-  const model = useTextModel({ text: input.value });
-  if (!model) {
-    return null;
-  }
-
-  // TODO(burdon): String?
-  return <TextEditor model={model} placeholder={t('value placeholder')} lineWrapping={false} />;
 };
 
 export const Section = ({ title, actions, children }: PropsWithChildren<{ title: string; actions?: JSX.Element }>) => {
