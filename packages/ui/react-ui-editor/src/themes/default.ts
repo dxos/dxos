@@ -50,14 +50,16 @@ export const defaultTheme: ThemeStyles = {
     outline: 'none',
   },
 
+  // NOTE: See https://codemirror.net/docs/guide (DOM Structure).
   '.cm-scroller': {
-    // overflow: 'visible',
+    overflowY: 'auto',
     fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
     lineHeight: 1.4,
   },
 
   '.cm-content': {
-    padding: 0,
+    paddingTop: 0,
+    paddingBottom: 0,
     // NOTE: Base font size (otherwise defined by HTML tag, which might be different for storybook).
     fontSize: '16px',
   },

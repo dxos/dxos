@@ -11,15 +11,13 @@ import {
   type Comment,
   MarkdownEditor,
   Toolbar,
-  editorHalfViewportOverscrollContent,
-  editorFillLayoutEditor,
+  cursorLineMargin,
   editorFillLayoutRoot,
   focusComment,
   useComments,
   useEditorView,
   useActionHandler,
   useFormattingState,
-  cursorLineMargin,
 } from '@dxos/react-ui-editor';
 import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
@@ -30,7 +28,7 @@ export type EditorMainProps = {
   toolbar?: boolean;
 } & Pick<TextEditorProps, 'model' | 'readonly' | 'extensions'>;
 
-const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...props }: EditorMainProps) => {
+export const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
 
   const [editorRef, viewInvalidated] = useEditorView(model.id);
@@ -43,10 +41,6 @@ const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...prop
     const composer = (window as any).composer;
     if (composer) {
       composer.editorView = editorRef.current;
-    }
-    // TODO(thure): What is scrolling when CM starts?
-    if (editorRef.current?.scrollDOM) {
-      editorRef.current?.scrollDOM.scrollTo(0, 0);
     }
   }, [editorRef.current]);
 
@@ -75,23 +69,20 @@ const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...prop
     <>
       {toolbar && (
         <Toolbar.Root
-          onAction={handleAction}
-          state={formattingState}
           classNames='max-is-[60rem] justify-self-center border-be separator-separator'
+          state={formattingState}
+          onAction={handleAction}
         >
           <Toolbar.Markdown />
           <Toolbar.Separator />
           <Toolbar.Extended />
         </Toolbar.Root>
       )}
-      <div
-        role='none'
-        data-toolbar={toolbar ? 'enabled' : 'disabled'}
-        className='is-full bs-full overflow-hidden data-[toolbar=disabled]:pbs-8'
-      >
+      <div role='none' data-toolbar={toolbar ? 'enabled' : 'disabled'} className='is-full bs-full overflow-hidden'>
         <MarkdownEditor
           ref={editorRef}
           autoFocus
+          scrollPastEnd={true}
           placeholder={t('editor placeholder')}
           model={model}
           extensions={extensions}
@@ -107,11 +98,10 @@ const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...prop
               'data-testid': 'composer.markdownRoot',
             } as HTMLAttributes<HTMLDivElement>,
             editor: {
-              className: mx(editorFillLayoutEditor, !toolbar && 'border-bs'),
+              className: mx('h-full overflow-scroll', !toolbar && 'border-bs separator-separator'),
             },
             content: {
-              // after:block after:is-px after:bs-px after:overflow-anchor after:-mbs-px
-              className: mx(editorHalfViewportOverscrollContent, '!p-2 sm:!p-6 md:!p-8'),
+              className: '!px-2 !sm:px-6 !md:px-8',
             },
           }}
           {...props}

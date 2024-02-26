@@ -23,7 +23,6 @@ import {
   useFormattingState,
 } from '../../extensions';
 import { type Comment, useActionHandler, useEditorView, useTextModel } from '../../hooks';
-import { editorFillLayoutEditor, editorFillLayoutRoot, editorWithToolbarLayout } from '../../styles';
 import translations from '../../translations';
 import { MarkdownEditor } from '../TextEditor';
 
@@ -61,7 +60,7 @@ const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) =
   }
 
   return (
-    <div role='none' className={mx('fixed inset-0', editorWithToolbarLayout)}>
+    <div role='none' className={mx('fixed inset-0 flex flex-col')}>
       <Toolbar.Root onAction={handleAction} state={formattingState} classNames={textBlockWidth}>
         <Toolbar.Markdown />
         <Toolbar.Separator />
@@ -72,8 +71,7 @@ const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) =
         model={model}
         extensions={extensions}
         slots={{
-          root: { className: mx(textBlockWidth, editorFillLayoutRoot) },
-          editor: { className: editorFillLayoutEditor },
+          root: { className: mx(textBlockWidth) },
           content: { className: '!pli-2' },
         }}
       />

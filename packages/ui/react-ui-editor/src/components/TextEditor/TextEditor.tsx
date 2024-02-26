@@ -3,13 +3,13 @@
 //
 
 import { EditorState, type Extension, type StateEffect } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
+import { EditorView, scrollPastEnd } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, {
   type ComponentProps,
-  forwardRef,
   type KeyboardEventHandler,
+  forwardRef,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -52,6 +52,7 @@ export type TextEditorProps = {
   model: EditorModel; // TODO(burdon): Optional (e.g., just provide content if readonly).
   readonly?: boolean; // TODO(burdon): Move into model.
   autoFocus?: boolean;
+  scrollPastEnd?: boolean;
   lineWrapping?: boolean;
   scrollTo?: StateEffect<any>; // TODO(burdon): Restore scroll position: scrollTo EditorView.scrollSnapshot().
   selection?: { anchor: number; head?: number };
@@ -68,7 +69,18 @@ export type TextEditorProps = {
 // TODO(burdon): Replace with useTextEditor.
 export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
   (
-    { model, readonly, autoFocus, scrollTo, selection, theme, slots = defaultSlots, extensions = [], debug },
+    {
+      model,
+      readonly,
+      autoFocus,
+      scrollTo,
+      selection,
+      theme,
+      slots = defaultSlots,
+      extensions = [],
+      scrollPastEnd: _scrollPastEnd,
+      debug,
+    },
     forwardedRef,
   ) => {
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
@@ -84,12 +96,15 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
     // Set focus.
     useEffect(() => {
       if (autoFocus && !view?.hasFocus) {
+        view?.focus();
         if (view?.state.selection.main?.from === 0) {
           // Start at end of line.
-          const { to } = view.state.doc.lineAt(0);
-          view?.dispatch({ selection: { anchor: to } });
+          // TODO(burdon): Better way to do this?
+          // setTimeout(() => {
+          //   const { to } = view.state.doc.lineAt(0);
+          //   view?.dispatch({ selection: { anchor: to } });
+          // });
         }
-        view?.focus();
       }
     }, [view, autoFocus]);
 
@@ -119,7 +134,9 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
           EditorView.theme(theme ?? {}),
           EditorView.darkTheme.of(themeMode === 'dark'),
           EditorView.editorAttributes.of({ class: slots.editor?.className ?? '' }),
+          // NOTE: Must not set vertical padding or margins.
           EditorView.contentAttributes.of({ class: slots.content?.className ?? '' }),
+          _scrollPastEnd && scrollPastEnd(),
 
           // Focus.
           EditorView.updateListener.of((update) => {
@@ -133,6 +150,9 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
           // State.
           EditorView.editable.of(!readonly),
           EditorState.readOnly.of(!!readonly),
+
+          // TODO(burdon): Option.
+          // scrollPastEnd(),
 
           // Storage and replication.
           // NOTE: This must come before user extensions.
@@ -215,6 +235,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
       () => [createBasicBundle({ themeMode, placeholder, lineWrapping }), ...(_extensions ?? [])],
       [themeMode, placeholder, lineWrapping, _extensions],
     );
+
     return (
       <BaseTextEditor
         ref={forwardedRef}
@@ -236,6 +257,7 @@ export const MarkdownEditor = forwardRef<EditorView | null, TextEditorProps>(
       () => [createMarkdownExtensions({ themeMode, placeholder }), ...(_extensions ?? [])],
       [themeMode, placeholder, _extensions],
     );
+
     return (
       <BaseTextEditor
         ref={forwardedRef}
@@ -254,7 +276,7 @@ export const defaultSlots: TextEditorSlots = {
     className: focusRing,
   },
   editor: {
-    className: 'min-bs-full',
+    className: 'h-full overflow-scroll',
   },
 };
 

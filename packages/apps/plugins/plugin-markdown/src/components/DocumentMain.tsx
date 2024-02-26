@@ -11,6 +11,10 @@ import { type Comment, useTextModel } from '@dxos/react-ui-editor';
 
 import EditorMain, { type EditorMainProps } from './EditorMain';
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Move logic into plugin.
 const DocumentMain: FC<{ document: DocumentType } & Pick<EditorMainProps, 'toolbar' | 'readonly' | 'extensions'>> = ({
   document,
   ...props

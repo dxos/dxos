@@ -22,7 +22,6 @@ import {
   useFormattingState,
 } from '../../extensions';
 import { createDataExtensions, createThemeExtensions, useActionHandler, useTextEditor } from '../../hooks';
-import { editorFillLayoutEditor, editorWithToolbarLayout } from '../../styles';
 import { markdownTheme } from '../../themes';
 import translations from '../../translations';
 import { Toolbar } from '../Toolbar';
@@ -70,16 +69,16 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
 
   const handleAction = useActionHandler(view);
 
-  // TODO(marijn) This doesn't update the state on view changes.
+  // TODO(marijn): This doesn't update the state on view changes.
   //  Also not sure if view is even guaranteed to exist at this point.
   return (
-    <div role='none' className={mx('fixed inset-0', editorWithToolbarLayout)}>
+    <div role='none' className={mx('fixed inset-0 flex flex-col')}>
       <Toolbar.Root onAction={handleAction} state={formattingState} classNames={textBlockWidth}>
         <Toolbar.Markdown />
         <EditorModeToolbar editorMode={editorMode} setEditorMode={setEditorMode} />
       </Toolbar.Root>
-      <div role='none' className='overflow-y-auto'>
-        <div role='textbox' className={mx(textBlockWidth, attentionSurface, editorFillLayoutEditor)} ref={parentRef} />
+      <div role='none' className='grow overflow-hidden'>
+        <div role='textbox' className={mx(textBlockWidth, attentionSurface)} ref={parentRef} />
       </div>
     </div>
   );
