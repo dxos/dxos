@@ -1,6 +1,6 @@
 {
   "name": "@dxos/random-access-storage",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "Multiple random storage types.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -36,8 +36,7 @@
   "devDependencies": {
     "@types/pify": "^3.0.2",
     "@types/randombytes": "^2.0.0",
-    "randombytes": "^2.1.0",
-    "source-map-support": "^0.5.12"
+    "randombytes": "^2.1.0"
   },
   "publishConfig": {
     "access": "public"

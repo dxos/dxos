@@ -15,7 +15,7 @@ export {
   createSubscription,
   hasType,
   isTypedObject,
-  EchoDatabase,
+  type EchoDatabase,
   Expando,
   Filter,
   Query,
@@ -24,7 +24,6 @@ export {
   TypeCollection,
   TextObject,
   TypedObject,
-  getGlobalAutomergePreference, // TODO(dmaretskyi): Remove.
   getRawDoc,
   isAutomergeObject,
   isDocAccessor,

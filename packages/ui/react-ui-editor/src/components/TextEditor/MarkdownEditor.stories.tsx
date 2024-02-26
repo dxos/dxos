@@ -19,19 +19,15 @@ import { withTheme } from '@dxos/storybook-utils';
 import { MarkdownEditor, type TextEditorProps } from './TextEditor';
 import {
   type CommentsOptions,
-  type LinkOptions,
   autocomplete,
   blast,
-  code,
+  decorateMarkdown,
   comments,
   defaultOptions,
-  heading,
-  hr,
   image,
-  link,
+  linkTooltip,
   mention,
   table,
-  tasklist,
   typewriter,
   useComments,
   formatting,
@@ -47,9 +43,11 @@ const str = (...lines: string[]) => lines.join('\n');
 
 const num = () => faker.number.int({ min: 0, max: 9999 }).toLocaleString();
 
-// prettier-ignore
+const img = '![dxos](https://pbs.twimg.com/profile_banners/1268328127673044992/1684766689/1500x500)';
+
 const text = {
   tasks: str(
+    //
     '## Tasks',
     '',
     '- [x] decorator',
@@ -61,6 +59,7 @@ const text = {
   ),
 
   list: str(
+    //
     '## List',
     '',
     '- new york',
@@ -70,12 +69,13 @@ const text = {
   ),
 
   numbered: str(
+    //
     '## Numbered',
     '',
     '1. one',
     '2. two',
     '3. three',
-    ''
+    '',
   ),
 
   code: str(
@@ -115,7 +115,7 @@ const text = {
     '',
   ),
 
-  image: str('# Image', '', '![dxos](https://pbs.twimg.com/profile_banners/1268328127673044992/1684766689/1500x500)'),
+  image: str('# Image', '', img),
 
   headings: str(
     ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
@@ -123,7 +123,7 @@ const text = {
 
   paragraphs: str(...faker.helpers.multiple(() => [faker.lorem.paragraph(), ''], { count: 3 }).flat()),
 
-  footer: str('', '', '', '', '')
+  footer: str('', '', '', '', ''),
 };
 
 const document = str(
@@ -173,7 +173,7 @@ const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', '
 const hover =
   'rounded-sm text-base text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
-const onHoverLinkTooltip: LinkOptions['onHover'] = (el, url) => {
+const renderLinkTooltip = (el: Element, url: string) => {
   const web = new URL(url);
   createRoot(el).render(
     <StrictMode>
@@ -206,7 +206,7 @@ const onCommentsHover: CommentsOptions['onHover'] = (el, shortcut) => {
   );
 };
 
-const onRenderLink: LinkOptions['onRender'] = (el, url) => {
+const renderLinkButton = (el: Element, url: string) => {
   createRoot(el).render(
     <StrictMode>
       <a href={url} target='_blank' rel='noreferrer' className={hover}>
@@ -257,14 +257,11 @@ const defaults = [
   autocomplete({
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
-  code(),
+  decorateMarkdown({ renderLinkButton }),
   formatting(),
-  heading(),
-  hr(),
   image(),
-  link({ onRender: onRenderLink, onHover: onHoverLinkTooltip }),
+  linkTooltip(renderLinkTooltip),
   table(),
-  tasklist(),
 ];
 
 export const Default = {
@@ -281,6 +278,11 @@ export const NoExtensions = {
 
 const large = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
 
+const largeWithImages = faker.helpers
+  .multiple(() => [faker.lorem.paragraph({ min: 12, max: 16 }), img], { count: 20 })
+  .flatMap((x) => x)
+  .join('\n\n');
+
 export const Empty = {
   render: () => <Story />,
 };
@@ -289,26 +291,25 @@ export const Scrolling = {
   render: () => <Story text={str('# Large Document', '', large)} extensions={[]} />,
 };
 
-export const Links = {
-  render: () => (
-    <Story
-      text={str(text.links, text.footer)}
-      extensions={[link({ onHover: onHoverLinkTooltip, onRender: onRenderLink })]}
-    />
-  ),
+export const ScrollingWithImages = {
+  render: () => <Story text={str('# Large Document', '', largeWithImages)} extensions={[image()]} />,
 };
 
-export const Code = {
-  render: () => <Story text={str(text.code, text.footer)} extensions={[code()]} />,
+export const Links = {
+  render: () => <Story text={str(text.links, text.footer)} extensions={[linkTooltip(renderLinkTooltip)]} />,
 };
 
 export const Image = {
   render: () => <Story text={str(text.image, text.footer)} extensions={[image()]} />,
 };
 
+export const Code = {
+  render: () => <Story text={str(text.code, text.footer)} extensions={[decorateMarkdown()]} />,
+};
+
 export const Lists = {
   render: () => (
-    <Story text={str(text.tasks, '', text.list, '', text.numbered, text.footer)} extensions={[tasklist()]} />
+    <Story text={str(text.tasks, '', text.list, '', text.numbered, text.footer)} extensions={[decorateMarkdown()]} />
   ),
 };
 
@@ -330,7 +331,7 @@ export const Autocomplete = {
     <Story
       text={str('# Autocomplete', '', 'Press Ctrl-Space...', text.footer)}
       extensions={[
-        link({ onRender: onRenderLink }),
+        decorateMarkdown({ renderLinkButton }),
         autocomplete({
           onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
         }),
@@ -386,15 +387,6 @@ export const Comments = {
       />
     );
   },
-};
-
-export const HorizontalRule = {
-  render: () => (
-    <Story
-      text={str('# Horizontal Rule', '', text.paragraphs, '---', text.paragraphs, '---', text.paragraphs)}
-      extensions={[hr()]}
-    />
-  ),
 };
 
 export const Vim = {

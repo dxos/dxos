@@ -14,7 +14,6 @@ import { AbstractEchoObject } from './object';
 import { isAutomergeObject, type AutomergeOptions, type TypedObject } from './typed-object';
 import { base } from './types';
 import { AutomergeObject, getRawDoc } from '../automerge';
-import { getGlobalAutomergePreference } from '../automerge-preference';
 
 export type TextObjectOptions = AutomergeOptions;
 
@@ -35,7 +34,8 @@ export class TextObject extends AbstractEchoObject<TextModel> {
   constructor(text?: string, kind = TextKind.PLAIN, field?: string, opts?: TextObjectOptions) {
     super(TextModel);
 
-    if (opts?.automerge ?? getGlobalAutomergePreference()) {
+    // Redirect to automerge by default.
+    if (opts?.automerge ?? true) {
       const defaultedField = field ?? 'content';
       return new AutomergeObject(
         {

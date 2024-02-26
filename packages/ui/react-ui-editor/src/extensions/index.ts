@@ -10,6 +10,7 @@ export * from './basic';
 export * from './blast';
 export * from './comments';
 export * from './cursor';
+export * from './cursor-line-margin';
 export * from './listener';
 export * from './markdown';
 export * from './mention';

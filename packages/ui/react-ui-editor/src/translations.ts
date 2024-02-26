@@ -8,10 +8,11 @@ export default [
   {
     'en-US': {
       [translationKey]: {
-        'strong label': 'Strong',
-        'emphasis label': 'Emphasis',
-        'strikethrough label': 'Strike-through',
+        'strong label': 'Bold',
+        'emphasis label': 'Italics',
+        'strikethrough label': 'Strikethrough',
         'code label': 'Code',
+        'link label': 'Link',
         'list-bullet label': 'Bullet list',
         'list-ordered label': 'Numbered list',
         'list-task label': 'Task list',
@@ -19,6 +20,7 @@ export default [
         'codeblock label': 'Code block',
         'comment label': 'Create comment',
         'heading label': 'Heading level',
+        'table label': 'Create table',
       },
     },
   },

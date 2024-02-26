@@ -21,7 +21,15 @@ import {
 import { Graph, type Node } from '@dxos/app-graph';
 import { Keyboard } from '@dxos/keyboard';
 
-import { CommandsDialogContent, NODE_TYPE, NavBarStart, TreeViewContainer, TreeViewDocumentTitle } from './components';
+import {
+  CommandsDialogContent,
+  NODE_TYPE,
+  NavBarStart,
+  NavTreeContainer,
+  NavTreeDocumentTitle,
+  NotchStart,
+} from './components';
+import { CommandsTrigger } from './components/CommandsTrigger';
 import meta, { NAVTREE_PLUGIN } from './meta';
 import translations from './translations';
 
@@ -75,7 +83,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
             case 'navigation':
               if ('graph' in data && data.graph instanceof Graph) {
                 return (
-                  <TreeViewContainer
+                  <NavTreeContainer
                     graph={data.graph}
                     activeId={data.activeId as string}
                     popoverAnchorId={data.popoverAnchorId as string}
@@ -85,7 +93,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
               break;
 
             case 'document-title':
-              return <TreeViewDocumentTitle activeNode={data.activeNode as Node | undefined} />;
+              return <NavTreeDocumentTitle activeNode={data.activeNode as Node | undefined} />;
 
             case 'navbar-start':
               if (
@@ -105,6 +113,15 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                 };
               }
               break;
+
+            case 'notch-start':
+              return <NotchStart />;
+
+            case 'search-input':
+              return {
+                node: <CommandsTrigger />,
+                disposition: 'fallback',
+              };
           }
 
           return null;

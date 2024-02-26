@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "devtools",
   "sourceRoot": "packages/devtools/devtools/src",
   "projectType": "application",
   "targets": {
@@ -47,9 +49,7 @@
       "executor": "@dxos/serve-with-vault:run"
     }
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ],
-  "name": "devtools"
+  ]
 }

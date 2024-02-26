@@ -9,7 +9,6 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
 import { Expando, TypedObject } from './typed-object';
-import { getGlobalAutomergePreference } from '../automerge-preference';
 
 describe('TypedObject', () => {
   test('instance of TypedObject', async () => {
@@ -52,13 +51,11 @@ describe('TypedObject', () => {
     expect(Object.keys(obj.__meta)).to.deep.equal(['keys']);
   });
 
-  if (!getGlobalAutomergePreference()) {
-    test('devtools formatter', () => {
-      const obj = new TypedObject({ title: 'hello world' });
+  test.skip('devtools formatter', () => {
+    const obj = new TypedObject({ title: 'hello world' });
 
-      expect(obj[devtoolsFormatter].header()).to.not.be.undefined;
-      expect(obj[devtoolsFormatter].hasBody!()).to.be.true;
-      expect(obj[devtoolsFormatter].body!()).to.not.be.undefined;
-    });
-  }
+    expect(obj[devtoolsFormatter].header()).to.not.be.undefined;
+    expect(obj[devtoolsFormatter].hasBody!()).to.be.true;
+    expect(obj[devtoolsFormatter].body!()).to.not.be.undefined;
+  });
 });

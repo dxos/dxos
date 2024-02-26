@@ -18,7 +18,7 @@ export class DevicesServiceImpl implements DevicesService {
   constructor(private readonly _identityManager: IdentityManager) {}
 
   async updateDevice(profile: DeviceProfileDocument): Promise<Device> {
-    throw new Error('Method not implemented.');
+    return this._identityManager.updateDeviceProfile(profile);
   }
 
   queryDevices(): Stream<QueryDevicesResponse> {

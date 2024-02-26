@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "composer-extension",
   "sourceRoot": "packages/apps/composer-extension/src",
   "projectType": "application",
   "targets": {
@@ -59,7 +61,5 @@
         ]
       }
     }
-  },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "composer-extension"
+  }
 }
