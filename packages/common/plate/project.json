@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "plate",
   "sourceRoot": "packages/common/plate/src",
   "projectType": "library",
   "targets": {
@@ -34,10 +36,8 @@
       }
     }
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "name": "plate"
+  ]
 }

@@ -9,7 +9,7 @@ import React, { type HTMLAttributes, StrictMode, useEffect, useMemo, useRef, use
 import { createRoot } from 'react-dom/client';
 
 import { Button, DensityProvider, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
-import { type CursorInfo, type YText, link, useTextModel, MarkdownEditor } from '@dxos/react-ui-editor';
+import { type CursorInfo, type YText, decorateMarkdown, useTextModel, MarkdownEditor } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
@@ -268,7 +268,7 @@ const OutlinerItem = ({
       <MarkdownEditor
         ref={editorRef}
         model={model}
-        extensions={[outlinerKeymap, link({ onRender: onRenderLink })]}
+        extensions={[outlinerKeymap, decorateMarkdown({ renderLinkButton: onRenderLink })]}
         autoFocus={!!active}
         placeholder={placeholder}
         slots={{

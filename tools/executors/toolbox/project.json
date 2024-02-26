@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "toolbox",
   "sourceRoot": "tools/executors/toolbox/src",
   "projectType": "library",
   "targets": {
@@ -16,10 +18,8 @@
     "lint": {},
     "test": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "log-hook",
     "test"
-  ],
-  "name": "toolbox"
+  ]
 }

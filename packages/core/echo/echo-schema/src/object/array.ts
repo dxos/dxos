@@ -13,7 +13,6 @@ import { type AutomergeOptions, type TypedObject, isAutomergeObject } from './ty
 import { base } from './types';
 import { AutomergeArray } from '../automerge';
 import { REFERENCE_TYPE_TAG } from '../automerge/types';
-import { getGlobalAutomergePreference } from '../automerge-preference';
 
 const isIndex = (property: string | symbol): property is string =>
   typeof property === 'string' && parseInt(property).toString() === property;
@@ -49,7 +48,8 @@ export class EchoArray<T> implements Array<T> {
   }
 
   constructor(items: T[] = [], opts?: AutomergeOptions) {
-    if (opts?.automerge ?? getGlobalAutomergePreference()) {
+    // Redirect to automerge by default.
+    if (opts?.automerge ?? true) {
       return new AutomergeArray(items) as any;
     }
 

@@ -40,12 +40,14 @@ export type TagScope = 'errors' | 'telemetry' | 'metrics' | 'all';
 export type ObservabilityOptions = {
   /// The webapp (e.g. 'composer.dxos.org'), 'cli', or 'agent'.
   namespace: string;
+  mode: Mode;
   // TODO(nf): make platform a required extension?
   // platform: Platform;
+  release?: string;
+  environment?: string;
   config?: Config;
   secrets?: Record<string, string>;
   group?: string;
-  mode?: Mode;
 
   telemetry?: {
     batchSize?: number;
@@ -75,18 +77,28 @@ export class Observability {
 
   private _secrets: ObservabilitySecrets;
   private _namespace: string;
+  private _mode: Mode;
   private _config?: Config;
-  private _mode: Mode = 'disabled';
   private _group?: string;
   // TODO(nf): accept upstream context?
   private _ctx = new Context();
   private _tags = new Map<string, { value: string; scope: TagScope }>();
 
   // TODO(nf): make platform a required extension?
-  constructor({ namespace, config, secrets, group, mode, telemetry, errorLog }: ObservabilityOptions) {
+  constructor({
+    namespace,
+    environment,
+    release,
+    config,
+    secrets,
+    group,
+    mode,
+    telemetry,
+    errorLog,
+  }: ObservabilityOptions) {
     this._namespace = namespace;
+    this._mode = mode;
     this._config = config;
-    this._mode = mode ?? 'disabled';
     this._group = group;
     this._secrets = this._loadSecrets(config, secrets);
     this._telemetryBatchSize = telemetry?.batchSize ?? 30;
@@ -97,10 +109,9 @@ export class Observability {
       this.setTag('group', this._group);
     }
     this.setTag('namespace', this._namespace);
-
-    if (this._mode === 'full') {
-      // TODO(nf): set group and hostname?
-    }
+    environment && this.setTag('environment', environment);
+    release && this.setTag('release', release);
+    this.setTag('mode', this._mode);
   }
 
   private _loadSecrets(config: Config | undefined, secrets?: Record<string, string>) {
