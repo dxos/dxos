@@ -99,6 +99,8 @@ export class SignalRPCClient {
           async () => {
             // TODO(nf): use RFC6455 ping/pong once implemented in the browser?
             // TODO(nf): check for pong response from server (once implemented)
+            // Current implementation of signal server ignores all text data messages, and does not send a response.
+            // However this is enough to detect breakages in the connection as TCP will reset the connection if ACKs are not received.
             this._socket?.send('__ping__');
           },
           SIGNAL_KEEPALIVE_INTERVAL,
