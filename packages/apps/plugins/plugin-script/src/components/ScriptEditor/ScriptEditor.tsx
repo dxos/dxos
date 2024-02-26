@@ -22,7 +22,6 @@ export type ScriptEditorProps = {
 // TODO(burdon): https://davidmyers.dev/blog/how-to-build-a-code-editor-with-codemirror-6-and-typescript/introduction
 
 export const ScriptEditor = ({ source, themeMode, className }: ScriptEditorProps) => {
-  console.log('::::', source);
   const extensions = useMemo(
     () => [
       // TODO(burdon): Use basic set-up (e.g., bracket matching).
@@ -31,6 +30,7 @@ export const ScriptEditor = ({ source, themeMode, className }: ScriptEditorProps
       minimalSetup,
 
       lineNumbers(),
+      // TODO(burdon): Syntax highlighting theme.
       javascript({ typescript: true }),
       autocompletion({ activateOnTyping: false }),
       keymap.of([...completionKeymap]),

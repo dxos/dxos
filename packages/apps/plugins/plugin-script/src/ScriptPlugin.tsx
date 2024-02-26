@@ -153,23 +153,23 @@ const example = [
   '}',
 ].join('\n');
 
-let lastSource;
-let lastObj;
-let lastScript;
+// let lastSource;
+// let lastObj;
+// let lastScript;
 
 const Editor: FC<{ script: ScriptType; containerUrl: string }> = ({ script, containerUrl }) => {
   const source = useMemo(() => createDocAccessor(script.source), [script.source]);
 
-  console.log('Editor', {
-    scriptId: script.id,
-    script,
-    source: source === lastSource,
-    obj: lastObj === script.source,
-    scriptCh: lastScript === script,
-  });
-  lastSource = source;
-  lastObj = script.source;
-  lastScript = script;
+  // console.log('Editor', {
+  //   scriptId: script.id,
+  //   script,
+  //   source: source === lastSource,
+  //   obj: lastObj === script.source,
+  //   scriptCh: lastScript === script,
+  // });
+  // lastSource = source;
+  // lastObj = script.source;
+  // lastScript = script;
 
   useEffect(() => {
     console.log('mount editor');
