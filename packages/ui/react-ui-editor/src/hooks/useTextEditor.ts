@@ -86,6 +86,8 @@ export const useTextEditor = (
     };
   }, deps);
 
+  useDebugReactDeps([doc, ...(deps ?? [])]);
+
   useEffect(() => {
     if (view) {
       // Select end of line if not specified.
@@ -150,4 +152,19 @@ export const createThemeExtensions = ({ theme, themeMode, slots }: ThemeExtensio
     EditorView.editorAttributes.of({ class: slots?.editor?.className ?? '' }),
     EditorView.contentAttributes.of({ class: slots?.content?.className ?? '' }),
   ].filter(isNotFalsy);
+};
+
+const useDebugReactDeps = (deps: DependencyList = []) => {
+  const lastDeps = useRef<DependencyList>([]);
+  useEffect(() => {
+    console.group(`deps changed oldLength: ${lastDeps.current.length} newLength: ${deps.length}`);
+    for (let i = 0; i < Math.max(lastDeps.current.length ?? 0, deps.length ?? 0); i++) {
+      console.log(i, lastDeps.current[i] === deps[i] ? 'SAME' : 'CHANGED', {
+        previous: lastDeps.current[i],
+        current: deps[i],
+      });
+    }
+    console.groupEnd();
+    lastDeps.current = deps;
+  }, deps);
 };
