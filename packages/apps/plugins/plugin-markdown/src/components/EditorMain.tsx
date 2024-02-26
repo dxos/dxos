@@ -78,7 +78,11 @@ export const EditorMain = ({ model, comments, toolbar, extensions: _extensions, 
           <Toolbar.Extended />
         </Toolbar.Root>
       )}
-      <div role='none' className='is-full bs-full overflow-hidden'>
+      <div
+        role='none'
+        data-toolbar={toolbar ? 'enabled' : 'disabled'}
+        className='is-full bs-full overflow-hidden data-[toolbar=disabled]:pbs-2'
+      >
         <MarkdownEditor
           ref={editorRef}
           autoFocus
