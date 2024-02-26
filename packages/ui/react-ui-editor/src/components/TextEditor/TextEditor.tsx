@@ -128,7 +128,6 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
           EditorView.theme(theme ?? {}),
           EditorView.darkTheme.of(themeMode === 'dark'),
           EditorView.editorAttributes.of({ class: slots.editor?.className ?? '' }),
-          // NOTE: Don't set padding or margins on content (at minimum, affects multi-line selection).
           EditorView.contentAttributes.of({ class: slots.content?.className ?? '' }),
 
           // TODO(burdon): Assumes default line height?
