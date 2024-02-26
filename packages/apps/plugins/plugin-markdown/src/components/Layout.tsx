@@ -12,8 +12,8 @@ export const MainLayout = ({ children, toolbar }: PropsWithChildren<{ toolbar?: 
   return (
     <Main.Content
       bounce
-      classNames={[topbarBlockPaddingStart, editorWithToolbarLayout]}
       data-toolbar={toolbar ? 'enabled' : 'disabled'}
+      classNames={[topbarBlockPaddingStart, editorWithToolbarLayout]}
     >
       {children}
     </Main.Content>
