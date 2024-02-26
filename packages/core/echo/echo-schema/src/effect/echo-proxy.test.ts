@@ -5,7 +5,7 @@ import { log } from '@dxos/log';
 import { getProxyHandlerSlot } from './proxy';
 import { updateCounter } from './testutils';
 
-describe.only('ECHO backed reactive objects', () => {
+describe('ECHO backed reactive objects', () => {
   test('create object', () => {
     const obj = createEchoReactiveObject({ prop: 'foo' });
     expect(obj.prop).to.equal('foo');
@@ -44,7 +44,7 @@ describe.only('ECHO backed reactive objects', () => {
     expect(updates.count).to.equal(1);
   });
 
-  test.skip('array', () => {
+  test('array', () => {
     const obj = createEchoReactiveObject({ arr: [1, 2, 3] });
     expect(obj.arr).to.deep.equal([1, 2, 3]);
 
