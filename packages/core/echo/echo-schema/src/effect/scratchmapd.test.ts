@@ -1,7 +1,12 @@
-import { describe, test } from '@dxos/test';
-import { next as A } from '@dxos/automerge/automerge';
+//
+// Copyright 2024 DXOS.org
+//
+
 import { expect } from 'chai';
+
+import { next as A } from '@dxos/automerge/automerge';
 import { log } from '@dxos/log';
+import { describe, test } from '@dxos/test';
 
 describe('Scratchpad', () => {
   test.skip('am object identity', () => {
