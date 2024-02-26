@@ -11,14 +11,13 @@ import {
   type Comment,
   MarkdownEditor,
   Toolbar,
+  cursorLineMargin,
+  editorFillLayoutRoot,
   focusComment,
   useComments,
   useEditorView,
   useActionHandler,
   useFormattingState,
-  cursorLineMargin,
-  editorFillLayoutRoot,
-  editorFillLayoutEditor,
 } from '@dxos/react-ui-editor';
 import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
@@ -79,14 +78,11 @@ export const EditorMain = ({ model, comments, toolbar, extensions: _extensions, 
           <Toolbar.Extended />
         </Toolbar.Root>
       )}
-      <div
-        role='none'
-        data-toolbar={toolbar ? 'enabled' : 'disabled'}
-        className='is-full bs-full overflow-hidden data-[toolbar=disabled]:pbs-8'
-      >
+      <div role='none' data-toolbar={toolbar ? 'enabled' : 'disabled'} className='is-full bs-full overflow-hidden'>
         <MarkdownEditor
           ref={editorRef}
           autoFocus
+          scrollPastEnd={true}
           placeholder={t('editor placeholder')}
           model={model}
           extensions={extensions}
@@ -102,13 +98,10 @@ export const EditorMain = ({ model, comments, toolbar, extensions: _extensions, 
               'data-testid': 'composer.markdownRoot',
             } as HTMLAttributes<HTMLDivElement>,
             editor: {
-              // className: 'h-full',
-              className: mx(editorFillLayoutEditor, !toolbar && 'border-bs separator-separator'),
+              className: mx('h-full overflow-scroll', !toolbar && 'border-bs separator-separator'),
             },
             content: {
-              className: '!p-2',
-              // className: '!p-2 sm:!p-6 md:!p-8',
-              // className: mx(editorHalfViewportOverscrollContent, '!p-2 sm:!p-6 md:!p-8'),
+              className: '!px-2 !sm:px-6 !md:px-8',
             },
           }}
           {...props}

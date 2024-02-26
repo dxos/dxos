@@ -57,4 +57,7 @@ const preview: Preview = {
   }
 };
 
-export default preview;
+export const parameters = preview.parameters;
+export const globalTypes = preview.globalTypes;
+
+// export default preview;

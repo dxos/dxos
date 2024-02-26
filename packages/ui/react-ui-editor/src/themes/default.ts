@@ -58,7 +58,8 @@ export const defaultTheme: ThemeStyles = {
   },
 
   '.cm-content': {
-    padding: 0,
+    paddingTop: 0,
+    paddingBottom: 0,
     // NOTE: Base font size (otherwise defined by HTML tag, which might be different for storybook).
     fontSize: '16px',
   },

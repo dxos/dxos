@@ -3,7 +3,7 @@
 //
 
 import { EditorState, type Extension, type StateEffect } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
+import { EditorView, scrollPastEnd } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, {
@@ -52,6 +52,7 @@ export type TextEditorProps = {
   model: EditorModel; // TODO(burdon): Optional (e.g., just provide content if readonly).
   readonly?: boolean; // TODO(burdon): Move into model.
   autoFocus?: boolean;
+  scrollPastEnd?: boolean;
   lineWrapping?: boolean;
   scrollTo?: StateEffect<any>; // TODO(burdon): Restore scroll position: scrollTo EditorView.scrollSnapshot().
   selection?: { anchor: number; head?: number };
@@ -68,7 +69,18 @@ export type TextEditorProps = {
 // TODO(burdon): Replace with useTextEditor.
 export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
   (
-    { model, readonly, autoFocus, scrollTo, selection, theme, slots = defaultSlots, extensions = [], debug },
+    {
+      model,
+      readonly,
+      autoFocus,
+      scrollTo,
+      selection,
+      theme,
+      slots = defaultSlots,
+      extensions = [],
+      scrollPastEnd: _scrollPastEnd,
+      debug,
+    },
     forwardedRef,
   ) => {
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
@@ -122,7 +134,9 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
           EditorView.theme(theme ?? {}),
           EditorView.darkTheme.of(themeMode === 'dark'),
           EditorView.editorAttributes.of({ class: slots.editor?.className ?? '' }),
+          // NOTE: Must not set vertical padding or margins.
           EditorView.contentAttributes.of({ class: slots.content?.className ?? '' }),
+          _scrollPastEnd && scrollPastEnd(),
 
           // Focus.
           EditorView.updateListener.of((update) => {
@@ -262,7 +276,7 @@ export const defaultSlots: TextEditorSlots = {
     className: focusRing,
   },
   editor: {
-    className: 'min-bs-full',
+    className: 'h-full overflow-scroll',
   },
 };
 
