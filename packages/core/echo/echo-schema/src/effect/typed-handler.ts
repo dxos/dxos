@@ -19,9 +19,13 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
   _isInSet = false;
 
   _init(target: any): void {
+    this.makeArraysReactive(target);
+  }
+
+  private makeArraysReactive(target: any) {
     for (const key in target) {
-      if (Array.isArray(target[key]) && !(target instanceof ReactiveArray)) {
-        target[key] = new ReactiveArray(...target[key]);
+      if (Array.isArray(target[key]) && !(target[key] instanceof ReactiveArray)) {
+        target[key] = ReactiveArray.from(target[key]);
         const schema = this.getPropertySchema(target, key);
         setSchemaProperties(target[key], schema);
       }

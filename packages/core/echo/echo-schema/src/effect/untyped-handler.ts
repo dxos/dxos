@@ -38,8 +38,8 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     for (const key in target) {
-      if (Array.isArray(target[key]) && !(target instanceof ReactiveArray)) {
-        target[key] = new ReactiveArray(...target[key]);
+      if (Array.isArray(target[key]) && !(target[key] instanceof ReactiveArray)) {
+        target[key] = ReactiveArray.from(target[key]);
       }
     }
   }
