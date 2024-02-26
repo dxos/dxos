@@ -20,6 +20,7 @@ import {
   parseNavigationPlugin,
   LayoutAction,
   SettingsAction,
+  parsePluginHost,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -71,6 +72,7 @@ export const ObservabilityPlugin = (options: {
       state.prop(state.values.$notified!, 'notified', LocalStorageStore.bool);
     },
     ready: async (plugins) => {
+      const pluginHost = resolvePlugin(plugins, parsePluginHost);
       const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
@@ -109,6 +111,11 @@ export const ObservabilityPlugin = (options: {
       // Should not block application startup.
       void options.observability().then(async (obs) => {
         observability = obs;
+
+        // Ensure errors are tagged with enabled plugins to help with reproductions.
+        pluginHost?.provides?.plugins?.enabled?.map((plugin) =>
+          observability?.setTag(`pluginEnabled-${plugin}`, 'true', 'errors'),
+        );
 
         // Start client observability (i.e. not running as shared worker)
         // TODO(nf): how to prevent multiple instances for single shared worker?
