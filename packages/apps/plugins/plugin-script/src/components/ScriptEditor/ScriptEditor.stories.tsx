@@ -18,6 +18,7 @@ import '@dxosTheme';
 import React, { useEffect, useState } from 'react';
 
 import { TextObject } from '@dxos/client/echo';
+import { createDocAccessor, type DocAccessor } from '@dxos/echo-schema';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 import { ScriptEditor } from './ScriptEditor';
@@ -42,10 +43,14 @@ const example2 = [
 ].join('\n');
 
 const Story = () => {
-  const [source, setSource] = useState<TextObject>();
+  const [source, setSource] = useState<DocAccessor>();
   useEffect(() => {
-    setSource(new TextObject(example2, TextKind.PLAIN));
+    setSource(createDocAccessor(new TextObject(example2, TextKind.PLAIN)));
   }, []);
+
+  if (!source) {
+    return null;
+  }
 
   return (
     <div className='flex fixed inset-0 bg-neutral-50'>

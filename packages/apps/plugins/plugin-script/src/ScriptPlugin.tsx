@@ -8,6 +8,7 @@ import React from 'react';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Script as ScriptType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
+import { createDocAccessor } from '@dxos/echo-schema';
 import {
   type Filter,
   type EchoObject,
@@ -102,7 +103,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
                 <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
                   <ScriptBlock
                     id={(data.active as any).id}
-                    source={(data.active as ScriptType).source}
+                    source={createDocAccessor((data.active as ScriptType).source)}
                     classes={{ toolbar: 'px-2' }}
                     containerUrl={containerUrl}
                   />
@@ -112,7 +113,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
               return isObject(data.slide, ScriptType.schema, ScriptType.filter()) ? (
                 <ScriptBlock
                   id={(data.slide as any).id}
-                  source={(data.slide as ScriptType).source}
+                  source={createDocAccessor((data.slide as ScriptType).source)}
                   classes={{ root: 'p-24' }}
                   view='preview'
                   hideSelector
@@ -123,7 +124,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
               return isObject(data.object, ScriptType.schema, ScriptType.filter()) ? (
                 <ScriptBlock
                   id={(data.object as any).id}
-                  source={(data.object as ScriptType).source}
+                  source={createDocAccessor((data.object as ScriptType).source)}
                   containerUrl={containerUrl}
                   classes={{ root: 'h-[400px] py-2' }}
                 />

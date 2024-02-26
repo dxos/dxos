@@ -10,7 +10,7 @@ import {
   type StateEffect,
 } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { type RefObject, useEffect, useRef, useState } from 'react';
+import { type DependencyList, type RefObject, useEffect, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { type ThemeMode } from '@dxos/react-ui';
@@ -36,14 +36,10 @@ export type UseTextEditor = {
  * Hook for creating editor.
  */
 // TODO(wittjosiah): Does not work in strict mode.
-export const useTextEditor = ({
-  autoFocus,
-  scrollTo,
-  debug,
-  doc,
-  selection,
-  extensions,
-}: UseTextEditorOptions = {}): UseTextEditor => {
+export const useTextEditor = (
+  { autoFocus, scrollTo, debug, doc, selection, extensions }: UseTextEditorOptions = {},
+  deps?: DependencyList,
+): UseTextEditor => {
   const onUpdate = useRef<() => void>();
   const [view, setView] = useState<EditorView>();
   const parentRef = useRef<HTMLDivElement>(null);
@@ -88,7 +84,7 @@ export const useTextEditor = ({
     return () => {
       view?.destroy();
     };
-  }, [doc, extensions]);
+  }, [doc, ...(deps ?? [])]);
 
   useEffect(() => {
     if (view) {

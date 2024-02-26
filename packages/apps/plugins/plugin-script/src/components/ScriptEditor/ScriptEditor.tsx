@@ -8,14 +8,13 @@ import { EditorView, keymap, lineNumbers } from '@codemirror/view';
 import { minimalSetup } from 'codemirror';
 import React, { useMemo } from 'react';
 
-import { type TextObject } from '@dxos/client/echo';
-import { getTextContent } from '@dxos/echo-schema';
+import { DocAccessor } from '@dxos/echo-schema';
 import { type ThemeMode } from '@dxos/react-ui';
-import { useTextEditor } from '@dxos/react-ui-editor';
+import { automerge, useTextEditor } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
 export type ScriptEditorProps = {
-  source?: TextObject;
+  source: DocAccessor;
   themeMode?: ThemeMode;
   className?: string;
 };
@@ -25,26 +24,25 @@ export type ScriptEditorProps = {
 export const ScriptEditor = ({ source, themeMode, className }: ScriptEditorProps) => {
   const extensions = useMemo(
     () => [
-      //
       // basicSetup,
       minimalSetup, // TODO(burdon): Use this in text editor (cancels highlight current line)???
       lineNumbers(),
       javascript({ typescript: true }),
       autocompletion({ activateOnTyping: false }),
-      keymap.of([
-        //
-        ...completionKeymap,
-      ]),
+      keymap.of([...completionKeymap]),
       EditorView.darkTheme.of(themeMode === 'dark'),
-      EditorView.editorAttributes.of({ class: 'grow' }),
+      automerge(source),
     ],
-    [themeMode],
+    [source, themeMode],
   );
 
-  const { parentRef } = useTextEditor({
-    extensions,
-    doc: getTextContent(source),
-  });
+  const { parentRef } = useTextEditor(
+    {
+      extensions,
+      doc: DocAccessor.getValue(source),
+    },
+    [extensions],
+  );
 
   return <div ref={parentRef} className={mx('flex grow', className)} />;
 };

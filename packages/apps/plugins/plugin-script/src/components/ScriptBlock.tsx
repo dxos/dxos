@@ -7,7 +7,7 @@ import { Play } from '@phosphor-icons/react';
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { getTextContent, type TextObject } from '@dxos/client/echo';
+import { DocAccessor } from '@dxos/echo-schema';
 import { DensityProvider, useThemeContext, Toolbar, Button } from '@dxos/react-ui';
 import { mx, getSize } from '@dxos/react-ui-theme';
 
@@ -18,7 +18,7 @@ import { Compiler, type CompilerResult, initializeCompiler } from '../compiler';
 
 export type ScriptBlockProps = {
   id: string;
-  source: TextObject;
+  source: DocAccessor;
   view?: View;
   hideSelector?: boolean;
   classes?: {
@@ -52,7 +52,7 @@ export const ScriptBlock = ({
 
   useEffect(() => {
     setTimeout(async () => {
-      const result = await compiler.compile(String(source.content));
+      const result = await compiler.compile(DocAccessor.getValue(source));
       setResult(result);
     });
   }, [source, id]);
@@ -69,7 +69,7 @@ export const ScriptBlock = ({
 
   const handleExec = useCallback(
     async (auto = true) => {
-      const result = await compiler.compile(getTextContent(source, ''));
+      const result = await compiler.compile(DocAccessor.getValue(source));
       setResult(result);
       if (auto && view === 'editor') {
         setView('preview');

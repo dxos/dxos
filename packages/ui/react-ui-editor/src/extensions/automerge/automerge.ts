@@ -7,29 +7,24 @@
 import { StateField, type Extension } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
-import { next as A, type Prop } from '@dxos/automerge/automerge';
+import { next as A } from '@dxos/automerge/automerge';
 
 import { cursorConverter } from './cursor';
-import { updateHeadsEffect, type IDocHandle, isReconcile, type State } from './defs';
+import { updateHeadsEffect, isReconcile, type State, type DocAccessor } from './defs';
 import { Syncer } from './sync';
 import { Cursor } from '../cursor';
 
-export type AutomergeOptions = {
-  handle: IDocHandle;
-  path: Prop[];
-};
-
-export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
+export const automerge = (accessor: DocAccessor): Extension => {
   const syncState = StateField.define<State>({
     create: () => ({
-      path: path.slice(),
-      lastHeads: A.getHeads(handle.docSync()!),
+      path: accessor.path.slice(),
+      lastHeads: A.getHeads(accessor.handle.docSync()!),
       unreconciledTransactions: [],
     }),
 
     update: (value, tr) => {
       const result: State = {
-        path: path.slice(),
+        path: accessor.path.slice(),
         lastHeads: value.lastHeads,
         unreconciledTransactions: value.unreconciledTransactions.slice(),
       };
@@ -54,21 +49,21 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
     },
   });
 
-  const syncer = new Syncer(handle, syncState);
+  const syncer = new Syncer(accessor.handle, syncState);
 
   return [
-    Cursor.converter.of(cursorConverter(handle, path)),
+    Cursor.converter.of(cursorConverter(accessor)),
     syncState,
 
     // Reconcile external updates.
     ViewPlugin.fromClass(
       class {
         constructor(private readonly _view: EditorView) {
-          handle.addListener('change', this._handleChange.bind(this));
+          accessor.handle.addListener('change', this._handleChange.bind(this));
         }
 
         destroy() {
-          handle.removeListener('change', this._handleChange.bind(this));
+          accessor.handle.removeListener('change', this._handleChange.bind(this));
         }
 
         _handleChange() {
