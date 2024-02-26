@@ -95,15 +95,13 @@ export const EditorMain = ({ model, comments, toolbar, extensions: _extensions, 
                 textBlockWidth,
                 editorFillLayoutRoot,
                 'md:border-is md:border-ie separator-separator focus-visible:ring-inset',
+                !toolbar && 'border-bs separator-separator',
               ),
               'data-testid': 'composer.markdownRoot',
             } as HTMLAttributes<HTMLDivElement>,
-            editor: {
-              className: mx('h-full overflow-scroll', !toolbar && 'border-bs separator-separator'),
-            },
             content: {
-              // TODO(burdon): Causes CM issues if y-padding is set.
-              className: '!px-2 sm:!px-6 md:!px-8',
+              // TODO(burdon): Override (!) required since base theme sets padding and scrollPastEnd sets bottom.
+              className: mx('!px-2 sm:!px-6 md:!px-8 !pt-2 sm:!pt-6 md:!pt-8'),
             },
           }}
           {...props}

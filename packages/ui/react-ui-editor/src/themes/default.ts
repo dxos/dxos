@@ -60,7 +60,8 @@ export const defaultTheme: ThemeStyles = {
   },
 
   '.cm-content': {
-    padding: 0,
+    // TODO(burdon): Is it possible to remove the padding value from CM's default theme?
+    // padding: 'unset',
     // NOTE: Base font size (otherwise defined by HTML tag, which might be different for storybook).
     fontSize: '16px',
   },

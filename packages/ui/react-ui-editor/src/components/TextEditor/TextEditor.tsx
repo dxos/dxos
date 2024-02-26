@@ -91,8 +91,6 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
     const rootRef = useRef<HTMLDivElement>(null);
     const [view, setView] = useState<EditorView | null>(null);
 
-    console.log(_scrollPastEnd, moveToEndOfLine);
-
     // The view ref can be used to focus the editor.
     // NOTE: This does not cause the parent to re-render, so the ref is not available immediately.
     useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => view, [view]);
@@ -125,12 +123,12 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
           }),
 
           // Theme.
-          // TODO(burdon): Make configurable.
+          // TODO(burdon): Make base theme configurable.
+          slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
+          slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
           EditorView.baseTheme(defaultTheme),
-          EditorView.theme(theme ?? {}),
+          theme && EditorView.theme(theme),
           EditorView.darkTheme.of(themeMode === 'dark'),
-          EditorView.editorAttributes.of({ class: slots.editor?.className ?? '' }),
-          EditorView.contentAttributes.of({ class: slots.content?.className ?? '' }),
 
           // NOTE: Assumes default line height.
           _scrollPastEnd && scrollPastEnd(),
