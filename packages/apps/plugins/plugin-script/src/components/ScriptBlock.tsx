@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Play } from '@phosphor-icons/react';
+import { Check, Play, Warning } from '@phosphor-icons/react';
 // @ts-ignore
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -51,10 +51,13 @@ export const ScriptBlock = ({
   }, []);
 
   useEffect(() => {
-    setTimeout(async () => {
+    // TODO(burdon): Throttle and listen for update.
+    const t = setTimeout(async () => {
       const result = await compiler.compile(DocAccessor.getValue(source));
       setResult(result);
     });
+
+    return () => clearTimeout(t);
   }, [source, id]);
 
   const handleSetView = useCallback(
@@ -85,10 +88,20 @@ export const ScriptBlock = ({
   return (
     <div className={mx('flex flex-col grow overflow-hidden', classes?.root)}>
       {!hideSelector && (
-        <DensityProvider density={'fine'}>
+        <DensityProvider density='fine'>
           <Toolbar.Root classNames={mx('mb-2', classes?.toolbar)}>
             <SplitterSelector view={view} onChange={handleSetView} />
             <div className='grow' />
+            {result?.bundle && !result?.error && (
+              <div title={String(result.error)}>
+                <Check className={mx(getSize(5), 'text-green-500')} />
+              </div>
+            )}
+            {result?.error && (
+              <div title={String(result.error)}>
+                <Warning className={mx(getSize(5), 'text-orange-500')} />
+              </div>
+            )}
             <Button variant='ghost' onClick={() => handleExec()}>
               <Play className={getSize(5)} />
             </Button>

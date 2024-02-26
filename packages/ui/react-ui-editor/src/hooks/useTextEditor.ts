@@ -84,7 +84,7 @@ export const useTextEditor = (
     return () => {
       view?.destroy();
     };
-  }, [doc, ...(deps ?? [])]);
+  }, deps);
 
   useEffect(() => {
     if (view) {

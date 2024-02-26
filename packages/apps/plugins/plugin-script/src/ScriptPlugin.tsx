@@ -3,7 +3,7 @@
 //
 
 import { Code, type IconProps } from '@phosphor-icons/react';
-import React, { type FC, useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Script as ScriptType } from '@braneframe/types';
@@ -20,7 +20,7 @@ import {
 import { Main } from '@dxos/react-ui';
 import { baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
-import { ScriptBlock } from './components';
+import { ScriptBlock, type ScriptBlockProps } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
 import translations from './translations';
 import { ScriptAction, type ScriptPluginProvides } from './types';
@@ -100,24 +100,31 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
           switch (role) {
             case 'main':
               return isObject(data.active, ScriptType.schema, ScriptType.filter()) ? (
-                <Editor script={data.active as ScriptType} containerUrl={containerUrl} />
+                <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
+                  <ScriptBlockWrapper
+                    //
+                    script={data.active as ScriptType}
+                    containerUrl={containerUrl}
+                    classes={{ toolbar: 'px-1' }}
+                  />
+                </Main.Content>
               ) : null;
             case 'slide':
               return isObject(data.slide, ScriptType.schema, ScriptType.filter()) ? (
-                <ScriptBlock
-                  id={(data.slide as any).id}
-                  source={createDocAccessor((data.slide as ScriptType).source)}
+                <ScriptBlockWrapper
+                  //
+                  script={data.slide as ScriptType}
                   containerUrl={containerUrl}
-                  classes={{ root: 'p-24' }}
+                  classes={{ toolbar: 'p-24' }}
                   view='preview'
                   hideSelector
                 />
               ) : null;
             case 'section':
               return isObject(data.object, ScriptType.schema, ScriptType.filter()) ? (
-                <ScriptBlock
-                  id={(data.object as any).id}
-                  source={createDocAccessor((data.object as ScriptType).source)}
+                <ScriptBlockWrapper
+                  //
+                  script={data.object as ScriptType}
                   containerUrl={containerUrl}
                   classes={{ root: 'h-[400px] py-2' }}
                 />
@@ -140,6 +147,11 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
   };
 };
 
+const ScriptBlockWrapper = ({ script, ...props }: { script: ScriptType } & Omit<ScriptBlockProps, 'id' | 'source'>) => {
+  const source = useMemo(() => createDocAccessor(script.source), [script.source]);
+  return <ScriptBlock id={script.id} source={source} {...props} />;
+};
+
 // TODO(burdon): Import.
 const example = [
   "import { Filter, useQuery, useSpaces} from '@dxos/react-client/echo';",
@@ -152,32 +164,3 @@ const example = [
   '  return <Chart items={objects} accessor={object => ({ x: object.lat, y: object.lng })} />',
   '}',
 ].join('\n');
-
-// let lastSource;
-// let lastObj;
-// let lastScript;
-
-const Editor: FC<{ script: ScriptType; containerUrl: string }> = ({ script, containerUrl }) => {
-  const source = useMemo(() => createDocAccessor(script.source), [script.source]);
-
-  // console.log('Editor', {
-  //   scriptId: script.id,
-  //   script,
-  //   source: source === lastSource,
-  //   obj: lastObj === script.source,
-  //   scriptCh: lastScript === script,
-  // });
-  // lastSource = source;
-  // lastObj = script.source;
-  // lastScript = script;
-
-  useEffect(() => {
-    console.log('mount editor');
-  }, []);
-
-  return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
-      <ScriptBlock id={script.id} source={source} classes={{ toolbar: 'px-2' }} containerUrl={containerUrl} />
-    </Main.Content>
-  );
-};
