@@ -16,6 +16,7 @@ export const symbolTypeAst = Symbol.for('@dxos/type/AST');
 export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T> {
   _proxyMap = new WeakMap<object, any>();
   _signal = compositeRuntime.createSignal();
+  _isInSet = false;
 
   _init(target: any): void {
     for (const key in target) {
@@ -38,6 +39,31 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
   }
 
   set(target: any, prop: string | symbol, value: any, receiver: any): boolean {
+    try {
+      this._isInSet = true;
+      const validatedValue = this.validateValue(target, prop, value);
+      const result = Reflect.set(target, prop, validatedValue, receiver);
+      this._signal.notifyWrite();
+      return result;
+    } finally {
+      this._isInSet = false;
+    }
+  }
+
+  defineProperty(target: any, property: string | symbol, attributes: PropertyDescriptor): boolean {
+    if (typeof property === 'symbol' || this._isInSet) {
+      return Reflect.defineProperty(target, property, attributes);
+    }
+    const validatedValue = this.validateValue(target, property, attributes.value);
+    const result = Reflect.defineProperty(target, property, {
+      ...attributes,
+      value: validatedValue,
+    });
+    this._signal.notifyWrite();
+    return result;
+  }
+
+  private validateValue(target: any, prop: string | symbol, value: any) {
     const schema = this.getPropertySchema(target, prop);
     const _ = S.asserts(schema)(value);
     if (Array.isArray(value)) {
@@ -46,15 +72,12 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
     if (isValidProxyTarget(value)) {
       setSchemaProperties(value, schema);
     }
-    const result = Reflect.set(target, prop, value, receiver);
-    this._signal.notifyWrite();
-    return result;
+    return value;
   }
 
   private getPropertySchema(target: any, prop: string | symbol): S.Schema<any> {
     if (target instanceof ReactiveArray) {
-      const arraySchema = (target as any)[symbolSchema];
-      return S.make(arraySchema.ast.rest.value[0]);
+      return getArrayElementSchema((target as any)[symbolSchema]);
     }
     const ast = target[symbolTypeAst] as AST.AST;
     const properties = AST.getPropertySignatures(ast).find((property) => property.name === prop);
@@ -65,12 +88,18 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
   }
 }
 
+const getArrayElementSchema = (arraySchema: S.Schema<any>): S.Schema<any> => {
+  return S.make((arraySchema.ast as any).rest.value[0]);
+};
+
 /**
  * Recursively set AST property on the object.
  */
 // TODO(burdon): Use visitProperties.
 export const setSchemaProperties = (obj: any, schema: S.Schema<any>) => {
-  Object.defineProperty(obj, symbolSchema, { enumerable: false, value: schema });
+  if (!obj[symbolSchema]) {
+    Object.defineProperty(obj, symbolSchema, { enumerable: false, value: schema });
+  }
   if (AST.isTypeLiteral(schema.ast)) {
     Object.defineProperty(obj, symbolTypeAst, {
       enumerable: false,
@@ -84,10 +113,10 @@ export const setSchemaProperties = (obj: any, schema: S.Schema<any>) => {
       }
     }
   } else if (Array.isArray(obj) && AST.isTuple(schema.ast)) {
-    const type: S.Schema<any> = S.make((schema.ast as any).rest.value[0]);
-    for (const property of obj) {
-      if (isValidProxyTarget(property)) {
-        setSchemaProperties(property, type);
+    const elementSchema = getArrayElementSchema(schema);
+    for (const value of obj) {
+      if (isValidProxyTarget(value)) {
+        setSchemaProperties(value, elementSchema);
       }
     }
   }
