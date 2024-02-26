@@ -18,6 +18,7 @@ import {
   useFormattingState,
   cursorLineMargin,
   editorFillLayoutRoot,
+  editorFillLayoutEditor,
 } from '@dxos/react-ui-editor';
 import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
@@ -28,7 +29,7 @@ export type EditorMainProps = {
   toolbar?: boolean;
 } & Pick<TextEditorProps, 'model' | 'readonly' | 'extensions'>;
 
-const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...props }: EditorMainProps) => {
+export const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
 
   const [editorRef, viewInvalidated] = useEditorView(model.id);
@@ -101,8 +102,8 @@ const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...prop
               'data-testid': 'composer.markdownRoot',
             } as HTMLAttributes<HTMLDivElement>,
             editor: {
-              className: 'h-full',
-              // className: mx(editorFillLayoutEditor, !toolbar && 'border-bs separator-separator'),
+              // className: 'h-full',
+              className: mx(editorFillLayoutEditor, !toolbar && 'border-bs separator-separator'),
             },
             content: {
               className: '!p-2',
