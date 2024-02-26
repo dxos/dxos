@@ -102,6 +102,7 @@ export const EditorMain = ({ model, comments, toolbar, extensions: _extensions, 
               className: mx('h-full overflow-scroll', !toolbar && 'border-bs separator-separator'),
             },
             content: {
+              // TODO(burdon): Causes CM issues if y-padding is set.
               className: '!px-2 sm:!px-6 md:!px-8',
             },
           }}

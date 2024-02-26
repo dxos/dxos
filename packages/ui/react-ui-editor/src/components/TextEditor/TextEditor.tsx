@@ -75,7 +75,7 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
       readonly,
       autoFocus,
       scrollTo = EditorView.scrollIntoView(0),
-      moveToEndOfLine = true,
+      moveToEndOfLine,
       selection,
       theme,
       slots = defaultSlots,
@@ -90,6 +90,8 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
 
     const rootRef = useRef<HTMLDivElement>(null);
     const [view, setView] = useState<EditorView | null>(null);
+
+    console.log(_scrollPastEnd, moveToEndOfLine);
 
     // The view ref can be used to focus the editor.
     // NOTE: This does not cause the parent to re-render, so the ref is not available immediately.
