@@ -51,7 +51,7 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
         themeMode,
         theme: markdownTheme,
         slots: {
-          content: { className: '!p-4' },
+          editor: { className: 'p-2' },
         },
       }),
       // TODO(burdon): Move lineWrapping.

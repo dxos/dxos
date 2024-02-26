@@ -72,7 +72,7 @@ const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) =
         extensions={extensions}
         slots={{
           root: { className: mx(textBlockWidth) },
-          content: { className: '!pli-2' },
+          editor: { className: 'p-2' },
         }}
       />
     </div>
