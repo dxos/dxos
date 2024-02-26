@@ -8,7 +8,7 @@ import { Main } from '@dxos/react-ui';
 import { editorWithToolbarLayout } from '@dxos/react-ui-editor';
 import { topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
-export const MainLayout = ({ children }: PropsWithChildren) => {
+export const MainLayout = ({ children, toolbar }: PropsWithChildren<{ toolbar?: boolean }>) => {
   return (
     <Main.Content
       bounce
