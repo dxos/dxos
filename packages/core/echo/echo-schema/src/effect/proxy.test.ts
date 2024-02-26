@@ -3,7 +3,6 @@
 //
 
 import * as S from '@effect/schema/Schema';
-import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
 import jestExpect from 'expect';
 import { inspect } from 'util';
@@ -12,6 +11,7 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
 import * as R from './reactive';
+import { updateCounter } from './testutils';
 
 registerSignalRuntime();
 
@@ -49,7 +49,7 @@ for (const schema of [undefined, TestSchema]) {
       return schema == null ? (R.object(props) as TestSchema) : R.object(schema, props);
     };
 
-    describe.only(`Proxy properties${schema == null ? '' : ' with schema'}`, () => {
+    describe(`Proxy properties${schema == null ? '' : ' with schema'}`, () => {
       test('object initializer', () => {
         const obj = createObject({ string: 'bar' });
         expect(obj.string).to.eq('bar');
@@ -559,22 +559,6 @@ for (const schema of [undefined, TestSchema]) {
     });
   }
 }
-
-const updateCounter = (touch: () => void) => {
-  let updateCount = -1;
-  const clear = effect(() => {
-    touch();
-    updateCount++;
-  });
-
-  return {
-    get count() {
-      return updateCount;
-    },
-    // https://github.com/tc39/proposal-explicit-resource-management
-    [Symbol.dispose]: clear,
-  };
-};
 
 const TEST_OBJECT: TestSchema = {
   string: 'foo',
