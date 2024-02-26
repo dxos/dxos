@@ -169,7 +169,7 @@ Arguments:
 `protocol`: <code>string</code>
 
 
-### [useAgentHostingProviderClient(config)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/useAgentHostingProvider.ts#L13)
+### [useAgentHostingProviderClient(config)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/useAgentHostingProvider.ts#L17)
 
 
 
