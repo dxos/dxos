@@ -50,10 +50,6 @@ export const defaultTheme: ThemeStyles = {
     outline: 'none',
   },
 
-  '.cm-editor': {
-    overflow: 'hidden',
-  },
-
   // NOTE: See https://codemirror.net/docs/guide (DOM Structure).
   '.cm-scroller': {
     // TODO(burdon): Reconcile with docs: https://codemirror.net/docs/guide

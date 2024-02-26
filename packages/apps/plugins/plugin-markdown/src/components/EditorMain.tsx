@@ -13,6 +13,7 @@ import {
   Toolbar,
   cursorLineMargin,
   editorFillLayoutRoot,
+  editorFillLayoutEditor,
   focusComment,
   useComments,
   useEditorView,
@@ -107,6 +108,7 @@ export const EditorMain = ({ model, comments, toolbar, extensions: _extensions, 
               // TODO(burdon): Override (!) required since base theme sets padding and scrollPastEnd sets bottom.
               className: mx('!pli-2 sm:!pli-6 md:!pli-8 !pbs-2 sm:!pbs-6 md:!pbs-8'),
             },
+            editor: { className: editorFillLayoutEditor },
           }}
           {...props}
         />
