@@ -25,7 +25,7 @@ const Story: FC<{
   return (
     <Tooltip.Provider>
       <MainLayout>
-        <EditorMain model={model} toolbar={toolbar} />
+        <EditorMain model={model} />
       </MainLayout>
     </Tooltip.Provider>
   );

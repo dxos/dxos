@@ -78,7 +78,7 @@ export const EditorMain = ({ model, comments, toolbar, extensions: _extensions, 
           <Toolbar.Extended />
         </Toolbar.Root>
       )}
-      <div role='none' data-toolbar={toolbar ? 'enabled' : 'disabled'} className='is-full bs-full overflow-hidden'>
+      <div role='none' className='is-full bs-full overflow-hidden'>
         <MarkdownEditor
           ref={editorRef}
           autoFocus
@@ -101,7 +101,7 @@ export const EditorMain = ({ model, comments, toolbar, extensions: _extensions, 
             } as HTMLAttributes<HTMLDivElement>,
             content: {
               // TODO(burdon): Override (!) required since base theme sets padding and scrollPastEnd sets bottom.
-              className: mx('!px-2 sm:!px-6 md:!px-8 !pt-2 sm:!pt-6 md:!pt-8'),
+              className: mx('!pli-2 sm:!pli-6 md:!pli-8 !pbs-2 sm:!pbs-6 md:!pbs-8'),
             },
           }}
           {...props}
