@@ -14,19 +14,15 @@ import { TextEditor } from './TextEditor';
 import {
   type EditorMode,
   EditorModes,
-  code,
+  decorateMarkdown,
   createMarkdownExtensions,
   formatting,
-  heading,
-  hr,
   image,
-  link,
   table,
-  tasklist,
   useFormattingState,
 } from '../../extensions';
 import { createDataExtensions, createThemeExtensions, useActionHandler, useTextEditor } from '../../hooks';
-import { editorFillLayoutEditor, editorFillLayoutRoot, editorWithToolbarLayout } from '../../styles';
+import { editorFillLayoutEditor, editorWithToolbarLayout } from '../../styles';
 import { markdownTheme } from '../../themes';
 import translations from '../../translations';
 import { Toolbar } from '../Toolbar';
@@ -56,20 +52,16 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
         themeMode,
         theme: markdownTheme,
         slots: {
-          editor: { className: editorFillLayoutEditor },
+          content: { className: '!p-4' },
         },
       }),
       // TODO(burdon): Move lineWrapping.
       createMarkdownExtensions({ placeholder, lineWrapping: true }),
       // TODO(burdon): Move into markdown bundle (with React callbacks).
-      code(),
+      decorateMarkdown(),
       formatting(),
-      heading(),
-      hr(),
       image(),
-      link(),
       table(),
-      tasklist(),
       trackFormatting,
     ],
     [editorMode, themeMode, placeholder, trackFormatting, readonly],
@@ -87,11 +79,7 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
         <EditorModeToolbar editorMode={editorMode} setEditorMode={setEditorMode} />
       </Toolbar.Root>
       <div role='none' className='overflow-y-auto'>
-        <div
-          role='textbox'
-          className={mx(textBlockWidth, attentionSurface, editorFillLayoutRoot, 'p-4')}
-          ref={parentRef}
-        />
+        <div role='textbox' className={mx(textBlockWidth, attentionSurface, editorFillLayoutEditor)} ref={parentRef} />
       </div>
     </div>
   );

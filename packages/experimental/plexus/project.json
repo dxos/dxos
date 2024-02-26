@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "plexus",
   "sourceRoot": "packages/experimental/plexus/src",
   "projectType": "application",
   "targets": {
@@ -19,9 +21,7 @@
       }
     }
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "test"
-  ],
-  "name": "plexus"
+  ]
 }

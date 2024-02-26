@@ -2,30 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDoubleLeft, GearSix } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { parseObservabilityPlugin } from '@braneframe/plugin-observability';
-import {
-  LayoutAction,
-  NavigationAction,
-  SettingsAction,
-  Surface,
-  useIntent,
-  useResolvePlugin,
-} from '@dxos/app-framework';
+import { NavigationAction, Surface, useIntent } from '@dxos/app-framework';
 import { type Node, type Graph, isGraphNode } from '@dxos/app-graph';
-import { useClient, useConfig } from '@dxos/react-client';
-import { useIdentity } from '@dxos/react-client/halo';
-import {
-  Button,
-  DensityProvider,
-  ElevationProvider,
-  Tooltip,
-  useMediaQuery,
-  useSidebars,
-  useTranslation,
-} from '@dxos/react-ui';
+import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import {
   NavTree,
@@ -34,11 +15,9 @@ import {
   type NavTreeProps,
   emptyBranchDroppableId,
 } from '@dxos/react-ui-navtree';
-import { getSize, mx } from '@dxos/react-ui-theme';
 import { arrayMove } from '@dxos/util';
 
-import { HaloButton } from './HaloButton';
-import { VersionInfo } from './VersionInfo';
+import { NavTreeFooter } from './NavTreeFooter';
 import { NAVTREE_PLUGIN } from '../meta';
 import { getPersistenceParent } from '../util';
 
@@ -59,7 +38,7 @@ const renderPresence = (node: TreeNode) => {
   return null;
 };
 
-export const TreeViewContainer = ({
+export const NavTreeContainer = ({
   graph,
   activeId,
   popoverAnchorId,
@@ -68,13 +47,7 @@ export const TreeViewContainer = ({
   activeId?: string;
   popoverAnchorId?: string;
 }) => {
-  const client = useClient();
-  const config = useConfig();
-  const identity = useIdentity();
-  const observabilityPlugin = useResolvePlugin(parseObservabilityPlugin);
-
-  const { t } = useTranslation(NAVTREE_PLUGIN);
-  const { navigationSidebarOpen, closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
+  const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
   const [isLg] = useMediaQuery('lg', { ssr: false });
   const { dispatch } = useIntent();
 
@@ -200,87 +173,22 @@ export const TreeViewContainer = ({
 
   return (
     <ElevationProvider elevation='chrome'>
-      <div role='none' className='flex flex-col bs-full'>
-        <DensityProvider density='coarse'>
-          {identity && (
-            <>
-              {/* TODO(wittjosiah): HALO button and settings button are not specific to the navtree plugin.
-                    They should probably be rendered via surfaces or exposed as root graph actions instead. */}
-              <div role='none' className='shrink-0 flex items-center gap-1 pis-3 pie-1 plb-1 bs-[--topbar-size]'>
-                <HaloButton
-                  size={6}
-                  identityKey={identity?.identityKey.toHex()}
-                  internal={observabilityPlugin?.provides?.observability?.group === 'dxos'}
-                  onClick={() => client.shell.shareIdentity()}
-                />
-                <div role='none' className='grow' />
-                <Tooltip.Root>
-                  <Tooltip.Trigger asChild>
-                    {/* TODO(burdon): Reconcile with action created by LayoutPlugin. */}
-                    <Button
-                      data-joyride='welcome/settings'
-                      variant='ghost'
-                      classNames='pli-2.5'
-                      data-testid='treeView.openSettings'
-                      {...(!navigationSidebarOpen && { tabIndex: -1 })}
-                      onClick={() => dispatch({ action: SettingsAction.OPEN })}
-                    >
-                      <span className='sr-only'>{t('open settings label', { ns: NAVTREE_PLUGIN })}</span>
-                      <GearSix className={mx(getSize(4), 'rotate-90')} />
-                    </Button>
-                  </Tooltip.Trigger>
-                  <Tooltip.Portal>
-                    <Tooltip.Content classNames='z-[70]'>
-                      {t('open settings label', { ns: NAVTREE_PLUGIN })}
-                      <Tooltip.Arrow />
-                    </Tooltip.Content>
-                  </Tooltip.Portal>
-                </Tooltip.Root>
-                <Tooltip.Root>
-                  <Tooltip.Trigger asChild>
-                    <Button
-                      variant='ghost'
-                      classNames='lg:hidden pli-2 pointer-fine:pli-1'
-                      {...(!navigationSidebarOpen && { tabIndex: -1 })}
-                      onClick={() =>
-                        dispatch({
-                          action: LayoutAction.SET_LAYOUT,
-                          data: { element: 'sidebar', state: false },
-                        })
-                      }
-                    >
-                      <span className='sr-only'>{t('close sidebar label', { ns: 'os' })}</span>
-                      <CaretDoubleLeft className={getSize(4)} />
-                    </Button>
-                  </Tooltip.Trigger>
-                  <Tooltip.Portal>
-                    <Tooltip.Content classNames='z-[70]'>
-                      {t('close sidebar label', { ns: 'os' })}
-                      <Tooltip.Arrow />
-                    </Tooltip.Content>
-                  </Tooltip.Portal>
-                </Tooltip.Root>
-              </div>
-              {/* <Separator orientation='horizontal' /> */}
-            </>
-          )}
-        </DensityProvider>
-        <DensityProvider density='fine'>
-          <div role='none' className='grow min-bs-0 overflow-y-auto p-0.5'>
-            <NavTree
-              node={graph.root}
-              current={currentPath}
-              type={NODE_TYPE}
-              onSelect={handleSelect}
-              isOver={isOver}
-              onOver={handleOver}
-              onDrop={handleDrop}
-              popoverAnchorId={popoverAnchorId}
-              renderPresence={renderPresence}
-            />
-          </div>
-          <VersionInfo config={config} />
-        </DensityProvider>
+      <div role='none' className='bs-full overflow-hidden grid grid-cols-1 grid-rows-[min-content_1fr_min-content]'>
+        <Surface role='search-input' limit={1} />
+        <div role='none' className='overflow-y-auto p-0.5'>
+          <NavTree
+            node={graph.root}
+            current={currentPath}
+            type={NODE_TYPE}
+            onSelect={handleSelect}
+            isOver={isOver}
+            onOver={handleOver}
+            onDrop={handleDrop}
+            popoverAnchorId={popoverAnchorId}
+            renderPresence={renderPresence}
+          />
+        </div>
+        <NavTreeFooter />
       </div>
     </ElevationProvider>
   );

@@ -163,4 +163,23 @@ describe('identity/identity-manager', () => {
 
     expect(!!identity.authorizedDeviceKeys.get(identity.deviceKey)?.platform).is.true;
   });
+
+  test('updates device profile', async () => {
+    const signalContext = new MemorySignalManagerContext();
+
+    const peer = await setupPeer({ signalContext });
+
+    const identity = await peer.identityManager.createIdentity();
+
+    // Note: Waiting for device profile credential to be processed.
+    await identity.stateUpdate.waitForCount(1);
+
+    const deviceProfile = identity.authorizedDeviceKeys.get(identity.deviceKey);
+    expect(deviceProfile).to.exist;
+
+    deviceProfile!.label = 'updated profile';
+    await peer.identityManager.updateDeviceProfile(deviceProfile!);
+
+    expect(identity.authorizedDeviceKeys.get(identity.deviceKey)?.label).to.equal('updated profile');
+  });
 });

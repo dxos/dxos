@@ -12,16 +12,12 @@ import { getSpaceForObject } from '@dxos/react-client/echo';
 import {
   type AutocompleteResult,
   type Extension,
-  type LinkOptions,
   EditorModes,
   autocomplete,
-  code,
-  heading,
-  hr,
   image,
-  link,
+  decorateMarkdown,
+  linkTooltip,
   table,
-  tasklist,
   typewriter,
   formatting,
 } from '@dxos/react-ui-editor';
@@ -48,13 +44,20 @@ export const getExtensions = ({ settings, document, dispatch }: ExtensionsOption
     //
     // Common.
     //
-    code(),
+    decorateMarkdown({
+      renderLinkButton: dispatch
+        ? onRenderLink((id: string) => {
+            void dispatch({
+              action: NavigationAction.ACTIVATE,
+              data: { id },
+            });
+          })
+        : undefined,
+    }),
+    linkTooltip(renderLinkTooltip),
     formatting(),
-    heading(),
-    hr(),
     image(),
     table(),
-    tasklist(),
   ];
 
   //
@@ -65,23 +68,6 @@ export const getExtensions = ({ settings, document, dispatch }: ExtensionsOption
     if (extension) {
       extensions.push(extension);
     }
-  }
-
-  //
-  // Hyperlinks (external and internal object links).
-  //
-  if (dispatch) {
-    extensions.push(
-      link({
-        onHover: onHoverLinkTooltip,
-        onRender: onRenderLink((id: string) => {
-          void dispatch({
-            action: NavigationAction.ACTIVATE,
-            data: { id },
-          });
-        }),
-      }),
-    );
   }
 
   //
@@ -149,7 +135,7 @@ const onRenderLink = (onSelectObject: (id: string) => void) => (el: Element, url
   );
 };
 
-const onHoverLinkTooltip: LinkOptions['onHover'] = (el, url) => {
+const renderLinkTooltip = (el: Element, url: string) => {
   const web = new URL(url);
   createRoot(el).render(
     <StrictMode>

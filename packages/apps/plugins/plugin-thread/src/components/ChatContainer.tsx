@@ -2,14 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Chat } from '@phosphor-icons/react';
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Message as MessageType } from '@braneframe/types';
-import { TextObject, getTextContent, useMembers } from '@dxos/react-client/echo';
+import { TextObject, getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Button, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { useTextModel } from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+import { getSize, mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadLayout } from '@dxos/react-ui-thread';
 
 import { MessageContainer } from './MessageContainer';
@@ -18,19 +19,36 @@ import { type ThreadContainerProps } from './types';
 import { useStatus, useMessageMetadata } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
 
-export const ChatContainer = ({ space, thread, context, current, autoFocus }: ThreadContainerProps) => {
+export const ChatHeading = () => {
+  const { t } = useTranslation(THREAD_PLUGIN);
+  return (
+    <div
+      role='none'
+      className='grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)] items-center border-be separator-separator -mbe-px'
+    >
+      <Button variant='primary' classNames='m-1 pli-0 is-[--rail-action] bs-[--rail-action] rounded-sm'>
+        <Chat weight='duotone' className={getSize(5)} />
+      </Button>
+      <h1 className='font-medium fg-accent pli-1 truncate'>{t('chat heading')}</h1>
+    </div>
+  );
+};
+
+export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: ThreadContainerProps) => {
   const identity = useIdentity()!;
-  const members = useMembers(space.key);
+  const space = getSpaceForObject(thread);
+  const members = useMembers(space?.key);
   const activity = useStatus(space, thread.id);
   const { t } = useTranslation(THREAD_PLUGIN);
   const extensions = useMemo(() => [command], []);
 
   const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
+  const [autoFocus, setAutoFocus] = useState(autoFocusTextbox);
   const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
-  const autoFocusAfterSend = useRef<boolean>(false);
   const textboxMetadata = useMessageMetadata(thread.id, identity);
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
 
+  // TODO(thure): Factor out.
   // TODO(thure): `flex-col-reverse` does not work to start the container scrolled to the end while also using
   //  `ScrollArea`. This is the least-bad way I found to scroll to the end on mount. Note that 0ms was insufficient
   //  for the desired effect; this is likely hardware-dependent and should be reevaluated.
@@ -62,9 +80,10 @@ export const ChatContainer = ({ space, thread, context, current, autoFocus }: Th
     );
 
     setNextMessage(() => {
-      autoFocusAfterSend.current = true;
       return { text: new TextObject() };
     });
+
+    setAutoFocus(true);
 
     scrollToEnd('smooth');
 
@@ -86,7 +105,7 @@ export const ChatContainer = ({ space, thread, context, current, autoFocus }: Th
     <Thread
       current={current}
       id={thread.id}
-      classNames='bs-full grid-rows-[1fr_min-content_min-content] overflow-hidden'
+      classNames='bs-full grid-rows-[1fr_min-content_min-content] overflow-hidden transition-[padding-block-end] pbe-[--rail-size] [[data-sidebar-inline-start-state=open]_&]:lg:pbe-0'
     >
       <ScrollArea.Root classNames='col-span-2'>
         <ScrollArea.Viewport classNames='overflow-anchored after:overflow-anchor after:block after:bs-px after:-mbs-px [&>div]:min-bs-full [&>div]:!grid [&>div]:grid-rows-[1fr_0]'>
@@ -106,11 +125,11 @@ export const ChatContainer = ({ space, thread, context, current, autoFocus }: Th
         <>
           <MessageTextbox
             onSend={handleCreate}
-            autoFocus={autoFocusAfterSend.current || autoFocus}
             placeholder={t('message placeholder')}
             {...textboxMetadata}
             model={nextMessageModel}
             extensions={extensions}
+            autoFocus={autoFocus}
           />
           <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
         </>
