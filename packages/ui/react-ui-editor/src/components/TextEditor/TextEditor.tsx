@@ -3,7 +3,7 @@
 //
 
 import { EditorState, type Extension, type StateEffect } from '@codemirror/state';
-import { EditorView, scrollPastEnd, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { EditorView, scrollPastEnd } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, {
@@ -130,17 +130,8 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
           EditorView.editorAttributes.of({ class: slots.editor?.className ?? '' }),
           EditorView.contentAttributes.of({ class: slots.content?.className ?? '' }),
 
-          // TODO(burdon): Assumes default line height?
+          // NOTE: Assumes default line height.
           _scrollPastEnd && scrollPastEnd(),
-          ViewPlugin.fromClass(
-            class {
-              update(update: ViewUpdate) {
-                const { view } = update;
-                const height = (view as any).viewState.editorHeight;
-                console.log(height, view.scaleY, view.defaultLineHeight, view.documentPadding);
-              }
-            },
-          ),
 
           // Focus.
           EditorView.updateListener.of((update) => {
@@ -182,7 +173,6 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
         },
       });
 
-      // view?.destroy();
       setView(view);
 
       if (moveToEndOfLine) {
