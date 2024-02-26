@@ -3,7 +3,7 @@
 //
 
 import { effect } from '@preact/signals-core';
-import { expect } from 'chai';
+import { expect, use } from 'chai';
 import jestExpect from 'expect';
 import { inspect } from 'util';
 
@@ -11,6 +11,7 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
 import * as R from './reactive';
+import { updateCounter } from './testutils';
 
 registerSignalRuntime();
 
@@ -524,22 +525,6 @@ class MyClass {
     return { field: this.field };
   }
 }
-
-const updateCounter = (touch: () => void) => {
-  let updateCount = -1;
-  const clear = effect(() => {
-    touch();
-    updateCount++;
-  });
-
-  return {
-    get count() {
-      return updateCount;
-    },
-    // https://github.com/tc39/proposal-explicit-resource-management
-    [Symbol.dispose]: clear,
-  };
-};
 
 const TEST_OBJECT = {
   string: 'foo',

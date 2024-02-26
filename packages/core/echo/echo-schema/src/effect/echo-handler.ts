@@ -9,6 +9,7 @@ import { EchoDatabase } from '../database';
 import { TypedObject } from '../object';
 import { invariant } from '@dxos/invariant';
 import { assignDeep } from '@dxos/util';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
 
 const symbolPath = Symbol('path');
 
@@ -30,6 +31,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   _objectCore = new AutomergeObjectCore();
 
+  private _signal = compositeRuntime.createSignal();
+
   _init(target: ProxyTarget): void {
     invariant(!(target as any)[symbolIsProxy]);
     this._objectCore.initNewObject(target);
@@ -48,6 +51,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const value = this._objectCore.get(fullPath);
     const decoded = this._objectCore.decode(value);
 
+    this._signal.notifyRead();
+
     return decoded;
   }
 
@@ -59,8 +64,17 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const encoded = this._objectCore.encode(value);
     this._objectCore.set(fullPath, encoded);
 
+    this._signal.notifyWrite();
+
     return true;
   }
+}
+
+/**
+ * Extends the native array to make sure that arrays methods are correctly reactive.
+ */
+class EchoArrayTwoPointO<T> extends Array<T> {
+  static [Symbol.species] = Array;
 }
 
 export const createEchoReactiveObject = <T extends {}>(init: T): ReactiveObject<T> => {
