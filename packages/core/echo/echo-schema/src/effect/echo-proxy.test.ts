@@ -1,8 +1,12 @@
-import { describe, test } from '@dxos/test';
-import { EchoReactiveHandler, createEchoReactiveObject } from './echo-handler';
+//
+// Copyright 2024 DXOS.org
+//
+
 import { expect } from 'chai';
-import { log } from '@dxos/log';
-import { getProxyHandlerSlot } from './proxy';
+
+import { describe, test } from '@dxos/test';
+
+import { createEchoReactiveObject } from './echo-handler';
 import { updateCounter } from './testutils';
 
 describe('ECHO backed reactive objects', () => {
