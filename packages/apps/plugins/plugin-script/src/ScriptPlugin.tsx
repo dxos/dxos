@@ -3,11 +3,12 @@
 //
 
 import { Code, type IconProps } from '@phosphor-icons/react';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Script as ScriptType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
+import { createDocAccessor } from '@dxos/echo-schema';
 import {
   type Filter,
   type EchoObject,
@@ -19,7 +20,7 @@ import {
 import { Main } from '@dxos/react-ui';
 import { baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
-import { ScriptBlock } from './components';
+import { ScriptBlock, type ScriptBlockProps } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
 import translations from './translations';
 import { ScriptAction, type ScriptPluginProvides } from './types';
@@ -100,30 +101,30 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
             case 'main':
               return isObject(data.active, ScriptType.schema, ScriptType.filter()) ? (
                 <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
-                  <ScriptBlock
-                    id={(data.active as any).id}
-                    source={(data.active as ScriptType).source}
-                    classes={{ toolbar: 'px-2' }}
+                  <ScriptBlockWrapper
+                    //
+                    script={data.active as ScriptType}
                     containerUrl={containerUrl}
+                    classes={{ toolbar: 'px-1' }}
                   />
                 </Main.Content>
               ) : null;
             case 'slide':
               return isObject(data.slide, ScriptType.schema, ScriptType.filter()) ? (
-                <ScriptBlock
-                  id={(data.slide as any).id}
-                  source={(data.slide as ScriptType).source}
-                  classes={{ root: 'p-24' }}
+                <ScriptBlockWrapper
+                  //
+                  script={data.slide as ScriptType}
+                  containerUrl={containerUrl}
+                  classes={{ toolbar: 'p-24' }}
                   view='preview'
                   hideSelector
-                  containerUrl={containerUrl}
                 />
               ) : null;
             case 'section':
               return isObject(data.object, ScriptType.schema, ScriptType.filter()) ? (
-                <ScriptBlock
-                  id={(data.object as any).id}
-                  source={(data.object as ScriptType).source}
+                <ScriptBlockWrapper
+                  //
+                  script={data.object as ScriptType}
                   containerUrl={containerUrl}
                   classes={{ root: 'h-[400px] py-2' }}
                 />
@@ -144,6 +145,11 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
       },
     },
   };
+};
+
+const ScriptBlockWrapper = ({ script, ...props }: { script: ScriptType } & Omit<ScriptBlockProps, 'id' | 'source'>) => {
+  const source = useMemo(() => createDocAccessor(script.source), [script.source]);
+  return <ScriptBlock id={script.id} source={source} {...props} />;
 };
 
 // TODO(burdon): Import.
