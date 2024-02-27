@@ -25,9 +25,9 @@ const preview: Preview = {
       disableSnapshot: true,
     },
     options: {
-      // TODO(burdon): Not called.
+      // TODO(burdon): Not called?
       storySort: {
-        // order: ['Introduction', 'Components', 'SDK', 'Apps', 'Plugins'],
+        order: ['Default', '*'],
         method: 'alphabetical',
       },
       // storySort: (a: IndexEntry, b: IndexEntry) => {
@@ -59,4 +59,4 @@ const preview: Preview = {
 export const parameters = preview.parameters;
 export const globalTypes = preview.globalTypes;
 
-// export default preview;
+export default preview;
