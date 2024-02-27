@@ -6,6 +6,7 @@ import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import type { DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   type AdmissionRequest,
   type AdmissionResponse,
@@ -62,7 +63,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     return {};
   }
 
-  async createAdmissionRequest(): Promise<AdmissionRequest> {
+  async createAdmissionRequest(deviceProfile?: DeviceProfileDocument): Promise<AdmissionRequest> {
     const deviceKey = await this._keyring.createKey();
     const controlFeedKey = await this._keyring.createKey();
     const dataFeedKey = await this._keyring.createKey();
@@ -72,6 +73,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
         deviceKey,
         controlFeedKey,
         dataFeedKey,
+        profile: deviceProfile,
       },
     };
   }
@@ -81,7 +83,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     const { identityKey, haloSpaceKey, genesisFeedKey, controlTimeframe } = response.device;
 
     invariant(request.device);
-    const { deviceKey, controlFeedKey, dataFeedKey } = request.device;
+    const { deviceKey, controlFeedKey, dataFeedKey, profile } = request.device;
 
     // TODO(wittjosiah): When multiple identities are supported, verify identity doesn't already exist before accepting.
 
@@ -93,6 +95,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
       controlFeedKey,
       dataFeedKey,
       controlTimeframe,
+      deviceProfile: profile,
     });
 
     return { identityKey };
