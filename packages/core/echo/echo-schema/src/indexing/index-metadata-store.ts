@@ -18,6 +18,7 @@ export type DocumentMetadata = {
   lastAvailableHash?: string;
 };
 
+// TODO(mykola): Use snapshot and append only log, not separate file for each document.
 export class IndexMetadataStore {
   private readonly _directory: Directory;
   /** map objectId -> index metadata */
