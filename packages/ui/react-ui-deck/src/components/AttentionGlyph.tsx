@@ -2,7 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import { type Primitive } from '@radix-ui/react-primitive';
+import React, { type ComponentPropsWithRef, forwardRef } from 'react';
+
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 const PresenceOne = () => {
   return (
@@ -24,6 +28,20 @@ const PresenceMany = () => {
   );
 };
 
-export const AttentionGlyph = () => {
-  return <i />;
-};
+export type AttentionGlyphProps = {
+  presence?: 'none' | 'one' | 'many';
+} & ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.span>, 'children'>>;
+
+const attentionGlyphStyles =
+  'inline-block rounded-sm is-3 bs-3 bg-transparent fg-accent [[aria-current]_&]:surface-unAccent [[aria-current]_&]:fg-inverse [[data-attention=true]_&]:surface-accent [[data-attention=true]_&]:fg-inverse [[aria-current][data-attention=true]_&]:surface-accent [[aria-current][data-attention=true]_&]:fg-inverse';
+
+export const AttentionGlyph = forwardRef<HTMLSpanElement, AttentionGlyphProps>(
+  ({ presence, classNames, ...props }, forwardedRef) => {
+    return (
+      <span role='none' {...props} className={mx(attentionGlyphStyles, classNames)} ref={forwardedRef}>
+        {presence === 'many' && <PresenceMany />}
+        {presence === 'one' && <PresenceOne />}
+      </span>
+    );
+  },
+);
