@@ -2,8 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Preview } from '@storybook/react';
-import { IndexEntry } from '@storybook/types';
+import { type Preview } from '@storybook/react';
 
 /**
  * Configure Storybook rendering.
@@ -23,19 +22,19 @@ const preview: Preview = {
     },
     // Disables Chromatic's snapshotting on a global level.
     chromatic: {
-      disableSnapshot: true
+      disableSnapshot: true,
     },
     options: {
-      // TODO(burdon): Not called.
+      // TODO(burdon): Not called?
       storySort: {
-        // order: ['Introduction', 'Components', 'SDK', 'Apps', 'Plugins'],
-        method: 'alphabetical'
-      }
+        order: ['Default', '*'],
+        method: 'alphabetical',
+      },
       // storySort: (a: IndexEntry, b: IndexEntry) => {
       //   console.log('>>', a);
       //   return a.id === b.id ? 0 : a.id.localeCompare(b.id, undefined, { numeric: true });
       // }
-    }
+    },
   },
 
   // https://storybook.js.org/docs/writing-stories/parameters#global-parameters
@@ -54,10 +53,10 @@ const preview: Preview = {
         ],
       },
     },
-  }
+  },
 };
 
 export const parameters = preview.parameters;
 export const globalTypes = preview.globalTypes;
 
-// export default preview;
+export default preview;
