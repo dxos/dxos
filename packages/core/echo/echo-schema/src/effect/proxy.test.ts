@@ -65,7 +65,7 @@ for (const schema of [undefined]) {
         expect(obj.string).to.eq('baz');
       });
 
-      test.only('can assign scalar values', () => {
+      test('can assign scalar values', () => {
         const obj = createObject();
 
         obj.string = 'foo';

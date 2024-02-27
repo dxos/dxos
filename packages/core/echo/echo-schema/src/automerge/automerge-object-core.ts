@@ -296,6 +296,9 @@ export class AutomergeObjectCore {
     if (value instanceof A.RawString) {
       return value;
     }
+    if (value === undefined) {
+      return null;
+    }
     if (value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
       const reference = this.linkObject(value);
       return encodeReference(reference);
@@ -305,13 +308,7 @@ export class AutomergeObjectCore {
       return encodeReference(value);
     }
     if (value instanceof AutomergeArray || Array.isArray(value)) {
-      const values: any = value.map((val) => {
-        if (val instanceof AutomergeArray || Array.isArray(val)) {
-          // TODO(mykola): Add support for nested arrays.
-          throw new Error('Nested arrays are not supported');
-        }
-        return this.encode(val);
-      });
+      const values: any = value.map((val) => this.encode(val));
       return values;
     }
     if (typeof value === 'object' && value !== null) {

@@ -6,7 +6,7 @@ import type * as S from '@effect/schema/Schema';
 
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { ComplexMap, defaultMap, getDeep } from '@dxos/util';
+import { assignDeep, ComplexMap, defaultMap, getDeep } from '@dxos/util';
 
 import { createReactiveProxy, symbolIsProxy, type ReactiveHandler } from './proxy';
 import { type ReactiveObject } from './reactive';
@@ -75,18 +75,15 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     this._signal.notifyRead();
 
-    // Short circuit for array methods and symbol.
-    if (
-      typeof prop === 'symbol' ||
-      (target instanceof EchoArrayTwoPointO && isNaN(parseInt(prop)) && prop !== 'length')
-    ) {
+    if (typeof prop === 'symbol') {
       return Reflect.get(target, prop);
     }
 
-    const dataPath = [...target[symbolPath], prop];
-    const fullPath = [DATA_NAMESPACE, ...dataPath];
-    const value = this._objectCore.get(fullPath);
-    const decoded = this._objectCore.decode(value);
+    if (target instanceof EchoArrayTwoPointO) {
+      return this._arrayGet(target, prop);
+    }
+
+    const { value: decoded, dataPath } = this._getAutomergeDecodedValue(target, prop);
 
     // TODO(dmaretskyi): Handle references.
     if (Array.isArray(decoded)) {
@@ -106,16 +103,61 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
   }
 
+  has(target: ProxyTarget, p: string | symbol): boolean {
+    if (target instanceof EchoArrayTwoPointO) {
+      return this._arrayHas(target, p);
+    }
+    return Reflect.has(target, p);
+  }
+
+  private _getAutomergeDecodedValue(target: ProxyTarget, prop: string) {
+    const dataPath = [...target[symbolPath], prop];
+    const fullPath = [DATA_NAMESPACE, ...dataPath];
+    const value = this._objectCore.get(fullPath);
+    return { value: this._objectCore.decode(value), dataPath };
+  }
+
+  private _arrayGet(target: ProxyTarget, prop: string) {
+    invariant(target instanceof EchoArrayTwoPointO);
+    if (prop === 'constructor') {
+      return Array.prototype.constructor;
+    }
+    if (prop !== 'length' && isNaN(parseInt(prop))) {
+      return Reflect.get(target, prop);
+    }
+    const { value } = this._getAutomergeDecodedValue(target, prop);
+    return value;
+  }
+
+  private _arrayHas(target: ProxyTarget, prop: string | symbol) {
+    invariant(target instanceof EchoArrayTwoPointO);
+    if (typeof prop === 'string') {
+      const parsedIndex = parseInt(prop);
+      const { value: length } = this._getAutomergeDecodedValue(target, 'length');
+      invariant(typeof length === 'number');
+      if (!isNaN(parsedIndex)) {
+        return parsedIndex < length;
+      }
+    }
+    return Reflect.has(target, prop);
+  }
+
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
     invariant(Array.isArray(target[symbolPath]));
     invariant(typeof prop === 'string');
+
+    if (target instanceof EchoArrayTwoPointO && prop === 'length') {
+      this._arraySetLength(target[symbolPath], value);
+      return true;
+    }
+
     const validatedValue = this.validateValue(target, prop, value);
     const fullPath = [DATA_NAMESPACE, ...target[symbolPath], prop];
 
-    const encoded = this._objectCore.encode(validatedValue);
-    if (encoded === undefined) {
+    if (validatedValue === undefined) {
       this._objectCore.delete(fullPath);
     } else {
+      const encoded = this._objectCore.encode(validatedValue);
       this._objectCore.set(fullPath, encoded);
     }
 
@@ -128,7 +170,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return (target as any)[symbolSchema] ? SchemaValidator.validateValue(target, prop, value) : value;
   }
 
-  arrayPush(path: PropPath, items: any[]): number {
+  arrayPush(_: any, path: PropPath, ...items: any[]): number {
     const fullPath = [DATA_NAMESPACE, ...path];
 
     const encodedItems = items.map((value) => this._objectCore.encode(value));
@@ -145,6 +187,123 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     return newLength;
   }
+
+  arrayPop(_: any, path: PropPath): any {
+    const fullPath = [DATA_NAMESPACE, ...path];
+
+    let returnValue: any | undefined;
+    this._objectCore.change((doc) => {
+      const array = getDeep(doc, fullPath);
+      invariant(Array.isArray(array));
+      returnValue = array.pop();
+    });
+
+    this._signal.notifyWrite();
+
+    return returnValue;
+  }
+
+  arrayShift(_: any, path: PropPath): any {
+    const fullPath = [DATA_NAMESPACE, ...path];
+
+    let returnValue: any | undefined;
+    this._objectCore.change((doc) => {
+      const array = getDeep(doc, fullPath);
+      invariant(Array.isArray(array));
+      returnValue = array.shift();
+    });
+
+    this._signal.notifyWrite();
+
+    return returnValue;
+  }
+
+  arrayUnshift(_: any, path: PropPath, ...items: any[]): number {
+    const fullPath = [DATA_NAMESPACE, ...path];
+
+    const encodedItems = items?.map((value) => this._objectCore.encode(value)) ?? [];
+
+    let newLength: number = -1;
+    this._objectCore.change((doc) => {
+      const array = getDeep(doc, fullPath);
+      invariant(Array.isArray(array));
+      newLength = array.unshift(...encodedItems);
+    });
+    invariant(newLength !== -1);
+
+    this._signal.notifyWrite();
+
+    return newLength;
+  }
+
+  arraySplice(_: any, path: PropPath, start: number, deleteCount?: number, ...items: any[]): any[] {
+    const fullPath = [DATA_NAMESPACE, ...path];
+
+    const encodedItems = items?.map((value) => this._objectCore.encode(value)) ?? [];
+
+    let deletedElements: any[] | undefined;
+    this._objectCore.change((doc) => {
+      const array = getDeep(doc, fullPath);
+      invariant(Array.isArray(array));
+      if (deleteCount != null) {
+        deletedElements = array.splice(start, deleteCount, ...encodedItems);
+      } else {
+        deletedElements = array.splice(start);
+      }
+    });
+    invariant(deletedElements);
+
+    this._signal.notifyWrite();
+
+    return deletedElements;
+  }
+
+  arraySort(target: any, path: PropPath, compareFn?: (v1: any, v2: any) => number): any[] {
+    const fullPath = [DATA_NAMESPACE, ...path];
+
+    this._objectCore.change((doc) => {
+      const array = getDeep(doc, fullPath);
+      invariant(Array.isArray(array));
+      const sortedArray = [...array].sort(compareFn);
+      assignDeep(doc, fullPath, sortedArray);
+    });
+
+    this._signal.notifyWrite();
+
+    return target;
+  }
+
+  arrayReverse(target: any, path: PropPath): any[] {
+    const fullPath = [DATA_NAMESPACE, ...path];
+
+    this._objectCore.change((doc) => {
+      const array = getDeep(doc, fullPath);
+      invariant(Array.isArray(array));
+      const reversedArray = [...array].reverse();
+      assignDeep(doc, fullPath, reversedArray);
+    });
+
+    this._signal.notifyWrite();
+
+    return target;
+  }
+
+  private _arraySetLength(path: PropPath, newLength: number) {
+    if (newLength < 0) {
+      throw new RangeError('Invalid array length');
+    }
+    const fullPath = [DATA_NAMESPACE, ...path];
+
+    this._objectCore.change((doc) => {
+      const array = getDeep(doc, fullPath);
+      invariant(Array.isArray(array));
+      const trimmedArray = [...array];
+      trimmedArray.length = newLength;
+      assignDeep(doc, fullPath, trimmedArray);
+    });
+
+    this._signal.notifyWrite();
+  }
 }
 
 /**
@@ -156,8 +315,27 @@ class EchoArrayTwoPointO<T> extends Array<T> {
   [symbolPath]: PropPath = null as any;
   [symbolHandler]: EchoReactiveHandler = null as any;
 
-  override push(...items: T[]): number {
-    return this[symbolHandler].arrayPush(this[symbolPath], items);
+  static {
+    /**
+     * These methods will trigger proxy traps like `set` and `defineProperty` and emit signal notifications.
+     * We wrap them in a batch to avoid unnecessary signal notifications.
+     */
+    const BATCHED_METHODS = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'] as const;
+
+    for (const method of BATCHED_METHODS) {
+      Object.defineProperty(this.prototype, method, {
+        enumerable: false,
+        value: function (this: EchoArrayTwoPointO<any>, ...args: any[]) {
+          let result!: any;
+          compositeRuntime.batch(() => {
+            const handlerMethodName = `array${method.slice(0, 1).toUpperCase()}${method.slice(1)}`;
+            const handler = this[symbolHandler] as any;
+            result = (handler[handlerMethodName] as any).apply(handler, [this, this[symbolPath], ...args]);
+          });
+          return result;
+        },
+      });
+    }
   }
 }
 
