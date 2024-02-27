@@ -71,7 +71,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   ownKeys(target: ProxyTarget): ArrayLike<string | symbol> {
-    const { value } = this._getAutomergeDecodedValue(target);
+    const { value } = this.getDecodedValueWithPath(target);
     return typeof value === 'object' ? Reflect.ownKeys(value) : [];
   }
 
@@ -92,7 +92,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return this._arrayGet(target, prop);
     }
 
-    const { value: decoded, dataPath } = this._getAutomergeDecodedValue(target, prop);
+    const { value: decoded, dataPath } = this.getDecodedValueWithPath(target, prop);
 
     // TODO(dmaretskyi): Handle references.
     if (Array.isArray(decoded)) {
@@ -116,10 +116,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (target instanceof EchoArrayTwoPointO) {
       return this._arrayHas(target, p);
     }
-    return Reflect.has(target, p);
+    const { value } = this.getDecodedValueWithPath(target);
+    return typeof value === 'object' ? Reflect.has(value, p) : false;
   }
 
-  private _getAutomergeDecodedValue(target: ProxyTarget, prop?: string) {
+  private getDecodedValueWithPath(target: ProxyTarget, prop?: string) {
     const dataPath = [...target[symbolPath]];
     if (prop != null) {
       dataPath.push(prop);
@@ -137,7 +138,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (prop !== 'length' && isNaN(parseInt(prop))) {
       return Reflect.get(target, prop);
     }
-    const { value } = this._getAutomergeDecodedValue(target, prop);
+    const { value } = this.getDecodedValueWithPath(target, prop);
     return value;
   }
 
@@ -145,7 +146,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     invariant(target instanceof EchoArrayTwoPointO);
     if (typeof prop === 'string') {
       const parsedIndex = parseInt(prop);
-      const { value: length } = this._getAutomergeDecodedValue(target, 'length');
+      const { value: length } = this.getDecodedValueWithPath(target, 'length');
       invariant(typeof length === 'number');
       if (!isNaN(parsedIndex)) {
         return parsedIndex < length;
