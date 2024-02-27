@@ -22,6 +22,7 @@ import {
 } from '@dxos/network-manager';
 import { InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AuthenticationResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
 
 import {
@@ -210,10 +211,18 @@ export class InvitationsHandler {
     return observable;
   }
 
-  acceptInvitation(protocol: InvitationProtocol, invitation: Invitation): AuthenticatingInvitation {
+  acceptInvitation(
+    protocol: InvitationProtocol,
+    invitation: Invitation,
+    deviceProfile?: DeviceProfileDocument,
+  ): AuthenticatingInvitation {
     const { timeout = INVITATION_TIMEOUT } = invitation;
     invariant(protocol);
 
+    // TODO(nf): duplicate check in InvitationsService
+    if (deviceProfile) {
+      invariant(invitation.kind === Invitation.Kind.DEVICE, 'deviceProfile provided for non-device invitation');
+    }
     const authenticated = new Trigger<string>();
 
     // TODO(dmaretskyi): Turn into state?
@@ -307,7 +316,7 @@ export class InvitationsHandler {
 
               // 3. Send admission credentials to host (with local space keys).
               log('request admission', { ...protocol.toJSON() });
-              const admissionRequest = await protocol.createAdmissionRequest();
+              const admissionRequest = await protocol.createAdmissionRequest(deviceProfile);
               const admissionResponse = await extension.rpc.InvitationHostService.admit(admissionRequest);
 
               // Remote connection no longer needed.
