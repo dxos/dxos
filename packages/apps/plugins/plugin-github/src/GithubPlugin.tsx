@@ -2,22 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GithubLogo } from '@phosphor-icons/react';
+import { GithubLogo, type IconProps } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
 import React from 'react';
 
-import { type Node } from '@braneframe/plugin-graph';
+import { parseClientPlugin } from '@braneframe/plugin-client';
+import { manageNodes } from '@braneframe/plugin-graph';
 import { isEditorModel, isMarkdownProperties } from '@braneframe/plugin-markdown';
-import { Folder, type Document } from '@braneframe/types';
-import { type PluginDefinition } from '@dxos/app-framework';
+import { type Document } from '@braneframe/types';
+import { resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
+import { EventSubscriptions } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { getSpaceForObject, isTypedObject, SpaceState } from '@dxos/react-client/echo';
+import { SpaceState } from '@dxos/react-client/echo';
 
 import {
   EmbeddedMain,
   ExportDialog,
   ImportDialog,
-  Issue,
   MarkdownActions,
   OctokitProvider,
   GitHubSettings,
@@ -45,32 +46,56 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
       settings: settings.values,
       translations,
       graph: {
-        builder: ({ parent }) => {
-          // TODO(wittjosiah): Easier way to identify node which represents a space.
-          const space = isTypedObject(parent.data) ? getSpaceForObject(parent.data) : undefined;
-          if (!space || !(parent.data instanceof Folder) || parent.data.name !== space.key.toHex()) {
+        builder: (plugins, graph) => {
+          const subscriptions = new EventSubscriptions();
+          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+          if (!client) {
             return;
           }
 
-          // TODO(dmaretskyi): Turn into subscription.
-          if (space.state.get() !== SpaceState.READY) {
-            return;
-          }
+          const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            spaces.forEach((space) => {
+              if (space.state.get() !== SpaceState.READY) {
+                return;
+              }
 
-          const query = space.db.query(filter);
-          return effect(() => {
-            if (query.objects.length === 0) {
-              return;
-            }
+              const query = space.db.query(filter);
+              let previousObjects: Document[] = [];
+              subscriptions.add(
+                effect(() => {
+                  const id = `${GITHUB_PLUGIN_SHORT_ID}:${space.key.toHex()}`;
 
-            const [presentationNode] = parent.addNode(GITHUB_PLUGIN, {
-              id: `${GITHUB_PLUGIN_SHORT_ID}:${parent.id}`,
-              label: ['plugin name', { ns: GITHUB_PLUGIN }],
-              icon: (props) => <GithubLogo {...props} />,
+                  manageNodes({
+                    graph,
+                    condition: query.objects.length > 0,
+                    removeEdges: true,
+                    nodes: [
+                      {
+                        id,
+                        data: 'github',
+                        properties: {
+                          label: ['plugin name', { ns: GITHUB_PLUGIN }],
+                          icon: (props: IconProps) => <GithubLogo {...props} />,
+                        },
+                        edges: [[space.key.toHex(), 'inbound']],
+                      },
+                    ],
+                  });
+
+                  const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+                  previousObjects = query.objects;
+                  removedObjects.forEach((object) => graph.removeEdge(id, object.id));
+                  // TODO(wittjosiah): Update icon to `Issue` icon.
+                  query.objects.forEach((object) => graph.addEdge(id, object.id));
+                }),
+              );
             });
-
-            query.objects.forEach((object) => objectToGraphNode(presentationNode, object));
           });
+
+          return () => {
+            unsubscribe();
+            subscriptions.clear();
+          };
         },
       },
       context: (props) => (
@@ -123,18 +148,4 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
       },
     },
   };
-};
-
-const objectToGraphNode = (parent: Node, document: Document): Node => {
-  const [child] = parent.addNode(GITHUB_PLUGIN, {
-    id: document.id,
-    label: document.title ?? ['document title placeholder', { ns: GITHUB_PLUGIN }],
-    icon: (props) => <Issue {...props} />,
-    data: document,
-    properties: {
-      persistenceClass: 'spaceObject',
-    },
-  });
-
-  return child;
 };

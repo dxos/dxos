@@ -25,7 +25,7 @@ const _InFlowSpaceActions = ({ actionsMap }: { actionsMap: Record<string, Action
           const Icon = properties?.icon;
           const label = properties?.label;
           return (
-            <Button key={actionId} classNames='block text-center plb-2 font-normal' onClick={() => invoke?.()}>
+            <Button key={actionId} classNames='block text-center plb-2 font-normal'>
               {Icon && <Icon className={mx(getSize(5), 'mli-auto')} />}
               <p>{Array.isArray(label) ? t(label[0], label[1]) : label}</p>
             </Button>

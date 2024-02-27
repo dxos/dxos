@@ -55,9 +55,9 @@ const getFolderGraphNodePartials = ({ graph, folder, space }: { graph: Graph; fo
     acceptPersistenceClass: new Set(['echo']),
     acceptPersistenceKey: new Set([space.key.toHex()]),
     role: 'branch',
-    onRearrangeChildren: (nextOrder: TypedObject[]) => {
+    onRearrangeChildren: (nextOrder: unknown[]) => {
       // Change on disk.
-      folder.objects = nextOrder;
+      folder.objects = nextOrder.filter(isTypedObject);
     },
     onTransferStart: (child: Node<TypedObject>) => {
       // TODO(wittjosiah): Support transfer between spaces.
@@ -470,22 +470,24 @@ export const updateGraphWithSpace = ({
 export const updateGraphWithAddObjectAction = ({
   graph,
   space,
-  dispatch,
   plugin,
   action,
   properties,
+  condition = true,
+  dispatch,
 }: {
   graph: Graph;
   space: Space;
-  dispatch: IntentDispatcher;
   plugin: string;
   action: string;
   properties: Record<string, any>;
+  condition?: boolean;
+  dispatch: IntentDispatcher;
 }) => {
   // Include the create document action on all spaces.
   manageNodes({
     graph,
-    condition: space.state.get() === SpaceState.READY,
+    condition: space.state.get() === SpaceState.READY && condition,
     nodes: [
       {
         id: `${plugin}/create/${space.key.toHex()}`,

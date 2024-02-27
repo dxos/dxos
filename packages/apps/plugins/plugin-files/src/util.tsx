@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { File as FileIcon, FloppyDisk, Folder, Plugs, X } from '@phosphor-icons/react';
+import { File as FileIcon, FloppyDisk, Folder, type IconProps, Plugs, X } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type Node } from '@braneframe/plugin-graph';
+import { type Graph, manageNodes } from '@braneframe/plugin-graph';
 import { type IntentDispatcher } from '@dxos/app-framework';
 
 import { FILES_PLUGIN } from './meta';
@@ -115,112 +115,129 @@ const handleLegacySave = (file: LocalFile) => {
   document.body.removeChild(a);
 };
 
-export const localEntityToGraphNode = (entity: LocalEntity, parent: Node, dispatch: IntentDispatcher) => {
+// TODO(wittjosiah): Handle remove.
+export const localEntityToGraphNode = (entity: LocalEntity, graph: Graph, dispatch: IntentDispatcher) => {
   if ('children' in entity) {
-    return localDirectoryToGraphNode(entity, parent, dispatch);
+    return localDirectoryToGraphNode(entity, graph, dispatch);
   } else {
-    return localFileToGraphNode(entity, parent, dispatch);
+    return localFileToGraphNode(entity, graph, dispatch);
   }
 };
 
-const localDirectoryToGraphNode = (
-  directory: LocalDirectory,
-  parent: Node<LocalDirectory>,
-  dispatch: IntentDispatcher,
-) => {
-  const [node] = parent.addNode(FILES_PLUGIN, {
+const localDirectoryToGraphNode = (directory: LocalDirectory, graph: Graph, dispatch: IntentDispatcher) => {
+  graph.addNodes({
     id: directory.id,
-    label: directory.title,
-    icon: (props) => <Folder {...props} />,
     data: directory,
-    properties: { role: 'branch' },
-  });
-
-  if (directory.permission !== 'granted') {
-    node.addAction({
-      id: 're-open',
-      label: ['re-open directory label', { ns: FILES_PLUGIN }],
-      icon: (props) => <Plugs {...props} />,
-      invoke: () =>
-        dispatch({
-          plugin: FILES_PLUGIN,
-          action: LocalFilesAction.RECONNECT,
-          data: { id: directory.id },
-        }),
-      properties: {
-        disposition: 'default',
+    properties: {
+      label: directory.title,
+      icon: (props: IconProps) => <Folder {...props} />,
+      role: 'branch',
+    },
+    nodes: [
+      {
+        id: `${LocalFilesAction.CLOSE}:${directory.id}`,
+        data: () =>
+          dispatch({
+            plugin: FILES_PLUGIN,
+            action: LocalFilesAction.CLOSE,
+            data: { id: directory.id },
+          }),
+        properties: {
+          label: ['close directory label', { ns: FILES_PLUGIN }],
+          icon: (props: IconProps) => <X {...props} />,
+        },
       },
-    });
-  }
-
-  node.addAction({
-    id: 'close-directory',
-    label: ['close directory label', { ns: FILES_PLUGIN }],
-    icon: (props) => <X {...props} />,
-    invoke: () =>
-      dispatch({
-        plugin: FILES_PLUGIN,
-        action: LocalFilesAction.CLOSE,
-        data: { id: directory.id },
-      }),
+    ],
   });
 
-  directory.children.forEach((entity, index) => localEntityToGraphNode(entity, node, dispatch));
+  manageNodes({
+    graph,
+    condition: directory.permission !== 'granted',
+    nodes: [
+      {
+        id: `${LocalFilesAction.RECONNECT}:${directory.id}`,
+        data: () =>
+          dispatch({
+            plugin: FILES_PLUGIN,
+            action: LocalFilesAction.RECONNECT,
+            data: { id: directory.id },
+          }),
+        properties: {
+          label: ['re-open directory label', { ns: FILES_PLUGIN }],
+          icon: (props: IconProps) => <Plugs {...props} />,
+          disposition: 'default',
+        },
+      },
+    ],
+  });
 
-  return node;
+  directory.children.forEach((entity) => localEntityToGraphNode(entity, graph, dispatch));
 };
 
-const localFileToGraphNode = (file: LocalFile, parent: Node<LocalDirectory>, dispatch: IntentDispatcher) => {
-  const [node] = parent.addNode(FILES_PLUGIN, {
+const localFileToGraphNode = (file: LocalFile, graph: Graph, dispatch: IntentDispatcher) => {
+  graph.addNodes({
     id: file.id,
-    label: file.title,
-    icon: (props) => <FileIcon {...props} />,
     data: file,
     properties: {
+      label: file.title,
+      icon: (props: IconProps) => <FileIcon {...props} />,
       modified: file.modified,
     },
-  });
-
-  if (file.permission === 'granted') {
-    node.addAction({
-      id: 'save',
-      label: [file.handle ? 'save label' : 'save as label', { ns: FILES_PLUGIN }],
-      icon: (props) => <FloppyDisk {...props} />,
-      invoke: () =>
-        dispatch({
-          plugin: FILES_PLUGIN,
-          action: LocalFilesAction.SAVE,
-          data: { id: file.id },
-        }),
-    });
-  } else {
-    node.addAction({
-      id: 're-open',
-      label: ['re-open file label', { ns: FILES_PLUGIN }],
-      icon: (props) => <Plugs {...props} />,
-      invoke: () =>
-        dispatch({
-          plugin: FILES_PLUGIN,
-          action: LocalFilesAction.RECONNECT,
-          data: { id: file.id },
-        }),
-      properties: {
-        disposition: 'default',
+    nodes: [
+      {
+        id: `${LocalFilesAction.CLOSE}:${file.id}`,
+        data: () =>
+          dispatch({
+            plugin: FILES_PLUGIN,
+            action: LocalFilesAction.CLOSE,
+            data: { id: file.id },
+          }),
+        properties: {
+          label: ['close file label', { ns: FILES_PLUGIN }],
+          icon: (props: IconProps) => <X {...props} />,
+        },
       },
-    });
-  }
-
-  node.addAction({
-    id: 'close-file',
-    label: ['close file label', { ns: FILES_PLUGIN }],
-    icon: (props) => <X {...props} />,
-    invoke: () =>
-      dispatch({
-        plugin: FILES_PLUGIN,
-        action: LocalFilesAction.CLOSE,
-        data: { id: file.id },
-      }),
+    ],
   });
 
-  return node;
+  manageNodes({
+    graph,
+    condition: file.permission === 'granted',
+    nodes: [
+      {
+        id: `${LocalFilesAction.SAVE}:${file.id}`,
+        data: () =>
+          dispatch({
+            plugin: FILES_PLUGIN,
+            action: LocalFilesAction.SAVE,
+            data: { id: file.id },
+          }),
+        properties: {
+          label: [file.handle ? 'save label' : 'save as label', { ns: FILES_PLUGIN }],
+          icon: (props: IconProps) => <FloppyDisk {...props} />,
+        },
+      },
+    ],
+  });
+
+  manageNodes({
+    graph,
+    condition: file.permission !== 'granted',
+    nodes: [
+      {
+        id: `${LocalFilesAction.RECONNECT}:${file.id}`,
+        data: () =>
+          dispatch({
+            plugin: FILES_PLUGIN,
+            action: LocalFilesAction.RECONNECT,
+            data: { id: file.id },
+          }),
+        properties: {
+          label: ['re-open file label', { ns: FILES_PLUGIN }],
+          icon: (props: IconProps) => <Plugs {...props} />,
+          disposition: 'default',
+        },
+      },
+    ],
+  });
 };

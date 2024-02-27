@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FilePlus, FolderPlus } from '@phosphor-icons/react';
+import { FilePlus, FolderPlus, type IconProps } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
 import { deepSignal } from 'deepsignal/react';
 import localforage from 'localforage';
@@ -100,11 +100,14 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
         subscriptions.add(
           effect(() => {
             const active = navigationPlugin.provides.location.active;
-            const path = active && graphPlugin.provides.graph.getPath(active)?.filter((id) => id.startsWith(PREFIX));
-            const current = (active?.startsWith(PREFIX) && path && findFile(state.files, path)) || undefined;
-            if (state.current !== current) {
-              state.current = current;
-            }
+            const path =
+              active && graphPlugin.provides.graph.getPath({ to: active })?.filter((id) => id.startsWith(PREFIX));
+            console.log({ path });
+            // TODO(wittjosiah): Hook back up.
+            // const current = (active?.startsWith(PREFIX) && path && findFile(state.files, path)) || undefined;
+            // if (state.current !== current) {
+            //   state.current = current;
+            // }
           }),
         );
       }
@@ -132,54 +135,59 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
         },
       },
       graph: {
-        builder: ({ parent, plugins }) => {
-          if (parent.id !== 'root') {
-            return;
-          }
-
+        builder: (plugins, graph) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          const [groupNode] = parent.addNode(FILES_PLUGIN, {
+          graph.addNodes({
             id: 'all-files',
-            label: ['plugin name', { ns: FILES_PLUGIN }],
             // TODO(burdon): Factor out palette constants.
-            properties: { palette: 'yellow', role: 'branch' },
-          });
-
-          groupNode.addAction({
-            id: 'open-file-handle',
-            label: ['open file label', { ns: FILES_PLUGIN }],
-            icon: (props) => <FilePlus {...props} />,
-            invoke: () =>
-              intentPlugin?.provides.intent.dispatch([
-                {
-                  plugin: FILES_PLUGIN,
-                  action: LocalFilesAction.OPEN_FILE,
+            properties: {
+              label: ['plugin name', { ns: FILES_PLUGIN }],
+              palette: 'yellow',
+              role: 'branch',
+            },
+            nodes: [
+              {
+                id: 'open-file-handle',
+                data: () =>
+                  intentPlugin?.provides.intent.dispatch([
+                    {
+                      plugin: FILES_PLUGIN,
+                      action: LocalFilesAction.OPEN_FILE,
+                    },
+                    { action: NavigationAction.ACTIVATE },
+                  ]),
+                properties: {
+                  label: ['open file label', { ns: FILES_PLUGIN }],
+                  icon: (props: IconProps) => <FilePlus {...props} />,
                 },
-                { action: NavigationAction.ACTIVATE },
-              ]),
+              },
+              ...('showDirectoryPicker' in window
+                ? [
+                    {
+                      id: 'open-directory',
+                      data: () =>
+                        intentPlugin?.provides.intent.dispatch([
+                          {
+                            plugin: FILES_PLUGIN,
+                            action: LocalFilesAction.OPEN_DIRECTORY,
+                          },
+                          { action: NavigationAction.ACTIVATE },
+                        ]),
+                      properties: {
+                        label: ['open directory label', { ns: FILES_PLUGIN }],
+                        icon: (props: IconProps) => <FolderPlus {...props} />,
+                      },
+                    },
+                  ]
+                : []),
+            ],
           });
-
-          if ('showDirectoryPicker' in window) {
-            groupNode.addAction({
-              id: 'open-directory',
-              label: ['open directory label', { ns: FILES_PLUGIN }],
-              icon: (props) => <FolderPlus {...props} />,
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch([
-                  {
-                    plugin: FILES_PLUGIN,
-                    action: LocalFilesAction.OPEN_DIRECTORY,
-                  },
-                  { action: NavigationAction.ACTIVATE },
-                ]),
-            });
-          }
 
           onFilesUpdate = () => {
             const dispatch = intentPlugin?.provides.intent.dispatch;
             if (dispatch) {
-              state.files.forEach((entity, index) => localEntityToGraphNode(entity, groupNode, dispatch));
+              state.files.forEach((entity, index) => localEntityToGraphNode(entity, graph, dispatch));
             }
           };
           onFilesUpdate();

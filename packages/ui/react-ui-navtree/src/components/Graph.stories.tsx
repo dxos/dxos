@@ -86,7 +86,7 @@ const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
       const ids = activeParent.nodes().map((node) => node.id);
       const activeIndex = ids.indexOf(activeNode.id);
       const overIndex = ids.indexOf(overNode.id);
-      graph.setEdges(
+      graph.sortEdges(
         activeParent.id,
         'outbound',
         arrayMove(ids, activeIndex, overIndex > -1 ? overIndex : ids.length - 1),

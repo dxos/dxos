@@ -107,8 +107,10 @@ export type InvokeParams = {
   caller?: string;
 };
 
+export type ActionData = (params: InvokeParams) => MaybePromise<void>;
+
 export type Action<TProperties extends Record<string, any> = Record<string, any>> = Readonly<
-  Omit<NodeBase<(params?: InvokeParams) => MaybePromise<any>, TProperties>, 'properties'> & {
+  Omit<NodeBase<ActionData, TProperties>, 'properties'> & {
     properties: Readonly<TProperties>;
   } & ConnectedNodes
 >;

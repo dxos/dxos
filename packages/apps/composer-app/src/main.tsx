@@ -222,7 +222,6 @@ const main = async () => {
       [WildcardMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-wildcard')),
     },
     core: [
-      //
       ClientMeta.id,
       GraphMeta.id,
       HelpMeta.id,
@@ -238,13 +237,7 @@ const main = async () => {
       WildcardMeta.id,
     ],
     // TODO(burdon): Add DebugMeta if dev build.
-    defaults: [
-      MarkdownMeta.id,
-      // TODO(wittjosiah): Enable when ready.
-      // StackMeta.id,
-      // ThreadMeta.id,
-      // SketchMeta.id,
-    ],
+    defaults: [MarkdownMeta.id, StackMeta.id, ThreadMeta.id, SketchMeta.id],
   });
 
   createRoot(document.getElementById('root')!).render(
