@@ -10,7 +10,7 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { TextModel } from '@dxos/text-model';
-import { assignDeep, defer } from '@dxos/util';
+import { assignDeep, defer, getDeep } from '@dxos/util';
 
 import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
@@ -296,9 +296,6 @@ export class AutomergeObjectCore {
     if (value instanceof A.RawString) {
       return value;
     }
-    if (value === undefined) {
-      return null;
-    }
     if (value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
       const reference = this.linkObject(value);
       return encodeReference(reference);
@@ -333,7 +330,7 @@ export class AutomergeObjectCore {
    */
   decode(value: any): DecodedAutomergeValue {
     if (value === null) {
-      return undefined;
+      return value;
     }
     if (Array.isArray(value)) {
       return value.map((val) => this.decode(val));
@@ -374,6 +371,15 @@ export class AutomergeObjectCore {
 
     this.change((doc) => {
       assignDeep(doc, fullPath, value);
+    });
+  }
+
+  delete(path: (string | number)[]) {
+    const fullPath = [...this.mountPath, ...path];
+
+    this.change((doc) => {
+      const value: any = getDeep(doc, fullPath.slice(0, fullPath.length - 1));
+      delete value[fullPath[fullPath.length - 1]];
     });
   }
 }

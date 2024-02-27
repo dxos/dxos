@@ -2,12 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
+import type * as S from '@effect/schema/Schema';
+
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { ComplexMap, defaultMap, getDeep } from '@dxos/util';
 
 import { createReactiveProxy, symbolIsProxy, type ReactiveHandler } from './proxy';
 import { type ReactiveObject } from './reactive';
+import { SchemaValidator, symbolSchema } from './schema-validator';
 import { AutomergeObjectCore } from '../automerge';
 
 const symbolPath = Symbol('path');
@@ -39,10 +42,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     invariant(!(target as any)[symbolIsProxy]);
     invariant(Array.isArray(target[symbolPath]));
 
-    for (const key in target) {
-      if (Array.isArray(target[key]) && !(target[key] instanceof EchoArrayTwoPointO)) {
-        target[key] = EchoArrayTwoPointO.from(target[key]);
-      }
+    if ((target as any)[symbolSchema]) {
+      SchemaValidator.initTypedTarget(target);
+    } else {
+      this.makeUntypedArraysReactive(target);
     }
 
     if (target[symbolPath].length === 0) {
@@ -55,6 +58,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         if (typeof key !== 'symbol') {
           delete (target as any)[key];
         }
+      }
+    }
+  }
+
+  private makeUntypedArraysReactive(target: any) {
+    for (const key in target) {
+      if (Array.isArray(target[key]) && !(target[key] instanceof EchoArrayTwoPointO)) {
+        target[key] = EchoArrayTwoPointO.from(target[key]);
       }
     }
   }
@@ -98,14 +109,23 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
     invariant(Array.isArray(target[symbolPath]));
     invariant(typeof prop === 'string');
+    const validatedValue = this.validateValue(target, prop, value);
     const fullPath = [DATA_NAMESPACE, ...target[symbolPath], prop];
 
-    const encoded = this._objectCore.encode(value);
-    this._objectCore.set(fullPath, encoded);
+    const encoded = this._objectCore.encode(validatedValue);
+    if (encoded === undefined) {
+      this._objectCore.delete(fullPath);
+    } else {
+      this._objectCore.set(fullPath, encoded);
+    }
 
     this._signal.notifyWrite();
 
     return true;
+  }
+
+  private validateValue(target: ProxyTarget, prop: string | symbol, value: any): any {
+    return (target as any)[symbolSchema] ? SchemaValidator.validateValue(target, prop, value) : value;
   }
 
   arrayPush(path: PropPath, items: any[]): number {
@@ -141,7 +161,10 @@ class EchoArrayTwoPointO<T> extends Array<T> {
   }
 }
 
-export const createEchoReactiveObject = <T extends {}>(init: T): ReactiveObject<T> => {
+export const createEchoReactiveObject = <T extends {}>(init: T, schema?: S.Schema<T>): ReactiveObject<T> => {
+  if (schema != null) {
+    SchemaValidator.prepareTarget(init, schema);
+  }
   const handler = new EchoReactiveHandler();
   const proxy = createReactiveProxy<ProxyTarget>(
     {

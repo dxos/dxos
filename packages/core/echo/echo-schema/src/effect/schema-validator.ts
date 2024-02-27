@@ -14,6 +14,11 @@ export const symbolSchema = Symbol.for('@dxos/schema');
 export const symbolTypeAst = Symbol.for('@dxos/type/AST');
 
 export class SchemaValidator {
+  public static prepareTarget<T>(target: T, schema: S.Schema<T>) {
+    const _ = S.asserts(schema)(target);
+    setSchemaProperties(target, schema);
+  }
+
   public static initTypedTarget(target: any) {
     invariant(target[symbolSchema]);
     this.makeArraysReactive(target);

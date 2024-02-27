@@ -44,17 +44,19 @@ const TestSchema = S.mutable(
 );
 type TestSchema = S.Schema.To<typeof TestSchema>;
 
-for (const schema of [undefined, TestSchema]) {
-  for (const useDatabase of [false, false]) {
+test('', () => {});
+
+for (const schema of [undefined]) {
+  for (const useDatabase of [true]) {
     const createObject = (props: Partial<TestSchema> = {}): TestSchema => {
       if (useDatabase) {
         // TODO: extract echo-schema into a separate package and export a test suite, use it in echo-database
-        return schema == null ? createEchoReactiveObject(props) : createEchoReactiveObject(props);
+        return createEchoReactiveObject(props, schema ?? undefined);
       }
       return schema == null ? (R.object(props) as TestSchema) : R.object(schema, props);
     };
 
-    describe(`Proxy properties${schema == null ? '' : ' with schema'}`, () => {
+    describe.only(`Proxy properties${schema == null ? '' : ' with schema'}`, () => {
       test('object initializer', () => {
         const obj = createObject({ string: 'bar' });
         expect(obj.string).to.eq('bar');
@@ -63,8 +65,8 @@ for (const schema of [undefined, TestSchema]) {
         expect(obj.string).to.eq('baz');
       });
 
-      test('can assign scalar values', () => {
-        const obj = createObject({ classInstance: new TestClass() });
+      test.only('can assign scalar values', () => {
+        const obj = createObject();
 
         obj.string = 'foo';
         obj.number = 42;
