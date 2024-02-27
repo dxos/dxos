@@ -3,12 +3,19 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { type Directory } from '@dxos/random-access-storage';
 
 import { IndexSchema } from './index-schema';
 import { type IndexKind, type Index, type IndexStaticProps } from './types';
 import { overrideFile } from './util';
+
+const RESERVED_SIZE = 4; // 4 bytes
+const HEADER_VERSION = 1;
+
+type IndexHeader = {
+  kind: IndexKind;
+  version: number;
+};
 
 export type IndexStoreParams = {
   directory: Directory;
@@ -20,28 +27,34 @@ export class IndexStore {
     this._directory = directory;
   }
 
-  async save(index: Index) {
-    const filename = indexKindFilenameCodec.encode(index.kind);
+  async save({ index, filename }: { index: Index; filename: string }) {
     const file = this._directory.getOrCreateFile(filename);
-    await overrideFile(file, Buffer.from(await index.serialize()));
+
+    const serialized = Buffer.from(await index.serialize());
+    const header = Buffer.from(JSON.stringify(headerEncoder.encode(index.kind)));
+
+    const metadata = Buffer.alloc(RESERVED_SIZE);
+    metadata.writeInt32LE(header.length, 0);
+    const data = Buffer.concat([metadata, header, serialized]);
+
+    await overrideFile(file, data);
   }
 
   async load(filename: string): Promise<Index> {
-    const kind = indexKindFilenameCodec.decode(filename);
+    const file = this._directory.getOrCreateFile(filename);
+    const { size } = await file.stat();
+
+    const headerSize = fromBytesInt32(await file.read(0, 4));
+    const header: IndexHeader = JSON.parse((await file.read(RESERVED_SIZE, headerSize)).toString());
+    invariant(header.version === HEADER_VERSION, `Index version ${header.version} is not supported`);
+
+    const kind = headerEncoder.decode(header);
     const IndexConstructor = IndexConstructors[kind.kind];
-    invariant(IndexConstructor, `Index constructor not found for kind: ${kind.kind}`);
-    try {
-      const file = this._directory.getOrCreateFile(filename);
-      const { size } = await file.stat();
-      if (size === 0) {
-        return new IndexConstructor(kind);
-      }
-      const serialized = (await file.read(0, size)).toString();
-      return IndexConstructor.load({ serialized, indexKind: kind });
-    } catch (err) {
-      log.warn(`Error loading index: ${filename}`, err);
-      return new IndexConstructor(kind);
-    }
+    invariant(IndexConstructor, `Index kind ${kind.kind} is not supported`);
+
+    const offset = RESERVED_SIZE + headerSize;
+    const serialized = (await file.read(offset, size - offset)).toString();
+    return IndexConstructor.load({ serialized, indexKind: kind });
   }
 }
 
@@ -49,21 +62,16 @@ const IndexConstructors: { [key in IndexKind['kind']]?: IndexStaticProps } = {
   SCHEMA_MATCH: IndexSchema,
 };
 
-const indexKindFilenameCodec = {
-  encode: (kind: IndexKind): string => {
-    switch (kind.kind) {
-      case 'SCHEMA_MATCH':
-        return 'schema-match';
-      default:
-        throw new Error(`Unsupported index kind: ${kind}`);
-    }
+const headerEncoder = {
+  encode: (kind: IndexKind): IndexHeader => {
+    return {
+      kind,
+      version: HEADER_VERSION,
+    };
   },
-  decode: (filename: string): IndexKind => {
-    switch (filename) {
-      case 'schema-match':
-        return { kind: 'SCHEMA_MATCH' };
-      default:
-        throw new Error(`Unsupported index kind: ${filename}`);
-    }
+  decode: (header: IndexHeader): IndexKind => {
+    return header.kind;
   },
 };
+
+const fromBytesInt32 = (buf: Buffer) => buf.readInt32LE(0);
