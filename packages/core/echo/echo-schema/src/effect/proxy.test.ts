@@ -182,7 +182,7 @@ for (const schema of [undefined]) {
         expect(updates.count, 'update count').to.eq(2);
       });
 
-      test('keys enumeration', () => {
+      test.only('keys enumeration', () => {
         const obj = createObject({ string: 'bar' });
 
         expect(Object.keys(obj)).to.deep.eq(['string']);

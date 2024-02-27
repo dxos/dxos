@@ -70,6 +70,15 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
   }
 
+  ownKeys(target: ProxyTarget): ArrayLike<string | symbol> {
+    const { value } = this._getAutomergeDecodedValue(target);
+    return typeof value === 'object' ? Reflect.ownKeys(value) : [];
+  }
+
+  getOwnPropertyDescriptor(target: ProxyTarget, p: string | symbol): PropertyDescriptor | undefined {
+    return { enumerable: true, configurable: true };
+  }
+
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
     invariant(Array.isArray(target[symbolPath]));
 
@@ -110,8 +119,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return Reflect.has(target, p);
   }
 
-  private _getAutomergeDecodedValue(target: ProxyTarget, prop: string) {
-    const dataPath = [...target[symbolPath], prop];
+  private _getAutomergeDecodedValue(target: ProxyTarget, prop?: string) {
+    const dataPath = [...target[symbolPath]];
+    if (prop != null) {
+      dataPath.push(prop);
+    }
     const fullPath = [DATA_NAMESPACE, ...dataPath];
     const value = this._objectCore.get(fullPath);
     return { value: this._objectCore.decode(value), dataPath };
