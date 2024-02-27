@@ -3,7 +3,6 @@
 //
 
 import { Flags } from '@oclif/core';
-import platform from 'platform';
 
 import { asyncTimeout } from '@dxos/async';
 import { type Client } from '@dxos/client';
@@ -17,35 +16,22 @@ export default class Update extends BaseCommand<typeof Update> {
   static override description = 'Update device info.';
   static override flags = {
     ...BaseCommand.flags,
-    label: Flags.string({ description: 'Set device label' }),
+    label: Flags.string({ description: 'Set device label', required: true }),
   };
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
       // TODO(mykola): Hack to wait for identity with `client.halo.identity.wait()`.
       await asyncTimeout(client.spaces.isReady.wait(), IDENTITY_WAIT_TIMEOUT, new IdentityWaitTimeoutError());
-      const device = client.halo.device;
-
-      if (!device) {
-        this.log('No device found.');
-        return;
-      }
-
-      let label = device.profile?.label;
-      if (this.flags.label) {
-        label = this.flags.label;
-      }
+      // TODO(nf): should updateDevice also apply defaults?
+      const updatedProfile = {
+        ...client.halo.device?.profile,
+        label: this.flags.label,
+      };
 
       invariant(client.services.services.DevicesService, 'DevicesService not found');
       // TODO(nf): dedupe
-      const uDevice = await client.services.services.DevicesService.updateDevice({
-        label,
-        platform: platform.name,
-        platformVersion: platform.version,
-        architecture: typeof platform.os?.architecture === 'number' ? String(platform.os.architecture) : undefined,
-        os: platform.os?.family,
-        osVersion: platform.os?.version,
-      });
+      const uDevice = await client.services.services.DevicesService.updateDevice(updatedProfile);
       this.log('Device updated:', uDevice);
 
       return uDevice;

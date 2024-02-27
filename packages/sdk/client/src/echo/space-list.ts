@@ -100,9 +100,13 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
     invariant(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
     invariant(this._serviceProvider.services.InvitationsService, 'InvitationsService is not available.');
-    this._invitationProxy = new InvitationsProxy(this._serviceProvider.services.InvitationsService, () => ({
-      kind: Invitation.Kind.SPACE,
-    }));
+    this._invitationProxy = new InvitationsProxy(
+      this._serviceProvider.services.InvitationsService,
+      this._serviceProvider.services.IdentityService,
+      () => ({
+        kind: Invitation.Kind.SPACE,
+      }),
+    );
     await this._invitationProxy.open();
 
     // Subscribe to spaces and create proxies.
