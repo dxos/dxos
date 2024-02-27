@@ -180,14 +180,16 @@ export class AutomergeDb {
       return this._echoDatabase.add(obj);
     }
 
-    if (obj[base]._database) {
+    invariant(isAutomergeObject(obj));
+    const core = obj[base]._core;
+
+    if (core.database) {
       return obj;
     }
 
-    invariant(isAutomergeObject(obj));
-    invariant(!this._objects.has(obj.id));
-    this._objects.set(obj.id, obj[base]._core);
-    (obj[base] as AutomergeObject)._bind({
+    invariant(!this._objects.has(core.id));
+    this._objects.set(core.id, core);
+    core.bind({
       db: this,
       docHandle: this._docHandle,
       path: ['objects', obj.id],
@@ -236,15 +238,21 @@ export class AutomergeDb {
     for (const id of objectIds) {
       invariant(!this._objects.has(id));
       const obj = new AutomergeObject();
-      obj[base]._core.id = id;
-      this._objects.set(obj.id, obj[base]._core);
-      (obj[base] as AutomergeObject)._bind({
-        db: this,
-        docHandle: this._docHandle,
-        path: ['objects', obj.id],
-        assignFromLocalState: false,
-      });
+      const core = obj[base]._core;
+
+      core.id = id;
+      this._bindObject(core);
     }
+  }
+
+  private _bindObject(obj: AutomergeObjectCore) {
+    this._objects.set(obj.id, obj);
+    obj.bind({
+      db: this,
+      docHandle: this._docHandle,
+      path: ['objects', obj.id],
+      assignFromLocalState: false,
+    });
   }
 }
 
