@@ -100,7 +100,8 @@ export class ControlPipeline {
     return this._pipeline;
   }
 
-  setWriteFeed(feed: FeedWrapper<FeedMessage>) {
+  async setWriteFeed(feed: FeedWrapper<FeedMessage>) {
+    await this._pipeline.addFeed(feed);
     this._pipeline.setWriteFeed(feed);
   }
 

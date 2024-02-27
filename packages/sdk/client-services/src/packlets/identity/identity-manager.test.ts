@@ -106,8 +106,7 @@ describe('identity/identity-manager', () => {
     expect(identity.profileDocument?.displayName).to.equal('Example');
   });
 
-  // TODO(nf): fails because the AuthorizedDevice credential is not written?
-  test.skip('admit another device', async () => {
+  test('admit another device', async () => {
     const signalContext = new MemorySignalManagerContext();
 
     const peer1 = await setupPeer({ signalContext });

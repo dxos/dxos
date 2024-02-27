@@ -273,7 +273,7 @@ export class IdentityManager {
     // const generator = new CredentialGenerator(this._keyring, this._identity.identityKey, this._identity.deviceKey);
     // const credential = await generator.createDeviceProfile(profile);
 
-    const credential = await this._identity.getIdentityCredentialSigner().createCredential({
+    const credential = await this._identity.getDeviceCredentialSigner().createCredential({
       subject: this._identity.deviceKey,
       assertion: {
         '@type': 'dxos.halo.credentials.DeviceProfile',
@@ -311,7 +311,7 @@ export class IdentityManager {
       },
       identityKey: identityRecord.identityKey,
     });
-    space.setControlFeed(controlFeed);
+    await space.setControlFeed(controlFeed);
     space.setDataFeed(dataFeed);
 
     const identity: Identity = new Identity({
