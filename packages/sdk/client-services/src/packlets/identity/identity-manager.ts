@@ -104,7 +104,6 @@ export class IdentityManager {
   }
 
   async createIdentity({ displayName, deviceProfile }: CreateIdentityOptions = {}) {
-
     // TODO(nf): populate using context from ServiceContext?
     invariant(!this._identity, 'Identity already exists.');
     log('creating identity...');
