@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
 import { expect } from 'chai';
 import jestExpect from 'expect';
 import { inspect } from 'util';
@@ -12,37 +11,10 @@ import { describe, test } from '@dxos/test';
 
 import { createEchoReactiveObject } from './echo-handler';
 import * as R from './reactive';
+import { TestSchema } from './testing/schema';
 import { updateCounter } from './testutils';
 
 registerSignalRuntime();
-
-// For testing.
-class TestClass {
-  field = 'value';
-
-  toJSON() {
-    return { field: this.field };
-  }
-}
-const TestNestedSchema = S.mutable(S.struct({ field: S.string }));
-const TestSchema = S.mutable(
-  S.partial(
-    S.struct({
-      string: S.string,
-      number: S.number,
-      boolean: S.boolean,
-      null: S.null,
-      undefined: S.undefined,
-      numberArray: S.mutable(S.array(S.number)),
-      twoDimNumberArray: S.mutable(S.array(S.mutable(S.array(S.number)))),
-      object: TestNestedSchema,
-      objectArray: S.mutable(S.array(TestNestedSchema)),
-      classInstance: S.instanceOf(TestClass),
-      other: S.any,
-    }),
-  ),
-);
-type TestSchema = S.Schema.To<typeof TestSchema>;
 
 test('', () => {});
 
@@ -56,7 +28,7 @@ for (const schema of [TestSchema]) {
       return schema == null ? (R.object(props) as TestSchema) : R.object(schema, props);
     };
 
-    describe.only(`Proxy properties${schema == null ? '' : ' with schema'}`, () => {
+    describe(`Proxy properties${schema == null ? '' : ' with schema'}`, () => {
       test('object initializer', () => {
         const obj = createObject({ string: 'bar' });
         expect(obj.string).to.eq('bar');
@@ -89,19 +61,6 @@ for (const schema of [TestSchema]) {
 
         obj.object.field = 'baz';
         expect(obj.object.field).to.eq('baz');
-      });
-
-      test('can assign class instances', () => {
-        const obj = createObject();
-
-        const classInstance = new TestClass();
-        obj.classInstance = classInstance;
-        expect(obj.classInstance.field).to.eq('value');
-        expect(obj.classInstance instanceof TestClass).to.eq(true);
-        expect(obj.classInstance === classInstance).to.be.true;
-
-        obj.classInstance.field = 'baz';
-        expect(obj.classInstance.field).to.eq('baz');
       });
 
       test('sub-proxies maintain their identity', () => {
@@ -296,18 +255,6 @@ for (const schema of [TestSchema]) {
 
           obj.object!.field = 'baz';
           expect(updates.count, 'update count').to.eq(1);
-        });
-
-        test('not in nested class instances', () => {
-          const obj = createObject({ classInstance: new TestClass() });
-
-          using updates = updateCounter(() => {
-            obj.classInstance!.field;
-          });
-          expect(updates.count, 'update count').to.eq(0);
-
-          obj.classInstance!.field = 'baz';
-          expect(updates.count, 'update count').to.eq(0);
         });
 
         test('in nested arrays', () => {
@@ -576,5 +523,4 @@ const TEST_OBJECT: TestSchema = {
   null: null,
   numberArray: [1, 2, 3],
   object: { field: 'bar' },
-  classInstance: new TestClass(),
 };

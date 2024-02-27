@@ -49,7 +49,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     if (target[symbolPath].length === 0) {
-      this.deepDeleteUndefinedValues(target);
+      this.validateInitialProps(target);
       this._objectCore.initNewObject(target);
     }
 
@@ -63,13 +63,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
   }
 
-  private deepDeleteUndefinedValues(target: any) {
+  private validateInitialProps(target: any) {
     for (const key in target) {
       const value = target[key];
       if (value === undefined) {
         delete target[key];
       } else if (typeof target[key] === 'object') {
-        this.deepDeleteUndefinedValues(target[key]);
+        throwIfCustomClass(key, value);
+        this.validateInitialProps(target[key]);
       }
     }
   }
@@ -201,6 +202,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private validateValue(target: ProxyTarget, prop: string | symbol, value: any): any {
+    throwIfCustomClass(prop, value);
     return (target as any)[symbolSchema] ? SchemaValidator.validateValue(target, prop, value) : value;
   }
 
@@ -372,6 +374,15 @@ class EchoArrayTwoPointO<T> extends Array<T> {
     }
   }
 }
+
+const throwIfCustomClass = (prop: string | symbol, value: any) => {
+  if (value != null) {
+    const proto = Object.getPrototypeOf(value);
+    if (typeof value === 'object' && !Array.isArray(value) && proto !== Object.prototype) {
+      throw new Error(`class instances are not supported: setting ${proto} on ${String(prop)}`);
+    }
+  }
+};
 
 export const createEchoReactiveObject = <T extends {}>(init: T, schema?: S.Schema<T>): ReactiveObject<T> => {
   if (schema != null) {
