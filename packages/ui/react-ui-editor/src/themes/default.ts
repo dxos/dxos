@@ -101,6 +101,13 @@ export const defaultTheme: ThemeStyles = {
   },
 
   //
+  // gutter
+  //
+  '.cm-gutterElement': {
+    width: '48px',
+  },
+
+  //
   // Selection
   //
 

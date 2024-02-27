@@ -2,13 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Monaco } from '@monaco-editor/react';
-import { Play } from '@phosphor-icons/react';
+import { Check, Play, Warning } from '@phosphor-icons/react';
 // @ts-ignore
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { getTextContent, type TextObject } from '@dxos/client/echo';
+import { DocAccessor } from '@dxos/echo-schema';
 import { DensityProvider, useThemeContext, Toolbar, Button } from '@dxos/react-ui';
 import { mx, getSize } from '@dxos/react-ui-theme';
 
@@ -19,7 +18,7 @@ import { Compiler, type CompilerResult, initializeCompiler } from '../compiler';
 
 export type ScriptBlockProps = {
   id: string;
-  source: TextObject;
+  source: DocAccessor;
   view?: View;
   hideSelector?: boolean;
   classes?: {
@@ -52,10 +51,13 @@ export const ScriptBlock = ({
   }, []);
 
   useEffect(() => {
-    setTimeout(async () => {
-      const result = await compiler.compile(String(source.content));
+    // TODO(burdon): Throttle and listen for update.
+    const t = setTimeout(async () => {
+      const result = await compiler.compile(DocAccessor.getValue(source));
       setResult(result);
     });
+
+    return () => clearTimeout(t);
   }, [source, id]);
 
   const handleSetView = useCallback(
@@ -70,7 +72,7 @@ export const ScriptBlock = ({
 
   const handleExec = useCallback(
     async (auto = true) => {
-      const result = await compiler.compile(getTextContent(source, ''));
+      const result = await compiler.compile(DocAccessor.getValue(source));
       setResult(result);
       if (auto && view === 'editor') {
         setView('preview');
@@ -79,27 +81,6 @@ export const ScriptBlock = ({
     [source, view],
   );
 
-  const handleBeforeMount = (monaco: Monaco) => {
-    // TODO(burdon): Module resolution: https://github.com/lukasbach/monaco-editor-auto-typings
-    //  https://stackoverflow.com/questions/52290727/adding-typescript-type-declarations-to-monaco-editor
-    //  https://stackoverflow.com/questions/43058191/how-to-use-addextralib-in-monaco-with-an-external-type-definition
-    //  Temporarily disable diagnostics (to hide import errors).
-    monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
-      noSemanticValidation: true,
-    });
-
-    // https://microsoft.github.io/monaco-editor/typedoc/interfaces/languages.typescript.CompilerOptions.html
-    monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-      // module: monaco.languages.typescript.ModuleKind.CommonJS,
-      // moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
-      // noEmit: true,
-      // noLib: true,
-      // target: monaco.languages.typescript.ScriptTarget.ESNext,
-      // typeRoots: ['node_modules/@types'],
-      jsx: monaco.languages.typescript.JsxEmit.React,
-    });
-  };
-
   if (!source) {
     return null;
   }
@@ -107,10 +88,20 @@ export const ScriptBlock = ({
   return (
     <div className={mx('flex flex-col grow overflow-hidden', classes?.root)}>
       {!hideSelector && (
-        <DensityProvider density={'fine'}>
+        <DensityProvider density='fine'>
           <Toolbar.Root classNames={mx('mb-2', classes?.toolbar)}>
             <SplitterSelector view={view} onChange={handleSetView} />
             <div className='grow' />
+            {result?.bundle && !result?.error && (
+              <div title={String(result.error)}>
+                <Check className={mx(getSize(5), 'text-green-500')} />
+              </div>
+            )}
+            {result?.error && (
+              <div title={String(result.error)}>
+                <Warning className={mx(getSize(5), 'text-orange-500')} />
+              </div>
+            )}
             <Button variant='ghost' onClick={() => handleExec()}>
               <Play className={getSize(5)} />
             </Button>
@@ -119,13 +110,7 @@ export const ScriptBlock = ({
       )}
 
       <Splitter view={view}>
-        <ScriptEditor
-          id={id}
-          source={source}
-          themeMode={themeMode}
-          language='typescript'
-          onBeforeMount={handleBeforeMount}
-        />
+        <ScriptEditor source={source} themeMode={themeMode} />
         {result && <FrameContainer key={id} result={result} containerUrl={containerUrl} />}
       </Splitter>
     </div>
