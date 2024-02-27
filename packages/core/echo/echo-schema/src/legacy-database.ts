@@ -60,7 +60,7 @@ export class EchoLegacyDatabase {
   }
 
   get objects(): EchoObject[] {
-    return [...this._objects.values(), ...this.automerge._objects.values()];
+    return [...this._objects.values(), ...this.automerge.allObjects()];
   }
 
   get graph() {
@@ -72,7 +72,7 @@ export class EchoLegacyDatabase {
   }
 
   getObjectById<T extends EchoObject>(id: string): T | undefined {
-    const obj = this._objects.get(id) ?? this.automerge._objects.get(id);
+    const obj = this._objects.get(id) ?? this.automerge._getObjectFromMap(id);
 
     if (!obj) {
       return undefined;

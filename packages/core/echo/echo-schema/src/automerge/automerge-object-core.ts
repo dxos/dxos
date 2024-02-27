@@ -82,6 +82,12 @@ export class AutomergeObjectCore {
   public signal = compositeRuntime.createSignal();
 
   /**
+   * User-facing proxy for the object.
+   * Either an instance of `AutomergeObject` or a `ReactiveEchoObject<T>`.
+   */
+  public rootProxy: unknown;
+
+  /**
    * Create local doc with initial state from this object.
    */
   initNewObject(initialProps?: unknown, opts?: TypedObjectOptions) {

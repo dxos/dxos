@@ -228,7 +228,7 @@ class SpaceQuerySource implements QuerySource {
         (this._database._legacy._objects.has(object.id) &&
           filterMatch(this._filter!, this._database._legacy._objects.get(object.id)!)) ||
         (this._database.automerge._objects.has(object.id) &&
-          filterMatch(this._filter!, this._database.automerge._objects.get(object.id)!))
+          filterMatch(this._filter!, this._database.automerge._getObjectFromMap(object.id)!))
       );
     });
 
@@ -244,7 +244,7 @@ class SpaceQuerySource implements QuerySource {
     }
 
     if (!this._results) {
-      this._results = [...this._database._legacy._objects.values(), ...this._database.automerge._objects.values()]
+      this._results = [...this._database._legacy._objects.values(), ...this._database.automerge.allObjects()]
         .filter((object) => filterMatch(this._filter!, object))
         .map((object) => ({
           id: object.id,

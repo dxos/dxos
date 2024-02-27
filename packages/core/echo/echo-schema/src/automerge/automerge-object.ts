@@ -65,7 +65,9 @@ export class AutomergeObject implements TypedObjectProperties {
     }
     this._immutable = opts?.immutable ?? false;
 
-    return this._createProxy(['data']);
+    const proxy = this._createProxy(['data']);
+    this._core.rootProxy = proxy;
+    return proxy;
   }
 
   get __typename(): string | undefined {

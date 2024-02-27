@@ -18,6 +18,7 @@ import { type Hypergraph } from '../hypergraph';
 import { type EchoLegacyDatabase } from '../legacy-database';
 import { type EchoObject, base, isActualTypedObject, isAutomergeObject, isActualTextObject } from '../object';
 import { type Schema } from '../proto';
+import { AutomergeObjectCore } from './automerge-object-core';
 
 export type SpaceState = {
   // Url of the root automerge document.
@@ -30,8 +31,7 @@ export class AutomergeDb {
   /**
    * @internal
    */
-  readonly _objects = new Map<string, AutomergeObject>();
-  readonly _objectsSystem = new Map<string, EchoObject>();
+  readonly _objects = new Map<string, AutomergeObjectCore>();
 
   readonly _updateEvent = new Event<{ spaceKey: PublicKey; itemsUpdated: { id: string }[] }>();
 
@@ -52,6 +52,10 @@ export class AutomergeDb {
 
   get spaceKey() {
     return this._echoDatabase._backend.spaceKey;
+  }
+
+  allObjects(): EchoObject[] {
+    return Array.from(this._objects.values()).map((core) => core.rootProxy as EchoObject);
   }
 
   @synchronized
@@ -148,6 +152,10 @@ export class AutomergeDb {
     });
   }
 
+  _getObjectFromMap(id: string): EchoObject | undefined {
+    return this._objects.get(id)?.rootProxy as EchoObject | undefined;
+  }
+
   getObjectById(id: string): EchoObject | undefined {
     const obj = this._objects.get(id) ?? this._echoDatabase._objects.get(id);
     if (!obj) {
@@ -158,7 +166,13 @@ export class AutomergeDb {
       return undefined;
     }
 
-    return obj;
+    if (obj instanceof AutomergeObjectCore) {
+      const root = obj.rootProxy;
+      invariant(isAutomergeObject(root));
+      return root;
+    } else {
+      return obj;
+    }
   }
 
   add<T extends EchoObject>(obj: T): T {
@@ -172,7 +186,7 @@ export class AutomergeDb {
 
     invariant(isAutomergeObject(obj));
     invariant(!this._objects.has(obj.id));
-    this._objects.set(obj.id, obj);
+    this._objects.set(obj.id, obj[base]._core);
     (obj[base] as AutomergeObject)._bind({
       db: this,
       docHandle: this._docHandle,
@@ -195,9 +209,9 @@ export class AutomergeDb {
       itemsUpdated: itemsUpdated.map((id) => ({ id })),
     });
     for (const id of itemsUpdated) {
-      const obj = this._objects.get(id);
-      if (obj) {
-        obj[base]._core.notifyUpdate();
+      const objCore = this._objects.get(id);
+      if (objCore) {
+        objCore.notifyUpdate();
       }
     }
   }
@@ -223,7 +237,7 @@ export class AutomergeDb {
       invariant(!this._objects.has(id));
       const obj = new AutomergeObject();
       obj[base]._core.id = id;
-      this._objects.set(obj.id, obj);
+      this._objects.set(obj.id, obj[base]._core);
       (obj[base] as AutomergeObject)._bind({
         db: this,
         docHandle: this._docHandle,
