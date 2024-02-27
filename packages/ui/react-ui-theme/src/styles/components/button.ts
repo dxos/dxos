@@ -44,7 +44,7 @@ export const buttonRoot: ComponentFunction<ButtonStyleProps> = (props, ...etc) =
     'transition-color duration-100',
     props.density === 'fine' ? fineButtonDimensions : coarseButtonDimensions,
     props.disabled && staticDisabled,
-    !props.inGroup && 'rounded-md',
+    !props.inGroup && 'rounded-sm',
     !props.textWrap && 'text-ellipsis whitespace-nowrap',
     !props.disabled &&
       !props.inGroup &&
@@ -65,7 +65,7 @@ export const buttonRoot: ComponentFunction<ButtonStyleProps> = (props, ...etc) =
 
 export const buttonGroup: ComponentFunction<{ elevation?: Elevation }> = (props, ...etc) => {
   return mx(
-    'inline-flex rounded-md [&>:first-child]:rounded-is-md [&>:last-child]:rounded-ie-md [&>button]:relative',
+    'inline-flex rounded-sm [&>:first-child]:rounded-is-sm [&>:last-child]:rounded-ie-sm [&>button]:relative',
     contentElevation({ elevation: props.elevation }),
     ...etc,
   );

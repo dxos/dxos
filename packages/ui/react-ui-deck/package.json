@@ -18,6 +18,7 @@
   "dependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@radix-ui/react-context": "^1.0.0",
     "@radix-ui/react-primitive": "^1.0.2"
   },
   "devDependencies": {

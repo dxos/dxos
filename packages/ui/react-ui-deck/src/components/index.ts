@@ -2,4 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './AttentionGlyph';
+export * from './Attention';
+export * from './PlankHeading';

@@ -34,7 +34,7 @@ export const CommentsHeading = () => {
       role='none'
       className='grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)] items-center border-be separator-separator -mbe-px'
     >
-      <Button variant='primary' classNames='m-1 pli-0 is-[--rail-action] bs-[--rail-action] rounded-sm'>
+      <Button variant='primary' classNames='m-1 pli-0 is-[--rail-action] bs-[--rail-action]'>
         <Quotes weight='duotone' className={getSize(5)} />
       </Button>
       <h1 className='font-medium fg-accent pli-1 truncate'>{t('comments heading')}</h1>

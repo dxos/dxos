@@ -9,7 +9,7 @@ import React from 'react';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { AttentionGlyph } from './AttentionGlyph';
-import translations from '../translations';
+import translations from '../../translations';
 
 type StorybookAttentionGlyphProps = {
   current?: boolean;
