@@ -23,29 +23,29 @@ import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 import { ScriptEditor } from './ScriptEditor';
 
-const example1 = [
-  //
-  'export default function() {',
-  '  const value = 100',
-  '  return <div>{value}</div>;',
-  '}',
-].join('\n');
-
-const example2 = [
-  //
-  '// Example schema.',
-  'S.struct({',
-  '  timestamp: S.Date,',
-  '  title: S.string,',
-  '  content: R.Text,',
-  "}).pipe(S.identifier('dxos.org/schema/Test'))",
-  '',
-].join('\n');
+const examples: string[] = [
+  [
+    '// Example schema.',
+    'export default function() {',
+    '  const value = 100',
+    '  return <div>{value}</div>;',
+    '}',
+  ].join('\n'),
+  [
+    '// Example schema.',
+    'S.struct({',
+    '  timestamp: S.Date,',
+    '  title: S.string,',
+    '  content: R.Text,',
+    "}).pipe(S.identifier('dxos.org/schema/Test'))",
+    '',
+  ].join('\n'),
+];
 
 const Story = () => {
   const [source, setSource] = useState<DocAccessor>();
   useEffect(() => {
-    setSource(createDocAccessor(new TextObject(example2, TextKind.PLAIN)));
+    setSource(createDocAccessor(new TextObject(examples[1], TextKind.PLAIN)));
   }, []);
 
   if (!source) {

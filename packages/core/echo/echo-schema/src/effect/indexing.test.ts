@@ -4,6 +4,7 @@
 
 import * as S from '@effect/schema/Schema';
 import { create } from '@orama/orama';
+import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
@@ -19,6 +20,7 @@ describe('Schema indexing through orama', () => {
         }),
       ),
     });
+    expect(Contact).to.exist;
 
     type Contact = S.Schema.To<typeof Contact>;
 
@@ -32,5 +34,6 @@ describe('Schema indexing through orama', () => {
         },
       },
     });
+    expect(db).to.exist;
   });
 });
