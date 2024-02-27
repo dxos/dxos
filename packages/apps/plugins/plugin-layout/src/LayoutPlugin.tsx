@@ -151,15 +151,11 @@ export const LayoutPlugin = ({
         .prop(settings.values.$showFooter!, 'show-footer', LocalStorageStore.bool)
         .prop(settings.values.$enableNativeRedirect!, 'enable-native-redirect', LocalStorageStore.bool);
 
-      // TODO(burdon): Create context and plugin.
-      Keyboard.singleton.initialize();
-
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);
       }
     },
     unload: async () => {
-      Keyboard.singleton.destroy();
       layout.close();
     },
     provides: {
@@ -354,6 +350,7 @@ export const LayoutPlugin = ({
               const id = intent.data?.id ?? intent.data?.result?.id;
               const path = id && graphPlugin?.provides.graph.getPath({ to: id });
               if (path) {
+                // TODO(wittjosiah): Factor out.
                 Keyboard.singleton.setCurrentContext(path.join('/'));
               }
 

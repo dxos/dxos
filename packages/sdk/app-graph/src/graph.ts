@@ -199,10 +199,14 @@ export class Graph {
     });
   }
 
-  setEdges(nodeId: string, direction: EdgeDirection, edges: string[]) {
+  sortEdges(nodeId: string, direction: EdgeDirection, edges: string[]) {
     untracked(() => {
       const current = this._edges[this.getEdgeKey(nodeId, direction)];
-      current.splice(0, current.length, ...edges);
+      if (current) {
+        const unsorted = current.filter((id) => !edges.includes(id)) ?? [];
+        const sorted = edges.filter((id) => current.includes(id)) ?? [];
+        current.splice(0, current.length, ...[...sorted, ...unsorted]);
+      }
     });
   }
 
@@ -238,7 +242,7 @@ export class Graph {
       visitor?.(node, [...path, node.id]);
     }
 
-    Object.values(node.nodes({ direction })).forEach((child) =>
+    Object.values(this._getNodes({ id: node.id, direction })).forEach((child) =>
       this.traverse({ node: child, direction, filter, visitor }, [...path, node.id]),
     );
   }

@@ -412,8 +412,7 @@ export const SpacePlugin = ({
               return;
             }
 
-            const unordered = groupNode.edges().filter((edge) => !spacesOrder.order.includes(edge));
-            graph.setEdges(groupNode.id, 'outbound', [...spacesOrder.order, ...unordered]);
+            graph.sortEdges(groupNode.id, 'outbound', spacesOrder.order);
           };
           const spacesOrderQuery = client.spaces.default.db.query({ key: SHARED });
           spacesOrder = spacesOrderQuery.objects[0];

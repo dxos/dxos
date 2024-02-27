@@ -6,8 +6,6 @@ import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 
 import { Graph } from './graph';
 
-export const KEY_BINDING = 'KeyBinding';
-
 export type BuilderExtension = (graph: Graph) => UnsubscribeCallback | void;
 
 /**

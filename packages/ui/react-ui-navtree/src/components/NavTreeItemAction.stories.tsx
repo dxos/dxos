@@ -34,7 +34,7 @@ const meta: Meta = {
   ],
 };
 
-// // TODO(burdon): Required otherwise ID complains with `Inferred type...` error.
+// TODO(burdon): Required otherwise ID complains with `Inferred type...` error.
 export default meta;
 
 export const Default = {

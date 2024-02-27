@@ -20,9 +20,10 @@ import {
   type GraphProvides,
   parseGraphPlugin,
 } from '@dxos/app-framework';
-import { isGraphNode, type Node, type NodeFilter } from '@dxos/app-graph';
+import { isAction, isGraphNode, type Node, type NodeFilter } from '@dxos/app-graph';
 import { Keyboard } from '@dxos/keyboard';
 import { treeNodeFromGraphNode, type TreeNode, getTreeNode } from '@dxos/react-ui-navtree';
+import { getHostPlatform } from '@dxos/util';
 
 import {
   CommandsDialogContent,
@@ -33,7 +34,7 @@ import {
   NotchStart,
 } from './components';
 import { CommandsTrigger } from './components/CommandsTrigger';
-import meta, { NAVTREE_PLUGIN } from './meta';
+import meta, { KEY_BINDING, NAVTREE_PLUGIN } from './meta';
 import translations from './translations';
 
 export type NavTreePluginProvides = SurfaceProvides &
@@ -71,6 +72,32 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
             const longestPath = longestPaths.get(node.id)?.length ?? 0;
             if (longestPath < path.length) {
               longestPaths.set(node.id, path);
+            }
+
+            // TODO(wittjosiah): Factor out.
+            let shortcut: string | undefined;
+            if (typeof node.properties.keyBinding === 'object') {
+              const availablePlatforms = Object.keys(node.properties.keyBinding);
+              const platform = getHostPlatform();
+              shortcut = availablePlatforms.includes(platform)
+                ? node.properties.keyBinding[platform]
+                : platform === 'ios'
+                  ? node.properties.keyBinding.macos // Fallback to macos if ios-specific bindings not provided.
+                  : platform === 'linux' || platform === 'unknown'
+                    ? node.properties.keyBinding.windows // Fallback to windows if platform-specific bindings not provided.
+                    : undefined;
+            } else {
+              shortcut = node.properties.keyBinding;
+            }
+
+            if (shortcut && isAction(node)) {
+              Keyboard.singleton.getContext(path.slice(0, -1).join('/')).bind({
+                shortcut,
+                handler: () => {
+                  node.data({ node, caller: KEY_BINDING });
+                },
+                data: node.properties.label,
+              });
             }
           },
         });
@@ -178,6 +205,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
               icon: (props: IconProps) => <MagnifyingGlass {...props} />,
               keyBinding: 'meta+k',
             },
+            edges: [['root', 'inbound']],
           });
         },
       },

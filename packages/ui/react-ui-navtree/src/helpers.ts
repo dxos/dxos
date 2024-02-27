@@ -68,12 +68,13 @@ export const treeNodeFromGraphNode = (node: Node, options: TreeNodeFromGraphNode
  * Get a reactive tree action from a graph action.
  */
 export const treeActionFromGraphAction = (action: Action): TreeNodeAction => {
-  const { icon, label, ...properties } = action.properties;
+  const { icon, label, keyBinding, ...properties } = action.properties;
   const node = action.nodes({ direction: 'inbound' })[0];
   const treeAction = deepSignal<TreeNodeActionLike>({
     id: action.id,
     label,
     icon,
+    keyBinding,
     properties,
     invoke: (params) => action.data({ node, ...params }),
   });

@@ -106,19 +106,19 @@ describe('Graph', () => {
     expect(graph.findNode('test2')?.nodes({ direction: 'inbound' })).to.have.length(2);
   });
 
-  test('set edges', () => {
+  test('sort edges', () => {
     const graph = new Graph();
 
     const [root] = graph.addNodes({
       id: 'root',
-      nodes: [{ id: 'test1' }, { id: 'test2' }],
+      nodes: [{ id: 'test1' }, { id: 'test3' }, { id: 'test2' }, { id: 'test4' }],
     });
 
-    expect(root.nodes().map((node) => node.id)).to.deep.equal(['test1', 'test2']);
+    expect(root.nodes().map((node) => node.id)).to.deep.equal(['test1', 'test3', 'test2', 'test4']);
 
-    graph.setEdges('root', 'outbound', ['test2', 'test1']);
+    graph.sortEdges('root', 'outbound', ['test4', 'test3']);
 
-    expect(root.nodes().map((node) => node.id)).to.deep.equal(['test2', 'test1']);
+    expect(root.nodes().map((node) => node.id)).to.deep.equal(['test4', 'test3', 'test1', 'test2']);
   });
 
   test('remove edge', () => {

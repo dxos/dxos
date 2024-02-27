@@ -2,18 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Action, type Node } from '@dxos/app-graph';
+import { type Action } from '@dxos/app-graph';
 import type { TFunction } from '@dxos/react-ui';
 import { type TreeNode } from '@dxos/react-ui-navtree';
-
-export const getLevel = (node: Node, level = 0): number => {
-  const parent = node.nodes({ direction: 'inbound' })[0];
-  if (!parent) {
-    return level;
-  } else {
-    return getLevel(parent, level + 1);
-  }
-};
 
 // TODO(wittjosiah): Move into node implementation?
 export const sortActions = (actions: Action[]): Action[] =>

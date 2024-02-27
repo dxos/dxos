@@ -14,13 +14,14 @@ export type TreeNodeAction = Pick<Action, 'id' | 'properties'> & {
   keyBinding?: string | KeyBinding;
   invoke: (params?: Omit<InvokeParams, 'node'>) => MaybePromise<any>;
 };
+
 export type TreeNodeActionGroup = Pick<ActionGroup, 'id' | 'properties'> & {
   label: Label;
   icon?: FC<IconProps>;
-  keyBinding?: string | KeyBinding;
   // TODO(wittjosiah): Support nested groups.
   actions: TreeNodeAction[];
 };
+
 export type TreeNodeActionLike = TreeNodeAction | TreeNodeActionGroup;
 
 export type TreeNode = MakeOptional<NodeBase, 'data'> & {

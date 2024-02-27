@@ -5,15 +5,20 @@
 import { DotOutline } from '@phosphor-icons/react';
 import React, { useMemo, useRef, useState } from 'react';
 
-import { KEY_BINDING, type Graph, type ActionLike, isActionGroup, isAction } from '@dxos/app-graph';
+import { type Graph, type ActionLike, isActionGroup, isAction, type NodeBase } from '@dxos/app-graph';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
-import { Button, Dialog, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, type TFunction, useTranslation } from '@dxos/react-ui';
+import { type Label } from '@dxos/react-ui-navtree';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
-import { NAVTREE_PLUGIN } from '../meta';
-import { getTreeItemLabel } from '../util';
+import { KEY_BINDING, NAVTREE_PLUGIN } from '../meta';
+
+const getNodeLabel = (node: NodeBase, t: TFunction) => {
+  const label: Label = node.properties.label;
+  return Array.isArray(label) ? t(...label) : label;
+};
 
 // TODO(wittjosiah): This probably deserves its own plugin but for now it lives here w/ other navigation UI.
 export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Graph; selected?: string }) => {
@@ -29,19 +34,15 @@ export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Gr
     const actions: ActionLike[] = [];
     graph?.traverse({
       visitor: (node, path) => {
-        if (current.startsWith(path.join('/'))) {
-          node.actions().forEach((action) => {
-            if (!actionMap.has(action.id)) {
-              actionMap.add(action.id);
-              actions.push(action);
-            }
-          });
+        if (isAction(node) && !actionMap.has(node.id) && current.startsWith(path.slice(0, -1).join('/'))) {
+          actionMap.add(node.id);
+          actions.push(node);
         }
       },
     });
 
-    actions.sort(({ properties: a }, { properties: b }) => {
-      return getTreeItemLabel(a.label, t)?.toLowerCase().localeCompare(getTreeItemLabel(b.label, t)?.toLowerCase());
+    actions.sort((a, b) => {
+      return getNodeLabel(a, t)?.toLowerCase().localeCompare(getNodeLabel(b, t)?.toLowerCase());
     });
 
     // console.log(JSON.stringify(actions, undefined, 2));
@@ -63,7 +64,7 @@ export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Gr
         <SearchList.Input placeholder={t('commandlist input placeholder')} classNames={mx('px-1 my-2')} />
         <SearchList.Content classNames={['max-bs-[30rem] overflow-auto']}>
           {actions?.map((action) => {
-            const label = getTreeItemLabel(action.properties.label, t);
+            const label = getNodeLabel(action, t);
             const shortcut =
               typeof action.properties.keyBinding === 'string'
                 ? action.properties.keyBinding
@@ -86,7 +87,8 @@ export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Gr
                   // TODO(burdon): Remove hack to close dialog (via hook?)
                   buttonRef.current?.click();
                   setTimeout(() => {
-                    isAction(action) && action.data({ caller: KEY_BINDING });
+                    const node = action.nodes({ direction: 'inbound' })[0];
+                    isAction(action) && action.data({ node, caller: KEY_BINDING });
                   });
                 }}
                 classNames='flex items-center gap-2'

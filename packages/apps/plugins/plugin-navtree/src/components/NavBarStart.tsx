@@ -5,23 +5,16 @@
 import { DotsThreeVertical } from '@phosphor-icons/react';
 import React, { Fragment } from 'react';
 
-import { KEY_BINDING, useGraph } from '@braneframe/plugin-graph';
-import { Keyboard } from '@dxos/keyboard';
 import { Popover, useTranslation } from '@dxos/react-ui';
 import { NavTreeItemAction, type TreeNode } from '@dxos/react-ui-navtree';
 
-import { NAVTREE_PLUGIN } from '../meta';
+import { KEY_BINDING, NAVTREE_PLUGIN } from '../meta';
 import { getTreeItemLabel } from '../util';
 
 const TREE_ITEM_MAIN_HEADING = 'TreeItemMainHeading';
 
 export const NavBarStart = ({ activeNode, popoverAnchorId }: { activeNode: TreeNode; popoverAnchorId?: string }) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
-
-  const { graph } = useGraph();
-  const context = graph.getPath({ to: activeNode.id })?.join('/');
-  // TODO(wittjosiah): Why is this happening here?
-  Keyboard.singleton.setCurrentContext(context);
 
   const ActionRoot =
     popoverAnchorId === `dxos.org/ui/${TREE_ITEM_MAIN_HEADING}/${activeNode.id}` ||

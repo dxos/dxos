@@ -312,7 +312,7 @@ export const updateGraphWithSpace = ({
       previousObjects.get(space.key.toHex())?.filter((object) => !query.objects.includes(object)) ?? [];
     previousObjects.set(space.key.toHex(), [...query.objects]);
     const unsortedObjects = query.objects.filter((object) => !folder.objects.includes(object));
-    const objects = [...folder.objects, ...unsortedObjects];
+    const objects = [...(folder?.objects ?? []), ...unsortedObjects];
 
     // Cleanup when objects removed from space.
     removedObjects.forEach((object) => {
@@ -344,7 +344,7 @@ export const updateGraphWithSpace = ({
         object.objects.forEach((child) => graph.addEdge(object.id, child.id));
 
         // Set order of objects in folder.
-        graph.setEdges(
+        graph.sortEdges(
           object.id,
           'outbound',
           object.objects.map((o) => o.id),
@@ -415,9 +415,10 @@ export const updateGraphWithSpace = ({
               data: { object, ...params },
             }),
           properties: {
-            label: ['rename object label', { ns: SPACE_PLUGIN }],
+            label: [object instanceof Folder ? 'rename folder label' : 'rename object label', { ns: SPACE_PLUGIN }],
             icon: (props: IconProps) => <PencilSimpleLine {...props} />,
-            keyBinding: 'shift+F6',
+            // TODO(wittjosiah): Doesn't work.
+            // keyBinding: 'shift+F6',
             testId: 'spacePlugin.renameObject',
           },
           edges: [[object.id, 'inbound']],
@@ -434,9 +435,9 @@ export const updateGraphWithSpace = ({
             ]);
           },
           properties: {
-            label: ['delete object label', { ns: SPACE_PLUGIN }],
+            label: [object instanceof Folder ? 'delete folder label' : 'delete object label', { ns: SPACE_PLUGIN }],
             icon: (props) => <Trash {...props} />,
-            keyBinding: 'shift+meta+Backspace',
+            keyBinding: object instanceof Folder ? undefined : 'shift+meta+Backspace',
             testId: 'spacePlugin.deleteObject',
           },
           edges: [[object.id, 'inbound']],
@@ -445,7 +446,7 @@ export const updateGraphWithSpace = ({
     });
 
     // Set order of objects in space.
-    graph.setEdges(
+    graph.sortEdges(
       space.key.toHex(),
       'outbound',
       objects.map((o) => o.id),
