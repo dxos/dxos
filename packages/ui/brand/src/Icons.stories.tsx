@@ -14,7 +14,7 @@ import { DXNS, DXOS, ECHO, HALO, KUBE, MESH } from './icons';
 const Icon = () => null;
 
 export default {
-  title: 'react-icons/Icons',
+  title: 'brand/Icons',
   component: Icon,
   decorators: [withTheme],
 };
