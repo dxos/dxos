@@ -39,7 +39,7 @@ export default class Join extends BaseCommand<typeof Join> {
 
     return await this.execWithClient(async (client: Client) => {
       if (client.halo.identity.get()) {
-        this.error(chalk`{red Profile already initialized.}`);
+        this.catch(chalk`{red Profile already initialized.}`);
       }
 
       if (!encoded) {
@@ -76,7 +76,7 @@ export default class Join extends BaseCommand<typeof Join> {
         );
       } catch (err: any) {
         ux.log();
-        this.error(chalk`{red Timeout waiting for device join to complete: ${err.message}}`);
+        this.catch(chalk`{red Timeout waiting for device join to complete: ${err.message}}`);
       }
 
       ux.log();

@@ -2,15 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
+import { invariant } from '@dxos/invariant';
+
 import { type ReactiveObject } from './reactive';
+import { ReactiveArray } from './reactive-array';
 
 export const symbolIsProxy = Symbol('isProxy');
 
-export const isValidProxyTarget = (value: any): value is object =>
-  typeof value === 'object' &&
-  value !== null &&
-  (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === Array.prototype) &&
-  !value[symbolIsProxy];
+export const isValidProxyTarget = (value: any): value is object => {
+  if (value == null || value[symbolIsProxy]) {
+    return false;
+  }
+  if (value instanceof ReactiveArray) {
+    return true;
+  }
+  return typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype;
+};
 
 /**
  *
@@ -52,7 +59,7 @@ class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
 
   get(target: T, prop: string | symbol, receiver: any): any {
     if (prop === symbolIsProxy) {
-      return true;
+      return this;
     }
 
     if (!this.handler || !this.handler.get) {
@@ -99,3 +106,9 @@ class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
     }
   }
 }
+
+export const getProxyHandlerSlot = <T extends object>(proxy: ReactiveObject<any>): ProxyHandlerSlot<T> => {
+  const value = (proxy as any)[symbolIsProxy];
+  invariant(value instanceof ProxyHandlerSlot);
+  return value;
+};

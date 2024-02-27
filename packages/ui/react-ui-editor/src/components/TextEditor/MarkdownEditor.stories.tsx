@@ -288,7 +288,7 @@ export const Empty = {
 };
 
 export const Scrolling = {
-  render: () => <Story text={str('# Large Document', '', large)} extensions={[]} />,
+  render: () => <Story text={str('# Large Document', '', large)} />,
 };
 
 export const ScrollingWithImages = {

@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 import { type ThemeMode } from '@dxos/react-ui';
 import { isNotFalsy } from '@dxos/util';
 
-import { type ThemeStyles } from '..//styles';
+import { type ThemeStyles } from '../styles';
 import { defaultTheme } from '../themes';
 import { logChanges } from '../util';
 
@@ -26,6 +26,7 @@ export type UseTextEditorOptions = {
   debug?: boolean;
 } & EditorStateConfig;
 
+// TODO(burdon): Return tuple?
 export type UseTextEditor = {
   parentRef: RefObject<HTMLDivElement>;
   view?: EditorView;
@@ -87,8 +88,7 @@ export const useTextEditor = ({
     return () => {
       view?.destroy();
     };
-    // TODO(wittjosiah): Does `parentRef` ever change? Only `.current` changes?
-  }, [parentRef, extensions]);
+  }, [doc, extensions]);
 
   useEffect(() => {
     if (view) {
