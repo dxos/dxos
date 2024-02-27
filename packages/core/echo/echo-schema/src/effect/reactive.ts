@@ -8,7 +8,8 @@ import * as S from '@effect/schema/Schema';
 import { invariant } from '@dxos/invariant';
 
 import { type ReactiveHandler, createReactiveProxy, isValidProxyTarget } from './proxy';
-import { TypedReactiveHandler, setSchemaProperties, symbolSchema } from './typed-handler';
+import { setSchemaProperties, symbolSchema } from './schema-validator';
+import { TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');

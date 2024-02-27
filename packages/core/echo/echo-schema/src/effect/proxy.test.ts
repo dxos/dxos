@@ -10,6 +10,7 @@ import { inspect } from 'util';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
+import { createEchoReactiveObject } from './echo-handler';
 import * as R from './reactive';
 import { updateCounter } from './testutils';
 
@@ -44,8 +45,12 @@ const TestSchema = S.mutable(
 type TestSchema = S.Schema.To<typeof TestSchema>;
 
 for (const schema of [undefined, TestSchema]) {
-  for (const _ of [false]) {
+  for (const useDatabase of [false, false]) {
     const createObject = (props: Partial<TestSchema> = {}): TestSchema => {
+      if (useDatabase) {
+        // TODO: extract echo-schema into a separate package and export a test suite, use it in echo-database
+        return schema == null ? createEchoReactiveObject(props) : createEchoReactiveObject(props);
+      }
       return schema == null ? (R.object(props) as TestSchema) : R.object(schema, props);
     };
 
