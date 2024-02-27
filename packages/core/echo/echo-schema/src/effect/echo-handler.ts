@@ -83,12 +83,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   ownKeys(target: ProxyTarget): ArrayLike<string | symbol> {
-    const { value } = this.getDecodedValueWithPath(target);
+    const { value } = this.getDecodedValueAtPath(target);
     return typeof value === 'object' ? Reflect.ownKeys(value) : [];
   }
 
   getOwnPropertyDescriptor(target: ProxyTarget, p: string | symbol): PropertyDescriptor | undefined {
-    const { value } = this.getDecodedValueWithPath(target);
+    const { value } = this.getDecodedValueAtPath(target);
     return typeof value === 'object' ? Reflect.getOwnPropertyDescriptor(value, p) : undefined;
   }
 
@@ -105,8 +105,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return this._arrayGet(target, prop);
     }
 
-    const { value: decoded, dataPath } = this.getDecodedValueWithPath(target, prop);
+    const decodedValueAtPath = this.getDecodedValueAtPath(target, prop);
+    return this._wrapInProxyIfRequired(decodedValueAtPath);
+  }
 
+  private _wrapInProxyIfRequired(decodedValueAtPath: DecodedValueAtPath) {
+    const { value: decoded, dataPath } = decodedValueAtPath;
     // TODO(dmaretskyi): Handle references.
     if (Array.isArray(decoded)) {
       const target = defaultMap(this._targetsMap, dataPath, (): ProxyTarget => {
@@ -129,7 +133,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (target instanceof EchoArrayTwoPointO) {
       return this._arrayHas(target, p);
     }
-    const { value } = this.getDecodedValueWithPath(target);
+    const { value } = this.getDecodedValueAtPath(target);
     return typeof value === 'object' ? Reflect.has(value, p) : false;
   }
 
@@ -137,7 +141,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return this.set(target, property, attributes.value, target);
   }
 
-  private getDecodedValueWithPath(target: ProxyTarget, prop?: string) {
+  private getDecodedValueAtPath(target: ProxyTarget, prop?: string): DecodedValueAtPath {
     const dataPath = [...target[symbolPath]];
     if (prop != null) {
       dataPath.push(prop);
@@ -155,15 +159,15 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (prop !== 'length' && isNaN(parseInt(prop))) {
       return Reflect.get(target, prop);
     }
-    const { value } = this.getDecodedValueWithPath(target, prop);
-    return value;
+    const decodedValueAtPath = this.getDecodedValueAtPath(target, prop);
+    return this._wrapInProxyIfRequired(decodedValueAtPath);
   }
 
   private _arrayHas(target: ProxyTarget, prop: string | symbol) {
     invariant(target instanceof EchoArrayTwoPointO);
     if (typeof prop === 'string') {
       const parsedIndex = parseInt(prop);
-      const { value: length } = this.getDecodedValueWithPath(target, 'length');
+      const { value: length } = this.getDecodedValueAtPath(target, 'length');
       invariant(typeof length === 'number');
       if (!isNaN(parsedIndex)) {
         return parsedIndex < length;
@@ -384,3 +388,8 @@ export const createEchoReactiveObject = <T extends {}>(init: T, schema?: S.Schem
 
   return proxy;
 };
+
+interface DecodedValueAtPath {
+  value: any;
+  dataPath: string[];
+}
