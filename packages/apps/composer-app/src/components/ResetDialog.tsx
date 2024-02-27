@@ -6,7 +6,7 @@ import { CaretDown, CaretRight, Clipboard } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { Config, Defaults } from '@dxos/react-client';
+import { Config, Defaults, Envs, Local, Storage } from '@dxos/react-client';
 import {
   AlertDialog,
   type AlertDialogRootProps,
@@ -63,7 +63,7 @@ export const ResetDialog = ({
   }, [error]);
 
   const handleReset = async () => {
-    const config = new Config(Defaults());
+    const config = new Config(await Storage(), Envs(), Local(), Defaults());
 
     const { ClientServicesHost } = await import('@dxos/client-services');
     const services = new ClientServicesHost({ config });

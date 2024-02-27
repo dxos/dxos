@@ -343,7 +343,7 @@ message Chain {
 
     string name = 1;
     Type type = 2;
-    dxos.schema.Text value = 3; // TODO(burdon): String?
+    string value = 3;
   }
 
   // TODO(burdon): Bug: Not reactive unless object?

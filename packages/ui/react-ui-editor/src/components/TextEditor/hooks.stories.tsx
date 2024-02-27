@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { useMemo, useState } from 'react';
 
-import { Toolbar as NaturalToolbar, Select, useThemeContext } from '@dxos/react-ui';
+import { Toolbar as NaturalToolbar, Select, useThemeContext, Tooltip } from '@dxos/react-ui';
 import { attentionSurface, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -14,19 +14,14 @@ import { TextEditor } from './TextEditor';
 import {
   type EditorMode,
   EditorModes,
-  code,
+  decorateMarkdown,
   createMarkdownExtensions,
   formatting,
-  heading,
-  hr,
   image,
-  link,
   table,
-  tasklist,
   useFormattingState,
 } from '../../extensions';
 import { createDataExtensions, createThemeExtensions, useActionHandler, useTextEditor } from '../../hooks';
-import { editorFillLayoutEditor, editorWithToolbarLayout } from '../../styles';
 import { markdownTheme } from '../../themes';
 import translations from '../../translations';
 import { Toolbar } from '../Toolbar';
@@ -56,20 +51,16 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
         themeMode,
         theme: markdownTheme,
         slots: {
-          content: { className: '!p-4' },
+          editor: { className: 'p-2' },
         },
       }),
       // TODO(burdon): Move lineWrapping.
       createMarkdownExtensions({ placeholder, lineWrapping: true }),
       // TODO(burdon): Move into markdown bundle (with React callbacks).
-      code(),
+      decorateMarkdown(),
       formatting(),
-      heading(),
-      hr(),
       image(),
-      link(),
       table(),
-      tasklist(),
       trackFormatting,
     ],
     [editorMode, themeMode, placeholder, trackFormatting, readonly],
@@ -78,16 +69,16 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
 
   const handleAction = useActionHandler(view);
 
-  // TODO(marijn) This doesn't update the state on view changes.
+  // TODO(marijn): This doesn't update the state on view changes.
   //  Also not sure if view is even guaranteed to exist at this point.
   return (
-    <div role='none' className={mx('fixed inset-0', editorWithToolbarLayout)}>
+    <div role='none' className={mx('fixed inset-0 flex flex-col')}>
       <Toolbar.Root onAction={handleAction} state={formattingState} classNames={textBlockWidth}>
         <Toolbar.Markdown />
         <EditorModeToolbar editorMode={editorMode} setEditorMode={setEditorMode} />
       </Toolbar.Root>
-      <div role='none' className='overflow-y-auto'>
-        <div role='textbox' className={mx(textBlockWidth, attentionSurface, editorFillLayoutEditor)} ref={parentRef} />
+      <div role='none' className='grow overflow-hidden'>
+        <div role='textbox' className={mx(textBlockWidth, attentionSurface)} ref={parentRef} />
       </div>
     </div>
   );
@@ -127,7 +118,11 @@ export default {
   title: 'react-ui-editor/useTextEditor',
   component: TextEditor,
   decorators: [withTheme],
-  render: (args: StoryProps) => <Story {...args} />,
+  render: (args: StoryProps) => (
+    <Tooltip.Provider>
+      <Story {...args} />
+    </Tooltip.Provider>
+  ),
   parameters: { translations, layout: 'fullscreen' },
 };
 

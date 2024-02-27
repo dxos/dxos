@@ -40,23 +40,6 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
       translations,
       graph: {
         builder: (plugins, graph) => {
-          // TODO(burdon): Use same id for action and intent?
-          // createObject(InboxAction.CREATE_MAILBOX, {
-          //   id: `${INBOX_PLUGIN}/create-mailbox`,
-          //   label: ['create mailbox label', { ns: INBOX_PLUGIN }],
-          //   icon: (props) => <Envelope {...props} />,
-          // });
-          // createObject(InboxAction.CREATE_ADDRESSBOOK, {
-          //   id: `${INBOX_PLUGIN}/create-addressbook`,
-          //   label: ['create addressbook label', { ns: INBOX_PLUGIN }],
-          //   icon: (props) => <AddressBook {...props} />,
-          // });
-          // createObject(InboxAction.CREATE_CALENDAR, {
-          //   id: `${INBOX_PLUGIN}/create-calendar`,
-          //   label: ['create calendar label', { ns: INBOX_PLUGIN }],
-          //   icon: (props) => <Calendar {...props} />,
-          // });
-
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
           if (!client || !dispatch) {

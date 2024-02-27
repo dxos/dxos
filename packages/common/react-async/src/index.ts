@@ -4,6 +4,7 @@
 
 export * from './useAsyncEffect';
 export * from './useControlledState';
+export * from './useDebugReactDeps';
 export * from './useDynamicRef';
 export * from './useMounted';
 export * from './useStateRef';

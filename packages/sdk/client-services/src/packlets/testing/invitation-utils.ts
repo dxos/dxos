@@ -6,6 +6,7 @@ import { Trigger } from '@dxos/async';
 import { InvitationEncoder, type AuthenticatingInvitation, type CancellableInvitation } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { ServiceContext } from '../services';
 
@@ -21,7 +22,7 @@ export type InvitationHost = {
 };
 
 export type InvitationGuest = {
-  join(invitation: Invitation | string): AuthenticatingInvitation;
+  join(invitation: Invitation | string, deviceProfile?: DeviceProfileDocument): AuthenticatingInvitation;
 };
 
 export type PerformInvitationCallbacks<T> = {
@@ -43,6 +44,7 @@ export type PerformInvitationParams = {
     host?: PerformInvitationCallbacks<CancellableInvitation>;
     guest?: PerformInvitationCallbacks<AuthenticatingInvitation>;
   };
+  guestDeviceProfile?: DeviceProfileDocument;
 };
 
 export type Result = { invitation?: Invitation; error?: Error };
@@ -52,6 +54,7 @@ export const performInvitation = ({
   guest,
   options,
   hooks,
+  guestDeviceProfile,
 }: PerformInvitationParams): [Promise<Result>, Promise<Result>] => {
   const hostComplete = new Trigger<Result>();
   const guestComplete = new Trigger<Result>();
@@ -65,7 +68,7 @@ export const performInvitation = ({
           if (hooks?.host?.onConnecting?.(hostObservable)) {
             break;
           }
-          const guestObservable = acceptInvitation(guest, hostInvitation);
+          const guestObservable = acceptInvitation(guest, hostInvitation, guestDeviceProfile);
           guestObservable.subscribe(
             async (guestInvitation: Invitation) => {
               switch (guestInvitation.state) {
@@ -205,13 +208,14 @@ const createInvitation = (
 const acceptInvitation = (
   guest: ServiceContext | InvitationGuest,
   invitation: Invitation,
+  guestDeviceProfile?: DeviceProfileDocument,
 ): AuthenticatingInvitation => {
   invitation = sanitizeInvitation(invitation);
 
   if (guest instanceof ServiceContext) {
     const guestHandler = guest.getInvitationHandler({ kind: invitation.kind });
-    return guest.invitations.acceptInvitation(guestHandler, invitation);
+    return guest.invitations.acceptInvitation(guestHandler, invitation, guestDeviceProfile);
   }
 
-  return guest.join(invitation);
+  return guest.join(invitation, guestDeviceProfile);
 };

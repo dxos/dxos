@@ -104,22 +104,6 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                       label: ['debug label', { ns: DEBUG_PLUGIN }],
                     },
                     edges: [['root', 'inbound']],
-                    nodes: [
-                      {
-                        id: 'open-devtools',
-                        data: () =>
-                          intentPlugin?.provides.intent.dispatch({
-                            plugin: DEBUG_PLUGIN,
-                            action: DebugAction.OPEN_DEVTOOLS,
-                          }),
-                        properties: {
-                          label: ['open devtools label', { ns: DEBUG_PLUGIN }],
-                          icon: (props: IconProps) => <Bug {...props} />,
-                          keyBinding: 'shift+meta+\\',
-                          testId: 'spacePlugin.openDevtools',
-                        },
-                      },
-                    ],
                   },
                 ],
               });
@@ -141,6 +125,22 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                       label: ['devtools label', { ns: DEBUG_PLUGIN }],
                     },
                     edges: [['root', 'inbound']],
+                    nodes: [
+                      {
+                        id: 'open-devtools',
+                        data: () =>
+                          intentPlugin?.provides.intent.dispatch({
+                            plugin: DEBUG_PLUGIN,
+                            action: DebugAction.OPEN_DEVTOOLS,
+                          }),
+                        properties: {
+                          label: ['open devtools label', { ns: DEBUG_PLUGIN }],
+                          icon: (props: IconProps) => <Bug {...props} />,
+                          keyBinding: 'shift+meta+\\',
+                          testId: 'spacePlugin.openDevtools',
+                        },
+                      },
+                    ],
                   },
                 ],
               });

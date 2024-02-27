@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Extension } from '@codemirror/state';
 import get from 'lodash.get';
 import { type Dispatch, type SetStateAction, useState, useMemo } from 'react';
 
@@ -14,13 +15,42 @@ import { type Identity } from '@dxos/react-client/halo';
 import { SpaceAwarenessProvider } from './awareness-provider';
 import { type EditorModel, modelState } from './defs';
 import { automerge, awareness } from '../extensions';
+import { type DocAccessor } from '../extensions/automerge/defs';
 import { cursorColor } from '../styles';
 
-// TODO(burdon): Remove space/identity dependency. Define interface for the framework re content and presence.
-export type UseTextModelProps = {
-  identity?: Identity | null;
+export type useTextExtensionsProps = {
+  id: string;
+  text: DocAccessor;
   space?: Space;
+  identity?: Identity;
+};
+
+// TODO(burdon): Factor out automerge defs and extension (not hook).
+export const useTextExtensions = ({ id, text, space, identity }: useTextExtensionsProps): Extension[] => {
+  const extensions: Extension[] = [automerge(text)];
+
+  if (space && identity) {
+    const awarenessProvider = new SpaceAwarenessProvider({
+      space,
+      channel: `awareness.${id}`,
+      peerId: identity.identityKey.toHex(),
+      info: {
+        displayName: identity.profile?.displayName ?? generateName(identity.identityKey.toHex()),
+        color: cursorColor.color,
+        lightColor: cursorColor.light,
+      },
+    });
+
+    extensions.push(awareness(awarenessProvider));
+  }
+
+  return extensions;
+};
+
+export type UseTextModelProps = {
   text?: TextObject;
+  space?: Space;
+  identity?: Identity | null;
 };
 
 /**
@@ -32,8 +62,7 @@ export const useTextModel = (props: UseTextModelProps): EditorModel | undefined 
 
 /**
  * For use primarily in stories & tests so the dependence on TextObject can be avoided.
- * @param id
- * @param defaultContent
+ * @deprecated
  */
 export const useInMemoryTextModel = ({
   id,

@@ -97,7 +97,7 @@ describe('RequestProcessor', () => {
                 new ChainType.Input({
                   name: 'language',
                   type: ChainType.Input.Type.VALUE,
-                  value: new TextObject('japanese'),
+                  value: 'japanese',
                 }),
                 new ChainType.Input({ name: 'input', type: ChainType.Input.Type.PASS_THROUGH }),
               ],
@@ -160,12 +160,12 @@ describe('RequestProcessor', () => {
                 new ChainType.Input({
                   name: 'company',
                   type: ChainType.Input.Type.SCHEMA,
-                  value: new TextObject('example.com/schema/organization'),
+                  value: 'example.com/schema/organization',
                 }),
                 new ChainType.Input({
                   name: 'contact',
                   type: ChainType.Input.Type.SCHEMA,
-                  value: new TextObject('example.com/schema/contact'),
+                  value: 'example.com/schema/contact',
                 }),
               ],
             }),

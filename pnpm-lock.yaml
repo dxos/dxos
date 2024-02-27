@@ -2709,6 +2709,21 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@codemirror/autocomplete':
+        specifier: ^6.12.0
+        version: 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)(@lezer/common@1.2.1)
+      '@codemirror/lang-javascript':
+        specifier: ^6.2.2
+        version: 6.2.2
+      '@codemirror/language':
+        specifier: ^6.10.1
+        version: 6.10.1
+      '@codemirror/state':
+        specifier: ^6.4.0
+        version: 6.4.0
+      '@codemirror/view':
+        specifier: ^6.23.0
+        version: 6.23.1
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -2724,6 +2739,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -2745,21 +2763,21 @@ importers:
       '@dxos/text-model':
         specifier: workspace:*
         version: link:../../../core/echo/text-model
-      '@monaco-editor/react':
-        specifier: ^4.4.6
-        version: 4.4.6(monaco-editor@0.44.0)(react-dom@18.2.0)(react@18.2.0)
+      '@lezer/common':
+        specifier: ^1.2.1
+        version: 1.2.1
       '@preact/signals-core':
         specifier: ^1.5.1
         version: 1.5.1
+      codemirror:
+        specifier: ^6.0.1
+        version: 6.0.1(@lezer/common@1.2.1)
       esbuild-wasm:
         specifier: ^0.16.14
         version: 0.16.17
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
-      monaco-editor:
-        specifier: ^0.44.0
-        version: 0.44.0
     devDependencies:
       '@braneframe/plugin-client':
         specifier: workspace:*
@@ -5050,8 +5068,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/node-std
       '@orama/orama':
-        specifier: ^2.0.0-beta.1
-        version: 2.0.0-beta.3
+        specifier: ^2.0.8
+        version: 2.0.8
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -5135,6 +5153,9 @@ importers:
       '@dxos/echo-typegen':
         specifier: workspace:*
         version: link:../echo-typegen
+      '@orama/orama':
+        specifier: ^2.0.8
+        version: 2.0.8
       '@preact/signals-core':
         specifier: ^1.5.1
         version: 1.5.1
@@ -6158,6 +6179,9 @@ importers:
       pkg-up:
         specifier: ^3.1.0
         version: 3.1.0
+      platform:
+        specifier: ^1.3.6
+        version: 1.3.6
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -6192,6 +6216,9 @@ importers:
       '@types/node-fetch':
         specifier: ^2.5.10
         version: 2.6.2
+      '@types/platform':
+        specifier: ^1.3.4
+        version: 1.3.5
       '@types/react-dom':
         specifier: ^18.0.6
         version: 18.0.6
@@ -8683,6 +8710,9 @@ importers:
       '@codemirror/commands':
         specifier: ^6.3.3
         version: 6.3.3
+      '@codemirror/lang-javascript':
+        specifier: ^6.2.2
+        version: 6.2.2
       '@codemirror/lang-markdown':
         specifier: ^6.2.4
         version: 6.2.4
@@ -8768,7 +8798,7 @@ importers:
         specifier: ^6.0.14
         version: 6.0.14(@codemirror/commands@6.3.3)(@codemirror/language@6.10.1)(@codemirror/search@6.5.5)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
       codemirror:
-        specifier: 6.0.1
+        specifier: ^6.0.1
         version: 6.0.1(@lezer/common@1.2.1)
       lib0:
         specifier: ^0.2.65
@@ -8849,8 +8879,11 @@ importers:
       '@types/react-test-renderer':
         specifier: ^17.0.2
         version: 17.0.9
+      '@vitest/browser':
+        specifier: ^1.2.2
+        version: 1.2.2(vitest@1.2.2)(webdriverio@8.29.3)
       '@vitest/ui':
-        specifier: ^1.2.1
+        specifier: ^1.2.2
         version: 1.2.2(vitest@1.2.2)
       deepsignal:
         specifier: ^1.5.0
@@ -13566,7 +13599,7 @@ packages:
     resolution: {integrity: sha512-Nq7lmx9SU+JyoaRcs6SaJs7uAmW2W06HpgJVQYeZptVGNWDzDvzhjwVb/ZuG1rwTlOocY4Y9GwNOBuKCeJbKtw==}
     dependencies:
       '@codemirror/lang-html': 6.4.2
-      '@codemirror/lang-javascript': 6.1.4
+      '@codemirror/lang-javascript': 6.2.2
       '@codemirror/language': 6.10.1
       '@lezer/common': 1.2.1
       '@lezer/highlight': 1.2.0
@@ -13597,7 +13630,7 @@ packages:
     dependencies:
       '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)(@lezer/common@1.2.1)
       '@codemirror/lang-css': 6.2.1(@codemirror/view@6.23.1)
-      '@codemirror/lang-javascript': 6.1.4
+      '@codemirror/lang-javascript': 6.2.2
       '@codemirror/language': 6.10.1
       '@codemirror/state': 6.4.0
       '@codemirror/view': 6.23.1
@@ -13613,8 +13646,8 @@ packages:
       '@lezer/java': 1.0.3
     dev: false
 
-  /@codemirror/lang-javascript@6.1.4:
-    resolution: {integrity: sha512-OxLf7OfOZBTMRMi6BO/F72MNGmgOd9B0vetOLvHsDACFXayBzW8fm8aWnDM0yuy68wTK03MBf4HbjSBNRG5q7A==}
+  /@codemirror/lang-javascript@6.2.2:
+    resolution: {integrity: sha512-VGQfY+FCc285AhWuwjYxQyUQcYurWlxdKYT4bqwr3Twnd5wP5WSeu52t4tvvuWmljT4EmgEgZCqSieokhtY8hg==}
     dependencies:
       '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)(@lezer/common@1.2.1)
       '@codemirror/language': 6.10.1
@@ -13713,7 +13746,7 @@ packages:
     resolution: {integrity: sha512-D4YrefiRBAr+CfEIM4S3yvGSbYW+N69mttIfGMEf7diHpRbmygDxS+R/5xSqjgtkY6VO6qmUrre1GkRcWeZa9A==}
     dependencies:
       '@codemirror/lang-html': 6.4.2
-      '@codemirror/lang-javascript': 6.1.4
+      '@codemirror/lang-javascript': 6.2.2
       '@codemirror/language': 6.10.1
       '@lezer/common': 1.2.1
       '@lezer/highlight': 1.2.0
@@ -13748,7 +13781,7 @@ packages:
       '@codemirror/lang-css': 6.2.1(@codemirror/view@6.23.1)
       '@codemirror/lang-html': 6.4.2
       '@codemirror/lang-java': 6.0.1
-      '@codemirror/lang-javascript': 6.1.4
+      '@codemirror/lang-javascript': 6.2.2
       '@codemirror/lang-json': 6.0.1
       '@codemirror/lang-less': 6.0.1(@codemirror/view@6.23.1)
       '@codemirror/lang-markdown': 6.2.4
@@ -16427,29 +16460,6 @@ packages:
     resolution: {integrity: sha512-9b8mPpKrfeGRuhFH5iO1iwCLeIIsV6+H1sRfxbkoGXIyQE2BTsPd9zqSqQJ+pv5sJ/hT5M1zvOFL02MnEezFug==}
     dev: false
 
-  /@monaco-editor/loader@1.3.2(monaco-editor@0.44.0):
-    resolution: {integrity: sha512-BTDbpHl3e47r3AAtpfVFTlAi7WXv4UQ/xZmz8atKl4q7epQV5e7+JbigFDViWF71VBi4IIBdcWP57Hj+OWuc9g==}
-    peerDependencies:
-      monaco-editor: '>= 0.21.0 < 1'
-    dependencies:
-      monaco-editor: 0.44.0
-      state-local: 1.0.7
-    dev: false
-
-  /@monaco-editor/react@4.4.6(monaco-editor@0.44.0)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-Gr3uz3LYf33wlFE3eRnta4RxP5FSNxiIV9ENn2D2/rN8KgGAD8ecvcITRtsbbyuOuNkwbuHYxfeaz2Vr+CtyFA==}
-    peerDependencies:
-      monaco-editor: '>= 0.25.0 < 1'
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0
-      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
-    dependencies:
-      '@monaco-editor/loader': 1.3.2(monaco-editor@0.44.0)
-      monaco-editor: 0.44.0
-      prop-types: 15.8.1
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-    dev: false
-
   /@mrmlnc/readdir-enhanced@2.2.1:
     resolution: {integrity: sha512-bPHp6Ji8b41szTOcaP63VlnbbO5Ny6dwAATtY6JTjh5N2OLrb5Qk/Th5cRkRQhkWCt+EJsYrNB0MiL+Gpn6e3g==}
     engines: {node: '>=4'}
@@ -17857,10 +17867,9 @@ packages:
       aggregate-error: 3.1.0
     dev: false
 
-  /@orama/orama@2.0.0-beta.3:
-    resolution: {integrity: sha512-yii79NdmyoshM0IsgJN2CgytXv41pmXpITuzczKnwhrLJWd94p/Dzqp7ljUa1Rz6c91yzItfSnFOTq2Tj+7Zow==}
+  /@orama/orama@2.0.8:
+    resolution: {integrity: sha512-qaku4eOWLH80pneJ/PtqvF/VXGO3b1W1X6NSji3Yh6s3BNuoyprOifNfSWEkIbymzT89/B+ZFoq6PKG43fW6PA==}
     engines: {node: '>= 16.0.0'}
-    dev: false
 
   /@phenomnomnominal/tsquery@5.0.1(typescript@5.2.2):
     resolution: {integrity: sha512-3nVv+e2FQwsW8Aw6qTU6f+1rfcJ3hrcnvH/mu9i8YhxO+9sqbOfpL8m6PbET5+xKOlz/VSbp0RoYWYCtIsnmuA==}
@@ -37659,10 +37668,6 @@ packages:
     dev: true
     optional: true
 
-  /monaco-editor@0.44.0:
-    resolution: {integrity: sha512-5SmjNStN6bSuSE5WPT2ZV+iYn1/yI9sd4Igtk23ChvqB7kDk9lZbB9F5frsuvpB+2njdIeGGFf2G4gbE6rCC9Q==}
-    dev: false
-
   /mri@1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
     engines: {node: '>=4'}
@@ -42742,10 +42747,6 @@ packages:
 
   /standard-as-callback@2.1.0:
     resolution: {integrity: sha512-qoRRSyROncaz1z0mvYqIE4lCd9p2R90i6GxW3uZv5ucSu8tU7B5HXUP1gG8pVZsYNVaXjk8ClXHPttLyxAL48A==}
-    dev: false
-
-  /state-local@1.0.7:
-    resolution: {integrity: sha512-HTEHMNieakEnoe33shBYcZ7NX83ACUjCu8c40iOGEZsngj9zRnkqS9j1pqQPXwobB0ZcVTk27REb7COQ0UR59w==}
     dev: false
 
   /static-extend@0.1.2:

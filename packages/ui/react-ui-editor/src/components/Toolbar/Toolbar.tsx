@@ -25,7 +25,7 @@ import {
   Quotes,
 } from '@phosphor-icons/react';
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, useRef, useState } from 'react';
 
 import {
   DensityProvider,
@@ -33,6 +33,7 @@ import {
   Select,
   type ThemedClassName,
   Toolbar as NaturalToolbar,
+  Tooltip,
   type ToolbarToggleGroupItemProps,
   useTranslation,
 } from '@dxos/react-ui';
@@ -40,6 +41,8 @@ import { getSize } from '@dxos/react-ui-theme';
 
 import { type Formatting } from '../../extensions';
 import { translationKey } from '../../translations';
+
+const tooltipProps = { side: 'top' as const, classNames: 'z-10' };
 
 const HeadingIcons: { [key: string]: Icon } = {
   '0': Paragraph,
@@ -112,10 +115,20 @@ type ToolbarButtonProps = ToolbarToggleGroupItemProps & { Icon: Icon };
 
 const ToolbarButton = ({ Icon, children, ...props }: ToolbarButtonProps) => {
   return (
-    <NaturalToolbar.ToggleGroupItem variant='ghost' {...props} classNames={buttonStyles}>
-      <Icon className={iconStyles} />
-      <span className='sr-only'>{children}</span>
-    </NaturalToolbar.ToggleGroupItem>
+    <Tooltip.Root>
+      <Tooltip.Trigger asChild>
+        <NaturalToolbar.ToggleGroupItem variant='ghost' {...props} classNames={buttonStyles}>
+          <Icon className={iconStyles} />
+          <span className='sr-only'>{children}</span>
+        </NaturalToolbar.ToggleGroupItem>
+      </Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Content {...tooltipProps}>
+          {children}
+          <Tooltip.Arrow />
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
   );
 };
 
@@ -128,41 +141,71 @@ const MarkdownHeading = () => {
   const header = blockType && /heading(\d)/.exec(blockType);
   const value = header ? header[1] : blockType === 'paragraph' || !blockType ? '0' : undefined;
   const HeadingIcon = HeadingIcons[value ?? '0'];
+  const suppressNextTooltip = useRef<boolean>(false);
+  const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
+  const [selectOpen, setSelectOpen] = useState<boolean>(false);
   return (
-    <Select.Root
-      disabled={value === null}
-      value={value ?? '0'}
-      onValueChange={(value) => onAction?.({ type: 'heading', data: parseInt(value) })}
+    <Tooltip.Root
+      open={tooltipOpen}
+      onOpenChange={(nextOpen) => {
+        if (nextOpen && suppressNextTooltip.current) {
+          suppressNextTooltip.current = false;
+          return setTooltipOpen(false);
+        } else {
+          return setTooltipOpen(nextOpen);
+        }
+      }}
     >
-      <NaturalToolbar.Button asChild>
-        <Select.TriggerButton variant='ghost' classNames={buttonStyles}>
-          <span className='sr-only'>{t('heading label')}</span>
-          <HeadingIcon className={iconStyles} />
-        </Select.TriggerButton>
-      </NaturalToolbar.Button>
-      <Select.Portal>
-        <Select.Content>
-          <Select.ScrollUpButton />
-          <Select.Viewport>
-            <Select.Option value='0'>
-              <Paragraph className={iconStyles} />
-            </Select.Option>
-            {[1, 2, 3, 4, 5, 6].map((level) => (
-              <Select.Option key={level} value={String(level)}>
-                {level === 1 && <TextHOne className={iconStyles} />}
-                {level === 2 && <TextHTwo className={iconStyles} />}
-                {level === 3 && <TextHThree className={iconStyles} />}
-                {level === 4 && <TextHFour className={iconStyles} />}
-                {level === 5 && <TextHFive className={iconStyles} />}
-                {level === 6 && <TextHSix className={iconStyles} />}
+      <Select.Root
+        disabled={value === null}
+        value={value ?? '0'}
+        open={selectOpen}
+        onOpenChange={(nextOpen: boolean) => {
+          if (!nextOpen) {
+            suppressNextTooltip.current = true;
+          }
+          return setSelectOpen(nextOpen);
+        }}
+        onValueChange={(value) => onAction?.({ type: 'heading', data: parseInt(value) })}
+      >
+        <Tooltip.Trigger asChild>
+          <NaturalToolbar.Button asChild>
+            <Select.TriggerButton variant='ghost' classNames={buttonStyles}>
+              <span className='sr-only'>{t('heading label')}</span>
+              <HeadingIcon className={iconStyles} />
+            </Select.TriggerButton>
+          </NaturalToolbar.Button>
+        </Tooltip.Trigger>
+        <Select.Portal>
+          <Select.Content>
+            <Select.ScrollUpButton />
+            <Select.Viewport>
+              <Select.Option value='0'>
+                <Paragraph className={iconStyles} />
               </Select.Option>
-            ))}
-          </Select.Viewport>
-          <Select.ScrollDownButton />
-          <Select.Arrow />
-        </Select.Content>
-      </Select.Portal>
-    </Select.Root>
+              {[1, 2, 3, 4, 5, 6].map((level) => (
+                <Select.Option key={level} value={String(level)}>
+                  {level === 1 && <TextHOne className={iconStyles} />}
+                  {level === 2 && <TextHTwo className={iconStyles} />}
+                  {level === 3 && <TextHThree className={iconStyles} />}
+                  {level === 4 && <TextHFour className={iconStyles} />}
+                  {level === 5 && <TextHFive className={iconStyles} />}
+                  {level === 6 && <TextHSix className={iconStyles} />}
+                </Select.Option>
+              ))}
+            </Select.Viewport>
+            <Select.ScrollDownButton />
+            <Select.Arrow />
+          </Select.Content>
+        </Select.Portal>
+      </Select.Root>
+      <Tooltip.Portal>
+        <Tooltip.Content {...tooltipProps}>
+          {t('heading label')}
+          <Tooltip.Arrow />
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
   );
 };
 
@@ -233,7 +276,6 @@ const markdownBlocks: ButtonProps[] = [
     type: 'codeblock',
     Icon: CodeBlock,
     getState: (state) => state.blockType === 'codeblock',
-    disabled: (state) => !state.blankLine,
   },
   {
     type: 'table',
@@ -277,15 +319,25 @@ const MarkdownExtended = () => {
   const { onAction } = useToolbarContext('MarkdownStyles');
   const { t } = useTranslation(translationKey);
   return (
-    <NaturalToolbar.Button
-      variant='ghost'
-      data-testid='editor.toolbar.comment'
-      onClick={() => onAction?.({ type: 'comment' })}
-      classNames={buttonStyles}
-    >
-      <ChatText className={iconStyles} />
-      <span className='sr-only'>{t('comment label')}</span>
-    </NaturalToolbar.Button>
+    <Tooltip.Root>
+      <Tooltip.Trigger asChild>
+        <NaturalToolbar.Button
+          variant='ghost'
+          data-testid='editor.toolbar.comment'
+          onClick={() => onAction?.({ type: 'comment' })}
+          classNames={buttonStyles}
+        >
+          <ChatText className={iconStyles} />
+          <span className='sr-only'>{t('comment label')}</span>
+        </NaturalToolbar.Button>
+      </Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Content {...tooltipProps}>
+          {t('comment label')}
+          <Tooltip.Arrow />
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
   );
 };
 

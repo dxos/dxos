@@ -3,28 +3,29 @@
 //
 
 import { ux } from '@oclif/core';
-import { format, parseISO } from 'date-fns';
+import { load } from 'js-yaml';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
-import { FaasClient } from '@dxos/agent';
+import { Config } from '@dxos/config';
+import { type FunctionDef, type FunctionManifest } from '@dxos/functions';
 
 import { BaseCommand } from '../../base-command';
 
-export const printFunctions = (functions: any[], flags = {}) => {
+// TODO(burdon): List stats.
+// TODO(burdon): List triggers.
+export const printFunctions = (functions: FunctionDef[], flags = {}) => {
   ux.table(
     functions,
     {
+      id: {
+        header: 'id',
+      },
       name: {
         header: 'name',
       },
-      image: {
-        header: 'image',
-      },
-      createdAt: {
-        header: 'createdAt',
-        get: (row) => format(parseISO(row.createdAt), 'MM/dd/yyyy HH:mm'),
-      },
-      invocationCount: {
-        header: 'invocations',
+      description: {
+        header: 'description',
       },
     },
     {
@@ -33,18 +34,23 @@ export const printFunctions = (functions: any[], flags = {}) => {
   );
 };
 
-/**
- * @deprecated
- */
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;
   static override description = 'List functions.';
-  // static override state = 'deprecated';
 
   async run(): Promise<any> {
-    const client = new FaasClient(this.clientConfig.values.runtime?.services?.faasd ?? {});
-    const result: any[] = await client.listFunctions();
-    printFunctions(result);
-    return result;
+    return await this.execWithClient(async (client) => {
+      // TODO(dmaretskyi): Move into system service?
+      const config = new Config(JSON.parse((await client.services.services.DevtoolsHost!.getConfig()).config));
+      const functionsConfig = config.values.runtime?.agent?.plugins?.find(
+        (plugin) => plugin.id === 'dxos.org/agent/plugin/functions', // TODO(burdon): Use const.
+      );
+
+      const file = this.flags.manifest ?? functionsConfig?.config?.manifest ?? join(process.cwd(), 'functions.yml');
+      const manifest = load(await readFile(file, 'utf8')) as FunctionManifest;
+      const { functions } = manifest;
+      printFunctions(functions);
+      return manifest;
+    });
   }
 }
