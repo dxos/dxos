@@ -49,6 +49,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     if (target[symbolPath].length === 0) {
+      this.deepDeleteUndefinedValues(target);
       this._objectCore.initNewObject(target);
     }
 
@@ -58,6 +59,17 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         if (typeof key !== 'symbol') {
           delete (target as any)[key];
         }
+      }
+    }
+  }
+
+  private deepDeleteUndefinedValues(target: any) {
+    for (const key in target) {
+      const value = target[key];
+      if (value === undefined) {
+        delete target[key];
+      } else if (typeof target[key] === 'object') {
+        this.deepDeleteUndefinedValues(target[key]);
       }
     }
   }
@@ -76,7 +88,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   getOwnPropertyDescriptor(target: ProxyTarget, p: string | symbol): PropertyDescriptor | undefined {
-    return { enumerable: true, configurable: true };
+    const { value } = this.getDecodedValueWithPath(target);
+    return typeof value === 'object' ? Reflect.getOwnPropertyDescriptor(value, p) : undefined;
   }
 
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
@@ -118,6 +131,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
     const { value } = this.getDecodedValueWithPath(target);
     return typeof value === 'object' ? Reflect.has(value, p) : false;
+  }
+
+  defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
+    return this.set(target, property, attributes.value, target);
   }
 
   private getDecodedValueWithPath(target: ProxyTarget, prop?: string) {

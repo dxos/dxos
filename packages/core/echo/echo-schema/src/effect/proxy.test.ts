@@ -46,7 +46,7 @@ type TestSchema = S.Schema.To<typeof TestSchema>;
 
 test('', () => {});
 
-for (const schema of [undefined]) {
+for (const schema of [TestSchema]) {
   for (const useDatabase of [true]) {
     const createObject = (props: Partial<TestSchema> = {}): TestSchema => {
       if (useDatabase) {
@@ -230,7 +230,9 @@ for (const schema of [undefined]) {
 
       test('toJSON', () => {
         const obj = createObject({ ...TEST_OBJECT });
-        expect(JSON.stringify(obj)).to.eq(JSON.stringify(TEST_OBJECT));
+        const expected = JSON.parse(JSON.stringify(TEST_OBJECT));
+        const actual = JSON.parse(JSON.stringify(obj));
+        expect(actual).to.deep.eq(expected);
       });
 
       test('chai deep equal works', () => {
@@ -572,7 +574,6 @@ const TEST_OBJECT: TestSchema = {
   number: 42,
   boolean: true,
   null: null,
-  undefined,
   numberArray: [1, 2, 3],
   object: { field: 'bar' },
   classInstance: new TestClass(),
