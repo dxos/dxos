@@ -68,6 +68,7 @@ export const TranslationsProvider = ({
         });
       });
     }
+
     setLoaded(true);
   }, [resourceExtensions]);
 

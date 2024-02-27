@@ -199,6 +199,7 @@ export class AutomergeStoreAdapter {
   }
 }
 
+// TODO(burdon): Replace with lodash.get.
 const getDeep = (obj: any, path: string[]) => {
   let value = obj;
   for (const key of path) {
