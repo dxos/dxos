@@ -13,6 +13,7 @@ import { App } from '@dxos/app-framework';
 <App plugins={[ /* core plugins */ ]} />
 ```
 
-From here, it is up to the plugins to figure out what to render in the main `<Surface />`. 
+From here, the main `<Surface />` interrogates all the plugins to determine what component to fill the screen with. Components are also able to use more nested `<Surface />` elements to further delegate rendering to other plugins.
 
-By default, the `Layout` plugin implements a simple layout with a header, a left and a right sidebars, and a main content area.
+
+For example, the `Layout` plugin splits the screen into more Surfaces: a header, a left and a right sidebars, and a main content area. Each of these get fulfilled by components other plugins.
