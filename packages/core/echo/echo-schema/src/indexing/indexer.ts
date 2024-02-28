@@ -79,9 +79,7 @@ export class Indexer {
     await cancelWithContext(
       this._ctx,
       Promise.all(
-        snapshots.map((snapshot) =>
-          this._params.metadataStore.markDocumentAsClean(snapshot.object.id, snapshot.currentHash),
-        ),
+        snapshots.map((snapshot) => this._params.metadataStore.markClean(snapshot.object.id, snapshot.currentHash)),
       ),
     );
 
@@ -156,4 +154,4 @@ export class Indexer {
 }
 
 const updateIndexWithObjects = async (index: Index, objects: ObjectType[]) =>
-  Promise.all(objects.map((object) => index.updateObject(object.id, object)));
+  Promise.all(objects.map((object) => index.update(object.id, object)));

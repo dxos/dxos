@@ -4,7 +4,6 @@
 import * as orama from '@orama/orama';
 import { expect } from 'chai';
 
-import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 describe('Orama', () => {
@@ -25,28 +24,28 @@ describe('Orama', () => {
       const objects = [
         {
           id: '1',
-          schema: '@dxos.org/examples/product',
+          schema: '@example.org/schema/product',
           title: 'Shoes',
           price: 100,
           tags: ['shoes', 'clothing'],
         },
         {
           id: '2',
-          schema: '@dxos.org/examples/product',
+          schema: '@example.org/schema/product',
           title: 'T-shirt',
           price: 50,
           tags: ['t-shirt', 'clothing'],
         },
         {
           id: '3',
-          schema: '@dxos.org/examples/product',
+          schema: '@example.org/schema/product',
           title: 'Jeans',
           price: 150,
           tags: ['jeans', 'clothing'],
         },
         {
           id: '4',
-          schema: '@dxos.org/examples/something-else',
+          schema: '@example.org/schema/something-else',
           caliber: 9,
         },
         { id: '5' },
@@ -55,7 +54,7 @@ describe('Orama', () => {
     }
 
     {
-      const result = await orama.search(db, { term: '@dxos.org/examples/product', exact: true, threshold: 0 });
+      const result = await orama.search(db, { term: '@example.org/schema/product', exact: true, threshold: 0 });
       expect(result.hits.length).to.equal(3);
     }
 
@@ -72,7 +71,7 @@ describe('Orama', () => {
 
       {
         const result = await orama.search(deserializedDb, {
-          term: '@dxos.org/examples/product',
+          term: '@example.org/schema/product',
           exact: true,
           threshold: 0,
         });

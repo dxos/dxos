@@ -20,14 +20,14 @@ describe('IndexStore', () => {
 
     const index = new IndexSchema();
 
-    const schemaURI = 'dxos.org/test/Contact';
+    const schemaURI = '@example.org/schema/Contact';
     const objects = [
       { id: '1', name: 'John', schema: schemaURI },
-      { id: '2', title: 'first document', schema: 'dxos.org/test/Document' },
+      { id: '2', title: 'first document', schema: '@example.org/schema/Document' },
     ];
 
     {
-      await Promise.all(objects.map((object) => index.updateObject(object.id, object)));
+      await Promise.all(objects.map((object) => index.update(object.id, object)));
 
       const ids = await index.find({ type: { itemId: schemaURI } } as Filter);
       expect(ids).to.deep.equal(['1']);

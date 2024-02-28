@@ -17,10 +17,10 @@ describe('IndexMetadataStore', () => {
     const metadataStore = new IndexMetadataStore({ directory });
 
     const ids = ['1', '2', '3'];
-    await Promise.all(ids.map((id) => metadataStore.markDocumentAsDirty(id, `hash-${id}`)));
+    await Promise.all(ids.map((id) => metadataStore.markDirty(id, `hash-${id}`)));
     expect(await metadataStore.getDirtyDocuments()).to.deep.equal(ids);
 
-    await metadataStore.markDocumentAsClean('1', 'hash-1');
+    await metadataStore.markClean('1', 'hash-1');
     expect(await metadataStore.getDirtyDocuments()).to.deep.equal(['2', '3']);
   });
 });

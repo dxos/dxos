@@ -30,7 +30,7 @@ export class IndexMetadataStore {
     this._directory = directory;
   }
 
-  async markDocumentAsDirty(id: string, lastAvailableHash: string) {
+  async markDirty(id: string, lastAvailableHash: string) {
     const metadata = await this._getMetadata(id);
     metadata.lastAvailableHash = lastAvailableHash;
     await this._setMetadata(id, metadata);
@@ -51,7 +51,7 @@ export class IndexMetadataStore {
     return dirty;
   }
 
-  async markDocumentAsClean(id: string, lastIndexedHash: string) {
+  async markClean(id: string, lastIndexedHash: string) {
     const metadata = await this._getMetadata(id);
     metadata.lastIndexedHash = lastIndexedHash;
     await this._setMetadata(id, metadata);

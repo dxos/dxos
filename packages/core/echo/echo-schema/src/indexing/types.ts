@@ -14,9 +14,9 @@ export interface Index {
   identifier: string;
   kind: IndexKind;
   updated: Event;
-  removeObject: (id: string) => Promise<void>;
-  updateObject: (id: string, object: ObjectType) => Promise<void>;
 
+  update: (id: string, object: ObjectType) => Promise<void>;
+  remove: (id: string) => Promise<void>;
   find: (filter: Filter) => Promise<string[]>;
 
   serialize(): Promise<string>;

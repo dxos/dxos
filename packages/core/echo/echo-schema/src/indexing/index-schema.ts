@@ -11,9 +11,9 @@ import {
   type ObjectType,
   type Index,
   type IndexKind,
-  staticImplements,
   type IndexStaticProps,
   type LoadParams,
+  staticImplements,
 } from './types';
 import { type Filter } from '../query';
 
@@ -45,12 +45,12 @@ export class IndexSchema implements Index {
     return this._identifier;
   }
 
-  async removeObject(id: string) {
-    await orama.remove(await this._orama, id);
+  async update(id: string, object: ObjectType) {
+    await orama.update<any>(await this._orama, id, object);
   }
 
-  async updateObject(id: string, object: ObjectType) {
-    await orama.update<any>(await this._orama, id, object);
+  async remove(id: string) {
+    await orama.remove(await this._orama, id);
   }
 
   // TODO(mykola): Fix Filter type with new Reactive API.
