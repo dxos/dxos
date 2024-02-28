@@ -5,27 +5,23 @@
 // NOTE(thure): The following unused imports quell TS2742 (“likely not portable”).
 
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { createContextScope, type Scope, type CreateScope } from '@radix-ui/react-context';
+import { createContext, type Scope, type CreateScope } from '@radix-ui/react-context';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import React from 'react';
 
 const ATTENTION_NAME = 'Attention';
 
-type AttentionScopedProps<P> = P & { __attentionScope?: Scope };
-
-const [createAttentionContext, createAttentionScope] = createContextScope(ATTENTION_NAME, []);
-
 type AttentionContextValue = {
   attended: Set<string>;
 };
 
-const [AttentionProvider, useAttentionContext] = createAttentionContext<AttentionContextValue>(ATTENTION_NAME);
+const [AttentionProvider, useAttentionContext] = createContext(ATTENTION_NAME, { attended: new Set() });
 
-const useHasAttention = (attendableId: string, __attentionScope?: Scope) => {
-  const { attended } = useAttentionContext(ATTENTION_NAME, __attentionScope);
+const useHasAttention = (attendableId: string) => {
+  const { attended } = useAttentionContext(ATTENTION_NAME);
   return attended.has(attendableId);
 };
 
-export { AttentionProvider, createAttentionScope, useAttentionContext, useHasAttention, ATTENTION_NAME };
+export { AttentionProvider, useAttentionContext, useHasAttention, ATTENTION_NAME };
 
-export type { AttentionContextValue, AttentionScopedProps };
+export type { AttentionContextValue };
