@@ -32,8 +32,10 @@ export type Signal = S.Schema.From<typeof Signal>;
 export class SignalBus {
   public constructor(private readonly space: Space) {}
 
-  async emit(signal: Signal) {
-    await this.space.postMessage('signals', signal);
+  emit(signal: Signal) {
+    this.space.postMessage('signals', signal).catch((error) => {
+      log.warn('failed to emit a signal', { signal, error });
+    });
   }
 
   subscribe(callback: (signal: Signal) => void): () => void {

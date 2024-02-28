@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as S from '@effect/schema/Schema';
 import { CronJob } from 'cron';
+import * as Either from 'effect/Either';
 
 import { debounce, DeferredTask } from '@dxos/async';
-import { type Client, type PublicKey } from '@dxos/client';
+import { type Client, PublicKey } from '@dxos/client';
 import { type Space, TextObject } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { Filter, createSubscription, type Query, subscribe } from '@dxos/echo-schema';
@@ -14,7 +16,15 @@ import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
 import { type FunctionSubscriptionEvent } from '../handler';
-import { type FunctionDef, type FunctionManifest, type FunctionTrigger, type TriggerSubscription } from '../manifest';
+import {
+  type FunctionDef,
+  type FunctionManifest,
+  FunctionResult,
+  type FunctionTrigger,
+  type SignalSubscription,
+  type TriggerSubscription,
+} from '../manifest';
+import { type Signal, SignalBus } from '../signal/signal-bus';
 
 type Callback = (data: FunctionSubscriptionEvent) => Promise<number>;
 
@@ -79,6 +89,11 @@ export class Scheduler {
       // Subscription.
       for (const triggerSubscription of trigger.subscriptions ?? []) {
         this._createSubscription(ctx, space, def, triggerSubscription);
+      }
+
+      const signalBus = new SignalBus(space);
+      for (const signalSubscription of trigger.signals ?? []) {
+        this._createSignalProcessor(ctx, space, signalBus, def, signalSubscription);
       }
     }
   }
@@ -174,11 +189,54 @@ export class Scheduler {
     });
   }
 
-  private async _execFunction(def: FunctionDef, data: any) {
+  private _createSignalProcessor(
+    ctx: Context,
+    space: Space,
+    bus: SignalBus,
+    def: FunctionDef,
+    signalSubscription: SignalSubscription,
+  ) {
+    let signalToProcess: Signal | null = null;
+    const task = new DeferredTask(ctx, async () => {
+      if (signalToProcess == null) {
+        return;
+      }
+      const functionResult = await this._execFunction(def, {
+        signal: signalToProcess,
+      });
+      if (functionResult != null) {
+        bus.emit({
+          id: PublicKey.random().toHex(),
+          kind: 'suggestion',
+          metadata: {
+            created: Date.now(),
+            source: def.id,
+            spaceKey: space.key.toHex(),
+            triggerSignalId: signalToProcess.id,
+          },
+          data: functionResult,
+        });
+      }
+      signalToProcess = null;
+    });
+    const unsubscribeFromBus = bus.subscribe((signal: Signal) => {
+      if (signalToProcess != null) {
+        return;
+      }
+      if (signal.kind === signalSubscription.kind && signal.data.type === signalSubscription.dataType) {
+        signalToProcess = signal;
+        task.schedule();
+      }
+    });
+    ctx.onDispose(unsubscribeFromBus);
+  }
+
+  private async _execFunction(def: FunctionDef, data: any): Promise<FunctionResult | null> {
     try {
       log('request', { function: def.id });
       const { endpoint, callback } = this._options;
       let status = 0;
+      let functionResult: FunctionResult | null = null;
       if (endpoint) {
         // TODO(burdon): Move out of scheduler (generalize as callback).
         const response = await fetch(`${this._options.endpoint}/${def.name}`, {
@@ -189,6 +247,7 @@ export class Scheduler {
           body: JSON.stringify(data),
         });
 
+        functionResult = this._parseFunctionResult(response);
         status = response.status;
       } else if (callback) {
         status = await callback(data);
@@ -196,8 +255,23 @@ export class Scheduler {
 
       // const result = await response.json();
       log('result', { function: def.id, result: status });
+      return functionResult;
     } catch (err: any) {
       log.error('error', { function: def.id, error: err.message });
+      return null;
+    }
+  }
+
+  private _parseFunctionResult(response: Response): FunctionResult | null {
+    try {
+      const result = S.validateEither(FunctionResult)(response.json());
+      if (Either.isLeft(result)) {
+        log.warn('incorrectly formatted function result', { result, error: result.left });
+        return null;
+      }
+      return result.right;
+    } catch (error) {
+      return null;
     }
   }
 }

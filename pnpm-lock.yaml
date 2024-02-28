@@ -6843,7 +6843,7 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/schema':
-        specifier: ^0.62.1
+        specifier: ^0.62.6
         version: 0.62.6(effect@2.3.5)(fast-check@3.15.1)
       '@langchain/community':
         specifier: ^0.0.26
@@ -6879,7 +6879,7 @@ importers:
         specifier: ^14.14.1
         version: 14.14.1
       effect:
-        specifier: ^2.3.1
+        specifier: ^2.3.5
         version: 2.3.5
       email-addresses:
         specifier: ^5.0.0
