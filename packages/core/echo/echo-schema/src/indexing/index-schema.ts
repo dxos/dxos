@@ -5,9 +5,10 @@ import * as orama from '@orama/orama';
 
 import { Event } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 
 import {
-  type IndexingType,
+  type ObjectType,
   type Index,
   type IndexKind,
   staticImplements,
@@ -18,6 +19,7 @@ import { type Filter } from '../query';
 
 @staticImplements<IndexStaticProps>()
 export class IndexSchema implements Index {
+  private _identifier = PublicKey.random().toString();
   public readonly kind: IndexKind = { kind: 'SCHEMA_MATCH' };
   public readonly updated = new Event<void>();
 
@@ -39,11 +41,15 @@ export class IndexSchema implements Index {
     });
   }
 
+  get identifier() {
+    return this._identifier;
+  }
+
   async removeObject(id: string) {
     await orama.remove(await this._orama, id);
   }
 
-  async updateObject(id: string, object: IndexingType) {
+  async updateObject(id: string, object: ObjectType) {
     await orama.update<any>(await this._orama, id, object);
   }
 
@@ -60,10 +66,11 @@ export class IndexSchema implements Index {
     return JSON.stringify(await orama.save(await this._orama), null, 2);
   }
 
-  static async load({ serialized }: LoadParams): Promise<IndexSchema> {
+  static async load({ serialized, identifier }: LoadParams): Promise<IndexSchema> {
     const deserialized = JSON.parse(serialized);
 
     const index = new IndexSchema();
+    index._identifier = identifier;
     await orama.load(await index._orama, deserialized);
     return index;
   }
