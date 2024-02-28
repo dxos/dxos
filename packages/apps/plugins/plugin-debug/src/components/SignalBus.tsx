@@ -32,22 +32,22 @@ export const SignalBus = () => {
   }, [signalBus]);
 
   // TESTING
-  useEffect(() => {
-    setInterval(() => {
-      signalBus.emit({
-        id: 'test',
-        kind: 'echo-mutation',
-        metadata: {
-          created: Date.now(),
-          source: 'test',
-        },
-        data: {
-          type: 'test',
-          value: 'test',
-        },
-      });
-    }, 500);
-  }, [signalBus]);
+  // useEffect(() => {
+  //   setInterval(() => {
+  //     signalBus.emit({
+  //       id: 'test',
+  //       kind: 'echo-mutation',
+  //       metadata: {
+  //         created: Date.now(),
+  //         source: 'test',
+  //       },
+  //       data: {
+  //         type: 'test',
+  //         value: 'test',
+  //       },
+  //     });
+  //   }, 500);
+  // }, [signalBus]);
 
   return (
     <>
