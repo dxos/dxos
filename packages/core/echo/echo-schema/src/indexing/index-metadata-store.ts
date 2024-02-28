@@ -20,7 +20,8 @@ export type DocumentMetadata = {
 
 // TODO(mykola): Use snapshot and append only log, not separate file for each document.
 export class IndexMetadataStore {
-  public readonly updated = new Event<void>();
+  public readonly dirty = new Event<void>();
+  public readonly clean = new Event<void>();
 
   private readonly _directory: Directory;
   /** map objectId -> index metadata */
@@ -34,7 +35,7 @@ export class IndexMetadataStore {
     const metadata = await this._getMetadata(id);
     metadata.lastAvailableHash = lastAvailableHash;
     await this._setMetadata(id, metadata);
-    this.updated.emit();
+    this.dirty.emit();
   }
 
   async getDirtyDocuments(): Promise<string[]> {
@@ -55,6 +56,7 @@ export class IndexMetadataStore {
     const metadata = await this._getMetadata(id);
     metadata.lastIndexedHash = lastIndexedHash;
     await this._setMetadata(id, metadata);
+    this.clean.emit();
   }
 
   @synchronized

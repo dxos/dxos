@@ -6,6 +6,7 @@ import * as orama from '@orama/orama';
 import { Event } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import {
   type ObjectType,

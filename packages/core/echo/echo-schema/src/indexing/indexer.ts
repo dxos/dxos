@@ -10,9 +10,11 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
+import { IndexConstructors } from './index-constructors';
 import { type IndexMetadataStore } from './index-metadata-store';
 import { type IndexStore } from './index-store';
 import { type ObjectType, type Index, type IndexKind } from './types';
+import { type Filter } from '../query';
 
 export type ObjectSnapshot = { object: ObjectType; currentHash: string };
 
@@ -23,12 +25,12 @@ export type IndexerParams = {
   /**
    * Amount of updates to save indexes after.
    */
-  saveAfterUpdates: number;
+  saveAfterUpdates?: number;
 
   /**
    * Amount of time in [ms] to save indexes after.
    */
-  saveAfterTime: number;
+  saveAfterTime?: number;
 };
 
 export type IndexerConfig = {
@@ -37,23 +39,24 @@ export type IndexerConfig = {
 
 export class Indexer {
   private readonly _ctx = new Context();
+  private _indexConfig?: IndexerConfig;
   private readonly _indexes = new ComplexMap<IndexKind, Index>((kind) =>
     kind.kind === 'FIELD_MATCH' ? `${kind.kind}:${kind.field}` : kind.kind,
   );
 
   private _initialized = false;
 
-  private _indexConfig?: IndexerConfig;
   private _updatesAfterSave = 0;
   private _lastSave = Date.now();
 
   private readonly _run = new DeferredTask(this._ctx, async () => {
-    const ids = await cancelWithContext(this._ctx, this._params.metadataStore.getDirtyDocuments());
+    const ids = await cancelWithContext(this._ctx, this._metadataStore.getDirtyDocuments());
     if (ids.length === 0) {
       return;
     }
 
-    const snapshots = await cancelWithContext(this._ctx, this._params.loadDocuments(ids));
+    const snapshots = await cancelWithContext(this._ctx, this._loadDocuments(ids));
+
     for (const [kind, index] of this._indexes.entries()) {
       switch (kind.kind) {
         case 'FIELD_MATCH':
@@ -73,23 +76,38 @@ export class Indexer {
               snapshots.map((snapshot) => snapshot.object),
             ),
           );
+          break;
       }
     }
 
     await cancelWithContext(
       this._ctx,
-      Promise.all(
-        snapshots.map((snapshot) => this._params.metadataStore.markClean(snapshot.object.id, snapshot.currentHash)),
-      ),
+      Promise.all(snapshots.map((snapshot) => this._metadataStore.markClean(snapshot.object.id, snapshot.currentHash))),
     );
 
     await cancelWithContext(this._ctx, this._maybeSaveIndexes());
   });
 
-  constructor(private readonly _params: IndexerParams) {
-    this._params.metadataStore.updated.on(this._ctx, () => {
-      this._run.schedule();
-    });
+  private readonly _metadataStore: IndexMetadataStore;
+  private readonly _indexStore: IndexStore;
+  private readonly _loadDocuments: (ids: string[]) => Promise<ObjectSnapshot[]>;
+  private readonly _saveAfterUpdates: number;
+  private readonly _saveAfterTime: number;
+
+  constructor({
+    metadataStore,
+    indexStore,
+    loadDocuments,
+    saveAfterUpdates = 100,
+    saveAfterTime = 30_000,
+  }: IndexerParams) {
+    this._metadataStore = metadataStore;
+    this._indexStore = indexStore;
+    this._loadDocuments = loadDocuments;
+    this._saveAfterUpdates = saveAfterUpdates;
+    this._saveAfterTime = saveAfterTime;
+
+    this._metadataStore.dirty.on(this._ctx, () => this._run.schedule());
   }
 
   @synchronized
@@ -117,23 +135,37 @@ export class Indexer {
       log.warn('Index config is not set');
     }
 
-    const indexesFromDisk = await this._params.indexStore.loadAllIndexes();
+    // Load indexes from disk.
+    // TODO(mykola): Load only indexes that are needed.
+    const indexesFromDisk = await this._indexStore.loadAllIndexes();
     for (const index of indexesFromDisk) {
       if (!this._indexConfig || this._indexConfig.indexes.some((kind) => isEqual(kind, index.kind))) {
         this._indexes.set(index.kind, index);
       }
     }
-    this._run.schedule();
 
+    // Create indexes that are not loaded from disk.
+    for (const kind of this._indexConfig?.indexes || []) {
+      if (!this._indexes.has(kind)) {
+        const IndexConstructor = IndexConstructors[kind.kind];
+        invariant(IndexConstructor, `Index kind ${kind.kind} is not supported`);
+        this._indexes.set(kind, new IndexConstructor(kind));
+      }
+    }
+
+    this._run.schedule();
     this._initialized = true;
+  }
+
+  // TODO(mykola): `Find` should use junctions and conjunctions of ID sets.
+  async find(filter: Filter) {
+    const arraysOfIds = await Promise.all(Array.from(this._indexes.values()).map((index) => index.find(filter)));
+    return arraysOfIds.reduce((acc, ids) => acc.concat(ids), []);
   }
 
   private async _maybeSaveIndexes() {
     this._updatesAfterSave++;
-    if (
-      this._updatesAfterSave >= this._params.saveAfterUpdates ||
-      Date.now() - this._lastSave >= this._params.saveAfterTime
-    ) {
+    if (this._updatesAfterSave >= this._saveAfterUpdates || Date.now() - this._lastSave >= this._saveAfterTime) {
       await this._saveIndexes();
     }
   }
@@ -141,7 +173,7 @@ export class Indexer {
   @synchronized
   private async _saveIndexes() {
     for (const index of this._indexes.values()) {
-      await this._params.indexStore.save(index);
+      await this._indexStore.save(index);
     }
     this._updatesAfterSave = 0;
     this._lastSave = Date.now();

@@ -6,8 +6,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Directory } from '@dxos/random-access-storage';
 
-import { IndexSchema } from './index-schema';
-import { type IndexKind, type Index, type IndexStaticProps } from './types';
+import { IndexConstructors } from './index-constructors';
+import { type IndexKind, type Index } from './types';
 import { overrideFile } from './util';
 
 const RESERVED_SIZE = 4; // 4 bytes
@@ -66,10 +66,6 @@ export class IndexStore {
     return indexes.filter(Boolean) as Index[];
   }
 }
-
-const IndexConstructors: { [key in IndexKind['kind']]?: IndexStaticProps } = {
-  SCHEMA_MATCH: IndexSchema,
-};
 
 const headerEncoder = {
   encode: (kind: IndexKind): IndexHeader => {
