@@ -8,11 +8,13 @@ import { PublicKey } from '@dxos/keys';
 import { Select } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
 import { useClient } from '@dxos/react-client';
+import { Json } from './Tree';
 
 const { helper, builder } = createColumnBuilder<Signal>();
 const columns: TableColumnDef<Signal, any>[] = [
   // prettier, no
   helper.accessor('id', builder.string({ header: 'id' })),
+  helper.accessor('kind', builder.string({ header: 'kind' })),
 ];
 
 export const SignalBus = () => {
@@ -56,7 +58,12 @@ export const SignalBus = () => {
         onChange={setSelectedSpace}
         getLabel={(key) => client.spaces.get(key)?.properties.name ?? humanize(key)}
       />
-      <Table<Signal> columns={columns} data={signals} />
+      <div className='divide-y border-neutral-500'>
+        {signals.map((signal) => (
+          <Json key={signal.id} data={signal} theme='light' />
+        ))}
+      </div>
+      {/* <Table<Signal> columns={columns} data={signals} /> */}
     </>
   );
 };
