@@ -44,6 +44,7 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/text-model": "workspace:*",
+    "@dxos/util": "workspace:*",
     "codemirror": "^6.0.1",
     "esbuild-wasm": "^0.16.14",
     "lodash.get": "^4.4.2"

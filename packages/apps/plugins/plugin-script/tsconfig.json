@@ -35,6 +35,9 @@
       "path": "../../../common/random"
     },
     {
+      "path": "../../../common/util"
+    },
+    {
       "path": "../../../core/echo/echo-generator"
     },
     {

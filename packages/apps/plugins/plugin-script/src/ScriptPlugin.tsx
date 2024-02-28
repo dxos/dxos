@@ -16,6 +16,7 @@ import {
   TextObject,
   isTypedObject,
   SpaceProxy,
+  Space,
 } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
@@ -26,6 +27,7 @@ import translations from './translations';
 import { ScriptAction, type ScriptPluginProvides } from './types';
 import { SignalBus } from '@dxos/functions';
 import { SignalBusContext } from './signals';
+import { defaultMap } from '@dxos/util';
 
 // TODO(burdon): Make generic and remove need for filter.
 const isObject = <T extends EchoObject>(object: unknown, schema: Schema, filter: Filter<T>): T | undefined => {
@@ -39,6 +41,8 @@ export type ScriptPluginProps = {
 };
 
 export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinition<ScriptPluginProvides> => {
+  const signalBuses = new Map<Space, SignalBus>();
+
   return {
     meta,
     provides: {
@@ -146,9 +150,9 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
         },
       },
       context: ({ children }) => {
-        const [signalBus] = useState<SignalBus>(() => new SignalBus(null as any));
+        const getBus = (space: Space) => defaultMap(signalBuses, space, () => new SignalBus(space));
 
-        return <SignalBusContext.Provider value={{ signalBus }}>{children}</SignalBusContext.Provider>;
+        return <SignalBusContext.Provider value={{ getBus }}>{children}</SignalBusContext.Provider>;
       },
     },
   };

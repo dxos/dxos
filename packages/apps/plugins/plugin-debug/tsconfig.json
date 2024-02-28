@@ -62,6 +62,9 @@
       "path": "../../../core/echo/text-model"
     },
     {
+      "path": "../../../core/functions"
+    },
+    {
       "path": "../../../core/protocols"
     },
     {
