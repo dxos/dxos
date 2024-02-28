@@ -82,7 +82,7 @@ export const signalHandler = <T extends object>(
 ): FunctionHandler<Signal> => {
   const validator = S.validateEither(inputSchema);
   return async ({ event, context, ...rest }) => {
-    const validated = validator(event);
+    const validated = validator(event.data.value);
     if (Either.isLeft(validated)) {
       log.warn('function was called with input not matching its schema', { event, error: validated.left });
       return rest.response.status(400);

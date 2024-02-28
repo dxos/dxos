@@ -44,6 +44,11 @@ functions:
     handler: 'github'
     description: 'Github Sync.'
 
+  - id: 'dxos.org/function/suggest-reference'
+    name: 'suggest-reference'
+    handler: 'suggest-reference'
+    description: 'Listens to document changes, extracts subjects and suggests references'
+
 triggers:
 #  - function: 'dxos.org/function/calendar'
 #    schedule: '*/30 * * * * *'
@@ -76,6 +81,11 @@ triggers:
         deep: true
         delay: 5
       - type: 'braneframe.File'
+
+  - function: 'dxos.org/function/suggest-reference'
+    signals:
+      - kind: 'echo-mutation'
+        type: 'dxos.Text.v0'
 
 #  - function: 'dxos.org/function/github'
 #    subscriptions:
