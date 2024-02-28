@@ -4,6 +4,7 @@
 
 import type * as S from '@effect/schema/Schema';
 
+import { Reference } from '@dxos/document-model';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { assignDeep, ComplexMap, defaultMap, getDeep } from '@dxos/util';
@@ -11,7 +12,8 @@ import { assignDeep, ComplexMap, defaultMap, getDeep } from '@dxos/util';
 import { createReactiveProxy, symbolIsProxy, type ReactiveHandler } from './proxy';
 import { type ReactiveObject } from './reactive';
 import { SchemaValidator, symbolSchema } from './schema-validator';
-import { AutomergeObjectCore } from '../automerge';
+import { AutomergeObjectCore, encodeReference } from '../automerge';
+import { type EchoObject } from '../object';
 
 const symbolPath = Symbol('path');
 const symbolHandler = Symbol('handler');
@@ -29,7 +31,7 @@ const DATA_NAMESPACE = 'data';
 /**
  * Shared for all targets within one ECHO object.
  */
-export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
+export class EchoReactiveHandler implements EchoObject, ReactiveHandler<ProxyTarget> {
   _proxyMap = new WeakMap<object, any>();
 
   _objectCore = new AutomergeObjectCore();
@@ -61,6 +63,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         }
       }
     }
+
+    target[symbolHandler] = this;
   }
 
   private validateInitialProps(target: any) {
@@ -112,7 +116,15 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   private _wrapInProxyIfRequired(decodedValueAtPath: DecodedValueAtPath) {
     const { value: decoded, dataPath } = decodedValueAtPath;
-    // TODO(dmaretskyi): Handle references.
+    if (decoded == null) {
+      return decoded;
+    }
+    if (decoded[symbolIsProxy]) {
+      return decoded;
+    }
+    if (decoded instanceof Reference) {
+      return this._objectCore.lookupLink(decoded);
+    }
     if (Array.isArray(decoded)) {
       const target = defaultMap(this._targetsMap, dataPath, (): ProxyTarget => {
         const array = new EchoArrayTwoPointO();
@@ -121,13 +133,13 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         return array;
       });
       return createReactiveProxy(target, this);
-    } else if (typeof decoded === 'object' && decoded !== null) {
+    }
+    if (typeof decoded === 'object') {
       // TODO(dmaretskyi): Materialize properties for easier debugging.
       const target = defaultMap(this._targetsMap, dataPath, (): ProxyTarget => ({ [symbolPath]: dataPath }));
       return createReactiveProxy(target, this);
-    } else {
-      return decoded;
     }
+    return decoded;
   }
 
   has(target: ProxyTarget, p: string | symbol): boolean {
@@ -191,6 +203,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     if (validatedValue === undefined) {
       this._objectCore.delete(fullPath);
+    } else if (value[symbolHandler] instanceof EchoReactiveHandler) {
+      const link = this._linkReactiveHandler(value, value[symbolHandler]);
+      this._objectCore.set(fullPath, encodeReference(link));
     } else {
       const encoded = this._objectCore.encode(validatedValue);
       this._objectCore.set(fullPath, encoded);
@@ -199,6 +214,27 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     this._signal.notifyWrite();
 
     return true;
+  }
+
+  private _linkReactiveHandler(proxy: any, handler: EchoReactiveHandler): Reference {
+    const itemId = handler._objectCore.id;
+    if (this._objectCore.database) {
+      const anotherDb = handler._objectCore.database;
+      if (!anotherDb) {
+        this._objectCore.database.add(proxy);
+        return new Reference(itemId);
+      } else {
+        if (anotherDb !== this._objectCore.database) {
+          return new Reference(itemId, undefined, anotherDb.spaceKey.toHex());
+        } else {
+          return new Reference(itemId);
+        }
+      }
+    } else {
+      invariant(this._objectCore.linkCache);
+      this._objectCore.linkCache.set(itemId, proxy);
+      return new Reference(itemId);
+    }
   }
 
   private validateValue(target: ProxyTarget, prop: string | symbol, value: any): any {
