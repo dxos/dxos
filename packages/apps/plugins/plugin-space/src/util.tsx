@@ -343,7 +343,9 @@ export const updateGraphWithSpace = ({
           data: object,
           properties: {
             ...partials,
-            label: object.name ?? ['unnamed folder label', { ns: SPACE_PLUGIN }],
+            label: object.name ||
+              // TODO(wittjosiah): This is here for backwards compatibility.
+              (object as TypedObject).title || ['unnamed folder label', { ns: SPACE_PLUGIN }],
             icon: (props: IconProps) => <FolderOpen {...props} />,
             testId: 'spacePlugin.object',
             persistenceClass: 'echo',
