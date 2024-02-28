@@ -8,20 +8,21 @@ import { type Filter } from '../query';
 
 export type IndexKind = { kind: 'SCHEMA_MATCH' } | { kind: 'FIELD_MATCH'; field: string } | { kind: 'FULL_TEXT' };
 
-export type IndexingType = Record<string, any>;
+export type ObjectType = Record<string, any>;
 
 export interface Index {
+  identifier: string;
   kind: IndexKind;
   updated: Event;
   removeObject: (id: string) => Promise<void>;
-  updateObject: (id: string, object: IndexingType) => Promise<void>;
+  updateObject: (id: string, object: ObjectType) => Promise<void>;
 
   find: (filter: Filter) => Promise<string[]>;
 
   serialize(): Promise<string>;
 }
 
-export type LoadParams = { serialized: string; indexKind: IndexKind };
+export type LoadParams = { serialized: string; indexKind: IndexKind; identifier: string };
 
 export interface IndexStaticProps {
   new (kind: IndexKind): Index;
