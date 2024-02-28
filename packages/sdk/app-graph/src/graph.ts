@@ -56,10 +56,16 @@ export class Graph {
   // Explicit type required because TS says this is not portable.
   readonly _edges: DeepSignal<Record<string, string[]>> = deepSignal({});
 
+  /**
+   * Alias for `findNode('root')`.
+   */
   get root() {
     return this.findNode(ROOT_ID)!;
   }
 
+  /**
+   * Convert the graph to a JSON object.
+   */
   toJSON(id = ROOT_ID) {
     const toJSON = (node: Node): any => {
       const nodes = node.nodes();
@@ -124,8 +130,9 @@ export class Graph {
     return `${id}-${direction}`;
   }
 
-  // TODO(wittjosiah): Wrap mutators w/ `untracked` to avoid unexpected re-renders.
-
+  /**
+   * Add nodes to the graph.
+   */
   addNodes<TData = null, TProperties extends Record<string, any> = Record<string, any>>(
     ...nodes: NodeArg<TData, TProperties>[]
   ): Node<TData, TProperties>[] {
@@ -137,9 +144,8 @@ export class Graph {
     edges,
     ..._node
   }: NodeArg<TData, TProperties>): Node<TData, TProperties> {
-    const node = { data: null, properties: {}, ..._node };
-
-    untracked(() => {
+    return untracked(() => {
+      const node = { data: null, properties: {}, ..._node };
       this._nodes[node.id] = node;
 
       if (nodes) {
@@ -154,11 +160,17 @@ export class Graph {
           direction === 'outbound' ? this.addEdge(node.id, target) : this.addEdge(target, node.id),
         );
       }
-    });
 
-    return this._constructNode(node) as Node<TData, TProperties>;
+      return this._constructNode(node) as Node<TData, TProperties>;
+    });
   }
 
+  /**
+   * Remove nodes from the graph.
+   *
+   * @param id The id of the node to remove.
+   * @param edges Whether to remove edges connected to the node from the graph as well.
+   */
   removeNode(id: string, edges = false) {
     untracked(() => {
       const node = this.findNode(id);
@@ -181,6 +193,9 @@ export class Graph {
     });
   }
 
+  /**
+   * Add an edge to the graph.
+   */
   addEdge(from: string, to: string) {
     untracked(() => {
       const outbound = this._edges[this.getEdgeKey(from, 'outbound')];
@@ -199,6 +214,15 @@ export class Graph {
     });
   }
 
+  /**
+   * Sort edges for a node.
+   *
+   * Edges not included in the sorted list are appended to the end of the list.
+   *
+   * @param nodeId The id of the node to sort edges for.
+   * @param direction The direction of the edges from the node to sort.
+   * @param edges The ordered list of edges.
+   */
   sortEdges(nodeId: string, direction: EdgeDirection, edges: string[]) {
     untracked(() => {
       const current = this._edges[this.getEdgeKey(nodeId, direction)];
@@ -210,6 +234,9 @@ export class Graph {
     });
   }
 
+  /**
+   * Remove an edge from the graph.
+   */
   removeEdge(from: string, to: string) {
     untracked(() => {
       const outboundIndex = this._edges[this.getEdgeKey(from, 'outbound')]?.findIndex((id) => id === to);
