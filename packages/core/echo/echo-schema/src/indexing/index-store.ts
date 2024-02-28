@@ -3,6 +3,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { type Directory } from '@dxos/random-access-storage';
 
 import { IndexSchema } from './index-schema';
@@ -27,8 +28,8 @@ export class IndexStore {
     this._directory = directory;
   }
 
-  async save({ index, filename }: { index: Index; filename: string }) {
-    const file = this._directory.getOrCreateFile(filename);
+  async save(index: Index) {
+    const file = this._directory.getOrCreateFile(index.identifier);
 
     const serialized = Buffer.from(await index.serialize());
     const header = Buffer.from(JSON.stringify(headerEncoder.encode(index.kind)));
@@ -40,8 +41,8 @@ export class IndexStore {
     await overrideFile(file, data);
   }
 
-  async load(filename: string): Promise<Index> {
-    const file = this._directory.getOrCreateFile(filename);
+  async load(identifier: string): Promise<Index> {
+    const file = this._directory.getOrCreateFile(identifier);
     const { size } = await file.stat();
 
     const headerSize = fromBytesInt32(await file.read(0, 4));
@@ -54,7 +55,15 @@ export class IndexStore {
 
     const offset = RESERVED_SIZE + headerSize;
     const serialized = (await file.read(offset, size - offset)).toString();
-    return IndexConstructor.load({ serialized, indexKind: kind });
+    return IndexConstructor.load({ serialized, indexKind: kind, identifier });
+  }
+
+  async loadAllIndexes(): Promise<Index[]> {
+    const files = await this._directory.list();
+    const indexes = await Promise.all(
+      files.map((file) => this.load(file).catch((err) => log.warn('failed to load index', { file, err }))),
+    );
+    return indexes.filter(Boolean) as Index[];
   }
 }
 

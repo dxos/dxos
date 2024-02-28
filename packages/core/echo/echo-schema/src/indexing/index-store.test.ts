@@ -34,8 +34,8 @@ describe('IndexStore', () => {
     }
 
     {
-      await store.save({ index, filename: 'index' });
-      const loadedIndex = await store.load('index');
+      await store.save(index);
+      const loadedIndex = await store.load(index.identifier);
 
       const ids = await loadedIndex.find({ type: { itemId: schemaURI } } as Filter);
       expect(ids).to.deep.equal(['1']);
