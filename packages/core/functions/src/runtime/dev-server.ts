@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import express from 'express';
-import { getPort } from 'get-port-please';
 import type http from 'http';
 import { join } from 'node:path';
 
@@ -66,6 +64,9 @@ export class DevServer {
   }
 
   async start() {
+    const { default: express } = await import('express');
+    const { getPort } = await import('get-port-please');
+
     const app = express();
     app.use(express.json());
 

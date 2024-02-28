@@ -25,7 +25,7 @@ import meta, { SCRIPT_PLUGIN } from './meta';
 import translations from './translations';
 import { ScriptAction, type ScriptPluginProvides } from './types';
 import { SignalBus } from '@dxos/functions';
-import { SignalBusContext } from './SignalBusContext';
+import { SignalBusContext } from './signals';
 
 // TODO(burdon): Make generic and remove need for filter.
 const isObject = <T extends EchoObject>(object: unknown, schema: Schema, filter: Filter<T>): T | undefined => {

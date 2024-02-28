@@ -1,7 +1,8 @@
-import { useClient } from '@dxos/react-client';
+import { SignalBusContext } from '@braneframe/plugin-script';
+import { useContext } from 'react';
+import { raise } from '@dxos/debug';
 
 export const SignalBus = () => {
-  const client = useClient();
-
+  const { signalBus } = useContext(SignalBusContext) ?? raise(new Error('SignalBusContext not found'));
   return null;
 };

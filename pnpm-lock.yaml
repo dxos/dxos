@@ -1048,6 +1048,9 @@ importers:
 
   packages/apps/plugins/plugin-debug:
     dependencies:
+      '@braneframe/plugin-script':
+        specifier: workspace:*
+        version: link:../plugin-script
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
@@ -1145,6 +1148,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../../common/debug
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui

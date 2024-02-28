@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-script": "workspace:*",
     "@braneframe/plugin-settings": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client-services": "workspace:*",
@@ -44,6 +45,7 @@
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.5.1",
     "date-fns": "^3.3.1",
+    "@dxos/debug": "workspace:*",
     "lodash.get": "^4.4.2",
     "react-json-tree": "^0.18.0",
     "react-syntax-highlighter": "^15.5.0"
@@ -57,7 +59,6 @@
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
