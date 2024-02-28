@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as S from '@effect/schema/Schema';
+
 // Lambda-like function definitions.
 // See: https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml/#functions
 
@@ -24,6 +26,11 @@ export type TriggerSubscription = {
   delay?: number;
 };
 
+export type SignalSubscription = {
+  kind: string;
+  dataType: string;
+};
+
 // TODO(burdon): Generalize binding.
 // https://www.npmjs.com/package/aws-lambda
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
@@ -31,6 +38,7 @@ export type FunctionTrigger = {
   function: string;
   schedule?: string;
   subscriptions?: TriggerSubscription[];
+  signals?: SignalSubscription[];
 };
 
 /**
@@ -40,3 +48,9 @@ export type FunctionManifest = {
   functions: FunctionDef[];
   triggers: FunctionTrigger[];
 };
+
+export const FunctionResult = S.struct({
+  type: S.string,
+  value: S.any,
+});
+export type FunctionResult = S.Schema.From<typeof FunctionResult>;

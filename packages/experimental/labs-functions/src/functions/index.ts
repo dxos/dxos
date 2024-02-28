@@ -9,3 +9,4 @@ export * from './email';
 export * from './email-extractor';
 export * from './github';
 export * from './hello';
+export * from './suggest-reference';

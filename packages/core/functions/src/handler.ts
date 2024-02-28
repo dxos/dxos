@@ -2,15 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as S from '@effect/schema/Schema';
+import * as Either from 'effect/Either';
+
 import { type Client, PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { isTypedObject, type TypedObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
+import { type Signal } from './signal/signal-bus';
+
 // TODO(burdon): No response?
 export interface Response {
   status(code: number): Response;
+  body(value: any): Response;
 }
 
 // TODO(burdon): Limit access to individual space?
@@ -67,5 +73,20 @@ export const subscriptionHandler = (
     }
 
     return handler({ event: { space, objects }, context, ...rest });
+  };
+};
+
+export const signalHandler = <T extends object>(
+  inputSchema: S.Schema<T>,
+  handler: FunctionHandler<T>,
+): FunctionHandler<Signal> => {
+  const validator = S.validateEither(inputSchema);
+  return async ({ event, context, ...rest }) => {
+    const validated = validator(event.data.value);
+    if (Either.isLeft(validated)) {
+      log.warn('function was called with input not matching its schema', { event, error: validated.left });
+      return rest.response.status(400);
+    }
+    return handler({ event: validated.right, context, ...rest });
   };
 };

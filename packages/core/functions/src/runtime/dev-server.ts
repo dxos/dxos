@@ -78,8 +78,14 @@ export class DevServer {
           await this._load(def, true);
         }
 
-        res.statusCode = await this._invoke(name, req.body);
-        res.end();
+        const { statusCode, body } = await this._invoke(name, req.body);
+        res.statusCode = statusCode;
+        if (body != null) {
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify(body));
+        } else {
+          res.end();
+        }
       } catch (err: any) {
         log.error(`Function failed: ${name}`, err);
         res.statusCode = 500;
@@ -167,7 +173,12 @@ export class DevServer {
     };
 
     let statusCode = 200;
+    let body: any | undefined;
     const response: Response = {
+      body(value: any): Response {
+        body = value;
+        return response;
+      },
       status: (code: number) => {
         statusCode = code;
         return response;
@@ -177,6 +188,6 @@ export class DevServer {
     await handler({ context, event, response });
     log.info('res', { seq, name, statusCode, duration: Date.now() - now });
 
-    return statusCode;
+    return { statusCode, body };
   }
 }
