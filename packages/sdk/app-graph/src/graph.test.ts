@@ -25,6 +25,7 @@ const filterLongestPath: NodeFilter = (node, connectedNode): node is Node => {
   return true;
 };
 
+// TODO(wittjosiah): Add tests for granularity of reactivity.
 describe('Graph', () => {
   test('add nodes', () => {
     const graph = new Graph();

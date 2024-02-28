@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FilePlus, FolderPlus, type IconProps } from '@phosphor-icons/react';
+import { File, FilePlus, Folder, FolderPlus, X, type IconProps, Plugs, FloppyDisk } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
 import { deepSignal } from 'deepsignal/react';
 import localforage from 'localforage';
@@ -34,7 +34,6 @@ import {
   handleToLocalFile,
   isLocalFile,
   legacyFileToLocalFile,
-  localEntityToGraphNode,
 } from './util';
 
 // TODO(burdon): Rename package plugin-file (singular).
@@ -62,13 +61,13 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
       const value = await localforage.getItem<FileSystemHandle[]>(FILES_PLUGIN);
       if (Array.isArray(value)) {
         await Promise.all(
-          value.map(async (handle, index) => {
+          value.map(async (handle) => {
             if (handle.kind === 'file') {
               const file = await handleToLocalFile(handle);
-              state.files = [file, ...state.files];
+              state.files.push(file);
             } else if (handle.kind === 'directory') {
               const directory = await handleToLocalDirectory(handle);
-              state.files = [...state.files, directory];
+              state.files.push(directory);
             }
           }),
         );
@@ -102,12 +101,10 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
             const active = navigationPlugin.provides.location.active;
             const path =
               active && graphPlugin.provides.graph.getPath({ to: active })?.filter((id) => id.startsWith(PREFIX));
-            console.log({ path });
-            // TODO(wittjosiah): Hook back up.
-            // const current = (active?.startsWith(PREFIX) && path && findFile(state.files, path)) || undefined;
-            // if (state.current !== current) {
-            //   state.current = current;
-            // }
+            const current = (active?.startsWith(PREFIX) && path && findFile(state.files, path)) || undefined;
+            if (state.current !== current) {
+              state.current = current;
+            }
           }),
         );
       }
@@ -146,6 +143,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
               palette: 'yellow',
               role: 'branch',
             },
+            edges: [['root', 'inbound']],
             nodes: [
               {
                 id: 'open-file-handle',
@@ -184,17 +182,92 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
             ],
           });
 
-          onFilesUpdate = () => {
-            const dispatch = intentPlugin?.provides.intent.dispatch;
-            if (dispatch) {
-              state.files.forEach((entity, index) => localEntityToGraphNode(entity, graph, dispatch));
-            }
-          };
-          onFilesUpdate();
+          let previousFiles = [...state.files];
+          const unsubscribe = effect(() => {
+            void localforage.setItem(FILES_PLUGIN, state.files.map((file) => file.handle).filter(Boolean));
 
-          const unsubscribe = state.$files!.subscribe(async (files) => {
-            await localforage.setItem(FILES_PLUGIN, files.map((file) => file.handle).filter(Boolean));
-            onFilesUpdate?.();
+            const removedFiles = previousFiles.filter((file) => !state.files.includes(file));
+            previousFiles = [...state.files];
+
+            removedFiles.forEach((file) => {
+              graph.removeNode(file.id, true);
+              if ('children' in file) {
+                file.children.forEach((entity) => graph.removeNode(entity.id, true));
+              }
+              // TODO(wittjosiah): Actions are not being removed here.
+            });
+            state.files.forEach((entity) => {
+              graph.addNodes({
+                id: entity.id,
+                data: entity,
+                properties: {
+                  label: entity.title,
+                  icon: (props: IconProps) => ('children' in entity ? <Folder {...props} /> : <File {...props} />),
+                  modified: 'children' in entity ? undefined : entity.modified,
+                },
+                edges: [['all-files', 'inbound']],
+                nodes: [
+                  {
+                    id: `${LocalFilesAction.CLOSE}:${entity.id}`,
+                    data: () =>
+                      intentPlugin?.provides.intent.dispatch({
+                        plugin: FILES_PLUGIN,
+                        action: LocalFilesAction.CLOSE,
+                        data: { id: entity.id },
+                      }),
+                    properties: {
+                      label: ['close label', { ns: FILES_PLUGIN }],
+                      icon: (props: IconProps) => <X {...props} />,
+                    },
+                  },
+                  ...(entity.permission !== 'granted'
+                    ? [
+                        {
+                          id: `${LocalFilesAction.RECONNECT}:${entity.id}`,
+                          data: () =>
+                            intentPlugin?.provides.intent.dispatch({
+                              plugin: FILES_PLUGIN,
+                              action: LocalFilesAction.RECONNECT,
+                              data: { id: entity.id },
+                            }),
+                          properties: {
+                            label: ['re-open label', { ns: FILES_PLUGIN }],
+                            icon: (props: IconProps) => <Plugs {...props} />,
+                            disposition: 'default',
+                          },
+                        },
+                      ]
+                    : []),
+                  ...(entity.permission === 'granted' && !('children' in entity)
+                    ? [
+                        {
+                          id: `${LocalFilesAction.SAVE}:${entity.id}`,
+                          data: () =>
+                            intentPlugin?.provides.intent.dispatch({
+                              plugin: FILES_PLUGIN,
+                              action: LocalFilesAction.SAVE,
+                              data: { id: entity.id },
+                            }),
+                          properties: {
+                            label: [entity.handle ? 'save label' : 'save as label', { ns: FILES_PLUGIN }],
+                            icon: (props: IconProps) => <FloppyDisk {...props} />,
+                          },
+                        },
+                      ]
+                    : []),
+                  ...('children' in entity
+                    ? entity.children.map((child) => ({
+                        id: child.id,
+                        data: child,
+                        properties: {
+                          label: child.title,
+                          icon: (props: IconProps) => <File {...props} />,
+                        },
+                      }))
+                    : []),
+                ],
+              });
+            });
           });
 
           return () => unsubscribe();
@@ -215,7 +288,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   ],
                 });
                 const file = await handleToLocalFile(handle);
-                state.files = [file, ...state.files];
+                state.files.push(file);
 
                 return { data: [file.id] };
               }
@@ -228,7 +301,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                 const [legacyFile] = input.files ? Array.from(input.files) : [];
                 if (legacyFile) {
                   const file = await legacyFileToLocalFile(legacyFile);
-                  state.files = [file, ...state.files];
+                  state.files.push(file);
                   result.wake([file.id]);
                 }
               };
@@ -239,7 +312,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
             case LocalFilesAction.OPEN_DIRECTORY: {
               const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
               const directory = await handleToLocalDirectory(handle);
-              state.files = [...state.files, directory];
+              state.files.push(directory);
               return { data: [directory.id, directory.children[0]?.id] };
             }
 
@@ -281,9 +354,12 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
 
             case LocalFilesAction.CLOSE: {
               if (typeof intent.data?.id === 'string') {
-                state.files = state.files.filter((f) => f.id !== intent.data?.id);
-                onFilesUpdate?.();
-                return { data: true };
+                const index = state.files.findIndex((f) => f.id === intent.data?.id);
+                if (index >= 0) {
+                  state.files.splice(index, 1);
+                  onFilesUpdate?.();
+                  return { data: true };
+                }
               }
               break;
             }
