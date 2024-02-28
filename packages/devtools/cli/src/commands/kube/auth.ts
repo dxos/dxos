@@ -24,7 +24,7 @@ export default class Auth extends BaseCommand<typeof Auth> {
     );
 
     if (!authDeviceCreds.length) {
-      this.error('No authorized devices');
+      this.catch('No authorized devices');
     }
 
     // Init auth sequence.

@@ -11,9 +11,9 @@ import {
   type Comment,
   MarkdownEditor,
   Toolbar,
-  editorHalfViewportOverscrollContent,
-  editorFillLayoutEditor,
+  cursorLineMargin,
   editorFillLayoutRoot,
+  editorFillLayoutEditor,
   focusComment,
   useComments,
   useEditorView,
@@ -29,7 +29,7 @@ export type EditorMainProps = {
   toolbar?: boolean;
 } & Pick<TextEditorProps, 'model' | 'readonly' | 'extensions'>;
 
-const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...props }: EditorMainProps) => {
+export const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
 
   const [editorRef, viewInvalidated] = useEditorView(model.id);
@@ -61,15 +61,18 @@ const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...prop
 
   // Toolbar state.
   const [formattingState, formattingObserver] = useFormattingState();
-  const extensions = useMemo(() => [...(_extensions ?? []), formattingObserver], [_extensions, formattingObserver]);
+  const extensions = useMemo(
+    () => [...(_extensions ?? []), formattingObserver, cursorLineMargin],
+    [_extensions, formattingObserver],
+  );
 
   return (
     <>
       {toolbar && (
         <Toolbar.Root
-          onAction={handleAction}
-          state={formattingState}
           classNames='max-is-[60rem] justify-self-center border-be separator-separator'
+          state={formattingState}
+          onAction={handleAction}
         >
           <Toolbar.Markdown />
           <Toolbar.Separator />
@@ -79,11 +82,13 @@ const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...prop
       <div
         role='none'
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
-        className='is-full overflow-y-auto overflow-anchored after:block after:is-px after:bs-px after:overflow-anchor after:-mbs-px data-[toolbar=disabled]:pbs-8'
+        className='is-full bs-full overflow-hidden data-[toolbar=disabled]:pbs-2'
       >
         <MarkdownEditor
           ref={editorRef}
           autoFocus
+          scrollPastEnd
+          moveToEndOfLine
           placeholder={t('editor placeholder')}
           model={model}
           extensions={extensions}
@@ -95,19 +100,15 @@ const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...prop
                 textBlockWidth,
                 editorFillLayoutRoot,
                 'md:border-is md:border-ie separator-separator focus-visible:ring-inset',
+                !toolbar && 'border-bs separator-separator',
               ),
               'data-testid': 'composer.markdownRoot',
             } as HTMLAttributes<HTMLDivElement>,
-            editor: {
-              className: mx(
-                editorFillLayoutEditor,
-                'is-full [&>.cm-scroller]:overflow-visible [&>.cm-scroller]:p-2 [&>.cm-scroller]:sm:p-6 [&>.cm-scroller]:md:p-8',
-                !toolbar && 'border-bs',
-              ),
-            },
             content: {
-              className: editorHalfViewportOverscrollContent,
+              // TODO(burdon): Override (!) required since base theme sets padding and scrollPastEnd sets bottom.
+              className: mx('!pli-2 sm:!pli-6 md:!pli-8 !pbs-2 sm:!pbs-6 md:!pbs-8'),
             },
+            editor: { className: editorFillLayoutEditor },
           }}
           {...props}
         />

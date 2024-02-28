@@ -314,8 +314,11 @@ describe('Invitations', () => {
         );
 
         space = await hostContext.dataSpaceManager.createSpace();
-        host = new InvitationsProxy(hostService, () => ({ kind: Invitation.Kind.SPACE, spaceKey: space.key }));
-        guest = new InvitationsProxy(guestService, () => ({ kind: Invitation.Kind.SPACE }));
+        host = new InvitationsProxy(hostService, undefined, () => ({
+          kind: Invitation.Kind.SPACE,
+          spaceKey: space.key,
+        }));
+        guest = new InvitationsProxy(guestService, undefined, () => ({ kind: Invitation.Kind.SPACE }));
 
         afterTest(() => space.close());
       });
@@ -347,8 +350,8 @@ describe('Invitations', () => {
           guestContext.getInvitationHandler(invitation),
         );
 
-        host = new InvitationsProxy(hostService, () => ({ kind: Invitation.Kind.DEVICE }));
-        guest = new InvitationsProxy(guestService, () => ({ kind: Invitation.Kind.DEVICE }));
+        host = new InvitationsProxy(hostService, undefined, () => ({ kind: Invitation.Kind.DEVICE }));
+        guest = new InvitationsProxy(guestService, undefined, () => ({ kind: Invitation.Kind.DEVICE }));
       });
 
       testSuite(

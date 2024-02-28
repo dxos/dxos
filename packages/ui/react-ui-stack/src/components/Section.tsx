@@ -91,8 +91,8 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
           className={mx(
             attentionSurface,
             hoverableControls,
-            'flex separator-separator md:border-is md:border-ie',
-            separation ? 'min-bs-[4rem]' : 'group-first:border-bs group-last:border-be',
+            'flex separator-separator border-is border-ie group-first:border-bs border-be',
+            separation ? 'min-bs-[4rem] border-bs' : 'border-bs-0',
             active && staticHoverableControls,
             active && 'border-bs border-be',
             (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
