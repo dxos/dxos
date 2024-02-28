@@ -5,6 +5,7 @@
 import autoprefixer from 'autoprefixer';
 import { resolve } from 'node:path';
 import tailwindcss from 'tailwindcss';
+import nesting from 'tailwindcss/nesting';
 import type { ThemeConfig } from 'tailwindcss/types/config';
 import { type Plugin } from 'vite';
 
@@ -39,6 +40,7 @@ export const ThemePlugin = (
         css: {
           postcss: {
             plugins: [
+              nesting,
               tailwindcss(
                 tailwindConfig({
                   env: env.mode,

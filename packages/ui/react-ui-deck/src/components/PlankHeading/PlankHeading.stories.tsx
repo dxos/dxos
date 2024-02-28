@@ -9,22 +9,30 @@ import React from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
 
-import { PlankHeadingButton, plankHeadingIconProps } from './PlankHeading';
+import { PlankHeading, plankHeadingIconProps } from './PlankHeading';
+import { plankHeadingLayout } from '../../fragments/layout';
 import translations from '../../translations';
 import { AttentionProvider } from '../Attention';
 
 type StorybookPlankHeadingProps = {
   attendableId?: string;
+  label?: string;
 };
 
 const storybookAttended = new Set(['attended-story']);
 
-const StorybookPlankHeading = ({ attendableId }: StorybookPlankHeadingProps) => {
+const StorybookPlankHeading = ({
+  attendableId = '',
+  label = 'Plank heading Storybook story',
+}: StorybookPlankHeadingProps) => {
   return (
     <AttentionProvider attended={storybookAttended}>
-      <PlankHeadingButton attendableId={attendableId}>
-        <BookBookmark {...plankHeadingIconProps} />
-      </PlankHeadingButton>
+      <div role='none' className={plankHeadingLayout}>
+        <PlankHeading.Button attendableId={attendableId}>
+          <BookBookmark {...plankHeadingIconProps} />
+        </PlankHeading.Button>
+        <PlankHeading.Label attendableId={attendableId}>{label}</PlankHeading.Label>
+      </div>
     </AttentionProvider>
   );
 };

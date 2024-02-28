@@ -5,15 +5,7 @@
 import type { Density, Elevation, ComponentFunction, Theme } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
-import {
-  hoverColors,
-  coarseButtonDimensions,
-  fineButtonDimensions,
-  staticDisabled,
-  focusRing,
-  contentElevation,
-  ghostHover,
-} from '../fragments';
+import { contentElevation, ghostHover } from '../fragments';
 
 export const primaryButtonColors =
   'fg-inverse surface-accent hover:surface-accentHover aria-pressed:bg-primary-500 dark:aria-pressed:bg-primary-500 data-[state=open]:bg-primary-500 dark:data-[state=open]:bg-primary-500 aria-checked:bg-primary-500 dark:aria-checked:bg-primary-500 aria-checked:text-primary-100';
@@ -37,30 +29,8 @@ export type ButtonStyleProps = Partial<{
   variant: 'default' | 'primary' | 'ghost' | 'outline';
 }>;
 
-export const buttonRoot: ComponentFunction<ButtonStyleProps> = (props, ...etc) => {
-  const resolvedVariant = props.variant ?? 'default';
-  return mx(
-    'font-medium text-sm shrink-0 inline-flex select-none items-center justify-center overflow-hidden',
-    'transition-color duration-100',
-    props.density === 'fine' ? fineButtonDimensions : coarseButtonDimensions,
-    props.disabled && staticDisabled,
-    !props.inGroup && 'rounded-sm',
-    !props.textWrap && 'text-ellipsis whitespace-nowrap',
-    !props.disabled &&
-      !props.inGroup &&
-      (resolvedVariant === 'default' || resolvedVariant === 'primary') &&
-      contentElevation({ elevation: props.elevation }),
-    !props.disabled && hoverColors,
-    resolvedVariant !== 'outline' && ' hover:border-transparent dark:hover:border-transparent',
-    resolvedVariant === 'default' && defaultButtonColors,
-    !props.disabled && resolvedVariant === 'ghost' && ghostButtonColors,
-    resolvedVariant === 'primary' && primaryButtonColors,
-    resolvedVariant === 'outline' && 'border separator-base',
-    !props.disabled && focusRing,
-    // Register all radix states
-    'group',
-    ...etc,
-  );
+export const buttonRoot: ComponentFunction<ButtonStyleProps> = (_props, ...etc) => {
+  return mx('ch-button group', ...etc);
 };
 
 export const buttonGroup: ComponentFunction<{ elevation?: Elevation }> = (props, ...etc) => {
