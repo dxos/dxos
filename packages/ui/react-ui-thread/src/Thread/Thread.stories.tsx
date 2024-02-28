@@ -43,6 +43,7 @@ const Story = () => {
       ],
     },
   ]);
+
   const nextMessageModel = useInMemoryTextModel({ id: 't1__next' });
 
   // TODO(thure): Why does pressing Enter clear the text content?

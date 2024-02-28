@@ -39,7 +39,7 @@ export const presets = [
           new ChainType.Input({
             name: 'language',
             type: ChainType.Input.Type.VALUE,
-            value: new TextObject('japanese'),
+            value: 'japanese',
           }),
           new ChainType.Input({ name: 'input', type: ChainType.Input.Type.PASS_THROUGH }),
         ],
@@ -66,7 +66,7 @@ export const presets = [
           new ChainType.Input({
             name: 'history',
             type: ChainType.Input.Type.CONTEXT,
-            value: new TextObject('object.pgn'),
+            value: 'object.pgn',
           }),
         ],
       }),
@@ -120,7 +120,7 @@ export const presets = [
           new ChainType.Input({
             type: ChainType.Input.Type.SCHEMA,
             name: 'schema',
-            value: new TextObject('example.com/schema/project'),
+            value: 'example.com/schema/project',
           }),
           new ChainType.Input({ name: 'question', type: ChainType.Input.Type.PASS_THROUGH }),
         ],
@@ -170,7 +170,7 @@ export const presets = [
         ),
         inputs: [
           //
-          new ChainType.Input({ name: 'input', type: ChainType.Input.Type.CONTEXT, value: new TextObject('text') }),
+          new ChainType.Input({ name: 'input', type: ChainType.Input.Type.CONTEXT, value: 'text' }),
         ],
       }),
   },
@@ -201,14 +201,14 @@ export const presets = [
           new ChainType.Input({
             type: ChainType.Input.Type.SCHEMA,
             name: 'contact',
-            value: new TextObject('example.com/schema/contact'),
+            value: 'example.com/schema/contact',
           }),
           new ChainType.Input({
             type: ChainType.Input.Type.SCHEMA,
             name: 'company',
-            value: new TextObject('example.com/schema/organization'),
+            value: 'example.com/schema/organization',
           }),
-          new ChainType.Input({ name: 'input', type: ChainType.Input.Type.CONTEXT, value: new TextObject('text') }),
+          new ChainType.Input({ name: 'input', type: ChainType.Input.Type.CONTEXT, value: 'text' }),
         ],
       }),
   },
@@ -233,7 +233,7 @@ export const presets = [
           new ChainType.Input({
             name: 'context',
             type: ChainType.Input.Type.RESOLVER,
-            value: new TextObject('discord.messages.recent'),
+            value: 'discord.messages.recent',
           }),
         ],
       }),
