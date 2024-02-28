@@ -10,23 +10,6 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { getToken } from '../../styles';
 
-/**
- * Widget for first/last line of code block (read-only).
- */
-// TODO(burdon): Add copy-to-clipboard button.
-class FencedCodeBoundary extends WidgetType {
-  constructor(private readonly _className: string) {
-    super();
-  }
-
-  override toDOM() {
-    const el = document.createElement('span');
-    el.innerHTML = '&nbsp;';
-    el.className = mx('cm-code cm-codeblock', this._className);
-    return el;
-  }
-}
-
 class HorizontalRuleWidget extends WidgetType {
   override toDOM() {
     const el = document.createElement('span');
@@ -91,8 +74,9 @@ class CheckboxWidget extends WidgetType {
 }
 
 const hide = Decoration.replace({});
-const fencedCodeTop = Decoration.replace({ widget: new FencedCodeBoundary('cm-codeblock-end cm-codeblock-first') });
-const fencedCodeBottom = Decoration.replace({ widget: new FencedCodeBoundary('cm-codeblock-end cm-codeblock-last') });
+const fencedCodeLine = Decoration.line({ class: mx('cm-code cm-codeblock-line') });
+const fencedCodeLineFirst = Decoration.line({ class: mx('cm-code cm-codeblock-line', 'cm-codeblock-first') });
+const fencedCodeLineLast = Decoration.line({ class: mx('cm-code cm-codeblock-line', 'cm-codeblock-last') });
 const horizontalRule = Decoration.replace({ widget: new HorizontalRuleWidget() });
 const checkedTask = Decoration.replace({ widget: new CheckboxWidget(true) });
 const uncheckedTask = Decoration.replace({ widget: new CheckboxWidget(false) });
@@ -130,16 +114,13 @@ const buildDecorations = (view: EditorView, options: DecorateOptions): Decoratio
             }
             const first = block.from <= node.from;
             const last = block.to >= node.to;
+            builder.add(
+              block.from,
+              block.from,
+              first ? fencedCodeLineFirst : last ? fencedCodeLineLast : fencedCodeLine,
+            );
             if (!editing && (first || last)) {
-              builder.add(block.from, block.to, first ? fencedCodeTop : fencedCodeBottom);
-            } else {
-              builder.add(
-                block.from,
-                block.from,
-                Decoration.line({
-                  class: mx('cm-code cm-codeblock-line', first && 'cm-codeblock-first', last && 'cm-codeblock-last'),
-                }),
-              );
+              builder.add(block.from, block.to, hide);
             }
           }
           return false;
@@ -252,18 +233,13 @@ const formattingStyles = EditorView.baseTheme({
     },
   },
   '& .cm-codeblock-first': {
-    '&::after': {
-      borderTopLeftRadius: '.5rem',
-      borderTopRightRadius: '.5rem',
-    },
+    borderTopLeftRadius: '.5rem',
+    borderTopRightRadius: '.5rem',
   },
   '& .cm-codeblock-last': {
-    '&::after': {
-      borderBottomLeftRadius: '.5rem',
-      borderBottomRightRadius: '.5rem',
-    },
+    borderBottomLeftRadius: '.5rem',
+    borderBottomRightRadius: '.5rem',
   },
-
   '&light .cm-codeblock-line, &light .cm-activeLine.cm-codeblock-line': {
     background: getToken('extend.semanticColors.input.light'),
     mixBlendMode: 'darken',
@@ -271,18 +247,6 @@ const formattingStyles = EditorView.baseTheme({
   '&dark .cm-codeblock-line, &dark .cm-activeLine.cm-codeblock-line': {
     background: getToken('extend.semanticColors.input.dark'),
     mixBlendMode: 'lighten',
-  },
-  '&light .cm-codeblock-first, &light .cm-codeblock-last': {
-    mixBlendMode: 'darken',
-    '&::after': {
-      background: getToken('extend.semanticColors.input.light'),
-    },
-  },
-  '&dark .cm-codeblock-first, &dark .cm-codeblock-last': {
-    mixBlendMode: 'lighten',
-    '&::after': {
-      background: getToken('extend.semanticColors.input.dark'),
-    },
   },
   '& .cm-hr': {
     display: 'inline-block',
