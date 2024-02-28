@@ -13,7 +13,7 @@ import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
-import { type Device, DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
+import { Device, DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type IdentityRecord, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
@@ -22,6 +22,7 @@ import {
   DeviceType,
   type ProfileDocument,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace as Trace } from '@dxos/tracing';
 import { isNode, deferFunction } from '@dxos/util';
@@ -29,10 +30,14 @@ import { isNode, deferFunction } from '@dxos/util';
 import { createAuthProvider } from './authenticator';
 import { Identity } from './identity';
 
+const DEVICE_PRESENCE_ANNOUNCE_INTERVAL = 10_000;
+const DEVICE_PRESENCE_OFFLINE_TIMEOUT = 20_000;
+
 interface ConstructSpaceParams {
   spaceRecord: SpaceMetadata;
   swarmIdentity: SwarmIdentity;
   identityKey: PublicKey;
+  gossip: Gossip;
 }
 
 export type JoinIdentityParams = {
@@ -58,12 +63,19 @@ export type CreateIdentityOptions = {
   deviceProfile?: DeviceProfileDocument;
 };
 
+export type IdentityManagerRuntimeParams = {
+  devicePresenceAnnounceInterval?: number;
+  devicePresenceOfflineTimeout?: number;
+};
+
 // TODO(dmaretskyi): Rename: represents the peer's state machine.
 @Trace.resource()
 export class IdentityManager {
   readonly stateUpdate = new Event();
 
   private _identity?: Identity;
+  private readonly _devicePresenceAnnounceInterval: number;
+  private readonly _devicePresenceOfflineTimeout: number;
 
   // TODO(burdon): IdentityManagerParams.
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
@@ -72,7 +84,15 @@ export class IdentityManager {
     private readonly _keyring: Keyring,
     private readonly _feedStore: FeedStore<FeedMessage>,
     private readonly _spaceManager: SpaceManager,
-  ) {}
+    params?: IdentityManagerRuntimeParams,
+  ) {
+    const {
+      devicePresenceAnnounceInterval = DEVICE_PRESENCE_ANNOUNCE_INTERVAL,
+      devicePresenceOfflineTimeout = DEVICE_PRESENCE_OFFLINE_TIMEOUT,
+    } = params ?? {};
+    this._devicePresenceAnnounceInterval = devicePresenceAnnounceInterval;
+    this._devicePresenceOfflineTimeout = devicePresenceOfflineTimeout;
+  }
 
   get identity() {
     return this._identity;
@@ -284,12 +304,27 @@ export class IdentityManager {
     const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential } });
     await this._identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
     this.stateUpdate.emit();
-    return { deviceKey: this._identity.deviceKey, kind: DeviceKind.CURRENT, profile };
+    return {
+      deviceKey: this._identity.deviceKey,
+      kind: DeviceKind.CURRENT,
+      presence: Device.PresenceState.ONLINE,
+      profile,
+    };
   }
 
   private async _constructIdentity(identityRecord: IdentityRecord) {
     invariant(!this._identity);
     log('constructing identity', { identityRecord });
+
+    const gossip = new Gossip({
+      localPeerId: identityRecord.deviceKey,
+    });
+    const presence = new Presence({
+      announceInterval: this._devicePresenceAnnounceInterval,
+      offlineTimeout: this._devicePresenceOfflineTimeout,
+      identityKey: identityRecord.deviceKey,
+      gossip,
+    });
 
     // Must be created before the space so the feeds are writable.
     invariant(identityRecord.haloSpace.controlFeedKey);
@@ -309,6 +344,7 @@ export class IdentityManager {
         credentialProvider: createAuthProvider(createCredentialSignerWithKey(this._keyring, identityRecord.deviceKey)),
         credentialAuthenticator: deferFunction(() => identity.authVerifier.verifier),
       },
+      gossip,
       identityKey: identityRecord.identityKey,
     });
     await space.setControlFeed(controlFeed);
@@ -316,6 +352,7 @@ export class IdentityManager {
 
     const identity: Identity = new Identity({
       space,
+      presence,
       signer: this._keyring,
       identityKey: identityRecord.identityKey,
       deviceKey: identityRecord.deviceKey,
@@ -331,14 +368,19 @@ export class IdentityManager {
     return identity;
   }
 
-  private async _constructSpace({ spaceRecord, swarmIdentity, identityKey }: ConstructSpaceParams) {
+  private async _constructSpace({ spaceRecord, swarmIdentity, identityKey, gossip }: ConstructSpaceParams) {
     return this._spaceManager.constructSpace({
       metadata: {
         key: spaceRecord.key,
         genesisFeedKey: spaceRecord.genesisFeedKey,
       },
       swarmIdentity,
-      onAuthorizedConnection: () => {},
+      onAuthorizedConnection: (session) => {
+        session.addExtension(
+          'dxos.mesh.teleport.gossip',
+          gossip.createExtension({ remotePeerId: session.remotePeerId }),
+        );
+      },
       onAuthFailure: () => {
         log.warn('auth failure');
       },

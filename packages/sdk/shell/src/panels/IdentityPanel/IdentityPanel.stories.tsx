@@ -8,7 +8,7 @@ import React from 'react';
 
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
-import { DeviceKind } from '@dxos/react-client/halo';
+import { Device, DeviceKind } from '@dxos/react-client/halo';
 import { Invitation } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -71,10 +71,23 @@ export const DeviceManager = () => {
       <IdentityPanelImpl
         {...{
           ...noOpProps,
+          // TODO(nf): update
           devices: [
-            { deviceKey: PublicKey.random(), kind: DeviceKind.CURRENT },
-            { deviceKey: PublicKey.random(), kind: DeviceKind.TRUSTED },
-            { deviceKey: PublicKey.random(), kind: DeviceKind.TRUSTED },
+            {
+              deviceKey: PublicKey.random(),
+              kind: DeviceKind.CURRENT,
+              presence: Device.PresenceState.ONLINE,
+            },
+            {
+              deviceKey: PublicKey.random(),
+              kind: DeviceKind.TRUSTED,
+              presence: Device.PresenceState.ONLINE,
+            },
+            {
+              deviceKey: PublicKey.random(),
+              kind: DeviceKind.TRUSTED,
+              presence: Device.PresenceState.OFFLINE,
+            },
           ],
         }}
         activeView='device manager'
