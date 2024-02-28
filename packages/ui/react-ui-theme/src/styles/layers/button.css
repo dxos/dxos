@@ -41,7 +41,7 @@
         }
       }
       &[data-variant='ghost'] {
-        @apply surface-input;
+        @apply bg-transparent;
         &:hover {
           @apply surface-hover text-inherit;
         }
