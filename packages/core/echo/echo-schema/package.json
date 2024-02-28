@@ -69,7 +69,8 @@
     "@orama/orama": "^2.0.8",
     "effect": "^2.3.1",
     "lodash.defaultsdeep": "^4.6.1",
-    "lodash.get": "^4.4.2"
+    "lodash.get": "^4.4.2",
+    "lodash.isequal": "^4.5.0"
   },
   "devDependencies": {
     "@dxos/echo-pipeline": "workspace:*",
@@ -77,6 +78,7 @@
     "@preact/signals-core": "^1.5.1",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.get": "^4.4.7",
+    "@types/lodash.isequal": "^4.5.0",
     "fast-check": "^3.15.1",
     "wait-for-expect": "^3.0.2"
   },
