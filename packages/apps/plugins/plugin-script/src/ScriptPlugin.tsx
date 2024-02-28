@@ -3,7 +3,7 @@
 //
 
 import { Code, type IconProps } from '@phosphor-icons/react';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Script as ScriptType } from '@braneframe/types';
@@ -24,6 +24,8 @@ import { ScriptBlock, type ScriptBlockProps } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
 import translations from './translations';
 import { ScriptAction, type ScriptPluginProvides } from './types';
+import { SignalBus } from '@dxos/functions';
+import { SignalBusContext } from './SignalBusContext';
 
 // TODO(burdon): Make generic and remove need for filter.
 const isObject = <T extends EchoObject>(object: unknown, schema: Schema, filter: Filter<T>): T | undefined => {
@@ -142,6 +144,11 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
             }
           }
         },
+      },
+      context: ({ children }) => {
+        const [signalBus] = useState<SignalBus>(() => new SignalBus(null as any));
+
+        return <SignalBusContext.Provider value={{ signalBus }}>{children}</SignalBusContext.Provider>;
       },
     },
   };
