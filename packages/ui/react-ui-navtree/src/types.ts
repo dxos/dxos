@@ -6,6 +6,7 @@ import { type IconProps } from '@phosphor-icons/react';
 import { type FC } from 'react';
 
 import { type InvokeParams, type Action, type ActionGroup, type NodeBase } from '@dxos/app-graph';
+import { type Label } from '@dxos/react-ui';
 import { type MakeOptional, type MaybePromise } from '@dxos/util';
 
 export type TreeNodeAction = Pick<Action, 'id' | 'properties'> & {
@@ -31,9 +32,6 @@ export type TreeNode = MakeOptional<NodeBase, 'data'> & {
   children: TreeNode[];
   actions: TreeNodeActionLike[];
 };
-
-// TODO(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures.
-export type Label = string | [string, { ns: string; count?: number }];
 
 /**
  * Platform-specific key binding.

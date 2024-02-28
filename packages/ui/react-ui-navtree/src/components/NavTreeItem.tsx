@@ -13,6 +13,7 @@ import {
   TreeItem,
   useTranslation,
   DensityProvider,
+  toLocalizedString,
 } from '@dxos/react-ui';
 import { Mosaic, useContainer, type MosaicTileComponent, Path, useItemsWithOrigin } from '@dxos/react-ui-mosaic';
 import {
@@ -189,7 +190,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                     {...{
                       id: node.id,
                       level,
-                      label: Array.isArray(node.label) ? t(...node.label) : node.label,
+                      label: toLocalizedString(node.label, t),
                       icon: node.icon,
                       open,
                       current: path === current,
@@ -203,7 +204,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                   />
                   {primaryAction?.properties.disposition === 'toolbar' && (
                     <NavTreeItemAction
-                      label={Array.isArray(primaryAction.label) ? t(...primaryAction.label) : primaryAction.label}
+                      label={toLocalizedString(primaryAction.label, t)}
                       icon={primaryAction.icon ?? Placeholder}
                       action={'invoke' in primaryAction ? primaryAction : undefined}
                       actions={

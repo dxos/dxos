@@ -8,7 +8,7 @@ import React from 'react';
 import { type Action } from '@braneframe/plugin-graph';
 import { Surface } from '@dxos/app-framework';
 import { SpaceState, type Space } from '@dxos/react-client/echo';
-import { Button, Main, useTranslation } from '@dxos/react-ui';
+import { Button, Main, useTranslation, toLocalizedString } from '@dxos/react-ui';
 import { getSize, mx, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 import { ClipboardProvider } from '@dxos/shell/react';
 
@@ -27,7 +27,7 @@ const _InFlowSpaceActions = ({ actionsMap }: { actionsMap: Record<string, Action
           return (
             <Button key={actionId} classNames='block text-center plb-2 font-normal'>
               {Icon && <Icon className={mx(getSize(5), 'mli-auto')} />}
-              <p>{Array.isArray(label) ? t(label[0], label[1]) : label}</p>
+              <p>{toLocalizedString(label, t)}</p>
             </Button>
           );
         })}

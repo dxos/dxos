@@ -6,7 +6,7 @@ import { X } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type KeyBinding, Keyboard } from '@dxos/keyboard';
-import { Button, DensityProvider, useTranslation } from '@dxos/react-ui';
+import { Button, DensityProvider, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { fixedBorder, groupSurface, mx } from '@dxos/react-ui-theme';
 
 import { Key } from './Key';
@@ -19,15 +19,11 @@ export const ShortcutsHints = ({ onClose }: { onClose: () => void }) => {
   const bindings = Keyboard.singleton.getBindings();
   const hints = bindings.filter((binding) => defaults.includes(binding.shortcut));
 
-  // TODO(burdon): Factor out.
-  // TODO(burdon): How to access all translations across plugins?
-  const toString = (label: any) => (Array.isArray(label) ? t(label[0], label[1]) : label);
-
   const Shortcut = ({ binding }: { binding: KeyBinding }) => {
     return (
       <div role='none' className='flex items-center gap-2'>
         <Key binding={binding.shortcut} />
-        <span className='text-sm'>{toString(binding.data)}</span>
+        <span className='text-sm'>{toLocalizedString(binding.data, t)}</span>
       </div>
     );
   };

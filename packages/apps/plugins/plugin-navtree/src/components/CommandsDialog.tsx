@@ -5,20 +5,14 @@
 import { DotOutline } from '@phosphor-icons/react';
 import React, { useMemo, useRef, useState } from 'react';
 
-import { type Graph, type ActionLike, isActionGroup, isAction, type NodeBase } from '@dxos/app-graph';
+import { type Graph, type ActionLike, isActionGroup, isAction } from '@dxos/app-graph';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
-import { Button, Dialog, type TFunction, useTranslation } from '@dxos/react-ui';
-import { type Label } from '@dxos/react-ui-navtree';
+import { Button, Dialog, useTranslation, toLocalizedString } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
 import { KEY_BINDING, NAVTREE_PLUGIN } from '../meta';
-
-const getNodeLabel = (node: NodeBase, t: TFunction) => {
-  const label: Label = node.properties.label;
-  return Array.isArray(label) ? t(...label) : label;
-};
 
 // TODO(wittjosiah): This probably deserves its own plugin but for now it lives here w/ other navigation UI.
 export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Graph; selected?: string }) => {
@@ -42,7 +36,9 @@ export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Gr
     });
 
     actions.sort((a, b) => {
-      return getNodeLabel(a, t)?.toLowerCase().localeCompare(getNodeLabel(b, t)?.toLowerCase());
+      return toLocalizedString(a.properties.label, t)
+        ?.toLowerCase()
+        .localeCompare(toLocalizedString(b.properties.label, t)?.toLowerCase());
     });
 
     // console.log(JSON.stringify(actions, undefined, 2));
@@ -64,7 +60,7 @@ export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Gr
         <SearchList.Input placeholder={t('commandlist input placeholder')} classNames={mx('px-1 my-2')} />
         <SearchList.Content classNames={['max-bs-[30rem] overflow-auto']}>
           {actions?.map((action) => {
-            const label = getNodeLabel(action, t);
+            const label = toLocalizedString(action.properties.label, t);
             const shortcut =
               typeof action.properties.keyBinding === 'string'
                 ? action.properties.keyBinding
@@ -88,7 +84,7 @@ export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Gr
                   buttonRef.current?.click();
                   setTimeout(() => {
                     const node = action.nodes({ direction: 'inbound' })[0];
-                    isAction(action) && action.data({ node, caller: KEY_BINDING });
+                    void (isAction(action) && action.data({ node, caller: KEY_BINDING }));
                   });
                 }}
                 classNames='flex items-center gap-2'

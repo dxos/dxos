@@ -3,7 +3,6 @@
 //
 
 import { type Action } from '@dxos/app-graph';
-import type { TFunction } from '@dxos/react-ui';
 import { type TreeNode } from '@dxos/react-ui-navtree';
 
 // TODO(wittjosiah): Move into node implementation?
@@ -19,9 +18,6 @@ export const sortActions = (actions: Action[]): Action[] =>
 
     return 1;
   });
-
-export const getTreeItemLabel = (node: TreeNode, t: TFunction) =>
-  Array.isArray(node.label) ? t(...node.label) : node.label;
 
 export const getPersistenceParent = (node: TreeNode, persistenceClass: string): TreeNode | null => {
   const parent = node.parent;

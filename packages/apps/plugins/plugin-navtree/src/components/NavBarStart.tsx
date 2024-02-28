@@ -5,11 +5,10 @@
 import { DotsThreeVertical } from '@phosphor-icons/react';
 import React, { Fragment } from 'react';
 
-import { Popover, useTranslation } from '@dxos/react-ui';
+import { Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { NavTreeItemAction, type TreeNode } from '@dxos/react-ui-navtree';
 
 import { KEY_BINDING, NAVTREE_PLUGIN } from '../meta';
-import { getTreeItemLabel } from '../util';
 
 const TREE_ITEM_MAIN_HEADING = 'TreeItemMainHeading';
 
@@ -34,7 +33,9 @@ export const NavBarStart = ({ activeNode, popoverAnchorId }: { activeNode: TreeN
           caller={TREE_ITEM_MAIN_HEADING}
         />
       </ActionRoot>
-      <h1 className='mli-1 min-is-0 shrink-1 truncate font-medium fg-accent'>{getTreeItemLabel(activeNode, t)}</h1>
+      <h1 className='mli-1 min-is-0 shrink-1 truncate font-medium fg-accent'>
+        {toLocalizedString(activeNode.label, t)}
+      </h1>
     </>
   );
 };

@@ -6,7 +6,7 @@ import React, { type FC, useMemo } from 'react';
 
 import { type Action, useGraph } from '@braneframe/plugin-graph';
 import { Surface } from '@dxos/app-framework';
-import { Button, Main, useTranslation } from '@dxos/react-ui';
+import { Button, Main, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type EditorModel } from '@dxos/react-ui-editor';
 import { baseSurface, descriptionText, mx, textBlockWidth, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
@@ -57,11 +57,7 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
             >
               {t('missing file permissions')}
               {action && node && (
-                <Button onClick={() => action.data({ node })}>
-                  {Array.isArray(action.properties.label)
-                    ? t(action.properties.label[0], action.properties.label[1])
-                    : action.properties.label}
-                </Button>
+                <Button onClick={() => action.data({ node })}>{toLocalizedString(action.properties.label, t)}</Button>
               )}
             </p>
           </div>
