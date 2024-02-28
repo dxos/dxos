@@ -307,12 +307,13 @@ export const updateGraphWithSpace = ({
   const query = space.db.query();
   const previousObjects = new Map<string, TypedObject[]>();
   const unsubscribeQuery = effect(() => {
-    const folder = space.properties[Folder.schema.typename];
+    const folder: Folder = space.properties[Folder.schema.typename];
+    const folderObjects = folder?.objects ?? [];
     const removedObjects =
       previousObjects.get(space.key.toHex())?.filter((object) => !query.objects.includes(object)) ?? [];
     previousObjects.set(space.key.toHex(), [...query.objects]);
-    const unsortedObjects = query.objects.filter((object) => !folder.objects.includes(object));
-    const objects = [...(folder?.objects ?? []), ...unsortedObjects];
+    const unsortedObjects = query.objects.filter((object) => !folderObjects.includes(object));
+    const objects = [...folderObjects, ...unsortedObjects].filter((object) => object !== folder);
 
     // Cleanup when objects removed from space.
     removedObjects.forEach((object) => {
@@ -331,8 +332,25 @@ export const updateGraphWithSpace = ({
     objects.forEach((object) => {
       const getId = (id: string) => `${id}/${object.id}`;
 
-      // For all folders, including the root folder.
-      if (object instanceof Folder) {
+      // When object is a folder but not the root folder.
+      // TODO(wittjosiah): Not adding nodes for any folders until the root folder is available.
+      //  Not clear why it it's not immediately available.
+      if (object instanceof Folder && folder && object !== folder) {
+        const partials = getFolderGraphNodePartials({ graph, folder: object, space });
+
+        graph.addNodes({
+          id: object.id,
+          data: object,
+          properties: {
+            ...partials,
+            label: object.name ?? ['unnamed folder label', { ns: SPACE_PLUGIN }],
+            icon: (props: IconProps) => <FolderOpen {...props} />,
+            testId: 'spacePlugin.object',
+            persistenceClass: 'echo',
+            persistenceKey: space.key.toHex(),
+          },
+        });
+
         const removedObjects = previousObjects.get(object.id)?.filter((o) => !object.objects.includes(o)) ?? [];
         // TODO(wittjosiah): Not speading here results in empty array being stored.
         previousObjects.set(object.id, [...object.objects]);
@@ -349,24 +367,6 @@ export const updateGraphWithSpace = ({
           'outbound',
           object.objects.map((o) => o.id),
         );
-      }
-
-      // When object is a folder but not the root folder.
-      if (object instanceof Folder && object !== folder) {
-        const partials = getFolderGraphNodePartials({ graph, folder: object, space });
-
-        graph.addNodes({
-          id: object.id,
-          data: object,
-          properties: {
-            ...partials,
-            label: object.name ?? ['unnamed folder label', { ns: SPACE_PLUGIN }],
-            icon: (props: IconProps) => <FolderOpen {...props} />,
-            testId: 'spacePlugin.object',
-            persistenceClass: 'echo',
-            persistenceKey: space.key.toHex(),
-          },
-        });
 
         graph.addNodes({
           id: getId(SpaceAction.ADD_OBJECT),
@@ -449,7 +449,7 @@ export const updateGraphWithSpace = ({
     graph.sortEdges(
       space.key.toHex(),
       'outbound',
-      objects.map((o) => o.id),
+      folderObjects.map((o) => o.id),
     );
   });
 
