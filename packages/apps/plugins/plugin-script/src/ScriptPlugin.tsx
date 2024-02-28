@@ -3,7 +3,7 @@
 //
 
 import { Code, type IconProps } from '@phosphor-icons/react';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Script as ScriptType } from '@braneframe/types';
@@ -16,6 +16,7 @@ import {
   TextObject,
   isTypedObject,
   SpaceProxy,
+  Space,
 } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
@@ -24,6 +25,9 @@ import { ScriptBlock, type ScriptBlockProps } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
 import translations from './translations';
 import { ScriptAction, type ScriptPluginProvides } from './types';
+import { SignalBus } from '@dxos/functions';
+import { SignalBusContext } from './signals';
+import { defaultMap } from '@dxos/util';
 
 // TODO(burdon): Make generic and remove need for filter.
 const isObject = <T extends EchoObject>(object: unknown, schema: Schema, filter: Filter<T>): T | undefined => {
@@ -37,6 +41,8 @@ export type ScriptPluginProps = {
 };
 
 export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinition<ScriptPluginProvides> => {
+  const signalBuses = new Map<Space, SignalBus>();
+
   return {
     meta,
     provides: {
@@ -142,6 +148,11 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
             }
           }
         },
+      },
+      context: ({ children }) => {
+        const getBus = (space: Space) => defaultMap(signalBuses, space, () => new SignalBus(space));
+
+        return <SignalBusContext.Provider value={{ getBus }}>{children}</SignalBusContext.Provider>;
       },
     },
   };

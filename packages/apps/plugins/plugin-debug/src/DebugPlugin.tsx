@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Bug, type IconProps } from '@phosphor-icons/react';
-import { batch } from '@preact/signals-core';
+import { Bug, Van, type IconProps } from '@phosphor-icons/react';
+import { batch, effect } from '@preact/signals-core';
 import React, { useEffect, useState } from 'react';
 
 import { type ClientPluginProvides } from '@braneframe/plugin-client';
@@ -30,6 +30,7 @@ import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsMain } fro
 import meta, { DEBUG_PLUGIN } from './meta';
 import translations from './translations';
 import { DebugContext, type DebugSettingsProps, type DebugPluginProvides, DebugAction } from './types';
+import { log } from '@dxos/log';
 
 export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
 
@@ -142,13 +143,19 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                 subscriptions.push(
                   // TODO(burdon): Remove if hidden.
                   clientPlugin.provides.client.spaces.subscribe((spaces) => {
-                    batch(() => {
-                      spaces.forEach((space) => {
-                        root.addNode(DEBUG_PLUGIN, {
-                          id: `${space.key.toHex()}-debug`,
-                          label: space.key.truncate(),
-                          icon: (props: IconProps) => <Bug {...props} />,
-                          data: { space },
+                    effect(() => {
+                      batch(() => {
+                        spaces.forEach((space) => {
+                          root.addNode(DEBUG_PLUGIN, {
+                            id: `${space.key.toHex()}-debug`,
+                            label:
+                              space.properties.name ??
+                              (space === clientPlugin.provides.client.spaces.default
+                                ? 'Personal Space'
+                                : space.key.truncate()),
+                            icon: (props: IconProps) => <Bug {...props} />,
+                            data: { space },
+                          });
                         });
                       });
                     });

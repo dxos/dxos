@@ -26,6 +26,9 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/debug"
+    },
+    {
       "path": "../../../common/invariant"
     },
     {
@@ -57,6 +60,9 @@
     },
     {
       "path": "../../../core/echo/text-model"
+    },
+    {
+      "path": "../../../core/functions"
     },
     {
       "path": "../../../core/protocols"
@@ -102,6 +108,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-script"
     },
     {
       "path": "../plugin-settings"

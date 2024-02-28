@@ -36,6 +36,7 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -43,6 +44,7 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/text-model": "workspace:*",
+    "@dxos/util": "workspace:*",
     "codemirror": "^6.0.1",
     "esbuild-wasm": "^0.16.14",
     "lodash.get": "^4.4.2"

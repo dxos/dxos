@@ -35,6 +35,9 @@
       "path": "../../../common/random"
     },
     {
+      "path": "../../../common/util"
+    },
+    {
       "path": "../../../core/echo/echo-generator"
     },
     {
@@ -42,6 +45,9 @@
     },
     {
       "path": "../../../core/echo/text-model"
+    },
+    {
+      "path": "../../../core/functions"
     },
     {
       "path": "../../../core/mesh/rpc"
