@@ -249,7 +249,7 @@ export const setStyle =
               if (node.from >= from && openEnd <= to) {
                 changes.push({ from: node.from, to: openEnd });
                 if (markType !== type && closeStart >= to) {
-                  // End marker outside, move start
+                  // End marker outside, move start.
                   changesAtEnd.push({
                     from: skipSpaces(Math.min(to, blockEnd), state.doc, 1, blockEnd),
                     insert: inlineMarkerText(markType),
@@ -259,7 +259,7 @@ export const setStyle =
               if (closeStart >= from && node.to <= to) {
                 changes.push({ from: closeStart, to: node.to });
                 if (markType !== type && openEnd <= from) {
-                  // Start marker outside, move end
+                  // Start marker outside, move end.
                   changes.push({
                     from: skipSpaces(Math.max(from, blockStart), state.doc, -1, blockStart),
                     insert: inlineMarkerText(markType),
@@ -271,7 +271,7 @@ export const setStyle =
         },
         leave: (node) => {
           if (Object.hasOwn(Textblocks, node.name) && Textblocks[node.name] !== 'codeblock') {
-            // Finish opening/closing the marks for this textblock
+            // Finish opening/closing the marks for this textblock.
             const rangeStart = Math.max(from, blockStart);
             const rangeEnd = Math.min(to, blockEnd);
             if (enable) {
@@ -430,7 +430,7 @@ export const insertTable = (view: EditorView) => {
 // Links
 //
 
-// For each link in the given range, remove the link markup
+// For each link in the given range, remove the link markup.
 const removeLinkInner = (from: number, to: number, changes: ChangeSpec[], state: EditorState) => {
   syntaxTree(state).iterate({
     from,
@@ -451,8 +451,9 @@ const removeLinkInner = (from: number, to: number, changes: ChangeSpec[], state:
   });
 };
 
-// Remove all links touching the selection
+// Remove all links touching the selection.
 export const removeLink: StateCommand = ({ state, dispatch }) => {
+  console.log('::::');
   const changes: ChangeSpec[] = [];
   for (const { from, to } of state.selection.ranges) {
     removeLinkInner(from, to, changes, state);
@@ -464,13 +465,13 @@ export const removeLink: StateCommand = ({ state, dispatch }) => {
   return true;
 };
 
-// Add link markup around the selection
+// Add link markup around the selection.
 export const addLink: StateCommand = ({ state, dispatch }) => {
   const changes = state.changeByRange((range) => {
     let { from, to } = range;
     const cutStyles: SyntaxNode[] = [];
     let okay: boolean | null = null;
-    // Check whether this range is in a position where a link makes sense
+    // Check whether this range is in a position where a link makes sense.
     syntaxTree(state).iterate({
       from,
       to,

@@ -81,7 +81,10 @@ const horizontalRule = Decoration.replace({ widget: new HorizontalRuleWidget() }
 const checkedTask = Decoration.replace({ widget: new CheckboxWidget(true) });
 const uncheckedTask = Decoration.replace({ widget: new CheckboxWidget(false) });
 
-const editingRange = (state: EditorState, range: { from: number; to: number }) => {
+const editingRange = (state: EditorState, range: { from: number; to: number }, lineChanged?: boolean): boolean => {
+  if (lineChanged) {
+    return false;
+  }
   const {
     readOnly,
     selection: {
@@ -93,7 +96,7 @@ const editingRange = (state: EditorState, range: { from: number; to: number }) =
 
 const MarksByParent = new Set(['CodeMark', 'EmphasisMark', 'StrikethroughMark', 'SubscriptMark', 'SuperscriptMark']);
 
-const buildDecorations = (view: EditorView, options: DecorateOptions): DecorationSet => {
+const buildDecorations = (view: EditorView, options: DecorateOptions, lineChanged?: boolean): DecorationSet => {
   const builder = new RangeSetBuilder<Decoration>();
   const { state } = view;
 
@@ -127,7 +130,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions): Decoratio
         } else if (node.name === 'Link') {
           const marks = node.node.getChildren('LinkMark');
           const urlNode = node.node.getChild('URL');
-          const editing = editingRange(state, node);
+          const editing = editingRange(state, node, lineChanged);
           if (urlNode && marks.length >= 2) {
             const url = state.sliceDoc(urlNode.from, urlNode.to);
             if (!editing) {
@@ -160,23 +163,23 @@ const buildDecorations = (view: EditorView, options: DecorateOptions): Decoratio
           }
         } else if (node.name === 'HeaderMark') {
           const parent = node.node.parent!;
-          if (/^ATX/.test(parent.name) && !editingRange(state, state.doc.lineAt(node.from))) {
+          if (/^ATX/.test(parent.name) && !editingRange(state, state.doc.lineAt(node.from), lineChanged)) {
             const next = state.doc.sliceString(node.to, node.to + 1);
             builder.add(node.from, node.to + (next === ' ' ? 1 : 0), hide);
           }
         } else if (node.name === 'HorizontalRule') {
-          if (!editingRange(state, node)) {
+          if (!editingRange(state, node, lineChanged)) {
             builder.add(node.from, node.to, horizontalRule);
           }
         } else if (node.name === 'TaskMarker') {
           // Check if cursor is inside text.
-          if (!editingRange(state, node)) {
+          if (!editingRange(state, node, lineChanged)) {
             const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
             builder.add(node.from - 2, node.from - 1, Decoration.mark({ class: 'cm-task' }));
             builder.add(node.from, node.to, checked ? checkedTask : uncheckedTask);
           }
         } else if (MarksByParent.has(node.name)) {
-          if (!editingRange(state, node.node.parent!)) {
+          if (!editingRange(state, node.node.parent!, lineChanged)) {
             builder.add(node.from, node.to, hide);
           }
         }
@@ -201,8 +204,12 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
         }
 
         update(update: ViewUpdate) {
+          const { number: previous } = update.state.doc.lineAt(update.startState.selection.main.anchor);
+          const { number: current } = update.state.doc.lineAt(update.state.selection.main.anchor);
+          // TODO(burdon): Updated is called twice when navigating via keys.
+          const lineChanged = previous !== current;
           if (update.docChanged || update.selectionSet || update.viewportChanged) {
-            this.decorations = buildDecorations(update.view, options);
+            this.decorations = buildDecorations(update.view, options, lineChanged);
           }
         }
       },

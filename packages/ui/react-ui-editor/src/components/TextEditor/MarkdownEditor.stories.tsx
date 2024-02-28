@@ -296,7 +296,9 @@ export const ScrollingWithImages = {
 };
 
 export const Links = {
-  render: () => <Story text={str(text.links, text.footer)} extensions={[linkTooltip(renderLinkTooltip)]} />,
+  render: () => (
+    <Story text={str(text.links, text.footer)} extensions={[decorateMarkdown(), linkTooltip(renderLinkTooltip)]} />
+  ),
 };
 
 export const Image = {
