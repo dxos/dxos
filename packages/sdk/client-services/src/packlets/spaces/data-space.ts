@@ -391,9 +391,9 @@ export class DataSpace {
         }
 
         const doc = handle.docSync() ?? failedInvariant();
-        if (!doc.experimental_spaceKey) {
+        if (!doc.access?.spaceKey) {
           handle.change((doc: any) => {
-            doc.experimental_spaceKey = this.key.toHex();
+            doc.access = { spaceKey: this.key.toHex() };
           });
         }
       } catch (err) {

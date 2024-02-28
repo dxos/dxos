@@ -114,16 +114,12 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
           }
           onValueChange={(value) => {
             if (confirm(t('settings storage adapter changed alert'))) {
-              const storageConfigCopy = JSON.parse(JSON.stringify(storageConfig ?? {}));
-              assignDeep(
-                storageConfigCopy,
+              updateConfig(
+                storageConfig,
+                setStorageConfig,
                 ['runtime', 'client', 'storage', 'dataStore'],
                 StorageAdapters[value as keyof typeof StorageAdapters],
               );
-              setStorageConfig(storageConfigCopy);
-              queueMicrotask(async () => {
-                await SaveConfig(storageConfigCopy);
-              });
             }
           }}
         >
@@ -141,6 +137,29 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
           </Select.Portal>
         </Select.Root>
       </SettingsValue>
+
+      <SettingsValue label={t('settings space fragmentation')}>
+        <Input.Switch
+          checked={storageConfig?.runtime?.client?.storage?.spaceFragmentation}
+          onCheckedChange={(checked) => {
+            updateConfig(
+              storageConfig,
+              setStorageConfig,
+              ['runtime', 'client', 'storage', 'spaceFragmentation'],
+              !!checked,
+            );
+          }}
+        />
+      </SettingsValue>
     </>
   );
+};
+
+const updateConfig = (config: ConfigProto, setConfig: (newConfig: ConfigProto) => void, path: string[], value: any) => {
+  const storageConfigCopy = JSON.parse(JSON.stringify(config ?? {}));
+  assignDeep(storageConfigCopy, path, value);
+  setConfig(storageConfigCopy);
+  queueMicrotask(async () => {
+    await SaveConfig(storageConfigCopy);
+  });
 };
