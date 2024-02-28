@@ -75,9 +75,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
                 effect(() => {
                   const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
                   previousObjects = query.objects;
-                  removedObjects.forEach((object) => {
-                    graph.removeNode(object.id);
-                  });
+                  removedObjects.forEach((object) => graph.removeNode(object.id));
                   query.objects.forEach((object) => {
                     graph.addNodes({
                       id: object.id,

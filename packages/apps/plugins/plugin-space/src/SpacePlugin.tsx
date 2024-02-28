@@ -118,12 +118,11 @@ export const SpacePlugin = ({
       // Create root folder structure.
       if (clientPlugin.provides.firstRun) {
         const defaultSpace = client.spaces.default;
-        const personalSpaceFolder = defaultSpace.db.add(new Folder());
+        const personalSpaceFolder = new Folder();
         defaultSpace.properties[Folder.schema.typename] = personalSpaceFolder;
-        // TODO(wittjosiah): Mark current version.
-        // if (Migrations.versionProperty) {
-        //   defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
-        // }
+        if (Migrations.versionProperty) {
+          defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
+        }
         onFirstRun?.({
           client,
           defaultSpace,

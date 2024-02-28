@@ -163,9 +163,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
                   const removedObjects = previousObjects.filter((object) => !objects.includes(object));
                   previousObjects = objects;
-                  removedObjects.forEach((object) => {
-                    graph.removeNode(object.id);
-                  });
+                  removedObjects.forEach((object) => graph.removeNode(object.id));
                   objects.forEach((object) => {
                     graph.addNodes({
                       id: object.id,

@@ -100,7 +100,7 @@ export const ClientPlugin = ({
           // TODO(wittjosiah): This doesn't work currently.
           //   There's no guaruntee that the default space will be fully synced by the time this is called.
           // firstRun = !client.spaces.default.properties[appKey];
-          client.spaces.default.properties[appKey] = true;
+          client.spaces.default.properties[`${appKey}.opened`] = Date.now();
         }
       } catch (err) {
         error = err;
