@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type IconProps, Info, Keyboard as KeyboardIcon } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 import { type Step } from 'react-joyride';
 
-import { type PluginDefinition } from '@dxos/app-framework';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 
 import { HelpContextProvider, ShortcutsDialogContent, ShortcutsHints, ShortcutsList } from './components';
@@ -40,42 +41,45 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
       translations,
       graph: {
         builder: (plugins, graph) => {
-          // TODO(wittjosiah): Implement.
-          // const intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
-          // if (parent.id === 'root') {
-          //   parent.addAction({
-          //     id: 'start-help', // TODO(burdon): Standardize.
-          //     label: ['open help tour', { ns: HELP_PLUGIN }],
-          //     icon: (props) => <Info {...props} />,
-          //     invoke: () => {
-          //       settings.values.showHints = true;
-          //       return intentPlugin?.provides.intent.dispatch({
-          //         plugin: HELP_PLUGIN,
-          //         action: HelpAction.START,
-          //       });
-          //     },
-          //     keyBinding: 'shift+meta+/',
-          //     properties: {
-          //       testId: 'helpPlugin.openHelp',
-          //     },
-          //   });
-          //   parent.addAction({
-          //     id: 'show-shortcuts',
-          //     label: ['open shortcuts label', { ns: HELP_PLUGIN }],
-          //     icon: (props) => <KeyboardIcon {...props} />,
-          //     keyBinding: 'meta+/',
-          //     invoke: () => {
-          //       settings.values.showHints = true;
-          //       return intentPlugin?.provides.intent.dispatch({
-          //         action: LayoutAction.SET_LAYOUT,
-          //         data: {
-          //           element: 'dialog',
-          //           component: `${HELP_PLUGIN}/Shortcuts`,
-          //         },
-          //       });
-          //     },
-          //   });
-          // }
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
+          graph.addNodes(
+            {
+              id: HelpAction.START,
+              data: () => {
+                settings.values.showHints = true;
+                return intentPlugin?.provides.intent.dispatch({
+                  plugin: HELP_PLUGIN,
+                  action: HelpAction.START,
+                });
+              },
+              properties: {
+                label: ['open help tour', { ns: HELP_PLUGIN }],
+                icon: (props: IconProps) => <Info {...props} />,
+                keyBinding: 'shift+meta+/',
+                testId: 'helpPlugin.openHelp',
+              },
+              edges: [['root', 'inbound']],
+            },
+            {
+              id: 'dxos.org/plugin/help/open-shortcuts',
+              data: () => {
+                settings.values.showHints = true;
+                return intentPlugin?.provides.intent.dispatch({
+                  action: LayoutAction.SET_LAYOUT,
+                  data: {
+                    element: 'dialog',
+                    component: `${HELP_PLUGIN}/Shortcuts`,
+                  },
+                });
+              },
+              properties: {
+                label: ['open shortcuts label', { ns: HELP_PLUGIN }],
+                icon: (props: IconProps) => <KeyboardIcon {...props} />,
+                keyBinding: 'meta+/',
+              },
+              edges: [['root', 'inbound']],
+            },
+          );
         },
       },
       surface: {

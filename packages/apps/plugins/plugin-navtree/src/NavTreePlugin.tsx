@@ -114,6 +114,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
 
       // TODO(burdon): Create context and plugin.
       Keyboard.singleton.initialize();
+      Keyboard.singleton.setCurrentContext(graphPlugin?.provides.graph.root.id);
     },
     unload: async () => {
       Keyboard.singleton.destroy();

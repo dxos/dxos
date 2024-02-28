@@ -179,6 +179,7 @@ export const LayoutPlugin = ({
               icon: (props: IconProps) => <ArrowsOut {...props} />,
               keyBinding: 'ctrl+meta+f',
             },
+            edges: [['root', 'inbound']],
           });
         },
       },
