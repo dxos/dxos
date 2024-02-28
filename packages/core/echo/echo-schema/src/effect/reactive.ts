@@ -8,13 +8,14 @@ import * as S from '@effect/schema/Schema';
 import { invariant } from '@dxos/invariant';
 
 import { type ReactiveHandler, createReactiveProxy, isValidProxyTarget } from './proxy';
-import { TypedReactiveHandler, setAstProperty, symbolSchema } from './typed-handler';
+import { TypedReactiveHandler, setSchemaProperties, symbolSchema } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
 
 // https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#introduction
+// https://effect-ts.github.io/effect/schema/Schema.ts.html
 
 /**
  * Reactive object.
@@ -36,12 +37,12 @@ export const object: {
     if (!isValidProxyTarget(obj)) {
       throw new Error('Value cannot be made into a reactive object.');
     }
-    // typed case
+
+    // Typed.
     const schema: S.Schema<T> = schemaOrObj as S.Schema<T>;
     const _ = S.asserts(schema)(obj);
 
-    Object.defineProperty(obj, symbolSchema, { enumerable: false, value: schema });
-    setAstProperty(obj, schema.ast);
+    setSchemaProperties(obj, schema);
 
     return createReactiveProxy(obj, new TypedReactiveHandler());
   } else {
@@ -49,7 +50,7 @@ export const object: {
       throw new Error('Value cannot be made into a reactive object.');
     }
 
-    // untyped case
+    // Untyped.
     return createReactiveProxy(schemaOrObj as T, UntypedReactiveHandler.instance as ReactiveHandler<any>);
   }
 };
@@ -67,28 +68,40 @@ export const getSchema = <T extends {}>(obj: T): S.Schema<T> | undefined => {
   return schema as S.Schema<T>;
 };
 
+export type PropertyVisitor<T> = (property: AST.PropertySignature, path: PropertyKey[]) => T;
+
 /**
  * Recursively visit properties of the given object.
  */
 // TODO(burdon): Ref unist-util-visit (e.g., specify filter).
-export const visitProperties = (
-  root: AST.AST,
-  visitor: (property: AST.PropertySignature, path: PropertyKey[]) => void,
-  rootPath: PropertyKey[] = [],
-): void => {
+export const visit = (root: AST.AST, visitor: PropertyVisitor<void>, rootPath: PropertyKey[] = []): void => {
   AST.getPropertySignatures(root).forEach((property) => {
     const path = [...rootPath, property.name];
     visitor(property, path);
 
     // Recursively visit properties.
-    if (AST.isTypeLiteral(property.type)) {
-      visitProperties(property.type, visitor, path);
-    } else if (AST.isUnion(property.type)) {
-      property.type.types.forEach((type) => {
+    const { type } = property;
+    if (AST.isTypeLiteral(type)) {
+      visit(type, visitor, path);
+    } else if (AST.isUnion(type)) {
+      type.types.forEach((type) => {
         if (AST.isTypeLiteral(type)) {
-          visitProperties(type, visitor, path);
+          visit(type, visitor, path);
         }
       });
     }
   });
+};
+
+export const reduce = <T>(
+  root: AST.AST,
+  visitor: (acc: T, property: AST.PropertySignature, path: PropertyKey[]) => T,
+  initialValue: T,
+): T => {
+  let acc = initialValue;
+  visit(root, (property, path) => {
+    acc = visitor(acc, property, path);
+  });
+
+  return acc;
 };

@@ -23,6 +23,7 @@ import { Context } from '@dxos/context';
 import { type Platform } from '@dxos/protocols/proto/dxos/client/services';
 
 import { BaseCommand } from '../../base-command';
+import { FriendlyError } from '../../errors';
 
 export default class Start extends BaseCommand<typeof Start> {
   static override enableJsonFlag = true;
@@ -94,7 +95,14 @@ export default class Start extends BaseCommand<typeof Start> {
       ],
     });
 
-    await this._agent.start();
+    try {
+      await this._agent.start();
+    } catch (err: any) {
+      if (err?.code === 'EAGAIN') {
+        throw new AgentAlreadyRunningError();
+      }
+      throw err;
+    }
     this.log('Agent started... (ctrl-c to exit)');
 
     await this._sendTelemetry();
@@ -139,7 +147,7 @@ export default class Start extends BaseCommand<typeof Start> {
           this.log('Agent started.');
         }
       } catch (err: any) {
-        this.error(err);
+        this.catch(err);
       }
     }, system);
   }
@@ -162,5 +170,19 @@ export default class Start extends BaseCommand<typeof Start> {
 
     runInContext(this._ctx, sendTelemetry);
     scheduleTaskInterval(this._ctx, sendTelemetry, 1000 * 60);
+  }
+}
+
+class AgentAlreadyRunningError extends FriendlyError {
+  constructor() {
+    super('Agent is already running.');
+  }
+
+  get friendlyMessage() {
+    return 'Agent is already running.';
+  }
+
+  override get suggestion() {
+    return 'Make sure you stop the daemonized agent process.';
   }
 }

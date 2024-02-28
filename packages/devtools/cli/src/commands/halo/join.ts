@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ux, Flags } from '@oclif/core';
+import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Invitation, InvitationEncoder } from '@dxos/client/invitations';
+import { DeviceType } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { BaseCommand } from '../../base-command';
 import { acceptInvitation } from '../../util';
@@ -27,14 +28,18 @@ export default class Join extends BaseCommand<typeof Join> {
       description: 'Timeout in seconds',
       default: 300,
     }),
+    deviceLabel: Flags.string({
+      description: 'Set device label',
+    }),
+    managedAgent: Flags.boolean({ description: 'Managed agent', default: false }),
   };
 
   async run(): Promise<any> {
-    let { invitation: encoded, secret } = this.flags;
+    let { invitation: encoded, secret, deviceLabel, managedAgent } = this.flags;
 
     return await this.execWithClient(async (client: Client) => {
       if (client.halo.identity.get()) {
-        this.error(chalk`{red Profile already initialized.}`);
+        this.catch(chalk`{red Profile already initialized.}`);
       }
 
       if (!encoded) {
@@ -53,7 +58,10 @@ export default class Join extends BaseCommand<typeof Join> {
         invitation = await asyncTimeout(
           Promise.all([
             acceptInvitation({
-              observable: client.halo.join(InvitationEncoder.decode(encoded!)),
+              observable: client.halo.join(InvitationEncoder.decode(encoded!), {
+                type: managedAgent ? DeviceType.AGENT_MANAGED : DeviceType.AGENT,
+                ...(deviceLabel ? { label: deviceLabel } : {}),
+              }),
               callbacks: {
                 onConnecting: async () => ux.action.stop(),
                 onReadyForAuth: async () => secret ?? ux.prompt(chalk`\n{red Secret}`),
@@ -68,7 +76,7 @@ export default class Join extends BaseCommand<typeof Join> {
         );
       } catch (err: any) {
         ux.log();
-        this.error(chalk`{red Timeout waiting for device join to complete: ${err.message}}`);
+        this.catch(chalk`{red Timeout waiting for device join to complete: ${err.message}}`);
       }
 
       ux.log();

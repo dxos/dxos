@@ -5,8 +5,9 @@
 import React, { useEffect, useRef } from 'react';
 
 import { clientServiceBundle } from '@dxos/client-protocol';
+import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
-import { mx } from '@dxos/react-ui-theme';
+import { baseSurface, mx } from '@dxos/react-ui-theme';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
@@ -21,7 +22,7 @@ export type FrameContainerProps = {
 /**
  * IFrame container for the compiled script.
  */
-export const FrameContainer = ({ containerUrl, result, debug = false }: FrameContainerProps) => {
+export const FrameContainer = ({ containerUrl, result, debug = true }: FrameContainerProps) => {
   const client = useClient();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   useEffect(() => {
@@ -46,11 +47,13 @@ export const FrameContainer = ({ containerUrl, result, debug = false }: FrameCon
 
   // Encodes compiled code via URL.
   const sourceHash = Buffer.from(result.sourceHash).toString('hex');
-  const src = `${containerUrl}?ts=${sourceHash}#importMap=${encodeURIComponent(
-    JSON.stringify({
-      imports: createImportMap(result),
-    }),
-  )}`;
+  const src =
+    result.bundle &&
+    `${containerUrl}?ts=${sourceHash}#importMap=${encodeURIComponent(
+      JSON.stringify({
+        imports: createImportMap(result),
+      }),
+    )}`;
 
   return (
     <>
@@ -60,7 +63,8 @@ export const FrameContainer = ({ containerUrl, result, debug = false }: FrameCon
         <div className='relative'>
           <div
             className={mx(
-              'flex absolute right-2 bottom-2 w-[400px] h-[200px] ring rounded bg-white',
+              baseSurface,
+              'flex absolute right-2 bottom-2 w-[400px] h-[200px] ring rounded',
               'z-[100] overflow-x-hidden overflow-y-auto',
             )}
           >
@@ -69,6 +73,7 @@ export const FrameContainer = ({ containerUrl, result, debug = false }: FrameCon
                 {
                   timestamp: result.timestamp,
                   sourceHash,
+                  error: result.error,
                   src,
                 },
                 undefined,
@@ -98,6 +103,7 @@ const createImportMap = (result: CompilerResult) => {
     return `data:text/javascript;base64,${btoa(code)}`;
   };
 
+  invariant(result.bundle);
   return {
     '@frame/bundle': `data:text/javascript;base64,${btoa(result.bundle)}`,
     ...Object.fromEntries(
