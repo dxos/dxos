@@ -28,6 +28,7 @@ export default [
         'settings data store label': 'Data Store',
         'settings storage adapter changed alert':
           'Warning: Swapping the storage adapter will make your data unavailable.',
+        'settings space fragmentation': 'Enable AM space fragmentation',
       },
     },
   },
