@@ -13,7 +13,7 @@ import { Indexer, type ObjectSnapshot } from './indexer';
 import { type Filter } from '../query';
 
 describe('Indexer', () => {
-  test.only('objects that are marked as dirty are getting indexed', async () => {
+  test('objects that are marked as dirty are getting indexed', async () => {
     const storage = createStorage({ type: StorageType.RAM });
     afterTest(() => storage.close());
 
