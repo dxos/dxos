@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { synchronized } from '@dxos/async';
+import { synchronized, Event } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type Directory } from '@dxos/random-access-storage';
 
@@ -20,6 +20,8 @@ export type DocumentMetadata = {
 
 // TODO(mykola): Use snapshot and append only log, not separate file for each document.
 export class IndexMetadataStore {
+  public readonly updated = new Event<void>();
+
   private readonly _directory: Directory;
   /** map objectId -> index metadata */
   private readonly _metadata: Map<string, DocumentMetadata> = new Map();
@@ -32,6 +34,7 @@ export class IndexMetadataStore {
     const metadata = await this._getMetadata(id);
     metadata.lastAvailableHash = lastAvailableHash;
     await this._setMetadata(id, metadata);
+    this.updated.emit();
   }
 
   async getDirtyDocuments(): Promise<string[]> {
