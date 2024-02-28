@@ -25,7 +25,7 @@ import {
   Quotes,
 } from '@phosphor-icons/react';
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, useRef, useState } from 'react';
 
 import {
   DensityProvider,
@@ -141,11 +141,31 @@ const MarkdownHeading = () => {
   const header = blockType && /heading(\d)/.exec(blockType);
   const value = header ? header[1] : blockType === 'paragraph' || !blockType ? '0' : undefined;
   const HeadingIcon = HeadingIcons[value ?? '0'];
+  const suppressNextTooltip = useRef<boolean>(false);
+  const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
+  const [selectOpen, setSelectOpen] = useState<boolean>(false);
   return (
-    <Tooltip.Root>
+    <Tooltip.Root
+      open={tooltipOpen}
+      onOpenChange={(nextOpen) => {
+        if (nextOpen && suppressNextTooltip.current) {
+          suppressNextTooltip.current = false;
+          return setTooltipOpen(false);
+        } else {
+          return setTooltipOpen(nextOpen);
+        }
+      }}
+    >
       <Select.Root
         disabled={value === null}
         value={value ?? '0'}
+        open={selectOpen}
+        onOpenChange={(nextOpen: boolean) => {
+          if (!nextOpen) {
+            suppressNextTooltip.current = true;
+          }
+          return setSelectOpen(nextOpen);
+        }}
         onValueChange={(value) => onAction?.({ type: 'heading', data: parseInt(value) })}
       >
         <Tooltip.Trigger asChild>
