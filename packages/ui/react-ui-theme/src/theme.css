@@ -13,7 +13,9 @@
 
 :root {
   font-synthesis: none;
-  font-variation-settings: 'wght' 400, 'slnt' 0;
+  font-variation-settings:
+    'wght' 400,
+    'slnt' 0;
   --surface-bg: theme(colors.neutral.25);
   --input-bg: theme(colors.neutral.50);
   --input-bg-hover: theme(colors.neutral.75);

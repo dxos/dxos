@@ -1,5 +1,5 @@
 @layer components {
-    .sticky-top-from-topbar-bottom {
-        --sticky-top: var(--topbar-size);
-    }
+  .sticky-top-from-topbar-bottom {
+    --sticky-top: var(--topbar-size);
+  }
 }

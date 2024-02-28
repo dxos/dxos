@@ -1,9 +1,9 @@
 @layer components {
-    .overflow-anchored * {
-        overflow-anchor: none;
-    }
+  .overflow-anchored * {
+    overflow-anchor: none;
+  }
 
-    .overflow-anchor {
-        overflow-anchor: auto;
-    }
+  .overflow-anchor {
+    overflow-anchor: auto;
+  }
 }
