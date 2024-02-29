@@ -24,8 +24,9 @@ import {
   type SignalSubscription,
   type TriggerSubscription,
 } from '../manifest';
-import { type Signal, SignalBus } from '../signal';
+import { type Signal, type SignalBus } from '../signal';
 import { MutationSignalEmitter } from '../signal/echo-mutation-signal';
+import { SignalBusInterconnect } from '../signal/signal-bus-interconnect';
 
 type Callback = (data: FunctionSubscriptionEvent) => Promise<number>;
 
@@ -45,6 +46,7 @@ export class Scheduler {
     { ctx: Context; trigger: FunctionTrigger }
   >(({ id, spaceKey }) => `${spaceKey.toHex()}:${id}`);
 
+  private readonly _busInterconnect = new SignalBusInterconnect();
   private readonly _signalEmitter: MutationSignalEmitter;
 
   constructor(
@@ -52,7 +54,7 @@ export class Scheduler {
     private readonly _manifest: FunctionManifest,
     private readonly _options: SchedulerOptions = {},
   ) {
-    this._signalEmitter = new MutationSignalEmitter(_client);
+    this._signalEmitter = new MutationSignalEmitter(_client, this._busInterconnect);
   }
 
   async start() {
@@ -98,7 +100,7 @@ export class Scheduler {
         this._createSubscription(ctx, space, def, triggerSubscription);
       }
 
-      const signalBus = new SignalBus(space);
+      const signalBus = this._busInterconnect.createConnected(space);
       for (const signalSubscription of trigger.signals ?? []) {
         this._createSignalProcessor(ctx, space, signalBus, def, signalSubscription);
       }

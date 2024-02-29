@@ -7,7 +7,6 @@ import * as Either from 'effect/Either';
 
 import { type Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
-import { ComplexMap } from '@dxos/util';
 
 const Signal = S.struct({
   id: S.string,
@@ -28,7 +27,7 @@ export type Signal = S.Schema.From<typeof Signal>;
 export type OnSignalCallback = (signal: Signal) => void;
 
 export class SignalBus {
-  private static _localCallbacks = new ComplexMap<Space, OnSignalCallback[]>((space) => space.key.toHex());
+  private readonly callbacks: OnSignalCallback[] = [];
 
   public constructor(private readonly space: Space) {}
 
@@ -36,15 +35,20 @@ export class SignalBus {
     this.space.postMessage('signals', signal).catch((error) => {
       log.warn('failed to emit a signal', { signal, error });
     });
-    const localCallbacks = SignalBus._localCallbacks.get(this.space);
-    for (const callback of localCallbacks ?? []) {
+    this.emitLocal(signal);
+  }
+
+  emitLocal(signal: Signal) {
+    for (const callback of this.callbacks) {
       callback(signal);
     }
   }
 
   subscribe(callback: (signal: Signal) => void): () => void {
+    if (this.callbacks.includes(callback)) {
+      throw new Error('double registration of a callback');
+    }
     const unsubscribe = this.space.listen('signals', (message) => {
-      log.info('signal received', { message });
       const decoded = S.decodeEither<Signal, Signal>(Signal)(message.payload);
       if (Either.isRight(decoded)) {
         callback(decoded.right);
@@ -52,12 +56,12 @@ export class SignalBus {
         log.warn('malformed signal received', { error: decoded.left });
       }
     });
-    const callbacks = SignalBus._localCallbacks.get(this.space) ?? [];
-    callbacks.push(callback);
-    SignalBus._localCallbacks.set(this.space, callbacks);
+    this.callbacks.push(callback);
     return () => {
-      const callbacks = SignalBus._localCallbacks.get(this.space) ?? [];
-      callbacks.unshift(callback);
+      const index = this.callbacks.indexOf(callback);
+      if (index >= 0) {
+        this.callbacks.splice(index, 1);
+      }
       unsubscribe();
     };
   }

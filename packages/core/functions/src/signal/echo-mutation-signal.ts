@@ -9,12 +9,16 @@ import { createSubscription, type Query, subscribe, TextObject, type TypedObject
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
-import { type Signal, SignalBus } from './signal-bus';
+import { type Signal } from './signal-bus';
+import { type SignalBusInterconnect } from './signal-bus-interconnect';
 
 export class MutationSignalEmitter {
   private readonly spaceSubscriptions = new ComplexMap<Space, Context>((space) => space.key.toHex());
 
-  constructor(private readonly _client: Client) {}
+  constructor(
+    private readonly _client: Client,
+    private readonly _busInterconnect: SignalBusInterconnect,
+  ) {}
 
   public start() {
     this._client.spaces.subscribe(async (spaces) => {
@@ -38,7 +42,7 @@ export class MutationSignalEmitter {
 
   private _createSubscription(space: Space): Context {
     const ctx = new Context();
-    const bus = new SignalBus(space);
+    const bus = this._busInterconnect.createConnected(space);
     const subscriptions: (() => void)[] = [];
     const subscription = createSubscription(({ added, updated }) => {
       const signals: Signal[] = [added, updated]
