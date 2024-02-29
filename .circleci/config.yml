@@ -146,6 +146,7 @@ jobs:
     resource_class: xlarge
     environment:
       DX_ENVIRONMENT: circleci
+      NX_CLOUD_ACCESS_TOKEN:
     steps:
       - checkout
       - *cache_restore
