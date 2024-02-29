@@ -51,7 +51,7 @@ export class EchoLegacyDatabase {
     private readonly _graph: Hypergraph,
     automergeContext: AutomergeContext,
   ) {
-    this.automerge = new AutomergeDb(this._graph, automergeContext, this);
+    this.automerge = null as any; // new AutomergeDb(this._graph, automergeContext, this);
 
     this._backend.itemUpdate.on(this._update.bind(this));
 

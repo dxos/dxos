@@ -31,6 +31,7 @@ import {
 import { AutomergeObject } from './automerge-object';
 import { AutomergeObjectCore } from './automerge-object-core';
 import { type SpaceDoc } from './types';
+import { EchoDatabase } from '../database';
 
 export type SpaceState = {
   // Url of the root automerge document.
@@ -47,23 +48,21 @@ export class AutomergeDb {
 
   private _ctx?: Context = undefined;
 
-  /**
-   * @internal
-   */
-  readonly _echoDatabase: EchoLegacyDatabase;
   private readonly _automergeDocLoader: AutomergeDocumentLoader;
+
+  /**
+   * @deprecated Remove
+   */
+  _dbApi: EchoDatabase;
 
   constructor(
     public readonly graph: Hypergraph,
     public readonly automerge: AutomergeContext,
-    echoDatabase: EchoLegacyDatabase,
+    public readonly spaceKey: PublicKey,
+    dbApi: EchoDatabase, // TODO(dmaretskyi): Remove.
   ) {
-    this._echoDatabase = echoDatabase;
     this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this.spaceKey, automerge);
-  }
-
-  get spaceKey() {
-    return this._echoDatabase._backend.spaceKey;
+    this._dbApi = dbApi;
   }
 
   allObjects(): EchoObject[] {
@@ -115,31 +114,23 @@ export class AutomergeDb {
   }
 
   getObjectById(id: string): EchoObject | undefined {
-    // TODO(dmaretskyi): Cleanup.
-    const obj = this._objects.get(id) ?? this._echoDatabase._objects.get(id);
+    const obj = this._objects.get(id);
     if (!obj) {
       this._automergeDocLoader.loadObjectDocument(id);
       return undefined;
     }
 
-    if ((obj as any).__deleted === true) {
+    if ((obj.rootProxy as any).__deleted === true) {
       return undefined;
     }
 
-    if (obj instanceof AutomergeObjectCore) {
-      const root = obj.rootProxy;
-      invariant(isAutomergeObject(root));
-      return root;
-    } else {
-      return obj;
-    }
+    invariant(obj instanceof AutomergeObjectCore);
+    const root = obj.rootProxy;
+    invariant(isAutomergeObject(root));
+    return root;
   }
 
   add<T extends EchoObject>(obj: T): T {
-    if (isActualTypedObject(obj) || isActualTextObject(obj)) {
-      return this._echoDatabase.add(obj);
-    }
-
     invariant(isAutomergeObject(obj));
     const core = obj[base]._core;
 

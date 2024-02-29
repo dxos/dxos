@@ -102,9 +102,6 @@ export class TestPeer {
   }
 
   async flush() {
-    if (this.db._backend.currentBatch) {
-      this.db._backend.commitBatch();
-    }
     await this.base.confirm();
     await this.db.flush();
   }

@@ -56,7 +56,6 @@ export class Hypergraph {
   _register(spaceKey: PublicKey, database: EchoDatabaseImpl, owningObject?: unknown) {
     this._databases.set(spaceKey, database);
     this._owningObjects.set(spaceKey, owningObject);
-    database._updateEvent.on(this._onUpdate.bind(this));
     database.automerge._updateEvent.on(this._onUpdate.bind(this));
 
     const map = this._resolveEvents.get(spaceKey);
@@ -221,8 +220,6 @@ class SpaceQuerySource implements QuerySource {
       return (
         !this._results ||
         this._results.find((result) => result.id === object.id) ||
-        (this._database._legacy._objects.has(object.id) &&
-          filterMatch(this._filter!, this._database._legacy._objects.get(object.id)!)) ||
         (this._database.automerge._objects.has(object.id) &&
           filterMatch(this._filter!, this._database.automerge.getObjectById(object.id)!))
       );
@@ -240,7 +237,8 @@ class SpaceQuerySource implements QuerySource {
     }
 
     if (!this._results) {
-      this._results = [...this._database._legacy._objects.values(), ...this._database.automerge.allObjects()]
+      this._results = this._database.automerge
+        .allObjects()
         .filter((object) => filterMatch(this._filter!, object))
         .map((object) => ({
           id: object.id,
@@ -272,7 +270,6 @@ class SpaceQuerySource implements QuerySource {
     this._filter = filter;
 
     // TODO(dmaretskyi): Allow to specify a retainer.
-    this._database._updateEvent.on(new Context(), this._onUpdate, { weak: true });
     this._database.automerge._updateEvent.on(new Context(), this._onUpdate, { weak: true });
 
     this._results = undefined;
