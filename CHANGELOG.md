@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.4.6](https://github.com/dxos/dxos/compare/v0.4.5...v0.4.6) (2024-02-28)
+
+
+### Features
+
+* Add schema & initial ECHO support to the new Reactive Object API ([#5785](https://github.com/dxos/dxos/issues/5785)) ([3724cc4](https://github.com/dxos/dxos/commit/3724cc4fd98cfbac4979073b4ddb9b03b7f156b6))
+* **echo:** automerge space fragmentation ([#5798](https://github.com/dxos/dxos/issues/5798)) ([7879c71](https://github.com/dxos/dxos/commit/7879c71d11752c4a23ace1a091cc1654d1d72f03))
+* **mesh:** signaling WS keepalive ([#5787](https://github.com/dxos/dxos/issues/5787)) ([6d26f8f](https://github.com/dxos/dxos/commit/6d26f8ffec88f04c7e9a136e05f5fa6c8e6c1ef0))
+* set and synchronize device profile ([#5482](https://github.com/dxos/dxos/issues/5482)) ([268e405](https://github.com/dxos/dxos/commit/268e405f1189f261dd0ed6d4220a5b8f801cb8eb))
+
+
+### Bug Fixes
+
+* Editor scrolling hack ([#5776](https://github.com/dxos/dxos/issues/5776)) ([3500f01](https://github.com/dxos/dxos/commit/3500f0192f2ab59a8e02c79ad149afaf7f48d02f))
+* Fix reset dialog ([#5792](https://github.com/dxos/dxos/issues/5792)) ([39d1738](https://github.com/dxos/dxos/commit/39d173801718d2d2334ddabb06d9deec03bf6b51))
+* Layout for iOS devices ([#5807](https://github.com/dxos/dxos/issues/5807)) ([d90739d](https://github.com/dxos/dxos/commit/d90739d7269ae247e5ffc5f2d5ff3f5b04ebcc6d))
+* Privacy notice ([#5777](https://github.com/dxos/dxos/issues/5777)) ([9c97a50](https://github.com/dxos/dxos/commit/9c97a503a46308d594547daab858a9953a05a26c))
+* **react-ui-editor:** Preload images found in the document ([#5799](https://github.com/dxos/dxos/issues/5799)) ([2c76dca](https://github.com/dxos/dxos/commit/2c76dca2171bafaf9b7823dcf158c24f5d8e9ac1))
+* **react-ui-editor:** Simplify styling of first/last codeblock lines ([#5783](https://github.com/dxos/dxos/issues/5783)) ([20d1ec4](https://github.com/dxos/dxos/commit/20d1ec4e89634a69f3bea7897026d309f786c780))
+
 ## [0.4.5](https://github.com/dxos/dxos/compare/v0.4.4...v0.4.5) (2024-02-26)
 
 
