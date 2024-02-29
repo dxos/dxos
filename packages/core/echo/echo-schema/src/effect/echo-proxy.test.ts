@@ -10,9 +10,13 @@ import { inspect } from 'util';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
-import { createEchoReactiveObject, type EchoReactiveObject } from './echo-handler';
+import { EchoReactiveObject, createEchoReactiveObject, isEchoReactiveObject } from './echo-handler';
 import { TestClass, TestSchema, TestSchemaWithClass } from './testing/schema';
 import { createDatabase } from '../testing';
+import { Hypergraph } from '../hypergraph';
+import { AutomergeContext, SpaceDoc } from '../automerge';
+import { EchoDatabaseImpl } from '../database';
+import { PublicKey } from '@dxos/keys';
 
 registerSignalRuntime();
 
@@ -55,6 +59,11 @@ for (const schema of [undefined, TestSchemaWithClass]) {
       const obj = createObject({ undefined });
       expect(obj).to.deep.eq({});
     });
+
+    test('isEchoReactiveObject', () => {
+      const obj = createObject({ string: 'bar' });
+      expect(isEchoReactiveObject(obj)).to.be.true;
+    });
   });
 }
 
@@ -77,5 +86,35 @@ describe('Reactive Object with ECHO database', async () => {
     expect(obj.id).to.be.a('string');
     expect(obj.string).to.eq('foo');
     expect(R.getSchema(obj)).to.eq(undefined);
+  });
+
+  test('instantiating reactive objects after a restart', async () => {
+    const graph = new Hypergraph();
+    const automergeContext = new AutomergeContext();
+    const doc = automergeContext.repo.create<SpaceDoc>();
+    const spaceKey = PublicKey.random();
+
+    let id: string;
+    {
+      const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey, useReactiveObjectApi: true });
+      await db._automerge.open({ rootUrl: doc.url });
+
+      const obj = db.add(R.object(TestSchema, { string: 'foo' }));
+      id = obj.id;
+    }
+
+    // Create a new DB instance to simulate a restart
+    {
+      const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey, useReactiveObjectApi: true });
+      await db._automerge.open({ rootUrl: doc.url });
+
+      const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
+      expect(isEchoReactiveObject(obj)).to.be.true;
+      expect(obj.id).to.eq(id);
+      expect(obj.string).to.eq('foo');
+
+      // TODO(dmaretskyi): Schema lookup?
+      // expect(R.getSchema(obj)).to.eq(TestSchema);
+    }
   });
 });

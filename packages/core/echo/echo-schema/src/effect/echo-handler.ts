@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { isTypeLiteral } from '@effect/schema/AST';
 import * as AST from '@effect/schema/AST';
-import type * as S from '@effect/schema/Schema';
+import { isTypeLiteral } from '@effect/schema/AST';
+import * as S from '@effect/schema/Schema';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { Reference } from '@dxos/document-model';
@@ -12,14 +12,22 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { assignDeep, ComplexMap, defaultMap, getDeep } from '@dxos/util';
 
-import { createReactiveProxy, symbolIsProxy, type ReactiveHandler, getProxyHandlerSlot } from './proxy';
+import { AutomergeObjectCore, encodeReference } from '../automerge';
+import { defineHiddenProperty } from '../util/property';
+import {
+  createReactiveProxy,
+  getProxyHandlerSlot,
+  isReactiveProxy,
+  symbolIsProxy,
+  type ReactiveHandler,
+} from './proxy';
 import { getSchema, type ReactiveObject } from './reactive';
 import { SchemaValidator, symbolSchema } from './schema-validator';
-import { AutomergeObjectCore, encodeReference } from '../automerge';
-import { isProxy } from 'node:util/types';
-import { defineHiddenProperty } from '../util/property';
 
 export type EchoReactiveObject<T> = ReactiveObject<T> & { id: string };
+
+export const isEchoReactiveObject = (value: unknown): value is EchoReactiveObject<any> =>
+  isReactiveProxy(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;
 
 const symbolPath = Symbol('path');
 const symbolHandler = Symbol('handler');
@@ -29,6 +37,7 @@ type PropPath = string[];
 type ProxyTarget = {
   [symbolPath]: PropPath;
   [symbolHandler]?: EchoReactiveHandler;
+  [symbolSchema]?: S.Schema<any>;
 } & ({ [key: keyof any]: any } | any[]);
 
 const DATA_NAMESPACE = 'data';
@@ -45,11 +54,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   private _targetsMap = new ComplexMap<PropPath, ProxyTarget>((key) => JSON.stringify(key));
 
-  _init(target: any): void {
+  _init(target: ProxyTarget): void {
     invariant(!(target as any)[symbolIsProxy]);
     invariant(Array.isArray(target[symbolPath]));
 
-    if ((target as any)[symbolSchema]) {
+    if (target[symbolSchema]) {
       SchemaValidator.initTypedTarget(target);
     } else {
       this.makeUntypedArraysReactive(target);
@@ -457,12 +466,18 @@ export const createEchoReactiveObject = <T extends {}>(init: T): EchoReactiveObj
   const schema = getSchema(init);
 
   // TODO(dmaretskyi): Refactor to unify branches.
-  if (isProxy(init)) {
-    const slot = getProxyHandlerSlot(init);
-    slot.handler = new EchoReactiveHandler();
+  if (isReactiveProxy(init)) {
+    const proxy = init;
+
+    const slot = getProxyHandlerSlot(proxy);
+
+    const echoHandler = new EchoReactiveHandler();
+    echoHandler._objectCore.rootProxy = proxy;
+
+    slot.handler = echoHandler;
     const target = slot.target as ProxyTarget;
     target[symbolPath] = [];
-    slot.handler._proxyMap.set(target, init);
+    slot.handler._proxyMap.set(target, proxy);
     slot.handler._init(target);
 
     if (schema != null) {
@@ -473,9 +488,9 @@ export const createEchoReactiveObject = <T extends {}>(init: T): EchoReactiveObj
         throw new Error('"id" property name is reserved');
       }
     }
-    return init as any;
+    return proxy as any;
   } else {
-    const target = { [symbolPath]: [], ...init };
+    const target = { [symbolPath]: [], ...(init as any) };
     if (schema != null) {
       SchemaValidator.prepareTarget(target, schema);
       invariant(isTypeLiteral(schema.ast));
@@ -486,6 +501,7 @@ export const createEchoReactiveObject = <T extends {}>(init: T): EchoReactiveObj
     }
     const handler = new EchoReactiveHandler();
     const proxy = createReactiveProxy<ProxyTarget>(target, handler) as any;
+    handler._objectCore.rootProxy = proxy;
     return proxy;
   }
 };

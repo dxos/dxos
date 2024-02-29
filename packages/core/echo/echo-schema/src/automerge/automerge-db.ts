@@ -33,6 +33,7 @@ import { AutomergeObject, getAutomergeObjectCore } from './automerge-object';
 import { AutomergeObjectCore } from './automerge-object-core';
 import { type SpaceDoc } from './types';
 import { EchoDatabase } from '../database';
+import { isReactiveProxy } from '../effect/proxy';
 
 export type SpaceState = {
   // Url of the root automerge document.
@@ -60,6 +61,7 @@ export class AutomergeDb {
     public readonly graph: Hypergraph,
     public readonly automerge: AutomergeContext,
     public readonly spaceKey: PublicKey,
+    private readonly _constructObj: () => OpaqueEchoObject,
     dbApi: EchoDatabase, // TODO(dmaretskyi): Remove.
   ) {
     this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this.spaceKey, automerge);
@@ -115,20 +117,20 @@ export class AutomergeDb {
   }
 
   getObjectById(id: string): EchoObject | undefined {
-    const obj = this._objects.get(id);
-    if (!obj) {
+    const objCore = this._objects.get(id);
+    if (!objCore) {
       this._automergeDocLoader.loadObjectDocument(id);
       return undefined;
     }
 
-    if ((obj.rootProxy as any).__deleted === true) {
+    if (objCore.isDeleted()) {
       return undefined;
     }
 
-    invariant(obj instanceof AutomergeObjectCore);
-    const root = obj.rootProxy;
-    invariant(isAutomergeObject(root));
-    return root;
+    invariant(objCore instanceof AutomergeObjectCore);
+    const root = objCore.rootProxy;
+    invariant(isAutomergeObject(root) || isReactiveProxy(root));
+    return root as any;
   }
 
   add(obj: OpaqueEchoObject) {
@@ -260,9 +262,9 @@ export class AutomergeDb {
   private _createObjectInDocument(docHandle: DocHandle<SpaceDoc>, objectId: string) {
     invariant(!this._objects.get(objectId));
 
-    const obj = new AutomergeObject();
-    obj[base]._core.id = objectId;
-    const core = obj[base]._core;
+    const obj = this._constructObj();
+    const core = getAutomergeObjectCore(obj);
+    core.id = objectId;
 
     this._objects.set(core.id, core);
     this._automergeDocLoader.onObjectBoundToDocument(docHandle, objectId);

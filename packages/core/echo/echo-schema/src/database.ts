@@ -7,7 +7,7 @@ import { type BatchUpdate, type DatabaseProxy, type ItemManager } from '@dxos/ec
 import { type PublicKey } from '@dxos/keys';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { AutomergeDb, type AutomergeContext } from './automerge';
+import { AutomergeDb, type AutomergeContext, AutomergeObject } from './automerge';
 import { type Hypergraph } from './hypergraph';
 import { EchoLegacyDatabase } from './legacy-database';
 import { isAutomergeObject, type EchoObject, type TypedObject, OpaqueEchoObject } from './object';
@@ -80,7 +80,15 @@ export class EchoDatabaseImpl implements EchoDatabase {
   private _useReactiveObjectApi: boolean;
 
   constructor(params: EchoDatabaseParams) {
-    this._automerge = new AutomergeDb(params.graph, params.automergeContext, params.spaceKey, this);
+    const constructObj = () => {
+      if (this._useReactiveObjectApi) {
+        return createEchoReactiveObject({});
+      } else {
+        return new AutomergeObject();
+      }
+    };
+
+    this._automerge = new AutomergeDb(params.graph, params.automergeContext, params.spaceKey, constructObj, this);
     this._useReactiveObjectApi = params.useReactiveObjectApi ?? false;
   }
 
