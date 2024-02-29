@@ -214,11 +214,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/plugins/plugin-undo/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/plugins/plugin-wildcard/package.json",
           "jsonpath": "$.version"
         },

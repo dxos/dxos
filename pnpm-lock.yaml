@@ -862,6 +862,9 @@ importers:
 
   packages/apps/plugins/plugin-chain:
     dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
@@ -880,6 +883,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.23.0
         version: 6.23.1
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/chain':
         specifier: workspace:*
         version: link:../../../core/chain
@@ -895,16 +901,19 @@ importers:
       '@dxos/text-model':
         specifier: workspace:*
         version: link:../../../core/echo/text-model
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
     devDependencies:
-      '@braneframe/plugin-space':
+      '@braneframe/plugin-client':
         specifier: workspace:*
-        version: link:../plugin-space
+        version: link:../plugin-client
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -944,9 +953,15 @@ importers:
 
   packages/apps/plugins/plugin-chess:
     dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/chess-app':
         specifier: workspace:*
         version: link:../../../experimental/chess-app
@@ -956,16 +971,19 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       chess.js:
         specifier: 1.0.0-alpha.0
         version: 1.0.0-alpha.0
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)
     devDependencies:
-      '@braneframe/plugin-space':
+      '@braneframe/plugin-client':
         specifier: workspace:*
-        version: link:../plugin-space
+        version: link:../plugin-client
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -1181,9 +1199,15 @@ importers:
 
   packages/apps/plugins/plugin-explorer:
     dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
@@ -1199,6 +1223,9 @@ importers:
       '@observablehq/plot':
         specifier: ^0.6.11
         version: 0.6.11
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       d3:
         specifier: ^7.8.5
         version: 7.8.5
@@ -1215,12 +1242,12 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0
     devDependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@braneframe/plugin-search':
         specifier: workspace:*
         version: link:../plugin-search
-      '@braneframe/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -1342,6 +1369,9 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
@@ -1373,6 +1403,9 @@ importers:
         specifier: ^2.0.14
         version: 2.0.14
     devDependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -1433,6 +1466,9 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
@@ -1445,9 +1481,12 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -1455,6 +1494,9 @@ importers:
         specifier: ^4.26.1
         version: 4.26.1
     devDependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -1528,15 +1570,24 @@ importers:
 
   packages/apps/plugins/plugin-grid:
     dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@dnd-kit/core':
         specifier: ^6.0.5
         version: 6.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -1547,9 +1598,9 @@ importers:
         specifier: ^7.1.2
         version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
-      '@braneframe/plugin-space':
+      '@braneframe/plugin-client':
         specifier: workspace:*
-        version: link:../plugin-space
+        version: link:../plugin-client
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -1671,9 +1722,15 @@ importers:
 
   packages/apps/plugins/plugin-inbox:
     dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../../sdk/app-graph
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../../common/display-name
@@ -1683,6 +1740,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       date-fns:
         specifier: ^3.3.1
         version: 3.3.1
@@ -1690,9 +1750,9 @@ importers:
         specifier: ^4.4.2
         version: 4.4.2
     devDependencies:
-      '@braneframe/plugin-space':
+      '@braneframe/plugin-client':
         specifier: workspace:*
-        version: link:../plugin-space
+        version: link:../plugin-client
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -1805,6 +1865,9 @@ importers:
 
   packages/apps/plugins/plugin-kanban:
     dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@dnd-kit/core':
         specifier: ^6.0.5
         version: 6.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -1817,6 +1880,9 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.0
         version: 3.2.0(react@18.2.0)
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -1829,10 +1895,13 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
     devDependencies:
-      '@braneframe/plugin-space':
+      '@braneframe/plugin-client':
         specifier: workspace:*
-        version: link:../plugin-space
+        version: link:../plugin-client
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -1939,15 +2008,24 @@ importers:
 
   packages/apps/plugins/plugin-map:
     dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)
       leaflet:
         specifier: ^1.9.3
         version: 1.9.3
@@ -1958,9 +2036,9 @@ importers:
         specifier: ^7.1.2
         version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
-      '@braneframe/plugin-space':
+      '@braneframe/plugin-client':
         specifier: workspace:*
-        version: link:../plugin-space
+        version: link:../plugin-client
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
@@ -2247,9 +2325,6 @@ importers:
       deepsignal:
         specifier: ^1.5.0
         version: 1.5.0(@preact/signals-core@1.5.1)
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
     devDependencies:
       '@braneframe/plugin-theme':
         specifier: workspace:*
@@ -2272,9 +2347,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -2360,6 +2432,9 @@ importers:
 
   packages/apps/plugins/plugin-outliner:
     dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
@@ -2372,6 +2447,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.23.0
         version: 6.23.1
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -2381,13 +2459,16 @@ importers:
       '@dxos/text-model':
         specifier: workspace:*
         version: link:../../../core/echo/text-model
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
     devDependencies:
-      '@braneframe/plugin-space':
+      '@braneframe/plugin-client':
         specifier: workspace:*
-        version: link:../plugin-space
+        version: link:../plugin-client
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -2417,7 +2498,7 @@ importers:
         version: 18.0.6
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -2430,12 +2511,18 @@ importers:
 
   packages/apps/plugins/plugin-presenter:
     dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)
       hastscript:
         specifier: ^7.1.0
         version: 7.1.0
@@ -2461,6 +2548,9 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3
     devDependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@braneframe/plugin-layout':
         specifier: workspace:*
         version: link:../plugin-layout
@@ -2610,6 +2700,9 @@ importers:
       '@braneframe/plugin-explorer':
         specifier: workspace:*
         version: link:../plugin-explorer
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
@@ -2618,7 +2711,7 @@ importers:
         version: link:../../types
       '@codemirror/autocomplete':
         specifier: ^6.12.0
-        version: 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+        version: 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)(@lezer/common@1.2.1)
       '@codemirror/lang-javascript':
         specifier: ^6.2.2
         version: 6.2.2
@@ -2631,6 +2724,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.23.0
         version: 6.23.1
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
@@ -2667,9 +2763,15 @@ importers:
       '@dxos/text-model':
         specifier: workspace:*
         version: link:../../../core/echo/text-model
+      '@lezer/common':
+        specifier: ^1.2.1
+        version: 1.2.1
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       codemirror:
         specifier: ^6.0.1
-        version: 6.0.1
+        version: 6.0.1(@lezer/common@1.2.1)
       esbuild-wasm:
         specifier: ^0.16.14
         version: 0.16.17
@@ -2677,15 +2779,15 @@ importers:
         specifier: ^4.4.2
         version: 4.4.2
     devDependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
       '@braneframe/plugin-layout':
         specifier: workspace:*
         version: link:../plugin-layout
-      '@braneframe/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
@@ -2820,6 +2922,9 @@ importers:
 
   packages/apps/plugins/plugin-sketch:
     dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -2832,6 +2937,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       '@tldraw/assets':
         specifier: 2.0.0-alpha.14
         version: 2.0.0-alpha.14
@@ -2860,9 +2968,9 @@ importers:
         specifier: ^13.6.10
         version: 13.6.10
     devDependencies:
-      '@braneframe/plugin-space':
+      '@braneframe/plugin-client':
         specifier: workspace:*
-        version: link:../plugin-space
+        version: link:../plugin-client
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
@@ -3038,6 +3146,12 @@ importers:
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
@@ -3053,9 +3167,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)
       node-fetch:
         specifier: ^2.6.0
         version: 2.6.7
@@ -3069,9 +3186,9 @@ importers:
       '@babel/core':
         specifier: ^7.18.13
         version: 7.23.9
-      '@braneframe/plugin-space':
+      '@braneframe/plugin-client':
         specifier: workspace:*
-        version: link:../plugin-space
+        version: link:../plugin-client
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -3108,9 +3225,15 @@ importers:
 
   packages/apps/plugins/plugin-table:
     dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
@@ -3123,16 +3246,19 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)
     devDependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@braneframe/plugin-search':
         specifier: workspace:*
         version: link:../plugin-search
-      '@braneframe/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -3172,22 +3298,28 @@ importers:
 
   packages/apps/plugins/plugin-template:
     dependencies:
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../../sdk/react-client
-      deepsignal:
-        specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-    devDependencies:
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
+      deepsignal:
+        specifier: ^1.5.0
+        version: 1.5.0(@preact/signals-core@1.5.1)
+    devDependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -3203,9 +3335,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -3264,6 +3393,9 @@ importers:
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@codemirror/language':
         specifier: ^6.10.1
         version: 6.10.1
@@ -3313,12 +3445,12 @@ importers:
         specifier: ^4.4.2
         version: 4.4.2
     devDependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@braneframe/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -3337,52 +3469,6 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../../ui/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
-      '@types/react':
-        specifier: ^18.0.21
-        version: 18.0.21
-      '@types/react-dom':
-        specifier: ^18.0.6
-        version: 18.0.6
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
-
-  packages/apps/plugins/plugin-undo:
-    dependencies:
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../../sdk/react-client
-      deepsignal:
-        specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-    devDependencies:
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../../sdk/app-framework
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
@@ -7524,9 +7610,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/keyboard':
-        specifier: workspace:*
-        version: link:../../common/keyboard
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -7536,12 +7619,6 @@ importers:
       deepsignal:
         specifier: ^1.5.0
         version: 1.5.0(@preact/signals-core@1.5.1)
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-      lodash.set:
-        specifier: ^4.3.2
-        version: 4.3.2
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -7561,12 +7638,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
-      '@types/lodash.set':
-        specifier: ^4.3.7
-        version: 4.3.7
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -8614,7 +8685,7 @@ importers:
     dependencies:
       '@codemirror/autocomplete':
         specifier: ^6.12.0
-        version: 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+        version: 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)(@lezer/common@1.2.1)
       '@codemirror/commands':
         specifier: ^6.3.3
         version: 6.3.3
@@ -8629,7 +8700,7 @@ importers:
         version: 6.10.1
       '@codemirror/language-data':
         specifier: ^6.3.1
-        version: 6.3.1(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+        version: 6.3.1(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)(@lezer/common@1.2.1)
       '@codemirror/lint':
         specifier: ^6.4.2
         version: 6.4.2
@@ -8707,7 +8778,7 @@ importers:
         version: 6.0.14(@codemirror/commands@6.3.3)(@codemirror/language@6.10.1)(@codemirror/search@6.5.5)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
       codemirror:
         specifier: ^6.0.1
-        version: 6.0.1
+        version: 6.0.1(@lezer/common@1.2.1)
       lib0:
         specifier: ^0.2.65
         version: 0.2.78
@@ -8956,6 +9027,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
+      deepsignal:
+        specifier: ^1.5.0
+        version: 1.5.0(@preact/signals-core@1.5.1)
     devDependencies:
       '@dnd-kit/core':
         specifier: ^6.0.5
@@ -8972,12 +9049,18 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
       '@types/react-dom':
         specifier: ^18.0.6
         version: 18.0.6
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -13468,12 +13551,13 @@ packages:
       minimist: 1.2.8
     dev: true
 
-  /@codemirror/autocomplete@6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1):
+  /@codemirror/autocomplete@6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)(@lezer/common@1.2.1):
     resolution: {integrity: sha512-r4IjdYFthwbCQyvqnSlx0WBHRHi8nBvU+WjJxFUij81qsBfhNudf/XKKmmC2j3m0LaOYUQTf3qiEK1J8lO1sdg==}
     peerDependencies:
       '@codemirror/language': ^6.0.0
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
+      '@lezer/common': ^1.0.0
     dependencies:
       '@codemirror/language': 6.10.1
       '@codemirror/state': 6.4.0
@@ -13511,7 +13595,7 @@ packages:
   /@codemirror/lang-css@6.2.1(@codemirror/view@6.23.1):
     resolution: {integrity: sha512-/UNWDNV5Viwi/1lpr/dIXJNWiwDxpw13I4pTUAsNxZdg6E0mI2kTQb0P2iHczg1Tu+H4EBgJR+hYhKiHKko7qg==}
     dependencies:
-      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)(@lezer/common@1.2.1)
       '@codemirror/language': 6.10.1
       '@codemirror/state': 6.4.0
       '@lezer/common': 1.2.1
@@ -13523,7 +13607,7 @@ packages:
   /@codemirror/lang-html@6.4.2:
     resolution: {integrity: sha512-bqCBASkteKySwtIbiV/WCtGnn/khLRbbiV5TE+d9S9eQJD7BA4c5dTRm2b3bVmSpilff5EYxvB4PQaZzM/7cNw==}
     dependencies:
-      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)(@lezer/common@1.2.1)
       '@codemirror/lang-css': 6.2.1(@codemirror/view@6.23.1)
       '@codemirror/lang-javascript': 6.2.2
       '@codemirror/language': 6.10.1
@@ -13544,7 +13628,7 @@ packages:
   /@codemirror/lang-javascript@6.2.2:
     resolution: {integrity: sha512-VGQfY+FCc285AhWuwjYxQyUQcYurWlxdKYT4bqwr3Twnd5wP5WSeu52t4tvvuWmljT4EmgEgZCqSieokhtY8hg==}
     dependencies:
-      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)(@lezer/common@1.2.1)
       '@codemirror/language': 6.10.1
       '@codemirror/lint': 6.4.2
       '@codemirror/state': 6.4.0
@@ -13574,7 +13658,7 @@ packages:
   /@codemirror/lang-markdown@6.2.4:
     resolution: {integrity: sha512-UghkA1vSMs8bT7RSZM6vsIocigyah2bV00eRQuZy76401UmFZdsTsbQNBGdyxRQDOLeEvF5iFwap0BM8LKyd+g==}
     dependencies:
-      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)(@lezer/common@1.2.1)
       '@codemirror/lang-html': 6.4.2
       '@codemirror/language': 6.10.1
       '@codemirror/state': 6.4.0
@@ -13593,15 +13677,16 @@ packages:
       '@lezer/php': 1.0.1
     dev: false
 
-  /@codemirror/lang-python@6.1.2(@codemirror/state@6.4.0)(@codemirror/view@6.23.1):
+  /@codemirror/lang-python@6.1.2(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)(@lezer/common@1.2.1):
     resolution: {integrity: sha512-nbQfifLBZstpt6Oo4XxA2LOzlSp4b/7Bc5cmodG1R+Cs5PLLCTUvsMNWDnziiCfTOG/SW1rVzXq/GbIr6WXlcw==}
     dependencies:
-      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)(@lezer/common@1.2.1)
       '@codemirror/language': 6.10.1
       '@lezer/python': 1.1.2
     transitivePeerDependencies:
       - '@codemirror/state'
       - '@codemirror/view'
+      - '@lezer/common'
     dev: false
 
   /@codemirror/lang-rust@6.0.1:
@@ -13623,16 +13708,17 @@ packages:
       - '@codemirror/view'
     dev: false
 
-  /@codemirror/lang-sql@6.4.0(@codemirror/view@6.23.1):
+  /@codemirror/lang-sql@6.4.0(@codemirror/view@6.23.1)(@lezer/common@1.2.1):
     resolution: {integrity: sha512-UWGK1+zc9+JtkiT+XxHByp4N6VLgLvC2x0tIudrJG26gyNtn0hWOVoB0A8kh/NABPWkKl3tLWDYf2qOBJS9Zdw==}
     dependencies:
-      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)(@lezer/common@1.2.1)
       '@codemirror/language': 6.10.1
       '@codemirror/state': 6.4.0
       '@lezer/highlight': 1.2.0
       '@lezer/lr': 1.3.3
     transitivePeerDependencies:
       - '@codemirror/view'
+      - '@lezer/common'
     dev: false
 
   /@codemirror/lang-vue@0.1.2:
@@ -13657,7 +13743,7 @@ packages:
   /@codemirror/lang-xml@6.0.2(@codemirror/view@6.23.1):
     resolution: {integrity: sha512-JQYZjHL2LAfpiZI2/qZ/qzDuSqmGKMwyApYmEUUCTxLM4MWS7sATUEfIguZQr9Zjx/7gcdnewb039smF6nC2zw==}
     dependencies:
-      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)(@lezer/common@1.2.1)
       '@codemirror/language': 6.10.1
       '@codemirror/state': 6.4.0
       '@lezer/common': 1.2.1
@@ -13666,7 +13752,7 @@ packages:
       - '@codemirror/view'
     dev: false
 
-  /@codemirror/language-data@6.3.1(@codemirror/state@6.4.0)(@codemirror/view@6.23.1):
+  /@codemirror/language-data@6.3.1(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)(@lezer/common@1.2.1):
     resolution: {integrity: sha512-p6jhJmvhGe1TG1EGNhwH7nFWWFSTJ8NDKnB2fVx5g3t+PpO0+63R7GJNxjS0TmmH3cdMxZbzejsik+rlEh1EyQ==}
     dependencies:
       '@codemirror/lang-angular': 0.1.2
@@ -13679,10 +13765,10 @@ packages:
       '@codemirror/lang-less': 6.0.1(@codemirror/view@6.23.1)
       '@codemirror/lang-markdown': 6.2.4
       '@codemirror/lang-php': 6.0.1
-      '@codemirror/lang-python': 6.1.2(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+      '@codemirror/lang-python': 6.1.2(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)(@lezer/common@1.2.1)
       '@codemirror/lang-rust': 6.0.1
       '@codemirror/lang-sass': 6.0.2(@codemirror/view@6.23.1)
-      '@codemirror/lang-sql': 6.4.0(@codemirror/view@6.23.1)
+      '@codemirror/lang-sql': 6.4.0(@codemirror/view@6.23.1)(@lezer/common@1.2.1)
       '@codemirror/lang-vue': 0.1.2
       '@codemirror/lang-wast': 6.0.1
       '@codemirror/lang-xml': 6.0.2(@codemirror/view@6.23.1)
@@ -13691,6 +13777,7 @@ packages:
     transitivePeerDependencies:
       - '@codemirror/state'
       - '@codemirror/view'
+      - '@lezer/common'
     dev: false
 
   /@codemirror/language@6.10.1:
@@ -26712,16 +26799,18 @@ packages:
     resolution: {integrity: sha512-+xi2ENsvchtUNa8oBUU58gHgmyN6BEEeZ8NIEgeQ0XnC+AoyihivgZYe+OOiNi+fLy/NUowugwV5gP8XWYDm0Q==}
     dev: true
 
-  /codemirror@6.0.1:
+  /codemirror@6.0.1(@lezer/common@1.2.1):
     resolution: {integrity: sha512-J8j+nZ+CdWmIeFIGXEFbFPtpiYacFMDR8GlHK3IyHQJMCaVRfGx9NT+Hxivv1ckLWPvNdZqndbr/7lVhrf/Svg==}
     dependencies:
-      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)(@lezer/common@1.2.1)
       '@codemirror/commands': 6.3.3
       '@codemirror/language': 6.10.1
       '@codemirror/lint': 6.4.2
       '@codemirror/search': 6.5.5
       '@codemirror/state': 6.4.0
       '@codemirror/view': 6.23.1
+    transitivePeerDependencies:
+      - '@lezer/common'
     dev: false
 
   /codepage@1.15.0:
@@ -28134,7 +28223,6 @@ packages:
         optional: true
     dependencies:
       '@preact/signals-core': 1.5.1
-    dev: false
 
   /deepsignal@1.5.0(@preact/signals-react@1.3.8):
     resolution: {integrity: sha512-bFywDpBUUWMs576H2dgLFLLFuQ/UWXbzHfKD98MZTfGsl7+twIzvz4ihCNrRrZ/Emz3kqJaNIAp5eBWUEWhnAw==}
@@ -30577,7 +30665,7 @@ packages:
     resolution: {integrity: sha512-dm9s5Pw7Jc0GvMYbshN6zchCA9RgQlzzEZX3vylR9IqFfS8XciblUXOKfW6SiuJ0e13eDYZoZV5wdrev7P3Nwg==}
     engines: {node: ^10.12.0 || >=12.0.0}
     dependencies:
-      flatted: 3.2.9
+      flatted: 3.2.7
       rimraf: 3.0.2
 
   /flat-tree@1.9.0:
@@ -30588,8 +30676,12 @@ packages:
     resolution: {integrity: sha512-b6suED+5/3rTpUBdG1gupIl8MPFCAMA0QXwmljLhvCUKcUvdE4gWky9zpuGCcXHOsz4J9wPGNWq6OKpmIzz3hQ==}
     hasBin: true
 
+  /flatted@3.2.7:
+    resolution: {integrity: sha512-5nqDSxl8nn5BSNxyR3n4I6eDmbolI6WT+QqR547RwxQapgjQBmtktdP+HTBb/a/zLsbzERTONyUB5pefh5TtjQ==}
+
   /flatted@3.2.9:
     resolution: {integrity: sha512-36yxDn5H7OFZQla0/jFJmbIKTdZAQHngCedGxiMmpNfEZM0sdEeT+WczLQrjK6D7o2aiyLYDnkw0R3JK0Qv1RQ==}
+    dev: true
 
   /flow-parser@0.190.0:
     resolution: {integrity: sha512-9jxaqkeeARD//nhwDoN//j+EFcwzKJCGPtTQzUdKZdlZG3JmUdbV6XJFLD9sbWFPUmcCT1mblwILwdoq0mKWQw==}
