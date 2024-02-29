@@ -13,6 +13,7 @@ import { EchoLegacyDatabase } from './legacy-database';
 import { isAutomergeObject, type EchoObject, type TypedObject, OpaqueEchoObject } from './object';
 import { type FilterSource, type Query } from './query';
 import { invariant } from '@dxos/invariant';
+import { EchoReactiveObject, createEchoReactiveObject } from './effect/echo-handler';
 
 export interface EchoDatabase {
   get graph(): Hypergraph;
@@ -24,7 +25,7 @@ export interface EchoDatabase {
   /**
    * Adds object to the database.
    */
-  add<T extends OpaqueEchoObject>(obj: T): T;
+  add<T extends OpaqueEchoObject>(obj: T): T extends EchoObject ? T : EchoReactiveObject<T>;
 
   /**
    * Removes object from the database.
@@ -84,9 +85,16 @@ export class EchoDatabaseImpl implements EchoDatabase {
     return this._automerge.getObjectById(id) as T | undefined;
   }
 
-  add<T extends OpaqueEchoObject>(obj: T): T {
-    invariant(isAutomergeObject(obj));
-    return this._automerge.add(obj);
+  add<T extends OpaqueEchoObject>(obj: T): T extends EchoObject ? T : EchoReactiveObject<T> {
+    // TODO(dmaretskyi): Feature flag.;
+    if (isAutomergeObject(obj)) {
+      this._automerge.add(obj);
+      return obj as any;
+    } else {
+      const echoObj = createEchoReactiveObject(obj);
+      this._automerge.add(echoObj);
+      return echoObj as any;
+    }
   }
 
   remove<T extends OpaqueEchoObject>(obj: T): void {

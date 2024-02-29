@@ -29,6 +29,7 @@ import {
   type ObjectMeta,
   type TypedObjectOptions,
   type TypedObjectProperties,
+  OpaqueEchoObject,
 } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
@@ -375,7 +376,7 @@ export const getRawDoc = (obj: EchoObject, path?: string[]): DocAccessor => {
   return obj[base]._getRawDoc(path);
 };
 
-export const getAutomergeObjectCore = (obj: EchoObject): AutomergeObjectCore => {
+export const getAutomergeObjectCore = (obj: OpaqueEchoObject): AutomergeObjectCore => {
   invariant(isAutomergeObject(obj));
   return obj[base]._core;
 };

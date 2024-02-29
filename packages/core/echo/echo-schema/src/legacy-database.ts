@@ -18,6 +18,7 @@ import { TextObject, TypedObject, base, db, type EchoObject } from './object';
 import { AbstractEchoObject } from './object/object';
 import { type Schema } from './proto';
 import { type FilterSource, type Query } from './query';
+import { todo } from '@dxos/debug';
 
 /**
  * Legacy ECHO database.
@@ -90,7 +91,8 @@ export class EchoLegacyDatabase {
    */
   add<T extends EchoObject>(obj: T): T {
     if (obj[base] instanceof AutomergeObject) {
-      return this.automerge.add(obj);
+      // return this.automerge.add(obj);
+      todo();
     }
 
     log('add', { id: obj.id, type: (obj as any).__typename });

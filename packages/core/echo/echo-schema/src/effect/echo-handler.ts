@@ -446,6 +446,7 @@ const throwIfCustomClass = (prop: string | symbol, value: any) => {
   }
 };
 
+// TODO(dmaretskyi): Read schema from typed in-memory objects.
 export const createEchoReactiveObject = <T extends {}>(init: T, schema?: S.Schema<T>): EchoReactiveObject<T> => {
   const target = { [symbolPath]: [], ...init };
   if (schema != null) {

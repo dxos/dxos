@@ -19,6 +19,7 @@ import {
   isActualTypedObject,
   isAutomergeObject,
   type EchoObject,
+  OpaqueEchoObject,
 } from '../object';
 import { type Schema } from '../proto';
 import { type AutomergeContext } from './automerge-context';
@@ -130,12 +131,12 @@ export class AutomergeDb {
     return root;
   }
 
-  add<T extends EchoObject>(obj: T): T {
+  add(obj: OpaqueEchoObject) {
     invariant(isAutomergeObject(obj));
     const core = getAutomergeObjectCore(obj);
 
     if (core.database) {
-      return obj;
+      return; // Already in the database.
     }
 
     invariant(!this._objects.has(core.id));
@@ -160,7 +161,6 @@ export class AutomergeDb {
       path: ['objects', core.id],
       assignFromLocalState: true,
     });
-
     return obj;
   }
 
