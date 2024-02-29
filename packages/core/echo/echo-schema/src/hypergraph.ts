@@ -224,7 +224,7 @@ class SpaceQuerySource implements QuerySource {
         (this._database._legacy._objects.has(object.id) &&
           filterMatch(this._filter!, this._database._legacy._objects.get(object.id)!)) ||
         (this._database.automerge._objects.has(object.id) &&
-          filterMatch(this._filter!, this._database.automerge._getObjectFromMap(object.id)!))
+          filterMatch(this._filter!, this._database.automerge.getObjectById(object.id)!))
       );
     });
 
