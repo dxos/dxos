@@ -1,0 +1,34 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "plugin-template",
+  "sourceRoot": "packages/apps/templates/plugin-template/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "options": {
+        "main": "packages/apps/templates/plugin-template/src/config.t.ts",
+        "outputPath": "packages/apps/templates/plugin-template/dist",
+        "tsConfig": "packages/apps/templates/plugin-template/tsconfig.json"
+      }
+    },
+    "gen": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "gen"
+      },
+      "outputs": [
+        "{projectRoot}/test/variants"
+      ]
+    },
+    "lint": {},
+    "test": {
+      "options": {
+        "checkLeaks": false,
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "forceExit": true
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "@dxos/plugin-template",
+  "version": "1.0.0",
+  "private": true,
+  "description": "",
+  "keywords": [],
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "",
+  "main": "dist/src/template.t.js",
+  "types": "dist/src/template.t.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@dxos/plate": "workspace:*",
+    "sanitize-filename": "1.6.3"
+  },
+  "devDependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@phosphor-icons/react": "^2.0.5",
+    "tmp-promise": "^3.0.3",
+    "ts-node": "10.9.1",
+    "typescript": "^5.2.2"
+  }
+}
