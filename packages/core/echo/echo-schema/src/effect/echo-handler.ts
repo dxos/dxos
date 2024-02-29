@@ -3,6 +3,7 @@
 //
 
 import type * as S from '@effect/schema/Schema';
+import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { Reference } from '@dxos/document-model';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -13,7 +14,6 @@ import { createReactiveProxy, symbolIsProxy, type ReactiveHandler } from './prox
 import { type ReactiveObject } from './reactive';
 import { SchemaValidator, symbolSchema } from './schema-validator';
 import { AutomergeObjectCore, encodeReference } from '../automerge';
-import { type EchoObject } from '../object';
 
 const symbolPath = Symbol('path');
 const symbolHandler = Symbol('handler');
@@ -31,7 +31,7 @@ const DATA_NAMESPACE = 'data';
 /**
  * Shared for all targets within one ECHO object.
  */
-export class EchoReactiveHandler implements EchoObject, ReactiveHandler<ProxyTarget> {
+export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   _proxyMap = new WeakMap<object, any>();
 
   _objectCore = new AutomergeObjectCore();
@@ -40,7 +40,7 @@ export class EchoReactiveHandler implements EchoObject, ReactiveHandler<ProxyTar
 
   private _targetsMap = new ComplexMap<PropPath, ProxyTarget>((key) => JSON.stringify(key));
 
-  _init(target: ProxyTarget): void {
+  _init(target: any): void {
     invariant(!(target as any)[symbolIsProxy]);
     invariant(Array.isArray(target[symbolPath]));
 
@@ -65,6 +65,7 @@ export class EchoReactiveHandler implements EchoObject, ReactiveHandler<ProxyTar
     }
 
     target[symbolHandler] = this;
+    target[inspect.custom] = this._inspect.bind(target);
   }
 
   private validateInitialProps(target: any) {
@@ -203,7 +204,7 @@ export class EchoReactiveHandler implements EchoObject, ReactiveHandler<ProxyTar
 
     if (validatedValue === undefined) {
       this._objectCore.delete(fullPath);
-    } else if (value[symbolHandler] instanceof EchoReactiveHandler) {
+    } else if (value !== null && value[symbolHandler] instanceof EchoReactiveHandler) {
       const link = this._linkReactiveHandler(value, value[symbolHandler]);
       this._objectCore.set(fullPath, encodeReference(link));
     } else {
@@ -376,6 +377,25 @@ export class EchoReactiveHandler implements EchoObject, ReactiveHandler<ProxyTar
 
     this._signal.notifyWrite();
   }
+
+  private _inspect(
+    _: number,
+    options: InspectOptionsStylized,
+    inspectFn: (value: any, options?: InspectOptionsStylized) => string,
+  ) {
+    const handler = (this as any)[symbolHandler] as EchoReactiveHandler;
+    const isTyped = Boolean((this as any)[symbolSchema]);
+    const proxy = handler._proxyMap.get(this);
+    return `${isTyped ? 'Typed' : ''}EchoObject ${inspectFn(
+      { ...proxy },
+      {
+        ...options,
+        compact: true,
+        showHidden: false,
+        customInspect: false,
+      },
+    )}`;
+  }
 }
 
 /**
@@ -421,18 +441,12 @@ const throwIfCustomClass = (prop: string | symbol, value: any) => {
 };
 
 export const createEchoReactiveObject = <T extends {}>(init: T, schema?: S.Schema<T>): ReactiveObject<T> => {
+  const target = { [symbolPath]: [], ...init };
   if (schema != null) {
-    SchemaValidator.prepareTarget(init, schema);
+    SchemaValidator.prepareTarget(target, schema);
   }
   const handler = new EchoReactiveHandler();
-  const proxy = createReactiveProxy<ProxyTarget>(
-    {
-      [symbolPath]: [],
-      ...init,
-    },
-    handler,
-  ) as any;
-
+  const proxy = createReactiveProxy<ProxyTarget>(target, handler) as any;
   return proxy;
 };
 

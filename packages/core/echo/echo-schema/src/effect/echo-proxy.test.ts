@@ -3,6 +3,7 @@
 //
 
 import { expect } from 'chai';
+import { inspect } from 'util';
 
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
@@ -18,6 +19,13 @@ for (const schema of [undefined, TestSchemaWithClass]) {
   };
 
   describe(`Non-echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
+    test('inspect', () => {
+      const obj = createObject({ string: 'bar' });
+
+      const str = inspect(obj, { colors: false });
+      expect(str).to.eq(`${schema == null ? '' : 'Typed'}EchoObject { string: 'bar' }`);
+    });
+
     test('throws when assigning a class instances', () => {
       expect(() => {
         createObject().classInstance = new TestClass();

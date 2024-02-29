@@ -4,7 +4,6 @@
 
 import { expect } from 'chai';
 import jestExpect from 'expect';
-import { inspect } from 'util';
 
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
@@ -173,13 +172,6 @@ for (const schema of [TestSchema]) {
         expect(obj.numberArray instanceof Array).to.be.true;
         expect(obj.object instanceof Object).to.be.true;
         expect(obj.object instanceof Array).to.be.false;
-      });
-
-      test('inspect', () => {
-        const obj = createObject({ string: 'bar' });
-
-        const str = inspect(obj, { colors: false });
-        expect(str).to.eq("{ string: 'bar' }");
       });
 
       test('toString', () => {

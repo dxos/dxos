@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { inspect, type InspectOptionsStylized } from 'node:util';
+
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 
 import { type ReactiveHandler, createReactiveProxy, isValidProxyTarget } from './proxy';
@@ -13,6 +15,10 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
 
   _init(target: any): void {
     SchemaValidator.initTypedTarget(target);
+    Object.defineProperty(target, inspect.custom, {
+      enumerable: false,
+      value: this._inspect.bind(target),
+    });
   }
 
   get(target: any, prop: string | symbol, receiver: any): any {
@@ -43,5 +49,18 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
     });
     this._signal.notifyWrite();
     return result;
+  }
+
+  private _inspect(
+    _: number,
+    options: InspectOptionsStylized,
+    inspectFn: (value: any, options?: InspectOptionsStylized) => string,
+  ) {
+    return `Typed ${inspectFn(this, {
+      ...options,
+      compact: true,
+      showHidden: false,
+      customInspect: false,
+    })}`;
   }
 }

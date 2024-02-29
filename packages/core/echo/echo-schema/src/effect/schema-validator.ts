@@ -69,11 +69,16 @@ const getArrayElementSchema = (arraySchema: S.Schema<any>): S.Schema<any> => {
 // TODO(burdon): Use visitProperties.
 export const setSchemaProperties = (obj: any, schema: S.Schema<any>) => {
   if (!obj[symbolSchema]) {
-    Object.defineProperty(obj, symbolSchema, { enumerable: false, value: schema });
+    Object.defineProperty(obj, symbolSchema, {
+      enumerable: false,
+      configurable: true,
+      value: schema,
+    });
   }
   if (AST.isTypeLiteral(schema.ast)) {
     Object.defineProperty(obj, symbolTypeAst, {
       enumerable: false,
+      configurable: true,
       value: schema.ast,
     });
 
