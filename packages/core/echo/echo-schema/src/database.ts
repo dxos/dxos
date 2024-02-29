@@ -59,6 +59,14 @@ export interface EchoDatabase {
   readonly automerge: AutomergeDb;
 }
 
+export type EchoDatabaseParams = {
+  graph: Hypergraph;
+  automergeContext: AutomergeContext;
+  spaceKey: PublicKey;
+
+  useReactiveObjectApi?: boolean;
+};
+
 /**
  * API for the database.
  * Implements EchoDatabase interface.
@@ -69,8 +77,11 @@ export class EchoDatabaseImpl implements EchoDatabase {
    */
   _automerge: AutomergeDb;
 
-  constructor(itemManager: ItemManager, backend: DatabaseProxy, graph: Hypergraph, automergeContext: AutomergeContext) {
-    this._automerge = new AutomergeDb(graph, automergeContext, backend.spaceKey, this);
+  private _useReactiveObjectApi: boolean;
+
+  constructor(params: EchoDatabaseParams) {
+    this._automerge = new AutomergeDb(params.graph, params.automergeContext, params.spaceKey, this);
+    this._useReactiveObjectApi = params.useReactiveObjectApi ?? false;
   }
 
   get graph(): Hypergraph {
@@ -86,11 +97,12 @@ export class EchoDatabaseImpl implements EchoDatabase {
   }
 
   add<T extends OpaqueEchoObject>(obj: T): T extends EchoObject ? T : EchoReactiveObject<T> {
-    // TODO(dmaretskyi): Feature flag.;
-    if (isAutomergeObject(obj)) {
+    if (!this._useReactiveObjectApi) {
+      invariant(isAutomergeObject(obj));
       this._automerge.add(obj);
       return obj as any;
     } else {
+      invariant(!isAutomergeObject(obj));
       const echoObj = createEchoReactiveObject(obj);
       this._automerge.add(echoObj);
       return echoObj as any;

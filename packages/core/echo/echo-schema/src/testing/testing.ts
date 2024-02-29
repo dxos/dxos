@@ -36,7 +36,7 @@ export const createDatabase = async (graph = new Hypergraph()) => {
   const host = await createMemoryDatabase(modelFactory);
   const proxy = await createRemoteDatabaseFromDataServiceHost(modelFactory, host.backend.createDataServiceHost());
   const automergeContext = new AutomergeContext();
-  const db = new EchoDatabaseImpl(proxy.itemManager, proxy.backend as DatabaseProxy, graph, automergeContext);
+  const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey: proxy.backend.spaceKey });
   await db.automerge.open({
     rootUrl: automergeContext.repo.create().url,
   });
@@ -79,7 +79,11 @@ export class TestBuilder {
 }
 
 export class TestPeer {
-  public db = new EchoDatabaseImpl(this.base.items, this.base.proxy, this.builder.graph, this.builder.automergeContext);
+  public db = new EchoDatabaseImpl({
+    spaceKey: this.base.proxy.spaceKey,
+    graph: this.builder.graph,
+    automergeContext: this.builder.automergeContext,
+  });
 
   constructor(
     public readonly builder: TestBuilder,
@@ -90,7 +94,11 @@ export class TestPeer {
 
   async reload() {
     await this.base.reload();
-    this.db = new EchoDatabaseImpl(this.base.items, this.base.proxy, this.builder.graph, this.builder.automergeContext);
+    this.db = new EchoDatabaseImpl({
+      spaceKey: this.base.proxy.spaceKey,
+      graph: this.builder.graph,
+      automergeContext: this.builder.automergeContext,
+    });
     await this.db.automerge.open({
       rootUrl: this.automergeDocId,
     });
