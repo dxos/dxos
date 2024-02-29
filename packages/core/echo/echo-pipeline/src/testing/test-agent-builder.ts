@@ -196,8 +196,8 @@ export class TestAgent {
         );
       },
     });
-    space.setControlFeed(controlFeed);
-    space.setDataFeed(dataFeed);
+    await space.setControlFeed(controlFeed);
+    await space.setDataFeed(dataFeed);
 
     await space.open(new Context());
 

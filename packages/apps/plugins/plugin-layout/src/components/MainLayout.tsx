@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDoubleLeft, List as MenuIcon, X } from '@phosphor-icons/react';
+import { Sidebar as MenuIcon, X } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Surface, type Toast as ToastSchema } from '@dxos/app-framework';
@@ -81,7 +81,7 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
             classNames='p-0 is-[--rail-action] border-bs-4 border-be-4 border-transparent bg-clip-padding'
           >
             <span className='sr-only'>{t('open navigation sidebar label')}</span>
-            <MenuIcon weight='light' className={getSize(4)} />
+            <MenuIcon weight='light' className={getSize(5)} />
           </Button>
           <Surface role='notch-end' />
         </Main.Notch>
@@ -113,7 +113,7 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
                     classNames='p-0 bs-[var(--rail-action)] is-[var(--rail-action)]'
                   >
                     <span className='sr-only'>{t('open complementary sidebar label')}</span>
-                    <CaretDoubleLeft mirrored={context.complementarySidebarOpen} className={getSize(4)} />
+                    <MenuIcon weight='light' mirrored className={getSize(5)} />
                   </Button>
                 )}
               </DensityProvider>

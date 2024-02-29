@@ -7,6 +7,7 @@ import { type MutableRefObject, useRef, useState } from 'react';
 
 /**
  * Hook for accessing the editor view.
+ * @deprecated
  *
  * ```tsx
  * const Test = () => {
@@ -20,6 +21,7 @@ import { type MutableRefObject, useRef, useState } from 'react';
  * };
  * ```
  */
+// TODO(burdon): Replace with useTextEditor.
 export const useEditorView = (id: string): [MutableRefObject<EditorView | null>, boolean] => {
   const editorRef = useRef<EditorView | null>(null);
   const [prev, setPrev] = useState<[EditorView | null, string]>([null, '']);

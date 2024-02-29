@@ -17,8 +17,9 @@ export type Import = {
 export type CompilerResult = {
   timestamp: number;
   sourceHash: Buffer;
-  imports: Import[];
-  bundle: string;
+  imports?: Import[];
+  bundle?: string;
+  error?: any;
 };
 
 export type CompilerOptions = {
@@ -38,48 +39,55 @@ export const initializeCompiler = async (options: { wasmURL: string }) => {
 export class Compiler {
   constructor(private readonly _options: CompilerOptions) {}
 
-  // TODO(burdon): Error handling.
   async compile(source: string): Promise<CompilerResult> {
+    const createResult = async (result?: Partial<CompilerResult>) => {
+      return {
+        timestamp: Date.now(),
+        sourceHash: Buffer.from(await subtleCrypto.digest('SHA-256', Buffer.from(source))),
+        ...result,
+      };
+    };
+
     if (this._options.platform === 'browser') {
       invariant(initialized, 'Compiler not initialized.');
       await initialized;
     }
 
     // https://esbuild.github.io/api/#build
-    const result = await build({
-      ...this._options,
-      metafile: true,
-      write: false,
-      entryPoints: ['memory:main.tsx'],
-      plugins: [
-        {
-          name: 'memory',
-          setup: (build) => {
-            build.onResolve({ filter: /^memory:/ }, ({ path }) => {
-              return { path: path.split(':')[1], namespace: 'memory' };
-            });
-            build.onLoad({ filter: /.*/, namespace: 'memory' }, ({ path }) => {
-              const imports = ["import React from 'react';"];
-              if (path === 'main.tsx') {
-                return {
-                  contents: [...imports, source].join('\n'),
-                  loader: 'tsx',
-                };
-              }
-            });
+    try {
+      const result = await build({
+        ...this._options,
+        metafile: true,
+        write: false,
+        entryPoints: ['memory:main.tsx'],
+        plugins: [
+          {
+            name: 'memory',
+            setup: (build) => {
+              build.onResolve({ filter: /^memory:/ }, ({ path }) => {
+                return { path: path.split(':')[1], namespace: 'memory' };
+              });
+              build.onLoad({ filter: /.*/, namespace: 'memory' }, ({ path }) => {
+                const imports = ["import React from 'react';"];
+                if (path === 'main.tsx') {
+                  return {
+                    contents: [...imports, source].join('\n'),
+                    loader: 'tsx',
+                  };
+                }
+              });
+            },
           },
-        },
-      ],
-    });
+        ],
+      });
 
-    // console.log(result.outputFiles![0].text);
-
-    return {
-      timestamp: Date.now(),
-      sourceHash: Buffer.from(await subtleCrypto.digest('SHA-256', Buffer.from(source))),
-      imports: this.analyzeImports(result),
-      bundle: result.outputFiles![0].text,
-    };
+      return await createResult({
+        imports: this.analyzeImports(result),
+        bundle: result.outputFiles![0].text,
+      });
+    } catch (err) {
+      return await createResult({ error: err });
+    }
   }
 
   // TODO(dmaretskyi): In the future we can replace the compiler with SWC with plugins running in WASM.
