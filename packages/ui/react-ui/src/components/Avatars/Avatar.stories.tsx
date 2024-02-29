@@ -6,18 +6,15 @@ import '@dxosTheme';
 
 import React, { type PropsWithChildren } from 'react';
 
-import { getColorForValue } from '@dxos/react-ui-theme';
 import { type Size } from '@dxos/react-ui-types';
-import { hexToEmoji } from '@dxos/util';
+import { hexToFallback } from '@dxos/util';
 
-import { Avatar, type AvatarVariant, type AvatarStatus, type AvatarAnimation } from './Avatar';
+import { Avatar, type AvatarVariant, type AvatarStatus, type AvatarAnimation, type AvatarRootProps } from './Avatar';
 import { withTheme } from '../../testing';
 
-const randomColor = () => getColorForValue({ value: Math.random().toString(16), type: 'color' });
-
 type StorybookAvatarProps = {
+  id?: string;
   imgSrc?: string;
-  fallbackValue?: string;
   fallbackText?: string;
   label?: string;
   description?: string;
@@ -25,28 +22,27 @@ type StorybookAvatarProps = {
   variant?: AvatarVariant;
   animation?: AvatarAnimation;
   size?: Size;
-  color?: string;
+  hue?: AvatarRootProps['hue'];
 };
 
 const StorybookAvatar = (props: PropsWithChildren<StorybookAvatarProps>) => {
   const {
+    id = '20970b563fc49b5bb194a6ffdff376031a3a11f9481360c071c3fed87874106b',
     status,
     size = 12,
     variant = 'circle',
     label = 'Alice',
     description = 'Online',
-    fallbackValue = '20970b563fc49b5bb194a6ffdff376031a3a11f9481360c071c3fed87874106b',
     fallbackText = '',
     animation,
     imgSrc,
-    color = randomColor(),
   } = props;
-  const emoji = hexToEmoji(fallbackValue);
+  const { emoji, hue } = hexToFallback(id);
   return (
     <div className='flex flex-row gap-3 align-middle items-center'>
-      <Avatar.Root {...{ size, variant, status, animation, color }}>
+      <Avatar.Root {...{ size, variant, status, animation, hue: props.hue || hue }}>
         <Avatar.Frame>
-          {!imgSrc && (fallbackValue || fallbackText) && <Avatar.Fallback text={fallbackText || emoji} />}
+          {!imgSrc && (fallbackText || emoji) && <Avatar.Fallback text={fallbackText || emoji} />}
           {imgSrc && <Avatar.Image href={imgSrc} />}
         </Avatar.Frame>
         <div>
@@ -72,7 +68,7 @@ const sampleImage =
 
 const row = (size: Size) => (
   <>
-    <StorybookAvatar size={size} description='Offline' color={''} />
+    <StorybookAvatar size={size} description='Offline' />
     <StorybookAvatar size={size} status='active' />
     <StorybookAvatar size={size} status='active' imgSrc={sampleImage} />
   </>

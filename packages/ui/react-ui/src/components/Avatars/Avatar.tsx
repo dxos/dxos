@@ -34,7 +34,7 @@ type AvatarContextValue = {
   status?: AvatarStatus;
   animation?: AvatarAnimation;
   inGroup?: boolean;
-  color?: string;
+  hue?: string;
 };
 
 const AVATAR_NAME = 'Avatar';
@@ -50,13 +50,13 @@ const AvatarRoot = ({
   descriptionId: propsDescriptionId,
   maskId: propsMaskId,
   inGroup,
-  color,
+  hue,
 }: AvatarRootProps) => {
   const labelId = useId('avatar__label', propsLabelId);
   const descriptionId = useId('avatar__description', propsDescriptionId);
   const maskId = useId('avatar__mask', propsMaskId);
   return (
-    <AvatarProvider {...{ labelId, descriptionId, maskId, size, variant, status, animation, inGroup, color }}>
+    <AvatarProvider {...{ labelId, descriptionId, maskId, size, variant, status, animation, inGroup, hue }}>
       {children}
     </AvatarProvider>
   );
@@ -68,7 +68,7 @@ const rx = '0.25rem';
 
 const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
-    const { size, variant, labelId, descriptionId, maskId, inGroup, status, animation, color } =
+    const { size, variant, labelId, descriptionId, maskId, inGroup, status, animation, hue } =
       useAvatarContext('AvatarFrame');
 
     const { tx } = useThemeContext();
@@ -112,11 +112,10 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
           </defs>
           {variant === 'circle' ? (
             <circle
-              className={`avatarFrameFill${color ? '' : ' fill-[var(--surface-bg)]'}`}
+              className={hue ? tx('hue.fill', 'avatar__frame__circle', { hue }) : 'fill-[var(--surface-bg)]'}
               cx='50%'
               cy='50%'
               r={r}
-              {...(color ? { fill: color } : {})}
             />
           ) : (
             <rect

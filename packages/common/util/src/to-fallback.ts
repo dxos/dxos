@@ -16,6 +16,7 @@ export const idEmoji = [
   // – requires less special knowledge to identify
   // – less likely to evoke negative feelings (no meat, no drugs, no weapons, etc)
   // – less common as a signifier in UX
+  // NOTE that this is intentionally an array of strings because of the way emoji graphemes work.
   '👹',
   '👻',
   '👽',
@@ -150,8 +151,45 @@ export const idEmoji = [
   '🎵',
 ];
 
+export const idHue = [
+  'red' as const,
+  'orange' as const,
+  'amber' as const,
+  'yellow' as const,
+  'lime' as const,
+  'green' as const,
+  'emerald' as const,
+  'teal' as const,
+  'cyan' as const,
+  // 'sky' as const, /* Omitted since it is quite similar to the primary accent palette */
+  // 'blue' as const, /* Omitted since it is quite similar to the primary accent palette */
+  // 'indigo' as const, /* Omitted since it is quite similar to the primary accent palette */
+  'violet' as const,
+  'purple' as const,
+  'fuchsia' as const,
+  'pink' as const,
+  'rose' as const,
+];
+
+export const keyToEmoji = (key: PublicKey) => hexToEmoji(key.toHex());
+
 export const hexToEmoji = (hex: string) => toEmoji(parseInt(hex, 16));
 
-export const keyToEmoji = (key: PublicKey) => idEmoji[key.getInsecureHash(idEmoji.length)];
-
 export const toEmoji = (hash: number) => idEmoji[hash % idEmoji.length];
+
+export const keyToHue = (key: PublicKey) => hexToHue(key.toHex());
+
+export const hexToHue = (hex: string) => toHue(parseInt(hex, 16));
+
+export const toHue = (hash: number) => idHue[hash & idHue.length];
+
+export type FallbackValue = {
+  emoji: string;
+  hue: (typeof idHue)[number];
+};
+
+export const keyToFallback = (key: PublicKey) => hexToFallback(key.toHex());
+
+export const hexToFallback = (hex: string) => toFallback(parseInt(hex, 16));
+
+export const toFallback = (hash: number): FallbackValue => ({ emoji: toEmoji(hash), hue: toHue(hash) });

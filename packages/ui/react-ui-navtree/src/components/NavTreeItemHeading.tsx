@@ -8,13 +8,7 @@ import React, { type FC, forwardRef } from 'react';
 import { Button, TreeItem } from '@dxos/react-ui';
 import { getSize, mx, valenceColorText } from '@dxos/react-ui-theme';
 
-import {
-  navTreeHeading,
-  topLevelHeadingColor,
-  topLevelHeadingHoverColor,
-  topLevelText,
-  treeItemText,
-} from './navtree-fragments';
+import { navTreeHeading, topLevelText, treeItemText } from './navtree-fragments';
 
 export type NavTreeItemHeadingProps = {
   id: string;
@@ -43,10 +37,8 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
       <div
         role='none'
         className={mx(
-          'grow flex items-center gap-1 pli-0',
+          'grow flex items-center gap-1 pli-0 fg-description',
           level < 1 && topLevelText,
-          level < 1 && topLevelHeadingColor(palette),
-          level < 1 && topLevelHeadingHoverColor(palette),
           error && valenceColorText('error'),
         )}
       >
