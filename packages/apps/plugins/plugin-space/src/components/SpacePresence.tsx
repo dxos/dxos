@@ -20,12 +20,11 @@ import {
   useDensityContext,
   useTranslation,
   Button,
-  useJdenticonHref,
   List,
   ListItem,
 } from '@dxos/react-ui';
 import { getColorForValue, mx } from '@dxos/react-ui-theme';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, keyToEmoji } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';
 import type { SpacePluginProvides } from '../types';
@@ -186,9 +185,8 @@ type PresenceAvatarProps = {
 
 const PrensenceAvatar = ({ identity, showName, match, group, index, onClick }: PresenceAvatarProps) => {
   const Root = group ? AvatarGroupItem.Root : Avatar.Root;
-  const memberHex = identity.identityKey.toHex();
   const status = match ? 'current' : 'active';
-  const jdenticon = useJdenticonHref(memberHex ?? '', 12);
+  const fallbackValue = keyToEmoji(identity.identityKey);
   return (
     <Root status={status}>
       <Avatar.Frame
@@ -197,7 +195,7 @@ const PrensenceAvatar = ({ identity, showName, match, group, index, onClick }: P
         {...(index ? { style: { zIndex: index } } : {})}
         onClick={() => onClick?.()}
       >
-        <Avatar.Fallback href={jdenticon} />
+        <Avatar.Fallback text={fallbackValue} />
       </Avatar.Frame>
       {showName && <Avatar.Label classNames='text-sm truncate pli-2'>{getName(identity)}</Avatar.Label>}
     </Root>
