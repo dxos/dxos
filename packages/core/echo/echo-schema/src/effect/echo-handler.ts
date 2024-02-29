@@ -17,6 +17,8 @@ import { type ReactiveObject } from './reactive';
 import { SchemaValidator, symbolSchema } from './schema-validator';
 import { AutomergeObjectCore, encodeReference } from '../automerge';
 
+export type EchoReactiveObject<T> = ReactiveObject<T> & { id: string };
+
 const symbolPath = Symbol('path');
 const symbolHandler = Symbol('handler');
 
@@ -27,8 +29,6 @@ type ProxyTarget = {
 } & ({ [key: keyof any]: any } | any[]);
 
 const DATA_NAMESPACE = 'data';
-
-// TODO(dmaretskyi): Unfinished code.
 
 /**
  * Shared for all targets within one ECHO object.
@@ -445,8 +445,6 @@ const throwIfCustomClass = (prop: string | symbol, value: any) => {
     }
   }
 };
-
-export type EchoReactiveObject<T> = ReactiveObject<T> & { id: string };
 
 export const createEchoReactiveObject = <T extends {}>(init: T, schema?: S.Schema<T>): EchoReactiveObject<T> => {
   const target = { [symbolPath]: [], ...init };

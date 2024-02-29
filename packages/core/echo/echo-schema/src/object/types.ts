@@ -6,6 +6,8 @@ import type { AbstractEchoObject } from './object';
 import { type AutomergeObject } from '../automerge';
 import type { EchoDatabase } from '../database';
 import type { Schema } from '../proto';
+import { ReactiveObject } from '../effect/reactive';
+import { EchoReactiveObject } from '../effect/echo-handler';
 
 // TODO(burdon): Don't export symbols outside of package?
 
@@ -25,6 +27,12 @@ export const proxy = Symbol.for('dxos.echo.proxy');
 export const base = Symbol.for('dxos.echo.base');
 export const db = Symbol.for('dxos.echo.db');
 export const subscribe = Symbol.for('dxos.echo-object.subscribe');
+
+/**
+ * Only needed while we're transitioning from TypedObject to ReactiveObject APIs.
+ * To be removed afterwards.
+ */
+export type OpaqueEchoObject = EchoObject | EchoReactiveObject<any>;
 
 /**
  * Shared interface of all echo objects.

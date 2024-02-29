@@ -11,6 +11,7 @@ import { type AbstractEchoObject } from './object';
 import { isAutomergeObject } from './typed-object';
 import { base, type EchoObject, type ForeignKey } from './types';
 import type { EchoDatabase } from '../database';
+import { todo } from '@dxos/debug';
 
 export const setStateFromSnapshot = (obj: AbstractEchoObject, snapshot: ObjectSnapshot | TextSnapshot) => {
   invariant(obj[base]._stateMachine);
@@ -26,7 +27,8 @@ export const getDatabaseFromObject = (obj: EchoObject): EchoDatabase | undefined
     return obj[base]._core.database?._dbApi;
   }
 
-  return (obj[base] as AbstractEchoObject)._database;
+  todo();
+  // return (obj[base] as AbstractEchoObject)._database.;
 };
 
 export const getReferenceWithSpaceKey = (obj: EchoObject): Reference | undefined => {

@@ -92,7 +92,7 @@ export abstract class AbstractEchoObject<T extends Model = any> implements EchoO
 
   /** Database reference if bound. */
   get [db](): EchoDatabase | undefined {
-    return this[base]._database;
+    return this[base]._database as any;
   }
 
   [subscribe](callback: (value: any) => void) {

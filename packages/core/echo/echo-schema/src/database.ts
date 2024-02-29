@@ -10,7 +10,7 @@ import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { AutomergeDb, type AutomergeContext } from './automerge';
 import { type Hypergraph } from './hypergraph';
 import { EchoLegacyDatabase } from './legacy-database';
-import { isAutomergeObject, type EchoObject, type TypedObject } from './object';
+import { isAutomergeObject, type EchoObject, type TypedObject, OpaqueEchoObject } from './object';
 import { type FilterSource, type Query } from './query';
 import { invariant } from '@dxos/invariant';
 
@@ -24,12 +24,12 @@ export interface EchoDatabase {
   /**
    * Adds object to the database.
    */
-  add<T extends EchoObject>(obj: T): T;
+  add<T extends OpaqueEchoObject>(obj: T): T;
 
   /**
    * Removes object from the database.
    */
-  remove<T extends EchoObject>(obj: T): void;
+  remove<T extends OpaqueEchoObject>(obj: T): void;
 
   /**
    * Query objects.
@@ -84,12 +84,12 @@ export class EchoDatabaseImpl implements EchoDatabase {
     return this._automerge.getObjectById(id) as T | undefined;
   }
 
-  add<T extends EchoObject>(obj: T): T {
+  add<T extends OpaqueEchoObject>(obj: T): T {
     invariant(isAutomergeObject(obj));
     return this._automerge.add(obj);
   }
 
-  remove<T extends EchoObject>(obj: T): void {
+  remove<T extends OpaqueEchoObject>(obj: T): void {
     invariant(isAutomergeObject(obj));
     return this._automerge.remove(obj);
   }
