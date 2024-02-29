@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AddressBook } from '@phosphor-icons/react';
+import { AddressBook, type IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import {
@@ -97,10 +97,15 @@ export const ClientPlugin = ({
 
         if (client.halo.identity.get()) {
           await client.spaces.isReady.wait({ timeout: WAIT_FOR_DEFAULT_SPACE_TIMEOUT });
+          // TODO(wittjosiah): Remove. This is a cleanup for the old way of tracking first run.
+          if (typeof client.spaces.default.properties[appKey] === 'boolean') {
+            client.spaces.default.properties[appKey] = {};
+          }
+          const key = `${appKey}.opened`;
           // TODO(wittjosiah): This doesn't work currently.
           //   There's no guaruntee that the default space will be fully synced by the time this is called.
-          // firstRun = !client.spaces.default.properties[appKey];
-          client.spaces.default.properties[appKey] = true;
+          // firstRun = !client.spaces.default.properties[key];
+          client.spaces.default.properties[key] = Date.now();
         }
       } catch (err) {
         error = err;
@@ -135,22 +140,21 @@ export const ClientPlugin = ({
     provides: {
       translations,
       graph: {
-        builder: ({ parent, plugins }) => {
+        builder: (plugins, graph) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
-          if (parent.id === 'root') {
-            parent.addAction({
-              id: `${CLIENT_PLUGIN}/open-shell`,
+          const id = `${CLIENT_PLUGIN}/open-shell`;
+          graph.addNodes({
+            id,
+            data: () =>
+              intentPlugin?.provides.intent.dispatch([{ plugin: CLIENT_PLUGIN, action: ClientAction.OPEN_SHELL }]),
+            properties: {
               label: ['open shell label', { ns: CLIENT_PLUGIN }],
-              icon: (props) => <AddressBook {...props} />,
+              icon: (props: IconProps) => <AddressBook {...props} />,
               keyBinding: 'meta+shift+.',
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch([{ plugin: CLIENT_PLUGIN, action: ClientAction.OPEN_SHELL }]),
-              properties: {
-                testId: 'clientPlugin.openShell',
-              },
-            });
-          }
+              testId: 'clientPlugin.openShell',
+            },
+            edges: [['root', 'inbound']],
+          });
         },
       },
       intent: {

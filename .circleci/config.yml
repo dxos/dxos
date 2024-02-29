@@ -144,6 +144,8 @@ jobs:
     docker:
       - *docker_image_default
     resource_class: xlarge
+    environment:
+      DX_ENVIRONMENT: circleci
     steps:
       - checkout
       - *cache_restore
