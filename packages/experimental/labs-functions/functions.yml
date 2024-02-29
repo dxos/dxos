@@ -85,7 +85,7 @@ triggers:
   - function: 'dxos.org/function/suggest-reference'
     signals:
       - kind: 'echo-mutation'
-        type: 'dxos.Text.v0'
+        dataType: 'dxos.Text.v0'
 
 #  - function: 'dxos.org/function/github'
 #    subscriptions:

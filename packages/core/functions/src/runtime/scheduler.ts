@@ -24,7 +24,8 @@ import {
   type SignalSubscription,
   type TriggerSubscription,
 } from '../manifest';
-import { type Signal, SignalBus } from '../signal/signal-bus';
+import { type Signal, SignalBus } from '../signal';
+import { MutationSignalEmitter } from '../signal/echo-mutation-signal';
 
 type Callback = (data: FunctionSubscriptionEvent) => Promise<number>;
 
@@ -44,11 +45,15 @@ export class Scheduler {
     { ctx: Context; trigger: FunctionTrigger }
   >(({ id, spaceKey }) => `${spaceKey.toHex()}:${id}`);
 
+  private readonly _signalEmitter: MutationSignalEmitter;
+
   constructor(
     private readonly _client: Client,
     private readonly _manifest: FunctionManifest,
     private readonly _options: SchedulerOptions = {},
-  ) {}
+  ) {
+    this._signalEmitter = new MutationSignalEmitter(_client);
+  }
 
   async start() {
     this._client.spaces.subscribe(async (spaces) => {
@@ -59,9 +64,11 @@ export class Scheduler {
         }
       }
     });
+    this._signalEmitter.start();
   }
 
   async stop() {
+    this._signalEmitter.stop();
     for (const { id, spaceKey } of this._mounts.keys()) {
       await this.unmount(id, spaceKey);
     }
@@ -201,9 +208,7 @@ export class Scheduler {
       if (signalToProcess == null) {
         return;
       }
-      const functionResult = await this._execFunction(def, {
-        signal: signalToProcess,
-      });
+      const functionResult = await this._execFunction(def, signalToProcess);
       if (functionResult != null) {
         bus.emit({
           id: PublicKey.random().toHex(),
@@ -247,13 +252,12 @@ export class Scheduler {
           body: JSON.stringify(data),
         });
 
-        functionResult = this._parseFunctionResult(response);
+        functionResult = await this._parseFunctionResult(response);
         status = response.status;
       } else if (callback) {
         status = await callback(data);
       }
 
-      // const result = await response.json();
       log('result', { function: def.id, result: status });
       return functionResult;
     } catch (err: any) {
@@ -262,11 +266,15 @@ export class Scheduler {
     }
   }
 
-  private _parseFunctionResult(response: Response): FunctionResult | null {
+  private async _parseFunctionResult(response: Response): Promise<FunctionResult | null> {
     try {
-      const result = S.validateEither(FunctionResult)(response.json());
+      if (response.headers.get('Content-Type') !== 'application/json') {
+        return null;
+      }
+      const json = await response.json();
+      const result = S.validateEither(FunctionResult)(json);
       if (Either.isLeft(result)) {
-        log.warn('incorrectly formatted function result', { result, error: result.left });
+        log.warn('incorrectly formatted function result', { json, error: result.left });
         return null;
       }
       return result.right;
