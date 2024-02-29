@@ -6,7 +6,7 @@ import { CaretDown, CaretRight, type IconProps } from '@phosphor-icons/react';
 import React, { type FC, forwardRef } from 'react';
 
 import { Button, TreeItem } from '@dxos/react-ui';
-import { getSize, mx, valenceColorText } from '@dxos/react-ui-theme';
+import { getSize, type HuePalette, hueTokens, mx, valenceColorText } from '@dxos/react-ui-theme';
 
 import { navTreeHeading, topLevelText, treeItemText } from './navtree-fragments';
 
@@ -37,8 +37,10 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
       <div
         role='none'
         className={mx(
-          'grow flex items-center gap-1 pli-0 fg-description',
+          'grow flex items-center gap-1 pli-0',
           level < 1 && topLevelText,
+          level < 1 && palette && hueTokens[palette as HuePalette].text,
+          level < 1 && palette && hueTokens[palette as HuePalette].textHover,
           error && valenceColorText('error'),
         )}
       >
