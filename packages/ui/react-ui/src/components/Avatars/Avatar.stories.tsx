@@ -8,7 +8,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import { getColorForValue } from '@dxos/react-ui-theme';
 import { type Size } from '@dxos/react-ui-types';
-import { toEmoji } from '@dxos/util';
+import { stringToEmoji } from '@dxos/util';
 
 import { Avatar, type AvatarVariant, type AvatarStatus, type AvatarAnimation } from './Avatar';
 import { withTheme } from '../../testing';
@@ -17,7 +17,7 @@ const randomColor = () => getColorForValue({ value: Math.random().toString(16), 
 
 type StorybookAvatarProps = {
   imgSrc?: string;
-  fallbackValue?: number;
+  fallbackValue?: string;
   fallbackText?: string;
   label?: string;
   description?: string;
@@ -35,13 +35,13 @@ const StorybookAvatar = (props: PropsWithChildren<StorybookAvatarProps>) => {
     variant = 'circle',
     label = 'Alice',
     description = 'Online',
-    fallbackValue = parseInt('20970b563fc49b5bb194a6ffdff376031a3a11f9481360c071c3fed87874106b', 16),
+    fallbackValue = '20970b563fc49b5bb194a6ffdff376031a3a11f9481360c071c3fed87874106b',
     fallbackText = '',
     animation,
     imgSrc,
     color = randomColor(),
   } = props;
-  const emoji = toEmoji(fallbackValue);
+  const emoji = stringToEmoji(fallbackValue);
   return (
     <div className='flex flex-row gap-3 align-middle items-center'>
       <Avatar.Root {...{ size, variant, status, animation, color }}>
@@ -112,22 +112,22 @@ export const Square = () => (
 
 export const DefaultEmoji = () => (
   <div className='flex flex-row gap-4'>
-    <StorybookAvatar fallbackText='🦄' fallbackValue={0} status='active' animation='pulse' />
-    <StorybookAvatar fallbackText='🐒' fallbackValue={0} animation='pulse' />
-    <StorybookAvatar fallbackText='🪲' fallbackValue={0} />
+    <StorybookAvatar fallbackText='🦄' status='active' animation='pulse' />
+    <StorybookAvatar fallbackText='🐒' animation='pulse' />
+    <StorybookAvatar fallbackText='🪲' />
   </div>
 );
 
-export const SquareEmoji = () => <StorybookAvatar variant='square' fallbackText='🦄' fallbackValue={0} />;
+export const SquareEmoji = () => <StorybookAvatar variant='square' fallbackText='🦄' />;
 
 export const DefaultText = () => (
   <div className='flex flex-row gap-4'>
-    <StorybookAvatar fallbackText='PT' fallbackValue={0} />
-    <StorybookAvatar fallbackText='AP' fallbackValue={0} />
-    <StorybookAvatar fallbackText='Z' fallbackValue={0} />
-    <StorybookAvatar fallbackText='pt' fallbackValue={0} />
-    <StorybookAvatar fallbackText='ap' fallbackValue={0} />
-    <StorybookAvatar fallbackText='z' fallbackValue={0} />
+    <StorybookAvatar fallbackText='PT' />
+    <StorybookAvatar fallbackText='AP' />
+    <StorybookAvatar fallbackText='Z' />
+    <StorybookAvatar fallbackText='pt' />
+    <StorybookAvatar fallbackText='ap' />
+    <StorybookAvatar fallbackText='z' />
   </div>
 );
 

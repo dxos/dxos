@@ -6,7 +6,7 @@ import { X } from '@phosphor-icons/react';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, { type ComponentPropsWithRef, type FC, forwardRef, useMemo } from 'react';
 
-import { Avatar, Button, type ThemedClassName, useJdenticonHref, useTranslation } from '@dxos/react-ui';
+import { Avatar, Button, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { TextEditor, type TextEditorProps, keymap, type EditorView, listener } from '@dxos/react-ui-editor';
 import {
   focusRing,
@@ -15,7 +15,7 @@ import {
   hoverableFocusedWithinControls,
   mx,
 } from '@dxos/react-ui-theme';
-import { safeParseJson } from '@dxos/util';
+import { safeParseJson, stringToEmoji } from '@dxos/util';
 
 import { translationKey } from '../translations';
 import { type MessageEntity, type MessageEntityBlock, type MessageMetadata } from '../types';
@@ -33,8 +33,6 @@ export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
     { authorImgSrc, authorStatus, authorId, authorName, continues = true, children, classNames, ...rootProps },
     forwardedRef,
   ) => {
-    const jdenticon = useJdenticonHref(authorId ?? '', avatarSize);
-
     return (
       <Avatar.Root status={authorStatus ?? 'inactive'} size={avatarSize}>
         <div
@@ -46,7 +44,7 @@ export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
         >
           <div role='none' className={'flex flex-col items-center gap-2 ' + messageCell}>
             <Avatar.Frame>
-              <Avatar.Fallback href={jdenticon} />
+              <Avatar.Fallback text={stringToEmoji(authorId)} />
               {authorImgSrc && <Avatar.Image href={authorImgSrc} />}
             </Avatar.Frame>
             {continues && <div role='none' className='is-px grow surface-separator' />}

@@ -5,7 +5,7 @@
 import React, { type ChangeEvent, useState } from 'react';
 
 import { Input, useTranslation } from '@dxos/react-ui';
-import { toEmoji } from '@dxos/util';
+import { stringToEmoji } from '@dxos/util';
 
 import { Actions, Action, Emoji, StepHeading } from '../../../components';
 import { type JoinStepProps } from '../JoinPanelProps';
@@ -45,7 +45,7 @@ export const InvitationAuthenticator = ({
   return (
     <>
       <div role='none' className='grow flex flex-col justify-center'>
-        {invitationId && <Emoji text={toEmoji(parseInt(invitationId, 16))} />}
+        {invitationId && <Emoji text={stringToEmoji(invitationId)} />}
         <Input.Root
           {...(failed && {
             validationValence: 'error',
