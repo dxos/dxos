@@ -75,6 +75,18 @@ Arguments:
 `target`: <code>undefined | string</code>
 
 
+### [Storage()]()
+
+
+Load config from storage.
+
+Returns: <code>Promise&lt;Partial&lt;Config&gt;&gt;</code>
+
+Arguments: none
+
+
+
+
 ### [createClientServices(config, \[createWorker\])]()
 
 
