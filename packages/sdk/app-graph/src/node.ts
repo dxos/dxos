@@ -4,24 +4,10 @@
 
 import { type MaybePromise, type MakeOptional } from '@dxos/util';
 
-// import * as S from '@effect/schema/Schema';
-
-// const NodeBase = ({
-//   data = S.any,
-//   properties = S.struct({}),
-// }: {
-//   data: S.Schema<unknown, unknown, unknown>;
-//   properties: S.Schema<unknown, unknown, unknown>;
-// }) =>
-//   S.struct({
-//     id: S.string,
-//     properties,
-//     data,
-//   });
-
 /**
  * Represents a node in the graph.
  */
+// TODO(wittjosiah): Use Effect Schema.
 export type NodeBase<TData = any, TProperties extends Record<string, any> = Record<string, any>> = {
   /**
    * Globally unique ID.
