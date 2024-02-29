@@ -74,8 +74,8 @@ export class InvitationsHandler {
       state = Invitation.State.INIT,
       timeout = INVITATION_TIMEOUT,
       swarmKey = PublicKey.random(),
-      persistent = false,
-      persistenceExpiry = undefined,
+      persistent = true,
+      lifetime = 86400, // 1 day
     } = options ?? {};
     const authCode =
       options?.authCode ??
@@ -91,7 +91,7 @@ export class InvitationsHandler {
       authCode,
       timeout,
       persistent,
-      persistenceExpiry,
+      lifetime,
       ...protocol.getInvitationContext(),
     };
 
@@ -409,3 +409,12 @@ export class InvitationsHandler {
     return observable;
   }
 }
+
+export const invitationExpired = (invitation: Invitation) => {
+  return (
+    invitation.created &&
+    invitation.lifetime &&
+    invitation.lifetime !== 0 &&
+    invitation.created.getTime() + invitation.lifetime < Date.now()
+  );
+};

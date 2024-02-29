@@ -4,8 +4,9 @@
 
 import CRC32 from 'crc-32';
 
-import { synchronized, Event } from '@dxos/async';
+import { Event, scheduleTaskInterval, synchronized } from '@dxos/async';
 import { type Codec } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -22,6 +23,8 @@ import {
 import { type Directory, type File } from '@dxos/random-access-storage';
 import { type Timeframe } from '@dxos/timeframe';
 import { ComplexMap, arrayToBuffer, forEachAsync, isNotNullOrUndefined } from '@dxos/util';
+
+const EXPIRED_INVITATION_CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour
 
 export interface AddSpaceOptions {
   key: PublicKey;
@@ -47,6 +50,7 @@ export class MetadataStore {
   private _metadataFile?: File = undefined;
 
   public readonly update = new Event<EchoMetadata>();
+  private readonly _invitationCleanupCtx = new Context();
 
   /**
    * @internal
@@ -121,6 +125,7 @@ export class MetadataStore {
   }
 
   async close() {
+    await this._invitationCleanupCtx.dispose();
     await this.flush();
     await this._metadataFile?.close();
     this._metadataFile = undefined;
@@ -163,6 +168,24 @@ export class MetadataStore {
           log.error('failed to load space large metadata', { err });
         }
       },
+    );
+
+    // Cleanup expired persistent invitations.
+    scheduleTaskInterval(
+      this._invitationCleanupCtx,
+      async () => {
+        for (const invitation of this.getInvitations()) {
+          if (
+            invitation.created &&
+            invitation.lifetime &&
+            invitation.lifetime !== 0 &&
+            invitation.created.getTime() + invitation.lifetime < Date.now()
+          ) {
+            await this.removeInvitation(invitation.invitationId);
+          }
+        }
+      },
+      EXPIRED_INVITATION_CLEANUP_INTERVAL,
     );
   }
 
@@ -247,25 +270,22 @@ export class MetadataStore {
     await this.flush();
   }
 
-  getPersistentInvitations(): Invitation[] {
-    return this._metadata.persistentInvitations ?? [];
+  getInvitations(): Invitation[] {
+    return this._metadata.invitations ?? [];
   }
 
-  async addPersistentInvitation(invitation: Invitation) {
-    // TODO(nf): lock?
-    if (this._metadata.persistentInvitations?.find((i) => i.invitationId === invitation.invitationId)) {
+  async addInvitation(invitation: Invitation) {
+    if (this._metadata.invitations?.find((i) => i.invitationId === invitation.invitationId)) {
       return;
     }
 
-    (this._metadata.persistentInvitations ??= []).push(invitation);
+    (this._metadata.invitations ??= []).push(invitation);
     await this._save();
     await this.flush();
   }
 
-  async removePersistentInvitation(invitationId: string) {
-    this._metadata.persistentInvitations = (this._metadata.persistentInvitations ?? []).filter(
-      (i) => i.invitationId !== invitationId,
-    );
+  async removeInvitation(invitationId: string) {
+    this._metadata.invitations = (this._metadata.invitations ?? []).filter((i) => i.invitationId !== invitationId);
     await this._save();
     await this.flush();
   }

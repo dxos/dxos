@@ -451,11 +451,16 @@ message Invitation {
   /// Path or identifier to navigate to after successful authentication.
   optional string target = 11;
 
+  // TODO(nf): should these exist elsewhere since they only have meaning to the host?
   /// Host should resume invitation on startup until timeout.
   optional bool persistent = 12;
 
-  /// Host should resume invitation on startup until expiry.
-  optional google.protobuf.Timestamp persistence_expiry = 13;
+  optional google.protobuf.Timestamp created = 13;
+
+  /// Number of seconds the host will honor the invitation. 0 means the invitation persists forever.
+  // TODO(nf): some feedback mechanism or GC for immortal invitations?
+  // TODO(nf): should the creator have a way to make an invitation last as long as the client? this was the previous behavior.
+  optional int32 lifetime = 14;
 }
 
 message AcceptInvitationRequest {

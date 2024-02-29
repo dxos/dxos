@@ -19,7 +19,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 
 import { type InvitationProtocol } from './invitation-protocol';
-import { type InvitationsHandler } from './invitations-handler';
+import { invitationExpired, type InvitationsHandler } from './invitations-handler';
 
 /**
  * Adapts invitation service observable to client/service stream.
@@ -59,14 +59,14 @@ export class InvitationsServiceImpl implements InvitationsService {
       this._createInvitations.set(invitation.get().invitationId, invitation);
       this._invitationCreated.emit(invitation.get());
 
-      if (invitation.get().persistent) {
-        scheduleTask(savePersistentInvitationCtx, async () =>
-          this._metadataStore.addPersistentInvitation(invitation.get()),
-        );
-      }
     }
 
     return new Stream<Invitation>(({ next, close }) => {
+      if (invitation.get().persistent) {
+        scheduleTask(savePersistentInvitationCtx, async () =>
+          this._metadataStore.addInvitation(invitation.get()).catch((err) => close(err)),
+        );
+      }
       invitation.subscribe(
         (invitation) => {
           next(invitation);
@@ -79,7 +79,7 @@ export class InvitationsServiceImpl implements InvitationsService {
           close();
           if (invitation.get().persistent) {
             await savePersistentInvitationCtx.dispose();
-            await this._metadataStore.removePersistentInvitation(invitation.get().invitationId);
+            await this._metadataStore.removeInvitation(invitation.get().invitationId);
           }
 
           this._createInvitations.delete(invitation.get().invitationId);
@@ -92,17 +92,10 @@ export class InvitationsServiceImpl implements InvitationsService {
   }
 
   async getPersistentInvitations(): Promise<GetPersistentInvitationsResponse> {
-    const persistentInvitations = this._metadataStore.getPersistentInvitations();
+    const persistentInvitations = this._metadataStore.getInvitations();
 
     // get saved persistent invitations, filter and remove from storage those that have expired.
-    const freshInvitations = persistentInvitations.filter(async (invitation) => {
-      if (invitation.persistenceExpiry && Date.now() > invitation.persistenceExpiry.getTime()) {
-        log('removing expired persistent invitation', { invitation });
-        await this._metadataStore.removePersistentInvitation(invitation.invitationId);
-        return false;
-      }
-      return true;
-    });
+    const freshInvitations = persistentInvitations.filter(async (invitation) => !invitationExpired(invitation));
 
     return { invitations: freshInvitations };
   }
