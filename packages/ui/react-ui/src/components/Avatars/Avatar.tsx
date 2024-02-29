@@ -11,8 +11,7 @@ import {
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import { toSvg } from 'jdenticon';
-import React, { type ComponentPropsWithRef, forwardRef, type PropsWithChildren, useMemo } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef, type PropsWithChildren } from 'react';
 
 import { useId } from '@dxos/react-hooks';
 import { type Size } from '@dxos/react-ui-types';
@@ -282,13 +281,6 @@ const AvatarFallback = forwardRef<SVGImageElement, AvatarFallbackProps>(({ delay
   );
 });
 
-const getJdenticonHref = (value: string, size: Size) =>
-  `data:image/svg+xml;utf8,${encodeURIComponent(toSvg(value, size === 'px' ? 1 : size * 4, { padding: 0 }))}`;
-
-const useJdenticonHref = (value: string, size: Size) => {
-  return useMemo(() => getJdenticonHref(value, size), [value]);
-};
-
 export const Avatar = {
   Root: AvatarRoot,
   Frame: AvatarFrame,
@@ -298,7 +290,7 @@ export const Avatar = {
   Description: AvatarDescription,
 };
 
-export { useJdenticonHref, useAvatarContext, getJdenticonHref };
+export { useAvatarContext };
 
 export type {
   AvatarStatus,

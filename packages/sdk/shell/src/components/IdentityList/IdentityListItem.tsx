@@ -7,8 +7,9 @@ import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 import { generateName } from '@dxos/display-name';
 import { SpaceMember } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
-import { ListItem, Avatar, useJdenticonHref, useId, type ThemedClassName } from '@dxos/react-ui';
+import { ListItem, Avatar, useId, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
+import { keyToEmoji } from '@dxos/util';
 
 type IdentityListItemProps = {
   identity: Identity;
@@ -20,9 +21,8 @@ export const IdentityListItem = forwardRef<
   HTMLLIElement,
   ThemedClassName<ComponentPropsWithoutRef<'li'>> & IdentityListItemProps
 >(({ identity, presence, onClick, classNames, ...props }, forwardedRef) => {
-  const fallbackValue = identity.identityKey.toHex();
+  const fallbackValue = keyToEmoji(identity.identityKey);
   const labelId = useId('identityListItem__label');
-  const jdenticon = useJdenticonHref(fallbackValue ?? '', 12);
   const displayName = identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
   return (
     <ListItem.Root
@@ -35,7 +35,7 @@ export const IdentityListItem = forwardRef<
     >
       <Avatar.Root status={presence === SpaceMember.PresenceState.ONLINE ? 'active' : 'inactive'} labelId={labelId}>
         <Avatar.Frame classNames='place-self-center'>
-          <Avatar.Fallback href={jdenticon} />
+          <Avatar.Fallback text={fallbackValue} />
         </Avatar.Frame>
         <Avatar.Label classNames='text-sm truncate pli-2'>{displayName}</Avatar.Label>
       </Avatar.Root>
