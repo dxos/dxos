@@ -10,13 +10,13 @@ import {
   type StateEffect,
 } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { type RefObject, useEffect, useRef, useState } from 'react';
+import { type DependencyList, type RefObject, useEffect, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { type ThemeMode } from '@dxos/react-ui';
 import { isNotFalsy } from '@dxos/util';
 
-import { type ThemeStyles } from '..//styles';
+import { type ThemeStyles } from '../styles';
 import { defaultTheme } from '../themes';
 import { logChanges } from '../util';
 
@@ -26,6 +26,7 @@ export type UseTextEditorOptions = {
   debug?: boolean;
 } & EditorStateConfig;
 
+// TODO(burdon): Return tuple?
 export type UseTextEditor = {
   parentRef: RefObject<HTMLDivElement>;
   view?: EditorView;
@@ -35,14 +36,10 @@ export type UseTextEditor = {
  * Hook for creating editor.
  */
 // TODO(wittjosiah): Does not work in strict mode.
-export const useTextEditor = ({
-  autoFocus,
-  scrollTo,
-  debug,
-  doc,
-  selection,
-  extensions,
-}: UseTextEditorOptions = {}): UseTextEditor => {
+export const useTextEditor = (
+  { autoFocus, scrollTo, debug, doc, selection, extensions }: UseTextEditorOptions = {},
+  deps?: DependencyList,
+): UseTextEditor => {
   const onUpdate = useRef<() => void>();
   const [view, setView] = useState<EditorView>();
   const parentRef = useRef<HTMLDivElement>(null);
@@ -87,8 +84,7 @@ export const useTextEditor = ({
     return () => {
       view?.destroy();
     };
-    // TODO(wittjosiah): Does `parentRef` ever change? Only `.current` changes?
-  }, [parentRef, extensions]);
+  }, deps);
 
   useEffect(() => {
     if (view) {

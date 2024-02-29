@@ -150,6 +150,7 @@ describe('identity/identity-manager', () => {
     expect(identity1.space.protocol.sessions.get(identity2.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
     expect(identity2.space.protocol.sessions.get(identity1.deviceKey)).to.exist;
     expect(identity2.space.protocol.sessions.get(identity1.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
+    // TODO(nf): how to check whether peer1 has written the device profile credential?
   });
 
   test('sets device profile', async () => {

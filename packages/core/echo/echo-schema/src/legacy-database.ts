@@ -72,7 +72,7 @@ export class EchoLegacyDatabase {
   }
 
   getObjectById<T extends EchoObject>(id: string): T | undefined {
-    const obj = this._objects.get(id) ?? this.automerge._objects.get(id);
+    const obj = this._objects.get(id) ?? this.automerge.getObjectById(id);
 
     if (!obj) {
       return undefined;

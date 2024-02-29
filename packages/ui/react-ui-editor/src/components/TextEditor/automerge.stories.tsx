@@ -7,11 +7,9 @@ import '@dxosTheme';
 import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
 import '@preact/signals-react';
 import { EditorView } from '@codemirror/view'; // Register react integration.
-import get from 'lodash.get';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { type Prop } from '@dxos/automerge/automerge';
-import { Repo, type DocHandle } from '@dxos/automerge/automerge-repo';
+import { Repo } from '@dxos/automerge/automerge-repo';
 import { Filter } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { Expando, TextObject, useSpace } from '@dxos/react-client/echo';
@@ -20,7 +18,8 @@ import { ClientRepeater } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor } from './TextEditor';
-import { type IDocHandle, automerge, awareness, createBasicBundle } from '../../extensions';
+import { automerge, awareness, createBasicBundle } from '../../extensions';
+import { DocAccessor } from '../../extensions/automerge/defs';
 import { useTextEditor, useTextModel } from '../../hooks';
 import { defaultTheme } from '../../themes';
 import translations from '../../translations';
@@ -32,24 +31,24 @@ type TestObject = {
 };
 
 type EditorProps = {
-  handle: IDocHandle;
-  path?: Prop[];
+  source: DocAccessor;
 };
 
-const Editor = ({ handle, path = ['text'] }: EditorProps) => {
+const Editor = ({ source }: EditorProps) => {
   const extensions = useMemo(
     () => [
       EditorView.baseTheme(defaultTheme),
       EditorView.editorAttributes.of({ class: 'p-2 bg-white' }),
       createBasicBundle({ placeholder: 'Type here...' }),
-      automerge({ handle, path }),
+      automerge(source),
       awareness(),
     ],
-    [handle, path],
+    [source],
   );
+
   const { parentRef } = useTextEditor({
     autoFocus: true,
-    doc: get(handle.docSync()!, path),
+    doc: DocAccessor.getValue(source),
     extensions,
   });
 
@@ -57,8 +56,8 @@ const Editor = ({ handle, path = ['text'] }: EditorProps) => {
 };
 
 const Story = () => {
-  const [object1, setObject1] = useState<DocHandle<TestObject>>();
-  const [object2, setObject2] = useState<DocHandle<TestObject>>();
+  const [object1, setObject1] = useState<DocAccessor<TestObject>>();
+  const [object2, setObject2] = useState<DocAccessor<TestObject>>();
 
   useEffect(() => {
     queueMicrotask(async () => {
@@ -77,8 +76,8 @@ const Story = () => {
       const object2 = repo2.find(object1.url);
       await object2.whenReady();
 
-      setObject1(object1);
-      setObject2(object2);
+      setObject1({ handle: object1, path: ['text'] });
+      setObject2({ handle: object2, path: ['text'] });
     });
   }, []);
 
@@ -88,8 +87,8 @@ const Story = () => {
 
   return (
     <div role='none' className='grid grid-cols-2 bs-full is-full gap-2'>
-      <Editor handle={object1} path={['text']} />
-      <Editor handle={object2} path={['text']} />
+      <Editor source={object1} />
+      <Editor source={object2} />
     </div>
   );
 };

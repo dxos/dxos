@@ -14,6 +14,7 @@ import {
   type PropertiesProps,
   type Space,
 } from '@dxos/client-protocol';
+import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import {
@@ -56,6 +57,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   constructor(
+    private readonly _config: Config | undefined,
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _modelFactory: ModelFactory,
     private readonly _graph: Hypergraph,
@@ -68,7 +70,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spacesStream = new PushStream<Space[]>();
     super(spacesStream.observable, []);
     this._spacesStream = spacesStream;
-    this._automergeContext = new AutomergeContext(_serviceProvider.services.DataService);
+    this._automergeContext = new AutomergeContext(_serviceProvider.services.DataService, {
+      spaceFragmentationEnabled: this._config?.values?.runtime?.client?.storage?.spaceFragmentation ?? false,
+    });
   }
 
   [inspect.custom]() {
@@ -100,9 +104,13 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
     invariant(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
     invariant(this._serviceProvider.services.InvitationsService, 'InvitationsService is not available.');
-    this._invitationProxy = new InvitationsProxy(this._serviceProvider.services.InvitationsService, () => ({
-      kind: Invitation.Kind.SPACE,
-    }));
+    this._invitationProxy = new InvitationsProxy(
+      this._serviceProvider.services.InvitationsService,
+      this._serviceProvider.services.IdentityService,
+      () => ({
+        kind: Invitation.Kind.SPACE,
+      }),
+    );
     await this._invitationProxy.open();
 
     // Subscribe to spaces and create proxies.
