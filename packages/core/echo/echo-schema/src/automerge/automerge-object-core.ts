@@ -386,6 +386,15 @@ export class AutomergeObjectCore {
       delete value[fullPath[fullPath.length - 1]];
     });
   }
+
+  isDeleted() {
+    const value = this.get(['system', 'deleted']);
+    return typeof value === 'boolean' ? value : false;
+  }
+
+  setDeleted(value: boolean) {
+    this.set(['system', 'deleted'], value);
+  }
 }
 
 const isDocument = Symbol.for('isDocument');

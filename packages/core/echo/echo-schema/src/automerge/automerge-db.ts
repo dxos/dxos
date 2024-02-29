@@ -28,7 +28,7 @@ import {
   type DocumentChanges,
   type ObjectDocumentLoaded,
 } from './automerge-doc-loader';
-import { AutomergeObject } from './automerge-object';
+import { AutomergeObject, getAutomergeObjectCore } from './automerge-object';
 import { AutomergeObjectCore } from './automerge-object-core';
 import { type SpaceDoc } from './types';
 import { EchoDatabase } from '../database';
@@ -132,33 +132,32 @@ export class AutomergeDb {
 
   add<T extends EchoObject>(obj: T): T {
     invariant(isAutomergeObject(obj));
-    const core = obj[base]._core;
+    const core = getAutomergeObjectCore(obj);
 
     if (core.database) {
       return obj;
     }
 
-    invariant(isAutomergeObject(obj));
     invariant(!this._objects.has(core.id));
-    this._objects.set(obj.id, core);
+    this._objects.set(core.id, core);
 
     // TODO: create all objects as linked.
     // This is a temporary solution to get quick benefit from lazily-loaded separate-document objects.
     // All objects should be created linked to root space doc after query indexing is ready to make them
     // discoverable.
     let spaceDocHandle: DocHandle<SpaceDoc>;
-    if (obj.__typename === LEGACY_TEXT_TYPE && this.automerge.spaceFragmentationEnabled) {
-      spaceDocHandle = this._automergeDocLoader.createDocumentForObject(obj.id);
+    if (shouldObjectGoIntoFragmentedSpace(core) && this.automerge.spaceFragmentationEnabled) {
+      spaceDocHandle = this._automergeDocLoader.createDocumentForObject(core.id);
       spaceDocHandle.on('change', this._onDocumentUpdate);
     } else {
       spaceDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
-      this._automergeDocLoader.onObjectBoundToDocument(spaceDocHandle, obj.id);
+      this._automergeDocLoader.onObjectBoundToDocument(spaceDocHandle, core.id);
     }
 
-    (obj[base] as AutomergeObject)._bind({
+    core.bind({
       db: this,
       docHandle: spaceDocHandle,
-      path: ['objects', obj.id],
+      path: ['objects', core.id],
       assignFromLocalState: true,
     });
 
@@ -167,8 +166,10 @@ export class AutomergeDb {
 
   remove<T extends EchoObject>(obj: T) {
     invariant(isAutomergeObject(obj));
-    invariant(this._objects.has(obj.id));
-    (obj[base] as AutomergeObject).__system!.deleted = true;
+    const core = getAutomergeObjectCore(obj);
+
+    invariant(this._objects.has(core.id));
+    core.setDeleted(true);
   }
 
   private _emitUpdateEvent(itemsUpdated: string[]) {
@@ -259,16 +260,17 @@ export class AutomergeDb {
 
   private _createObjectInDocument(docHandle: DocHandle<SpaceDoc>, objectId: string) {
     invariant(!this._objects.get(objectId));
+
     const obj = new AutomergeObject();
     obj[base]._core.id = objectId;
     const core = obj[base]._core;
 
     this._objects.set(core.id, core);
     this._automergeDocLoader.onObjectBoundToDocument(docHandle, objectId);
-    (obj[base] as AutomergeObject)._bind({
+    core.bind({
       db: this,
       docHandle,
-      path: ['objects', obj.id],
+      path: ['objects', core.id],
       assignFromLocalState: false,
     });
   }
@@ -318,3 +320,11 @@ export interface ItemsUpdatedEvent {
   spaceKey: PublicKey;
   itemsUpdated: Array<{ id: string }>;
 }
+
+const shouldObjectGoIntoFragmentedSpace = (core: AutomergeObjectCore) => {
+  if (isAutomergeObject(core.rootProxy)) {
+    return core.rootProxy.__typename === LEGACY_TEXT_TYPE;
+  } else {
+    return false;
+  }
+};
