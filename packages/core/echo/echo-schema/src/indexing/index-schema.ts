@@ -6,7 +6,6 @@ import * as orama from '@orama/orama';
 import { Event } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 
 import {
   type ObjectType,
@@ -18,21 +17,21 @@ import {
 } from './types';
 import { type Filter } from '../query';
 
+type OramaSchemaType = orama.Orama<
+  {
+    schema: string;
+  },
+  orama.IIndex<orama.components.index.Index>,
+  orama.IDocumentsStore<orama.components.documentsStore.DocumentsStore>
+>;
+
 @staticImplements<IndexStaticProps>()
 export class IndexSchema implements Index {
   private _identifier = PublicKey.random().toString();
   public readonly kind: IndexKind = { kind: 'SCHEMA_MATCH' };
   public readonly updated = new Event<void>();
 
-  private readonly _orama: Promise<
-    orama.Orama<
-      {
-        schema: string;
-      },
-      orama.IIndex<orama.components.index.Index>,
-      orama.IDocumentsStore<orama.components.documentsStore.DocumentsStore>
-    >
-  >;
+  private readonly _orama: Promise<OramaSchemaType>;
 
   constructor() {
     this._orama = orama.create({
@@ -58,9 +57,12 @@ export class IndexSchema implements Index {
   async find(filter: Filter) {
     invariant(filter.type, 'Filter type is required.');
     // TODO(mykola): Use Schema URI.
-    const results = await orama.search(await this._orama, { term: filter.type.itemId, exact: true, threshold: 0 });
-    const ids = results.hits.map((hit) => hit.id);
-    return ids;
+    const results = await orama.search<OramaSchemaType, ObjectType>(await this._orama, {
+      term: filter.type.itemId,
+      exact: true,
+      threshold: 0,
+    });
+    return results.hits.map((hit) => ({ id: hit.id, rank: hit.score }));
   }
 
   async serialize(): Promise<string> {

@@ -30,7 +30,9 @@ describe('IndexStore', () => {
       await Promise.all(objects.map((object) => index.update(object.id, object)));
 
       const ids = await index.find({ type: { itemId: schemaURI } } as Filter);
-      expect(ids).to.deep.equal(['1']);
+      expect(ids.length).to.equal(1);
+
+      expect(ids[0].id).to.equal('1');
     }
 
     {
@@ -38,7 +40,8 @@ describe('IndexStore', () => {
       const loadedIndex = await store.load(index.identifier);
 
       const ids = await loadedIndex.find({ type: { itemId: schemaURI } } as Filter);
-      expect(ids).to.deep.equal(['1']);
+      expect(ids.length).to.equal(1);
+      expect(ids[0].id).to.equal('1');
     }
   });
 });

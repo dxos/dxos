@@ -47,7 +47,8 @@ describe('Indexer', () => {
 
     {
       const ids = await indexer.find({ type: { itemId: schemaURI } } as Filter);
-      expect(ids).to.deep.equal(['1']);
+      expect(ids.length).to.equal(1);
+      expect(ids[0].id).to.equal('1');
     }
   });
 });

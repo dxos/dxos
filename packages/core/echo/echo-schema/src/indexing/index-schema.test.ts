@@ -19,9 +19,10 @@ describe('IndexSchema', () => {
       { id: '2', title: 'first document', schema: '@example.org/schema/Document' },
     ];
 
-    await Promise.all(objects.map((object) => index.updateObject(object.id, object)));
+    await Promise.all(objects.map((object) => index.update(object.id, object)));
 
     const ids = await index.find({ type: { itemId: schemaURI } } as Filter);
-    expect(ids).to.deep.equal(['1']);
+    expect(ids.length).to.equal(1);
+    expect(ids[0].id).to.equal('1');
   });
 });

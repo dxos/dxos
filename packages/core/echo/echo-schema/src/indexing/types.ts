@@ -8,7 +8,7 @@ import { type Filter } from '../query';
 
 export type IndexKind = { kind: 'SCHEMA_MATCH' } | { kind: 'FIELD_MATCH'; field: string } | { kind: 'FULL_TEXT' };
 
-export type ObjectType = Record<string, any>;
+export type ObjectType = Record<string, any> & { id: string };
 
 export interface Index {
   identifier: string;
@@ -17,7 +17,7 @@ export interface Index {
 
   update: (id: string, object: ObjectType) => Promise<void>;
   remove: (id: string) => Promise<void>;
-  find: (filter: Filter) => Promise<string[]>;
+  find: (filter: Filter) => Promise<{ id: string; rank: number }[]>;
 
   serialize(): Promise<string>;
 }
