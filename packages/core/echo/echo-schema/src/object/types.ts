@@ -32,7 +32,7 @@ export const subscribe = Symbol.for('dxos.echo-object.subscribe');
  * Only needed while we're transitioning from TypedObject to ReactiveObject APIs.
  * To be removed afterwards.
  */
-export type OpaqueEchoObject = EchoObject | EchoReactiveObject<any>;
+export type OpaqueEchoObject = EchoObject | ReactiveObject<any>;
 
 /**
  * Shared interface of all echo objects.

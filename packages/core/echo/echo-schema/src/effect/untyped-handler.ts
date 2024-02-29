@@ -7,6 +7,7 @@ import { invariant } from '@dxos/invariant';
 
 import { createReactiveProxy, isValidProxyTarget, type ReactiveHandler } from './proxy';
 import { ReactiveArray } from './reactive-array';
+import { defineHiddenProperty } from '../util/property';
 
 const symbolSignal = Symbol('signal');
 
@@ -29,12 +30,7 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     invariant(typeof target === 'object' && target !== null);
 
     if (!(symbolSignal in target)) {
-      Object.defineProperty(target, symbolSignal, {
-        value: compositeRuntime.createSignal(),
-        enumerable: false,
-        writable: true,
-        configurable: true,
-      });
+      defineHiddenProperty(target, symbolSignal, compositeRuntime.createSignal());
     }
 
     for (const key in target) {

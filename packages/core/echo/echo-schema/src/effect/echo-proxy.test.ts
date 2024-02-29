@@ -11,7 +11,8 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
 import { createEchoReactiveObject, type EchoReactiveObject } from './echo-handler';
-import { TestClass, TestSchemaWithClass } from './testing/schema';
+import { TestClass, TestSchema, TestSchemaWithClass } from './testing/schema';
+import { createDatabase } from '../testing';
 
 registerSignalRuntime();
 
@@ -56,3 +57,25 @@ for (const schema of [undefined, TestSchemaWithClass]) {
     });
   });
 }
+
+describe('Reactive Object with ECHO database', async () => {
+  test('existing proxy objects can be added to the database', async () => {
+    const { db } = await createDatabase(undefined, { useReactiveObjectApi: true });
+
+    const obj = R.object(TestSchema, { string: 'foo' });
+    const returnObj = db.add(obj);
+    expect(returnObj.id).to.be.a('string');
+    expect(returnObj.string).to.eq('foo');
+    expect(R.getSchema(returnObj)).to.eq(TestSchema);
+    expect(returnObj === obj).to.be.true;
+  });
+
+  test('proxies are initialized when a plain object is inserted into the database', async () => {
+    const { db } = await createDatabase(undefined, { useReactiveObjectApi: true });
+
+    const obj = db.add({ string: 'foo' });
+    expect(obj.id).to.be.a('string');
+    expect(obj.string).to.eq('foo');
+    expect(R.getSchema(obj)).to.eq(undefined);
+  });
+});

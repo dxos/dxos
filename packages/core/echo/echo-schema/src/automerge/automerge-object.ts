@@ -33,6 +33,8 @@ import {
 } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
+import { getProxyHandlerSlot } from '../effect/proxy';
+import { EchoReactiveHandler } from '../effect/echo-handler';
 
 // TODO(dmaretskyi): Rename to `AutomergeObjectApi`.
 export class AutomergeObject implements TypedObjectProperties {
@@ -377,6 +379,11 @@ export const getRawDoc = (obj: EchoObject, path?: string[]): DocAccessor => {
 };
 
 export const getAutomergeObjectCore = (obj: OpaqueEchoObject): AutomergeObjectCore => {
-  invariant(isAutomergeObject(obj));
-  return obj[base]._core;
+  if (isAutomergeObject(obj)) {
+    return obj[base]._core;
+  } else {
+    const handler = getProxyHandlerSlot(obj).handler;
+    invariant(handler instanceof EchoReactiveHandler);
+    return handler._objectCore;
+  }
 };

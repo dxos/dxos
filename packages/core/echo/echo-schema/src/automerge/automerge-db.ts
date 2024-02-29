@@ -132,7 +132,6 @@ export class AutomergeDb {
   }
 
   add(obj: OpaqueEchoObject) {
-    invariant(isAutomergeObject(obj));
     const core = getAutomergeObjectCore(obj);
 
     if (core.database) {

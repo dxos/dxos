@@ -32,6 +32,7 @@ export const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHa
   // TODO(dmaretskyi): in future this should be mutable to allow replacing the handler on the fly while maintaining the proxy identity
   const handlerSlot = new ProxyHandlerSlot<T>();
   handlerSlot.handler = handler;
+  handlerSlot.target = target;
 
   const proxy = new Proxy(target, handlerSlot);
   handler._init(target);
@@ -42,6 +43,9 @@ export const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHa
 };
 
 export interface ReactiveHandler<T extends object> extends ProxyHandler<T> {
+  /**
+   * Target to Proxy mapping.
+   */
   readonly _proxyMap: WeakMap<object, any>;
 
   /**
@@ -56,6 +60,7 @@ export interface ReactiveHandler<T extends object> extends ProxyHandler<T> {
  */
 class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
   public handler?: ReactiveHandler<T> = undefined;
+  public target?: T = undefined;
 
   get(target: T, prop: string | symbol, receiver: any): any {
     if (prop === symbolIsProxy) {
@@ -106,6 +111,8 @@ class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
     }
   }
 }
+
+export const isReactiveProxy = (value: unknown): value is ReactiveObject<any> => !!(value as any)[symbolIsProxy];
 
 export const getProxyHandlerSlot = <T extends object>(proxy: ReactiveObject<any>): ProxyHandlerSlot<T> => {
   const value = (proxy as any)[symbolIsProxy];

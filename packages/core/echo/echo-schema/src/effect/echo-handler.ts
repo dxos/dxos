@@ -12,10 +12,12 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { assignDeep, ComplexMap, defaultMap, getDeep } from '@dxos/util';
 
-import { createReactiveProxy, symbolIsProxy, type ReactiveHandler } from './proxy';
+import { createReactiveProxy, symbolIsProxy, type ReactiveHandler, getProxyHandlerSlot } from './proxy';
 import { getSchema, type ReactiveObject } from './reactive';
 import { SchemaValidator, symbolSchema } from './schema-validator';
 import { AutomergeObjectCore, encodeReference } from '../automerge';
+import { isProxy } from 'node:util/types';
+import { defineHiddenProperty } from '../util/property';
 
 export type EchoReactiveObject<T> = ReactiveObject<T> & { id: string };
 
@@ -26,6 +28,7 @@ type PropPath = string[];
 
 type ProxyTarget = {
   [symbolPath]: PropPath;
+  [symbolHandler]?: EchoReactiveHandler;
 } & ({ [key: keyof any]: any } | any[]);
 
 const DATA_NAMESPACE = 'data';
@@ -66,8 +69,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     }
 
-    target[symbolHandler] = this;
-    target[inspect.custom] = this._inspect.bind(target);
+    defineHiddenProperty(target, symbolHandler, this);
+    defineHiddenProperty(target, inspect.custom, this._inspect.bind(target));
   }
 
   private validateInitialProps(target: any) {
@@ -384,29 +387,31 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     this._signal.notifyWrite();
   }
 
-  private _inspect(
+  // Will be bound to the proxy target.
+  _inspect = function (
+    this: ProxyTarget,
     _: number,
     options: InspectOptionsStylized,
     inspectFn: (value: any, options?: InspectOptionsStylized) => string,
   ) {
-    const handler = (this as any)[symbolHandler] as EchoReactiveHandler;
+    const handler = this[symbolHandler] as EchoReactiveHandler;
     const isTyped = Boolean((this as any)[symbolSchema]);
     const proxy = handler._proxyMap.get(this);
-    return `${isTyped ? 'Typed' : ''}EchoObject ${inspectFn(
-      { ...proxy },
-      {
-        ...options,
-        compact: true,
-        showHidden: false,
-        customInspect: false,
-      },
-    )}`;
-  }
+    invariant(proxy, '_proxyMap corrupted');
+    const reified = { ...proxy }; // Will call proxy methods and construct a plain JS object.
+    return `${isTyped ? 'Typed' : ''}EchoObject ${inspectFn(reified, {
+      ...options,
+      compact: true,
+      showHidden: false,
+      customInspect: false,
+    })}`;
+  };
 }
 
 /**
  * Extends the native array with methods overrides for automerge.
  */
+// TODO(dmaretskyi): Rename once the original AutomergeArray gets deleted.
 class EchoArrayTwoPointO<T> extends Array<T> {
   static [Symbol.species] = Array;
 
@@ -421,12 +426,13 @@ class EchoArrayTwoPointO<T> extends Array<T> {
     const BATCHED_METHODS = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'] as const;
 
     for (const method of BATCHED_METHODS) {
+      const handlerMethodName = `array${method.slice(0, 1).toUpperCase()}${method.slice(1)}`;
+
       Object.defineProperty(this.prototype, method, {
         enumerable: false,
         value: function (this: EchoArrayTwoPointO<any>, ...args: any[]) {
           let result!: any;
           compositeRuntime.batch(() => {
-            const handlerMethodName = `array${method.slice(0, 1).toUpperCase()}${method.slice(1)}`;
             const handler = this[symbolHandler] as any;
             result = (handler[handlerMethodName] as any).apply(handler, [this, this[symbolPath], ...args]);
           });
@@ -449,18 +455,39 @@ const throwIfCustomClass = (prop: string | symbol, value: any) => {
 // TODO(dmaretskyi): Read schema from typed in-memory objects.
 export const createEchoReactiveObject = <T extends {}>(init: T): EchoReactiveObject<T> => {
   const schema = getSchema(init);
-  const target = { [symbolPath]: [], ...init };
-  if (schema != null) {
-    SchemaValidator.prepareTarget(target, schema);
-    invariant(isTypeLiteral(schema.ast));
-    const idProperty = AST.getPropertySignatures(schema.ast).find((prop) => prop.name === 'id');
-    if (idProperty != null) {
-      throw new Error('"id" property name is reserved');
+
+  // TODO(dmaretskyi): Refactor to unify branches.
+  if (isProxy(init)) {
+    const slot = getProxyHandlerSlot(init);
+    slot.handler = new EchoReactiveHandler();
+    const target = slot.target as ProxyTarget;
+    target[symbolPath] = [];
+    slot.handler._proxyMap.set(target, init);
+    slot.handler._init(target);
+
+    if (schema != null) {
+      SchemaValidator.prepareTarget(target as any, schema);
+      invariant(isTypeLiteral(schema.ast));
+      const idProperty = AST.getPropertySignatures(schema.ast).find((prop) => prop.name === 'id');
+      if (idProperty != null) {
+        throw new Error('"id" property name is reserved');
+      }
     }
+    return init as any;
+  } else {
+    const target = { [symbolPath]: [], ...init };
+    if (schema != null) {
+      SchemaValidator.prepareTarget(target, schema);
+      invariant(isTypeLiteral(schema.ast));
+      const idProperty = AST.getPropertySignatures(schema.ast).find((prop) => prop.name === 'id');
+      if (idProperty != null) {
+        throw new Error('"id" property name is reserved');
+      }
+    }
+    const handler = new EchoReactiveHandler();
+    const proxy = createReactiveProxy<ProxyTarget>(target, handler) as any;
+    return proxy;
   }
-  const handler = new EchoReactiveHandler();
-  const proxy = createReactiveProxy<ProxyTarget>(target, handler) as any;
-  return proxy;
 };
 
 interface DecodedValueAtPath {

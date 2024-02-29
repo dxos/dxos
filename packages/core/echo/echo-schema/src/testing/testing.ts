@@ -20,11 +20,15 @@ import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 import { schemaBuiltin } from '../proto';
 
+export type CreateDatabaseOpts = {
+  useReactiveObjectApi?: boolean;
+};
+
 /**
  * @deprecated Use TestBuilder.
  */
 // TODO(burdon): Builder pattern.
-export const createDatabase = async (graph = new Hypergraph()) => {
+export const createDatabase = async (graph = new Hypergraph(), { useReactiveObjectApi }: CreateDatabaseOpts = {}) => {
   // prettier-ignore
   const modelFactory = new ModelFactory()
     .registerModel(DocumentModel)
@@ -36,7 +40,7 @@ export const createDatabase = async (graph = new Hypergraph()) => {
   const host = await createMemoryDatabase(modelFactory);
   const proxy = await createRemoteDatabaseFromDataServiceHost(modelFactory, host.backend.createDataServiceHost());
   const automergeContext = new AutomergeContext();
-  const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey: proxy.backend.spaceKey });
+  const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey: proxy.backend.spaceKey, useReactiveObjectApi });
   await db.automerge.open({
     rootUrl: automergeContext.repo.create().url,
   });
