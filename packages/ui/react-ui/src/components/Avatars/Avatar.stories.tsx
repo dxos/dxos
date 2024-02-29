@@ -8,7 +8,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import { getColorForValue } from '@dxos/react-ui-theme';
 import { type Size } from '@dxos/react-ui-types';
-import { stringToEmoji } from '@dxos/util';
+import { hexToEmoji } from '@dxos/util';
 
 import { Avatar, type AvatarVariant, type AvatarStatus, type AvatarAnimation } from './Avatar';
 import { withTheme } from '../../testing';
@@ -41,7 +41,7 @@ const StorybookAvatar = (props: PropsWithChildren<StorybookAvatarProps>) => {
     imgSrc,
     color = randomColor(),
   } = props;
-  const emoji = stringToEmoji(fallbackValue);
+  const emoji = hexToEmoji(fallbackValue);
   return (
     <div className='flex flex-row gap-3 align-middle items-center'>
       <Avatar.Root {...{ size, variant, status, animation, color }}>

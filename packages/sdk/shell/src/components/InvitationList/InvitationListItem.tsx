@@ -21,7 +21,7 @@ import {
   type ThemedClassName,
 } from '@dxos/react-ui';
 import { focusRing, getSize, mx } from '@dxos/react-ui-theme';
-import { stringToEmoji } from '@dxos/util';
+import { hexToEmoji } from '@dxos/util';
 
 import { type SharedInvitationListProps } from './InvitationListProps';
 import { AuthCode } from '../AuthCode';
@@ -151,7 +151,7 @@ export const InvitationListItemImpl = ({
         <Avatar.Root {...avatarProps} animation={avatarAnimation} status={avatarStatus}>
           <Tooltip.Trigger asChild>
             <Avatar.Frame tabIndex={0} classNames={[focusRing, 'relative rounded-full place-self-center']}>
-              <Avatar.Fallback text={stringToEmoji(invitationId)} />
+              <Avatar.Fallback text={hexToEmoji(invitationId)} />
             </Avatar.Frame>
           </Tooltip.Trigger>
         </Avatar.Root>

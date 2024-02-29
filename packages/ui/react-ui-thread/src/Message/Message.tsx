@@ -15,7 +15,7 @@ import {
   hoverableFocusedWithinControls,
   mx,
 } from '@dxos/react-ui-theme';
-import { safeParseJson, stringToEmoji } from '@dxos/util';
+import { safeParseJson, hexToEmoji } from '@dxos/util';
 
 import { translationKey } from '../translations';
 import { type MessageEntity, type MessageEntityBlock, type MessageMetadata } from '../types';
@@ -44,7 +44,7 @@ export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
         >
           <div role='none' className={'flex flex-col items-center gap-2 ' + messageCell}>
             <Avatar.Frame>
-              <Avatar.Fallback text={stringToEmoji(authorId)} />
+              <Avatar.Fallback text={hexToEmoji(authorId)} />
               {authorImgSrc && <Avatar.Image href={authorImgSrc} />}
             </Avatar.Frame>
             {continues && <div role='none' className='is-px grow surface-separator' />}
