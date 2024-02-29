@@ -3,6 +3,7 @@
 //
 
 import * as S from '@effect/schema/Schema';
+import * as R from './reactive';
 import { expect } from 'chai';
 import { inspect } from 'util';
 
@@ -16,12 +17,12 @@ registerSignalRuntime();
 
 test('id property name is reserved', () => {
   const invalidSchema = S.struct({ id: S.number });
-  expect(() => createEchoReactiveObject({ id: 42 }, invalidSchema)).to.throw();
+  expect(() => createEchoReactiveObject(R.object(invalidSchema, { id: 42 }))).to.throw();
 });
 
 for (const schema of [undefined, TestSchemaWithClass]) {
   const createObject = (props: Partial<TestSchemaWithClass> = {}): EchoReactiveObject<TestSchemaWithClass> => {
-    return createEchoReactiveObject(props, schema);
+    return createEchoReactiveObject(schema ? R.object(schema, props) : R.object(props));
   };
 
   describe(`Non-echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {

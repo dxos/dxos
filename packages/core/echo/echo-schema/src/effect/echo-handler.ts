@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { assignDeep, ComplexMap, defaultMap, getDeep } from '@dxos/util';
 
 import { createReactiveProxy, symbolIsProxy, type ReactiveHandler } from './proxy';
-import { type ReactiveObject } from './reactive';
+import { getSchema, type ReactiveObject } from './reactive';
 import { SchemaValidator, symbolSchema } from './schema-validator';
 import { AutomergeObjectCore, encodeReference } from '../automerge';
 
@@ -447,7 +447,8 @@ const throwIfCustomClass = (prop: string | symbol, value: any) => {
 };
 
 // TODO(dmaretskyi): Read schema from typed in-memory objects.
-export const createEchoReactiveObject = <T extends {}>(init: T, schema?: S.Schema<T>): EchoReactiveObject<T> => {
+export const createEchoReactiveObject = <T extends {}>(init: T): EchoReactiveObject<T> => {
+  const schema = getSchema(init);
   const target = { [symbolPath]: [], ...init };
   if (schema != null) {
     SchemaValidator.prepareTarget(target, schema);
