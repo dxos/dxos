@@ -323,7 +323,7 @@ export const updateGraphWithSpace = ({
         graph.removeNode(getId(SpaceAction.ADD_OBJECT));
         graph.removeNode(getId(SpaceAction.ADD_OBJECT.replace('object', 'folder')));
       }
-      graph.removeEdge(space.key.toHex(), object.id);
+      graph.removeEdge({ source: space.key.toHex(), target: object.id });
       [SpaceAction.RENAME_OBJECT, SpaceAction.REMOVE_OBJECT].forEach((action) => {
         graph.removeNode(getId(action));
       });
@@ -358,10 +358,10 @@ export const updateGraphWithSpace = ({
         previousObjects.set(object.id, [...object.objects]);
 
         // Remove objects no longer in folder.
-        removedObjects.forEach((child) => graph.removeEdge(object.id, child.id));
+        removedObjects.forEach((child) => graph.removeEdge({ source: object.id, target: child.id }));
 
         // Add new objects to folder.
-        object.objects.forEach((child) => graph.addEdge(object.id, child.id));
+        object.objects.forEach((child) => graph.addEdge({ source: object.id, target: child.id }));
 
         // Set order of objects in folder.
         graph.sortEdges(
@@ -403,7 +403,7 @@ export const updateGraphWithSpace = ({
       }
 
       // Add an edge for every object. Depends on other presentation plugins to add the node itself.
-      graph.addEdge(space.key.toHex(), object.id);
+      graph.addEdge({ source: space.key.toHex(), target: object.id });
 
       // Add basic rename and delete actions to every object.
       // TODO(wittjosiah): Rename should be customizable.

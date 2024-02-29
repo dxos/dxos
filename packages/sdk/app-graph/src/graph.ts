@@ -66,10 +66,12 @@ export class Graph {
   /**
    * Convert the graph to a JSON object.
    */
-  toJSON(id = ROOT_ID) {
+  toJSON({ id = ROOT_ID, maxLength = 32 }: { id?: string; maxLength?: number } = {}) {
     const toJSON = (node: Node): any => {
       const nodes = node.nodes();
-      const obj: Record<string, any> = { id: node.id.length > 35 ? `${node.id.slice(0, 32)}...` : node.id };
+      const obj: Record<string, any> = {
+        id: node.id.length > maxLength ? `${node.id.slice(0, maxLength - 3)}...` : node.id,
+      };
       if (node.properties.label) {
         obj.label = node.properties.label;
       }
@@ -80,7 +82,7 @@ export class Graph {
     };
 
     const root = this.findNode(id);
-    invariant(root, `Node with id ${id} not found.`);
+    invariant(root, `Node not found: ${id}`);
     return toJSON(root);
   }
 
@@ -151,13 +153,15 @@ export class Graph {
       if (nodes) {
         nodes.forEach((subNode) => {
           this._addNode(subNode);
-          this.addEdge(node.id, subNode.id);
+          this.addEdge({ source: node.id, target: subNode.id });
         });
       }
 
       if (edges) {
-        edges.forEach(([target, direction]) =>
-          direction === 'outbound' ? this.addEdge(node.id, target) : this.addEdge(target, node.id),
+        edges.forEach(([id, direction]) =>
+          direction === 'outbound'
+            ? this.addEdge({ source: node.id, target: id })
+            : this.addEdge({ source: id, target: node.id }),
         );
       }
 
@@ -184,8 +188,10 @@ export class Graph {
         delete this._edges[this.getEdgeKey(id, 'inbound')];
 
         // Remove edges from connected nodes.
-        this._getNodes({ id }).forEach((node) => this.removeEdge(id, node.id));
-        this._getNodes({ id, direction: 'inbound' }).forEach((node) => this.removeEdge(node.id, id));
+        this._getNodes({ id }).forEach((node) => this.removeEdge({ source: id, target: node.id }));
+        this._getNodes({ id, direction: 'inbound' }).forEach((node) =>
+          this.removeEdge({ source: node.id, target: id }),
+        );
       }
 
       // Remove node.
@@ -196,20 +202,20 @@ export class Graph {
   /**
    * Add an edge to the graph.
    */
-  addEdge(from: string, to: string) {
+  addEdge({ source, target }: { source: string; target: string }) {
     untracked(() => {
-      const outbound = this._edges[this.getEdgeKey(from, 'outbound')];
+      const outbound = this._edges[this.getEdgeKey(source, 'outbound')];
       if (!outbound) {
-        this._edges[this.getEdgeKey(from, 'outbound')] = [to];
-      } else if (!outbound.includes(to)) {
-        outbound.push(to);
+        this._edges[this.getEdgeKey(source, 'outbound')] = [target];
+      } else if (!outbound.includes(target)) {
+        outbound.push(target);
       }
 
-      const inbound = this._edges[this.getEdgeKey(to, 'inbound')];
+      const inbound = this._edges[this.getEdgeKey(target, 'inbound')];
       if (!inbound) {
-        this._edges[this.getEdgeKey(to, 'inbound')] = [from];
-      } else if (!inbound.includes(from)) {
-        inbound.push(from);
+        this._edges[this.getEdgeKey(target, 'inbound')] = [source];
+      } else if (!inbound.includes(source)) {
+        inbound.push(source);
       }
     });
   }
@@ -237,16 +243,16 @@ export class Graph {
   /**
    * Remove an edge from the graph.
    */
-  removeEdge(from: string, to: string) {
+  removeEdge({ source, target }: { source: string; target: string }) {
     untracked(() => {
-      const outboundIndex = this._edges[this.getEdgeKey(from, 'outbound')]?.findIndex((id) => id === to);
+      const outboundIndex = this._edges[this.getEdgeKey(source, 'outbound')]?.findIndex((id) => id === target);
       if (outboundIndex !== -1) {
-        this._edges[this.getEdgeKey(from, 'outbound')].splice(outboundIndex, 1);
+        this._edges[this.getEdgeKey(source, 'outbound')].splice(outboundIndex, 1);
       }
 
-      const inboundIndex = this._edges[this.getEdgeKey(to, 'inbound')]?.findIndex((id) => id === from);
+      const inboundIndex = this._edges[this.getEdgeKey(target, 'inbound')]?.findIndex((id) => id === source);
       if (inboundIndex !== -1) {
-        this._edges[this.getEdgeKey(to, 'inbound')].splice(inboundIndex, 1);
+        this._edges[this.getEdgeKey(target, 'inbound')].splice(inboundIndex, 1);
       }
     });
   }
@@ -277,8 +283,8 @@ export class Graph {
   /**
    * Get the path between two nodes in the graph.
    */
-  getPath({ from = 'root', to }: { from?: string; to: string }): string[] | undefined {
-    const start = this.findNode(from);
+  getPath({ source = 'root', target }: { source?: string; target: string }): string[] | undefined {
+    const start = this.findNode(source);
     if (!start) {
       return undefined;
     }
@@ -288,7 +294,7 @@ export class Graph {
       node: start,
       filter: () => !found,
       visitor: (node, path) => {
-        if (node.id === to) {
+        if (node.id === target) {
           found = path;
         }
       },

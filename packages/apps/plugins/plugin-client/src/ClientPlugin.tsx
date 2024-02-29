@@ -97,10 +97,15 @@ export const ClientPlugin = ({
 
         if (client.halo.identity.get()) {
           await client.spaces.isReady.wait({ timeout: WAIT_FOR_DEFAULT_SPACE_TIMEOUT });
+          // TODO(wittjosiah): Remove. This is a cleanup for the old way of tracking first run.
+          if (typeof client.spaces.default.properties[appKey] === 'boolean') {
+            client.spaces.default.properties[appKey] = {};
+          }
+          const key = `${appKey}.opened`;
           // TODO(wittjosiah): This doesn't work currently.
           //   There's no guaruntee that the default space will be fully synced by the time this is called.
-          // firstRun = !client.spaces.default.properties[appKey];
-          client.spaces.default.properties[`${appKey}.opened`] = Date.now();
+          // firstRun = !client.spaces.default.properties[key];
+          client.spaces.default.properties[key] = Date.now();
         }
       } catch (err) {
         error = err;

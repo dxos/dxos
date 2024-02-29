@@ -349,7 +349,7 @@ export const LayoutPlugin = ({
             // TODO(wittjosiah): Factor out.
             case NavigationAction.ACTIVATE: {
               const id = intent.data?.id ?? intent.data?.result?.id;
-              const path = id && graphPlugin?.provides.graph.getPath({ to: id });
+              const path = id && graphPlugin?.provides.graph.getPath({ target: id });
               if (path) {
                 // TODO(wittjosiah): Factor out.
                 Keyboard.singleton.setCurrentContext(path.join('/'));

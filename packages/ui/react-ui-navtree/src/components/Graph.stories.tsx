@@ -92,8 +92,8 @@ const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
         arrayMove(ids, activeIndex, overIndex > -1 ? overIndex : ids.length - 1),
       );
     } else if (activeNode && activeParent && overParent && operation === 'transfer') {
-      graph.removeEdge(activeParent.id, activeNode.id);
-      graph.addEdge(overNode.id, activeNode.id);
+      graph.removeEdge({ source: activeParent.id, target: activeNode.id });
+      graph.addEdge({ source: overNode.id, target: activeNode.id });
     }
   };
 

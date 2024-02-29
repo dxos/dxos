@@ -84,9 +84,9 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
 
                   const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
                   previousObjects = query.objects;
-                  removedObjects.forEach((object) => graph.removeEdge(id, object.id));
+                  removedObjects.forEach((object) => graph.removeEdge({ source: id, target: object.id }));
                   // TODO(wittjosiah): Update icon to `Issue` icon.
-                  query.objects.forEach((object) => graph.addEdge(id, object.id));
+                  query.objects.forEach((object) => graph.addEdge({ source: id, target: object.id }));
                 }),
               );
             });

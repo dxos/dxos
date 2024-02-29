@@ -100,7 +100,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
           effect(() => {
             const active = navigationPlugin.provides.location.active;
             const path =
-              active && graphPlugin.provides.graph.getPath({ to: active })?.filter((id) => id.startsWith(PREFIX));
+              active && graphPlugin.provides.graph.getPath({ target: active })?.filter((id) => id.startsWith(PREFIX));
             const current = (active?.startsWith(PREFIX) && path && findFile(state.files, path)) || undefined;
             if (state.current !== current) {
               state.current = current;

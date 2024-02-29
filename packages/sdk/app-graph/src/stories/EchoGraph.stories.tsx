@@ -46,7 +46,7 @@ const spaceBuilderExtension = (graph: Graph) => {
           if (space.state.get() === SpaceState.READY) {
             console.log('add space');
             graph.addNodes({ id: space.key.toHex(), properties: { label: space.properties.name }, data: space });
-            graph.addEdge('root', space.key.toHex());
+            graph.addEdge({ source: 'root', target: space.key.toHex() });
           } else {
             graph.removeNode(space.key.toHex());
           }
@@ -57,7 +57,7 @@ const spaceBuilderExtension = (graph: Graph) => {
       subscriptions.add(
         effect(() => {
           query.objects.forEach((object) => {
-            graph.addEdge(space.key.toHex(), object.id);
+            graph.addEdge({ source: space.key.toHex(), target: object.id });
           });
         }),
       );
