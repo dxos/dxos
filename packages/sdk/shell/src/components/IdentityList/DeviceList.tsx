@@ -35,6 +35,7 @@ export const DeviceList = ({ devices, onSelect }: DeviceListProps) => {
           <IdentityListItem
             key={device.deviceKey.toHex()}
             identity={identity}
+            presence={device.presence}
             onClick={onSelect && (() => onSelect(device))}
           />
         );
