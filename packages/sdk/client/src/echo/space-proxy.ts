@@ -99,10 +99,14 @@ export class SpaceProxy implements Space {
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
-    this._invitationsProxy = new InvitationsProxy(this._clientServices.services.InvitationsService, () => ({
-      kind: Invitation.Kind.SPACE,
-      spaceKey: this.key,
-    }));
+    this._invitationsProxy = new InvitationsProxy(
+      this._clientServices.services.InvitationsService,
+      this._clientServices.services.IdentityService,
+      () => ({
+        kind: Invitation.Kind.SPACE,
+        spaceKey: this.key,
+      }),
+    );
 
     invariant(this._clientServices.services.DataService, 'DataService not available');
     this._itemManager = new ItemManager(this._modelFactory);

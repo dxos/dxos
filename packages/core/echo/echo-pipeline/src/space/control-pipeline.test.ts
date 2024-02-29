@@ -59,7 +59,7 @@ describe('space/control-pipeline', () => {
     });
     expect(admittedFeeds).toEqual([]);
 
-    controlPipeline.setWriteFeed(genesisFeed);
+    await controlPipeline.setWriteFeed(genesisFeed);
     await controlPipeline.start();
 
     afterTest(() => controlPipeline.stop());

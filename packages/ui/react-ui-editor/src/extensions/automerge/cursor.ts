@@ -4,14 +4,13 @@
 
 import get from 'lodash.get';
 
-import type { Prop } from '@dxos/automerge/automerge';
 import { next as A } from '@dxos/automerge/automerge';
 import { log } from '@dxos/log';
 
-import { type IDocHandle } from './defs';
+import { type DocAccessor } from './defs';
 import { type CursorConverter } from '../cursor';
 
-export const cursorConverter = (handle: IDocHandle, path: Prop[]): CursorConverter => ({
+export const cursorConverter = ({ handle, path }: DocAccessor): CursorConverter => ({
   // TODO(burdon): Handle assoc to associate with a previous character.
   toCursor: (pos) => {
     const doc = handle.docSync();

@@ -30,7 +30,10 @@ export const NavTreeFooter = () => {
       : `${repo}/commit/${commitHash}`;
 
   return (
-    <div role='none' className='bs-[--rail-size] box-content separator-separator border-bs pli-1 flex justify-end'>
+    <div
+      role='none'
+      className='bs-[--rail-size] pbe-[env(safe-area-inset-bottom)] box-content separator-separator border-bs pli-1 flex justify-end'
+    >
       <div role='none' className='grid grid-cols-[repeat(2,minmax(var(--rail-action),min-content))]'>
         <Popover.Root>
           <Popover.Trigger asChild>

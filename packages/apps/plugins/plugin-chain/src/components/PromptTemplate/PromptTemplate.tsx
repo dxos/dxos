@@ -2,20 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type PropsWithChildren, useEffect } from 'react';
+import { type Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
+import React, { type PropsWithChildren, useEffect, useMemo } from 'react';
 
 import { Chain as ChainType } from '@braneframe/types';
-import { TextObject, getTextContent } from '@dxos/react-client/echo';
-import { DensityProvider, Input, Select, useTranslation } from '@dxos/react-ui';
-import {
-  BaseTextEditor,
-  createBasicBundle,
-  defaultTextSlots,
-  TextEditor,
-  textTheme,
-  useTextModel,
-} from '@dxos/react-ui-editor';
-import { groupBorder, mx } from '@dxos/react-ui-theme';
+import { getTextContent } from '@dxos/react-client/echo';
+import { DensityProvider, Input, Select, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { createBasicBundle, useTextEditor, useTextModel } from '@dxos/react-ui-editor';
+import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
 
 import { nameRegex, promptExtension } from './prompt-extension';
 import { CHAIN_PLUGIN } from '../../meta';
@@ -57,14 +52,7 @@ const inputTypes = [
 
 const getInputType = (type: string) => inputTypes.find(({ value }) => String(value) === type)?.value;
 
-type PromptTemplateProps = {
-  prompt: ChainType.Prompt;
-};
-
-export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
-  const { t } = useTranslation(CHAIN_PLUGIN);
-  const model = useTextModel({ text: prompt.source });
-
+const usePromptInputs = (prompt: ChainType.Prompt) => {
   const text = getTextContent(prompt.source) ?? '';
   useEffect(() => {
     if (!prompt.inputs) {
@@ -92,7 +80,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
       if (next) {
         next.name = name;
       } else {
-        prompt.inputs.push(new ChainType.Input({ name, value: new TextObject() }));
+        prompt.inputs.push(new ChainType.Input({ name }));
       }
     });
 
@@ -102,6 +90,37 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
       prompt.inputs.splice(prompt.inputs.indexOf(input), 1);
     }
   }, [text]);
+};
+
+type PromptTemplateProps = {
+  prompt: ChainType.Prompt;
+};
+
+export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
+  const { t } = useTranslation(CHAIN_PLUGIN);
+  const { themeMode } = useThemeContext();
+  const model = useTextModel({ text: prompt.source }); // TODO(burdon): Remove.
+  const extensions = useMemo<Extension[]>(
+    () =>
+      model
+        ? [
+            promptExtension,
+            createBasicBundle({
+              themeMode,
+              bracketMatching: false,
+              lineWrapping: true,
+              placeholder: t('template placeholder'),
+            }),
+            EditorView.darkTheme.of(themeMode === 'dark'),
+            EditorView.contentAttributes.of({ class: '!p-3' }),
+            model.extension!,
+          ]
+        : [],
+    [model, themeMode],
+  );
+  const doc = useMemo(() => getTextContent(prompt.source), [prompt]);
+  const { parentRef } = useTextEditor({ doc, extensions });
+  usePromptInputs(prompt);
 
   if (!model) {
     return null;
@@ -127,15 +146,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
         </Section>
 
         <Section title='Template'>
-          <BaseTextEditor
-            model={model}
-            extensions={[
-              createBasicBundle({ bracketMatching: false, placeholder: t('template placeholder') }),
-              promptExtension,
-            ]}
-            theme={textTheme}
-            slots={{ ...defaultTextSlots, editor: { className: 'p-3' } }}
-          />
+          <div ref={parentRef} className={attentionSurface} />
         </Section>
 
         {prompt.inputs?.length > 0 && (
@@ -145,7 +156,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
                 <tbody>
                   {prompt.inputs.map((input) => (
                     <tr key={input.name}>
-                      <td className='px-3 py-1.5 w-[200px] font-mono text-sm'>{'{' + input.name + '}'}</td>
+                      <td className='px-3 py-1.5 w-[200px] font-mono text-sm'>{input.name}</td>
                       <td className='px-3 py-1.5 w-[160px]'>
                         <Input.Root>
                           <Select.Root
@@ -175,7 +186,18 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
                           ChainType.Input.Type.CONTEXT,
                           ChainType.Input.Type.RESOLVER,
                           ChainType.Input.Type.SCHEMA,
-                        ].includes(input.type) && <ValueEditor input={input} />}
+                        ].includes(input.type) && (
+                          <Input.Root>
+                            <Input.TextInput
+                              placeholder={t('command placeholder')}
+                              classNames={mx('is-full bg-transparent m-2')}
+                              value={input.value ?? ''}
+                              onChange={(event) => {
+                                input.value = event.target.value;
+                              }}
+                            />
+                          </Input.Root>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -187,17 +209,6 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
       </div>
     </DensityProvider>
   );
-};
-
-const ValueEditor = ({ input }: { input: ChainType.Input }) => {
-  const { t } = useTranslation(CHAIN_PLUGIN);
-  const model = useTextModel({ text: input.value });
-  if (!model) {
-    return null;
-  }
-
-  // TODO(burdon): String?
-  return <TextEditor model={model} placeholder={t('value placeholder')} lineWrapping={false} />;
 };
 
 export const Section = ({ title, actions, children }: PropsWithChildren<{ title: string; actions?: JSX.Element }>) => {
