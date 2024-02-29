@@ -12,7 +12,7 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { TextModel } from '@dxos/text-model';
-import { assignDeep, defer } from '@dxos/util';
+import { assignDeep, defer, getDeep } from '@dxos/util';
 
 import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
@@ -309,13 +309,7 @@ export class AutomergeObjectCore {
       return encodeReference(value);
     }
     if (value instanceof AutomergeArray || Array.isArray(value)) {
-      const values: any = value.map((val) => {
-        if (val instanceof AutomergeArray || Array.isArray(val)) {
-          // TODO(mykola): Add support for nested arrays.
-          throw new Error('Nested arrays are not supported');
-        }
-        return this.encode(val);
-      });
+      const values: any = value.map((val) => this.encode(val));
       return values;
     }
     if (typeof value === 'object' && value !== null) {
@@ -334,7 +328,7 @@ export class AutomergeObjectCore {
    */
   decode(value: any): DecodedAutomergeValue {
     if (value === null) {
-      return undefined;
+      return value;
     }
     if (Array.isArray(value)) {
       return value.map((val) => this.decode(val));
@@ -375,6 +369,15 @@ export class AutomergeObjectCore {
 
     this.change((doc) => {
       assignDeep(doc, fullPath, value);
+    });
+  }
+
+  delete(path: (string | number)[]) {
+    const fullPath = [...this.mountPath, ...path];
+
+    this.change((doc) => {
+      const value: any = getDeep(doc, fullPath.slice(0, fullPath.length - 1));
+      delete value[fullPath[fullPath.length - 1]];
     });
   }
 }

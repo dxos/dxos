@@ -23,7 +23,7 @@ export const GraphPlugin = (): PluginDefinition<GraphProvides> => {
     meta,
     ready: async (plugins) => {
       filterPlugins(plugins, parseGraphBuilderPlugin).forEach((plugin) =>
-        builder.addNodeBuilder(plugin.meta.id, (parent) => plugin.provides.graph.builder({ parent, plugins })),
+        builder.addExtension(plugin.meta.id, (graph) => plugin.provides.graph.builder(plugins, graph)),
       );
 
       builder.build(graph);

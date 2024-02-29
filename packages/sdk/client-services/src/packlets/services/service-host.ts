@@ -24,7 +24,7 @@ import { assignDeep } from '@dxos/util';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 import { createDiagnostics } from './diagnostics';
-import { ServiceContext } from './service-context';
+import { ServiceContext, type ServiceContextRuntimeParams } from './service-context';
 import { ServiceRegistry } from './service-registry';
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
@@ -54,6 +54,7 @@ export type ClientServicesHostParams = {
   storage?: Storage;
   lockKey?: string;
   callbacks?: ClientServicesHostCallbacks;
+  runtimeParams?: ServiceContextRuntimeParams;
 };
 
 export type ClientServicesHostCallbacks = {
@@ -88,6 +89,7 @@ export class ClientServicesHost {
   private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
 
   private _serviceContext!: ServiceContext;
+  private readonly _runtimeParams?: ServiceContextRuntimeParams;
 
   @Trace.info()
   private _opening = false;
@@ -104,10 +106,12 @@ export class ClientServicesHost {
     // TODO(wittjosiah): Turn this on by default.
     lockKey,
     callbacks,
+    runtimeParams,
   }: ClientServicesHostParams = {}) {
     this._storage = storage;
     this._modelFactory = modelFactory;
     this._callbacks = callbacks;
+    this._runtimeParams = runtimeParams;
 
     if (config) {
       this.initialize({ config, transportFactory, signalManager });
@@ -239,6 +243,7 @@ export class ClientServicesHost {
       this._networkManager,
       this._signalManager,
       this._modelFactory,
+      this._runtimeParams,
     );
 
     this._serviceRegistry.setServices({
