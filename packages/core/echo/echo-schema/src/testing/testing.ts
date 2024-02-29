@@ -3,7 +3,6 @@
 //
 
 import { DocumentModel } from '@dxos/document-model';
-import { type DatabaseProxy } from '@dxos/echo-db';
 import {
   DatabaseTestBuilder,
   createMemoryDatabase,

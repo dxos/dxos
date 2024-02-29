@@ -14,6 +14,8 @@ import { AutomergeArray } from './automerge-array';
 import { AutomergeObjectCore, type BindOptions, type DocAccessor } from './automerge-object-core';
 import { REFERENCE_TYPE_TAG, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
+import { EchoReactiveHandler } from '../effect/echo-handler';
+import { getProxyHandlerSlot } from '../effect/proxy';
 import {
   base,
   data,
@@ -29,12 +31,10 @@ import {
   type ObjectMeta,
   type TypedObjectOptions,
   type TypedObjectProperties,
-  OpaqueEchoObject,
+  type OpaqueEchoObject,
 } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
-import { getProxyHandlerSlot } from '../effect/proxy';
-import { EchoReactiveHandler } from '../effect/echo-handler';
 
 // TODO(dmaretskyi): Rename to `AutomergeObjectApi`.
 export class AutomergeObject implements TypedObjectProperties {

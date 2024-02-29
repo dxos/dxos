@@ -3,6 +3,7 @@
 //
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
+import { todo } from '@dxos/debug';
 import { DocumentModel, type DocumentModelState, type Reference } from '@dxos/document-model';
 import { UpdateEvent, type BatchUpdate, type DatabaseProxy, type Item, type ItemManager } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
@@ -12,13 +13,12 @@ import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/o
 import { TextModel } from '@dxos/text-model';
 import { WeakDictionary, getDebugName } from '@dxos/util';
 
-import { AutomergeDb, AutomergeObject, type AutomergeContext } from './automerge';
+import { type AutomergeDb, AutomergeObject, type AutomergeContext } from './automerge';
 import { type Hypergraph } from './hypergraph';
 import { TextObject, TypedObject, base, db, type EchoObject } from './object';
 import { AbstractEchoObject } from './object/object';
 import { type Schema } from './proto';
 import { type FilterSource, type Query } from './query';
-import { todo } from '@dxos/debug';
 
 /**
  * Legacy ECHO database.

@@ -4,7 +4,7 @@
 
 import * as AST from '@effect/schema/AST';
 import { isTypeLiteral } from '@effect/schema/AST';
-import * as S from '@effect/schema/Schema';
+import type * as S from '@effect/schema/Schema';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { Reference } from '@dxos/document-model';
@@ -12,8 +12,6 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { assignDeep, ComplexMap, defaultMap, getDeep } from '@dxos/util';
 
-import { AutomergeObjectCore, encodeReference } from '../automerge';
-import { defineHiddenProperty } from '../util/property';
 import {
   createReactiveProxy,
   getProxyHandlerSlot,
@@ -23,6 +21,8 @@ import {
 } from './proxy';
 import { getSchema, type ReactiveObject } from './reactive';
 import { SchemaValidator, symbolSchema } from './schema-validator';
+import { AutomergeObjectCore, encodeReference } from '../automerge';
+import { defineHiddenProperty } from '../util/property';
 
 export type EchoReactiveObject<T> = ReactiveObject<T> & { id: string };
 

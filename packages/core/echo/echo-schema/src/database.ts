@@ -3,17 +3,16 @@
 //
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
-import { type BatchUpdate, type DatabaseProxy, type ItemManager } from '@dxos/echo-db';
+import { type BatchUpdate } from '@dxos/echo-db';
+import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { AutomergeDb, type AutomergeContext, AutomergeObject } from './automerge';
+import { type EchoReactiveObject, createEchoReactiveObject } from './effect/echo-handler';
 import { type Hypergraph } from './hypergraph';
-import { EchoLegacyDatabase } from './legacy-database';
-import { isAutomergeObject, type EchoObject, type TypedObject, OpaqueEchoObject } from './object';
+import { isAutomergeObject, type EchoObject, type TypedObject, type OpaqueEchoObject } from './object';
 import { type FilterSource, type Query } from './query';
-import { invariant } from '@dxos/invariant';
-import { EchoReactiveObject, createEchoReactiveObject } from './effect/echo-handler';
 
 export interface EchoDatabase {
   get graph(): Hypergraph;

@@ -186,7 +186,9 @@ export class Filter<T extends EchoObject = EchoObject> {
 
 // TODO(burdon): Move logic into Filter.
 export const filterMatch = (filter: Filter, object: EchoObject | undefined): boolean => {
-  if (!object) return false;
+  if (!object) {
+    return false;
+  }
   const result = filterMatchInner(filter, object);
   return filter.not ? !result : result;
 };

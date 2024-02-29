@@ -3,20 +3,20 @@
 //
 
 import * as S from '@effect/schema/Schema';
-import * as R from './reactive';
 import { expect } from 'chai';
 import { inspect } from 'util';
 
 import { registerSignalRuntime } from '@dxos/echo-signals';
+import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
-import { EchoReactiveObject, createEchoReactiveObject, isEchoReactiveObject } from './echo-handler';
+import { type EchoReactiveObject, createEchoReactiveObject, isEchoReactiveObject } from './echo-handler';
+import * as R from './reactive';
 import { TestClass, TestSchema, TestSchemaWithClass } from './testing/schema';
-import { createDatabase } from '../testing';
-import { Hypergraph } from '../hypergraph';
-import { AutomergeContext, SpaceDoc } from '../automerge';
+import { AutomergeContext, type SpaceDoc } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
-import { PublicKey } from '@dxos/keys';
+import { Hypergraph } from '../hypergraph';
+import { createDatabase } from '../testing';
 
 registerSignalRuntime();
 
@@ -67,7 +67,7 @@ for (const schema of [undefined, TestSchemaWithClass]) {
   });
 }
 
-describe('Reactive Object with ECHO database', async () => {
+describe('Reactive Object with ECHO database', () => {
   test('existing proxy objects can be added to the database', async () => {
     const { db } = await createDatabase(undefined, { useReactiveObjectApi: true });
 

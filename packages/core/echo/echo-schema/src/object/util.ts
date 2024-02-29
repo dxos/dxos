@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { todo } from '@dxos/debug';
 import { Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
@@ -11,7 +12,6 @@ import { type AbstractEchoObject } from './object';
 import { isAutomergeObject } from './typed-object';
 import { base, type EchoObject, type ForeignKey } from './types';
 import type { EchoDatabase } from '../database';
-import { todo } from '@dxos/debug';
 
 export const setStateFromSnapshot = (obj: AbstractEchoObject, snapshot: ObjectSnapshot | TextSnapshot) => {
   invariant(obj[base]._stateMachine);

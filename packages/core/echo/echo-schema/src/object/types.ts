@@ -5,9 +5,8 @@
 import type { AbstractEchoObject } from './object';
 import { type AutomergeObject } from '../automerge';
 import type { EchoDatabase } from '../database';
+import { type ReactiveObject } from '../effect/reactive';
 import type { Schema } from '../proto';
-import { ReactiveObject } from '../effect/reactive';
-import { EchoReactiveObject } from '../effect/echo-handler';
 
 // TODO(burdon): Don't export symbols outside of package?
 
