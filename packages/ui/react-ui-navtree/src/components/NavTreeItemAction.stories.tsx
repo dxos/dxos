@@ -45,7 +45,6 @@ export const Default = {
         id: faker.string.uuid(),
         label: faker.lorem.words(2),
         icon: Circle,
-        actions: [],
         invoke: () => {
           console.log('invoke');
         },
