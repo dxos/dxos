@@ -24,7 +24,7 @@ export default defineConfig({
             key: './key.pem',
             cert: './cert.pem',
           }
-        : false,
+        : undefined,
     fs: {
       strict: false,
       allow: [
@@ -49,9 +49,7 @@ export default defineConfig({
     },
   },
   plugins: [
-    ConfigPlugin({
-      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_DATADOG_API_KEY', 'DX_DATADOG_APP_KEY', 'DX_VAULT'],
-    }),
+    ConfigPlugin(),
     ThemePlugin({
       root: __dirname,
       content: [resolve(__dirname, './*.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
@@ -95,7 +93,7 @@ export default defineConfig({
         assets: './packages/apps/halo-app/out/halo/**',
       },
       authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
-      dryRun: process.env.DX_ENVIRONMENT !== 'production',
+      disable: process.env.DX_ENVIRONMENT !== 'production',
     }),
     // https://www.bundle-buddy.com/rollup
     {
