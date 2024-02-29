@@ -55,7 +55,12 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
               properties: {
                 label: ['open help tour', { ns: HELP_PLUGIN }],
                 icon: (props: IconProps) => <Info {...props} />,
-                keyBinding: 'shift+meta+/',
+                keyBinding: {
+                  macos: 'shift+meta+/',
+                  // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
+                  windows: 'shift+ctrl+/',
+                  linux: 'shift+ctrl+?',
+                },
                 testId: 'helpPlugin.openHelp',
               },
               edges: [['root', 'inbound']],
@@ -75,7 +80,10 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
               properties: {
                 label: ['open shortcuts label', { ns: HELP_PLUGIN }],
                 icon: (props: IconProps) => <KeyboardIcon {...props} />,
-                keyBinding: 'meta+/',
+                keyBinding: {
+                  macos: 'meta+/',
+                  windows: 'ctrl+/',
+                },
               },
               edges: [['root', 'inbound']],
             },
