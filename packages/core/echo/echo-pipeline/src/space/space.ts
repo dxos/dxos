@@ -187,16 +187,17 @@ export class Space {
     return this._snapshotManager;
   }
 
-  setControlFeed(feed: FeedWrapper<FeedMessage>) {
+  async setControlFeed(feed: FeedWrapper<FeedMessage>) {
     invariant(!this._controlFeed, 'Control feed already set.');
     this._controlFeed = feed;
-    this._controlPipeline.setWriteFeed(feed);
+    await this._controlPipeline.setWriteFeed(feed);
     return this;
   }
 
-  setDataFeed(feed: FeedWrapper<FeedMessage>) {
+  async setDataFeed(feed: FeedWrapper<FeedMessage>) {
     invariant(!this._dataFeed, 'Data feed already set.');
     this._dataFeed = feed;
+    await this._dataPipeline.pipeline?.addFeed(feed);
     this._dataPipeline.pipeline?.setWriteFeed(feed);
     return this;
   }

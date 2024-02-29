@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import get from 'lodash.get';
+
 import { Event } from '@dxos/async';
 import { next as A, type ChangeFn, type ChangeOptions, type Doc, type Heads } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
@@ -14,17 +16,17 @@ import { assignDeep, defer, getDeep } from '@dxos/util';
 
 import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
-import { AutomergeObject } from './automerge-object';
+import { AutomergeObject, getRawDoc } from './automerge-object';
 import { docChangeSemaphore } from './doc-semaphore';
 import {
   encodeReference,
-  type DocStructure,
   type ObjectStructure,
   isEncodedReferenceObject,
   decodeReference,
   type DecodedAutomergeValue,
+  type SpaceDoc,
 } from './types';
-import { base, type TypedObjectOptions, type EchoObject, TextObject } from '../object';
+import { base, type TypedObjectOptions, type EchoObject, TextObject, type AutomergeTextCompat } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto'; // Keep type-only
 
@@ -43,7 +45,7 @@ export class AutomergeObjectCore {
   // TODO(dmaretskyi): Create a discriminated union for the bound/not bound states.
 
   /**
-   * Set if when the object is not bound to a database.
+   * Set if when the object is bound to a database.
    */
   public database?: AutomergeDb | undefined;
 
@@ -55,7 +57,7 @@ export class AutomergeObjectCore {
   /**
    * Set if when the object is bound to a database.
    */
-  public docHandle?: DocHandle<DocStructure> = undefined;
+  public docHandle?: DocHandle<SpaceDoc> = undefined;
 
   /**
    * Until object is persisted in the database, the linked object references are stored in this cache.
@@ -131,7 +133,7 @@ export class AutomergeObjectCore {
       // Prevent recursive change calls.
       using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
-      this.docHandle.change((newDoc: DocStructure) => {
+      this.docHandle.change((newDoc: SpaceDoc) => {
         assignDeep(newDoc, this.mountPath, doc);
       });
     }
@@ -199,6 +201,7 @@ export class AutomergeObjectCore {
   getDocAccessor(path: string[] = []): DocAccessor {
     const self = this;
     return {
+      [isDocument]: true,
       handle: {
         docSync: () => this.getDoc(),
         change: (callback, options) => {
@@ -225,8 +228,6 @@ export class AutomergeObjectCore {
       get path() {
         return [...self.mountPath, 'data', ...path];
       },
-
-      isAutomergeDocAccessor: true,
     };
   }
 
@@ -381,26 +382,40 @@ export class AutomergeObjectCore {
   }
 }
 
-export type DocAccessor<T = any> = {
+const isDocument = Symbol.for('isDocument');
+
+// TODO(burdon): Rename ValueAccessor.
+export interface DocAccessor<T = any> {
+  [isDocument]: true;
   handle: IDocHandle<T>;
+  get path(): string[]; // TODO(burdon): Getter or prop?
+}
 
-  path: string[];
-
-  isAutomergeDocAccessor: true;
+export const DocAccessor = {
+  getValue: (accessor: DocAccessor) => get(accessor.handle.docSync(), accessor.path),
 };
 
-export type IDocHandle<T = any> = {
+/**
+ * @deprecated
+ */
+// TODO(burdon): Temporary.
+export const createDocAccessor = <T = any>(text: TextObject): DocAccessor<T> => {
+  const obj = text as any as AutomergeTextCompat;
+  return getRawDoc(obj, [obj.field]);
+};
+
+export interface IDocHandle<T = any> {
   docSync(): Doc<T> | undefined;
   change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
   changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): string[] | undefined;
 
   addListener(event: 'change', listener: () => void): void;
   removeListener(event: 'change', listener: () => void): void;
-};
+}
 
 export type BindOptions = {
   db: AutomergeDb;
-  docHandle: DocHandle<DocStructure>;
+  docHandle: DocHandle<SpaceDoc>;
   path: string[];
 
   /**
@@ -410,10 +425,10 @@ export type BindOptions = {
 };
 
 export const isDocAccessor = (obj: any): obj is DocAccessor => {
-  return !!obj?.isAutomergeDocAccessor;
+  return !!obj?.[isDocument];
 };
 
-export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<DocStructure>) => {
+export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<SpaceDoc>) => {
   if (event.patches.some((patch) => patch.path[0] === 'objects' && patch.path[1] === objId)) {
     return true;
   }

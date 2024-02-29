@@ -7,6 +7,7 @@ export {
   type Contact,
   type Device,
   DeviceKind,
+  DeviceType,
   type Identity,
   // generateSeedPhrase,
   type Halo,

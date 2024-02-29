@@ -34,7 +34,7 @@ import { DebugContext, type DebugSettingsProps, type DebugPluginProvides, DebugA
 export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
 
 export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
-  const settings = new LocalStorageStore<DebugSettingsProps>(DEBUG_PLUGIN);
+  const settings = new LocalStorageStore<DebugSettingsProps>(DEBUG_PLUGIN, { debug: true, devtools: true });
   let intentPlugin: Plugin<IntentPluginProvides>;
 
   return {
@@ -120,6 +120,8 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                   label: ['debug label', { ns: DEBUG_PLUGIN }],
                   data: { graph: graphPlugin?.provides.graph },
                 });
+
+                // TODO(burdon): Move menu here.
 
                 root.addAction({
                   id: 'open-devtools',

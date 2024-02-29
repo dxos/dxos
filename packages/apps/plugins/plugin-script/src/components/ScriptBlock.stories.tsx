@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 
 import { TextObject } from '@dxos/client/echo';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
+import { createDocAccessor, type DocAccessor } from '@dxos/echo-schema';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { useClient } from '@dxos/react-client';
 import { ClientRepeater } from '@dxos/react-client/testing';
@@ -29,9 +30,9 @@ const code = [
 ].join('\n');
 
 const Story = () => {
-  const [source, setSource] = useState<TextObject>();
+  const [source, setSource] = useState<DocAccessor>();
   useEffect(() => {
-    setSource(new TextObject(code, TextKind.PLAIN));
+    setSource(createDocAccessor(new TextObject(code, TextKind.PLAIN)));
   }, []);
 
   const client = useClient();

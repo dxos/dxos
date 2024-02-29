@@ -36,7 +36,7 @@ export class TextObject extends AbstractEchoObject<TextModel> {
 
     // Redirect to automerge by default.
     if (opts?.automerge ?? true) {
-      const defaultedField = field ?? 'content';
+      const defaultedField = field ?? 'content'; // TODO(burdon): Factor out const.
       return new AutomergeObject(
         {
           kind,

@@ -143,7 +143,7 @@ export class DataSpaceManager {
 
     const automergeRoot = this._automergeHost.repo.create();
     automergeRoot.change((doc: any) => {
-      doc.experimental_spaceKey = spaceKey.toHex();
+      doc.access = { spaceKey: spaceKey.toHex() };
     });
 
     const space = await this._constructSpace(metadata);
@@ -240,8 +240,8 @@ export class DataSpaceManager {
       },
       memberKey: this._signingContext.identityKey,
     });
-    controlFeed && space.setControlFeed(controlFeed);
-    dataFeed && space.setDataFeed(dataFeed);
+    controlFeed && (await space.setControlFeed(controlFeed));
+    dataFeed && (await space.setDataFeed(dataFeed));
 
     const dataSpace = new DataSpace({
       inner: space,

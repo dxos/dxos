@@ -35,7 +35,9 @@ export type EditorModel = {
 
 /**
  * State field makes the model available to other extensions.
+ * @deprecated
  */
+// TODO(burdon): Remove.
 export const modelState = StateField.define<EditorModel | undefined>({
   create: () => undefined,
   update: (model) => model,

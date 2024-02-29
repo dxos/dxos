@@ -48,6 +48,9 @@ type ThreadState = {
   focus?: boolean;
 };
 
+// TODO(thure): Get source of truth from `react-ui-theme`.
+const isMinSm = () => window.matchMedia('(min-width:768px)').matches;
+
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
   const state = deepSignal<ThreadState>({ threads: {} });
@@ -79,12 +82,20 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           if (activeNode && isDocument(activeNode?.data) && activeNode.data.comments.length > 0) {
             void intentPlugin?.provides.intent.dispatch({
               action: LayoutAction.SET_LAYOUT,
-              data: { element: 'complementary', subject: activeNode.data, state: true },
+              data: {
+                element: 'complementary',
+                subject: activeNode.data,
+                state: isMinSm(),
+              },
             });
           } else if (settings.values.standalone && thread && !isThread(activeNode?.data)) {
             void intentPlugin?.provides.intent.dispatch({
               action: LayoutAction.SET_LAYOUT,
-              data: { element: 'complementary', subject: thread, state: true },
+              data: {
+                element: 'complementary',
+                subject: thread,
+                state: isMinSm(),
+              },
             });
           } else {
             void intentPlugin?.provides.intent.dispatch({
@@ -320,7 +331,11 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   },
                   {
                     action: LayoutAction.SET_LAYOUT,
-                    data: { element: 'complementary', subject: doc, state: true },
+                    data: {
+                      element: 'complementary',
+                      subject: doc,
+                      state: true,
+                    },
                   },
                 ]);
 
