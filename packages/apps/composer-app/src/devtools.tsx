@@ -46,8 +46,10 @@ const App = () => {
 };
 
 const main = () => {
-  // Redirect to home page if devtools is not enabled.
-  if (localStorage.getItem('dxos.org/plugin/debug/devtools') !== 'true') {
+  const enter =
+    localStorage.getItem('dxos.org/plugin/debug/devtools') === 'true' ||
+    window.confirm('Continue to DXOS developer tools?');
+  if (!enter) {
     window.location.pathname = '/';
     return;
   }
