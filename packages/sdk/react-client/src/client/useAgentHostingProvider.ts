@@ -20,7 +20,6 @@ export const useAgentHostingProviderClient = (config: Config): AgentHostingProvi
     config.get('runtime.app.env.DX_ENVIRONMENT') !== 'development' &&
     localStorage.getItem('dxos.org/shell/features/agentHosting') !== 'true'
   ) {
-    log.info('agent hosting disabled');
     return null;
   }
 
