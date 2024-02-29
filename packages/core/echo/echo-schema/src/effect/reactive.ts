@@ -8,7 +8,8 @@ import * as S from '@effect/schema/Schema';
 import { invariant } from '@dxos/invariant';
 
 import { type ReactiveHandler, createReactiveProxy, isValidProxyTarget } from './proxy';
-import { TypedReactiveHandler, setSchemaProperties, symbolSchema } from './typed-handler';
+import { SchemaValidator, symbolSchema } from './schema-validator';
+import { TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
@@ -37,13 +38,8 @@ export const object: {
     if (!isValidProxyTarget(obj)) {
       throw new Error('Value cannot be made into a reactive object.');
     }
-
-    // Typed.
     const schema: S.Schema<T> = schemaOrObj as S.Schema<T>;
-    const _ = S.asserts(schema)(obj);
-
-    setSchemaProperties(obj, schema);
-
+    SchemaValidator.prepareTarget(obj, schema);
     return createReactiveProxy(obj, new TypedReactiveHandler());
   } else {
     if (!isValidProxyTarget(schemaOrObj)) {
