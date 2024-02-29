@@ -177,6 +177,11 @@ for (const schema of [undefined, TestSchema]) {
         expect(obj.toString()).to.eq('[object Object]'); // TODO(dmaretskyi): Change to `[object ECHO]`?
       });
 
+      test('object spreading', () => {
+        const obj = createObject({ ...TEST_OBJECT });
+        expect({ ...obj }).to.deep.eq({ ...TEST_OBJECT });
+      });
+
       test('toJSON', () => {
         const obj = createObject({ ...TEST_OBJECT });
         const expected = JSON.parse(JSON.stringify(TEST_OBJECT));
@@ -393,6 +398,12 @@ for (const schema of [undefined, TestSchema]) {
           expect(returnValue === array).to.be.true;
           expect(array).to.deep.eq([1, 2, 3]);
           expect(updates.count, 'update count').to.eq(1);
+        });
+
+        test('filter', () => {
+          const array = createReactiveArray([1, 2, 3]);
+          const returnValue = array.filter((v) => v & 1);
+          expect(returnValue).to.deep.eq([1, 3]);
         });
 
         test('reverse', () => {
