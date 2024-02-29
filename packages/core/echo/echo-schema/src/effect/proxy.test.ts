@@ -15,10 +15,8 @@ import { updateCounter } from './testutils';
 
 registerSignalRuntime();
 
-test('', () => {});
-
-for (const schema of [TestSchema]) {
-  for (const useDatabase of [true]) {
+for (const schema of [undefined, TestSchema]) {
+  for (const useDatabase of [false, true]) {
     const createObject = (props: Partial<TestSchema> = {}): TestSchema => {
       if (useDatabase) {
         // TODO: extract echo-schema into a separate package and export a test suite, use it in echo-database

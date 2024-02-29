@@ -17,6 +17,7 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
     SchemaValidator.initTypedTarget(target);
     Object.defineProperty(target, inspect.custom, {
       enumerable: false,
+      configurable: true,
       value: this._inspect.bind(target),
     });
   }

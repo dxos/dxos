@@ -3,6 +3,7 @@
 //
 
 import * as AST from '@effect/schema/AST';
+import { isTypeLiteral } from '@effect/schema/AST';
 import * as S from '@effect/schema/Schema';
 
 import { invariant } from '@dxos/invariant';
@@ -15,6 +16,9 @@ export const symbolTypeAst = Symbol.for('@dxos/type/AST');
 
 export class SchemaValidator {
   public static prepareTarget<T>(target: T, schema: S.Schema<T>) {
+    if (!isTypeLiteral(schema.ast)) {
+      throw new Error('schema has to describe an object type');
+    }
     const _ = S.asserts(schema)(target);
     setSchemaProperties(target, schema);
   }

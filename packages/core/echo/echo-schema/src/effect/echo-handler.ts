@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { isTypeLiteral } from '@effect/schema/AST';
+import * as AST from '@effect/schema/AST';
 import type * as S from '@effect/schema/Schema';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
@@ -109,6 +111,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     if (target instanceof EchoArrayTwoPointO) {
       return this._arrayGet(target, prop);
+    }
+
+    if (prop === 'id') {
+      return this._objectCore.id;
     }
 
     const decodedValueAtPath = this.getDecodedValueAtPath(target, prop);
@@ -440,10 +446,17 @@ const throwIfCustomClass = (prop: string | symbol, value: any) => {
   }
 };
 
-export const createEchoReactiveObject = <T extends {}>(init: T, schema?: S.Schema<T>): ReactiveObject<T> => {
+export type EchoReactiveObject<T> = ReactiveObject<T> & { id: string };
+
+export const createEchoReactiveObject = <T extends {}>(init: T, schema?: S.Schema<T>): EchoReactiveObject<T> => {
   const target = { [symbolPath]: [], ...init };
   if (schema != null) {
     SchemaValidator.prepareTarget(target, schema);
+    invariant(isTypeLiteral(schema.ast));
+    const idProperty = AST.getPropertySignatures(schema.ast).find((prop) => prop.name === 'id');
+    if (idProperty != null) {
+      throw new Error('"id" property name is reserved');
+    }
   }
   const handler = new EchoReactiveHandler();
   const proxy = createReactiveProxy<ProxyTarget>(target, handler) as any;
