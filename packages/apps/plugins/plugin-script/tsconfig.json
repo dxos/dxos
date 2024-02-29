@@ -23,6 +23,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/async"
+    },
+    {
       "path": "../../../common/crypto"
     },
     {
@@ -36,6 +39,9 @@
     },
     {
       "path": "../../../core/echo/echo-generator"
+    },
+    {
+      "path": "../../../core/echo/echo-schema"
     },
     {
       "path": "../../../core/echo/text-model"
@@ -78,6 +84,9 @@
     },
     {
       "path": "../../types"
+    },
+    {
+      "path": "../plugin-client"
     },
     {
       "path": "../plugin-explorer"

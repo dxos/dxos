@@ -41,7 +41,7 @@ describe('AutomergeDocumentLoader', () => {
     const { loader, automerge } = await setupTest();
     const handle = automerge.repo.create<SpaceDoc>();
     const docLoadInfo = waitForDocumentLoad(loader, { objectId, handle });
-    loader.loadLinkedObjects({ [objectId]: handle.url });
+    loadLinkedObjects(loader, { [objectId]: handle.url });
     await sleep(10);
     expect(docLoadInfo.loaded).to.be.true;
   });
@@ -52,7 +52,7 @@ describe('AutomergeDocumentLoader', () => {
     const oldDocHandle = automerge.repo.create<SpaceDoc>();
     const newDocHandle = automerge.repo.create<SpaceDoc>();
     const docLoadInfo = waitForDocumentLoad(loader, { objectId, handle: oldDocHandle });
-    loader.loadLinkedObjects({ [objectId]: oldDocHandle.url });
+    loadLinkedObjects(loader, { [objectId]: oldDocHandle.url });
     loader.onObjectBoundToDocument(newDocHandle, objectId);
     await sleep(10);
     expect(docLoadInfo.loaded).to.be.false;
@@ -65,7 +65,7 @@ describe('AutomergeDocumentLoader', () => {
     loader.onObjectBoundToDocument(existingHandle, objectId);
     const newDocHandle = automerge.repo.create<SpaceDoc>();
     const docLoadInfo = waitForDocumentLoad(loader, { objectId, handle: newDocHandle });
-    loader.loadLinkedObjects({ [objectId]: existingHandle.url });
+    loadLinkedObjects(loader, { [objectId]: existingHandle.url });
     await sleep(10);
     expect(docLoadInfo.loaded).to.be.false;
   });
@@ -78,6 +78,11 @@ describe('AutomergeDocumentLoader', () => {
       rootUrl: spaceRootDocHandle.url,
     });
     return { loader, spaceRootDocHandle, automerge };
+  };
+
+  const loadLinkedObjects = (loader: AutomergeDocumentLoader, links: SpaceDoc['links']) => {
+    Object.keys(links ?? {}).forEach((objectId) => loader.loadObjectDocument(objectId));
+    loader.onObjectLinksUpdated(links);
   };
 
   const waitForDocumentLoad = (loader: AutomergeDocumentLoader, expected: ObjectDocumentLoaded) => {

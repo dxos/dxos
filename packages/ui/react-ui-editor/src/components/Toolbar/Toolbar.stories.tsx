@@ -9,23 +9,21 @@ import React, { type FC, useMemo, useState } from 'react';
 import { TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
+import { Tooltip } from '@dxos/react-ui';
 import { mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Toolbar } from './Toolbar';
 import {
-  code,
+  decorateMarkdown,
   comments,
   formatting,
-  heading,
   image,
   table,
-  tasklist,
   useComments,
   useFormattingState,
 } from '../../extensions';
 import { type Comment, useActionHandler, useEditorView, useTextModel } from '../../hooks';
-import { editorFillLayoutEditor, editorFillLayoutRoot, editorWithToolbarLayout } from '../../styles';
 import translations from '../../translations';
 import { MarkdownEditor } from '../TextEditor';
 
@@ -39,7 +37,7 @@ const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) =
   const [formattingState, formattingObserver] = useFormattingState();
   const extensions = useMemo(
     () => [
-      code(),
+      decorateMarkdown(),
       comments({
         onCreate: ({ cursor }) => {
           const id = PublicKey.random().toHex();
@@ -48,10 +46,8 @@ const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) =
         },
       }),
       formatting(),
-      heading(),
       image(),
       table(),
-      tasklist(),
       formattingObserver,
     ],
     [],
@@ -65,7 +61,7 @@ const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) =
   }
 
   return (
-    <div role='none' className={mx('fixed inset-0', editorWithToolbarLayout)}>
+    <div role='none' className={mx('fixed inset-0 flex flex-col')}>
       <Toolbar.Root onAction={handleAction} state={formattingState} classNames={textBlockWidth}>
         <Toolbar.Markdown />
         <Toolbar.Separator />
@@ -76,8 +72,8 @@ const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) =
         model={model}
         extensions={extensions}
         slots={{
-          root: { className: mx(textBlockWidth, editorFillLayoutRoot, 'pli-2') },
-          editor: { className: editorFillLayoutEditor },
+          root: { className: mx(textBlockWidth) },
+          editor: { className: 'p-2' },
         }}
       />
     </div>
@@ -87,7 +83,11 @@ const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) =
 export default {
   title: 'react-ui-editor/Toolbar',
   component: Toolbar,
-  render: (args: any) => <Story {...args} />,
+  render: (args: any) => (
+    <Tooltip.Provider>
+      <Story {...args} />
+    </Tooltip.Provider>
+  ),
   decorators: [withTheme],
   parameters: { translations, layout: 'fullscreen' },
 };

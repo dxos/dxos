@@ -75,6 +75,18 @@ Arguments:
 `target`: <code>undefined | string</code>
 
 
+### [Storage()]()
+
+
+Load config from storage.
+
+Returns: <code>Promise&lt;Partial&lt;Config&gt;&gt;</code>
+
+Arguments: none
+
+
+
+
 ### [createClientServices(config, \[createWorker\])]()
 
 
@@ -169,7 +181,7 @@ Arguments:
 `protocol`: <code>string</code>
 
 
-### [useAgentHostingProviderClient(config)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/useAgentHostingProvider.ts#L13)
+### [useAgentHostingProviderClient(config)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/useAgentHostingProvider.ts#L17)
 
 
 

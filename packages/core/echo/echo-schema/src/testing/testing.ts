@@ -15,7 +15,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { TextModel } from '@dxos/text-model';
 import { ComplexMap } from '@dxos/util';
 
-import { AutomergeContext } from '../automerge';
+import { AutomergeContext, type AutomergeContextConfig } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 import { schemaBuiltin } from '../proto';
@@ -46,12 +46,14 @@ export const createDatabase = async (graph = new Hypergraph()) => {
 
 export class TestBuilder {
   public readonly defaultSpaceKey = PublicKey.random();
-  public readonly automergeContext = new AutomergeContext();
+  public readonly graph = new Hypergraph();
+  public readonly base = new DatabaseTestBuilder();
 
-  constructor(
-    public readonly graph = new Hypergraph(),
-    public readonly base = new DatabaseTestBuilder(),
-  ) {}
+  public readonly automergeContext;
+
+  constructor(automergeConfig?: AutomergeContextConfig) {
+    this.automergeContext = new AutomergeContext(undefined, automergeConfig);
+  }
 
   public readonly peers = new ComplexMap<PublicKey, TestPeer>(PublicKey.hash);
 

@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-stack",
-  "version": "0.4.4",
+  "version": "0.4.6",
   "description": "DXOS Surface plugin for Stack entities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -24,11 +24,14 @@
   ],
   "dependencies": {
     "@braneframe/plugin-settings": "workspace:*",
+    "@braneframe/plugin-space": "workspace:*",
+    "@dxos/async": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@preact/signals-core": "^1.5.1",
     "deepsignal": "^1.5.0",
     "node-fetch": "^2.6.0",
     "react-drag-drop-files": "^2.3.8",
@@ -36,7 +39,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/plugin-client": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
@@ -51,7 +54,7 @@
   },
   "peerDependencies": {
     "@babel/core": "^7.18.13",
-    "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/plugin-client": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",

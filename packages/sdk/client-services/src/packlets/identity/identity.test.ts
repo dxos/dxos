@@ -96,9 +96,9 @@ describe('identity/identity', () => {
       metadataStore,
       snapshotManager: new SnapshotManager(snapshotStore, blobStore, protocol.blobSync),
       snapshotId: undefined,
-    })
-      .setControlFeed(controlFeed)
-      .setDataFeed(dataFeed);
+    });
+    await space.setControlFeed(controlFeed);
+    await space.setDataFeed(dataFeed);
 
     const identity = new Identity({
       signer: keyring,
@@ -209,9 +209,9 @@ describe('identity/identity', () => {
         modelFactory: createDefaultModelFactory(),
         metadataStore,
         snapshotManager: new SnapshotManager(snapshotStore, blobStore, protocol.blobSync),
-      })
-        .setControlFeed(controlFeed)
-        .setDataFeed(dataFeed);
+      });
+      await space.setControlFeed(controlFeed);
+      await space.setDataFeed(dataFeed);
 
       const identity = (identity1 = new Identity({
         signer: keyring,
@@ -300,9 +300,9 @@ describe('identity/identity', () => {
         modelFactory: createDefaultModelFactory(),
         metadataStore,
         snapshotManager: new SnapshotManager(snapshotStore, blobStore, protocol.blobSync),
-      })
-        .setControlFeed(controlFeed)
-        .setDataFeed(dataFeed);
+      });
+      await space.setControlFeed(controlFeed);
+      await space.setDataFeed(dataFeed);
 
       const identity = (identity2 = new Identity({
         signer: keyring,

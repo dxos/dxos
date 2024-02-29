@@ -43,7 +43,7 @@ export class AutomergeDb {
   readonly _objects = new Map<string, AutomergeObject>();
   readonly _objectsSystem = new Map<string, EchoObject>();
 
-  readonly _updateEvent = new Event<{ spaceKey: PublicKey; itemsUpdated: { id: string }[] }>();
+  readonly _updateEvent = new Event<ItemsUpdatedEvent>();
 
   private _ctx?: Context = undefined;
 
@@ -84,7 +84,6 @@ export class AutomergeDb {
       invariant(spaceRootDoc);
       const objectIds = Object.keys(spaceRootDoc.objects ?? {});
       this._createInlineObjects(spaceRootDocHandle, objectIds);
-      this._automergeDocLoader.loadLinkedObjects(spaceRootDoc.links);
       spaceRootDocHandle.on('change', this._onDocumentUpdate);
     } catch (err) {
       if (err instanceof ContextDisposedError) {
@@ -114,6 +113,7 @@ export class AutomergeDb {
   getObjectById(id: string): EchoObject | undefined {
     const obj = this._objects.get(id) ?? this._echoDatabase._objects.get(id);
     if (!obj) {
+      this._automergeDocLoader.loadObjectDocument(id);
       return undefined;
     }
 
@@ -142,7 +142,7 @@ export class AutomergeDb {
     // All objects should be created linked to root space doc after query indexing is ready to make them
     // discoverable.
     let spaceDocHandle: DocHandle<SpaceDoc>;
-    if (obj.__typename === LEGACY_TEXT_TYPE) {
+    if (obj.__typename === LEGACY_TEXT_TYPE && this.automerge.spaceFragmentationEnabled) {
       spaceDocHandle = this._automergeDocLoader.createDocumentForObject(obj.id);
       spaceDocHandle.on('change', this._onDocumentUpdate);
     } else {
@@ -200,7 +200,7 @@ export class AutomergeDb {
   private readonly _onDocumentUpdate = (event: DocHandleChangePayload<SpaceDoc>) => {
     const documentChanges = this._processDocumentUpdate(event);
     this._rebindObjects(event.handle, documentChanges.objectsToRebind);
-    this._automergeDocLoader.loadLinkedObjects(documentChanges.linkedDocuments);
+    this._automergeDocLoader.onObjectLinksUpdated(documentChanges.linkedDocuments);
     this._createInlineObjects(event.handle, documentChanges.createdObjectIds);
     this._emitUpdateEvent(documentChanges.updatedObjectIds);
   };
@@ -308,3 +308,8 @@ const getInlineAndLinkChanges = (event: DocHandleChangePayload<SpaceDoc>) => {
     linkedDocuments,
   };
 };
+
+export interface ItemsUpdatedEvent {
+  spaceKey: PublicKey;
+  itemsUpdated: Array<{ id: string }>;
+}

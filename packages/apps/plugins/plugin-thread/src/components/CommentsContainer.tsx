@@ -1,12 +1,16 @@
 //
 // Copyright 2024 DXOS.org
 //
+import { Quotes } from '@phosphor-icons/react';
 import React, { useEffect } from 'react';
 
 import { type Thread as ThreadType } from '@braneframe/types';
+import { Button, useTranslation } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 
 import { CommentContainer } from './CommentContainer';
 import { type ThreadContainerProps } from './types';
+import { THREAD_PLUGIN } from '../meta';
 
 export type ThreadsContainerProps = Omit<
   ThreadContainerProps,
@@ -21,6 +25,21 @@ export type ThreadsContainerProps = Omit<
   autoFocusCurrentTextbox?: boolean;
   onThreadAttend?: (thread: ThreadType) => void;
   onThreadDelete?: (thread: ThreadType) => void;
+};
+
+export const CommentsHeading = () => {
+  const { t } = useTranslation(THREAD_PLUGIN);
+  return (
+    <div
+      role='none'
+      className='grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)] items-center border-be separator-separator -mbe-px'
+    >
+      <Button variant='primary' classNames='m-1 pli-0 min-bs-0 is-[--rail-action] bs-[--rail-action] rounded-sm'>
+        <Quotes weight='duotone' className={getSize(5)} />
+      </Button>
+      <h1 className='font-medium fg-accent pli-1 truncate'>{t('comments heading')}</h1>
+    </div>
+  );
 };
 
 /**
@@ -49,7 +68,7 @@ export const CommentsContainer = ({
           thread={thread}
           current={currentId === thread.id}
           detached={detached.includes(thread.id)}
-          autoFocus={autoFocusCurrentTextbox && currentId === thread.id}
+          autoFocusTextbox={autoFocusCurrentTextbox && currentId === thread.id}
           {...(onThreadAttend && { onAttend: () => onThreadAttend(thread) })}
           {...(onThreadDelete && { onDelete: () => onThreadDelete(thread) })}
           {...props}

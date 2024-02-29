@@ -331,7 +331,7 @@ export class DataSpace {
     const credentials: Credential[] = [];
     if (!this.inner.controlFeedKey) {
       const controlFeed = await this._feedStore.openFeed(await this._keyring.createKey(), { writable: true });
-      this.inner.setControlFeed(controlFeed);
+      await this.inner.setControlFeed(controlFeed);
 
       credentials.push(
         await this._signingContext.credentialSigner.createCredential({
@@ -351,7 +351,7 @@ export class DataSpace {
         writable: true,
         sparse: true,
       });
-      this.inner.setDataFeed(dataFeed);
+      await this.inner.setDataFeed(dataFeed);
 
       credentials.push(
         await this._signingContext.credentialSigner.createCredential({

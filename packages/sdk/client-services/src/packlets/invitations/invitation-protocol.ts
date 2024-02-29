@@ -4,7 +4,7 @@
 
 import type { ApiError } from '@dxos/protocols';
 import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import type { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import type { ProfileDocument, DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import type {
   AdmissionRequest,
   AdmissionResponse,
@@ -54,7 +54,7 @@ export interface InvitationProtocol {
   /**
    * Get key information to send to the host in order to create an admission credential for the guest.
    */
-  createAdmissionRequest(): Promise<AdmissionRequest>;
+  createAdmissionRequest(deviceProfile?: DeviceProfileDocument): Promise<AdmissionRequest>;
 
   /**
    * Redeem the admission credential.

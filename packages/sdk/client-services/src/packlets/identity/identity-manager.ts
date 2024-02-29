@@ -1,7 +1,6 @@
 //
 // Copyright 2022 DXOS.org
 //
-
 import platform from 'platform';
 
 import { Event } from '@dxos/async';
@@ -14,12 +13,18 @@ import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
+import { type Device, DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type IdentityRecord, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AdmittedFeed, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  AdmittedFeed,
+  type DeviceProfileDocument,
+  DeviceType,
+  type ProfileDocument,
+} from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { trace as Trace } from '@dxos/tracing';
-import { deferFunction } from '@dxos/util';
+import { isNode, deferFunction } from '@dxos/util';
 
 import { createAuthProvider } from './authenticator';
 import { Identity } from './identity';
@@ -43,10 +48,14 @@ export type JoinIdentityParams = {
    * We will try to catch up to this timeframe before starting the data pipeline.
    */
   controlTimeframe?: Timeframe;
+  // Custom device profile, merged with defaults, to be applied once the identity is accepted.
+  deviceProfile?: DeviceProfileDocument;
 };
 
 export type CreateIdentityOptions = {
   displayName?: string;
+  // device profile for device creating the identity.
+  deviceProfile?: DeviceProfileDocument;
 };
 
 // TODO(dmaretskyi): Rename: represents the peer's state machine.
@@ -84,6 +93,7 @@ export class IdentityManager {
         identityKey: identityRecord.identityKey,
         displayName: this._identity.profileDocument?.displayName,
       });
+
       this.stateUpdate.emit();
     }
     log.trace('dxos.halo.identity-manager.open', trace.end({ id: traceId }));
@@ -93,7 +103,8 @@ export class IdentityManager {
     await this._identity?.close(new Context());
   }
 
-  async createIdentity({ displayName }: CreateIdentityOptions = {}) {
+  async createIdentity({ displayName, deviceProfile }: CreateIdentityOptions = {}) {
+    // TODO(nf): populate using context from ServiceContext?
     invariant(!this._identity, 'Identity already exists.');
     log('creating identity...');
 
@@ -139,11 +150,8 @@ export class IdentityManager {
       // Write device metadata to profile.
       credentials.push(
         await generator.createDeviceProfile({
-          platform: platform.name,
-          platformVersion: platform.version,
-          architecture: typeof platform.os?.architecture === 'number' ? String(platform.os.architecture) : undefined,
-          os: platform.os?.family,
-          osVersion: platform.os?.version,
+          ...this.createDefaultDeviceProfile(),
+          ...deviceProfile,
         }),
       );
       for (const credential of credentials) {
@@ -166,12 +174,42 @@ export class IdentityManager {
     });
     this.stateUpdate.emit();
 
-    log('created identity', { identityKey: identity.identityKey, deviceKey: identity.deviceKey });
+    log('created identity', {
+      identityKey: identity.identityKey,
+      deviceKey: identity.deviceKey,
+      profile: identity.profileDocument,
+    });
     return identity;
   }
 
+  // TODO(nf): receive platform info rather than generating it here.
+  createDefaultDeviceProfile(): DeviceProfileDocument {
+    let type: DeviceType;
+    // TODO(nf): call Platform service instead?
+    if (isNode()) {
+      type = DeviceType.AGENT;
+    } else {
+      if (platform.name?.startsWith('iOS') || platform.name?.startsWith('Android')) {
+        type = DeviceType.MOBILE;
+      } else if ((globalThis as any).__args) {
+        type = DeviceType.NATIVE;
+      } else {
+        type = DeviceType.BROWSER;
+      }
+    }
+
+    return {
+      type,
+      platform: platform.name,
+      platformVersion: platform.version,
+      architecture: typeof platform.os?.architecture === 'number' ? String(platform.os.architecture) : undefined,
+      os: platform.os?.family,
+      osVersion: platform.os?.version,
+    };
+  }
+
   /**
-   * Accept an existing identity. Expects it's device key to be authorized (now or later).
+   * Accept an existing identity. Expects its device key to be authorized (now or later).
    */
   async acceptIdentity(params: JoinIdentityParams) {
     log('accepting identity', { params });
@@ -199,6 +237,10 @@ export class IdentityManager {
       displayName: this._identity.profileDocument?.displayName,
     });
 
+    await this.updateDeviceProfile({
+      ...this.createDefaultDeviceProfile(),
+      ...params.deviceProfile,
+    });
     this.stateUpdate.emit();
     log('accepted identity', { identityKey: identity.identityKey, deviceKey: identity.deviceKey });
     return identity;
@@ -222,6 +264,27 @@ export class IdentityManager {
     await this._identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
     this.stateUpdate.emit();
     return profile;
+  }
+
+  async updateDeviceProfile(profile: DeviceProfileDocument): Promise<Device> {
+    invariant(this._identity, 'Identity not initialized.');
+
+    // TODO(nf): CredentialGenerator doesn't work when not updating own device.
+    // const generator = new CredentialGenerator(this._keyring, this._identity.identityKey, this._identity.deviceKey);
+    // const credential = await generator.createDeviceProfile(profile);
+
+    const credential = await this._identity.getDeviceCredentialSigner().createCredential({
+      subject: this._identity.deviceKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.DeviceProfile',
+        profile,
+      },
+    });
+
+    const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential } });
+    await this._identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
+    this.stateUpdate.emit();
+    return { deviceKey: this._identity.deviceKey, kind: DeviceKind.CURRENT, profile };
   }
 
   private async _constructIdentity(identityRecord: IdentityRecord) {
@@ -248,7 +311,7 @@ export class IdentityManager {
       },
       identityKey: identityRecord.identityKey,
     });
-    space.setControlFeed(controlFeed);
+    await space.setControlFeed(controlFeed);
     space.setDataFeed(dataFeed);
 
     const identity: Identity = new Identity({
@@ -264,6 +327,7 @@ export class IdentityManager {
       identity.controlPipeline.state.setTargetTimeframe(identityRecord.haloSpace.controlTimeframe);
     }
 
+    identity.stateUpdate.on(() => this.stateUpdate.emit());
     return identity;
   }
 

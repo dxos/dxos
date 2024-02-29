@@ -2,56 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { IconProps } from '@phosphor-icons/react';
-import { type FC } from 'react';
-
-import type { UnsubscribeCallback } from '@dxos/async';
-
-import { type ActionArg, type Action, type Label } from './action';
-
-/**
- * Called when a node is added to the graph, allowing other node builders to add children, actions or properties.
- */
-export type NodeBuilder = (parent: Node) => UnsubscribeCallback | void;
+import { type MaybePromise, type MakeOptional } from '@dxos/util';
 
 /**
  * Represents a node in the graph.
  */
-export type Node<TData = any, TProperties extends Record<string, any> = Record<string, any>> = {
+// TODO(wittjosiah): Use Effect Schema.
+export type NodeBase<TData = any, TProperties extends Record<string, any> = Record<string, any>> = {
   /**
    * Globally unique ID.
    */
   id: string;
 
   /**
-   * Parent node in the graph.
-   */
-  parent: Node | null;
-
-  /**
-   * Label to be used when displaying the node.
-   * For default labels, use a translated string.
-   *
-   * @example 'My Node'
-   * @example ['unknown node label, { ns: 'example-plugin' }]
-   */
-  label: Label;
-
-  /**
-   * Description to be used when displaying a detailed view of the node.
-   * For default descriptions, use a translated string.
-   */
-  description?: Label;
-
-  /**
-   * Icon to be used when displaying the node.
-   */
-  icon?: FC<IconProps>;
-
-  /**
    * Properties of the node relevant to displaying the node.
    */
-  // TODO(burdon): Make this extensible and move label, description, and icon into here?
   properties: TProperties;
 
   /**
@@ -59,50 +24,97 @@ export type Node<TData = any, TProperties extends Record<string, any> = Record<s
    */
   // TODO(burdon): Type system (e.g., minimally provide identifier string vs. TypedObject vs. Graph mixin type system)?
   //  type field would prevent convoluted sniffing of object properties. And allow direct pass-through for ECHO TypedObjects.
-  // TODO(burdon): In some places `null` is cast to TData so make optional?
   data: TData;
-
-  /**
-   * Children of the node stored by their id.
-   */
-  // TODO(burdon): Rename nodes/nodeMap?
-  childrenMap: Record<string, Node>;
-
-  /**
-   * Actions of the node stored by their id.
-   */
-  actionsMap: Record<string, Action>;
-
-  /**
-   * Children of the node in default order.
-   */
-  get children(): Node[];
-
-  /**
-   * Actions of the node in default order.
-   */
-  get actions(): Action[];
-
-  addProperty(key: string, value: any): void;
-  removeProperty(key: string): void;
-
-  addNode<TChildData = null, TChildProperties extends Record<string, any> = Record<string, any>>(
-    id: string,
-    ...node: NodeArg<TChildData, TChildProperties>[]
-  ): Node<TChildData, TChildProperties>[];
-  removeNode(id: string): Node;
-
-  addAction<TActionProperties extends Record<string, any> = Record<string, any>>(
-    ...action: ActionArg<TActionProperties>[]
-  ): Action<TActionProperties>[];
-  removeAction(id: string): Action;
 };
 
-export type NodeArg<TData = null, TProperties extends Record<string, any> = Record<string, any>> = Pick<
-  Node,
-  'id' | 'label'
-> &
-  Partial<Omit<Node<TData, TProperties>, 'id' | 'label' | 'actions'>> & { actions?: ActionArg[] };
+export type NodeFilter<T = any, U extends Record<string, any> = Record<string, any>> = (
+  node: Node<unknown, Record<string, any>>,
+  connectedNode: Node,
+) => node is Node<T, U>;
+
+export type EdgeDirection = 'outbound' | 'inbound';
+
+export type ConnectedNodes = {
+  /**
+   * Edges that this node is connected to in default order.
+   */
+  edges(params?: { direction?: EdgeDirection }): Readonly<string[]>;
+
+  /**
+   * Nodes that this node is connected to in default order.
+   */
+  nodes<T = any, U extends Record<string, any> = Record<string, any>>(params?: {
+    direction?: EdgeDirection;
+    filter?: NodeFilter<T, U>;
+  }): Node<T>[];
+
+  /**
+   * Get a specific connected node by id.
+   */
+  node(id: string): Node | undefined;
+};
+
+export type ConnectedActions = {
+  /**
+   * Actions or action groups that this node is connected to in default order.
+   */
+  actions(): ActionLike[];
+};
+
+export type Node<TData = any, TProperties extends Record<string, any> = Record<string, any>> = Readonly<
+  Omit<NodeBase<TData, TProperties>, 'properties'> & { properties: Readonly<TProperties> } & ConnectedNodes &
+    ConnectedActions
+>;
 
 export const isGraphNode = (data: unknown): data is Node =>
-  data && typeof data === 'object' ? 'id' in data && 'label' in data : false;
+  data && typeof data === 'object' && 'id' in data && 'properties' in data && data.properties
+    ? typeof data.properties === 'object' && 'data' in data
+    : false;
+
+export type NodeArg<TData, TProperties extends Record<string, any> = Record<string, any>> = MakeOptional<
+  NodeBase<TData, TProperties>,
+  'data' | 'properties'
+> & {
+  /** Will automatically add nodes with an edge from this node to each. */
+  nodes?: NodeArg<unknown>[];
+
+  /** Will automatically add specified edges. */
+  edges?: [string, EdgeDirection][];
+};
+
+//
+// Actions
+//
+
+export type InvokeParams = {
+  /** Node the invoked action is connected to. */
+  node: Node;
+
+  caller?: string;
+};
+
+export type ActionData = (params: InvokeParams) => MaybePromise<void>;
+
+export type Action<TProperties extends Record<string, any> = Record<string, any>> = Readonly<
+  Omit<NodeBase<ActionData, TProperties>, 'properties'> & {
+    properties: Readonly<TProperties>;
+  } & ConnectedNodes
+>;
+
+export const isAction = (data: unknown): data is Action =>
+  isGraphNode(data) ? typeof data.data === 'function' : false;
+
+export const actionGroupSymbol = Symbol('ActionGroup');
+
+export type ActionGroup = Readonly<
+  Omit<NodeBase<typeof actionGroupSymbol, Record<string, any>>, 'properties'> & {
+    properties: Readonly<Record<string, any>>;
+  } & ConnectedActions
+>;
+
+export const isActionGroup = (data: unknown): data is ActionGroup =>
+  isGraphNode(data) ? data.data === actionGroupSymbol : false;
+
+export type ActionLike = Action | ActionGroup;
+
+export const isActionLike = (data: unknown): data is Action | ActionGroup => isAction(data) || isActionGroup(data);

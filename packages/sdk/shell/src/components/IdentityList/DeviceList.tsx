@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { generateName } from '@dxos/display-name';
-import { type Device } from '@dxos/react-client/halo';
+import { type Device, DeviceType } from '@dxos/react-client/halo';
 import { List, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 
@@ -22,7 +22,10 @@ export const DeviceList = ({ devices, onSelect }: DeviceListProps) => {
     <List classNames='flex flex-col gap-2'>
       {devices.map((device) => {
         // TODO(wittjosiah): Render this better. Consider communicating these as apps rather than devices.
-        const displayName = generateName(device.deviceKey.toHex());
+        const deviceType = device.profile?.type || DeviceType.UNKNOWN;
+        const displayName = device.profile?.label
+          ? `${device.profile.label} (${DeviceType[deviceType]})`
+          : generateName(device.deviceKey.toHex());
 
         const identity = {
           identityKey: device.deviceKey,

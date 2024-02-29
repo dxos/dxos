@@ -240,8 +240,8 @@ export class DataSpaceManager {
       },
       memberKey: this._signingContext.identityKey,
     });
-    controlFeed && space.setControlFeed(controlFeed);
-    dataFeed && space.setDataFeed(dataFeed);
+    controlFeed && (await space.setControlFeed(controlFeed));
+    dataFeed && (await space.setDataFeed(dataFeed));
 
     const dataSpace = new DataSpace({
       inner: space,

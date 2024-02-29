@@ -29,6 +29,7 @@ export default defineConfig({
         : undefined,
     fs: {
       strict: false,
+      cachedChecks: false,
       allow: [
         // TODO(wittjosiah): Not detecting pnpm-workspace?
         //   https://vitejs.dev/config/server-options.html#server-fs-allow
