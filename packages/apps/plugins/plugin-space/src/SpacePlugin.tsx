@@ -33,7 +33,6 @@ import { type Client, PublicKey } from '@dxos/react-client';
 import { type Space, SpaceProxy, getSpaceForObject, type PropertiesProps } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
-import { inferRecordOrder } from '@dxos/util';
 
 import {
   AwaitingObject,
@@ -60,7 +59,7 @@ import {
   type PluginState,
   SPACE_DIRECTORY_HANDLE,
 } from './types';
-import { SHARED, getActiveSpace, isSpace, spaceToGraphNode } from './util';
+import { SHARED, getActiveSpace, isSpace, updateGraphWithSpace } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 
@@ -119,8 +118,11 @@ export const SpacePlugin = ({
       // Create root folder structure.
       if (clientPlugin.provides.firstRun) {
         const defaultSpace = client.spaces.default;
-        const personalSpaceFolder = defaultSpace.db.add(new Folder());
+        const personalSpaceFolder = new Folder();
         defaultSpace.properties[Folder.schema.typename] = personalSpaceFolder;
+        if (Migrations.versionProperty) {
+          defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
+        }
         onFirstRun?.({
           client,
           defaultSpace,
@@ -322,11 +324,7 @@ export const SpacePlugin = ({
         },
       },
       graph: {
-        builder: ({ parent, plugins }) => {
-          if (parent.id !== 'root') {
-            return;
-          }
-
+        builder: (plugins, graph) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
           const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
           const metadataPlugin = resolvePlugin(plugins, parseMetadataResolverPlugin);
@@ -343,50 +341,16 @@ export const SpacePlugin = ({
           graphSubscriptions.get(client.spaces.default.key.toHex())?.();
           graphSubscriptions.set(
             client.spaces.default.key.toHex(),
-            spaceToGraphNode({ space: client.spaces.default, parent, dispatch, resolve }),
+            updateGraphWithSpace({ graph, space: client.spaces.default, isPersonalSpace: true, dispatch, resolve }),
           );
 
           // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
           //  Instead, we store order as an array of space keys.
           let spacesOrder: Expando | undefined;
-          const [groupNode] = parent.addNode(SPACE_PLUGIN, {
+          const [groupNode] = graph.addNodes({
             id: SHARED,
-            label: ['shared spaces label', { ns: SPACE_PLUGIN }],
-            actions: [
-              {
-                id: 'create-space',
-                label: ['create space label', { ns: SPACE_PLUGIN }],
-                icon: (props) => <Plus {...props} />,
-                properties: {
-                  disposition: 'toolbar',
-                  testId: 'spacePlugin.createSpace',
-                },
-                invoke: () =>
-                  dispatch({
-                    plugin: SPACE_PLUGIN,
-                    action: SpaceAction.CREATE,
-                  }),
-              },
-              {
-                id: 'join-space',
-                label: ['join space label', { ns: SPACE_PLUGIN }],
-                icon: (props) => <SignIn {...props} />,
-                properties: {
-                  testId: 'spacePlugin.joinSpace',
-                },
-                invoke: () =>
-                  dispatch([
-                    {
-                      plugin: SPACE_PLUGIN,
-                      action: SpaceAction.JOIN,
-                    },
-                    {
-                      action: NavigationAction.ACTIVATE,
-                    },
-                  ]),
-              },
-            ],
             properties: {
+              label: ['shared spaces label', { ns: SPACE_PLUGIN }],
               testId: 'spacePlugin.sharedSpaces',
               role: 'branch',
               palette: 'pink',
@@ -405,6 +369,41 @@ export const SpacePlugin = ({
                 updateSpacesOrder(spacesOrder);
               },
             },
+            edges: [['root', 'inbound']],
+            nodes: [
+              {
+                id: SpaceAction.CREATE,
+                data: () =>
+                  dispatch({
+                    plugin: SPACE_PLUGIN,
+                    action: SpaceAction.CREATE,
+                  }),
+                properties: {
+                  label: ['create space label', { ns: SPACE_PLUGIN }],
+                  icon: (props: IconProps) => <Plus {...props} />,
+                  disposition: 'toolbar',
+                  testId: 'spacePlugin.createSpace',
+                },
+              },
+              {
+                id: SpaceAction.JOIN,
+                data: () =>
+                  dispatch([
+                    {
+                      plugin: SPACE_PLUGIN,
+                      action: SpaceAction.JOIN,
+                    },
+                    {
+                      action: NavigationAction.ACTIVATE,
+                    },
+                  ]),
+                properties: {
+                  label: ['join space label', { ns: SPACE_PLUGIN }],
+                  icon: (props: IconProps) => <SignIn {...props} />,
+                  testId: 'spacePlugin.joinSpace',
+                },
+              },
+            ],
           });
 
           const updateSpacesOrder = (spacesOrder?: Expando) => {
@@ -412,7 +411,7 @@ export const SpacePlugin = ({
               return;
             }
 
-            groupNode.childrenMap = inferRecordOrder(groupNode.childrenMap, spacesOrder.order);
+            graph.sortEdges(groupNode.id, 'outbound', spacesOrder.order);
           };
           const spacesOrderQuery = client.spaces.default.db.query({ key: SHARED });
           spacesOrder = spacesOrderQuery.objects[0];
@@ -427,10 +426,11 @@ export const SpacePlugin = ({
               graphSubscriptions.get(space.key.toHex())?.();
               graphSubscriptions.set(
                 space.key.toHex(),
-                spaceToGraphNode({
+                updateGraphWithSpace({
+                  graph,
                   space,
-                  parent: space === client.spaces.default ? parent : groupNode,
                   hidden: settings.values.showHidden,
+                  isPersonalSpace: space === client.spaces.default,
                   dispatch,
                   resolve,
                 }),

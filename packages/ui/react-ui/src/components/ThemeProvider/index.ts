@@ -3,4 +3,4 @@
 //
 
 export * from './ThemeProvider';
-export { useTranslation } from './TranslationsProvider';
+export { type Label, toLocalizedString, useTranslation } from './TranslationsProvider';
