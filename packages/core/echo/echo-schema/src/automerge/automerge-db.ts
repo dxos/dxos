@@ -10,27 +10,27 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type AutomergeContext } from './automerge-context';
-import {
-  type AutomergeDocumentLoader,
-  AutomergeDocumentLoaderImpl,
-  type DocumentChanges,
-  type ObjectDocumentLoaded,
-} from './automerge-doc-loader';
-import { AutomergeObject, getAutomergeObjectCore } from './automerge-object';
-import { type SpaceDoc } from './types';
 import { type Hypergraph } from '../hypergraph';
 import { type EchoLegacyDatabase } from '../legacy-database';
 import {
+  LEGACY_TEXT_TYPE,
   base,
-  type EchoObject,
   isActualTextObject,
   isActualTypedObject,
   isAutomergeObject,
-  LEGACY_TEXT_TYPE,
+  type EchoObject,
 } from '../object';
 import { type Schema } from '../proto';
+import { type AutomergeContext } from './automerge-context';
+import {
+  AutomergeDocumentLoaderImpl,
+  type AutomergeDocumentLoader,
+  type DocumentChanges,
+  type ObjectDocumentLoaded,
+} from './automerge-doc-loader';
+import { AutomergeObject } from './automerge-object';
 import { AutomergeObjectCore } from './automerge-object-core';
+import { type SpaceDoc } from './types';
 
 export type SpaceState = {
   // Url of the root automerge document.
@@ -115,6 +115,7 @@ export class AutomergeDb {
   }
 
   getObjectById(id: string): EchoObject | undefined {
+    // TODO(dmaretskyi): Cleanup.
     const obj = this._objects.get(id) ?? this._echoDatabase._objects.get(id);
     if (!obj) {
       this._automergeDocLoader.loadObjectDocument(id);
@@ -147,8 +148,8 @@ export class AutomergeDb {
     }
 
     invariant(isAutomergeObject(obj));
-    invariant(!this._objects.has(obj.id));
-    this._objects.set(obj.id, obj);
+    invariant(!this._objects.has(core.id));
+    this._objects.set(obj.id, core);
 
     // TODO: create all objects as linked.
     // This is a temporary solution to get quick benefit from lazily-loaded separate-document objects.
@@ -223,9 +224,8 @@ export class AutomergeDb {
     const createdObjectIds: string[] = [];
     const objectsToRebind: string[] = [];
     for (const updatedObject of inlineChangedObjects) {
-      const echoObject = this._objects.get(updatedObject);
-      const objectCore = echoObject ? getAutomergeObjectCore(echoObject) : null;
-      if (echoObject == null) {
+      const objectCore = this._objects.get(updatedObject);
+      if (!objectCore) {
         createdObjectIds.push(updatedObject);
       } else if (objectCore?.docHandle && objectCore.docHandle.url !== event.handle.url) {
         log.warn('object bound to incorrect document, going to rebind', {
@@ -270,7 +270,9 @@ export class AutomergeDb {
     invariant(!this._objects.get(objectId));
     const obj = new AutomergeObject();
     obj[base]._core.id = objectId;
-    this._objects.set(obj.id, obj);
+    const core = obj[base]._core;
+
+    this._objects.set(core.id, core);
     this._automergeDocLoader.onObjectBoundToDocument(docHandle, objectId);
     (obj[base] as AutomergeObject)._bind({
       db: this,
@@ -282,27 +284,16 @@ export class AutomergeDb {
 
   private _rebindObjects(docHandle: DocHandle<SpaceDoc>, objectIds: string[]) {
     for (const objectId of objectIds) {
-      const object = this._objects.get(objectId);
-      invariant(object);
-      const automergeObjectCore = getAutomergeObjectCore(object);
-      automergeObjectCore.bind({
+      const objectCore = this._objects.get(objectId);
+      invariant(objectCore);
+      objectCore.bind({
         db: this,
         docHandle,
-        path: automergeObjectCore.mountPath,
+        path: objectCore.mountPath,
         assignFromLocalState: false,
       });
       this._automergeDocLoader.onObjectBoundToDocument(docHandle, objectId);
     }
-  }
-
-  private _bindObject(obj: AutomergeObjectCore) {
-    this._objects.set(obj.id, obj);
-    obj.bind({
-      db: this,
-      docHandle: this._docHandle,
-      path: ['objects', obj.id],
-      assignFromLocalState: false,
-    });
   }
 }
 
