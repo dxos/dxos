@@ -47,7 +47,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
                   plugin: CHESS_PLUGIN,
                   action: ChessAction.CREATE,
                   properties: {
-                    label: ['create object label', { ns: CHESS_PLUGIN }],
+                    label: ['create game label', { ns: CHESS_PLUGIN }],
                     icon: (props: IconProps) => <ShieldChevron {...props} />,
                     testId: 'chessPlugin.createObject',
                   },
@@ -69,7 +69,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
                       data: object,
                       properties: {
                         // TODO(wittjosiah): Reconcile with metadata provides.
-                        label: ['object title placeholder', { ns: CHESS_PLUGIN }],
+                        label: ['grid title placeholder', { ns: CHESS_PLUGIN }],
                         icon: (props: IconProps) => <ShieldChevron {...props} />,
                         testId: 'spacePlugin.object',
                         persistenceClass: 'echo',
