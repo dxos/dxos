@@ -23,10 +23,11 @@ export type MaybeFunction<T> = T | (() => T);
  * NOTE: To filter by type:
  * items.filter((item: any): item is RangeSet<Decoration> => item instanceof RangeSet)
  */
-// TODO(burdon): Reconcile names.
+// TODO(burdon): Reconcile names and variants.
 export const isNotFalsy = <T>(value: T): value is Exclude<T, Falsy> => !!value;
 export const nonNullable = <T>(value: T): value is NonNullable<T> => value !== null && value !== undefined;
 export const isNotNullOrUndefined = <T>(value: T): value is Exclude<T, null | undefined> => value != null;
+// export const isNotNullish = <T>(value: T | null | undefined): value is T => value !== undefined && value !== null;
 export const boolGuard = <T>(value: T | null | undefined): value is T => Boolean(value);
 
 /**

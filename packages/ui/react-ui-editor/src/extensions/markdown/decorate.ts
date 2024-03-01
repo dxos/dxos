@@ -88,7 +88,7 @@ const editingRange = (state: EditorState, range: { from: number; to: number }, f
       main: { head },
     },
   } = state;
-  return focus && !readOnly && head >= range.from && head <= range.to;
+  return focus && !readOnly && head >= range.from && head < range.to;
 };
 
 const MarksByParent = new Set(['CodeMark', 'EmphasisMark', 'StrikethroughMark', 'SubscriptMark', 'SuperscriptMark']);
