@@ -181,7 +181,7 @@ export const keyToHue = (key: PublicKey) => hexToHue(key.toHex());
 
 export const hexToHue = (hex: string) => toHue(parseInt(hex, 16));
 
-export const toHue = (hash: number) => idHue[hash & idHue.length];
+export const toHue = (hash: number) => idHue[hash % idHue.length];
 
 export type FallbackValue = {
   emoji: string;

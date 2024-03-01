@@ -9,7 +9,7 @@ import { SpaceMember } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 import { ListItem, Avatar, useId, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { keyToEmoji } from '@dxos/util';
+import { keyToFallback } from '@dxos/util';
 
 type IdentityListItemProps = {
   identity: Identity;
@@ -21,7 +21,7 @@ export const IdentityListItem = forwardRef<
   HTMLLIElement,
   ThemedClassName<ComponentPropsWithoutRef<'li'>> & IdentityListItemProps
 >(({ identity, presence, onClick, classNames, ...props }, forwardedRef) => {
-  const fallbackValue = keyToEmoji(identity.identityKey);
+  const fallbackValue = keyToFallback(identity.identityKey);
   const labelId = useId('identityListItem__label');
   const displayName = identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
   return (
@@ -33,9 +33,13 @@ export const IdentityListItem = forwardRef<
       labelId={labelId}
       ref={forwardedRef}
     >
-      <Avatar.Root status={presence === SpaceMember.PresenceState.ONLINE ? 'active' : 'inactive'} labelId={labelId}>
+      <Avatar.Root
+        status={presence === SpaceMember.PresenceState.ONLINE ? 'active' : 'inactive'}
+        labelId={labelId}
+        hue={fallbackValue.hue}
+      >
         <Avatar.Frame classNames='place-self-center'>
-          <Avatar.Fallback text={fallbackValue} />
+          <Avatar.Fallback text={fallbackValue.emoji} />
         </Avatar.Frame>
         <Avatar.Label classNames='text-sm truncate pli-2'>{displayName}</Avatar.Label>
       </Avatar.Root>

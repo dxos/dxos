@@ -10,7 +10,7 @@ export * from './elevation';
 export * from './focus';
 export * from './group';
 export * from './hover';
-export * from './hues';
+export * from './hue';
 export * from './layout';
 export * from './motion';
 export * from './ornament';

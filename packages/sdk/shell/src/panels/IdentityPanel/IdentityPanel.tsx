@@ -10,7 +10,7 @@ import { type Identity, useIdentity, useDevices, useHaloInvitations } from '@dxo
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { Avatar, DensityProvider, useId, useTranslation } from '@dxos/react-ui';
-import { keyToEmoji } from '@dxos/util';
+import { keyToFallback } from '@dxos/util';
 
 import {
   type IdentityPanelHeadingProps,
@@ -26,12 +26,12 @@ import { InvitationManager } from '../../steps';
 const viewStyles = 'pbs-1 pbe-3 pli-3';
 
 const IdentityHeading = ({ titleId, title, identity, onDone }: IdentityPanelHeadingProps) => {
-  const fallbackValue = keyToEmoji(identity.identityKey);
+  const fallbackValue = keyToFallback(identity.identityKey);
   return (
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
-      <Avatar.Root size={12} variant='circle' status='active'>
+      <Avatar.Root size={12} variant='circle' status='active' hue={fallbackValue.hue}>
         <Avatar.Frame classNames='block mbs-4 mbe-2 mli-auto chromatic-ignore'>
-          <Avatar.Fallback text={fallbackValue} />
+          <Avatar.Fallback text={fallbackValue.emoji} />
         </Avatar.Frame>
         <Avatar.Label classNames='block text-center font-light text-xl' data-testid='identityHeading.displayName'>
           {identity.profile?.displayName ?? generateName(identity.identityKey.toHex())}
