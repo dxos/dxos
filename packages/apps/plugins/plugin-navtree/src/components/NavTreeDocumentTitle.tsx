@@ -3,15 +3,13 @@
 //
 import { useEffect } from 'react';
 
-import { type Node } from '@dxos/app-graph';
-import { useTranslation } from '@dxos/react-ui';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { type TreeNode } from '@dxos/react-ui-navtree';
 
-import { getTreeItemLabel } from '../util';
-
-export const NavTreeDocumentTitle = ({ activeNode }: { activeNode?: Node }) => {
+export const NavTreeDocumentTitle = ({ activeNode }: { activeNode?: TreeNode }) => {
   const { t } = useTranslation();
   useEffect(() => {
-    document.title = activeNode ? getTreeItemLabel(activeNode, t) : t('current app name', { ns: 'appkit' });
+    document.title = activeNode ? toLocalizedString(activeNode.label, t) : t('current app name', { ns: 'appkit' });
   }, [activeNode?.label]);
   return null;
 };

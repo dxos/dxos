@@ -26,7 +26,7 @@ export default defineConfig({
             key: './key.pem',
             cert: './cert.pem',
           }
-        : false,
+        : undefined,
     fs: {
       strict: false,
       cachedChecks: false,
@@ -139,6 +139,10 @@ export default defineConfig({
       ],
     }),
     VitePWA({
+      // No PWA in dev to make it easier to ensure the latest version is being used.
+      // May be mitigated in the future by https://github.com/dxos/dxos/issues/4939.
+      // https://vite-pwa-org.netlify.app/guide/unregister-service-worker.html#unregister-service-worker
+      selfDestroying: process.env.DX_ENVIRONMENT === 'development',
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
@@ -182,7 +186,7 @@ export default defineConfig({
         assets: './packages/apps/composer-app/out/composer/**',
       },
       authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
-      dryRun: process.env.DX_ENVIRONMENT !== 'production',
+      disable: process.env.DX_ENVIRONMENT !== 'production',
     }),
     // https://www.bundle-buddy.com/rollup
     {
