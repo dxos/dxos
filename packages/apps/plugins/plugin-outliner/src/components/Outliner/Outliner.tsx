@@ -3,13 +3,13 @@
 //
 
 import { type Extension, Prec } from '@codemirror/state';
-import { EditorView, keymap, placeholder } from '@codemirror/view';
-import { ArrowSquareOut, DotsThreeVertical, DotOutline, X } from '@phosphor-icons/react';
+import { EditorView, keymap } from '@codemirror/view';
+import { ArrowSquareOut, Circle, DotsThreeVertical, X } from '@phosphor-icons/react';
 import React, { type HTMLAttributes, StrictMode, useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { createDocAccessor, getTextContent } from '@dxos/react-client/echo';
-import { Button, DensityProvider, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
+import { Button, DensityProvider, DropdownMenu, Input, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type CursorInfo,
   type YText,
@@ -17,9 +17,10 @@ import {
   defaultTheme,
   automerge,
   decorateMarkdown,
+  createMarkdownExtensions,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
-import { nonNullable } from '@dxos/util';
+import { isNotFalsy } from '@dxos/util';
 
 import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
 import { OUTLINER_PLUGIN } from '../../meta';
@@ -52,7 +53,7 @@ const OutlinerItem = ({
   item,
   active,
   isTasklist,
-  placeholder: _placeholder,
+  placeholder,
   onSelect,
   onEnter,
   onDelete,
@@ -61,6 +62,7 @@ const OutlinerItem = ({
   onCursor,
 }: OutlinerItemProps) => {
   const { t } = useTranslation(OUTLINER_PLUGIN);
+  const { themeMode } = useThemeContext();
 
   // Keys.
   const outlinerKeymap = useMemo(() => {
@@ -172,7 +174,11 @@ const OutlinerItem = ({
           run: (view) => {
             const { from, line } = getCursor(view);
             if (line === 1) {
-              onCursor?.('up', from);
+              if (from === 0) {
+                onCursor?.('up', from);
+              } else {
+                view.dispatch({ selection: { anchor: 0 } });
+              }
               return true;
             }
 
@@ -200,9 +206,14 @@ const OutlinerItem = ({
         {
           key: 'ArrowDown',
           run: (view) => {
-            const { line, lines, from } = getCursor(view);
+            const { line, lines, length, from } = getCursor(view);
             if (line === lines) {
-              onCursor?.('down', from);
+              if (from === length) {
+                onCursor?.('down', from);
+              } else {
+                view.dispatch({ selection: { anchor: length } });
+              }
+
               return true;
             }
 
@@ -227,16 +238,32 @@ const OutlinerItem = ({
     );
   }, []);
 
+  const [focus, setFocus] = useState(false);
+  useEffect(() => {
+    if (focus) {
+      onSelect?.();
+    }
+  }, [focus]);
+
   const extensions = useMemo<Extension[]>(
     () =>
-      [
-        // TODO(burdon): Theme.
-        EditorView.baseTheme(defaultTheme),
-        automerge(createDocAccessor(item.text!)),
-        _placeholder && placeholder(_placeholder),
-        decorateMarkdown({ renderLinkButton: onRenderLink }),
-        outlinerKeymap,
-      ].filter(nonNullable),
+      item.text
+        ? [
+            EditorView.baseTheme(defaultTheme),
+            EditorView.darkTheme.of(themeMode === 'dark'),
+            EditorView.updateListener.of((update) => {
+              if (update.focusChanged) {
+                setFocus(update.view.hasFocus);
+              }
+            }),
+
+            // lineNumbers(), // Debug-only.
+            createMarkdownExtensions({ themeMode, placeholder, lineWrapping: true }),
+            decorateMarkdown({ renderLinkButton: onRenderLink }),
+            automerge(createDocAccessor(item.text)),
+            outlinerKeymap,
+          ].filter(isNotFalsy)
+        : [],
     [item.text],
   );
 
@@ -248,20 +275,11 @@ const OutlinerItem = ({
     [extensions],
   );
 
-  // Focus.
-  const [focus, setFocus] = useState(false);
   useEffect(() => {
-    if (focus) {
-      onSelect?.();
-    }
-  }, [focus]);
-
-  useEffect(() => {
-    // TODO(burdon): Set initial selection.
     if (active) {
       view?.focus();
     }
-  }, [view]);
+  }, [view, active]);
 
   return (
     <div className='flex group'>
@@ -277,28 +295,16 @@ const OutlinerItem = ({
             />
           </Input.Root>
         )) || (
-          <DotOutline
+          <Circle
             weight={focus ? 'fill' : undefined}
-            className={mx('cursor-pointer', getSize(6), active && 'text-primary-500')}
+            className={mx('mx-2 cursor-pointer', getSize(4), active && 'text-primary-500')}
             onClick={() => onSelect?.()}
           />
         )}
       </div>
-      <div ref={parentRef} className='flex grow overflow-hidden pt-1' />
-      {/* <MarkdownEditor */}
-      {/*  ref={editorRef} */}
-      {/*  model={model} */}
-      {/*  autoFocus={!!active} */}
-      {/*  placeholder={placeholder} */}
-      {/*  extensions={[outlinerKeymap, decorateMarkdown({ renderLinkButton: onRenderLink })]} */}
-      {/*  slots={{ */}
-      {/*    root: { */}
-      {/*      className: 'w-full pt-1', */}
-      {/*      onFocus: () => setFocus(true), */}
-      {/*      onBlur: () => setFocus(false), */}
-      {/*    }, */}
-      {/*  }} */}
-      {/* /> */}
+
+      <div ref={parentRef} className='flex grow pt-1' />
+
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
           <Button variant='ghost'>
@@ -551,7 +557,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
 
       case 'up': {
         const previous = getPrevious(root, item);
-        if (previous) {
+        if (previous && previous !== root) {
           setActive({ itemId: previous.id, anchor });
         }
         break;

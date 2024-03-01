@@ -40,7 +40,7 @@ export type MarkdownBundleOptions = {
 export const createMarkdownExtensions = ({
   themeMode,
   placeholder: _placeholder,
-  lineWrapping = true,
+  lineWrapping = false,
 }: MarkdownBundleOptions = {}): Extension[] => {
   return [
     lineWrapping && EditorView.lineWrapping,
