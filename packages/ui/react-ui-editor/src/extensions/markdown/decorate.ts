@@ -3,7 +3,7 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { RangeSetBuilder, type EditorState } from '@codemirror/state';
+import { RangeSetBuilder, type EditorState, StateEffect } from '@codemirror/state';
 import { EditorView, Decoration, type DecorationSet, WidgetType, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
 import { mx } from '@dxos/react-ui-theme';
@@ -81,20 +81,21 @@ const horizontalRule = Decoration.replace({ widget: new HorizontalRuleWidget() }
 const checkedTask = Decoration.replace({ widget: new CheckboxWidget(true) });
 const uncheckedTask = Decoration.replace({ widget: new CheckboxWidget(false) });
 
-const editingRange = (state: EditorState, range: { from: number; to: number }) => {
+const editingRange = (state: EditorState, range: { from: number; to: number }, focus: boolean) => {
   const {
     readOnly,
     selection: {
       main: { head },
     },
   } = state;
-  return !readOnly && head >= range.from && head <= range.to;
+  return focus && !readOnly && head >= range.from && head <= range.to;
 };
 
 const MarksByParent = new Set(['CodeMark', 'EmphasisMark', 'StrikethroughMark', 'SubscriptMark', 'SuperscriptMark']);
 
-const buildDecorations = (view: EditorView, options: DecorateOptions): DecorationSet => {
-  const builder = new RangeSetBuilder<Decoration>();
+const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boolean) => {
+  const deco = new RangeSetBuilder<Decoration>();
+  const atomicDeco = new RangeSetBuilder<Decoration>();
   const { state } = view;
 
   for (const { from, to } of view.visibleRanges) {
@@ -103,7 +104,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions): Decoratio
       to,
       enter: (node) => {
         if (node.name === 'FencedCode') {
-          const editing = editingRange(state, node);
+          const editing = editingRange(state, node, focus);
           // FencedCode > CodeMark > [CodeInfo] > CodeText > CodeMark
           for (const block of view.viewportLineBlocks) {
             if (block.to < node.from) {
@@ -114,26 +115,22 @@ const buildDecorations = (view: EditorView, options: DecorateOptions): Decoratio
             }
             const first = block.from <= node.from;
             const last = block.to >= node.to;
-            builder.add(
-              block.from,
-              block.from,
-              first ? fencedCodeLineFirst : last ? fencedCodeLineLast : fencedCodeLine,
-            );
+            deco.add(block.from, block.from, first ? fencedCodeLineFirst : last ? fencedCodeLineLast : fencedCodeLine);
             if (!editing && (first || last)) {
-              builder.add(block.from, block.to, hide);
+              atomicDeco.add(block.from, block.to, hide);
             }
           }
           return false;
         } else if (node.name === 'Link') {
           const marks = node.node.getChildren('LinkMark');
           const urlNode = node.node.getChild('URL');
-          const editing = editingRange(state, node);
+          const editing = editingRange(state, node, focus);
           if (urlNode && marks.length >= 2) {
             const url = state.sliceDoc(urlNode.from, urlNode.to);
             if (!editing) {
-              builder.add(node.from, marks[0].to, hide);
+              atomicDeco.add(node.from, marks[0].to, hide);
             }
-            builder.add(
+            deco.add(
               marks[0].to,
               marks[1].from,
               Decoration.mark({
@@ -147,7 +144,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions): Decoratio
               }),
             );
             if (!editing) {
-              builder.add(
+              atomicDeco.add(
                 marks[1].from,
                 node.to,
                 options.renderLinkButton
@@ -160,54 +157,94 @@ const buildDecorations = (view: EditorView, options: DecorateOptions): Decoratio
           }
         } else if (node.name === 'HeaderMark') {
           const parent = node.node.parent!;
-          if (/^ATX/.test(parent.name) && !editingRange(state, state.doc.lineAt(node.from))) {
+          if (/^ATX/.test(parent.name) && !editingRange(state, state.doc.lineAt(node.from), focus)) {
             const next = state.doc.sliceString(node.to, node.to + 1);
-            builder.add(node.from, node.to + (next === ' ' ? 1 : 0), hide);
+            atomicDeco.add(node.from, node.to + (next === ' ' ? 1 : 0), hide);
           }
         } else if (node.name === 'HorizontalRule') {
-          if (!editingRange(state, node)) {
-            builder.add(node.from, node.to, horizontalRule);
+          if (!editingRange(state, node, focus)) {
+            deco.add(node.from, node.to, horizontalRule);
           }
         } else if (node.name === 'TaskMarker') {
           // Check if cursor is inside text.
-          if (!editingRange(state, node)) {
+          if (!editingRange(state, node, focus)) {
             const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
-            builder.add(node.from - 2, node.from - 1, Decoration.mark({ class: 'cm-task' }));
-            builder.add(node.from, node.to, checked ? checkedTask : uncheckedTask);
+            atomicDeco.add(node.from - 2, node.from - 1, Decoration.mark({ class: 'cm-task' }));
+            atomicDeco.add(node.from, node.to, checked ? checkedTask : uncheckedTask);
           }
         } else if (MarksByParent.has(node.name)) {
-          if (!editingRange(state, node.node.parent!)) {
-            builder.add(node.from, node.to, hide);
+          if (!editingRange(state, node.node.parent!, focus)) {
+            atomicDeco.add(node.from, node.to, hide);
           }
         }
       },
     });
   }
 
-  return builder.finish();
+  return { deco: deco.finish(), atomicDeco: atomicDeco.finish() };
 };
 
 export interface DecorateOptions {
   renderLinkButton?: (el: Element, url: string) => void;
+  selectionChangeDelay?: number;
 }
+
+const forceUpdate = StateEffect.define<null>();
 
 export const decorateMarkdown = (options: DecorateOptions = {}) => {
   return [
     ViewPlugin.fromClass(
       class {
-        decorations: DecorationSet;
+        pendingUpdate = -1;
+        deco: DecorationSet;
+        atomicDeco: DecorationSet;
+
         constructor(view: EditorView) {
-          this.decorations = buildDecorations(view, options);
+          ({ deco: this.deco, atomicDeco: this.atomicDeco } = buildDecorations(view, options, view.hasFocus));
         }
 
         update(update: ViewUpdate) {
-          if (update.docChanged || update.selectionSet || update.viewportChanged) {
-            this.decorations = buildDecorations(update.view, options);
+          if (
+            update.docChanged ||
+            update.viewportChanged ||
+            update.focusChanged ||
+            update.transactions.some((tr) => tr.effects.some((e) => e.is(forceUpdate)))
+          ) {
+            ({ deco: this.deco, atomicDeco: this.atomicDeco } = buildDecorations(
+              update.view,
+              options,
+              update.view.hasFocus,
+            ));
+            this.clearUpdate();
+          } else if (update.selectionSet) {
+            this.scheduleUpdate(update.view);
           }
+        }
+
+        clearUpdate() {
+          if (this.pendingUpdate > -1) {
+            window.clearTimeout(this.pendingUpdate);
+            this.pendingUpdate = -1;
+          }
+        }
+
+        scheduleUpdate(view: EditorView) {
+          this.clearUpdate();
+          this.pendingUpdate = window.setTimeout(() => {
+            view.dispatch({ effects: forceUpdate.of(null) });
+          }, options.selectionChangeDelay ?? 400);
+        }
+
+        destroy() {
+          this.clearUpdate();
         }
       },
       {
-        decorations: (value) => value.decorations,
+        provide: (plugin) => [
+          EditorView.atomicRanges.of((view) => view.plugin(plugin)?.atomicDeco ?? Decoration.none),
+          EditorView.decorations.of((view) => view.plugin(plugin)?.deco ?? Decoration.none),
+          EditorView.decorations.of((view) => view.plugin(plugin)?.atomicDeco ?? Decoration.none),
+        ],
       },
     ),
     formattingStyles,
