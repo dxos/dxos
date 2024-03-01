@@ -98,8 +98,8 @@ export class InvitationsHandler {
     const stream = new PushStream<Invitation>();
     const ctx = new Context({
       onError: (err) => {
-        void ctx.dispose();
         stream.error(err);
+        void ctx.dispose();
       },
     });
 
