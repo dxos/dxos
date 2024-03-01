@@ -134,6 +134,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-navigation/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-navtree/package.json",
           "jsonpath": "$.version"
         },

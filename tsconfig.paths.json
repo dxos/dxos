@@ -122,6 +122,15 @@
       "@braneframe/plugin-native/meta": [
         "packages/apps/plugins/plugin-native/src/meta.ts"
       ],
+      "@braneframe/plugin-navigation": [
+        "packages/apps/plugins/plugin-navigation/src/index.ts"
+      ],
+      "@braneframe/plugin-navigation/meta": [
+        "packages/apps/plugins/plugin-navigation/src/meta.ts"
+      ],
+      "@braneframe/plugin-navigation/schema": [
+        "packages/apps/plugins/plugin-navigation/src/schema.ts"
+      ],
       "@braneframe/plugin-navtree": [
         "packages/apps/plugins/plugin-navtree/src/index.ts"
       ],

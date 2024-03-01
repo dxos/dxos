@@ -53,6 +53,9 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-navigation"
+    },
+    {
       "path": "../plugin-observability"
     },
     {

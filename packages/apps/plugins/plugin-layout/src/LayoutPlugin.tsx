@@ -4,30 +4,25 @@
 
 import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-core';
+import { createRoute } from '@tanstack/react-router';
 import { type RevertDeepSignal } from 'deepsignal/react';
 import { deepSignal } from 'deepsignal/react';
-import React, { type PropsWithChildren, useEffect } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
-import { type Node, useGraph } from '@braneframe/plugin-graph';
+import { type Node } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
-  findPlugin,
   parseGraphPlugin,
   parseIntentPlugin,
-  parseSurfacePlugin,
   resolvePlugin,
-  useIntent,
-  usePlugins,
   LayoutAction,
   NavigationAction,
-  Surface,
   Toast as ToastSchema,
   type IntentPluginProvides,
   type Location,
   type Plugin,
   type PluginDefinition,
   type GraphProvides,
-  type SurfaceProps,
   type Layout,
   IntentAction,
 } from '@dxos/app-framework';
@@ -38,7 +33,7 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { LayoutContext } from './LayoutContext';
 import { MainLayout, ContentEmpty, LayoutSettings, ContentFallback } from './components';
-import { activeToUri, checkAppScheme, uriToActive } from './helpers';
+import { checkAppScheme } from './helpers';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
 import { type LayoutPluginProvides, type LayoutSettingsProps } from './types';
@@ -190,88 +185,97 @@ export const LayoutPlugin = ({
           </LayoutContext.Provider>
         </Mosaic.Root>
       ),
-      root: () => {
-        const { plugins } = usePlugins();
-        const { dispatch } = useIntent();
-        const { graph } = useGraph();
-        const [shortId, component] = location.active?.split(':') ?? [];
-        const plugin = parseSurfacePlugin(findPlugin(plugins, shortId));
-
-        // Update selection based on browser navigation.
-        useEffect(() => {
-          const handleNavigation = async () => {
-            await dispatch({
-              plugin: LAYOUT_PLUGIN,
-              action: NavigationAction.ACTIVATE,
-              data: { id: uriToActive(window.location.pathname) },
-            });
-          };
-
-          if (!location.active && window.location.pathname.length > 1) {
-            void handleNavigation();
-          }
-
-          window.addEventListener('popstate', handleNavigation);
-          return () => {
-            window.removeEventListener('popstate', handleNavigation);
-          };
-        }, []);
-
-        // Update URL when selection changes.
-        useEffect(() => {
-          const selectedPath = activeToUri(location.active);
-          if (window.location.pathname !== selectedPath) {
-            // TODO(wittjosiah): Better support for search params?
-            history.pushState(null, '', `${selectedPath}${window.location.search}`);
-          }
-        }, [location.active]);
-
-        const surfaceProps: SurfaceProps = plugin
-          ? { data: { component: `${plugin.meta.id}/${component}` } }
-          : location.activeNode
-            ? layout.values.fullscreen
-              ? {
-                  data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
-                  surfaces: { main: { data: { active: location.activeNode.data } } },
-                }
-              : {
-                  data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
-                  surfaces: {
-                    sidebar: {
-                      data: { graph, activeId: location.active, popoverAnchorId: layout.values.popoverAnchorId },
-                    },
-                    main: { data: { active: location.activeNode.data } },
-                    'navbar-start': {
-                      data: { activeNode: location.activeNode, popoverAnchorId: layout.values.popoverAnchorId },
-                    },
-                    'navbar-end': { data: { object: location.activeNode.data } },
-                    status: { data: { active: location.activeNode.data } },
-                    documentTitle: { data: { activeNode: location.activeNode } },
-                  },
-                }
-            : {
-                data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
-                surfaces: {
-                  sidebar: {
-                    data: { graph, activeId: location.active, popoverAnchorId: layout.values.popoverAnchorId },
-                  },
-                  main: {
-                    data: location.active
-                      ? { active: location.active }
-                      : { component: `${LAYOUT_PLUGIN}/ContentEmpty` },
-                  },
-                  // TODO(wittjosiah): This plugin should own document title.
-                  documentTitle: { data: { component: `${LAYOUT_PLUGIN}/DocumentTitle` } },
-                },
-              };
-
-        return (
-          <>
-            <Surface {...surfaceProps} />
-            <Mosaic.DragOverlay />
-          </>
-        );
+      navigation: {
+        layouts: (_, { root }) => ({
+          main: createRoute({
+            getParentRoute: () => root,
+            id: 'main',
+            component: MainLayout,
+          }),
+        }),
       },
+      // root: () => {
+      //   const { plugins } = usePlugins();
+      //   const { dispatch } = useIntent();
+      //   const { graph } = useGraph();
+      //   const [shortId, component] = location.active?.split(':') ?? [];
+      //   const plugin = parseSurfacePlugin(findPlugin(plugins, shortId));
+
+      //   // Update selection based on browser navigation.
+      //   useEffect(() => {
+      //     const handleNavigation = async () => {
+      //       await dispatch({
+      //         plugin: LAYOUT_PLUGIN,
+      //         action: NavigationAction.ACTIVATE,
+      //         data: { id: uriToActive(window.location.pathname) },
+      //       });
+      //     };
+
+      //     if (!location.active && window.location.pathname.length > 1) {
+      //       void handleNavigation();
+      //     }
+
+      //     window.addEventListener('popstate', handleNavigation);
+      //     return () => {
+      //       window.removeEventListener('popstate', handleNavigation);
+      //     };
+      //   }, []);
+
+      //   // Update URL when selection changes.
+      //   useEffect(() => {
+      //     const selectedPath = activeToUri(location.active);
+      //     if (window.location.pathname !== selectedPath) {
+      //       // TODO(wittjosiah): Better support for search params?
+      //       history.pushState(null, '', `${selectedPath}${window.location.search}`);
+      //     }
+      //   }, [location.active]);
+
+      //   const surfaceProps: SurfaceProps = plugin
+      //     ? { data: { component: `${plugin.meta.id}/${component}` } }
+      //     : location.activeNode
+      //       ? layout.values.fullscreen
+      //         ? {
+      //             data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
+      //             surfaces: { main: { data: { active: location.activeNode.data } } },
+      //           }
+      //         : {
+      //             data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
+      //             surfaces: {
+      //               sidebar: {
+      //                 data: { graph, activeId: location.active, popoverAnchorId: layout.values.popoverAnchorId },
+      //               },
+      //               main: { data: { active: location.activeNode.data } },
+      //               'navbar-start': {
+      //                 data: { activeNode: location.activeNode, popoverAnchorId: layout.values.popoverAnchorId },
+      //               },
+      //               'navbar-end': { data: { object: location.activeNode.data } },
+      //               status: { data: { active: location.activeNode.data } },
+      //               documentTitle: { data: { activeNode: location.activeNode } },
+      //             },
+      //           }
+      //       : {
+      //           data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
+      //           surfaces: {
+      //             sidebar: {
+      //               data: { graph, activeId: location.active, popoverAnchorId: layout.values.popoverAnchorId },
+      //             },
+      //             main: {
+      //               data: location.active
+      //                 ? { active: location.active }
+      //                 : { component: `${LAYOUT_PLUGIN}/ContentEmpty` },
+      //             },
+      //             // TODO(wittjosiah): This plugin should own document title.
+      //             documentTitle: { data: { component: `${LAYOUT_PLUGIN}/DocumentTitle` } },
+      //           },
+      //         };
+
+      //   return (
+      //     <>
+      //       <Surface {...surfaceProps} />
+      //       <Mosaic.DragOverlay />
+      //     </>
+      //   );
+      // },
       surface: {
         component: ({ data, role }) => {
           switch (data.component) {

@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type LayoutRouteProvides } from '@braneframe/plugin-navigation/schema';
 import type {
   LayoutProvides,
   SettingsProvides,
@@ -23,4 +24,5 @@ export type LayoutPluginProvides = SurfaceProvides &
   TranslationsProvides &
   SettingsProvides<LayoutSettingsProps> &
   LayoutProvides &
+  LayoutRouteProvides &
   LocationProvides;
