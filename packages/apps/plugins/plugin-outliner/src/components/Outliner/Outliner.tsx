@@ -34,38 +34,8 @@ type OutlinerOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 's
   isTasklist?: boolean;
 };
 
-//
-// Item
-//
-
-type OutlinerItemProps = {
-  item: Item;
-  active?: CursorSelection; // Request focus.
-  onSelect?: () => void;
-  onEnter?: (state?: CursorInfo) => void;
-  onDelete?: (state?: CursorInfo) => void;
-  onIndent?: (direction?: 'left' | 'right') => void;
-  onShift?: (direction?: 'up' | 'down') => void;
-  onCursor?: (direction?: 'home' | 'end' | 'up' | 'down', anchor?: number) => void;
-} & OutlinerOptions;
-
-const OutlinerItem = ({
-  item,
-  active,
-  isTasklist,
-  placeholder,
-  onSelect,
-  onEnter,
-  onDelete,
-  onIndent,
-  onShift,
-  onCursor,
-}: OutlinerItemProps) => {
-  const { t } = useTranslation(OUTLINER_PLUGIN);
-  const { themeMode } = useThemeContext();
-
-  // Keys.
-  const outlinerKeymap = useMemo(() => {
+const useKeymap = ({ onEnter, onIndent, onDelete, onShift, onCursor }: OutlinerItemProps) =>
+  useMemo(() => {
     const getCursor = (view: EditorView): CursorInfo => {
       const { head, from, to } = view.state.selection.ranges[0];
       const { number: line } = view.state.doc.lineAt(head);
@@ -103,6 +73,21 @@ const OutlinerItem = ({
           },
         },
         {
+          key: 'Tab',
+          run: () => {
+            onIndent?.('right');
+            return true;
+          },
+          shift: () => {
+            onIndent?.('left');
+            return true;
+          },
+        },
+
+        //
+        // Nav
+        //
+        {
           key: 'ArrowLeft',
           run: (view) => {
             const { from, line } = getCursor(view);
@@ -124,17 +109,6 @@ const OutlinerItem = ({
             }
 
             return false;
-          },
-        },
-        {
-          key: 'Tab',
-          run: () => {
-            onIndent?.('right');
-            return true;
-          },
-          shift: () => {
-            onIndent?.('left');
-            return true;
           },
         },
 
@@ -238,6 +212,27 @@ const OutlinerItem = ({
     );
   }, []);
 
+//
+// Item
+//
+
+type OutlinerItemProps = {
+  item: Item;
+  active?: CursorSelection; // Request focus.
+  onSelect?: () => void;
+  onEnter?: (state?: CursorInfo) => void;
+  onDelete?: (state?: CursorInfo) => void;
+  onIndent?: (direction?: 'left' | 'right') => void;
+  onShift?: (direction?: 'up' | 'down') => void;
+  onCursor?: (direction?: 'home' | 'end' | 'up' | 'down', anchor?: number) => void;
+} & OutlinerOptions;
+
+const OutlinerItem = (props: OutlinerItemProps) => {
+  const { item, active, placeholder, isTasklist, onSelect, onDelete } = props;
+  const { t } = useTranslation(OUTLINER_PLUGIN);
+  const { themeMode } = useThemeContext();
+  const keymap = useKeymap(props);
+
   const [focus, setFocus] = useState(false);
   useEffect(() => {
     if (focus) {
@@ -252,30 +247,19 @@ const OutlinerItem = ({
             EditorView.baseTheme(defaultTheme),
             EditorView.darkTheme.of(themeMode === 'dark'),
             EditorView.editorAttributes.of({ class: 'grow' }),
-            EditorView.updateListener.of((update) => {
-              if (update.focusChanged) {
-                setFocus(update.view.hasFocus);
-              }
-            }),
+            EditorView.updateListener.of(({ view }) => setFocus(view.hasFocus)),
 
             // lineNumbers(), // Debug-only.
-            createMarkdownExtensions({ themeMode, placeholder, lineWrapping: true }),
+            createMarkdownExtensions({ themeMode, placeholder }),
             decorateMarkdown({ renderLinkButton: onRenderLink }),
             automerge(createDocAccessor(item.text)),
-            outlinerKeymap,
+            keymap,
           ].filter(isNotFalsy)
         : [],
     [item.text],
   );
 
-  const { parentRef, view } = useTextEditor(
-    {
-      extensions,
-      doc: getTextContent(item.text),
-    },
-    [extensions],
-  );
-
+  const { parentRef, view } = useTextEditor({ extensions, doc: getTextContent(item.text) }, [extensions]);
   useEffect(() => {
     if (active) {
       view?.focus();
@@ -283,8 +267,8 @@ const OutlinerItem = ({
   }, [view, active]);
 
   return (
-    <div className='flex group'>
-      <div className='flex flex-col shrink-0 justify-center h-[40px] cursor-pointer' title={item.id.slice(0, 8)}>
+    <div className='flex'>
+      <div className='flex flex-col shrink-0 h-[40px] justify-center cursor-pointer'>
         {(isTasklist && (
           <Input.Root>
             <Input.Checkbox
@@ -364,7 +348,6 @@ const OutlinerBranch = ({
           <OutlinerItem
             item={item}
             active={active?.itemId === item.id ? active : undefined}
-            placeholder='Enter text'
             onCursor={(...args) => onItemCursor?.(root, item, ...args)}
             onSelect={() => onItemSelect?.(root, item)}
             onEnter={(...args) => onItemCreate?.(root, item, ...args)}
