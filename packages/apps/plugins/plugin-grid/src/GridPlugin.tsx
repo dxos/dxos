@@ -60,7 +60,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
                   plugin: GRID_PLUGIN,
                   action: GridAction.CREATE,
                   properties: {
-                    label: ['create object label', { ns: GRID_PLUGIN }],
+                    label: ['create grid label', { ns: GRID_PLUGIN }],
                     icon: (props: IconProps) => <SquaresFour {...props} />,
                     testId: 'gridPlugin.createObject',
                   },
@@ -82,7 +82,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
                       data: object,
                       properties: {
                         // TODO(wittjosiah): Reconcile with metadata provides.
-                        label: object.title || ['object title placeholder', { ns: GRID_PLUGIN }],
+                        label: object.title || ['grid title placeholder', { ns: GRID_PLUGIN }],
                         icon: (props: IconProps) => <SquaresFour {...props} />,
                         testId: 'spacePlugin.object',
                         persistenceClass: 'echo',
