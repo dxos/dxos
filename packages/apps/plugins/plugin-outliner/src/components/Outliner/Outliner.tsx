@@ -251,6 +251,7 @@ const OutlinerItem = ({
         ? [
             EditorView.baseTheme(defaultTheme),
             EditorView.darkTheme.of(themeMode === 'dark'),
+            EditorView.editorAttributes.of({ class: 'grow' }),
             EditorView.updateListener.of((update) => {
               if (update.focusChanged) {
                 setFocus(update.view.hasFocus);
