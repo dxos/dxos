@@ -6,6 +6,7 @@ import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { log } from '@dxos/log';
 import { type DevicesService, type Device } from '@dxos/protocols/proto/dxos/client/services';
 import { afterEach, afterTest, beforeEach, describe, test } from '@dxos/test';
 
@@ -44,10 +45,13 @@ describe('DevicesService', () => {
     test('returns empty list if no identity is available', async () => {
       const query = devicesService.queryDevices();
       const result = new Trigger<Device[] | undefined>();
-      query.subscribe(({ devices }) => {
-        result.wake(devices);
-      });
-      afterTest(() => query.close());
+      query.subscribe(
+        ({ devices }) => {
+          result.wake(devices);
+        },
+        (err) => log.catch(err),
+      );
+      afterTest(() => query.close().catch((err) => log.catch(err)));
       expect(await result.wait()).to.be.length(0);
     });
 
