@@ -15,31 +15,34 @@ export {
   createSubscription,
   hasType,
   isTypedObject,
-  type EchoDatabase,
   Expando,
   Filter,
   Query,
   Schema,
-  Text, // TODO(burdon): Deprecated.
-  TypeCollection,
-  TextObject,
   TypedObject,
   getRawDoc,
-  isAutomergeObject,
   isDocAccessor,
-  getTextContent,
-  setTextContent,
   getTextInRange,
   fromCursor,
   toCursor,
   type AutomergeTextCompat,
   type DocAccessor,
-  type EchoObject, // TODO(burdon): Remove from API?
+  type EchoDatabase,
+  type EchoObject, // TODO(burdon): Remove from API.
   type FilterSource,
   type ObjectMeta,
   type Selection,
   type Subscription,
   type SubscriptionHandle,
+
+  // TODO(burdon): Deprecated.
+  createDocAccessor,
+  isAutomergeObject,
+  getTextContent,
+  setTextContent,
+  Text,
+  TextObject,
+  TypeCollection,
 } from '@dxos/echo-schema';
 
 export { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';

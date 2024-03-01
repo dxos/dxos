@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Space } from '@dxos/client-protocol';
+import { type Halo, type Space } from '@dxos/client-protocol';
 import type { ClientServicesHost, DataSpace } from '@dxos/client-services';
 import { DocumentModel, type DocumentModelState } from '@dxos/document-model';
 import { TYPE_PROPERTIES } from '@dxos/echo-db';
@@ -27,6 +27,7 @@ export interface DevtoolsHook {
 
   spaces?: Accessor<Space | DataSpace>;
   feeds?: Accessor<FeedWrapper>;
+  halo?: Halo;
 
   openClientRpcServer: () => Promise<boolean>;
 
@@ -94,6 +95,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
           ]),
         ),
     });
+    hook.halo = client.halo;
 
     hook.openDevtoolsApp = async () => {
       const vault = client.config?.values.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';

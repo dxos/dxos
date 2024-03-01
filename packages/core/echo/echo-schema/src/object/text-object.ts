@@ -25,6 +25,9 @@ export type AutomergeTextCompat = TypedObject<{
   content?: string;
 }>;
 
+/**
+ * @deprecated
+ */
 export class TextObject extends AbstractEchoObject<TextModel> {
   static [Symbol.hasInstance](instance: any) {
     return !!instance?.[base] && (isActualTextObject(instance) || isAutomergeText(instance));
