@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { type Identity } from '@dxos/react-client/halo';
 import { useTranslation } from '@dxos/react-ui';
 
-import { Action, Actions, StepHeading, Input, useClipboardContext } from '../../../components';
+import { Action, Actions, StepHeading, Input, useClipboardContext, EmojiPickerMenu } from '../../../components';
 import { type IdentityPanelStepProps } from '../IdentityPanelProps';
 import { type IdentityEvent } from '../identityMachine';
 
@@ -59,8 +59,8 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
           onChange={({ target: { value } }) => setInputValue(value)}
           onKeyDown={({ key }) => key === 'Enter' && onUpdateProfile?.({ displayName: inputValue })}
         />
-      </div>
-      <Actions>
+        <StepHeading>{t('emoji and color label')}</StepHeading>
+        <EmojiPickerMenu identity={identity} />
         <Action
           variant='ghost'
           disabled={disabled}
@@ -73,6 +73,8 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
         >
           {t(copied ? 'copy success label' : 'copy self public key label')}
         </Action>
+      </div>
+      <Actions>
         <Action
           variant='ghost'
           disabled={disabled}

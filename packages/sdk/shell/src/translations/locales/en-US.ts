@@ -106,4 +106,5 @@ export const os = {
   'join new identity label': 'Join a new identity',
   'reset device label': 'Reset device',
   'reset device confirm message': 'Are you sure you want to reset your device? All data will be lost.',
+  'emoji and color label': 'Emoji and color',
 };

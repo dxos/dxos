@@ -153,9 +153,9 @@ export const idEmoji = [
 
 export const idHue = [
   'red' as const,
-  'orange' as const,
-  'amber' as const,
-  'yellow' as const,
+  // 'orange' as const, /* More shades in these palettes are considered “ugly” */
+  'amber' as const, // Amber arcs between red-orange and yellow as it gets lighter, so improves aesthetics.
+  // 'yellow' as const, /* More shades in these palettes are considered “ugly” */
   'lime' as const,
   'green' as const,
   'emerald' as const,
