@@ -6,7 +6,7 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import waitForExpect from 'wait-for-expect';
 
-import { asyncChain, asyncTimeout } from '@dxos/async';
+import { asyncChain, asyncTimeout, Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { type DataSpace, InvitationsServiceImpl, type ServiceContext } from '@dxos/client-services';
 import {
@@ -294,6 +294,115 @@ describe('Invitations', () => {
   });
 
   describe('InvitationsProxy', () => {
+    describe('space with persistent invitation', () => {
+      let hostContext: ServiceContext;
+      let guestContext: ServiceContext;
+      let host: InvitationsProxy;
+      let guest: InvitationsProxy;
+      let space: DataSpace;
+      let hostService: InvitationsServiceImpl;
+      let hostMetadata: MetadataStore;
+
+      test('no auth', async () => {
+        hostMetadata = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory());
+        const guestMetadata = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory());
+        const peers = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
+        hostContext = peers[0];
+        guestContext = peers[1];
+        invariant(hostContext.dataSpaceManager);
+        invariant(guestContext.dataSpaceManager);
+        hostService = new InvitationsServiceImpl(
+          hostContext.invitations,
+          (invitation) => hostContext.getInvitationHandler(invitation),
+          hostMetadata,
+        );
+
+        const guestService = new InvitationsServiceImpl(
+          guestContext.invitations,
+          (invitation) => guestContext.getInvitationHandler(invitation),
+          guestMetadata,
+        );
+
+        space = await hostContext?.dataSpaceManager.createSpace();
+        afterTest(() => space.close());
+
+        guest = new InvitationsProxy(guestService, undefined, () => ({ kind: Invitation.Kind.SPACE }));
+        let persistentInvitationId: string;
+        {
+          const tempHost = new InvitationsProxy(hostService, undefined, () => ({
+            kind: Invitation.Kind.SPACE,
+            spaceKey: space.key,
+          }));
+
+          // ensure the saved event fires
+          await tempHost.open();
+          const savedTrigger = new Trigger();
+          tempHost.saved.subscribe((invitation) => {
+            if (invitation.length > 0) {
+              savedTrigger.wake();
+            }
+          });
+          const persistentInvitation = tempHost.share({ authMethod: Invitation.AuthMethod.NONE });
+          await savedTrigger.wait();
+          persistentInvitationId = persistentInvitation.get().invitationId;
+          // TODO(nf): expose this in API as suspendInvitation()/SuspendableInvitation?
+          await hostContext.networkManager.leaveSwarm(persistentInvitation.get().swarmKey);
+        }
+
+        const newHostService = new InvitationsServiceImpl(
+          hostContext.invitations,
+          (invitation) => hostContext.getInvitationHandler(invitation),
+          hostMetadata,
+        );
+        host = new InvitationsProxy(newHostService, undefined, () => ({
+          kind: Invitation.Kind.SPACE,
+          spaceKey: space.key,
+        }));
+        await host.resumePersistentInvitations();
+
+        const [hostObservable] = host.created.get();
+
+        const hostComplete = new Trigger<Result>();
+        const guestComplete = new Trigger<Result>();
+        hostObservable.subscribe(
+          async (hostInvitation: Invitation) => {
+            switch (hostInvitation.state) {
+              case Invitation.State.CONNECTING: {
+                const guestObservable = guest.join(hostInvitation);
+                guestObservable.subscribe(
+                  async (guestInvitation: Invitation) => {
+                    switch (guestInvitation.state) {
+                      case Invitation.State.SUCCESS: {
+                        guestComplete.wake({ invitation: guestInvitation });
+                        break;
+                      }
+                    }
+                  },
+                  (err: Error) => {
+                    throw err;
+                  },
+                );
+                break;
+              }
+              case Invitation.State.SUCCESS: {
+                hostComplete.wake({ invitation: hostInvitation });
+                break;
+              }
+            }
+          },
+          (err: Error) => {
+            throw err;
+          },
+        );
+
+        await successfulInvitation({
+          host: hostContext,
+          guest: guestContext,
+          hostResult: await hostComplete.wait(),
+          guestResult: await guestComplete.wait(),
+        });
+      });
+    });
     describe('space', () => {
       let hostContext: ServiceContext;
       let guestContext: ServiceContext;

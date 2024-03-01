@@ -27,10 +27,12 @@ import { invitationExpired, type InvitationsHandler } from './invitations-handle
 export class InvitationsServiceImpl implements InvitationsService {
   private readonly _createInvitations = new Map<string, CancellableInvitation>();
   private readonly _acceptInvitations = new Map<string, AuthenticatingInvitation>();
+  private readonly _savedInvitations = new Map<string, Invitation>();
   private readonly _invitationCreated = new Event<Invitation>();
   private readonly _invitationAccepted = new Event<Invitation>();
   private readonly _removedCreated = new Event<Invitation>();
   private readonly _removedAccepted = new Event<Invitation>();
+  private readonly _saved = new Event<Invitation>();
 
   constructor(
     private readonly _invitationsHandler: InvitationsHandler,
@@ -63,9 +65,14 @@ export class InvitationsServiceImpl implements InvitationsService {
 
     return new Stream<Invitation>(({ next, close }) => {
       if (invitation.get().persistent) {
-        scheduleTask(savePersistentInvitationCtx, async () =>
-          this._metadataStore.addInvitation(invitation.get()).catch((err) => close(err)),
-        );
+        scheduleTask(savePersistentInvitationCtx, async () => {
+          try {
+            await this._metadataStore.addInvitation(invitation.get());
+            this._saved.emit(invitation.get());
+          } catch (err: any) {
+            close(err);
+          }
+        });
       }
       invitation.subscribe(
         (invitation) => {
@@ -73,6 +80,8 @@ export class InvitationsServiceImpl implements InvitationsService {
         },
         async (err: Error) => {
           await savePersistentInvitationCtx.dispose();
+
+          // TODO(nf): also remove from storage?
           close(err);
         },
         async () => {
@@ -149,7 +158,7 @@ export class InvitationsServiceImpl implements InvitationsService {
   }
 
   async cancelInvitation({ invitationId }: { invitationId: string }): Promise<void> {
-    log('deleting...');
+    log('cancelInvitation...', { invitationId });
     invariant(invitationId);
     const created = this._createInvitations.get(invitationId);
     const accepted = this._acceptInvitations.get(invitationId);
@@ -199,6 +208,15 @@ export class InvitationsServiceImpl implements InvitationsService {
         next({
           action: QueryInvitationsResponse.Action.REMOVED,
           type: QueryInvitationsResponse.Type.ACCEPTED,
+          invitations: [invitation],
+        });
+      });
+
+      // used only for testing
+      this._saved.on(ctx, (invitation) => {
+        next({
+          action: QueryInvitationsResponse.Action.SAVED,
+          type: QueryInvitationsResponse.Type.CREATED,
           invitations: [invitation],
         });
       });

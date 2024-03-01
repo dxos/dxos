@@ -49,8 +49,10 @@ export class InvitationsProxy implements Invitations {
   private _ctx!: Context;
   private _createdUpdate = new Event<CancellableInvitation[]>();
   private _acceptedUpdate = new Event<AuthenticatingInvitation[]>();
+  private _savedUpdate = new Event<Invitation[]>();
   private _created = MulticastObservable.from(this._createdUpdate, []);
   private _accepted = MulticastObservable.from(this._acceptedUpdate, []);
+  private _saved = MulticastObservable.from(this._savedUpdate, []);
   // Invitations originating from this proxy.
   private _invitations = new Set<string>();
 
@@ -70,6 +72,13 @@ export class InvitationsProxy implements Invitations {
     return this._accepted;
   }
 
+  /**
+   * @test-only
+   */
+  get saved(): MulticastObservable<Invitation[]> {
+    return this._saved;
+  }
+
   get isOpen(): boolean {
     return this._opened;
   }
@@ -84,27 +93,38 @@ export class InvitationsProxy implements Invitations {
 
     const stream = this._invitationsService.queryInvitations();
     stream.subscribe(({ action, type, invitations }: QueryInvitationsResponse) => {
-      if (action === QueryInvitationsResponse.Action.ADDED) {
-        log('remote invitations added', { type, invitations });
-        invitations
-          ?.filter((invitation) => this._matchesInvitationContext(invitation))
-          .filter((invitation) => !this._invitations.has(invitation.invitationId))
-          .forEach((invitation) => {
-            type === QueryInvitationsResponse.Type.CREATED ? this.share(invitation) : this.join(invitation);
+      switch (action) {
+        case QueryInvitationsResponse.Action.ADDED: {
+          log('remote invitations added', { type, invitations });
+          invitations
+            ?.filter((invitation) => this._matchesInvitationContext(invitation))
+            .filter((invitation) => !this._invitations.has(invitation.invitationId))
+            .forEach((invitation) => {
+              type === QueryInvitationsResponse.Type.CREATED ? this.share(invitation) : this.join(invitation);
+            });
+          break;
+        }
+        case QueryInvitationsResponse.Action.REMOVED: {
+          log('remote invitations removed', { type, invitations });
+          const cache = type === QueryInvitationsResponse.Type.CREATED ? this._created : this._accepted;
+          const cacheUpdate =
+            type === QueryInvitationsResponse.Type.CREATED ? this._createdUpdate : this._acceptedUpdate;
+          invitations?.forEach((removed) => {
+            const index = cache.get().findIndex((invitation) => invitation.get().invitationId === removed.invitationId);
+            void cache.get()[index]?.cancel();
+            index >= 0 &&
+              cacheUpdate.emit([
+                ...cache.get().slice(0, index),
+                ...cache.get().slice(index + 1),
+              ] as AuthenticatingInvitation[]);
           });
-      } else if (action === QueryInvitationsResponse.Action.REMOVED) {
-        log('remote invitations removed', { type, invitations });
-        const cache = type === QueryInvitationsResponse.Type.CREATED ? this._created : this._accepted;
-        const cacheUpdate = type === QueryInvitationsResponse.Type.CREATED ? this._createdUpdate : this._acceptedUpdate;
-        invitations?.forEach((removed) => {
-          const index = cache.get().findIndex((invitation) => invitation.get().invitationId === removed.invitationId);
-          void cache.get()[index]?.cancel();
-          index >= 0 &&
-            cacheUpdate.emit([
-              ...cache.get().slice(0, index),
-              ...cache.get().slice(index + 1),
-            ] as AuthenticatingInvitation[]);
-        });
+          break;
+        }
+        case QueryInvitationsResponse.Action.SAVED: {
+          log('remote invitations saved', { invitations });
+          this._savedUpdate.emit(invitations ?? []);
+          break;
+        }
       }
     });
 
@@ -136,6 +156,7 @@ export class InvitationsProxy implements Invitations {
     };
   }
 
+  // TODO(nf): InvitationId in options implies that the invitation must already exist?
   share(options?: Partial<Invitation>): CancellableInvitation {
     const invitation: Invitation = { ...this.getInvitationOptions(), ...options };
     this._invitations.add(invitation.invitationId);
@@ -143,6 +164,10 @@ export class InvitationsProxy implements Invitations {
     const existing = this._created.get().find((created) => created.get().invitationId === invitation.invitationId);
     if (existing) {
       return existing;
+    } else {
+      if (options?.invitationId) {
+        throw new Error('invitationId provided but no existing invitation present');
+      }
     }
 
     const observable = new CancellableInvitation({

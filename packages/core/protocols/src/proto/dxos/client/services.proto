@@ -488,6 +488,7 @@ message QueryInvitationsResponse {
   enum Action {
     ADDED = 0;
     REMOVED = 1;
+    SAVED = 2;
   }
 
   enum Type {
