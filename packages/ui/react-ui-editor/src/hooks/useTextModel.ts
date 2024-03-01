@@ -98,8 +98,8 @@ const createModel = ({ space, identity, text }: UseTextModelProps) => {
       channel: `automerge.awareness.${obj.id}`,
       info: {
         displayName: identity ? identity.profile?.displayName ?? generateName(identity.identityKey.toHex()) : undefined,
-        color: cursorDarkValue,
-        lightColor: cursorLightValue,
+        color: cursorLightValue,
+        lightColor: cursorDarkValue,
       },
       peerId: identity?.identityKey.toHex() ?? 'Anonymous',
     });

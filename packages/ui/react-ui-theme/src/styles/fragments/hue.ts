@@ -12,15 +12,15 @@ export type HueToken = {
   fill: string;
   cursorLightValue: string;
   cursorDarkValue: string;
-  highlightLightValue: string;
-  highlightDarkValue: string;
+  // highlightLightValue: string;
+  // highlightDarkValue: string;
 };
 
 const hueTokenValueShades = {
-  cursorLightValue: 700,
-  cursorDarkValue: 400,
-  highlightLightValue: 50,
-  highlightDarkValue: 900,
+  cursorLightValue: 400,
+  cursorDarkValue: 300,
+  // highlightLightValue: 50,
+  // highlightDarkValue: 900,
 };
 
 export const hueTokenThemes: Record<HuePalette, Pick<HueToken, 'text' | 'textHover' | 'fill'>> = {
@@ -130,10 +130,10 @@ export const hueTokens: Record<HuePalette, HueToken> = Object.keys(hueTokenTheme
   (acc: Record<string, HueToken>, huePalette) => {
     acc[huePalette] = {
       ...hueTokenThemes[huePalette as HuePalette],
-      cursorDarkValue: physicalColors[huePalette][hueTokenValueShades.cursorDarkValue],
+      cursorDarkValue: `${physicalColors[huePalette][hueTokenValueShades.cursorDarkValue]}88`,
       cursorLightValue: physicalColors[huePalette][hueTokenValueShades.cursorLightValue],
-      highlightDarkValue: physicalColors[huePalette][hueTokenValueShades.highlightDarkValue],
-      highlightLightValue: physicalColors[huePalette][hueTokenValueShades.highlightLightValue],
+      // highlightDarkValue: physicalColors[huePalette][hueTokenValueShades.highlightDarkValue],
+      // highlightLightValue: physicalColors[huePalette][hueTokenValueShades.highlightLightValue],
     };
     return acc;
   },
