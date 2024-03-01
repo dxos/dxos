@@ -235,18 +235,15 @@ export const SpacePlugin = ({
         },
       },
       navigation: {
-        routes: (plugins, { root, layouts }) => {
-          const layout = layouts.main;
-          if (layout) {
-            const route = createRoute({
-              getParentRoute: () => layout,
+        routes: (addRoute) => {
+          addRoute('main', (parent) => [
+            SPACE_PLUGIN,
+            createRoute({
+              getParentRoute: () => parent,
               path: '/',
               component: () => <div>hello</div>,
-            });
-            layout.addChildren([...(layout.children ?? []), route]);
-          }
-
-          return [];
+            }),
+          ]);
         },
       },
       surface: {

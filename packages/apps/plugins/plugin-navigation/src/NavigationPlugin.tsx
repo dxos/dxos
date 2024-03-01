@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { RouterProvider, createRouter, createRootRoute } from '@tanstack/react-router';
+import { RouterProvider, createRouter, createRootRoute, type AnyRoute } from '@tanstack/react-router';
 import { deepSignal, shallow } from 'deepsignal/react';
 import React from 'react';
 
@@ -10,33 +10,36 @@ import { type PluginDefinition } from '@dxos/app-framework';
 import { nonNullable } from '@dxos/util';
 
 import meta from './meta';
-import { type RouterProvides, parseRoutesPlugin, type RootRouteProvides, parseLayoutRouteProvides } from './schema';
-
-type RouterPluginProvides = RouterProvides & RootRouteProvides;
+import { type RouterProvides, parseRoutesPlugin } from './schema';
 
 /**
  * Plugin for collecting and resolving type metadata.
  */
-export const NavigationPlugin = (): PluginDefinition<RouterPluginProvides> => {
+export const NavigationPlugin = (): PluginDefinition<RouterProvides> => {
   const root = createRootRoute();
-  const state = deepSignal({ router: shallow(createRouter({ routeTree: root })), root: shallow(root) });
+  const state = deepSignal({ router: shallow(createRouter({ routeTree: root })) });
 
   return {
     meta,
     ready: async (plugins) => {
-      const layouts = plugins
-        .map(parseLayoutRouteProvides)
-        .filter(nonNullable)
-        .map((plugin) => plugin.provides.navigation.layouts(plugins, { root }))
-        .reduce((acc, layouts) => ({ ...acc, ...layouts }), {});
-
-      const routes = plugins
+      plugins
         .map(parseRoutesPlugin)
         .filter(nonNullable)
-        .flatMap((plugin) => plugin.provides.navigation.routes(plugins, { root, layouts }));
+        .reduce(
+          (acc, plugin) => {
+            plugin.provides.navigation.routes((parentId, cb) => {
+              const parent = acc[parentId] || root;
+              const [id, route] = cb(parent);
+              parent.addChildren([...(parent.children || []), route]);
+              acc[id] = route;
+            });
 
-      const routeTree = root.addChildren([...Object.values(layouts), ...routes]);
-      state.router = shallow(createRouter({ routeTree }));
+            return acc;
+          },
+          { root } as Record<string, AnyRoute>,
+        );
+
+      state.router = shallow(createRouter({ routeTree: root }));
     },
     provides: {
       root: () => <RouterProvider router={state.router} />,

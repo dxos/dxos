@@ -186,13 +186,16 @@ export const LayoutPlugin = ({
         </Mosaic.Root>
       ),
       navigation: {
-        layouts: (_, { root }) => ({
-          main: createRoute({
-            getParentRoute: () => root,
-            id: 'main',
-            component: MainLayout,
-          }),
-        }),
+        routes: (addRoute) => {
+          addRoute('root', (parent) => [
+            'main',
+            createRoute({
+              getParentRoute: () => parent,
+              id: 'main',
+              component: MainLayout,
+            }),
+          ]);
+        },
       },
       // root: () => {
       //   const { plugins } = usePlugins();

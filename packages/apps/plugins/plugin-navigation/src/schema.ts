@@ -2,25 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Router, type RootRoute, type AnyRoute } from '@tanstack/react-router';
+import { type Router, type AnyRoute } from '@tanstack/react-router';
 
 import { type Plugin } from '@dxos/app-framework';
 
 export type RoutesProvides = {
   navigation: {
-    routes: (plugins: Plugin[], params: { root: RootRoute; layouts: Record<string, AnyRoute> }) => AnyRoute[];
-  };
-};
-
-export type LayoutRouteProvides = {
-  navigation: {
-    layouts: (plugins: Plugin[], params: { root: RootRoute }) => Record<string, AnyRoute>;
-  };
-};
-
-export type RootRouteProvides = {
-  navigation: {
-    root: RootRoute;
+    routes: (addRoute: (id: string, cb: (parent: AnyRoute) => [string, AnyRoute]) => void) => void;
   };
 };
 
@@ -43,18 +31,6 @@ export const parseRoutesPlugin = (plugin: Plugin) => {
   return navigation && 'routes' in navigation && typeof navigation.routes === 'function'
     ? (plugin as Plugin<RoutesProvides>)
     : undefined;
-};
-
-export const parseLayoutRouteProvides = (plugin: Plugin) => {
-  const navigation = parseRoutesExists(plugin);
-  return navigation && 'layouts' in navigation && typeof navigation.layouts === 'function'
-    ? (plugin as Plugin<LayoutRouteProvides>)
-    : undefined;
-};
-
-export const parseRootRouteProvides = (plugin: Plugin) => {
-  const navigation = parseRoutesExists(plugin);
-  return navigation && 'root' in navigation && navigation.root ? (plugin as Plugin<RootRouteProvides>) : undefined;
 };
 
 export const parseRouterProvides = (plugin: Plugin) => {
