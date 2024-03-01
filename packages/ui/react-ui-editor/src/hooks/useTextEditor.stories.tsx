@@ -10,7 +10,9 @@ import { Toolbar as NaturalToolbar, Select, useThemeContext, Tooltip } from '@dx
 import { attentionSurface, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { TextEditor } from './TextEditor';
+import { useActionHandler } from './useActionHandler';
+import { createBasicExtensions, createThemeExtensions, useTextEditor } from './useTextEditor';
+import { Toolbar } from '../components';
 import {
   type EditorMode,
   EditorModes,
@@ -20,11 +22,9 @@ import {
   image,
   table,
   useFormattingState,
-} from '../../extensions';
-import { createDataExtensions, createThemeExtensions, useActionHandler, useTextEditor } from '../../hooks';
-import { markdownTheme } from '../../themes';
-import translations from '../../translations';
-import { Toolbar } from '../Toolbar';
+} from '../extensions';
+import { markdownTheme } from '../themes';
+import translations from '../translations';
 
 // TODO(burdon): Demo toolbar with hooks.
 // TODO(burdon): Build components from hooks and adapters for model/extensions, etc.
@@ -46,7 +46,7 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
   const extensions = useMemo(
     () => [
       editorMode ? EditorModes[editorMode] : [],
-      createDataExtensions({ readonly }),
+      createBasicExtensions({ readonly }),
       createThemeExtensions({
         themeMode,
         theme: markdownTheme,
@@ -116,7 +116,7 @@ const EditorModeToolbar = ({
 
 export default {
   title: 'react-ui-editor/useTextEditor',
-  component: TextEditor,
+  // component: TextEditor,
   decorators: [withTheme],
   render: (args: StoryProps) => (
     <Tooltip.Provider>

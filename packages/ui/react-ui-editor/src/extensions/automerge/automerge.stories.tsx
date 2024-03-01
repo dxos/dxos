@@ -6,7 +6,6 @@ import '@dxosTheme';
 
 import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
 import '@preact/signals-react';
-import { EditorView } from '@codemirror/view';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Repo } from '@dxos/automerge/automerge-repo';
@@ -14,12 +13,12 @@ import { createDocAccessor, Filter } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { Expando, TextObject, useSpace } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
+import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { automerge, createBasicBundle } from '../../extensions';
-import { DocAccessor } from '../../extensions/automerge/defs';
-import { useTextEditor } from '../../hooks';
-import { defaultTheme } from '../../themes';
+import { automerge } from './automerge';
+import { DocAccessor } from './defs';
+import { createBasicExtensions, createThemeExtensions, useTextEditor } from '../../hooks';
 import translations from '../../translations';
 
 const initialContent = 'Hello world!';
@@ -34,14 +33,14 @@ type EditorProps = {
 };
 
 const Editor = ({ source, autoFocus }: EditorProps) => {
+  const { themeMode } = useThemeContext();
   const extensions = useMemo(
     () => [
-      EditorView.baseTheme(defaultTheme),
-      EditorView.editorAttributes.of({ class: 'p-2 bg-white' }),
-      createBasicBundle({ placeholder: 'Type here...' }),
+      createBasicExtensions({ placeholder: 'Type here...' }),
+      createThemeExtensions({ themeMode, slots: { editor: { className: 'p-2 bg-white dark:bg-black' } } }),
       automerge(source),
     ],
-    [source],
+    [themeMode, source],
   );
 
   const { parentRef } = useTextEditor({
@@ -80,7 +79,7 @@ const Story = () => {
   }
 
   return (
-    <div role='none' className='grid grid-cols-2 bs-full is-full divide-x'>
+    <div role='none' className='grid grid-cols-2 bs-full is-full divide-x divide-neutral-500'>
       <Editor source={object1} autoFocus />
       <Editor source={object2} />
     </div>
@@ -90,6 +89,7 @@ const Story = () => {
 export default {
   title: 'react-ui-editor/Automerge',
   component: Editor,
+  decorators: [withTheme],
   render: () => <Story />,
   parameters: { translations, layout: 'fullscreen' },
 };

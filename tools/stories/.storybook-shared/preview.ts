@@ -3,6 +3,7 @@
 //
 
 import { type Preview } from '@storybook/react';
+import { themes } from '@storybook/theming';
 
 /**
  * Configure Storybook rendering.
@@ -24,6 +25,11 @@ const preview: Preview = {
     chromatic: {
       disableSnapshot: true,
     },
+    // https://storybook.js.org/addons/storybook-dark-mode
+    darkMode: {
+      dark: { ...themes.dark },
+      light: { ...themes.normal }
+    },
     options: {
       // TODO(burdon): Not called?
       storySort: {
@@ -38,25 +44,23 @@ const preview: Preview = {
   },
 
   // https://storybook.js.org/docs/writing-stories/parameters#global-parameters
+  // TODO(burdon): Replace with @storybook/addon-themes when released (change storybook sidebar theme, etc.)
   globalTypes: {
     theme: {
       name: 'Theme',
       description: 'Global theme for components.',
       defaultValue: 'light',
       toolbar: {
-        // The icon for the toolbar item.
-        icon: 'circlehollow',
-        // Array of options.
         items: [
-          { value: 'light', icon: 'circlehollow', title: 'light' },
-          { value: 'dark', icon: 'circle', title: 'dark' },
+          { value: 'light', icon: 'lightning', title: 'light' },
+          { value: 'dark', icon: 'starhollow', title: 'dark' },
         ],
       },
     },
   },
 };
 
-export const parameters = preview.parameters;
-export const globalTypes = preview.globalTypes;
+export const parameters: Preview['parameters'] = preview.parameters;
+export const globalTypes: Preview['globalTypes'] = preview.globalTypes;
 
 export default preview;

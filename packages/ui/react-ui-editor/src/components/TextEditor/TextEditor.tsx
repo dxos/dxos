@@ -23,8 +23,8 @@ import { useThemeContext } from '@dxos/react-ui';
 import { focusRing } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
 
-import { createBasicBundle, createMarkdownExtensions, editorMode } from '../../extensions';
-import { type EditorModel } from '../../hooks';
+import { createMarkdownExtensions, editorMode } from '../../extensions';
+import { createBasicExtensions, createThemeExtensions, type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
 import { defaultTheme, markdownTheme, textTheme } from '../../themes';
 import { logChanges } from '../../util';
@@ -222,13 +222,17 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
 
 export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
   (
-    { readonly, placeholder, lineWrapping, theme = textTheme, slots, extensions: _extensions, ...props },
+    { readonly, placeholder, lineWrapping = true, theme = textTheme, slots, extensions: _extensions, ...props },
     forwardedRef,
   ) => {
     const { themeMode } = useThemeContext();
     const updatedSlots = defaultsDeep({}, slots, defaultTextSlots);
     const extensions = useMemo(
-      () => [createBasicBundle({ themeMode, placeholder, lineWrapping }), ...(_extensions ?? [])],
+      () => [
+        createBasicExtensions({ lineWrapping, placeholder }),
+        createThemeExtensions({ themeMode }),
+        ...(_extensions ?? []),
+      ],
       [themeMode, placeholder, lineWrapping, _extensions],
     );
 

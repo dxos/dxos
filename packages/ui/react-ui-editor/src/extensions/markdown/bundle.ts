@@ -10,17 +10,9 @@ import { languages } from '@codemirror/language-data';
 import { searchKeymap } from '@codemirror/search';
 import { EditorState, type Extension } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
-import {
-  crosshairCursor,
-  drawSelection,
-  dropCursor,
-  EditorView,
-  highlightActiveLine,
-  keymap,
-  placeholder,
-} from '@codemirror/view';
+import { EditorView, drawSelection, dropCursor, keymap, placeholder } from '@codemirror/view';
 
-import type { ThemeMode } from '@dxos/react-ui';
+import { type ThemeMode } from '@dxos/react-ui';
 import { isNotFalsy } from '@dxos/util';
 
 import { markdownHighlightStyle, markdownTagsExtensions } from './highlight';
@@ -28,7 +20,7 @@ import { type TextEditorProps } from '../../components';
 
 export type MarkdownBundleOptions = {
   themeMode?: ThemeMode;
-} & Pick<TextEditorProps, 'placeholder' | 'lineWrapping'>;
+} & Pick<TextEditorProps, 'lineWrapping' | 'placeholder'>;
 
 /**
  * Markdown bundle.
@@ -36,25 +28,21 @@ export type MarkdownBundleOptions = {
  * https://codemirror.net/docs/community
  * https://codemirror.net/docs/ref/#codemirror.basicSetup
  */
-// TODO(burdon): Add Composer here: https://codemirror.net/docs/community
 export const createMarkdownExtensions = ({
   themeMode,
   placeholder: _placeholder,
   lineWrapping = true,
 }: MarkdownBundleOptions = {}): Extension[] => {
   return [
+    // TODO(burdon): Reconcile with createBasicExtensions.
     lineWrapping && EditorView.lineWrapping,
     EditorState.allowMultipleSelections.of(true),
     EditorState.tabSize.of(2),
 
-    // https://codemirror.net/docs/extensions
-    // https://github.com/codemirror/basic-setup
     bracketMatching(),
     closeBrackets(),
-    crosshairCursor(),
     dropCursor(),
     drawSelection(),
-    highlightActiveLine(),
     history(),
     indentOnInput(),
     _placeholder && placeholder(_placeholder),

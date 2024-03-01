@@ -3,13 +3,12 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
 import React, { type PropsWithChildren, useEffect, useMemo } from 'react';
 
 import { Chain as ChainType } from '@braneframe/types';
 import { getTextContent } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { createBasicBundle, useTextEditor, useTextModel } from '@dxos/react-ui-editor';
+import { createBasicExtensions, createThemeExtensions, useTextEditor, useTextModel } from '@dxos/react-ui-editor';
 import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
 
 import { nameRegex, promptExtension } from './prompt-extension';
@@ -104,15 +103,18 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
     () =>
       model
         ? [
-            promptExtension,
-            createBasicBundle({
-              themeMode,
+            createBasicExtensions({
               bracketMatching: false,
               lineWrapping: true,
               placeholder: t('template placeholder'),
             }),
-            EditorView.darkTheme.of(themeMode === 'dark'),
-            EditorView.contentAttributes.of({ class: '!p-3' }),
+            createThemeExtensions({
+              themeMode,
+              slots: {
+                content: { className: '!p-3' },
+              },
+            }),
+            promptExtension,
             model.extension!,
           ]
         : [],
