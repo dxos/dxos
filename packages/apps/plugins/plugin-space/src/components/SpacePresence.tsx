@@ -24,7 +24,7 @@ import {
   ListItem,
 } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { ComplexMap, hexToHue, keyToEmoji } from '@dxos/util';
+import { ComplexMap, hexToHue, keyToFallback } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';
 import type { SpacePluginProvides } from '../types';
@@ -186,16 +186,16 @@ type PresenceAvatarProps = {
 const PrensenceAvatar = ({ identity, showName, match, group, index, onClick }: PresenceAvatarProps) => {
   const Root = group ? AvatarGroupItem.Root : Avatar.Root;
   const status = match ? 'current' : 'active';
-  const fallbackValue = keyToEmoji(identity.identityKey);
+  const fallbackValue = keyToFallback(identity.identityKey);
   return (
-    <Root status={status}>
+    <Root status={status} hue={fallbackValue.hue}>
       <Avatar.Frame
         data-testid='spacePlugin.presence.member'
         data-status={status}
         {...(index ? { style: { zIndex: index } } : {})}
         onClick={() => onClick?.()}
       >
-        <Avatar.Fallback text={fallbackValue} />
+        <Avatar.Fallback text={fallbackValue.emoji} />
       </Avatar.Frame>
       {showName && <Avatar.Label classNames='text-sm truncate pli-2'>{getName(identity)}</Avatar.Label>}
     </Root>
