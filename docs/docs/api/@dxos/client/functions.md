@@ -50,3 +50,15 @@ Arguments: none
 
 
 
+### [Storage()]()
+
+
+Load config from storage.
+
+Returns: <code>Promise&lt;Partial&lt;Config&gt;&gt;</code>
+
+Arguments: none
+
+
+
+

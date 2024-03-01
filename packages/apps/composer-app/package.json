@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/composer-app",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "private": true,
   "description": "DXOS Composer application.",
   "homepage": "https://dxos.org",
@@ -90,7 +90,7 @@
     "@vitejs/plugin-react": "^4.2.1",
     "robotjs": "^0.6.0",
     "vite": "^5.1.3",
-    "vite-plugin-pwa": "^0.17.5",
+    "vite-plugin-pwa": "^0.18.2",
     "vite-plugin-top-level-await": "^1.4.1",
     "vite-plugin-wasm": "^3.3.0",
     "workbox-window": "^7.0.0"

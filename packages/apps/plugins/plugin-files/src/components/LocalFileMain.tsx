@@ -4,14 +4,14 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { useGraph } from '@braneframe/plugin-graph';
+import { type Action, useGraph } from '@braneframe/plugin-graph';
 import { Surface } from '@dxos/app-framework';
-import { Button, Main, useTranslation } from '@dxos/react-ui';
+import { Button, Main, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type EditorModel } from '@dxos/react-ui-editor';
 import { baseSurface, descriptionText, mx, textBlockWidth, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
 import { FILES_PLUGIN } from '../meta';
-import { type LocalFile, type LocalEntity } from '../types';
+import { type LocalFile, type LocalEntity, LocalFilesAction } from '../types';
 
 const LocalFileMain: FC<{ file: LocalFile }> = ({ file }) => {
   const transformedData = useMemo(
@@ -41,7 +41,8 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
   const { t } = useTranslation(FILES_PLUGIN);
   const { graph } = useGraph();
   const node = graph.findNode(entity.id);
-  const action = node?.actionsMap['re-open'];
+  const action = node?.node(`${LocalFilesAction.RECONNECT}:${node.id}`) as Action | undefined;
+
   return (
     <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
       <div role='none' className={mx(textBlockWidth, 'pli-2')}>
@@ -55,10 +56,8 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
               )}
             >
               {t('missing file permissions')}
-              {action && (
-                <Button onClick={() => action.invoke()}>
-                  {Array.isArray(action.label) ? t(...action.label) : action.label}
-                </Button>
+              {action && node && (
+                <Button onClick={() => action.data({ node })}>{toLocalizedString(action.properties.label, t)}</Button>
               )}
             </p>
           </div>
