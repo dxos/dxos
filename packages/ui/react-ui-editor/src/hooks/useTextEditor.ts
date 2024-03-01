@@ -38,7 +38,7 @@ export type UseTextEditor = {
 // TODO(wittjosiah): Does not work in strict mode.
 export const useTextEditor = (
   { autoFocus, scrollTo, debug, doc, selection, extensions }: UseTextEditorOptions = {},
-  deps?: DependencyList,
+  deps: DependencyList = [],
 ): UseTextEditor => {
   const onUpdate = useRef<() => void>();
   const [view, setView] = useState<EditorView>();

@@ -6,21 +6,19 @@ import '@dxosTheme';
 
 import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
 import '@preact/signals-react';
-import { EditorView } from '@codemirror/view'; // Register react integration.
+import { EditorView } from '@codemirror/view';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Repo } from '@dxos/automerge/automerge-repo';
-import { Filter } from '@dxos/echo-schema';
+import { createDocAccessor, Filter } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { Expando, TextObject, useSpace } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { MarkdownEditor } from './TextEditor';
-import { automerge, awareness, createBasicBundle } from '../../extensions';
+import { automerge, createBasicBundle } from '../../extensions';
 import { DocAccessor } from '../../extensions/automerge/defs';
-import { useTextEditor, useTextModel } from '../../hooks';
+import { useTextEditor } from '../../hooks';
 import { defaultTheme } from '../../themes';
 import translations from '../../translations';
 
@@ -32,24 +30,24 @@ type TestObject = {
 
 type EditorProps = {
   source: DocAccessor;
+  autoFocus?: boolean;
 };
 
-const Editor = ({ source }: EditorProps) => {
+const Editor = ({ source, autoFocus }: EditorProps) => {
   const extensions = useMemo(
     () => [
       EditorView.baseTheme(defaultTheme),
       EditorView.editorAttributes.of({ class: 'p-2 bg-white' }),
       createBasicBundle({ placeholder: 'Type here...' }),
       automerge(source),
-      awareness(),
     ],
     [source],
   );
 
   const { parentRef } = useTextEditor({
-    autoFocus: true,
     doc: DocAccessor.getValue(source),
     extensions,
+    autoFocus,
   });
 
   return <div ref={parentRef} />;
@@ -61,12 +59,8 @@ const Story = () => {
 
   useEffect(() => {
     queueMicrotask(async () => {
-      const repo1 = new Repo({
-        network: [new BroadcastChannelNetworkAdapter()],
-      });
-      const repo2 = new Repo({
-        network: [new BroadcastChannelNetworkAdapter()],
-      });
+      const repo1 = new Repo({ network: [new BroadcastChannelNetworkAdapter()] });
+      const repo2 = new Repo({ network: [new BroadcastChannelNetworkAdapter()] });
 
       const object1 = repo1.create();
       object1.change((doc: TestObject) => {
@@ -86,8 +80,8 @@ const Story = () => {
   }
 
   return (
-    <div role='none' className='grid grid-cols-2 bs-full is-full gap-2'>
-      <Editor source={object1} />
+    <div role='none' className='grid grid-cols-2 bs-full is-full divide-x'>
+      <Editor source={object1} autoFocus />
       <Editor source={object2} />
     </div>
   );
@@ -100,32 +94,34 @@ export default {
   parameters: { translations, layout: 'fullscreen' },
 };
 
-export const Default = {};
-
 const EchoStory = ({ spaceKey }: { spaceKey: PublicKey }) => {
-  const identity = useIdentity();
+  // TODO(burdon): Test identity.
+  // const identity = useIdentity();
   const space = useSpace(spaceKey);
-  // TODO(dmaretskyi): useQuery doesn't work.
-  const [obj] = space?.db.query(Filter.from({ type: 'test' })).objects ?? [];
-  const model = useTextModel({
-    identity,
-    space,
-    text: obj?.content,
-  });
+  const source = useMemo<DocAccessor | undefined>(() => {
+    const { objects = [] } = space?.db.query(Filter.from({ type: 'test' })) ?? {};
+    if (objects.length) {
+      return createDocAccessor(objects[0].content);
+    }
+  }, [space]);
 
-  if (!model) {
+  if (!source) {
     return null;
   }
 
-  return <MarkdownEditor model={model} />;
+  return <Editor source={source} />;
 };
 
+export const Default = {};
+
+// TODO(burdon): Feed already added error.
 export const WithEcho = {
   decorators: [withTheme],
   render: () => {
     return (
       <ClientRepeater
         count={2}
+        component={EchoStory}
         createSpace
         onCreateSpace={async (space) => {
           space.db.add(
@@ -135,7 +131,6 @@ export const WithEcho = {
             }),
           );
         }}
-        component={EchoStory}
       />
     );
   },

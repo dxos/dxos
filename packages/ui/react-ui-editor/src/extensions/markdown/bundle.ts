@@ -47,6 +47,7 @@ export const createMarkdownExtensions = ({
     EditorState.allowMultipleSelections.of(true),
     EditorState.tabSize.of(2),
 
+    // https://codemirror.net/docs/extensions
     // https://github.com/codemirror/basic-setup
     bracketMatching(),
     closeBrackets(),
