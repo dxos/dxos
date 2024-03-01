@@ -422,7 +422,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
  */
 // TODO(dmaretskyi): Rename once the original AutomergeArray gets deleted.
 class EchoArrayTwoPointO<T> extends Array<T> {
-  static [Symbol.species] = Array;
+  static get [Symbol.species]() {
+    return Array;
+  }
 
   [symbolPath]: PropPath = null as any;
   [symbolHandler]: EchoReactiveHandler = null as any;
