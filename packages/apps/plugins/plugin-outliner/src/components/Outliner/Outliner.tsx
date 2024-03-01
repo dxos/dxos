@@ -2,15 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Prec } from '@codemirror/state';
-import { type EditorView, keymap } from '@codemirror/view';
+import { type Extension, Prec } from '@codemirror/state';
+import { EditorView, keymap, placeholder } from '@codemirror/view';
 import { ArrowSquareOut, DotsThreeVertical, DotOutline, X } from '@phosphor-icons/react';
-import React, { type HTMLAttributes, StrictMode, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type HTMLAttributes, StrictMode, useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { createDocAccessor, getTextContent } from '@dxos/react-client/echo';
 import { Button, DensityProvider, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
-import { type CursorInfo, type YText, decorateMarkdown, useTextModel, MarkdownEditor } from '@dxos/react-ui-editor';
+import {
+  type CursorInfo,
+  type YText,
+  useTextEditor,
+  defaultTheme,
+  automerge,
+  decorateMarkdown,
+} from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
+import { nonNullable } from '@dxos/util';
 
 import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
 import { OUTLINER_PLUGIN } from '../../meta';
@@ -43,7 +52,7 @@ const OutlinerItem = ({
   item,
   active,
   isTasklist,
-  placeholder,
+  placeholder: _placeholder,
   onSelect,
   onEnter,
   onDelete,
@@ -52,27 +61,6 @@ const OutlinerItem = ({
   onCursor,
 }: OutlinerItemProps) => {
   const { t } = useTranslation(OUTLINER_PLUGIN);
-  const model = useTextModel({ text: item.text });
-
-  // Focus.
-  const [focus, setFocus] = useState(false);
-  useEffect(() => {
-    if (focus) {
-      onSelect?.();
-    }
-  }, [focus]);
-
-  // Focus and selection.
-  // NOTE: The only way to set focus after creating a new item is to pass focus=true into the editor.
-  // The editorRef updated by the editor's useImperativeHandle doesn't trigger an update here.
-  const editorRef = useRef<EditorView>(null);
-  useEffect(() => {
-    // NOTE: useImperativeHandle does not trigger editorRef.
-    // TODO(burdon): Set initial selection.
-    if (editorRef.current && active) {
-      editorRef.current?.focus();
-    }
-  }, [active]);
 
   // Keys.
   const outlinerKeymap = useMemo(() => {
@@ -239,9 +227,41 @@ const OutlinerItem = ({
     );
   }, []);
 
-  if (!model) {
-    return null;
-  }
+  const extensions = useMemo<Extension[]>(
+    () =>
+      [
+        // TODO(burdon): Theme.
+        EditorView.baseTheme(defaultTheme),
+        automerge(createDocAccessor(item.text!)),
+        _placeholder && placeholder(_placeholder),
+        decorateMarkdown({ renderLinkButton: onRenderLink }),
+        outlinerKeymap,
+      ].filter(nonNullable),
+    [item.text],
+  );
+
+  const { parentRef, view } = useTextEditor(
+    {
+      extensions,
+      doc: getTextContent(item.text),
+    },
+    [extensions],
+  );
+
+  // Focus.
+  const [focus, setFocus] = useState(false);
+  useEffect(() => {
+    if (focus) {
+      onSelect?.();
+    }
+  }, [focus]);
+
+  useEffect(() => {
+    // TODO(burdon): Set initial selection.
+    if (active) {
+      view?.focus();
+    }
+  }, [view]);
 
   return (
     <div className='flex group'>
@@ -249,7 +269,7 @@ const OutlinerItem = ({
         {(isTasklist && (
           <Input.Root>
             <Input.Checkbox
-              classNames='ml-2'
+              classNames='mx-2'
               checked={item.done}
               onCheckedChange={(checked) => {
                 item.done = !!checked;
@@ -264,21 +284,21 @@ const OutlinerItem = ({
           />
         )}
       </div>
-
-      <MarkdownEditor
-        ref={editorRef}
-        model={model}
-        extensions={[outlinerKeymap, decorateMarkdown({ renderLinkButton: onRenderLink })]}
-        autoFocus={!!active}
-        placeholder={placeholder}
-        slots={{
-          root: {
-            onFocus: () => setFocus(true),
-            onBlur: () => setFocus(false),
-          },
-        }}
-      />
-
+      <div ref={parentRef} className='flex grow overflow-hidden pt-1' />
+      {/* <MarkdownEditor */}
+      {/*  ref={editorRef} */}
+      {/*  model={model} */}
+      {/*  autoFocus={!!active} */}
+      {/*  placeholder={placeholder} */}
+      {/*  extensions={[outlinerKeymap, decorateMarkdown({ renderLinkButton: onRenderLink })]} */}
+      {/*  slots={{ */}
+      {/*    root: { */}
+      {/*      className: 'w-full pt-1', */}
+      {/*      onFocus: () => setFocus(true), */}
+      {/*      onBlur: () => setFocus(false), */}
+      {/*    }, */}
+      {/*  }} */}
+      {/* /> */}
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
           <Button variant='ghost'>

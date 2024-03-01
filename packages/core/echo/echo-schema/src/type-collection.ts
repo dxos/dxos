@@ -15,6 +15,7 @@ type Prototype = {
 
 /**
  * Constructed via generated protobuf class.
+ * @deprecated
  */
 export class TypeCollection {
   private readonly _prototypes = new Map<string, Prototype>();
