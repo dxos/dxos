@@ -73,7 +73,7 @@ export const useInMemoryTextModel = ({
   defaultContent?: string;
 }): EditorModel & { setContent: Dispatch<SetStateAction<string>> } => {
   const [content, setContent] = useState(defaultContent ?? '');
-  return { id, content, setContent, text: () => content };
+  return { id, content, text: () => content, setContent };
 };
 
 const createModel = ({ space, identity, text }: UseTextModelProps): EditorModel | undefined => {

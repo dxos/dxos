@@ -18,6 +18,7 @@ import React, {
   useMemo,
 } from 'react';
 
+import { DocAccessor } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { useThemeContext } from '@dxos/react-ui';
 import { focusRing } from '@dxos/react-ui-theme';
@@ -114,7 +115,7 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
       //
       const state = EditorState.create({
-        doc: model.text(),
+        doc: typeof model.content === 'string' ? model.content : DocAccessor.getValue(model.content),
         selection,
         extensions: [
           // TODO(burdon): Doesn't catch errors in keymap functions.
