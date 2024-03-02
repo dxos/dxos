@@ -620,7 +620,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
   _lookupLink(ref: Reference): EchoObject | undefined {
     if (this._database) {
       // This doesn't clean-up properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
-      return this._database.graph._lookupLink(ref, this._database, this._onLinkResolved);
+      return this._database.graph._lookupLink(ref, this._database as any, this._onLinkResolved);
     } else {
       invariant(this._linkCache);
       return this._linkCache.get(ref.itemId);

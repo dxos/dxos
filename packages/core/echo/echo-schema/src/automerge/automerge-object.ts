@@ -14,6 +14,8 @@ import { AutomergeArray } from './automerge-array';
 import { AutomergeObjectCore, type BindOptions, type DocAccessor } from './automerge-object-core';
 import { REFERENCE_TYPE_TAG, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
+import { EchoReactiveHandler } from '../effect/echo-handler';
+import { getProxyHandlerSlot } from '../effect/proxy';
 import {
   base,
   data,
@@ -29,6 +31,7 @@ import {
   type ObjectMeta,
   type TypedObjectOptions,
   type TypedObjectProperties,
+  type OpaqueEchoObject,
 } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
@@ -65,7 +68,9 @@ export class AutomergeObject implements TypedObjectProperties {
     }
     this._immutable = opts?.immutable ?? false;
 
-    return this._createProxy(['data']);
+    const proxy = this._createProxy(['data']);
+    this._core.rootProxy = proxy;
+    return proxy;
   }
 
   get __typename(): string | undefined {
@@ -110,7 +115,7 @@ export class AutomergeObject implements TypedObjectProperties {
   }
 
   get [db](): EchoDatabase | undefined {
-    return this[base]._core.database?._echoDatabase;
+    return this[base]._core.database?._dbApi;
   }
 
   get [debug](): string {
@@ -373,7 +378,12 @@ export const getRawDoc = (obj: EchoObject, path?: string[]): DocAccessor => {
   return obj[base]._getRawDoc(path);
 };
 
-export const getAutomergeObjectCore = (obj: EchoObject): AutomergeObjectCore => {
-  invariant(isAutomergeObject(obj));
-  return obj[base]._core;
+export const getAutomergeObjectCore = (obj: OpaqueEchoObject): AutomergeObjectCore => {
+  if (isAutomergeObject(obj)) {
+    return obj[base]._core;
+  } else {
+    const handler = getProxyHandlerSlot(obj).handler;
+    invariant(handler instanceof EchoReactiveHandler);
+    return handler._objectCore;
+  }
 };

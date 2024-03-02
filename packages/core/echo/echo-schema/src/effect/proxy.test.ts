@@ -18,11 +18,10 @@ registerSignalRuntime();
 for (const schema of [undefined, TestSchema]) {
   for (const useDatabase of [false, true]) {
     const createObject = (props: Partial<TestSchema> = {}): TestSchema => {
-      if (useDatabase) {
-        // TODO: extract echo-schema into a separate package and export a test suite, use it in echo-database
-        return createEchoReactiveObject(props, schema ?? undefined);
-      }
-      return schema == null ? (R.object(props) as TestSchema) : R.object(schema, props);
+      const obj = schema == null ? (R.object(props) as TestSchema) : R.object(schema, props);
+
+      // TODO: extract echo-schema into a separate package and export a test suite, use it in echo-database
+      return useDatabase ? createEchoReactiveObject(obj) : obj;
     };
 
     describe(`Proxy properties${schema == null ? '' : ' with schema'}`, () => {
