@@ -32,7 +32,7 @@ registerSignalRuntime({
     const prev = areSignalsProhibited;
     try {
       areSignalsProhibited = false;
-      cb();
+      return cb();
     } finally {
       areSignalsProhibited = prev;
     }

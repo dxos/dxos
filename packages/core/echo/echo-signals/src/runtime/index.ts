@@ -27,7 +27,7 @@ export interface SignalRuntime {
   /**
    * @deprecated Temporary measure to prevent ECHO from subscribing to signals within its internals.
    */
-  untracked(cb: () => void): void;
+  untracked<T>(cb: () => T): T;
 }
 
 export const runtimeList: SignalRuntime[] = [];
@@ -91,10 +91,10 @@ class CompositeRuntime implements SignalRuntime {
     return new CompositeSignal(runtimeList.map((runtime) => runtime.createSignal()));
   }
 
-  untracked(cb: () => void): void {
+  untracked<T>(cb: () => T): T {
     runtimeUsed = true;
 
-    const callUntrackedRecursively = (index: number): void => {
+    const callUntrackedRecursively = (index: number): T => {
       if (index >= runtimeList.length) {
         return cb();
       } else {
