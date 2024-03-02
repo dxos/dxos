@@ -10,13 +10,25 @@ import { registerSignalRuntime, type GenericSignal } from '@dxos/echo-signals/ru
 
 let areSignalsProhibited = false;
 
+let inUntrackedScope = false;
+
 const signalGuard: GenericSignal = {
   notifyRead: () => {
+    // Separate if statements so it's possible to place a debugger breakpoint on `!inUntrackedScope` condition.
+    if (inUntrackedScope) {
+      return;
+    }
+
     if (areSignalsProhibited) {
       throw new Error('Signal read is prohibited in this scope');
     }
   },
   notifyWrite: () => {
+    // Separate if statements so it's possible to place a debugger breakpoint on `!inUntrackedScope` condition.
+    if (inUntrackedScope) {
+      return;
+    }
+
     if (areSignalsProhibited) {
       throw new Error('Signal write is prohibited in this scope');
     }
@@ -29,12 +41,12 @@ registerSignalRuntime({
     cb();
   },
   untracked: (cb) => {
-    const prev = areSignalsProhibited;
+    const prev = inUntrackedScope;
     try {
-      areSignalsProhibited = false;
+      inUntrackedScope = true;
       return cb();
     } finally {
-      areSignalsProhibited = prev;
+      inUntrackedScope = prev;
     }
   },
 });
