@@ -25,6 +25,7 @@ import { isReactiveProxy } from '../effect/proxy';
 import { type Hypergraph } from '../hypergraph';
 import { LEGACY_TEXT_TYPE, isAutomergeObject, type EchoObject, type OpaqueEchoObject } from '../object';
 import { type Schema } from '../proto';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
 
 export type SpaceState = {
   // Url of the root automerge document.
@@ -168,16 +169,18 @@ export class AutomergeDb {
     if (itemsUpdated.length === 0) {
       return;
     }
-    this._updateEvent.emit({
-      spaceKey: this.spaceKey,
-      itemsUpdated: itemsUpdated.map((id) => ({ id })),
-    });
-    for (const id of itemsUpdated) {
-      const objCore = this._objects.get(id);
-      if (objCore) {
-        objCore.notifyUpdate();
+    compositeRuntime.batch(() => {
+      this._updateEvent.emit({
+        spaceKey: this.spaceKey,
+        itemsUpdated: itemsUpdated.map((id) => ({ id })),
+      });
+      for (const id of itemsUpdated) {
+        const objCore = this._objects.get(id);
+        if (objCore) {
+          objCore.notifyUpdate();
+        }
       }
-    }
+    });
   }
 
   /**
