@@ -9,8 +9,8 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type Filter } from './filter';
-import { type EchoObject, type TypedObject } from '../object';
 import { prohibitSignalActions } from '../guarded-scope';
+import { type EchoObject, type TypedObject } from '../object';
 
 // TODO(burdon): Reconcile with echo-db/database/selection.
 

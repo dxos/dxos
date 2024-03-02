@@ -6,6 +6,7 @@ import { Event, synchronized } from '@dxos/async';
 import { isValidAutomergeUrl, type DocHandle, type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { type Reference } from '@dxos/document-model';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -25,7 +26,6 @@ import { isReactiveProxy } from '../effect/proxy';
 import { type Hypergraph } from '../hypergraph';
 import { LEGACY_TEXT_TYPE, isAutomergeObject, type EchoObject, type OpaqueEchoObject } from '../object';
 import { type Schema } from '../proto';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
 
 export type SpaceState = {
   // Url of the root automerge document.

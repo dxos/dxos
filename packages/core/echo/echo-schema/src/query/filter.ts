@@ -2,14 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DocumentModel, Reference } from '@dxos/document-model';
+import { Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { AutomergeObject, getAutomergeObjectCore } from '../automerge';
+import { getAutomergeObjectCore } from '../automerge';
 import {
-  base,
   getDatabaseFromObject,
   isTypedObject,
   type EchoObject,

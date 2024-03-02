@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { registerSignalRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 
 //
@@ -7,12 +11,12 @@ import { registerSignalRuntime, type GenericSignal } from '@dxos/echo-signals/ru
 let areSignalsProhibited = false;
 
 const signalGuard: GenericSignal = {
-  notifyRead() {
+  notifyRead: () => {
     if (areSignalsProhibited) {
       throw new Error('Signal read is prohibited in this scope');
     }
   },
-  notifyWrite() {
+  notifyWrite: () => {
     if (areSignalsProhibited) {
       throw new Error('Signal write is prohibited in this scope');
     }
@@ -20,14 +24,12 @@ const signalGuard: GenericSignal = {
 };
 
 registerSignalRuntime({
-  createSignal() {
-    return signalGuard;
-  },
-  batch(cb) {
+  createSignal: () => signalGuard,
+  batch: (cb) => {
     cb();
   },
-  untracked(cb) {
-    let prev = areSignalsProhibited;
+  untracked: (cb) => {
+    const prev = areSignalsProhibited;
     try {
       areSignalsProhibited = false;
       cb();
