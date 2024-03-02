@@ -139,6 +139,7 @@
   },
   "devDependencies": {
     "@braneframe/types": "workspace:*",
+    "@dxos/echo-pipeline": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@types/lodash.isequal": "^4.5.0",
     "@types/lodash.isequalwith": "^4.4.0",

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, MulticastObservable, type Observable, PushStream } from '@dxos/async';
+import { Event, MulticastObservable, type Observable, PushStream, Trigger } from '@dxos/async';
 import {
   AuthenticatingInvitation,
   CancellableInvitation,
@@ -55,6 +55,7 @@ export class InvitationsProxy implements Invitations {
   private _saved = MulticastObservable.from(this._savedUpdate, []);
   // Invitations originating from this proxy.
   private _invitations = new Set<string>();
+  private _invitationsLoaded = new Trigger();
 
   private _opened = false;
 
@@ -90,9 +91,13 @@ export class InvitationsProxy implements Invitations {
 
     log('opening...', this._getInvitationContext());
     this._ctx = new Context();
+    const persistentLoaded = new Trigger();
+    const initialCreatedReceived = new Trigger();
+    // TODO(nf): actually needed?
+    const initialAcceptedReceived = new Trigger();
 
     const stream = this._invitationsService.queryInvitations();
-    stream.subscribe(({ action, type, invitations }: QueryInvitationsResponse) => {
+    stream.subscribe(({ action, type, invitations, existing }: QueryInvitationsResponse) => {
       switch (action) {
         case QueryInvitationsResponse.Action.ADDED: {
           log('remote invitations added', { type, invitations });
@@ -102,6 +107,11 @@ export class InvitationsProxy implements Invitations {
             .forEach((invitation) => {
               type === QueryInvitationsResponse.Type.CREATED ? this.share(invitation) : this.join(invitation);
             });
+          if (existing) {
+            type === QueryInvitationsResponse.Type.CREATED
+              ? initialCreatedReceived.wake()
+              : initialAcceptedReceived.wake();
+          }
           break;
         }
         case QueryInvitationsResponse.Action.REMOVED: {
@@ -118,6 +128,11 @@ export class InvitationsProxy implements Invitations {
                 ...cache.get().slice(index + 1),
               ] as AuthenticatingInvitation[]);
           });
+          existing && initialAcceptedReceived.wake();
+          break;
+        }
+        case QueryInvitationsResponse.Action.LOAD_COMPLETE: {
+          persistentLoaded.wake();
           break;
         }
         case QueryInvitationsResponse.Action.SAVED: {
@@ -129,6 +144,10 @@ export class InvitationsProxy implements Invitations {
     });
 
     this._ctx.onDispose(() => stream.close());
+    await persistentLoaded.wait();
+    // wait until remote invitations are added and removed in case .created is called early.
+    await initialAcceptedReceived.wait();
+    await initialCreatedReceived.wait();
     this._opened = true;
     log('opened', this._getInvitationContext());
   }
@@ -156,7 +175,7 @@ export class InvitationsProxy implements Invitations {
     };
   }
 
-  // TODO(nf): InvitationId in options implies that the invitation must already exist?
+  // TODO(nf): Some way to retrieve observables for resumed invitations?
   share(options?: Partial<Invitation>): CancellableInvitation {
     const invitation: Invitation = { ...this.getInvitationOptions(), ...options };
     this._invitations.add(invitation.invitationId);
@@ -164,10 +183,6 @@ export class InvitationsProxy implements Invitations {
     const existing = this._created.get().find((created) => created.get().invitationId === invitation.invitationId);
     if (existing) {
       return existing;
-    } else {
-      if (options?.invitationId) {
-        throw new Error('invitationId provided but no existing invitation present');
-      }
     }
 
     const observable = new CancellableInvitation({
@@ -182,24 +197,6 @@ export class InvitationsProxy implements Invitations {
     this._createdUpdate.emit([...this._created.get(), observable]);
 
     return observable;
-  }
-
-  async resumePersistentInvitations() {
-    const invitations = await this._invitationsService.getPersistentInvitations();
-    for (const invitation of invitations.invitations ?? []) {
-      const observable = new CancellableInvitation({
-        initialInvitation: invitation,
-        subscriber: createObservable(this._invitationsService.createInvitation(invitation)),
-        onCancel: async () => {
-          const invitationId = observable.get().invitationId;
-          invariant(invitationId, 'Invitation missing identifier');
-          await this._invitationsService.cancelInvitation({ invitationId });
-        },
-      });
-      this._createdUpdate.emit([...this._created.get(), observable]);
-
-      // TODO: cancel invitations at persistence expiry.
-    }
   }
 
   join(invitation: Invitation | string, deviceProfile?: DeviceProfileDocument): AuthenticatingInvitation {

@@ -154,7 +154,6 @@ export class HaloProxy implements Halo {
     // });
     // this._subscriptions.add(() => contactsStream.close());
     // TODO(nf): trigger automatically? feedback on how many were resumed?
-    await this._invitationProxy.resumePersistentInvitations();
 
     log.trace('dxos.sdk.halo-proxy.open', Trace.end({ id: this._instanceId }));
     await Promise.all([gotIdentity]);

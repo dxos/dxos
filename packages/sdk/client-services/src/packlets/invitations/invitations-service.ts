@@ -12,7 +12,6 @@ import { log } from '@dxos/log';
 import {
   type AuthenticationRequest,
   type AcceptInvitationRequest,
-  type GetPersistentInvitationsResponse,
   Invitation,
   type InvitationsService,
   QueryInvitationsResponse,
@@ -27,17 +26,17 @@ import { invitationExpired, type InvitationsHandler } from './invitations-handle
 export class InvitationsServiceImpl implements InvitationsService {
   private readonly _createInvitations = new Map<string, CancellableInvitation>();
   private readonly _acceptInvitations = new Map<string, AuthenticatingInvitation>();
-  private readonly _savedInvitations = new Map<string, Invitation>();
   private readonly _invitationCreated = new Event<Invitation>();
   private readonly _invitationAccepted = new Event<Invitation>();
   private readonly _removedCreated = new Event<Invitation>();
   private readonly _removedAccepted = new Event<Invitation>();
   private readonly _saved = new Event<Invitation>();
+  private readonly _persistentInvitationsLoadedEvent = new Event();
+  private _persistentInvitationsLoaded = false;
 
   constructor(
     private readonly _invitationsHandler: InvitationsHandler,
     private readonly _getHandler: (invitation: Invitation) => InvitationProtocol,
-    // TODO(nf): avoid making InvitationManager?
     private readonly _metadataStore: MetadataStore,
   ) {}
 
@@ -88,6 +87,7 @@ export class InvitationsServiceImpl implements InvitationsService {
           close();
           if (invitation.get().persistent) {
             await savePersistentInvitationCtx.dispose();
+            // TODO(nf): remove on all complete conditions?
             await this._metadataStore.removeInvitation(invitation.get().invitationId);
           }
 
@@ -100,13 +100,24 @@ export class InvitationsServiceImpl implements InvitationsService {
     });
   }
 
-  async getPersistentInvitations(): Promise<GetPersistentInvitationsResponse> {
+  async loadPersistentInvitations() {
     const persistentInvitations = this._metadataStore.getInvitations();
 
     // get saved persistent invitations, filter and remove from storage those that have expired.
     const freshInvitations = persistentInvitations.filter(async (invitation) => !invitationExpired(invitation));
 
-    return { invitations: freshInvitations };
+    const cInvitations = freshInvitations.map((persistentInvitation) => {
+      invariant(!this._createInvitations.get(persistentInvitation.invitationId), 'invitation already exists');
+
+      const handler = this._getHandler(persistentInvitation);
+      const invitation = this._invitationsHandler.createInvitation(handler, persistentInvitation);
+      this._createInvitations.set(invitation.get().invitationId, invitation);
+      this._invitationCreated.emit(invitation.get());
+      return persistentInvitation;
+    });
+    this._persistentInvitationsLoadedEvent.emit();
+    this._persistentInvitationsLoaded = true;
+    return { invitations: cInvitations };
   }
 
   acceptInvitation({ invitation: options, deviceProfile }: AcceptInvitationRequest): Stream<Invitation> {
@@ -226,13 +237,31 @@ export class InvitationsServiceImpl implements InvitationsService {
         action: QueryInvitationsResponse.Action.ADDED,
         type: QueryInvitationsResponse.Type.CREATED,
         invitations: Array.from(this._createInvitations.values()).map((invitation) => invitation.get()),
+        existing: true,
       });
 
       next({
         action: QueryInvitationsResponse.Action.ADDED,
         type: QueryInvitationsResponse.Type.ACCEPTED,
         invitations: Array.from(this._acceptInvitations.values()).map((invitation) => invitation.get()),
+        existing: true,
       });
+
+      if (this._persistentInvitationsLoaded) {
+        next({
+          action: QueryInvitationsResponse.Action.LOAD_COMPLETE,
+          type: QueryInvitationsResponse.Type.CREATED,
+          // TODO(nf): populate with invitations
+        });
+      } else {
+        this._persistentInvitationsLoadedEvent.on(ctx, () => {
+          next({
+            action: QueryInvitationsResponse.Action.LOAD_COMPLETE,
+            type: QueryInvitationsResponse.Type.CREATED,
+            // TODO(nf): populate with invitations
+          });
+        });
+      }
 
       // TODO(nf): expired invitations?
     });

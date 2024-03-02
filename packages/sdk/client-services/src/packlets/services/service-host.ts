@@ -293,6 +293,11 @@ export class ClientServicesHost {
     });
 
     await this._serviceContext.open(ctx);
+    // TODO(nf): move to InvitationManager in ServiceContext?
+    invariant(this.serviceRegistry.services.InvitationsService);
+    const loadedInvitations = await this.serviceRegistry.services.InvitationsService.loadPersistentInvitations();
+
+    log('loaded persistent invitations', { count: loadedInvitations.invitations?.length });
 
     const devtoolsProxy = this._config?.get('runtime.client.devtoolsProxy');
     if (devtoolsProxy) {

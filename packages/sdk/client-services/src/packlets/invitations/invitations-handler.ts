@@ -75,6 +75,7 @@ export class InvitationsHandler {
       timeout = INVITATION_TIMEOUT,
       swarmKey = PublicKey.random(),
       persistent = true,
+      created = new Date(),
       lifetime = 86400, // 1 day
     } = options ?? {};
     const authCode =
@@ -91,6 +92,7 @@ export class InvitationsHandler {
       authCode,
       timeout,
       persistent,
+      created,
       lifetime,
       ...protocol.getInvitationContext(),
     };
@@ -185,11 +187,24 @@ export class InvitationsHandler {
       return extension;
     };
 
+    if (invitation.lifetime && invitation.created && invitation.lifetime !== 0) {
+      invariant(
+        invitation.created.getTime() + invitation.lifetime * 1000 > Date.now(),
+        'invitation has already expired',
+      );
+      scheduleTask(
+        ctx,
+        async () => {
+          // ensure the swarm is closed before changing state and closing the stream.
+          await swarmConnection.close();
+          stream.next({ ...invitation, state: Invitation.State.EXPIRED });
+          await ctx.dispose();
+        },
+        invitation.created.getTime() + invitation.lifetime * 1000 - Date.now(),
+      );
+    }
+
     let swarmConnection: SwarmConnection;
-
-    // TODO(nf): cancel invitations when the persistence deadline is reached.
-    // TODO(nf): honor some deadline for non-persistent invitations as well?
-
     const invitationLabel =
       'invitation host for ' +
       (invitation.kind === Invitation.Kind.DEVICE ? 'device' : `space ${invitation.spaceKey?.truncate()}`);
@@ -415,6 +430,6 @@ export const invitationExpired = (invitation: Invitation) => {
     invitation.created &&
     invitation.lifetime &&
     invitation.lifetime !== 0 &&
-    invitation.created.getTime() + invitation.lifetime < Date.now()
+    invitation.created.getTime() + invitation.lifetime * 1000 < Date.now()
   );
 };

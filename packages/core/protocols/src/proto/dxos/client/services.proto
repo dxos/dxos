@@ -416,6 +416,7 @@ message Invitation {
     CANCELLED = 6;
     TIMEOUT = 7;
     ERROR = 8;
+    EXPIRED = 9;
   }
 
   /// Local identifier (random).
@@ -436,7 +437,7 @@ message Invitation {
   /// Local state.
   State state = 6;
 
-  /// Timeout (ms).
+  /// Timeout for guest to complete invitation once connected (ms).
   optional int32 timeout = 7;
 
   /// Guest's identity.
@@ -489,6 +490,7 @@ message QueryInvitationsResponse {
     ADDED = 0;
     REMOVED = 1;
     SAVED = 2;
+    LOAD_COMPLETE = 3;
   }
 
   enum Type {
@@ -499,9 +501,12 @@ message QueryInvitationsResponse {
   Action action = 1;
   Type type = 2;
   repeated Invitation invitations = 3;
+  // indicate to caller that invitations of this action/type were existing at time of initial response.
+  optional bool existing = 4;
 }
 
-message GetPersistentInvitationsResponse {
+// Informational, consumers must share invitations to receive CancellableInvitation
+message LoadPersistentInvitationsResponse {
   repeated Invitation invitations = 1;
 }
 
@@ -511,7 +516,7 @@ service InvitationsService {
   rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
   rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
   rpc QueryInvitations(google.protobuf.Empty) returns (stream QueryInvitationsResponse);
-  rpc GetPersistentInvitations(google.protobuf.Empty) returns (GetPersistentInvitationsResponse);
+  rpc LoadPersistentInvitations(google.protobuf.Empty) returns (LoadPersistentInvitationsResponse);
 }
 
 //
