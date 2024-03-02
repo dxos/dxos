@@ -218,14 +218,16 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
 
             this.clearUpdate();
           } else if (update.selectionSet) {
-            // TODO(burdon): Optional.
+            // TODO(burdon): Make optional.
             this.scheduleUpdate(update.view);
           }
         }
 
         scheduleUpdate(view: EditorView) {
+          console.log('>>>');
           this.clearUpdate();
           this.pendingUpdate = setTimeout(() => {
+            console.log('!!');
             view.dispatch({ effects: forceUpdate.of(null) });
           }, options.selectionChangeDelay ?? 400);
         }
