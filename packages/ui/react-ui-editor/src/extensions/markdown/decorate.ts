@@ -195,9 +195,9 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
   return [
     ViewPlugin.fromClass(
       class {
-        pendingUpdate = -1;
         deco: DecorationSet;
         atomicDeco: DecorationSet;
+        pendingUpdate?: NodeJS.Timeout;
 
         constructor(view: EditorView) {
           ({ deco: this.deco, atomicDeco: this.atomicDeco } = buildDecorations(view, options, view.hasFocus));
@@ -215,24 +215,26 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
               options,
               update.view.hasFocus,
             ));
+
             this.clearUpdate();
           } else if (update.selectionSet) {
+            // TODO(burdon): Optional.
             this.scheduleUpdate(update.view);
-          }
-        }
-
-        clearUpdate() {
-          if (this.pendingUpdate > -1) {
-            window.clearTimeout(this.pendingUpdate);
-            this.pendingUpdate = -1;
           }
         }
 
         scheduleUpdate(view: EditorView) {
           this.clearUpdate();
-          this.pendingUpdate = window.setTimeout(() => {
+          this.pendingUpdate = setTimeout(() => {
             view.dispatch({ effects: forceUpdate.of(null) });
           }, options.selectionChangeDelay ?? 400);
+        }
+
+        clearUpdate() {
+          if (this.pendingUpdate) {
+            clearTimeout(this.pendingUpdate);
+            this.pendingUpdate = undefined;
+          }
         }
 
         destroy() {
@@ -242,8 +244,8 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
       {
         provide: (plugin) => [
           EditorView.atomicRanges.of((view) => view.plugin(plugin)?.atomicDeco ?? Decoration.none),
-          EditorView.decorations.of((view) => view.plugin(plugin)?.deco ?? Decoration.none),
           EditorView.decorations.of((view) => view.plugin(plugin)?.atomicDeco ?? Decoration.none),
+          EditorView.decorations.of((view) => view.plugin(plugin)?.deco ?? Decoration.none),
         ],
       },
     ),
