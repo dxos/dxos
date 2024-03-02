@@ -97,9 +97,8 @@ export type MessageProps<BlockValue> = MessageEntity<BlockValue> & {
   MessageBlockComponent?: FC<MessageBlockProps<BlockValue>>;
 };
 
-// TODO(burdon): Remove generic type?
 export const Message = <BlockValue,>(props: MessageProps<BlockValue>) => {
-  const { authorName, onDelete, blocks, id, MessageBlockComponent = DefaultMessageBlock, ...metaProps } = props;
+  const { id, authorName, onDelete, blocks, MessageBlockComponent = DefaultMessageBlock, ...metaProps } = props;
   const { t, dtLocale } = useTranslation(translationKey);
   const firstBlock = blocks[0];
   const dt = firstBlock.timestamp ? new Date(firstBlock.timestamp) : undefined;

@@ -18,17 +18,13 @@ export type Comment = {
   cursor?: string;
 };
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Remove.
 export type EditorModel = {
   id: string;
   text: () => string;
-  extension?: Extension;
-
-  // TODO(burdon): Remove.
   content: string | DocAccessor;
-
-  // TODO(burdon): Remove.
-  peer?: {
-    id: string;
-    name?: string;
-  };
+  extension?: Extension;
 };

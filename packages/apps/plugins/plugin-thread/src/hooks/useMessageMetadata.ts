@@ -9,7 +9,8 @@ import { type MessageMetadata } from '@dxos/react-ui-thread';
 
 export type MessagePropertiesProvider = (identityKey: PublicKey | undefined) => MessageMetadata;
 
-export const useMessageMetadata = (id: string, identity?: Identity): MessageMetadata => {
+// TODO(burdon): This isn't a hook. Rename and move to types.
+export const createMessageData = (id: string, identity?: Identity): MessageMetadata => {
   return {
     id,
     authorId: identity?.identityKey.toHex(),

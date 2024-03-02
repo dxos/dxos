@@ -108,11 +108,5 @@ const createModel = ({ space, identity, text }: UseTextModelProps): EditorModel 
     content: doc,
     text: () => get(doc.handle.docSync(), doc.path),
     extension: extensions,
-    peer: identity
-      ? {
-          id: identity.identityKey.toHex(),
-          name: identity.profile?.displayName,
-        }
-      : undefined,
   };
 };
