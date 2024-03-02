@@ -8,7 +8,7 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { DocumentModel } from '@dxos/document-model';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
-import { type TypedObject, base, getRawDoc, type SpaceDoc } from '@dxos/echo-schema';
+import { type TypedObject, base, getRawDoc, type SpaceDoc, getAutomergeObjectCore } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -357,7 +357,7 @@ export class ClientServicesHost {
     await document.whenReady();
 
     document.change((doc: SpaceDoc) => {
-      assignDeep(doc, ['objects', obj[base]._id], getRawDoc(obj).handle.docSync());
+      assignDeep(doc, ['objects', getAutomergeObjectCore(obj).id], getRawDoc(obj).handle.docSync());
     });
 
     return identity;
