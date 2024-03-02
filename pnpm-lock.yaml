@@ -3523,9 +3523,6 @@ importers:
       sanitize-filename:
         specifier: 1.6.3
         version: 1.6.3
-      types-package-json:
-        specifier: ^2.0.39
-        version: 2.0.39
     devDependencies:
       '@types/lodash.merge':
         specifier: ^4.6.6
@@ -3539,6 +3536,9 @@ importers:
       ts-node:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+      types-package-json:
+        specifier: ^2.0.39
+        version: 2.0.39
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
@@ -3576,6 +3576,9 @@ importers:
       '@dxos/plate':
         specifier: workspace:*
         version: link:../../../common/plate
+      lodash.merge:
+        specifier: ^4.6.2
+        version: 4.6.2
       sanitize-filename:
         specifier: 1.6.3
         version: 1.6.3
@@ -3586,12 +3589,18 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/lodash.merge':
+        specifier: ^4.6.6
+        version: 4.6.7
       tmp-promise:
         specifier: ^3.0.3
         version: 3.0.3
       ts-node:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.3.3)
+      types-package-json:
+        specifier: ^2.0.39
+        version: 2.0.39
       typescript:
         specifier: ^5.2.2
         version: 5.3.3
@@ -44162,6 +44171,7 @@ packages:
 
   /types-package-json@2.0.39:
     resolution: {integrity: sha512-c8ua5W1Uu6x7LAwtwSGCl46cHmj+r2eAA+lXR1CluIZotu9V03ZHcGB9wKRZE2oIAX5IzMP/rxDV9g9ikCg9Nw==}
+    dev: true
 
   /typescript@5.2.2:
     resolution: {integrity: sha512-mI4WrpHsbCIcwT9cF4FZvr80QUeKvsUsUvKDoR+X/7XHQH98xYD8YHZg7ANtz2GtZt/CBq2QJ0thkGJMHfqc1w==}

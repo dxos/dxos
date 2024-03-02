@@ -209,6 +209,12 @@ export const executeDirectoryTemplate = async <I extends InquirableZodType>(
   if (!template) {
     throw new Error(`failed to load template function from ${src}`);
   }
+  if (!(template instanceof DirectoryTemplate)) {
+    throw new Error(`template is not an executable template ${src}`);
+  }
+  if (!template.apply) {
+    throw new Error(`template does not have an apply function ${src}`);
+  }
   try {
     return template.apply(options);
   } catch (err) {

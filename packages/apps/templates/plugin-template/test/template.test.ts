@@ -23,10 +23,10 @@ describe('plugin template', () => {
     const tempFolder = await tmp.dir({ unsafeCleanup: false, keep: true, prefix: 'plugin-template' });
 
     const promises = scenarios.map(async (scenario) => {
-      const outputDirectory = path.resolve(tempFolder.path, scenario.name);
+      const outputDirectory = path.resolve(tempFolder.path);
 
       const results = await template.apply({
-        input: { ...scenario, name: `${packageJson.name}-${scenario.name}` },
+        input: { ...scenario, name: `${packageJson.name.split('/')[1]}-${scenario.name}` },
         outputDirectory,
         after: false, // do not print messages
       });
