@@ -8,7 +8,7 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { DocumentModel } from '@dxos/document-model';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
-import { type TypedObject, base, getRawDoc, type SpaceDoc, getAutomergeObjectCore } from '@dxos/echo-schema';
+import { type TypedObject, getRawDoc, type SpaceDoc, getAutomergeObjectCore } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

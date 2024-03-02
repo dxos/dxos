@@ -4,6 +4,7 @@
 
 import path from 'node:path';
 
+import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { Expando, TextObject } from '@dxos/client/echo';
 import { log } from '@dxos/log';
@@ -11,7 +12,6 @@ import { STORAGE_VERSION } from '@dxos/protocols';
 
 import { data } from './testing';
 import { getLatestStorage, getConfig, getStorageDir } from './util';
-import { sleep } from '@dxos/async';
 
 /**
  * Generates a snapshot of encoded protocol buffers to check for backwards compatibility.
