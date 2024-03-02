@@ -13,7 +13,7 @@ import { isAutomergeObject, type Space, type TextObject } from '@dxos/react-clie
 import { type Identity } from '@dxos/react-client/halo';
 
 import { SpaceAwarenessProvider } from './awareness-provider';
-import { type EditorModel, modelState } from './defs';
+import { type EditorModel } from './defs';
 import { automerge, awareness } from '../extensions';
 import { type DocAccessor } from '../extensions/automerge/defs';
 import { cursorColor } from '../styles';
@@ -75,7 +75,7 @@ export const useInMemoryTextModel = ({
   return { id, content, setContent, text: () => content };
 };
 
-const createModel = ({ space, identity, text }: UseTextModelProps) => {
+const createModel = ({ space, identity, text }: UseTextModelProps): EditorModel | undefined => {
   if (!text) {
     return undefined;
   }
@@ -97,12 +97,12 @@ const createModel = ({ space, identity, text }: UseTextModelProps) => {
       peerId: identity?.identityKey.toHex() ?? 'Anonymous',
     });
 
-  const extensions = [modelState.init(() => model), automerge({ handle: doc.handle, path: doc.path })];
+  const extensions = [automerge({ handle: doc.handle, path: doc.path })];
   if (awarenessProvider) {
     extensions.push(awareness(awarenessProvider));
   }
 
-  const model: EditorModel = {
+  return {
     id: obj.id,
     content: doc,
     text: () => get(doc.handle.docSync(), doc.path),
@@ -114,6 +114,4 @@ const createModel = ({ space, identity, text }: UseTextModelProps) => {
         }
       : undefined,
   };
-
-  return model;
 };

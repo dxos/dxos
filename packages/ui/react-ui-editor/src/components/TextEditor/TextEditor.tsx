@@ -207,15 +207,7 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
     );
 
     return (
-      <div
-        role='none'
-        ref={rootRef}
-        key={model.id}
-        tabIndex={0}
-        onKeyUp={handleKeyUp}
-        {...slots.root}
-        {...tabsterDOMAttribute}
-      />
+      <div role='none' ref={rootRef} tabIndex={0} onKeyUp={handleKeyUp} {...slots.root} {...tabsterDOMAttribute} />
     );
   },
 );

@@ -161,7 +161,6 @@ const defaults: BasicExtensionsOptions = {
 
 export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extension => {
   const props: BasicExtensionsOptions = defaultsDeep({}, _props, defaults);
-  console.log(JSON.stringify(props, null, 2));
   return [
     // TODO(burdon): Doesn't catch errors in keymap functions.
     EditorView.exceptionSink.of((err) => {
