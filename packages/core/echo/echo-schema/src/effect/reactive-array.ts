@@ -8,7 +8,9 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
  * Extends the native array to make sure that arrays methods are correctly reactive.
  */
 export class ReactiveArray<T> extends Array<T> {
-  static [Symbol.species] = Array;
+  static get [Symbol.species]() {
+    return Array;
+  }
 
   static {
     /**

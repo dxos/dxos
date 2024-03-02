@@ -8,6 +8,7 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 
 import { type ReactiveHandler, createReactiveProxy, isValidProxyTarget } from './proxy';
 import { SchemaValidator } from './schema-validator';
+import { defineHiddenProperty } from '../util/property';
 
 export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T> {
   _proxyMap = new WeakMap<object, any>();
@@ -15,11 +16,7 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
 
   _init(target: any): void {
     SchemaValidator.initTypedTarget(target);
-    Object.defineProperty(target, inspect.custom, {
-      enumerable: false,
-      configurable: true,
-      value: this._inspect.bind(target),
-    });
+    defineHiddenProperty(target, inspect.custom, this._inspect.bind(target));
   }
 
   get(target: any, prop: string | symbol, receiver: any): any {
