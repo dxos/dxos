@@ -211,8 +211,8 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
             update.docChanged ||
             update.viewportChanged ||
             update.focusChanged ||
-            update.transactions.some((tr) => tr.effects.some((e) => e.is(forceUpdate)))
-            // (update.selectionSet && !options.selectionChangeDelay)
+            update.transactions.some((tr) => tr.effects.some((e) => e.is(forceUpdate))) ||
+            (update.selectionSet && !options.selectionChangeDelay)
           ) {
             ({ deco: this.deco, atomicDeco: this.atomicDeco } = buildDecorations(
               update.view,
@@ -226,7 +226,8 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
           }
         }
 
-        // TODO(burdon): BUG: If the cursor is at the end of a link at the end of a line, the cursor will float in space after the decoration is applied.
+        // TODO(burdon): BUG: If the cursor is at the end of a link at the end of a line,
+        //  the cursor will float in space or be in the wrong position after the decoration is applied.
         scheduleUpdate(view: EditorView) {
           this.clearUpdate();
           this.pendingUpdate = setTimeout(() => {
@@ -248,8 +249,8 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
       {
         provide: (plugin) => [
           EditorView.atomicRanges.of((view) => view.plugin(plugin)?.atomicDeco ?? Decoration.none),
-          EditorView.decorations.of((view) => view.plugin(plugin)?.deco ?? Decoration.none),
           EditorView.decorations.of((view) => view.plugin(plugin)?.atomicDeco ?? Decoration.none),
+          EditorView.decorations.of((view) => view.plugin(plugin)?.deco ?? Decoration.none),
         ],
       },
     ),
