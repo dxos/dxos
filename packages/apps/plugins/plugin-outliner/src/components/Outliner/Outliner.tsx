@@ -2,15 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Prec } from '@codemirror/state';
-import { type EditorView, keymap } from '@codemirror/view';
-import { ArrowSquareOut, DotsThreeVertical, DotOutline, X } from '@phosphor-icons/react';
-import React, { type HTMLAttributes, StrictMode, useEffect, useMemo, useRef, useState } from 'react';
+import { type Extension, Prec } from '@codemirror/state';
+import { EditorView, keymap } from '@codemirror/view';
+import { ArrowSquareOut, Circle, DotsThreeVertical, X } from '@phosphor-icons/react';
+import React, { type HTMLAttributes, StrictMode, useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { Button, DensityProvider, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
-import { type CursorInfo, type YText, decorateMarkdown, useTextModel, MarkdownEditor } from '@dxos/react-ui-editor';
+import { createDocAccessor, getTextContent } from '@dxos/react-client/echo';
+import { Button, DensityProvider, DropdownMenu, Input, useThemeContext, useTranslation } from '@dxos/react-ui';
+import {
+  type CursorInfo,
+  type YText,
+  useTextEditor,
+  defaultTheme,
+  automerge,
+  decorateMarkdown,
+  createMarkdownExtensions,
+} from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
+import { isNotFalsy } from '@dxos/util';
 
 import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
 import { OUTLINER_PLUGIN } from '../../meta';
@@ -24,58 +34,8 @@ type OutlinerOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 's
   isTasklist?: boolean;
 };
 
-//
-// Item
-//
-
-type OutlinerItemProps = {
-  item: Item;
-  active?: CursorSelection; // Request focus.
-  onSelect?: () => void;
-  onEnter?: (state?: CursorInfo) => void;
-  onDelete?: (state?: CursorInfo) => void;
-  onIndent?: (direction?: 'left' | 'right') => void;
-  onShift?: (direction?: 'up' | 'down') => void;
-  onCursor?: (direction?: 'home' | 'end' | 'up' | 'down', anchor?: number) => void;
-} & OutlinerOptions;
-
-const OutlinerItem = ({
-  item,
-  active,
-  isTasklist,
-  placeholder,
-  onSelect,
-  onEnter,
-  onDelete,
-  onIndent,
-  onShift,
-  onCursor,
-}: OutlinerItemProps) => {
-  const { t } = useTranslation(OUTLINER_PLUGIN);
-  const model = useTextModel({ text: item.text });
-
-  // Focus.
-  const [focus, setFocus] = useState(false);
-  useEffect(() => {
-    if (focus) {
-      onSelect?.();
-    }
-  }, [focus]);
-
-  // Focus and selection.
-  // NOTE: The only way to set focus after creating a new item is to pass focus=true into the editor.
-  // The editorRef updated by the editor's useImperativeHandle doesn't trigger an update here.
-  const editorRef = useRef<EditorView>(null);
-  useEffect(() => {
-    // NOTE: useImperativeHandle does not trigger editorRef.
-    // TODO(burdon): Set initial selection.
-    if (editorRef.current && active) {
-      editorRef.current?.focus();
-    }
-  }, [active]);
-
-  // Keys.
-  const outlinerKeymap = useMemo(() => {
+const useKeymap = ({ onEnter, onIndent, onDelete, onShift, onCursor }: OutlinerItemProps) =>
+  useMemo(() => {
     const getCursor = (view: EditorView): CursorInfo => {
       const { head, from, to } = view.state.selection.ranges[0];
       const { number: line } = view.state.doc.lineAt(head);
@@ -113,6 +73,21 @@ const OutlinerItem = ({
           },
         },
         {
+          key: 'Tab',
+          run: () => {
+            onIndent?.('right');
+            return true;
+          },
+          shift: () => {
+            onIndent?.('left');
+            return true;
+          },
+        },
+
+        //
+        // Nav
+        //
+        {
           key: 'ArrowLeft',
           run: (view) => {
             const { from, line } = getCursor(view);
@@ -134,17 +109,6 @@ const OutlinerItem = ({
             }
 
             return false;
-          },
-        },
-        {
-          key: 'Tab',
-          run: () => {
-            onIndent?.('right');
-            return true;
-          },
-          shift: () => {
-            onIndent?.('left');
-            return true;
           },
         },
 
@@ -184,7 +148,11 @@ const OutlinerItem = ({
           run: (view) => {
             const { from, line } = getCursor(view);
             if (line === 1) {
-              onCursor?.('up', from);
+              if (from === 0) {
+                onCursor?.('up', from);
+              } else {
+                view.dispatch({ selection: { anchor: 0 } });
+              }
               return true;
             }
 
@@ -212,9 +180,14 @@ const OutlinerItem = ({
         {
           key: 'ArrowDown',
           run: (view) => {
-            const { line, lines, from } = getCursor(view);
+            const { line, lines, length, from } = getCursor(view);
             if (line === lines) {
-              onCursor?.('down', from);
+              if (from === length) {
+                onCursor?.('down', from);
+              } else {
+                view.dispatch({ selection: { anchor: length } });
+              }
+
               return true;
             }
 
@@ -239,17 +212,67 @@ const OutlinerItem = ({
     );
   }, []);
 
-  if (!model) {
-    return null;
-  }
+//
+// Item
+//
+
+type OutlinerItemProps = {
+  item: Item;
+  active?: CursorSelection; // Request focus.
+  onSelect?: () => void;
+  onEnter?: (state?: CursorInfo) => void;
+  onDelete?: (state?: CursorInfo) => void;
+  onIndent?: (direction?: 'left' | 'right') => void;
+  onShift?: (direction?: 'up' | 'down') => void;
+  onCursor?: (direction?: 'home' | 'end' | 'up' | 'down', anchor?: number) => void;
+} & OutlinerOptions;
+
+const OutlinerItem = (props: OutlinerItemProps) => {
+  const { item, active, placeholder, isTasklist, onSelect, onDelete } = props;
+  const { t } = useTranslation(OUTLINER_PLUGIN);
+  const { themeMode } = useThemeContext();
+  const keymap = useKeymap(props);
+
+  const [focus, setFocus] = useState(false);
+  useEffect(() => {
+    if (focus) {
+      onSelect?.();
+    }
+  }, [focus]);
+
+  const extensions = useMemo<Extension[]>(
+    () =>
+      item.text
+        ? [
+            EditorView.baseTheme(defaultTheme),
+            EditorView.darkTheme.of(themeMode === 'dark'),
+            EditorView.editorAttributes.of({ class: 'grow' }),
+            EditorView.updateListener.of(({ view }) => setFocus(view.hasFocus)),
+
+            // lineNumbers(), // Debug-only.
+            createMarkdownExtensions({ themeMode, placeholder }),
+            decorateMarkdown({ renderLinkButton: onRenderLink }),
+            automerge(createDocAccessor(item.text)),
+            keymap,
+          ].filter(isNotFalsy)
+        : [],
+    [item.text],
+  );
+
+  const { parentRef, view } = useTextEditor({ extensions, doc: getTextContent(item.text) }, [extensions]);
+  useEffect(() => {
+    if (active) {
+      view?.focus();
+    }
+  }, [view, active]);
 
   return (
-    <div className='flex group'>
-      <div className='flex flex-col shrink-0 justify-center h-[40px] cursor-pointer' title={item.id.slice(0, 8)}>
+    <div className='flex'>
+      <div className='flex flex-col shrink-0 h-[40px] justify-center cursor-pointer'>
         {(isTasklist && (
           <Input.Root>
             <Input.Checkbox
-              classNames='ml-2'
+              classNames='mx-2'
               checked={item.done}
               onCheckedChange={(checked) => {
                 item.done = !!checked;
@@ -257,27 +280,15 @@ const OutlinerItem = ({
             />
           </Input.Root>
         )) || (
-          <DotOutline
+          <Circle
             weight={focus ? 'fill' : undefined}
-            className={mx('cursor-pointer', getSize(6), active && 'text-primary-500')}
+            className={mx('mx-2 cursor-pointer', getSize(4), active && 'text-primary-500')}
             onClick={() => onSelect?.()}
           />
         )}
       </div>
 
-      <MarkdownEditor
-        ref={editorRef}
-        model={model}
-        extensions={[outlinerKeymap, decorateMarkdown({ renderLinkButton: onRenderLink })]}
-        autoFocus={!!active}
-        placeholder={placeholder}
-        slots={{
-          root: {
-            onFocus: () => setFocus(true),
-            onBlur: () => setFocus(false),
-          },
-        }}
-      />
+      <div ref={parentRef} className='flex grow pt-1' />
 
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
@@ -337,7 +348,6 @@ const OutlinerBranch = ({
           <OutlinerItem
             item={item}
             active={active?.itemId === item.id ? active : undefined}
-            placeholder='Enter text'
             onCursor={(...args) => onItemCursor?.(root, item, ...args)}
             onSelect={() => onItemSelect?.(root, item)}
             onEnter={(...args) => onItemCreate?.(root, item, ...args)}
@@ -531,7 +541,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
 
       case 'up': {
         const previous = getPrevious(root, item);
-        if (previous) {
+        if (previous && previous !== root) {
           setActive({ itemId: previous.id, anchor });
         }
         break;

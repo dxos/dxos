@@ -31,15 +31,17 @@ const Story = ({
         () => {
           let text = '';
           switch (data) {
-            case 'words':
+            case 'words': {
               text = faker.lorem.words();
               break;
-            case 'sentences':
+            }
+            case 'sentences': {
               text = faker.lorem
                 .sentences({ min: 1, max: 3 })
                 .split(/\. \s*/)
                 .join('.\n');
               break;
+            }
           }
 
           return {

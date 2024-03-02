@@ -228,6 +228,7 @@ describe('Serializer from Hypergraph to Automerge', () => {
       );
       db.add(obj);
 
+      // TODO(burdon): Remove.
       const yjs = new TextObject(undefined, undefined, undefined, { automerge: false });
       yjs.doc!.transact(() => {
         const yMap = yjs.doc!.getMap('records');
