@@ -3,7 +3,7 @@
 //
 
 import { ArticleMedium, type IconProps } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-core';
+import { computed, effect } from '@preact/signals-core';
 import { deepSignal } from 'deepsignal/react';
 import React, { useMemo, type Ref } from 'react';
 
@@ -151,7 +151,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                       properties: {
                         // TODO(wittjosiah): Reconcile with metadata provides.
                         label: object.title ||
-                          getFallbackTitle(object) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
+                          computed(() => getFallbackTitle(object)).value || [
+                            'document title placeholder',
+                            { ns: MARKDOWN_PLUGIN },
+                          ],
                         icon: (props: IconProps) => <ArticleMedium {...props} />,
                         testId: 'spacePlugin.object',
                         persistenceClass: 'echo',
