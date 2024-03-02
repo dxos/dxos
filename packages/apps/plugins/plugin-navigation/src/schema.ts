@@ -2,13 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Router, type AnyRoute } from '@tanstack/react-router';
+import { type Router, type RouteOptions as NaturalRouteOptions } from '@tanstack/react-router';
 
 import { type Plugin } from '@dxos/app-framework';
 
+export type RouteOptions = Omit<NaturalRouteOptions, 'getParentRoute'> & {
+  parentId: string;
+  id: string;
+  path?: string;
+};
+
 export type RoutesProvides = {
   navigation: {
-    routes: (addRoute: (id: string, cb: (parent: AnyRoute) => [string, AnyRoute]) => void) => void;
+    routes: (createRoute: (options: RouteOptions) => void) => void;
   };
 };
 

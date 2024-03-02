@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { RouterProvider, createRouter, createRootRoute, type AnyRoute } from '@tanstack/react-router';
+import { RouterProvider, createRouter, createRootRoute, type AnyRoute, createRoute } from '@tanstack/react-router';
 import { deepSignal, shallow } from 'deepsignal/react';
 import React from 'react';
 
@@ -27,9 +27,14 @@ export const NavigationPlugin = (): PluginDefinition<RouterProvides> => {
         .filter(nonNullable)
         .reduce(
           (acc, plugin) => {
-            plugin.provides.navigation.routes((parentId, cb) => {
+            plugin.provides.navigation.routes((options) => {
+              const { parentId, id, path, ...rest } = options;
               const parent = acc[parentId] || root;
-              const [id, route] = cb(parent);
+              const route = createRoute({
+                getParentRoute: () => parent,
+                ...(path ? { path } : { id }),
+                ...rest,
+              });
               parent.addChildren([...(parent.children || []), route]);
               acc[id] = route;
             });

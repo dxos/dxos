@@ -4,7 +4,6 @@
 
 import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-core';
-import { createRoute } from '@tanstack/react-router';
 import { type RevertDeepSignal } from 'deepsignal/react';
 import { deepSignal } from 'deepsignal/react';
 import React, { type PropsWithChildren } from 'react';
@@ -186,15 +185,12 @@ export const LayoutPlugin = ({
         </Mosaic.Root>
       ),
       navigation: {
-        routes: (addRoute) => {
-          addRoute('root', (parent) => [
-            'main',
-            createRoute({
-              getParentRoute: () => parent,
-              id: 'main',
-              component: MainLayout,
-            }),
-          ]);
+        routes: (createRoute) => {
+          createRoute({
+            parentId: 'root',
+            id: 'main',
+            component: MainLayout,
+          });
         },
       },
       // root: () => {

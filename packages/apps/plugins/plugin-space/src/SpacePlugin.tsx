@@ -4,7 +4,6 @@
 
 import { type IconProps, Folder as FolderIcon, Plus, SignIn } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
-import { createRoute } from '@tanstack/react-router';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import localforage from 'localforage';
 import React from 'react';
@@ -235,16 +234,13 @@ export const SpacePlugin = ({
         },
       },
       navigation: {
-        routes: (addRoute) => {
-          addRoute('main', (parent) => [
-            SPACE_PLUGIN,
-            createRoute({
-              getParentRoute: () => parent,
-              path: '/',
-              component: () => <div>hello</div>,
-            }),
-          ]);
-        },
+        routes: (createRoute) =>
+          createRoute({
+            parentId: 'main',
+            id: SPACE_PLUGIN,
+            path: '/',
+            component: () => <div>hello</div>,
+          }),
       },
       surface: {
         component: ({ data, role }) => {

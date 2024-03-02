@@ -42,7 +42,6 @@
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.5.1",
-    "@tanstack/react-router": "^1.17.5",
     "deepsignal": "^1.5.0",
     "jszip": "^3.10.1",
     "localforage": "^1.10.0",
