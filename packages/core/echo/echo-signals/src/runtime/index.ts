@@ -23,6 +23,11 @@ export interface SignalRuntime {
    * All writes inside the callback will be batched and notified when the callback is finished.
    */
   batch(cb: () => void): void;
+
+  /**
+   * @deprecated Temporary measure to prevent ECHO from subscribing to signals within its internals.
+   */
+  untracked(cb: () => void): void;
 }
 
 export const runtimeList: SignalRuntime[] = [];
@@ -84,6 +89,20 @@ class CompositeRuntime implements SignalRuntime {
     runtimeUsed = true;
 
     return new CompositeSignal(runtimeList.map((runtime) => runtime.createSignal()));
+  }
+
+  untracked(cb: () => void): void {
+    runtimeUsed = true;
+
+    const callUntrackedRecursively = (index: number): void => {
+      if (index >= runtimeList.length) {
+        return cb();
+      } else {
+        return runtimeList[index].untracked(() => callUntrackedRecursively(index + 1));
+      }
+    };
+
+    return callUntrackedRecursively(0);
   }
 }
 

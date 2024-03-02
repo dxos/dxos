@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { signal, batch } from '@preact/signals';
+import { signal, batch, untracked } from '@preact/signals';
 
 import { registerSignalRuntime as registerRuntimeForEcho } from './runtime';
 
@@ -28,6 +28,7 @@ export const registerSignalRuntime = () => {
       };
     },
     batch,
+    untracked,
   });
 };
 

@@ -26,6 +26,15 @@ registerSignalRuntime({
   batch(cb) {
     cb();
   },
+  untracked(cb) {
+    let prev = areSignalsProhibited;
+    try {
+      areSignalsProhibited = false;
+      cb();
+    } finally {
+      areSignalsProhibited = prev;
+    }
+  },
 });
 
 /**
