@@ -154,6 +154,7 @@ export class Query<T extends TypedObject = TypedObject> {
   private _ensureCachePresent() {
     if (!this._resultCache) {
       prohibitSignalActions(() => {
+        // TODO(dmaretskyi): Clean up getters in the internal signals so they don't use the Proxy API and don't hit the signals.
         compositeRuntime.untracked(() => {
           this._resultCache = Array.from(this._sources).flatMap((source) => source.getResults()) as QueryResult<T>[];
           this._objectCache = this._resultCache
