@@ -186,6 +186,9 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
 
 export interface DecorateOptions {
   renderLinkButton?: (el: Element, url: string) => void;
+  /**
+   * Prevents triggering decorations as the cursor moves through the document.
+   */
   selectionChangeDelay?: number;
 }
 
@@ -204,7 +207,13 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
         }
 
         update(update: ViewUpdate) {
+          if (update.selectionSet && options.selectionChangeDelay) {
+            this.scheduleUpdate(update.view);
+            return;
+          }
+
           if (
+            update.selectionSet ||
             update.docChanged ||
             update.viewportChanged ||
             update.focusChanged ||
@@ -217,19 +226,15 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
             ));
 
             this.clearUpdate();
-          } else if (update.selectionSet) {
-            // TODO(burdon): Make optional.
-            this.scheduleUpdate(update.view);
           }
         }
 
+        // TODO(burdon): BUG: If the cursor is at the end of a link at the end of a line, the cursor will float in space after the decoration is applied.
         scheduleUpdate(view: EditorView) {
-          console.log('>>>');
           this.clearUpdate();
           this.pendingUpdate = setTimeout(() => {
-            console.log('!!');
             view.dispatch({ effects: forceUpdate.of(null) });
-          }, options.selectionChangeDelay ?? 400);
+          }, options.selectionChangeDelay);
         }
 
         clearUpdate() {
