@@ -3,12 +3,25 @@
 //
 
 export interface GenericSignal {
+  /**
+   * Simulate a read operation on the signal.
+   * Subscribes the current computation to the signal.
+   */
   notifyRead(): void;
+
+  /**
+   * Simulate a write operation on the signal.
+   * Notifies all subscribed computations about the change.
+   */
   notifyWrite(): void;
 }
 
 export interface SignalRuntime {
   createSignal(): GenericSignal;
+
+  /**
+   * All writes inside the callback will be batched and notified when the callback is finished.
+   */
   batch(cb: () => void): void;
 }
 
