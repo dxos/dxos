@@ -36,12 +36,13 @@ export const MessageContainer = ({
     (member) => message.from.identityKey && PublicKey.equals(member.identity.identityKey, message.from.identityKey),
   )?.identity;
   const messageMetadata = useMessageMetadata(message.id, identity);
+
   return (
     <Message<MessageType.Block>
       {...messageMetadata}
-      onDelete={onDelete}
       blocks={message.blocks ?? []}
       MessageBlockComponent={MessageBlock}
+      onDelete={onDelete}
     />
   );
 };

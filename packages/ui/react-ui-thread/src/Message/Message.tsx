@@ -21,7 +21,6 @@ import { translationKey } from '../translations';
 import { type MessageEntity, type MessageEntityBlock, type MessageMetadata } from '../types';
 
 const avatarSize = 7;
-
 const messageCell = 'plb-1 min-is-0';
 
 export type MessageMetaProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
@@ -98,11 +97,10 @@ export type MessageProps<BlockValue> = MessageEntity<BlockValue> & {
   MessageBlockComponent?: FC<MessageBlockProps<BlockValue>>;
 };
 
+// TODO(burdon): Remove generic type?
 export const Message = <BlockValue,>(props: MessageProps<BlockValue>) => {
-  const { t, dtLocale } = useTranslation(translationKey);
-
   const { authorName, onDelete, blocks, id, MessageBlockComponent = DefaultMessageBlock, ...metaProps } = props;
-
+  const { t, dtLocale } = useTranslation(translationKey);
   const firstBlock = blocks[0];
   const dt = firstBlock.timestamp ? new Date(firstBlock.timestamp) : undefined;
 
@@ -197,6 +195,7 @@ export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
         authorStatus='active'
         continues={false}
       >
+        {/* TODO(burdon): Change to hook. */}
         <TextEditor
           slots={{ root: { className: mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50') } }}
           readonly={disabled}

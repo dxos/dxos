@@ -64,6 +64,7 @@ export const useTextModel = (props: UseTextModelProps): EditorModel | undefined 
  * For use primarily in stories & tests so the dependence on TextObject can be avoided.
  * @deprecated
  */
+// TODO(burdon): Remove.
 export const useInMemoryTextModel = ({
   id,
   defaultContent,
