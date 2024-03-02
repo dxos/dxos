@@ -107,4 +107,6 @@ export const os = {
   'reset device label': 'Reset device',
   'reset device confirm message': 'Are you sure you want to reset your device? All data will be lost.',
   'emoji and color label': 'Emoji and color',
+  'clear label': 'Use default',
+  'select emoji label': 'Choose an emoji to use in your avatar',
 };
