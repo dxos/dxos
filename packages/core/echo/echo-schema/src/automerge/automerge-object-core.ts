@@ -387,6 +387,15 @@ export class AutomergeObjectCore {
     });
   }
 
+  getType(): Reference | undefined {
+    const value = this.decode(this.get(['system', 'type']));
+    if (!value) {
+      return undefined;
+    }
+    invariant(value instanceof Reference);
+    return value;
+  }
+
   isDeleted() {
     const value = this.get(['system', 'deleted']);
     return typeof value === 'boolean' ? value : false;
