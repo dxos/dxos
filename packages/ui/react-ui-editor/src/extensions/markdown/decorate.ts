@@ -207,17 +207,12 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
         }
 
         update(update: ViewUpdate) {
-          if (update.selectionSet && options.selectionChangeDelay) {
-            this.scheduleUpdate(update.view);
-            return;
-          }
-
           if (
-            update.selectionSet ||
             update.docChanged ||
             update.viewportChanged ||
             update.focusChanged ||
             update.transactions.some((tr) => tr.effects.some((e) => e.is(forceUpdate)))
+            // (update.selectionSet && !options.selectionChangeDelay)
           ) {
             ({ deco: this.deco, atomicDeco: this.atomicDeco } = buildDecorations(
               update.view,
@@ -226,6 +221,8 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
             ));
 
             this.clearUpdate();
+          } else if (update.selectionSet) {
+            this.scheduleUpdate(update.view);
           }
         }
 
@@ -251,8 +248,8 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
       {
         provide: (plugin) => [
           EditorView.atomicRanges.of((view) => view.plugin(plugin)?.atomicDeco ?? Decoration.none),
-          EditorView.decorations.of((view) => view.plugin(plugin)?.atomicDeco ?? Decoration.none),
           EditorView.decorations.of((view) => view.plugin(plugin)?.deco ?? Decoration.none),
+          EditorView.decorations.of((view) => view.plugin(plugin)?.atomicDeco ?? Decoration.none),
         ],
       },
     ),
