@@ -10,6 +10,7 @@ import { log } from '@dxos/log';
 
 import { type Filter } from './filter';
 import { type EchoObject, type TypedObject } from '../object';
+import { prohibitSignalActions } from '../guarded-scope';
 
 // TODO(burdon): Reconcile with echo-db/database/selection.
 
@@ -152,8 +153,10 @@ export class Query<T extends TypedObject = TypedObject> {
 
   private _ensureCachePresent() {
     if (!this._resultCache) {
-      this._resultCache = Array.from(this._sources).flatMap((source) => source.getResults()) as QueryResult<T>[];
-      this._objectCache = this._resultCache.map((result) => result.object!).filter((object): object is T => !!object);
+      prohibitSignalActions(() => {
+        this._resultCache = Array.from(this._sources).flatMap((source) => source.getResults()) as QueryResult<T>[];
+        this._objectCache = this._resultCache.map((result) => result.object!).filter((object): object is T => !!object);
+      });
     }
   }
 
