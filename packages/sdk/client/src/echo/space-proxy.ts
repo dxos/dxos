@@ -115,7 +115,7 @@ export class SpaceProxy implements Space {
       itemManager: this._itemManager,
       spaceKey: this.key,
     });
-    this._db = new EchoDatabaseImpl(this._itemManager, this._dbBackend, graph, automergeContext);
+    this._db = new EchoDatabaseImpl({ spaceKey: this._dbBackend.spaceKey, graph, automergeContext });
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
