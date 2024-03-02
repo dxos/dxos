@@ -3,7 +3,6 @@
 //
 
 import { DocumentModel } from '@dxos/document-model';
-import { type DatabaseProxy } from '@dxos/echo-db';
 import {
   DatabaseTestBuilder,
   createMemoryDatabase,
@@ -20,11 +19,15 @@ import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 import { schemaBuiltin } from '../proto';
 
+export type CreateDatabaseOpts = {
+  useReactiveObjectApi?: boolean;
+};
+
 /**
  * @deprecated Use TestBuilder.
  */
 // TODO(burdon): Builder pattern.
-export const createDatabase = async (graph = new Hypergraph()) => {
+export const createDatabase = async (graph = new Hypergraph(), { useReactiveObjectApi }: CreateDatabaseOpts = {}) => {
   // prettier-ignore
   const modelFactory = new ModelFactory()
     .registerModel(DocumentModel)
@@ -36,7 +39,7 @@ export const createDatabase = async (graph = new Hypergraph()) => {
   const host = await createMemoryDatabase(modelFactory);
   const proxy = await createRemoteDatabaseFromDataServiceHost(modelFactory, host.backend.createDataServiceHost());
   const automergeContext = new AutomergeContext();
-  const db = new EchoDatabaseImpl(proxy.itemManager, proxy.backend as DatabaseProxy, graph, automergeContext);
+  const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey: proxy.backend.spaceKey, useReactiveObjectApi });
   await db.automerge.open({
     rootUrl: automergeContext.repo.create().url,
   });
@@ -79,7 +82,11 @@ export class TestBuilder {
 }
 
 export class TestPeer {
-  public db = new EchoDatabaseImpl(this.base.items, this.base.proxy, this.builder.graph, this.builder.automergeContext);
+  public db = new EchoDatabaseImpl({
+    spaceKey: this.base.proxy.spaceKey,
+    graph: this.builder.graph,
+    automergeContext: this.builder.automergeContext,
+  });
 
   constructor(
     public readonly builder: TestBuilder,
@@ -90,7 +97,11 @@ export class TestPeer {
 
   async reload() {
     await this.base.reload();
-    this.db = new EchoDatabaseImpl(this.base.items, this.base.proxy, this.builder.graph, this.builder.automergeContext);
+    this.db = new EchoDatabaseImpl({
+      spaceKey: this.base.proxy.spaceKey,
+      graph: this.builder.graph,
+      automergeContext: this.builder.automergeContext,
+    });
     await this.db.automerge.open({
       rootUrl: this.automergeDocId,
     });
@@ -102,9 +113,6 @@ export class TestPeer {
   }
 
   async flush() {
-    if (this.db._backend.currentBatch) {
-      this.db._backend.commitBatch();
-    }
     await this.base.confirm();
     await this.db.flush();
   }
