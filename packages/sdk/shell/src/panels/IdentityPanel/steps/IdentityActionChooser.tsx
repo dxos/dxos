@@ -30,11 +30,9 @@ export const IdentityActionChooser = (props: IdentityPanelStepProps) => {
   const createInvitation = (e: React.MouseEvent) => {
     const testing = e.altKey && e.shiftKey;
     invitations.forEach((invitation) => invitation.cancel());
-    // TODO(nf): make persistent configurable
+    // TODO(nf): allow user to make invitations non-persistent?
     const invitation = client.halo.share(
-      testing
-        ? { type: Invitation.Type.MULTIUSE, authMethod: Invitation.AuthMethod.NONE, persistent: true }
-        : undefined,
+      testing ? { type: Invitation.Type.MULTIUSE, authMethod: Invitation.AuthMethod.NONE } : undefined,
     );
     // TODO(wittjosiah): Don't depend on NODE_ENV.
     if (process.env.NODE_ENV !== 'production') {

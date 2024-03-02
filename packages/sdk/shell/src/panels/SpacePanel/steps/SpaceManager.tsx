@@ -80,21 +80,21 @@ export const SpaceManager = (props: SpaceManagerProps) => {
         }
       }, [space]),
     },
-    invitePersistent: {
-      label: t('invite persistent label'),
-      description: t('invite persistent description'),
-      icon: UserPlus,
-      onClick: useCallback(() => {
-        const invitation = space.share?.({
-          type: Invitation.Type.MULTIUSE,
-          authMethod: Invitation.AuthMethod.NONE,
-          persistent: true,
-          target,
-        });
-        if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
-          invitation.subscribe(onInvitationEvent);
-        }
-      }, [space]),
+    // inviteNonPersistent: {
+    //   label: 'Invite one (nonpersistent)',
+    //   description: 'Only one user may join. Invitation does not resume if client is restarted.',
+    //   icon: UserPlus,
+    //   onClick: useCallback(() => {
+    //     const invitation = space.share?.({
+    //       type: Invitation.Type.INTERACTIVE,
+    //       authMethod: Invitation.AuthMethod.SHARED_SECRET,
+    //       persistent: false,
+    //       target,
+    //     });
+    //     if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
+    //       invitation.subscribe(onInvitationEvent);
+    //     }
+    //   }, [space]),
     },
   };
 
