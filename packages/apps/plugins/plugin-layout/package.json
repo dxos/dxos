@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-navigation": "workspace:*",
     "@braneframe/plugin-settings": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -30,6 +31,7 @@
     "@dxos/local-storage": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@preact/signals-core": "^1.5.1",
+    "@tanstack/react-router": "^1.17.5",
     "deepsignal": "^1.5.0"
   },
   "devDependencies": {

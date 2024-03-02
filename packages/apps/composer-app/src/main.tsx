@@ -27,6 +27,7 @@ import MarkdownMeta from '@braneframe/plugin-markdown/meta';
 import MermaidMeta from '@braneframe/plugin-mermaid/meta';
 import MetadataMeta from '@braneframe/plugin-metadata/meta';
 import NativeMeta from '@braneframe/plugin-native/meta';
+import NavigationMeta from '@braneframe/plugin-navigation/meta';
 import NavTreeMeta from '@braneframe/plugin-navtree/meta';
 import ObservabilityMeta from '@braneframe/plugin-observability/meta';
 import OutlinerMeta from '@braneframe/plugin-outliner/meta';
@@ -129,6 +130,7 @@ const main = async () => {
       GptMeta,
 
       // Framework extensions
+      NavigationMeta,
       // TODO(wittjosiah): Space plugin currently needs to be before the Graph plugin.
       //  Root folder needs to be created before the graph is built or else it's not ordered first.
       GraphMeta,
@@ -189,6 +191,7 @@ const main = async () => {
       ...(isSocket
         ? { [NativeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-native')) }
         : { [PwaMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-pwa')) }),
+      [NavigationMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-navigation')),
       [NavTreeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-navtree')),
       [OutlinerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-outliner')),
       [PresenterMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-presenter')),
@@ -227,6 +230,7 @@ const main = async () => {
       HelpMeta.id,
       LayoutMeta.id,
       MetadataMeta.id,
+      NavigationMeta.id,
       NavTreeMeta.id,
       ...(isSocket ? [NativeMeta.id] : [PwaMeta.id]),
       RegistryMeta.id,

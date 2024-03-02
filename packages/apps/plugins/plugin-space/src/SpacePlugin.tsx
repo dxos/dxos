@@ -233,6 +233,15 @@ export const SpacePlugin = ({
           },
         },
       },
+      navigation: {
+        routes: (createRoute) =>
+          createRoute({
+            parentId: 'main',
+            id: SPACE_PLUGIN,
+            path: '/',
+            component: () => <div>hello</div>,
+          }),
+      },
       surface: {
         component: ({ data, role }) => {
           switch (role) {

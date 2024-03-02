@@ -3,10 +3,11 @@
 //
 
 import { Sidebar as MenuIcon, X } from '@phosphor-icons/react';
+import { Outlet } from '@tanstack/react-router';
 import React from 'react';
 
 import { Surface, type Toast as ToastSchema } from '@dxos/app-framework';
-import { Button, Main, Dialog, useTranslation, DensityProvider, Popover, Status } from '@dxos/react-ui';
+import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/react-ui';
 import { baseSurface, fixedInsetFlexLayout, getSize } from '@dxos/react-ui-theme';
 
 import { Fallback } from './Fallback';
@@ -125,7 +126,7 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
         <Main.Overlay />
 
         {/* Main content surface. */}
-        <Surface
+        {/* <Surface
           role='main'
           limit={1}
           fallback={Fallback}
@@ -135,7 +136,8 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
               <Status indeterminate aria-label='Initializing' />
             </div>
           }
-        />
+        /> */}
+        <Outlet />
 
         {/* Status info. */}
         {/* TODO(burdon): Currently obscured by complementary sidebar. */}

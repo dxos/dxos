@@ -1,0 +1,46 @@
+{
+  "name": "@braneframe/plugin-navigation",
+  "version": "0.4.6",
+  "description": "DXOS app navigation plugin built with TanStack Router.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "exports": {
+    ".": "./dist/lib/browser/index.mjs",
+    "./meta": "./dist/lib/browser/meta.mjs",
+    "./schema": "./dist/lib/browser/schema.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "meta": [
+        "dist/types/src/meta.d.ts"
+      ],
+      "schema": [
+        "dist/types/src/schema.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/util": "workspace:*",
+    "@tanstack/react-router": "^1.17.5",
+    "deepsignal": "^1.5.0"
+  },
+  "devDependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@types/react": "^18.0.21",
+    "react": "^18.2.0"
+  },
+  "peerDependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "react": "^18.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
