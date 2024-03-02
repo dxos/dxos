@@ -79,7 +79,7 @@ export class AutomergeObjectCore {
   /**
    * Reactive signal for update propagation.
    */
-  public signal = compositeRuntime.createSignal();
+  public signal = compositeRuntime.createSignal(this);
 
   /**
    * User-facing proxy for the object.
