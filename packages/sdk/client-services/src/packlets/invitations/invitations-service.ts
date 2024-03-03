@@ -9,6 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import {
   type AuthenticationRequest,
+  type AcceptInvitationRequest,
   Invitation,
   type InvitationsService,
   QueryInvitationsResponse,
@@ -72,15 +73,20 @@ export class InvitationsServiceImpl implements InvitationsService {
     });
   }
 
-  acceptInvitation(options: Invitation): Stream<Invitation> {
+  acceptInvitation({ invitation: options, deviceProfile }: AcceptInvitationRequest): Stream<Invitation> {
     let invitation: AuthenticatingInvitation;
+
+    // TODO(nf): duplicate check in InvitationHandler
+    if (deviceProfile) {
+      invariant(options.kind === Invitation.Kind.DEVICE, 'deviceProfile provided for non-device invitation');
+    }
 
     const existingInvitation = this._acceptInvitations.get(options.invitationId);
     if (existingInvitation) {
       invitation = existingInvitation;
     } else {
       const handler = this._getHandler(options);
-      invitation = this._invitationsHandler.acceptInvitation(handler, options);
+      invitation = this._invitationsHandler.acceptInvitation(handler, options, deviceProfile);
       this._acceptInvitations.set(invitation.get().invitationId, invitation);
       this._invitationAccepted.emit(invitation.get());
     }

@@ -23,8 +23,8 @@ parameters:
 
 aliases:
   # https://github.com/dxos/dxos/issues/4946
-  # - &node-version [ "18.19.0", "20.10.0", "21.4.0" ]
-  - &node-version [ "18.19.0", "20.10.0"]
+  # - &node-version [ "18.19.0", "20.11.1", "21.6.2" ]
+  - &node-version [ "18.19.1", "20.11.1"]
   - &docker_image_default
     image: ghcr.io/dxos/circleci-node:18.19.0
     auth:
@@ -144,6 +144,8 @@ jobs:
     docker:
       - *docker_image_default
     resource_class: xlarge
+    environment:
+      DX_ENVIRONMENT: circleci
     steps:
       - checkout
       - *cache_restore
@@ -151,7 +153,7 @@ jobs:
       - run: pnpm install-playwright
       - *cache_save
       - nx/set-shas
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=2
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1 --xmlReport
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=chromatic

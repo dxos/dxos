@@ -5,8 +5,9 @@
 // NOTE: Export * fails here.
 export {
   type Contact,
-  type Device,
+  Device,
   DeviceKind,
+  DeviceType,
   type Identity,
   // generateSeedPhrase,
   type Halo,

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Graph, Node } from '@dxos/app-graph';
+import type { Graph } from '@dxos/app-graph';
 import type { UnsubscribeCallback } from '@dxos/async';
 
 import type { Plugin } from '../PluginHost';
@@ -16,7 +16,7 @@ export type GraphProvides = {
 
 export type GraphBuilderProvides = {
   graph: {
-    builder: (params: { parent: Node; plugins: Plugin[] }) => UnsubscribeCallback | void;
+    builder: (plugins: Plugin[], graph: Graph) => UnsubscribeCallback | void;
   };
 };
 

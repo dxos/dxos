@@ -20,9 +20,10 @@ export interface AutomergeDocumentLoader {
   onObjectDocumentLoaded: Event<ObjectDocumentLoaded>;
 
   loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void>;
+  loadObjectDocument(objectId: string): void;
   getSpaceRootDocHandle(): DocHandle<SpaceDoc>;
   createDocumentForObject(objectId: string): DocHandle<SpaceDoc>;
-  loadLinkedObjects(links: SpaceDocumentLinks): void;
+  onObjectLinksUpdated(links: SpaceDocumentLinks): void;
   onObjectBoundToDocument(handle: DocHandle<SpaceDoc>, objectId: string): void;
 }
 
@@ -35,6 +36,11 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
    * An object id pointer to a handle of the document where the object is stored inline.
    */
   private readonly _objectDocumentHandles = new Map<string, DocHandle<SpaceDoc>>();
+  /**
+   * If object was requested via loadObjectDocument but root document links weren't updated yet
+   * loading will be triggered in onObjectLinksUpdated callback.
+   */
+  private readonly _objectsPendingDocumentLoad = new Set<string>();
 
   public readonly onObjectDocumentLoaded = new Event<ObjectDocumentLoaded>();
 
@@ -61,6 +67,33 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     }
   }
 
+  public loadObjectDocument(objectId: string) {
+    invariant(this._spaceRootDocHandle);
+    if (this._objectDocumentHandles.has(objectId) || this._objectsPendingDocumentLoad.has(objectId)) {
+      return;
+    }
+    const spaceRootDoc = this._spaceRootDocHandle.docSync();
+    invariant(spaceRootDoc);
+    const documentUrl = (spaceRootDoc.links ?? {})[objectId];
+    if (documentUrl == null) {
+      this._objectsPendingDocumentLoad.add(objectId);
+      log.info('loading delayed until object links are initialized', { objectId });
+      return;
+    }
+    this._loadLinkedObjects({ [objectId]: documentUrl });
+  }
+
+  public onObjectLinksUpdated(links: SpaceDocumentLinks) {
+    if (!links) {
+      return;
+    }
+    const linksAwaitingLoad = Object.entries(links).filter(([objectId]) =>
+      this._objectsPendingDocumentLoad.has(objectId),
+    );
+    this._loadLinkedObjects(Object.fromEntries(linksAwaitingLoad));
+    linksAwaitingLoad.forEach(([objectId]) => this._objectsPendingDocumentLoad.delete(objectId));
+  }
+
   public getSpaceRootDocHandle(): DocHandle<SpaceDoc> {
     invariant(this._spaceRootDocHandle);
     return this._spaceRootDocHandle;
@@ -82,7 +115,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     this._objectDocumentHandles.set(objectId, handle);
   }
 
-  public loadLinkedObjects(links: SpaceDocumentLinks) {
+  private _loadLinkedObjects(links: SpaceDocumentLinks) {
     if (!links) {
       return;
     }

@@ -31,6 +31,7 @@ import {
   DropdownMenu,
   Tooltip,
   useJdenticonHref,
+  toLocalizedString,
 } from '@dxos/react-ui';
 import { useTextModel } from '@dxos/react-ui-editor';
 import { defaultTx, descriptionText, getSize, mx } from '@dxos/react-ui-theme';
@@ -191,7 +192,7 @@ const EmbeddedLayoutImpl = () => {
                           <Avatar.Fallback href={spaceJdenticon} />
                         </Avatar.Frame>
                         <Avatar.Label classNames='text-sm text-[--surface-text]'>
-                          {Array.isArray(name) ? t(...name) : name}
+                          {name && toLocalizedString(name, t)}
                         </Avatar.Label>
                       </div>
                     </Avatar.Root>

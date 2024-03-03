@@ -36,7 +36,6 @@ export type MarkdownBundleOptions = {
  * https://codemirror.net/docs/community
  * https://codemirror.net/docs/ref/#codemirror.basicSetup
  */
-// TODO(burdon): Add Composer here: https://codemirror.net/docs/community
 export const createMarkdownExtensions = ({
   themeMode,
   placeholder: _placeholder,

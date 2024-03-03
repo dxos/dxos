@@ -6,7 +6,8 @@ export default interactiveDirectory({
   src: __filename.endsWith('.ts') ? __dirname : path.resolve(__dirname, '../../src'),
   inputShape: z.object({
     name: z.string().describe('Name the new package').default(path.basename(process.cwd())),
-    createFolder: z.boolean().describe('Create a new folder for the project').default(true)
+    createFolder: z.boolean().describe('Create a new folder for the project').default(true),
+    defaultPlugins: z.boolean().describe('Include default plugins').default(true),
   }),
   options({ input, outputDirectory, ...rest }) {
     const { name, createFolder } = {...input};

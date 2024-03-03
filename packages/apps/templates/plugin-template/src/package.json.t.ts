@@ -14,33 +14,39 @@ type Context = { version: string } & InputOf<typeof template>;
 
 export namespace Features {
   export const react = (): Partial<PackageJson> => ({
-    devDependencies: {
+    dependencies: {
       react: '^18.2.0',
       'react-dom': '^18.2.0',
-      // TODO(wittjosiah): Don't upgrade to 18.2 yet.
-      //   https://github.com/creativetimofficial/material-tailwind/issues/528#issuecomment-1856348865
-      '@types/react': '~18.0.21',
-      '@types/react-dom': '~18.0.6',
+    },
+    devDependencies: {
+      '@types/react': '~18.2.0',
+      '@types/react-dom': '~18.2.0',
       '@vitejs/plugin-react': '^4.2.1',
     },
   });
 
   export const dxosUi = (): Partial<PackageJson> => ({
     dependencies: {
-      // '@dxos/react-ui': depVersion,
       '@phosphor-icons/react': '^2.0.5',
-      'react-router-dom': '^6.4.0',
     },
     devDependencies: {
-      // '@dxos/react-ui-theme': depVersion,
+      '@dxos/react-ui': '^0.4.6',
+      '@dxos/react-ui-theme': '^0.4.6',
     },
   });
 
-  export const tailwind = (): Partial<PackageJson> => ({
+  export const defaultPlugins = (): Partial<PackageJson> => ({
     devDependencies: {
-      tailwindcss: '~3.2.7',
-      autoprefixer: '^10.4.12',
-      postcss: '^8.4.21',
+      'vite-plugin-top-level-await': '^1.3.1',
+      'vite-plugin-wasm': '^3.3.0',
+      '@dxos/config': '^0.4.6',
+      '@braneframe/plugin-theme': '^0.4.6',
+      '@braneframe/plugin-space': '^0.4.6',
+      '@braneframe/plugin-navtree': '^0.4.6',
+      '@braneframe/plugin-layout': '^0.4.6',
+      '@braneframe/plugin-graph': '^0.4.6',
+      '@braneframe/plugin-client': '^0.4.6',
+      '@braneframe/plugin-stack': '^0.4.6',
     },
   });
 }
@@ -57,15 +63,14 @@ export const base = ({ name, version }: Context): Partial<PackageJson> => {
       build: 'tsc',
       dev: 'vite',
     },
+    dependencies: {
+      '@preact/signals-react': '^1.3.6',
+      "@dxos/app-framework": "0.4.6",
+    },
     devDependencies: {
       '@types/node': '^18.11.9',
       typescript: '^5.0.4',
       vite: '^5.1.3',
-      "postcss": "^8.4.21",
-      'vite-plugin-top-level-await': '^1.4.1',
-      'vite-plugin-wasm': '^3.3.0',
-      "autoprefixer": "^10.4.12",
-      "tailwindcss": "~3.4.1"
     },
   };
 };
@@ -86,7 +91,13 @@ export default template.define
         ...input,
       };
 
-      const [first, ...rest] = [base(context), slotPackageJson?.() ?? {}].filter(Boolean);
+      const [first, ...rest] = [
+        base(context),
+        Features.react(),
+        Features.dxosUi(),
+        input.defaultPlugins && Features.defaultPlugins(),
+        slotPackageJson?.() ?? {},
+      ].filter(Boolean);
 
       const packageJson = merge(first, ...rest);
 

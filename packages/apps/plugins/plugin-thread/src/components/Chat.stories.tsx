@@ -56,7 +56,7 @@ const Story = () => {
     >
       <Mosaic.Root debug>
         <main className='max-is-prose mli-auto bs-dvh overflow-hidden'>
-          {space && <ChatContainer thread={thread} space={space} />}
+          {space && <ChatContainer thread={thread} />}
         </main>
         <Mosaic.DragOverlay />
       </Mosaic.Root>

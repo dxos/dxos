@@ -4,8 +4,9 @@
 
 import { EventSubscriptions } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
+import { invariant } from '@dxos/invariant';
 import {
-  type Device,
+  Device,
   DeviceKind,
   type DevicesService,
   type QueryDevicesResponse,
@@ -18,7 +19,7 @@ export class DevicesServiceImpl implements DevicesService {
   constructor(private readonly _identityManager: IdentityManager) {}
 
   async updateDevice(profile: DeviceProfileDocument): Promise<Device> {
-    throw new Error('Method not implemented.');
+    return this._identityManager.updateDeviceProfile(profile);
   }
 
   queryDevices(): Stream<QueryDevicesResponse> {
@@ -28,27 +29,62 @@ export class DevicesServiceImpl implements DevicesService {
         if (!deviceKeys) {
           next({ devices: [] });
         } else {
+          invariant(this._identityManager.identity?.presence, 'presence not present');
+          const peers = this._identityManager.identity.presence.getPeersOnline();
           next({
-            devices: Array.from(deviceKeys.entries()).map(([key, profile]) => ({
-              deviceKey: key,
-              kind: this._identityManager.identity?.deviceKey.equals(key) ? DeviceKind.CURRENT : DeviceKind.TRUSTED,
-              profile,
-            })),
+            devices: Array.from(deviceKeys.entries()).map(([key, profile]) => {
+              const isMe = this._identityManager.identity?.deviceKey.equals(key);
+              const peerState = peers.find((peer) => peer.identityKey.equals(key));
+
+              return {
+                deviceKey: key,
+                kind: this._identityManager.identity?.deviceKey.equals(key) ? DeviceKind.CURRENT : DeviceKind.TRUSTED,
+                profile,
+                presence: isMe
+                  ? Device.PresenceState.ONLINE
+                  : peerState
+                    ? Device.PresenceState.ONLINE
+                    : Device.PresenceState.OFFLINE,
+              };
+            }),
           });
         }
       };
 
+      let identitySubscribed = false;
+      let presenceSubscribed = false;
+      const subscribeIdentity = () => {
+        if (!identitySubscribed) {
+          this._identityManager.identity?.stateUpdate.on(() => {
+            update();
+          });
+          identitySubscribed = true;
+        }
+      };
+
+      const subscribePresence = () => {
+        if (!presenceSubscribed) {
+          this._identityManager.identity?.presence?.updated.on(() => {
+            update();
+          });
+          presenceSubscribed = true;
+        }
+      };
+
       const subscriptions = new EventSubscriptions();
+
+      if (this._identityManager.identity) {
+        subscribeIdentity();
+        subscribePresence();
+      }
+
       subscriptions.add(
         this._identityManager.stateUpdate.on(() => {
           update();
 
           if (this._identityManager.identity) {
-            subscriptions.add(
-              this._identityManager.identity.stateUpdate.on(() => {
-                update();
-              }),
-            );
+            subscribeIdentity();
+            subscribePresence();
           }
         }),
       );

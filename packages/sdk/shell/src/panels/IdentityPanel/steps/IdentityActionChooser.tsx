@@ -5,7 +5,7 @@
 import { CaretRight, Devices, Plus, Power, UserGear, HardDrive } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { useClient } from '@dxos/react-client';
+import { useAgentHostingProviderClient, useClient } from '@dxos/react-client';
 import { useHaloInvitations } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { DensityProvider, useTranslation } from '@dxos/react-ui';
@@ -20,6 +20,7 @@ export const IdentityActionChooser = (props: IdentityPanelStepProps) => {
   const { send } = props;
   const client = useClient();
   const invitations = useHaloInvitations();
+  const agentHostingProviderClient = useAgentHostingProviderClient(client.config);
   const onInvitationEvent = useCallback((invitation: Invitation) => {
     const invitationCode = InvitationEncoder.encode(invitation);
     if (invitation.state === Invitation.State.CONNECTING) {
@@ -38,7 +39,13 @@ export const IdentityActionChooser = (props: IdentityPanelStepProps) => {
     }
     send?.({ type: 'selectInvitation', invitation });
   };
-  return <IdentityActionChooserImpl {...props} onCreateInvitationClick={(e) => createInvitation(e)} />;
+  return (
+    <IdentityActionChooserImpl
+      {...props}
+      onCreateInvitationClick={(e) => createInvitation(e)}
+      agentHostingEnabled={!!agentHostingProviderClient}
+    />
+  );
 };
 
 export type IdentityActionChooserImplProps = IdentityActionChooserProps & {
@@ -51,6 +58,7 @@ export const IdentityActionChooserImpl = ({
   send,
   onDone,
   doneActionParent,
+  agentHostingEnabled,
 }: IdentityActionChooserImplProps) => {
   const { t } = useTranslation('os');
 
@@ -63,11 +71,13 @@ export const IdentityActionChooserImpl = ({
     <div role='none' className='grow flex flex-col gap-1'>
       <DensityProvider density='coarse'>
         <div className='grow justify-center flex flex-col gap-1'>
-          <Action data-testid='manage-agent' onClick={() => send?.({ type: 'chooseAgent' })} classNames='plb-4'>
-            <HardDrive className={getSize(6)} />
-            <span className='grow mli-3'>Manage Agent</span>
-            <CaretRight weight='bold' className={getSize(4)} />
-          </Action>
+          {agentHostingEnabled && (
+            <Action data-testid='manage-agent' onClick={() => send?.({ type: 'chooseAgent' })} classNames='plb-4'>
+              <HardDrive className={getSize(6)} />
+              <span className='grow mli-3'>Manage Agent</span>
+              <CaretRight weight='bold' className={getSize(4)} />
+            </Action>
+          )}
           <Action
             disabled={!active}
             data-testid='devices-panel.create-invitation'
