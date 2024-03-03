@@ -96,7 +96,7 @@ class CompositeRuntime implements SignalRuntime {
     runtimeUsed = true;
 
     return new CompositeSignal(
-      runtimeList.map((runtime) => runtime.createSignal()),
+      runtimeList.map((runtime) => runtime.createSignal(debugInfo)),
       debugInfo,
     );
   }

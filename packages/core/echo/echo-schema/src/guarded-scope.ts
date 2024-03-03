@@ -12,8 +12,10 @@ let areSignalsProhibited = false;
 
 let inUntrackedScope = false;
 
-const signalGuard: GenericSignal = {
-  notifyRead: () => {
+class GuardSignal implements GenericSignal {
+  constructor(public readonly debugInfo: unknown) {}
+
+  notifyRead() {
     // Separate if statements so it's possible to place a debugger breakpoint on `!inUntrackedScope` condition.
     if (inUntrackedScope) {
       return;
@@ -22,8 +24,9 @@ const signalGuard: GenericSignal = {
     if (areSignalsProhibited) {
       throw new Error('Signal read is prohibited in this scope');
     }
-  },
-  notifyWrite: () => {
+  }
+
+  notifyWrite() {
     // Separate if statements so it's possible to place a debugger breakpoint on `!inUntrackedScope` condition.
     if (inUntrackedScope) {
       return;
@@ -32,11 +35,11 @@ const signalGuard: GenericSignal = {
     if (areSignalsProhibited) {
       throw new Error('Signal write is prohibited in this scope');
     }
-  },
-};
+  }
+}
 
 registerSignalRuntime({
-  createSignal: () => signalGuard,
+  createSignal: (debugInfo) => new GuardSignal(debugInfo),
   batch: (cb) => {
     cb();
   },
