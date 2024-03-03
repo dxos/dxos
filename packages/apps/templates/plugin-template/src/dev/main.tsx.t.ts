@@ -12,6 +12,7 @@ export default template.define.script({
     import { createRoot } from "react-dom/client";
     import translations from "./translations";
     
+    import ThemeMeta from "@braneframe/plugin-theme/meta";
     ${defaultPlugins && plate/* javascript */`
     import ClientMeta from "@braneframe/plugin-client/meta";
     import GraphMeta from "@braneframe/plugin-graph/meta";
@@ -19,7 +20,6 @@ export default template.define.script({
     import NavTreeMeta from "@braneframe/plugin-navtree/meta";
     import SpaceMeta from "@braneframe/plugin-space/meta";
     import StackMeta from "@braneframe/plugin-stack/meta";
-    import ThemeMeta from "@braneframe/plugin-theme/meta";
     `}
     
     import { meta } from "../src/plugin";

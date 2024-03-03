@@ -40,7 +40,6 @@ export namespace Features {
       'vite-plugin-top-level-await': '^1.3.1',
       'vite-plugin-wasm': '^3.3.0',
       '@dxos/config': '^0.4.6',
-      '@braneframe/plugin-theme': '^0.4.6',
       '@braneframe/plugin-space': '^0.4.6',
       '@braneframe/plugin-navtree': '^0.4.6',
       '@braneframe/plugin-layout': '^0.4.6',
@@ -71,6 +70,7 @@ export const base = ({ name, version }: Context): Partial<PackageJson> => {
       '@types/node': '^18.11.9',
       typescript: '^5.0.4',
       vite: '^5.1.3',
+      '@braneframe/plugin-theme': '^0.4.6',
     },
   };
 };
