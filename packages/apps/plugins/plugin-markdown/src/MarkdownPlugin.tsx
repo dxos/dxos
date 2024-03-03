@@ -3,7 +3,7 @@
 //
 
 import { ArticleMedium, type IconProps } from '@phosphor-icons/react';
-import { computed, effect, untracked } from '@preact/signals-core';
+import { effect } from '@preact/signals-core';
 import { deepSignal } from 'deepsignal/react';
 import React, { useMemo, type Ref } from 'react';
 
