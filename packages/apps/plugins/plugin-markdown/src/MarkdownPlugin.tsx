@@ -3,7 +3,7 @@
 //
 
 import { ArticleMedium, type IconProps } from '@phosphor-icons/react';
-import { computed, effect } from '@preact/signals-core';
+import { computed, effect, untracked } from '@preact/signals-core';
 import { deepSignal } from 'deepsignal/react';
 import React, { useMemo, type Ref } from 'react';
 
@@ -153,12 +153,23 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                         object.title ||
                         getFallbackTitle(object) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
                     );
+
+                    subscriptions.add(
+                      effect(() => {
+                        const node = graph.findNode(object.id);
+                        if (!node) {
+                          return;
+                        }
+                        (node.properties as any).label = title.value;
+                      }),
+                    );
+
                     graph.addNodes({
                       id: object.id,
                       data: object,
                       properties: {
                         // TODO(wittjosiah): Reconcile with metadata provides.
-                        label: title.value,
+                        label: untracked(() => title.value),
                         icon: (props: IconProps) => <ArticleMedium {...props} />,
                         testId: 'spacePlugin.object',
                         persistenceClass: 'echo',

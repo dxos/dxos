@@ -35,14 +35,16 @@ export const getTreeNode = (tree: TreeNode, path?: string[]): TreeNode => {
  * Get a reactive tree node from a graph node.
  */
 export const treeNodeFromGraphNode = (node: Node, options: TreeNodeFromGraphNodeOptions = {}): TreeNode => {
-  const { icon, label, ...properties } = node.properties;
+  // const { icon, label, ...properties } = node.properties;
   const { filter, path = [] } = options;
 
   const treeNode = deepSignal<TreeNode>({
     id: node.id,
-    label,
-    icon,
-    properties,
+    get label() {
+      return node.properties.label;
+    },
+    icon: node.properties.icon,
+    properties: node.properties,
     data: node.data,
     get parent() {
       const parentId = path[path.length - 1];
