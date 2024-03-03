@@ -53,5 +53,5 @@ const nonTitleChars = /[^\w ]/g;
 
 export const getFallbackTitle = (document: Document) => {
   const content = getTextContent(document.content);
-  return content?.substring(0, 63).split('\n')[0].replaceAll(nonTitleChars, '').trim();
+  return content?.substring(0, 31).split('\n')[0].replaceAll(nonTitleChars, '').trim();
 };
