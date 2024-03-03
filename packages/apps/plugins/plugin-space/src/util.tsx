@@ -23,7 +23,7 @@ import { actionGroupSymbol, type InvokeParams, type Graph, type Node, manageNode
 import { Folder } from '@braneframe/types';
 import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { EchoDatabaseImpl, isTypedObject } from '@dxos/echo-schema';
+import { EchoDatabaseImpl, LEGACY_TEXT_TYPE, isTypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { Migrations } from '@dxos/migrations';
 import { SpaceState, getSpaceForObject, type Space, type TypedObject } from '@dxos/react-client/echo';
@@ -304,7 +304,8 @@ export const updateGraphWithSpace = ({
   });
 
   // Update graph with all objects in the space.
-  const query = space.db.query();
+  // TODO(wittjosiah): If text objects are included in this query then it updates on every keystroke in the editor.
+  const query = space.db.query((obj) => obj.__typename !== LEGACY_TEXT_TYPE);
   const previousObjects = new Map<string, TypedObject[]>();
   const unsubscribeQuery = effect(() => {
     const folder: Folder = space.properties[Folder.schema.typename];

@@ -6,6 +6,7 @@ import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { type ChangeFn, type Doc } from '@dxos/automerge/automerge';
 import { Reference } from '@dxos/document-model';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { assignDeep } from '@dxos/util';
@@ -74,16 +75,20 @@ export class AutomergeObject implements TypedObjectProperties {
   }
 
   get __typename(): string | undefined {
-    if (this.__schema) {
-      return this.__schema?.typename;
-    }
-    // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
-    const typeRef = this.__system.type;
-    if (typeRef?.protocol === 'protobuf') {
-      return typeRef?.itemId;
-    } else {
-      return undefined;
-    }
+    // Type can't change so we use untracked here to stop signal subscriptions
+    // TODO(dmaretskyi): Clean-up getters to not subscribe to signals in the first place.
+    return compositeRuntime.untracked(() => {
+      if (this.__schema) {
+        return this.__schema?.typename;
+      }
+      // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
+      const typeRef = this.__system.type;
+      if (typeRef?.protocol === 'protobuf') {
+        return typeRef?.itemId;
+      } else {
+        return undefined;
+      }
+    });
   }
 
   get __schema(): Schema | undefined {

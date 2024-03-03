@@ -79,7 +79,7 @@ export class AutomergeObjectCore {
   /**
    * Reactive signal for update propagation.
    */
-  public signal = compositeRuntime.createSignal();
+  public signal = compositeRuntime.createSignal(this);
 
   /**
    * User-facing proxy for the object.
@@ -385,6 +385,15 @@ export class AutomergeObjectCore {
       const value: any = getDeep(doc, fullPath.slice(0, fullPath.length - 1));
       delete value[fullPath[fullPath.length - 1]];
     });
+  }
+
+  getType(): Reference | undefined {
+    const value = this.decode(this.get(['system', 'type']));
+    if (!value) {
+      return undefined;
+    }
+    invariant(value instanceof Reference);
+    return value;
   }
 
   isDeleted() {
