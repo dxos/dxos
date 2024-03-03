@@ -14,6 +14,7 @@ import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
 import { type AutomergeDb, type ItemsUpdatedEvent } from './automerge';
 import { type EchoDatabaseImpl, type EchoDatabase } from './database';
+import { prohibitSignalActions } from './guarded-scope';
 import { type EchoObject, type TypedObject } from './object';
 import {
   Filter,
@@ -25,7 +26,6 @@ import {
   type QuerySource,
 } from './query';
 import { TypeCollection } from './type-collection';
-import { prohibitSignalActions } from './guarded-scope';
 
 /**
  * Manages cross-space database interactions.

@@ -6,6 +6,7 @@ import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { type ChangeFn, type Doc } from '@dxos/automerge/automerge';
 import { Reference } from '@dxos/document-model';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { assignDeep } from '@dxos/util';
@@ -35,7 +36,6 @@ import {
 } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
 
 // TODO(dmaretskyi): Rename to `AutomergeObjectApi`.
 export class AutomergeObject implements TypedObjectProperties {
