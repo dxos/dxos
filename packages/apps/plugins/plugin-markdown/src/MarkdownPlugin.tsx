@@ -145,31 +145,19 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   previousObjects = query.objects;
                   removedObjects.forEach((object) => graph.removeNode(object.id));
                   query.objects.forEach((object) => {
-                    // Memoize the title.
-                    // Avoids re-rendering the graph when the content is changing but the title is not.
-                    // TODO(wittjosiah): It is still slow when the fallback title is changing. Consider removing.
-                    const title = computed(
-                      () =>
-                        object.title ||
-                        getFallbackTitle(object) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
-                    );
-
-                    subscriptions.add(
-                      effect(() => {
-                        const node = graph.findNode(object.id);
-                        if (!node) {
-                          return;
-                        }
-                        (node.properties as any).label = title.value;
-                      }),
-                    );
-
                     graph.addNodes({
                       id: object.id,
                       data: object,
                       properties: {
                         // TODO(wittjosiah): Reconcile with metadata provides.
-                        label: untracked(() => title.value),
+
+                        // Provide the label as a getter so we don't have to rebuild the graph node when the title changes while editing the document.
+                        get label() {
+                          return (
+                            object.title ||
+                            getFallbackTitle(object) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }]
+                          );
+                        },
                         icon: (props: IconProps) => <ArticleMedium {...props} />,
                         testId: 'spacePlugin.object',
                         persistenceClass: 'echo',
