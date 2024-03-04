@@ -6,7 +6,7 @@ order: 6
 
 Given any kind of `data` value, the `Surface` figures out how to render it based on the plugins available in context.
 
-For example, some plugins provide a specific kind of editor, such as a color picker. They would implement `provides.surface.component() => <ColorPicker />` whenever the given `data` is a color value.
+For example, some plugins provide a specific kind of editor, such as a color picker. They would implement `provides.surface.component: () => <ColorPicker />` whenever the given `data` is a color value.
 
 The entire user interface of Composer is constructed of Surfaces, and the core plugins `provide` basic components that fulfill them.
 
