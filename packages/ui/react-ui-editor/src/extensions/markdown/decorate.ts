@@ -114,7 +114,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
               break;
             }
             const first = block.from <= node.from;
-            const last = block.to >= node.to;
+            const last = block.to >= node.to && /^(\s>)*```$/.test(state.doc.sliceString(block.from, block.to));
             deco.add(block.from, block.from, first ? fencedCodeLineFirst : last ? fencedCodeLineLast : fencedCodeLine);
             if (!editing && (first || last)) {
               atomicDeco.add(block.from, block.to, hide);
