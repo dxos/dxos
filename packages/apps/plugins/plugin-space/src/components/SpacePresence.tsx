@@ -181,7 +181,7 @@ type PresenceAvatarProps = {
   group?: boolean;
   index?: number;
   onClick?: () => void;
-} & Pick<Exclude<Identity['profile'], undefined>, 'hue' | 'emoji'>;
+} & Pick<NonNullable<Identity['profile']>, 'hue' | 'emoji'>;
 
 const PrensenceAvatar = ({ identity, showName, match, group, index, onClick, hue, emoji }: PresenceAvatarProps) => {
   const Root = group ? AvatarGroupItem.Root : Avatar.Root;

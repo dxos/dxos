@@ -16,7 +16,7 @@ export type HaloButtonProps = {
   identityKey?: string;
   internal?: boolean;
   onClick?: () => void;
-} & Pick<Exclude<Identity['profile'], undefined>, 'hue' | 'emoji'>;
+} & Pick<NonNullable<Identity['profile']>, 'hue' | 'emoji'>;
 
 export const HaloButton = (props: HaloButtonProps) => {
   const { onClick, identityKey, internal, size = 8 } = props;

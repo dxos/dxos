@@ -8,8 +8,9 @@ import { type Event, type SingleOrArray } from 'xstate';
 import { log } from '@dxos/log';
 import { type Identity } from '@dxos/react-client/halo';
 import { useTranslation } from '@dxos/react-ui';
+import { hexToEmoji, hexToHue } from '@dxos/util';
 
-import { Action, Actions, StepHeading, Input, useClipboardContext, AvatarPicker } from '../../../components';
+import { Action, Actions, StepHeading, Input, useClipboardContext, EmojiPicker, HuePicker } from '../../../components';
 import { type IdentityPanelStepProps } from '../IdentityPanelProps';
 import { type IdentityEvent } from '../identityMachine';
 
@@ -36,13 +37,19 @@ export const ProfileForm = (props: ProfileFormProps) => {
   return <ProfileFormImpl {...props} onUpdateProfile={handleUpdateProfile} validationMessage={validationMessage} />;
 };
 
+const getHueValue = (identity?: Identity) => identity?.profile?.hue || hexToHue(identity?.identityKey.toHex() ?? '0');
+const getEmojiValue = (identity?: Identity) =>
+  identity?.profile?.emoji || hexToEmoji(identity?.identityKey.toHex() ?? '0');
+
 // TODO(zhenyasav): impl shouldn't need send()
 const ProfileFormImpl = (props: ProfileFormImplProps) => {
   const { active, identity, send, onUpdateProfile, validationMessage } = props;
   const profile = identity?.profile;
   const disabled = !active;
   const { t } = useTranslation('os');
-  const [inputValue, setInputValue] = useState(profile?.displayName ?? '');
+  const [displayName, setDisplayName] = useState(profile?.displayName ?? '');
+  const [hue, setHue] = useState<string>(getHueValue(identity));
+  const [emoji, setEmoji] = useState<string>(getEmojiValue(identity));
   const { textValue, setTextValue } = useClipboardContext();
   const identityHex = identity?.identityKey.toHex();
   const copied = textValue === identityHex;
@@ -55,11 +62,24 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
           disabled={disabled}
           data-testid='display-name-input'
           placeholder={t('display name input placeholder')}
-          value={inputValue}
-          onChange={({ target: { value } }) => setInputValue(value)}
-          onKeyDown={({ key }) => key === 'Enter' && onUpdateProfile?.({ displayName: inputValue })}
+          value={displayName}
+          onChange={({ target: { value } }) => setDisplayName(value)}
         />
-        <AvatarPicker identity={identity} disabled={disabled} />
+        <StepHeading className='mbe-2'>{t('emoji and color label')}</StepHeading>
+        <div role='none' className='grid grid-cols-[1fr_min-content] gap-y-2'>
+          <EmojiPicker
+            emoji={emoji}
+            onChangeEmoji={setEmoji}
+            disabled={disabled}
+            onClickClear={() => setEmoji(getEmojiValue(identity))}
+          />
+          <HuePicker
+            hue={hue}
+            onChangeHue={setHue}
+            disabled={disabled}
+            onClickClear={() => setHue(getHueValue(identity))}
+          />
+        </div>
       </div>
       <Actions>
         <Action
@@ -85,7 +105,7 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
         <Action
           variant='primary'
           disabled={disabled}
-          onClick={() => onUpdateProfile?.({ displayName: inputValue })}
+          onClick={() => onUpdateProfile?.({ displayName, emoji, hue })}
           data-testid='update-profile-form-continue'
         >
           {t('done label')}

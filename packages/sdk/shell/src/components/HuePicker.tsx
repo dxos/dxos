@@ -2,14 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 import { ArrowCounterClockwise, CaretDown, Check } from '@phosphor-icons/react';
-import React, { useCallback, useState } from 'react';
+import { useControllableState } from '@radix-ui/react-use-controllable-state';
+import React, { type Dispatch, type SetStateAction } from 'react';
 
-import { type Identity } from '@dxos/react-client/halo';
-import { Button, useTranslation, Tooltip, DropdownMenu, useThemeContext } from '@dxos/react-ui';
+import { Button, useTranslation, Tooltip, DropdownMenu, useThemeContext, type ButtonProps } from '@dxos/react-ui';
 import { getSize, hueTokenThemes } from '@dxos/react-ui-theme';
-import { hexToHue } from '@dxos/util';
-
-const getHueValue = (identity?: Identity) => identity?.profile?.hue || hexToHue(identity?.identityKey.toHex() ?? '0');
 
 const HuePreview = ({ hue }: { hue: string }) => {
   const { tx } = useThemeContext();
@@ -20,26 +17,22 @@ const HuePreview = ({ hue }: { hue: string }) => {
   );
 };
 
-export const HuePicker = ({ identity, disabled }: { identity?: Identity; disabled?: boolean }) => {
+export type HuePickerProps = {
+  disabled?: boolean;
+  defaultHue?: string;
+  hue?: string;
+  onChangeHue?: Dispatch<SetStateAction<string>>;
+  onClickClear?: ButtonProps['onClick'];
+};
+
+export const HuePicker = ({ disabled, hue, onChangeHue, defaultHue, onClickClear }: HuePickerProps) => {
   const { t } = useTranslation('os');
 
-  const [hueValue, setHueValue] = useState<string>(getHueValue(identity));
-
-  const handleHueClick = useCallback(
-    (hue: string) => {
-      if (identity?.profile) {
-        identity.profile.hue = hue;
-        setHueValue(hue);
-      }
-    },
-    [identity],
-  );
-  const handleClearHueClick = useCallback(() => {
-    if (identity?.profile) {
-      identity.profile.hue = undefined;
-    }
-    setHueValue(getHueValue(identity));
-  }, [identity]);
+  const [hueValue, setHueValue] = useControllableState<string>({
+    prop: hue,
+    onChange: onChangeHue,
+    defaultProp: defaultHue,
+  });
 
   // @ts-ignore
   return (
@@ -49,7 +42,7 @@ export const HuePicker = ({ identity, disabled }: { identity?: Identity; disable
           <Button variant='ghost' classNames='gap-2 plb-1' disabled={disabled}>
             <span className='sr-only'>{t('select hue label')}</span>
             <div role='none' className='pis-14 grow flex items-center justify-center gap-2'>
-              <HuePreview hue={hueValue} />
+              <HuePreview hue={hueValue!} />
               <span>{t(`${hueValue} label`)}</span>
             </div>
             <CaretDown className={getSize(4)} />
@@ -62,7 +55,7 @@ export const HuePicker = ({ identity, disabled }: { identity?: Identity; disable
                 <DropdownMenu.CheckboxItem
                   key={hue}
                   checked={hue === hueValue}
-                  onCheckedChange={() => handleHueClick(hue)}
+                  onCheckedChange={() => setHueValue(hue)}
                 >
                   <HuePreview hue={hue} />
                   <span className='grow'>{t(`${hue} label`)}</span>
@@ -78,7 +71,7 @@ export const HuePicker = ({ identity, disabled }: { identity?: Identity; disable
       </DropdownMenu.Root>
       <Tooltip.Root>
         <Tooltip.Trigger asChild>
-          <Button variant='ghost' onClick={handleClearHueClick} disabled={disabled}>
+          <Button variant='ghost' onClick={onClickClear} disabled={disabled}>
             <span className='sr-only'>{t('clear label')}</span>
             <ArrowCounterClockwise />
           </Button>

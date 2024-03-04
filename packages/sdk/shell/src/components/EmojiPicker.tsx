@@ -3,48 +3,38 @@
 //
 import emojiData from '@emoji-mart/data';
 import EmojiMart from '@emoji-mart/react';
-import { useModalAttributes } from '@fluentui/react-tabster';
 import { ArrowCounterClockwise, CaretDown } from '@phosphor-icons/react';
-import React, { useCallback, useState } from 'react';
+import { useControllableState } from '@radix-ui/react-use-controllable-state';
+import React, { type Dispatch, type SetStateAction, useState } from 'react';
 
-import { type Identity } from '@dxos/react-client/halo';
-import { Button, Popover, useTranslation, Tooltip } from '@dxos/react-ui';
+import { Button, Popover, useTranslation, Tooltip, type ButtonProps } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
-import { hexToEmoji } from '@dxos/util';
 
-const getEmojiValue = (identity?: Identity) =>
-  identity?.profile?.emoji || hexToEmoji(identity?.identityKey.toHex() ?? '0');
+export type EmojiPickerProps = {
+  disabled?: boolean;
+  defaultEmoji?: string;
+  emoji?: string;
+  onChangeEmoji?: Dispatch<SetStateAction<string>>;
+  onClickClear?: ButtonProps['onClick'];
+};
 
-export const EmojiPicker = ({ identity, disabled }: { identity?: Identity; disabled?: boolean }) => {
+export const EmojiPicker = ({ disabled, defaultEmoji, emoji, onChangeEmoji, onClickClear }: EmojiPickerProps) => {
   const { t } = useTranslation('os');
 
-  const [emojiValue, setEmojiValue] = useState<string>(getEmojiValue(identity));
-  const [emojiPickerOpen, setEmojiPickerOpen] = useState<boolean>(false);
-  const { modalAttributes, triggerAttributes } = useModalAttributes({ trapFocus: true });
+  const [emojiValue, setEmojiValue] = useControllableState<string>({
+    prop: emoji,
+    onChange: onChangeEmoji,
+    defaultProp: defaultEmoji,
+  });
 
-  const handleEmojiSelect = useCallback(
-    ({ native }: { native?: string }) => {
-      if (identity?.profile && native) {
-        identity.profile.emoji = native;
-        setEmojiValue(native);
-        setEmojiPickerOpen(false);
-      }
-    },
-    [identity],
-  );
-  const handleClearEmojiClick = useCallback(() => {
-    if (identity?.profile) {
-      identity.profile.emoji = undefined;
-    }
-    setEmojiValue(getEmojiValue(identity));
-  }, [identity]);
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState<boolean>(false);
 
   // @ts-ignore
   return (
     <>
       <Popover.Root open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
         <Popover.Trigger asChild>
-          <Button variant='ghost' classNames='gap-2 text-2xl plb-1' {...triggerAttributes} disabled={disabled}>
+          <Button variant='ghost' classNames='gap-2 text-2xl plb-1' disabled={disabled}>
             <span className='sr-only'>{t('select emoji label')}</span>
             <span className='grow pis-14'>{emojiValue}</span>
             <CaretDown className={getSize(4)} />
@@ -58,11 +48,15 @@ export const EmojiPicker = ({ identity, disabled }: { identity?: Identity; disab
               setEmojiPickerOpen(false);
             }
           }}
-          {...modalAttributes}
         >
           <EmojiMart
             data={emojiData}
-            onEmojiSelect={handleEmojiSelect}
+            onEmojiSelect={({ native }: { native?: string }) => {
+              if (native) {
+                setEmojiValue(native);
+                setEmojiPickerOpen(false);
+              }
+            }}
             autoFocus={true}
             maxFrequentRows={0}
             noCountryFlags={true}
@@ -72,7 +66,7 @@ export const EmojiPicker = ({ identity, disabled }: { identity?: Identity; disab
       </Popover.Root>
       <Tooltip.Root>
         <Tooltip.Trigger asChild>
-          <Button variant='ghost' onClick={handleClearEmojiClick} disabled={disabled}>
+          <Button variant='ghost' onClick={onClickClear} disabled={disabled}>
             <span className='sr-only'>{t('clear label')}</span>
             <ArrowCounterClockwise />
           </Button>
