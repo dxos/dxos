@@ -20,7 +20,6 @@ export * from './automerge';
 
 // TODO(dmaretskyi): Until we resolve the circular dependencies lets avoid using "barrel" index.ts files in subdirectories.
 export * from './effect/json-schema';
-export * from './effect/reactive';
 
 linkDeferred();
 
