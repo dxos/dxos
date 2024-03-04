@@ -29,7 +29,7 @@
     "@codemirror/language": "^6.10.1",
     "@codemirror/search": "^6.5.5",
     "@codemirror/state": "^6.4.0",
-    "@codemirror/view": "^6.23.0",
+    "@codemirror/view": "^6.25.0",
     "@dxos/async": "workspace:*",
     "@dxos/chain": "workspace:*",
     "@dxos/invariant": "workspace:*",
