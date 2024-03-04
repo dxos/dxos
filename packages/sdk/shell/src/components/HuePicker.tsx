@@ -34,7 +34,6 @@ export const HuePicker = ({ disabled, hue, onChangeHue, defaultHue, onClickClear
     defaultProp: defaultHue,
   });
 
-  // @ts-ignore
   return (
     <>
       <DropdownMenu.Root modal={false}>

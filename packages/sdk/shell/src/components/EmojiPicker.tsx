@@ -29,7 +29,6 @@ export const EmojiPicker = ({ disabled, defaultEmoji, emoji, onChangeEmoji, onCl
 
   const [emojiPickerOpen, setEmojiPickerOpen] = useState<boolean>(false);
 
-  // @ts-ignore
   return (
     <>
       <Popover.Root open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
