@@ -37,7 +37,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
   return {
     meta,
     ready: async () => {
-      settings.prop('pat', LocalStorageStore.string({ allowUndefined: true }));
+      settings.prop({ key: 'pat', type: LocalStorageStore.string({ allowUndefined: true }) });
     },
     unload: async () => {
       settings.close();

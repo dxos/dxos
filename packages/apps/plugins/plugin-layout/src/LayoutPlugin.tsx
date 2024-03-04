@@ -145,12 +145,12 @@ export const LayoutPlugin = ({
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
 
-      layout.prop('sidebarOpen', LocalStorageStore.bool());
+      layout.prop({ key: 'sidebarOpen', storageKey: 'sidebar-open', type: LocalStorageStore.bool() });
 
       // prettier-ignore
       settings
-        .prop('showFooter', LocalStorageStore.bool())
-        .prop('enableNativeRedirect', LocalStorageStore.bool());
+        .prop({ key: 'showFooter', storageKey: 'show-footer', type: LocalStorageStore.bool() })
+        .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() });
 
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);

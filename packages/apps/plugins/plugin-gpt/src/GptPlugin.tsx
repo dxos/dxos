@@ -37,7 +37,7 @@ export const GptPlugin = (): PluginDefinition<GptPluginProvides> => {
   return {
     meta,
     ready: async (plugins) => {
-      settings.prop('apiKey', LocalStorageStore.string({ allowUndefined: true }));
+      settings.prop({ key: 'apiKey', storageKey: 'api-key', type: LocalStorageStore.string({ allowUndefined: true }) });
 
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);

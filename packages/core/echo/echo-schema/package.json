@@ -31,6 +31,9 @@
     "*": {
       "testing": [
         "dist/types/src/testing/index.d.ts"
+      ],
+      "schema": [
+        "dist/types/src/schema.d.ts"
       ]
     }
   },

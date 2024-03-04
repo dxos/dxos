@@ -42,8 +42,8 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
     ready: async () => {
       // prettier-ignore
       settings
-        .prop('debug', LocalStorageStore.bool({ allowUndefined: true }))
-        .prop('devtools', LocalStorageStore.bool({ allowUndefined: true }));
+        .prop({ key: 'debug', type: LocalStorageStore.bool({ allowUndefined: true }) })
+        .prop({ key: 'devtools', type: LocalStorageStore.bool({ allowUndefined: true }) });
 
       // TODO(burdon): Remove hacky dependency on global variable?
       // Used to test how composer handles breaking protocol changes.

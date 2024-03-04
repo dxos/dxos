@@ -5,7 +5,7 @@
 import { effect } from '@preact/signals-core';
 
 import type { UnsubscribeCallback } from '@dxos/async';
-import * as E from '@dxos/echo-schema';
+import * as E from '@dxos/echo-schema/schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 
 type PropType<T> = {
@@ -120,8 +120,16 @@ export class LocalStorageStore<T extends object> {
   /**
    * Binds signal property to local storage key.
    */
-  prop<K extends keyof T>(key: K, type: PropType<T[K]>) {
-    const storageKey = this._prefix + '/' + key.toString();
+  prop<K extends keyof T>({
+    key,
+    storageKey: _storageKey,
+    type,
+  }: {
+    key: K;
+    storageKey?: string;
+    type: PropType<T[K]>;
+  }) {
+    const storageKey = this._prefix + '/' + (_storageKey ?? key).toString();
     if (this._subscriptions.has(storageKey)) {
       return this;
     }

@@ -42,7 +42,7 @@ export const SettingsPlugin = (): PluginDefinition<SettingsPluginProvides> => {
   return {
     meta,
     ready: async () => {
-      settings.prop('selected', LocalStorageStore.string());
+      settings.prop({ key: 'selected', type: LocalStorageStore.string() });
     },
     provides: {
       surface: {

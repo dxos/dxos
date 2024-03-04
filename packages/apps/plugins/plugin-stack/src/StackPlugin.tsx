@@ -33,7 +33,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
   return {
     meta,
     ready: async (plugins) => {
-      settings.prop('separation', LocalStorageStore.bool());
+      settings.prop({ key: 'separation', type: LocalStorageStore.bool() });
 
       for (const plugin of plugins) {
         if (plugin.meta.id === STACK_PLUGIN) {

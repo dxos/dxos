@@ -62,7 +62,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   return {
     meta,
     ready: async (plugins) => {
-      settings.prop('standalone', LocalStorageStore.bool({ allowUndefined: true }));
+      settings.prop({ key: 'standalone', type: LocalStorageStore.bool({ allowUndefined: true }) });
 
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;

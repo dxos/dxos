@@ -54,7 +54,7 @@ export const PluginHost = ({
     },
   });
 
-  state.prop('enabled', LocalStorageStore.json<string[]>());
+  state.prop({ key: 'enabled', type: LocalStorageStore.json<string[]>() });
 
   return {
     meta: {

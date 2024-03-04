@@ -101,7 +101,12 @@ export const SpacePlugin = ({
   return {
     meta,
     ready: async (plugins) => {
-      settings.prop('showHidden', LocalStorageStore.bool({ allowUndefined: true }));
+      settings.prop({
+        key: 'showHidden',
+        storageKey: 'show-hidden',
+        type: LocalStorageStore.bool({ allowUndefined: true }),
+      });
+
       const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);

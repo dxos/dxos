@@ -86,11 +86,15 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     meta,
     ready: async (plugins) => {
       settings
-        .prop('editorMode', LocalStorageStore.enum<EditorMode>({ allowUndefined: true }))
-        .prop('toolbar', LocalStorageStore.bool({ allowUndefined: true }))
-        .prop('experimental', LocalStorageStore.bool({ allowUndefined: true }))
-        .prop('debug', LocalStorageStore.bool({ allowUndefined: true }))
-        .prop('typewriter', LocalStorageStore.string({ allowUndefined: true }));
+        .prop({
+          key: 'editorMode',
+          storageKey: 'editor-mode',
+          type: LocalStorageStore.enum<EditorMode>({ allowUndefined: true }),
+        })
+        .prop({ key: 'toolbar', type: LocalStorageStore.bool({ allowUndefined: true }) })
+        .prop({ key: 'experimental', type: LocalStorageStore.bool({ allowUndefined: true }) })
+        .prop({ key: 'debug', type: LocalStorageStore.bool({ allowUndefined: true }) })
+        .prop({ key: 'typewriter', type: LocalStorageStore.string({ allowUndefined: true }) });
 
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
