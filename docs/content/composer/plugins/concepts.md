@@ -6,7 +6,7 @@ order: 1
 
 ### Plugins
 
-Everything in Composer is provided by a Plugin. For example, the `Layout` plugin provides a layout for the application, the `NavTree` plugin provides a navigation tree, and the `Stack` plugin provides a vertically-scrollable list of objects.
+Everything in Composer is provided by a Plugin. For example, the `Layout` plugin provides a layout for the application, the `NavTree` plugin provides a navigation tree, and the `Settings` plugin provides a user preferences dialog.
 
 ### Surfaces
 
