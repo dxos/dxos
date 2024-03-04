@@ -8284,6 +8284,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@emoji-mart/data':
+        specifier: ^1.1.2
+        version: 1.1.2
+      '@emoji-mart/react':
+        specifier: ^1.1.1
+        version: 1.1.1(emoji-mart@5.5.2)(react@18.2.0)
       '@fluentui/react-tabster':
         specifier: ^9.19.0
         version: 9.19.2(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -8305,9 +8311,9 @@ importers:
       '@xstate/react':
         specifier: ^3.2.1
         version: 3.2.1(@types/react@18.0.21)(react@18.2.0)(xstate@4.37.1)
-      emoji-picker-element:
-        specifier: ^1.21.1
-        version: 1.21.1
+      emoji-mart:
+        specifier: ^5.5.2
+        version: 5.5.2
       react-qr-rounded:
         specifier: ^1.0.0
         version: 1.0.0(react@18.2.0)
@@ -13413,6 +13419,20 @@ packages:
     dependencies:
       effect: 2.3.5
       fast-check: 3.15.1
+    dev: false
+
+  /@emoji-mart/data@1.1.2:
+    resolution: {integrity: sha512-1HP8BxD2azjqWJvxIaWAMyTySeZY0Osr83ukYjltPVkNXeJvTz7yDrPLBtnrD5uqJ3tg4CcLuuBW09wahqL/fg==}
+    dev: false
+
+  /@emoji-mart/react@1.1.1(emoji-mart@5.5.2)(react@18.2.0):
+    resolution: {integrity: sha512-NMlFNeWgv1//uPsvLxvGQoIerPuVdXwK/EUek8OOkJ6wVOWPUizRBJU0hDqWZCOROVpfBgCemaC3m6jDOXi03g==}
+    peerDependencies:
+      emoji-mart: ^5.2
+      react: ^16.8 || ^17 || ^18
+    dependencies:
+      emoji-mart: 5.5.2
+      react: 18.2.0
     dev: false
 
   /@emotion/babel-plugin@11.10.2(@babel/core@7.21.3):
@@ -28166,8 +28186,8 @@ packages:
     engines: {node: '>=10'}
     dev: false
 
-  /emoji-picker-element@1.21.1:
-    resolution: {integrity: sha512-XO3buLicIjIb59dy3R2PVzpyxUEye7DSmHApbxFJxK8gCFPlGKP/Pld8ccWNYvny9t6vYhnKP1FNYgqqMy1XHA==}
+  /emoji-mart@5.5.2:
+    resolution: {integrity: sha512-Sqc/nso4cjxhOwWJsp9xkVm8OF5c+mJLZJFoFfzRuKO+yWiN7K8c96xmtughYb0d/fZ8UC6cLIQ/p4BR6Pv3/A==}
     dev: false
 
   /emoji-regex@10.3.0:

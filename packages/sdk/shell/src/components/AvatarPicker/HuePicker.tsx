@@ -1,7 +1,6 @@
 //
 // Copyright 2024 DXOS.org
 //
-import 'emoji-picker-element';
 import { CaretDown, Check, X } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 
