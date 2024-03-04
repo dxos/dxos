@@ -5,13 +5,22 @@ import { CaretDown, Check, X } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 
 import { type Identity } from '@dxos/react-client/halo';
-import { Button, useTranslation, Tooltip, DropdownMenu } from '@dxos/react-ui';
+import { Button, useTranslation, Tooltip, DropdownMenu, useThemeContext } from '@dxos/react-ui';
 import { getSize, hueTokenThemes } from '@dxos/react-ui-theme';
 import { hexToHue } from '@dxos/util';
 
 const getHueValue = (identity?: Identity) => identity?.profile?.hue || hexToHue(identity?.identityKey.toHex() ?? '0');
 
-export const HuePicker = ({ identity }: { identity?: Identity }) => {
+const HuePreview = ({ hue }: { hue: string }) => {
+  const { tx } = useThemeContext();
+  return (
+    <svg width={12} height={12} viewBox='0 0 12 12'>
+      <rect x={0} y={0} width={12} height={12} className={tx('hue.fill', 'select--hue__preview', { hue })} />
+    </svg>
+  );
+};
+
+export const HuePicker = ({ identity, disabled }: { identity?: Identity; disabled?: boolean }) => {
   const { t } = useTranslation('os');
 
   const [hueValue, setHueValue] = useState<string>(getHueValue(identity));
@@ -39,9 +48,12 @@ export const HuePicker = ({ identity }: { identity?: Identity }) => {
         <DropdownMenu.Root modal={false}>
           <DropdownMenu.Trigger asChild>
             <Tooltip.Trigger asChild>
-              <Button variant='ghost' classNames='gap-2 plb-1'>
+              <Button variant='ghost' classNames='gap-2 plb-1' disabled={disabled}>
                 <span className='sr-only'>{t('select hue label')}</span>
-                <span className='grow pis-14'>{t(`${hueValue} label`)}</span>
+                <div role='none' className='pis-14 grow flex items-center justify-center gap-2'>
+                  <HuePreview hue={hueValue} />
+                  <span>{t(`${hueValue} label`)}</span>
+                </div>
                 <CaretDown className={getSize(4)} />
               </Button>
             </Tooltip.Trigger>
@@ -55,6 +67,7 @@ export const HuePicker = ({ identity }: { identity?: Identity }) => {
                     checked={hue === hueValue}
                     onCheckedChange={() => handleHueClick(hue)}
                   >
+                    <HuePreview hue={hue} />
                     {t(`${hue} label`)}
                     <DropdownMenu.ItemIndicator>
                       <Check />
@@ -73,7 +86,7 @@ export const HuePicker = ({ identity }: { identity?: Identity }) => {
           </Tooltip.Content>
         </Tooltip.Portal>
       </Tooltip.Root>
-      <Button variant='ghost' onClick={handleClearHueClick}>
+      <Button variant='ghost' onClick={handleClearHueClick} disabled={disabled}>
         <span className='sr-only'>{t('clear label')}</span>
         <X />
       </Button>

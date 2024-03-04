@@ -51,7 +51,7 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
       <div role='none' className='grow flex flex-col justify-center'>
         <Input
           {...{ validationMessage }}
-          label={<StepHeading>{t('display name input label')}</StepHeading>}
+          label={<StepHeading className='m-0'>{t('display name input label')}</StepHeading>}
           disabled={disabled}
           data-testid='display-name-input'
           placeholder={t('display name input placeholder')}
@@ -60,7 +60,9 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
           onKeyDown={({ key }) => key === 'Enter' && onUpdateProfile?.({ displayName: inputValue })}
         />
         <StepHeading>{t('emoji and color label')}</StepHeading>
-        <AvatarPicker identity={identity} />
+        <AvatarPicker identity={identity} disabled={disabled} />
+      </div>
+      <Actions>
         <Action
           variant='ghost'
           disabled={disabled}
@@ -73,8 +75,6 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
         >
           {t(copied ? 'copy success label' : 'copy self public key label')}
         </Action>
-      </div>
-      <Actions>
         <Action
           variant='ghost'
           disabled={disabled}
