@@ -1,7 +1,7 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "tsconfig": "../tsconfig.json",
-  "json": "docs/api.json",
+  "json": "content/api.json",
   "gitRevision": "main",
   "githubPages": false,
   "excludePrivate": true,
