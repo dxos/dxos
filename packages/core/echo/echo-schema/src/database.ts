@@ -3,6 +3,7 @@
 //
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
+import { type Reference } from '@dxos/document-model';
 import { type BatchUpdate } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -10,6 +11,8 @@ import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { AutomergeDb, type AutomergeContext, AutomergeObject } from './automerge';
 import { type EchoReactiveObject, createEchoReactiveObject } from './effect/echo-handler';
+import { getSchema } from './effect/reactive';
+import { SchemaValidator } from './effect/schema-validator';
 import { type Hypergraph } from './hypergraph';
 import { isAutomergeObject, type EchoObject, type TypedObject, type OpaqueEchoObject } from './object';
 import { type FilterSource, type Query } from './query';
@@ -79,9 +82,17 @@ export class EchoDatabaseImpl implements EchoDatabase {
   private _useReactiveObjectApi: boolean;
 
   constructor(params: EchoDatabaseParams) {
-    const constructObj = () => {
+    const constructObj = (typeReference: Reference | null) => {
       if (this._useReactiveObjectApi) {
-        return createEchoReactiveObject({});
+        const target = {};
+        if (typeReference != null) {
+          const schema = this.graph.types.getEffectSchema(typeReference.itemId);
+          if (schema == null) {
+            throw createSchemaNotRegisteredError();
+          }
+          SchemaValidator.prepareTarget(target, schema);
+        }
+        return createEchoReactiveObject(target);
       } else {
         return new AutomergeObject();
       }
@@ -110,6 +121,10 @@ export class EchoDatabaseImpl implements EchoDatabase {
       return obj as any;
     } else {
       invariant(!isAutomergeObject(obj));
+      const schema = getSchema(obj);
+      if (schema != null && !this.graph.types.isEffectSchemaRegistered(schema)) {
+        throw createSchemaNotRegisteredError();
+      }
       const echoObj = createEchoReactiveObject(obj);
       this._automerge.add(echoObj);
       return echoObj as any;
@@ -151,3 +166,7 @@ export class EchoDatabaseImpl implements EchoDatabase {
     return this._automerge;
   }
 }
+
+const createSchemaNotRegisteredError = () => {
+  return new Error('Schema not registered in Hypergraph: call registerEffectSchema before adding an object');
+};

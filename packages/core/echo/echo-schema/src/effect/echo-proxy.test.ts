@@ -68,14 +68,27 @@ for (const schema of [undefined, TestSchemaWithClass]) {
 }
 
 describe('Reactive Object with ECHO database', () => {
-  test('existing proxy objects can be added to the database', async () => {
-    const { db } = await createDatabase(undefined, { useReactiveObjectApi: true });
+  const EchoObjectSchema = TestSchema.pipe(R.echoObject('TestSchema', '1.0.0'));
 
-    const obj = R.object(TestSchema, { string: 'foo' });
+  test('throws if schema was not annotated as echo object', async () => {
+    const { graph } = await createDatabase(undefined, { useReactiveObjectApi: true });
+    expect(() => graph.types.registerEffectSchema(TestSchema)).to.throw();
+  });
+
+  test('throws if schema was not registered in Hypergraph', async () => {
+    const { db } = await createDatabase(undefined, { useReactiveObjectApi: true });
+    expect(() => db.add(R.object(EchoObjectSchema, { string: 'foo' }))).to.throw();
+  });
+
+  test('existing proxy objects can be added to the database', async () => {
+    const { db, graph } = await createDatabase(undefined, { useReactiveObjectApi: true });
+    graph.types.registerEffectSchema(EchoObjectSchema);
+
+    const obj = R.object(EchoObjectSchema, { string: 'foo' });
     const returnObj = db.add(obj);
     expect(returnObj.id).to.be.a('string');
     expect(returnObj.string).to.eq('foo');
-    expect(R.getSchema(returnObj)).to.eq(TestSchema);
+    expect(R.getSchema(returnObj)).to.eq(EchoObjectSchema);
     expect(returnObj === obj).to.be.true;
   });
 
@@ -90,6 +103,8 @@ describe('Reactive Object with ECHO database', () => {
 
   test('instantiating reactive objects after a restart', async () => {
     const graph = new Hypergraph();
+    graph.types.registerEffectSchema(EchoObjectSchema);
+
     const automergeContext = new AutomergeContext();
     const doc = automergeContext.repo.create<SpaceDoc>();
     const spaceKey = PublicKey.random();
@@ -99,7 +114,7 @@ describe('Reactive Object with ECHO database', () => {
       const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey, useReactiveObjectApi: true });
       await db._automerge.open({ rootUrl: doc.url });
 
-      const obj = db.add(R.object(TestSchema, { string: 'foo' }));
+      const obj = db.add(R.object(EchoObjectSchema, { string: 'foo' }));
       id = obj.id;
     }
 
@@ -113,8 +128,7 @@ describe('Reactive Object with ECHO database', () => {
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
 
-      // TODO(dmaretskyi): Schema lookup?
-      // expect(R.getSchema(obj)).to.eq(TestSchema);
+      expect(R.getSchema(obj)).to.eq(EchoObjectSchema);
     }
   });
 });
