@@ -27,7 +27,7 @@ All your feedback is most welcome on [Discord](https://discord.gg/eXVfryv3sW).
 
 ## Use Cases
 
-* **Personal Knowledge Management**: Organize and manage personal knowledge, notes, tasks, diagrams, and other kinds of content.
+* **Knowledge Management**: Organize and manage personal knowledge, notes, tasks, diagrams, and other kinds of content.
 * **Collaborative Work**: Share and collaborate on documents, projects, and tasks.
 * **Data Integration**: Integrate and visualize data from diverse sources and formats.
 * **Custom Applications**: Build custom applications and workflows on top of Composer.
