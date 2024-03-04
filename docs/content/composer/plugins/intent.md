@@ -18,7 +18,7 @@ export default definePlugin<IntentResolverProvides>({
     intent: {
       resolver: (intent) => {
         switch (intent.action) {
-          case 'create-color':
+          case 'create-random-color':
             // handle the intent
             console.log('handled the create intent', intent);
             // any object returned will be dispatched as another intent
