@@ -4,6 +4,7 @@
 
 import path from 'node:path';
 
+import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { Expando, TextObject } from '@dxos/client/echo';
 import { log } from '@dxos/log';
@@ -33,33 +34,44 @@ const main = async () => {
     await client.initialize();
   }
 
+  log.break();
+
   {
     // Init storage.
     await client.halo.createIdentity();
   }
 
+  log.break();
+
   {
     // Create Space and data.
     const space = await client.spaces.create(data.space.properties);
-    await space.waitUntilReady();
+    // await space.waitUntilReady();
 
     // TODO(burdon): Add properties (mutations).
     space.db.add(new Expando(data.space.expando));
-    await space.db.flush();
+    // await space.db.flush();
 
     // Generate epoch.
     // TODO(burdon): Generate multiple epochs.
-    await space.internal.createEpoch();
+    // await space.internal.createEpoch();
 
     // TODO(burdon): Add mutations.
     space.db.add(new TextObject(data.space.text.content));
-    await space.db.flush();
+    // await space.db.flush();
   }
+
+  log.break();
+
+  // TODO(dmaretskyi): Automerge throttles saving to 100ms.
+  await sleep(200);
 
   {
     // Clean up.
     await client.destroy();
   }
+
+  log.break();
 };
 
 main().catch((err) => log.catch(err));

@@ -2,15 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Event, type ReadOnlyEvent } from '@dxos/async';
-import { type UpdateEvent, type BatchUpdate, type DatabaseProxy, type ItemManager } from '@dxos/echo-db';
+import { Event, type ReadOnlyEvent } from '@dxos/async';
+import { type BatchUpdate } from '@dxos/echo-db';
+import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { type AutomergeDb, type AutomergeContext } from './automerge';
+import { AutomergeDb, type AutomergeContext, AutomergeObject } from './automerge';
+import { type EchoReactiveObject, createEchoReactiveObject } from './effect/echo-handler';
 import { type Hypergraph } from './hypergraph';
-import { EchoLegacyDatabase } from './legacy-database';
-import { type TypedObject, type EchoObject } from './object';
+import { isAutomergeObject, type EchoObject, type TypedObject, type OpaqueEchoObject } from './object';
 import { type FilterSource, type Query } from './query';
 
 export interface EchoDatabase {
@@ -23,12 +24,12 @@ export interface EchoDatabase {
   /**
    * Adds object to the database.
    */
-  add<T extends EchoObject>(obj: T): T;
+  add<T extends OpaqueEchoObject>(obj: T): T extends EchoObject ? T : EchoReactiveObject<T>;
 
   /**
    * Removes object from the database.
    */
-  remove<T extends EchoObject>(obj: T): void;
+  remove<T extends OpaqueEchoObject>(obj: T): void;
 
   /**
    * Query objects.
@@ -55,17 +56,15 @@ export interface EchoDatabase {
    * @deprecated
    */
   readonly automerge: AutomergeDb;
-
-  /**
-   * @deprecated
-   */
-  readonly _backend: DatabaseProxy;
-
-  /**
-   * @deprecated
-   */
-  clone<T extends EchoObject>(obj: T): void;
 }
+
+export type EchoDatabaseParams = {
+  graph: Hypergraph;
+  automergeContext: AutomergeContext;
+  spaceKey: PublicKey;
+
+  useReactiveObjectApi?: boolean;
+};
 
 /**
  * API for the database.
@@ -75,79 +74,80 @@ export class EchoDatabaseImpl implements EchoDatabase {
   /**
    * @internal
    */
-  _legacy: EchoLegacyDatabase;
+  _automerge: AutomergeDb;
 
-  constructor(itemManager: ItemManager, backend: DatabaseProxy, graph: Hypergraph, automergeContext: AutomergeContext) {
-    this._legacy = new EchoLegacyDatabase(itemManager, backend, graph, automergeContext);
+  private _useReactiveObjectApi: boolean;
+
+  constructor(params: EchoDatabaseParams) {
+    const constructObj = () => {
+      if (this._useReactiveObjectApi) {
+        return createEchoReactiveObject({});
+      } else {
+        return new AutomergeObject();
+      }
+    };
+
+    this._automerge = new AutomergeDb(params.graph, params.automergeContext, params.spaceKey, constructObj, this);
+    this._useReactiveObjectApi = params.useReactiveObjectApi ?? false;
   }
 
   get graph(): Hypergraph {
-    return this._legacy.graph;
+    return this._automerge.graph;
   }
 
   get spaceKey(): PublicKey {
-    return this._legacy.spaceKey;
+    return this._automerge.spaceKey;
   }
 
   getObjectById<T extends EchoObject>(id: string): T | undefined {
-    return this._legacy.getObjectById(id);
+    return this._automerge.getObjectById(id) as T | undefined;
   }
 
-  add<T extends EchoObject>(obj: T): T {
-    return this._legacy.add(obj);
+  add<T extends OpaqueEchoObject>(obj: T): T extends EchoObject ? T : EchoReactiveObject<T> {
+    if (!this._useReactiveObjectApi) {
+      invariant(isAutomergeObject(obj));
+      this._automerge.add(obj);
+      return obj as any;
+    } else {
+      invariant(!isAutomergeObject(obj));
+      const echoObj = createEchoReactiveObject(obj);
+      this._automerge.add(echoObj);
+      return echoObj as any;
+    }
   }
 
-  remove<T extends EchoObject>(obj: T): void {
-    return this._legacy.remove(obj);
+  remove<T extends OpaqueEchoObject>(obj: T): void {
+    invariant(isAutomergeObject(obj));
+    return this._automerge.remove(obj);
   }
 
   query<T extends TypedObject>(filter?: FilterSource<T> | undefined, options?: QueryOptions | undefined): Query<T> {
-    return this._legacy.query(filter, options);
+    options ??= {};
+    options.spaces = [this.spaceKey];
+
+    return this._automerge.graph.query(filter, options);
   }
 
-  flush(): Promise<void> {
-    return this._legacy.flush();
-  }
-
-  /**
-   * @internal
-   */
-  get _updateEvent(): Event<UpdateEvent> {
-    return this._legacy._updateEvent;
+  async flush(): Promise<void> {
+    // TODO(dmaretskyi): Noop until we implement flushing with automerger.
   }
 
   /**
    * @deprecated
    */
   get objects(): EchoObject[] {
-    return this._legacy.objects;
+    return this._automerge.allObjects();
   }
 
   /**
    * @deprecated
    */
-  get pendingBatch(): ReadOnlyEvent<BatchUpdate> {
-    return this._legacy.pendingBatch;
-  }
+  readonly pendingBatch = new Event<BatchUpdate>();
 
   /**
    * @deprecated
    */
   get automerge(): AutomergeDb {
-    return this._legacy.automerge;
-  }
-
-  /**
-   * @deprecated
-   */
-  get _backend(): DatabaseProxy {
-    return this._legacy._backend;
-  }
-
-  /**
-   * @deprecated
-   */
-  clone<T extends EchoObject>(obj: T): void {
-    return this._legacy.clone(obj);
+    return this._automerge;
   }
 }
