@@ -2,9 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
+import type * as S from '@effect/schema/Schema';
+
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import { getTypeReference } from './effect/reactive';
 import { TypedObject, dangerouslyMutateImmutableObject } from './object';
 import type { SchemaProps, Schema as SchemaProto } from './proto';
 
@@ -21,6 +24,8 @@ export class TypeCollection {
   private readonly _prototypes = new Map<string, Prototype>();
   private readonly _types = new Map<string, SchemaProto>();
   private readonly _schemaDefs = new Map<string, SchemaProps>();
+
+  private readonly _effectSchemaDefs = new Map<string, S.Schema<any>>();
 
   get schemas(): SchemaProto[] {
     log.info('schemas', {
@@ -40,6 +45,25 @@ export class TypeCollection {
       invariant(!this._types.has(name), `Schema already exists: ${name}`);
       this._types.set(name, type);
     });
+  }
+
+  registerEffectSchema(...schemaList: S.Schema<any>[]) {
+    schemaList.forEach((schema) => {
+      const typename = getTypenameOrThrow(schema);
+      if (this._effectSchemaDefs.has(typename)) {
+        throw new Error(`Schema was already registered or identifier is not unique: ${typename}`);
+      }
+      this._effectSchemaDefs.set(typename, schema);
+    });
+  }
+
+  isEffectSchemaRegistered(schema: S.Schema<any>): boolean {
+    const typename = getTypenameOrThrow(schema);
+    return this._effectSchemaDefs.has(typename);
+  }
+
+  getEffectSchema(typename: string): S.Schema<any> | undefined {
+    return this._effectSchemaDefs.get(typename);
   }
 
   /**
@@ -123,4 +147,12 @@ export const linkDeferred = () => {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { schemaBuiltin } = require('./proto');
   schemaBuiltin.link();
+};
+
+const getTypenameOrThrow = (schema: S.Schema<any>): string => {
+  const typename = getTypeReference(schema);
+  if (typename == null) {
+    throw new Error('Effect schema must have a valid identifier: MyTypeSchema.pipe(R.echoObject("MyType", "1.0.0")');
+  }
+  return typename.itemId;
 };

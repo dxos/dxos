@@ -19,7 +19,7 @@ import {
   symbolIsProxy,
   type ReactiveHandler,
 } from './proxy';
-import { getSchema, type ReactiveObject } from './reactive';
+import { getSchema, getTypeReference, type ReactiveObject } from './reactive';
 import { SchemaValidator, symbolSchema } from './schema-validator';
 import { AutomergeObjectCore, encodeReference } from '../automerge';
 import { defineHiddenProperty } from '../util/property';
@@ -41,6 +41,7 @@ type ProxyTarget = {
 } & ({ [key: keyof any]: any } | any[]);
 
 const DATA_NAMESPACE = 'data';
+const SYSTEM_NAMESPACE = 'system';
 
 /**
  * Shared for all targets within one ECHO object.
@@ -58,7 +59,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     invariant(!(target as any)[symbolIsProxy]);
     invariant(Array.isArray(target[symbolPath]));
 
+    let typeReference: Reference | undefined;
     if (target[symbolSchema]) {
+      typeReference = getTypeReference(target[symbolSchema]);
       SchemaValidator.initTypedTarget(target);
     } else {
       this.makeUntypedArraysReactive(target);
@@ -67,6 +70,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (target[symbolPath].length === 0) {
       this.validateInitialProps(target);
       this._objectCore.initNewObject(target);
+      if (typeReference != null) {
+        const encodedType = this._objectCore.encode(typeReference);
+        this._objectCore.set([SYSTEM_NAMESPACE, 'type'], encodedType);
+      }
     }
 
     // Clear extra keys from objects
@@ -483,29 +490,28 @@ export const createEchoReactiveObject = <T extends {}>(init: T): EchoReactiveObj
     slot.handler._init(target);
 
     if (schema != null) {
-      SchemaValidator.prepareTarget(target as any, schema);
-      invariant(isTypeLiteral(schema.ast));
-      const idProperty = AST.getPropertySignatures(schema.ast).find((prop) => prop.name === 'id');
-      if (idProperty != null) {
-        throw new Error('"id" property name is reserved');
-      }
+      prepareTypedTarget(schema, target);
     }
     return proxy as any;
   } else {
     const target = { [symbolPath]: [], ...(init as any) };
     if (schema != null) {
-      SchemaValidator.prepareTarget(target, schema);
-      invariant(isTypeLiteral(schema.ast));
-      const idProperty = AST.getPropertySignatures(schema.ast).find((prop) => prop.name === 'id');
-      if (idProperty != null) {
-        throw new Error('"id" property name is reserved');
-      }
+      prepareTypedTarget(schema, target);
     }
     const handler = new EchoReactiveHandler();
     const proxy = createReactiveProxy<ProxyTarget>(target, handler) as any;
     handler._objectCore.rootProxy = proxy;
     return proxy;
   }
+};
+
+const prepareTypedTarget = (schema: S.Schema<any>, target: any) => {
+  invariant(isTypeLiteral(schema.ast));
+  const idProperty = AST.getPropertySignatures(schema.ast).find((prop) => prop.name === 'id');
+  if (idProperty != null) {
+    throw new Error('"id" property name is reserved');
+  }
+  SchemaValidator.prepareTarget(target, schema);
 };
 
 interface DecodedValueAtPath {
