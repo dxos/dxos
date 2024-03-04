@@ -8,6 +8,7 @@ export * from './bitfield';
 export * from './callback';
 export * from './complex';
 export * from './defer-function';
+export * from './to-fallback';
 export * from './entry';
 export * from './human-hash';
 export * from './interval';

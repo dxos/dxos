@@ -20,6 +20,8 @@ export const NotchStart = () => {
     <HaloButton
       size={8}
       identityKey={identity?.identityKey.toHex()}
+      hue={identity?.profile?.hue}
+      emoji={identity?.profile?.emoji}
       internal={observabilityPlugin?.provides?.observability?.group === 'dxos'}
       onClick={() => client.shell.shareIdentity()}
     />
