@@ -30,9 +30,9 @@ The contents of the provides object are of interest only to other plugins, which
 For example, the [Surface](surface) plugin defines a `provides.surface.component` object that `<Surface />` elements use to determine what components to use when rendering:
 
 ```tsx
-import { definePlugin } from '@dxos/app-framework';
+import { definePlugin, SurfaceProvides } from '@dxos/app-framework';
 
-export default definePlugin(
+export default definePlugin<SurfaceProvides>(
   {
     meta: {
       id: 'my-plugin',

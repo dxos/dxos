@@ -9,9 +9,16 @@ Composer is created by passing an array of `Plugin` instances to the `<App />` e
 The `<App />` element provides a full-screen `<Surface />` and the `PluginContext` to let nested components access the plugins.
 
 ```tsx
-import { App } from '@dxos/app-framework';
+import { createRoot } from 'react-dom';
+import { createApp } from '@dxos/app-framework';
 
-<App plugins={[ /* core plugins */ ]} />
+const App = createApp({
+  plugins: [
+    // ... list of plugins
+  ]
+})
+
+createRoot(document.getElementById('root')).render(<App />);
 ```
 
 From here, the main `<Surface />` interrogates all the plugins to determine what component to fill the screen with. Components are also able to use more nested `<Surface />` elements to further delegate rendering to other plugins.
