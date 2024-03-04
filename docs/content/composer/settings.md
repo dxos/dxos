@@ -1,5 +1,8 @@
 ---
 order: 8
+next: 
+  text: Building Plugins
+  link: plugins/
 ---
 
 # Settings

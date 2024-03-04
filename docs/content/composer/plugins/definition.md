@@ -14,6 +14,7 @@ import { definePlugin } from '@dxos/app-framework';
 export default definePlugin({
   meta: {
     id: 'org.example.my-plugin',
+    name: 'My Plugin'
   }
 })
 ```
@@ -24,7 +25,7 @@ Plugins can exchange functionality by exposing a `provides` object.
 
 The contents of the provides object are of interest only to other plugins, which implement specific keys and values to define functionality with.
 
-For example, the Surfaces plugin defines a `provides.surface.component` object that `<Surface />` elements use to determine what components to use when rendering: 
+For example, the [Surface](surface) plugin defines a `provides.surface.component` object that `<Surface />` elements use to determine what components to use when rendering: 
 
 ```tsx
 import { definePlugin } from '@dxos/app-framework';
@@ -43,7 +44,6 @@ export default definePlugin(
   }
 )
 ```
-Plugins may also return a falsy value if they don't know how to render a given `data`.
 
 ## Context
 
@@ -64,11 +64,47 @@ export default definePlugin(
     },
     provides: {
       context: ({ children }: PropsWithChildren) => (
-        <div className="wrapper"> // wrap with anything here
+        <div className="wrap-with-anything">
           {children}
         </div>
       )
     }
   }
+)
+```
+
+## Root
+
+Plugins may provide a `root` component which will be main element(s) of the application.
+
+If multiple plugins provide a `root` component, they will render as a list of siblings.
+
+```tsx
+import { definePlugin } from '@dxos/app-framework';
+
+export default definePlugin(
+  {
+    meta: {
+      id: 'my-plugin',
+    },
+    provides: {
+      root: () => <div>My root component here</div>
+    }
+  }
+)
+```
+The entire application can be thought of as a set of composed contexts that wrap one or more `root` elements.
+
+```tsx
+// The app will be constructed as follows:
+const App = () => (
+  <ContextFromPluginOne>
+    <ContextFromPluginTwo>
+      {/* more contexts nest here ... */}
+        <RootFromPluginOne/>
+        <RootFromPluginTwo/>
+        { /* more roots append here ... */ }
+    </ContextFromPluginTwo>
+  </ContextFromPluginOne>
 )
 ```

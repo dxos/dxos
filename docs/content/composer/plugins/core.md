@@ -3,21 +3,25 @@ order: 4
 ---
 # Core Plugins
 
-## [Surface](surfaces)
+## [Intent](intents)
+
+Intents are a way for plugins to communicate with each other. They represent user actions and enable plugins to respond to changes in state initiated by the user or any other plugin. Similar to redux actions.
+
+## [Surface](surface)
 
 Defines a component `<Surface />` that allows developers to delegate presentation of arbitrary content to plugins. The entire user interface of Composer is constructed of Surfaces, and the core plugins `provide` components that fulfill them.
 
-## Graph
+## [Graph](graph)
 
 Responsible for maintaining the organizational structure of the user's data and representing the user's possible actions on that data.
-
-## Layout
-
-Responsible for creating the main surfaces of the app layout, including the sidebars, main content area, dialog, and toolbar areas.
 
 ## Theme
 
 Provides a default DXOS UI theme to the rest of the app's components.
+
+## Layout
+
+Responsible for creating the main surfaces of the app layout, including the sidebars, main content area, dialog, and toolbar areas.
 
 ## NavTree
 
