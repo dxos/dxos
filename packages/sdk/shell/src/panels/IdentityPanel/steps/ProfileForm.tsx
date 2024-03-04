@@ -59,7 +59,6 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
           onChange={({ target: { value } }) => setInputValue(value)}
           onKeyDown={({ key }) => key === 'Enter' && onUpdateProfile?.({ displayName: inputValue })}
         />
-        <StepHeading>{t('emoji and color label')}</StepHeading>
         <AvatarPicker identity={identity} disabled={disabled} />
       </div>
       <Actions>
