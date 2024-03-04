@@ -9,7 +9,8 @@ import { useClient } from '@dxos/react-client';
 import { type Identity, useIdentity, useDevices, useHaloInvitations } from '@dxos/react-client/halo';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
-import { Avatar, DensityProvider, useId, useJdenticonHref, useTranslation } from '@dxos/react-ui';
+import { Avatar, DensityProvider, useId, useTranslation } from '@dxos/react-ui';
+import { keyToFallback } from '@dxos/util';
 
 import {
   type IdentityPanelHeadingProps,
@@ -25,12 +26,12 @@ import { InvitationManager } from '../../steps';
 const viewStyles = 'pbs-1 pbe-3 pli-3';
 
 const IdentityHeading = ({ titleId, title, identity, onDone }: IdentityPanelHeadingProps) => {
-  const fallbackHref = useJdenticonHref(identity.identityKey.toHex(), 12);
+  const fallbackValue = keyToFallback(identity.identityKey);
   return (
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
-      <Avatar.Root size={12} variant='circle' status='active'>
+      <Avatar.Root size={12} variant='circle' status='active' hue={identity.profile?.hue || fallbackValue.hue}>
         <Avatar.Frame classNames='block mbs-4 mbe-2 mli-auto chromatic-ignore'>
-          <Avatar.Fallback href={fallbackHref} />
+          <Avatar.Fallback text={identity.profile?.emoji || fallbackValue.emoji} />
         </Avatar.Frame>
         <Avatar.Label classNames='block text-center font-light text-xl' data-testid='identityHeading.displayName'>
           {identity.profile?.displayName ?? generateName(identity.identityKey.toHex())}
