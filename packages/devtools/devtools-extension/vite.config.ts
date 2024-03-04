@@ -33,20 +33,14 @@ export default defineConfig({
   },
   worker: {
     format: 'es',
-    plugins: () => [
-      TopLevelAwaitPlugin(),
-      WasmPlugin(),
-    ],
+    plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
   },
   plugins: [
     ConfigPlugin(),
 
     ThemePlugin({
       root: __dirname,
-      content: [
-        resolve(__dirname, './*.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-      ],
+      content: [resolve(__dirname, './*.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
     }),
 
     TopLevelAwaitPlugin(),
@@ -103,7 +97,7 @@ export default defineConfig({
     //     assets: './packages/devtools/devtools-extension/out/devtools-extension/**'
     //   },
     //   authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
-    //   dryRun: process.env.DX_ENVIRONMENT !== 'production'
+    //   disable: process.env.DX_ENVIRONMENT !== 'production'
     // })
 
     // Add "style-src 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'unsafe-inline' https://fonts.googleapis.com" in content_security_policy in manifest.json when uncommenting this.

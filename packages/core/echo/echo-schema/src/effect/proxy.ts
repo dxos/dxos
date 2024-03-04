@@ -2,15 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
+import { invariant } from '@dxos/invariant';
+
 import { type ReactiveObject } from './reactive';
+import { ReactiveArray } from './reactive-array';
 
 export const symbolIsProxy = Symbol('isProxy');
 
-export const isValidProxyTarget = (value: any): value is object =>
-  typeof value === 'object' &&
-  value !== null &&
-  (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === Array.prototype) &&
-  !value[symbolIsProxy];
+export const isValidProxyTarget = (value: any): value is object => {
+  if (value == null || value[symbolIsProxy]) {
+    return false;
+  }
+  if (value instanceof ReactiveArray) {
+    return true;
+  }
+  return typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype;
+};
 
 /**
  *
@@ -25,6 +32,7 @@ export const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHa
   // TODO(dmaretskyi): in future this should be mutable to allow replacing the handler on the fly while maintaining the proxy identity
   const handlerSlot = new ProxyHandlerSlot<T>();
   handlerSlot.handler = handler;
+  handlerSlot.target = target;
 
   const proxy = new Proxy(target, handlerSlot);
   handler._init(target);
@@ -35,6 +43,9 @@ export const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHa
 };
 
 export interface ReactiveHandler<T extends object> extends ProxyHandler<T> {
+  /**
+   * Target to Proxy mapping.
+   */
   readonly _proxyMap: WeakMap<object, any>;
 
   /**
@@ -49,10 +60,11 @@ export interface ReactiveHandler<T extends object> extends ProxyHandler<T> {
  */
 class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
   public handler?: ReactiveHandler<T> = undefined;
+  public target?: T = undefined;
 
   get(target: T, prop: string | symbol, receiver: any): any {
     if (prop === symbolIsProxy) {
-      return true;
+      return this;
     }
 
     if (!this.handler || !this.handler.get) {
@@ -99,3 +111,11 @@ class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
     }
   }
 }
+
+export const isReactiveProxy = (value: unknown): value is ReactiveObject<any> => !!(value as any)?.[symbolIsProxy];
+
+export const getProxyHandlerSlot = <T extends object>(proxy: ReactiveObject<any>): ProxyHandlerSlot<T> => {
+  const value = (proxy as any)[symbolIsProxy];
+  invariant(value instanceof ProxyHandlerSlot);
+  return value;
+};

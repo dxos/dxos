@@ -6,6 +6,7 @@ import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { type ChangeFn, type Doc } from '@dxos/automerge/automerge';
 import { Reference } from '@dxos/document-model';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { assignDeep } from '@dxos/util';
@@ -14,6 +15,8 @@ import { AutomergeArray } from './automerge-array';
 import { AutomergeObjectCore, type BindOptions, type DocAccessor } from './automerge-object-core';
 import { REFERENCE_TYPE_TAG, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
+import { EchoReactiveHandler } from '../effect/echo-handler';
+import { getProxyHandlerSlot } from '../effect/proxy';
 import {
   base,
   data,
@@ -29,6 +32,7 @@ import {
   type ObjectMeta,
   type TypedObjectOptions,
   type TypedObjectProperties,
+  type OpaqueEchoObject,
 } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
@@ -65,20 +69,26 @@ export class AutomergeObject implements TypedObjectProperties {
     }
     this._immutable = opts?.immutable ?? false;
 
-    return this._createProxy(['data']);
+    const proxy = this._createProxy(['data']);
+    this._core.rootProxy = proxy;
+    return proxy;
   }
 
   get __typename(): string | undefined {
-    if (this.__schema) {
-      return this.__schema?.typename;
-    }
-    // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
-    const typeRef = this.__system.type;
-    if (typeRef?.protocol === 'protobuf') {
-      return typeRef?.itemId;
-    } else {
-      return undefined;
-    }
+    // Type can't change so we use untracked here to stop signal subscriptions
+    // TODO(dmaretskyi): Clean-up getters to not subscribe to signals in the first place.
+    return compositeRuntime.untracked(() => {
+      if (this.__schema) {
+        return this.__schema?.typename;
+      }
+      // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
+      const typeRef = this.__system.type;
+      if (typeRef?.protocol === 'protobuf') {
+        return typeRef?.itemId;
+      } else {
+        return undefined;
+      }
+    });
   }
 
   get __schema(): Schema | undefined {
@@ -110,7 +120,7 @@ export class AutomergeObject implements TypedObjectProperties {
   }
 
   get [db](): EchoDatabase | undefined {
-    return this[base]._core.database?._echoDatabase;
+    return this[base]._core.database?._dbApi;
   }
 
   get [debug](): string {
@@ -373,7 +383,12 @@ export const getRawDoc = (obj: EchoObject, path?: string[]): DocAccessor => {
   return obj[base]._getRawDoc(path);
 };
 
-export const getAutomergeObjectCore = (obj: EchoObject): AutomergeObjectCore => {
-  invariant(isAutomergeObject(obj));
-  return obj[base]._core;
+export const getAutomergeObjectCore = (obj: OpaqueEchoObject): AutomergeObjectCore => {
+  if (isAutomergeObject(obj)) {
+    return obj[base]._core;
+  } else {
+    const handler = getProxyHandlerSlot(obj).handler;
+    invariant(handler instanceof EchoReactiveHandler);
+    return handler._objectCore;
+  }
 };

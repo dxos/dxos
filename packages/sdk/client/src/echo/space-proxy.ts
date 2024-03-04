@@ -12,12 +12,13 @@ import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
 import {
-  EchoDatabase,
+  type EchoDatabase,
   forceUpdate,
   setStateFromSnapshot,
   type AutomergeContext,
   type Hypergraph,
   type TypedObject,
+  EchoDatabaseImpl,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -74,7 +75,7 @@ export class SpaceProxy implements Space {
   @trace.info()
   _initialized = false;
 
-  private readonly _db!: EchoDatabase;
+  private readonly _db!: EchoDatabaseImpl;
   private readonly _internal!: SpaceInternal;
   private readonly _dbBackend: DatabaseProxy;
   private readonly _itemManager: ItemManager;
@@ -98,10 +99,14 @@ export class SpaceProxy implements Space {
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
-    this._invitationsProxy = new InvitationsProxy(this._clientServices.services.InvitationsService, () => ({
-      kind: Invitation.Kind.SPACE,
-      spaceKey: this.key,
-    }));
+    this._invitationsProxy = new InvitationsProxy(
+      this._clientServices.services.InvitationsService,
+      this._clientServices.services.IdentityService,
+      () => ({
+        kind: Invitation.Kind.SPACE,
+        spaceKey: this.key,
+      }),
+    );
 
     invariant(this._clientServices.services.DataService, 'DataService not available');
     this._itemManager = new ItemManager(this._modelFactory);
@@ -110,7 +115,7 @@ export class SpaceProxy implements Space {
       itemManager: this._itemManager,
       spaceKey: this.key,
     });
-    this._db = new EchoDatabase(this._itemManager, this._dbBackend, graph, automergeContext);
+    this._db = new EchoDatabaseImpl({ spaceKey: this._dbBackend.spaceKey, graph, automergeContext });
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
@@ -145,7 +150,7 @@ export class SpaceProxy implements Space {
     return this._data.spaceKey;
   }
 
-  get db() {
+  get db(): EchoDatabase {
     return this._db;
   }
 

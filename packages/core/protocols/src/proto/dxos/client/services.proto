@@ -137,6 +137,7 @@ message CreateIdentityRequest {
   optional halo.credentials.ProfileDocument profile = 1;
 
   reserved 2; // Removed use_automerge flag.
+  optional halo.credentials.DeviceProfileDocument device_profile = 3;
 }
 
 // TODO(wittjosiah): Align pluralization with other services.
@@ -159,9 +160,16 @@ enum DeviceKind {
 
 // TODO(burdon): Preferences (in database).
 message Device {
+  // TODO(nf): dedupe?
+  enum PresenceState {
+    OFFLINE = 0;
+    ONLINE = 1;
+    REMOVED = 2;
+  }
   dxos.keys.PublicKey device_key = 1;
   DeviceKind kind = 2;
   optional halo.credentials.DeviceProfileDocument profile = 3;
+  PresenceState presence = 4;
 }
 
 message QueryDevicesResponse {
@@ -444,6 +452,11 @@ message Invitation {
   optional string target = 11;
 }
 
+message AcceptInvitationRequest {
+  Invitation invitation = 1;
+  optional dxos.credentials.DeviceProfileDocument device_profile = 2;
+}
+
 message AuthenticationRequest {
   string invitation_id = 1;
   string auth_code = 2;
@@ -478,7 +491,7 @@ message QueryInvitationsResponse {
 
 service InvitationsService {
   rpc CreateInvitation(Invitation) returns (stream Invitation);
-  rpc AcceptInvitation(Invitation) returns (stream Invitation);
+  rpc AcceptInvitation(AcceptInvitationRequest) returns (stream Invitation);
   rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
   rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
   rpc QueryInvitations(google.protobuf.Empty) returns (stream QueryInvitationsResponse);

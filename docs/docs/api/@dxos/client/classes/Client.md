@@ -25,7 +25,7 @@ Type: <code>Event&lt;void&gt;</code>
 Emitted after the client is reset and the services have finished restarting.
 
 ### [version](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L71)
-Type: <code>"0.4.3"</code>
+Type: <code>"0.4.6"</code>
 
 The version of this client API.
 
@@ -112,7 +112,7 @@ Arguments:
 `types`: <code>TypeCollection</code>
 
 
-### [destroy()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L428)
+### [destroy()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L429)
 
 
 Cleanup, release resources.
@@ -162,7 +162,7 @@ Arguments: none
 
 
 
-### [reset()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L463)
+### [reset()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L464)
 
 
 Resets and destroys client storage.
@@ -174,7 +174,7 @@ Arguments: none
 
 
 
-### [resumeHostServices()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L454)
+### [resumeHostServices()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L455)
 
 
 Reinitialized the client session with the remote service host.

@@ -1,4 +1,6 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "echo-schema",
   "sourceRoot": "packages/core/echo/echo-schema/src",
   "projectType": "library",
   "targets": {
@@ -7,6 +9,7 @@
       "options": {
         "entryPoints": [
           "packages/core/echo/echo-schema/src/index.ts",
+          "packages/core/echo/echo-schema/src/schema.ts",
           "packages/core/echo/echo-schema/src/testing/index.ts"
         ],
         "injectGlobals": true
@@ -32,10 +35,8 @@
       }
     }
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "name": "echo-schema"
+  ]
 }

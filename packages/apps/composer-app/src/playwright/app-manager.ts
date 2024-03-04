@@ -111,12 +111,19 @@ export class AppManager {
   }
 
   async joinSpace() {
-    await this.page.getByTestId('navtree.treeItem.actionsLevel0').nth(1).click({ button: 'right' });
+    await this.page.getByTestId('navtree.treeItem.actionsLevel0').nth(1).click();
     return this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
-  waitForSpaceReady(params: { interval?: number; timeout?: number } = {}) {
-    return waitFor(() => this.page.getByTestId('spacePlugin.main.name').isEnabled(), params);
+  waitForSpaceReady(params: { interval?: number; timeout?: number } = { timeout: 30_000 }) {
+    return waitFor(
+      () =>
+        this.page
+          .getByTestId('spacePlugin.main')
+          .getAttribute('data-isready')
+          .then((value) => value === 'true'),
+      params,
+    );
   }
 
   getSpacePresenceMembers() {
@@ -159,14 +166,24 @@ export class AppManager {
   }
 
   async renameObject(newName: string, nth = 0) {
-    await this.page.getByTestId('spacePlugin.object').nth(nth).click({ button: 'right' });
+    await this.page
+      .getByTestId('spacePlugin.object')
+      .nth(nth)
+      .getByTestId('navtree.treeItem.actionsLevel2')
+      .first()
+      .click();
     await this.page.getByTestId('spacePlugin.renameObject').last().click();
     await this.page.getByTestId('spacePlugin.renameObject.input').fill(newName);
     await this.page.getByTestId('spacePlugin.renameObject.input').press('Enter');
   }
 
   async deleteObject(nth = 0) {
-    await this.page.getByTestId('spacePlugin.object').nth(nth).click({ button: 'right' });
+    await this.page
+      .getByTestId('spacePlugin.object')
+      .nth(nth)
+      .getByTestId('navtree.treeItem.actionsLevel2')
+      .first()
+      .click();
     await this.page.getByTestId('spacePlugin.deleteObject').last().click();
     await this.page.getByTestId('spacePlugin.confirmDeleteObject').last().click();
   }
@@ -228,7 +245,7 @@ export class AppManager {
 // TODO(wittjosiah): Factor out.
 const waitFor = (
   cb: () => Promise<boolean>,
-  { interval: _interval = 1000, timeout: _timeout = 10_000 } = {},
+  { interval: _interval = 1000, timeout: _timeout = 5_000 } = {},
 ): Promise<void> =>
   new Promise<void>((resolve, reject) => {
     const interval = setInterval(async () => {

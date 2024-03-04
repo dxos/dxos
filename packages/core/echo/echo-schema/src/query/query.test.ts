@@ -52,7 +52,7 @@ describe('Queries', () => {
       expect(results).to.have.length(1);
       expect(results[0].object).to.eq(objects[0]);
       expect(results[0].id).to.eq(objects[0].id);
-      expect(results[0].spaceKey).to.eq(db._backend.spaceKey);
+      expect(results[0].spaceKey).to.eq(db.spaceKey);
     }
 
     {

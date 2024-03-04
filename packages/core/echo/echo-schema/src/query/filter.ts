@@ -2,14 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DocumentModel, Reference } from '@dxos/document-model';
+import { Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { AutomergeObject } from '../automerge';
+import { getAutomergeObjectCore } from '../automerge';
 import {
-  base,
   getDatabaseFromObject,
   isTypedObject,
   type EchoObject,
@@ -185,15 +184,20 @@ export class Filter<T extends EchoObject = EchoObject> {
 }
 
 // TODO(burdon): Move logic into Filter.
-export const filterMatch = (filter: Filter, object: EchoObject): boolean => {
+export const filterMatch = (filter: Filter, object: EchoObject | undefined): boolean => {
+  if (!object) {
+    return false;
+  }
   const result = filterMatchInner(filter, object);
   return filter.not ? !result : result;
 };
 
 const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
   if (isTypedObject(object)) {
+    const core = getAutomergeObjectCore(object);
+
     const deleted = filter.options.deleted ?? QueryOptions.ShowDeletedOption.HIDE_DELETED;
-    if (object.__deleted) {
+    if (core.isDeleted()) {
       if (deleted === QueryOptions.ShowDeletedOption.HIDE_DELETED) {
         return false;
       }
@@ -201,15 +205,6 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
       if (deleted === QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY) {
         return false;
       }
-    }
-  }
-
-  // Match all models if contains '*', otherwise default to documents.
-  if (!(filter.options.models && filter.options.models.includes('*'))) {
-    // TODO(burdon): Expose default options that are merged if not null.
-    const models = filter.options.models ?? [DocumentModel.meta.type];
-    if (!(object[base] instanceof AutomergeObject) && !models.includes(object[base]._modelConstructor.meta.type)) {
-      return false;
     }
   }
 
@@ -235,13 +230,13 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
         return false;
       }
     } else {
-      const type = object[base]._getType();
+      const type = getAutomergeObjectCore(object).getType();
       if (!type) {
         return false;
       }
 
       // TODO(burdon): Comment.
-      if (!compareType(filter.type, type, getDatabaseFromObject(object)?._backend?.spaceKey)) {
+      if (!compareType(filter.type, type, getDatabaseFromObject(object)?.spaceKey)) {
         return false;
       }
     }

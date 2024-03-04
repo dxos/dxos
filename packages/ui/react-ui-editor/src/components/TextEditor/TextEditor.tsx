@@ -3,13 +3,13 @@
 //
 
 import { EditorState, type Extension, type StateEffect } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
+import { EditorView, scrollPastEnd } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, {
   type ComponentProps,
-  forwardRef,
   type KeyboardEventHandler,
+  forwardRef,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -52,6 +52,8 @@ export type TextEditorProps = {
   model: EditorModel; // TODO(burdon): Optional (e.g., just provide content if readonly).
   readonly?: boolean; // TODO(burdon): Move into model.
   autoFocus?: boolean;
+  scrollPastEnd?: boolean;
+  moveToEndOfLine?: boolean;
   lineWrapping?: boolean;
   scrollTo?: StateEffect<any>; // TODO(burdon): Restore scroll position: scrollTo EditorView.scrollSnapshot().
   selection?: { anchor: number; head?: number };
@@ -68,7 +70,19 @@ export type TextEditorProps = {
 // TODO(burdon): Replace with useTextEditor.
 export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
   (
-    { model, readonly, autoFocus, scrollTo, selection, theme, slots = defaultSlots, extensions = [], debug },
+    {
+      model,
+      readonly,
+      autoFocus,
+      scrollTo = EditorView.scrollIntoView(0),
+      moveToEndOfLine,
+      selection,
+      theme,
+      slots = defaultSlots,
+      extensions = [],
+      scrollPastEnd: _scrollPastEnd,
+      debug,
+    },
     forwardedRef,
   ) => {
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
@@ -83,12 +97,7 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
 
     // Set focus.
     useEffect(() => {
-      if (autoFocus && !view?.hasFocus) {
-        if (view?.state.selection.main?.from === 0) {
-          // Start at end of line.
-          const { to } = view.state.doc.lineAt(0);
-          view?.dispatch({ selection: { anchor: to } });
-        }
+      if (autoFocus) {
         view?.focus();
       }
     }, [view, autoFocus]);
@@ -114,12 +123,15 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
           }),
 
           // Theme.
-          // TODO(burdon): Make configurable.
+          // TODO(burdon): Make base theme configurable.
           EditorView.baseTheme(defaultTheme),
-          EditorView.theme(theme ?? {}),
+          theme && EditorView.theme(theme),
           EditorView.darkTheme.of(themeMode === 'dark'),
-          EditorView.editorAttributes.of({ class: slots.editor?.className ?? '' }),
-          EditorView.contentAttributes.of({ class: slots.content?.className ?? '' }),
+          slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
+          slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
+
+          // NOTE: Assumes default line height.
+          _scrollPastEnd && scrollPastEnd(),
 
           // Focus.
           EditorView.updateListener.of((update) => {
@@ -147,7 +159,7 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
       // EditorView
       // https://codemirror.net/docs/ref/#view.EditorViewConfig
       //
-      const newView = new EditorView({
+      const view = new EditorView({
         state,
         parent: rootRef.current,
         scrollTo,
@@ -161,8 +173,12 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
         },
       });
 
-      view?.destroy();
-      setView(newView);
+      setView(view);
+
+      if (moveToEndOfLine) {
+        const { to } = view.state.doc.lineAt(0);
+        view?.dispatch({ selection: { anchor: to } });
+      }
 
       // Remove tabster attribute (rely on custom keymap).
       if (state.facet(editorMode).noTabster) {
@@ -170,7 +186,7 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
       }
 
       return () => {
-        newView?.destroy();
+        view?.destroy();
         setView(null);
       };
       // TODO(wittjosiah): Does `rootRef` ever change? Only `.current` changes?
@@ -204,6 +220,7 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
   },
 );
 
+// TODO(burdon): Replace with hooks.
 export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
   (
     { readonly, placeholder, lineWrapping, theme = textTheme, slots, extensions: _extensions, ...props },
@@ -215,6 +232,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
       () => [createBasicBundle({ themeMode, placeholder, lineWrapping }), ...(_extensions ?? [])],
       [themeMode, placeholder, lineWrapping, _extensions],
     );
+
     return (
       <BaseTextEditor
         ref={forwardedRef}
@@ -228,6 +246,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
   },
 );
 
+// TODO(burdon): Replace with hooks.
 export const MarkdownEditor = forwardRef<EditorView | null, TextEditorProps>(
   ({ readonly, placeholder, theme = markdownTheme, slots, extensions: _extensions, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
@@ -236,6 +255,7 @@ export const MarkdownEditor = forwardRef<EditorView | null, TextEditorProps>(
       () => [createMarkdownExtensions({ themeMode, placeholder }), ...(_extensions ?? [])],
       [themeMode, placeholder, _extensions],
     );
+
     return (
       <BaseTextEditor
         ref={forwardedRef}
@@ -254,7 +274,7 @@ export const defaultSlots: TextEditorSlots = {
     className: focusRing,
   },
   editor: {
-    className: 'min-bs-full',
+    className: 'bs-full',
   },
 };
 

@@ -11,15 +11,7 @@ import { dirname, join } from 'node:path';
 import readline from 'node:readline';
 import pkgUp from 'pkg-up';
 
-import {
-  AgentIsNotStartedByCLIError,
-  AgentWaitTimeoutError,
-  type Daemon,
-  PhoenixDaemon,
-  SystemDaemon,
-  LaunchctlRunner,
-  SystemctlRunner,
-} from '@dxos/agent';
+import { type Daemon, PhoenixDaemon, SystemDaemon, LaunchctlRunner, SystemctlRunner } from '@dxos/agent';
 import { Client, Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { fromAgent } from '@dxos/client/services';
@@ -44,7 +36,7 @@ import {
 } from '@dxos/observability';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 
-import { IdentityWaitTimeoutError, PublisherConnectionError, SpaceWaitTimeoutError } from './errors';
+import { FriendlyError, PublisherConnectionError } from './errors';
 import { PublisherRpcPeer, SupervisorRpcPeer, TunnelRpcPeer, selectSpace, waitForSpace } from './util';
 
 const STDIN_TIMEOUT = 100;
@@ -202,7 +194,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     const { mode, installationId, group } = observabilityState;
 
     if (mode === 'disabled') {
-      this.log('telemetry disabled by config');
+      this.log('observability disabled by config');
       return;
     }
     {
@@ -223,6 +215,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     this._observability = await initializeNodeObservability({
       namespace,
+      version: this.config.version,
       installationId,
       group,
       config: this._clientConfig!,
@@ -296,8 +289,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    * NOTE: Full stack trace is displayed if `oclif.settings.debug = true` (see bin script).
    * https://oclif.io/docs/error_handling
    */
-  override error(err: string | Error, options?: any): never;
-  override error(err: string | Error, options?: any): void {
+  override catch(err: string | Error, options?: any): never;
+  override catch(err: string | Error, options?: any): void {
     // Will only submit if API key exists (i.e., prod).
     this._observability?.captureException(err);
 
@@ -309,26 +302,14 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       return;
     }
 
-    // TODO(burdon): Errors should not be imported (polluting base command); just stringify.
     // Convert known errors to human readable messages.
-    if (err instanceof SpaceWaitTimeoutError) {
-      this.logToStderr(chalk`{red Error}: ${err.message}`);
-    } else if (err instanceof AgentWaitTimeoutError) {
-      // TODO(burdon): Need better diagnostics: might fail for other reasons.
-      this.logToStderr(chalk`{red Error}: Agent may be stale (to restart: 'dx agent restart --force')`);
-    } else if (err instanceof AgentIsNotStartedByCLIError) {
-      this.logToStderr(chalk`{red Error}: Agent may be running in the foreground or as a system daemon.`);
-    } else if (err instanceof PublisherConnectionError) {
-      this.logToStderr(chalk`{red Error}: Could not connect to publisher.`);
-    } else if (err instanceof IdentityWaitTimeoutError) {
-      this.logToStderr(chalk`{red Error}: Identity not initialized.`);
+    if (err instanceof FriendlyError) {
+      this.logToStderr(chalk`{red Error}: ${err.friendlyMessage}`);
+      err.suggestion && this.logToStderr(chalk`{gray Suggestion: ${err.suggestion}}`);
     } else {
-      // Handle unknown errors with default method.
-      super.error(err, options as any);
-      return;
+      this.logToStderr(chalk`{red Error}: Something went wrong. Use --verbose for more details.`);
     }
-
-    this.exit();
+    this.exit(1);
   }
 
   /**
@@ -391,7 +372,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       await Promise.all(
         spaces.map(async (space) => {
           if (space.state.get() === SpaceState.INITIALIZING) {
-            await waitForSpace(space, this.flags.timeout, (err) => this.error(err));
+            await waitForSpace(space, this.flags.timeout, (err) => this.catch(err));
           }
         }),
       );
@@ -411,10 +392,10 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     const space = spaces.find((space) => space.key.toHex().startsWith(key!));
     if (!space) {
-      this.error(`Invalid key: ${key}`);
+      this.catch(`Invalid key: ${key}`);
     } else {
       if (wait && !this.flags['no-wait'] && space.state.get() === SpaceState.INITIALIZING) {
-        await waitForSpace(space, this.flags.timeout, (err) => this.error(err));
+        await waitForSpace(space, this.flags.timeout, (err) => this.catch(err));
       }
 
       return space;
@@ -477,7 +458,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
       return await callback(rpc);
     } catch (err: any) {
-      this.error(new PublisherConnectionError());
+      this.catch(new PublisherConnectionError());
     } finally {
       if (rpc) {
         await rpc.close();
@@ -495,7 +476,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
       return await callback(rpc);
     } catch (err: any) {
-      this.error(err);
+      this.catch(err);
     } finally {
       if (rpc) {
         await rpc.close();
@@ -513,7 +494,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
       return await callback(rpc);
     } catch (err: any) {
-      this.error(err);
+      this.catch(err);
     } finally {
       if (rpc) {
         await rpc.close();

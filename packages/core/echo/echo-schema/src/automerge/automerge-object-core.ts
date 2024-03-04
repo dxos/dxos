@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import get from 'lodash.get';
+
 import { Event } from '@dxos/async';
 import { next as A, type ChangeFn, type ChangeOptions, type Doc, type Heads } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
@@ -10,21 +12,21 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { TextModel } from '@dxos/text-model';
-import { assignDeep, defer } from '@dxos/util';
+import { assignDeep, defer, getDeep } from '@dxos/util';
 
 import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
-import { AutomergeObject } from './automerge-object';
+import { AutomergeObject, getRawDoc } from './automerge-object';
 import { docChangeSemaphore } from './doc-semaphore';
 import {
   encodeReference,
-  type DocStructure,
   type ObjectStructure,
   isEncodedReferenceObject,
   decodeReference,
   type DecodedAutomergeValue,
+  type SpaceDoc,
 } from './types';
-import { base, type TypedObjectOptions, type EchoObject, TextObject } from '../object';
+import { base, type TypedObjectOptions, type EchoObject, TextObject, type AutomergeTextCompat } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto'; // Keep type-only
 
@@ -43,7 +45,7 @@ export class AutomergeObjectCore {
   // TODO(dmaretskyi): Create a discriminated union for the bound/not bound states.
 
   /**
-   * Set if when the object is not bound to a database.
+   * Set if when the object is bound to a database.
    */
   public database?: AutomergeDb | undefined;
 
@@ -55,7 +57,7 @@ export class AutomergeObjectCore {
   /**
    * Set if when the object is bound to a database.
    */
-  public docHandle?: DocHandle<DocStructure> = undefined;
+  public docHandle?: DocHandle<SpaceDoc> = undefined;
 
   /**
    * Until object is persisted in the database, the linked object references are stored in this cache.
@@ -77,7 +79,13 @@ export class AutomergeObjectCore {
   /**
    * Reactive signal for update propagation.
    */
-  public signal = compositeRuntime.createSignal();
+  public signal = compositeRuntime.createSignal(this);
+
+  /**
+   * User-facing proxy for the object.
+   * Either an instance of `AutomergeObject` or a `ReactiveEchoObject<T>`.
+   */
+  public rootProxy: unknown;
 
   /**
    * Create local doc with initial state from this object.
@@ -131,7 +139,7 @@ export class AutomergeObjectCore {
       // Prevent recursive change calls.
       using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
-      this.docHandle.change((newDoc: DocStructure) => {
+      this.docHandle.change((newDoc: SpaceDoc) => {
         assignDeep(newDoc, this.mountPath, doc);
       });
     }
@@ -199,6 +207,7 @@ export class AutomergeObjectCore {
   getDocAccessor(path: string[] = []): DocAccessor {
     const self = this;
     return {
+      [isDocument]: true,
       handle: {
         docSync: () => this.getDoc(),
         change: (callback, options) => {
@@ -225,8 +234,6 @@ export class AutomergeObjectCore {
       get path() {
         return [...self.mountPath, 'data', ...path];
       },
-
-      isAutomergeDocAccessor: true,
     };
   }
 
@@ -308,18 +315,10 @@ export class AutomergeObjectCore {
       return encodeReference(value);
     }
     if (value instanceof AutomergeArray || Array.isArray(value)) {
-      const values: any = value.map((val) => {
-        if (val instanceof AutomergeArray || Array.isArray(val)) {
-          // TODO(mykola): Add support for nested arrays.
-          throw new Error('Nested arrays are not supported');
-        }
-        return this.encode(val);
-      });
+      const values: any = value.map((val) => this.encode(val));
       return values;
     }
     if (typeof value === 'object' && value !== null) {
-      // TODO(dmaretskyi): Why do we freeze it?
-      Object.freeze(value);
       return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this.encode(value)]));
     }
 
@@ -335,7 +334,7 @@ export class AutomergeObjectCore {
    */
   decode(value: any): DecodedAutomergeValue {
     if (value === null) {
-      return undefined;
+      return value;
     }
     if (Array.isArray(value)) {
       return value.map((val) => this.decode(val));
@@ -359,28 +358,88 @@ export class AutomergeObjectCore {
 
     return value;
   }
+
+  get(path: (string | number)[]) {
+    const fullPath = [...this.mountPath, ...path];
+
+    let value = this.getDoc();
+    for (const key of fullPath) {
+      value = value?.[key];
+    }
+
+    return value;
+  }
+
+  set(path: (string | number)[], value: any) {
+    const fullPath = [...this.mountPath, ...path];
+
+    this.change((doc) => {
+      assignDeep(doc, fullPath, value);
+    });
+  }
+
+  delete(path: (string | number)[]) {
+    const fullPath = [...this.mountPath, ...path];
+
+    this.change((doc) => {
+      const value: any = getDeep(doc, fullPath.slice(0, fullPath.length - 1));
+      delete value[fullPath[fullPath.length - 1]];
+    });
+  }
+
+  getType(): Reference | undefined {
+    const value = this.decode(this.get(['system', 'type']));
+    if (!value) {
+      return undefined;
+    }
+    invariant(value instanceof Reference);
+    return value;
+  }
+
+  isDeleted() {
+    const value = this.get(['system', 'deleted']);
+    return typeof value === 'boolean' ? value : false;
+  }
+
+  setDeleted(value: boolean) {
+    this.set(['system', 'deleted'], value);
+  }
 }
 
-export type DocAccessor<T = any> = {
+const isDocument = Symbol.for('isDocument');
+
+// TODO(burdon): Rename ValueAccessor.
+export interface DocAccessor<T = any> {
+  [isDocument]: true;
   handle: IDocHandle<T>;
+  get path(): string[]; // TODO(burdon): Getter or prop?
+}
 
-  path: string[];
-
-  isAutomergeDocAccessor: true;
+export const DocAccessor = {
+  getValue: (accessor: DocAccessor) => get(accessor.handle.docSync(), accessor.path),
 };
 
-export type IDocHandle<T = any> = {
+/**
+ * @deprecated
+ */
+// TODO(burdon): Temporary.
+export const createDocAccessor = <T = any>(text: TextObject): DocAccessor<T> => {
+  const obj = text as any as AutomergeTextCompat;
+  return getRawDoc(obj, [obj.field]);
+};
+
+export interface IDocHandle<T = any> {
   docSync(): Doc<T> | undefined;
   change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
   changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): string[] | undefined;
 
   addListener(event: 'change', listener: () => void): void;
   removeListener(event: 'change', listener: () => void): void;
-};
+}
 
 export type BindOptions = {
   db: AutomergeDb;
-  docHandle: DocHandle<DocStructure>;
+  docHandle: DocHandle<SpaceDoc>;
   path: string[];
 
   /**
@@ -390,10 +449,10 @@ export type BindOptions = {
 };
 
 export const isDocAccessor = (obj: any): obj is DocAccessor => {
-  return !!obj?.isAutomergeDocAccessor;
+  return !!obj?.[isDocument];
 };
 
-export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<DocStructure>) => {
+export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<SpaceDoc>) => {
   if (event.patches.some((patch) => patch.path[0] === 'objects' && patch.path[1] === objId)) {
     return true;
   }

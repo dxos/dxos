@@ -5,12 +5,24 @@
 import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
-import { createReactiveProxy, isValidProxyTarget, symbolIsProxy, type ReactiveHandler } from './proxy';
+import { createReactiveProxy, isValidProxyTarget, type ReactiveHandler } from './proxy';
+import { ReactiveArray } from './reactive-array';
+import { defineHiddenProperty } from '../util/property';
 
 const symbolSignal = Symbol('signal');
+const symbolPropertySignal = Symbol('property-signal');
 
 type ProxyTarget = {
+  /**
+   * For get and set operations on value properties.
+   */
+  // TODO(dmaretskyi): Turn into a map of signals per-field.
   [symbolSignal]: GenericSignal;
+
+  /**
+   * For modifying the structure of the object.
+   */
+  [symbolPropertySignal]: GenericSignal;
 } & ({ [key: keyof any]: any } | any[]);
 
 /**
@@ -28,26 +40,31 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     invariant(typeof target === 'object' && target !== null);
 
     if (!(symbolSignal in target)) {
-      Object.defineProperty(target, symbolSignal, {
-        value: compositeRuntime.createSignal(),
-        enumerable: false,
-        writable: true,
-        configurable: true,
-      });
+      defineHiddenProperty(target, symbolSignal, compositeRuntime.createSignal());
+      defineHiddenProperty(target, symbolPropertySignal, compositeRuntime.createSignal());
     }
 
     for (const key in target) {
-      if (Array.isArray(target[key]) && !(target instanceof ReactiveArray)) {
-        target[key] = new ReactiveArray(...target[key]);
+      if (Array.isArray(target[key]) && !(target[key] instanceof ReactiveArray)) {
+        target[key] = ReactiveArray.from(target[key]);
       }
     }
   }
 
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
+    // Handle getter properties. Will not subscribe the value signal.
+    if (Object.getOwnPropertyDescriptor(target, prop)?.get) {
+      target[symbolPropertySignal].notifyRead();
+
+      // TODO(dmaretskyi): Turn getters into computed fields.
+      return Reflect.get(target, prop, receiver);
+    }
+
     target[symbolSignal].notifyRead();
+    target[symbolPropertySignal].notifyRead();
     const value = Reflect.get(target, prop);
 
-    if ((value instanceof ReactiveArray || isValidProxyTarget(value)) && !(value as any)[symbolIsProxy]) {
+    if (isValidProxyTarget(value)) {
       // Note: Need to pass in `this` instance to createReactiveProxy to ensure that the same proxy is used for target.
       return createReactiveProxy(value, this);
     }
@@ -68,37 +85,7 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
     const result = Reflect.defineProperty(target, property, attributes);
-    target[symbolSignal].notifyWrite();
+    target[symbolPropertySignal].notifyWrite();
     return result;
-  }
-}
-
-/**
- * Extends the native array to make sure that arrays methods are correctly reactive.
- */
-class ReactiveArray<T> extends Array<T> {
-  static get [Symbol.species]() {
-    return Array;
-  }
-
-  static {
-    /**
-     * These methods will trigger proxy traps like `set` and `defineProperty` and emit signal notifications.
-     * We wrap them in a batch to avoid unnecessary signal notifications.
-     */
-    const BATCHED_METHODS = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'] as const;
-
-    for (const method of BATCHED_METHODS) {
-      Object.defineProperty(this.prototype, method, {
-        enumerable: false,
-        value: function (this: ReactiveArray<any>, ...args: any[]) {
-          let result!: any;
-          compositeRuntime.batch(() => {
-            result = Array.prototype[method].apply(this, args);
-          });
-          return result;
-        },
-      });
-    }
   }
 }

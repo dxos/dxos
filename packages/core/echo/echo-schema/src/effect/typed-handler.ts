@@ -2,21 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as AST from '@effect/schema/AST';
-import * as S from '@effect/schema/Schema';
+import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 
 import { type ReactiveHandler, createReactiveProxy, isValidProxyTarget } from './proxy';
-
-export const symbolSchema = Symbol.for('@dxos/schema');
-export const symbolTypeAst = Symbol.for('@dxos/type/AST');
+import { SchemaValidator } from './schema-validator';
+import { defineHiddenProperty } from '../util/property';
 
 export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T> {
   _proxyMap = new WeakMap<object, any>();
   _signal = compositeRuntime.createSignal();
 
-  _init(): void {}
+  _init(target: any): void {
+    SchemaValidator.initTypedTarget(target);
+    defineHiddenProperty(target, inspect.custom, this._inspect.bind(target));
+  }
 
   get(target: any, prop: string | symbol, receiver: any): any {
     this._signal.notifyRead();
@@ -29,35 +30,35 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
   }
 
   set(target: any, prop: string | symbol, value: any, receiver: any): boolean {
-    const ast = target[symbolTypeAst] as AST.AST;
-    const properties = AST.getPropertySignatures(ast).find((property) => property.name === prop);
-    if (!properties) {
-      throw new Error(`Invalid property: ${prop.toString()}`);
-    }
+    let result: boolean = false;
+    compositeRuntime.batch(() => {
+      const validatedValue = SchemaValidator.validateValue(target, prop, value);
+      result = Reflect.set(target, prop, validatedValue, receiver);
+      this._signal.notifyWrite();
+    });
+    return result;
+  }
 
-    const _ = S.asserts(S.make(properties.type))(value);
-    const result = Reflect.set(target, prop, value, receiver);
+  defineProperty(target: any, property: string | symbol, attributes: PropertyDescriptor): boolean {
+    const validatedValue = SchemaValidator.validateValue(target, property, attributes.value);
+    const result = Reflect.defineProperty(target, property, {
+      ...attributes,
+      value: validatedValue,
+    });
     this._signal.notifyWrite();
     return result;
   }
-}
 
-/**
- * Recursively set AST property on the object.
- */
-// TODO(burdon): Use visitProperties.
-export const setAstProperty = (obj: any, ast: AST.AST) => {
-  if (AST.isTypeLiteral(ast)) {
-    Object.defineProperty(obj, symbolTypeAst, {
-      enumerable: false,
-      value: ast,
-    });
-
-    for (const property of ast.propertySignatures) {
-      const value = obj[property.name];
-      if (isValidProxyTarget(value)) {
-        setAstProperty(value, property.type);
-      }
-    }
+  private _inspect(
+    _: number,
+    options: InspectOptionsStylized,
+    inspectFn: (value: any, options?: InspectOptionsStylized) => string,
+  ) {
+    return `Typed ${inspectFn(this, {
+      ...options,
+      compact: true,
+      showHidden: false,
+      customInspect: false,
+    })}`;
   }
-};
+}
