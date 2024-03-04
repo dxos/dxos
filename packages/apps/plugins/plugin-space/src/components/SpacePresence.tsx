@@ -181,21 +181,21 @@ type PresenceAvatarProps = {
   group?: boolean;
   index?: number;
   onClick?: () => void;
-};
+} & Pick<Exclude<Identity['profile'], undefined>, 'hue' | 'emoji'>;
 
-const PrensenceAvatar = ({ identity, showName, match, group, index, onClick }: PresenceAvatarProps) => {
+const PrensenceAvatar = ({ identity, showName, match, group, index, onClick, hue, emoji }: PresenceAvatarProps) => {
   const Root = group ? AvatarGroupItem.Root : Avatar.Root;
   const status = match ? 'current' : 'active';
   const fallbackValue = keyToFallback(identity.identityKey);
   return (
-    <Root status={status} hue={fallbackValue.hue}>
+    <Root status={status} hue={hue || fallbackValue.hue}>
       <Avatar.Frame
         data-testid='spacePlugin.presence.member'
         data-status={status}
         {...(index ? { style: { zIndex: index } } : {})}
         onClick={() => onClick?.()}
       >
-        <Avatar.Fallback text={fallbackValue.emoji} />
+        <Avatar.Fallback text={emoji || fallbackValue.emoji} />
       </Avatar.Frame>
       {showName && <Avatar.Label classNames='text-sm truncate pli-2'>{getName(identity)}</Avatar.Label>}
     </Root>
@@ -215,7 +215,7 @@ export const SmallPresence = (props: MemberPresenceProps) => {
             {members.slice(0, 3).map((viewer, i) => {
               const viewerHex = viewer.identity.identityKey.toHex();
               return (
-                <AvatarGroupItem.Root key={viewerHex} hue={hexToHue(viewerHex)}>
+                <AvatarGroupItem.Root key={viewerHex} hue={viewer.identity.profile?.hue || hexToHue(viewerHex)}>
                   <Avatar.Frame style={{ zIndex: members.length - i }} />
                 </AvatarGroupItem.Root>
               );

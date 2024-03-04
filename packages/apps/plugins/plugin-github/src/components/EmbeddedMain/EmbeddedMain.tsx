@@ -186,7 +186,7 @@ const EmbeddedLayoutImpl = () => {
                   <DropdownMenu.Separator />
                   <DropdownMenu.GroupLabel>
                     {t('active space label', { ns: SPACE_PLUGIN })}
-                    <Avatar.Root size={5} variant='circle' hue={spaceFallbackValue.hue}>
+                    <Avatar.Root size={5} variant='circle'>
                       <div role='none' className='flex gap-1 mlb-1 items-center'>
                         <Avatar.Frame>
                           <Avatar.Fallback text={spaceFallbackValue.emoji} />
