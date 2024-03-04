@@ -3,7 +3,7 @@
 //
 
 import { StackSimple, type IconProps } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-core';
+import { batch, effect } from '@preact/signals-core';
 import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
@@ -101,19 +101,21 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
                 effect(() => {
                   const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
                   previousObjects = query.objects;
-                  removedObjects.forEach((object) => graph.removeNode(object.id));
-                  query.objects.forEach((object) => {
-                    graph.addNodes({
-                      id: object.id,
-                      data: object,
-                      properties: {
-                        // TODO(wittjosiah): Reconcile with metadata provides.
-                        label: object.title || ['stack title placeholder', { ns: STACK_PLUGIN }],
-                        icon: (props: IconProps) => <StackSimple {...props} />,
-                        testId: 'spacePlugin.object',
-                        persistenceClass: 'echo',
-                        persistenceKey: space?.key.toHex(),
-                      },
+                  batch(() => {
+                    removedObjects.forEach((object) => graph.removeNode(object.id));
+                    query.objects.forEach((object) => {
+                      graph.addNodes({
+                        id: object.id,
+                        data: object,
+                        properties: {
+                          // TODO(wittjosiah): Reconcile with metadata provides.
+                          label: object.title || ['stack title placeholder', { ns: STACK_PLUGIN }],
+                          icon: (props: IconProps) => <StackSimple {...props} />,
+                          testId: 'spacePlugin.object',
+                          persistenceClass: 'echo',
+                          persistenceKey: space?.key.toHex(),
+                        },
+                      });
                     });
                   });
                 }),
