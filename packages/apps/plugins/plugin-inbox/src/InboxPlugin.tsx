@@ -3,7 +3,7 @@
 //
 
 import { AddressBook, Calendar, Envelope, type IconProps } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-core';
+import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
@@ -112,50 +112,52 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                   previousAddressBooks = addressBookQuery.objects;
                   previousCalendars = calendarQuery.objects;
 
-                  removedMailboxes.forEach((object) => graph.removeNode(object.id));
-                  removedAddressBooks.forEach((object) => graph.removeNode(object.id));
-                  removedCalendars.forEach((object) => graph.removeNode(object.id));
+                  batch(() => {
+                    removedMailboxes.forEach((object) => graph.removeNode(object.id));
+                    removedAddressBooks.forEach((object) => graph.removeNode(object.id));
+                    removedCalendars.forEach((object) => graph.removeNode(object.id));
 
-                  mailboxQuery.objects.forEach((object) => {
-                    graph.addNodes({
-                      id: object.id,
-                      data: object,
-                      properties: {
-                        // TODO(wittjosiah): Reconcile with metadata provides.
-                        label: object.title || ['mailbox title placeholder', { ns: INBOX_PLUGIN }],
-                        icon: (props: IconProps) => <Envelope {...props} />,
-                        testId: 'spacePlugin.object',
-                        persistenceClass: 'echo',
-                        persistenceKey: space?.key.toHex(),
-                      },
+                    mailboxQuery.objects.forEach((object) => {
+                      graph.addNodes({
+                        id: object.id,
+                        data: object,
+                        properties: {
+                          // TODO(wittjosiah): Reconcile with metadata provides.
+                          label: object.title || ['mailbox title placeholder', { ns: INBOX_PLUGIN }],
+                          icon: (props: IconProps) => <Envelope {...props} />,
+                          testId: 'spacePlugin.object',
+                          persistenceClass: 'echo',
+                          persistenceKey: space?.key.toHex(),
+                        },
+                      });
                     });
-                  });
-                  addressBookQuery.objects.forEach((object) => {
-                    graph.addNodes({
-                      id: object.id,
-                      data: object,
-                      properties: {
-                        // TODO(wittjosiah): Reconcile with metadata provides.
-                        label: ['addressbook title placeholder', { ns: INBOX_PLUGIN }],
-                        icon: (props: IconProps) => <AddressBook {...props} />,
-                        testId: 'spacePlugin.object',
-                        persistenceClass: 'echo',
-                        persistenceKey: space?.key.toHex(),
-                      },
+                    addressBookQuery.objects.forEach((object) => {
+                      graph.addNodes({
+                        id: object.id,
+                        data: object,
+                        properties: {
+                          // TODO(wittjosiah): Reconcile with metadata provides.
+                          label: ['addressbook title placeholder', { ns: INBOX_PLUGIN }],
+                          icon: (props: IconProps) => <AddressBook {...props} />,
+                          testId: 'spacePlugin.object',
+                          persistenceClass: 'echo',
+                          persistenceKey: space?.key.toHex(),
+                        },
+                      });
                     });
-                  });
-                  calendarQuery.objects.forEach((object) => {
-                    graph.addNodes({
-                      id: object.id,
-                      data: object,
-                      properties: {
-                        // TODO(wittjosiah): Reconcile with metadata provides.
-                        label: ['calendar title placeholder', { ns: INBOX_PLUGIN }],
-                        icon: (props: IconProps) => <Calendar {...props} />,
-                        testId: 'spacePlugin.object',
-                        persistenceClass: 'echo',
-                        persistenceKey: space?.key.toHex(),
-                      },
+                    calendarQuery.objects.forEach((object) => {
+                      graph.addNodes({
+                        id: object.id,
+                        data: object,
+                        properties: {
+                          // TODO(wittjosiah): Reconcile with metadata provides.
+                          label: ['calendar title placeholder', { ns: INBOX_PLUGIN }],
+                          icon: (props: IconProps) => <Calendar {...props} />,
+                          testId: 'spacePlugin.object',
+                          persistenceClass: 'echo',
+                          persistenceKey: space?.key.toHex(),
+                        },
+                      });
                     });
                   });
                 }),
