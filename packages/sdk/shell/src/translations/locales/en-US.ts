@@ -109,6 +109,7 @@ export const os = {
   'emoji and color label': 'Emoji and color',
   'clear label': 'Use default',
   'select emoji label': 'Choose an emoji to use in your avatar',
+  'select hue label': 'Choose a hue to use in your avatar',
   'red label': 'Red',
   'orange label': 'Orange',
   'amber label': 'Amber',

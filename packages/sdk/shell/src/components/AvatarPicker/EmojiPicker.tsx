@@ -4,7 +4,7 @@
 import emojiData from '@emoji-mart/data';
 import EmojiMart from '@emoji-mart/react';
 import { useModalAttributes } from '@fluentui/react-tabster';
-import { CaretDown, X } from '@phosphor-icons/react';
+import { ArrowCounterClockwise, CaretDown } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 
 import { type Identity } from '@dxos/react-client/halo';
@@ -42,48 +42,48 @@ export const EmojiPicker = ({ identity, disabled }: { identity?: Identity; disab
   // @ts-ignore
   return (
     <>
+      <Popover.Root open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
+        <Popover.Trigger asChild>
+          <Button variant='ghost' classNames='gap-2 text-2xl plb-1' {...triggerAttributes} disabled={disabled}>
+            <span className='sr-only'>{t('select emoji label')}</span>
+            <span className='grow pis-14'>{emojiValue}</span>
+            <CaretDown className={getSize(4)} />
+          </Button>
+        </Popover.Trigger>
+        <Popover.Content
+          side='right'
+          onKeyDownCapture={(event) => {
+            if (event.key === 'Escape') {
+              event.stopPropagation();
+              setEmojiPickerOpen(false);
+            }
+          }}
+          {...modalAttributes}
+        >
+          <EmojiMart
+            data={emojiData}
+            onEmojiSelect={handleEmojiSelect}
+            autoFocus={true}
+            maxFrequentRows={0}
+            noCountryFlags={true}
+          />
+          <Popover.Arrow />
+        </Popover.Content>
+      </Popover.Root>
       <Tooltip.Root>
-        <Popover.Root open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
-          <Popover.Trigger asChild>
-            <Tooltip.Trigger asChild>
-              <Button variant='ghost' classNames='gap-2 text-2xl plb-1' {...triggerAttributes} disabled={disabled}>
-                <span className='sr-only'>{t('select emoji label')}</span>
-                <span className='grow pis-14'>{emojiValue}</span>
-                <CaretDown className={getSize(4)} />
-              </Button>
-            </Tooltip.Trigger>
-          </Popover.Trigger>
-          <Popover.Content
-            side='right'
-            onKeyDownCapture={(event) => {
-              if (event.key === 'Escape') {
-                event.stopPropagation();
-                setEmojiPickerOpen(false);
-              }
-            }}
-            {...modalAttributes}
-          >
-            <EmojiMart
-              data={emojiData}
-              onEmojiSelect={handleEmojiSelect}
-              autoFocus={true}
-              maxFrequentRows={0}
-              noCountryFlags={true}
-            />
-            <Popover.Arrow />
-          </Popover.Content>
-        </Popover.Root>
+        <Tooltip.Trigger asChild>
+          <Button variant='ghost' onClick={handleClearEmojiClick} disabled={disabled}>
+            <span className='sr-only'>{t('clear label')}</span>
+            <ArrowCounterClockwise />
+          </Button>
+        </Tooltip.Trigger>
         <Tooltip.Portal>
-          <Tooltip.Content>
-            {t('select emoji label')}
+          <Tooltip.Content style={{ zIndex: 70 }} side='right'>
+            {t('clear label')}
             <Tooltip.Arrow />
           </Tooltip.Content>
         </Tooltip.Portal>
       </Tooltip.Root>
-      <Button variant='ghost' onClick={handleClearEmojiClick} disabled={disabled}>
-        <span className='sr-only'>{t('clear label')}</span>
-        <X />
-      </Button>
     </>
   );
 };
