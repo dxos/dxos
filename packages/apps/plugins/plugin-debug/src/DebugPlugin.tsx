@@ -3,7 +3,7 @@
 //
 
 import { Bug, type IconProps } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-core';
+import { batch, effect } from '@preact/signals-core';
 import React, { useEffect, useState } from 'react';
 
 import { parseClientPlugin, type ClientPluginProvides } from '@braneframe/plugin-client';
@@ -153,28 +153,30 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           }
 
           const { unsubscribe } = clientPlugin.provides.client.spaces.subscribe((spaces) => {
-            spaces.forEach((space) => {
-              subscriptions.add(
-                effect(() => {
-                  manageNodes({
-                    graph,
-                    condition: Boolean(settings.values.debug),
-                    removeEdges: true,
-                    nodes: [
-                      {
-                        id: `${space.key.toHex()}-debug`,
-                        data: { space },
-                        properties: {
-                          label: ['debug label', { ns: DEBUG_PLUGIN }],
-                          icon: (props: IconProps) => <Bug {...props} />,
+            subscriptions.add(
+              effect(() => {
+                batch(() => {
+                  spaces.forEach((space) => {
+                    manageNodes({
+                      graph,
+                      condition: Boolean(settings.values.debug),
+                      removeEdges: true,
+                      nodes: [
+                        {
+                          id: `${space.key.toHex()}-debug`,
+                          data: { space },
+                          properties: {
+                            label: ['debug label', { ns: DEBUG_PLUGIN }],
+                            icon: (props: IconProps) => <Bug {...props} />,
+                          },
+                          edges: [[space.key.toHex(), 'inbound']],
                         },
-                        edges: [[space.key.toHex(), 'inbound']],
-                      },
-                    ],
+                      ],
+                    });
                   });
-                }),
-              );
-            });
+                });
+              }),
+            );
           });
 
           return () => {
