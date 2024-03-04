@@ -59,6 +59,11 @@ export type AcceptSpaceOptions = {
   dataTimeframe?: Timeframe;
 };
 
+export type DataSpaceManagerRuntimeParams = {
+  spaceMemberPresenceAnnounceInterval?: number;
+  spaceMemberPresenceOfflineTimeout?: number;
+};
+
 @trackLeaks('open', 'close')
 export class DataSpaceManager {
   private readonly _ctx = new Context();
@@ -69,6 +74,8 @@ export class DataSpaceManager {
 
   private _isOpen = false;
   private readonly _instanceId = PublicKey.random().toHex();
+  private readonly _spaceMemberPresenceAnnounceInterval: number;
+  private readonly _spaceMemberPresenceOfflineTimeout: number;
 
   constructor(
     private readonly _spaceManager: SpaceManager,
@@ -78,7 +85,15 @@ export class DataSpaceManager {
     private readonly _signingContext: SigningContext,
     private readonly _feedStore: FeedStore<FeedMessage>,
     private readonly _automergeHost: AutomergeHost,
-  ) {}
+    params?: DataSpaceManagerRuntimeParams,
+  ) {
+    const {
+      spaceMemberPresenceAnnounceInterval = PRESENCE_ANNOUNCE_INTERVAL,
+      spaceMemberPresenceOfflineTimeout = PRESENCE_OFFLINE_TIMEOUT,
+    } = params ?? {};
+    this._spaceMemberPresenceAnnounceInterval = spaceMemberPresenceAnnounceInterval;
+    this._spaceMemberPresenceOfflineTimeout = spaceMemberPresenceOfflineTimeout;
+  }
 
   // TODO(burdon): Remove.
   get spaces() {
@@ -143,7 +158,7 @@ export class DataSpaceManager {
 
     const automergeRoot = this._automergeHost.repo.create();
     automergeRoot.change((doc: any) => {
-      doc.experimental_spaceKey = spaceKey.toHex();
+      doc.access = { spaceKey: spaceKey.toHex() };
     });
 
     const space = await this._constructSpace(metadata);
@@ -204,8 +219,8 @@ export class DataSpaceManager {
       localPeerId: this._signingContext.deviceKey,
     });
     const presence = new Presence({
-      announceInterval: PRESENCE_ANNOUNCE_INTERVAL,
-      offlineTimeout: PRESENCE_OFFLINE_TIMEOUT, // TODO(burdon): Config.
+      announceInterval: this._spaceMemberPresenceAnnounceInterval,
+      offlineTimeout: this._spaceMemberPresenceOfflineTimeout,
       identityKey: this._signingContext.identityKey,
       gossip,
     });

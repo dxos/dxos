@@ -31,15 +31,21 @@ import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { trace as Trace } from '@dxos/tracing';
 import { safeInstanceof } from '@dxos/util';
 
-import { type CreateIdentityOptions, IdentityManager, type JoinIdentityParams } from '../identity';
+import {
+  type CreateIdentityOptions,
+  IdentityManager,
+  type IdentityManagerRuntimeParams,
+  type JoinIdentityParams,
+} from '../identity';
 import {
   DeviceInvitationProtocol,
   InvitationsHandler,
   type InvitationProtocol,
   SpaceInvitationProtocol,
 } from '../invitations';
-import { DataSpaceManager, type SigningContext } from '../spaces';
+import { DataSpaceManager, type DataSpaceManagerRuntimeParams, type SigningContext } from '../spaces';
 
+export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams & DataSpaceManagerRuntimeParams;
 /**
  * Shared backend for all client services.
  */
@@ -80,6 +86,7 @@ export class ServiceContext {
     public readonly networkManager: NetworkManager,
     public readonly signalManager: SignalManager,
     public readonly modelFactory: ModelFactory,
+    public readonly _runtimeParams?: IdentityManagerRuntimeParams & DataSpaceManagerRuntimeParams,
   ) {
     // TODO(burdon): Move strings to constants.
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
@@ -107,7 +114,13 @@ export class ServiceContext {
       snapshotStore: this.snapshotStore,
     });
 
-    this.identityManager = new IdentityManager(this.metadataStore, this.keyring, this.feedStore, this.spaceManager);
+    this.identityManager = new IdentityManager(
+      this.metadataStore,
+      this.keyring,
+      this.feedStore,
+      this.spaceManager,
+      this._runtimeParams as IdentityManagerRuntimeParams,
+    );
 
     this.automergeHost = new AutomergeHost(storage.createDirectory('automerge'));
 
@@ -221,6 +234,7 @@ export class ServiceContext {
       signingContext,
       this.feedStore,
       this.automergeHost,
+      this._runtimeParams as DataSpaceManagerRuntimeParams,
     );
     await this.dataSpaceManager.open();
 

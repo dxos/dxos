@@ -7,11 +7,22 @@ import { invariant } from '@dxos/invariant';
 
 import { createReactiveProxy, isValidProxyTarget, type ReactiveHandler } from './proxy';
 import { ReactiveArray } from './reactive-array';
+import { defineHiddenProperty } from '../util/property';
 
 const symbolSignal = Symbol('signal');
+const symbolPropertySignal = Symbol('property-signal');
 
 type ProxyTarget = {
+  /**
+   * For get and set operations on value properties.
+   */
+  // TODO(dmaretskyi): Turn into a map of signals per-field.
   [symbolSignal]: GenericSignal;
+
+  /**
+   * For modifying the structure of the object.
+   */
+  [symbolPropertySignal]: GenericSignal;
 } & ({ [key: keyof any]: any } | any[]);
 
 /**
@@ -29,12 +40,8 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     invariant(typeof target === 'object' && target !== null);
 
     if (!(symbolSignal in target)) {
-      Object.defineProperty(target, symbolSignal, {
-        value: compositeRuntime.createSignal(),
-        enumerable: false,
-        writable: true,
-        configurable: true,
-      });
+      defineHiddenProperty(target, symbolSignal, compositeRuntime.createSignal());
+      defineHiddenProperty(target, symbolPropertySignal, compositeRuntime.createSignal());
     }
 
     for (const key in target) {
@@ -45,7 +52,16 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
+    // Handle getter properties. Will not subscribe the value signal.
+    if (Object.getOwnPropertyDescriptor(target, prop)?.get) {
+      target[symbolPropertySignal].notifyRead();
+
+      // TODO(dmaretskyi): Turn getters into computed fields.
+      return Reflect.get(target, prop, receiver);
+    }
+
     target[symbolSignal].notifyRead();
+    target[symbolPropertySignal].notifyRead();
     const value = Reflect.get(target, prop);
 
     if (isValidProxyTarget(value)) {
@@ -69,7 +85,7 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
     const result = Reflect.defineProperty(target, property, attributes);
-    target[symbolSignal].notifyWrite();
+    target[symbolPropertySignal].notifyWrite();
     return result;
   }
 }

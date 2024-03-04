@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { todo } from '@dxos/debug';
 import { Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
@@ -23,10 +24,11 @@ export const forceUpdate = (obj: AbstractEchoObject) => {
 
 export const getDatabaseFromObject = (obj: EchoObject): EchoDatabase | undefined => {
   if (isAutomergeObject(obj)) {
-    return obj[base]._core.database?._echoDatabase;
+    return obj[base]._core.database?._dbApi;
   }
 
-  return (obj[base] as AbstractEchoObject)._database;
+  todo();
+  // return (obj[base] as AbstractEchoObject)._database.;
 };
 
 export const getReferenceWithSpaceKey = (obj: EchoObject): Reference | undefined => {

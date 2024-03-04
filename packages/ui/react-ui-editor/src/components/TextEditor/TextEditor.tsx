@@ -220,6 +220,7 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
   },
 );
 
+// TODO(burdon): Replace with hooks.
 export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
   (
     { readonly, placeholder, lineWrapping, theme = textTheme, slots, extensions: _extensions, ...props },
@@ -245,6 +246,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
   },
 );
 
+// TODO(burdon): Replace with hooks.
 export const MarkdownEditor = forwardRef<EditorView | null, TextEditorProps>(
   ({ readonly, placeholder, theme = markdownTheme, slots, extensions: _extensions, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();

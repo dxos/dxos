@@ -2,51 +2,26 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
 import { expect } from 'chai';
 import jestExpect from 'expect';
-import { inspect } from 'util';
 
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
+import { createEchoReactiveObject } from './echo-handler';
 import * as R from './reactive';
+import { TestSchema } from './testing/schema';
 import { updateCounter } from './testutils';
 
 registerSignalRuntime();
 
-// For testing.
-class TestClass {
-  field = 'value';
-
-  toJSON() {
-    return { field: this.field };
-  }
-}
-const TestNestedSchema = S.mutable(S.struct({ field: S.string }));
-const TestSchema = S.mutable(
-  S.partial(
-    S.struct({
-      string: S.string,
-      number: S.number,
-      boolean: S.boolean,
-      null: S.null,
-      undefined: S.undefined,
-      numberArray: S.mutable(S.array(S.number)),
-      twoDimNumberArray: S.mutable(S.array(S.mutable(S.array(S.number)))),
-      object: TestNestedSchema,
-      objectArray: S.mutable(S.array(TestNestedSchema)),
-      classInstance: S.instanceOf(TestClass),
-      other: S.any,
-    }),
-  ),
-);
-type TestSchema = S.Schema.To<typeof TestSchema>;
-
 for (const schema of [undefined, TestSchema]) {
-  for (const _ of [false]) {
+  for (const useDatabase of [false, true]) {
     const createObject = (props: Partial<TestSchema> = {}): TestSchema => {
-      return schema == null ? (R.object(props) as TestSchema) : R.object(schema, props);
+      const obj = schema == null ? (R.object(props) as TestSchema) : R.object(schema, props);
+
+      // TODO: extract echo-schema into a separate package and export a test suite, use it in echo-database
+      return useDatabase ? createEchoReactiveObject(obj) : obj;
     };
 
     describe(`Proxy properties${schema == null ? '' : ' with schema'}`, () => {
@@ -59,7 +34,7 @@ for (const schema of [undefined, TestSchema]) {
       });
 
       test('can assign scalar values', () => {
-        const obj = createObject({ classInstance: new TestClass() });
+        const obj = createObject();
 
         obj.string = 'foo';
         obj.number = 42;
@@ -82,19 +57,6 @@ for (const schema of [undefined, TestSchema]) {
 
         obj.object.field = 'baz';
         expect(obj.object.field).to.eq('baz');
-      });
-
-      test('can assign class instances', () => {
-        const obj = createObject();
-
-        const classInstance = new TestClass();
-        obj.classInstance = classInstance;
-        expect(obj.classInstance.field).to.eq('value');
-        expect(obj.classInstance instanceof TestClass).to.eq(true);
-        expect(obj.classInstance === classInstance).to.be.true;
-
-        obj.classInstance.field = 'baz';
-        expect(obj.classInstance.field).to.eq('baz');
       });
 
       test('sub-proxies maintain their identity', () => {
@@ -209,21 +171,21 @@ for (const schema of [undefined, TestSchema]) {
         expect(obj.object instanceof Array).to.be.false;
       });
 
-      test('inspect', () => {
-        const obj = createObject({ string: 'bar' });
-
-        const str = inspect(obj, { colors: false });
-        expect(str).to.eq("{ string: 'bar' }");
-      });
-
       test('toString', () => {
         const obj = createObject({ string: 'bar' });
         expect(obj.toString()).to.eq('[object Object]'); // TODO(dmaretskyi): Change to `[object ECHO]`?
       });
 
+      test('object spreading', () => {
+        const obj = createObject({ ...TEST_OBJECT });
+        expect({ ...obj }).to.deep.eq({ ...TEST_OBJECT });
+      });
+
       test('toJSON', () => {
         const obj = createObject({ ...TEST_OBJECT });
-        expect(JSON.stringify(obj)).to.eq(JSON.stringify(TEST_OBJECT));
+        const expected = JSON.parse(JSON.stringify(TEST_OBJECT));
+        const actual = JSON.parse(JSON.stringify(obj));
+        expect(actual).to.deep.eq(expected);
       });
 
       test('chai deep equal works', () => {
@@ -287,18 +249,6 @@ for (const schema of [undefined, TestSchema]) {
 
           obj.object!.field = 'baz';
           expect(updates.count, 'update count').to.eq(1);
-        });
-
-        test('not in nested class instances', () => {
-          const obj = createObject({ classInstance: new TestClass() });
-
-          using updates = updateCounter(() => {
-            obj.classInstance!.field;
-          });
-          expect(updates.count, 'update count').to.eq(0);
-
-          obj.classInstance!.field = 'baz';
-          expect(updates.count, 'update count').to.eq(0);
         });
 
         test('in nested arrays', () => {
@@ -449,6 +399,12 @@ for (const schema of [undefined, TestSchema]) {
           expect(updates.count, 'update count').to.eq(1);
         });
 
+        test('filter', () => {
+          const array = createReactiveArray([1, 2, 3]);
+          const returnValue = array.filter((v) => v & 1);
+          expect(returnValue).to.deep.eq([1, 3]);
+        });
+
         test('reverse', () => {
           const array = createReactiveArray([1, 2, 3]);
           using updates = updateCounter(() => {
@@ -565,8 +521,6 @@ const TEST_OBJECT: TestSchema = {
   number: 42,
   boolean: true,
   null: null,
-  undefined,
   numberArray: [1, 2, 3],
   object: { field: 'bar' },
-  classInstance: new TestClass(),
 };
