@@ -17,7 +17,7 @@ export type EmojiPickerProps = { onEmojiClick: (event: EmojiClickEvent) => void 
 const getEmojiValue = (identity?: Identity) =>
   identity?.profile?.emoji || hexToEmoji(identity?.identityKey.toHex() ?? '0');
 
-export const EmojiPickerMenu = ({ identity }: { identity?: Identity }) => {
+export const EmojiPicker = ({ identity }: { identity?: Identity }) => {
   const { t } = useTranslation('os');
 
   const [emojiValue, setEmojiValue] = useState<string>(getEmojiValue(identity));
@@ -53,9 +53,9 @@ export const EmojiPickerMenu = ({ identity }: { identity?: Identity }) => {
 
   // @ts-ignore
   return (
-    <div role='none' className='grid grid-cols-[1fr_min-content]'>
+    <>
       <Tooltip.Root>
-        <Popover.Root modal={false} open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
+        <Popover.Root open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
           <Popover.Trigger asChild>
             <Tooltip.Trigger asChild>
               <Button variant='ghost' classNames='gap-2 text-2xl plb-1'>
@@ -67,7 +67,7 @@ export const EmojiPickerMenu = ({ identity }: { identity?: Identity }) => {
           </Popover.Trigger>
           <Popover.Content
             side='right'
-            classNames='overflow-hidden'
+            classNames='overflow-hidden overscroll-contain'
             onOpenAutoFocus={() => pickerRef.current?.shadowRoot?.querySelector('input')?.focus()}
             onKeyDownCapture={(event) => {
               if (event.key === 'Escape') {
@@ -91,6 +91,6 @@ export const EmojiPickerMenu = ({ identity }: { identity?: Identity }) => {
         <span className='sr-only'>{t('clear label')}</span>
         <X />
       </Button>
-    </div>
+    </>
   );
 };

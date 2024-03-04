@@ -4,7 +4,7 @@
 
 export * from './Clipboard';
 export * from './CompoundButton';
-export * from './EmojiPickerMenu';
+export * from './AvatarPicker';
 export * from './IdentityList';
 export * from './InvitationList';
 export * from './Panel';
