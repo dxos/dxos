@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+
 import { type EditorView } from '@codemirror/view';
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import defaultsDeep from 'lodash.defaultsdeep';
@@ -24,6 +25,8 @@ import {
   decorateMarkdown,
   comments,
   defaultOptions,
+  dnd,
+  command,
   image,
   linkTooltip,
   mention,
@@ -353,6 +356,10 @@ export const Mention = {
   ),
 };
 
+export const Command = {
+  render: () => <Story text={str('# Command', '')} extensions={[command({ onHint: () => 'Press / for commands.' })]} />,
+};
+
 export const Comments = {
   render: () => {
     const [_comments, setComments] = useState<Comment[]>([]);
@@ -400,6 +407,10 @@ export const Vim = {
 
 export const Annotations = {
   render: () => <Story text={str('# Annotations', '', large)} extensions={[annotations({ match: /volup/gi })]} />,
+};
+
+export const DND = {
+  render: () => <Story text={str('# DND', '')} extensions={[dnd()]} />,
 };
 
 const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewriter')?.split(',');
