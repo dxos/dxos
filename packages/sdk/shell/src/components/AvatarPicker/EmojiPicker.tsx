@@ -8,7 +8,7 @@ import { CaretDown, X } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 
 import { type Identity } from '@dxos/react-client/halo';
-import { Button, Popover, useTranslation, Tooltip } from '@dxos/react-ui';
+import { Button, Popover, useTranslation, Tooltip, useThemeContext } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
@@ -21,6 +21,7 @@ export const EmojiPicker = ({ identity }: { identity?: Identity }) => {
   const [emojiValue, setEmojiValue] = useState<string>(getEmojiValue(identity));
   const [emojiPickerOpen, setEmojiPickerOpen] = useState<boolean>(false);
   const { modalAttributes, triggerAttributes } = useModalAttributes({ trapFocus: true });
+  const { themeMode } = useThemeContext();
 
   const handleEmojiSelect = useCallback(
     ({ native }: { native?: string }) => {
@@ -62,7 +63,13 @@ export const EmojiPicker = ({ identity }: { identity?: Identity }) => {
             }}
             {...modalAttributes}
           >
-            <EmojiMart data={emojiData} onEmojiSelect={handleEmojiSelect} />
+            <EmojiMart
+              data={emojiData}
+              onEmojiSelect={handleEmojiSelect}
+              autoFocus={true}
+              maxFrequentRows={0}
+              noCountryFlags={true}
+            />
             <Popover.Arrow />
           </Popover.Content>
         </Popover.Root>
