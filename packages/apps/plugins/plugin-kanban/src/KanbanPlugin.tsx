@@ -3,7 +3,7 @@
 //
 
 import { type IconProps, Kanban } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-core';
+import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
@@ -63,19 +63,22 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
                 effect(() => {
                   const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
                   previousObjects = query.objects;
-                  removedObjects.forEach((object) => graph.removeNode(object.id));
-                  query.objects.forEach((object) => {
-                    graph.addNodes({
-                      id: object.id,
-                      data: object,
-                      properties: {
-                        // TODO(wittjosiah): Reconcile with metadata provides.
-                        label: object.title || ['object title placeholder', { ns: KANBAN_PLUGIN }],
-                        icon: (props: IconProps) => <Kanban {...props} />,
-                        testId: 'spacePlugin.object',
-                        persistenceClass: 'echo',
-                        persistenceKey: space?.key.toHex(),
-                      },
+
+                  batch(() => {
+                    removedObjects.forEach((object) => graph.removeNode(object.id));
+                    query.objects.forEach((object) => {
+                      graph.addNodes({
+                        id: object.id,
+                        data: object,
+                        properties: {
+                          // TODO(wittjosiah): Reconcile with metadata provides.
+                          label: object.title || ['object title placeholder', { ns: KANBAN_PLUGIN }],
+                          icon: (props: IconProps) => <Kanban {...props} />,
+                          testId: 'spacePlugin.object',
+                          persistenceClass: 'echo',
+                          persistenceKey: space?.key.toHex(),
+                        },
+                      });
                     });
                   });
                 }),
