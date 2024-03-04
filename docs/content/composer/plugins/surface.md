@@ -1,6 +1,7 @@
 ---
 order: 6
 ---
+
 # Surface
 
 Given any kind of `data` value, the `Surface` figures out how to render it based on the plugins available in context.
@@ -27,7 +28,7 @@ export default definePlugin({
 
 ### Example
 
-The following code demonstrates rendering a component for a value of a specific type. The `role` parameter is used to distinguish between different contexts in which the component is used. 
+The following code demonstrates rendering a component for a value of a specific type. The `role` parameter is used to distinguish between different contexts in which the component is used.
 
 The `<Surface />` rendering this component may be named `main` - which is a full-screen presentation of the entity, or `section` - which is a smaller presentation of the entity in the context of another collection or list of entities.
 
@@ -59,7 +60,7 @@ export default definePlugin({
 
 ## Using Surfaces
 
-To present arbitrary data, use the `<Surface />` component. 
+To present arbitrary data, use the `<Surface />` component.
 
 It will figure out how to render the data based on the plugins available in context.
 
@@ -84,10 +85,9 @@ When multiple plugins provide components for the same data, the `<Surface />` el
 ### Surface Props
 
 :::apidoc[@dxos/app-framework.SurfaceProps]
-
 :::
 
 ## See also
-- [Surface plugin source](https://github.com/dxos/dxos/blob/main/packages/sdk/app-framework/src/plugins/SurfacePlugin/plugin.tsx)
-- [Surface component props and source](https://github.com/dxos/dxos/blob/main/packages/sdk/app-framework/src/plugins/SurfacePlugin/Surface.tsx)
 
+* [Surface plugin source](https://github.com/dxos/dxos/blob/main/packages/sdk/app-framework/src/plugins/SurfacePlugin/plugin.tsx)
+* [Surface component props and source](https://github.com/dxos/dxos/blob/main/packages/sdk/app-framework/src/plugins/SurfacePlugin/Surface.tsx)

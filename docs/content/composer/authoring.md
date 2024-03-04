@@ -1,6 +1,7 @@
 ---
 order: 5
 ---
+
 # Authoring
 
 Composer supports [markdown](https://commonmark.org/help/) rich text formatting, including syntax-highlighted code blocks.

@@ -83,4 +83,4 @@ dispatch([
 
 ## See also
 
-- [Intent plugin source](https://github.com/dxos/dxos/blob/main/packages/sdk/app-framework/src/plugins/IntentPlugin/plugin.tsx)
+* [Intent plugin source](https://github.com/dxos/dxos/blob/main/packages/sdk/app-framework/src/plugins/IntentPlugin/plugin.tsx)

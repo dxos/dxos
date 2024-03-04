@@ -3,6 +3,7 @@ dir:
   text: Building Plugins
   order: 20
 ---
+
 # Quick Start
 
 To prototype a plugin:

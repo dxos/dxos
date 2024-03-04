@@ -84,7 +84,7 @@ export namespace Remark {
         });
         const insertedAst = await unified()
           .use(remarkParse)
-          .use(unifiedPrettier as any)
+          // .use(unifiedPrettier as any)
           .parse(content);
         node.children = [directiveLabelNode, ...(insertedAst as any).children];
       });

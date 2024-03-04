@@ -1,6 +1,7 @@
 ---
 order: 7
 ---
+
 # Graph
 
 The Graph is used to organize the user's content, provide a navigation structure, and to represent the user's possible actions in the system.

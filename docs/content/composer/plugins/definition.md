@@ -1,6 +1,7 @@
 ---
 order: 3
 ---
+
 # Plugin Definition
 
 A plugin is a javascript object with interfaces as described below.
@@ -8,6 +9,7 @@ A plugin is a javascript object with interfaces as described below.
 ## Meta
 
 Plugins are identified by a list of properties stored in `plugin.meta`:
+
 ```ts
 import { definePlugin } from '@dxos/app-framework';
 
@@ -25,7 +27,7 @@ Plugins can exchange functionality by exposing a `provides` object.
 
 The contents of the provides object are of interest only to other plugins, which implement specific keys and values to define functionality with.
 
-For example, the [Surface](surface) plugin defines a `provides.surface.component` object that `<Surface />` elements use to determine what components to use when rendering: 
+For example, the [Surface](surface) plugin defines a `provides.surface.component` object that `<Surface />` elements use to determine what components to use when rendering:
 
 ```tsx
 import { definePlugin } from '@dxos/app-framework';
@@ -93,6 +95,7 @@ export default definePlugin(
   }
 )
 ```
+
 The entire application can be thought of as a set of composed contexts that wrap one or more `root` elements.
 
 ```tsx
