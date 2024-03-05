@@ -28,6 +28,10 @@ export class TypeCollection {
 
   private readonly _effectSchemaDefs = new Map<string, S.Schema<any>>();
 
+  constructor() {
+    this._effectSchemaDefs.set(LEGACY_TEXT_TYPE, TextCompatibilitySchema);
+  }
+
   get schemas(): SchemaProto[] {
     log.info('schemas', {
       types: this._types.size,
@@ -64,9 +68,6 @@ export class TypeCollection {
   }
 
   getEffectSchema(typename: string): S.Schema<any> | undefined {
-    if (typename === LEGACY_TEXT_TYPE) {
-      return TextCompatibilitySchema;
-    }
     return this._effectSchemaDefs.get(typename);
   }
 

@@ -40,7 +40,6 @@ type ProxyTarget = {
 } & ({ [key: keyof any]: any } | any[]);
 
 const DATA_NAMESPACE = 'data';
-const SYSTEM_NAMESPACE = 'system';
 
 /**
  * Shared for all targets within one ECHO object.
@@ -58,11 +57,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     invariant(!(target as any)[symbolIsProxy]);
     invariant(Array.isArray(target[symbolPath]));
 
-    this.makeUntypedArraysReactive(target);
-
     if (target[symbolPath].length === 0) {
       this.validateInitialProps(target);
-      if (this._objectCore.mountPath.length === 0) {
+      if (this._objectCore.database == null) {
         this._objectCore.initNewObject(target);
       }
     }
@@ -88,14 +85,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       } else if (typeof target[key] === 'object') {
         throwIfCustomClass(key, value);
         this.validateInitialProps(target[key]);
-      }
-    }
-  }
-
-  private makeUntypedArraysReactive(target: any) {
-    for (const key in target) {
-      if (Array.isArray(target[key]) && !(target[key] instanceof EchoArrayTwoPointO)) {
-        target[key] = EchoArrayTwoPointO.from(target[key]);
       }
     }
   }
@@ -215,16 +204,16 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return true;
     }
 
-    const validatedValue = this.validateValue(target, prop, value);
+    this.validateValue(target, prop, value);
     const fullPath = [DATA_NAMESPACE, ...target[symbolPath], prop];
 
-    if (validatedValue === undefined) {
+    if (value === undefined) {
       this._objectCore.delete(fullPath);
     } else if (value !== null && value[symbolHandler] instanceof EchoReactiveHandler) {
       const link = this._linkReactiveHandler(value, value[symbolHandler]);
       this._objectCore.set(fullPath, encodeReference(link));
     } else {
-      const encoded = this._objectCore.encode(validatedValue);
+      const encoded = this._objectCore.encode(value);
       this._objectCore.set(fullPath, encoded);
     }
 
@@ -254,21 +243,21 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
   }
 
-  private validateValue(target: ProxyTarget, prop: string | symbol, value: any): any {
+  private validateValue(target: ProxyTarget, prop: string | symbol, value: any) {
     throwIfCustomClass(prop, value);
     const rootObjectSchema = this.getSchema();
     if (rootObjectSchema == null) {
-      return value;
+      return;
     }
     const propertySchema: S.Schema<any> = SchemaValidator.getPropertySchema(rootObjectSchema, [
       ...target[symbolPath],
       prop,
     ]);
-    S.validate(propertySchema)(value);
-    return value;
+    const _ = S.asserts(propertySchema)(value);
   }
 
   getSchema(): S.Schema<any> | undefined {
+    // TODO: make reactive
     invariant(this._objectCore.database, 'EchoHandler used without database');
     const typeReference = this._objectCore.getType();
     if (typeReference == null) {
@@ -282,7 +271,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayPush(_: any, path: PropPath, ...items: any[]): number {
-    const fullPath = this.getPropertyMountPath(path);
+    const fullPath = this._getPropertyMountPath(path);
 
     const encodedItems = items.map((value) => this._objectCore.encode(value));
 
@@ -300,7 +289,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayPop(_: any, path: PropPath): any {
-    const fullPath = this.getPropertyMountPath(path);
+    const fullPath = this._getPropertyMountPath(path);
 
     let returnValue: any | undefined;
     this._objectCore.change((doc) => {
@@ -315,7 +304,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayShift(_: any, path: PropPath): any {
-    const fullPath = this.getPropertyMountPath(path);
+    const fullPath = this._getPropertyMountPath(path);
 
     let returnValue: any | undefined;
     this._objectCore.change((doc) => {
@@ -330,7 +319,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayUnshift(_: any, path: PropPath, ...items: any[]): number {
-    const fullPath = this.getPropertyMountPath(path);
+    const fullPath = this._getPropertyMountPath(path);
 
     const encodedItems = items?.map((value) => this._objectCore.encode(value)) ?? [];
 
@@ -348,7 +337,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arraySplice(_: any, path: PropPath, start: number, deleteCount?: number, ...items: any[]): any[] {
-    const fullPath = this.getPropertyMountPath(path);
+    const fullPath = this._getPropertyMountPath(path);
 
     const encodedItems = items?.map((value) => this._objectCore.encode(value)) ?? [];
 
@@ -370,7 +359,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arraySort(target: any, path: PropPath, compareFn?: (v1: any, v2: any) => number): any[] {
-    const fullPath = this.getPropertyMountPath(path);
+    const fullPath = this._getPropertyMountPath(path);
 
     this._objectCore.change((doc) => {
       const array = getDeep(doc, fullPath);
@@ -385,7 +374,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayReverse(target: any, path: PropPath): any[] {
-    const fullPath = this.getPropertyMountPath(path);
+    const fullPath = this._getPropertyMountPath(path);
 
     this._objectCore.change((doc) => {
       const array = getDeep(doc, fullPath);
@@ -403,7 +392,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (newLength < 0) {
       throw new RangeError('Invalid array length');
     }
-    const fullPath = this.getPropertyMountPath(path);
+    const fullPath = this._getPropertyMountPath(path);
 
     this._objectCore.change((doc) => {
       const array = getDeep(doc, fullPath);
@@ -416,7 +405,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     this._signal.notifyWrite();
   }
 
-  private getPropertyMountPath(path: PropPath): string[] {
+  private _getPropertyMountPath(path: PropPath): string[] {
     return [...this._objectCore.mountPath, DATA_NAMESPACE, ...path];
   }
 
@@ -428,7 +417,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     inspectFn: (value: any, options?: InspectOptionsStylized) => string,
   ) {
     const handler = this[symbolHandler] as EchoReactiveHandler;
-    const isTyped = Boolean(handler._objectCore.getType());
+    const isTyped = !!handler._objectCore.getType();
     const proxy = handler._proxyMap.get(this);
     invariant(proxy, '_proxyMap corrupted');
     const reified = { ...proxy }; // Will call proxy methods and construct a plain JS object.
@@ -532,12 +521,12 @@ const validateSchema = (schema: S.Schema<any>) => {
   if (idProperty != null) {
     throw new Error('"id" property name is reserved');
   }
+  getSchemaTypeRefOrThrow(schema);
 };
 
 const saveTypeInAutomerge = (handler: EchoReactiveHandler, schema: S.Schema<any> | undefined) => {
   if (schema != null) {
-    const encodedRef = handler._objectCore.encode(getSchemaTypeRefOrThrow(schema));
-    handler._objectCore.set([SYSTEM_NAMESPACE, 'type'], encodedRef);
+    handler._objectCore.setType(getSchemaTypeRefOrThrow(schema));
   }
 };
 
@@ -545,7 +534,7 @@ export const getSchemaTypeRefOrThrow = (schema: S.Schema<any>): Reference => {
   const typeReference = getTypeReference(schema);
   if (typeReference == null) {
     throw new Error(
-      'EchoObject schema must have a valid annotation: MyTypeSchema.pipe(R.echoObject("MyType", "1.0.0")',
+      'EchoObject schema must have a valid annotation: MyTypeSchema.pipe(R.echoObject("MyType", "1.0.0"))',
     );
   }
   return typeReference;

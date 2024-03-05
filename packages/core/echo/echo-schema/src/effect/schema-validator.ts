@@ -32,14 +32,14 @@ export class SchemaValidator {
     for (const key in target) {
       if (Array.isArray(target[key]) && !(target[key] instanceof ReactiveArray)) {
         target[key] = ReactiveArray.from(target[key]);
-        const schema = this.getTargetPropertySchema(target, key);
+        const schema = this._getTargetPropertySchema(target, key);
         setSchemaProperties(target[key], schema);
       }
     }
   }
 
   public static validateValue(target: any, prop: string | symbol, value: any) {
-    const schema = this.getTargetPropertySchema(target, prop);
+    const schema = this._getTargetPropertySchema(target, prop);
     const _ = S.asserts(schema)(value);
     if (Array.isArray(value)) {
       value = new ReactiveArray(...value);
@@ -50,7 +50,7 @@ export class SchemaValidator {
     return value;
   }
 
-  private static getTargetPropertySchema(target: any, prop: string | symbol): S.Schema<any> {
+  private static _getTargetPropertySchema(target: any, prop: string | symbol): S.Schema<any> {
     if (target instanceof ReactiveArray) {
       return getArrayElementSchema((target as any)[symbolSchema]);
     }
