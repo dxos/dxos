@@ -3,7 +3,7 @@
 //
 
 import { Code, type IconProps } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-core';
+import { batch, effect } from '@preact/signals-core';
 import React, { useMemo } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
@@ -78,19 +78,22 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
                 effect(() => {
                   const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
                   previousObjects = query.objects;
-                  removedObjects.forEach((object) => graph.removeNode(object.id));
-                  query.objects.forEach((object) => {
-                    graph.addNodes({
-                      id: object.id,
-                      data: object,
-                      properties: {
-                        // TODO(wittjosiah): Reconcile with metadata provides.
-                        label: object.title || ['object title placeholder', { ns: SCRIPT_PLUGIN }],
-                        icon: (props: IconProps) => <Code {...props} />,
-                        testId: 'spacePlugin.object',
-                        persistenceClass: 'echo',
-                        persistenceKey: space?.key.toHex(),
-                      },
+
+                  batch(() => {
+                    removedObjects.forEach((object) => graph.removeNode(object.id));
+                    query.objects.forEach((object) => {
+                      graph.addNodes({
+                        id: object.id,
+                        data: object,
+                        properties: {
+                          // TODO(wittjosiah): Reconcile with metadata provides.
+                          label: object.title || ['object title placeholder', { ns: SCRIPT_PLUGIN }],
+                          icon: (props: IconProps) => <Code {...props} />,
+                          testId: 'spacePlugin.object',
+                          persistenceClass: 'echo',
+                          persistenceKey: space?.key.toHex(),
+                        },
+                      });
                     });
                   });
                 }),
