@@ -63,6 +63,9 @@ export class Indexer {
     }
 
     const snapshots = await cancelWithContext(this._ctx, this._loadDocuments(ids));
+    if (snapshots.length === 0) {
+      return;
+    }
 
     for (const [kind, index] of this._indexes.entries()) {
       switch (kind.kind) {
@@ -71,18 +74,12 @@ export class Indexer {
             this._ctx,
             updateIndexWithObjects(
               index,
-              snapshots.filter((snapshot) => kind.field in snapshot.object).map((snapshot) => snapshot.object),
+              snapshots.filter((snapshot) => kind.field in snapshot.object),
             ),
           );
           break;
-        default:
-          await cancelWithContext(
-            this._ctx,
-            updateIndexWithObjects(
-              index,
-              snapshots.map((snapshot) => snapshot.object),
-            ),
-          );
+        case 'SCHEMA_MATCH':
+          await cancelWithContext(this._ctx, updateIndexWithObjects(index, snapshots));
           break;
       }
     }
@@ -192,5 +189,5 @@ export class Indexer {
   }
 }
 
-const updateIndexWithObjects = async (index: Index, objects: ObjectType[]) =>
-  Promise.all(objects.map((object) => index.update(object.id, object)));
+const updateIndexWithObjects = async (index: Index, snapshots: ObjectSnapshot[]) =>
+  Promise.all(snapshots.map((snapshot) => index.update(snapshot.id, snapshot.object)));

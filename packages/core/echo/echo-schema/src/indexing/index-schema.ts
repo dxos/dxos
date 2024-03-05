@@ -20,8 +20,8 @@ import { type Filter } from '../query';
 // TODO(mykola): Correct schema ref?
 type OramaSchemaType = orama.Orama<
   {
-    meta: {
-      type: { itemId: 'strings' };
+    system: {
+      type: { itemId: 'string' };
     };
   },
   orama.IIndex<orama.components.index.Index>,
@@ -39,8 +39,8 @@ export class IndexSchema implements Index {
   constructor() {
     this._orama = orama.create({
       schema: {
-        meta: {
-          type: { itemId: 'strings' },
+        system: {
+          type: { itemId: 'string' },
         },
       },
     });

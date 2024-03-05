@@ -20,6 +20,7 @@ export class IndexQueryProvider implements QuerySourceProvider {
   constructor(private readonly _params: IndexQueryProviderParams) {}
 
   private async find(filter: Filter): Promise<QueryResult<EchoObject>[]> {
+    const start = Date.now();
     const idAndRanks = await this._params.indexer.find(filter);
 
     const objects = await this._params.loadObjects(idAndRanks.map((idAndRank) => idAndRank.id));
@@ -29,6 +30,7 @@ export class IndexQueryProvider implements QuerySourceProvider {
       spaceKey: object[db]!.spaceKey,
       object,
       match: { rank: idAndRanks[index].rank },
+      resolution: { source: 'index', time: Date.now() - start },
     }));
 
     return results;

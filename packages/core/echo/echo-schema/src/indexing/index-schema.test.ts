@@ -15,8 +15,25 @@ describe('IndexSchema', () => {
 
     const schemaURI = '@example.org/schema/Contact';
     const objects = [
-      { id: '1', name: 'John', schema: schemaURI },
-      { id: '2', title: 'first document', schema: '@example.org/schema/Document' },
+      {
+        id: '1',
+        data: {
+          name: 'John',
+        },
+        // Complaint structure with automerge storage
+        system: {
+          type: { itemId: schemaURI },
+        },
+      },
+      {
+        id: '2',
+        data: {
+          title: 'first document',
+        },
+        system: {
+          type: { itemId: '@example.org/schema/Document' },
+        },
+      },
     ];
 
     await Promise.all(objects.map((object) => index.update(object.id, object)));

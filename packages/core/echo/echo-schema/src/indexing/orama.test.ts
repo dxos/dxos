@@ -79,4 +79,47 @@ describe('Orama', () => {
       }
     }
   });
+
+  test('nested fields', async () => {
+    const db = await orama.create({
+      schema: {
+        system: {
+          type: { itemId: 'string' },
+        },
+      },
+    });
+
+    const typename = '@example.org/schema/product';
+
+    {
+      const objects = [
+        {
+          data: {
+            id: '1',
+            title: 'Shoes',
+            price: 100,
+            tags: ['shoes', 'clothing'],
+          },
+          system: {
+            type: { itemId: typename },
+          },
+        },
+        {
+          typename,
+          id: '2',
+          title: 'Shoes',
+          price: 100,
+          tags: ['shoes', 'clothing'],
+        },
+      ];
+      await Promise.all(objects.map((object) => orama.insert<any>(db, object)));
+    }
+
+    const result = await orama.search(db, {
+      term: typename,
+      exact: true,
+      threshold: 0,
+    });
+    expect(result.hits.length).to.equal(1);
+  });
 });
