@@ -3,7 +3,7 @@
 //
 
 import { Brain, type IconProps } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-core';
+import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
@@ -67,23 +67,26 @@ export const GptPlugin = (): PluginDefinition<GptPluginProvides> => {
                 effect(() => {
                   const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
                   previousObjects = query.objects;
-                  removedObjects.forEach((object) => graph.removeNode(`${GptAction.ANALYZE}/${object.id}`, true));
-                  query.objects.forEach((object) =>
-                    graph.addNodes({
-                      id: `${GptAction.ANALYZE}/${object.id}`,
-                      data: () =>
-                        dispatch([
-                          {
-                            plugin: GPT_PLUGIN,
-                            action: GptAction.ANALYZE,
-                          },
-                        ]),
-                      properties: {
-                        label: ['analyze document label', { ns: GPT_PLUGIN }],
-                        icon: (props: IconProps) => <Brain {...props} />,
-                      },
-                    }),
-                  );
+
+                  batch(() => {
+                    removedObjects.forEach((object) => graph.removeNode(`${GptAction.ANALYZE}/${object.id}`, true));
+                    query.objects.forEach((object) =>
+                      graph.addNodes({
+                        id: `${GptAction.ANALYZE}/${object.id}`,
+                        data: () =>
+                          dispatch([
+                            {
+                              plugin: GPT_PLUGIN,
+                              action: GptAction.ANALYZE,
+                            },
+                          ]),
+                        properties: {
+                          label: ['analyze document label', { ns: GPT_PLUGIN }],
+                          icon: (props: IconProps) => <Brain {...props} />,
+                        },
+                      }),
+                    );
+                  });
                 }),
               );
             });

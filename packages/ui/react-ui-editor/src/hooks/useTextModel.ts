@@ -11,12 +11,13 @@ import { type AutomergeTextCompat, getRawDoc } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { isAutomergeObject, type Space, type TextObject } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
+import { hueTokens } from '@dxos/react-ui-theme';
+import { hexToHue } from '@dxos/util';
 
 import { SpaceAwarenessProvider } from './awareness-provider';
 import { type EditorModel, modelState } from './defs';
 import { automerge, awareness } from '../extensions';
 import { type DocAccessor } from '../extensions/automerge/defs';
-import { cursorColor } from '../styles';
 
 export type useTextExtensionsProps = {
   id: string;
@@ -29,6 +30,9 @@ export type useTextExtensionsProps = {
 export const useTextExtensions = ({ id, text, space, identity }: useTextExtensionsProps): Extension[] => {
   const extensions: Extension[] = [automerge(text)];
 
+  const peerId = identity?.identityKey.toHex();
+  const { cursorLightValue, cursorDarkValue } = hueTokens[hexToHue(peerId ?? '0')];
+
   if (space && identity) {
     const awarenessProvider = new SpaceAwarenessProvider({
       space,
@@ -36,8 +40,8 @@ export const useTextExtensions = ({ id, text, space, identity }: useTextExtensio
       peerId: identity.identityKey.toHex(),
       info: {
         displayName: identity.profile?.displayName ?? generateName(identity.identityKey.toHex()),
-        color: cursorColor.color,
-        lightColor: cursorColor.light,
+        color: cursorDarkValue,
+        lightColor: cursorLightValue,
       },
     });
 
@@ -84,6 +88,9 @@ const createModel = ({ space, identity, text }: UseTextModelProps) => {
   const obj = text as any as AutomergeTextCompat;
   const doc = getRawDoc(obj, [obj.field]);
 
+  const peerId = identity?.identityKey.toHex();
+  const { cursorLightValue, cursorDarkValue } = hueTokens[hexToHue(peerId ?? '0')];
+
   const awarenessProvider =
     space &&
     new SpaceAwarenessProvider({
@@ -91,8 +98,8 @@ const createModel = ({ space, identity, text }: UseTextModelProps) => {
       channel: `automerge.awareness.${obj.id}`,
       info: {
         displayName: identity ? identity.profile?.displayName ?? generateName(identity.identityKey.toHex()) : undefined,
-        color: cursorColor.color,
-        lightColor: cursorColor.light,
+        color: cursorLightValue,
+        lightColor: cursorDarkValue,
       },
       peerId: identity?.identityKey.toHex() ?? 'Anonymous',
     });

@@ -3,7 +3,7 @@
 //
 
 import { type IconProps, Presentation } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-core';
+import { batch, effect } from '@preact/signals-core';
 import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
@@ -52,30 +52,33 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
                 effect(() => {
                   const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
                   previousObjects = query.objects;
-                  removedObjects.forEach((object) => {
-                    graph.removeNode(object.id, true);
-                  });
-                  query.objects.forEach((object) => {
-                    graph.addNodes({
-                      id: object.id,
-                      // TODO(burdon): Allow function so can generate state when activated.
-                      //  So can set explicit fullscreen state coordinated with current presenter state.
-                      data: () =>
-                        dispatch([
-                          {
-                            plugin: PRESENTER_PLUGIN,
-                            action: 'toggle-presentation',
-                          },
-                          {
-                            action: LayoutAction.SET_LAYOUT,
-                            data: { element: 'fullscreen' },
-                          },
-                        ]),
-                      properties: {
-                        label: ['toggle presentation label', { ns: PRESENTER_PLUGIN }],
-                        icon: (props: IconProps) => <Presentation {...props} />,
-                        keyBinding: 'shift+meta+p',
-                      },
+
+                  batch(() => {
+                    removedObjects.forEach((object) => {
+                      graph.removeNode(object.id, true);
+                    });
+                    query.objects.forEach((object) => {
+                      graph.addNodes({
+                        id: object.id,
+                        // TODO(burdon): Allow function so can generate state when activated.
+                        //  So can set explicit fullscreen state coordinated with current presenter state.
+                        data: () =>
+                          dispatch([
+                            {
+                              plugin: PRESENTER_PLUGIN,
+                              action: 'toggle-presentation',
+                            },
+                            {
+                              action: LayoutAction.SET_LAYOUT,
+                              data: { element: 'fullscreen' },
+                            },
+                          ]),
+                        properties: {
+                          label: ['toggle presentation label', { ns: PRESENTER_PLUGIN }],
+                          icon: (props: IconProps) => <Presentation {...props} />,
+                          keyBinding: 'shift+meta+p',
+                        },
+                      });
                     });
                   });
                 }),

@@ -119,4 +119,17 @@ describe('getters', () => {
     obj.field = 2;
     expect(updates.count, 'update count').to.eq(1);
   });
+
+  test('getter for array', () => {
+    const value = [1];
+    const obj = R.object({
+      get getter() {
+        return value;
+      },
+    });
+    expect(obj.getter).to.have.length(1);
+
+    value.push(2);
+    expect(obj.getter).to.have.length(2);
+  });
 });
