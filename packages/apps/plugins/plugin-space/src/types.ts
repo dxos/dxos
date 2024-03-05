@@ -12,6 +12,7 @@ import type {
 } from '@dxos/app-framework';
 import type { PublicKey } from '@dxos/react-client';
 import type { ItemID } from '@dxos/react-client/echo';
+import { type ComplexMap } from '@dxos/util';
 
 import { SPACE_PLUGIN } from './meta';
 
@@ -37,18 +38,22 @@ export enum SpaceAction {
   SELECT_DIRECTORY = `${SPACE_ACTION}/select-directory`,
 }
 
-export type ObjectViewer = {
-  identityKey: PublicKey;
-  spaceKey: PublicKey;
-  objectId: string;
+export type ObjectViewerProps = {
   lastSeen: number;
+  spaceKey: PublicKey;
 };
+
+export type ObjectId = string;
 
 export type PluginState = {
   /**
-   * Which objects peers are currently viewing.
+   * Which objects are currently being viewed by which peers.
    */
-  viewers: ObjectViewer[];
+  viewersByObject: Map<ObjectId, ComplexMap<PublicKey, ObjectViewerProps>>;
+  /**
+   * Which peers are currently viewing which objects.
+   */
+  viewersByIdentity: ComplexMap<PublicKey, Set<ObjectId>>;
 
   /**
    * Object that was linked to directly but not found and is being awaited.

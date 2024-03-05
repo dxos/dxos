@@ -7,7 +7,7 @@ import React from 'react';
 import { NavigationAction, useIntentDispatcher, usePlugin } from '@dxos/app-framework';
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
-import { type PublicKey, useClient } from '@dxos/react-client';
+import { PublicKey, useClient } from '@dxos/react-client';
 import { type TypedObject, getSpaceForObject, useSpace, useMembers, type SpaceMember } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import {
@@ -26,7 +26,9 @@ import { AttentionGlyph } from '@dxos/react-ui-deck';
 import { ComplexMap, keyToFallback } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';
-import type { SpacePluginProvides } from '../types';
+import type { ObjectViewerProps, SpacePluginProvides } from '../types';
+
+const defaultViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 
 // TODO(wittjosiah): Factor out?
 const getName = (identity: Identity) => identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
@@ -45,28 +47,15 @@ export const SpacePresence = ({ object, spaceKey }: { object: TypedObject; space
     return null;
   }
 
-  // TODO(wittjosiah): This isn't working because of issue w/ deepsignal state.
-  //  Assigning plugin to deepsignal seems to create a new instance of objects in provides and breaks the reference.
-  const viewers = spacePlugin.provides.space.viewers
-    .filter((viewer) => {
-      return (
-        space.key.equals(viewer.spaceKey) && object.id === viewer.objectId && Date.now() - viewer.lastSeen < 30_000
-      );
-    })
-    .reduce(
-      (viewers, viewer) => {
-        viewers.set(viewer.identityKey, viewer.lastSeen);
-        return viewers;
-      },
-      new ComplexMap<PublicKey, number>((key) => key.toHex()),
-    );
+  const currentObjectViewers = spacePlugin.provides.space.viewersByObject.get(object.id) ?? defaultViewers;
+  const viewing = spacePlugin.provides.space.viewersByIdentity;
 
   const members = spaceMembers
     .filter((member) => member.presence === 1 && !identity.identityKey.equals(member.identity.identityKey))
     .map((member) => ({
       ...member,
-      match: viewers.has(member.identity.identityKey),
-      lastSeen: viewers.get(member.identity.identityKey) ?? Infinity,
+      match: currentObjectViewers.has(member.identity.identityKey),
+      lastSeen: currentObjectViewers.get(member.identity.identityKey)?.lastSeen ?? Infinity,
     }))
     .toSorted((a, b) => a.lastSeen - b.lastSeen);
 
@@ -76,13 +65,15 @@ export const SpacePresence = ({ object, spaceKey }: { object: TypedObject; space
     <FullPresence
       members={members}
       onMemberClick={(member) => {
-        const viewing = spacePlugin.provides.space.viewers.find((viewer) =>
-          viewer.identityKey.equals(member.identity.identityKey),
-        )?.objectId;
-        if (viewing) {
+        if (
+          !currentObjectViewers.has(member.identity.identityKey) &&
+          (viewing.get(member.identity.identityKey)?.size ?? 0) > 0
+        ) {
           void dispatch({
             action: NavigationAction.ACTIVATE,
-            data: { id: viewing },
+            // TODO(thure): Multitasking will make this multifarious; implement a way to follow other members that
+            //  doesn’t assume they can only view one object at a time.
+            data: { id: Array.from(viewing.get(member.identity.identityKey)!)[0] },
           });
         } else {
           log.warn('No viewing object found for member');

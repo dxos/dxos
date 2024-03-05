@@ -4,7 +4,7 @@
 
 import { type IconProps, Folder as FolderIcon, Plus, SignIn } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
-import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
+import { deepSignal } from 'deepsignal/react';
 import localforage from 'localforage';
 import React from 'react';
 
@@ -33,6 +33,7 @@ import { type Client, PublicKey } from '@dxos/react-client';
 import { type Space, SpaceProxy, getSpaceForObject, type PropertiesProps } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
+import { ComplexMap } from '@dxos/util';
 
 import {
   AwaitingObject,
@@ -90,8 +91,10 @@ export const SpacePlugin = ({
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
   const state = deepSignal<PluginState>({
     awaiting: undefined,
-    viewers: [],
-  }) as RevertDeepSignal<PluginState>;
+    viewersByObject: new Map(),
+    viewersByIdentity: new ComplexMap(PublicKey.hash),
+    // TODO(thure): is there a better way to cast this?
+  }) as unknown as PluginState;
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
@@ -188,25 +191,23 @@ export const SpacePlugin = ({
                 const identityKey = PublicKey.safeFrom(message.payload.identityKey);
                 const spaceKey = PublicKey.safeFrom(message.payload.spaceKey);
                 if (identityKey && spaceKey && Array.isArray(added) && Array.isArray(removed)) {
-                  const newViewers = [
-                    ...state.viewers.filter(
-                      (viewer) =>
-                        !viewer.identityKey.equals(identityKey) ||
-                        !viewer.spaceKey.equals(spaceKey) ||
-                        (viewer.identityKey.equals(identityKey) &&
-                          viewer.spaceKey.equals(spaceKey) &&
-                          !removed.some((objectId) => objectId === viewer.objectId) &&
-                          !added.some((objectId) => objectId === viewer.objectId)),
-                    ),
-                    ...added.map((objectId) => ({
-                      identityKey,
-                      spaceKey,
-                      objectId,
-                      lastSeen: Date.now(),
-                    })),
-                  ];
-                  newViewers.sort((a, b) => b.lastSeen - a.lastSeen);
-                  state.viewers = newViewers;
+                  added.forEach((objectIdAny) => {
+                    const objectId = objectIdAny.toString();
+                    if (!state.viewersByObject.has(objectId)) {
+                      state.viewersByObject.set(objectId, new ComplexMap(PublicKey.hash));
+                    }
+                    state.viewersByObject.get(objectId)!.set(identityKey, { lastSeen: Date.now(), spaceKey });
+                    if (!state.viewersByIdentity.has(identityKey)) {
+                      state.viewersByIdentity.set(identityKey, new Set());
+                    }
+                    state.viewersByIdentity.get(identityKey)!.add(objectId);
+                  });
+                  removed.forEach((objectIdAny) => {
+                    const objectId = objectIdAny.toString();
+                    state.viewersByObject.get(objectId)?.delete(identityKey);
+                    state.viewersByIdentity.get(identityKey)?.delete(objectId);
+                    // It’s okay for these to be empty sets/maps, reduces churn.
+                  });
                 }
               }),
             );
@@ -222,7 +223,7 @@ export const SpacePlugin = ({
       graphSubscriptions.clear();
     },
     provides: {
-      space: state as RevertDeepSignal<PluginState>,
+      space: state,
       settings: settings.values,
       translations: [...translations, osTranslations],
       root: () => (state.awaiting ? <AwaitingObject id={state.awaiting} /> : null),

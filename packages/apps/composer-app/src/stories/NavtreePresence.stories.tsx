@@ -115,9 +115,7 @@ export const Demo = {
               components: {
                 // @ts-ignore
                 presence: ({ data: { object } }: { data: { object: any } }) => {
-                  return (
-                    <SmallPresence size={2} members={object?.viewers ?? []} classNames={[fineBlockSize, 'is-6']} />
-                  );
+                  return <SmallPresence members={object?.viewers ?? []} classNames={[fineBlockSize, 'is-6']} />;
                 },
               },
             }}
