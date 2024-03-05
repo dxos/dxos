@@ -37,9 +37,10 @@ export const ProfileForm = (props: ProfileFormProps) => {
   return <ProfileFormImpl {...props} onUpdateProfile={handleUpdateProfile} validationMessage={validationMessage} />;
 };
 
-const getHueValue = (identity?: Identity) => identity?.profile?.hue || hexToHue(identity?.identityKey.toHex() ?? '0');
+const getHueValue = (identity?: Identity) =>
+  identity?.profile?.data?.hue || hexToHue(identity?.identityKey.toHex() ?? '0');
 const getEmojiValue = (identity?: Identity) =>
-  identity?.profile?.emoji || hexToEmoji(identity?.identityKey.toHex() ?? '0');
+  identity?.profile?.data?.emoji || hexToEmoji(identity?.identityKey.toHex() ?? '0');
 
 // TODO(zhenyasav): impl shouldn't need send()
 const ProfileFormImpl = (props: ProfileFormImplProps) => {
@@ -105,7 +106,7 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
         <Action
           variant='primary'
           disabled={disabled}
-          onClick={() => onUpdateProfile?.({ displayName, emoji, hue })}
+          onClick={() => onUpdateProfile?.({ displayName, data: { emoji, hue } })}
           data-testid='update-profile-form-continue'
         >
           {t('done label')}

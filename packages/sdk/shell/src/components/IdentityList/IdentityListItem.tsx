@@ -36,10 +36,10 @@ export const IdentityListItem = forwardRef<
       <Avatar.Root
         status={presence === SpaceMember.PresenceState.ONLINE ? 'active' : 'inactive'}
         labelId={labelId}
-        hue={identity.profile?.hue || fallbackValue.hue}
+        hue={identity.profile?.data?.hue || fallbackValue.hue}
       >
         <Avatar.Frame classNames='place-self-center'>
-          <Avatar.Fallback text={identity.profile?.emoji || fallbackValue.emoji} />
+          <Avatar.Fallback text={identity.profile?.data?.emoji || fallbackValue.emoji} />
         </Avatar.Frame>
         <Avatar.Label classNames='text-sm truncate pli-2'>{displayName}</Avatar.Label>
       </Avatar.Root>
