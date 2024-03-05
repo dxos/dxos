@@ -13,7 +13,7 @@ export type NavTreeContextType = {
   popoverAnchorId?: string;
   onSelect?: (params: { path: string; node: TreeNode; level: number; position: number }) => void;
   isOver: (path: string) => boolean;
-  renderPresence?: (node: TreeNode) => ReactNode;
+  renderPresence?: (node: TreeNode, current?: string) => ReactNode;
 };
 
 const Context = createContext<NavTreeContextType>({ isOver: () => false });

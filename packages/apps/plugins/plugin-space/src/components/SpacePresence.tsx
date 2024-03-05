@@ -19,12 +19,11 @@ import {
   Tooltip,
   useDensityContext,
   useTranslation,
-  Button,
   List,
   ListItem,
 } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
-import { ComplexMap, hexToHue, keyToFallback } from '@dxos/util';
+import { AttentionGlyph } from '@dxos/react-ui-deck';
+import { ComplexMap, keyToFallback } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';
 import type { SpacePluginProvides } from '../types';
@@ -202,26 +201,13 @@ const PrensenceAvatar = ({ identity, showName, match, group, index, onClick, hue
   );
 };
 
-export const SmallPresence = (props: MemberPresenceProps) => {
-  const { members = [], size = 2, classNames } = props;
+export const SmallPresence = (props: Omit<MemberPresenceProps, 'size'>) => {
+  const { members = [] } = props;
   const { t } = useTranslation(SPACE_PLUGIN);
-  return members.length === 0 ? (
-    <div role='none' className={mx(classNames)} />
-  ) : (
+  return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
-        <Button variant='ghost' classNames={['pli-0', classNames]}>
-          <AvatarGroup.Root size={size} classNames='m-1 mie-2'>
-            {members.slice(0, 3).map((viewer, i) => {
-              const viewerHex = viewer.identity.identityKey.toHex();
-              return (
-                <AvatarGroupItem.Root key={viewerHex} hue={viewer.identity.profile?.hue || hexToHue(viewerHex)}>
-                  <Avatar.Frame style={{ zIndex: members.length - i }} />
-                </AvatarGroupItem.Root>
-              );
-            })}
-          </AvatarGroup.Root>
-        </Button>
+        <AttentionGlyph presence={members.length > 1 ? 'many' : members.length === 1 ? 'one' : 'none'} />
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content side='bottom' classNames='z-[70]'>

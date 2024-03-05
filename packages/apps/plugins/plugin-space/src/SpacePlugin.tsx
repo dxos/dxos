@@ -45,6 +45,7 @@ import {
   PopoverRenameObject,
   PopoverRenameSpace,
   ShareSpaceButton,
+  SmallPresence,
   SpaceMain,
   SpacePresence,
   SpaceSettings,
@@ -290,6 +291,9 @@ export const SpacePlugin = ({
               } else {
                 return null;
               }
+            case 'presence--glyph': {
+              return <SmallPresence members={isTypedObject(data.object) ? data.object.viewers : []} />;
+            }
             case 'navbar-start': {
               const space =
                 isGraphNode(data.activeNode) && isTypedObject(data.activeNode.data)
