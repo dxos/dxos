@@ -215,9 +215,7 @@ export class SpacesServiceImpl implements SpacesService {
         return {
           identity: {
             identityKey: member.key,
-            profile: {
-              displayName: member.profile?.displayName,
-            },
+            profile: member.profile ?? {},
           },
           presence: member.removed
             ? SpaceMember.PresenceState.REMOVED
