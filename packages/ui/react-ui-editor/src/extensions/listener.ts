@@ -6,7 +6,7 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
 export type ListenerOptions = {
-  onFocus?: (focused: boolean) => void;
+  onFocus?: (focusing: boolean) => void;
   onChange?: (text: string) => void;
 };
 
