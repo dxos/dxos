@@ -20,7 +20,7 @@ import {
 } from './automerge-doc-loader';
 import { getAutomergeObjectCore } from './automerge-object';
 import { AutomergeObjectCore } from './automerge-object-core';
-import { decodeReference, type SpaceDoc } from './types';
+import { type SpaceDoc } from './types';
 import { type EchoDatabase } from '../database';
 import { isReactiveProxy } from '../effect/proxy';
 import { type Hypergraph } from '../hypergraph';
@@ -257,9 +257,6 @@ export class AutomergeDb {
 
   private _createObjectInDocument(docHandle: DocHandle<SpaceDoc>, objectId: string) {
     invariant(!this._objects.get(objectId));
-
-    const encodedType = docHandle.docSync()?.objects?.[objectId]?.system?.type ?? null;
-    const typeReference = encodedType != null ? decodeReference(encodedType) : null;
 
     const core = new AutomergeObjectCore();
     core.id = objectId;
