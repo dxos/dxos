@@ -47,6 +47,7 @@ import { types, Document } from '@braneframe/types';
 import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
 import { createStorageObjects } from '@dxos/client-services';
 import { defs, SaveConfig } from '@dxos/config';
+import { registerSignalRuntime } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
 import { initializeAppObservability } from '@dxos/observability';
 import { createClientServices } from '@dxos/react-client';
@@ -62,6 +63,8 @@ import { steps } from './help';
 import translations from './translations';
 
 const main = async () => {
+  registerSignalRuntime();
+
   let config = await setupConfig();
 
   if (

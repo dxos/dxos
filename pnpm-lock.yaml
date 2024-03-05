@@ -635,6 +635,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-signals
       '@dxos/migrations':
         specifier: workspace:*
         version: link:../../sdk/migrations
@@ -7613,6 +7616,12 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-signals
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -7622,9 +7631,6 @@ importers:
       '@preact/signals-core':
         specifier: ^1.5.1
         version: 1.5.1
-      deepsignal:
-        specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-core@1.5.1)
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -9015,6 +9021,9 @@ importers:
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../sdk/app-graph
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
@@ -9036,16 +9045,10 @@ importers:
       '@preact/signals-core':
         specifier: ^1.5.1
         version: 1.5.1
-      deepsignal:
-        specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-core@1.5.1)
     devDependencies:
       '@dnd-kit/core':
         specifier: ^6.0.5
         version: 6.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
