@@ -232,7 +232,10 @@ export const updateGraphWithSpace = ({
             properties: {
               label: ['rename space label', { ns: SPACE_PLUGIN }],
               icon: (props: IconProps) => <PencilSimpleLine {...props} />,
-              keyBinding: 'shift+F6',
+              keyBinding: {
+                macos: 'shift+F6',
+                windows: 'shift+F6',
+              },
               mainAreaDisposition: 'absent',
             },
             edges: [[space.key.toHex(), 'inbound']],
@@ -244,7 +247,10 @@ export const updateGraphWithSpace = ({
             properties: {
               label: ['share space', { ns: SPACE_PLUGIN }],
               icon: (props) => <Users {...props} />,
-              keyBinding: 'meta+.',
+              keyBinding: {
+                macos: 'meta+.',
+                windows: 'alt+.',
+              },
               mainAreaDisposition: 'absent',
             },
             edges: [[space.key.toHex(), 'inbound']],
@@ -265,7 +271,10 @@ export const updateGraphWithSpace = ({
             properties: {
               label: ['save space to disk label', { ns: SPACE_PLUGIN }],
               icon: (props: IconProps) => <FloppyDisk {...props} />,
-              keyBinding: 'meta+s',
+              keyBinding: {
+                macos: 'meta+s',
+                windows: 'ctrl+s',
+              },
               mainAreaDisposition: 'in-flow',
             },
             edges: [[space.key.toHex(), 'inbound']],
@@ -276,7 +285,10 @@ export const updateGraphWithSpace = ({
             properties: {
               label: ['load space from disk label', { ns: SPACE_PLUGIN }],
               icon: (props: IconProps) => <FolderOpen {...props} />,
-              keyBinding: 'meta+shift+l',
+              keyBinding: {
+                macos: 'meta+shift+l',
+                windows: 'ctrl+shift+l',
+              },
               mainAreaDisposition: 'in-flow',
             },
             edges: [[space.key.toHex(), 'inbound']],
