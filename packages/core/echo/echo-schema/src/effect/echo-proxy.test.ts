@@ -153,14 +153,23 @@ describe('Reactive Object with ECHO database', () => {
     {
       const TaskSchema = S.mutable(S.struct({ title: S.string })).pipe(R.echoObject('example.test.Task', '1.0.0'));
       type TaskSchema = S.Schema.To<typeof TaskSchema>;
-      graph.types.registerEffectSchema(TaskSchema);
       const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey, useReactiveObjectApi: true });
       await db._automerge.open({ rootUrl: doc.url });
 
       const obj = db.getObjectById(id) as any as EchoReactiveObject<TaskSchema>;
       expect(isEchoReactiveObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
+
       expect(obj.title).to.eq(task.title);
+
+      const updatedTitle = 'Updated';
+
+      // schema was not registered
+      expect(() => (obj.title = updatedTitle)).to.throw();
+
+      graph.types.registerEffectSchema(TaskSchema);
+      obj.title = updatedTitle;
+      expect(obj.title).to.eq(updatedTitle);
 
       expect(R.getSchema(obj)).to.eq(TaskSchema);
     }
