@@ -46,8 +46,6 @@ export const SpacePresence = ({ object, spaceKey }: { object: TypedObject; space
     return null;
   }
 
-  // TODO(wittjosiah): This isn't working because of issue w/ deepsignal state.
-  //  Assigning plugin to deepsignal seems to create a new instance of objects in provides and breaks the reference.
   const viewers = spacePlugin.provides.space.viewers
     .filter((viewer) => {
       return (

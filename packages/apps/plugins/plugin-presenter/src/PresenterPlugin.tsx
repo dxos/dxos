@@ -4,7 +4,6 @@
 
 import { type IconProps, Presentation } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
-import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
@@ -13,6 +12,7 @@ import { isStack } from '@braneframe/plugin-stack';
 import { Stack } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
+import * as E from '@dxos/echo-schema/schema';
 
 import { PresenterMain, MarkdownSlideMain } from './components';
 import meta, { PRESENTER_PLUGIN } from './meta';
@@ -28,7 +28,7 @@ type PresenterState = {
 
 export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => {
   // TODO(burdon): Do we need context providers if we can get the state from the plugin?
-  const state = deepSignal<PresenterState>({ presenting: false });
+  const state = E.object<PresenterState>({ presenting: false });
 
   return {
     meta,

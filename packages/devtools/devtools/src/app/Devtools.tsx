@@ -2,8 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { deepSignal } from 'deepsignal/react';
-import React, { type FC, useEffect } from 'react';
+import React, { type FC, useEffect, useState } from 'react';
 import { HashRouter, useLocation } from 'react-router-dom';
 
 import { log } from '@dxos/log';
@@ -60,7 +59,7 @@ export const Devtools: FC<{
   namespace?: string;
   observability?: Observability;
 }> = ({ client, services, observability, namespace = observabilityNamespace }) => {
-  const state = deepSignal<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
+  const [themeMode] = useState<ThemeMode>('dark');
   const devtoolsTx = bindTheme({
     ...defaultTheme,
     toolbar: {
@@ -71,7 +70,7 @@ export const Devtools: FC<{
   });
 
   return (
-    <ThemeProvider {...{ tx: devtoolsTx, themeMode: state.themeMode }}>
+    <ThemeProvider {...{ tx: devtoolsTx, themeMode }}>
       <DensityProvider density='fine'>
         <ErrorBoundary>
           <ClientContext.Provider value={{ client, services }}>

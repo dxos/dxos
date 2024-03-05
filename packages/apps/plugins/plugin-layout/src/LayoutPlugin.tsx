@@ -4,8 +4,6 @@
 
 import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-core';
-import { type RevertDeepSignal } from 'deepsignal/react';
-import { deepSignal } from 'deepsignal/react';
 import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { type Node, useGraph } from '@braneframe/plugin-graph';
@@ -31,6 +29,7 @@ import {
   type Layout,
   IntentAction,
 } from '@dxos/app-framework';
+import * as E from '@dxos/echo-schema/schema';
 import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -84,7 +83,7 @@ export const LayoutPlugin = ({
     toasts: [],
   });
 
-  const location = deepSignal<NavigationState>({
+  const location = E.object<NavigationState>({
     active: undefined,
     previous: undefined,
 
@@ -161,8 +160,8 @@ export const LayoutPlugin = ({
     },
     provides: {
       settings: settings.values,
-      layout: layout.values as RevertDeepSignal<Layout>,
-      location: location as RevertDeepSignal<Location>,
+      layout: layout.values,
+      location,
       translations,
       graph: {
         builder: (_, graph) => {
@@ -186,9 +185,7 @@ export const LayoutPlugin = ({
       },
       context: (props: PropsWithChildren) => (
         <Mosaic.Root>
-          <LayoutContext.Provider value={layout.values as RevertDeepSignal<Layout>}>
-            {props.children}
-          </LayoutContext.Provider>
+          <LayoutContext.Provider value={layout.values}>{props.children}</LayoutContext.Provider>
         </Mosaic.Root>
       ),
       root: () => {
