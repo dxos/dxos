@@ -8,7 +8,7 @@ import { batch } from '@preact/signals-core';
 import React from 'react';
 
 import { Graph } from '@dxos/app-graph';
-import { registerSignalRuntime } from '@dxos/echo-signals';
+import { registerSignalRuntime } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
 import { DensityProvider, Tooltip } from '@dxos/react-ui';
 import { Mosaic, Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation } from '@dxos/react-ui-mosaic';
