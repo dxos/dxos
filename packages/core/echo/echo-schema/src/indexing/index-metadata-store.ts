@@ -3,6 +3,7 @@
 //
 
 import { synchronized, Event } from '@dxos/async';
+import { type MetadataMethods } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import { type Directory } from '@dxos/random-access-storage';
 
@@ -19,7 +20,7 @@ export type DocumentMetadata = {
 };
 
 // TODO(mykola): Use snapshot and append only log, not separate file for each document.
-export class IndexMetadataStore {
+export class IndexMetadataStore implements MetadataMethods {
   public readonly dirty = new Event<void>();
   public readonly clean = new Event<void>();
 
