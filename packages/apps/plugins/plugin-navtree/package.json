@@ -29,6 +29,7 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -37,8 +38,7 @@
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.5.1",
-    "date-fns": "^3.3.1",
-    "deepsignal": "^1.5.0"
+    "date-fns": "^3.3.1"
   },
   "devDependencies": {
     "@braneframe/plugin-theme": "workspace:*",

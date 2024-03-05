@@ -4,7 +4,6 @@
 
 import { MagnifyingGlass, type IconProps } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
-import { deepSignal, type RevertDeepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import {
@@ -21,6 +20,7 @@ import {
   parseGraphPlugin,
 } from '@dxos/app-framework';
 import { isAction, isGraphNode, type Node, type NodeFilter } from '@dxos/app-graph';
+import * as E from '@dxos/echo-schema/schema';
 import { Keyboard } from '@dxos/keyboard';
 import { treeNodeFromGraphNode, type TreeNode, getTreeNode } from '@dxos/react-ui-navtree';
 import { getHostPlatform } from '@dxos/util';
@@ -44,7 +44,7 @@ export type NavTreePluginProvides = SurfaceProvides &
 
 export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
   const longestPaths = new Map<string, string[]>();
-  const state = deepSignal<{ root?: TreeNode }>({});
+  const state = E.object<{ root?: TreeNode }>({});
   let graphPlugin: Plugin<GraphProvides> | undefined;
 
   // Filter for the longest path to a node from the root.
@@ -151,7 +151,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
               if (state.root) {
                 return (
                   <NavTreeContainer
-                    root={state.root as RevertDeepSignal<TreeNode>}
+                    root={state.root}
                     paths={longestPaths}
                     activeId={data.activeId as string}
                     popoverAnchorId={data.popoverAnchorId as string}
@@ -163,14 +163,14 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
             case 'document-title': {
               const graphNode = isGraphNode(data.activeNode) ? data.activeNode : undefined;
               const path = graphNode?.id ? longestPaths.get(graphNode.id) : undefined;
-              const activeNode = path ? getTreeNode(state.root as RevertDeepSignal<TreeNode>, path) : undefined;
+              const activeNode = path && state.root ? getTreeNode(state.root, path) : undefined;
               return <NavTreeDocumentTitle activeNode={activeNode} />;
             }
 
             case 'navbar-start': {
               const path = isGraphNode(data.activeNode) && longestPaths.get(data.activeNode.id);
-              if (path) {
-                const activeNode = getTreeNode(state.root as RevertDeepSignal<TreeNode>, path);
+              if (path && state.root) {
+                const activeNode = getTreeNode(state.root, path);
 
                 return {
                   node: (
