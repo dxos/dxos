@@ -27,7 +27,28 @@ const broadShadeNumbers: number[] = [
 
 const dtor = Math.PI / 180;
 
-export const paletteConfigs: Record<string, PaletteConfig> = {
+export type HuePalette =
+  | 'red'
+  | 'orange'
+  | 'amber'
+  | 'yellow'
+  | 'lime'
+  | 'green'
+  | 'emerald'
+  | 'teal'
+  | 'cyan'
+  | 'sky'
+  | 'blue'
+  | 'indigo'
+  | 'violet'
+  | 'purple'
+  | 'fuchsia'
+  | 'pink'
+  | 'rose';
+
+export type ConfigPalette = HuePalette | 'primary' | 'neutral';
+
+export const paletteConfigs: Record<ConfigPalette, PaletteConfig> = {
   red: {
     keyColor: '#ee003b',
     darkCp: 1,
@@ -147,7 +168,7 @@ export const paletteConfigs: Record<string, PaletteConfig> = {
 export const physicalColors = Object.keys(paletteConfigs).reduce(
   (acc: Record<string, Record<string, string>>, palette) => {
     const isBroad = palette === 'neutral' || palette === 'primary';
-    const paletteConfig = paletteConfigs[palette] as PaletteConfig;
+    const paletteConfig = paletteConfigs[palette as ConfigPalette];
     const curve = curvePathFromPalette({
       ...paletteConfig,
       keyColor: hexToLch(paletteConfig.keyColor),
