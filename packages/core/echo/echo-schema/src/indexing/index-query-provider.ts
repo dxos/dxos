@@ -23,7 +23,9 @@ export class IndexQueryProvider implements QuerySourceProvider {
     const start = Date.now();
     const idAndRanks = await this._params.indexer.find(filter);
 
-    const objects = await this._params.loadObjects(idAndRanks.map((idAndRank) => idAndRank.id));
+    const objects = (await this._params.loadObjects(idAndRanks.map((idAndRank) => idAndRank.id))).filter(
+      Boolean,
+    ) as EchoObject[];
 
     const results: QueryResult<EchoObject>[] = objects.map((object, index) => ({
       id: object.id,

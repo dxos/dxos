@@ -3,12 +3,11 @@
 //
 
 import { Contact } from '@braneframe/types';
-import { sleep } from '@dxos/async';
+import { Trigger, asyncTimeout } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { warnAfterTimeout } from '@dxos/debug';
 import { IndexQueryProvider, IndexStore, Indexer } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
@@ -17,7 +16,7 @@ import { Client } from '../client';
 import { TestBuilder } from '../testing';
 
 describe('Index queries', () => {
-  test.only('basic index queries', async () => {
+  test('basic index queries', async () => {
     const builder = new TestBuilder();
     builder.storage = createStorage({ type: StorageType.RAM });
     afterTest(() => builder.destroy());
@@ -29,21 +28,26 @@ describe('Index queries', () => {
 
     await client.halo.createIdentity();
 
+    const indexingDone = services.host!.context.indexMetadata.clean.waitForCount(2);
     const indexer = new Indexer({
       indexStore: new IndexStore({ directory: builder.storage!.createDirectory('index-store') }),
       metadataStore: services.host!.context.indexMetadata,
-      loadDocuments: async (ids) =>
-        Promise.all(
+      loadDocuments: async (ids) => {
+        const snapshots = await Promise.all(
           ids.map(async (id) => {
             const { documentId, objectId } = idCodec.decode(id);
             const handle = services.host!.context.automergeHost.repo.find(documentId as any);
             await warnAfterTimeout(1000, 'to long to load doc', () => handle.whenReady());
             const doc = handle.docSync();
             const heads = getHeads(doc);
-            return { id, object: doc[objectId], currentHash: heads.at(-1)! };
+            return { id, object: doc.objects[objectId], currentHash: heads.at(-1)! };
           }),
-        ),
+        );
+        return snapshots.filter((snapshot) => snapshot.object);
+      },
     });
+    indexer.setIndexConfig({ indexes: [{ kind: 'SCHEMA_MATCH' }] });
+    await indexer.initialize();
 
     const agentQuerySourceProvider = new IndexQueryProvider({
       indexer,
@@ -68,9 +72,8 @@ describe('Index queries', () => {
         ),
     });
     client._graph.registerQuerySourceProvider(agentQuerySourceProvider);
-
+    const space = await client.spaces.create();
     {
-      const space = await client.spaces.create();
       await space.waitUntilReady();
 
       const contact = new Contact({ name: 'John Doe' });
@@ -78,12 +81,19 @@ describe('Index queries', () => {
       await space.db.flush();
     }
 
+    await asyncTimeout(indexingDone, 1000);
+
     {
-      const query = client.spaces.query(Contact.filter());
-      query.subscribe((result) => {
-        log('Query result:', result);
-      });
-      await sleep(2000);
+      const receivedIndexedContact = new Trigger();
+      const query = space.db.query(Contact.filter());
+      query.subscribe((query) => {
+        for (const result of query.results) {
+          if (result.object instanceof Contact && result.resolution?.source === 'index') {
+            receivedIndexedContact.wake();
+          }
+        }
+      }, true);
+      await receivedIndexedContact.wait({ timeout: 1000 });
     }
   });
 });
