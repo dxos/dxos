@@ -137,9 +137,10 @@ export class AutomergeHost {
     this._meshNetwork.ready();
 
     {
-      this._repo.on('document', this._onDocument);
+      const listener = ({ handle }: { handle: DocHandle<any> }) => this._onDocument(handle);
+      this._repo.on('document', listener);
       this._ctx.onDispose(() => {
-        this._repo.off('document', this._onDocument);
+        this._repo.off('document', listener);
       });
     }
   }
@@ -155,10 +156,11 @@ export class AutomergeHost {
     }
   }
 
-  private _onDocument({ handle }: { handle: DocHandle<any> }) {
-    handle.on('change', this._onUpdate);
+  private _onDocument(handle: DocHandle<any>) {
+    const listener = (event: DocHandleChangePayload<any>) => this._onUpdate(event);
+    handle.on('change', listener);
     this._ctx.onDispose(() => {
-      handle.off('change', this._onUpdate);
+      handle.off('change', listener);
     });
   }
 
