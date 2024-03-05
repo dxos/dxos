@@ -507,7 +507,7 @@ export const createEchoReactiveObject = <T extends {}>(init: T): EchoReactiveObj
   }
 };
 
-export const initEchoReactiveObjectRootProxy = <T extends {}>(core: AutomergeObjectCore, schema?: S.Schema<any>) => {
+export const initEchoReactiveObjectRootProxy = (core: AutomergeObjectCore, schema?: S.Schema<any>) => {
   const target = { [symbolPath]: [] };
   if (schema != null) {
     setSchemaProperties(target, schema);
