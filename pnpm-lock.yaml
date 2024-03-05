@@ -7756,6 +7756,9 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../apps/types
+      '@dxos/echo-pipeline':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-pipeline
       '@dxos/random-access-storage':
         specifier: workspace:*
         version: link:../../common/random-access-storage
@@ -8314,6 +8317,9 @@ importers:
       '@xstate/react':
         specifier: ^3.2.1
         version: 3.2.1(@types/react@18.0.21)(react@18.2.0)(xstate@4.37.1)
+      date-fns:
+        specifier: ^3.3.1
+        version: 3.3.1
       emoji-mart:
         specifier: ^5.5.2
         version: 5.5.2
