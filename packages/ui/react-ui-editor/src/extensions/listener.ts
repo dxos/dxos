@@ -18,8 +18,8 @@ export const listener = ({ onFocus, onChange }: ListenerOptions): Extension => {
 
   onFocus &&
     extensions.push(
-      EditorView.focusChangeEffect.of((_, focused) => {
-        onFocus(focused);
+      EditorView.focusChangeEffect.of((_, focusing) => {
+        onFocus(focusing);
         return null;
       }),
     );
