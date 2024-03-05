@@ -29,10 +29,10 @@ describe('Indexer', () => {
 
     const schemaURI = '@example.org/schema/Contact';
     const objects = [
-      { id: '1', name: 'John', schema: schemaURI },
-      { id: '2', title: 'first document', schema: '@example.org/schema/Document' },
+      { id: '1', data: { name: 'John' }, system: { type: { itemId: schemaURI } } },
+      { id: '2', data: { title: 'first document' }, system: { type: { itemId: '@example.org/schema/Document' } } },
     ];
-    objects.forEach((object) => documents.push({ object, currentHash: 'hash' }));
+    objects.forEach((object) => documents.push({ id: object.id, object, currentHash: 'hash' }));
 
     {
       indexer.setIndexConfig({ indexes: [{ kind: 'SCHEMA_MATCH' }] });
