@@ -207,7 +207,10 @@ export const SmallPresence = (props: Omit<MemberPresenceProps, 'size'>) => {
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
-        <AttentionGlyph presence={members.length > 1 ? 'many' : members.length === 1 ? 'one' : 'none'} />
+        <AttentionGlyph
+          presence={members.length > 1 ? 'many' : members.length === 1 ? 'one' : 'none'}
+          classNames='self-center mie-1'
+        />
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content side='bottom' classNames='z-[70]'>
