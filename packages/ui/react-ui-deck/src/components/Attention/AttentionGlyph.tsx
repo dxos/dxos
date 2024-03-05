@@ -33,7 +33,7 @@ export type AttentionGlyphProps = {
 } & ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.span>, 'children'>>;
 
 const attentionGlyphStyles =
-  'inline-block rounded-sm is-3 bs-3 bg-transparent fg-accent [[aria-current]_&]:surface-unAccent [[aria-current]_&]:fg-inverse [[data-attention=true]_&]:surface-accent [[data-attention=true]_&]:fg-inverse [[aria-current][data-attention=true]_&]:surface-accent [[aria-current][data-attention=true]_&]:fg-inverse';
+  'inline-block rounded-sm is-3 bs-3 bg-transparent fg-accent transition-colors [[aria-current]_&]:surface-unAccent [[aria-current]_&]:fg-inverse [[data-attention=true]_&]:surface-accent [[data-attention=true]_&]:fg-inverse [[aria-current][data-attention=true]_&]:surface-accent [[aria-current][data-attention=true]_&]:fg-inverse';
 
 export const AttentionGlyph = forwardRef<HTMLSpanElement, AttentionGlyphProps>(
   ({ presence, classNames, ...props }, forwardedRef) => {

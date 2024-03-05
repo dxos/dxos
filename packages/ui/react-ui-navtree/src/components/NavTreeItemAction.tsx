@@ -316,6 +316,7 @@ export const NavTreeItemAction = ({
       {action ? (
         <Tooltip.Trigger asChild>
           <Button
+            variant='ghost'
             classNames={[
               'shrink-0 pli-2 pointer-fine:pli-1',
               hoverableControlItem,
