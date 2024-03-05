@@ -4,7 +4,6 @@
 
 import React from 'react';
 
-import { type Identity } from '@dxos/react-client/halo';
 import { Avatar, type Size } from '@dxos/react-ui';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 import { hexToFallback } from '@dxos/util';
@@ -14,9 +13,11 @@ const INTERNAL = 'https://avatars.githubusercontent.com/u/57182821';
 export type HaloButtonProps = {
   size?: Size;
   identityKey?: string;
+  hue?: string;
+  emoji?: string;
   internal?: boolean;
   onClick?: () => void;
-} & Pick<NonNullable<Identity['profile']>, 'hue' | 'emoji'>;
+};
 
 export const HaloButton = (props: HaloButtonProps) => {
   const { onClick, identityKey, internal, size = 8 } = props;

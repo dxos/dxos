@@ -76,7 +76,7 @@ export class SharedWorkerConnection {
         BridgeService: this._transportService,
       },
       port: this._systemPort,
-      timeout: 200,
+      timeout: 30_000,
     });
 
     let lockKey: string | undefined;
