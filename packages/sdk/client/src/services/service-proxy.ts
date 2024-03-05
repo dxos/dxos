@@ -49,8 +49,7 @@ export class ClientServicesProxy implements ClientServicesProvider {
       exposed: {},
       handlers: {},
       port: this._port,
-      // TODO(wittjosiah): Specifying breaks the reset flows in Composer.
-      // timeout: this._timeout,
+      timeout: this._timeout,
     });
 
     await asyncTimeout(
