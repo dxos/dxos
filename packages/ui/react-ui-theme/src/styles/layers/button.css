@@ -1,4 +1,5 @@
-@layer components {
+/* TODO(thure): This should be on the `components` layer, but utility classes like `pli-0` weren’t getting precedence like they should. */
+@layer base {
   /* Base styles */
   .ch-button {
     @apply font-medium text-sm shrink-0 inline-flex select-none items-center justify-center overflow-hidden transition-colors duration-100 ease-linear surface-input min-bs-[2.5rem] pli-4;
