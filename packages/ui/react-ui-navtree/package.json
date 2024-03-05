@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@dnd-kit/core": "^6.0.5",
-    "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo-signals": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/util": "workspace:*",

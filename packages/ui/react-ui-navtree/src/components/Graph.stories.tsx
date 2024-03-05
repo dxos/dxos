@@ -8,6 +8,7 @@ import { batch } from '@preact/signals-core';
 import React from 'react';
 
 import { Graph } from '@dxos/app-graph';
+import { registerSignalRuntime } from '@dxos/echo-signals';
 import { faker } from '@dxos/random';
 import { DensityProvider, Tooltip } from '@dxos/react-ui';
 import { Mosaic, Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation } from '@dxos/react-ui-mosaic';
@@ -17,6 +18,7 @@ import { NavTree } from './NavTree';
 import { treeNodeFromGraphNode } from '../helpers';
 
 faker.seed(3);
+registerSignalRuntime();
 
 const createGraph = () => {
   const graph = new Graph();
