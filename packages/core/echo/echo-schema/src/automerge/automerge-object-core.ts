@@ -33,6 +33,8 @@ import { type Schema } from '../proto'; // Keep type-only
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
 
+const SYSTEM_NAMESPACE = 'system';
+
 // TODO(dmaretskyi): Rename to `AutomergeObject`.
 export class AutomergeObjectCore {
   // TODO(dmaretskyi): Start making some of those fields private.
@@ -378,6 +380,10 @@ export class AutomergeObjectCore {
     });
   }
 
+  setType(reference: Reference) {
+    this.set([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
+  }
+
   delete(path: (string | number)[]) {
     const fullPath = [...this.mountPath, ...path];
 
@@ -388,7 +394,7 @@ export class AutomergeObjectCore {
   }
 
   getType(): Reference | undefined {
-    const value = this.decode(this.get(['system', 'type']));
+    const value = this.decode(this.get([SYSTEM_NAMESPACE, 'type']));
     if (!value) {
       return undefined;
     }
@@ -397,12 +403,12 @@ export class AutomergeObjectCore {
   }
 
   isDeleted() {
-    const value = this.get(['system', 'deleted']);
+    const value = this.get([SYSTEM_NAMESPACE, 'deleted']);
     return typeof value === 'boolean' ? value : false;
   }
 
   setDeleted(value: boolean) {
-    this.set(['system', 'deleted'], value);
+    this.set([SYSTEM_NAMESPACE, 'deleted'], value);
   }
 }
 
