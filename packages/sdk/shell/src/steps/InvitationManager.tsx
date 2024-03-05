@@ -9,6 +9,7 @@ import { QR } from 'react-qr-rounded';
 import { type InvitationStatus, Invitation } from '@dxos/react-client/invitations';
 import { useId, useTranslation } from '@dxos/react-ui';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
+import { hexToEmoji } from '@dxos/util';
 
 import { type StepProps } from './StepProps';
 import {
@@ -22,7 +23,7 @@ import {
   CopyButton,
   Centered,
 } from '../components';
-import { invitationStatusValue, toEmoji } from '../util';
+import { invitationStatusValue } from '../util';
 
 export type InvitationManagerProps = StepProps &
   Partial<InvitationStatus> & {
@@ -44,13 +45,13 @@ export const InvitationManager = ({
   status,
   type,
   authCode,
-  id,
+  id = '0',
 }: InvitationManagerProps) => {
   const { t } = useTranslation('os');
   const qrLabel = useId('invitation-manager__qr-code');
   const statusValue = type === Invitation.Type.MULTIUSE ? 0 : invitationStatusValue.get(status!) ?? 0;
   const showAuthCode = statusValue === 3;
-  const emoji = toEmoji(id ?? '');
+  const emoji = hexToEmoji(id);
   const activeView = useMemo(() => {
     switch (true) {
       case statusValue === 5:
