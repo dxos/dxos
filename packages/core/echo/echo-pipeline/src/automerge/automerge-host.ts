@@ -17,6 +17,7 @@ import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { idCodec } from '@dxos/protocols';
 import { type HostInfo, type SyncRepoRequest, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
 import { StorageType, type Directory } from '@dxos/random-access-storage';
 import { type AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
@@ -180,8 +181,10 @@ export class AutomergeHost {
 
     const markingDirtyPromise = Promise.all(
       objectIds.map(async (objectId) => {
-        const id = `${spaceKey}|${objectId}`;
-        await this._metadata!.markDirty(id, lastAvailableHash);
+        await this._metadata!.markDirty(
+          idCodec.encode({ documentId: event.handle.documentId, objectId }),
+          lastAvailableHash,
+        );
       }),
     )
       .then(() => {
