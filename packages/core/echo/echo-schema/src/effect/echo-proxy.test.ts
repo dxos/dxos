@@ -18,6 +18,7 @@ import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 import { createDatabase } from '../testing';
 import { Task } from '../tests/proto';
+import { Filter } from '../query';
 
 registerSignalRuntime();
 
@@ -173,5 +174,17 @@ describe('Reactive Object with ECHO database', () => {
 
       expect(R.getSchema(obj)).to.eq(TaskSchema);
     }
+  });
+
+  test('queries', async () => {
+    const graph = new Hypergraph();
+    graph.types.registerEffectSchema(EchoObjectSchema);
+
+    const { db } = await createDatabase(graph, { useReactiveObjectApi: true });
+
+    db.add(R.object(EchoObjectSchema, { string: 'foo' }));
+
+    const query = db.query(Filter.typename('TestSchema'));
+    expect(query.objects.length).to.eq(1);
   });
 });
