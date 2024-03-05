@@ -59,7 +59,6 @@ export class InvitationsServiceImpl implements InvitationsService {
       invitation = this._invitationsHandler.createInvitation(handler, options);
       this._createInvitations.set(invitation.get().invitationId, invitation);
       this._invitationCreated.emit(invitation.get());
-
     }
 
     return new Stream<Invitation>(({ next, close }) => {

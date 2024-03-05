@@ -95,7 +95,7 @@ export const SpaceManager = (props: SpaceManagerProps) => {
     //       invitation.subscribe(onInvitationEvent);
     //     }
     //   }, [space]),
-    },
+    // },
   };
 
   return <SpaceManagerImpl {...props} invitations={invitations} inviteActions={inviteActions} />;

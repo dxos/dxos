@@ -304,7 +304,6 @@ describe('Invitations', () => {
 
       beforeEach(async () => {
         hostMetadata = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory());
-        const guestMetadata = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory());
         const peers = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
         hostContext = peers[0];
         guestContext = peers[1];
@@ -316,12 +315,6 @@ describe('Invitations', () => {
           (invitation) => hostContext.getInvitationHandler(invitation),
           hostMetadata,
         );
-        const guestService = new InvitationsServiceImpl(
-          guestContext.invitations,
-          (invitation) => guestContext.getInvitationHandler(invitation),
-          guestMetadata,
-        );
-
         space = await hostContext.dataSpaceManager.createSpace();
         host = new InvitationsProxy(hostService, undefined, () => ({
           kind: Invitation.Kind.SPACE,
