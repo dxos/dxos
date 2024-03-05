@@ -17,6 +17,7 @@ import { AutomergeContext, type SpaceDoc } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 import { createDatabase } from '../testing';
+import { Task } from '../tests/proto';
 
 registerSignalRuntime();
 
@@ -129,6 +130,39 @@ describe('Reactive Object with ECHO database', () => {
       expect(obj.string).to.eq('foo');
 
       expect(R.getSchema(obj)).to.eq(EchoObjectSchema);
+    }
+  });
+
+  test('effect-protobuf schema interop', async () => {
+    const graph = new Hypergraph();
+
+    const automergeContext = new AutomergeContext();
+    const doc = automergeContext.repo.create<SpaceDoc>();
+    const spaceKey = PublicKey.random();
+    const task = new Task({ title: 'Hello' });
+
+    let id: string;
+    {
+      const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey, useReactiveObjectApi: false });
+      await db._automerge.open({ rootUrl: doc.url });
+      const obj = db.add(task);
+      id = obj.id;
+    }
+
+    // Create a new DB instance to simulate a restart
+    {
+      const TaskSchema = S.mutable(S.struct({ title: S.string })).pipe(R.echoObject('example.test.Task', '1.0.0'));
+      type TaskSchema = S.Schema.To<typeof TaskSchema>;
+      graph.types.registerEffectSchema(TaskSchema);
+      const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey, useReactiveObjectApi: true });
+      await db._automerge.open({ rootUrl: doc.url });
+
+      const obj = db.getObjectById(id) as any as EchoReactiveObject<TaskSchema>;
+      expect(isEchoReactiveObject(obj)).to.be.true;
+      expect(obj.id).to.eq(id);
+      expect(obj.title).to.eq(task.title);
+
+      expect(R.getSchema(obj)).to.eq(TaskSchema);
     }
   });
 });

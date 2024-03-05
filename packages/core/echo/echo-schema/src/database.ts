@@ -9,12 +9,21 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { AutomergeDb, type AutomergeContext, AutomergeObject } from './automerge';
-import { type EchoReactiveObject, createEchoReactiveObject } from './effect/echo-handler';
+import {
+  AutomergeDb,
+  type AutomergeContext,
+  AutomergeObject,
+  type InitRootProxyFn,
+  type AutomergeObjectCore,
+} from './automerge';
+import {
+  type EchoReactiveObject,
+  createEchoReactiveObject,
+  initEchoReactiveObjectRootProxy,
+} from './effect/echo-handler';
 import { getSchema } from './effect/reactive';
-import { SchemaValidator } from './effect/schema-validator';
 import { type Hypergraph } from './hypergraph';
-import { isAutomergeObject, type EchoObject, type TypedObject, type OpaqueEchoObject } from './object';
+import { isAutomergeObject, type EchoObject, type TypedObject, type OpaqueEchoObject, base } from './object';
 import { type FilterSource, type Query } from './query';
 
 export interface EchoDatabase {
@@ -82,23 +91,21 @@ export class EchoDatabaseImpl implements EchoDatabase {
   private _useReactiveObjectApi: boolean;
 
   constructor(params: EchoDatabaseParams) {
-    const constructObj = (typeReference: Reference | null) => {
+    const initRootProxyFn: InitRootProxyFn = (core: AutomergeObjectCore, typeReference: Reference | null) => {
       if (this._useReactiveObjectApi) {
-        const target = {};
-        if (typeReference != null) {
-          const schema = this.graph.types.getEffectSchema(typeReference.itemId);
-          if (schema == null) {
-            throw createSchemaNotRegisteredError();
-          }
-          SchemaValidator.prepareTarget(target, schema);
+        const schema = typeReference != null ? this.graph.types.getEffectSchema(typeReference.itemId) : undefined;
+        if (typeReference != null && schema == null) {
+          throw createSchemaNotRegisteredError();
         }
-        return createEchoReactiveObject(target);
+        initEchoReactiveObjectRootProxy(core, schema);
       } else {
-        return new AutomergeObject();
+        const obj = new AutomergeObject();
+        obj[base]._core = core;
+        core.rootProxy = obj;
       }
     };
 
-    this._automerge = new AutomergeDb(params.graph, params.automergeContext, params.spaceKey, constructObj, this);
+    this._automerge = new AutomergeDb(params.graph, params.automergeContext, params.spaceKey, initRootProxyFn, this);
     this._useReactiveObjectApi = params.useReactiveObjectApi ?? false;
   }
 

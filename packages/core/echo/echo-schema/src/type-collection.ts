@@ -2,13 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import type * as S from '@effect/schema/Schema';
+import * as S from '@effect/schema/Schema';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 import { getTypeReference } from './effect/reactive';
-import { TypedObject, dangerouslyMutateImmutableObject } from './object';
+import { TypedObject, dangerouslyMutateImmutableObject, LEGACY_TEXT_TYPE } from './object';
 import type { SchemaProps, Schema as SchemaProto } from './proto';
 
 type Prototype = {
@@ -63,6 +64,9 @@ export class TypeCollection {
   }
 
   getEffectSchema(typename: string): S.Schema<any> | undefined {
+    if (typename === LEGACY_TEXT_TYPE) {
+      return TextCompatibilitySchema;
+    }
     return this._effectSchemaDefs.get(typename);
   }
 
@@ -156,3 +160,11 @@ const getTypenameOrThrow = (schema: S.Schema<any>): string => {
   }
   return typename.itemId;
 };
+
+const TextCompatibilitySchema = S.partial(
+  S.struct({
+    kind: S.enums(TextKind),
+    field: S.string,
+    content: S.string,
+  }),
+);

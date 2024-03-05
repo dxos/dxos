@@ -32,6 +32,8 @@ export type SpaceState = {
   rootUrl?: string;
 };
 
+export type InitRootProxyFn = (core: AutomergeObjectCore, typeReference: Reference | null) => void;
+
 export class AutomergeDb {
   /**
    * @internal
@@ -53,7 +55,7 @@ export class AutomergeDb {
     public readonly graph: Hypergraph,
     public readonly automerge: AutomergeContext,
     public readonly spaceKey: PublicKey,
-    private readonly _constructObj: (typeReference: Reference | null) => OpaqueEchoObject,
+    private readonly _initRootProxyFn: InitRootProxyFn,
     dbApi: EchoDatabase, // TODO(dmaretskyi): Remove.
   ) {
     this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this.spaceKey, automerge);
@@ -258,10 +260,9 @@ export class AutomergeDb {
 
     const encodedType = docHandle.docSync()?.objects?.[objectId]?.system?.type ?? null;
     const typeReference = encodedType != null ? decodeReference(encodedType) : null;
-    const obj = this._constructObj(typeReference);
-    const core = getAutomergeObjectCore(obj);
-    core.id = objectId;
 
+    const core = new AutomergeObjectCore();
+    core.id = objectId;
     this._objects.set(core.id, core);
     this._automergeDocLoader.onObjectBoundToDocument(docHandle, objectId);
     core.bind({
@@ -270,6 +271,7 @@ export class AutomergeDb {
       path: ['objects', core.id],
       assignFromLocalState: false,
     });
+    this._initRootProxyFn(core, typeReference);
   }
 
   private _rebindObjects(docHandle: DocHandle<SpaceDoc>, objectIds: string[]) {

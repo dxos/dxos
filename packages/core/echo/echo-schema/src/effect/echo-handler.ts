@@ -4,7 +4,7 @@
 
 import * as AST from '@effect/schema/AST';
 import { isTypeLiteral } from '@effect/schema/AST';
-import type * as S from '@effect/schema/Schema';
+import * as S from '@effect/schema/Schema';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { Reference } from '@dxos/document-model';
@@ -20,7 +20,7 @@ import {
   type ReactiveHandler,
 } from './proxy';
 import { getSchema, getTypeReference, type ReactiveObject } from './reactive';
-import { SchemaValidator, symbolSchema } from './schema-validator';
+import { SchemaValidator, setSchemaProperties, symbolSchema } from './schema-validator';
 import { AutomergeObjectCore, encodeReference } from '../automerge';
 import { defineHiddenProperty } from '../util/property';
 
@@ -69,10 +69,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     if (target[symbolPath].length === 0) {
       this.validateInitialProps(target);
-      this._objectCore.initNewObject(target);
-      if (typeReference != null) {
-        const encodedType = this._objectCore.encode(typeReference);
-        this._objectCore.set([SYSTEM_NAMESPACE, 'type'], encodedType);
+      if (this._objectCore.mountPath.length === 0) {
+        this._objectCore.initNewObject(target);
+        if (typeReference != null) {
+          const encodedType = this._objectCore.encode(typeReference);
+          this._objectCore.set([SYSTEM_NAMESPACE, 'type'], encodedType);
+        }
       }
     }
 
@@ -502,6 +504,20 @@ export const createEchoReactiveObject = <T extends {}>(init: T): EchoReactiveObj
     const proxy = createReactiveProxy<ProxyTarget>(target, handler) as any;
     handler._objectCore.rootProxy = proxy;
     return proxy;
+  }
+};
+
+export const initEchoReactiveObjectRootProxy = <T extends {}>(core: AutomergeObjectCore, schema?: S.Schema<any>) => {
+  const target = { [symbolPath]: [] };
+  if (schema != null) {
+    setSchemaProperties(target, schema);
+  }
+  const handler = new EchoReactiveHandler();
+  handler._objectCore = core;
+  const proxy = createReactiveProxy<ProxyTarget>(target, handler) as any;
+  handler._objectCore.rootProxy = proxy;
+  if (schema != null) {
+    const _ = S.asserts(schema)(proxy);
   }
 };
 
