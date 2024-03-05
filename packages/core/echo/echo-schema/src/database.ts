@@ -3,7 +3,6 @@
 //
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
-import { type Reference } from '@dxos/document-model';
 import { type BatchUpdate } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -91,13 +90,9 @@ export class EchoDatabaseImpl implements EchoDatabase {
   private _useReactiveObjectApi: boolean;
 
   constructor(params: EchoDatabaseParams) {
-    const initRootProxyFn: InitRootProxyFn = (core: AutomergeObjectCore, typeReference: Reference | null) => {
+    const initRootProxyFn: InitRootProxyFn = (core: AutomergeObjectCore) => {
       if (this._useReactiveObjectApi) {
-        const schema = typeReference != null ? this.graph.types.getEffectSchema(typeReference.itemId) : undefined;
-        if (typeReference != null && schema == null) {
-          throw createSchemaNotRegisteredError();
-        }
-        initEchoReactiveObjectRootProxy(core, schema);
+        initEchoReactiveObjectRootProxy(core);
       } else {
         const obj = new AutomergeObject();
         obj[base]._core = core;

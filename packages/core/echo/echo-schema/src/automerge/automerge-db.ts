@@ -32,7 +32,7 @@ export type SpaceState = {
   rootUrl?: string;
 };
 
-export type InitRootProxyFn = (core: AutomergeObjectCore, typeReference: Reference | null) => void;
+export type InitRootProxyFn = (core: AutomergeObjectCore) => void;
 
 export class AutomergeDb {
   /**
@@ -271,7 +271,7 @@ export class AutomergeDb {
       path: ['objects', core.id],
       assignFromLocalState: false,
     });
-    this._initRootProxyFn(core, typeReference);
+    this._initRootProxyFn(core);
   }
 
   private _rebindObjects(docHandle: DocHandle<SpaceDoc>, objectIds: string[]) {

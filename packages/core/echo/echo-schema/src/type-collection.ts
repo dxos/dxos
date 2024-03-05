@@ -8,7 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
-import { getTypeReference } from './effect/reactive';
+import { getSchemaTypeRefOrThrow } from './effect/echo-handler';
 import { TypedObject, dangerouslyMutateImmutableObject, LEGACY_TEXT_TYPE } from './object';
 import type { SchemaProps, Schema as SchemaProto } from './proto';
 
@@ -153,13 +153,7 @@ export const linkDeferred = () => {
   schemaBuiltin.link();
 };
 
-const getTypenameOrThrow = (schema: S.Schema<any>): string => {
-  const typename = getTypeReference(schema);
-  if (typename == null) {
-    throw new Error('Effect schema must have a valid identifier: MyTypeSchema.pipe(R.echoObject("MyType", "1.0.0")');
-  }
-  return typename.itemId;
-};
+const getTypenameOrThrow = (schema: S.Schema<any>): string => getSchemaTypeRefOrThrow(schema).itemId;
 
 const TextCompatibilitySchema = S.partial(
   S.struct({

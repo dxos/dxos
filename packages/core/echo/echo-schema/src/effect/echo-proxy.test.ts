@@ -12,7 +12,7 @@ import { describe, test } from '@dxos/test';
 
 import { type EchoReactiveObject, createEchoReactiveObject, isEchoReactiveObject } from './echo-handler';
 import * as R from './reactive';
-import { TestClass, TestSchema, TestSchemaWithClass } from './testing/schema';
+import { TestClass, TestSchema, type TestSchemaWithClass } from './testing/schema';
 import { AutomergeContext, type SpaceDoc } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
@@ -21,17 +21,19 @@ import { Task } from '../tests/proto';
 
 registerSignalRuntime();
 
+const EchoObjectSchema = TestSchema.pipe(R.echoObject('TestSchema', '1.0.0'));
+
 test('id property name is reserved', () => {
   const invalidSchema = S.struct({ id: S.number });
   expect(() => createEchoReactiveObject(R.object(invalidSchema, { id: 42 }))).to.throw();
 });
 
-for (const schema of [undefined, TestSchemaWithClass]) {
+for (const schema of [undefined, EchoObjectSchema]) {
   const createObject = (props: Partial<TestSchemaWithClass> = {}): EchoReactiveObject<TestSchemaWithClass> => {
     return createEchoReactiveObject(schema ? R.object(schema, props) : R.object(props));
   };
 
-  describe(`Non-echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
+  describe(`Echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
     test('has id', () => {
       const obj = createObject({ string: 'bar' });
       expect(obj.id).not.to.be.undefined;
@@ -69,8 +71,6 @@ for (const schema of [undefined, TestSchemaWithClass]) {
 }
 
 describe('Reactive Object with ECHO database', () => {
-  const EchoObjectSchema = TestSchema.pipe(R.echoObject('TestSchema', '1.0.0'));
-
   test('throws if schema was not annotated as echo object', async () => {
     const { graph } = await createDatabase(undefined, { useReactiveObjectApi: true });
     expect(() => graph.types.registerEffectSchema(TestSchema)).to.throw();

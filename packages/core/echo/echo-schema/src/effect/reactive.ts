@@ -10,7 +10,14 @@ import * as Option from 'effect/Option';
 import { Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 
-import { type ReactiveHandler, createReactiveProxy, isValidProxyTarget } from './proxy';
+import { EchoReactiveHandler } from './echo-handler';
+import {
+  type ReactiveHandler,
+  createReactiveProxy,
+  isValidProxyTarget,
+  isReactiveProxy,
+  getProxyHandlerSlot,
+} from './proxy';
 import { SchemaValidator, symbolSchema } from './schema-validator';
 import { TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
@@ -75,6 +82,13 @@ export const object: {
  * Returns the schema for the given object if one is defined.
  */
 export const getSchema = <T extends {}>(obj: T): S.Schema<T> | undefined => {
+  if (isReactiveProxy(obj)) {
+    const proxyHandlerSlot = getProxyHandlerSlot(obj);
+    if (proxyHandlerSlot.handler instanceof EchoReactiveHandler) {
+      return proxyHandlerSlot.handler.getSchema();
+    }
+  }
+
   const schema = (obj as any)[symbolSchema];
   if (!schema) {
     return undefined;
