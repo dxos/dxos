@@ -28,7 +28,7 @@ const preview: Preview = {
     // https://storybook.js.org/addons/storybook-dark-mode
     darkMode: {
       dark: { ...themes.dark },
-      light: { ...themes.normal }
+      light: { ...themes.normal },
     },
     options: {
       // TODO(burdon): Not called?
