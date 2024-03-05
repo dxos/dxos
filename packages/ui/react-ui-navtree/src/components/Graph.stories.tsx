@@ -4,6 +4,7 @@
 
 import '@dxosTheme';
 
+import { batch } from '@preact/signals-core';
 import React from 'react';
 
 import { Graph } from '@dxos/app-graph';
@@ -20,20 +21,22 @@ faker.seed(3);
 const createGraph = () => {
   const graph = new Graph();
 
-  graph.addNodes({
-    id: ROOT_ID,
-    nodes: [...Array(2)].map((_, i) => ({
-      id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
-      properties: { index: `a${i}`, label: faker.lorem.words(2), description: faker.lorem.sentence() },
-      nodes: [...Array(2)].map((_, j) => ({
+  batch(() => {
+    graph.addNodes({
+      id: ROOT_ID,
+      nodes: [...Array(2)].map((_, i) => ({
         id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
-        properties: { index: `a${j}`, label: faker.lorem.words(2), description: faker.lorem.sentence() },
-        nodes: [...Array(2)].map((_, k) => ({
+        properties: { index: `a${i}`, label: faker.lorem.words(2), description: faker.lorem.sentence() },
+        nodes: [...Array(2)].map((_, j) => ({
           id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
-          properties: { index: `a${k}`, label: faker.lorem.words(2), description: faker.lorem.sentence() },
+          properties: { index: `a${j}`, label: faker.lorem.words(2), description: faker.lorem.sentence() },
+          nodes: [...Array(2)].map((_, k) => ({
+            id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
+            properties: { index: `a${k}`, label: faker.lorem.words(2), description: faker.lorem.sentence() },
+          })),
         })),
       })),
-    })),
+    });
   });
 
   return graph;
@@ -70,31 +73,33 @@ const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
   };
 
   const handleDrop = ({ operation, active, over }: MosaicDropEvent<number>) => {
-    const activeNode = graph.findNode(active.item.id);
-    const overNode = graph.findNode(over.item.id);
-    const activeParent = activeNode?.nodes({ direction: 'inbound' })[0];
-    const overParent = overNode?.nodes({ direction: 'inbound' })[0];
-    if (
-      activeNode &&
-      overNode &&
-      activeParent &&
-      overParent &&
-      activeParent.id === overParent.id &&
-      activeNode.id !== overNode.id &&
-      operation === 'rearrange'
-    ) {
-      const ids = activeParent.nodes().map((node) => node.id);
-      const activeIndex = ids.indexOf(activeNode.id);
-      const overIndex = ids.indexOf(overNode.id);
-      graph.sortEdges(
-        activeParent.id,
-        'outbound',
-        arrayMove(ids, activeIndex, overIndex > -1 ? overIndex : ids.length - 1),
-      );
-    } else if (activeNode && activeParent && overParent && operation === 'transfer') {
-      graph.removeEdge({ source: activeParent.id, target: activeNode.id });
-      graph.addEdge({ source: overNode.id, target: activeNode.id });
-    }
+    batch(() => {
+      const activeNode = graph.findNode(active.item.id);
+      const overNode = graph.findNode(over.item.id);
+      const activeParent = activeNode?.nodes({ direction: 'inbound' })[0];
+      const overParent = overNode?.nodes({ direction: 'inbound' })[0];
+      if (
+        activeNode &&
+        overNode &&
+        activeParent &&
+        overParent &&
+        activeParent.id === overParent.id &&
+        activeNode.id !== overNode.id &&
+        operation === 'rearrange'
+      ) {
+        const ids = activeParent.nodes().map((node) => node.id);
+        const activeIndex = ids.indexOf(activeNode.id);
+        const overIndex = ids.indexOf(overNode.id);
+        graph.sortEdges(
+          activeParent.id,
+          'outbound',
+          arrayMove(ids, activeIndex, overIndex > -1 ? overIndex : ids.length - 1),
+        );
+      } else if (activeNode && activeParent && overParent && operation === 'transfer') {
+        graph.removeEdge({ source: activeParent.id, target: activeNode.id });
+        graph.addEdge({ source: overNode.id, target: activeNode.id });
+      }
+    });
   };
 
   return <NavTree node={tree} onDrop={handleDrop} onOver={handleOver} />;
