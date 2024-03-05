@@ -14,7 +14,7 @@ import {
   type PluginDefinition,
   type TranslationsProvides,
 } from '@dxos/app-framework';
-import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
+import { Config, ConfigProto, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
 import { type TypeCollection } from '@dxos/react-client/echo';
@@ -46,6 +46,14 @@ export type ClientPluginProvides = IntentResolverProvides &
 export const parseClientPlugin = (plugin?: Plugin) =>
   (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
 
+const CONFIG: ConfigProto = {
+  runtime: {
+    client: {
+      useReactiveObjectApi: true,
+    },
+  },
+};
+
 export const ClientPlugin = ({
   types,
   appKey,
@@ -65,7 +73,7 @@ export const ClientPlugin = ({
     initialize: async () => {
       let firstRun = false;
 
-      client = new Client({ config: new Config(await Storage(), Envs(), Local(), Defaults()), ...options });
+      client = new Client({ config: new Config(await Storage(), Envs(), Local(), Defaults(), CONFIG), ...options });
 
       try {
         await client.initialize();

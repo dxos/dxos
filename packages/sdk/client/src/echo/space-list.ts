@@ -134,6 +134,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
             space,
             this._graph,
             this._automergeContext,
+            { useReactiveObjectApi: this._config?.values?.runtime?.client?.useReactiveObjectApi ?? false },
           );
 
           // Propagate space state updates to the space list observable.
