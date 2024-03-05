@@ -60,7 +60,7 @@ export const SpacePresence = ({ object, spaceKey }: { object: TypedObject; space
     .toSorted((a, b) => a.lastSeen - b.lastSeen);
 
   return density === 'fine' ? (
-    <SmallPresence members={members.filter((member) => member.match)} />
+    <SmallPresence count={members.filter((member) => member.match).length} />
   ) : (
     <FullPresence
       members={members}
@@ -192,20 +192,16 @@ const PrensenceAvatar = ({ identity, showName, match, group, index, onClick, hue
   );
 };
 
-export const SmallPresence = (props: Omit<MemberPresenceProps, 'size'>) => {
-  const { members = [] } = props;
+export const SmallPresence = ({ count }: { count: number }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
-        <AttentionGlyph
-          presence={members.length > 1 ? 'many' : members.length === 1 ? 'one' : 'none'}
-          classNames='self-center mie-1'
-        />
+        <AttentionGlyph presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'} classNames='self-center mie-1' />
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content side='bottom' classNames='z-[70]'>
-          <span>{t('presence label', { count: members.length })}</span>
+          <span>{t('presence label', { count })}</span>
           <Tooltip.Arrow />
         </Tooltip.Content>
       </Tooltip.Portal>

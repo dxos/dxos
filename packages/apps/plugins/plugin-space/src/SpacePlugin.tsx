@@ -293,7 +293,11 @@ export const SpacePlugin = ({
                 return null;
               }
             case 'presence--glyph': {
-              return <SmallPresence members={isTypedObject(data.object) ? data.object.viewers : []} />;
+              return (
+                <SmallPresence
+                  count={isTypedObject(data.object) ? state.viewersByObject.get(data.object.id)?.size ?? 0 : 0}
+                />
+              );
             }
             case 'navbar-start': {
               const space =
