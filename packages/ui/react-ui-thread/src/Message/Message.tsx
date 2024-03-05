@@ -41,9 +41,9 @@ export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
           className={mx('grid grid-cols-subgrid col-span-2', classNames)}
           ref={forwardedRef}
         >
-          <div role='none' className={'flex flex-col items-center gap-2 ' + messageCell}>
+          <div role='none' className={mx('flex flex-col items-center gap-2', messageCell)}>
             <Avatar.Frame>
-              <Avatar.Fallback text={hexToEmoji(authorId)} />
+              <Avatar.Fallback text={authorId && hexToEmoji(authorId)} />
               {authorImgSrc && <Avatar.Image href={authorImgSrc} />}
             </Avatar.Frame>
             {continues && <div role='none' className='is-px grow surface-separator' />}
