@@ -3,7 +3,7 @@
 //
 
 import { type IconProps, SquaresFour } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-core';
+import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
@@ -60,7 +60,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
                   plugin: GRID_PLUGIN,
                   action: GridAction.CREATE,
                   properties: {
-                    label: ['create object label', { ns: GRID_PLUGIN }],
+                    label: ['create grid label', { ns: GRID_PLUGIN }],
                     icon: (props: IconProps) => <SquaresFour {...props} />,
                     testId: 'gridPlugin.createObject',
                   },
@@ -75,19 +75,22 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
                 effect(() => {
                   const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
                   previousObjects = query.objects;
-                  removedObjects.forEach((object) => graph.removeNode(object.id));
-                  query.objects.forEach((object) => {
-                    graph.addNodes({
-                      id: object.id,
-                      data: object,
-                      properties: {
-                        // TODO(wittjosiah): Reconcile with metadata provides.
-                        label: object.title || ['object title placeholder', { ns: GRID_PLUGIN }],
-                        icon: (props: IconProps) => <SquaresFour {...props} />,
-                        testId: 'spacePlugin.object',
-                        persistenceClass: 'echo',
-                        persistenceKey: space?.key.toHex(),
-                      },
+
+                  batch(() => {
+                    removedObjects.forEach((object) => graph.removeNode(object.id));
+                    query.objects.forEach((object) => {
+                      graph.addNodes({
+                        id: object.id,
+                        data: object,
+                        properties: {
+                          // TODO(wittjosiah): Reconcile with metadata provides.
+                          label: object.title || ['grid title placeholder', { ns: GRID_PLUGIN }],
+                          icon: (props: IconProps) => <SquaresFour {...props} />,
+                          testId: 'spacePlugin.object',
+                          persistenceClass: 'echo',
+                          persistenceKey: space?.key.toHex(),
+                        },
+                      });
                     });
                   });
                 }),

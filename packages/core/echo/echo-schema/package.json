@@ -18,6 +18,12 @@
       "import": "./dist/lib/browser/testing/index.mjs",
       "require": "./dist/lib/node/testing/index.cjs",
       "node": "./dist/lib/node/testing/index.cjs"
+    },
+    "./schema": {
+      "browser": "./dist/lib/browser/schema.mjs",
+      "import": "./dist/lib/browser/schema.mjs",
+      "require": "./dist/lib/node/schema.cjs",
+      "node": "./dist/lib/node/schema.cjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

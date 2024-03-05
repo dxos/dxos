@@ -5,6 +5,7 @@
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { type ClientServices } from '@dxos/client-protocol';
 import { ClientServicesHost } from '@dxos/client-services';
+import { type ServiceContextRuntimeParams } from '@dxos/client-services/src';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
@@ -112,11 +113,12 @@ export class TestBuilder {
   /**
    * Create backend service handlers.
    */
-  createClientServicesHost() {
+  createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams) {
     const services = new ClientServicesHost({
       config: this.config,
       modelFactory: this._modelFactory,
       storage: this.storage,
+      runtimeParams,
       ...this.networking,
     });
     this._ctx.onDispose(() => services.close());

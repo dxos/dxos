@@ -33,10 +33,10 @@ describe('AutomergeObject', () => {
     const testBuilder = new TestBuilder();
     const { db } = await testBuilder.createPeer();
 
-    const contact = new Contact({ name: 'Contact' }, { automerge: false });
+    const contact = new Contact({ name: 'Contact' });
     db.add(contact);
-    const task1 = new Task({ title: 'Task1' }, { automerge: true });
-    const task2 = new Task({ title: 'Task2' }, { automerge: false });
+    const task1 = new Task({ title: 'Task1' });
+    const task2 = new Task({ title: 'Task2' });
 
     contact.tasks.push(task1);
     contact.tasks.push(task2);

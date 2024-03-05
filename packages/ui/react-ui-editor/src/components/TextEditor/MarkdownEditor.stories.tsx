@@ -3,17 +3,19 @@
 //
 
 import '@dxosTheme';
+
 import { type EditorView } from '@codemirror/view';
-import { ArrowSquareOut } from '@phosphor-icons/react';
+import { ArrowSquareOut, X } from '@phosphor-icons/react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { type FC, StrictMode, useRef, useState } from 'react';
+import React, { type FC, type KeyboardEvent, StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { TextObject } from '@dxos/echo-schema';
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
-import { getSize, mx, textBlockWidth } from '@dxos/react-ui-theme';
+import { Button, DensityProvider, Input, ThemeProvider } from '@dxos/react-ui';
+import { baseSurface, defaultTx, getSize, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor, type TextEditorProps } from './TextEditor';
@@ -24,6 +26,8 @@ import {
   decorateMarkdown,
   comments,
   defaultOptions,
+  dnd,
+  command,
   image,
   linkTooltip,
   mention,
@@ -33,6 +37,8 @@ import {
   formatting,
   annotations,
   EditorModes,
+  type CommandOptions,
+  type CommandAction,
 } from '../../extensions';
 import { type Comment, useTextModel } from '../../hooks';
 import translations from '../../translations';
@@ -238,7 +244,7 @@ const Story = ({ id = 'test', text, comments, placeholder = 'New document.', ...
       placeholder={placeholder}
       slots={{
         root: { className: mx(textBlockWidth, 'min-bs-dvh') },
-        editor: { className: 'min-bs-dvh p-2 bg-white dark:bg-black' },
+        editor: { className: 'min-bs-dvh px-8 bg-white dark:bg-black' },
       }}
       {...props}
     />
@@ -353,6 +359,64 @@ export const Mention = {
   ),
 };
 
+const CommandDialog: FC<{ onClose: (action?: CommandAction) => void }> = ({ onClose }) => {
+  const [text, setText] = useState('');
+  const handleInsert = () => {
+    onClose(text.length ? { insert: text + '\n' } : undefined);
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    switch (event.key) {
+      case 'Enter': {
+        handleInsert();
+        break;
+      }
+      case 'Escape': {
+        onClose();
+        break;
+      }
+    }
+  };
+
+  return (
+    <DensityProvider density='fine'>
+      <div className={mx('flex items-center p-2 gap-2 border rounded-md', baseSurface)}>
+        <Input.Root>
+          <Input.TextInput
+            autoFocus={true}
+            placeholder='Enter command.'
+            value={text}
+            onChange={({ target: { value } }) => setText(value)}
+            onKeyDown={handleKeyDown}
+          />
+        </Input.Root>
+        <Button variant='ghost' classNames='pli-0' onClick={() => onClose()}>
+          <X className={getSize(5)} />
+        </Button>
+      </div>
+    </DensityProvider>
+  );
+};
+
+const renderCommandDialog: CommandOptions['onRender'] = (el, onClose) => {
+  createRoot(el).render(
+    <StrictMode>
+      <ThemeProvider tx={defaultTx}>
+        <CommandDialog onClose={onClose} />
+      </ThemeProvider>
+    </StrictMode>,
+  );
+};
+
+export const Command = {
+  render: () => (
+    <Story
+      text={str('# Command', '')}
+      extensions={[command({ onRender: renderCommandDialog, onHint: () => 'Press / for commands.' })]}
+    />
+  ),
+};
+
 export const Comments = {
   render: () => {
     const [_comments, setComments] = useState<Comment[]>([]);
@@ -400,6 +464,10 @@ export const Vim = {
 
 export const Annotations = {
   render: () => <Story text={str('# Annotations', '', large)} extensions={[annotations({ match: /volup/gi })]} />,
+};
+
+export const DND = {
+  render: () => <Story text={str('# DND', '')} extensions={[dnd()]} />,
 };
 
 const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewriter')?.split(',');

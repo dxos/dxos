@@ -4,7 +4,7 @@
 
 import './Editor.css';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import { Document } from '@braneframe/types';
 import type { PublicKey } from '@dxos/client';
@@ -15,13 +15,14 @@ import { MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
 const Editor = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
   const identity = useIdentity();
   const space = useSpace(spaceKey);
-  useEffect(() => {
-    if (!space) {
-      return;
-    }
 
-    space.db._backend.maxBatchSize = 0;
-  }, [space]);
+  // TODO(dmaretskyi): Is this code still relevant?
+  // useEffect(() => {
+  // if (!space) {
+  //   return;
+  // }
+  // space.db._backend.maxBatchSize = 0;
+  // }, [space]);
 
   const [doc] = useQuery(space, Document.filter());
   const model = useTextModel({ identity, space, text: doc?.content });
