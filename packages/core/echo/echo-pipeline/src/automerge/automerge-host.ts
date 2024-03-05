@@ -167,8 +167,8 @@ export class AutomergeHost {
       return;
     }
 
-    const ids = getInlineChanges(event);
-    if (ids.length === 0) {
+    const objectIds = getInlineChanges(event);
+    if (objectIds.length === 0) {
       return;
     }
 
@@ -178,7 +178,12 @@ export class AutomergeHost {
       return;
     }
 
-    const markingDirtyPromise = Promise.all(ids.map((id) => this._metadata!.markDirty(id, lastAvailableHash)))
+    const markingDirtyPromise = Promise.all(
+      objectIds.map(async (objectId) => {
+        const id = `${spaceKey}|${objectId}`;
+        await this._metadata!.markDirty(id, lastAvailableHash);
+      }),
+    )
       .then(() => {
         this._updatingMetadata.delete(event.handle.documentId);
       })
