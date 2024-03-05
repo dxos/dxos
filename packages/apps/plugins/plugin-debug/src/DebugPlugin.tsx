@@ -136,7 +136,12 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                         properties: {
                           label: ['open devtools label', { ns: DEBUG_PLUGIN }],
                           icon: (props: IconProps) => <Bug {...props} />,
-                          keyBinding: 'shift+meta+\\',
+                          keyBinding: {
+                            macos: 'shift+meta+\\',
+                            // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
+                            windows: 'shift+alt+\\',
+                            linux: 'shift+alt+|',
+                          },
                           testId: 'spacePlugin.openDevtools',
                         },
                       },
