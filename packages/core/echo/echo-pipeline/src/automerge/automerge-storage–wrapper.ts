@@ -7,6 +7,7 @@ import { type MaybePromise } from '@dxos/util';
 
 export type StorageCallbacks = {
   beforeSave?: (path: string[]) => MaybePromise<void>;
+  afterSave?: (path: string[]) => MaybePromise<void>;
 };
 
 export type AutomergeStorageWrapperParams = {
@@ -32,7 +33,8 @@ export class AutomergeStorageWrapper implements StorageAdapterInterface {
 
   async save(key: StorageKey, value: Uint8Array): Promise<void> {
     await this._callbacks.beforeSave?.(key);
-    return this._storage.save(key, value);
+    await this._storage.save(key, value);
+    await this._callbacks.afterSave?.(key);
   }
 
   async remove(key: StorageKey): Promise<void> {

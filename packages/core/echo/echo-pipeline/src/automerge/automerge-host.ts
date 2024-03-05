@@ -2,10 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { next as automerge } from '@dxos/automerge/automerge';
-import { Repo, type StorageAdapter, type PeerId, type DocumentId } from '@dxos/automerge/automerge-repo';
+import { next as automerge, getHeads } from '@dxos/automerge/automerge';
+import {
+  Repo,
+  type StorageAdapter,
+  type PeerId,
+  type DocumentId,
+  type StorageKey,
+  type DocHandle,
+  type DocHandleChangePayload,
+} from '@dxos/automerge/automerge-repo';
 import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
 import { type Stream } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type HostInfo, type SyncRepoRequest, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
@@ -15,13 +24,24 @@ import { trace } from '@dxos/tracing';
 import { ComplexMap, ComplexSet, defaultMap, mapValues } from '@dxos/util';
 
 import { AutomergeStorageAdapter } from './automerge-storage-adapter';
+import { AutomergeStorageWrapper } from './automerge-storage–wrapper';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
 import { MeshNetworkAdapter } from './mesh-network-adapter';
 
 export type { DocumentId };
 
+export interface MetadataMethods {
+  markDirty(id: string, lastAvailableHash: string): Promise<void>;
+}
+
+export type AutomergeHostParams = {
+  directory: Directory;
+  metadata?: MetadataMethods;
+};
+
 @trace.resource()
 export class AutomergeHost {
+  private readonly _ctx = new Context();
   private readonly _repo: Repo;
   private readonly _meshNetwork: MeshNetworkAdapter;
   private readonly _clientNetwork: LocalHostNetworkAdapter;
@@ -35,17 +55,24 @@ export class AutomergeHost {
    */
   private readonly _authorizedDevices = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(PublicKey.hash);
 
+  private readonly _updatingMetadata = new Map<string, Promise<void>>();
+  private readonly _metadata?: MetadataMethods;
+
   public _requestedDocs = new Set<string>();
 
-  constructor(storageDirectory: Directory) {
+  constructor({ directory, metadata }: AutomergeHostParams) {
+    this._metadata = metadata;
     this._meshNetwork = new MeshNetworkAdapter();
     this._clientNetwork = new LocalHostNetworkAdapter();
 
-    // TODO(mykola): Delete specific handling of IDB storage.
-    this._storage =
-      storageDirectory.type === StorageType.IDB
-        ? new IndexedDBStorageAdapter(storageDirectory.path, 'data')
-        : new AutomergeStorageAdapter(storageDirectory);
+    this._storage = new AutomergeStorageWrapper({
+      storage:
+        // TODO(mykola): Delete specific handling of IDB storage.
+        directory.type === StorageType.IDB
+          ? new IndexedDBStorageAdapter(directory.path, 'data')
+          : new AutomergeStorageAdapter(directory),
+      callbacks: { beforeSave: (params) => this._beforeSave(params) },
+    });
     this._peerId = `host-${PublicKey.random().toHex()}` as PeerId;
     this._repo = new Repo({
       peerId: this._peerId as PeerId,
@@ -107,10 +134,56 @@ export class AutomergeHost {
     });
     this._clientNetwork.ready();
     this._meshNetwork.ready();
+
+    {
+      this._repo.on('document', this._onDocument);
+      this._ctx.onDispose(() => {
+        this._repo.off('document', this._onDocument);
+      });
+    }
   }
 
   get repo(): Repo {
     return this._repo;
+  }
+
+  private async _beforeSave(path: StorageKey) {
+    const id = path[0];
+    if (this._updatingMetadata.has(id)) {
+      return this._updatingMetadata.get(id);
+    }
+  }
+
+  private _onDocument({ handle }: { handle: DocHandle<any> }) {
+    handle.on('change', this._onUpdate);
+    this._ctx.onDispose(() => {
+      handle.off('change', this._onUpdate);
+    });
+  }
+
+  private async _onUpdate(event: DocHandleChangePayload<any>) {
+    const spaceKey = event.doc.access?.spaceKey;
+    if (!spaceKey) {
+      return;
+    }
+
+    const ids = getInlineChanges(event);
+    if (ids.length === 0) {
+      return;
+    }
+
+    const heads = getHeads(event.doc);
+    const lastAvailableHash = heads.at(-1);
+    if (!lastAvailableHash) {
+      return;
+    }
+
+    const markingDirtyPromise = Promise.all(ids.map((id) => this._metadata!.markDirty(id, lastAvailableHash)))
+      .then(() => {
+        this._updatingMetadata.delete(event.handle.documentId);
+      })
+      .catch((err) => log.catch(err));
+    this._updatingMetadata.set(event.handle.documentId, markingDirtyPromise);
   }
 
   @trace.info({ depth: null })
@@ -147,6 +220,7 @@ export class AutomergeHost {
   async close() {
     this._storage instanceof AutomergeStorageAdapter && (await this._storage.close());
     await this._clientNetwork.close();
+    void this._ctx.dispose();
   }
 
   //
@@ -178,3 +252,21 @@ export class AutomergeHost {
     defaultMap(this._authorizedDevices, spaceKey, () => new ComplexSet(PublicKey.hash)).add(deviceKey);
   }
 }
+
+// TODO(mykola): Reconcile with `getInlineAndLinkChanges` in AutomergeDB.
+const getInlineChanges = (event: DocHandleChangePayload<any>) => {
+  const inlineChangedObjectIds = new Set<string>();
+  for (const { path } of event.patches) {
+    if (path.length < 2) {
+      continue;
+    }
+    switch (path[0]) {
+      case 'objects':
+        if (path.length >= 2) {
+          inlineChangedObjectIds.add(path[1]);
+        }
+        break;
+    }
+  }
+  return [...inlineChangedObjectIds];
+};
