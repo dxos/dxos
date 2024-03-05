@@ -16,7 +16,14 @@ import { type IndexStore } from './index-store';
 import { type ObjectType, type Index, type IndexKind } from './types';
 import { type Filter } from '../query';
 
-export type ObjectSnapshot = { object: ObjectType; currentHash: string };
+export type ObjectSnapshot = {
+  /**
+   * Index ID.
+   */
+  id: string;
+  object: ObjectType;
+  currentHash: string;
+};
 
 export type IndexerParams = {
   metadataStore: IndexMetadataStore;
@@ -82,7 +89,7 @@ export class Indexer {
 
     await cancelWithContext(
       this._ctx,
-      Promise.all(snapshots.map((snapshot) => this._metadataStore.markClean(snapshot.object.id, snapshot.currentHash))),
+      Promise.all(snapshots.map((snapshot) => this._metadataStore.markClean(snapshot.id, snapshot.currentHash))),
     );
 
     await cancelWithContext(this._ctx, this._maybeSaveIndexes());

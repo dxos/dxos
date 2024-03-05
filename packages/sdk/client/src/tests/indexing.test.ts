@@ -10,6 +10,7 @@ import { IndexQueryProvider, IndexStore, Indexer } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Client } from '../client';
@@ -18,6 +19,7 @@ import { TestBuilder } from '../testing';
 describe('Index queries', () => {
   test.only('basic index queries', async () => {
     const builder = new TestBuilder();
+    builder.storage = createStorage({ type: StorageType.RAM });
     afterTest(() => builder.destroy());
 
     const services = builder.createLocal();
@@ -38,7 +40,7 @@ describe('Index queries', () => {
             await warnAfterTimeout(1000, 'to long to load doc', () => handle.whenReady());
             const doc = handle.docSync();
             const heads = getHeads(doc);
-            return { object: { id: objectId, ...doc[objectId] }, currentHash: heads.at(-1)! };
+            return { id, object: doc[objectId], currentHash: heads.at(-1)! };
           }),
         ),
     });
