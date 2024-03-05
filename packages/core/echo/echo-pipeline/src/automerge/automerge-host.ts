@@ -164,7 +164,7 @@ export class AutomergeHost {
     });
   }
 
-  private async _onUpdate(event: DocHandleChangePayload<any>) {
+  private _onUpdate(event: DocHandleChangePayload<any>) {
     const spaceKey = event.doc.access?.spaceKey;
     if (!spaceKey) {
       return;
@@ -193,6 +193,7 @@ export class AutomergeHost {
         this._updatingMetadata.delete(event.handle.documentId);
       })
       .catch((err) => log.catch(err));
+
     this._updatingMetadata.set(event.handle.documentId, markingDirtyPromise);
   }
 
