@@ -176,7 +176,7 @@ describe('Reactive Object with ECHO database', () => {
     }
   });
 
-  test.only('queries', async () => {
+  test('queries', async () => {
     const graph = new Hypergraph();
     graph.types.registerEffectSchema(EchoObjectSchema);
 

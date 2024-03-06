@@ -15,9 +15,12 @@ import {
   type Expando,
   type TypedObject,
   immutable,
+  OpaqueEchoObject,
 } from '../object';
 import { getReferenceWithSpaceKey } from '../object';
 import { type Schema } from '../proto';
+import get from 'lodash.get';
+import { isReactiveProxy } from '../effect/proxy';
 
 export const hasType =
   <T extends TypedObject>(schema: Schema) =>
@@ -184,7 +187,7 @@ export class Filter<T extends EchoObject = EchoObject> {
 }
 
 // TODO(burdon): Move logic into Filter.
-export const filterMatch = (filter: Filter, object: EchoObject | undefined): boolean => {
+export const filterMatch = (filter: Filter, object: OpaqueEchoObject | undefined): boolean => {
   if (!object) {
     return false;
   }
@@ -192,19 +195,18 @@ export const filterMatch = (filter: Filter, object: EchoObject | undefined): boo
   return filter.not ? !result : result;
 };
 
-const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
-  if (isTypedObject(object)) {
-    const core = getAutomergeObjectCore(object);
+const filterMatchInner = (filter: Filter, object: OpaqueEchoObject): boolean => {
+  invariant(isTypedObject(object) || isReactiveProxy(object));
+  const core = getAutomergeObjectCore(object);
 
-    const deleted = filter.options.deleted ?? QueryOptions.ShowDeletedOption.HIDE_DELETED;
-    if (core.isDeleted()) {
-      if (deleted === QueryOptions.ShowDeletedOption.HIDE_DELETED) {
-        return false;
-      }
-    } else {
-      if (deleted === QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY) {
-        return false;
-      }
+  const deleted = filter.options.deleted ?? QueryOptions.ShowDeletedOption.HIDE_DELETED;
+  if (core.isDeleted()) {
+    if (deleted === QueryOptions.ShowDeletedOption.HIDE_DELETED) {
+      return false;
+    }
+  } else {
+    if (deleted === QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY) {
+      return false;
     }
   }
 
@@ -219,24 +221,23 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
   }
 
   if (filter.type) {
-    if (!isTypedObject(object)) {
-      return false;
-    }
+    const type = core.getType();
+
+    const dynamicSchema = isTypedObject(core.rootProxy) ? core.rootProxy.__schema : undefined;
 
     // Separate branch for objects with dynamic schema and typename filters.
     // TODO(dmaretskyi): Better way to check if schema is dynamic.
-    if (filter.type.protocol === 'protobuf' && object.__schema && !object.__schema[immutable]) {
-      if (object.__schema.typename !== filter.type.itemId) {
+    if (filter.type.protocol === 'protobuf' && dynamicSchema && !dynamicSchema[immutable]) {
+      if (dynamicSchema.typename !== filter.type.itemId) {
         return false;
       }
     } else {
-      const type = getAutomergeObjectCore(object).getType();
       if (!type) {
         return false;
       }
 
       // TODO(burdon): Comment.
-      if (!compareType(filter.type, type, getDatabaseFromObject(object)?.spaceKey)) {
+      if (!compareType(filter.type, type, core.database?.spaceKey)) {
         return false;
       }
     }
