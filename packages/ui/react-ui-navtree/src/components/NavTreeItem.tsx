@@ -171,7 +171,6 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
               role='treeitem'
             >
               <ActionRoot>
-                {/* @ts-ignore See note below. */}
                 <div
                   role='none'
                   className={mx(
@@ -188,7 +187,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                     // NOTE(thure): This is intentionally an empty string to for descendents to select by in the CSS
                     //   without alerting the user (except for in the correct link element). See also:
                     //   https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current#description
-                    ...(path === current && { 'aria-current': '', 'data-attention': true })
+                    ...(path === current && { 'aria-current': '' as 'page', 'data-attention': true })
                   }
                 >
                   <NavTreeItemHeading
