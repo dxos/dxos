@@ -7,10 +7,11 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { TS } from './ts';
+import { TS } from './runtime';
 
 // TODO(burdon): Clean-up docs and TODOs.
 // TODO(burdon): react-buddy for storybook?
+//  https://discuss.codemirror.net/u/madebysid/summary
 //  https://www.typescriptlang.org/play
 //  https://www.npmjs.com/package/@typescript/vfs
 //  https://discuss.codemirror.net/t/codemirror-6-and-typescript-lsp/3398/11
