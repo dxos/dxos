@@ -4,7 +4,7 @@
 
 import { Reference } from '@dxos/document-model';
 
-import { type ObjectMeta, type EchoObject, OpaqueEchoObject } from '../object';
+import { type ObjectMeta, type OpaqueEchoObject } from '../object';
 import { type Schema } from '../proto';
 
 export interface SpaceDoc {

@@ -26,17 +26,16 @@ import {
   type DecodedAutomergeValue,
   type SpaceDoc,
 } from './types';
+import { isReactiveProxy } from '../effect/proxy';
 import {
-  base,
   type TypedObjectOptions,
   type EchoObject,
   TextObject,
   type AutomergeTextCompat,
-  OpaqueEchoObject,
+  type OpaqueEchoObject,
 } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto'; // Keep type-only
-import { isReactiveProxy } from '../effect/proxy';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
