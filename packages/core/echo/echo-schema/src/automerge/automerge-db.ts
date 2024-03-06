@@ -3,12 +3,7 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
-import {
-  isValidAutomergeUrl,
-  type DocHandle,
-  type DocHandleChangePayload,
-  type DocumentId,
-} from '@dxos/automerge/automerge-repo';
+import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { type Reference } from '@dxos/document-model';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -26,6 +21,7 @@ import {
 import { getAutomergeObjectCore } from './automerge-object';
 import { AutomergeObjectCore } from './automerge-object-core';
 import { type SpaceDoc } from './types';
+import { getInlineAndLinkChanges } from './utils';
 import { type EchoDatabase } from '../database';
 import { isReactiveProxy } from '../effect/proxy';
 import { type Hypergraph } from '../hypergraph';
@@ -360,32 +356,6 @@ export class AutomergeDb {
     }
   }
 }
-
-const getInlineAndLinkChanges = (event: DocHandleChangePayload<SpaceDoc>) => {
-  const inlineChangedObjectIds = new Set<string>();
-  const linkedDocuments: DocumentChanges['linkedDocuments'] = {};
-  for (const { path, value } of event.patches) {
-    if (path.length < 2) {
-      continue;
-    }
-    switch (path[0]) {
-      case 'objects':
-        if (path.length >= 2) {
-          inlineChangedObjectIds.add(path[1]);
-        }
-        break;
-      case 'links':
-        if (path.length >= 2 && typeof value === 'string' && isValidAutomergeUrl(value)) {
-          linkedDocuments[path[1]] = value;
-        }
-        break;
-    }
-  }
-  return {
-    inlineChangedObjects: [...inlineChangedObjectIds],
-    linkedDocuments,
-  };
-};
 
 export interface ItemsUpdatedEvent {
   spaceKey: PublicKey;
