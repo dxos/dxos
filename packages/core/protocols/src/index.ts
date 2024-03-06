@@ -3,6 +3,7 @@
 //
 
 export * from './errors';
+export * from './indexing';
 export * from './proto';
 export * from './storage';
 export * from './testing';

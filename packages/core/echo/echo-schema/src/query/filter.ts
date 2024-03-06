@@ -2,28 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as S from '@effect/schema/Schema';
+
 import { Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
-import * as S from '@effect/schema/Schema';
 
 import { getAutomergeObjectCore } from '../automerge';
+import { getSchemaTypeRefOrThrow } from '../effect/echo-handler';
+import { isReactiveProxy } from '../effect/proxy';
 import {
-  getDatabaseFromObject,
+  getReferenceWithSpaceKey,
+  immutable,
   isTypedObject,
   type EchoObject,
   type Expando,
+  type OpaqueEchoObject,
   type TypedObject,
-  immutable,
-  OpaqueEchoObject,
 } from '../object';
-import { getReferenceWithSpaceKey } from '../object';
 import { type Schema } from '../proto';
-import get from 'lodash.get';
-import { isReactiveProxy } from '../effect/proxy';
-import { getEchoObjectAnnotation } from '../effect/reactive';
-import { getSchemaTypeRefOrThrow } from '../effect/echo-handler';
 
 export const hasType =
   <T extends TypedObject>(schema: Schema) =>

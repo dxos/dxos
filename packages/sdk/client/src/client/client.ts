@@ -99,7 +99,10 @@ export class Client {
   private _shellManager?: ShellManager;
   private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
 
-  private readonly _graph = new Hypergraph();
+  /**
+   * @internal
+   */
+  readonly _graph = new Hypergraph();
 
   /**
    * Unique id of the Client, local to the current peer.

@@ -16,7 +16,7 @@ import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, ThreadH
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
 import { type ThreadContainerProps } from './types';
-import { useStatus, useMessageMetadata } from '../hooks';
+import { useStatus, createMessageData } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
 
 export const CommentContainer = ({
@@ -96,7 +96,7 @@ export const CommentContainer = ({
     }
   };
 
-  const textboxMetadata = useMessageMetadata(thread.id, identity);
+  const textboxMetadata = createMessageData(thread.id, identity);
 
   return (
     <Thread onClickCapture={onAttend} onFocusCapture={onAttend} current={current} id={thread.id}>

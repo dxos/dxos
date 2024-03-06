@@ -15,7 +15,7 @@ import { hueTokens } from '@dxos/react-ui-theme';
 import { hexToHue } from '@dxos/util';
 
 import { SpaceAwarenessProvider } from './awareness-provider';
-import { type EditorModel, modelState } from './defs';
+import { type EditorModel } from './defs';
 import { automerge, awareness } from '../extensions';
 import { type DocAccessor } from '../extensions/automerge/defs';
 
@@ -68,6 +68,7 @@ export const useTextModel = (props: UseTextModelProps): EditorModel | undefined 
  * For use primarily in stories & tests so the dependence on TextObject can be avoided.
  * @deprecated
  */
+// TODO(burdon): Remove.
 export const useInMemoryTextModel = ({
   id,
   defaultContent,
@@ -76,10 +77,10 @@ export const useInMemoryTextModel = ({
   defaultContent?: string;
 }): EditorModel & { setContent: Dispatch<SetStateAction<string>> } => {
   const [content, setContent] = useState(defaultContent ?? '');
-  return { id, content, setContent, text: () => content };
+  return { id, content, text: () => content, setContent };
 };
 
-const createModel = ({ space, identity, text }: UseTextModelProps) => {
+const createModel = ({ space, identity, text }: UseTextModelProps): EditorModel | undefined => {
   if (!text) {
     return undefined;
   }
@@ -104,23 +105,15 @@ const createModel = ({ space, identity, text }: UseTextModelProps) => {
       peerId: identity?.identityKey.toHex() ?? 'Anonymous',
     });
 
-  const extensions = [modelState.init(() => model), automerge({ handle: doc.handle, path: doc.path })];
+  const extensions = [automerge({ handle: doc.handle, path: doc.path })];
   if (awarenessProvider) {
     extensions.push(awareness(awarenessProvider));
   }
 
-  const model: EditorModel = {
+  return {
     id: obj.id,
     content: doc,
     text: () => get(doc.handle.docSync(), doc.path),
     extension: extensions,
-    peer: identity
-      ? {
-          id: identity.identityKey.toHex(),
-          name: identity.profile?.displayName,
-        }
-      : undefined,
   };
-
-  return model;
 };
