@@ -10,9 +10,19 @@ import { ReactiveArray } from './reactive-array';
 import { defineHiddenProperty } from '../util/property';
 
 const symbolSignal = Symbol('signal');
+const symbolPropertySignal = Symbol('property-signal');
 
 type ProxyTarget = {
+  /**
+   * For get and set operations on value properties.
+   */
+  // TODO(dmaretskyi): Turn into a map of signals per-field.
   [symbolSignal]: GenericSignal;
+
+  /**
+   * For modifying the structure of the object.
+   */
+  [symbolPropertySignal]: GenericSignal;
 } & ({ [key: keyof any]: any } | any[]);
 
 /**
@@ -31,17 +41,33 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     if (!(symbolSignal in target)) {
       defineHiddenProperty(target, symbolSignal, compositeRuntime.createSignal());
+      defineHiddenProperty(target, symbolPropertySignal, compositeRuntime.createSignal());
     }
 
-    for (const key in target) {
-      if (Array.isArray(target[key]) && !(target[key] instanceof ReactiveArray)) {
-        target[key] = ReactiveArray.from(target[key]);
+    for (const key of Object.getOwnPropertyNames(target)) {
+      const descriptor = Object.getOwnPropertyDescriptor(target, key)!;
+      if (descriptor.get) {
+        // Ignore getters.
+        continue;
+      }
+
+      if (Array.isArray(target[key as any]) && !(target[key as any] instanceof ReactiveArray)) {
+        target[key as any] = ReactiveArray.from(target[key as any]);
       }
     }
   }
 
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
+    // Handle getter properties. Will not subscribe the value signal.
+    if (Object.getOwnPropertyDescriptor(target, prop)?.get) {
+      target[symbolPropertySignal].notifyRead();
+
+      // TODO(dmaretskyi): Turn getters into computed fields.
+      return Reflect.get(target, prop, receiver);
+    }
+
     target[symbolSignal].notifyRead();
+    target[symbolPropertySignal].notifyRead();
     const value = Reflect.get(target, prop);
 
     if (isValidProxyTarget(value)) {
@@ -65,7 +91,7 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
     const result = Reflect.defineProperty(target, property, attributes);
-    target[symbolSignal].notifyWrite();
+    target[symbolPropertySignal].notifyWrite();
     return result;
   }
 }

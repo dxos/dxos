@@ -18,6 +18,12 @@
       "import": "./dist/lib/browser/testing/index.mjs",
       "require": "./dist/lib/node/testing/index.cjs",
       "node": "./dist/lib/node/testing/index.cjs"
+    },
+    "./schema": {
+      "browser": "./dist/lib/browser/schema.mjs",
+      "import": "./dist/lib/browser/schema.mjs",
+      "require": "./dist/lib/node/schema.cjs",
+      "node": "./dist/lib/node/schema.cjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -55,21 +61,24 @@
     "@dxos/model-factory": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/random-access-storage": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/schema": "^0.62.1",
+    "@orama/orama": "^2.0.8",
     "effect": "^2.3.1",
     "lodash.defaultsdeep": "^4.6.1",
-    "lodash.get": "^4.4.2"
+    "lodash.get": "^4.4.2",
+    "lodash.isequal": "^4.5.0"
   },
   "devDependencies": {
     "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
-    "@orama/orama": "^2.0.8",
     "@preact/signals-core": "^1.5.1",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.get": "^4.4.7",
+    "@types/lodash.isequal": "^4.5.0",
     "fast-check": "^3.15.1",
     "wait-for-expect": "^3.0.2"
   },

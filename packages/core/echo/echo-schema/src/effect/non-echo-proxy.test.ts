@@ -81,3 +81,55 @@ for (const schema of [undefined, TestSchemaWithClass]) {
     });
   });
 }
+
+describe('getters', () => {
+  test('add getter to object', () => {
+    let value = 'foo';
+    const obj = R.object({
+      get getter() {
+        return value;
+      },
+    });
+    expect(obj.getter).to.eq('foo');
+
+    value = 'bar';
+    expect(obj.getter).to.eq('bar');
+  });
+
+  test('signal updates', () => {
+    const innerObj = R.object({
+      string: 'bar',
+    });
+
+    const obj = R.object({
+      field: 1,
+      get getter() {
+        return innerObj.string;
+      },
+    });
+
+    using updates = updateCounter(() => {
+      obj.getter;
+    });
+
+    innerObj.string = 'baz';
+    expect(obj.getter).to.eq('baz');
+    expect(updates.count, 'update count').to.eq(1);
+
+    obj.field = 2;
+    expect(updates.count, 'update count').to.eq(1);
+  });
+
+  test('getter for array', () => {
+    const value = [1];
+    const obj = R.object({
+      get getter() {
+        return value;
+      },
+    });
+    expect(obj.getter).to.have.length(1);
+
+    value.push(2);
+    expect(obj.getter).to.have.length(2);
+  });
+});

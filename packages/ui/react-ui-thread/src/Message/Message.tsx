@@ -6,7 +6,7 @@ import { X } from '@phosphor-icons/react';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, { type ComponentPropsWithRef, type FC, forwardRef, useMemo } from 'react';
 
-import { Avatar, Button, type ThemedClassName, useJdenticonHref, useTranslation } from '@dxos/react-ui';
+import { Avatar, Button, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { TextEditor, type TextEditorProps, keymap, type EditorView, listener } from '@dxos/react-ui-editor';
 import {
   focusRing,
@@ -15,13 +15,12 @@ import {
   hoverableFocusedWithinControls,
   mx,
 } from '@dxos/react-ui-theme';
-import { safeParseJson } from '@dxos/util';
+import { safeParseJson, hexToEmoji } from '@dxos/util';
 
 import { translationKey } from '../translations';
 import { type MessageEntity, type MessageEntityBlock, type MessageMetadata } from '../types';
 
 const avatarSize = 7;
-
 const messageCell = 'plb-1 min-is-0';
 
 export type MessageMetaProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
@@ -33,8 +32,6 @@ export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
     { authorImgSrc, authorStatus, authorId, authorName, continues = true, children, classNames, ...rootProps },
     forwardedRef,
   ) => {
-    const jdenticon = useJdenticonHref(authorId ?? '', avatarSize);
-
     return (
       <Avatar.Root status={authorStatus ?? 'inactive'} size={avatarSize}>
         <div
@@ -44,9 +41,9 @@ export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
           className={mx('grid grid-cols-subgrid col-span-2', classNames)}
           ref={forwardedRef}
         >
-          <div role='none' className={'flex flex-col items-center gap-2 ' + messageCell}>
+          <div role='none' className={mx('flex flex-col items-center gap-2', messageCell)}>
             <Avatar.Frame>
-              <Avatar.Fallback href={jdenticon} />
+              <Avatar.Fallback text={authorId && hexToEmoji(authorId)} />
               {authorImgSrc && <Avatar.Image href={authorImgSrc} />}
             </Avatar.Frame>
             {continues && <div role='none' className='is-px grow surface-separator' />}
@@ -99,10 +96,8 @@ export type MessageProps<BlockValue> = MessageEntity<BlockValue> & {
 };
 
 export const Message = <BlockValue,>(props: MessageProps<BlockValue>) => {
+  const { id, authorName, onDelete, blocks, MessageBlockComponent = DefaultMessageBlock, ...metaProps } = props;
   const { t, dtLocale } = useTranslation(translationKey);
-
-  const { authorName, onDelete, blocks, id, MessageBlockComponent = DefaultMessageBlock, ...metaProps } = props;
-
   const firstBlock = blocks[0];
   const dt = firstBlock.timestamp ? new Date(firstBlock.timestamp) : undefined;
 
@@ -197,6 +192,7 @@ export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
         authorStatus='active'
         continues={false}
       >
+        {/* TODO(burdon): Change to hook. */}
         <TextEditor
           slots={{ root: { className: mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50') } }}
           readonly={disabled}

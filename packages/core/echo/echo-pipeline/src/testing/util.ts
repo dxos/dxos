@@ -46,7 +46,9 @@ export const createRemoteDatabaseFromDataServiceHost = async (
   dataServiceHost: DataServiceHost,
 ) => {
   const dataServiceSubscriptions = new DataServiceSubscriptions();
-  const automergeHost = new AutomergeHost(createStorage({ type: StorageType.RAM }).createDirectory());
+  const automergeHost = new AutomergeHost({
+    directory: createStorage({ type: StorageType.RAM }).createDirectory(),
+  });
   const dataService = new DataServiceImpl(dataServiceSubscriptions, automergeHost);
 
   const spaceKey = PublicKey.random();

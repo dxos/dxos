@@ -15,8 +15,9 @@ export const registerSignalRuntime = () => {
   registered = true;
 
   registerRuntimeForEcho({
-    createSignal: () => {
+    createSignal: (debugInfo) => {
       const thisSignal = signal({});
+      (thisSignal as any).__debugInfo = debugInfo;
 
       return {
         notifyRead: () => {

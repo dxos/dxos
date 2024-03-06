@@ -25,6 +25,11 @@ export interface AutomergeDocumentLoader {
   createDocumentForObject(objectId: string): DocHandle<SpaceDoc>;
   onObjectLinksUpdated(links: SpaceDocumentLinks): void;
   onObjectBoundToDocument(handle: DocHandle<SpaceDoc>, objectId: string): void;
+
+  /**
+   * @returns objectIds for which we had document handles or were loading one.
+   */
+  clearHandleReferences(): string[];
 }
 
 /**
@@ -113,6 +118,13 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
 
   public onObjectBoundToDocument(handle: DocHandle<SpaceDoc>, objectId: string) {
     this._objectDocumentHandles.set(objectId, handle);
+  }
+
+  public clearHandleReferences(): string[] {
+    const objectsWithHandles = [...this._objectDocumentHandles.keys()];
+    this._objectDocumentHandles.clear();
+    this._spaceRootDocHandle = null;
+    return objectsWithHandles;
   }
 
   private _loadLinkedObjects(links: SpaceDocumentLinks) {

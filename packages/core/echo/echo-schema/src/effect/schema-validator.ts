@@ -32,14 +32,14 @@ export class SchemaValidator {
     for (const key in target) {
       if (Array.isArray(target[key]) && !(target[key] instanceof ReactiveArray)) {
         target[key] = ReactiveArray.from(target[key]);
-        const schema = this.getPropertySchema(target, key);
+        const schema = this._getTargetPropertySchema(target, key);
         setSchemaProperties(target[key], schema);
       }
     }
   }
 
   public static validateValue(target: any, prop: string | symbol, value: any) {
-    const schema = this.getPropertySchema(target, prop);
+    const schema = this._getTargetPropertySchema(target, prop);
     const _ = S.asserts(schema)(value);
     if (Array.isArray(value)) {
       value = new ReactiveArray(...value);
@@ -50,7 +50,7 @@ export class SchemaValidator {
     return value;
   }
 
-  private static getPropertySchema(target: any, prop: string | symbol): S.Schema<any> {
+  private static _getTargetPropertySchema(target: any, prop: string | symbol): S.Schema<any> {
     if (target instanceof ReactiveArray) {
       return getArrayElementSchema((target as any)[symbolSchema]);
     }
@@ -60,6 +60,23 @@ export class SchemaValidator {
       throw new Error(`Invalid property: ${prop.toString()}`);
     }
     return S.make(properties.type);
+  }
+
+  public static getPropertySchema(
+    rootObjectSchema: S.Schema<any>,
+    propertyPath: Array<string | symbol>,
+  ): S.Schema<any> {
+    let schema: S.Schema<any> = rootObjectSchema;
+    for (const propertyName of propertyPath) {
+      if (AST.isTuple(schema.ast)) {
+        schema = getArrayElementSchema(schema);
+      } else {
+        const property = AST.getPropertySignatures(schema.ast).find((p) => p.name === propertyName);
+        invariant(property, `unknown property: ${String(propertyName)}, path: ${propertyPath}`);
+        schema = S.make(property.type);
+      }
+    }
+    return schema;
   }
 }
 

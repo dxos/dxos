@@ -20,12 +20,11 @@ import {
   useDensityContext,
   useTranslation,
   Button,
-  useJdenticonHref,
   List,
   ListItem,
 } from '@dxos/react-ui';
-import { getColorForValue, mx } from '@dxos/react-ui-theme';
-import { ComplexMap } from '@dxos/util';
+import { mx } from '@dxos/react-ui-theme';
+import { ComplexMap, hexToHue, keyToFallback } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';
 import type { SpacePluginProvides } from '../types';
@@ -145,7 +144,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
       {members.length > 3 && (
         <Tooltip.Root>
           <Tooltip.Trigger>
-            <AvatarGroupItem.Root color='#ccc' status='inactive'>
+            <AvatarGroupItem.Root status='inactive'>
               <Avatar.Frame style={{ zIndex: members.length - 4 }}>
                 {/* TODO(wittjosiah): Make text fit. */}
                 <Avatar.Fallback text={`+${members.length - 3}`} />
@@ -186,18 +185,17 @@ type PresenceAvatarProps = {
 
 const PrensenceAvatar = ({ identity, showName, match, group, index, onClick }: PresenceAvatarProps) => {
   const Root = group ? AvatarGroupItem.Root : Avatar.Root;
-  const memberHex = identity.identityKey.toHex();
   const status = match ? 'current' : 'active';
-  const jdenticon = useJdenticonHref(memberHex ?? '', 12);
+  const fallbackValue = keyToFallback(identity.identityKey);
   return (
-    <Root status={status}>
+    <Root status={status} hue={identity.profile?.data?.hue || fallbackValue.hue}>
       <Avatar.Frame
         data-testid='spacePlugin.presence.member'
         data-status={status}
         {...(index ? { style: { zIndex: index } } : {})}
         onClick={() => onClick?.()}
       >
-        <Avatar.Fallback href={jdenticon} />
+        <Avatar.Fallback text={identity.profile?.data?.emoji || fallbackValue.emoji} />
       </Avatar.Frame>
       {showName && <Avatar.Label classNames='text-sm truncate pli-2'>{getName(identity)}</Avatar.Label>}
     </Root>
@@ -217,7 +215,7 @@ export const SmallPresence = (props: MemberPresenceProps) => {
             {members.slice(0, 3).map((viewer, i) => {
               const viewerHex = viewer.identity.identityKey.toHex();
               return (
-                <AvatarGroupItem.Root key={viewerHex} color={getColorForValue({ value: viewerHex, type: 'color' })}>
+                <AvatarGroupItem.Root key={viewerHex} hue={viewer.identity.profile?.data?.hue || hexToHue(viewerHex)}>
                   <Avatar.Frame style={{ zIndex: members.length - i }} />
                 </AvatarGroupItem.Root>
               );
