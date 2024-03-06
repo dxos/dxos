@@ -57,6 +57,7 @@ export const hintViewPlugin = ({ onHint }: CommandOptions) =>
           const selection = update.view.state.selection.main;
           const line = update.view.state.doc.lineAt(selection.from);
           // Only show if blank line.
+          // TODO(burdon): Clashes with placeholder if pos === 0.
           // TODO(burdon): Show after delay or if blank line above?
           if (selection.from === selection.to && line.from === line.to) {
             const hint = onHint();

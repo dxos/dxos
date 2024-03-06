@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Extension, StateField } from '@codemirror/state';
+import { type Extension } from '@codemirror/state';
 
 import { type DocAccessor } from '@dxos/echo-schema';
 
@@ -18,27 +18,13 @@ export type Comment = {
   cursor?: string;
 };
 
-export type EditorModel = {
-  id: string;
-  text: () => string;
-  extension?: Extension;
-
-  // TODO(burdon): Remove.
-  content: string | DocAccessor;
-
-  // TODO(burdon): Remove.
-  peer?: {
-    id: string;
-    name?: string;
-  };
-};
-
 /**
- * State field makes the model available to other extensions.
  * @deprecated
  */
 // TODO(burdon): Remove.
-export const modelState = StateField.define<EditorModel | undefined>({
-  create: () => undefined,
-  update: (model) => model,
-});
+export type EditorModel = {
+  id: string;
+  text: () => string;
+  content: string | DocAccessor;
+  extension?: Extension;
+};
