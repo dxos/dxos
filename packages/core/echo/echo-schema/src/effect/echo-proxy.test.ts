@@ -176,15 +176,23 @@ describe('Reactive Object with ECHO database', () => {
     }
   });
 
-  test('queries', async () => {
-    const graph = new Hypergraph();
-    graph.types.registerEffectSchema(EchoObjectSchema);
+  describe('queries', () => {
+    test('filter by schema or typename', async () => {
+      const graph = new Hypergraph();
+      graph.types.registerEffectSchema(EchoObjectSchema);
 
-    const { db } = await createDatabase(graph, { useReactiveObjectApi: true });
+      const { db } = await createDatabase(graph, { useReactiveObjectApi: true });
+      db.add(R.object(EchoObjectSchema, { string: 'foo' }));
 
-    db.add(R.object(EchoObjectSchema, { string: 'foo' }));
+      {
+        const query = db.query(Filter.typename('TestSchema'));
+        expect(query.objects.length).to.eq(1);
+      }
 
-    const query = db.query(Filter.typename('TestSchema'));
-    expect(query.objects.length).to.eq(1);
+      {
+        const query = db.query(Filter.schema(EchoObjectSchema));
+        expect(query.objects.length).to.eq(1);
+      }
+    });
   });
 });
