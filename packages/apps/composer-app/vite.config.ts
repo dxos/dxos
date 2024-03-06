@@ -77,30 +77,6 @@ export default defineConfig({
     tsconfigPaths({
       projects: ['../../../tsconfig.paths.json'],
     }),
-    // Required for the script plugin.
-    {
-      name: 'sandbox-importmap-integration',
-      transformIndexHtml() {
-        return [
-          {
-            tag: 'script',
-            injectTo: 'head-prepend', // Inject before vite's built-in scripts.
-            children: `
-            if (window.location.hash.includes('importMap')) {
-              const urlParams = new URLSearchParams(window.location.hash.slice(1));
-              if (urlParams.get('importMap')) {
-                const importMap = JSON.parse(decodeURIComponent(urlParams.get('importMap')));
-                const mapElement = document.createElement('script');
-                mapElement.type = 'importmap'; 
-                mapElement.textContent = JSON.stringify(importMap, null, 2);
-                document.head.appendChild(mapElement);
-              }
-            }
-          `,
-          },
-        ];
-      },
-    },
     ConfigPlugin(),
     ThemePlugin({
       root: __dirname,
