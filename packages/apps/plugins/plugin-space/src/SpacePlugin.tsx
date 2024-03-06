@@ -4,6 +4,7 @@
 
 import { type IconProps, Folder as FolderIcon, Plus, SignIn } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
+import { type RevertDeepSignal } from 'deepsignal';
 import { deepSignal } from 'deepsignal/react';
 import localforage from 'localforage';
 import React from 'react';
@@ -93,8 +94,7 @@ export const SpacePlugin = ({
     awaiting: undefined,
     viewersByObject: new Map(),
     viewersByIdentity: new ComplexMap(PublicKey.hash),
-    // TODO(thure): is there a better way to cast this?
-  }) as unknown as PluginState;
+  }) as RevertDeepSignal<PluginState>;
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
