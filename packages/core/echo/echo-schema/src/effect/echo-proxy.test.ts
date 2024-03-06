@@ -16,9 +16,9 @@ import { TestClass, TestSchema, type TestSchemaWithClass } from './testing/schem
 import { AutomergeContext, type SpaceDoc } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
+import { Filter } from '../query';
 import { createDatabase } from '../testing';
 import { Task } from '../tests/proto';
-import { Filter } from '../query';
 
 registerSignalRuntime();
 
