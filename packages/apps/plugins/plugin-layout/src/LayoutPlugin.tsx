@@ -177,7 +177,10 @@ export const LayoutPlugin = ({
             properties: {
               label: ['toggle fullscreen label', { ns: LAYOUT_PLUGIN }],
               icon: (props: IconProps) => <ArrowsOut {...props} />,
-              keyBinding: 'ctrl+meta+f',
+              keyBinding: {
+                macos: 'ctrl+meta+f',
+                windows: 'shift+ctrl+f',
+              },
             },
             edges: [['root', 'inbound']],
           });

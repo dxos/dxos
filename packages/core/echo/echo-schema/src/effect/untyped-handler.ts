@@ -44,9 +44,15 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       defineHiddenProperty(target, symbolPropertySignal, compositeRuntime.createSignal());
     }
 
-    for (const key in target) {
-      if (Array.isArray(target[key]) && !(target[key] instanceof ReactiveArray)) {
-        target[key] = ReactiveArray.from(target[key]);
+    for (const key of Object.getOwnPropertyNames(target)) {
+      const descriptor = Object.getOwnPropertyDescriptor(target, key)!;
+      if (descriptor.get) {
+        // Ignore getters.
+        continue;
+      }
+
+      if (Array.isArray(target[key as any]) && !(target[key as any] instanceof ReactiveArray)) {
+        target[key as any] = ReactiveArray.from(target[key as any]);
       }
     }
   }
