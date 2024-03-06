@@ -6,23 +6,23 @@ import type { EditorView } from '@codemirror/view';
 
 import type { ToolbarProps } from '../components';
 import {
-  createComment,
-  insertTable,
-  setHeading,
-  setStyle,
-  toggleStyle,
-  addLink,
-  removeLink,
   Inline,
   List,
-  addList,
-  removeList,
-  toggleList,
   addBlockquote,
-  removeBlockquote,
   addCodeblock,
+  addLink,
+  addList,
+  createComment,
+  insertTable,
+  removeBlockquote,
   removeCodeblock,
+  removeLink,
+  removeList,
+  setHeading,
+  setStyle,
   toggleBlockquote,
+  toggleList,
+  toggleStyle,
 } from '../extensions';
 
 export const useActionHandler = (view?: EditorView | null): ToolbarProps['onAction'] => {

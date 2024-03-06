@@ -59,7 +59,7 @@ export const commandState = StateField.define<CommandState>({
                       selection: { anchor: pos + action.insert.length },
                     });
                   }
-                  // TODO(burdon): Truncates text if focus immediately.
+                  // TODO(burdon): Truncates text if set focus immediately.
                   setTimeout(() => view.focus());
                 });
               },
@@ -100,7 +100,7 @@ export const closeCommand: Command = (view: EditorView) => {
   return false;
 };
 
-export const commandKeymap: readonly KeyBinding[] = [
+export const commandKeyBindings: readonly KeyBinding[] = [
   { key: '/', run: openCommand },
   { key: 'Escape', run: closeCommand },
 ];
