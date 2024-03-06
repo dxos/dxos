@@ -345,7 +345,8 @@ export class AutomergeObjectCore {
     if (value instanceof A.RawString) {
       return value.toString();
     }
-    if (isEncodedReferenceObject(value)) {
+    // For some reason references without `@type` are being stored in the document.
+    if (isEncodedReferenceObject(value) || looksLikeReferenceObject(value)) {
       if (value.protocol === 'protobuf') {
         // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
         // TODO(dmaretskyi): Why are we returning raw reference here instead of doing lookup?
@@ -483,3 +484,11 @@ const getSchemaProto = (): typeof Schema => {
 
   return schemaProto;
 };
+
+const looksLikeReferenceObject = (value: unknown) =>
+  typeof value === 'object' &&
+  value !== null &&
+  Object.keys(value).length === 3 &&
+  'itemId' in value &&
+  'protocol' in value &&
+  'host' in value;
