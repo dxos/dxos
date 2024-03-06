@@ -24,7 +24,7 @@ describe('Typescript VFS', () => {
     const ts = new TS();
     await ts.initialize();
 
-    const path = 'index.ts';
+    const path = 'test.ts';
 
     {
       const content = ['const value = 100;'].join('\n');
