@@ -192,21 +192,25 @@ export const SpacePlugin = ({
                 const spaceKey = PublicKey.safeFrom(message.payload.spaceKey);
                 if (identityKey && spaceKey && Array.isArray(added) && Array.isArray(removed)) {
                   added.forEach((objectIdAny) => {
-                    const objectId = objectIdAny.toString();
-                    if (!state.viewersByObject.has(objectId)) {
-                      state.viewersByObject.set(objectId, new ComplexMap(PublicKey.hash));
+                    if (objectIdAny) {
+                      const objectId = objectIdAny.toString();
+                      if (!state.viewersByObject.has(objectId)) {
+                        state.viewersByObject.set(objectId, new ComplexMap(PublicKey.hash));
+                      }
+                      state.viewersByObject.get(objectId)!.set(identityKey, { lastSeen: Date.now(), spaceKey });
+                      if (!state.viewersByIdentity.has(identityKey)) {
+                        state.viewersByIdentity.set(identityKey, new Set());
+                      }
+                      state.viewersByIdentity.get(identityKey)!.add(objectId);
                     }
-                    state.viewersByObject.get(objectId)!.set(identityKey, { lastSeen: Date.now(), spaceKey });
-                    if (!state.viewersByIdentity.has(identityKey)) {
-                      state.viewersByIdentity.set(identityKey, new Set());
-                    }
-                    state.viewersByIdentity.get(identityKey)!.add(objectId);
                   });
                   removed.forEach((objectIdAny) => {
-                    const objectId = objectIdAny.toString();
-                    state.viewersByObject.get(objectId)?.delete(identityKey);
-                    state.viewersByIdentity.get(identityKey)?.delete(objectId);
-                    // It’s okay for these to be empty sets/maps, reduces churn.
+                    if (objectIdAny) {
+                      const objectId = objectIdAny.toString();
+                      state.viewersByObject.get(objectId)?.delete(identityKey);
+                      state.viewersByIdentity.get(identityKey)?.delete(objectId);
+                      // It’s okay for these to be empty sets/maps, reduces churn.
+                    }
                   });
                 }
               }),
