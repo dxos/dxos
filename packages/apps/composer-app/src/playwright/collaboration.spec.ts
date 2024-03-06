@@ -87,7 +87,7 @@ test.describe('Collaboration tests', () => {
     });
   });
 
-  test.only('host and guest can see each others’ changes in same document', async () => {
+  test('host and guest can see each others’ changes in same document', async () => {
     await host.createSpace();
     await host.createObject('markdownPlugin');
     await Markdown.waitForMarkdownTextbox(host.page);
