@@ -28,7 +28,7 @@ import { MeshNetworkAdapter } from './mesh-network-adapter';
 
 describe('AutomergeHost', () => {
   test('can create documents', () => {
-    const host = new AutomergeHost(createStorage({ type: StorageType.RAM }).createDirectory());
+    const host = new AutomergeHost({ directory: createStorage({ type: StorageType.RAM }).createDirectory() });
 
     const handle = host.repo.create();
     handle.change((doc: any) => {
@@ -40,7 +40,7 @@ describe('AutomergeHost', () => {
   test('changes are preserved in storage', async () => {
     const storageDirectory = createStorage({ type: StorageType.RAM }).createDirectory();
 
-    const host = new AutomergeHost(storageDirectory);
+    const host = new AutomergeHost({ directory: storageDirectory });
     const handle = host.repo.create();
     handle.change((doc: any) => {
       doc.text = 'Hello world';
@@ -50,7 +50,7 @@ describe('AutomergeHost', () => {
     // TODO(dmaretskyi): Is there a way to know when automerge has finished saving?
     await sleep(100);
 
-    const host2 = new AutomergeHost(storageDirectory);
+    const host2 = new AutomergeHost({ directory: storageDirectory });
     const handle2 = host2.repo.find(url);
     await handle2.whenReady();
     expect(handle2.docSync().text).toEqual('Hello world');
