@@ -16,6 +16,9 @@
     "plate": "plate src/templates/api --input docs/api.json --output docs/api",
     "typedoc": "typedoc"
   },
+  "dependencies": {
+    "chalk": "^4.1.0"
+  },
   "devDependencies": {
     "@dxos/plate": "workspace:*",
     "@linkedmd/markdown-it-directive": "^1.0.1",

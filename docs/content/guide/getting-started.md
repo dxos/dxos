@@ -67,6 +67,7 @@ const client = new Client();
 const main = async () => {
   await client.initialize();
   // use client here
+
 };
 
 main();
@@ -96,7 +97,7 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
 const createWorker = () =>
-  new SharedWorker(new URL('./shared-worker', import.meta.url), {
+  new SharedWorker(new URL('../shared-worker', import.meta.url), {
     type: 'module',
     name: 'dxos-client-worker',
   });
@@ -123,7 +124,7 @@ createRoot(document.body).render(<App />);
 
 The [`SharedWorker`](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker) allows resources to be shared between tabs and windows. Put the following in a file called `shared-worker.ts` in the same directory as your `App` component above:
 
-```tsx file=./react/snippets/shared-worker.tsx#L5-
+```tsx file=./react/snippets/shared-worker.ts#L5-
 onconnect = async (event) => {
   const { onconnect } = await import('@dxos/react-client/worker');
   await onconnect(event);
