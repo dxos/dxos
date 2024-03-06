@@ -7765,6 +7765,9 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../apps/types
+      '@dxos/automerge':
+        specifier: workspace:*
+        version: link:../../core/echo/automerge
       '@dxos/random-access-storage':
         specifier: workspace:*
         version: link:../../common/random-access-storage
