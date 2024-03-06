@@ -1959,6 +1959,9 @@ importers:
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
+      '@dxos/react-ui-deck':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-deck
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
@@ -2307,6 +2310,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-deck':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-deck
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
@@ -8695,12 +8701,18 @@ importers:
 
   packages/ui/react-ui-deck:
     dependencies:
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../common/keyboard
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       '@radix-ui/react-context':
         specifier: ^1.0.0
         version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
@@ -8717,15 +8729,15 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.0
         version: 3.2.0(react@18.2.0)
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../sdk/app-graph
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../storybook-utils
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)

@@ -6,7 +6,7 @@ import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-core';
 import { type RevertDeepSignal } from 'deepsignal/react';
 import { deepSignal } from 'deepsignal/react';
-import React, { type PropsWithChildren, useEffect } from 'react';
+import React, { type PropsWithChildren, useEffect, useMemo } from 'react';
 
 import { type Node, useGraph } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
@@ -34,6 +34,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { AttentionProvider } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { LayoutContext } from './LayoutContext';
@@ -268,11 +269,13 @@ export const LayoutPlugin = ({
                 },
               };
 
+        const attended = useMemo(() => new Set(location.active ? [location.active] : []), [location.active]);
+
         return (
-          <>
+          <AttentionProvider attended={attended}>
             <Surface {...surfaceProps} />
             <Mosaic.DragOverlay />
-          </>
+          </AttentionProvider>
         );
       },
       surface: {

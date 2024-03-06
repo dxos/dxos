@@ -3,11 +3,23 @@
 //
 
 import { type IconProps } from '@phosphor-icons/react';
-import React, { type ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef, useRef, useState } from 'react';
 
-import { Button, type ButtonProps, type ThemedClassName } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { keySymbols } from '@dxos/keyboard';
+import {
+  Button,
+  type ButtonProps,
+  DropdownMenu,
+  type ThemedClassName,
+  toLocalizedString,
+  Tooltip,
+  useTranslation,
+} from '@dxos/react-ui';
+import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
+import { getHostPlatform } from '@dxos/util';
 
+import { translationKey } from '../../translations';
+import { type PlankHeadingAction } from '../../types';
 import { useHasAttention } from '../Attention';
 
 type AttendableId = { attendableId: string };
@@ -33,6 +45,102 @@ const PlankHeadingButton = forwardRef<HTMLButtonElement, PlankHeadingButtonProps
   },
 );
 
+type PlankHeadingDropdownMenuProps = PlankHeadingButtonProps & {
+  label?: string;
+  actions?: PlankHeadingAction[];
+  onAction?: (action: PlankHeadingAction) => void;
+};
+
+const PlankHeadingDropdownMenu = ({
+  actions,
+  onAction,
+  label,
+  children,
+  ...triggerProps
+}: PlankHeadingDropdownMenuProps) => {
+  const { t } = useTranslation(translationKey);
+  const suppressNextTooltip = useRef(false);
+
+  const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
+  const [triggerTooltipOpen, setTriggerTooltipOpen] = useState(false);
+
+  return (
+    <Tooltip.Root
+      open={triggerTooltipOpen}
+      onOpenChange={(nextOpen) => {
+        if (suppressNextTooltip.current) {
+          setTriggerTooltipOpen(false);
+          suppressNextTooltip.current = false;
+        } else {
+          setTriggerTooltipOpen(nextOpen);
+        }
+      }}
+    >
+      <DropdownMenu.Root
+        {...{
+          open: optionsMenuOpen,
+          onOpenChange: (nextOpen: boolean) => {
+            if (!nextOpen) {
+              suppressNextTooltip.current = true;
+            }
+            return setOptionsMenuOpen(nextOpen);
+          },
+        }}
+      >
+        <Tooltip.Trigger asChild>
+          <DropdownMenu.Trigger asChild>
+            <PlankHeadingButton {...triggerProps}>
+              {children}
+              <span className='sr-only'>{label}</span>
+            </PlankHeadingButton>
+          </DropdownMenu.Trigger>
+        </Tooltip.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content classNames='z-[31]'>
+            <DropdownMenu.Viewport>
+              {actions?.map((action) => {
+                const shortcut =
+                  typeof action.keyBinding === 'string' ? action.keyBinding : action.keyBinding?.[getHostPlatform()];
+                return (
+                  <DropdownMenu.Item
+                    key={action.id}
+                    onClick={(event) => {
+                      if (action.properties.disabled) {
+                        return;
+                      }
+                      event.stopPropagation();
+                      // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
+                      suppressNextTooltip.current = true;
+                      setOptionsMenuOpen(false);
+                      onAction?.(action);
+                    }}
+                    classNames='gap-2'
+                    disabled={action.properties.disabled}
+                    {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
+                  >
+                    {action.icon && <action.icon className={mx(getSize(4), 'shrink-0')} />}
+                    <span className='grow truncate'>{toLocalizedString(action.label, t)}</span>
+                    {shortcut && (
+                      <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>
+                    )}
+                  </DropdownMenu.Item>
+                );
+              })}
+            </DropdownMenu.Viewport>
+            <DropdownMenu.Arrow />
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
+      <Tooltip.Portal>
+        <Tooltip.Content classNames='z-70'>
+          {label}
+          <Tooltip.Arrow />
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
+  );
+};
+
 type PlankHeadingLabelProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & AttendableId;
 
 const PlankHeadingLabel = forwardRef<HTMLHeadingElement, PlankHeadingLabelProps>(
@@ -49,7 +157,10 @@ const PlankHeadingLabel = forwardRef<HTMLHeadingElement, PlankHeadingLabelProps>
   },
 );
 
-export const PlankHeading = { Button: PlankHeadingButton, Label: PlankHeadingLabel };
-export { plankHeadingIconProps };
+export const PlankHeading = {
+  Button: PlankHeadingButton,
+  Label: PlankHeadingLabel,
+};
+export { plankHeadingIconProps, PlankHeadingDropdownMenu };
 
-export type { PlankHeadingButtonProps };
+export type { PlankHeadingButtonProps, PlankHeadingDropdownMenuProps };
