@@ -47,13 +47,7 @@ export const FrameContainer = ({ containerUrl, result, debug = true }: FrameCont
 
   // Encodes compiled code via URL.
   const sourceHash = Buffer.from(result.sourceHash).toString('hex');
-  const src =
-    result.bundle &&
-    `${containerUrl}?ts=${sourceHash}#importMap=${encodeURIComponent(
-      JSON.stringify({
-        imports: createImportMap(result),
-      }),
-    )}`;
+  const src = result.bundle && `${containerUrl}?ts=${sourceHash}#code=${encodeURIComponent(result.bundle)}`;
 
   return (
     <>
