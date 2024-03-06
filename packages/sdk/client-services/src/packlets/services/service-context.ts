@@ -14,6 +14,7 @@ import {
   SnapshotStore,
   AutomergeHost,
 } from '@dxos/echo-pipeline';
+import { IndexMetadataStore } from '@dxos/echo-schema';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
@@ -68,6 +69,7 @@ export class ServiceContext {
   public readonly identityManager: IdentityManager;
   public readonly invitations: InvitationsHandler;
   public readonly automergeHost: AutomergeHost;
+  public readonly indexMetadata: IndexMetadataStore;
 
   // Initialized after identity is initialized.
   public dataSpaceManager?: DataSpaceManager;
@@ -90,6 +92,7 @@ export class ServiceContext {
   ) {
     // TODO(burdon): Move strings to constants.
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
+    this.indexMetadata = new IndexMetadataStore({ directory: storage.createDirectory('index-metadata') });
     this.snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
     this.blobStore = new BlobStore(storage.createDirectory('blobs'));
 
@@ -122,7 +125,10 @@ export class ServiceContext {
       this._runtimeParams as IdentityManagerRuntimeParams,
     );
 
-    this.automergeHost = new AutomergeHost(storage.createDirectory('automerge'));
+    this.automergeHost = new AutomergeHost({
+      directory: storage.createDirectory('automerge'),
+      metadata: this.indexMetadata,
+    });
 
     this.invitations = new InvitationsHandler(this.networkManager);
 
