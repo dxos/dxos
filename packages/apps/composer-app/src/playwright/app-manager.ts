@@ -16,6 +16,8 @@ import { setupPage } from '@dxos/test/playwright';
 const isMac = os.platform() === 'darwin';
 const modifier = isMac ? 'Meta' : 'Control';
 
+console.log('MODIFIER', modifier);
+
 export class AppManager {
   page!: Page;
   shell!: ShellManager;
