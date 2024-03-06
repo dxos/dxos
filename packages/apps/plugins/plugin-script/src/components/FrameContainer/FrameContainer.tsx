@@ -80,30 +80,3 @@ export const FrameContainer = ({ containerUrl, result, debug = true }: FrameCont
     </>
   );
 };
-
-/**
- * Create import map used to resolve modules in the browser.
- * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap
- * @param result
- */
-const createImportMap = (result: CompilerResult) => {
-  const createReexportingModule = (namedImports: string[], key: string) => {
-    const code = `
-      const { ${namedImports.join(',')} } = window.__DXOS_SANDBOX_MODULES__[${JSON.stringify(key)}];
-      export { ${namedImports.join(',')} };
-      export default window.__DXOS_SANDBOX_MODULES__[${JSON.stringify(key)}].default;
-    `;
-
-    return `data:text/javascript;base64,${btoa(code)}`;
-  };
-
-  invariant(result.bundle);
-  return {
-    '@frame/bundle': `data:text/javascript;base64,${btoa(result.bundle)}`,
-    ...Object.fromEntries(
-      result.imports
-        ?.filter((entry) => !entry.moduleUrl!.startsWith('http'))
-        .map((entry) => [entry.moduleUrl!, createReexportingModule(entry.namedImports!, entry.moduleUrl!)]) ?? [],
-    ),
-  };
-};

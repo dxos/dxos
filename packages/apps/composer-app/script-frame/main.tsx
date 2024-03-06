@@ -37,14 +37,7 @@ if (!code) {
   throw new Error('No code provided.');
 }
 
-console.log(code);
-
-// eslint-disable-next-line no-new-func
-const Component = Function(
-  'React',
-  'module',
-  'return React.lazy(() => import(module))',
-)(React, `data:text/javascript;base64,${btoa(code)}`);
+const Component = React.lazy(() => import(/* @vite-ignore */ `data:text/javascript;base64,${btoa(code)}`));
 
 const services = new ClientServicesProxy(
   createIFramePort({

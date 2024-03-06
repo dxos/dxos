@@ -57,7 +57,6 @@ export class Compiler {
     }
 
     const imports = analyzeSourceFileImports(source);
-    console.log('imports', imports);
 
     // https://esbuild.github.io/api/#build
     try {
