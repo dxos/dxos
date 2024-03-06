@@ -7,56 +7,57 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { createEnv } from './ts';
+import { TS } from './ts';
 
-// TODO(burdon):
+// TODO(burdon): Clean-up docs and TODOs.
+//  https://www.typescriptlang.org/play
 //  https://github.com/val-town/codemirror-ts
 //  https://www.npmjs.com/package/@typescript/vfs
 //  https://discuss.codemirror.net/t/codemirror-6-and-typescript-lsp/3398/11
 //  https://observablehq.com/blog/bringing-the-typescript-language-server-to-observable
-
-// https://www.typescriptlang.org/play
-// https://www.npmjs.com/package/@typescript/ata
-
-// TODO(burdon): Worker: https://github.com/val-town/codemirror-ts?tab=readme-ov-file#setup-worker
-// TODO(burdon): https://github.com/asadm/codemirror-copilot
+//  TODO(burdon): https://github.com/asadm/codemirror-copilot
 
 describe('Typescript VFS', () => {
   test('Basic', async () => {
     const path = 'index.ts';
 
-    const env = await createEnv(false);
+    const ts = new TS();
+    await ts.initialize();
 
     {
       const content = ['const value = 100;'].join('\n');
-      env.createFile(path, content);
-      const file = env.getSourceFile(path);
+      ts.env.createFile(path, content);
+      const file = ts.env.getSourceFile(path);
       expect(file).to.exist;
 
-      const lints = getLints({ env, path });
+      const lints = getLints({ env: ts.env, path });
       expect(lints).to.have.length(0);
     }
 
     {
       const content = ['const value = 100;', 'console.'].join('\n');
-      env.updateFile(path, content);
+      ts.env.updateFile(path, content);
 
-      const completions = await getAutocompletion({ env, path, context: { pos: content.length, explicit: true } });
+      const completions = await getAutocompletion({
+        env: ts.env,
+        path,
+        context: { pos: content.length, explicit: true },
+      });
       const completion = completions?.options.find(({ label }) => label === 'log');
       expect(completion).to.exist;
     }
 
     {
       const content = ['const value = 100;', 'console.log('].join('\n');
-      env.updateFile(path, content);
+      ts.env.updateFile(path, content);
 
-      const completions = await getAutocompletion({ env, path, context: { pos: content.length, explicit: true } });
+      const completions = await getAutocompletion({
+        env: ts.env,
+        path,
+        context: { pos: content.length, explicit: true },
+      });
       const completion = completions?.options.find(({ label }) => label === 'value');
       expect(completion).to.exist;
-    }
-
-    {
-      // import * as S from '@effect/schema/Schema';
     }
   });
 });

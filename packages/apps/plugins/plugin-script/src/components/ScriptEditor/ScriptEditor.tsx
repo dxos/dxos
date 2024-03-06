@@ -4,10 +4,10 @@
 
 import { autocompletion } from '@codemirror/autocomplete';
 import { javascript } from '@codemirror/lang-javascript';
-import { EditorView } from '@codemirror/view';
+import { EditorView, lineNumbers } from '@codemirror/view';
 import { type VirtualTypeScriptEnvironment } from '@typescript/vfs';
-import { tsAutocomplete, tsFacet, tsLinter, tsSync } from '@valtown/codemirror-ts';
-import { basicSetup } from 'codemirror';
+import { tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } from '@valtown/codemirror-ts';
+import { minimalSetup } from 'codemirror';
 import React, { useMemo } from 'react';
 
 import { DocAccessor } from '@dxos/echo-schema';
@@ -29,24 +29,23 @@ export const ScriptEditor = ({ source, themeMode, className, env, path }: Script
   const extensions = useMemo(
     () => [
       // TODO(burdon): Use basic set-up (e.g., bracket matching).
-      // TODO(burdon): Use this in text editor (cancels highlight current line)
-      basicSetup,
-      // minimalSetup,
+      minimalSetup,
+      lineNumbers(),
 
-      // lineNumbers(),
       // TODO(burdon): Syntax highlighting theme.
       javascript({
         typescript: true,
         jsx: true,
       }),
-      // autocompletion({ activateOnTyping: false }),
-      // keymap.of([...completionKeymap]),
 
       // https://github.com/val-town/codemirror-ts
+      // TODO(burdon): Extend tooltip to show TS type info (not just errors).
+      // TODO(burdon): Worker: https://github.com/val-town/codemirror-ts?tab=readme-ov-file#setup-worker
       env && path
         ? [
             tsFacet.of({ env, path }),
             tsSync(),
+            tsHover(),
             tsLinter(),
             autocompletion({
               override: [tsAutocomplete()],

@@ -2754,6 +2754,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../../core/protocols
@@ -2778,6 +2781,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.5.1
         version: 1.5.1
+      '@typescript/ata':
+        specifier: ^0.9.4
+        version: 0.9.4(typescript@5.3.3)
       '@typescript/vfs':
         specifier: ^1.5.0
         version: 1.5.0
@@ -22736,6 +22742,14 @@ packages:
     dependencies:
       '@typescript-eslint/types': 6.20.0
       eslint-visitor-keys: 3.4.3
+
+  /@typescript/ata@0.9.4(typescript@5.3.3):
+    resolution: {integrity: sha512-PaJ16WouPV/SaA+c0tnOKIqYq24+m93ipl/e0Dkxuianer+ibc5b0/6ZgfCFF8J7QEp57dySMSP9nWOFaCfJnw==}
+    peerDependencies:
+      typescript: ^4.4.4
+    dependencies:
+      typescript: 5.3.3
+    dev: false
 
   /@typescript/vfs@1.5.0:
     resolution: {integrity: sha512-AJS307bPgbsZZ9ggCT3wwpg3VbTKMFNHfaY/uF0ahSkYYrPF2dSSKDNIDIQAHm9qJqbLvCsSJH7yN4Vs/CsMMg==}

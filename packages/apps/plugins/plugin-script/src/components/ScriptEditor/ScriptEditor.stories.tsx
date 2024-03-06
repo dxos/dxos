@@ -14,66 +14,65 @@
 // - mobile rendering error
 
 import '@dxosTheme';
-import { type VirtualTypeScriptEnvironment } from '@typescript/vfs';
 import React, { useEffect, useState } from 'react';
 
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { createDocAccessor, TextObject, type DocAccessor } from '@dxos/react-client/echo';
 
 import { ScriptEditor } from './ScriptEditor';
-import { createEnv } from '../../ts';
+import { TS } from '../../ts';
 
 const examples: string[] = [
   [
     //
+    '// Example schema.',
     'import * as S from "@effect/schema/Schema";',
-    'S.',
     '',
-  ].join('\n'),
-  [
-    //
-    '// Example TS.',
-    'const value = 100;',
-    'console.log(value);',
+    'const Contact = S.struct({',
+    '});',
     '',
   ].join('\n'),
   [
     '// Example schema.',
-    'export default function() {',
-    '  const value = 100',
-    '  return <div>{value}</div>;',
-    '}',
+    'import * as S from "@effect/schema/Schema";',
     '',
-  ].join('\n'),
-  [
-    '// Example schema.',
     'S.struct({',
     '  timestamp: S.Date,',
     '  title: S.string,',
     '  content: R.Text,',
-    "}).pipe(S.identifier('dxos.org/schema/Test'))",
+    "}).pipe(S.identifier('dxos.org/schema/Test'))", // TODO(burdon): pipe not recognized by ATS.
     '',
   ].join('\n'),
 ];
 
+const imports = [
+  //
+  'import * as S from "@effect/schema/Schema"',
+];
+
 const Story = () => {
   const [source, setSource] = useState<DocAccessor>();
-  const [env, setEnv] = useState<VirtualTypeScriptEnvironment>();
+  const [ts, setTs] = useState<TS>();
   useEffect(() => {
     setSource(createDocAccessor(new TextObject(examples[0], TextKind.PLAIN)));
     setTimeout(async () => {
-      setEnv(await createEnv());
+      const ts = new TS();
+      await ts.initialize();
+      for (const statement of imports) {
+        ts.import(statement);
+      }
+      setTs(ts);
     });
   }, []);
 
-  if (!source || !env) {
+  if (!source || !ts) {
     return null;
   }
 
   return (
     <div className='flex fixed inset-0 bg-neutral-50'>
       <div className='flex w-[700px] mx-auto'>
-        <ScriptEditor source={source} className='bg-white text-lg' env={env} path='test.ts' />
+        <ScriptEditor source={source} className='bg-white text-lg' env={ts.env} path='test.ts' />
       </div>
     </div>
   );
