@@ -9,7 +9,6 @@ import {
   createVirtualTypeScriptEnvironment,
   type VirtualTypeScriptEnvironment,
 } from '@typescript/vfs';
-import lzstring from 'lz-string';
 import ts, { type CompilerOptions, type System } from 'typescript';
 
 import { Trigger } from '@dxos/async';
@@ -39,49 +38,47 @@ export class TS {
     },
   ) {
     const cache = typeof localStorage !== 'undefined';
-
-    // TODO(burdon): Not called.
-    const fetcher: typeof fetch = async (...props) => {
-      console.log('??', props);
-      try {
-        return fetch(...props);
-      } catch (err) {
-        console.log(err);
-        return Response.error();
-      }
-    };
-
-    this._fsMap = await createDefaultMapFromCDN(compilerOptions, ts.version, cache, ts, lzstring, fetcher);
+    this._fsMap = await createDefaultMapFromCDN(compilerOptions, ts.version, cache, ts);
     this._system = createSystem(this._fsMap);
     this._env = createVirtualTypeScriptEnvironment(this._system, rootFiles, ts, compilerOptions);
   }
 
   /**
-   * Dynamically import typedefs.
+   * Dynamically import typedefs from cdn.jsdelivr.net.
    * @param statement Import statement.
    */
   async loadImport(statement: string) {
     if (this._imports.has(statement)) {
       return;
     }
+
     this._imports.add(statement);
 
     const trigger = new Trigger();
 
+    const fetcher: typeof fetch = async (...props) => {
+      try {
+        return fetch(...props);
+      } catch (err) {
+        console.log('???');
+        return Response.error();
+      }
+    };
+
     // https://www.npmjs.com/package/@typescript/ata
     const ata = setupTypeAcquisition({
-      projectName: 'Test',
+      projectName: 'dxos.org/app/composer',
       typescript: ts,
       logger: console,
+      fetcher,
       delegate: {
-        receivedFile: (code, path) => {
-          this._fsMap!.set(path, code);
-          log('received', { path });
-        },
         started: () => {
           log.info('start', { statement });
         },
         // TODO(burdon): Show progress/done in UI.
+        receivedFile: (code, path) => {
+          this._fsMap!.set(path, code);
+        },
         progress: (downloaded, total) => {
           log('update', { downloaded, total });
         },
@@ -100,7 +97,7 @@ export class TS {
       ata(statement);
       await trigger.wait({ timeout: 30_000 });
     } catch (err) {
-      log.catch(err);
+      log.catch('failed to load', { statement });
       this._imports.delete(statement);
     }
   }
