@@ -27,7 +27,7 @@ export const ThemePlugin = (
   const config: VitePluginTailwindOptions & Pick<typeof options, 'extensions'> = {
     jit: true,
     cssPath: resolve(__dirname, './theme.css'),
-    virtualFileId: '@dxosTheme', // TODO(burdon): import '@dxos-theme'?
+    virtualFileId: '@dxosTheme', // TODO(burdon): Rename '@dxos-theme'?
     ...options,
   };
 

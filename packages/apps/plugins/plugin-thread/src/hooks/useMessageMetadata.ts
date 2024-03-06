@@ -9,12 +9,14 @@ import { type MessageMetadata } from '@dxos/react-ui-thread';
 
 export type MessagePropertiesProvider = (identityKey: PublicKey | undefined) => MessageMetadata;
 
-export const useMessageMetadata = (id: string, identity?: Identity): MessageMetadata => {
-  const authorId = identity?.identityKey.toHex() ?? 'unknown';
+// TODO(burdon): This isn't a hook. Rename and move to types.
+export const createMessageData = (id: string, identity?: Identity): MessageMetadata => {
   return {
     id,
-    authorId,
-    authorName: identity?.profile?.displayName ?? (identity?.identityKey ? generateName(authorId) : undefined),
+    authorId: identity?.identityKey.toHex(),
+    authorName:
+      identity?.profile?.displayName ??
+      (identity?.identityKey ? generateName(identity.identityKey.toHex()) : undefined),
     authorStatus: 'inactive',
   };
 };

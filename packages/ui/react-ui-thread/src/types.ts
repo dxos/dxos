@@ -5,8 +5,8 @@
 import type { AvatarStatus } from '@dxos/react-ui';
 
 export type MessageMetadata = {
-  id: string;
-  authorId: string;
+  id: string; // TODO(burdon): Remove/rename?
+  authorId?: string;
   authorName?: string;
   authorImgSrc?: string;
   authorStatus?: AvatarStatus;
