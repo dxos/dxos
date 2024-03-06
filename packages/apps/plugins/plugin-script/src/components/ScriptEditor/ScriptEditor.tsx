@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { autocompletion, completionKeymap } from '@codemirror/autocomplete';
+import { autocompletion } from '@codemirror/autocomplete';
 import { javascript } from '@codemirror/lang-javascript';
-import { EditorView, keymap, lineNumbers } from '@codemirror/view';
-import { minimalSetup } from 'codemirror';
+import { EditorView } from '@codemirror/view';
+import { type VirtualTypeScriptEnvironment } from '@typescript/vfs';
+import { tsAutocomplete, tsFacet, tsLinter, tsSync } from '@valtown/codemirror-ts';
+import { basicSetup } from 'codemirror';
 import React, { useMemo } from 'react';
 
 import { DocAccessor } from '@dxos/echo-schema';
@@ -17,32 +19,49 @@ export type ScriptEditorProps = {
   source: DocAccessor;
   themeMode?: ThemeMode;
   className?: string;
+  env?: VirtualTypeScriptEnvironment;
+  path?: string;
 };
 
 // TODO(burdon): https://davidmyers.dev/blog/how-to-build-a-code-editor-with-codemirror-6-and-typescript/introduction
 
-export const ScriptEditor = ({ source, themeMode, className }: ScriptEditorProps) => {
+export const ScriptEditor = ({ source, themeMode, className, env, path }: ScriptEditorProps) => {
   const extensions = useMemo(
     () => [
       // TODO(burdon): Use basic set-up (e.g., bracket matching).
       // TODO(burdon): Use this in text editor (cancels highlight current line)
-      // basicSetup,
-      minimalSetup,
+      basicSetup,
+      // minimalSetup,
 
-      lineNumbers(),
+      // lineNumbers(),
       // TODO(burdon): Syntax highlighting theme.
-      javascript({ typescript: true }),
-      autocompletion({ activateOnTyping: false }),
-      keymap.of([...completionKeymap]),
+      javascript({
+        typescript: true,
+        jsx: true,
+      }),
+      // autocompletion({ activateOnTyping: false }),
+      // keymap.of([...completionKeymap]),
+
+      // https://github.com/val-town/codemirror-ts
+      env && path
+        ? [
+            tsFacet.of({ env, path }),
+            tsSync(),
+            tsLinter(),
+            autocompletion({
+              override: [tsAutocomplete()],
+            }),
+          ]
+        : [],
 
       EditorView.baseTheme(defaultTheme),
       EditorView.darkTheme.of(themeMode === 'dark'),
       EditorView.contentAttributes.of({ class: '!px-2' }),
 
-      // TODO(burdon): Presence.
+      // TODO(burdon): Add presence.
       automerge(source),
     ],
-    [source, themeMode],
+    [source, themeMode, env, path],
   );
 
   const { parentRef } = useTextEditor(

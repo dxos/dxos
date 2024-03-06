@@ -14,15 +14,22 @@
 // - mobile rendering error
 
 import '@dxosTheme';
-
+import { type VirtualTypeScriptEnvironment } from '@typescript/vfs';
 import React, { useEffect, useState } from 'react';
 
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { createDocAccessor, TextObject, type DocAccessor } from '@dxos/react-client/echo';
 
 import { ScriptEditor } from './ScriptEditor';
+import { createEnv } from '../../ts';
 
 const examples: string[] = [
+  [
+    //
+    '// Example TS.',
+    'const value = 100;',
+    'console.log(value);',
+  ].join('\n'),
   [
     '// Example schema.',
     'export default function() {',
@@ -43,18 +50,22 @@ const examples: string[] = [
 
 const Story = () => {
   const [source, setSource] = useState<DocAccessor>();
+  const [env, setEnv] = useState<VirtualTypeScriptEnvironment>();
   useEffect(() => {
-    setSource(createDocAccessor(new TextObject(examples[1], TextKind.PLAIN)));
+    setSource(createDocAccessor(new TextObject(examples[0], TextKind.PLAIN)));
+    setTimeout(async () => {
+      setEnv(await createEnv());
+    });
   }, []);
 
-  if (!source) {
+  if (!source || !env) {
     return null;
   }
 
   return (
     <div className='flex fixed inset-0 bg-neutral-50'>
       <div className='flex w-[700px] mx-auto'>
-        <ScriptEditor source={source} className='bg-white text-lg' />
+        <ScriptEditor source={source} className='bg-white text-lg' env={env} path='index.ts' />
       </div>
     </div>
   );
