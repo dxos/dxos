@@ -3,7 +3,12 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
-import { isValidAutomergeUrl, type DocHandle, type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
+import {
+  isValidAutomergeUrl,
+  type DocHandle,
+  type DocHandleChangePayload,
+  type DocumentId,
+} from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { type Reference } from '@dxos/document-model';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -72,13 +77,13 @@ export class AutomergeDb {
       return;
     }
     this._ctx = new Context();
-    this._ctx.onDispose(this._onDispose.bind(this));
+    this._ctx.onDispose(this._unsubscribeFromHandles.bind(this));
     this._automergeDocLoader.onObjectDocumentLoaded.on(this._ctx, this._onObjectDocumentLoaded.bind(this));
 
     try {
       await this._automergeDocLoader.loadSpaceRootDocHandle(this._ctx, spaceState);
       const spaceRootDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
-      const spaceRootDoc = spaceRootDocHandle.docSync();
+      const spaceRootDoc: SpaceDoc = spaceRootDocHandle.docSync();
       invariant(spaceRootDoc);
       const objectIds = Object.keys(spaceRootDoc.objects ?? {});
       this._createInlineObjects(spaceRootDocHandle, objectIds);
@@ -94,6 +99,28 @@ export class AutomergeDb {
     const elapsed = performance.now() - start;
     if (elapsed > 1000) {
       log.warn('slow AM open', { docId: spaceState.rootUrl, duration: elapsed });
+    }
+  }
+
+  async update(spaceState: SpaceState) {
+    invariant(this._ctx);
+    if (spaceState.rootUrl === this._automergeDocLoader.getSpaceRootDocHandle().url) {
+      return;
+    }
+    this._unsubscribeFromHandles();
+    const objectIdsToLoad = this._automergeDocLoader.clearHandleReferences();
+
+    try {
+      await this._automergeDocLoader.loadSpaceRootDocHandle(this._ctx, spaceState);
+      const spaceRootDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
+      await this._handleSpaceRootDocumentChange(spaceRootDocHandle, objectIdsToLoad);
+      spaceRootDocHandle.on('change', this._onDocumentUpdate);
+    } catch (err) {
+      if (err instanceof ContextDisposedError) {
+        return;
+      }
+      log.catch(err);
+      throw err;
     }
   }
 
@@ -165,6 +192,48 @@ export class AutomergeDb {
     core.setDeleted(true);
   }
 
+  private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandle<SpaceDoc>, objectsToLoad: string[]) {
+    const spaceRootDoc: SpaceDoc = spaceRootDocHandle.docSync();
+    const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
+    const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}));
+
+    const objectsToRebind = new Map<string, { handle: DocHandle<SpaceDoc>; objectIds: string[] }>();
+    objectsToRebind.set(spaceRootDocHandle.url, { handle: spaceRootDocHandle, objectIds: [] });
+
+    const objectsToRemove: string[] = [];
+    const objectsToCreate = [...inlinedObjectIds.values()].filter((oid) => !this._objects.has(oid));
+
+    for (const object of this._objects.values()) {
+      if (inlinedObjectIds.has(object.id)) {
+        objectsToRebind.get(spaceRootDocHandle.url)!.objectIds.push(object.id);
+      } else if (linkedObjectIds.has(object.id)) {
+        const newObjectDocUrl = linkedObjectIds.get(object.id)!;
+        const existing = objectsToRebind.get(newObjectDocUrl);
+        if (existing != null) {
+          existing.objectIds.push(object.id);
+          continue;
+        }
+        const newDocHandle = this.automerge.repo.find(newObjectDocUrl as DocumentId);
+        await newDocHandle.whenReady(['ready']);
+        objectsToRebind.set(newObjectDocUrl, { handle: newDocHandle, objectIds: [object.id] });
+      } else {
+        objectsToRemove.push(object.id);
+      }
+    }
+
+    objectsToRemove.forEach((oid) => this._objects.delete(oid));
+    this._createInlineObjects(spaceRootDocHandle, objectsToCreate);
+    for (const { handle, objectIds } of objectsToRebind.values()) {
+      this._rebindObjects(handle, objectIds);
+    }
+    for (const objectId of objectsToLoad) {
+      if (!this._objects.has(objectId)) {
+        this._automergeDocLoader.loadObjectDocument(objectId);
+      }
+    }
+    this._automergeDocLoader.onObjectLinksUpdated(spaceRootDoc.links);
+  }
+
   private _emitUpdateEvent(itemsUpdated: string[]) {
     if (itemsUpdated.length === 0) {
       return;
@@ -231,7 +300,7 @@ export class AutomergeDb {
     };
   }
 
-  private _onDispose() {
+  private _unsubscribeFromHandles() {
     for (const docHandle of Object.values(this.automerge.repo.handles)) {
       docHandle.off('change', this._onDocumentUpdate);
     }
