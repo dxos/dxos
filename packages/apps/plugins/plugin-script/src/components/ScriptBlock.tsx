@@ -16,6 +16,17 @@ import { ScriptEditor } from './ScriptEditor';
 import { Splitter, SplitterSelector, type View } from './Splitter';
 import { Compiler, type CompilerResult, initializeCompiler } from '../compiler';
 
+// Keep in sync with packages/apps/composer-app/script-frame/main.tsx .
+const PROVIDED_MODULES = [
+  'react',
+  'react-dom/client',
+  '@dxos/client',
+  '@dxos/react-client',
+  '@dxos/react-client/echo',
+  '@braneframe/plugin-explorer',
+  '@braneframe/types',
+];
+
 export type ScriptBlockProps = {
   id: string;
   source: DocAccessor;
@@ -44,7 +55,7 @@ export const ScriptBlock = ({
   useEffect(() => handleSetView(controlledView ?? 'editor'), [controlledView]);
 
   const [result, setResult] = useState<CompilerResult>();
-  const compiler = useMemo(() => new Compiler({ platform: 'browser' }), []);
+  const compiler = useMemo(() => new Compiler({ platform: 'browser', providedModules: PROVIDED_MODULES }), []);
   useEffect(() => {
     // TODO(burdon): Create useCompiler hook (with initialization).
     void initializeCompiler({ wasmURL: esbuildWasmURL });
