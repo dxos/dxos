@@ -14,6 +14,7 @@ import { visit } from 'unist-util-visit';
 import { loadConfig as _loadConfig } from './config.js';
 import { loadTypedocJson as _loadTypedocJson } from './loadTypedocJson.js';
 import { Stringifier, packagesInProject, findReflection } from './templates/api/util.t/index.js';
+import { JSONOutput } from 'typedoc';
 
 export namespace Remark {
   /**
@@ -57,7 +58,7 @@ export namespace Remark {
           );
           return tree;
         }
-        let symbol = findReflection(pkage, (node) => node.name === symbolName);
+        let symbol = findReflection(pkage, (node) => node.name === symbolName) as JSONOutput.DeclarationReflection;
         if (!symbol) {
           console.warn(
             `problem in file ${vfile.path}: symbol ${symbolName} of package ${packageName} not found while processing apidoc directive`,
@@ -67,7 +68,7 @@ export namespace Remark {
         let next: string | undefined;
         const restMembers2 = [...restMembers];
         while ((next = restMembers2.shift())) {
-          symbol = findReflection(symbol as any, (node) => node.name === next);
+          symbol = findReflection(symbol as any, (node) => node.name === next) as JSONOutput.DeclarationReflection;
         }
         if (!symbol) {
           console.warn(

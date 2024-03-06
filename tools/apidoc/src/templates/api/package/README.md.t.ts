@@ -1,10 +1,11 @@
 import path from 'node:path';
 import template from '../template.t.js';
 import { packagesInProject } from '../util.t/index.js';
+import { JSONOutput as S } from 'typedoc'
 
 export default template.define.group(({ input }) => {
   const { packagesPath } = input!;
-  const modules = packagesInProject(input! as any);
+  const modules = packagesInProject(input! as any) as S.DeclarationReflection[];
   return modules
     .map((module) => {
       const source = module.sources?.[0].fileName;
