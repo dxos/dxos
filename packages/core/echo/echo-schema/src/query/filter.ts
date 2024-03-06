@@ -6,6 +6,7 @@ import { Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
+import * as S from '@effect/schema/Schema';
 
 import { getAutomergeObjectCore } from '../automerge';
 import {
@@ -21,6 +22,8 @@ import { getReferenceWithSpaceKey } from '../object';
 import { type Schema } from '../proto';
 import get from 'lodash.get';
 import { isReactiveProxy } from '../effect/proxy';
+import { getEchoObjectAnnotation } from '../effect/reactive';
+import { getSchemaTypeRefOrThrow } from '../effect/echo-handler';
 
 export const hasType =
   <T extends TypedObject>(schema: Schema) =>
@@ -85,12 +88,19 @@ export class Filter<T extends EchoObject = EchoObject> {
     }
   }
 
-  static schema(schema: Schema): Filter<Expando> {
-    const ref = getReferenceWithSpaceKey(schema);
-    invariant(ref, 'Invalid schema; check persisted in the database.');
-    return new Filter({
-      type: ref,
-    });
+  static schema(schema: S.Schema<any> | Schema): Filter<Expando> {
+    if (S.isSchema(schema)) {
+      const ref = getSchemaTypeRefOrThrow(schema);
+      return new Filter({
+        type: ref,
+      });
+    } else {
+      const ref = getReferenceWithSpaceKey(schema);
+      invariant(ref, 'Invalid schema; check persisted in the database.');
+      return new Filter({
+        type: ref,
+      });
+    }
   }
 
   static typename(typename: string, filter?: Record<string, any> | OperatorFilter<any>): Filter<any> {
