@@ -1,0 +1,42 @@
+{
+  "name": "@dxos/indexing",
+  "version": "0.4.6",
+  "description": "ECHO database.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/automerge": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/echo-pipeline": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/random-access-storage": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect/schema": "^0.62.1",
+    "@orama/orama": "^2.0.8",
+    "effect": "^2.3.1",
+    "lodash.isequal": "^4.5.0"
+  },
+  "devDependencies": {
+    "@dxos/echo-pipeline": "workspace:*",
+    "@types/lodash.isequal": "^4.5.0",
+    "fast-check": "^3.15.1",
+    "wait-for-expect": "^3.0.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "beast": {}
+}

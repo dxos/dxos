@@ -1,0 +1,16 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "indexing",
+  "sourceRoot": "packages/core/echo/indexing/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {},
+    "lint": {},
+    "test": {}
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}
