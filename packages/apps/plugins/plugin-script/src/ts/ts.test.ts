@@ -10,12 +10,14 @@ import { describe, test } from '@dxos/test';
 import { TS } from './ts';
 
 // TODO(burdon): Clean-up docs and TODOs.
+// TODO(burdon): react-buddy for storybook?
 //  https://www.typescriptlang.org/play
-//  https://github.com/val-town/codemirror-ts
 //  https://www.npmjs.com/package/@typescript/vfs
 //  https://discuss.codemirror.net/t/codemirror-6-and-typescript-lsp/3398/11
 //  https://observablehq.com/blog/bringing-the-typescript-language-server-to-observable
-//  TODO(burdon): https://github.com/asadm/codemirror-copilot
+//  https://github.com/val-town/codemirror-ts
+//  https://github.com/asadm/codemirror-copilot
+//  https://davidmyers.dev/blog/how-to-build-a-code-editor-with-codemirror-6-and-typescript/introduction
 
 describe('Typescript VFS', () => {
   test('Basic', async () => {

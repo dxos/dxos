@@ -19,6 +19,7 @@ import { log } from '@dxos/log';
  * Typescript VFS.
  */
 export class TS {
+  private _imports = new Set<string>();
   private _fsMap?: Map<string, string>;
   private _env?: VirtualTypeScriptEnvironment;
 
@@ -44,6 +45,10 @@ export class TS {
    * @param statement
    */
   async import(statement: string) {
+    if (this._imports.has(statement)) {
+      return;
+    }
+
     const trigger = new Trigger();
 
     // https://www.npmjs.com/package/@typescript/ata
@@ -54,16 +59,17 @@ export class TS {
       delegate: {
         receivedFile: (code, path) => {
           this._fsMap!.set(path, code);
-          log.info('received', { path });
+          log('received', { path });
         },
         started: () => {
-          log.info('start', { statement });
+          log('start', { statement });
         },
+        // TODO(burdon): Show progress/done in UI.
         progress: (downloaded, total) => {
-          log.info('update', { downloaded, total });
+          log('update', { downloaded, total });
         },
         finished: (vfs) => {
-          log.info('done', { statement, files: vfs.size });
+          log('done', { statement, files: vfs.size });
           trigger.wake();
         },
       },
@@ -71,5 +77,6 @@ export class TS {
 
     ata(statement);
     await trigger.wait();
+    this._imports.add(statement);
   }
 }
