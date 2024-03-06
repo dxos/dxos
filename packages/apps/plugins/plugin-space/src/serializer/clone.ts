@@ -13,7 +13,7 @@ import { serializers } from './serializers';
  */
 export const clone = async (object: TypedObject) => {
   const typename = object.__typename ?? TypeOfExpando;
-  const serializer = serializers[typename];
+  const serializer = serializers[typename] ?? serializers.default;
   invariant(serializer, `No serializer for type: ${typename}`);
   const data = await serializer.serialize(object);
   return serializer.deserialize(data);

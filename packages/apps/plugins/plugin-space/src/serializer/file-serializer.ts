@@ -5,11 +5,10 @@
 import md5 from 'md5';
 
 import { Folder } from '@braneframe/types';
-import { getTypeRef } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { TypedObject, type Space, base } from '@dxos/react-client/echo';
+import { type Space, base } from '@dxos/react-client/echo';
 
-import { type TypedObjectSerializer, serializers } from './serializers';
+import { serializers } from './serializers';
 
 export const TypeOfExpando = 'dxos.org/typename/expando';
 
@@ -88,7 +87,7 @@ export class FileSerializer {
         continue;
       }
 
-      const serializer = serializers[child.__typename] ?? this.defaultSerializer;
+      const serializer = serializers[child.__typename] ?? serializers.default;
       const typename = child.__typename ?? TypeOfExpando;
 
       const filename = serializer.filename(child);
@@ -130,7 +129,7 @@ export class FileSerializer {
           }
           case 'file': {
             const child = folder.objects.find((item) => item.id === object.id);
-            const serializer = serializers[object.typename] ?? this.defaultSerializer;
+            const serializer = serializers[object.typename] ?? serializers.default;
             const deserialized = await serializer.deserialize(object.content!, child);
 
             if (!child) {
@@ -145,35 +144,6 @@ export class FileSerializer {
       }
     }
   }
-
-  /**
-   * Default serializer.
-   */
-  private defaultSerializer: TypedObjectSerializer = {
-    filename: () => ({ name: 'Untitled', extension: 'json' }),
-    serialize: async (object: TypedObject) => JSON.stringify(object.toJSON(), null, 2),
-    deserialize: async (text: string, object?: TypedObject) => {
-      const { '@id': id, '@type': type, '@meta': meta, ...data } = JSON.parse(text);
-      if (!object) {
-        const deserializedObject = new TypedObject(
-          Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@'))),
-          {
-            meta,
-            type: getTypeRef(type),
-          },
-        );
-        deserializedObject[base]._id = id;
-        return deserializedObject;
-      } else {
-        Object.entries(data)
-          .filter(([key]) => !key.startsWith('@'))
-          .forEach(([key, value]: any) => {
-            object[key] = value;
-          });
-        return object;
-      }
-    },
-  };
 
   private readonly _namesCount = new Map<string, number>();
   private _fixNamesCollisions = (name = 'Untitled') => {
