@@ -205,16 +205,22 @@ export class AutomergeDb {
 
     for (const object of this._objects.values()) {
       if (inlinedObjectIds.has(object.id)) {
+        if (spaceRootDocHandle.url === object.docHandle?.url) {
+          continue;
+        }
         objectsToRebind.get(spaceRootDocHandle.url)!.objectIds.push(object.id);
       } else if (linkedObjectIds.has(object.id)) {
         const newObjectDocUrl = linkedObjectIds.get(object.id)!;
+        if (newObjectDocUrl === object.docHandle?.url) {
+          continue;
+        }
         const existing = objectsToRebind.get(newObjectDocUrl);
         if (existing != null) {
           existing.objectIds.push(object.id);
           continue;
         }
         const newDocHandle = this.automerge.repo.find(newObjectDocUrl as DocumentId);
-        await newDocHandle.whenReady(['ready']);
+        await newDocHandle.doc(['ready']);
         objectsToRebind.set(newObjectDocUrl, { handle: newDocHandle, objectIds: [object.id] });
       } else {
         objectsToRemove.push(object.id);

@@ -157,6 +157,36 @@ describe('AutomergeDb', () => {
       expect(peer.db.getObjectById(stack.notLoadedDocument.id)).to.be.undefined;
     });
 
+    test('linked objects can be remapped', async () => {
+      const stack = new Expando({
+        text1: new TextObject('text1'),
+        text2: new TextObject('text2'),
+        text3: new TextObject('text3'),
+      });
+      const peer = await createPeerInSpaceWithObject(stack);
+      const newRootDocHandle = peer.db._automerge.automerge.repo.create<SpaceDoc>();
+      newRootDocHandle.change((newDoc: any) => {
+        newDoc.links = getObjectDocHandle(stack).docSync().links;
+        newDoc.links[stack.text2.id] = newDoc.links[stack.text1.id];
+        newDoc.links[stack.text3.id] = newDoc.links[stack.text1.id];
+      });
+      getObjectDocHandle(stack.text1).change((newDoc: any) => {
+        newDoc.objects[stack.text2.id] = getObjectDocHandle(stack.text2).docSync()?.objects[stack.text2.id];
+        newDoc.objects[stack.text3.id] = getObjectDocHandle(stack.text3).docSync()?.objects[stack.text3.id];
+      });
+      for (const obj of [stack.text1, stack.text2, stack.text3]) {
+        await waitObjectLoaded(peer, obj, { triggerLoading: true });
+      }
+
+      await peer.db._automerge.update({ rootUrl: newRootDocHandle.url });
+      expect((peer.db.getObjectById(stack.text1.id) as any).content).to.eq(stack.text1.content);
+      for (const obj of [stack.text1, stack.text2, stack.text3]) {
+        const dbObject: any = peer.db.getObjectById(obj.id);
+        expect(dbObject.content).to.eq(obj.content);
+        expect(getObjectDocHandle(dbObject).url).to.eq(getObjectDocHandle(stack.text1).url);
+      }
+    });
+
     test('updates are not received on old handles', async () => {
       const obj = new Expando({});
       const peer = await createPeerInSpaceWithObject(obj);
