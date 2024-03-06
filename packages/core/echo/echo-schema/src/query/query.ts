@@ -46,7 +46,7 @@ export type QueryResult<T extends EchoObject> = {
    */
   resolution?: {
     // TODO(dmaretskyi): Make this more generic.
-    source: 'remote' | 'local';
+    source: 'remote' | 'local' | 'index';
 
     /**
      * Query resolution time in milliseconds.
