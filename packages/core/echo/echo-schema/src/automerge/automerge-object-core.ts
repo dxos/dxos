@@ -312,7 +312,7 @@ export class AutomergeObjectCore {
       const reference = this.linkObject(value);
       return encodeReference(reference);
     }
-    if (value instanceof Reference && value.protocol === 'protobuf') {
+    if (value instanceof Reference) {
       // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
       return encodeReference(value);
     }
@@ -334,7 +334,8 @@ export class AutomergeObjectCore {
   /**
    * Decode a value from the Automerge document.
    */
-  decode(value: any): DecodedAutomergeValue {
+  // TODO(dmaretskyi): Cleanup to not do resolution in this method.
+  decode(value: any, { resolveLinks = true }: { resolveLinks?: boolean } = {}): DecodedAutomergeValue {
     if (value === null) {
       return value;
     }
@@ -344,7 +345,8 @@ export class AutomergeObjectCore {
     if (value instanceof A.RawString) {
       return value.toString();
     }
-    if (isEncodedReferenceObject(value)) {
+    // For some reason references without `@type` are being stored in the document.
+    if (isEncodedReferenceObject(value) || looksLikeReferenceObject(value)) {
       if (value.protocol === 'protobuf') {
         // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
         // TODO(dmaretskyi): Why are we returning raw reference here instead of doing lookup?
@@ -352,7 +354,12 @@ export class AutomergeObjectCore {
       }
 
       const reference = decodeReference(value);
-      return this.lookupLink(reference);
+
+      if (resolveLinks) {
+        return this.lookupLink(reference);
+      } else {
+        return reference;
+      }
     }
     if (typeof value === 'object') {
       return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this.decode(value)]));
@@ -394,10 +401,11 @@ export class AutomergeObjectCore {
   }
 
   getType(): Reference | undefined {
-    const value = this.decode(this.get([SYSTEM_NAMESPACE, 'type']));
+    const value = this.decode(this.get([SYSTEM_NAMESPACE, 'type']), { resolveLinks: false });
     if (!value) {
       return undefined;
     }
+
     invariant(value instanceof Reference);
     return value;
   }
@@ -476,3 +484,11 @@ const getSchemaProto = (): typeof Schema => {
 
   return schemaProto;
 };
+
+const looksLikeReferenceObject = (value: unknown) =>
+  typeof value === 'object' &&
+  value !== null &&
+  Object.keys(value).length === 3 &&
+  'itemId' in value &&
+  'protocol' in value &&
+  'host' in value;
