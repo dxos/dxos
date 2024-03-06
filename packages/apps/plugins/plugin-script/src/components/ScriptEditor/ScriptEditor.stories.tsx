@@ -53,7 +53,7 @@ const Story = () => {
   return (
     <div className='flex fixed inset-0 bg-neutral-50'>
       <div className='flex w-[700px] mx-auto'>
-        <ScriptEditor source={source} className='bg-white text-lg' ts={ts} path='test.ts' />
+        <ScriptEditor ts={ts} path='test.ts' source={source} className='bg-white text-lg' />
       </div>
     </div>
   );

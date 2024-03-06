@@ -5,11 +5,13 @@
 import { autocompletion } from '@codemirror/autocomplete';
 import { javascript } from '@codemirror/lang-javascript';
 import { syntaxTree } from '@codemirror/language';
+import { type EditorState } from '@codemirror/state';
 import { EditorView, lineNumbers } from '@codemirror/view';
 import { tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } from '@valtown/codemirror-ts';
 import { minimalSetup } from 'codemirror';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
+import { debounce } from '@dxos/async';
 import { DocAccessor } from '@dxos/echo-schema';
 import { type ThemeMode } from '@dxos/react-ui';
 import { automerge, defaultTheme, useTextEditor } from '@dxos/react-ui-editor';
@@ -18,14 +20,27 @@ import { mx } from '@dxos/react-ui-theme';
 import { type TS } from '../../ts';
 
 export type ScriptEditorProps = {
+  ts?: TS;
+  path?: string;
   source: DocAccessor;
   themeMode?: ThemeMode;
   className?: string;
-  ts?: TS;
-  path?: string;
 };
 
-export const ScriptEditor = ({ source, themeMode, className, ts, path }: ScriptEditorProps) => {
+export const ScriptEditor = ({ ts, path, source, themeMode, className }: ScriptEditorProps) => {
+  const checkImports =
+    ts &&
+    debounce((state: EditorState) => {
+      syntaxTree(state).iterate({
+        enter: (node) => {
+          if (node.name === 'ImportDeclaration') {
+            const [text] = state.doc.slice(node.from, node.to);
+            void ts.loadImport(text);
+          }
+        },
+      });
+    }, 500);
+
   const extensions = useMemo(
     () => [
       // TODO(burdon): Use basic set-up (e.g., bracket matching).
@@ -39,8 +54,8 @@ export const ScriptEditor = ({ source, themeMode, className, ts, path }: ScriptE
       }),
 
       // https://github.com/val-town/codemirror-ts
-      // TODO(burdon): Extend tooltip to show TS type info (not just errors).
-      // TODO(burdon): Worker: https://github.com/val-town/codemirror-ts?tab=readme-ov-file#setup-worker
+      // TODO(burdon): Create worker (configure vite; need extension for plugin architecture?)
+      //  https://github.com/val-town/codemirror-ts?tab=readme-ov-file#setup-worker
       ts && path
         ? [
             tsFacet.of({ env: ts.env, path }),
@@ -50,16 +65,14 @@ export const ScriptEditor = ({ source, themeMode, className, ts, path }: ScriptE
             autocompletion({
               override: [tsAutocomplete()],
             }),
-            EditorView.updateListener.of(({ state }) => {
-              syntaxTree(state).iterate({
-                enter: (node) => {
-                  if (node.name === 'ImportDeclaration') {
-                    const [text] = state.doc.slice(node.from, node.to);
-                    void ts.import(text);
+            // Dynamically import types.
+            checkImports
+              ? EditorView.updateListener.of(({ state, changes }) => {
+                  if (!changes.empty) {
+                    checkImports(state);
                   }
-                },
-              });
-            }),
+                })
+              : [],
           ]
         : [],
 
@@ -73,13 +86,17 @@ export const ScriptEditor = ({ source, themeMode, className, ts, path }: ScriptE
     [source, themeMode, ts, path],
   );
 
-  const { parentRef } = useTextEditor(
+  const { parentRef, view } = useTextEditor(
     {
       extensions,
       doc: DocAccessor.getValue(source),
     },
     [extensions],
   );
+
+  useEffect(() => {
+    view && checkImports?.(view.state);
+  }, [view]);
 
   return <div ref={parentRef} className={mx('flex grow', className)} />;
 };

@@ -9,18 +9,23 @@ import {
   createVirtualTypeScriptEnvironment,
   type VirtualTypeScriptEnvironment,
 } from '@typescript/vfs';
-import ts, { type CompilerOptions } from 'typescript';
+import lzstring from 'lz-string';
+import ts, { type CompilerOptions, type System } from 'typescript';
 
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+const rootFiles: string[] = [];
+
 /**
  * Typescript VFS.
  */
 export class TS {
-  private _imports = new Set<string>();
+  // TODO(burdon): Create persistent map (since types are cached in localStorage).
+  private readonly _imports = new Set<string>();
   private _fsMap?: Map<string, string>;
+  private _system?: System;
   private _env?: VirtualTypeScriptEnvironment;
 
   get env() {
@@ -34,20 +39,32 @@ export class TS {
     },
   ) {
     const cache = typeof localStorage !== 'undefined';
-    this._fsMap = await createDefaultMapFromCDN(compilerOptions, ts.version, cache, ts);
 
-    const system = createSystem(this._fsMap);
-    this._env = createVirtualTypeScriptEnvironment(system, [], ts, compilerOptions);
+    // TODO(burdon): Not called.
+    const fetcher: typeof fetch = async (...props) => {
+      console.log('??', props);
+      try {
+        return fetch(...props);
+      } catch (err) {
+        console.log(err);
+        return Response.error();
+      }
+    };
+
+    this._fsMap = await createDefaultMapFromCDN(compilerOptions, ts.version, cache, ts, lzstring, fetcher);
+    this._system = createSystem(this._fsMap);
+    this._env = createVirtualTypeScriptEnvironment(this._system, rootFiles, ts, compilerOptions);
   }
 
   /**
    * Dynamically import typedefs.
-   * @param statement
+   * @param statement Import statement.
    */
-  async import(statement: string) {
+  async loadImport(statement: string) {
     if (this._imports.has(statement)) {
       return;
     }
+    this._imports.add(statement);
 
     const trigger = new Trigger();
 
@@ -62,21 +79,29 @@ export class TS {
           log('received', { path });
         },
         started: () => {
-          log('start', { statement });
+          log.info('start', { statement });
         },
         // TODO(burdon): Show progress/done in UI.
         progress: (downloaded, total) => {
           log('update', { downloaded, total });
         },
         finished: (vfs) => {
-          log('done', { statement, files: vfs.size });
+          log.info('done', { statement, files: vfs.size });
           trigger.wake();
+        },
+        // TODO(burdon): Wrap fetch (Uncaught (in promise) TypeError: Failed to fetch).
+        errorMessage: (error) => {
+          log.catch(error);
         },
       },
     });
 
-    ata(statement);
-    await trigger.wait();
-    this._imports.add(statement);
+    try {
+      ata(statement);
+      await trigger.wait({ timeout: 30_000 });
+    } catch (err) {
+      log.catch(err);
+      this._imports.delete(statement);
+    }
   }
 }

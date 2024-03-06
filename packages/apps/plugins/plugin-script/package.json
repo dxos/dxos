@@ -53,6 +53,7 @@
     "@typescript/vfs": "^1.5.0",
     "@valtown/codemirror-ts": "^2.1.0",
     "codemirror": "^6.0.1",
+    "comlink": "^4.4.1",
     "esbuild-wasm": "^0.16.14",
     "lodash.get": "^4.4.2",
     "lz-string": "^1.5.0",
