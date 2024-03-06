@@ -78,7 +78,7 @@ export class SharedWorkerConnection {
       port: this._systemPort,
       // TODO(wittjosiah): Make longer and factor out to constant.
       // TODO(wittjosiah): If this is too long then it breaks the reset flows in Composer.
-      timeout: 5_000,
+      timeout: 200,
     });
 
     let lockKey: string | undefined;

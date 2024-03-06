@@ -16,8 +16,6 @@ import { setupPage } from '@dxos/test/playwright';
 const isMac = os.platform() === 'darwin';
 const modifier = isMac ? 'Meta' : 'Control';
 
-console.log('MODIFIER', modifier);
-
 export class AppManager {
   page!: Page;
   shell!: ShellManager;
@@ -73,11 +71,14 @@ export class AppManager {
   }
 
   async openIdentityManager() {
-    await this.page.keyboard.press(`${modifier}+Shift+.`);
+    const platform = os.platform();
+    const shortcut = platform === 'darwin' ? 'Meta+Shift+.' : platform === 'win32' ? 'Alt+Shift+.' : 'Alt+Shift+>';
+    await this.page.keyboard.press(shortcut);
   }
 
   async openSpaceManager() {
-    await this.page.keyboard.press(`${modifier}+.`);
+    const shortcut = isMac ? 'Meta+.' : 'Alt+.';
+    await this.page.keyboard.press(shortcut);
   }
 
   isAuthenticated({ timeout = 5_000 } = {}) {
