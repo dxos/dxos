@@ -5,7 +5,6 @@
 import { next as automerge, getHeads } from '@dxos/automerge/automerge';
 import {
   Repo,
-  type StorageAdapter,
   type PeerId,
   type DocumentId,
   type StorageKey,
@@ -14,7 +13,7 @@ import {
 } from '@dxos/automerge/automerge-repo';
 import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
 import { type Stream } from '@dxos/codec-protobuf';
-import { Context } from '@dxos/context';
+import { Context, cancelWithContext } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
@@ -46,7 +45,7 @@ export class AutomergeHost {
   private readonly _repo: Repo;
   private readonly _meshNetwork: MeshNetworkAdapter;
   private readonly _clientNetwork: LocalHostNetworkAdapter;
-  private readonly _storage: StorageAdapter;
+  private readonly _storage: AutomergeStorageWrapper;
 
   @trace.info()
   private readonly _peerId: string;
@@ -183,16 +182,21 @@ export class AutomergeHost {
 
     const markingDirtyPromise = Promise.all(
       objectIds.map(async (objectId) => {
-        await this._metadata!.markDirty(
-          idCodec.encode({ documentId: event.handle.documentId, objectId }),
-          lastAvailableHash,
+        await cancelWithContext(
+          this._ctx,
+          this._metadata!.markDirty(
+            idCodec.encode({ documentId: event.handle.documentId, objectId }),
+            lastAvailableHash,
+          ),
         );
       }),
     )
       .then(() => {
         this._updatingMetadata.delete(event.handle.documentId);
       })
-      .catch((err) => log.catch(err));
+      .catch((err: Error) => {
+        !this._ctx.disposed && log.catch(err);
+      });
 
     this._updatingMetadata.set(event.handle.documentId, markingDirtyPromise);
   }
@@ -229,9 +233,9 @@ export class AutomergeHost {
   }
 
   async close() {
-    this._storage instanceof AutomergeStorageAdapter && (await this._storage.close());
+    await this._storage.close();
     await this._clientNetwork.close();
-    void this._ctx.dispose();
+    await this._ctx.dispose();
   }
 
   //

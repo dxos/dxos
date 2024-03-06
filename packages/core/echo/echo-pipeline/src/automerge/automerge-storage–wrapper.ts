@@ -5,6 +5,8 @@
 import { type StorageKey, type Chunk, type StorageAdapterInterface } from '@dxos/automerge/automerge-repo';
 import { type MaybePromise } from '@dxos/util';
 
+import { AutomergeStorageAdapter } from './automerge-storage-adapter';
+
 export type StorageCallbacks = {
   beforeSave?: (path: string[]) => MaybePromise<void>;
   afterSave?: (path: string[]) => MaybePromise<void>;
@@ -47,5 +49,11 @@ export class AutomergeStorageWrapper implements StorageAdapterInterface {
 
   async removeRange(keyPrefix: StorageKey): Promise<void> {
     return this._storage.removeRange(keyPrefix);
+  }
+
+  async close() {
+    if (this._storage instanceof AutomergeStorageAdapter) {
+      return this._storage.close();
+    }
   }
 }
