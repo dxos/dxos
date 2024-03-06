@@ -85,7 +85,7 @@ export class Compiler {
                 }
               });
 
-              for (const module of this._options.providedModules) {
+              for (const module of providedModules) {
                 build.onResolve({ filter: new RegExp(`^${module}$`) }, ({ path }) => {
                   return { path, namespace: 'injected-module' };
                 });

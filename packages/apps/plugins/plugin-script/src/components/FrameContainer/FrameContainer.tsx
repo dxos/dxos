@@ -5,7 +5,6 @@
 import React, { useEffect, useRef } from 'react';
 
 import { clientServiceBundle } from '@dxos/client-protocol';
-import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { baseSurface, mx } from '@dxos/react-ui-theme';
 import { createProtoRpcPeer } from '@dxos/rpc';
