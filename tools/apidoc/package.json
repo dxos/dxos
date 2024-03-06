@@ -33,7 +33,7 @@
     "remark-frontmatter": "^5.0.0",
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
-    "typedoc": "^0.23.22",
+    "typedoc": "^0.25.10",
     "typescript": "^5.2.2",
     "unified": "^11.0.0",
     "unified-prettier": "^2.0.0",

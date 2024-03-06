@@ -8,9 +8,9 @@
   "basePath": "..",
   "entryPointStrategy": "packages",
   "entryPoints": [
-    "../packages/sdk/client",
-    "../packages/sdk/react-client",
-    "../packages/sdk/config",
+    // "../packages/sdk/client",
+    // "../packages/sdk/react-client",
+    // "../packages/sdk/config",
     "../packages/sdk/app-framework"
   ]
 }
