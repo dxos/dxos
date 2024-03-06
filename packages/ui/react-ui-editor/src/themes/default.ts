@@ -152,6 +152,7 @@ export const defaultTheme: ThemeStyles = {
   //
   '.cm-tooltip': {
     border: 'none',
+    background: 'unset',
   },
   '.cm-tooltip-below': {},
 
