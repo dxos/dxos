@@ -128,7 +128,7 @@ export const ScriptBlock = ({
       )}
 
       <Splitter view={view}>
-        <ScriptEditor ts={ts} path='index.tsx' source={source} themeMode={themeMode} />
+        <ScriptEditor ts={ts} path='main.tsx' source={source} themeMode={themeMode} />
         {result && <FrameContainer key={id} result={result} containerUrl={containerUrl} />}
       </Splitter>
     </div>

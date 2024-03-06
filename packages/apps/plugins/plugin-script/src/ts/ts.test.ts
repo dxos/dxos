@@ -14,21 +14,22 @@ import { TS } from './ts';
 //  https://www.typescriptlang.org/play
 //  https://www.npmjs.com/package/@typescript/vfs
 //  https://discuss.codemirror.net/t/codemirror-6-and-typescript-lsp/3398/11
-//  https://observablehq.com/blog/bringing-the-typescript-language-server-to-observable
 //  https://github.com/val-town/codemirror-ts
 //  https://github.com/asadm/codemirror-copilot
+//  https://observablehq.com/blog/bringing-the-typescript-language-server-to-observable
 //  https://davidmyers.dev/blog/how-to-build-a-code-editor-with-codemirror-6-and-typescript/introduction
 
 describe('Typescript VFS', () => {
   test('Basic', async () => {
-    const path = 'index.ts';
-
     const ts = new TS();
     await ts.initialize();
+
+    const path = 'index.ts';
 
     {
       const content = ['const value = 100;'].join('\n');
       ts.env.createFile(path, content);
+
       const file = ts.env.getSourceFile(path);
       expect(file).to.exist;
 

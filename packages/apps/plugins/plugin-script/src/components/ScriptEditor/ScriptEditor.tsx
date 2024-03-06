@@ -7,7 +7,7 @@ import { javascript } from '@codemirror/lang-javascript';
 import { syntaxTree } from '@codemirror/language';
 import { type EditorState } from '@codemirror/state';
 import { EditorView, lineNumbers } from '@codemirror/view';
-import { tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } from '@valtown/codemirror-ts';
+import { type HoverInfo, tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } from '@valtown/codemirror-ts';
 import { minimalSetup } from 'codemirror';
 import React, { useEffect, useMemo } from 'react';
 
@@ -26,6 +26,27 @@ export type ScriptEditorProps = {
   themeMode?: ThemeMode;
   className?: string;
 };
+
+// TODO(burdon): Adapt syntax highlighting theme.
+// punctuation, space, alias,
+const styles = EditorView.baseTheme({
+  '.cm-tooltip-info': {
+    fontFamily: 'monospace',
+    fontSize: '16px',
+  },
+  '.cm-tooltip-info-keyword': {
+    color: '#708',
+  },
+  '.cm-tooltip-info-localName, .cm-tooltip-info-aliasName, .cm-tooltip-info-parameterName': {
+    color: '#00f',
+  },
+  // '.cm-tooltip-info-interfaceName, .cm-tooltip-info-typeParameterName': {
+  //   color: 'orange',
+  // },
+  '.cm-tooltip-info-stringLiteral': {
+    color: '#a11',
+  },
+});
 
 export const ScriptEditor = ({ ts, path, source, themeMode, className }: ScriptEditorProps) => {
   const checkImports =
@@ -60,8 +81,23 @@ export const ScriptEditor = ({ ts, path, source, themeMode, className }: ScriptE
         ? [
             tsFacet.of({ env: ts.env, path }),
             tsSync(),
-            tsHover(),
             tsLinter(),
+            tsHover({
+              renderTooltip: (info: HoverInfo) => {
+                const div = document.createElement('div');
+                if (info.quickInfo?.displayParts) {
+                  for (const part of info.quickInfo.displayParts) {
+                    // console.log(part.kind);
+                    const span = div.appendChild(document.createElement('span'));
+                    span.className = `cm-tooltip-info cm-tooltip-info-${part.kind}`;
+                    span.innerText = part.text;
+                  }
+                }
+
+                return { dom: div };
+              },
+            }),
+            styles,
             autocompletion({
               override: [tsAutocomplete()],
             }),

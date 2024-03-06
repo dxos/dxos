@@ -18,7 +18,7 @@ import { log } from '@dxos/log';
 const rootFiles: string[] = [];
 
 /**
- * Typescript VFS.
+ * Typescript VFS environment.
  */
 export class TS {
   // TODO(burdon): Create persistent map (since types are cached in localStorage).
@@ -60,7 +60,7 @@ export class TS {
       try {
         return fetch(...props);
       } catch (err) {
-        console.log('???');
+        console.error('fetcher', err);
         return Response.error();
       }
     };
@@ -73,7 +73,7 @@ export class TS {
       fetcher,
       delegate: {
         started: () => {
-          log.info('start', { statement });
+          log.info('started', { statement });
         },
         // TODO(burdon): Show progress/done in UI.
         receivedFile: (code, path) => {
@@ -83,7 +83,7 @@ export class TS {
           log('update', { downloaded, total });
         },
         finished: (vfs) => {
-          log.info('done', { statement, files: vfs.size });
+          log.info('finished', { statement, files: vfs.size });
           trigger.wake();
         },
         // TODO(burdon): Wrap fetch (Uncaught (in promise) TypeError: Failed to fetch).
@@ -97,7 +97,7 @@ export class TS {
       ata(statement);
       await trigger.wait({ timeout: 30_000 });
     } catch (err) {
-      log.catch('failed to load', { statement });
+      log.catch('failed to import types', { statement });
       this._imports.delete(statement);
     }
   }

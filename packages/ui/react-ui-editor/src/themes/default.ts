@@ -159,6 +159,9 @@ export const defaultTheme: ThemeStyles = {
   '&dark .cm-tooltip': {
     background: get(tokens, 'extend.colors.black'),
   },
+  '.cm-tooltip-hover': {
+    padding: '0 4px',
+  },
   '.cm-tooltip-below': {},
 
   //

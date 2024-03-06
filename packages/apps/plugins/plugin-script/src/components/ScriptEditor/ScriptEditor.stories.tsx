@@ -13,23 +13,14 @@ import { TS } from '../../ts';
 
 const examples: string[] = [
   [
-    //
     '// Example schema.',
-    'import * as S from "@effect/schema/Schema";',
+    "import * as S from '@effect/schema/Schema';",
     '',
     'const Contact = S.struct({',
-    '});',
-    '',
-  ].join('\n'),
-  [
-    '// Example schema.',
-    'import * as S from "@effect/schema/Schema";',
-    '',
-    'S.struct({',
     '  timestamp: S.Date,',
     '  title: S.string,',
-    '  content: R.Text,',
-    "}).pipe(S.identifier('dxos.org/schema/Test'))", // TODO(burdon): pipe not recognized by ATS.
+    '  content: S.string,',
+    "}).pipe(S.identifier('dxos.org/schema/Test'))",
     '',
   ].join('\n'),
 ];
