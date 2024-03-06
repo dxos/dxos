@@ -16,6 +16,7 @@ import { createEnv } from './ts';
 //  https://observablehq.com/blog/bringing-the-typescript-language-server-to-observable
 
 // https://www.typescriptlang.org/play
+// https://www.npmjs.com/package/@typescript/ata
 
 // TODO(burdon): Worker: https://github.com/val-town/codemirror-ts?tab=readme-ov-file#setup-worker
 // TODO(burdon): https://github.com/asadm/codemirror-copilot
@@ -52,6 +53,10 @@ describe('Typescript VFS', () => {
       const completions = await getAutocompletion({ env, path, context: { pos: content.length, explicit: true } });
       const completion = completions?.options.find(({ label }) => label === 'value');
       expect(completion).to.exist;
+    }
+
+    {
+      // import * as S from '@effect/schema/Schema';
     }
   });
 });

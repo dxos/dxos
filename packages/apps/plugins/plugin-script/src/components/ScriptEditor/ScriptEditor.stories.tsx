@@ -26,9 +26,16 @@ import { createEnv } from '../../ts';
 const examples: string[] = [
   [
     //
+    'import * as S from "@effect/schema/Schema";',
+    'S.',
+    '',
+  ].join('\n'),
+  [
+    //
     '// Example TS.',
     'const value = 100;',
     'console.log(value);',
+    '',
   ].join('\n'),
   [
     '// Example schema.',
@@ -36,6 +43,7 @@ const examples: string[] = [
     '  const value = 100',
     '  return <div>{value}</div>;',
     '}',
+    '',
   ].join('\n'),
   [
     '// Example schema.',
@@ -65,7 +73,7 @@ const Story = () => {
   return (
     <div className='flex fixed inset-0 bg-neutral-50'>
       <div className='flex w-[700px] mx-auto'>
-        <ScriptEditor source={source} className='bg-white text-lg' env={env} path='index.ts' />
+        <ScriptEditor source={source} className='bg-white text-lg' env={env} path='test.ts' />
       </div>
     </div>
   );
