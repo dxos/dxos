@@ -16,7 +16,7 @@ import { assignDeep, defer, getDeep } from '@dxos/util';
 
 import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
-import { AutomergeObject, getRawDoc } from './automerge-object';
+import { AutomergeObject, getAutomergeObjectCore, getRawDoc } from './automerge-object';
 import { docChangeSemaphore } from './doc-semaphore';
 import {
   encodeReference,
@@ -26,9 +26,17 @@ import {
   type DecodedAutomergeValue,
   type SpaceDoc,
 } from './types';
-import { base, type TypedObjectOptions, type EchoObject, TextObject, type AutomergeTextCompat } from '../object';
+import {
+  base,
+  type TypedObjectOptions,
+  type EchoObject,
+  TextObject,
+  type AutomergeTextCompat,
+  OpaqueEchoObject,
+} from '../object';
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto'; // Keep type-only
+import { isReactiveProxy } from '../effect/proxy';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
@@ -65,6 +73,7 @@ export class AutomergeObjectCore {
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * Set only when the object is not bound to a database.
    */
+  // TODO(dmaretskyi): Change to object core.
   public linkCache?: Map<string, EchoObject> = new Map<string, EchoObject>();
 
   /**
@@ -266,21 +275,23 @@ export class AutomergeObjectCore {
   /**
    * Store referenced object.
    */
-  linkObject(obj: EchoObject): Reference {
+  linkObject(obj: OpaqueEchoObject): Reference {
+    const core = getAutomergeObjectCore(obj);
+
     if (this.database) {
-      if (!obj[base]._database) {
+      if (!core.database) {
         this.database.add(obj);
-        return new Reference(obj.id);
+        return new Reference(core.id);
       } else {
-        if ((obj[base]._database as any) !== this.database) {
-          return new Reference(obj.id, undefined, obj[base]._database.spaceKey.toHex());
+        if ((core.database as any) !== this.database) {
+          return new Reference(core.id, undefined, core.database.spaceKey.toHex());
         } else {
-          return new Reference(obj.id);
+          return new Reference(core.id);
         }
       }
     } else {
       invariant(this.linkCache);
-      this.linkCache.set(obj.id, obj);
+      this.linkCache.set(obj.id, obj as EchoObject);
       return new Reference(obj.id);
     }
   }
@@ -308,8 +319,13 @@ export class AutomergeObjectCore {
     if (value === undefined) {
       return null;
     }
-    if (value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
-      const reference = this.linkObject(value);
+    // TODO(dmaretskyi): Move proxy handling out of this class.
+    if (
+      value instanceof AbstractEchoObject ||
+      value instanceof AutomergeObject ||
+      (isReactiveProxy(value) as boolean)
+    ) {
+      const reference = this.linkObject(value as OpaqueEchoObject);
       return encodeReference(reference);
     }
     if (value instanceof Reference) {

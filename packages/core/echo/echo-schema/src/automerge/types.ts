@@ -4,7 +4,7 @@
 
 import { Reference } from '@dxos/document-model';
 
-import { type ObjectMeta, type EchoObject } from '../object';
+import { type ObjectMeta, type EchoObject, OpaqueEchoObject } from '../object';
 import { type Schema } from '../proto';
 
 export interface SpaceDoc {
@@ -89,5 +89,5 @@ export type DecodedAutomergeValue =
   | boolean
   | DecodedAutomergeValue[]
   | { [key: string]: DecodedAutomergeValue }
-  | Reference // TODO(dmaretskyi): Raw references shouldn't be here.
-  | EchoObject;
+  | Reference
+  | OpaqueEchoObject;
