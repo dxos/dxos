@@ -7,7 +7,6 @@ import { EchoDatabaseImpl } from './database';
 import { Expando, TextObject, TypedObject } from './object';
 import { linkDeferred } from './type-collection';
 
-export * from './indexing';
 export * from './database';
 export * from './hypergraph';
 export * from './object';

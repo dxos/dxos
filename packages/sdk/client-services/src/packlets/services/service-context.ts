@@ -14,8 +14,8 @@ import {
   SnapshotStore,
   AutomergeHost,
 } from '@dxos/echo-pipeline';
-import { IndexMetadataStore } from '@dxos/echo-schema';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
+import { IndexMetadataStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
