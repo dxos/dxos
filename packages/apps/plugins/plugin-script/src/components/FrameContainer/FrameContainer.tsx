@@ -6,6 +6,7 @@ import React, { useEffect, useRef } from 'react';
 
 import { clientServiceBundle } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { baseSurface, mx } from '@dxos/react-ui-theme';
 import { createProtoRpcPeer } from '@dxos/rpc';
@@ -38,9 +39,9 @@ export const FrameContainer = ({ containerUrl, result, debug = true }: FrameCont
         }),
       });
 
-      rpc.open().catch(console.error);
+      rpc.open().catch((e) => log.catch(e));
       return () => {
-        rpc.close().catch(console.error);
+        rpc.close().catch((e) => log.catch(e));
       };
     }
   }, [iframeRef]);

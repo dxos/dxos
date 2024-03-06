@@ -5,6 +5,7 @@
 import { scheduleTask, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { subscriptionHandler } from '@dxos/functions';
+import { log } from '@dxos/log';
 
 export const handler = subscriptionHandler(async ({ event }) => {
   const { space, objects } = event;
@@ -30,7 +31,7 @@ export const handler = subscriptionHandler(async ({ event }) => {
             chess.move(move);
             // TODO(burdon): Can we defer committing a batch until the function completes (idempotence?)
             game.pgn = chess.pgn();
-            console.log(`move: ${chess.history().length}\n` + chess.ascii());
+            log.info(`move: ${chess.history().length}\n` + chess.ascii());
           }
         }
       }

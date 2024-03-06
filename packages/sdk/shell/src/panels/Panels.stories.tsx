@@ -6,6 +6,7 @@ import '@dxosTheme';
 
 import React from 'react';
 
+import { log } from '@dxos/log';
 import { withTheme } from '@dxos/storybook-utils';
 
 import * as IdentityPanels from './IdentityPanel/IdentityPanel.stories';
@@ -17,7 +18,7 @@ const getComponentNames = (module: any): string[] =>
 
 const getComponents = (module: any): React.FC[] => {
   const components = getComponentNames(module).map((name) => module[name]);
-  console.log(module);
+  log.info(module);
   return components;
 };
 

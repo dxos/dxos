@@ -129,7 +129,7 @@ export const IdentityPanel = ({
   const invitations = useHaloInvitations();
   const agentProps = useAgentHandlers({ client, identity, invitations });
   if (!identity) {
-    console.error('IdentityPanel rendered with no active identity.');
+    log.error('IdentityPanel rendered with no active identity.');
     return null;
   }
   const [identityState, identitySend, identityService] = useIdentityMachine(client);

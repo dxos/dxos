@@ -13,6 +13,7 @@ import { type Document } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { log } from '@dxos/log';
 import { SpaceState } from '@dxos/react-client/echo';
 
 import {
@@ -131,7 +132,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                       docGhId={data.docGhId as GhIdentifier}
                       onUpdate={(content) => {
                         // TODO(burdon): Fire intent.
-                        console.log('onUpdate', content);
+                        log.info('onUpdate', content);
                       }}
                     />
                   );

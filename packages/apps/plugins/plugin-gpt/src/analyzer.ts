@@ -9,6 +9,7 @@ import { type Document as DocumentType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import { getTextContent, toJsonSchema, Schema, Expando, TextObject, getTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 export type GptAnalyzerOptions = {
   apiKey: string;
@@ -28,7 +29,7 @@ export class GptAnalyzer {
   async exec(space: Space, document: DocumentType) {
     const { objects: schemas } = space.db.query(Schema.filter());
     const text = getTextContent(document.content);
-    console.info('analyzing...', { length: text?.length, schema: schemas.length });
+    log.info('analyzing...', { length: text?.length, schema: schemas.length });
     if (!text?.length || !schemas.length) {
       return;
     }
@@ -36,7 +37,7 @@ export class GptAnalyzer {
     const schemaMap = schemas.reduce((map, schema) => {
       const jsonSchema = toJsonSchema(schema);
       if (jsonSchema.title) {
-        console.log(schema.typename);
+        log.info(schema.typename);
         map.set(jsonSchema.title, jsonSchema);
       }
 
@@ -66,9 +67,9 @@ export class GptAnalyzer {
       },
     ];
 
-    console.info('requesting...', { length: text?.length, schema: schemas.length });
+    log.info('requesting...', { length: text?.length, schema: schemas.length });
     const response = await this._client.chat.completions.create({ model: 'gpt-4', messages });
-    console.log('processing', { choices: response.choices.length });
+    log.info('processing', { choices: response.choices.length });
     const result = response.choices[0];
     try {
       if (result.message.content) {
@@ -76,7 +77,7 @@ export class GptAnalyzer {
         for (const obj of data) {
           const schema = schemas.find((schema) => schema.typename === getTypename(obj));
           if (!schema) {
-            console.warn('invalid object', obj);
+            log.warn('invalid object', { obj });
             continue;
           }
 
@@ -101,11 +102,11 @@ export class GptAnalyzer {
 
           const object = new Expando(data, { schema });
           space.db.add(object);
-          console.log('created', JSON.stringify(object, null, 2));
+          log.info('created', { json: JSON.stringify(object, null, 2) });
         }
       }
     } catch (err) {
-      console.warn('invalid response', err);
+      log.warn('invalid response', { err });
     }
   }
 }

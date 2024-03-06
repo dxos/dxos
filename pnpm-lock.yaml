@@ -1217,6 +1217,9 @@ importers:
       '@dxos/gem-spore':
         specifier: workspace:*
         version: link:../../../experimental/gem-spore
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -1481,6 +1484,9 @@ importers:
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -2751,6 +2757,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../../core/protocols
@@ -3423,6 +3432,9 @@ importers:
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -3806,6 +3818,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../log
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
@@ -8519,6 +8534,9 @@ importers:
 
   packages/ui/react-ui:
     dependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../primitives/react-hooks
@@ -8939,6 +8957,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
@@ -9204,6 +9225,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
@@ -26267,6 +26291,7 @@ packages:
 
   /commander@2.20.3:
     resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==}
+    requiresBuild: true
 
   /commander@2.9.0:
     resolution: {integrity: sha512-bmkUukX8wAOjHdN26xj5c4ctEV22TQ7dQYhSmuckKhToXrkUn0iIaolHdIxYYqD55nhpSPA9zPQ1yP57GdXP2A==}

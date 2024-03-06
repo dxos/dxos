@@ -5,6 +5,7 @@
 import * as Tabs from '@radix-ui/react-tabs';
 import React, { useEffect, useRef, useState } from 'react';
 
+import { log } from '@dxos/log';
 import { type Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
 import { AnchoredOverflow } from '@dxos/react-ui'; // Deliberately not using the common components export to aid in code-splitting.
@@ -95,7 +96,7 @@ export const TracingPanel = () => {
         forceUpdate({});
       },
       (err) => {
-        console.error(err);
+        log.catch(err);
       },
     );
 

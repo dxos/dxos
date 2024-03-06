@@ -153,7 +153,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     get: () => {
       if (!warningShown) {
         warningShown = true;
-        console.warn('globalThis.dxos is an undocumented API and may changed or removed entirely without notice.');
+        log.warn('globalThis.dxos is an undocumented API and may changed or removed entirely without notice.');
       }
       return hook;
     },
@@ -253,11 +253,11 @@ const port: RpcPort = {
  * Delete all data in the browser without depending on other packages.
  */
 const reset = async () => {
-  console.log(`Deleting all data from ${typeof window.localStorage !== 'undefined' ? window.location?.origin : ''}`);
+  log.info(`Deleting all data from ${typeof window.localStorage !== 'undefined' ? window.location?.origin : ''}`);
 
   if (typeof localStorage !== 'undefined') {
     localStorage.clear();
-    console.log('Cleared local storage');
+    log.info('Cleared local storage');
   }
 
   if (
@@ -270,10 +270,10 @@ const reset = async () => {
       try {
         await root.removeEntry(entry, { recursive: true });
       } catch (err) {
-        console.error(`Failed to delete ${entry}: ${err}`);
+        log.error(`Failed to delete ${entry}: ${err}`);
       }
     }
-    console.log('Cleared OPFS');
+    log.info('Cleared OPFS');
 
     if (typeof location !== 'undefined' && typeof location.reload === 'function') {
       location.reload();
