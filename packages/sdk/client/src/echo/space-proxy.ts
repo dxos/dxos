@@ -267,7 +267,7 @@ export class SpaceProxy implements Space {
       const automergeRoot = space.pipeline?.currentEpoch?.subject.assertion.automergeRoot;
       if (automergeRoot) {
         // NOOP if the root is the same.
-        await this._db._automerge.update({ rootUrl: automergeRoot });
+        await this._db.automerge.update({ rootUrl: automergeRoot });
       }
     }
 
