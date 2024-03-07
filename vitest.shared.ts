@@ -30,9 +30,6 @@ const createNodeConfig = () =>
 
 const createBrowserConfig = (browserName: 'chrome') =>
   defineConfig({
-    server: {
-      middlewareMode: false,
-    },
     plugins: [
       nodeStdPlugin(),
       // Inspect()
