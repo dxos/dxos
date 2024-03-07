@@ -23,6 +23,9 @@ import { type SurfaceComponent, type SurfaceResult, useSurfaceRoot } from './Sur
  */
 export type Direction = 'inline' | 'inline-reverse' | 'block' | 'block-reverse';
 
+/**
+ * SurfaceProps are the props that are passed to the Surface component.
+ */
 export type SurfaceProps = PropsWithChildren<{
   /**
    * Role defines how the data should be rendered.
