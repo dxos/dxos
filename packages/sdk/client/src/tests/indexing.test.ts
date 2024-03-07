@@ -6,7 +6,7 @@ import { Contact } from '@braneframe/types';
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { warnAfterTimeout } from '@dxos/debug';
-import { IndexQueryProvider, IndexStore, Indexer } from '@dxos/echo-schema';
+import { IndexQueryProvider, IndexStore, Indexer } from '@dxos/indexing';
 import { PublicKey } from '@dxos/keys';
 import { idCodec } from '@dxos/protocols';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
@@ -32,7 +32,7 @@ describe('Index queries', () => {
     const indexer = new Indexer({
       indexStore: new IndexStore({ directory: builder.storage!.createDirectory('index-store') }),
       metadataStore: services.host!.context.indexMetadata,
-      loadDocuments: async (ids) => {
+      loadDocuments: async (ids: string[]) => {
         const snapshots = await Promise.all(
           ids.map(async (id) => {
             const { documentId, objectId } = idCodec.decode(id);

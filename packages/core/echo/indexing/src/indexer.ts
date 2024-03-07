@@ -9,12 +9,13 @@ import { Context, cancelWithContext } from '@dxos/context';
 import { type Filter } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { IndexKind, type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { ComplexMap } from '@dxos/util';
 
 import { IndexConstructors } from './index-constructors';
 import { type IndexMetadataStore } from './index-metadata-store';
 import { type IndexStore } from './index-store';
-import { type ObjectType, type Index, type IndexKind } from './types';
+import { type ObjectType, type Index } from './types';
 
 export type ObjectSnapshot = {
   /**
@@ -40,15 +41,11 @@ export type IndexerParams = {
   saveAfterTime?: number;
 };
 
-export type IndexerConfig = {
-  indexes: IndexKind[];
-};
-
 export class Indexer {
   private readonly _ctx = new Context();
-  private _indexConfig?: IndexerConfig;
+  private _indexConfig?: IndexConfig;
   private readonly _indexes = new ComplexMap<IndexKind, Index>((kind) =>
-    kind.kind === 'FIELD_MATCH' ? `${kind.kind}:${kind.field}` : kind.kind,
+    kind.kind === IndexKind.Kind.FIELD_MATCH ? `${kind.kind}:${kind.field}` : kind.kind,
   );
 
   private _initialized = false;
@@ -69,16 +66,17 @@ export class Indexer {
 
     for (const [kind, index] of this._indexes.entries()) {
       switch (kind.kind) {
-        case 'FIELD_MATCH':
+        case IndexKind.Kind.FIELD_MATCH:
+          invariant(kind.field, 'Field match index kind should have a field');
           await cancelWithContext(
             this._ctx,
             updateIndexWithObjects(
               index,
-              snapshots.filter((snapshot) => kind.field in snapshot.object),
+              snapshots.filter((snapshot) => kind.field! in snapshot.object),
             ),
           );
           break;
-        case 'SCHEMA_MATCH':
+        case IndexKind.Kind.SCHEMA_MATCH:
           await cancelWithContext(this._ctx, updateIndexWithObjects(index, snapshots));
           break;
       }
@@ -115,12 +113,12 @@ export class Indexer {
   }
 
   @synchronized
-  setIndexConfig(config: IndexerConfig) {
+  setIndexConfig(config: IndexConfig) {
     invariant(!this._indexConfig, 'Index config is already set');
     this._indexConfig = config;
     if (this._initialized) {
       for (const kind of this._indexes.keys()) {
-        if (!config.indexes.some((kind) => isEqual(kind, kind))) {
+        if (!config.indexes?.some((kind) => isEqual(kind, kind))) {
           this._indexes.delete(kind);
         }
       }
@@ -143,7 +141,7 @@ export class Indexer {
     // TODO(mykola): Load only indexes that are needed.
     const indexesFromDisk = await this._indexStore.loadAllIndexes();
     for (const index of indexesFromDisk) {
-      if (!this._indexConfig || this._indexConfig.indexes.some((kind) => isEqual(kind, index.kind))) {
+      if (!this._indexConfig || this._indexConfig.indexes?.some((kind) => isEqual(kind, index.kind))) {
         this._indexes.set(index.kind, index);
       }
     }

@@ -140,6 +140,7 @@
   "devDependencies": {
     "@braneframe/types": "workspace:*",
     "@dxos/automerge": "workspace:*",
+    "@dxos/indexing": "workspace:*",
     "@dxos/echo-pipeline": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@types/lodash.isequal": "^4.5.0",
