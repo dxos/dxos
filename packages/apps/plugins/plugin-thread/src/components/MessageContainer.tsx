@@ -69,10 +69,11 @@ const TextboxBlock = ({
   onBlockDelete,
 }: { text: TextObject } & Pick<MessageBlockProps<MessageType.Block>, 'authorId' | 'onBlockDelete'>) => {
   const identity = useIdentity();
-  const model = useTextModel({ text });
-  const extensions = useMemo(() => [command], []);
   const textboxWidth = onBlockDelete ? 'col-span-2' : 'col-span-3';
   const readonly = identity?.identityKey.toHex() !== authorId;
+
+  const model = useTextModel({ text });
+  const extensions = useMemo(() => [command], []);
 
   return (
     <div

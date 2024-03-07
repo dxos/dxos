@@ -140,12 +140,12 @@ export const CommentContainer = ({
       {nextMessageModel && (
         <>
           <MessageTextbox
-            onSend={handleCreate}
             autoFocus={autoFocus}
             placeholder={t('message placeholder')}
-            {...textboxMetadata}
             model={nextMessageModel}
             extensions={extensions}
+            onSend={handleCreate}
+            {...textboxMetadata}
           />
           <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
           {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}

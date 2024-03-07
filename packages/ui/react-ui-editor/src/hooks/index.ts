@@ -4,6 +4,7 @@
 
 export * from './awareness-provider';
 export * from './defs';
+export * from './extension-utils';
 
 export * from './useActionHandler';
 export * from './useEditorView';

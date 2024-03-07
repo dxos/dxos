@@ -61,7 +61,7 @@ const Story = () => {
       {messages.map((message) => (
         <Message key={message.id} {...message} />
       ))}
-      <MessageTextbox disabled={pending} authorId={identityKey1.toHex()} onSend={handleSend} model={nextMessageModel} />
+      <MessageTextbox authorId={identityKey1.toHex()} disabled={pending} model={nextMessageModel} onSend={handleSend} />
       <ThreadFooter activity>Processing...</ThreadFooter>
     </Thread>
   );

@@ -133,8 +133,6 @@ const StoryThread: FC<{
   const [autoFocus, setAutoFocus] = useState(false);
   const [item, setItem] = useState({ text: new TextObject() });
   const model = useTextModel({ text: item.text });
-  const editorRef = useRef<EditorView>(null);
-
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -182,10 +180,9 @@ const StoryThread: FC<{
       <div ref={containerRef} className='contents'>
         <MessageTextbox
           authorId={authorId}
-          ref={editorRef}
           autoFocus={autoFocus}
-          onEditorFocus={onSelect}
           model={model}
+          onEditorFocus={onSelect}
           onSend={handleCreateMessage}
         />
         <ThreadFooter />

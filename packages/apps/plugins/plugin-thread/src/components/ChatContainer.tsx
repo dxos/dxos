@@ -125,12 +125,12 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
       {nextMessageModel && (
         <>
           <MessageTextbox
-            onSend={handleCreate}
+            autoFocus={autoFocus}
             placeholder={t('message placeholder')}
-            {...textboxMetadata}
             model={nextMessageModel}
             extensions={extensions}
-            autoFocus={autoFocus}
+            onSend={handleCreate}
+            {...textboxMetadata}
           />
           <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
         </>

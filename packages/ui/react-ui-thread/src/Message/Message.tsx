@@ -7,7 +7,7 @@ import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, { type ComponentPropsWithRef, type FC, forwardRef, useMemo } from 'react';
 
 import { Avatar, Button, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { TextEditor, type TextEditorProps, keymap, type EditorView, listener } from '@dxos/react-ui-editor';
+import { TextEditor, type TextEditorProps, keymap, listener } from '@dxos/react-ui-editor';
 import {
   focusRing,
   hoverableControlItem,
@@ -159,50 +159,51 @@ const keyBindings = ({ onSend, onClear }: Pick<MessageTextboxProps, 'onSend' | '
   },
 ];
 
-export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
-  (
-    {
-      onSend,
-      onClear,
-      onEditorFocus,
-      authorId,
-      authorName,
-      authorImgSrc,
-      disabled,
-      extensions: _extensions,
-      ...editorProps
-    },
-    forwardedRef,
-  ) => {
-    const extensions = useMemo(
-      () => [
-        ...(_extensions ?? []),
-        keymap.of(keyBindings({ onSend, onClear })),
-        listener({
-          onFocus: (focused) => {
-            if (focused) {
-              onEditorFocus?.();
-            }
-          },
-        }),
-      ],
-      [_extensions, onSend, onClear, onEditorFocus],
-    );
+export const MessageTextbox = ({
+  onSend,
+  onClear,
+  onEditorFocus,
+  authorId,
+  authorName,
+  authorImgSrc,
+  disabled,
+  extensions: _extensions,
+  ...editorProps
+}: MessageTextboxProps) => {
+  const extensions = useMemo(
+    () => [
+      ...(_extensions ?? []),
+      keymap.of(keyBindings({ onSend, onClear })),
+      listener({
+        onFocus: (focused) => {
+          if (focused) {
+            onEditorFocus?.();
+          }
+        },
+      }),
+    ],
+    [_extensions, onSend, onClear, onEditorFocus],
+  );
 
-    return (
-      <MessageMeta
-        {...{ id: editorProps.model.id, authorId, authorName, authorImgSrc }}
-        authorStatus='active'
-        continues={false}
-      >
-        <TextEditor
-          ref={forwardedRef}
-          readonly={disabled}
-          extensions={extensions}
-          slots={{ root: { className: mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50') } }}
-          {...editorProps}
-        />
-      </MessageMeta>
-    );
-  },
-);
+  // TODO(burdon): Merge with useMemo above.
+  // const { parentRef } = useTextEditor({
+  //   doc: getTextContent(),
+  //   extensions,
+  // });
+
+  return (
+    <MessageMeta
+      {...{ id: editorProps.model.id, authorId, authorName, authorImgSrc }}
+      authorStatus='active'
+      continues={false}
+    >
+      <TextEditor
+        readonly={disabled}
+        extensions={extensions}
+        slots={{ root: { className: mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50') } }}
+        {...editorProps}
+      />
+      {/* <div ref={parentRef} className={mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50')} /> */}
+    </MessageMeta>
+  );
+};

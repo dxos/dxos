@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Extension } from '@codemirror/state';
 import get from 'lodash.get';
 import { type Dispatch, type SetStateAction, useState, useMemo } from 'react';
 
@@ -17,39 +16,6 @@ import { hexToHue } from '@dxos/util';
 import { SpaceAwarenessProvider } from './awareness-provider';
 import { type EditorModel } from './defs';
 import { automerge, awareness } from '../extensions';
-import { type DocAccessor } from '../extensions/automerge/defs';
-
-export type useTextExtensionsProps = {
-  id: string;
-  text: DocAccessor;
-  space?: Space;
-  identity?: Identity;
-};
-
-// TODO(burdon): Factor out automerge defs and extension (not hook).
-export const useTextExtensions = ({ id, text, space, identity }: useTextExtensionsProps): Extension[] => {
-  const extensions: Extension[] = [automerge(text)];
-
-  const peerId = identity?.identityKey.toHex();
-  const { cursorLightValue, cursorDarkValue } = hueTokens[hexToHue(peerId ?? '0')];
-
-  if (space && identity) {
-    const awarenessProvider = new SpaceAwarenessProvider({
-      space,
-      channel: `awareness.${id}`,
-      peerId: identity.identityKey.toHex(),
-      info: {
-        displayName: identity.profile?.displayName ?? generateName(identity.identityKey.toHex()),
-        color: cursorDarkValue,
-        lightColor: cursorLightValue,
-      },
-    });
-
-    extensions.push(awareness(awarenessProvider));
-  }
-
-  return extensions;
-};
 
 export type UseTextModelProps = {
   text?: TextObject;
