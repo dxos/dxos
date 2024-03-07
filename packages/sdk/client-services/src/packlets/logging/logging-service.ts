@@ -22,7 +22,7 @@ import {
   type QueryMetricsRequest,
   type QueryMetricsResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { jsonify, numericalValues, tracer } from '@dxos/util';
+import { getDebugName, jsonify, numericalValues, tracer } from '@dxos/util';
 
 /**
  * Logging service used to spy on logs of the host.
@@ -121,6 +121,7 @@ export class LoggingServiceImpl implements LoggingService {
             scope: {
               hostSessionId: this._sessionId,
               uptimeSeconds: (Date.now() - this._started) / 1000,
+              name: getDebugName(entry.meta?.S),
             },
           },
         };

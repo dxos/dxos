@@ -5,7 +5,7 @@
 import type { Breadcrumb, SeverityLevel, Event } from '@sentry/types';
 
 import { type LogConfig, type LogEntry, LogLevel, type LogProcessor, shouldLog } from '@dxos/log';
-import { CircularBuffer, getPrototypeSpecificInstanceId } from '@dxos/util';
+import { CircularBuffer, getDebugName } from '@dxos/util';
 
 import { withScope, captureException, captureMessage } from './';
 
@@ -112,17 +112,12 @@ const formatMessageForSentry = (entry: LogEntry) => {
   let scopePrefix: string | undefined;
   if (entry.meta?.S) {
     const scope = entry.meta?.S;
-    const prototype = Object.getPrototypeOf(scope);
-    const id = getPrototypeSpecificInstanceId(scope);
-    scopePrefix = `${prototype.constructor.name}#${id}`;
+    scopePrefix = scope.name || getDebugName(scope);
   }
   if (scopePrefix == null) {
     return entry.message;
   }
-  const workerPrefix = '[worker] ';
-  if (!entry.message.startsWith(workerPrefix)) {
-    return `${scopePrefix} ${entry.message}`;
-  }
+  const workerPrefix = entry.meta?.S?.hostSessionId ? '[worker] ' : '';
   return `${workerPrefix}${scopePrefix} ${entry.message.slice(workerPrefix.length)}`;
 };
 
