@@ -1,7 +1,6 @@
 //
 // Copyright 2023 DXOS.org
 //
-
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import {
   getCoreRowModel,
@@ -18,6 +17,7 @@ import { useVirtualizer, type VirtualizerOptions } from '@tanstack/react-virtual
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 
 import { debounce } from '@dxos/async';
+import { log } from '@dxos/log';
 
 import { TableBody } from './TableBody';
 import { TableProvider as UntypedTableProvider, type TypedTableProvider, useTableContext } from './TableContext';
@@ -155,6 +155,10 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
   // Create additional expansion column if all columns have fixed width.
   const expand = false; // columns.map((column) => column.size).filter(Boolean).length === columns?.length;
 
+  if (!getScrollElement) {
+    log.warn('Table: getScrollElement is not set. This is required for virtualized tables.');
+  }
+
   return (
     <TableProvider
       {...props}
@@ -182,10 +186,6 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
         <code>{JSON.stringify(table.getState(), undefined, 2)}</code>
       </pre>
     );
-  }
-
-  if (process.env.NODE_ENV === 'development' && !getScrollElement) {
-    console.warn('Table: getScrollElement is not set. This is required for virtualized tables.');
   }
 
   return (
