@@ -20,25 +20,26 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor, type TextEditorProps } from './TextEditor';
 import {
-  type CommentsOptions,
+  annotations,
   autocomplete,
   blast,
-  decorateMarkdown,
+  command,
   comments,
+  decorateMarkdown,
   defaultOptions,
   dnd,
-  command,
+  formatting,
   image,
   linkTooltip,
   mention,
   table,
   typewriter,
   useComments,
-  formatting,
-  annotations,
   EditorModes,
-  type CommandOptions,
   type CommandAction,
+  type CommandOptions,
+  type CommentsOptions,
+  listener,
 } from '../../extensions';
 import { type Comment, useTextModel } from '../../hooks';
 import translations from '../../translations';
@@ -471,6 +472,24 @@ export const DND = {
 };
 
 const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewriter')?.split(',');
+
+export const Listener = {
+  render: () => (
+    <Story
+      text={str('# Listener', '', text.footer)}
+      extensions={[
+        listener({
+          onFocus: (focusing) => {
+            console.log({ focusing });
+          },
+          onChange: (text) => {
+            console.log({ text });
+          },
+        }),
+      ]}
+    />
+  ),
+};
 
 export const Typewriter = {
   render: () => (

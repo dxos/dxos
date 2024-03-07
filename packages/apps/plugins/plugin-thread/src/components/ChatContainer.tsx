@@ -17,7 +17,7 @@ import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadL
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
 import { type ThreadContainerProps } from './types';
-import { useStatus, useMessageMetadata } from '../hooks';
+import { useStatus, createMessageData } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
 
 export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
@@ -46,7 +46,7 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
   const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
   const [autoFocus, setAutoFocus] = useState(autoFocusTextbox);
   const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
-  const textboxMetadata = useMessageMetadata(thread.id, identity);
+  const textboxMetadata = createMessageData(thread.id, identity);
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
 
   // TODO(thure): Factor out.

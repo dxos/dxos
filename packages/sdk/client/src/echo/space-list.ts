@@ -49,7 +49,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private readonly _spaceCreated = new Event<PublicKey>();
   private readonly _instanceId = PublicKey.random().toHex();
 
-  private readonly _automergeContext: AutomergeContext;
+  /**
+   * @internal
+   */
+  readonly _automergeContext: AutomergeContext;
 
   @trace.info()
   private get _isReadyState() {

@@ -78,6 +78,18 @@ export const object: {
   }
 };
 
+export const ReferenceAnnotation = Symbol.for('@dxos/schema/annotation/Reference');
+export type ReferenceAnnotationValue = {};
+
+export const ref = <T>(targetType: S.Schema<T>): S.Schema<T> =>
+  S.make(AST.setAnnotation(targetType.ast, ReferenceAnnotation, {}));
+
+export const getRefAnnotation = (schema: S.Schema<any>) =>
+  pipe(
+    AST.getAnnotation<ReferenceAnnotationValue>(ReferenceAnnotation)(schema.ast),
+    Option.getOrElse(() => undefined),
+  );
+
 /**
  * Returns the schema for the given object if one is defined.
  */

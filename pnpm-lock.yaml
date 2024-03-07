@@ -1959,9 +1959,6 @@ importers:
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
-      '@dxos/react-ui-deck':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-deck
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
@@ -2310,9 +2307,6 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
-      '@dxos/react-ui-deck':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-deck
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
@@ -3064,9 +3058,6 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
-      '@dxos/react-ui-deck':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-deck
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
@@ -3435,9 +3426,6 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
-      '@dxos/react-ui-deck':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-deck
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
@@ -5146,6 +5134,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
+      '@dxos/random-access-storage':
+        specifier: workspace:*
+        version: link:../../../common/random-access-storage
       '@dxos/text-model':
         specifier: workspace:*
         version: link:../text-model
@@ -5158,6 +5149,9 @@ importers:
       '@effect/schema':
         specifier: ^0.62.1
         version: 0.62.6(effect@2.3.5)(fast-check@3.15.1)
+      '@orama/orama':
+        specifier: ^2.0.8
+        version: 2.0.8
       effect:
         specifier: ^2.3.1
         version: 2.3.5
@@ -5167,13 +5161,13 @@ importers:
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
+      lodash.isequal:
+        specifier: ^4.5.0
+        version: 4.5.0
     devDependencies:
       '@dxos/echo-typegen':
         specifier: workspace:*
         version: link:../echo-typegen
-      '@orama/orama':
-        specifier: ^2.0.8
-        version: 2.0.8
       '@preact/signals-core':
         specifier: ^1.5.1
         version: 1.5.1
@@ -5183,6 +5177,9 @@ importers:
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
+      '@types/lodash.isequal':
+        specifier: ^4.5.0
+        version: 4.5.6
       fast-check:
         specifier: ^3.15.1
         version: 3.15.1
@@ -7768,6 +7765,9 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../apps/types
+      '@dxos/automerge':
+        specifier: workspace:*
+        version: link:../../core/echo/automerge
       '@dxos/random-access-storage':
         specifier: workspace:*
         version: link:../../common/random-access-storage
@@ -8680,67 +8680,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/react':
-        specifier: ^18.0.21
-        version: 18.0.21
-      '@types/react-dom':
-        specifier: ^18.0.6
-        version: 18.0.6
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
-      vite-plugin-turbosnap:
-        specifier: ^1.0.2
-        version: 1.0.2
-
-  packages/ui/react-ui-deck:
-    dependencies:
-      '@dxos/keyboard':
-        specifier: workspace:*
-        version: link:../../common/keyboard
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../react-ui-theme
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@radix-ui/react-context':
-        specifier: ^1.0.0
-        version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
-      '@radix-ui/react-primitive':
-        specifier: ^1.0.2
-        version: 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
-    devDependencies:
-      '@dnd-kit/core':
-        specifier: ^6.0.5
-        version: 6.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@dnd-kit/sortable':
-        specifier: ^7.0.1
-        version: 7.0.1(@dnd-kit/core@6.0.5)(react@18.2.0)
-      '@dnd-kit/utilities':
-        specifier: ^3.2.0
-        version: 3.2.0(react@18.2.0)
-      '@dxos/app-graph':
-        specifier: workspace:*
-        version: link:../../sdk/app-graph
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../storybook-utils
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -12763,7 +12702,6 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       regenerator-runtime: 0.14.0
-    dev: true
 
   /@babel/runtime@7.23.9:
     resolution: {integrity: sha512-0CX6F+BI2s9dkUqr08KFrAIZgNFj75rdBU/DjCyYLIaV/quFjkk6T+EJ2LkZHyZTbEV4L5p97mNkUsHl2wLFAw==}
@@ -13424,7 +13362,7 @@ packages:
       '@dnd-kit/utilities': 3.2.0(react@18.2.0)
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-      tslib: 2.6.2
+      tslib: 2.6.0
 
   /@dnd-kit/modifiers@6.0.0(@dnd-kit/core@6.0.5)(react@18.2.0):
     resolution: {integrity: sha512-V3+JSo6/BTcgPRHiNUTSKgqVv/doKXg+T4Z0QvKiiXp+uIyJTUtPkQOBRQApUWi3ApBhnoWljyt/3xxY4fTd0Q==}
@@ -13447,7 +13385,7 @@ packages:
       '@dnd-kit/core': 6.0.5(react-dom@18.2.0)(react@18.2.0)
       '@dnd-kit/utilities': 3.2.0(react@18.2.0)
       react: 18.2.0
-      tslib: 2.6.2
+      tslib: 2.6.0
 
   /@dnd-kit/utilities@3.2.0(react@18.2.0):
     resolution: {integrity: sha512-h65/pn2IPCCIWwdlR2BMLqRkDxpTEONA+HQW3n765HBijLYGyrnTCLa2YQt8VVjjSQD6EfFlTE6aS2Q/b6nb2g==}
@@ -13455,7 +13393,7 @@ packages:
       react: '>=16.8.0'
     dependencies:
       react: 18.2.0
-      tslib: 2.6.2
+      tslib: 2.6.0
 
   /@dxos/esbuild-book-knobs@2.28.12(@emotion/css@11.10.0)(@emotion/react@11.10.4)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-io/I+4uKdotdiIpE7OAYWtIUOhx4VWP7yGweprM1flQZXmDfwglAavxKlEcqafEoimquX+K5UWYGnBPYh+a0RQ==}
@@ -17279,6 +17217,7 @@ packages:
   /@orama/orama@2.0.8:
     resolution: {integrity: sha512-qaku4eOWLH80pneJ/PtqvF/VXGO3b1W1X6NSji3Yh6s3BNuoyprOifNfSWEkIbymzT89/B+ZFoq6PKG43fW6PA==}
     engines: {node: '>= 16.0.0'}
+    dev: false
 
   /@phenomnomnominal/tsquery@5.0.1(typescript@5.2.2):
     resolution: {integrity: sha512-3nVv+e2FQwsW8Aw6qTU6f+1rfcJ3hrcnvH/mu9i8YhxO+9sqbOfpL8m6PbET5+xKOlz/VSbp0RoYWYCtIsnmuA==}
@@ -17708,7 +17647,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.22.15
       '@types/react': 18.0.21
       react: 18.2.0
     dev: false
@@ -18402,7 +18341,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.23.4
       '@radix-ui/react-slot': 1.0.2(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -39635,7 +39574,7 @@ packages:
   /react-base16-styling@0.9.1:
     resolution: {integrity: sha512-1s0CY1zRBOQ5M3T61wetEpvQmsYSNtWEcdYzyZNxKa8t7oDvaOn9d21xrGezGAHFWLM7SHcktPuPTrvoqxSfKw==}
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.22.15
       '@types/base16': 1.0.2
       '@types/lodash': 4.14.191
       base16: 1.0.0
