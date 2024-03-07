@@ -35,9 +35,6 @@
       "path": "../../../common/invariant"
     },
     {
-      "path": "../../../common/log"
-    },
-    {
       "path": "../../../common/random"
     },
     {
