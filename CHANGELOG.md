@@ -1,5 +1,43 @@
 # Changelog
 
+## [0.4.7](https://github.com/dxos/dxos/compare/v0.4.6...v0.4.7) (2024-03-07)
+
+
+### Features
+
+* Add async indexer ([#5738](https://github.com/dxos/dxos/issues/5738)) ([6a8321e](https://github.com/dxos/dxos/commit/6a8321ea2688c7b9cd42e6e227cef97eb7ab58be))
+* **composer-app:** add cross-platform keybindings ([#5814](https://github.com/dxos/dxos/issues/5814)) ([344d0d8](https://github.com/dxos/dxos/commit/344d0d84400e709b000e0fa93e3476cfca4f7358))
+* device presence ([#5809](https://github.com/dxos/dxos/issues/5809)) ([0aeacda](https://github.com/dxos/dxos/commit/0aeacda7b9a33add22048371b78cb114b3f62017))
+* **devtools:** add halo to devtooks hook ([#5810](https://github.com/dxos/dxos/issues/5810)) ([d28a540](https://github.com/dxos/dxos/commit/d28a540225974b5d626ed738e9e201c40af74a19))
+* **echo:** echo handler integration with effect schema ([#5813](https://github.com/dxos/dxos/issues/5813)) ([e015b9e](https://github.com/dxos/dxos/commit/e015b9e696e64df65e19ad05b604ec46f5446f4c))
+* **echo:** in-memory effect schema registration for lookups on restore ([#5845](https://github.com/dxos/dxos/issues/5845)) ([65109e8](https://github.com/dxos/dxos/commit/65109e8b91190388c0068c43e24c369a3c04c9ae))
+* **echo:** method for updating space root document ([#5861](https://github.com/dxos/dxos/issues/5861)) ([85d9ee7](https://github.com/dxos/dxos/commit/85d9ee723f003c15dea7f36d7a3e2964264da1d5))
+* Editor command dialog ([#5848](https://github.com/dxos/dxos/issues/5848)) ([4f83620](https://github.com/dxos/dxos/commit/4f83620ca0c61f7e1e688f6c4e199c7041922bb2))
+* Emoji fallbacks for Avatars ([#5811](https://github.com/dxos/dxos/issues/5811)) ([ea67fec](https://github.com/dxos/dxos/commit/ea67fecf076b35b6df46159dd2bccdfd1f55ba4a))
+* New composer documentation ([#5728](https://github.com/dxos/dxos/issues/5728)) ([f4b92be](https://github.com/dxos/dxos/commit/f4b92be6c5a166433d0b12b0ce154b4a77845093))
+* Querying by effect schema ([#5862](https://github.com/dxos/dxos/issues/5862)) ([22460ef](https://github.com/dxos/dxos/commit/22460efd6ea3fe7b3ea759b0d7361e029c71e206))
+* **react-ui-deck:** Attention, Plank headings, Presence increment ([#5790](https://github.com/dxos/dxos/issues/5790)) ([2193472](https://github.com/dxos/dxos/commit/21934723c18e74aba4b47d25c998e1f038660bfa))
+* Support getters in E.object and add a @dxos/echo-schema/schema entrypoint ([#5832](https://github.com/dxos/dxos/issues/5832)) ([33db07e](https://github.com/dxos/dxos/commit/33db07ed4bcd2994cb3ea0dd3eeef455da592ef2))
+* Support references in ECHO-effect schema ([#5867](https://github.com/dxos/dxos/issues/5867)) ([3df814a](https://github.com/dxos/dxos/commit/3df814aa407391de0d0cf9f9c55ef8d9cfbdc8f0))
+* Support storing and recalling EchoReactiveObject from the database ([#5800](https://github.com/dxos/dxos/issues/5800)) ([7b31910](https://github.com/dxos/dxos/commit/7b31910a6586c2be2b8d5168140187abcaa495e2))
+
+
+### Bug Fixes
+
+* **client-services:** always pass through whole profile ([#5855](https://github.com/dxos/dxos/issues/5855)) ([e5c4f14](https://github.com/dxos/dxos/commit/e5c4f1416e1a07ba9f1de65c87c232e37c299b67))
+* Do not proxify getters that return arrays ([#5846](https://github.com/dxos/dxos/issues/5846)) ([b23cefb](https://github.com/dxos/dxos/commit/b23cefb7b5c74bd2e490dea0d67cefefeb2e08bd))
+* Fix move objects cross spaces ([#5868](https://github.com/dxos/dxos/issues/5868)) ([5a1c1e0](https://github.com/dxos/dxos/commit/5a1c1e0acb8124639c6ba48941f0ab7284634fd0))
+* Increase timeouts to prevent crashes during boot ([#5856](https://github.com/dxos/dxos/issues/5856)) ([69f352e](https://github.com/dxos/dxos/commit/69f352eec547b4c4b15f8e589ddee978c64743e2))
+* Optimize label updates ([#5831](https://github.com/dxos/dxos/issues/5831)) ([2d03537](https://github.com/dxos/dxos/commit/2d03537f053afc50899f808754a1241e5d64f0ba))
+* **plugin-space:** remove object popover ([#5836](https://github.com/dxos/dxos/issues/5836)) ([fd27392](https://github.com/dxos/dxos/commit/fd27392973907ba11106e878f707ee3815db942c))
+* **react-ui-editor:** Delay hiding/unhiding of markdown markup during cursor motion ([#5821](https://github.com/dxos/dxos/issues/5821)) ([dca306f](https://github.com/dxos/dxos/commit/dca306fbfdc073ba4be2698f604531d5d420b441))
+* **react-ui-editor:** Don't hide last line of codeblock without end marker ([#5835](https://github.com/dxos/dxos/issues/5835)) ([e0789ae](https://github.com/dxos/dxos/commit/e0789ae9394d4c042184c9fb2c5403dc05d03ecd))
+* **react-ui-editor:** Upgrade @codemirror/view to 6.25.0 ([#5833](https://github.com/dxos/dxos/issues/5833)) ([f9d3866](https://github.com/dxos/dxos/commit/f9d386678b1d6900c86a73bd3a5f4e950bffc774))
+* Reference decoding ([#5864](https://github.com/dxos/dxos/issues/5864)) ([06facb4](https://github.com/dxos/dxos/commit/06facb4e9952495933ed754e70875c12d9ca523e))
+* Repair outliner (formatting and editing). ([#5820](https://github.com/dxos/dxos/issues/5820)) ([ec8b8b7](https://github.com/dxos/dxos/commit/ec8b8b7644804e602bb49fdd2d9123d142b34a20))
+* Script Plugin ([#5863](https://github.com/dxos/dxos/issues/5863)) ([5c1d185](https://github.com/dxos/dxos/commit/5c1d185af359600a2a2f6081fdbd1ddb07dc1f8c))
+* Signal oversubscriptions  ([#5827](https://github.com/dxos/dxos/issues/5827)) ([6fe5670](https://github.com/dxos/dxos/commit/6fe567075fa67c82ae24427a3f7ac6d63c34aab5))
+
 ## [0.4.6](https://github.com/dxos/dxos/compare/v0.4.5...v0.4.6) (2024-02-28)
 
 
