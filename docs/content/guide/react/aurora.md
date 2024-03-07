@@ -146,9 +146,9 @@ To prevent flash of unstyled content, ensure the document features the right cla
 
 Note that you can apply this classname selectively further down the DOM tree if needed.
 
-## Browsing Components
+<!-- ## Browsing Components
 
 [Storybook](https://storybook.js.org/) is used to browse and test components.
 
 * [react-ui storybook](https://609d2a9c8202250039083fbb-owiqnnxehq.chromatic.com/).
-* [react-shell storybook](https://64c18b27fca920629f846e5b-qdjdssmfjl.chromatic.com/)
+* [react-shell storybook](https://64c18b27fca920629f846e5b-qdjdssmfjl.chromatic.com/) -->

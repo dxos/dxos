@@ -8,8 +8,9 @@ order: 30
 
 A collaborative, real-time, offline-first rich-text editor with `dxos`.
 
+* Learn more about [Composer](https://dxos.org/composer)
+* Try [Composer](http://composer.dxos.org) on `dxos.org`
 * Code on [Github](https://github.com/dxos/dxos/tree/main/packages/apps/composer-app)
-* Run [Composer](http://composer.dxos.org) on `dxos.org`
 
 ![composer-app](../assets/images/composer-app-light.png#light)
 ![composer-app](../assets/images/composer-app-dark.png#dark)

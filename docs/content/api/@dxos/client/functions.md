@@ -2,7 +2,7 @@
 title: Functions
 ---
 # Functions
-### [mountDevtoolsHooks(options)](https://github.com/dxos/dxos/blob/bfdd5a17b/packages/sdk/client/src/devtools/devtools.ts#L46)
+### [mountDevtoolsHooks(options)](https://github.com/dxos/dxos/blob/5efa14d7c/packages/sdk/client/src/devtools/devtools.ts#L46)
 
 
 
@@ -14,7 +14,7 @@ Arguments:
 `options`: <code>[MountOptions](/api/@dxos/client/types/MountOptions)</code>
 
 
-### [unmountDevtoolsHooks()](https://github.com/dxos/dxos/blob/bfdd5a17b/packages/sdk/client/src/devtools/devtools.ts#L164)
+### [unmountDevtoolsHooks()](https://github.com/dxos/dxos/blob/5efa14d7c/packages/sdk/client/src/devtools/devtools.ts#L164)
 
 
 
@@ -26,7 +26,7 @@ Arguments: none
 
 
 
-### [createDefaultModelFactory()](https://github.com/dxos/dxos/blob/bfdd5a17b/packages/sdk/client/src/echo/util.ts#L14)
+### [createDefaultModelFactory()](https://github.com/dxos/dxos/blob/5efa14d7c/packages/sdk/client/src/echo/util.ts#L14)
 
 
 
@@ -93,7 +93,7 @@ Arguments:
 `path`: <code>string[]</code>
 
 
-### [getSpaceForObject(object)](https://github.com/dxos/dxos/blob/bfdd5a17b/packages/sdk/client/src/echo/util.ts#L22)
+### [getSpaceForObject(object)](https://github.com/dxos/dxos/blob/5efa14d7c/packages/sdk/client/src/echo/util.ts#L22)
 
 
 
@@ -211,7 +211,7 @@ Arguments:
 `pos`: <code>number</code>
 
 
-### [Remote(target)](https://github.com/dxos/dxos/blob/bfdd5a17b/packages/sdk/client/src/services/client-services-factory.tsx#L15)
+### [Remote(target)](https://github.com/dxos/dxos/blob/5efa14d7c/packages/sdk/client/src/services/client-services-factory.tsx#L15)
 
 
 
@@ -223,7 +223,7 @@ Arguments:
 `target`: <code>undefined | string</code>
 
 
-### [createClientServices(config, \[createWorker\])](https://github.com/dxos/dxos/blob/bfdd5a17b/packages/sdk/client/src/services/client-services-factory.tsx#L41)
+### [createClientServices(config, \[createWorker\])](https://github.com/dxos/dxos/blob/5efa14d7c/packages/sdk/client/src/services/client-services-factory.tsx#L41)
 
 
 Create services from config.
@@ -237,7 +237,7 @@ Arguments:
 `createWorker`: <code>function</code>
 
 
-### [fromAgent(options)](https://github.com/dxos/dxos/blob/bfdd5a17b/packages/sdk/client/src/services/agent.ts#L29)
+### [fromAgent(options)](https://github.com/dxos/dxos/blob/5efa14d7c/packages/sdk/client/src/services/agent.ts#L29)
 
 
 Connects to locally running CLI daemon.
@@ -249,7 +249,7 @@ Arguments:
 `options`: <code>[FromAgentOptions](/api/@dxos/client/types/FromAgentOptions)</code>
 
 
-### [fromHost(config, \[params\])](https://github.com/dxos/dxos/blob/bfdd5a17b/packages/sdk/client/src/services/local-client-services.ts#L19)
+### [fromHost(config, \[params\])](https://github.com/dxos/dxos/blob/5efa14d7c/packages/sdk/client/src/services/local-client-services.ts#L19)
 
 
 Creates stand-alone services without rpc.
@@ -263,7 +263,7 @@ Arguments:
 `params`: <code>ClientServicesHostParams</code>
 
 
-### [fromIFrame(config, options)](https://github.com/dxos/dxos/blob/bfdd5a17b/packages/sdk/client/src/services/utils.ts#L21)
+### [fromIFrame(config, options)](https://github.com/dxos/dxos/blob/5efa14d7c/packages/sdk/client/src/services/utils.ts#L21)
 
 
 Create services provider proxy connected via iFrame to host.
@@ -277,7 +277,7 @@ Arguments:
 `options`: <code>Omit&lt;Partial&lt;[IFrameClientServicesProxyOptions](/api/@dxos/client/types/IFrameClientServicesProxyOptions)&gt;, "source"&gt;</code>
 
 
-### [fromSocket(url)](https://github.com/dxos/dxos/blob/bfdd5a17b/packages/sdk/client/src/services/socket.ts#L12)
+### [fromSocket(url)](https://github.com/dxos/dxos/blob/5efa14d7c/packages/sdk/client/src/services/socket.ts#L12)
 
 
 Access to remote client via a socket.
@@ -289,7 +289,7 @@ Arguments:
 `url`: <code>string</code>
 
 
-### [fromWorker(config, options)](https://github.com/dxos/dxos/blob/bfdd5a17b/packages/sdk/client/src/services/worker-client-services.ts#L23)
+### [fromWorker(config, options)](https://github.com/dxos/dxos/blob/5efa14d7c/packages/sdk/client/src/services/worker-client-services.ts#L23)
 
 
 Creates services provider connected via worker.
@@ -303,7 +303,7 @@ Arguments:
 `options`: <code>Omit&lt;WorkerClientServicesParams, "config"&gt;</code>
 
 
-### [getUnixSocket(profile, protocol)](https://github.com/dxos/dxos/blob/bfdd5a17b/packages/sdk/client/src/services/agent.ts#L19)
+### [getUnixSocket(profile, protocol)](https://github.com/dxos/dxos/blob/5efa14d7c/packages/sdk/client/src/services/agent.ts#L19)
 
 
 
@@ -317,7 +317,7 @@ Arguments:
 `protocol`: <code>string</code>
 
 
-### [joinCommonSpace(options, \[spaceKey\])](https://github.com/dxos/dxos/blob/bfdd5a17b/packages/sdk/client/src/testing/test-builder.ts#L195)
+### [joinCommonSpace(options, \[spaceKey\])](https://github.com/dxos/dxos/blob/5efa14d7c/packages/sdk/client/src/testing/test-builder.ts#L195)
 
 
 
@@ -343,7 +343,7 @@ Arguments:
 `options`: <code>PerformInvitationParams</code>
 
 
-### [syncItems(db1, db2)](https://github.com/dxos/dxos/blob/bfdd5a17b/packages/sdk/client/src/testing/test-builder.ts#L184)
+### [syncItems(db1, db2)](https://github.com/dxos/dxos/blob/5efa14d7c/packages/sdk/client/src/testing/test-builder.ts#L184)
 
 
 
@@ -357,7 +357,7 @@ Arguments:
 `db2`: <code>DatabaseProxy</code>
 
 
-### [testSpace(create, check)](https://github.com/dxos/dxos/blob/bfdd5a17b/packages/sdk/client/src/testing/test-builder.ts#L166)
+### [testSpace(create, check)](https://github.com/dxos/dxos/blob/5efa14d7c/packages/sdk/client/src/testing/test-builder.ts#L166)
 
 
 
@@ -371,7 +371,7 @@ Arguments:
 `check`: <code>DatabaseProxy</code>
 
 
-### [waitForSpace(client, spaceKey, options)](https://github.com/dxos/dxos/blob/bfdd5a17b/packages/sdk/client/src/testing/utils.ts#L16)
+### [waitForSpace(client, spaceKey, options)](https://github.com/dxos/dxos/blob/5efa14d7c/packages/sdk/client/src/testing/utils.ts#L16)
 
 
 

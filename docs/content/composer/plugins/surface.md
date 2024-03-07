@@ -82,15 +82,23 @@ export const MyComponent = ({ data }) => {
 
 When multiple plugins provide components for the same data, the `<Surface />` element can render all or some of them based on other props passed to `<Surface />`.
 
-### Surface Props
+:::apidoc[@dxos/app-framework.SurfaceProps]{level="3"}
+### Type `SurfaceProps`
 
-:::apidoc[@dxos/app-framework.SurfaceProps]
-# Type `SurfaceProps`
+<sub>Declared in [packages/sdk/app-framework/src/plugins/SurfacePlugin/Surface.tsx:29](https://github.com/dxos/dxos/blob/5efa14d7c/packages/sdk/app-framework/src/plugins/SurfacePlugin/Surface.tsx#L29)</sub>
 
-<sub>Declared in [packages/sdk/app-framework/src/plugins/SurfacePlugin/Surface.tsx:26](https://github.com/dxos/dxos/blob/bfdd5a17b/packages/sdk/app-framework/src/plugins/SurfacePlugin/Surface.tsx#L26)</sub>
+SurfaceProps are the props that are passed to the Surface component.
 :::
 
 ## See also
 
 * [Surface plugin source](https://github.com/dxos/dxos/blob/main/packages/sdk/app-framework/src/plugins/SurfacePlugin/plugin.tsx)
 * [Surface component props and source](https://github.com/dxos/dxos/blob/main/packages/sdk/app-framework/src/plugins/SurfacePlugin/Surface.tsx)
+
+::: note Under Development
+
+The Composer Extensibility APIs are under active development. The API may change often, and these docs may not be accurate. 
+
+Talk to us on [Discord](https://discord.gg/eXVfryv3sW) with feedback anytime.
+
+:::

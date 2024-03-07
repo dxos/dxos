@@ -84,3 +84,11 @@ dispatch([
 ## See also
 
 * [Intent plugin source](https://github.com/dxos/dxos/blob/main/packages/sdk/app-framework/src/plugins/IntentPlugin/plugin.tsx)
+
+::: note Under Development
+
+The Composer Extensibility APIs are under active development. The API may change often, and these docs may not be accurate. 
+
+Talk to us on [Discord](https://discord.gg/eXVfryv3sW) with feedback anytime.
+
+:::

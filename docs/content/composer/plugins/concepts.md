@@ -19,3 +19,12 @@ Plugins can communicate with each other through a system of intents that represe
 ### Graph
 
 The Graph plugin provides a way to store and manipulate data in a graph structure. It is used to organize the user's data and to represent the user's possible actions in the application.
+
+
+::: note Under Development
+
+The Composer Extensibility APIs are under active development. The API may change often, and these docs may not be accurate. 
+
+Talk to us on [Discord](https://discord.gg/eXVfryv3sW) with feedback anytime.
+
+:::

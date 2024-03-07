@@ -31,8 +31,10 @@ npm create @dxos/plugin-template@latest --interactive
 
 Answer `no` to the question `Include default plugins?` to generate an empty configuration.
 
-::: warning Technical Preview
+::: warning Under Development
 
-The Composer Extensibility APIs are under development and subject to frequent change. We are excited to hear your feedback and ideas on [Discord](https://discord.gg/eXVfryv3sW).
+The Composer Extensibility APIs are under active development. The API may change often, and these docs may not be accurate. 
+
+Talk to us on [Discord](https://discord.gg/eXVfryv3sW) with feedback anytime.
 
 :::

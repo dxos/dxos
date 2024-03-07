@@ -38,7 +38,7 @@ Type: unique symbol
 
 
 
-### [`ClientContext`](https://github.com/dxos/dxos/blob/bfdd5a17b/packages/sdk/react-client/src/client/ClientContext.tsx#L37)
+### [`ClientContext`](https://github.com/dxos/dxos/blob/5efa14d7c/packages/sdk/react-client/src/client/ClientContext.tsx#L37)
 Type: Context&lt;[ClientContextProps](/api/@dxos/react-client/types/ClientContextProps) | undefined&gt;
 
 

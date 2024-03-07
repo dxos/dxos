@@ -6,8 +6,10 @@ order: 7
 
 The Graph is used to organize the user's content, provide a navigation structure, and to represent the user's possible actions in the system.
 
-::: warning Under Construction
+::: note Under Development
 
-The Graph API is currently undergoing rapid iterations. We are excited to hear your feedback and ideas on [Discord](https://discord.gg/eXVfryv3sW).
+The Composer Extensibility APIs are under active development. The API may change often, and these docs may not be accurate. 
+
+Talk to us on [Discord](https://discord.gg/eXVfryv3sW) with feedback anytime.
 
 :::
