@@ -98,14 +98,12 @@ export class AutomergeHost {
         }
 
         try {
-          // experimental_spaceKey is set on old documents, new ones are created with doc.access.spaceKey
-          const rawSpaceKey = doc.access?.spaceKey ?? doc.experimental_spaceKey;
-          if (!rawSpaceKey) {
+          const spaceKey = getSpaceKeyFromDoc(doc);
+          if (!spaceKey) {
             log('space key not found for share policy check', { peerId, documentId });
             return false;
           }
 
-          const spaceKey = PublicKey.from(rawSpaceKey);
           const authorizedDevices = this._authorizedDevices.get(spaceKey);
 
           // TODO(mykola): Hack, stop abusing `peerMetadata` field.
@@ -284,4 +282,14 @@ const getInlineChanges = (event: DocHandleChangePayload<any>) => {
     }
   }
   return [...inlineChangedObjectIds];
+};
+
+export const getSpaceKeyFromDoc = (doc: any) => {
+  // experimental_spaceKey is set on old documents, new ones are created with doc.access.spaceKey
+  const rawSpaceKey = doc.access?.spaceKey ?? doc.experimental_spaceKey;
+  if (!rawSpaceKey) {
+    return;
+  }
+
+  return PublicKey.from(rawSpaceKey);
 };
