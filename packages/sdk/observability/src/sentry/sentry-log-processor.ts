@@ -26,7 +26,7 @@ export class SentryLogProcessor {
     withScope((scope) => {
       const severity = convertLevel(level);
       scope.setLevel(severity);
-      scope.setContext('dxoslog', entry.context);
+      scope.setContext('dxoslog', entry.context ?? null);
       if (meta) {
         scope.setTag('transaction', `${getRelativeFilename(meta.F)}:${meta.L}`);
 
@@ -45,7 +45,7 @@ export class SentryLogProcessor {
       const extendedMessage = formatMessageForSentry(entry);
       let capturedError = error;
       if (capturedError == null && entry.level === LogLevel.ERROR) {
-        capturedError = Object.values(context).find((v) => v instanceof Error);
+        capturedError = Object.values(entry.context ?? {}).find((v): v is Error => v instanceof Error);
       }
       if (capturedError) {
         const isMessageDifferentFromStackTrace = error == null;
@@ -76,7 +76,12 @@ export class SentryLogProcessor {
     });
   }
 
-  private _addBreadcrumb(eventId: string, message: string, severity: SeverityLevel, context: { [key: string]: any }) {
+  private _addBreadcrumb(
+    eventId: string,
+    message: string,
+    severity: SeverityLevel,
+    context: { [key: string]: any } | undefined,
+  ): void {
     const breadcrumb: Breadcrumb = {
       type: 'console',
       level: severity,
