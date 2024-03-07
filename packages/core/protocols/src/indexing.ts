@@ -3,14 +3,15 @@
 //
 
 export type IdDecoded = {
+  spaceKey: string;
   documentId: string;
   objectId: string;
 };
 
 export const idCodec = {
-  encode: ({ documentId, objectId }: IdDecoded) => `${documentId}|${objectId}`,
+  encode: ({ spaceKey, documentId, objectId }: IdDecoded) => `${spaceKey}|${documentId}|${objectId}`,
   decode: (id: string): IdDecoded => {
-    const [documentId, objectId] = id.split('|');
-    return { documentId, objectId };
+    const [spaceKey, documentId, objectId] = id.split('|');
+    return { spaceKey, documentId, objectId };
   },
 };

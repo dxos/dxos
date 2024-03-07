@@ -180,10 +180,14 @@ export class AutomergeHost {
 
     const markingDirtyPromise = Promise.all(
       objectIds.map(async (objectId) => {
+        const spaceKey = getSpaceKeyFromDoc(event.doc);
+        if (!spaceKey) {
+          return;
+        }
         await cancelWithContext(
           this._ctx,
           this._metadata!.markDirty(
-            idCodec.encode({ documentId: event.handle.documentId, objectId }),
+            idCodec.encode({ documentId: event.handle.documentId, objectId, spaceKey }),
             lastAvailableHash,
           ),
         );
@@ -291,5 +295,5 @@ export const getSpaceKeyFromDoc = (doc: any) => {
     return;
   }
 
-  return PublicKey.from(rawSpaceKey);
+  return rawSpaceKey;
 };

@@ -2,16 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Context, cancelWithContext } from '@dxos/context';
-import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
+import { Context } from '@dxos/context';
+import { type AutomergeHost } from '@dxos/echo-pipeline';
 import { Filter } from '@dxos/echo-schema';
+import { PublicKey } from '@dxos/keys';
 import { idCodec } from '@dxos/protocols';
 import { type QueryRequest, type QueryResponse, type QueryResult } from '@dxos/protocols/proto/dxos/agent/query';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 
 import { type Indexer } from './indexer';
-import { warnAfterTimeout } from '../../../../common/debug/src';
 
 export type IndexServiceParams = {
   indexer: Indexer;
@@ -35,21 +35,10 @@ export class IndexServiceImpl implements IndexService {
       results: (
         await Promise.all(
           results.map(async (result) => {
-            const { objectId, documentId } = idCodec.decode(result.id);
-            const handle = this._params.automergeHost.repo.find(documentId as any);
-            await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
-              await cancelWithContext(this._ctx, handle.whenReady());
-            });
-            if (this._ctx.disposed) {
-              return;
-            }
-            const spaceKey = getSpaceKeyFromDoc(handle.docSync());
-            if (!spaceKey) {
-              return;
-            }
+            const { objectId, spaceKey } = idCodec.decode(result.id);
             return {
               id: objectId,
-              spaceKey,
+              spaceKey: PublicKey.from(spaceKey),
               rank: result.rank,
             };
           }),

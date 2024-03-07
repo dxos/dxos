@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, asyncTimeout } from '@dxos/async';
 import {
   type QuerySourceProvider,
   db,
@@ -11,35 +11,51 @@ import {
   type QueryResult,
   type QuerySource,
 } from '@dxos/echo-schema';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
 
+import { type SpaceList } from './space-list';
+
 export type IndexQueryProviderParams = {
   service: IndexService;
-  loadObjects: (ids: string[]) => Promise<EchoObject[]>;
+  spaceList: SpaceList;
 };
 
 // TODO(mykola): Separate by client-services barrier.
-export class IndexQueryProvider implements QuerySourceProvider {
+export class IndexQuerySourceProvider implements QuerySourceProvider {
   constructor(private readonly _params: IndexQueryProviderParams) {}
 
   private async find(filter: Filter): Promise<QueryResult<EchoObject>[]> {
     const start = Date.now();
-    const idAndRanks = await this._params.indexer.find(filter);
+    const response = await this._params.service.find({ queryId: PublicKey.random().toHex(), filter: filter.toProto() });
+    if (!response.results) {
+      return [];
+    }
 
-    const objects = (await this._params.loadObjects(idAndRanks.map((idAndRank) => idAndRank.id))).filter(
-      Boolean,
-    ) as EchoObject[];
+    const results: (QueryResult<EchoObject> | undefined)[] = await Promise.all(
+      response.results.map(async (result) => {
+        const space = this._params.spaceList.get(result.spaceKey);
+        if (!space) {
+          return;
+        }
+        await asyncTimeout(space?.waitUntilReady(), 5000);
+        const object = space?.db.getObjectById(result.id);
+        if (!object) {
+          return;
+        }
 
-    const results: QueryResult<EchoObject>[] = objects.map((object, index) => ({
-      id: object.id,
-      spaceKey: object[db]!.spaceKey,
-      object,
-      match: { rank: idAndRanks[index].rank },
-      resolution: { source: 'index', time: Date.now() - start },
-    }));
+        return {
+          id: object.id,
+          spaceKey: object[db]!.spaceKey,
+          object,
+          match: { rank: result.rank },
+          resolution: { source: 'index', time: Date.now() - start },
+        };
+      }),
+    );
 
-    return results;
+    return results.filter(Boolean) as QueryResult<EchoObject>[];
   }
 
   create(): QuerySource {
