@@ -48,7 +48,10 @@ export class SentryLogProcessor {
         capturedError = Object.values(context).find((v) => v instanceof Error);
       }
       if (capturedError) {
-        scope.setExtra('message', extendedMessage);
+        const isMessageDifferentFromStackTrace = error == null;
+        if (isMessageDifferentFromStackTrace) {
+          scope.setExtra('message', extendedMessage);
+        }
         const eventId = captureException(capturedError);
         this._addBreadcrumb(eventId, extendedMessage, severity, entry.context);
         return;
