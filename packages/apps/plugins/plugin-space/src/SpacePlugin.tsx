@@ -4,7 +4,6 @@
 
 import { type IconProps, Folder as FolderIcon, Plus, SignIn } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
-import { type RevertDeepSignal } from 'deepsignal';
 import { deepSignal } from 'deepsignal/react';
 import localforage from 'localforage';
 import React from 'react';
@@ -92,9 +91,9 @@ export const SpacePlugin = ({
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
   const state = deepSignal<PluginState>({
     awaiting: undefined,
-    viewersByObject: new Map(),
+    viewersByObject: {},
     viewersByIdentity: new ComplexMap(PublicKey.hash),
-  }) as RevertDeepSignal<PluginState>;
+  }) as unknown as PluginState;
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
@@ -190,25 +189,38 @@ export const SpacePlugin = ({
                 const { added, removed } = message.payload;
                 const identityKey = PublicKey.safeFrom(message.payload.identityKey);
                 const spaceKey = PublicKey.safeFrom(message.payload.spaceKey);
+                console.log('[viewing]', identityKey, spaceKey, added, removed);
                 if (identityKey && spaceKey && Array.isArray(added) && Array.isArray(removed)) {
                   added.forEach((objectIdAny) => {
                     if (objectIdAny) {
                       const objectId = objectIdAny.toString();
-                      if (!state.viewersByObject.has(objectId)) {
-                        state.viewersByObject.set(objectId, new ComplexMap(PublicKey.hash));
+                      if (!(objectId in state.viewersByObject)) {
+                        state.viewersByObject[objectId] = new ComplexMap(PublicKey.hash);
                       }
-                      state.viewersByObject.get(objectId)!.set(identityKey, { lastSeen: Date.now(), spaceKey });
+                      state.viewersByObject[objectId]!.set(identityKey, { lastSeen: Date.now(), spaceKey });
                       if (!state.viewersByIdentity.has(identityKey)) {
                         state.viewersByIdentity.set(identityKey, new Set());
                       }
                       state.viewersByIdentity.get(identityKey)!.add(objectId);
+                      console.log(
+                        '[added]',
+                        objectId,
+                        state.viewersByObject[objectId],
+                        state.viewersByIdentity.get(identityKey),
+                      );
                     }
                   });
                   removed.forEach((objectIdAny) => {
                     if (objectIdAny) {
                       const objectId = objectIdAny.toString();
-                      state.viewersByObject.get(objectId)?.delete(identityKey);
+                      state.viewersByObject[objectId]?.delete(identityKey);
                       state.viewersByIdentity.get(identityKey)?.delete(objectId);
+                      console.log(
+                        '[removed]',
+                        objectId,
+                        state.viewersByObject[objectId],
+                        state.viewersByIdentity.get(identityKey),
+                      );
                       // It’s okay for these to be empty sets/maps, reduces churn.
                     }
                   });
@@ -299,7 +311,7 @@ export const SpacePlugin = ({
             case 'presence--glyph': {
               return (
                 <SmallPresence
-                  count={isTypedObject(data.object) ? state.viewersByObject.get(data.object.id)?.size ?? 0 : 0}
+                  count={isTypedObject(data.object) ? state.viewersByObject[data.object.id]?.size ?? 0 : 0}
                 />
               );
             }

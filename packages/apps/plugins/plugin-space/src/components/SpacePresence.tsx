@@ -28,7 +28,7 @@ import { ComplexMap, keyToFallback } from '@dxos/util';
 import { SPACE_PLUGIN } from '../meta';
 import type { ObjectViewerProps, SpacePluginProvides } from '../types';
 
-const defaultViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
+const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 
 // TODO(wittjosiah): Factor out?
 const getName = (identity: Identity) => identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
@@ -47,8 +47,9 @@ export const SpacePresence = ({ object, spaceKey }: { object: TypedObject; space
     return null;
   }
 
-  const currentObjectViewers = spacePlugin.provides.space.viewersByObject.get(object.id) ?? defaultViewers;
-  const viewing = spacePlugin.provides.space.viewersByIdentity;
+  const spaceState = spacePlugin.provides.space;
+  const currentObjectViewers = spaceState.viewersByObject[object.id] ?? noViewers;
+  const viewing = spaceState.viewersByIdentity;
 
   const members = spaceMembers
     .filter((member) => member.presence === 1 && !identity.identityKey.equals(member.identity.identityKey))

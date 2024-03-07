@@ -49,7 +49,7 @@ export type PluginState = {
   /**
    * Which objects are currently being viewed by which peers.
    */
-  viewersByObject: Map<ObjectId, ComplexMap<PublicKey, ObjectViewerProps>>;
+  viewersByObject: Record<ObjectId, ComplexMap<PublicKey, ObjectViewerProps>>;
   /**
    * Which peers are currently viewing which objects.
    */
