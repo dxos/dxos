@@ -17,7 +17,7 @@ import { type DatadogMetrics } from './datadog';
 import { type IPData, getTelemetryIdentifier, mapSpaces } from './helpers';
 import { type SegmentTelemetry, type EventOptions, type PageOptions } from './segment';
 import { type InitOptions, type captureException as SentryCaptureException } from './sentry';
-import { createSentryLogProcessor } from './sentry/sentry-log-processor';
+import { SentryLogProcessor } from './sentry/sentry-log-processor';
 
 const SPACE_METRICS_MIN_INTERVAL = 1000 * 60;
 // const DATADOG_IDLE_INTERVAL = 1000 * 60 * 5;
@@ -454,17 +454,20 @@ export class Observability {
         dest: this._secrets.SENTRY_DESTINATION,
         options: this._errorReportingOptions,
       });
+
+      const logProcessor = new SentryLogProcessor();
       init({
         ...this._errorReportingOptions,
         destination: this._secrets.SENTRY_DESTINATION,
         scrubFilenames: this._mode !== 'full',
+        onError: (event) => logProcessor.addLogBreadcrumbsTo(event),
       });
       if (this._errorReportingOptions?.tracing) {
         configureTracing();
       }
 
       // TODO(nf): set platform at instantiation? needed for node.
-      log.runtimeConfig.processors.push(createSentryLogProcessor());
+      log.runtimeConfig.processors.push(logProcessor.logProcessor);
 
       // TODO(nf): is this different than passing as properties in options?
       this._tags.forEach((v, k) => {
