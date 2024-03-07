@@ -3,7 +3,7 @@
 //
 
 import { type IconProps } from '@phosphor-icons/react';
-import React, { type ComponentPropsWithRef, forwardRef, useRef, useState } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef, type PropsWithChildren, useRef, useState } from 'react';
 
 import { keySymbols } from '@dxos/keyboard';
 import {
@@ -45,19 +45,13 @@ const PlankHeadingButton = forwardRef<HTMLButtonElement, PlankHeadingButtonProps
   },
 );
 
-type PlankHeadingDropdownMenuProps = PlankHeadingButtonProps & {
-  label?: string;
+type PlankHeadingActionsMenuProps = PropsWithChildren<{
+  triggerLabel?: string;
   actions?: PlankHeadingAction[];
   onAction?: (action: PlankHeadingAction) => void;
-};
+}>;
 
-const PlankHeadingDropdownMenu = ({
-  actions,
-  onAction,
-  label,
-  children,
-  ...triggerProps
-}: PlankHeadingDropdownMenuProps) => {
+const PlankHeadingActionsMenu = ({ actions, onAction, triggerLabel, children }: PlankHeadingActionsMenuProps) => {
   const { t } = useTranslation(translationKey);
   const suppressNextTooltip = useRef(false);
 
@@ -88,12 +82,7 @@ const PlankHeadingDropdownMenu = ({
         }}
       >
         <Tooltip.Trigger asChild>
-          <DropdownMenu.Trigger asChild>
-            <PlankHeadingButton {...triggerProps}>
-              {children}
-              <span className='sr-only'>{label}</span>
-            </PlankHeadingButton>
-          </DropdownMenu.Trigger>
+          <DropdownMenu.Trigger asChild>{children}</DropdownMenu.Trigger>
         </Tooltip.Trigger>
         <DropdownMenu.Portal>
           <DropdownMenu.Content classNames='z-[31]'>
@@ -132,8 +121,8 @@ const PlankHeadingDropdownMenu = ({
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
       <Tooltip.Portal>
-        <Tooltip.Content classNames='z-70'>
-          {label}
+        <Tooltip.Content style={{ zIndex: 70 }}>
+          {triggerLabel}
           <Tooltip.Arrow />
         </Tooltip.Content>
       </Tooltip.Portal>
@@ -150,7 +139,7 @@ const PlankHeadingLabel = forwardRef<HTMLHeadingElement, PlankHeadingLabelProps>
       <h1
         {...props}
         data-attention={hasAttention.toString()}
-        className={mx('pli-1 min-is-0 flex-1 truncate font-medium fg-base data-[attention=true]:fg-accent', classNames)}
+        className={mx('pli-1 min-is-0 shrink truncate font-medium fg-base data-[attention=true]:fg-accent', classNames)}
         ref={forwardedRef}
       />
     );
@@ -160,7 +149,8 @@ const PlankHeadingLabel = forwardRef<HTMLHeadingElement, PlankHeadingLabelProps>
 export const PlankHeading = {
   Button: PlankHeadingButton,
   Label: PlankHeadingLabel,
+  ActionsMenu: PlankHeadingActionsMenu,
 };
-export { plankHeadingIconProps, PlankHeadingDropdownMenu };
+export { plankHeadingIconProps };
 
-export type { PlankHeadingButtonProps, PlankHeadingDropdownMenuProps };
+export type { PlankHeadingButtonProps, PlankHeadingActionsMenuProps };

@@ -234,7 +234,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
                 return (
                   <>
-                    <CommentsHeading />
+                    <CommentsHeading attendableId={data.subject.id} />
                     <ScrollArea.Root>
                       <ScrollArea.Viewport>
                         <CommentsContainer
