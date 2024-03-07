@@ -384,7 +384,7 @@ service SpacesService {
 // Indexing
 //
 
-service IndexingService {
+service IndexService {
   rpc find(dxos.agent.query.QueryRequest) returns (dxos.agent.query.QueryResponse);
 }
 
