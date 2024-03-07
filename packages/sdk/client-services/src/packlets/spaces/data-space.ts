@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
+import { Event, asyncTimeout, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context, ContextDisposedError } from '@dxos/context';
 import { timed, warnAfterTimeout } from '@dxos/debug';
@@ -15,7 +15,7 @@ import {
   type AutomergeHost,
 } from '@dxos/echo-pipeline';
 import { type FeedStore } from '@dxos/feed-store';
-import { failedInvariant } from '@dxos/invariant';
+import { failedInvariant, invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -423,18 +423,38 @@ export class DataSpace {
       case undefined:
       case CreateEpochRequest.Migration.NONE:
         {
+          // TODO(dmaretskyi): Unify epoch construction.
           epoch = await this.dataPipeline.createEpoch();
         }
         break;
-      case CreateEpochRequest.Migration.INIT_AUTOMERGE: {
-        const document = this._automergeHost.repo.create();
-        epoch = {
-          previousId: this._automergeSpaceState.lastEpoch?.id,
-          number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
-          timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
-          automergeRoot: document.url,
-        };
-      }
+      case CreateEpochRequest.Migration.INIT_AUTOMERGE:
+        {
+          const document = this._automergeHost.repo.create();
+          // TODO(dmaretskyi): Unify epoch construction.
+          epoch = {
+            previousId: this._automergeSpaceState.lastEpoch?.id,
+            number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
+            timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
+            automergeRoot: document.url,
+          };
+        }
+        break;
+      case CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY:
+        {
+          const currentRootUrl = this._automergeSpaceState.rootUrl;
+          const rootHandle = this._automergeHost.repo.find(currentRootUrl as any);
+          await cancelWithContext(this._ctx, asyncTimeout(rootHandle.whenReady(), 10_000));
+          const newRoot = this._automergeHost.repo.create(rootHandle.docSync());
+          invariant(typeof newRoot.url === 'string' && newRoot.url.length > 0);
+          // TODO(dmaretskyi): Unify epoch construction.
+          epoch = {
+            previousId: this._automergeSpaceState.lastEpoch?.id,
+            number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
+            timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
+            automergeRoot: newRoot.url,
+          };
+        }
+        break;
     }
 
     if (!epoch) {

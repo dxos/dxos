@@ -351,6 +351,9 @@ message CreateEpochRequest {
 
     /// Init empty automerge document as the space root. Disables legacy ECHO snapshot creation.
     INIT_AUTOMERGE = 1;
+
+    /// Init new automerge root by clonning the current space root. History is pruned.
+    PRUNE_AUTOMERGE_ROOT_HISTORY = 2;
   }
 
   dxos.keys.PublicKey space_key = 1;
