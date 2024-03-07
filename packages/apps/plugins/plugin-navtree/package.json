@@ -32,6 +32,7 @@
     "@dxos/keyboard": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-deck": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-navtree": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",

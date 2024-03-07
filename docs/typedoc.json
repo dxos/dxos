@@ -1,7 +1,7 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "tsconfig": "../tsconfig.json",
-  "json": "docs/api.json",
+  "json": "content/api.json",
   "gitRevision": "main",
   "githubPages": false,
   "excludePrivate": true,
@@ -10,6 +10,7 @@
   "entryPoints": [
     "../packages/sdk/client",
     "../packages/sdk/react-client",
-    "../packages/sdk/config"
+    "../packages/sdk/config",
+    "../packages/sdk/app-framework"
   ]
 }

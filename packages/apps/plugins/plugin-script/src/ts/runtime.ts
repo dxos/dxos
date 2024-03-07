@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { setupTypeAcquisition } from '@typescript/ata';
 import {
   createDefaultMapFromCDN,
   createSystem,
@@ -53,6 +52,7 @@ export class TS {
     }
 
     this._imports.add(statement);
+    const { setupTypeAcquisition } = await import('@typescript/ata');
 
     const trigger = new Trigger();
 

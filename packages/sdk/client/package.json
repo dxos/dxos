@@ -91,7 +91,7 @@
         "dist/types/src/services/index.d.ts"
       ],
       "shared-worker": [
-        "dist/types/src/shared-worker.d.ts"
+        "dist/types/src/worker/shared-worker.d.ts"
       ],
       "testing": [
         "dist/types/src/testing/index.d.ts"
@@ -162,8 +162,5 @@
         ]
       }
     ]
-  },
-  "typedoc": {
-    "entryPoint": "src/index.ts"
   }
 }
