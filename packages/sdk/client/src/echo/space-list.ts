@@ -242,7 +242,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spaceProxy = (this.get().find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy) ?? failUndefined();
 
     await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
-    spaceProxy.db.add(new Properties(meta));
+    if (this._config?.values?.runtime?.client?.useReactiveObjectApi ?? false) {
+    } else {
+      spaceProxy.db.add(new Properties(meta));
+    }
     await spaceProxy.db.flush();
     await spaceProxy._initializationComplete.wait();
 

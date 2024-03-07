@@ -5,7 +5,13 @@
 import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
-import { type ClientServicesProvider, Properties, type Space, type SpaceInternal } from '@dxos/client-protocol';
+import {
+  type ClientServicesProvider,
+  Properties,
+  type Space,
+  type SpaceInternal,
+  PropertiesSchema,
+} from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
@@ -34,6 +40,7 @@ import {
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { trace } from '@dxos/tracing';
+import * as E from '@dxos/echo-schema';
 
 import { InvitationsProxy } from '../invitations';
 
@@ -149,9 +156,13 @@ export class SpaceProxy implements Space {
     this._pipelineUpdate.emit(_data.pipeline ?? {});
     this._membersUpdate.emit(_data.members ?? []);
 
-    this._cachedProperties = new Properties({}, { immutable: true });
-    if (this._data.cache?.properties) {
-      setStateFromSnapshot(this._cachedProperties, this._data.cache.properties);
+    if (options.useReactiveObjectApi) {
+      this._cachedProperties = E.object(PropertiesSchema, {}) as any;
+    } else {
+      this._cachedProperties = new Properties({}, { immutable: true });
+      if (this._data.cache?.properties) {
+        setStateFromSnapshot(this._cachedProperties, this._data.cache.properties);
+      }
     }
   }
 
