@@ -8,7 +8,7 @@ import type { SharedWorkerConnection } from '@dxos/client-services';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import type { PublicKey } from '@dxos/keys';
-import { type LogFilter, parseFilter, log } from '@dxos/log';
+import { type LogFilter, parseFilter, log, type CallMetadata } from '@dxos/log';
 import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
 import { type ServiceBundle } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
@@ -106,16 +106,16 @@ export class WorkerClientServices implements ClientServicesProvider {
     this._loggingStream.subscribe((entry) => {
       switch (entry.level) {
         case LogLevel.DEBUG:
-          log.debug(`[worker] ${entry.message}`, entry.context);
+          log.debug(`[worker] ${entry.message}`, entry.context, mapLogMeta(entry.meta));
           break;
         case LogLevel.INFO:
-          log.info(`[worker] ${entry.message}`, entry.context);
+          log.info(`[worker] ${entry.message}`, entry.context, mapLogMeta(entry.meta));
           break;
         case LogLevel.WARN:
-          log.warn(`[worker] ${entry.message}`, entry.context);
+          log.warn(`[worker] ${entry.message}`, entry.context, mapLogMeta(entry.meta));
           break;
         case LogLevel.ERROR:
-          log.error(`[worker] ${entry.message}`, entry.context);
+          log.error(`[worker] ${entry.message}`, entry.context, mapLogMeta(entry.meta));
           break;
       }
     });
@@ -139,3 +139,13 @@ export class WorkerClientServices implements ClientServicesProvider {
     this._isOpen = false;
   }
 }
+
+const mapLogMeta = (meta: LogEntry.Meta | undefined): CallMetadata | undefined => {
+  return (
+    meta && {
+      F: meta.file,
+      L: meta.line,
+      S: meta.scope,
+    }
+  );
+};
