@@ -7,7 +7,7 @@ export default template.define.group(({ input }) => {
   const packages = packagesInProject(input! as any);
   return packages
     .map((pkage) => {
-      const ifaces = reflectionsOfKind(pkage, ReflectionKind.Interface) as S.ContainerReflection[];
+      const ifaces = reflectionsOfKind(pkage, ReflectionKind.Interface) as S.DeclarationReflection[];
       const stringifier = new Stringifier(input! as any);
       return ifaces
         .map((iface) => {

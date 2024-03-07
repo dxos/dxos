@@ -6,7 +6,8 @@ import { DotsThreeVertical } from '@phosphor-icons/react';
 import React, { Fragment } from 'react';
 
 import { Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { NavTreeItemAction, type TreeNode } from '@dxos/react-ui-navtree';
+import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
+import { type TreeNode } from '@dxos/react-ui-navtree';
 
 import { KEY_BINDING, NAVTREE_PLUGIN } from '../meta';
 
@@ -21,21 +22,25 @@ export const NavBarStart = ({ activeNode, popoverAnchorId }: { activeNode: TreeN
       ? Popover.Anchor
       : Fragment;
 
+  const Icon = activeNode.icon ?? DotsThreeVertical;
+
+  const menuTriggerLabel = t('node actions menu invoker label');
+
   return (
     <>
       <ActionRoot>
-        <NavTreeItemAction
-          variant='plank-heading'
-          label={t('node actions menu invoker label')}
+        <PlankHeading.ActionsMenu
+          triggerLabel={menuTriggerLabel}
           actions={activeNode.actions.flatMap((action) => ('invoke' in action ? [action] : []))}
           onAction={(action) => action.invoke?.({ caller: TREE_ITEM_MAIN_HEADING })}
-          icon={activeNode.icon ?? DotsThreeVertical}
-          caller={TREE_ITEM_MAIN_HEADING}
-        />
+        >
+          <PlankHeading.Button attendableId={activeNode.id}>
+            <Icon {...plankHeadingIconProps} />
+            <span className='sr-only'>{menuTriggerLabel}</span>
+          </PlankHeading.Button>
+        </PlankHeading.ActionsMenu>
       </ActionRoot>
-      <h1 className='mli-1 min-is-0 shrink-1 truncate font-medium fg-accent'>
-        {toLocalizedString(activeNode.label, t)}
-      </h1>
+      <PlankHeading.Label attendableId={activeNode.id}>{toLocalizedString(activeNode.label, t)}</PlankHeading.Label>
     </>
   );
 };
