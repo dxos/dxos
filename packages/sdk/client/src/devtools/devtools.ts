@@ -12,6 +12,7 @@ import { createBundledRpcServer, type RpcPeer, type RpcPort } from '@dxos/rpc';
 import { TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';
 
 import { type Client } from '../client';
+import { importModule } from '@dxos/debug';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;
@@ -36,6 +37,11 @@ export interface DevtoolsHook {
   downloadDiagnostics?: () => Promise<void>;
 
   reset: () => void;
+
+  /**
+   * Import modules exposed by `exposeModule` from @dxos/debug.
+   */
+  importModule: (module: string) => unknown;
 }
 
 export type MountOptions = {
@@ -81,6 +87,8 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     },
 
     reset,
+
+    importModule,
   };
 
   if (client) {
