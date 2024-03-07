@@ -23,7 +23,7 @@ Then, `pnpm i` to regenerate the `pnpm-lock.yaml` on the new `HEAD`.
 
 ### Obscure errors while running tests
 
-Mocha may obfuscate the error message when a test fails.
+Mocha may obfuscate the error message when a test fails. (E.g., ERR_REQUIRE_ESM.)
 
 To temporarily log the root cause, add logging statements inside the `catch` block in the following file:
 
