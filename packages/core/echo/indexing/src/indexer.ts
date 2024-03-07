@@ -54,6 +54,10 @@ export class Indexer {
   private _lastSave = Date.now();
 
   private readonly _run = new DeferredTask(this._ctx, async () => {
+    if (!this._initialized) {
+      return;
+    }
+
     const ids = await cancelWithContext(this._ctx, this._metadataStore.getDirtyDocuments());
     if (ids.length === 0) {
       return;
@@ -161,6 +165,9 @@ export class Indexer {
 
   // TODO(mykola): `Find` should use junctions and conjunctions of ID sets.
   async find(filter: Filter): Promise<{ id: string; rank: number }[]> {
+    if (!this._initialized) {
+      return [];
+    }
     const arraysOfIds = await Promise.all(Array.from(this._indexes.values()).map((index) => index.find(filter)));
     return arraysOfIds.reduce((acc, ids) => acc.concat(ids), []);
   }
