@@ -1,0 +1,392 @@
+@use 'sass:color';
+@use 'sass:map';
+@import './tailwind-colors.scss';
+@import './palette.scss';
+
+/**
+ * Main content area.
+ */
+.page {
+  transition: none !important;
+}
+
+body {
+  font-size: 17px !important;
+}
+
+#message-container .message {
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+html[data-theme='light'] {
+  .hint-container {
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/**
+ * Navbar (header)
+ */
+.navbar {
+  .site-name {
+    display: none;
+  }
+
+  .logo {
+    height: 48px;
+    opacity: 0.9;
+  }
+
+  nav {
+    &.nav-links {
+      margin-left: 2rem !important;
+    }
+
+    .nav-item > .nav-link:hover::after,
+    .nav-item > .nav-link.active::after {
+      bottom: -16px;
+    }
+  }
+}
+
+/**
+ * Hero
+ */
+.vp-project-home {
+  .vp-hero-info-wrapper {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-top: 2rem;
+
+    // discord button
+    html[data-theme='dark'] & {
+      .vp-hero-action.discord {
+        background-color: #6a5acd;
+        color: var(--white);
+        &:hover {
+          background-color: #7a6bdb;
+        }
+      }
+    }
+    html[data-theme='light'] & {
+      .vp-hero-action.discord {
+        background-color: #7289da;
+        color: white;
+        &:hover {
+          background-color: #8b9fe9;
+        }
+      }
+    }
+
+    .vp-hero-info {
+      flex-direction: column;
+
+      .vp-hero-infos {
+        font-family: 'Sharp Sans';
+        max-width: 25rem;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .vp-hero-actions {
+        font-family: 'DM Sans';
+        margin: 3rem 0;
+      }
+    }
+  }
+
+  .vp-feature-wrapper {
+    .vp-feature {
+      padding-top: 0;
+
+      .vp-features {
+        margin-top: 0;
+
+        .vp-feature-item {
+          .vp-feature-title {
+            font-family: 'Sharp Sans';
+            font-weight: 400;
+          }
+        }
+
+        .vp-feature-item:hover {
+          transform: none;
+          box-shadow: none;
+          background-color: transparent;
+
+          &:before {
+            display: none;
+          }
+        }
+      }
+    }
+  }
+}
+
+html[data-theme='dark'] .vp-project-home .vp-hero-info-wrapper {
+  img.dark {
+    opacity: 0.9 !important;
+  }
+  h1 {
+    color: white;
+  }
+}
+
+html[data-theme='light'] .vp-project-home .vp-hero-info-wrapper {
+  img.light {
+    opacity: 0.9 !important;
+  }
+  h1 {
+    color: black;
+  }
+}
+
+.custom-container {
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+  ul {
+    li {
+      margin-bottom: 0.62em;
+    }
+  }
+
+  .custom-container-title {
+    font-weight: 500;
+  }
+}
+
+html[data-theme='dark'] {
+  .custom-container.note,
+  .hint-container.note {
+    background-color: darken($zinc-800, 3%);
+  }
+}
+
+/**
+ * Misc.
+ */
+
+// Rich text formatting.
+h2,
+h3,
+h4,
+h5,
+h6 {
+  > a:first-child {
+    margin-left: -1.1em;
+  }
+}
+h1 {
+  font-size: 2rem;
+}
+h2 {
+  font-size: 1.65rem;
+}
+h3 {
+  font-size: 1.35rem;
+}
+h4 {
+  font-size: 1.15rem;
+}
+
+html[data-theme='light'] {
+  th,
+  td {
+    border-color: $zinc-200;
+  }
+}
+
+html[data-theme='dark'] {
+  tr:nth-child(2n) {
+    background-color: transparent;
+  }
+  th,
+  td {
+    border-color: $zinc-700;
+  }
+}
+
+.theme-hope-content figure img {
+  border-radius: 0;
+  &[tabindex]:hover {
+    box-shadow: none;
+  }
+}
+
+/**
+ * Code
+ */
+
+code {
+  background-color: color.adjust($zinc-200, $lightness: 3%);
+}
+
+a code,
+p a code {
+  color: $emerald-500;
+  font-weight: 600;
+}
+
+div[class^='language-'] {
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+html[data-theme='dark'] div[class^='language-'] {
+  background-color: $zinc-900;
+}
+
+div[class^='language-error'] code {
+  color: $red-600;
+  html[data-theme='dark'] & {
+    color: $red-400;
+  }
+}
+
+// Code highlight v height adjustment for font
+div[class*='language-'] .highlight-lines {
+  line-height: 1.376;
+}
+
+div[class*='language-'] > button.copy-code-button:not(.fancy) {
+  top: auto;
+  bottom: 0;
+  right: 0;
+  margin: 0.5em;
+  border-radius: 0.25em;
+}
+
+html[data-theme='light'] {
+  div[class*='language-'] > button.copy-code-button:not(.pure) {
+    background-color: $zinc-300;
+    box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.075);
+    &:hover {
+      background-color: $theme-color; // map.get($theme-color, 'light');
+    }
+  }
+}
+
+html[data-theme='dark'] {
+  div[class*='language-'] > button.copy-code-button:not(.pure) {
+    background-color: $zinc-700;
+    .copy-icon {
+      color: $zinc-400;
+    }
+    box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.075);
+    &:hover {
+      background-color: $theme-color; // map.get($theme-color, 'dark');
+      .copy-icon {
+        color: $zinc-800;
+      }
+    }
+  }
+}
+
+// dark and light video versions
+.dark {
+  display: none;
+}
+
+html[data-theme='dark'] {
+  .dark {
+    display: block;
+  }
+  .light {
+    display: none;
+  }
+}
+
+// showcase component
+.peer-a {
+  color: $orange-500;
+}
+
+.peer-b {
+  color: $violet-500;
+}
+
+// shell images
+.shell-images {
+  img {
+    border-radius: 12px;
+    box-shadow: 0px 10px 12px rgba(0, 0, 0, 0.25);
+  }
+}
+
+// icons
+.ph.large {
+  font-size: 48px;
+}
+
+a.button {
+  display: inline-block;
+  padding: 0.5em 1em;
+  border-radius: 0.25em;
+  font-weight: 600;
+  text-decoration: none;
+  transition: 0.2s;
+  html[data-theme='light'] & {
+    color: $zinc-100;
+    background-color: $emerald-500;
+  }
+  html[data-theme='dark'] & {
+    background-color: $zinc-700;
+  }
+  &:hover {
+    color: white;
+    text-decoration: none;
+    html[data-theme='light'] & {
+      color: white;
+      background-color: $emerald-400;
+    }
+    html[data-theme='dark'] & {
+      background-color: $emerald-500;
+    }
+  }
+  &.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+    html[data-theme='light'] & {
+      color: $zinc-500;
+      background-color: $zinc-300;
+    }
+    html[data-theme='dark'] & {
+      color: $zinc-500;
+    }
+  }
+}
+
+// quickstart tiles
+.quick-start-tiles {
+  &,* {
+    // outline: 1px dashed rgba(255,150,40,0.3);
+  }
+  display: flex;
+  flex-direction: row;
+  gap: 1em;
+  margin: 2em 0;
+  .tile {
+    flex: 1;
+  }
+}
+
+.composer-green {
+  color: $emerald-500;
+  font-weight: bold;
+}
+
+.composer-pink {
+  color: $pink-500;
+  font-weight: bold;
+}
+
+code.ph {
+  font-family: 'Consolas', Monaco, 'Andale Mono', 'Ubuntu Mono', monospace !important;
+  font-weight: bold;
+  &:before {
+    font-weight: normal;
+    font-family: 'Phosphor' !important;
+    font-size: 1.1em;
+    vertical-align: middle;
+    margin-right: 0.5em;
+  }
+}

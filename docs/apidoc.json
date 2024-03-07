@@ -1,6 +1,11 @@
 {
-  "include":["docs/guide/**/*.md","docs/guide/*.md", "docs/test.md"],
-  "typedocJsonPath": "docs/api.json",
-  "apiDocsPath": "docs/api",
+  "include":[
+    "content/guide/**/*.md",
+    "content/guide/*.md", 
+    "content/composer/**/*.md",
+    "content/composer/*.md", 
+    "content/test.md"],
+  "typedocJsonPath": "content/api.json",
+  "apiDocsPath": "content/api",
   "packagesPath": "../packages"
 }

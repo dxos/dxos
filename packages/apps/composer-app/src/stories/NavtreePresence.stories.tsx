@@ -15,7 +15,6 @@ import { faker } from '@dxos/random';
 import { Tooltip } from '@dxos/react-ui';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { NavTree, translations, treeNodeFromGraphNode, type TreeNode } from '@dxos/react-ui-navtree';
-import { fineBlockSize } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 faker.seed(3);
@@ -115,9 +114,7 @@ export const Demo = {
               components: {
                 // @ts-ignore
                 presence: ({ data: { object } }: { data: { object: any } }) => {
-                  return (
-                    <SmallPresence size={2} members={object?.viewers ?? []} classNames={[fineBlockSize, 'is-6']} />
-                  );
+                  return <SmallPresence count={object?.viewers.length ?? 0} />;
                 },
               },
             }}

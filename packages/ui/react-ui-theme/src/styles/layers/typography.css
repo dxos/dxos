@@ -1,0 +1,152 @@
+@import '@fontsource-variable/jetbrains-mono/wght-italic.css';
+@import '@fontsource-variable/jetbrains-mono/wght.css';
+@import '@fontsource-variable/inter/slnt.css';
+
+@layer utilities {
+  /* Font weights & `italic` handling */
+  .not-italic {
+    font-variation-settings:
+      'wght' 400,
+      'slnt' 0;
+  }
+  .font-thin,
+  .not-italic.font-thin,
+  .not-italic .font-thin,
+  .font-thin .not-italic {
+    font-variation-settings:
+      'wght' 100,
+      'slnt' 0;
+  }
+  .font-extralight,
+  .not-italic.font-extralight,
+  .not-italic .font-extralight,
+  .font-extralight .not-italic {
+    font-variation-settings:
+      'wght' 200,
+      'slnt' 0;
+  }
+  .font-light,
+  .not-italic.font-light,
+  .not-italic .font-light,
+  .font-light .not-italic {
+    font-variation-settings:
+      'wght' 300,
+      'slnt' 0;
+  }
+  .font-normal,
+  .not-italic.font-normal,
+  .not-italic .font-normal,
+  .font-normal .not-italic {
+    font-variation-settings:
+      'wght' 400,
+      'slnt' 0;
+  }
+  .font-medium,
+  .not-italic.font-medium,
+  .not-italic .font-medium,
+  .font-medium .not-italic {
+    font-variation-settings:
+      'wght' 500,
+      'slnt' 0;
+  }
+  .font-semibold,
+  .not-italic.font-semibold,
+  .not-italic .font-semibold,
+  .font-semibold .not-italic {
+    font-variation-settings:
+      'wght' 600,
+      'slnt' 0;
+  }
+  .font-bold,
+  .not-italic.font-bold,
+  .not-italic .font-bold,
+  .font-bold .not-italic {
+    font-variation-settings:
+      'wght' 700,
+      'slnt' 0;
+  }
+  .font-extrabold,
+  .not-italic.font-extrabold,
+  .not-italic .font-extrabold,
+  .font-extrabold .not-italic {
+    font-variation-settings:
+      'wght' 800,
+      'slnt' 0;
+  }
+  .font-black,
+  .not-italic.font-black,
+  .not-italic .font-black,
+  .font-black .not-italic {
+    font-variation-settings:
+      'wght' 900,
+      'slnt' 0;
+  }
+  .italic {
+    font-variation-settings:
+      'wght' 400,
+      'slnt' -10;
+  }
+  .italic.font-thin,
+  .italic .font-thin,
+  .font-thin .italic {
+    font-variation-settings:
+      'wght' 100,
+      'slnt' -10;
+  }
+  .italic.font-extralight,
+  .italic .font-extralight,
+  .font-extralight .italic {
+    font-variation-settings:
+      'wght' 200,
+      'slnt' -10;
+  }
+  .italic.font-light,
+  .italic .font-light,
+  .font-light .italic {
+    font-variation-settings:
+      'wght' 300,
+      'slnt' -10;
+  }
+  .italic.font-normal,
+  .italic .font-normal,
+  .font-normal .italic {
+    font-variation-settings:
+      'wght' 400,
+      'slnt' -10;
+  }
+  .italic.font-medium,
+  .italic .font-medium,
+  .font-medium .italic {
+    font-variation-settings:
+      'wght' 500,
+      'slnt' -10;
+  }
+  .italic.font-semibold,
+  .italic .font-semibold,
+  .font-semibold .italic {
+    font-variation-settings:
+      'wght' 600,
+      'slnt' -10;
+  }
+  .italic.font-bold,
+  .italic .font-bold,
+  .font-bold .italic {
+    font-variation-settings:
+      'wght' 700,
+      'slnt' -10;
+  }
+  .italic.font-extrabold,
+  .italic .font-extrabold,
+  .font-extrabold .italic {
+    font-variation-settings:
+      'wght' 800,
+      'slnt' -10;
+  }
+  .italic.font-black,
+  .italic .font-black,
+  .font-black .italic {
+    font-variation-settings:
+      'wght' 900,
+      'slnt' -10;
+  }
+}
