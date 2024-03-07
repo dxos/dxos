@@ -15,15 +15,15 @@ Returns: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
 
 Arguments: 
 
-`config`: <code>Config</code>
+`config`: <code>[Config](/api/@dxos/config/interfaces/Config)</code>
 
-`objects`: <code>Config[]</code>
+`objects`: <code>[Config](/api/@dxos/config/interfaces/Config)[]</code>
 
 
 
 ## Properties
 ### [values]()
-Type: <code>Config</code>
+Type: <code>[Config](/api/@dxos/config/interfaces/Config)</code>
 
 Returns an immutable config JSON object.
 
@@ -48,13 +48,13 @@ Arguments:
 
 Returns the given config property.
 
-Returns: <code>DeepIndex&lt;Config, ParseKey&lt;K&gt;&gt;</code>
+Returns: <code>[DeepIndex](/api/@dxos/config/types/DeepIndex)&lt;[Config](/api/@dxos/config/interfaces/Config), [ParseKey](/api/@dxos/config/types/ParseKey)&lt;K&gt;&gt;</code>
 
 Arguments: 
 
 `key`: <code>K</code>
 
-`defaultValue`: <code>DeepIndex&lt;Config, ParseKey&lt;K&gt;&gt;</code>
+`defaultValue`: <code>[DeepIndex](/api/@dxos/config/types/DeepIndex)&lt;[Config](/api/@dxos/config/interfaces/Config), [ParseKey](/api/@dxos/config/types/ParseKey)&lt;K&gt;&gt;</code>
 
 
 ### [getOrThrow(key)]()
@@ -62,7 +62,7 @@ Arguments:
 
 Returns the given config property or throw if it doesn't exist.
 
-Returns: <code>Exclude&lt;DeepIndex&lt;Config, ParseKey&lt;K&gt;&gt;, undefined&gt;</code>
+Returns: <code>Exclude&lt;[DeepIndex](/api/@dxos/config/types/DeepIndex)&lt;[Config](/api/@dxos/config/interfaces/Config), [ParseKey](/api/@dxos/config/types/ParseKey)&lt;K&gt;&gt;, undefined&gt;</code>
 
 Arguments: 
 

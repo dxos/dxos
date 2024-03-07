@@ -109,7 +109,7 @@ Arguments:
 
 Get Halo credentials for the current user.
 
-Returns: <code>ObservableProvider&lt;object, Credential[]&gt;</code>
+Returns: <code>ObservableProvider&lt;object, [Credential](/api/@dxos/client/interfaces/Credential)[]&gt;</code>
 
 Arguments: 
 
@@ -173,6 +173,6 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: 
 
-`credentials`: <code>Credential[]</code>
+`credentials`: <code>[Credential](/api/@dxos/client/interfaces/Credential)[]</code>
 
 

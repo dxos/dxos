@@ -8,7 +8,7 @@
   "author": "info@dxos.org",
   "type": "module",
   "scripts": {
-    "apidoc": "NODE_OPTIONS='--loader ts-node/esm' apidoc",
+    "apidoc": "rm -rf content/api && NODE_OPTIONS='--loader ts-node/esm' apidoc",
     "bundle": "vuepress build content",
     "clean:api": "rm -rf content/api",
     "prerelease": "pnpm typedoc && pnpm clean:api && pnpm apidoc",

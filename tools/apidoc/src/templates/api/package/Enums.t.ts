@@ -12,7 +12,7 @@ export default template.define.group(({ input }) => {
     const enums = reflectionsOfKind(pkage, ReflectionKind.Enum) as S.DeclarationReflection[];
     return template.define.text({
       path: path.join(pkage.name ?? '', 'enums.md'),
-      content: plate`
+      content: !!enums?.length && plate`
         ---
         title: Enumerations
         ---
