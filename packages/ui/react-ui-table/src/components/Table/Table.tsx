@@ -37,6 +37,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     rowsSelectable,
     debug,
     onDataSelectionChange,
+    getScrollElement,
   } = props;
 
   const TableProvider = UntypedTableProvider as TypedTableProvider<TData>;
@@ -46,6 +47,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
   //
 
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
+
   useEffect(() => {
     // Set initial state.
     setColumnSizing(
@@ -59,6 +61,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
   }, [columns]);
 
   const [columnSizingInfo, setColumnSizingInfo] = useState<ColumnSizingInfoState>({} as ColumnSizingInfoState);
+
   const onColumnResizeDebounced = onColumnResize && debounce<ColumnSizingState>(onColumnResize, 1_000);
   useEffect(() => {
     if (columnSizingInfo.columnSizingStart?.length === 0) {
@@ -160,7 +163,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
       expand={expand}
       isGrid={role === 'grid' || role === 'treegrid'}
     >
-      <TableImpl<TData> debug={false} />
+      <TableImpl<TData> debug={false} getScrollElement={getScrollElement} {...props} />
     </TableProvider>
   );
 };
@@ -169,7 +172,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
  * Pure implementation of table outside of context set-up.
  */
 const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
-  const { role, footer, grouping, getScrollElement, fullWidth, classNames, debug } = props;
+  const { debug, classNames, getScrollElement, role, footer, grouping, fullWidth } = props;
   const { table } = useTableContext<TData>('TableImpl');
   const { rows } = table.getRowModel();
 
@@ -179,6 +182,10 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
         <code>{JSON.stringify(table.getState(), undefined, 2)}</code>
       </pre>
     );
+  }
+
+  if (process.env.NODE_ENV === 'development' && !getScrollElement) {
+    console.warn('Table: getScrollElement is not set. This is required for virtualized tables.');
   }
 
   return (
@@ -215,7 +222,7 @@ const VirtualizedTableContent = ({
   const { getTotalSize, getVirtualItems } = useVirtualizer({
     getScrollElement,
     count: rows.length,
-    overscan: 16,
+    overscan: 4,
     estimateSize: () => 33,
   });
   const virtualRows = getVirtualItems();
