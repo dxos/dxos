@@ -11,6 +11,9 @@ import { log } from '@dxos/log';
 import { type HostInfo, type DataService, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
+import { exposeModule } from '@dxos/debug';
+
+exposeModule('@automerge/automerge', automerge);
 
 /**
  * Shared context for all spaces in the client.
