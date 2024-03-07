@@ -118,7 +118,7 @@ const formatMessageForSentry = (entry: LogEntry) => {
     return entry.message;
   }
   const workerPrefix = entry.meta?.S?.hostSessionId ? '[worker] ' : '';
-  return `${workerPrefix}${scopePrefix} ${entry.message.slice(workerPrefix.length)}`;
+  return `${workerPrefix}${scopePrefix} ${entry.message}`;
 };
 
 const convertLevel = (level: LogLevel): SeverityLevel => {
