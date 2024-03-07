@@ -192,7 +192,6 @@ export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
         authorStatus='active'
         continues={false}
       >
-        {/* TODO(burdon): Change to hook. */}
         <TextEditor
           slots={{ root: { className: mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50') } }}
           readonly={disabled}
