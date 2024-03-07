@@ -190,7 +190,6 @@ export const SpacePlugin = ({
                 const { added, removed } = message.payload;
                 const identityKey = PublicKey.safeFrom(message.payload.identityKey);
                 const spaceKey = PublicKey.safeFrom(message.payload.spaceKey);
-                console.log('[viewing]', identityKey, spaceKey, added, removed);
                 if (identityKey && spaceKey && Array.isArray(added) && Array.isArray(removed)) {
                   added.forEach((objectIdAny) => {
                     if (objectIdAny) {
@@ -203,12 +202,6 @@ export const SpacePlugin = ({
                         state.viewersByIdentity.set(identityKey, new Set());
                       }
                       state.viewersByIdentity.get(identityKey)!.add(objectId);
-                      console.log(
-                        '[added]',
-                        objectId,
-                        state.viewersByObject[objectId],
-                        state.viewersByIdentity.get(identityKey),
-                      );
                     }
                   });
                   removed.forEach((objectIdAny) => {
@@ -216,12 +209,6 @@ export const SpacePlugin = ({
                       const objectId = objectIdAny.toString();
                       state.viewersByObject[objectId]?.delete(identityKey);
                       state.viewersByIdentity.get(identityKey)?.delete(objectId);
-                      console.log(
-                        '[removed]',
-                        objectId,
-                        state.viewersByObject[objectId],
-                        state.viewersByIdentity.get(identityKey),
-                      );
                       // It’s okay for these to be empty sets/maps, reduces churn.
                     }
                   });
