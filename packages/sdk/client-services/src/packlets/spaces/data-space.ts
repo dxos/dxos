@@ -276,6 +276,8 @@ export class DataSpace {
     // Allow other tasks to run before loading the data pipeline.
     await sleep(1);
 
+    this._automergeSpaceState.startProcessingRootDocs();
+
     await this._inner.initializeDataPipeline();
 
     this.metrics.dataPipelineOpen = new Date();
