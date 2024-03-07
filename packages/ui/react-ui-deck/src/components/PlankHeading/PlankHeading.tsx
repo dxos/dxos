@@ -22,7 +22,7 @@ import { translationKey } from '../../translations';
 import { type PlankHeadingAction } from '../../types';
 import { useHasAttention } from '../Attention';
 
-type AttendableId = { attendableId: string };
+type AttendableId = { attendableId?: string };
 
 type PlankHeadingButtonProps = Omit<ButtonProps, 'variant'> & AttendableId;
 

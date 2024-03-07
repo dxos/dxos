@@ -17,7 +17,7 @@ type AttentionContextValue = {
 
 const [AttentionProvider, useAttentionContext] = createContext(ATTENTION_NAME, { attended: new Set() });
 
-const useHasAttention = (attendableId: string) => {
+const useHasAttention = (attendableId?: string) => {
   const { attended } = useAttentionContext(ATTENTION_NAME);
   return attended.has(attendableId);
 };
