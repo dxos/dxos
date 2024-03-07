@@ -4,21 +4,32 @@ This section includes tips for dealing with common problems.
 
 Please consider submitting a PR if you encounter problems you've successfully resolved.
 
+## Build
+
+### Package dependencies
+
+Edit `.pnpmfile.cjs` to override dependencies for individual packages.
+
 ### Conflicts in `package-lock.yaml`
 
-While rebasing, you can skip dealing with it during the rebase, just be sure to finalize with a `pnpm install` to regenerate the file at the end.
+While rebasing, you can skip dealing with it during the rebase;
+just be sure to finalize with a `pnpm install` to regenerate the file at the end.
 
-```
+```bash
 git checkout --ours pnpm-lock.yaml && git add pnpm-lock.yaml && git rebase --continue
 ```
 
-finally
+Then, `pnpm i` to regenerate the `pnpm-lock.yaml` on the new `HEAD`.
 
-```
-pnpm i
-```
+### Obscure errors while running tests
 
-to regenerate the `pnpm-lock.yaml` on the new `HEAD`.
+Mocha may obfuscate the error message when a test fails.
+
+To temporarily log the root cause, add logging statements inside the `catch` block in the following file:
+
+`./node_modules/mocha/lib/nodejs/esm-utils.js`
+
+## CI
 
 ### Publish succeeds in CI but app does not show up in dev
 

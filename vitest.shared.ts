@@ -42,7 +42,6 @@ const createBrowserConfig = (browserName: 'chrome') =>
     },
     esbuild: {
       target: 'es2020',
-
       // TODO(dmaretskyi): Move into nodeStd plugin.
       banner: 'import "@dxos/node-std/globals";',
     },
