@@ -152,7 +152,15 @@ export const defaultTheme: ThemeStyles = {
   //
   '.cm-tooltip': {
     border: 'none',
-    background: 'unset',
+  },
+  '&light .cm-tooltip': {
+    background: get(tokens, 'extend.colors.white'),
+  },
+  '&dark .cm-tooltip': {
+    background: get(tokens, 'extend.colors.black'),
+  },
+  '.cm-tooltip-hover': {
+    padding: '0 4px',
   },
   '.cm-tooltip-below': {},
 
