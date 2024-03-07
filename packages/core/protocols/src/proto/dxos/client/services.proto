@@ -11,6 +11,7 @@ import "google/protobuf/timestamp.proto";
 
 import "dxos/config.proto";
 import "dxos/agent/query.proto";
+import "dxos/echo/indexing.proto";
 import "dxos/echo/metadata.proto";
 import "dxos/echo/timeframe.proto";
 import "dxos/error.proto";
@@ -385,7 +386,8 @@ service SpacesService {
 //
 
 service IndexService {
-  rpc find(dxos.agent.query.QueryRequest) returns (dxos.agent.query.QueryResponse);
+  rpc SetConfig(dxos.echo.indexing.IndexConfig) returns (google.protobuf.Empty);
+  rpc Find(dxos.agent.query.QueryRequest) returns (dxos.agent.query.QueryResponse);
 }
 
 //

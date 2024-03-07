@@ -8,6 +8,7 @@ import { Filter } from '@dxos/echo-schema';
 import { idCodec } from '@dxos/protocols';
 import { type QueryRequest, type QueryResponse, type QueryResult } from '@dxos/protocols/proto/dxos/agent/query';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
+import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 
 import { type Indexer } from './indexer';
 import { warnAfterTimeout } from '../../../../common/debug/src';
@@ -20,6 +21,11 @@ export type IndexServiceParams = {
 export class IndexServiceImpl implements IndexService {
   private readonly _ctx = new Context();
   constructor(private readonly _params: IndexServiceParams) {}
+
+  async setConfig(config: IndexConfig): Promise<void> {
+    this._params.indexer.setIndexConfig(config);
+    await this._params.indexer.initialize();
+  }
 
   async find(request: QueryRequest): Promise<QueryResponse> {
     const filter = Filter.fromProto(request.filter);

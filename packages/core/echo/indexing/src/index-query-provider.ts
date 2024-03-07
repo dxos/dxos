@@ -12,11 +12,10 @@ import {
   type QuerySource,
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-
-import { type Indexer } from './indexer';
+import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
 
 export type IndexQueryProviderParams = {
-  indexer: Indexer;
+  service: IndexService;
   loadObjects: (ids: string[]) => Promise<EchoObject[]>;
 };
 

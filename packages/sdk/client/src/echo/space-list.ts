@@ -32,6 +32,7 @@ import { type ModelFactory } from '@dxos/model-factory';
 import { ApiError, trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { trace } from '@dxos/tracing';
 
@@ -187,6 +188,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
     await gotInitialUpdate.wait();
     log.trace('dxos.sdk.echo-proxy.open', Trace.end({ id: this._instanceId }));
+  }
+
+  async setIndexConfig(config: IndexConfig) {
+    await this._serviceProvider.services.IndexService?.setConfig(config);
   }
 
   /**
