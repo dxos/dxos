@@ -28,6 +28,7 @@ export type CompilerOptions = {
 };
 
 let initialized: Promise<void>;
+
 export const initializeCompiler = async (options: { wasmURL: string }) => {
   await (initialized ??= initialize({
     wasmURL: options.wasmURL,
