@@ -14,7 +14,7 @@ Client configuration object.
 ### [createWorker]()
 Type: <code>function</code>
 
-
+Create client worker.
 
 
 ### [modelFactory]()
@@ -36,7 +36,7 @@ Shell path.
 
 
 ### [types]()
-Type: <code>TypeCollection</code>
+Type: <code>[TypeCollection](/api/@dxos/react-client/classes/TypeCollection)</code>
 
 Types.
 

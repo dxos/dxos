@@ -44,8 +44,6 @@ What would have to be true for such a world to exist?
 
 ## Technologies
 
-DXOS supports the development and operation of privacy preserving, internet-scale applications.
-
 ### [ECHO](platform)
 
 In order to build local-first and offline-first applications with peer-to-peer collaboration features, developers need a simple-to-use solution for state management that solves for concurrent and offline writers. [Read more](platform)

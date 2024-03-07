@@ -20,37 +20,11 @@ DXOS works in any Node.js or Browser environment. There is a [TypeScript API](ty
 
 :::
 
-## Usage in a browser
-
-DXOS recommends [Vite](https://vitejs.dev/) as the bundler. Vite requires a plugin in order to serve the WebAssembly modules.
-
-```bash
-npm install --save vite-plugin-top-level-await vite-plugin-wasm
-```
-
-Add `topLevelAwait` and `wasm` to your `vite.config.ts`:
-
-<!-- TODO: Turn this into a snippet -->
-
-```ts
-// vite.config.ts
-import { defineConfig } from 'vite';
-import wasm from 'vite-plugin-wasm';
-import topLevelAwait from 'vite-plugin-top-level-await';
-
-export default defineConfig({
-  plugins: [topLevelAwait(), wasm()],
-
-  worker: {
-    format: 'es',
-    plugins: [topLevelAwait(), wasm()],
-  },
-});
-```
-
 ## Usage with TypeScript
 
-DXOS can be used in both the `node` and browser environments. If you're using a browser environment, ensure you've set up your Vite config as described [above](#usage-in-a-browser).
+DXOS can be used in both the `node` and browser environments.
+
+If you're using a browser environment, ensure you've set up your bundler to handle `wasm`. Example [vite config](#usage-in-a-browser) and [project templates](#project-templates).
 
 ```bash
 npm install --save @dxos/client
@@ -75,7 +49,9 @@ main();
 
 An [Options](/api/@dxos/client/types/ClientOptions) object can be passed to `Client()`. See [configuration examples](config).
 
-To begin manipulating data, we must [create an identity](./typescript/identity), and [join or create a space](./typescript/spaces).
+[Spaces](./platform/#spaces) are the main units of data storage and sharing (like `collections` in other databases).
+
+To begin manipulating data, use `client.spaces.default`, or [join or create a space](./typescript/spaces).
 
 See below for `react` usage, otherwise see the [TypeScript Guide](./typescript/queries).
 
@@ -134,6 +110,34 @@ onconnect = async (event) => {
 Components will automatically re-render when the data changes. Change the data by mutating it as any regular JavaScript object.
 
 For a step-by-step walkthrough, see the [react tutorial](./tutorial).
+
+## Usage in a browser
+
+DXOS recommends [Vite](https://vitejs.dev/) as the bundler. Vite requires a plugin in order to serve the WebAssembly modules.
+
+```bash
+npm install --save vite-plugin-top-level-await vite-plugin-wasm
+```
+
+Add `topLevelAwait` and `wasm` to your `vite.config.ts`:
+
+<!-- TODO: Turn this into a snippet -->
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite';
+import wasm from 'vite-plugin-wasm';
+import topLevelAwait from 'vite-plugin-top-level-await';
+
+export default defineConfig({
+  plugins: [topLevelAwait(), wasm()],
+
+  worker: {
+    format: 'es',
+    plugins: [topLevelAwait(), wasm()],
+  },
+});
+```
 
 ## Project templates
 

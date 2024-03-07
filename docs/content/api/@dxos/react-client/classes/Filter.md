@@ -1,5 +1,5 @@
 # Class `Filter`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/query/filter.d.ts:19]()</sub>
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/query/filter.d.ts:20]()</sub>
 
 
 
@@ -151,7 +151,7 @@ Returns: <code>[Filter](/api/@dxos/react-client/classes/Filter)&lt;[Expando](/ap
 
 Arguments: 
 
-`schema`: <code>[Schema](/api/@dxos/react-client/classes/Schema)</code>
+`schema`: <code>[Schema](/api/@dxos/react-client/classes/Schema) | Schema&lt;any, any, never&gt;</code>
 
 
 ### [typename(typename, \[filter\])]()

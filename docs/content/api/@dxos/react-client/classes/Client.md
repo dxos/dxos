@@ -40,7 +40,7 @@ Type: <code>object</code>
 
 
 ### [halo]()
-Type: <code>HaloProxy</code>
+Type: <code>[HaloProxy](/api/@dxos/react-client/classes/HaloProxy)</code>
 
 HALO credentials.
 
@@ -50,7 +50,7 @@ Type: <code>boolean</code>
 Returns true if the client has been initialized. Initialize by calling  `.initialize()` .
 
 ### [mesh]()
-Type: <code>MeshProxy</code>
+Type: <code>[MeshProxy](/api/@dxos/react-client/classes/MeshProxy)</code>
 
 MESH networking.
 
@@ -65,7 +65,7 @@ Type: <code>[Shell](/api/@dxos/react-client/classes/Shell)</code>
 
 
 ### [spaces]()
-Type: <code>SpaceList</code>
+Type: <code>[SpaceList](/api/@dxos/react-client/classes/SpaceList)</code>
 
 
 
@@ -93,11 +93,11 @@ Arguments: none
 
 
 
-Returns: <code>[Client](/api/@dxos/react-client/classes/Client)</code>
+Returns: <code>this</code>
 
 Arguments: 
 
-`types`: <code>TypeCollection</code>
+`types`: <code>[TypeCollection](/api/@dxos/react-client/classes/TypeCollection)</code>
 
 
 ### [addTypes(types)]()
@@ -105,11 +105,11 @@ Arguments:
 
 
 
-Returns: <code>[Client](/api/@dxos/react-client/classes/Client)</code>
+Returns: <code>this</code>
 
 Arguments: 
 
-`types`: <code>TypeCollection</code>
+`types`: <code>[TypeCollection](/api/@dxos/react-client/classes/TypeCollection)</code>
 
 
 ### [destroy()]()

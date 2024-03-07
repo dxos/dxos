@@ -1,19 +1,20 @@
 import path from 'node:path';
 import template from '../template.t.js';
 import { packagesInProject } from '../util.t/index.js';
-import { JSONOutput as S } from 'typedoc'
+import { ContainerReflection, JSONOutput as S } from 'typedoc'
 
 export default template.define.group(({ input }) => {
   const { packagesPath } = input!;
-  const modules = packagesInProject(input! as any) as S.DeclarationReflection[];
+  const modules = packagesInProject(input! as S.ProjectReflection) as S.DeclarationReflection[];
+  console.log('found modules:', modules.length);
   return modules
     .map((module) => {
-      const source = module.sources?.[0].fileName;
-      const packageReadme = source?.replace('src/index.ts', 'README.md');
-      return packageReadme
+      const readme = module.readme?.reduce((acc, r) => acc + '\n' + r.text, '');
+      return readme
         ? template.define.text({
             path: path.join(module.name, 'README.md'),
-            copyOf: path.resolve(packagesPath!.replace(/packages\/?$/, ''), packageReadme),
+            content: readme
+            // copyOf: path.resolve(packagesPath!.replace(/packages\/?$/, ''), packageReadme),
           })
         : null!;
     })

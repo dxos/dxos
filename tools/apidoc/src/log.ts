@@ -4,5 +4,6 @@
 
 import chalk from 'chalk';
 
-export const warn = (...args: any[]) => console.warn(chalk.yellow('[warn]'), ...args);
 export const info = (...args: any[]) => console.warn(chalk.cyan('[info]'), ...args);
+export const warn = (...args: any[]) => console.warn(chalk.yellow('[warn]'), ...args);
+export const err = (...args: any[]) => console.warn(chalk.red('[err]'), ...args);

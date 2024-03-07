@@ -63,7 +63,6 @@
     "vue": "^3.3.12",
     "vue-router": "^4.2.5",
     "vuepress": "2.0.0-rc.0",
-    "vuepress-plugin-check-md": "^0.0.3",
     "vuepress-theme-hope": "2.0.0-rc.5"
   }
 }

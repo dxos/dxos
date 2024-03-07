@@ -3,7 +3,42 @@ title: Values
 ---
 # Values 
 
-### [`ClientContext`](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L37)
+### [`DocAccessor`]()
+Type: object
+
+
+
+### [`Expando`]()
+Type: ExpandoConstructor
+
+
+
+### [`TypedObject`]()
+Type: TypedObjectConstructor
+
+
+
+### [`base`]()
+Type: unique symbol
+
+
+
+### [`debug`]()
+Type: unique symbol
+
+
+
+### [`defaultKey`]()
+Type: "__DEFAULT__"
+
+
+
+### [`subscribe`]()
+Type: unique symbol
+
+
+
+### [`ClientContext`](https://github.com/dxos/dxos/blob/5fb37fcfa/packages/sdk/react-client/src/client/ClientContext.tsx#L37)
 Type: Context&lt;[ClientContextProps](/api/@dxos/react-client/types/ClientContextProps) | undefined&gt;
 
 

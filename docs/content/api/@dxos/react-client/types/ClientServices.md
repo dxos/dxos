@@ -18,7 +18,7 @@ Type: <code>DevicesService</code>
 
 
 ### [DevtoolsHost]()
-Type: <code>DevtoolsHost</code>
+Type: <code>[DevtoolsHost](/api/@dxos/react-client/interfaces/DevtoolsHost)</code>
 
 
 

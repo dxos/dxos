@@ -1,28 +1,29 @@
-//
-// Copyright 2024 DXOS.org
-//
+# @dxos/app-framework
 
-import { type Plugin } from '../PluginHost';
+A framework for building applications from composible plugins.
 
-export const defaultFileTypes = {
-  images: ['png', 'jpg', 'jpeg'],
-  media: ['mp3', 'mp4', 'mov', 'avi'],
-  text: ['pdf', 'txt', 'md'],
-};
+## Installation
 
-export type FileInfo = {
-  cid?: string; // TODO(burdon): Meta key? Or other common properties with other file management system?
-};
+```bash
+pnpm i @dxos/app-framework
+```
 
-export type FileUploader = (file: File) => Promise<FileInfo | undefined>;
+## Usage
 
-export type FileManagerProvides = {
-  file: {
-    upload?: FileUploader;
-  };
-};
+Run with
 
-// TODO(burdon): Better match against interface? and Return provided service type. What if multiple?
-export const parseFileManagerPlugin = (plugin: Plugin) => {
-  return (plugin.provides as any).file ? (plugin as Plugin<FileManagerProvides>) : undefined;
-};
+```bash
+pnpm nx storybook app-framework
+```
+
+## DXOS Resources
+
+- [Website](https://dxos.org)
+- [Developer Documentation](https://docs.dxos.org)
+- Talk to us on [Discord](https://discord.gg/eXVfryv3sW)
+
+## Contributions
+
+Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](https://github.com/dxos/dxos/blob/main/CODE_OF_CONDUCT.md), the [issue guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-issues), and the [PR contribution guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-prs).
+
+License: [MIT](./LICENSE) Copyright 2022 © DXOS

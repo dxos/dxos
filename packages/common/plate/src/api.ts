@@ -61,7 +61,8 @@ export class Plate<I = null, TSlots extends Slots<I> = {}> {
         ...options,
       };
       const absoluteTemplateRelativeTo = path.resolve(relativeTo ?? path.dirname(templateFile));
-      const relativeOutputPath = getOutputNameFromTemplateName(templateFile).slice(
+      const cleanTemplateFile = templateFile.replace(/^file:\/\//g, '');
+      const relativeOutputPath = getOutputNameFromTemplateName(cleanTemplateFile).slice(
         absoluteTemplateRelativeTo.length + 1,
       );
       const { slots: _slots, ...restOpts } = options;

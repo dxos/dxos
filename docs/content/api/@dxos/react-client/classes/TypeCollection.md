@@ -1,5 +1,5 @@
 # Class `TypeCollection`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/type-collection.d.ts:10]()</sub>
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/type-collection.d.ts:11]()</sub>
 
 
 Constructed via generated protobuf class.
@@ -26,6 +26,18 @@ Type: <code>[Schema](/api/@dxos/react-client/classes/Schema)[]</code>
 
 
 ## Methods
+### [getEffectSchema(typename)]()
+
+
+
+
+Returns: <code>undefined | Schema&lt;any, any, never&gt;</code>
+
+Arguments: 
+
+`typename`: <code>string</code>
+
+
 ### [getPrototype(name)]()
 
 
@@ -50,6 +62,18 @@ Arguments:
 `name`: <code>string</code>
 
 
+### [isEffectSchemaRegistered(schema)]()
+
+
+
+
+Returns: <code>boolean</code>
+
+Arguments: 
+
+`schema`: <code>Schema&lt;any, any, never&gt;</code>
+
+
 ### [link()]()
 
 
@@ -72,6 +96,18 @@ Returns: <code>void</code>
 Arguments: 
 
 `schema`: <code>[TypeCollection](/api/@dxos/react-client/classes/TypeCollection)</code>
+
+
+### [registerEffectSchema(schemaList)]()
+
+
+
+
+Returns: <code>this</code>
+
+Arguments: 
+
+`schemaList`: <code>Schema&lt;any, any, never&gt;[]</code>
 
 
 ### [registerPrototype(proto, schema)]()

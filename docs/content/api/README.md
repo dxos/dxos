@@ -7,5 +7,6 @@ To get started with DXOS components and learn how to use them, check out the [gu
 ## Packages:
 
 - [@dxos/client](/api/@dxos/client)
-- [@dxos/config](/api/@dxos/config)
 - [@dxos/react-client](/api/@dxos/react-client)
+- [@dxos/config](/api/@dxos/config)
+- [@dxos/app-framework](/api/@dxos/app-framework)

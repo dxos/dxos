@@ -85,7 +85,7 @@ const config: UserConfig = defineUserConfig({
         attrs: true,
         figure: true,
         imgMark: true,
-      },
+      }
     },
   }),
   plugins: [

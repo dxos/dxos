@@ -52,7 +52,7 @@ Type: <code>string</code>
 ### [prepareStackTrace]()
 Type: <code>function</code>
 
-
+Optional override for formatting stack traces
 
 ### [stackTraceLimit]()
 Type: <code>number</code>
