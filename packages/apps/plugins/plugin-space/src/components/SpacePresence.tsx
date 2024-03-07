@@ -28,6 +28,7 @@ import { ComplexMap, keyToFallback } from '@dxos/util';
 import { SPACE_PLUGIN } from '../meta';
 import type { ObjectViewerProps, SpacePluginProvides } from '../types';
 
+// TODO(thure): This is chiefly meant to satisfy TS & provide an empty map after `deepSignal` interactions.
 const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 
 // TODO(wittjosiah): Factor out?
@@ -43,6 +44,8 @@ export const SpacePresence = ({ object, spaceKey }: { object: TypedObject; space
   const space = spaceKey ? client.spaces.get(spaceKey) : getSpaceForObject(object);
   const spaceMembers = useMembers(space?.key);
 
+  // TODO(thure): Could it be a smell to return early when there are interactions with `deepSignal` later, since it
+  //  prevents reactivity?
   if (!identity || !spacePlugin || !space || defaultSpace?.key.equals(space.key)) {
     return null;
   }
