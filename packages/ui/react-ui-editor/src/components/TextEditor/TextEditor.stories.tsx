@@ -11,7 +11,6 @@ import { mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { TextEditor, type TextEditorProps } from './TextEditor';
-import { listener } from '../../extensions';
 import { useTextModel } from '../../hooks';
 import translations from '../../translations';
 
@@ -57,19 +56,5 @@ export default {
 };
 
 export const Default = {
-  render: () => <Story placeholder='Enter text...' />,
-};
-
-export const Text = {
   render: () => <Story text={initialText} placeholder='Enter text...' />,
-};
-
-export const Automerge = {
-  render: () => <Story text={initialText} placeholder='Enter text...' automerge />,
-};
-
-export const Listener = {
-  render: () => (
-    <Story placeholder='Enter text...' extensions={[listener({ onChange: (text) => console.log(text) })]} />
-  ),
 };

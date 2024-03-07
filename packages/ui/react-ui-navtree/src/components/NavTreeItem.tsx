@@ -104,9 +104,6 @@ export const NavTreeMosaicComponent: MosaicTileComponent<NavTreeItemData, HTMLLI
 
 export type NavTreeItemData = TreeNode & { level: number };
 
-// TODO(burdon): Disabled until working and UX review.
-const presence = false;
-
 export const NAV_TREE_ITEM = 'NavTreeItem';
 
 export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = forwardRef(
@@ -183,8 +180,15 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                     hoverableFocusedWithinControls,
                     hoverableDescriptionIcons,
                     level < 1 && topLevelCollapsibleSpacing,
-                    staticGhostSelectedCurrent({ current: (active && active !== 'overlay') || path === current }),
+                    !renderPresence &&
+                      staticGhostSelectedCurrent({ current: (active && active !== 'overlay') || path === current }),
                   )}
+                  {
+                    // NOTE(thure): This is intentionally an empty string to for descendents to select by in the CSS
+                    //   without alerting the user (except for in the correct link element). See also:
+                    //   https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current#description
+                    ...(path === current && { 'aria-current': '' as 'page', 'data-attention': true })
+                  }
                 >
                   <NavTreeItemHeading
                     {...{
@@ -225,7 +229,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                     onAction={(action) => action.invoke?.({ caller: NAV_TREE_ITEM })}
                     testId={`navtree.treeItem.actionsLevel${level}`}
                   />
-                  {presence && renderPresence?.(node)}
+                  {renderPresence?.(node)}
                 </div>
               </ActionRoot>
               {!active &&

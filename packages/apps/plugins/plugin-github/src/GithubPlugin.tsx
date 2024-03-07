@@ -3,7 +3,7 @@
 //
 
 import { GithubLogo, type IconProps } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-core';
+import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
@@ -84,9 +84,12 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
 
                   const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
                   previousObjects = query.objects;
-                  removedObjects.forEach((object) => graph.removeEdge({ source: id, target: object.id }));
-                  // TODO(wittjosiah): Update icon to `Issue` icon.
-                  query.objects.forEach((object) => graph.addEdge({ source: id, target: object.id }));
+
+                  batch(() => {
+                    removedObjects.forEach((object) => graph.removeEdge({ source: id, target: object.id }));
+                    // TODO(wittjosiah): Update icon to `Issue` icon.
+                    query.objects.forEach((object) => graph.addEdge({ source: id, target: object.id }));
+                  });
                 }),
               );
             });

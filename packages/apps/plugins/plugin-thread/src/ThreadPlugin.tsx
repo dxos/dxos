@@ -3,7 +3,7 @@
 //
 
 import { Chat, type IconProps } from '@phosphor-icons/react';
-import { effect, untracked } from '@preact/signals-core';
+import { batch, effect, untracked } from '@preact/signals-core';
 import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
@@ -171,22 +171,24 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     .flatMap((doc) => doc.comments.map((comment) => comment.thread?.id))
                     .filter(nonNullable);
                   const objects = query.objects.filter((thread) => !documentThreads.includes(thread.id));
-
                   const removedObjects = previousObjects.filter((object) => !objects.includes(object));
                   previousObjects = objects;
-                  removedObjects.forEach((object) => graph.removeNode(object.id));
-                  objects.forEach((object) => {
-                    graph.addNodes({
-                      id: object.id,
-                      data: object,
-                      properties: {
-                        // TODO(wittjosiah): Reconcile with metadata provides.
-                        label: object.title || ['thread title placeholder', { ns: THREAD_PLUGIN }],
-                        icon: (props: IconProps) => <Chat {...props} />,
-                        testId: 'spacePlugin.object',
-                        persistenceClass: 'echo',
-                        persistenceKey: space?.key.toHex(),
-                      },
+
+                  batch(() => {
+                    removedObjects.forEach((object) => graph.removeNode(object.id));
+                    objects.forEach((object) => {
+                      graph.addNodes({
+                        id: object.id,
+                        data: object,
+                        properties: {
+                          // TODO(wittjosiah): Reconcile with metadata provides.
+                          label: object.title || ['thread title placeholder', { ns: THREAD_PLUGIN }],
+                          icon: (props: IconProps) => <Chat {...props} />,
+                          testId: 'spacePlugin.object',
+                          persistenceClass: 'echo',
+                          persistenceKey: space?.key.toHex(),
+                        },
+                      });
                     });
                   });
                 }),
@@ -232,7 +234,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
                 return (
                   <>
-                    <CommentsHeading />
+                    <CommentsHeading attendableId={data.subject.id} />
                     <ScrollArea.Root>
                       <ScrollArea.Viewport>
                         <CommentsContainer
@@ -271,7 +273,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               } else if (isThread(data.subject)) {
                 return (
                   <>
-                    <ChatHeading />
+                    <ChatHeading attendableId={data.subject.id} />
                     <ChatContainer thread={data.subject} context={{ object: location?.active }} />
                   </>
                 );

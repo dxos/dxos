@@ -3,7 +3,7 @@
 //
 
 import { ArticleMedium, type IconProps } from '@phosphor-icons/react';
-import { computed, effect } from '@preact/signals-core';
+import { batch, effect } from '@preact/signals-core';
 import { deepSignal } from 'deepsignal/react';
 import React, { useMemo, type Ref } from 'react';
 
@@ -143,47 +143,48 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 effect(() => {
                   const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
                   previousObjects = query.objects;
-                  removedObjects.forEach((object) => graph.removeNode(object.id));
-                  query.objects.forEach((object) => {
-                    // Memoize the title.
-                    // Avoids re-rendering the graph when the content is changing but the title is not.
-                    // TODO(wittjosiah): It is still slow when the fallback title is changing. Consider removing.
-                    const title = computed(
-                      () =>
-                        object.title ||
-                        getFallbackTitle(object) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
-                    );
-                    graph.addNodes({
-                      id: object.id,
-                      data: object,
-                      properties: {
-                        // TODO(wittjosiah): Reconcile with metadata provides.
-                        label: title.value,
-                        icon: (props: IconProps) => <ArticleMedium {...props} />,
-                        testId: 'spacePlugin.object',
-                        persistenceClass: 'echo',
-                        persistenceKey: space?.key.toHex(),
-                      },
-                      nodes: [
-                        {
-                          id: `${MARKDOWN_PLUGIN}/toggle-readonly/${object.id}`,
-                          data: () =>
-                            intentPlugin?.provides.intent.dispatch([
-                              {
-                                plugin: MARKDOWN_PLUGIN,
-                                action: MarkdownAction.TOGGLE_READONLY,
-                                data: {
-                                  objectId: object.id,
-                                },
-                              },
-                            ]),
-                          properties: {
-                            label: ['toggle view mode label', { ns: MARKDOWN_PLUGIN }],
-                            icon: (props: IconProps) => <ArticleMedium {...props} />,
-                            keyBinding: 'shift+F5',
+                  batch(() => {
+                    removedObjects.forEach((object) => graph.removeNode(object.id));
+                    query.objects.forEach((object) => {
+                      graph.addNodes({
+                        id: object.id,
+                        data: object,
+                        properties: {
+                          // TODO(wittjosiah): Reconcile with metadata provides.
+
+                          // Provide the label as a getter so we don't have to rebuild the graph node when the title changes while editing the document.
+                          get label() {
+                            return (
+                              object.title ||
+                              getFallbackTitle(object) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }]
+                            );
                           },
+                          icon: (props: IconProps) => <ArticleMedium {...props} />,
+                          testId: 'spacePlugin.object',
+                          persistenceClass: 'echo',
+                          persistenceKey: space?.key.toHex(),
                         },
-                      ],
+                        nodes: [
+                          {
+                            id: `${MARKDOWN_PLUGIN}/toggle-readonly/${object.id}`,
+                            data: () =>
+                              intentPlugin?.provides.intent.dispatch([
+                                {
+                                  plugin: MARKDOWN_PLUGIN,
+                                  action: MarkdownAction.TOGGLE_READONLY,
+                                  data: {
+                                    objectId: object.id,
+                                  },
+                                },
+                              ]),
+                            properties: {
+                              label: ['toggle view mode label', { ns: MARKDOWN_PLUGIN }],
+                              icon: (props: IconProps) => <ArticleMedium {...props} />,
+                              keyBinding: 'shift+F5',
+                            },
+                          },
+                        ],
+                      });
                     });
                   });
                 }),

@@ -3,7 +3,7 @@
 //
 
 import { File, FilePlus, Folder, FolderPlus, X, type IconProps, Plugs, FloppyDisk } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-core';
+import { batch, effect } from '@preact/signals-core';
 import { deepSignal } from 'deepsignal/react';
 import localforage from 'localforage';
 import React from 'react';
@@ -189,83 +189,85 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
             const removedFiles = previousFiles.filter((file) => !state.files.includes(file));
             previousFiles = [...state.files];
 
-            removedFiles.forEach((file) => {
-              graph.removeNode(file.id, true);
-              if ('children' in file) {
-                file.children.forEach((entity) => graph.removeNode(entity.id, true));
-              }
-              // TODO(wittjosiah): Actions are not being removed here.
-            });
-            state.files.forEach((entity) => {
-              graph.addNodes({
-                id: entity.id,
-                data: entity,
-                properties: {
-                  label: entity.title,
-                  icon: (props: IconProps) => ('children' in entity ? <Folder {...props} /> : <File {...props} />),
-                  modified: 'children' in entity ? undefined : entity.modified,
-                },
-                edges: [['all-files', 'inbound']],
-                nodes: [
-                  {
-                    id: `${LocalFilesAction.CLOSE}:${entity.id}`,
-                    data: () =>
-                      intentPlugin?.provides.intent.dispatch({
-                        plugin: FILES_PLUGIN,
-                        action: LocalFilesAction.CLOSE,
-                        data: { id: entity.id },
-                      }),
-                    properties: {
-                      label: ['close label', { ns: FILES_PLUGIN }],
-                      icon: (props: IconProps) => <X {...props} />,
-                    },
+            batch(() => {
+              removedFiles.forEach((file) => {
+                graph.removeNode(file.id, true);
+                if ('children' in file) {
+                  file.children.forEach((entity) => graph.removeNode(entity.id, true));
+                }
+                // TODO(wittjosiah): Actions are not being removed here.
+              });
+              state.files.forEach((entity) => {
+                graph.addNodes({
+                  id: entity.id,
+                  data: entity,
+                  properties: {
+                    label: entity.title,
+                    icon: (props: IconProps) => ('children' in entity ? <Folder {...props} /> : <File {...props} />),
+                    modified: 'children' in entity ? undefined : entity.modified,
                   },
-                  ...(entity.permission !== 'granted'
-                    ? [
-                        {
-                          id: `${LocalFilesAction.RECONNECT}:${entity.id}`,
-                          data: () =>
-                            intentPlugin?.provides.intent.dispatch({
-                              plugin: FILES_PLUGIN,
-                              action: LocalFilesAction.RECONNECT,
-                              data: { id: entity.id },
-                            }),
-                          properties: {
-                            label: ['re-open label', { ns: FILES_PLUGIN }],
-                            icon: (props: IconProps) => <Plugs {...props} />,
-                            disposition: 'default',
+                  edges: [['all-files', 'inbound']],
+                  nodes: [
+                    {
+                      id: `${LocalFilesAction.CLOSE}:${entity.id}`,
+                      data: () =>
+                        intentPlugin?.provides.intent.dispatch({
+                          plugin: FILES_PLUGIN,
+                          action: LocalFilesAction.CLOSE,
+                          data: { id: entity.id },
+                        }),
+                      properties: {
+                        label: ['close label', { ns: FILES_PLUGIN }],
+                        icon: (props: IconProps) => <X {...props} />,
+                      },
+                    },
+                    ...(entity.permission !== 'granted'
+                      ? [
+                          {
+                            id: `${LocalFilesAction.RECONNECT}:${entity.id}`,
+                            data: () =>
+                              intentPlugin?.provides.intent.dispatch({
+                                plugin: FILES_PLUGIN,
+                                action: LocalFilesAction.RECONNECT,
+                                data: { id: entity.id },
+                              }),
+                            properties: {
+                              label: ['re-open label', { ns: FILES_PLUGIN }],
+                              icon: (props: IconProps) => <Plugs {...props} />,
+                              disposition: 'default',
+                            },
                           },
-                        },
-                      ]
-                    : []),
-                  ...(entity.permission === 'granted' && !('children' in entity)
-                    ? [
-                        {
-                          id: `${LocalFilesAction.SAVE}:${entity.id}`,
-                          data: () =>
-                            intentPlugin?.provides.intent.dispatch({
-                              plugin: FILES_PLUGIN,
-                              action: LocalFilesAction.SAVE,
-                              data: { id: entity.id },
-                            }),
-                          properties: {
-                            label: [entity.handle ? 'save label' : 'save as label', { ns: FILES_PLUGIN }],
-                            icon: (props: IconProps) => <FloppyDisk {...props} />,
+                        ]
+                      : []),
+                    ...(entity.permission === 'granted' && !('children' in entity)
+                      ? [
+                          {
+                            id: `${LocalFilesAction.SAVE}:${entity.id}`,
+                            data: () =>
+                              intentPlugin?.provides.intent.dispatch({
+                                plugin: FILES_PLUGIN,
+                                action: LocalFilesAction.SAVE,
+                                data: { id: entity.id },
+                              }),
+                            properties: {
+                              label: [entity.handle ? 'save label' : 'save as label', { ns: FILES_PLUGIN }],
+                              icon: (props: IconProps) => <FloppyDisk {...props} />,
+                            },
                           },
-                        },
-                      ]
-                    : []),
-                  ...('children' in entity
-                    ? entity.children.map((child) => ({
-                        id: child.id,
-                        data: child,
-                        properties: {
-                          label: child.title,
-                          icon: (props: IconProps) => <File {...props} />,
-                        },
-                      }))
-                    : []),
-                ],
+                        ]
+                      : []),
+                    ...('children' in entity
+                      ? entity.children.map((child) => ({
+                          id: child.id,
+                          data: child,
+                          properties: {
+                            label: child.title,
+                            icon: (props: IconProps) => <File {...props} />,
+                          },
+                        }))
+                      : []),
+                  ],
+                });
               });
             });
           });
