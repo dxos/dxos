@@ -5,7 +5,6 @@
 import React, { useCallback } from 'react';
 
 import { NavigationAction, Surface, useIntent } from '@dxos/app-framework';
-import { isGraphNode } from '@dxos/app-graph';
 import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import {
@@ -31,13 +30,7 @@ const getMosaicPath = (paths: Map<string, string[]>, id: string) => {
 
 const trimPlaceholder = (path: string) => (Path.last(path) === emptyBranchDroppableId ? Path.parent(path) : path);
 
-const renderPresence = (node: TreeNode) => {
-  if (isGraphNode(node)) {
-    return <Surface role='presence' data={{ object: node.data }} />;
-  }
-
-  return null;
-};
+const renderPresence = (node: TreeNode) => <Surface role='presence--glyph' data={{ object: node.data }} />;
 
 export const NavTreeContainer = ({
   root,
