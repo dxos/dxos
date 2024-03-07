@@ -3,7 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { getHeads } from '@dxos/automerge/src/automerge';
+import { getHeads } from '@dxos/automerge/automerge';
 import { Context } from '@dxos/context';
 import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined, warnAfterTimeout } from '@dxos/debug';

@@ -5,7 +5,13 @@
   "projectType": "library",
   "targets": {
     "build": {},
-    "compile": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/core/echo/indexing/src/index.ts"
+        ]
+      }
+    },
     "lint": {},
     "test": {}
   },
