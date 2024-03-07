@@ -133,6 +133,32 @@ export type MessageTextboxProps = {
 } & Omit<MessageMetadata, 'id' | 'authorStatus'> &
   TextEditorProps;
 
+const keyBindings = ({ onSend, onClear }: Pick<MessageTextboxProps, 'onSend' | 'onClear'>) => [
+  {
+    key: 'Enter',
+    run: () => {
+      if (onSend) {
+        onSend();
+        return true;
+      } else {
+        return false;
+      }
+    },
+  },
+  {
+    // TODO(burdon): Other key bindings.
+    key: 'Meta+Backspace',
+    run: () => {
+      if (onClear) {
+        onClear();
+        return true;
+      } else {
+        return false;
+      }
+    },
+  },
+];
+
 export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
   (
     {
@@ -151,30 +177,7 @@ export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
     const extensions = useMemo(
       () => [
         ...(_extensions ?? []),
-        keymap.of([
-          {
-            key: 'Enter',
-            run: () => {
-              if (onSend) {
-                onSend();
-                return true;
-              } else {
-                return false;
-              }
-            },
-          },
-          {
-            key: 'Meta+Backspace',
-            run: () => {
-              if (onClear) {
-                onClear();
-                return true;
-              } else {
-                return false;
-              }
-            },
-          },
-        ]),
+        keymap.of(keyBindings({ onSend, onClear })),
         listener({
           onFocus: (focused) => {
             if (focused) {
@@ -193,11 +196,11 @@ export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
         continues={false}
       >
         <TextEditor
-          slots={{ root: { className: mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50') } }}
+          ref={forwardedRef}
           readonly={disabled}
           extensions={extensions}
+          slots={{ root: { className: mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50') } }}
           {...editorProps}
-          ref={forwardedRef}
         />
       </MessageMeta>
     );

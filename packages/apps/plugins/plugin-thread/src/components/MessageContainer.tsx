@@ -83,8 +83,8 @@ const TextboxBlock = ({
         <TextEditor
           model={model}
           readonly={readonly}
-          slots={{ root: { className: textboxWidth } }}
           extensions={extensions}
+          slots={{ root: { className: textboxWidth } }}
         />
       ) : (
         <span className={textboxWidth} />
