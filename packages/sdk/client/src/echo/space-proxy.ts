@@ -30,7 +30,7 @@ import {
   type Space as SpaceData,
   type SpaceMember,
   SpaceState,
-  CreateEpochRequest,
+  type CreateEpochRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';

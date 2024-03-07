@@ -5,13 +5,13 @@
 import { next as automerge } from '@dxos/automerge/automerge';
 import { type Message, NetworkAdapter, type PeerId, Repo, cbor } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
+import { exposeModule } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type HostInfo, type DataService, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
-import { exposeModule } from '@dxos/debug';
 
 exposeModule('@automerge/automerge', automerge);
 

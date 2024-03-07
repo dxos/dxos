@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 /**
  * Allows to register a module to be used later during debugging.
  *
