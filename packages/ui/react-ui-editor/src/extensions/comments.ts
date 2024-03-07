@@ -507,7 +507,7 @@ export const focusComment = (view: EditorView, id: string, center = true) => {
 /**
  * Update comments state field.
  */
-export const useComments = (view: EditorView | null, id: string, comments: Comment[] = []) => {
+export const useComments = (view: EditorView | null | undefined, id: string, comments: Comment[] = []) => {
   useEffect(() => {
     if (view) {
       view.dispatch({

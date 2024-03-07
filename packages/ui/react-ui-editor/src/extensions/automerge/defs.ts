@@ -40,7 +40,7 @@ export interface DocAccessor<T = any> {
 
 // TODO(burdon): Reconcile with echo.
 export const DocAccessor = {
-  getValue: (accessor: DocAccessor) => get(accessor.handle, accessor.path),
+  getValue: (accessor: DocAccessor): string => get(accessor.handle, accessor.path),
 };
 
 // TODO(burdon): Reconcile with echo.

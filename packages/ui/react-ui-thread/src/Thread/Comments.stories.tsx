@@ -7,11 +7,11 @@ import '@dxosTheme';
 import { Check, Trash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { TextObject } from '@dxos/echo-schema';
+import { createDocAccessor, getTextContent, TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { Button } from '@dxos/react-ui';
+import { Button, useThemeContext } from '@dxos/react-ui';
 import {
   MarkdownEditor,
   comments,
@@ -22,7 +22,11 @@ import {
   type Range,
   useTextModel,
   type EditorView,
-  TextEditor,
+  useTextEditor,
+  createBasicExtensions,
+  createThemeExtensions,
+  automerge,
+  defaultSlots,
 } from '@dxos/react-ui-editor';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -104,8 +108,20 @@ type StoryCommentThread = {
 };
 
 const StoryMessageBlock = (props: MessageBlockProps<{ text: TextObject }>) => {
-  const model = useTextModel({ text: props.block.text });
-  return model ? <TextEditor model={model} slots={{ root: { className: 'col-span-3' } }} /> : null;
+  const { themeMode } = useThemeContext();
+  const { parentRef } = useTextEditor(
+    {
+      doc: getTextContent(props.block.text),
+      extensions: [
+        createBasicExtensions(),
+        createThemeExtensions({ themeMode, slots: defaultSlots }),
+        automerge(createDocAccessor(props.block.text)),
+      ],
+    },
+    [themeMode],
+  );
+
+  return <div ref={parentRef} className='col-span-3' />;
 };
 
 const StoryThread: FC<{

@@ -4,13 +4,13 @@
 
 import '@dxosTheme';
 
-import React, { type FC, useMemo, useState } from 'react';
+import React, { type FC, useState } from 'react';
 
-import { TextObject } from '@dxos/echo-schema';
+import { getTextContent, TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
-import { Tooltip } from '@dxos/react-ui';
-import { mx, textBlockWidth } from '@dxos/react-ui-theme';
+import { Tooltip, useThemeContext } from '@dxos/react-ui';
+import { textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Toolbar } from './Toolbar';
@@ -22,21 +22,30 @@ import {
   table,
   useComments,
   useFormattingState,
+  createMarkdownExtensions,
 } from '../../extensions';
-import { type Comment, useActionHandler, useEditorView, useTextModel } from '../../hooks';
+import {
+  type Comment,
+  createBasicExtensions,
+  createThemeExtensions,
+  useActionHandler,
+  useTextEditor,
+} from '../../hooks';
 import translations from '../../translations';
-import { MarkdownEditor } from '../TextEditor';
+import { defaultSlots } from '../TextEditor';
 
 faker.seed(101);
 
 const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) => {
+  const { themeMode } = useThemeContext();
   const [item] = useState({ text: new TextObject(content) });
-  const [_comments, setComments] = useState<Comment[]>([]);
-  const [editorRef, viewInvalidated] = useEditorView(id);
-  const model = useTextModel({ text: item.text });
   const [formattingState, formattingObserver] = useFormattingState();
-  const extensions = useMemo(
-    () => [
+  const { parentRef, view } = useTextEditor({
+    doc: getTextContent(item.text),
+    extensions: [
+      createBasicExtensions(),
+      createMarkdownExtensions({ themeMode }),
+      createThemeExtensions({ themeMode, slots: { ...defaultSlots, editor: { className: 'p-2' } } }),
       decorateMarkdown(),
       comments({
         onCreate: ({ cursor }) => {
@@ -50,15 +59,12 @@ const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) =
       table(),
       formattingObserver,
     ],
-    [],
-  );
+  });
 
-  useComments(viewInvalidated ? null : editorRef.current, id, _comments);
-  const handleAction = useActionHandler(editorRef.current);
+  const [_comments, setComments] = useState<Comment[]>([]);
+  useComments(view, id, _comments);
 
-  if (!model) {
-    return null;
-  }
+  const handleAction = useActionHandler(view);
 
   return (
     <div role='none' className='fixed inset-0 flex flex-col'>
@@ -67,16 +73,7 @@ const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) =
         <Toolbar.Separator />
         <Toolbar.Extended />
       </Toolbar.Root>
-
-      <MarkdownEditor
-        ref={editorRef}
-        model={model}
-        extensions={extensions}
-        slots={{
-          root: { className: mx(textBlockWidth) },
-          editor: { className: 'p-2' },
-        }}
-      />
+      <div ref={parentRef} className={textBlockWidth} />;
     </div>
   );
 };

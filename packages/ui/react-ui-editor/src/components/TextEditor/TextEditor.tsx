@@ -221,6 +221,21 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
   },
 );
 
+/**
+ * @deprecated
+ */
+export const defaultSlots: TextEditorSlots = {
+  root: {
+    className: focusRing,
+  },
+  editor: {
+    className: 'bs-full',
+  },
+};
+
+/**
+ * @deprecated
+ */
 // TODO(burdon): Replace with hooks.
 export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
   (
@@ -228,7 +243,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
     forwardedRef,
   ) => {
     const { themeMode } = useThemeContext();
-    const updatedSlots = defaultsDeep({}, slots, defaultTextSlots);
+    const updatedSlots = defaultsDeep({}, slots, defaultSlots);
     const extensions = useMemo(
       () => [
         createBasicExtensions({ lineWrapping, placeholder }),
@@ -251,11 +266,14 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
   },
 );
 
+/**
+ * @deprecated
+ */
 // TODO(burdon): Replace with hooks.
 export const MarkdownEditor = forwardRef<EditorView | null, TextEditorProps>(
   ({ readonly, placeholder, theme = markdownTheme, slots, extensions: _extensions, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
-    const updatedSlots = defaultsDeep({}, slots, defaultMarkdownSlots);
+    const updatedSlots = defaultsDeep({}, slots, defaultSlots);
     const extensions = useMemo(
       () => [createMarkdownExtensions({ themeMode, placeholder }), ...(_extensions ?? [])],
       [themeMode, placeholder, _extensions],
@@ -273,20 +291,3 @@ export const MarkdownEditor = forwardRef<EditorView | null, TextEditorProps>(
     );
   },
 );
-
-export const defaultSlots: TextEditorSlots = {
-  root: {
-    className: focusRing,
-  },
-  editor: {
-    className: 'bs-full',
-  },
-};
-
-export const defaultTextSlots: TextEditorSlots = {
-  ...defaultSlots,
-};
-
-export const defaultMarkdownSlots: TextEditorSlots = {
-  ...defaultSlots,
-};
