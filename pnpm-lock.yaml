@@ -3745,7 +3745,7 @@ importers:
         specifier: ^2.0.39
         version: 2.0.39
       typescript:
-        specifier: ^5.2.2
+        specifier: ^5.3.3
         version: 5.3.3
 
   packages/apps/templates/tasks-template:
