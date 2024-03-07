@@ -9,6 +9,7 @@ import { type InvokeParams, type Action, type ActionGroup, type NodeBase } from 
 import { type Label } from '@dxos/react-ui';
 import { type MakeOptional, type MaybePromise } from '@dxos/util';
 
+// TODO(thure): Dedupe (similar in react-ui-deck)
 export type TreeNodeAction = Pick<Action, 'id' | 'properties'> & {
   label: Label;
   icon?: FC<IconProps>;
@@ -37,6 +38,7 @@ export type TreeNode = MakeOptional<NodeBase, 'data'> & {
  * Platform-specific key binding.
  */
 // NOTE: Keys come from `getHostPlatform` in `@dxos/util`.
+// TODO(thure): Dedupe (similar in react-ui-deck)
 export type KeyBinding = {
   windows?: string;
   macos?: string;
