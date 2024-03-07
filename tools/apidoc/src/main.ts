@@ -6,8 +6,8 @@ import { exec } from 'child_process';
 
 import { loadConfig } from './config.js';
 import { generateApiDocs } from './generateApiDocs.js';
-import { remarkDocumentation } from './remarkDocumentation.js';
 import { err } from './log.js';
+import { remarkDocumentation } from './remarkDocumentation.js';
 
 const isGitClean = async () => {
   const cmd = 'git status --porcelain';
