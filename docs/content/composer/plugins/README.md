@@ -9,7 +9,7 @@ dir:
 To prototype a plugin:
 
 ```bash
-npm create @dxos/plugin-template@latest
+npm create @dxos/app-plugin@latest
 ```
 
 This will create a working plugin project with a hot reloading development server.
@@ -26,7 +26,7 @@ This will start your development server with a core set of plugins and the plugi
 Default plugins can be disabled when creating the project using `--interactive`
 
 ```bash
-npm create @dxos/plugin-template@latest --interactive
+npm create @dxos/app-plugin@latest --interactive
 ```
 
 Answer `no` to the question `Include default plugins?` to generate an empty configuration.
