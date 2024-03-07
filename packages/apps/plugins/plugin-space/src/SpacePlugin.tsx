@@ -93,6 +93,7 @@ export const SpacePlugin = ({
     awaiting: undefined,
     viewersByObject: {},
     viewersByIdentity: new ComplexMap(PublicKey.hash),
+    // TODO(thure): Using `as RevertDeepSignal<PluginState>` causes incorrect type inferences on `viewersByObject`
   }) as unknown as PluginState;
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
