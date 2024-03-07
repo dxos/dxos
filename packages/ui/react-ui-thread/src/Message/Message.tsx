@@ -28,12 +28,9 @@ export type MessageMetaProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
   Partial<{ continues: boolean }>;
 
 export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
-  (
-    { authorImgSrc, authorStatus, authorId, authorName, continues = true, children, classNames, ...rootProps },
-    forwardedRef,
-  ) => {
+  ({ authorImgSrc, authorId, authorName, continues = true, children, classNames, ...rootProps }, forwardedRef) => {
     return (
-      <Avatar.Root status={authorStatus ?? 'inactive'} size={avatarSize}>
+      <Avatar.Root size={avatarSize}>
         <div
           role='none'
           data-testid='thread.message'
@@ -130,7 +127,7 @@ export type MessageTextboxProps = {
   onClear?: () => void;
   onEditorFocus?: () => void;
   disabled?: boolean;
-} & Omit<MessageMetadata, 'id' | 'authorStatus'> &
+} & Omit<MessageMetadata, 'id'> &
   TextEditorProps;
 
 export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
@@ -187,11 +184,7 @@ export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
     );
 
     return (
-      <MessageMeta
-        {...{ id: editorProps.model.id, authorId, authorName, authorImgSrc }}
-        authorStatus='active'
-        continues={false}
-      >
+      <MessageMeta {...{ id: editorProps.model.id, authorId, authorName, authorImgSrc }} continues={false}>
         {/* TODO(burdon): Change to hook. */}
         <TextEditor
           slots={{ root: { className: mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50') } }}
