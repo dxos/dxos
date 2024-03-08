@@ -23,6 +23,12 @@
   ],
   "references": [
     {
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
       "path": "../../../common/random"
     },
     {
@@ -54,6 +60,9 @@
     },
     {
       "path": "../../types"
+    },
+    {
+      "path": "../plugin-client"
     },
     {
       "path": "../plugin-search"

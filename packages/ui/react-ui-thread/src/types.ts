@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { AvatarStatus } from '@dxos/react-ui';
+import { type FallbackValue } from '@dxos/util';
 
 export type MessageMetadata = {
-  id: string;
-  authorId: string;
+  id: string; // TODO(burdon): Remove/rename?
+  authorId?: string;
   authorName?: string;
   authorImgSrc?: string;
-  authorStatus?: AvatarStatus;
+  authorAvatarProps?: FallbackValue;
 };
 
 export type MessageEntityBlock<BlockValue> = BlockValue & {

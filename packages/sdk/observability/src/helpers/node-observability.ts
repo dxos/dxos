@@ -126,7 +126,6 @@ export const initializeNodeObservability = async ({
         // TODO(wittjosiah): Configure this.
         sampleRate: 1.0,
       },
-      logProcessor: true,
     },
   });
 

@@ -3,32 +3,29 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
-import { isValidAutomergeUrl, type DocHandle, type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
+import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { type Reference } from '@dxos/document-model';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type AutomergeContext } from './automerge-context';
 import {
-  type AutomergeDocumentLoader,
   AutomergeDocumentLoaderImpl,
+  type AutomergeDocumentLoader,
   type DocumentChanges,
   type ObjectDocumentLoaded,
 } from './automerge-doc-loader';
-import { AutomergeObject, getAutomergeObjectCore } from './automerge-object';
+import { getAutomergeObjectCore } from './automerge-object';
+import { AutomergeObjectCore } from './automerge-object-core';
 import { type SpaceDoc } from './types';
+import { getInlineAndLinkChanges } from './utils';
+import { type EchoDatabase } from '../database';
+import { isReactiveProxy } from '../effect/proxy';
 import { type Hypergraph } from '../hypergraph';
-import { type EchoLegacyDatabase } from '../legacy-database';
-import {
-  base,
-  type EchoObject,
-  isActualTextObject,
-  isActualTypedObject,
-  isAutomergeObject,
-  LEGACY_TEXT_TYPE,
-} from '../object';
+import { LEGACY_TEXT_TYPE, isAutomergeObject, type EchoObject, type OpaqueEchoObject } from '../object';
 import { type Schema } from '../proto';
 
 export type SpaceState = {
@@ -36,34 +33,38 @@ export type SpaceState = {
   rootUrl?: string;
 };
 
+export type InitRootProxyFn = (core: AutomergeObjectCore) => void;
+
 export class AutomergeDb {
   /**
    * @internal
    */
-  readonly _objects = new Map<string, AutomergeObject>();
-  readonly _objectsSystem = new Map<string, EchoObject>();
+  readonly _objects = new Map<string, AutomergeObjectCore>();
 
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
 
   private _ctx?: Context = undefined;
 
-  /**
-   * @internal
-   */
-  readonly _echoDatabase: EchoLegacyDatabase;
   private readonly _automergeDocLoader: AutomergeDocumentLoader;
+
+  /**
+   * @deprecated Remove
+   */
+  _dbApi: EchoDatabase;
 
   constructor(
     public readonly graph: Hypergraph,
     public readonly automerge: AutomergeContext,
-    echoDatabase: EchoLegacyDatabase,
+    public readonly spaceKey: PublicKey,
+    private readonly _initRootProxyFn: InitRootProxyFn,
+    dbApi: EchoDatabase, // TODO(dmaretskyi): Remove.
   ) {
-    this._echoDatabase = echoDatabase;
     this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this.spaceKey, automerge);
+    this._dbApi = dbApi;
   }
 
-  get spaceKey() {
-    return this._echoDatabase._backend.spaceKey;
+  allObjects(): EchoObject[] {
+    return Array.from(this._objects.values()).map((core) => core.rootProxy as EchoObject);
   }
 
   @synchronized
@@ -74,13 +75,13 @@ export class AutomergeDb {
       return;
     }
     this._ctx = new Context();
-    this._ctx.onDispose(this._onDispose.bind(this));
+    this._ctx.onDispose(this._unsubscribeFromHandles.bind(this));
     this._automergeDocLoader.onObjectDocumentLoaded.on(this._ctx, this._onObjectDocumentLoaded.bind(this));
 
     try {
       await this._automergeDocLoader.loadSpaceRootDocHandle(this._ctx, spaceState);
       const spaceRootDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
-      const spaceRootDoc = spaceRootDocHandle.docSync();
+      const spaceRootDoc: SpaceDoc = spaceRootDocHandle.docSync();
       invariant(spaceRootDoc);
       const objectIds = Object.keys(spaceRootDoc.objects ?? {});
       this._createInlineObjects(spaceRootDocHandle, objectIds);
@@ -99,6 +100,28 @@ export class AutomergeDb {
     }
   }
 
+  async update(spaceState: SpaceState) {
+    invariant(this._ctx);
+    if (spaceState.rootUrl === this._automergeDocLoader.getSpaceRootDocHandle().url) {
+      return;
+    }
+    this._unsubscribeFromHandles();
+    const objectIdsToLoad = this._automergeDocLoader.clearHandleReferences();
+
+    try {
+      await this._automergeDocLoader.loadSpaceRootDocHandle(this._ctx, spaceState);
+      const spaceRootDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
+      await this._handleSpaceRootDocumentChange(spaceRootDocHandle, objectIdsToLoad);
+      spaceRootDocHandle.on('change', this._onDocumentUpdate);
+    } catch (err) {
+      if (err instanceof ContextDisposedError) {
+        return;
+      }
+      log.catch(err);
+      throw err;
+    }
+  }
+
   // TODO(dmaretskyi): Cant close while opening.
   @synchronized
   async close() {
@@ -111,75 +134,126 @@ export class AutomergeDb {
   }
 
   getObjectById(id: string): EchoObject | undefined {
-    const obj = this._objects.get(id) ?? this._echoDatabase._objects.get(id);
-    if (!obj) {
+    const objCore = this._objects.get(id);
+    if (!objCore) {
       this._automergeDocLoader.loadObjectDocument(id);
       return undefined;
     }
 
-    if ((obj as any).__deleted === true) {
+    if (objCore.isDeleted()) {
       return undefined;
     }
 
-    return obj;
+    invariant(objCore instanceof AutomergeObjectCore);
+    const root = objCore.rootProxy;
+    invariant(isAutomergeObject(root) || isReactiveProxy(root));
+    return root as any;
   }
 
-  add<T extends EchoObject>(obj: T): T {
-    if (isActualTypedObject(obj) || isActualTextObject(obj)) {
-      return this._echoDatabase.add(obj);
+  add(obj: OpaqueEchoObject) {
+    const core = getAutomergeObjectCore(obj);
+
+    if (core.database) {
+      return; // Already in the database.
     }
 
-    if (obj[base]._database) {
-      return obj;
-    }
-
-    invariant(isAutomergeObject(obj));
-    invariant(!this._objects.has(obj.id));
-    this._objects.set(obj.id, obj);
+    invariant(!this._objects.has(core.id));
+    this._objects.set(core.id, core);
 
     // TODO: create all objects as linked.
     // This is a temporary solution to get quick benefit from lazily-loaded separate-document objects.
     // All objects should be created linked to root space doc after query indexing is ready to make them
     // discoverable.
     let spaceDocHandle: DocHandle<SpaceDoc>;
-    if (obj.__typename === LEGACY_TEXT_TYPE && this.automerge.spaceFragmentationEnabled) {
-      spaceDocHandle = this._automergeDocLoader.createDocumentForObject(obj.id);
+    if (shouldObjectGoIntoFragmentedSpace(core) && this.automerge.spaceFragmentationEnabled) {
+      spaceDocHandle = this._automergeDocLoader.createDocumentForObject(core.id);
       spaceDocHandle.on('change', this._onDocumentUpdate);
     } else {
       spaceDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
-      this._automergeDocLoader.onObjectBoundToDocument(spaceDocHandle, obj.id);
+      this._automergeDocLoader.onObjectBoundToDocument(spaceDocHandle, core.id);
     }
 
-    (obj[base] as AutomergeObject)._bind({
+    core.bind({
       db: this,
       docHandle: spaceDocHandle,
-      path: ['objects', obj.id],
+      path: ['objects', core.id],
       assignFromLocalState: true,
     });
-
     return obj;
   }
 
   remove<T extends EchoObject>(obj: T) {
     invariant(isAutomergeObject(obj));
-    invariant(this._objects.has(obj.id));
-    (obj[base] as AutomergeObject).__system!.deleted = true;
+    const core = getAutomergeObjectCore(obj);
+
+    invariant(this._objects.has(core.id));
+    core.setDeleted(true);
+  }
+
+  private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandle<SpaceDoc>, objectsToLoad: string[]) {
+    const spaceRootDoc: SpaceDoc = spaceRootDocHandle.docSync();
+    const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
+    const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}));
+
+    const objectsToRebind = new Map<string, { handle: DocHandle<SpaceDoc>; objectIds: string[] }>();
+    objectsToRebind.set(spaceRootDocHandle.url, { handle: spaceRootDocHandle, objectIds: [] });
+
+    const objectsToRemove: string[] = [];
+    const objectsToCreate = [...inlinedObjectIds.values()].filter((oid) => !this._objects.has(oid));
+
+    for (const object of this._objects.values()) {
+      if (inlinedObjectIds.has(object.id)) {
+        if (spaceRootDocHandle.url === object.docHandle?.url) {
+          continue;
+        }
+        objectsToRebind.get(spaceRootDocHandle.url)!.objectIds.push(object.id);
+      } else if (linkedObjectIds.has(object.id)) {
+        const newObjectDocUrl = linkedObjectIds.get(object.id)!;
+        if (newObjectDocUrl === object.docHandle?.url) {
+          continue;
+        }
+        const existing = objectsToRebind.get(newObjectDocUrl);
+        if (existing != null) {
+          existing.objectIds.push(object.id);
+          continue;
+        }
+        const newDocHandle = this.automerge.repo.find(newObjectDocUrl as DocumentId);
+        await newDocHandle.doc(['ready']);
+        objectsToRebind.set(newObjectDocUrl, { handle: newDocHandle, objectIds: [object.id] });
+      } else {
+        objectsToRemove.push(object.id);
+      }
+    }
+
+    objectsToRemove.forEach((oid) => this._objects.delete(oid));
+    this._createInlineObjects(spaceRootDocHandle, objectsToCreate);
+    for (const { handle, objectIds } of objectsToRebind.values()) {
+      this._rebindObjects(handle, objectIds);
+    }
+    for (const objectId of objectsToLoad) {
+      if (!this._objects.has(objectId)) {
+        this._automergeDocLoader.loadObjectDocument(objectId);
+      }
+    }
+    this._automergeDocLoader.onObjectLinksUpdated(spaceRootDoc.links);
   }
 
   private _emitUpdateEvent(itemsUpdated: string[]) {
     if (itemsUpdated.length === 0) {
       return;
     }
-    this._updateEvent.emit({
-      spaceKey: this.spaceKey,
-      itemsUpdated: itemsUpdated.map((id) => ({ id })),
-    });
-    for (const id of itemsUpdated) {
-      const obj = this._objects.get(id);
-      if (obj) {
-        obj[base]._core.notifyUpdate();
+    compositeRuntime.batch(() => {
+      this._updateEvent.emit({
+        spaceKey: this.spaceKey,
+        itemsUpdated: itemsUpdated.map((id) => ({ id })),
+      });
+      for (const id of itemsUpdated) {
+        const objCore = this._objects.get(id);
+        if (objCore) {
+          objCore.notifyUpdate();
+        }
       }
-    }
+    });
   }
 
   /**
@@ -210,9 +284,8 @@ export class AutomergeDb {
     const createdObjectIds: string[] = [];
     const objectsToRebind: string[] = [];
     for (const updatedObject of inlineChangedObjects) {
-      const echoObject = this._objects.get(updatedObject);
-      const objectCore = echoObject ? getAutomergeObjectCore(echoObject) : null;
-      if (echoObject == null) {
+      const objectCore = this._objects.get(updatedObject);
+      if (!objectCore) {
         createdObjectIds.push(updatedObject);
       } else if (objectCore?.docHandle && objectCore.docHandle.url !== event.handle.url) {
         log.warn('object bound to incorrect document, going to rebind', {
@@ -231,7 +304,7 @@ export class AutomergeDb {
     };
   }
 
-  private _onDispose() {
+  private _unsubscribeFromHandles() {
     for (const docHandle of Object.values(this.automerge.repo.handles)) {
       docHandle.off('change', this._onDocumentUpdate);
     }
@@ -255,27 +328,28 @@ export class AutomergeDb {
 
   private _createObjectInDocument(docHandle: DocHandle<SpaceDoc>, objectId: string) {
     invariant(!this._objects.get(objectId));
-    const obj = new AutomergeObject();
-    obj[base]._core.id = objectId;
-    this._objects.set(obj.id, obj);
+
+    const core = new AutomergeObjectCore();
+    core.id = objectId;
+    this._objects.set(core.id, core);
     this._automergeDocLoader.onObjectBoundToDocument(docHandle, objectId);
-    (obj[base] as AutomergeObject)._bind({
+    core.bind({
       db: this,
       docHandle,
-      path: ['objects', obj.id],
+      path: ['objects', core.id],
       assignFromLocalState: false,
     });
+    this._initRootProxyFn(core);
   }
 
   private _rebindObjects(docHandle: DocHandle<SpaceDoc>, objectIds: string[]) {
     for (const objectId of objectIds) {
-      const object = this._objects.get(objectId);
-      invariant(object);
-      const automergeObjectCore = getAutomergeObjectCore(object);
-      automergeObjectCore.bind({
+      const objectCore = this._objects.get(objectId);
+      invariant(objectCore);
+      objectCore.bind({
         db: this,
         docHandle,
-        path: automergeObjectCore.mountPath,
+        path: objectCore.mountPath,
         assignFromLocalState: false,
       });
       this._automergeDocLoader.onObjectBoundToDocument(docHandle, objectId);
@@ -283,33 +357,15 @@ export class AutomergeDb {
   }
 }
 
-const getInlineAndLinkChanges = (event: DocHandleChangePayload<SpaceDoc>) => {
-  const inlineChangedObjectIds = new Set<string>();
-  const linkedDocuments: DocumentChanges['linkedDocuments'] = {};
-  for (const { path, value } of event.patches) {
-    if (path.length < 2) {
-      continue;
-    }
-    switch (path[0]) {
-      case 'objects':
-        if (path.length >= 2) {
-          inlineChangedObjectIds.add(path[1]);
-        }
-        break;
-      case 'links':
-        if (path.length >= 2 && typeof value === 'string' && isValidAutomergeUrl(value)) {
-          linkedDocuments[path[1]] = value;
-        }
-        break;
-    }
-  }
-  return {
-    inlineChangedObjects: [...inlineChangedObjectIds],
-    linkedDocuments,
-  };
-};
-
 export interface ItemsUpdatedEvent {
   spaceKey: PublicKey;
   itemsUpdated: Array<{ id: string }>;
 }
+
+const shouldObjectGoIntoFragmentedSpace = (core: AutomergeObjectCore) => {
+  if (isAutomergeObject(core.rootProxy)) {
+    return core.rootProxy.__typename === LEGACY_TEXT_TYPE;
+  } else {
+    return false;
+  }
+};

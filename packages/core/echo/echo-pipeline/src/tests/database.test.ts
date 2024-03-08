@@ -43,7 +43,9 @@ const createDatabaseWithFeeds = async () => {
   await host.open(new ItemManager(modelFactory), new ModelFactory().registerModel(DocumentModel));
 
   const dataServiceSubscriptions = new DataServiceSubscriptions();
-  const automergeHost = new AutomergeHost(createStorage({ type: StorageType.RAM }).createDirectory());
+  const automergeHost = new AutomergeHost({
+    directory: createStorage({ type: StorageType.RAM }).createDirectory(),
+  });
   const dataService = new DataServiceImpl(dataServiceSubscriptions, automergeHost);
 
   const spaceKey = PublicKey.random();

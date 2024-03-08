@@ -4,7 +4,7 @@
 
 import { type IconProps, Folder as FolderIcon, Plus, SignIn } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
-import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
+import { deepSignal } from 'deepsignal/react';
 import localforage from 'localforage';
 import React from 'react';
 
@@ -33,7 +33,7 @@ import { type Client, PublicKey } from '@dxos/react-client';
 import { type Space, SpaceProxy, getSpaceForObject, type PropertiesProps } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
-import { inferRecordOrder } from '@dxos/util';
+import { ComplexMap } from '@dxos/util';
 
 import {
   AwaitingObject,
@@ -46,6 +46,7 @@ import {
   PopoverRenameObject,
   PopoverRenameSpace,
   ShareSpaceButton,
+  SmallPresence,
   SpaceMain,
   SpacePresence,
   SpaceSettings,
@@ -60,7 +61,7 @@ import {
   type PluginState,
   SPACE_DIRECTORY_HANDLE,
 } from './types';
-import { SHARED, getActiveSpace, isSpace, spaceToGraphNode } from './util';
+import { SHARED, getActiveSpace, isSpace, updateGraphWithSpace } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 
@@ -90,8 +91,10 @@ export const SpacePlugin = ({
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
   const state = deepSignal<PluginState>({
     awaiting: undefined,
-    viewers: [],
-  }) as RevertDeepSignal<PluginState>;
+    viewersByObject: {},
+    viewersByIdentity: new ComplexMap(PublicKey.hash),
+    // TODO(thure): Using `as RevertDeepSignal<PluginState>` causes incorrect type inferences on `viewersByObject`
+  }) as unknown as PluginState;
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
@@ -119,8 +122,11 @@ export const SpacePlugin = ({
       // Create root folder structure.
       if (clientPlugin.provides.firstRun) {
         const defaultSpace = client.spaces.default;
-        const personalSpaceFolder = defaultSpace.db.add(new Folder());
+        const personalSpaceFolder = new Folder();
         defaultSpace.properties[Folder.schema.typename] = personalSpaceFolder;
+        if (Migrations.versionProperty) {
+          defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
+        }
         onFirstRun?.({
           client,
           defaultSpace,
@@ -185,25 +191,27 @@ export const SpacePlugin = ({
                 const identityKey = PublicKey.safeFrom(message.payload.identityKey);
                 const spaceKey = PublicKey.safeFrom(message.payload.spaceKey);
                 if (identityKey && spaceKey && Array.isArray(added) && Array.isArray(removed)) {
-                  const newViewers = [
-                    ...state.viewers.filter(
-                      (viewer) =>
-                        !viewer.identityKey.equals(identityKey) ||
-                        !viewer.spaceKey.equals(spaceKey) ||
-                        (viewer.identityKey.equals(identityKey) &&
-                          viewer.spaceKey.equals(spaceKey) &&
-                          !removed.some((objectId) => objectId === viewer.objectId) &&
-                          !added.some((objectId) => objectId === viewer.objectId)),
-                    ),
-                    ...added.map((objectId) => ({
-                      identityKey,
-                      spaceKey,
-                      objectId,
-                      lastSeen: Date.now(),
-                    })),
-                  ];
-                  newViewers.sort((a, b) => b.lastSeen - a.lastSeen);
-                  state.viewers = newViewers;
+                  added.forEach((objectIdAny) => {
+                    if (objectIdAny) {
+                      const objectId = objectIdAny.toString();
+                      if (!(objectId in state.viewersByObject)) {
+                        state.viewersByObject[objectId] = new ComplexMap(PublicKey.hash);
+                      }
+                      state.viewersByObject[objectId]!.set(identityKey, { lastSeen: Date.now(), spaceKey });
+                      if (!state.viewersByIdentity.has(identityKey)) {
+                        state.viewersByIdentity.set(identityKey, new Set());
+                      }
+                      state.viewersByIdentity.get(identityKey)!.add(objectId);
+                    }
+                  });
+                  removed.forEach((objectIdAny) => {
+                    if (objectIdAny) {
+                      const objectId = objectIdAny.toString();
+                      state.viewersByObject[objectId]?.delete(identityKey);
+                      state.viewersByIdentity.get(identityKey)?.delete(objectId);
+                      // It’s okay for these to be empty sets/maps, reduces churn.
+                    }
+                  });
                 }
               }),
             );
@@ -219,7 +227,7 @@ export const SpacePlugin = ({
       graphSubscriptions.clear();
     },
     provides: {
-      space: state as RevertDeepSignal<PluginState>,
+      space: state,
       settings: settings.values,
       translations: [...translations, osTranslations],
       root: () => (state.awaiting ? <AwaitingObject id={state.awaiting} /> : null),
@@ -288,6 +296,13 @@ export const SpacePlugin = ({
               } else {
                 return null;
               }
+            case 'presence--glyph': {
+              return (
+                <SmallPresence
+                  count={isTypedObject(data.object) ? state.viewersByObject[data.object.id]?.size ?? 0 : 0}
+                />
+              );
+            }
             case 'navbar-start': {
               const space =
                 isGraphNode(data.activeNode) && isTypedObject(data.activeNode.data)
@@ -322,11 +337,7 @@ export const SpacePlugin = ({
         },
       },
       graph: {
-        builder: ({ parent, plugins }) => {
-          if (parent.id !== 'root') {
-            return;
-          }
-
+        builder: (plugins, graph) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
           const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
           const metadataPlugin = resolvePlugin(plugins, parseMetadataResolverPlugin);
@@ -343,50 +354,16 @@ export const SpacePlugin = ({
           graphSubscriptions.get(client.spaces.default.key.toHex())?.();
           graphSubscriptions.set(
             client.spaces.default.key.toHex(),
-            spaceToGraphNode({ space: client.spaces.default, parent, dispatch, resolve }),
+            updateGraphWithSpace({ graph, space: client.spaces.default, isPersonalSpace: true, dispatch, resolve }),
           );
 
           // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
           //  Instead, we store order as an array of space keys.
           let spacesOrder: Expando | undefined;
-          const [groupNode] = parent.addNode(SPACE_PLUGIN, {
+          const [groupNode] = graph.addNodes({
             id: SHARED,
-            label: ['shared spaces label', { ns: SPACE_PLUGIN }],
-            actions: [
-              {
-                id: 'create-space',
-                label: ['create space label', { ns: SPACE_PLUGIN }],
-                icon: (props) => <Plus {...props} />,
-                properties: {
-                  disposition: 'toolbar',
-                  testId: 'spacePlugin.createSpace',
-                },
-                invoke: () =>
-                  dispatch({
-                    plugin: SPACE_PLUGIN,
-                    action: SpaceAction.CREATE,
-                  }),
-              },
-              {
-                id: 'join-space',
-                label: ['join space label', { ns: SPACE_PLUGIN }],
-                icon: (props) => <SignIn {...props} />,
-                properties: {
-                  testId: 'spacePlugin.joinSpace',
-                },
-                invoke: () =>
-                  dispatch([
-                    {
-                      plugin: SPACE_PLUGIN,
-                      action: SpaceAction.JOIN,
-                    },
-                    {
-                      action: NavigationAction.ACTIVATE,
-                    },
-                  ]),
-              },
-            ],
             properties: {
+              label: ['shared spaces label', { ns: SPACE_PLUGIN }],
               testId: 'spacePlugin.sharedSpaces',
               role: 'branch',
               palette: 'pink',
@@ -405,6 +382,41 @@ export const SpacePlugin = ({
                 updateSpacesOrder(spacesOrder);
               },
             },
+            edges: [['root', 'inbound']],
+            nodes: [
+              {
+                id: SpaceAction.CREATE,
+                data: () =>
+                  dispatch({
+                    plugin: SPACE_PLUGIN,
+                    action: SpaceAction.CREATE,
+                  }),
+                properties: {
+                  label: ['create space label', { ns: SPACE_PLUGIN }],
+                  icon: (props: IconProps) => <Plus {...props} />,
+                  disposition: 'toolbar',
+                  testId: 'spacePlugin.createSpace',
+                },
+              },
+              {
+                id: SpaceAction.JOIN,
+                data: () =>
+                  dispatch([
+                    {
+                      plugin: SPACE_PLUGIN,
+                      action: SpaceAction.JOIN,
+                    },
+                    {
+                      action: NavigationAction.ACTIVATE,
+                    },
+                  ]),
+                properties: {
+                  label: ['join space label', { ns: SPACE_PLUGIN }],
+                  icon: (props: IconProps) => <SignIn {...props} />,
+                  testId: 'spacePlugin.joinSpace',
+                },
+              },
+            ],
           });
 
           const updateSpacesOrder = (spacesOrder?: Expando) => {
@@ -412,7 +424,7 @@ export const SpacePlugin = ({
               return;
             }
 
-            groupNode.childrenMap = inferRecordOrder(groupNode.childrenMap, spacesOrder.order);
+            graph.sortEdges(groupNode.id, 'outbound', spacesOrder.order);
           };
           const spacesOrderQuery = client.spaces.default.db.query({ key: SHARED });
           spacesOrder = spacesOrderQuery.objects[0];
@@ -427,10 +439,11 @@ export const SpacePlugin = ({
               graphSubscriptions.get(space.key.toHex())?.();
               graphSubscriptions.set(
                 space.key.toHex(),
-                spaceToGraphNode({
+                updateGraphWithSpace({
+                  graph,
                   space,
-                  parent: space === client.spaces.default ? parent : groupNode,
                   hidden: settings.values.showHidden,
+                  isPersonalSpace: space === client.spaces.default,
                   dispatch,
                   resolve,
                 }),

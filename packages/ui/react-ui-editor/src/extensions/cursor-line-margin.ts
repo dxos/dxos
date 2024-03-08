@@ -8,6 +8,8 @@
 import { type EditorState, type Extension, Facet, Transaction } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
+import { log } from '@dxos/log';
+
 /**
  * Number of lines above/below the cursor to keep visible in the viewport.
  * Defaults to 3.
@@ -18,7 +20,8 @@ export const cursorLineMarginFacet = Facet.define<number, number>({
 
 const annotation = 'cursorLineMargin';
 const lineAtPos = (s: EditorState, pos: number) => s.doc.lineAt(pos).number;
-// seems to the best approximation of CM5's `cursorScrollMargin`
+
+// Seems to the best approximation of CM5's `cursorScrollMargin`
 // https://discuss.codemirror.net/t/cursorscrollmargin-for-v6/7448
 export const cursorLineMargin: Extension = EditorView.updateListener.of(
   ({ transactions, state, selectionSet, startState, view }) => {
@@ -60,7 +63,7 @@ export const cursorLineMargin: Extension = EditorView.updateListener.of(
 
     // the scroll margins are overlapping
     if (needsScrollTop && needsScrollBot) {
-      console.warn('is cursorScrollMargin too large for the editor size?');
+      log.warn('is cursorScrollMargin too large for the editor size?');
       return;
     }
 

@@ -68,11 +68,12 @@ const main = async () => {
   };
 
   const handleToggleBatching = async (checked: boolean) => {
-    const batchSize = checked ? 64 : 0;
+    const _batchSize = checked ? 64 : 0;
     clients.forEach((client) => {
       const space = client.spaces.get(spaceKey);
       if (space) {
-        space.db._backend.maxBatchSize = batchSize;
+        // TODO(dmaretskyi): Is this code still relevant?
+        // space.db._backend.maxBatchSize = batchSize;
       }
     });
   };

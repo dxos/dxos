@@ -3,6 +3,7 @@
 //
 
 import { type GraphData, type GraphLink, GraphModel } from '@dxos/gem-spore';
+import { log } from '@dxos/log';
 import { type Subscription, type Space, type TypedObject, Schema } from '@dxos/react-client/echo';
 
 export type SpaceGraphModelOptions = {
@@ -43,7 +44,7 @@ export class SpaceGraphModel extends GraphModel<TypedObject> {
         this._graph.nodes = objects;
         this._graph.links = objects.reduce<GraphLink[]>((links, object) => {
           if (!object.__schema) {
-            console.warn('no schema for object:', object.id.slice(0, 8), object.__typename);
+            log.warn('no schema for object:', { id: object.id.slice(0, 8), type: object.__typename });
           }
 
           if (object.__schema) {

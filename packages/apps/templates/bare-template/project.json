@@ -11,15 +11,6 @@
         "tsConfig": "packages/apps/templates/bare-template/tsconfig.json"
       }
     },
-    "gen": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "gen"
-      },
-      "outputs": [
-        "{projectRoot}/test/variants"
-      ]
-    },
     "lint": {},
     "test": {
       "options": {
