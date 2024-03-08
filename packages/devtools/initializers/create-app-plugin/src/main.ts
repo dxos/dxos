@@ -27,6 +27,12 @@ void (async () => {
   const result = await template.apply({
     verbose,
     interactive,
+    input: interactive
+      ? { name }
+      : {
+          name,
+          defaultPlugins: true,
+        },
   });
   await result.apply();
 })();
