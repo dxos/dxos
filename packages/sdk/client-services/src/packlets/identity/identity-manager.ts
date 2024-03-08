@@ -348,7 +348,7 @@ export class IdentityManager {
       identityKey: identityRecord.identityKey,
     });
     await space.setControlFeed(controlFeed);
-    void space.setDataFeed(dataFeed); // TODO(dmaretskyi): Should this be awaited?
+    await space.setDataFeed(dataFeed);
 
     const identity: Identity = new Identity({
       space,
