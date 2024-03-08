@@ -118,7 +118,7 @@ const Root = ({ order, core: corePluginIds, definitions, state, placeholder }: R
         const plugins = await Promise.all(
           enabled.map(async (definition) => {
             const plugin = await initializePlugin(definition).catch((err) => {
-              console.error('Failed to initialize plugin:', definition.meta.id, err);
+              log.error('Failed to initialize plugin:', { id: definition.meta.id, err });
               return undefined;
             });
             return plugin;

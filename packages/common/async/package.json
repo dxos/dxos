@@ -19,6 +19,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "zen-observable": "^0.10.0",

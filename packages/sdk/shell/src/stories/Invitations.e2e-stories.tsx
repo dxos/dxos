@@ -7,6 +7,7 @@ import '@dxosTheme';
 import { Laptop, Planet, Plus, PlusCircle, SignIn, QrCode, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
+import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space, type SpaceMember, SpaceProxy, useSpaces } from '@dxos/react-client/echo';
@@ -42,7 +43,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
         invitation.subscribe((invitation) => {
           const invitationCode = InvitationEncoder.encode(invitation);
           if (invitation.state === Invitation.State.CONNECTING) {
-            console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+            log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
           }
         });
       };
@@ -126,7 +127,7 @@ const Invitations = (args: { id: number; count: number }) => {
       invitation.subscribe((invitation) => {
         const invitationCode = InvitationEncoder.encode(invitation);
         if (invitation.state === Invitation.State.CONNECTING) {
-          console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+          log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
         }
       });
     };

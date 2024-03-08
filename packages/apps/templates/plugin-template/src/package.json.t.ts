@@ -5,12 +5,12 @@ import path from 'path';
 import { promises as fs } from 'fs';
 import { InputOf, Slot } from '@dxos/plate';
 import { PackageJson } from './utils.t/packageJson';
-
+import ownPackageJson from '../package.json';
 import merge from 'lodash.merge';
 
 import template from './template.t';
 
-type Context = { version: string } & InputOf<typeof template>;
+type Context = { version: string; frameworkVersion: string } & InputOf<typeof template>;
 
 export namespace Features {
   export const react = (): Partial<PackageJson> => ({
@@ -25,32 +25,36 @@ export namespace Features {
     },
   });
 
-  export const dxosUi = (): Partial<PackageJson> => ({
+  export const dxosUi = ({ frameworkVersion }: Context): Partial<PackageJson> => ({
     dependencies: {
       '@phosphor-icons/react': '^2.0.5',
     },
     devDependencies: {
-      '@dxos/react-ui': '^0.4.6',
-      '@dxos/react-ui-theme': '^0.4.6',
+      '@dxos/react-ui': '^' + frameworkVersion,
+      '@dxos/react-ui-theme': '^' + frameworkVersion,
     },
   });
 
-  export const defaultPlugins = (): Partial<PackageJson> => ({
+  export const defaultPlugins = ({ frameworkVersion }: Context): Partial<PackageJson> => ({
     devDependencies: {
-      'vite-plugin-top-level-await': '^1.3.1',
       'vite-plugin-wasm': '^3.3.0',
-      '@dxos/config': '^0.4.6',
-      '@braneframe/plugin-space': '^0.4.6',
-      '@braneframe/plugin-navtree': '^0.4.6',
-      '@braneframe/plugin-layout': '^0.4.6',
-      '@braneframe/plugin-graph': '^0.4.6',
-      '@braneframe/plugin-client': '^0.4.6',
-      '@braneframe/plugin-stack': '^0.4.6',
+      'vite-plugin-top-level-await': '^1.3.1',
+      '@dxos/react-client': '^' + frameworkVersion,
+      '@dxos/config': '^' + frameworkVersion,
+      '@dxos/shell': '^' + frameworkVersion,
+      '@braneframe/plugin-space': '^' + frameworkVersion,
+      '@braneframe/plugin-navtree': '^' + frameworkVersion,
+      '@braneframe/plugin-layout': '^' + frameworkVersion,
+      '@braneframe/plugin-graph': '^' + frameworkVersion,
+      '@braneframe/plugin-client': '^' + frameworkVersion,
+      '@braneframe/plugin-stack': '^' + frameworkVersion,
+      '@braneframe/plugin-metadata': '^' + frameworkVersion,
+      '@braneframe/plugin-settings': '^' + frameworkVersion,
     },
   });
 }
 
-export const base = ({ name, version }: Context): Partial<PackageJson> => {
+export const base = ({ name, version, frameworkVersion }: Context): Partial<PackageJson> => {
   return {
     name,
     version: version,
@@ -64,20 +68,15 @@ export const base = ({ name, version }: Context): Partial<PackageJson> => {
     },
     dependencies: {
       '@preact/signals-react': '^1.3.6',
-      "@dxos/app-framework": "0.4.6",
+      '@dxos/app-framework': `^${frameworkVersion}`,
     },
     devDependencies: {
       '@types/node': '^18.11.9',
-      typescript: '^5.0.4',
       vite: '^5.1.3',
-      '@braneframe/plugin-theme': '^0.4.6',
+      typescript: '^5.0.4',
+      '@braneframe/plugin-theme': `^${frameworkVersion}`,
     },
   };
-};
-
-const loadJson = async (moduleRelativePath: string) => {
-  const content = await fs.readFile(path.resolve(__dirname, moduleRelativePath));
-  return JSON.parse(content.toString());
 };
 
 export default template.define
@@ -88,14 +87,15 @@ export default template.define
     content: async ({ input, slots: { packageJson: slotPackageJson } }) => {
       const context = {
         version: '0.0.1',
+        frameworkVersion: ownPackageJson.version,
         ...input,
       };
 
       const [first, ...rest] = [
         base(context),
         Features.react(),
-        Features.dxosUi(),
-        input.defaultPlugins && Features.defaultPlugins(),
+        Features.dxosUi(context),
+        input.defaultPlugins && Features.defaultPlugins(context),
         slotPackageJson?.() ?? {},
       ].filter(Boolean);
 
