@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArticleMedium, type IconProps } from '@phosphor-icons/react';
+import { type IconProps, TextAa } from '@phosphor-icons/react';
 import React from 'react';
 
 import { pluginMeta } from '@dxos/app-framework';
@@ -14,5 +14,5 @@ export default pluginMeta({
   name: 'Editor',
   description: 'Markdown text editor.',
   homePage: 'https://github.com/dxos/dxos/tree/main/packages/apps/plugins/plugin-markdown',
-  iconComponent: (props: IconProps) => <ArticleMedium {...props} />,
+  iconComponent: (props: IconProps) => <TextAa {...props} />,
 });
