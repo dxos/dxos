@@ -6,7 +6,6 @@ order: 3
 
 A plugin is a javascript object with interfaces as described below.
 
-
 ## Meta
 
 Plugins are identified by a list of properties stored in `plugin.meta`:
@@ -113,10 +112,9 @@ const App = () => (
 )
 ```
 
-
 ::: note Under Development
 
-The Composer Extensibility APIs are under active development. The API may change often, and these docs may not be accurate. 
+The Composer Extensibility APIs are under active development. The API may change often, and these docs may not be accurate.
 
 Talk to us on [Discord](https://discord.gg/eXVfryv3sW) with feedback anytime.
 
