@@ -48,7 +48,7 @@ Type: string
 
 
 
-### [`testConfigWithLocalSignal`](https://github.com/dxos/dxos/blob/5efa14d7c/packages/sdk/client/src/testing/test-builder.ts#L34)
+### [`testConfigWithLocalSignal`](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/testing/test-builder.ts#L34)
 Type: [Config](/api/@dxos/react-client/classes/Config)
 
 
