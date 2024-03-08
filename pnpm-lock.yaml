@@ -3710,6 +3710,9 @@ importers:
       '@dxos/plate':
         specifier: workspace:*
         version: link:../../../common/plate
+      chalk:
+        specifier: ^4.1.0
+        version: 4.1.2
       lodash.merge:
         specifier: ^4.6.2
         version: 4.6.2
@@ -3720,6 +3723,12 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../../sdk/config
+      '@dxos/shell':
+        specifier: workspace:*
+        version: link:../../../sdk/shell
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
