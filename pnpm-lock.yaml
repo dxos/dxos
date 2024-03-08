@@ -6652,6 +6652,22 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
 
+  packages/devtools/initializers/create-app-plugin:
+    dependencies:
+      '@dxos/plugin-template':
+        specifier: workspace:*
+        version: link:../../../apps/templates/plugin-template
+      minimist:
+        specifier: ^1.2.7
+        version: 1.2.8
+    devDependencies:
+      '@types/minimist':
+        specifier: ^1.2.2
+        version: 1.2.2
+      typescript:
+        specifier: ^5.2.2
+        version: 5.3.3
+
   packages/devtools/initializers/create-bare:
     dependencies:
       '@dxos/bare-template':
