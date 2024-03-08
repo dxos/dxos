@@ -41,6 +41,10 @@ export class WorkerSession {
   @logInfo
   public origin?: string;
 
+  // TODO(nf): factor out?
+  public observabilityGroup?: string;
+  public signalTelemetryEnabled?: boolean;
+
   @logInfo
   public lockKey?: string;
 
@@ -91,6 +95,8 @@ export class WorkerSession {
           start: async (request) => {
             this.origin = request.origin;
             this.lockKey = request.lockKey;
+            this.observabilityGroup = request.observabilityGroup;
+            this.signalTelemetryEnabled = request.signalTelemetryEnabled;
             this._startTrigger.wake();
           },
 

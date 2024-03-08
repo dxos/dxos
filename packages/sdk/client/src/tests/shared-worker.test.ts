@@ -56,7 +56,7 @@ describe('Shared worker', () => {
   test('client connects to the worker', async () => {
     const { workerRuntime, clientProxy, client } = setup(() => new Config({}));
 
-    await Promise.all([workerRuntime.start(), clientProxy.open('*'), client.initialize()]);
+    await Promise.all([workerRuntime.start(), clientProxy.open({ origin: '*' }), client.initialize()]);
 
     await client.halo.createIdentity();
   });
@@ -70,7 +70,7 @@ describe('Shared worker', () => {
     const promise = Promise.all([
       // This error should be propagated to client.initialize() call.
       workerRuntime.start().catch(() => {}),
-      clientProxy.open('*').catch(() => {}),
+      clientProxy.open({ origin: '*' }).catch(() => {}),
     ]);
 
     await expect(client.initialize()).to.be.rejectedWith('Test error');
@@ -84,7 +84,7 @@ describe('Shared worker', () => {
       return new Config({});
     });
 
-    await Promise.all([workerRuntime.start(), clientProxy.open('*'), client.initialize()]);
+    await Promise.all([workerRuntime.start(), clientProxy.open({ origin: '*' }), client.initialize()]);
 
     await client.halo.createIdentity();
   });

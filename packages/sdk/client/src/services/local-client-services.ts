@@ -8,6 +8,7 @@ import { type ClientServicesHost, type ClientServicesHostParams } from '@dxos/cl
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
+import { setIdentityTags } from '@dxos/messaging';
 import { createLibDataChannelTransportFactory, type NetworkManagerOptions } from '@dxos/network-manager';
 import { type ServiceBundle } from '@dxos/rpc';
 import { trace } from '@dxos/tracing';
@@ -19,26 +20,39 @@ import { trace } from '@dxos/tracing';
 export const fromHost = async (
   config = new Config(),
   params?: ClientServicesHostParams,
+  observabilityGroup?: string,
+  signalTelemetryEnabled?: boolean,
 ): Promise<ClientServicesProvider> => {
-  return new LocalClientServices({
+  const getSignalMetadata = () => {
+    return {
+      ...lcs.signalMetadataTags,
+      ...(observabilityGroup ? { group: observabilityGroup } : {}),
+    };
+  };
+  const lcs = new LocalClientServices({
     config,
-    ...(await setupNetworking(config)),
+    ...(await setupNetworking(config, {}, getSignalMetadata)),
     ...params,
   });
+  return lcs;
 };
 
 /**
  * Creates signal manager and transport factory based on config.
  * These are used to create a WebRTC network manager connected to the specified signal server.
  */
-const setupNetworking = async (config: Config, options: Partial<NetworkManagerOptions> = {}) => {
+const setupNetworking = async (
+  config: Config,
+  options: Partial<NetworkManagerOptions> = {},
+  signalMetadata?: () => void,
+) => {
   const { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } = await import('@dxos/messaging');
   const { createSimplePeerTransportFactory, MemoryTransportFactory } = await import('@dxos/network-manager');
 
   const signals = config.get('runtime.services.signaling');
   if (signals) {
     const {
-      signalManager = new WebsocketSignalManager(signals),
+      signalManager = new WebsocketSignalManager(signals, signalMetadata),
       // TODO(nf): configure better
       transportFactory = process.env.MOCHA_ENV === 'nodejs'
         ? createLibDataChannelTransportFactory({ iceServers: config.get('runtime.services.ice') })
@@ -73,12 +87,28 @@ export class LocalClientServices implements ClientServicesProvider {
   private readonly _ctx = new Context();
   private readonly _params: ClientServicesHostParams;
   private _host?: ClientServicesHost;
+  signalMetadataTags: any = {
+    runtime: 'local-client-services',
+  };
 
   @trace.info()
   private _isOpen = false;
 
   constructor(params: ClientServicesHostParams) {
     this._params = params;
+    // TODO(nf): extract
+    if (typeof window === 'undefined') {
+      // TODO(nf): collect ClientServices metadata as param?
+      this.signalMetadataTags.origin = 'undefined';
+    } else {
+      // SocketSupply native app
+      if ((globalThis as any).__args) {
+        this.signalMetadataTags.origin = 'native';
+        // TODO(nf): access socket app metadata?
+      } else {
+        this.signalMetadataTags.origin = window.location.origin;
+      }
+    }
   }
 
   get descriptors(): ServiceBundle<ClientServices> {
@@ -112,6 +142,17 @@ export class LocalClientServices implements ClientServicesProvider {
     });
     await this._host.open(this._ctx);
     this._isOpen = true;
+    // don't set identity tags for non-browser usage, e.g. agents
+    // TODO(nf): fix
+    if (this.signalMetadataTags.origin !== 'undefined') {
+      setIdentityTags({
+        identityService: this._host.services.IdentityService!,
+        devicesService: this._host.services.DevicesService!,
+        setTag: (k: string, v: string) => {
+          this.signalMetadataTags[k] = v;
+        },
+      });
+    }
   }
 
   @synchronized

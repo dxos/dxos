@@ -76,6 +76,7 @@ export class Swarm {
   // TODO(burdon): Split up properties.
   constructor(
     private readonly _topic: PublicKey,
+    // usually the deviceKey
     private readonly _ownPeerId: PublicKey,
     private _topology: Topology,
     private readonly _protocolProvider: WireProtocolProvider,

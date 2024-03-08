@@ -41,6 +41,8 @@ export const Remote = (target: string | undefined): Partial<ConfigProto> => {
 export const createClientServices = (
   config: Config,
   createWorker?: WorkerClientServicesParams['createWorker'],
+  observabilityGroup?: string,
+  signalTelemetryEnabled?: boolean,
 ): Promise<ClientServicesProvider> => {
   const remote = config.values.runtime?.client?.remoteSource;
 
@@ -61,5 +63,7 @@ export const createClientServices = (
     }
   }
 
-  return createWorker && typeof SharedWorker !== 'undefined' ? fromWorker(config, { createWorker }) : fromHost(config);
+  return createWorker && typeof SharedWorker !== 'undefined'
+    ? fromWorker(config, { createWorker, observabilityGroup, signalTelemetryEnabled })
+    : fromHost(config, {}, observabilityGroup, signalTelemetryEnabled);
 };

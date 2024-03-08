@@ -199,6 +199,9 @@ export class ClientServicesHost {
       }
     }
 
+    if (!options.signalManager) {
+      log.warn('running signaling without telemetry metadata.');
+    }
     const {
       connectionLog = true,
       transportFactory = createSimplePeerTransportFactory({

@@ -42,7 +42,10 @@ export class WebsocketSignalManager implements SignalManager {
 
   private readonly _instanceId = PublicKey.random().toHex();
 
-  constructor(private readonly _hosts: Runtime.Services.Signal[]) {
+  constructor(
+    private readonly _hosts: Runtime.Services.Signal[],
+    private readonly _getMetadata?: () => any,
+  ) {
     log('Created WebsocketSignalManager', { hosts: this._hosts });
     for (const host of this._hosts) {
       if (this._servers.has(host.server)) {
@@ -52,6 +55,7 @@ export class WebsocketSignalManager implements SignalManager {
         host.server,
         async (message) => this.onMessage.emit(message),
         async (data) => this.swarmEvent.emit(data),
+        this._getMetadata,
       );
       server.statusChanged.on(() => this.statusChanged.emit(this.getStatus()));
 
