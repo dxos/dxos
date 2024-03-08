@@ -46,13 +46,13 @@ export class Scheduler {
     { ctx: Context; trigger: FunctionTrigger }
   >(({ id, spaceKey }) => `${spaceKey.toHex()}:${id}`);
 
-  private readonly _busInterconnect = new SignalBusInterconnect();
   private readonly _signalEmitter: MutationSignalEmitter;
 
   constructor(
     private readonly _client: Client,
     private readonly _manifest: FunctionManifest,
     private readonly _options: SchedulerOptions = {},
+    private readonly _busInterconnect = SignalBusInterconnect.global,
   ) {
     this._signalEmitter = new MutationSignalEmitter(_client, this._busInterconnect);
   }

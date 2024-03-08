@@ -3,3 +3,4 @@
 //
 
 export * from './signal-bus';
+export * from './signal-bus-interconnect';

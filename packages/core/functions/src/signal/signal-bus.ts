@@ -8,7 +8,7 @@ import * as Either from 'effect/Either';
 import { type Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 
-const Signal = S.struct({
+export const Signal = S.struct({
   id: S.string,
   kind: S.literal('echo-mutation', 'timer', 'attention', 'suggestion'),
   metadata: S.struct({

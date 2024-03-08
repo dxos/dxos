@@ -8,6 +8,8 @@ import { ComplexMap, entry } from '@dxos/util';
 import { SignalBus } from './signal-bus';
 
 export class SignalBusInterconnect {
+  public static readonly global = new SignalBusInterconnect();
+
   private readonly busses = new ComplexMap<Space, SignalBus>((space) => space.key.toHex());
 
   public createConnected(space: Space): SignalBus {
