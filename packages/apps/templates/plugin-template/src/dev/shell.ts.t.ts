@@ -2,7 +2,7 @@ import { plate } from '@dxos/plate';
 import template from '../template.t';
 
 export default template.define.script({
-  content: ({ input: { defaultPlugins } }) => plate/* javascript */`
+  content: ({ input: { defaultPlugins } }) => defaultPlugins && plate/* javascript */`
     import '@dxosTheme';
     import { runShell } from '@dxos/shell/react';
     import { createConfig } from './config';
