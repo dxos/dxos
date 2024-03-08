@@ -124,7 +124,7 @@ class OverlayErrorBoundary extends Component<OverlayErrorBoundaryProps> {
   };
 
   override componentDidCatch(error: any, info: any) {
-    log.warn('componentCatch', { error, info });
+    log.catch(error, { info });
   }
 
   override render() {

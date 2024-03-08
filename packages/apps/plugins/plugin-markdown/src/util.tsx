@@ -21,7 +21,7 @@ export const __isMarkdown = (object: { [key: string]: any }): object is EditorMo
       (typeof object.content === 'string' || object.content instanceof YText)
     );
   } catch (err) {
-    log.error('isMarkdown error', { err, object });
+    log.catch(err, { object });
     return false;
   }
 };

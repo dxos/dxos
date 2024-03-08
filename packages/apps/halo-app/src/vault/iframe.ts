@@ -210,7 +210,7 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
       await startShell(config, iframeRuntime.shell, shellClientProxy, origin);
     }
 
-    info.forEach((message) => log.info(message, cssLogStyle));
+    // info.forEach((message) => log.info(message, cssLogStyle));
 
     window.addEventListener('beforeunload', () => {
       iframeRuntime.close().catch((err: Error) => log.catch(err));

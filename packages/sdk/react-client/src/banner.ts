@@ -3,7 +3,6 @@
 //
 
 import { type Client } from '@dxos/client';
-import { log } from '@dxos/log';
 
 // http://patorjk.com/software/taag/#p=testall&f=Patorjk-HeX&t=DXOS
 const BANNER = (client: Client) => {
@@ -29,5 +28,6 @@ export const printBanner = (client: Client) => {
   }
 
   bannerPrinted = true;
-  log.info(`%c${BANNER(client)}`, 'font-family: monospace;');
+  // eslint-disable-next-line no-console
+  console.log(`%c${BANNER(client)}`, 'font-family: monospace;');
 };

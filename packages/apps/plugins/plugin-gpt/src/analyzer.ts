@@ -106,7 +106,7 @@ export class GptAnalyzer {
         }
       }
     } catch (err) {
-      log.warn('invalid response', { err });
+      log.catch(err);
     }
   }
 }
