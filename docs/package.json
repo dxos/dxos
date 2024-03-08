@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@dxos/apidoc": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
