@@ -362,6 +362,9 @@ importers:
       '@dxos/apidoc':
         specifier: workspace:*
         version: link:../tools/apidoc
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../packages/sdk/app-framework
       '@dxos/async':
         specifier: workspace:*
         version: link:../packages/common/async
