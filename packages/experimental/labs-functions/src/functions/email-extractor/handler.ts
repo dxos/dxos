@@ -55,7 +55,7 @@ export const handler = subscriptionHandler(async ({ event: { space, objects } })
 
   // TODO(burdon): Auto-flush (in wrapper).
   // TODO(burdon): Causes recursion. Scheduler must check. Also check that there are NO mutations if nothing changed.
-  log.info('>>>', { i });
+  log.info(`>>> ${i}`);
   await space.db.flush();
-  log.info('<<<', { i });
+  log.info(`<<< ${i}`);
 });

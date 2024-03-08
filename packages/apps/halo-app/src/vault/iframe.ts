@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';
 import { safariCheck } from '@dxos/util';
 
-const cssLogStyle = 'color:#C026D3;font-weight:bold';
+// const cssLogStyle = 'color:#C026D3;font-weight:bold';
 
 const startShell = async (config: Config, runtime: ShellRuntime, services: ClientServicesProvider, origin: string) => {
   const { createElement, StrictMode } = await import('react');
