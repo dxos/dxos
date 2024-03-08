@@ -40,6 +40,7 @@ const parse = (source: string, target: string) => {
     adjectives: select(cleaned.adjectives, 256),
   };
 
+  // eslint-disable-next-line no-console
   console.log(
     JSON.stringify({
       animals: selected.animals.length,

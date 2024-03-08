@@ -19,8 +19,8 @@ import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls
 import { Message, type MessageBlockProps, type MessageProps } from '@dxos/react-ui-thread';
 
 import { command } from './command-extension';
-import { createMessageData } from '../hooks';
 import { THREAD_ITEM } from '../meta';
+import { getMessageMetadata } from '../util';
 
 const messageControlClassNames = ['p-1 min-bs-0 mie-1 transition-opacity items-start', hoverableControlItem];
 
@@ -36,7 +36,7 @@ export const MessageContainer = ({
   const identity = members.find(
     (member) => message.from.identityKey && PublicKey.equals(member.identity.identityKey, message.from.identityKey),
   )?.identity;
-  const messageMetadata = createMessageData(message.id, identity);
+  const messageMetadata = getMessageMetadata(message.id, identity);
 
   return (
     <Message<MessageType.Block>

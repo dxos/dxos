@@ -1,0 +1,6 @@
+install: false
+usage: |
+  Use with npm init like this:
+  ```bash
+  npm init @dxos/app-plugin@latest
+  ```

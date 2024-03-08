@@ -58,7 +58,7 @@ const start = async () => {
 
   // Run agent entry point in browser.
   if ((globalThis as any).dxgravity_env) {
-    console.log('running in browser');
+    log.info('running in browser');
     const name = (globalThis as any).dxgravity_env.GRAVITY_SPEC;
     const params = (globalThis as any).dxgravity_env.GRAVITY_AGENT_PARAMS;
     invariant(name, 'missing GRAVITY_SPEC');
@@ -88,8 +88,8 @@ const start = async () => {
   const planGenerator = plans[name];
 
   if (!planGenerator) {
-    console.warn(`\nno test: ${name}`);
-    console.warn(`\navailable tests: ${Object.keys(plans).join(', ')}`);
+    log.warn(`\nno test: ${name}`);
+    log.warn(`\navailable tests: ${Object.keys(plans).join(', ')}`);
     return;
   }
 
@@ -102,7 +102,7 @@ const start = async () => {
   };
 
   if (options.repeatAnalysis) {
-    console.info(`\nrepeat analysis from file: ${options.repeatAnalysis}`);
+    log.info(`\nrepeat analysis from file: ${options.repeatAnalysis}`);
   }
 
   if (argv.specfile) {

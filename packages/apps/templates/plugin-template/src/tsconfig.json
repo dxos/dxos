@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "jsx": "react",
+    "emitDeclarationOnly": false,
+    "lib": ["DOM", "ESNext"],
+    "module": "ESNext",
+    "outDir": "dist",
+    "skipLibCheck": true,
+    "types": ["node"],
+    "moduleResolution": "node",
+    "isolatedModules": true,
+    "target": "ES2018"
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "vite.config.ts"]
+}

@@ -554,6 +554,11 @@
         },
         {
           "type": "json",
+          "path": "packages/devtools/initializers/create-app-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/devtools/initializers/create-bare/package.json",
           "jsonpath": "$.version"
         },

@@ -30,6 +30,7 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/local-storage": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@preact/signals-core": "^1.5.1",
     "deepsignal": "^1.5.0",

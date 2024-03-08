@@ -9,6 +9,7 @@ import sortBy from 'lodash.sortby';
 import { useEffect } from 'react';
 
 import { debounce } from '@dxos/async';
+import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
 import { Cursor } from './cursor';
@@ -128,7 +129,7 @@ const commentsDecorations = EditorView.decorations.compute([commentsState], (sta
     ?.flatMap((comment) => {
       const range = comment.range;
       if (!range || range.from === range.to) {
-        console.warn('Invalid range:', range);
+        log.warn('Invalid range:', range);
         return undefined;
       }
 

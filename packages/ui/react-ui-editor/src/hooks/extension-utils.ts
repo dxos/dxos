@@ -23,7 +23,7 @@ import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 import { type ThemeMode } from '@dxos/react-ui';
-import { hueTokens } from '@dxos/react-ui-theme';
+import { type HuePalette, hueTokens } from '@dxos/react-ui-theme';
 import { hexToHue, isNotFalsy } from '@dxos/util';
 
 import { SpaceAwarenessProvider } from './awareness-provider';
@@ -140,7 +140,8 @@ export const createDataExtensions = ({ id, text, space, identity }: DataExtensio
 
   if (space && identity) {
     const peerId = identity?.identityKey.toHex();
-    const { cursorLightValue, cursorDarkValue } = hueTokens[hexToHue(peerId ?? '0')];
+    const { cursorLightValue, cursorDarkValue } =
+      hueTokens[(identity?.profile?.data?.hue as HuePalette | undefined) ?? hexToHue(peerId ?? '0')];
     const awarenessProvider = new SpaceAwarenessProvider({
       space,
       channel: `awareness.${id}`,
