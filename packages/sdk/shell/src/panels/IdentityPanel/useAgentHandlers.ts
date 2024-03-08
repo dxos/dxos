@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { type CancellableInvitation } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { useAgentHostingProviderClient, type Client } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
@@ -46,7 +47,7 @@ export const useAgentHandlers = ({
   const handleAgentCreate = useCallback(async (invitation: Invitation) => {
     const invitationCode = InvitationEncoder.encode(invitation);
     if (invitation.state === Invitation.State.CONNECTING) {
-      console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+      log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
       invariant(identity, 'Identity not found');
       if (agentHostingProviderClient) {
         try {

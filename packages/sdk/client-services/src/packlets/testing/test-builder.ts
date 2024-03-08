@@ -179,7 +179,7 @@ export class TestPeer {
   }
 
   get automergeHost() {
-    return (this._props.automergeHost ??= new AutomergeHost(this.storage.createDirectory('automerge')));
+    return (this._props.automergeHost ??= new AutomergeHost({ directory: this.storage.createDirectory('automerge') }));
   }
 
   get dataSpaceManager() {

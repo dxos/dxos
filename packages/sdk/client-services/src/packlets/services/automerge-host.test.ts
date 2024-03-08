@@ -21,7 +21,7 @@ describe('AutomergeHost', () => {
 
     const storageDirectory = createStorage({ type: StorageType.RAM }).createDirectory();
 
-    const host = new AutomergeHost(storageDirectory);
+    const host = new AutomergeHost({ directory: storageDirectory });
     afterTest(() => host.close());
     const dataService = new DataServiceImpl(
       {} as DataServiceSubscriptions, // is not used in this test, just required argument
