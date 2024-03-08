@@ -6,9 +6,6 @@ require('@rushstack/eslint-patch/modern-module-resolution');
 
 module.exports = {
   root: true,
-  rules: {
-    'no-console': 'error'
-  },
   ignorePatterns: [
     // Build Artifacts
     'dist',
@@ -38,16 +35,16 @@ module.exports = {
   ],
   overrides: [
     {
-      "files": '**/*.{test,stories,blueprint-test}.{ts,tsx,js,jsx}',
-      "rules": {
-        "no-console": "off"
-      }
-    },
-    {
       files: '**/*.{ts,mts,tsx,js,jsx}',
       extends: [
         'plugin:@dxos/recommended'
       ]
+    },
+    {
+      "files": '**/*.{test,stories,blueprint-test}.{ts,tsx,js,jsx}',
+      "rules": {
+        "no-console": "off"
+      }
     },
     {
       files: '**/*.{ts,mts,tsx}',
