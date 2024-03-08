@@ -100,6 +100,12 @@ export class AutomergeDb {
     }
   }
 
+  /**
+   * Update DB in response to space state change.
+   * Can be used to change the root AM document.
+   */
+  // TODO(dmaretskyi): should it be synchronized and/or cancelable?
+  @synchronized
   async update(spaceState: SpaceState) {
     invariant(this._ctx);
     if (spaceState.rootUrl === this._automergeDocLoader.getSpaceRootDocHandle().url) {
