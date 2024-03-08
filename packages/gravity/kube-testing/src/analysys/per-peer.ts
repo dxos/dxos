@@ -50,5 +50,5 @@ for (const evt of stats.discoveredPeers) {
 const output = Array.from(statsPerPeer.entries()).sort((a, b) => b[1].failures - a[1].failures);
 
 for (const [peer, counters] of output) {
-  console.log(`${peer}: ${counters.failures} ${((counters.failures / counters.discoveredPeers) * 100).toFixed(2)}%`);
+  log.info(`${peer}: ${counters.failures} ${((counters.failures / counters.discoveredPeers) * 100).toFixed(2)}%`);
 }
