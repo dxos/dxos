@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';
 import { safariCheck } from '@dxos/util';
 
-const cssLogStyle = 'color:#C026D3;font-weight:bold';
+// const cssLogStyle = 'color:#C026D3;font-weight:bold';
 
 const startShell = async (config: Config, runtime: ShellRuntime, services: ClientServicesProvider, origin: string) => {
   const { createElement, StrictMode } = await import('react');
@@ -210,7 +210,7 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
       await startShell(config, iframeRuntime.shell, shellClientProxy, origin);
     }
 
-    info.forEach((message) => console.log(message, cssLogStyle));
+    // info.forEach((message) => log.info(message, cssLogStyle));
 
     window.addEventListener('beforeunload', () => {
       iframeRuntime.close().catch((err: Error) => log.catch(err));

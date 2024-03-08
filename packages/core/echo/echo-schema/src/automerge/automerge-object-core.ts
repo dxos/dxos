@@ -11,6 +11,7 @@ import { Reference } from '@dxos/document-model';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log'; // Keep type-only
 import { TextModel } from '@dxos/text-model';
 import { assignDeep, defer, getDeep } from '@dxos/util';
 
@@ -35,7 +36,7 @@ import {
   type OpaqueEchoObject,
 } from '../object';
 import { AbstractEchoObject } from '../object/object';
-import { type Schema } from '../proto'; // Keep type-only
+import { type Schema } from '../proto';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
@@ -259,7 +260,7 @@ export class AutomergeObjectCore {
     } catch (err) {
       // Print the error message synchronously for easier debugging.
       // The stack trace and details will be printed asynchronously.
-      console.error('' + err);
+      log.catch(err);
 
       // Reports all errors that happen during even propagation as unhandled.
       // This is important since we don't want to silently swallow errors.

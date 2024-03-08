@@ -19,6 +19,7 @@ import React, {
   useState,
 } from 'react';
 
+import { log } from '@dxos/log';
 import { useMediaQuery, useForwardedRef } from '@dxos/react-hooks';
 
 import { useSwipeToDismiss } from './useSwipeToDismiss';
@@ -45,12 +46,12 @@ const [MainProvider, useMainContext] = createContext<MainContextValue>(MAIN_NAME
   navigationSidebarOpen: false,
   setNavigationSidebarOpen: (nextOpen) => {
     // TODO(burdon): Standardize with other context missing errors using raise.
-    console.warn('Attempt to set sidebar state without initializing `MainRoot`');
+    log.warn('Attempt to set sidebar state without initializing `MainRoot`');
   },
   complementarySidebarOpen: false,
   setComplementarySidebarOpen: (nextOpen) => {
     // TODO(burdon): Standardize with other context missing errors using raise.
-    console.warn('Attempt to set sidebar state without initializing `MainRoot`');
+    log.warn('Attempt to set sidebar state without initializing `MainRoot`');
   },
 });
 

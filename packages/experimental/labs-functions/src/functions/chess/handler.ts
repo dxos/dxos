@@ -30,6 +30,7 @@ export const handler = subscriptionHandler(async ({ event }) => {
             chess.move(move);
             // TODO(burdon): Can we defer committing a batch until the function completes (idempotence?)
             game.pgn = chess.pgn();
+            // eslint-disable-next-line no-console
             console.log(`move: ${chess.history().length}\n` + chess.ascii());
           }
         }

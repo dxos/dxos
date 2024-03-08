@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+/* eslint-disable no-console */
+
 import chalk from 'chalk';
 
 import { type ModuleSpecifier } from './module-specifier';

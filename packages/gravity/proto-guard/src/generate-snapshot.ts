@@ -29,7 +29,7 @@ const main = async () => {
   {
     // Init client.
     const newStoragePath = path.join(getStorageDir(), STORAGE_VERSION.toString());
-    console.log(`creating snapshot: ${newStoragePath}`);
+    log.info(`creating snapshot: ${newStoragePath}`);
     client = new Client({ config: getConfig(newStoragePath) });
     await client.initialize();
   }
