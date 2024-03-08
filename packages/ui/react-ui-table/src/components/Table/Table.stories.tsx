@@ -222,6 +222,7 @@ export const Dynamic = {
       }, 500);
       return () => clearInterval(interval);
     }, []);
+
     return (
       <AnchoredOverflow.Root classNames='max-bs-[80dvh]' ref={containerRef}>
         <Table<Item>
@@ -287,6 +288,33 @@ export const Resizable = {
         stickyHeader
         // onColumnResize={handleColumnResize}
       />
+    );
+  },
+};
+
+export const TenThousandRows = {
+  render: () => {
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const [items, setItems] = useState<Item[]>(createItems(10000));
+
+    const onUpdate: ValueUpdater<Item, any> = (item, prop, value) => {
+      setItems((items) => updateItems(items, item.publicKey, prop, value));
+    };
+
+    return (
+      <div ref={containerRef} className='fixed inset-0 overflow-auto'>
+        <Table<Item>
+          role='grid'
+          rowsSelectable='multi'
+          keyAccessor={(row) => row.publicKey.toHex()}
+          columns={columns(onUpdate)}
+          data={items}
+          fullWidth
+          stickyHeader
+          border
+          getScrollElement={() => containerRef.current}
+        />
+      </div>
     );
   },
 };
