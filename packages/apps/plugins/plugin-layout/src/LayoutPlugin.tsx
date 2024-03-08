@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowsOut } from '@phosphor-icons/react';
+import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-core';
 import { type RevertDeepSignal } from 'deepsignal/react';
 import { deepSignal } from 'deepsignal/react';
-import React, { type PropsWithChildren, useEffect } from 'react';
+import React, { type PropsWithChildren, useEffect, useMemo } from 'react';
 
 import { type Node, useGraph } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
@@ -34,6 +34,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { AttentionProvider } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { LayoutContext } from './LayoutContext';
@@ -151,15 +152,11 @@ export const LayoutPlugin = ({
         .prop(settings.values.$showFooter!, 'show-footer', LocalStorageStore.bool)
         .prop(settings.values.$enableNativeRedirect!, 'enable-native-redirect', LocalStorageStore.bool);
 
-      // TODO(burdon): Create context and plugin.
-      Keyboard.singleton.initialize();
-
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);
       }
     },
     unload: async () => {
-      Keyboard.singleton.destroy();
       layout.close();
     },
     provides: {
@@ -168,22 +165,26 @@ export const LayoutPlugin = ({
       location: location as RevertDeepSignal<Location>,
       translations,
       graph: {
-        builder: ({ parent }) => {
-          if (parent.id === 'root') {
-            // TODO(burdon): Root menu isn't visible so nothing bound.
-            parent.addAction({
-              id: `${LayoutAction.SET_LAYOUT}/fullscreen`,
+        builder: (_, graph) => {
+          // TODO(burdon): Root menu isn't visible so nothing bound.
+          graph.addNodes({
+            id: `${LayoutAction.SET_LAYOUT}/fullscreen`,
+            data: () =>
+              intentPlugin?.provides.intent.dispatch({
+                plugin: LAYOUT_PLUGIN,
+                action: LayoutAction.SET_LAYOUT,
+                data: { element: 'fullscreen' },
+              }),
+            properties: {
               label: ['toggle fullscreen label', { ns: LAYOUT_PLUGIN }],
-              icon: (props) => <ArrowsOut {...props} />,
-              keyBinding: 'ctrl+meta+f',
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch({
-                  plugin: LAYOUT_PLUGIN,
-                  action: LayoutAction.SET_LAYOUT,
-                  data: { element: 'fullscreen' },
-                }),
-            });
-          }
+              icon: (props: IconProps) => <ArrowsOut {...props} />,
+              keyBinding: {
+                macos: 'ctrl+meta+f',
+                windows: 'shift+ctrl+f',
+              },
+            },
+            edges: [['root', 'inbound']],
+          });
         },
       },
       context: (props: PropsWithChildren) => (
@@ -268,11 +269,13 @@ export const LayoutPlugin = ({
                 },
               };
 
+        const attended = useMemo(() => new Set(location.active ? [location.active] : []), [location.active]);
+
         return (
-          <>
+          <AttentionProvider attended={attended}>
             <Surface {...surfaceProps} />
             <Mosaic.DragOverlay />
-          </>
+          </AttentionProvider>
         );
       },
       surface: {
@@ -352,8 +355,9 @@ export const LayoutPlugin = ({
             // TODO(wittjosiah): Factor out.
             case NavigationAction.ACTIVATE: {
               const id = intent.data?.id ?? intent.data?.result?.id;
-              const path = id && graphPlugin?.provides.graph.getPath(id);
+              const path = id && graphPlugin?.provides.graph.getPath({ target: id });
               if (path) {
+                // TODO(wittjosiah): Factor out.
                 Keyboard.singleton.setCurrentContext(path.join('/'));
               }
 

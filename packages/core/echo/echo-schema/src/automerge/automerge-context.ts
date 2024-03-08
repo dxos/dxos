@@ -5,12 +5,15 @@
 import { next as automerge } from '@dxos/automerge/automerge';
 import { type Message, NetworkAdapter, type PeerId, Repo, cbor } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
+import { exposeModule } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type HostInfo, type DataService, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
+
+exposeModule('@automerge/automerge', automerge);
 
 /**
  * Shared context for all spaces in the client.
@@ -19,13 +22,23 @@ import { mapValues } from '@dxos/util';
 @trace.resource()
 export class AutomergeContext {
   private _repo: Repo;
+
+  @trace.info()
   private _adapter?: LocalClientNetworkAdapter = undefined;
 
-  constructor(dataService: DataService | undefined = undefined) {
+  @trace.info()
+  private readonly _peerId: string;
+
+  @trace.info()
+  public readonly spaceFragmentationEnabled: boolean;
+
+  constructor(dataService: DataService | undefined = undefined, config: AutomergeContextConfig = {}) {
+    this._peerId = `client-${PublicKey.random().toHex()}` as PeerId;
+    this.spaceFragmentationEnabled = config.spaceFragmentationEnabled ?? false;
     if (dataService) {
       this._adapter = new LocalClientNetworkAdapter(dataService);
       this._repo = new Repo({
-        peerId: `client-${PublicKey.random().toHex()}` as PeerId,
+        peerId: this._peerId as PeerId,
         network: [this._adapter],
         sharePolicy: async () => true,
       });
@@ -45,6 +58,23 @@ export class AutomergeContext {
       state: handle.state,
       hasDoc: !!handle.docSync(),
       heads: handle.docSync() ? automerge.getHeads(handle.docSync()) : null,
+      data:
+        handle.docSync()?.doc &&
+        mapValues(handle.docSync()?.doc, (value, key) => {
+          try {
+            switch (key) {
+              case 'access':
+              case 'links':
+                return value;
+              case 'objects':
+                return Object.keys(value as any);
+              default:
+                return `${value}`;
+            }
+          } catch (err) {
+            return `${err}`;
+          }
+        }),
     }));
   }
 
@@ -61,11 +91,15 @@ export class AutomergeContext {
 /**
  * Used to replicate with apps running on the same device.
  */
+@trace.resource()
 class LocalClientNetworkAdapter extends NetworkAdapter {
   /**
    * Own peer id given by automerge repo.
    */
+  @trace.info()
   private _hostInfo?: HostInfo = undefined;
+
+  @trace.info()
   private _stream?: Stream<SyncRepoResponse> | undefined = undefined;
 
   constructor(private readonly _dataService: DataService) {
@@ -148,4 +182,8 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
     // TODO(mykola): `disconnect` is not used anywhere in `Repo` from `@automerge/automerge-repo`. Should we remove it?
     // No-op
   }
+}
+
+export interface AutomergeContextConfig {
+  spaceFragmentationEnabled?: boolean;
 }

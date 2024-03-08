@@ -164,7 +164,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
           from: start,
           to: startLine.from + startLine.length,
           value: Decoration.mark({
-            attributes: { style: `background-color: ${color}` },
+            attributes: { style: `background-color: ${lightColor}` },
             class: 'cm-collab-selection',
           }),
         });
@@ -174,7 +174,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
           from: endLine.from,
           to: end,
           value: Decoration.mark({
-            attributes: { style: `background-color: ${color}` },
+            attributes: { style: `background-color: ${lightColor}` },
             class: 'cm-collab-selection',
           }),
         });
@@ -185,7 +185,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
             from: linePos,
             to: linePos,
             value: Decoration.line({
-              attributes: { style: `background-color: ${color}`, class: 'cm-collab-selectionLine' },
+              attributes: { style: `background-color: ${lightColor}`, class: 'cm-collab-selectionLine' },
             }),
           });
         }

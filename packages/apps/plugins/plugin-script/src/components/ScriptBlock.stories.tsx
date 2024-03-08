@@ -8,9 +8,9 @@ import React, { useEffect, useState } from 'react';
 
 import { TextObject } from '@dxos/client/echo';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { createDocAccessor, type DocAccessor } from '@dxos/echo-schema';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { useClient } from '@dxos/react-client';
+import { createDocAccessor, type DocAccessor } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 
 // @ts-ignore

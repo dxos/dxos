@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -91,7 +91,7 @@
         "dist/types/src/services/index.d.ts"
       ],
       "shared-worker": [
-        "dist/types/src/shared-worker.d.ts"
+        "dist/types/src/worker/shared-worker.d.ts"
       ],
       "testing": [
         "dist/types/src/testing/index.d.ts"
@@ -139,6 +139,7 @@
   },
   "devDependencies": {
     "@braneframe/types": "workspace:*",
+    "@dxos/automerge": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@types/lodash.isequal": "^4.5.0",
     "@types/lodash.isequalwith": "^4.4.0",
@@ -161,8 +162,5 @@
         ]
       }
     ]
-  },
-  "typedoc": {
-    "entryPoint": "src/index.ts"
   }
 }

@@ -4,6 +4,7 @@
 
 import { type Document } from '@braneframe/types';
 import { type Plugin } from '@dxos/app-framework';
+import { log } from '@dxos/log';
 import { getTextContent, isTypedObject } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
 import { type EditorModel, YText } from '@dxos/react-ui-editor';
 
@@ -20,7 +21,7 @@ export const __isMarkdown = (object: { [key: string]: any }): object is EditorMo
       (typeof object.content === 'string' || object.content instanceof YText)
     );
   } catch (err) {
-    console.error('isMarkdown error', err, object);
+    log.catch(err, { object });
     return false;
   }
 };
@@ -53,5 +54,5 @@ const nonTitleChars = /[^\w ]/g;
 
 export const getFallbackTitle = (document: Document) => {
   const content = getTextContent(document.content);
-  return content?.substring(0, 63).split('\n')[0].replaceAll(nonTitleChars, '').trim();
+  return content?.substring(0, 31).split('\n')[0].replaceAll(nonTitleChars, '').trim();
 };

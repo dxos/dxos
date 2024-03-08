@@ -3,31 +3,33 @@
 //
 
 import { Code, type IconProps } from '@phosphor-icons/react';
-import React, { useMemo, useState } from 'react';
+import { batch, effect } from '@preact/signals-core';
+import React, { useMemo } from 'react';
 
-import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
-import { Folder, Script as ScriptType } from '@braneframe/types';
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
-import { createDocAccessor } from '@dxos/echo-schema';
+import { parseClientPlugin } from '@braneframe/plugin-client';
+import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
+import { Script as ScriptType } from '@braneframe/types';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
+import { EventSubscriptions } from '@dxos/async';
+import { SignalBus } from '@dxos/functions';
+import { createDocAccessor } from '@dxos/react-client/echo';
 import {
+  type Space,
   type Filter,
   type EchoObject,
   type Schema,
   TextObject,
   isTypedObject,
-  SpaceProxy,
-  Space,
 } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
+import { defaultMap } from '@dxos/util';
 
 import { ScriptBlock, type ScriptBlockProps } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
+import { SignalBusContext } from './signals';
 import translations from './translations';
 import { ScriptAction, type ScriptPluginProvides } from './types';
-import { SignalBus } from '@dxos/functions';
-import { SignalBusContext } from './signals';
-import { defaultMap } from '@dxos/util';
 
 // TODO(burdon): Make generic and remove need for filter.
 const isObject = <T extends EchoObject>(object: unknown, schema: Schema, filter: Filter<T>): T | undefined => {
@@ -56,35 +58,65 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
       },
       translations,
       graph: {
-        builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
+        builder: (plugins, graph) => {
+          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+          if (!client || !dispatch) {
             return;
           }
 
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
-          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
-            id: `${SCRIPT_PLUGIN}/create`,
-            label: ['create object label', { ns: SCRIPT_PLUGIN }],
-            icon: (props) => <Code {...props} />,
-            invoke: () =>
-              intentPlugin?.provides.intent.dispatch([
-                {
+          const subscriptions = new EventSubscriptions();
+          const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            spaces.forEach((space) => {
+              subscriptions.add(
+                updateGraphWithAddObjectAction({
+                  graph,
+                  space,
                   plugin: SCRIPT_PLUGIN,
                   action: ScriptAction.CREATE,
-                },
-                {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { target: parent.data },
-                },
-                {
-                  action: NavigationAction.ACTIVATE,
-                },
-              ]),
-            properties: {
-              testId: 'scriptPlugin.createObject',
-            },
+                  properties: {
+                    label: ['create object label', { ns: SCRIPT_PLUGIN }],
+                    icon: (props: IconProps) => <Code {...props} />,
+                    testId: 'scriptPlugin.createObject',
+                  },
+                  dispatch,
+                }),
+              );
+
+              // Add all scripts to the graph.
+              const query = space.db.query(ScriptType.filter());
+              let previousObjects: ScriptType[] = [];
+              subscriptions.add(
+                effect(() => {
+                  const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+                  previousObjects = query.objects;
+
+                  batch(() => {
+                    removedObjects.forEach((object) => graph.removeNode(object.id));
+                    query.objects.forEach((object) => {
+                      graph.addNodes({
+                        id: object.id,
+                        data: object,
+                        properties: {
+                          // TODO(wittjosiah): Reconcile with metadata provides.
+                          label: object.title || ['object title placeholder', { ns: SCRIPT_PLUGIN }],
+                          icon: (props: IconProps) => <Code {...props} />,
+                          testId: 'spacePlugin.object',
+                          persistenceClass: 'echo',
+                          persistenceKey: space?.key.toHex(),
+                        },
+                      });
+                    });
+                  });
+                }),
+              );
+            });
           });
+
+          return () => {
+            unsubscribe();
+            subscriptions.clear();
+          };
         },
       },
       stack: {

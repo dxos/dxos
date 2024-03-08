@@ -115,7 +115,7 @@ importers:
         version: 17.3.2(@swc-node/register@1.6.8)(@swc/core@1.4.0)(@types/node@18.11.9)(nx@17.3.2)(typescript@5.2.2)
       '@nx/vite':
         specifier: 17.3.2
-        version: 17.3.2(@swc-node/register@1.6.8)(@swc/core@1.4.0)(@types/node@18.11.9)(nx@17.3.2)(typescript@5.2.2)(vite@5.1.3)(vitest@1.2.2)
+        version: 17.3.2(@swc-node/register@1.6.8)(@swc/core@1.4.0)(@types/node@18.11.9)(nx@17.3.2)(typescript@5.2.2)(vite@5.1.5)(vitest@1.3.1)
       '@nx/web':
         specifier: 17.3.2
         version: 17.3.2(@swc-node/register@1.6.8)(@swc/core@1.4.0)(@types/node@18.11.9)(nx@17.3.2)(typescript@5.2.2)
@@ -193,25 +193,25 @@ importers:
         version: 6.20.0(eslint@8.49.0)(typescript@5.2.2)
       '@vitejs/plugin-react-swc':
         specifier: ^3.6.0
-        version: 3.6.0(vite@5.1.3)
+        version: 3.6.0(vite@5.1.5)
       '@vitest/browser':
-        specifier: ^1.2.2
-        version: 1.2.2(vitest@1.2.2)(webdriverio@8.29.3)
+        specifier: ^1.3.1
+        version: 1.3.1(vitest@1.3.1)(webdriverio@8.33.0)
       '@vitest/utils':
-        specifier: ^1.2.2
-        version: 1.2.2
+        specifier: ^1.3.1
+        version: 1.3.1
       '@vuepress/client':
         specifier: 2.0.0-rc.0
         version: 2.0.0-rc.0(typescript@5.2.2)
       chai:
-        specifier: ^4.3.4
-        version: 4.3.7
+        specifier: ^4.4.1
+        version: 4.4.1
       chai-as-promised:
         specifier: ^7.1.1
-        version: 7.1.1(chai@4.3.7)
+        version: 7.1.1(chai@4.4.1)
       chai-dom:
         specifier: ^1.11.0
-        version: 1.11.0(chai@4.3.7)(mocha@10.2.0)
+        version: 1.11.0(chai@4.4.1)(mocha@10.2.0)
       chalk:
         specifier: ^4.1.0
         version: 4.1.2
@@ -263,6 +263,9 @@ importers:
       lodash.set:
         specifier: ^4.3.2
         version: 4.3.2
+      loupe:
+        specifier: 2.3.7
+        version: 2.3.7
       mocha:
         specifier: ^10.2.0
         version: 10.2.0
@@ -330,29 +333,29 @@ importers:
         specifier: ^8.3.2
         version: 8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vite-plugin-inspect:
         specifier: ^0.8.1
-        version: 0.8.3(rollup@3.23.0)(vite@5.1.3)
+        version: 0.8.3(rollup@3.23.0)(vite@5.1.5)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.4.1(rollup@3.23.0)(vite@5.1.3)
+        version: 1.4.1(rollup@3.23.0)(vite@5.1.5)
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.3.0(vite@5.1.3)
+        version: 3.3.0(vite@5.1.5)
       vite-tsconfig-paths:
         specifier: ^4.3.1
-        version: 4.3.1(typescript@5.2.2)(vite@5.1.3)
+        version: 4.3.1(typescript@5.2.2)(vite@5.1.5)
       vitest:
-        specifier: ^1.2.2
-        version: 1.2.2(@types/node@18.11.9)(@vitest/browser@1.2.2)(@vitest/ui@1.2.2)(happy-dom@13.3.4)(jsdom@20.0.1)
+        specifier: ^1.3.1
+        version: 1.3.1(@types/node@18.11.9)(@vitest/browser@1.3.1)(@vitest/ui@1.3.1)(happy-dom@13.3.4)(jsdom@20.0.1)
       wait-for-expect:
         specifier: ^3.0.2
         version: 3.0.2
       webdriverio:
-        specifier: ^8.29.3
-        version: 8.29.3(typescript@5.2.2)
+        specifier: ^8.32.4
+        version: 8.33.0(typescript@5.2.2)
 
   docs:
     devDependencies:
@@ -427,7 +430,7 @@ importers:
         version: 18.0.6
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.1.3)
+        version: 4.2.1(vite@5.1.5)
       '@vuepress/bundler-vite':
         specifier: 2.0.0-rc.0
         version: 2.0.0-rc.0(@types/node@18.11.9)(ts-node@10.9.1)(typescript@5.2.2)
@@ -480,14 +483,14 @@ importers:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       typedoc:
-        specifier: ^0.23.22
-        version: 0.23.28(typescript@5.2.2)
+        specifier: ^0.25.10
+        version: 0.25.11(typescript@5.2.2)
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vue:
         specifier: ^3.3.12
         version: 3.4.15(typescript@5.2.2)
@@ -497,9 +500,6 @@ importers:
       vuepress:
         specifier: 2.0.0-rc.0
         version: 2.0.0-rc.0(@types/node@18.11.9)(@vuepress/client@2.0.0-rc.0)(ts-node@10.9.1)(typescript@5.2.2)(vue@3.4.15)
-      vuepress-plugin-check-md:
-        specifier: ^0.0.3
-        version: 0.0.3
       vuepress-theme-hope:
         specifier: 2.0.0-rc.5
         version: 2.0.0-rc.5(markdown-it@13.0.2)(typescript@5.2.2)(vuepress@2.0.0-rc.0)
@@ -719,22 +719,22 @@ importers:
         version: 18.0.6
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.1.3)
+        version: 4.2.1(vite@5.1.5)
       robotjs:
         specifier: ^0.6.0
         version: 0.6.0
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vite-plugin-pwa:
-        specifier: ^0.17.5
-        version: 0.17.5(vite@5.1.3)(workbox-window@7.0.0)
+        specifier: ^0.18.2
+        version: 0.18.2(vite@5.1.5)(workbox-window@7.0.0)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.4.1(rollup@3.23.0)(vite@5.1.3)
+        version: 1.4.1(rollup@3.23.0)(vite@5.1.5)
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.3.0(vite@5.1.3)
+        version: 3.3.0(vite@5.1.5)
       workbox-window:
         specifier: ^7.0.0
         version: 7.0.0
@@ -748,8 +748,8 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vite-plugin-web-extension:
         specifier: ^4.1.1
         version: 4.1.1(@types/node@18.11.9)
@@ -840,28 +840,31 @@ importers:
         version: 18.0.6
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.1.3)
+        version: 4.2.1(vite@5.1.5)
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vite-plugin-pwa:
-        specifier: ^0.17.5
-        version: 0.17.5(vite@5.1.3)(workbox-window@7.0.0)
+        specifier: ^0.18.2
+        version: 0.18.2(vite@5.1.5)(workbox-window@7.0.0)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.4.1(rollup@3.23.0)(vite@5.1.3)
+        version: 1.4.1(rollup@3.23.0)(vite@5.1.5)
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.3.0(vite@5.1.3)
+        version: 3.3.0(vite@5.1.5)
       workbox-window:
         specifier: ^7.0.0
         version: 7.0.0
 
   packages/apps/plugins/plugin-chain:
     dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
@@ -878,8 +881,11 @@ importers:
         specifier: ^6.4.0
         version: 6.4.0
       '@codemirror/view':
-        specifier: ^6.23.0
-        version: 6.23.1
+        specifier: ^6.25.0
+        version: 6.25.1
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/chain':
         specifier: workspace:*
         version: link:../../../core/chain
@@ -895,16 +901,19 @@ importers:
       '@dxos/text-model':
         specifier: workspace:*
         version: link:../../../core/echo/text-model
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
     devDependencies:
-      '@braneframe/plugin-space':
+      '@braneframe/plugin-client':
         specifier: workspace:*
-        version: link:../plugin-space
+        version: link:../plugin-client
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -939,14 +948,20 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-chess:
     dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/chess-app':
         specifier: workspace:*
         version: link:../../../experimental/chess-app
@@ -956,16 +971,19 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       chess.js:
         specifier: 1.0.0-alpha.0
         version: 1.0.0-alpha.0
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)
     devDependencies:
-      '@braneframe/plugin-space':
+      '@braneframe/plugin-client':
         specifier: workspace:*
-        version: link:../plugin-space
+        version: link:../plugin-client
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -994,8 +1012,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-client:
     dependencies:
@@ -1043,8 +1061,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-debug:
     dependencies:
@@ -1185,14 +1203,20 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-explorer:
     dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
@@ -1202,12 +1226,18 @@ importers:
       '@dxos/gem-spore':
         specifier: workspace:*
         version: link:../../../experimental/gem-spore
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
       '@observablehq/plot':
         specifier: ^0.6.11
         version: 0.6.11
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       d3:
         specifier: ^7.8.5
         version: 7.8.5
@@ -1224,12 +1254,12 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0
     devDependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@braneframe/plugin-search':
         specifier: workspace:*
         version: link:../plugin-search
-      '@braneframe/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -1279,8 +1309,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-files:
     dependencies:
@@ -1340,8 +1370,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-github:
     dependencies:
@@ -1351,6 +1381,9 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
@@ -1363,6 +1396,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
       '@preact/signals-core':
         specifier: ^1.5.1
         version: 1.5.1
@@ -1382,6 +1418,9 @@ importers:
         specifier: ^2.0.14
         version: 2.0.14
     devDependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -1428,8 +1467,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-gpt:
     dependencies:
@@ -1442,6 +1481,9 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
@@ -1451,12 +1493,18 @@ importers:
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -1464,6 +1512,9 @@ importers:
         specifier: ^4.26.1
         version: 4.26.1
     devDependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -1498,8 +1549,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-graph:
     dependencies:
@@ -1532,20 +1583,29 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-grid:
     dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@dnd-kit/core':
         specifier: ^6.0.5
         version: 6.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -1556,9 +1616,9 @@ importers:
         specifier: ^7.1.2
         version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
-      '@braneframe/plugin-space':
+      '@braneframe/plugin-client':
         specifier: workspace:*
-        version: link:../plugin-space
+        version: link:../plugin-client
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -1608,8 +1668,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-help:
     dependencies:
@@ -1675,14 +1735,20 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-inbox:
     dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../../sdk/app-graph
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../../common/display-name
@@ -1692,6 +1758,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       date-fns:
         specifier: ^3.3.1
         version: 3.3.1
@@ -1699,9 +1768,9 @@ importers:
         specifier: ^4.4.2
         version: 4.4.2
     devDependencies:
-      '@braneframe/plugin-space':
+      '@braneframe/plugin-client':
         specifier: workspace:*
-        version: link:../plugin-space
+        version: link:../plugin-client
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -1742,8 +1811,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-ipfs:
     dependencies:
@@ -1809,11 +1878,14 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-kanban:
     dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@dnd-kit/core':
         specifier: ^6.0.5
         version: 6.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -1826,6 +1898,9 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.0
         version: 3.2.0(react@18.2.0)
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -1838,10 +1913,13 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
     devDependencies:
-      '@braneframe/plugin-space':
+      '@braneframe/plugin-client':
         specifier: workspace:*
-        version: link:../plugin-space
+        version: link:../plugin-client
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -1876,8 +1954,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-layout:
     dependencies:
@@ -1896,6 +1974,9 @@ importers:
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
+      '@dxos/react-ui-deck':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-deck
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
@@ -1943,20 +2024,29 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-map:
     dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)
       leaflet:
         specifier: ^1.9.3
         version: 1.9.3
@@ -1967,9 +2057,9 @@ importers:
         specifier: ^7.1.2
         version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
-      '@braneframe/plugin-space':
+      '@braneframe/plugin-client':
         specifier: workspace:*
-        version: link:../plugin-space
+        version: link:../plugin-client
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
@@ -2004,8 +2094,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-markdown:
     dependencies:
@@ -2095,8 +2185,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-mermaid:
     dependencies:
@@ -2110,8 +2200,8 @@ importers:
         specifier: ^6.4.0
         version: 6.4.0
       '@codemirror/view':
-        specifier: ^6.23.0
-        version: 6.23.1
+        specifier: ^6.25.0
+        version: 6.25.1
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
@@ -2159,8 +2249,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-metadata:
     dependencies:
@@ -2181,8 +2271,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-native:
     dependencies:
@@ -2203,8 +2293,8 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/app-framework
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-navtree:
     dependencies:
@@ -2235,6 +2325,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-deck':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-deck
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
@@ -2256,9 +2349,6 @@ importers:
       deepsignal:
         specifier: ^1.5.0
         version: 1.5.0(@preact/signals-core@1.5.1)
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
     devDependencies:
       '@braneframe/plugin-theme':
         specifier: workspace:*
@@ -2281,9 +2371,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -2297,8 +2384,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-observability:
     dependencies:
@@ -2364,11 +2451,14 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-outliner:
     dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
@@ -2379,8 +2469,11 @@ importers:
         specifier: ^6.4.0
         version: 6.4.0
       '@codemirror/view':
-        specifier: ^6.23.0
-        version: 6.23.1
+        specifier: ^6.25.0
+        version: 6.25.1
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -2390,13 +2483,19 @@ importers:
       '@dxos/text-model':
         specifier: workspace:*
         version: link:../../../core/echo/text-model
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
     devDependencies:
-      '@braneframe/plugin-space':
+      '@braneframe/plugin-client':
         specifier: workspace:*
-        version: link:../plugin-space
+        version: link:../plugin-client
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -2426,7 +2525,7 @@ importers:
         version: 18.0.6
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -2434,17 +2533,23 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-presenter:
     dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)
       hastscript:
         specifier: ^7.1.0
         version: 7.1.0
@@ -2470,6 +2575,9 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3
     devDependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@braneframe/plugin-layout':
         specifier: workspace:*
         version: link:../plugin-layout
@@ -2516,8 +2624,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-pwa:
     dependencies:
@@ -2556,11 +2664,11 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vite-plugin-pwa:
-        specifier: ^0.17.5
-        version: 0.17.5(vite@5.1.3)(workbox-window@7.0.0)
+        specifier: ^0.18.2
+        version: 0.18.2(vite@5.1.5)(workbox-window@7.0.0)
       workbox-window:
         specifier: ^7.0.0
         version: 7.0.0
@@ -2611,14 +2719,17 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-script:
     dependencies:
       '@braneframe/plugin-explorer':
         specifier: workspace:*
         version: link:../plugin-explorer
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
@@ -2627,7 +2738,7 @@ importers:
         version: link:../../types
       '@codemirror/autocomplete':
         specifier: ^6.12.0
-        version: 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+        version: 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.25.1)(@lezer/common@1.2.1)
       '@codemirror/lang-javascript':
         specifier: ^6.2.2
         version: 6.2.2
@@ -2638,8 +2749,11 @@ importers:
         specifier: ^6.4.0
         version: 6.4.0
       '@codemirror/view':
-        specifier: ^6.23.0
-        version: 6.23.1
+        specifier: ^6.25.0
+        version: 6.25.1
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
@@ -2661,6 +2775,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../../core/protocols
@@ -2682,9 +2799,15 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@lezer/common':
+        specifier: ^1.2.1
+        version: 1.2.1
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       codemirror:
         specifier: ^6.0.1
-        version: 6.0.1
+        version: 6.0.1(@lezer/common@1.2.1)
       esbuild-wasm:
         specifier: ^0.16.14
         version: 0.16.17
@@ -2692,15 +2815,15 @@ importers:
         specifier: ^4.4.2
         version: 4.4.2
     devDependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
       '@braneframe/plugin-layout':
         specifier: workspace:*
         version: link:../plugin-layout
-      '@braneframe/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
@@ -2744,8 +2867,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-search:
     dependencies:
@@ -2799,8 +2922,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-settings:
     dependencies:
@@ -2830,11 +2953,14 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-sketch:
     dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -2847,6 +2973,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       '@tldraw/assets':
         specifier: 2.0.0-alpha.14
         version: 2.0.0-alpha.14
@@ -2875,9 +3004,9 @@ importers:
         specifier: ^13.6.10
         version: 13.6.10
     devDependencies:
-      '@braneframe/plugin-space':
+      '@braneframe/plugin-client':
         specifier: workspace:*
-        version: link:../plugin-space
+        version: link:../plugin-client
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
@@ -2915,8 +3044,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-space:
     dependencies:
@@ -2959,6 +3088,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-deck':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-deck
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
@@ -3045,14 +3177,20 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-stack:
     dependencies:
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
@@ -3068,9 +3206,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)
       node-fetch:
         specifier: ^2.6.0
         version: 2.6.7
@@ -3084,9 +3225,9 @@ importers:
       '@babel/core':
         specifier: ^7.18.13
         version: 7.23.9
-      '@braneframe/plugin-space':
+      '@braneframe/plugin-client':
         specifier: workspace:*
-        version: link:../plugin-space
+        version: link:../plugin-client
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -3118,14 +3259,20 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-table:
     dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
@@ -3138,16 +3285,19 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
+        version: 1.5.0(@preact/signals-core@1.5.1)
     devDependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@braneframe/plugin-search':
         specifier: workspace:*
         version: link:../plugin-search
-      '@braneframe/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -3182,27 +3332,33 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-template:
     dependencies:
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../../sdk/react-client
-      deepsignal:
-        specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-    devDependencies:
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
+      deepsignal:
+        specifier: ^1.5.0
+        version: 1.5.0(@preact/signals-core@1.5.1)
+    devDependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -3218,9 +3374,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -3234,8 +3387,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-theme:
     dependencies:
@@ -3271,14 +3424,17 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-thread:
     dependencies:
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@codemirror/language':
         specifier: ^6.10.1
         version: 6.10.1
@@ -3286,8 +3442,8 @@ importers:
         specifier: ^6.4.0
         version: 6.4.0
       '@codemirror/view':
-        specifier: ^6.23.0
-        version: 6.23.1
+        specifier: ^6.25.0
+        version: 6.25.1
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -3300,9 +3456,15 @@ importers:
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-deck':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-deck
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
@@ -3328,12 +3490,12 @@ importers:
         specifier: ^4.4.2
         version: 4.4.2
     devDependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@braneframe/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -3374,54 +3536,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
-
-  packages/apps/plugins/plugin-undo:
-    dependencies:
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../../sdk/react-client
-      deepsignal:
-        specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-react@1.3.8)
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-    devDependencies:
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../../sdk/app-framework
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-theme
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../../ui/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
-      '@types/react':
-        specifier: ^18.0.21
-        version: 18.0.21
-      '@types/react-dom':
-        specifier: ^18.0.6
-        version: 18.0.6
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-wildcard:
     dependencies:
@@ -3466,8 +3582,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/apps/tasks:
     dependencies:
@@ -3513,7 +3629,7 @@ importers:
         version: 18.0.6
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.1.3)
+        version: 4.2.1(vite@5.1.5)
       autoprefixer:
         specifier: ^10.4.12
         version: 10.4.13(postcss@8.4.24)
@@ -3527,14 +3643,14 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.4.1(rollup@3.23.0)(vite@5.1.3)
+        version: 1.4.1(rollup@3.23.0)(vite@5.1.5)
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.3.0(vite@5.1.3)
+        version: 3.3.0(vite@5.1.5)
       workbox-window:
         specifier: ^7.0.0
         version: 7.0.0
@@ -3556,9 +3672,6 @@ importers:
       sanitize-filename:
         specifier: 1.6.3
         version: 1.6.3
-      types-package-json:
-        specifier: ^2.0.39
-        version: 2.0.39
     devDependencies:
       '@types/lodash.merge':
         specifier: ^4.6.6
@@ -3572,6 +3685,9 @@ importers:
       ts-node:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+      types-package-json:
+        specifier: ^2.0.39
+        version: 2.0.39
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
@@ -3603,6 +3719,49 @@ importers:
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
+
+  packages/apps/templates/plugin-template:
+    dependencies:
+      '@dxos/plate':
+        specifier: workspace:*
+        version: link:../../../common/plate
+      chalk:
+        specifier: ^4.1.0
+        version: 4.1.2
+      lodash.merge:
+        specifier: ^4.6.2
+        version: 4.6.2
+      sanitize-filename:
+        specifier: 1.6.3
+        version: 1.6.3
+    devDependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../../sdk/config
+      '@dxos/shell':
+        specifier: workspace:*
+        version: link:../../../sdk/shell
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/lodash.merge':
+        specifier: ^4.6.6
+        version: 4.6.7
+      tmp-promise:
+        specifier: ^3.0.3
+        version: 3.0.3
+      ts-node:
+        specifier: 10.9.1
+        version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.3.3)
+      types-package-json:
+        specifier: ^2.0.39
+        version: 2.0.39
+      typescript:
+        specifier: ^5.2.2
+        version: 5.3.3
 
   packages/apps/templates/tasks-template:
     dependencies:
@@ -3694,16 +3853,16 @@ importers:
         version: 18.0.6
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.1.3)
+        version: 4.2.1(vite@5.1.5)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.4.1(rollup@3.23.0)(vite@5.1.3)
+        version: 1.4.1(rollup@3.23.0)(vite@5.1.5)
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.3.0(vite@5.1.3)
+        version: 3.3.0(vite@5.1.5)
 
   packages/apps/types:
     dependencies:
@@ -3729,6 +3888,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../log
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
@@ -5057,6 +5219,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
+      '@dxos/random-access-storage':
+        specifier: workspace:*
+        version: link:../../../common/random-access-storage
       '@dxos/text-model':
         specifier: workspace:*
         version: link:../text-model
@@ -5069,6 +5234,9 @@ importers:
       '@effect/schema':
         specifier: ^0.62.1
         version: 0.62.6(effect@2.3.5)(fast-check@3.15.1)
+      '@orama/orama':
+        specifier: ^2.0.8
+        version: 2.0.8
       effect:
         specifier: ^2.3.1
         version: 2.3.5
@@ -5078,13 +5246,13 @@ importers:
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
+      lodash.isequal:
+        specifier: ^4.5.0
+        version: 4.5.0
     devDependencies:
       '@dxos/echo-typegen':
         specifier: workspace:*
         version: link:../echo-typegen
-      '@orama/orama':
-        specifier: ^2.0.8
-        version: 2.0.8
       '@preact/signals-core':
         specifier: ^1.5.1
         version: 1.5.1
@@ -5094,6 +5262,9 @@ importers:
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
+      '@types/lodash.isequal':
+        specifier: ^4.5.0
+        version: 4.5.6
       fast-check:
         specifier: ^3.15.1
         version: 3.15.1
@@ -6345,7 +6516,7 @@ importers:
         version: 1.11.11
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.1.3)
+        version: 4.2.1(vite@5.1.5)
       postcss:
         specifier: ^8.4.21
         version: 8.4.24
@@ -6356,20 +6527,20 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vite-plugin-fonts:
         specifier: ^0.7.0
-        version: 0.7.0(vite@5.1.3)
+        version: 0.7.0(vite@5.1.5)
       vite-plugin-pwa:
-        specifier: ^0.17.5
-        version: 0.17.5(vite@5.1.3)(workbox-window@7.0.0)
+        specifier: ^0.18.2
+        version: 0.18.2(vite@5.1.5)(workbox-window@7.0.0)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.4.1(rollup@3.23.0)(vite@5.1.3)
+        version: 1.4.1(rollup@3.23.0)(vite@5.1.5)
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.3.0(vite@5.1.3)
+        version: 3.3.0(vite@5.1.5)
       workbox-window:
         specifier: ^7.0.0
         version: 7.0.0
@@ -6442,7 +6613,7 @@ importers:
         version: 7.21.3
       '@crxjs/vite-plugin':
         specifier: 2.0.0-beta.23
-        version: 2.0.0-beta.23(vite@5.1.3)
+        version: 2.0.0-beta.23(vite@5.1.5)
       '@dxos/esbuild-plugins':
         specifier: workspace:*
         version: link:../../common/esbuild-plugins
@@ -6466,7 +6637,7 @@ importers:
         version: 0.10.0
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.1.3)
+        version: 4.2.1(vite@5.1.5)
       body-parser:
         specifier: 1.19.0
         version: 1.19.0
@@ -6498,17 +6669,17 @@ importers:
         specifier: ~3.4.1
         version: 3.4.1(ts-node@10.9.1)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vite-plugin-fonts:
         specifier: ^0.7.0
-        version: 0.7.0(vite@5.1.3)
+        version: 0.7.0(vite@5.1.5)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.4.1(rollup@3.23.0)(vite@5.1.3)
+        version: 1.4.1(rollup@3.23.0)(vite@5.1.5)
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.3.0(vite@5.1.3)
+        version: 3.3.0(vite@5.1.5)
 
   packages/devtools/initializers/create:
     dependencies:
@@ -6525,6 +6696,22 @@ importers:
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
+
+  packages/devtools/initializers/create-app-plugin:
+    dependencies:
+      '@dxos/plugin-template':
+        specifier: workspace:*
+        version: link:../../../apps/templates/plugin-template
+      minimist:
+        specifier: ^1.2.7
+        version: 1.2.8
+    devDependencies:
+      '@types/minimist':
+        specifier: ^1.2.2
+        version: 1.2.2
+      typescript:
+        specifier: ^5.2.2
+        version: 5.3.3
 
   packages/devtools/initializers/create-bare:
     dependencies:
@@ -6607,8 +6794,8 @@ importers:
         specifier: ^18.0.6
         version: 18.0.6
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/experimental/chess-app:
     dependencies:
@@ -6659,8 +6846,8 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/experimental/discord-bot:
     dependencies:
@@ -7096,7 +7283,7 @@ importers:
         version: 1.1.1
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.1.3)
+        version: 4.2.1(vite@5.1.5)
       postcss:
         specifier: ^8.4.21
         version: 8.4.24
@@ -7110,17 +7297,17 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vite-plugin-fonts:
         specifier: ^0.7.0
-        version: 0.7.0(vite@5.1.3)
+        version: 0.7.0(vite@5.1.5)
       vite-plugin-inspect:
         specifier: ^0.8.1
-        version: 0.8.3(rollup@3.23.0)(vite@5.1.3)
+        version: 0.8.3(rollup@3.23.0)(vite@5.1.5)
       vite-plugin-pwa:
-        specifier: ^0.17.5
-        version: 0.17.5(vite@5.1.3)(workbox-window@7.0.0)
+        specifier: ^0.18.2
+        version: 0.18.2(vite@5.1.5)(workbox-window@7.0.0)
       workbox-window:
         specifier: ^7.0.0
         version: 7.0.0
@@ -7545,9 +7732,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/keyboard':
-        specifier: workspace:*
-        version: link:../../common/keyboard
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -7557,12 +7741,6 @@ importers:
       deepsignal:
         specifier: ^1.5.0
         version: 1.5.0(@preact/signals-core@1.5.1)
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-      lodash.set:
-        specifier: ^4.3.2
-        version: 4.3.2
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -7582,12 +7760,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
-      '@types/lodash.set':
-        specifier: ^4.3.7
-        version: 4.3.7
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -7601,8 +7773,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/sdk/client:
     dependencies:
@@ -7700,6 +7872,9 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../apps/types
+      '@dxos/automerge':
+        specifier: workspace:*
+        version: link:../../core/echo/automerge
       '@dxos/random-access-storage':
         specifier: workspace:*
         version: link:../../common/random-access-storage
@@ -7984,7 +8159,7 @@ importers:
         version: 18.0.6
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.1.3)
+        version: 4.2.1(vite@5.1.5)
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -7998,17 +8173,17 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.4.1(rollup@3.23.0)(vite@5.1.3)
+        version: 1.4.1(rollup@3.23.0)(vite@5.1.5)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.3.0(vite@5.1.3)
+        version: 3.3.0(vite@5.1.5)
 
   packages/sdk/migrations:
     dependencies:
@@ -8231,6 +8406,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@emoji-mart/data':
+        specifier: ^1.1.2
+        version: 1.1.2
+      '@emoji-mart/react':
+        specifier: ^1.1.1
+        version: 1.1.1(emoji-mart@5.5.2)(react@18.2.0)
       '@fluentui/react-tabster':
         specifier: ^9.19.0
         version: 9.19.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -8252,9 +8433,9 @@ importers:
       '@xstate/react':
         specifier: ^3.2.1
         version: 3.2.1(@types/react@18.0.21)(react@18.2.0)(xstate@4.37.1)
-      lodash.toarray:
-        specifier: ^4.4.0
-        version: 4.4.0
+      emoji-mart:
+        specifier: ^5.5.2
+        version: 5.5.2
       react-qr-rounded:
         specifier: ^1.0.0
         version: 1.0.0(react@18.2.0)
@@ -8280,9 +8461,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/lodash.toarray':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -8291,7 +8469,7 @@ importers:
         version: 18.0.6
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.1.3)
+        version: 4.2.1(vite@5.1.5)
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -8299,8 +8477,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
@@ -8448,6 +8626,9 @@ importers:
 
   packages/ui/react-ui:
     dependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../primitives/react-hooks
@@ -8532,9 +8713,6 @@ importers:
       i18next:
         specifier: ^21.10.0
         version: 21.10.0
-      jdenticon:
-        specifier: ^3.2.0
-        version: 3.2.0
       keyborg:
         specifier: ^2.5.0
         version: 2.5.0
@@ -8557,6 +8735,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -8573,8 +8754,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
@@ -8625,8 +8806,69 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
+      vite-plugin-turbosnap:
+        specifier: ^1.0.2
+        version: 1.0.2
+
+  packages/ui/react-ui-deck:
+    dependencies:
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../common/keyboard
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../react-ui-theme
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@radix-ui/react-context':
+        specifier: ^1.0.0
+        version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-primitive':
+        specifier: ^1.0.2
+        version: 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+    devDependencies:
+      '@dnd-kit/core':
+        specifier: ^6.0.5
+        version: 6.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@dnd-kit/sortable':
+        specifier: ^7.0.1
+        version: 7.0.1(@dnd-kit/core@6.0.5)(react@18.2.0)
+      '@dnd-kit/utilities':
+        specifier: ^3.2.0
+        version: 3.2.0(react@18.2.0)
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../sdk/app-graph
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
@@ -8635,7 +8877,7 @@ importers:
     dependencies:
       '@codemirror/autocomplete':
         specifier: ^6.12.0
-        version: 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+        version: 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.25.1)(@lezer/common@1.2.1)
       '@codemirror/commands':
         specifier: ^6.3.3
         version: 6.3.3
@@ -8650,7 +8892,7 @@ importers:
         version: 6.10.1
       '@codemirror/language-data':
         specifier: ^6.3.1
-        version: 6.3.1(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+        version: 6.3.1(@codemirror/state@6.4.0)(@codemirror/view@6.25.1)(@lezer/common@1.2.1)
       '@codemirror/lint':
         specifier: ^6.4.2
         version: 6.4.2
@@ -8664,8 +8906,8 @@ importers:
         specifier: ^6.1.2
         version: 6.1.2
       '@codemirror/view':
-        specifier: ^6.23.0
-        version: 6.23.1
+        specifier: ^6.25.0
+        version: 6.25.1
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -8725,10 +8967,10 @@ importers:
         version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@replit/codemirror-vim':
         specifier: ^6.0.14
-        version: 6.0.14(@codemirror/commands@6.3.3)(@codemirror/language@6.10.1)(@codemirror/search@6.5.5)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+        version: 6.0.14(@codemirror/commands@6.3.3)(@codemirror/language@6.10.1)(@codemirror/search@6.5.5)(@codemirror/state@6.4.0)(@codemirror/view@6.25.1)
       codemirror:
         specifier: ^6.0.1
-        version: 6.0.1
+        version: 6.0.1(@lezer/common@1.2.1)
       lib0:
         specifier: ^0.2.65
         version: 0.2.78
@@ -8809,11 +9051,11 @@ importers:
         specifier: ^17.0.2
         version: 17.0.9
       '@vitest/browser':
-        specifier: ^1.2.2
-        version: 1.2.2(vitest@1.2.2)(webdriverio@8.29.3)
+        specifier: ^1.3.1
+        version: 1.3.1(vitest@1.3.1)(webdriverio@8.33.0)
       '@vitest/ui':
-        specifier: ^1.2.2
-        version: 1.2.2(vitest@1.2.2)
+        specifier: ^1.3.1
+        version: 1.3.1(vitest@1.3.1)
       deepsignal:
         specifier: ^1.5.0
         version: 1.5.0(@preact/signals-react@1.3.8)
@@ -8833,17 +9075,17 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.4.1(rollup@3.23.0)(vite@5.1.3)
+        version: 1.4.1(rollup@3.23.0)(vite@5.1.5)
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.3.0(vite@5.1.3)
+        version: 3.3.0(vite@5.1.5)
       vitest:
-        specifier: ^1.2.2
-        version: 1.2.2(@types/node@18.11.9)(@vitest/browser@1.2.2)(@vitest/ui@1.2.2)(happy-dom@13.3.4)(jsdom@20.0.1)
+        specifier: ^1.3.1
+        version: 1.3.1(@types/node@18.11.9)(@vitest/browser@1.3.1)(@vitest/ui@1.3.1)(happy-dom@13.3.4)(jsdom@20.0.1)
 
   packages/ui/react-ui-mosaic:
     dependencies:
@@ -8868,6 +9110,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
@@ -8948,8 +9193,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
@@ -8977,6 +9222,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@preact/signals-core':
+        specifier: ^1.5.1
+        version: 1.5.1
+      deepsignal:
+        specifier: ^1.5.0
+        version: 1.5.0(@preact/signals-core@1.5.1)
     devDependencies:
       '@dnd-kit/core':
         specifier: ^6.0.5
@@ -8993,12 +9244,18 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
       '@types/react-dom':
         specifier: ^18.0.6
         version: 18.0.6
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -9006,8 +9263,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
@@ -9052,8 +9309,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
@@ -9104,8 +9361,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
@@ -9121,6 +9378,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
@@ -9180,8 +9440,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
@@ -9247,8 +9507,8 @@ importers:
         specifier: ^0.19.6
         version: 0.19.6
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
 
   packages/ui/react-ui-thread:
     dependencies:
@@ -9305,8 +9565,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
@@ -9336,6 +9596,10 @@ importers:
         version: 18.2.0(react@18.2.0)
 
   tools/apidoc:
+    dependencies:
+      chalk:
+        specifier: ^4.1.0
+        version: 4.1.2
     devDependencies:
       '@dxos/plate':
         specifier: workspace:*
@@ -9386,8 +9650,8 @@ importers:
         specifier: ^11.0.0
         version: 11.0.0
       typedoc:
-        specifier: ^0.23.22
-        version: 0.23.28(typescript@5.2.2)
+        specifier: ^0.25.10
+        version: 0.25.11(typescript@5.2.2)
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
@@ -9780,7 +10044,7 @@ importers:
         version: 8.0.0-alpha.11(react@18.2.0)
       '@storybook/builder-vite':
         specifier: 8.0.0-alpha.11
-        version: 8.0.0-alpha.11(typescript@5.2.2)(vite@5.1.3)
+        version: 8.0.0-alpha.11(typescript@5.2.2)(vite@5.1.5)
       '@storybook/core-server':
         specifier: 8.0.0-alpha.11
         version: 8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)
@@ -9789,7 +10053,7 @@ importers:
         version: 8.0.0-alpha.11
       '@storybook/html-vite':
         specifier: 8.0.0-alpha.11
-        version: 8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)(typescript@5.2.2)(vite@5.1.3)
+        version: 8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)(typescript@5.2.2)(vite@5.1.5)
       '@storybook/mdx2-csf':
         specifier: ^1.1.0
         version: 1.1.0
@@ -9798,7 +10062,7 @@ importers:
         version: 8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)(typescript@5.2.2)
       '@storybook/react-vite':
         specifier: 8.0.0-alpha.11
-        version: 8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)(rollup@3.23.0)(typescript@5.2.2)(vite@5.1.3)
+        version: 8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)(rollup@3.23.0)(typescript@5.2.2)(vite@5.1.5)
       '@types/lodash.flatten':
         specifier: ^4.4.6
         version: 4.4.7
@@ -9810,7 +10074,7 @@ importers:
         version: 18.0.6
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.1.3)
+        version: 4.2.1(vite@5.1.5)
       chromatic:
         specifier: ^10.1.0
         version: 10.1.0
@@ -9824,8 +10088,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.1.3
-        version: 5.1.3(@types/node@18.11.9)
+        specifier: ^5.1.5
+        version: 5.1.5(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
@@ -10333,21 +10597,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /@babel/helper-define-polyfill-provider@0.4.2(@babel/core@7.23.9):
-    resolution: {integrity: sha512-k0qnnOqHn5dK9pZpfD5XXZ9SojAITdCKRn2Lp6rnDGzIbaP0rHyMPk/4wsSxVBVz4RfN0q6VpXWP2pDGIoQ7hw==}
-    peerDependencies:
-      '@babel/core': ^7.4.0 || ^8.0.0-0 <8.0.0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-compilation-targets': 7.23.6
-      '@babel/helper-plugin-utils': 7.22.5
-      debug: 4.3.4(supports-color@8.1.1)
-      lodash.debounce: 4.0.8
-      resolve: 1.22.5
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
   /@babel/helper-define-polyfill-provider@0.5.0(@babel/core@7.23.9):
     resolution: {integrity: sha512-NovQquuQLAQ5HuyjCz7WQP9MjRj7dx++yspwiyUiGl9ZyadHRSql1HZh5ogRd8W8w6YM6EQ/NTB8rgjLt5W65Q==}
     peerDependencies:
@@ -10530,18 +10779,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /@babel/helper-remap-async-to-generator@7.22.17(@babel/core@7.23.9):
-    resolution: {integrity: sha512-bxH77R5gjH3Nkde6/LuncQoLaP16THYPscurp1S8z7S9ZgezCyV3G8Hc+TZiCmY8pz4fp8CvKSgtJMW0FkLAxA==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-annotate-as-pure': 7.22.5
-      '@babel/helper-environment-visitor': 7.22.20
-      '@babel/helper-wrap-function': 7.22.17
-    dev: true
-
   /@babel/helper-remap-async-to-generator@7.22.20(@babel/core@7.23.9):
     resolution: {integrity: sha512-pBGyV4uBqOns+0UvhsTO8qgl8hO89PmiDYv+/COyp1aeMcmfrfruz+/nCMFiYyFF/Knn0yfrC85ZzNFjembFTw==}
     engines: {node: '>=6.9.0'}
@@ -10677,15 +10914,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /@babel/helper-wrap-function@7.22.17:
-    resolution: {integrity: sha512-nAhoheCMlrqU41tAojw9GpVEKDlTS8r3lzFmF0lP52LwblCPbuFSO7nGIZoIcoU5NIm1ABrna0cJExE4Ay6l2Q==}
-    engines: {node: '>=6.9.0'}
-    dependencies:
-      '@babel/helper-function-name': 7.23.0
-      '@babel/template': 7.23.9
-      '@babel/types': 7.23.9
-    dev: true
-
   /@babel/helper-wrap-function@7.22.20:
     resolution: {integrity: sha512-pms/UwkOpnQe/PDAEdV/d7dVCoBbB+R4FvYoHGZz+4VPcg7RtYy2KP7S2lbuWM6FCSgob5wshfGESbC/hzNXZw==}
     engines: {node: '>=6.9.0'}
@@ -10772,16 +11000,6 @@ packages:
       '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
 
-  /@babel/plugin-bugfix-safari-id-destructuring-collision-in-function-expression@7.22.15(@babel/core@7.23.9):
-    resolution: {integrity: sha512-FB9iYlz7rURmRJyXRKEnalYPPdn87H5no108cyuQQyMwlpJ2SJtpIUBI27kdTin956pz+LPypkPVPUTlxOmrsg==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
   /@babel/plugin-bugfix-safari-id-destructuring-collision-in-function-expression@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-iRkKcCqb7iGnq9+3G6rZ+Ciz5VywC4XNRHe57lKM+jOeYAoR0lVqdeeDRfh0tQcTfw/+vBhHn926FmQhLtlFLQ==}
     engines: {node: '>=6.9.0'}
@@ -10802,18 +11020,6 @@ packages:
       '@babel/helper-plugin-utils': 7.20.2
       '@babel/helper-skip-transparent-expression-wrappers': 7.20.0
       '@babel/plugin-proposal-optional-chaining': 7.18.9(@babel/core@7.21.3)
-
-  /@babel/plugin-bugfix-v8-spread-parameters-in-optional-chaining@7.22.15(@babel/core@7.23.9):
-    resolution: {integrity: sha512-Hyph9LseGvAeeXzikV88bczhsrLrIZqDPxO+sSmAunMPaGrBGhfMWzCPYTtiW9t+HzSE2wtV8e5cc5P6r1xMDQ==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.13.0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-      '@babel/helper-skip-transparent-expression-wrappers': 7.22.5
-      '@babel/plugin-transform-optional-chaining': 7.22.15(@babel/core@7.23.9)
-    dev: true
 
   /@babel/plugin-bugfix-v8-spread-parameters-in-optional-chaining@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-WwlxbfMNdVEpQjZmK5mhm7oSwD3dS6eU+Iwsi4Knl9wAletWem7kaRsGOG+8UEbRyqxY4SS5zvtfXwX+jMxUwQ==}
@@ -11199,28 +11405,8 @@ packages:
       '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
 
-  /@babel/plugin-syntax-import-assertions@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-rdV97N7KqsRzeNGoWUOK6yUsWarLjE5Su/Snk9IYPU9CwkWHs4t+rTGOvffTR8XGkJMTAdLfO0xVnXm8wugIJg==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
   /@babel/plugin-syntax-import-assertions@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-lPgDSU+SJLK3xmFDTV2ZRQAiM7UuUjGidwBywFavObCiZc1BeAAcMtHJKUya92hPHO+at63JJPLygilZard8jw==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
-  /@babel/plugin-syntax-import-attributes@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-KwvoWDeNKPETmozyFE0P2rOLqh39EoQHNjqizrI5B8Vt0ZNS7M56s7dAiAqbYfiAYOuIzIh96z3iR2ktgu3tEg==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
@@ -11472,16 +11658,6 @@ packages:
       '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
 
-  /@babel/plugin-transform-arrow-functions@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-26lTNXoVRdAnsaDXPpvCNUq+OVWEVC6bx7Vvz9rC53F2bagUWW4u4ii2+h8Fejfh7RYqPxn+libeFBBck9muEw==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
   /@babel/plugin-transform-arrow-functions@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-NzQcQrzaQPkaEwoTm4Mhyl8jI1huEL/WWIEvudjTCMJ9aBZNpsJbMASx7EQECtQQPS/DcnFpo0FIh3LvEO9cxQ==}
     engines: {node: '>=6.9.0'}
@@ -11490,19 +11666,6 @@ packages:
     dependencies:
       '@babel/core': 7.23.9
       '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
-  /@babel/plugin-transform-async-generator-functions@7.22.15(@babel/core@7.23.9):
-    resolution: {integrity: sha512-jBm1Es25Y+tVoTi5rfd5t1KLmL8ogLKpXszboWOTTtGFGz2RKnQe2yn7HbZ+kb/B8N0FVSGQo874NSlOU1T4+w==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-environment-visitor': 7.22.20
-      '@babel/helper-plugin-utils': 7.22.5
-      '@babel/helper-remap-async-to-generator': 7.22.17(@babel/core@7.23.9)
-      '@babel/plugin-syntax-async-generators': 7.8.4(@babel/core@7.23.9)
     dev: true
 
   /@babel/plugin-transform-async-generator-functions@7.23.9(@babel/core@7.23.9):
@@ -11531,18 +11694,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /@babel/plugin-transform-async-to-generator@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-b1A8D8ZzE/VhNDoV1MSJTnpKkCG5bJo+19R4o4oy03zM7ws8yEMK755j61Dc3EyvdysbqH5BOOTquJ7ZX9C6vQ==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-module-imports': 7.22.15
-      '@babel/helper-plugin-utils': 7.22.5
-      '@babel/helper-remap-async-to-generator': 7.22.17(@babel/core@7.23.9)
-    dev: true
-
   /@babel/plugin-transform-async-to-generator@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-A7LFsKi4U4fomjqXJlZg/u0ft/n8/7n7lpffUP/ZULx/DtV9SGlNKZolHH6PE8Xl1ngCc0M11OaeZptXVkfKSw==}
     engines: {node: '>=6.9.0'}
@@ -11564,16 +11715,6 @@ packages:
       '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
 
-  /@babel/plugin-transform-block-scoped-functions@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-tdXZ2UdknEKQWKJP1KMNmuF5Lx3MymtMN/pvA+p/VEkhK8jVcQ1fzSy8KM9qRYhAf2/lV33hoMPKI/xaI9sADA==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
   /@babel/plugin-transform-block-scoped-functions@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-vI+0sIaPIO6CNuM9Kk5VmXcMVRiOpDh7w2zZt9GXzmE/9KD70CUEVhvPR/etAeNK/FAEkhxQtXOzVF3EuRL41A==}
     engines: {node: '>=6.9.0'}
@@ -11592,16 +11733,6 @@ packages:
     dependencies:
       '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
-
-  /@babel/plugin-transform-block-scoping@7.22.15(@babel/core@7.23.9):
-    resolution: {integrity: sha512-G1czpdJBZCtngoK1sJgloLiOHUnkb/bLZwqVZD8kXmq0ZnVfTTWUcs9OWtp0mBtYJ+4LQY1fllqBkOIPhXmFmw==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
 
   /@babel/plugin-transform-block-scoping@7.23.4(@babel/core@7.23.9):
     resolution: {integrity: sha512-0QqbP6B6HOh7/8iNR4CQU2Th/bbRtBp4KS9vcaZd1fZ0wSh5Fyssg0UCIHwxh+ka+pNDREbVLQnHCMHKZfPwfw==}
@@ -11635,18 +11766,6 @@ packages:
       '@babel/helper-plugin-utils': 7.22.5
     dev: true
 
-  /@babel/plugin-transform-class-static-block@7.22.11(@babel/core@7.23.9):
-    resolution: {integrity: sha512-GMM8gGmqI7guS/llMFk1bJDkKfn3v3C4KHK9Yg1ey5qcHcOlKb0QvcMrgzvxo+T03/4szNh5lghY+fEC98Kq9g==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.12.0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-create-class-features-plugin': 7.22.15(@babel/core@7.23.9)
-      '@babel/helper-plugin-utils': 7.22.5
-      '@babel/plugin-syntax-class-static-block': 7.14.5(@babel/core@7.23.9)
-    dev: true
-
   /@babel/plugin-transform-class-static-block@7.23.4(@babel/core@7.23.9):
     resolution: {integrity: sha512-nsWu/1M+ggti1SOALj3hfx5FXzAY06fwPJsUZD4/A5e1bWi46VUIWtD+kOX6/IdhXGsXBWllLFDSnqSCdUNydQ==}
     engines: {node: '>=6.9.0'}
@@ -11678,24 +11797,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /@babel/plugin-transform-classes@7.22.15(@babel/core@7.23.9):
-    resolution: {integrity: sha512-VbbC3PGjBdE0wAWDdHM9G8Gm977pnYI0XpqMd6LrKISj8/DJXEsWqgRuTYaNE9Bv0JGhTZUzHDlMk18IpOuoqw==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-annotate-as-pure': 7.22.5
-      '@babel/helper-compilation-targets': 7.23.6
-      '@babel/helper-environment-visitor': 7.22.20
-      '@babel/helper-function-name': 7.23.0
-      '@babel/helper-optimise-call-expression': 7.22.5
-      '@babel/helper-plugin-utils': 7.22.5
-      '@babel/helper-replace-supers': 7.22.9(@babel/core@7.23.9)
-      '@babel/helper-split-export-declaration': 7.22.6
-      globals: 11.12.0
-    dev: true
-
   /@babel/plugin-transform-classes@7.23.8(@babel/core@7.23.9):
     resolution: {integrity: sha512-yAYslGsY1bX6Knmg46RjiCiNSwJKv2IUC8qOdYKqMMr0491SXFhcHqOdRDeCRohOOIzwN/90C6mQ9qAKgrP7dg==}
     engines: {node: '>=6.9.0'}
@@ -11722,17 +11823,6 @@ packages:
       '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
 
-  /@babel/plugin-transform-computed-properties@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-4GHWBgRf0krxPX+AaPtgBAlTgTeZmqDynokHOX7aqqAB4tHs3U2Y02zH6ETFdLZGcg9UQSD1WCmkVrE9ErHeOg==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-      '@babel/template': 7.23.9
-    dev: true
-
   /@babel/plugin-transform-computed-properties@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-dTj83UVTLw/+nbiHqQSFdwO9CbTtwq1DsDqm3CUEtDrZNET5rT5E6bIdTlOftDTDLMYxvxHNEYO4B9SLl8SLZw==}
     engines: {node: '>=6.9.0'}
@@ -11752,16 +11842,6 @@ packages:
     dependencies:
       '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
-
-  /@babel/plugin-transform-destructuring@7.22.15(@babel/core@7.23.9):
-    resolution: {integrity: sha512-HzG8sFl1ZVGTme74Nw+X01XsUTqERVQ6/RLHo3XjGRzm7XD6QTtfS3NJotVgCGy8BzkDqRjRBD8dAyJn5TuvSQ==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
 
   /@babel/plugin-transform-destructuring@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-n225npDqjDIr967cMScVKHXJs7rout1q+tt50inyBCPkyZ8KxeI6d+GIbSBTT/w/9WdlWDOej3V9HE5Lgk57gw==}
@@ -11783,17 +11863,6 @@ packages:
       '@babel/helper-create-regexp-features-plugin': 7.19.0(@babel/core@7.21.3)
       '@babel/helper-plugin-utils': 7.20.2
 
-  /@babel/plugin-transform-dotall-regex@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-5/Yk9QxCQCl+sOIB1WelKnVRxTJDSAIxtJLL2/pqL14ZVlbH0fUQUZa/T5/UnQtBNgghR7mfB8ERBKyKPCi7Vw==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-create-regexp-features-plugin': 7.22.15(@babel/core@7.23.9)
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
   /@babel/plugin-transform-dotall-regex@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-vgnFYDHAKzFaTVp+mneDsIEbnJ2Np/9ng9iviHw3P/KVcgONxpNULEW/51Z/BaFojG2GI2GwwXck5uV1+1NOYQ==}
     engines: {node: '>=6.9.0'}
@@ -11814,16 +11883,6 @@ packages:
       '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
 
-  /@babel/plugin-transform-duplicate-keys@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-dEnYD+9BBgld5VBXHnF/DbYGp3fqGMsyxKbtD1mDyIA7AkTSpKXFhCVuj/oQVOoALfBs77DudA0BE4d5mcpmqw==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
   /@babel/plugin-transform-duplicate-keys@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-RrqQ+BQmU3Oyav3J+7/myfvRCq7Tbz+kKLLshUmMwNlDHExbGL7ARhajvoBJEvc+fCguPPu887N+3RRXBVKZUA==}
     engines: {node: '>=6.9.0'}
@@ -11832,17 +11891,6 @@ packages:
     dependencies:
       '@babel/core': 7.23.9
       '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
-  /@babel/plugin-transform-dynamic-import@7.22.11(@babel/core@7.23.9):
-    resolution: {integrity: sha512-g/21plo58sfteWjaO0ZNVb+uEOkJNjAaHhbejrnBmu011l/eNDScmkbjCC3l4FKb10ViaGU4aOkFznSu2zRHgA==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-      '@babel/plugin-syntax-dynamic-import': 7.8.3(@babel/core@7.23.9)
     dev: true
 
   /@babel/plugin-transform-dynamic-import@7.23.4(@babel/core@7.23.9):
@@ -11866,17 +11914,6 @@ packages:
       '@babel/helper-builder-binary-assignment-operator-visitor': 7.18.9
       '@babel/helper-plugin-utils': 7.20.2
 
-  /@babel/plugin-transform-exponentiation-operator@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-vIpJFNM/FjZ4rh1myqIya9jXwrwwgFRHPjT3DkUA9ZLHuzox8jiXkOLvwm1H+PQIP3CqfC++WPKeuDi0Sjdj1g==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-builder-binary-assignment-operator-visitor': 7.22.15
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
   /@babel/plugin-transform-exponentiation-operator@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-5fhCsl1odX96u7ILKHBj4/Y8vipoqwsJMh4csSA8qFfxrZDEA4Ssku2DyNvMJSmZNOEBT750LfFPbtrnTP90BQ==}
     engines: {node: '>=6.9.0'}
@@ -11886,17 +11923,6 @@ packages:
       '@babel/core': 7.23.9
       '@babel/helper-builder-binary-assignment-operator-visitor': 7.22.15
       '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
-  /@babel/plugin-transform-export-namespace-from@7.22.11(@babel/core@7.23.9):
-    resolution: {integrity: sha512-xa7aad7q7OiT8oNZ1mU7NrISjlSkVdMbNxn9IuLZyL9AJEhs1Apba3I+u5riX1dIkdptP5EKDG5XDPByWxtehw==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-      '@babel/plugin-syntax-export-namespace-from': 7.8.3(@babel/core@7.23.9)
     dev: true
 
   /@babel/plugin-transform-export-namespace-from@7.23.4(@babel/core@7.23.9):
@@ -11930,16 +11956,6 @@ packages:
       '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
 
-  /@babel/plugin-transform-for-of@7.22.15(@babel/core@7.23.9):
-    resolution: {integrity: sha512-me6VGeHsx30+xh9fbDLLPi0J1HzmeIIyenoOQHuw2D4m2SAU3NrspX5XxJLBpqn5yrLzrlw2Iy3RA//Bx27iOA==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
   /@babel/plugin-transform-for-of@7.23.6(@babel/core@7.23.9):
     resolution: {integrity: sha512-aYH4ytZ0qSuBbpfhuofbg/e96oQ7U2w1Aw/UQmKT+1l39uEhUPoFS3fHevDc1G0OvewyDudfMKY1OulczHzWIw==}
     engines: {node: '>=6.9.0'}
@@ -11962,18 +11978,6 @@ packages:
       '@babel/helper-function-name': 7.21.0
       '@babel/helper-plugin-utils': 7.20.2
 
-  /@babel/plugin-transform-function-name@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-UIzQNMS0p0HHiQm3oelztj+ECwFnj+ZRV4KnguvlsD2of1whUeM6o7wGNj6oLwcDoAXQ8gEqfgC24D+VdIcevg==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-compilation-targets': 7.23.6
-      '@babel/helper-function-name': 7.23.0
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
   /@babel/plugin-transform-function-name@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-I1QXp1LxIvt8yLaib49dRW5Okt7Q4oaxao6tFVKS/anCdEOMtYwWVKoiOA1p34GOWIZjUK0E+zCp7+l1pfQyiw==}
     engines: {node: '>=6.9.0'}
@@ -11984,17 +11988,6 @@ packages:
       '@babel/helper-compilation-targets': 7.23.6
       '@babel/helper-function-name': 7.23.0
       '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
-  /@babel/plugin-transform-json-strings@7.22.11(@babel/core@7.23.9):
-    resolution: {integrity: sha512-CxT5tCqpA9/jXFlme9xIBCc5RPtdDq3JpkkhgHQqtDdiTnTI0jtZ0QzXhr5DILeYifDPp2wvY2ad+7+hLMW5Pw==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-      '@babel/plugin-syntax-json-strings': 7.8.3(@babel/core@7.23.9)
     dev: true
 
   /@babel/plugin-transform-json-strings@7.23.4(@babel/core@7.23.9):
@@ -12017,16 +12010,6 @@ packages:
       '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
 
-  /@babel/plugin-transform-literals@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-fTLj4D79M+mepcw3dgFBTIDYpbcB9Sm0bpm4ppXPaO+U+PKFFyV9MGRvS0gvGw62sd10kT5lRMKXAADb9pWy8g==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
   /@babel/plugin-transform-literals@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-wZ0PIXRxnwZvl9AYpqNUxpZ5BiTGrYt7kueGQ+N5FiQ7RCOD4cm8iShd6S6ggfVIWaJf2EMk8eRzAh52RfP4rQ==}
     engines: {node: '>=6.9.0'}
@@ -12035,17 +12018,6 @@ packages:
     dependencies:
       '@babel/core': 7.23.9
       '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
-  /@babel/plugin-transform-logical-assignment-operators@7.22.11(@babel/core@7.23.9):
-    resolution: {integrity: sha512-qQwRTP4+6xFCDV5k7gZBF3C31K34ut0tbEcTKxlX/0KXxm9GLcO14p570aWxFvVzx6QAfPgq7gaeIHXJC8LswQ==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-      '@babel/plugin-syntax-logical-assignment-operators': 7.10.4(@babel/core@7.23.9)
     dev: true
 
   /@babel/plugin-transform-logical-assignment-operators@7.23.4(@babel/core@7.23.9):
@@ -12068,16 +12040,6 @@ packages:
       '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
 
-  /@babel/plugin-transform-member-expression-literals@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-RZEdkNtzzYCFl9SE9ATaUMTj2hqMb4StarOJLrZRbqqU4HSBE7UlBw9WBWQiDzrJZJdUWiMTVDI6Gv/8DPvfew==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
   /@babel/plugin-transform-member-expression-literals@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-sC3LdDBDi5x96LA+Ytekz2ZPk8i/Ck+DEuDbRAll5rknJ5XRTSaPKEYwomLcs1AA8wg9b3KjIQRsnApj+q51Ag==}
     engines: {node: '>=6.9.0'}
@@ -12098,17 +12060,6 @@ packages:
       '@babel/helper-module-transforms': 7.23.3(@babel/core@7.21.3)
       '@babel/helper-plugin-utils': 7.20.2
       babel-plugin-dynamic-import-node: 2.3.3
-
-  /@babel/plugin-transform-modules-amd@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-R+PTfLTcYEmb1+kK7FNkhQ1gP4KgjpSO6HfH9+f8/yfp2Nt3ggBjiVpRwmwTlfqZLafYKJACy36yDXlEmI9HjQ==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-module-transforms': 7.23.3(@babel/core@7.23.9)
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
 
   /@babel/plugin-transform-modules-amd@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-vJYQGxeKM4t8hYCKVBlZX/gtIY2I7mRGFNcm85sgXGMTBcoV3QdVtdpbcWEbzbfUIUZKwvgFT82mRvaQIebZzw==}
@@ -12183,19 +12134,6 @@ packages:
       '@babel/helper-validator-identifier': 7.19.1
       babel-plugin-dynamic-import-node: 2.3.3
 
-  /@babel/plugin-transform-modules-systemjs@7.22.11(@babel/core@7.23.9):
-    resolution: {integrity: sha512-rIqHmHoMEOhI3VkVf5jQ15l539KrwhzqcBO6wdCNWPWc/JWt9ILNYNUssbRpeq0qWns8svuw8LnMNCvWBIJ8wA==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-hoist-variables': 7.22.5
-      '@babel/helper-module-transforms': 7.23.3(@babel/core@7.23.9)
-      '@babel/helper-plugin-utils': 7.22.5
-      '@babel/helper-validator-identifier': 7.22.20
-    dev: true
-
   /@babel/plugin-transform-modules-systemjs@7.23.9(@babel/core@7.23.9):
     resolution: {integrity: sha512-KDlPRM6sLo4o1FkiSlXoAa8edLXFsKKIda779fbLrvmeuc3itnjCtaO6RrtoaANsIJANj+Vk1zqbZIMhkCAHVw==}
     engines: {node: '>=6.9.0'}
@@ -12218,17 +12156,6 @@ packages:
       '@babel/core': 7.21.3
       '@babel/helper-module-transforms': 7.23.3(@babel/core@7.21.3)
       '@babel/helper-plugin-utils': 7.20.2
-
-  /@babel/plugin-transform-modules-umd@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-+S6kzefN/E1vkSsKx8kmQuqeQsvCKCd1fraCM7zXm4SFoggI099Tr4G8U81+5gtMdUeMQ4ipdQffbKLX0/7dBQ==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-module-transforms': 7.23.3(@babel/core@7.23.9)
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
 
   /@babel/plugin-transform-modules-umd@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-zHsy9iXX2nIsCBFPud3jKn1IRPWg3Ing1qOZgeKV39m1ZgIdpJqvlWVeiHBZC6ITRG0MfskhYe9cLgntfSFPIg==}
@@ -12271,16 +12198,6 @@ packages:
       '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
 
-  /@babel/plugin-transform-new-target@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-AsF7K0Fx/cNKVyk3a+DW0JLo+Ua598/NxMRvxDnkpCIGFh43+h/v2xyhRUYf6oD8gE4QtL83C7zZVghMjHd+iw==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
   /@babel/plugin-transform-new-target@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-YJ3xKqtJMAT5/TIZnpAR3I+K+WaDowYbN3xyxI8zxx/Gsypwf9B9h0VB+1Nh6ACAAPRS5NSRje0uVv5i79HYGQ==}
     engines: {node: '>=6.9.0'}
@@ -12289,17 +12206,6 @@ packages:
     dependencies:
       '@babel/core': 7.23.9
       '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
-  /@babel/plugin-transform-nullish-coalescing-operator@7.22.11(@babel/core@7.23.9):
-    resolution: {integrity: sha512-YZWOw4HxXrotb5xsjMJUDlLgcDXSfO9eCmdl1bgW4+/lAGdkjaEvOnQ4p5WKKdUgSzO39dgPl0pTnfxm0OAXcg==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-      '@babel/plugin-syntax-nullish-coalescing-operator': 7.8.3(@babel/core@7.23.9)
     dev: true
 
   /@babel/plugin-transform-nullish-coalescing-operator@7.23.4(@babel/core@7.23.9):
@@ -12313,17 +12219,6 @@ packages:
       '@babel/plugin-syntax-nullish-coalescing-operator': 7.8.3(@babel/core@7.23.9)
     dev: true
 
-  /@babel/plugin-transform-numeric-separator@7.22.11(@babel/core@7.23.9):
-    resolution: {integrity: sha512-3dzU4QGPsILdJbASKhF/V2TVP+gJya1PsueQCxIPCEcerqF21oEcrob4mzjsp2Py/1nLfF5m+xYNMDpmA8vffg==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-      '@babel/plugin-syntax-numeric-separator': 7.10.4(@babel/core@7.23.9)
-    dev: true
-
   /@babel/plugin-transform-numeric-separator@7.23.4(@babel/core@7.23.9):
     resolution: {integrity: sha512-mps6auzgwjRrwKEZA05cOwuDc9FAzoyFS4ZsG/8F43bTLf/TgkJg7QXOrPO1JO599iA3qgK9MXdMGOEC8O1h6Q==}
     engines: {node: '>=6.9.0'}
@@ -12333,20 +12228,6 @@ packages:
       '@babel/core': 7.23.9
       '@babel/helper-plugin-utils': 7.22.5
       '@babel/plugin-syntax-numeric-separator': 7.10.4(@babel/core@7.23.9)
-    dev: true
-
-  /@babel/plugin-transform-object-rest-spread@7.22.15(@babel/core@7.23.9):
-    resolution: {integrity: sha512-fEB+I1+gAmfAyxZcX1+ZUwLeAuuf8VIg67CTznZE0MqVFumWkh8xWtn58I4dxdVf080wn7gzWoF8vndOViJe9Q==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/compat-data': 7.23.5
-      '@babel/core': 7.23.9
-      '@babel/helper-compilation-targets': 7.23.6
-      '@babel/helper-plugin-utils': 7.22.5
-      '@babel/plugin-syntax-object-rest-spread': 7.8.3(@babel/core@7.23.9)
-      '@babel/plugin-transform-parameters': 7.22.15(@babel/core@7.23.9)
     dev: true
 
   /@babel/plugin-transform-object-rest-spread@7.23.4(@babel/core@7.23.9):
@@ -12375,17 +12256,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /@babel/plugin-transform-object-super@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-klXqyaT9trSjIUrcsYIfETAzmOEZL3cBYqOYLJxBHfMFFggmXOv+NYSX/Jbs9mzMVESw/WycLFPRx8ba/b2Ipw==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-      '@babel/helper-replace-supers': 7.22.9(@babel/core@7.23.9)
-    dev: true
-
   /@babel/plugin-transform-object-super@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-BwQ8q0x2JG+3lxCVFohg+KbQM7plfpBwThdW9A6TMtWwLsbDA01Ek2Zb/AgDN39BiZsExm4qrXxjk+P1/fzGrA==}
     engines: {node: '>=6.9.0'}
@@ -12397,17 +12267,6 @@ packages:
       '@babel/helper-replace-supers': 7.22.20(@babel/core@7.23.9)
     dev: true
 
-  /@babel/plugin-transform-optional-catch-binding@7.22.11(@babel/core@7.23.9):
-    resolution: {integrity: sha512-rli0WxesXUeCJnMYhzAglEjLWVDF6ahb45HuprcmQuLidBJFWjNnOzssk2kuc6e33FlLaiZhG/kUIzUMWdBKaQ==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-      '@babel/plugin-syntax-optional-catch-binding': 7.8.3(@babel/core@7.23.9)
-    dev: true
-
   /@babel/plugin-transform-optional-catch-binding@7.23.4(@babel/core@7.23.9):
     resolution: {integrity: sha512-XIq8t0rJPHf6Wvmbn9nFxU6ao4c7WhghTR5WyV8SrJfUFzyxhCm4nhC+iAp3HFhbAKLfYpgzhJ6t4XCtVwqO5A==}
     engines: {node: '>=6.9.0'}
@@ -12417,18 +12276,6 @@ packages:
       '@babel/core': 7.23.9
       '@babel/helper-plugin-utils': 7.22.5
       '@babel/plugin-syntax-optional-catch-binding': 7.8.3(@babel/core@7.23.9)
-    dev: true
-
-  /@babel/plugin-transform-optional-chaining@7.22.15(@babel/core@7.23.9):
-    resolution: {integrity: sha512-ngQ2tBhq5vvSJw2Q2Z9i7ealNkpDMU0rGWnHPKqRZO0tzZ5tlaoz4hDvhXioOoaE0X2vfNss1djwg0DXlfu30A==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-      '@babel/helper-skip-transparent-expression-wrappers': 7.22.5
-      '@babel/plugin-syntax-optional-chaining': 7.8.3(@babel/core@7.23.9)
     dev: true
 
   /@babel/plugin-transform-optional-chaining@7.23.4(@babel/core@7.23.9):
@@ -12452,16 +12299,6 @@ packages:
       '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
 
-  /@babel/plugin-transform-parameters@7.22.15(@babel/core@7.23.9):
-    resolution: {integrity: sha512-hjk7qKIqhyzhhUvRT683TYQOFa/4cQKwQy7ALvTpODswN40MljzNDa0YldevS6tGbxwaEKVn502JmY0dP7qEtQ==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
   /@babel/plugin-transform-parameters@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-09lMt6UsUb3/34BbECKVbVwrT9bO6lILWln237z7sLaWnMsTi7Yc9fhX5DLpkJzAGfaReXI22wP41SZmnAA3Vw==}
     engines: {node: '>=6.9.0'}
@@ -12469,17 +12306,6 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
-  /@babel/plugin-transform-private-methods@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-PPjh4gyrQnGe97JTalgRGMuU4icsZFnWkzicB/fUtzlKUqvsWBKEpPPfr5a2JiyirZkHxnAqkQMO5Z5B2kK3fA==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-create-class-features-plugin': 7.22.15(@babel/core@7.23.9)
       '@babel/helper-plugin-utils': 7.22.5
     dev: true
 
@@ -12492,19 +12318,6 @@ packages:
       '@babel/core': 7.23.9
       '@babel/helper-create-class-features-plugin': 7.22.15(@babel/core@7.23.9)
       '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
-  /@babel/plugin-transform-private-property-in-object@7.22.11(@babel/core@7.23.9):
-    resolution: {integrity: sha512-sSCbqZDBKHetvjSwpyWzhuHkmW5RummxJBVbYLkGkaiTOWGxml7SXt0iWa03bzxFIx7wOj3g/ILRd0RcJKBeSQ==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-annotate-as-pure': 7.22.5
-      '@babel/helper-create-class-features-plugin': 7.22.15(@babel/core@7.23.9)
-      '@babel/helper-plugin-utils': 7.22.5
-      '@babel/plugin-syntax-private-property-in-object': 7.14.5(@babel/core@7.23.9)
     dev: true
 
   /@babel/plugin-transform-private-property-in-object@7.23.4(@babel/core@7.23.9):
@@ -12528,16 +12341,6 @@ packages:
     dependencies:
       '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
-
-  /@babel/plugin-transform-property-literals@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-TiOArgddK3mK/x1Qwf5hay2pxI6wCZnvQqrFSqbtg1GLl2JcNMitVH/YnqjP+M31pLUeTfzY1HAXFDnUBV30rQ==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
 
   /@babel/plugin-transform-property-literals@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-jR3Jn3y7cZp4oEWPFAlRsSWjxKe4PZILGBSd4nis1TsC5qeSpb+nrtihJuDhNI7QHiVbUaiXa0X2RZY3/TI6Nw==}
@@ -12577,17 +12380,6 @@ packages:
       '@babel/helper-plugin-utils': 7.20.2
       regenerator-transform: 0.15.0
 
-  /@babel/plugin-transform-regenerator@7.22.10(@babel/core@7.23.9):
-    resolution: {integrity: sha512-F28b1mDt8KcT5bUyJc/U9nwzw6cV+UmTeRlXYIl2TNqMMJif0Jeey9/RQ3C4NOd2zp0/TRsDns9ttj2L523rsw==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-      regenerator-transform: 0.15.2
-    dev: true
-
   /@babel/plugin-transform-regenerator@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-KP+75h0KghBMcVpuKisx3XTu9Ncut8Q8TuvGO4IhY+9D5DFEckQefOuIsB/gQ2tG71lCke4NMrtIPS8pOj18BQ==}
     engines: {node: '>=6.9.0'}
@@ -12607,16 +12399,6 @@ packages:
     dependencies:
       '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
-
-  /@babel/plugin-transform-reserved-words@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-DTtGKFRQUDm8svigJzZHzb/2xatPc6TzNvAIJ5GqOKDsGFYgAskjRulbR/vGsPKq3OPqtexnz327qYpP57RFyA==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
 
   /@babel/plugin-transform-reserved-words@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-QnNTazY54YqgGxwIexMZva9gqbPa15t/x9VS+0fsEFWplwVpXYZivtgl43Z1vMpc1bdPP2PP8siFeVcnFvA3Cg==}
@@ -12654,16 +12436,6 @@ packages:
       '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
 
-  /@babel/plugin-transform-shorthand-properties@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-vM4fq9IXHscXVKzDv5itkO1X52SmdFBFcMIBZ2FRn2nqVYqw6dBexUgMvAjHW+KXpPPViD/Yo3GrDEBaRC0QYA==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
   /@babel/plugin-transform-shorthand-properties@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-ED2fgqZLmexWiN+YNFX26fx4gh5qHDhn1O2gvEhreLW2iI63Sqm4llRLCXALKrCnbN4Jy0VcMQZl/SAzqug/jg==}
     engines: {node: '>=6.9.0'}
@@ -12683,17 +12455,6 @@ packages:
       '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
       '@babel/helper-skip-transparent-expression-wrappers': 7.20.0
-
-  /@babel/plugin-transform-spread@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-5ZzDQIGyvN4w8+dMmpohL6MBo+l2G7tfC/O2Dg7/hjpgeWvUx8FzfeOKxGog9IimPa4YekaQ9PlDqTLOljkcxg==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-      '@babel/helper-skip-transparent-expression-wrappers': 7.22.5
-    dev: true
 
   /@babel/plugin-transform-spread@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-VvfVYlrlBVu+77xVTOAoxQ6mZbnIq5FM0aGBSFEcIh03qHf+zNqA4DC/3XMUozTg7bZV3e3mZQ0i13VB6v5yUg==}
@@ -12715,16 +12476,6 @@ packages:
       '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
 
-  /@babel/plugin-transform-sticky-regex@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-zf7LuNpHG0iEeiyCNwX4j3gDg1jgt1k3ZdXBKbZSoA3BbGQGvMiSvfbZRR3Dr3aeJe3ooWFZxOOG3IRStYp2Bw==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
   /@babel/plugin-transform-sticky-regex@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-HZOyN9g+rtvnOU3Yh7kSxXrKbzgrm5X4GncPY1QOquu7epga5MxKHVpYu2hvQnry/H+JjckSYRb93iNfsioAGg==}
     engines: {node: '>=6.9.0'}
@@ -12744,16 +12495,6 @@ packages:
       '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
 
-  /@babel/plugin-transform-template-literals@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-5ciOehRNf+EyUeewo8NkbQiUs4d6ZxiHo6BcBcnFlgiJfu16q0bQUw9Jvo0b0gBKFG1SMhDSjeKXSYuJLeFSMA==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
   /@babel/plugin-transform-template-literals@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-Flok06AYNp7GV2oJPZZcP9vZdszev6vPBkHLwxwSpaIqx75wn6mUd3UFWsSsA0l8nXAKkyCmL/sR02m8RYGeHg==}
     engines: {node: '>=6.9.0'}
@@ -12772,16 +12513,6 @@ packages:
     dependencies:
       '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
-
-  /@babel/plugin-transform-typeof-symbol@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-bYkI5lMzL4kPii4HHEEChkD0rkc+nvnlR6+o/qdqR6zrm0Sv/nodmyLhlq2DO0YKLUNd2VePmPRjJXSBh9OIdA==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
 
   /@babel/plugin-transform-typeof-symbol@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-4t15ViVnaFdrPC74be1gXBSMzXk3B4Us9lP7uLRQHTFpV5Dvt33pn+2MyyNxmN3VTTm3oTrZVMUmuw3oBnQ2oQ==}
@@ -12827,16 +12558,6 @@ packages:
       '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
 
-  /@babel/plugin-transform-unicode-escapes@7.22.10(@babel/core@7.23.9):
-    resolution: {integrity: sha512-lRfaRKGZCBqDlRU3UIFovdp9c9mEvlylmpod0/OatICsSfuQ9YFthRo1tpTkGsklEefZdqlEFdY4A2dwTb6ohg==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
   /@babel/plugin-transform-unicode-escapes@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-OMCUx/bU6ChE3r4+ZdylEqAjaQgHAgipgW8nsCfu5pGqDcFytVd91AwRvUJSBZDz0exPGgnjoqhgRYLRjFZc9Q==}
     engines: {node: '>=6.9.0'}
@@ -12844,17 +12565,6 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.23.9
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
-  /@babel/plugin-transform-unicode-property-regex@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-HCCIb+CbJIAE6sXn5CjFQXMwkCClcOfPCzTlilJ8cUatfzwHlWQkbtV0zD338u9dZskwvuOYTuuaMaA8J5EI5A==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-create-regexp-features-plugin': 7.22.15(@babel/core@7.23.9)
       '@babel/helper-plugin-utils': 7.22.5
     dev: true
 
@@ -12879,33 +12589,11 @@ packages:
       '@babel/helper-create-regexp-features-plugin': 7.19.0(@babel/core@7.21.3)
       '@babel/helper-plugin-utils': 7.20.2
 
-  /@babel/plugin-transform-unicode-regex@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-028laaOKptN5vHJf9/Arr/HiJekMd41hOEZYvNsrsXqJ7YPYuX2bQxh31fkZzGmq3YqHRJzYFFAVYvKfMPKqyg==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-create-regexp-features-plugin': 7.22.15(@babel/core@7.23.9)
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
   /@babel/plugin-transform-unicode-regex@7.23.3(@babel/core@7.23.9):
     resolution: {integrity: sha512-wMHpNA4x2cIA32b/ci3AfwNgheiva2W0WUKWTK7vBHBhDKfPsc5cFGNWm69WBqpwd86u1qwZ9PWevKqm1A3yAw==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-create-regexp-features-plugin': 7.22.15(@babel/core@7.23.9)
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
-  /@babel/plugin-transform-unicode-sets-regex@7.22.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-lhMfi4FC15j13eKrh3DnYHjpGj6UKQHtNKTbtc1igvAhRy4+kLhV07OpLcsN0VgDEw/MjAvJO4BdMJsHwMhzCg==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0
     dependencies:
       '@babel/core': 7.23.9
       '@babel/helper-create-regexp-features-plugin': 7.22.15(@babel/core@7.23.9)
@@ -13007,97 +12695,6 @@ packages:
       semver: 6.3.0
     transitivePeerDependencies:
       - supports-color
-
-  /@babel/preset-env@7.22.15(@babel/core@7.23.9):
-    resolution: {integrity: sha512-tZFHr54GBkHk6hQuVA8w4Fmq+MSPsfvMG0vPnOYyTnJpyfMqybL8/MbNCPRT9zc2KBO2pe4tq15g6Uno4Jpoag==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/compat-data': 7.22.9
-      '@babel/core': 7.23.9
-      '@babel/helper-compilation-targets': 7.23.6
-      '@babel/helper-plugin-utils': 7.22.5
-      '@babel/helper-validator-option': 7.22.15
-      '@babel/plugin-bugfix-safari-id-destructuring-collision-in-function-expression': 7.22.15(@babel/core@7.23.9)
-      '@babel/plugin-bugfix-v8-spread-parameters-in-optional-chaining': 7.22.15(@babel/core@7.23.9)
-      '@babel/plugin-proposal-private-property-in-object': 7.21.0-placeholder-for-preset-env.2(@babel/core@7.23.9)
-      '@babel/plugin-syntax-async-generators': 7.8.4(@babel/core@7.23.9)
-      '@babel/plugin-syntax-class-properties': 7.12.13(@babel/core@7.23.9)
-      '@babel/plugin-syntax-class-static-block': 7.14.5(@babel/core@7.23.9)
-      '@babel/plugin-syntax-dynamic-import': 7.8.3(@babel/core@7.23.9)
-      '@babel/plugin-syntax-export-namespace-from': 7.8.3(@babel/core@7.23.9)
-      '@babel/plugin-syntax-import-assertions': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-syntax-import-attributes': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-syntax-import-meta': 7.10.4(@babel/core@7.23.9)
-      '@babel/plugin-syntax-json-strings': 7.8.3(@babel/core@7.23.9)
-      '@babel/plugin-syntax-logical-assignment-operators': 7.10.4(@babel/core@7.23.9)
-      '@babel/plugin-syntax-nullish-coalescing-operator': 7.8.3(@babel/core@7.23.9)
-      '@babel/plugin-syntax-numeric-separator': 7.10.4(@babel/core@7.23.9)
-      '@babel/plugin-syntax-object-rest-spread': 7.8.3(@babel/core@7.23.9)
-      '@babel/plugin-syntax-optional-catch-binding': 7.8.3(@babel/core@7.23.9)
-      '@babel/plugin-syntax-optional-chaining': 7.8.3(@babel/core@7.23.9)
-      '@babel/plugin-syntax-private-property-in-object': 7.14.5(@babel/core@7.23.9)
-      '@babel/plugin-syntax-top-level-await': 7.14.5(@babel/core@7.23.9)
-      '@babel/plugin-syntax-unicode-sets-regex': 7.18.6(@babel/core@7.23.9)
-      '@babel/plugin-transform-arrow-functions': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-async-generator-functions': 7.22.15(@babel/core@7.23.9)
-      '@babel/plugin-transform-async-to-generator': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-block-scoped-functions': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-block-scoping': 7.22.15(@babel/core@7.23.9)
-      '@babel/plugin-transform-class-properties': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-class-static-block': 7.22.11(@babel/core@7.23.9)
-      '@babel/plugin-transform-classes': 7.22.15(@babel/core@7.23.9)
-      '@babel/plugin-transform-computed-properties': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-destructuring': 7.22.15(@babel/core@7.23.9)
-      '@babel/plugin-transform-dotall-regex': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-duplicate-keys': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-dynamic-import': 7.22.11(@babel/core@7.23.9)
-      '@babel/plugin-transform-exponentiation-operator': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-export-namespace-from': 7.22.11(@babel/core@7.23.9)
-      '@babel/plugin-transform-for-of': 7.22.15(@babel/core@7.23.9)
-      '@babel/plugin-transform-function-name': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-json-strings': 7.22.11(@babel/core@7.23.9)
-      '@babel/plugin-transform-literals': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-logical-assignment-operators': 7.22.11(@babel/core@7.23.9)
-      '@babel/plugin-transform-member-expression-literals': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-modules-amd': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-modules-commonjs': 7.22.15(@babel/core@7.23.9)
-      '@babel/plugin-transform-modules-systemjs': 7.22.11(@babel/core@7.23.9)
-      '@babel/plugin-transform-modules-umd': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-named-capturing-groups-regex': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-new-target': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-nullish-coalescing-operator': 7.22.11(@babel/core@7.23.9)
-      '@babel/plugin-transform-numeric-separator': 7.22.11(@babel/core@7.23.9)
-      '@babel/plugin-transform-object-rest-spread': 7.22.15(@babel/core@7.23.9)
-      '@babel/plugin-transform-object-super': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-optional-catch-binding': 7.22.11(@babel/core@7.23.9)
-      '@babel/plugin-transform-optional-chaining': 7.22.15(@babel/core@7.23.9)
-      '@babel/plugin-transform-parameters': 7.22.15(@babel/core@7.23.9)
-      '@babel/plugin-transform-private-methods': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-private-property-in-object': 7.22.11(@babel/core@7.23.9)
-      '@babel/plugin-transform-property-literals': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-regenerator': 7.22.10(@babel/core@7.23.9)
-      '@babel/plugin-transform-reserved-words': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-shorthand-properties': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-spread': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-sticky-regex': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-template-literals': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-typeof-symbol': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-unicode-escapes': 7.22.10(@babel/core@7.23.9)
-      '@babel/plugin-transform-unicode-property-regex': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-unicode-regex': 7.22.5(@babel/core@7.23.9)
-      '@babel/plugin-transform-unicode-sets-regex': 7.22.5(@babel/core@7.23.9)
-      '@babel/preset-modules': 0.1.6-no-external-plugins(@babel/core@7.23.9)
-      '@babel/types': 7.23.9
-      babel-plugin-polyfill-corejs2: 0.4.5(@babel/core@7.23.9)
-      babel-plugin-polyfill-corejs3: 0.8.3(@babel/core@7.23.9)
-      babel-plugin-polyfill-regenerator: 0.5.2(@babel/core@7.23.9)
-      core-js-compat: 3.32.2
-      semver: 6.3.1
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
 
   /@babel/preset-env@7.23.9(@babel/core@7.23.9):
     resolution: {integrity: sha512-3kBGTNBBk9DQiPoXYS0g0BYlwTQYUTifqgKTjxUwEUkduRT2QOa0FPGBJ+NROQhGyYO5BuTJwGvBnqKDykac6A==}
@@ -13489,16 +13086,17 @@ packages:
       minimist: 1.2.8
     dev: true
 
-  /@codemirror/autocomplete@6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1):
+  /@codemirror/autocomplete@6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.25.1)(@lezer/common@1.2.1):
     resolution: {integrity: sha512-r4IjdYFthwbCQyvqnSlx0WBHRHi8nBvU+WjJxFUij81qsBfhNudf/XKKmmC2j3m0LaOYUQTf3qiEK1J8lO1sdg==}
     peerDependencies:
       '@codemirror/language': ^6.0.0
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
+      '@lezer/common': ^1.0.0
     dependencies:
       '@codemirror/language': 6.10.1
       '@codemirror/state': 6.4.0
-      '@codemirror/view': 6.23.1
+      '@codemirror/view': 6.25.1
       '@lezer/common': 1.2.1
     dev: false
 
@@ -13507,7 +13105,7 @@ packages:
     dependencies:
       '@codemirror/language': 6.10.1
       '@codemirror/state': 6.4.0
-      '@codemirror/view': 6.23.1
+      '@codemirror/view': 6.25.1
       '@lezer/common': 1.2.1
     dev: false
 
@@ -13529,10 +13127,10 @@ packages:
       '@lezer/cpp': 1.1.0
     dev: false
 
-  /@codemirror/lang-css@6.2.1(@codemirror/view@6.23.1):
+  /@codemirror/lang-css@6.2.1(@codemirror/view@6.25.1):
     resolution: {integrity: sha512-/UNWDNV5Viwi/1lpr/dIXJNWiwDxpw13I4pTUAsNxZdg6E0mI2kTQb0P2iHczg1Tu+H4EBgJR+hYhKiHKko7qg==}
     dependencies:
-      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.25.1)(@lezer/common@1.2.1)
       '@codemirror/language': 6.10.1
       '@codemirror/state': 6.4.0
       '@lezer/common': 1.2.1
@@ -13544,12 +13142,12 @@ packages:
   /@codemirror/lang-html@6.4.2:
     resolution: {integrity: sha512-bqCBASkteKySwtIbiV/WCtGnn/khLRbbiV5TE+d9S9eQJD7BA4c5dTRm2b3bVmSpilff5EYxvB4PQaZzM/7cNw==}
     dependencies:
-      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
-      '@codemirror/lang-css': 6.2.1(@codemirror/view@6.23.1)
+      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.25.1)(@lezer/common@1.2.1)
+      '@codemirror/lang-css': 6.2.1(@codemirror/view@6.25.1)
       '@codemirror/lang-javascript': 6.2.2
       '@codemirror/language': 6.10.1
       '@codemirror/state': 6.4.0
-      '@codemirror/view': 6.23.1
+      '@codemirror/view': 6.25.1
       '@lezer/common': 1.2.1
       '@lezer/css': 1.1.1
       '@lezer/html': 1.3.3
@@ -13565,11 +13163,11 @@ packages:
   /@codemirror/lang-javascript@6.2.2:
     resolution: {integrity: sha512-VGQfY+FCc285AhWuwjYxQyUQcYurWlxdKYT4bqwr3Twnd5wP5WSeu52t4tvvuWmljT4EmgEgZCqSieokhtY8hg==}
     dependencies:
-      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.25.1)(@lezer/common@1.2.1)
       '@codemirror/language': 6.10.1
       '@codemirror/lint': 6.4.2
       '@codemirror/state': 6.4.0
-      '@codemirror/view': 6.23.1
+      '@codemirror/view': 6.25.1
       '@lezer/common': 1.2.1
       '@lezer/javascript': 1.4.1
     dev: false
@@ -13581,10 +13179,10 @@ packages:
       '@lezer/json': 1.0.0
     dev: false
 
-  /@codemirror/lang-less@6.0.1(@codemirror/view@6.23.1):
+  /@codemirror/lang-less@6.0.1(@codemirror/view@6.25.1):
     resolution: {integrity: sha512-ABcsKBjLbyPZwPR5gePpc8jEKCQrFF4pby2WlMVdmJOOr7OWwwyz8DZonPx/cKDE00hfoSLc8F7yAcn/d6+rTQ==}
     dependencies:
-      '@codemirror/lang-css': 6.2.1(@codemirror/view@6.23.1)
+      '@codemirror/lang-css': 6.2.1(@codemirror/view@6.25.1)
       '@codemirror/language': 6.10.1
       '@lezer/highlight': 1.2.0
       '@lezer/lr': 1.3.3
@@ -13595,11 +13193,11 @@ packages:
   /@codemirror/lang-markdown@6.2.4:
     resolution: {integrity: sha512-UghkA1vSMs8bT7RSZM6vsIocigyah2bV00eRQuZy76401UmFZdsTsbQNBGdyxRQDOLeEvF5iFwap0BM8LKyd+g==}
     dependencies:
-      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.25.1)(@lezer/common@1.2.1)
       '@codemirror/lang-html': 6.4.2
       '@codemirror/language': 6.10.1
       '@codemirror/state': 6.4.0
-      '@codemirror/view': 6.23.1
+      '@codemirror/view': 6.25.1
       '@lezer/common': 1.2.1
       '@lezer/markdown': 1.2.0
     dev: false
@@ -13614,15 +13212,16 @@ packages:
       '@lezer/php': 1.0.1
     dev: false
 
-  /@codemirror/lang-python@6.1.2(@codemirror/state@6.4.0)(@codemirror/view@6.23.1):
+  /@codemirror/lang-python@6.1.2(@codemirror/state@6.4.0)(@codemirror/view@6.25.1)(@lezer/common@1.2.1):
     resolution: {integrity: sha512-nbQfifLBZstpt6Oo4XxA2LOzlSp4b/7Bc5cmodG1R+Cs5PLLCTUvsMNWDnziiCfTOG/SW1rVzXq/GbIr6WXlcw==}
     dependencies:
-      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.25.1)(@lezer/common@1.2.1)
       '@codemirror/language': 6.10.1
       '@lezer/python': 1.1.2
     transitivePeerDependencies:
       - '@codemirror/state'
       - '@codemirror/view'
+      - '@lezer/common'
     dev: false
 
   /@codemirror/lang-rust@6.0.1:
@@ -13632,10 +13231,10 @@ packages:
       '@lezer/rust': 1.0.0
     dev: false
 
-  /@codemirror/lang-sass@6.0.2(@codemirror/view@6.23.1):
+  /@codemirror/lang-sass@6.0.2(@codemirror/view@6.25.1):
     resolution: {integrity: sha512-l/bdzIABvnTo1nzdY6U+kPAC51czYQcOErfzQ9zSm9D8GmNPD0WTW8st/CJwBTPLO8jlrbyvlSEcN20dc4iL0Q==}
     dependencies:
-      '@codemirror/lang-css': 6.2.1(@codemirror/view@6.23.1)
+      '@codemirror/lang-css': 6.2.1(@codemirror/view@6.25.1)
       '@codemirror/language': 6.10.1
       '@codemirror/state': 6.4.0
       '@lezer/common': 1.2.1
@@ -13644,16 +13243,17 @@ packages:
       - '@codemirror/view'
     dev: false
 
-  /@codemirror/lang-sql@6.4.0(@codemirror/view@6.23.1):
+  /@codemirror/lang-sql@6.4.0(@codemirror/view@6.25.1)(@lezer/common@1.2.1):
     resolution: {integrity: sha512-UWGK1+zc9+JtkiT+XxHByp4N6VLgLvC2x0tIudrJG26gyNtn0hWOVoB0A8kh/NABPWkKl3tLWDYf2qOBJS9Zdw==}
     dependencies:
-      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.25.1)(@lezer/common@1.2.1)
       '@codemirror/language': 6.10.1
       '@codemirror/state': 6.4.0
       '@lezer/highlight': 1.2.0
       '@lezer/lr': 1.3.3
     transitivePeerDependencies:
       - '@codemirror/view'
+      - '@lezer/common'
     dev: false
 
   /@codemirror/lang-vue@0.1.2:
@@ -13675,10 +13275,10 @@ packages:
       '@lezer/lr': 1.3.3
     dev: false
 
-  /@codemirror/lang-xml@6.0.2(@codemirror/view@6.23.1):
+  /@codemirror/lang-xml@6.0.2(@codemirror/view@6.25.1):
     resolution: {integrity: sha512-JQYZjHL2LAfpiZI2/qZ/qzDuSqmGKMwyApYmEUUCTxLM4MWS7sATUEfIguZQr9Zjx/7gcdnewb039smF6nC2zw==}
     dependencies:
-      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.25.1)(@lezer/common@1.2.1)
       '@codemirror/language': 6.10.1
       '@codemirror/state': 6.4.0
       '@lezer/common': 1.2.1
@@ -13687,38 +13287,39 @@ packages:
       - '@codemirror/view'
     dev: false
 
-  /@codemirror/language-data@6.3.1(@codemirror/state@6.4.0)(@codemirror/view@6.23.1):
+  /@codemirror/language-data@6.3.1(@codemirror/state@6.4.0)(@codemirror/view@6.25.1)(@lezer/common@1.2.1):
     resolution: {integrity: sha512-p6jhJmvhGe1TG1EGNhwH7nFWWFSTJ8NDKnB2fVx5g3t+PpO0+63R7GJNxjS0TmmH3cdMxZbzejsik+rlEh1EyQ==}
     dependencies:
       '@codemirror/lang-angular': 0.1.2
       '@codemirror/lang-cpp': 6.0.2
-      '@codemirror/lang-css': 6.2.1(@codemirror/view@6.23.1)
+      '@codemirror/lang-css': 6.2.1(@codemirror/view@6.25.1)
       '@codemirror/lang-html': 6.4.2
       '@codemirror/lang-java': 6.0.1
       '@codemirror/lang-javascript': 6.2.2
       '@codemirror/lang-json': 6.0.1
-      '@codemirror/lang-less': 6.0.1(@codemirror/view@6.23.1)
+      '@codemirror/lang-less': 6.0.1(@codemirror/view@6.25.1)
       '@codemirror/lang-markdown': 6.2.4
       '@codemirror/lang-php': 6.0.1
-      '@codemirror/lang-python': 6.1.2(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+      '@codemirror/lang-python': 6.1.2(@codemirror/state@6.4.0)(@codemirror/view@6.25.1)(@lezer/common@1.2.1)
       '@codemirror/lang-rust': 6.0.1
-      '@codemirror/lang-sass': 6.0.2(@codemirror/view@6.23.1)
-      '@codemirror/lang-sql': 6.4.0(@codemirror/view@6.23.1)
+      '@codemirror/lang-sass': 6.0.2(@codemirror/view@6.25.1)
+      '@codemirror/lang-sql': 6.4.0(@codemirror/view@6.25.1)(@lezer/common@1.2.1)
       '@codemirror/lang-vue': 0.1.2
       '@codemirror/lang-wast': 6.0.1
-      '@codemirror/lang-xml': 6.0.2(@codemirror/view@6.23.1)
+      '@codemirror/lang-xml': 6.0.2(@codemirror/view@6.25.1)
       '@codemirror/language': 6.10.1
       '@codemirror/legacy-modes': 6.3.1
     transitivePeerDependencies:
       - '@codemirror/state'
       - '@codemirror/view'
+      - '@lezer/common'
     dev: false
 
   /@codemirror/language@6.10.1:
     resolution: {integrity: sha512-5GrXzrhq6k+gL5fjkAwt90nYDmjlzTIJV8THnxNFtNKWotMIlzzN+CpqxqwXOECnUdOndmSeWntVrVcv5axWRQ==}
     dependencies:
       '@codemirror/state': 6.4.0
-      '@codemirror/view': 6.23.1
+      '@codemirror/view': 6.25.1
       '@lezer/common': 1.2.1
       '@lezer/highlight': 1.2.0
       '@lezer/lr': 1.3.3
@@ -13735,7 +13336,7 @@ packages:
     resolution: {integrity: sha512-wzRkluWb1ptPKdzlsrbwwjYCPLgzU6N88YBAmlZi8WFyuiEduSd05MnJYNogzyc8rPK7pj6m95ptUApc8sHKVA==}
     dependencies:
       '@codemirror/state': 6.4.0
-      '@codemirror/view': 6.23.1
+      '@codemirror/view': 6.25.1
       crelt: 1.0.5
     dev: false
 
@@ -13743,7 +13344,7 @@ packages:
     resolution: {integrity: sha512-PIEN3Ke1buPod2EHbJsoQwlbpkz30qGZKcnmH1eihq9+bPQx8gelauUwLYaY4vBOuBAuEhmpDLii4rj/uO0yMA==}
     dependencies:
       '@codemirror/state': 6.4.0
-      '@codemirror/view': 6.23.1
+      '@codemirror/view': 6.25.1
       crelt: 1.0.5
     dev: false
 
@@ -13756,12 +13357,12 @@ packages:
     dependencies:
       '@codemirror/language': 6.10.1
       '@codemirror/state': 6.4.0
-      '@codemirror/view': 6.23.1
+      '@codemirror/view': 6.25.1
       '@lezer/highlight': 1.2.0
     dev: false
 
-  /@codemirror/view@6.23.1:
-    resolution: {integrity: sha512-J2Xnn5lFYT1ZN/5ewEoMBCmLlL71lZ3mBdb7cUEuHhX2ESoSrNEucpsDXpX22EuTGm9LOgC9v4Z0wx+Ez8QmGA==}
+  /@codemirror/view@6.25.1:
+    resolution: {integrity: sha512-2LXLxsQnHDdfGzDvjzAwZh2ZviNJm7im6tGpa0IONIDnFd8RZ80D2SNi8PDi6YjKcMoMRK20v6OmKIdsrwsyoQ==}
     dependencies:
       '@codemirror/state': 6.4.0
       style-mod: 4.1.0
@@ -13775,7 +13376,7 @@ packages:
     dev: true
     optional: true
 
-  /@crxjs/vite-plugin@2.0.0-beta.23(vite@5.1.3):
+  /@crxjs/vite-plugin@2.0.0-beta.23(vite@5.1.5):
     resolution: {integrity: sha512-AO+VYhtNZ1fITq/sc54FZpTtFvHR+gJwFGiWTGKs07bwYzzZFdF0sYeiFgZiEjaNkddkAzuM4F4lgOmCm69YUw==}
     peerDependencies:
       vite: ^5.0.0
@@ -13796,7 +13397,7 @@ packages:
       react-refresh: 0.13.0
       rollup: 2.78.1
       rxjs: 7.5.7
-      vite: 5.1.3(@types/node@18.11.9)
+      vite: 5.1.5(@types/node@18.11.9)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -14031,6 +13632,20 @@ packages:
     dependencies:
       effect: 2.3.5
       fast-check: 3.15.1
+    dev: false
+
+  /@emoji-mart/data@1.1.2:
+    resolution: {integrity: sha512-1HP8BxD2azjqWJvxIaWAMyTySeZY0Osr83ukYjltPVkNXeJvTz7yDrPLBtnrD5uqJ3tg4CcLuuBW09wahqL/fg==}
+    dev: false
+
+  /@emoji-mart/react@1.1.1(emoji-mart@5.5.2)(react@18.2.0):
+    resolution: {integrity: sha512-NMlFNeWgv1//uPsvLxvGQoIerPuVdXwK/EUek8OOkJ6wVOWPUizRBJU0hDqWZCOROVpfBgCemaC3m6jDOXi03g==}
+    peerDependencies:
+      emoji-mart: ^5.2
+      react: ^16.8 || ^17 || ^18
+    dependencies:
+      emoji-mart: 5.5.2
+      react: 18.2.0
     dev: false
 
   /@emotion/babel-plugin@11.10.2(@babel/core@7.21.3):
@@ -15319,7 +14934,7 @@ packages:
       chalk: 4.1.2
     dev: true
 
-  /@joshwooding/vite-plugin-react-docgen-typescript@0.3.0(typescript@5.2.2)(vite@5.1.3):
+  /@joshwooding/vite-plugin-react-docgen-typescript@0.3.0(typescript@5.2.2)(vite@5.1.5):
     resolution: {integrity: sha512-2D6y7fNvFmsLmRt6UCOFJPvFoPMJGT0Uh1Wg0RaigUp7kdQPs6yYn8Dmx6GZkOH/NW0yMTwRz/p0SRMMRo50vA==}
     peerDependencies:
       typescript: '>= 4.3.x'
@@ -15333,7 +14948,7 @@ packages:
       magic-string: 0.27.0
       react-docgen-typescript: 2.2.2(typescript@5.2.2)
       typescript: 5.2.2
-      vite: 5.1.3(@types/node@18.11.9)
+      vite: 5.1.5(@types/node@18.11.9)
     dev: true
 
   /@jridgewell/gen-mapping@0.1.1:
@@ -16373,14 +15988,6 @@ packages:
     resolution: {integrity: sha512-9b8mPpKrfeGRuhFH5iO1iwCLeIIsV6+H1sRfxbkoGXIyQE2BTsPd9zqSqQJ+pv5sJ/hT5M1zvOFL02MnEezFug==}
     dev: false
 
-  /@mrmlnc/readdir-enhanced@2.2.1:
-    resolution: {integrity: sha512-bPHp6Ji8b41szTOcaP63VlnbbO5Ny6dwAATtY6JTjh5N2OLrb5Qk/Th5cRkRQhkWCt+EJsYrNB0MiL+Gpn6e3g==}
-    engines: {node: '>=4'}
-    dependencies:
-      call-me-maybe: 1.0.2
-      glob-to-regexp: 0.3.0
-    dev: true
-
   /@multiformats/multiaddr-to-uri@9.0.8:
     resolution: {integrity: sha512-4eiN5iEiQfy2A98BxekUfW410L/ivg0sgjYSgSqmklnrBhK+QyMz4yqgfkub8xDTXOc7O5jp4+LVyM3ZqMeWNw==}
     dependencies:
@@ -16458,11 +16065,6 @@ packages:
     dependencies:
       '@nodelib/fs.stat': 2.0.5
       run-parallel: 1.2.0
-
-  /@nodelib/fs.stat@1.1.3:
-    resolution: {integrity: sha512-shAmDyaQC4H92APFoIaVDHCx5bStIocgvbwQyxPRrbUY20V1EYTbSDchWbuwlMG3V17cprZhA6+78JfB+3DTPw==}
-    engines: {node: '>= 6'}
-    dev: true
 
   /@nodelib/fs.stat@2.0.5:
     resolution: {integrity: sha512-RkhPPp2zrqDAQA/2jNhnztcPAlv64XdhIp7a7454A5ovI7Bukxgt7MX7udwAu3zg1DcpPU0rz3VV1SeaqvY4+A==}
@@ -16762,10 +16364,10 @@ packages:
       - debug
     dev: true
 
-  /@nrwl/vite@17.3.2(@swc-node/register@1.6.8)(@swc/core@1.4.0)(@types/node@18.11.9)(nx@17.3.2)(typescript@5.2.2)(vite@5.1.3)(vitest@1.2.2):
+  /@nrwl/vite@17.3.2(@swc-node/register@1.6.8)(@swc/core@1.4.0)(@types/node@18.11.9)(nx@17.3.2)(typescript@5.2.2)(vite@5.1.5)(vitest@1.3.1):
     resolution: {integrity: sha512-JhpNkaJ2ylq59EyretQsIdOeO6M6VdRck7uOavI7DVIKU6RjwrMNmccbIas/Lhbc0Wn67t1JiHK8xrvNDx2sPQ==}
     dependencies:
-      '@nx/vite': 17.3.2(@swc-node/register@1.6.8)(@swc/core@1.4.0)(@types/node@18.11.9)(nx@17.3.2)(typescript@5.2.2)(vite@5.1.3)(vitest@1.2.2)
+      '@nx/vite': 17.3.2(@swc-node/register@1.6.8)(@swc/core@1.4.0)(@types/node@18.11.9)(nx@17.3.2)(typescript@5.2.2)(vite@5.1.5)(vitest@1.3.1)
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@swc-node/register'
@@ -17181,21 +16783,21 @@ packages:
       - verdaccio
     dev: true
 
-  /@nx/vite@17.3.2(@swc-node/register@1.6.8)(@swc/core@1.4.0)(@types/node@18.11.9)(nx@17.3.2)(typescript@5.2.2)(vite@5.1.3)(vitest@1.2.2):
+  /@nx/vite@17.3.2(@swc-node/register@1.6.8)(@swc/core@1.4.0)(@types/node@18.11.9)(nx@17.3.2)(typescript@5.2.2)(vite@5.1.5)(vitest@1.3.1):
     resolution: {integrity: sha512-wWcECd08SfErSB0uPZ4yNNKnWg9wzxbK9+uSpgP790q/OBBuRi7gK3TjjFlWvmtqkGAFS5+7eT5jyB9q7XGCdA==}
     peerDependencies:
       vite: ^5.0.0
       vitest: ^1.0.0
     dependencies:
-      '@nrwl/vite': 17.3.2(@swc-node/register@1.6.8)(@swc/core@1.4.0)(@types/node@18.11.9)(nx@17.3.2)(typescript@5.2.2)(vite@5.1.3)(vitest@1.2.2)
+      '@nrwl/vite': 17.3.2(@swc-node/register@1.6.8)(@swc/core@1.4.0)(@types/node@18.11.9)(nx@17.3.2)(typescript@5.2.2)(vite@5.1.5)(vitest@1.3.1)
       '@nx/devkit': 17.3.2(nx@17.3.2)
       '@nx/js': 17.3.2(patch_hash=dwhumptijtisrex26nuv2tgk2a)(@swc-node/register@1.6.8)(@swc/core@1.4.0)(@types/node@18.11.9)(nx@17.3.2)(typescript@5.2.2)
       '@phenomnomnominal/tsquery': 5.0.1(typescript@5.2.2)
       '@swc/helpers': 0.5.1
       enquirer: 2.3.6
       tsconfig-paths: 4.1.2
-      vite: 5.1.3(@types/node@18.11.9)
-      vitest: 1.2.2(@types/node@18.11.9)(@vitest/browser@1.2.2)(@vitest/ui@1.2.2)(happy-dom@13.3.4)(jsdom@20.0.1)
+      vite: 5.1.5(@types/node@18.11.9)
+      vitest: 1.3.1(@types/node@18.11.9)(@vitest/browser@1.3.1)(@vitest/ui@1.3.1)(happy-dom@13.3.4)(jsdom@20.0.1)
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@swc-node/register'
@@ -17783,6 +17385,7 @@ packages:
   /@orama/orama@2.0.8:
     resolution: {integrity: sha512-qaku4eOWLH80pneJ/PtqvF/VXGO3b1W1X6NSji3Yh6s3BNuoyprOifNfSWEkIbymzT89/B+ZFoq6PKG43fW6PA==}
     engines: {node: '>= 16.0.0'}
+    dev: false
 
   /@phenomnomnominal/tsquery@5.0.1(typescript@5.2.2):
     resolution: {integrity: sha512-3nVv+e2FQwsW8Aw6qTU6f+1rfcJ3hrcnvH/mu9i8YhxO+9sqbOfpL8m6PbET5+xKOlz/VSbp0RoYWYCtIsnmuA==}
@@ -19580,7 +19183,7 @@ packages:
     resolution: {integrity: sha512-GRSOFhJzjGN+d4sKHTMSvNeUPoZiDHWmRnXfzaxrqe7dE/Nzlc8BiMSJdLDESZlndM7jIUrZ/F4yWqVYlI0rwQ==}
     engines: {node: '>=14'}
 
-  /@replit/codemirror-vim@6.0.14(@codemirror/commands@6.3.3)(@codemirror/language@6.10.1)(@codemirror/search@6.5.5)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1):
+  /@replit/codemirror-vim@6.0.14(@codemirror/commands@6.3.3)(@codemirror/language@6.10.1)(@codemirror/search@6.5.5)(@codemirror/state@6.4.0)(@codemirror/view@6.25.1):
     resolution: {integrity: sha512-wwhqhvL76FdRTdwfUWpKCbv0hkp2fvivfMosDVlL/popqOiNLtUhL02ThgHZH8mus/NkVr5Mj582lyFZqQrjOA==}
     peerDependencies:
       '@codemirror/commands': ^6.0.0
@@ -19593,7 +19196,7 @@ packages:
       '@codemirror/language': 6.10.1
       '@codemirror/search': 6.5.5
       '@codemirror/state': 6.4.0
-      '@codemirror/view': 6.23.1
+      '@codemirror/view': 6.25.1
     dev: false
 
   /@rollup/plugin-babel@5.3.1(@babel/core@7.23.9)(rollup@2.79.1):
@@ -20188,14 +19791,6 @@ packages:
     engines: {node: '>=18'}
     dev: true
 
-  /@sindresorhus/slugify@0.8.0:
-    resolution: {integrity: sha512-Y+C3aG0JHmi4nCfixHgq0iAtqWCjMCliWghf6fXbemRKSGzpcrHdYxGZGDt8MeFg+gH7ounfMbz6WogqKCWvDg==}
-    engines: {node: '>=6'}
-    dependencies:
-      escape-string-regexp: 1.0.5
-      lodash.deburr: 4.1.0
-    dev: true
-
   /@sinonjs/commons@1.8.3:
     resolution: {integrity: sha512-xkNcLAn/wZaX14RPlwizcKicDk9G3F8m2nU3L7Ukm5zBgTwiT0wsoFAHx9Jq56fJA1z/7uKGtCRu16sOUCLIHQ==}
     dependencies:
@@ -20532,7 +20127,7 @@ packages:
       - supports-color
     dev: true
 
-  /@storybook/builder-vite@8.0.0-alpha.11(typescript@5.2.2)(vite@5.1.3):
+  /@storybook/builder-vite@8.0.0-alpha.11(typescript@5.2.2)(vite@5.1.5):
     resolution: {integrity: sha512-Ql+RREqFUR/wGdFJkpireiy4HEjUchNtVkUs59hPunCjTxXVKbdFtCXQ8PxDL3l0Zx802o/6pNVATjCQvBeTgQ==}
     peerDependencies:
       '@preact/preset-vite': '*'
@@ -20563,7 +20158,7 @@ packages:
       fs-extra: 11.1.1
       magic-string: 0.30.0
       typescript: 5.2.2
-      vite: 5.1.3(@types/node@18.11.9)
+      vite: 5.1.5(@types/node@18.11.9)
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -20795,11 +20390,11 @@ packages:
     resolution: {integrity: sha512-FcOqPAXACP0I3oJ/ws6/rrPT9WGhu915Cg8D02a9YxLo0DE9zI+a9A5gRGvmQ09fiWPukqI8ZAEoQEdWUKMQdQ==}
     dev: true
 
-  /@storybook/html-vite@8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)(typescript@5.2.2)(vite@5.1.3):
+  /@storybook/html-vite@8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)(typescript@5.2.2)(vite@5.1.5):
     resolution: {integrity: sha512-49yN4gK9zd79dJPE4ZAHmcWHEbIkUfYATTfJReUpwShLn3Z9Fwwl1rKgNIvuGXeD8HOBc5l8Eba09cQFvi9jfA==}
     engines: {node: '>=18.0.0'}
     dependencies:
-      '@storybook/builder-vite': 8.0.0-alpha.11(typescript@5.2.2)(vite@5.1.3)
+      '@storybook/builder-vite': 8.0.0-alpha.11(typescript@5.2.2)(vite@5.1.5)
       '@storybook/core-server': 8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)
       '@storybook/html': 8.0.0-alpha.11
       '@storybook/node-logger': 8.0.0-alpha.11
@@ -20954,7 +20549,7 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: true
 
-  /@storybook/react-vite@8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)(rollup@3.23.0)(typescript@5.2.2)(vite@5.1.3):
+  /@storybook/react-vite@8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)(rollup@3.23.0)(typescript@5.2.2)(vite@5.1.5):
     resolution: {integrity: sha512-u47kykqugO4U6fck1TOl/Du1iYWysDWyomBQANWdhBXvTLfF3QyZ5Of9G2U+nFXf5Xxd3Qs/iWVyXiOnn0jWUg==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
@@ -20962,15 +20557,15 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
       vite: ^4.0.0 || ^5.0.0
     dependencies:
-      '@joshwooding/vite-plugin-react-docgen-typescript': 0.3.0(typescript@5.2.2)(vite@5.1.3)
+      '@joshwooding/vite-plugin-react-docgen-typescript': 0.3.0(typescript@5.2.2)(vite@5.1.5)
       '@rollup/pluginutils': 5.0.2(rollup@3.23.0)
-      '@storybook/builder-vite': 8.0.0-alpha.11(typescript@5.2.2)(vite@5.1.3)
+      '@storybook/builder-vite': 8.0.0-alpha.11(typescript@5.2.2)(vite@5.1.5)
       '@storybook/react': 8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)(typescript@5.2.2)
       magic-string: 0.30.0
       react: 18.2.0
       react-docgen: 7.0.1
       react-dom: 18.2.0(react@18.2.0)
-      vite: 5.1.3(@types/node@18.11.9)
+      vite: 5.1.5(@types/node@18.11.9)
     transitivePeerDependencies:
       - '@preact/preset-vite'
       - encoding
@@ -22650,12 +22245,6 @@ packages:
       '@types/lodash': 4.14.191
     dev: true
 
-  /@types/lodash.toarray@4.4.7:
-    resolution: {integrity: sha512-8cMZKAuMyngqE0ffoPXRg0pEVn660Mklzb13iVYoyfexWKTzDnscsTmivMF+Y5l0EzpQZsNt0yK/S1kg4sxdTw==}
-    dependencies:
-      '@types/lodash': 4.14.191
-    dev: true
-
   /@types/lodash.update@4.10.7:
     resolution: {integrity: sha512-S+s8ORbtkYZl+9EfhVyRZ7TAr7wEl/YRUzNdoTbjiiL2Ef8U/4mjiFo/J5bhWLJ8b8/GCnujXRCAv8EN9BI1VA==}
     dependencies:
@@ -23403,18 +22992,18 @@ packages:
       react: 18.2.0
     dev: false
 
-  /@vitejs/plugin-react-swc@3.6.0(vite@5.1.3):
+  /@vitejs/plugin-react-swc@3.6.0(vite@5.1.5):
     resolution: {integrity: sha512-XFRbsGgpGxGzEV5i5+vRiro1bwcIaZDIdBRP16qwm+jP68ue/S8FJTBEgOeojtVDYrbSua3XFp71kC8VJE6v+g==}
     peerDependencies:
       vite: ^4 || ^5
     dependencies:
       '@swc/core': 1.4.0
-      vite: 5.1.3(@types/node@18.11.9)
+      vite: 5.1.5(@types/node@18.11.9)
     transitivePeerDependencies:
       - '@swc/helpers'
     dev: true
 
-  /@vitejs/plugin-react@4.2.1(vite@5.1.3):
+  /@vitejs/plugin-react@4.2.1(vite@5.1.5):
     resolution: {integrity: sha512-oojO9IDc4nCUUi8qIR11KoQm0XFFLIwsRBwHRR4d/88IWghn1y6ckz/bJ8GHDCsYEJee8mDzqtJxh15/cisJNQ==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
@@ -23425,7 +23014,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.23.3(@babel/core@7.23.9)
       '@types/babel__core': 7.20.5
       react-refresh: 0.14.0
-      vite: 5.1.3(@types/node@18.11.9)
+      vite: 5.1.5(@types/node@18.11.9)
     transitivePeerDependencies:
       - supports-color
 
@@ -23440,12 +23029,12 @@ packages:
       vue: 3.4.15(typescript@5.2.2)
     dev: true
 
-  /@vitest/browser@1.2.2(vitest@1.2.2)(webdriverio@8.29.3):
-    resolution: {integrity: sha512-N8myxNVLbS9AbZ7B2cK33HTGYVzUTDArbMh3hLojOxaj7s7ZrBYYmzs0Q5J2wyDrOgs51p6OUrrzAIb1Z+Ck3A==}
+  /@vitest/browser@1.3.1(vitest@1.3.1)(webdriverio@8.33.0):
+    resolution: {integrity: sha512-pRof8G8nqRWwg3ouyIctyhfIVk5jXgF056uF//sqdi37+pVtDz9kBI/RMu0xlc8tgCyJ2aEMfbgJZPUydlEVaQ==}
     peerDependencies:
       playwright: '*'
       safaridriver: '*'
-      vitest: ^1.0.0
+      vitest: 1.3.1
       webdriverio: '*'
     peerDependenciesMeta:
       playwright:
@@ -23455,60 +23044,60 @@ packages:
       webdriverio:
         optional: true
     dependencies:
-      '@vitest/utils': 1.2.2
+      '@vitest/utils': 1.3.1
       magic-string: 0.30.5
       sirv: 2.0.4
-      vitest: 1.2.2(@types/node@18.11.9)(@vitest/browser@1.2.2)(@vitest/ui@1.2.2)(happy-dom@13.3.4)(jsdom@20.0.1)
-      webdriverio: 8.29.3(typescript@5.2.2)
+      vitest: 1.3.1(@types/node@18.11.9)(@vitest/browser@1.3.1)(@vitest/ui@1.3.1)(happy-dom@13.3.4)(jsdom@20.0.1)
+      webdriverio: 8.33.0(typescript@5.2.2)
     dev: true
 
-  /@vitest/expect@1.2.2:
-    resolution: {integrity: sha512-3jpcdPAD7LwHUUiT2pZTj2U82I2Tcgg2oVPvKxhn6mDI2On6tfvPQTjAI4628GUGDZrCm4Zna9iQHm5cEexOAg==}
+  /@vitest/expect@1.3.1:
+    resolution: {integrity: sha512-xofQFwIzfdmLLlHa6ag0dPV8YsnKOCP1KdAeVVh34vSjN2dcUiXYCD9htu/9eM7t8Xln4v03U9HLxLpPlsXdZw==}
     dependencies:
-      '@vitest/spy': 1.2.2
-      '@vitest/utils': 1.2.2
+      '@vitest/spy': 1.3.1
+      '@vitest/utils': 1.3.1
       chai: 4.4.1
     dev: true
 
-  /@vitest/runner@1.2.2:
-    resolution: {integrity: sha512-JctG7QZ4LSDXr5CsUweFgcpEvrcxOV1Gft7uHrvkQ+fsAVylmWQvnaAr/HDp3LAH1fztGMQZugIheTWjaGzYIg==}
+  /@vitest/runner@1.3.1:
+    resolution: {integrity: sha512-5FzF9c3jG/z5bgCnjr8j9LNq/9OxV2uEBAITOXfoe3rdZJTdO7jzThth7FXv/6b+kdY65tpRQB7WaKhNZwX+Kg==}
     dependencies:
-      '@vitest/utils': 1.2.2
+      '@vitest/utils': 1.3.1
       p-limit: 5.0.0
       pathe: 1.1.1
     dev: true
 
-  /@vitest/snapshot@1.2.2:
-    resolution: {integrity: sha512-SmGY4saEw1+bwE1th6S/cZmPxz/Q4JWsl7LvbQIky2tKE35US4gd0Mjzqfr84/4OD0tikGWaWdMja/nWL5NIPA==}
+  /@vitest/snapshot@1.3.1:
+    resolution: {integrity: sha512-EF++BZbt6RZmOlE3SuTPu/NfwBF6q4ABS37HHXzs2LUVPBLx2QoY/K0fKpRChSo8eLiuxcbCVfqKgx/dplCDuQ==}
     dependencies:
       magic-string: 0.30.5
       pathe: 1.1.1
       pretty-format: 29.7.0
     dev: true
 
-  /@vitest/spy@1.2.2:
-    resolution: {integrity: sha512-k9Gcahssw8d7X3pSLq3e3XEu/0L78mUkCjivUqCQeXJm9clfXR/Td8+AP+VC1O6fKPIDLcHDTAmBOINVuv6+7g==}
+  /@vitest/spy@1.3.1:
+    resolution: {integrity: sha512-xAcW+S099ylC9VLU7eZfdT9myV67Nor9w9zhf0mGCYJSO+zM2839tOeROTdikOi/8Qeusffvxb/MyBSOja1Uig==}
     dependencies:
       tinyspy: 2.2.0
     dev: true
 
-  /@vitest/ui@1.2.2(vitest@1.2.2):
-    resolution: {integrity: sha512-CG+5fa8lyoBr+9i+UZGS31Qw81v33QlD10uecHxN2CLJVN+jLnqx4pGzGvFFeJ7jSnUCT0AlbmVWY6fU6NJZmw==}
+  /@vitest/ui@1.3.1(vitest@1.3.1):
+    resolution: {integrity: sha512-2UrFLJ62c/eJGPHcclstMKlAR7E1WB1ITe1isuowEPJJHi3HfqofvsUqQ1cGrEF7kitG1DJuwURUA3HLDtQkXA==}
     peerDependencies:
-      vitest: ^1.0.0
+      vitest: 1.3.1
     dependencies:
-      '@vitest/utils': 1.2.2
+      '@vitest/utils': 1.3.1
       fast-glob: 3.3.2
       fflate: 0.8.1
       flatted: 3.2.9
       pathe: 1.1.1
       picocolors: 1.0.0
       sirv: 2.0.4
-      vitest: 1.2.2(@types/node@18.11.9)(@vitest/browser@1.2.2)(@vitest/ui@1.2.2)(happy-dom@13.3.4)(jsdom@20.0.1)
+      vitest: 1.3.1(@types/node@18.11.9)(@vitest/browser@1.3.1)(@vitest/ui@1.3.1)(happy-dom@13.3.4)(jsdom@20.0.1)
     dev: true
 
-  /@vitest/utils@1.2.2:
-    resolution: {integrity: sha512-WKITBHLsBHlpjnDQahr+XK6RE7MiAsgrIkr0pGhQ9ygoxBfUeG0lUG5iLlzqjmKSlBv3+j5EGsriBzh+C3Tq9g==}
+  /@vitest/utils@1.3.1:
+    resolution: {integrity: sha512-d3Waie/299qqRyHTm2DjADeTaNdNSVsnwHPWrs20JMpjh6eiVq7ggggweO8rc4arhf6rRkWuHKwvxGvejUXZZQ==}
     dependencies:
       diff-sequences: 29.6.3
       estree-walker: 3.0.3
@@ -23947,13 +23536,13 @@ packages:
       - vue
     dev: true
 
-  /@wdio/config@8.29.3:
-    resolution: {integrity: sha512-9TvmQAq4fLGKvYHvBJI4uXmqosZJgKtFQkxTaONt7R2cptIhQ7Ju6w+9eUsd4gQ6H/tUlQOstsx6ROHGJTVfKg==}
+  /@wdio/config@8.33.0:
+    resolution: {integrity: sha512-L2C8QK0cG645mviTGhjl1uSmnnIEs+kmUGDNNijLu1PqxK0YP5RGL3SSr3zTNRyp0CTib7P31ekriWYqURfCsw==}
     engines: {node: ^16.13 || >=18}
     dependencies:
       '@wdio/logger': 8.28.0
-      '@wdio/types': 8.29.1
-      '@wdio/utils': 8.29.3
+      '@wdio/types': 8.32.4
+      '@wdio/utils': 8.33.0
       decamelize: 6.0.0
       deepmerge-ts: 5.1.0
       glob: 10.3.10
@@ -23972,8 +23561,8 @@ packages:
       strip-ansi: 7.1.0
     dev: true
 
-  /@wdio/protocols@8.24.12:
-    resolution: {integrity: sha512-QnVj3FkapmVD3h2zoZk+ZQ8gevSj9D9MiIQIy8eOnY4FAneYZ9R9GvoW+mgNcCZO8S8++S/jZHetR8n+8Q808g==}
+  /@wdio/protocols@8.32.0:
+    resolution: {integrity: sha512-inLJRrtIGdTz/YPbcsvpSvPlYQFTVtF3OYBwAXhG2FiP1ZwE1CQNLP/xgRGye1ymdGCypGkexRqIx3KBGm801Q==}
     dev: true
 
   /@wdio/repl@8.24.12:
@@ -23983,20 +23572,20 @@ packages:
       '@types/node': 20.11.16
     dev: true
 
-  /@wdio/types@8.29.1:
-    resolution: {integrity: sha512-rZYzu+sK8zY1PjCEWxNu4ELJPYKDZRn7HFcYNgR122ylHygfldwkb5TioI6Pn311hQH/S+663KEeoq//Jb0f8A==}
+  /@wdio/types@8.32.4:
+    resolution: {integrity: sha512-pDPGcCvq0MQF8u0sjw9m4aMI2gAKn6vphyBB2+1IxYriL777gbbxd7WQ+PygMBvYVprCYIkLPvhUFwF85WakmA==}
     engines: {node: ^16.13 || >=18}
     dependencies:
       '@types/node': 20.11.16
     dev: true
 
-  /@wdio/utils@8.29.3:
-    resolution: {integrity: sha512-WnZ5vZrc0oKX0u6dteB9j04Yl2EUKBLi6GtRCNTRPTpCRYiGfqSLhs0pUddTNXye7gErlqIzsVwh64q19Z5KIQ==}
+  /@wdio/utils@8.33.0:
+    resolution: {integrity: sha512-XdNIZXTPF6Y89C/80GVexvz5p5a1NCaN/i2bw58PeDOlPYnvD5w3VIQZg0bi4n8lsPwJGseO0/y9qAGYkr8WwQ==}
     engines: {node: ^16.13 || >=18}
     dependencies:
       '@puppeteer/browsers': 1.9.1
       '@wdio/logger': 8.28.0
-      '@wdio/types': 8.29.1
+      '@wdio/types': 8.32.4
       decamelize: 6.0.0
       deepmerge-ts: 5.1.0
       edgedriver: 5.3.9
@@ -24197,7 +23786,6 @@ packages:
     engines: {node: '>=6.5'}
     dependencies:
       event-target-shim: 5.0.1
-    dev: false
 
   /abstract-extension@3.1.1:
     resolution: {integrity: sha512-qmUIqQEh6ZZBKN6JfysKgCEBqI4qVexE6/N/MUJjqtQhhuGR8a16GKnK6SGFKv/n1cAlbYxLDXbtyhkxSnVYRQ==}
@@ -24599,11 +24187,11 @@ packages:
       readable-stream: 2.3.7
     dev: true
 
-  /archiver-utils@4.0.1:
-    resolution: {integrity: sha512-Q4Q99idbvzmgCTEAAhi32BkOyq8iVI5EwdO0PmBDSGIzzjYNdcFn7Q7k3OzbLy4kLUPXfJtG6fO2RjftXbobBg==}
-    engines: {node: '>= 12.0.0'}
+  /archiver-utils@5.0.1:
+    resolution: {integrity: sha512-MMAoLdMvT/nckofX1tCLrf7uJce4jTNkiT6smA2u57AOImc1nce7mR3EDujxL5yv6/MnILuQH4sAsPtDS8kTvg==}
+    engines: {node: '>= 14'}
     dependencies:
-      glob: 8.1.0
+      glob: 10.3.10
       graceful-fs: 4.2.10
       lazystream: 1.0.1
       lodash: 4.17.21
@@ -24624,17 +24212,17 @@ packages:
       zip-stream: 2.1.3
     dev: true
 
-  /archiver@6.0.1:
-    resolution: {integrity: sha512-CXGy4poOLBKptiZH//VlWdFuUC1RESbdZjGjILwBuZ73P7WkAUN0htfSfBq/7k6FRFlpu7bg4JOkj1vU9G6jcQ==}
-    engines: {node: '>= 12.0.0'}
+  /archiver@7.0.0:
+    resolution: {integrity: sha512-R9HM9egs8FfktSqUqyjlKmvF4U+CWNqm/2tlROV+lOFg79MLdT67ae1l3hU47pGy8twSXxHoiefMCh43w0BriQ==}
+    engines: {node: '>= 14'}
     dependencies:
-      archiver-utils: 4.0.1
+      archiver-utils: 5.0.1
       async: 3.2.4
-      buffer-crc32: 0.2.13
-      readable-stream: 3.6.0
+      buffer-crc32: 1.0.0
+      readable-stream: 4.5.2
       readdir-glob: 1.1.3
       tar-stream: 3.1.7
-      zip-stream: 5.0.1
+      zip-stream: 6.0.0
     dev: true
 
   /archy@1.0.0:
@@ -24744,13 +24332,6 @@ packages:
     resolution: {integrity: sha512-/+3GRL7dDAGEfM6TseQk/U+mi18TU2Ms9I3UlLdUMhz2hbvGNTKdj9xniwXfUqgYhHxRx0+8UnKkvlNwVU+cWQ==}
     dev: false
 
-  /array-union@1.0.2:
-    resolution: {integrity: sha512-Dxr6QJj/RdU/hCaBjOfxW+q6lyuVE6JFWIrAUpuOOhoJJoQ99cUn3igRaHVB5P9WrgFVN0FfArM3x0cueOU8ng==}
-    engines: {node: '>=0.10.0'}
-    dependencies:
-      array-uniq: 1.0.3
-    dev: true
-
   /array-union@2.1.0:
     resolution: {integrity: sha512-HGyxoOTYUyCM6stUe6EJgnd4EoewAI7zMdfqO+kGjnlZmBDz/cR5pf8r/cR4Wq60sL/p0IkcjUEEPwS3GFrIyw==}
     engines: {node: '>=8'}
@@ -24758,11 +24339,6 @@ packages:
   /array-union@3.0.1:
     resolution: {integrity: sha512-1OvF9IbWwaeiM9VhzYXVQacMibxpXOMYVNIvMtKRyX9SImBXpKcFr8XvFDeEslCyuH/t6KRt7HEO94AlP8Iatw==}
     engines: {node: '>=12'}
-    dev: true
-
-  /array-uniq@1.0.3:
-    resolution: {integrity: sha512-MNha4BWQ6JbwhFhj03YK552f7cb3AzoE8SzeljgChvL1dl3IcvggXVz1DilzySZkCja+CXuZbdW7yATchWn8/Q==}
-    engines: {node: '>=0.10.0'}
     dev: true
 
   /array-unique@0.3.2:
@@ -24886,7 +24462,7 @@ packages:
     resolution: {integrity: sha512-x1FCFnFifvYDDzTaLII71vG5uvDwgtmDTEVWAxrgeiR8VjMONcCXJx7E+USjDtHlwFmt9MysbqgF9b9Vjr6w+w==}
     engines: {node: '>=4'}
     dependencies:
-      tslib: 2.6.0
+      tslib: 2.6.2
     dev: true
 
   /ast-types@0.14.2:
@@ -25178,19 +24754,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /babel-plugin-polyfill-corejs2@0.4.5(@babel/core@7.23.9):
-    resolution: {integrity: sha512-19hwUH5FKl49JEsvyTcoHakh6BE0wgXLLptIyKZ3PijHc/Ci521wygORCUCCred+E/twuqRyAkE02BAWPmsHOg==}
-    peerDependencies:
-      '@babel/core': ^7.4.0 || ^8.0.0-0 <8.0.0
-    dependencies:
-      '@babel/compat-data': 7.23.5
-      '@babel/core': 7.23.9
-      '@babel/helper-define-polyfill-provider': 0.4.2(@babel/core@7.23.9)
-      semver: 6.3.1
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
   /babel-plugin-polyfill-corejs2@0.4.8(@babel/core@7.23.9):
     resolution: {integrity: sha512-OtIuQfafSzpo/LhnJaykc0R/MMnuLSSVjVYy9mHArIZ9qTCSZ6TpWCuEKZYVoN//t8HqBNScHrOtCrIK5IaGLg==}
     peerDependencies:
@@ -25215,18 +24778,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /babel-plugin-polyfill-corejs3@0.8.3(@babel/core@7.23.9):
-    resolution: {integrity: sha512-z41XaniZL26WLrvjy7soabMXrfPWARN25PZoriDEiLMxAp50AUW3t35BGQUMg5xK3UrpVTtagIDklxYa+MhiNA==}
-    peerDependencies:
-      '@babel/core': ^7.4.0 || ^8.0.0-0 <8.0.0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-define-polyfill-provider': 0.4.2(@babel/core@7.23.9)
-      core-js-compat: 3.32.2
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
   /babel-plugin-polyfill-corejs3@0.9.0(@babel/core@7.23.9):
     resolution: {integrity: sha512-7nZPG1uzK2Ymhy/NbaOWTg3uibM2BmGASS4vHS4szRZAIR8R6GwA/xAujpdrXU5iyklrimWnLWU+BLF9suPTqg==}
     peerDependencies:
@@ -25248,17 +24799,6 @@ packages:
       '@babel/helper-define-polyfill-provider': 0.3.3(@babel/core@7.21.3)
     transitivePeerDependencies:
       - supports-color
-
-  /babel-plugin-polyfill-regenerator@0.5.2(@babel/core@7.23.9):
-    resolution: {integrity: sha512-tAlOptU0Xj34V1Y2PNTL4Y0FOJMDB6bZmoW39FeCQIhigGLkqu3Fj6uiXpxIf6Ij274ENdYx64y6Au+ZKlb1IA==}
-    peerDependencies:
-      '@babel/core': ^7.4.0 || ^8.0.0-0 <8.0.0
-    dependencies:
-      '@babel/core': 7.23.9
-      '@babel/helper-define-polyfill-provider': 0.4.2(@babel/core@7.23.9)
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
 
   /babel-plugin-polyfill-regenerator@0.5.5(@babel/core@7.23.9):
     resolution: {integrity: sha512-OJGYZlhLqBh2DDHeqAxWB1XIvr49CxiJ2gIt61/PU55CQK4Z58OzMqjDe1zwQdQk+rBYsRc+1rJmdajM3gimHg==}
@@ -25794,6 +25334,11 @@ packages:
   /buffer-crc32@0.2.13:
     resolution: {integrity: sha512-VO9Ht/+p3SN7SKWqcrgEzjGbRSJYTx+Q1pTQC0wrWqHx0vpJraQ6GtHx8tvcg1rlK1byhU5gccxgOgj7B0TDkQ==}
 
+  /buffer-crc32@1.0.0:
+    resolution: {integrity: sha512-Db1SbgBS/fg/392AblrMJk97KggmvYhr4pB5ZIMTWtaivCPMWLkmb7m21cJvpvgK+J3nsU2CmmixNBZx4vFj/w==}
+    engines: {node: '>=8.0.0'}
+    dev: true
+
   /buffer-equal-constant-time@1.0.1:
     resolution: {integrity: sha512-zRpUiDwd/xk6ADqPMATG8vc9VPrkck7T07OIx0gnjmJAnHnTVXNQG3vfvWNuiZIkwu9KrKdA1iJKfsfTVxE6NA==}
     dev: false
@@ -26026,10 +25571,6 @@ packages:
       get-intrinsic: 1.2.2
       set-function-length: 1.1.1
 
-  /call-me-maybe@1.0.2:
-    resolution: {integrity: sha512-HpX65o1Hnr9HH25ojC1YGs7HCQLq0GCOibSaWER0eNpgJ/Z1MZv2mTc7+xh6WOPxbRVcmgbv4hGU+uSQ/2xFZQ==}
-    dev: true
-
   /callsite@1.0.0:
     resolution: {integrity: sha512-0vdNRFXn5q+dtOqjfFtmtlI9N2eVZ7LMyEV2iKC5mEEFvSg/69Ml6b/WU2qF8W1nLRa0wiSrDT3Y5jOHZCwKPQ==}
     dev: false
@@ -26092,12 +25633,6 @@ packages:
 
   /caniuse-lite@1.0.30001580:
     resolution: {integrity: sha512-mtj5ur2FFPZcCEpXFy8ADXbDACuNFXg6mxVDqp7tqooX6l3zwm+d8EPoeOSIFRDvHs8qu7/SLFOGniULkcH2iA==}
-
-  /canvas-renderer@2.2.1:
-    resolution: {integrity: sha512-RrBgVL5qCEDIXpJ6NrzyRNoTnXxYarqm/cS/W6ERhUJts5UQtt/XPEosGN3rqUkZ4fjBArlnCbsISJ+KCFnIAg==}
-    dependencies:
-      '@types/node': 18.18.9
-    dev: false
 
   /canvas-size@1.2.6:
     resolution: {integrity: sha512-x2iVHOrZ5x9V0Hwx6kBz+Yxf/VCAII+jrD6WLjJbytJLozHq/oDJjEva432Os0eHxWMFR0vYlLJwTr6QxyxQqw==}
@@ -26195,37 +25730,24 @@ packages:
     dependencies:
       nanoassert: 2.0.0
 
-  /chai-as-promised@7.1.1(chai@4.3.7):
+  /chai-as-promised@7.1.1(chai@4.4.1):
     resolution: {integrity: sha512-azL6xMoi+uxu6z4rhWQ1jbdUhOMhis2PvscD/xjLqNMkv3BPPp2JyyuTHOrf9BOosGpNQ11v6BKv/g57RXbiaA==}
     peerDependencies:
       chai: '>= 2.1.2 < 5'
     dependencies:
-      chai: 4.3.7
+      chai: 4.4.1
       check-error: 1.0.2
     dev: true
 
-  /chai-dom@1.11.0(chai@4.3.7)(mocha@10.2.0):
+  /chai-dom@1.11.0(chai@4.4.1)(mocha@10.2.0):
     resolution: {integrity: sha512-ZzGlEfk1UhHH5+N0t9bDqstOxPEXmn3EyXvtsok5rfXVDOFDJbHVy12rED6ZwkJAUDs2w7/Da4Hlq2LB63kltg==}
     engines: {node: '>= 0.12.0'}
     peerDependencies:
       chai: '>= 3'
       mocha: '>= 2'
     dependencies:
-      chai: 4.3.7
+      chai: 4.4.1
       mocha: 10.2.0
-    dev: true
-
-  /chai@4.3.7:
-    resolution: {integrity: sha512-HLnAzZ2iupm25PlN0xFreAlBA5zaBSv3og0DdeGA4Ar6h6rJ3A0rolRUKJhSF2V10GZKDgWF/VmAEsNWjCRB+A==}
-    engines: {node: '>=4'}
-    dependencies:
-      assertion-error: 1.1.0
-      check-error: 1.0.2
-      deep-eql: 4.1.3
-      get-func-name: 2.0.0
-      loupe: 2.3.6
-      pathval: 1.1.1
-      type-detect: 4.0.8
     dev: true
 
   /chai@4.4.1:
@@ -26362,20 +25884,6 @@ packages:
     resolution: {integrity: sha512-iKEoDYaRmd1mxM90a2OEfWhjsjPpYPuQ+lMYsoxB126+t8fw7ySEO48nmDg5COTjxDI65/Y2OWpeEHk3ZOe8zg==}
     dependencies:
       get-func-name: 2.0.2
-    dev: true
-
-  /check-md@1.0.0:
-    resolution: {integrity: sha512-H9LS+TDB6ix4QZQFiTp2TVIL+24zKutOKDqxIxAxnvkx3phpzrwPINaykD8RSeynxIVp3s0PecR2GEA3KLbziQ==}
-    engines: {node: '>=8.0.0'}
-    hasBin: true
-    dependencies:
-      '@sindresorhus/slugify': 0.8.0
-      chalk: 2.4.2
-      commander: 2.20.3
-      diacritics: 1.3.0
-      globby: 9.2.0
-    transitivePeerDependencies:
-      - supports-color
     dev: true
 
   /cheerio-select@2.1.0:
@@ -26733,16 +26241,18 @@ packages:
     resolution: {integrity: sha512-+xi2ENsvchtUNa8oBUU58gHgmyN6BEEeZ8NIEgeQ0XnC+AoyihivgZYe+OOiNi+fLy/NUowugwV5gP8XWYDm0Q==}
     dev: true
 
-  /codemirror@6.0.1:
+  /codemirror@6.0.1(@lezer/common@1.2.1):
     resolution: {integrity: sha512-J8j+nZ+CdWmIeFIGXEFbFPtpiYacFMDR8GlHK3IyHQJMCaVRfGx9NT+Hxivv1ckLWPvNdZqndbr/7lVhrf/Svg==}
     dependencies:
-      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
+      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.25.1)(@lezer/common@1.2.1)
       '@codemirror/commands': 6.3.3
       '@codemirror/language': 6.10.1
       '@codemirror/lint': 6.4.2
       '@codemirror/search': 6.5.5
       '@codemirror/state': 6.4.0
-      '@codemirror/view': 6.23.1
+      '@codemirror/view': 6.25.1
+    transitivePeerDependencies:
+      - '@lezer/common'
     dev: false
 
   /codepage@1.15.0:
@@ -26955,14 +26465,14 @@ packages:
       readable-stream: 2.3.7
     dev: true
 
-  /compress-commons@5.0.1:
-    resolution: {integrity: sha512-MPh//1cERdLtqwO3pOFLeXtpuai0Y2WCd5AhtKxznqM7WtaMYaOEMSgn45d9D10sIHSfIKE603HlOp8OPGrvag==}
-    engines: {node: '>= 12.0.0'}
+  /compress-commons@6.0.1:
+    resolution: {integrity: sha512-l7occIJn8YwlCEbWUCrG6gPms9qnJTCZSaznCa5HaV+yJMH4kM8BDc7q9NyoQuoiB2O6jKgTcTeY462qw6MyHw==}
+    engines: {node: '>= 14'}
     dependencies:
       crc-32: 1.2.2
-      crc32-stream: 5.0.0
+      crc32-stream: 6.0.0
       normalize-path: 3.0.0
-      readable-stream: 3.6.0
+      readable-stream: 4.5.2
     dev: true
 
   /compress-json@2.1.2:
@@ -27248,12 +26758,12 @@ packages:
       readable-stream: 3.6.0
     dev: true
 
-  /crc32-stream@5.0.0:
-    resolution: {integrity: sha512-B0EPa1UK+qnpBZpG+7FgPCu0J2ETLpXq09o9BkLkEAhdB6Z61Qo4pJ3JYu0c+Qi+/SAL7QThqnzS06pmSSyZaw==}
-    engines: {node: '>= 12.0.0'}
+  /crc32-stream@6.0.0:
+    resolution: {integrity: sha512-piICUB6ei4IlTv1+653yq5+KoqfBYmj9bw6LqXoOneTMDXk5nM1qt12mFW1caG3LlJXEKW1Bp0WggEmIfQB34g==}
+    engines: {node: '>= 14'}
     dependencies:
       crc-32: 1.2.2
-      readable-stream: 3.6.0
+      readable-stream: 4.5.2
     dev: true
 
   /crc@3.8.0:
@@ -28155,7 +27665,6 @@ packages:
         optional: true
     dependencies:
       '@preact/signals-core': 1.5.1
-    dev: false
 
   /deepsignal@1.5.0(@preact/signals-react@1.3.8):
     resolution: {integrity: sha512-bFywDpBUUWMs576H2dgLFLLFuQ/UWXbzHfKD98MZTfGsl7+twIzvz4ihCNrRrZ/Emz3kqJaNIAp5eBWUEWhnAw==}
@@ -28407,8 +27916,8 @@ packages:
     resolution: {integrity: sha512-hyWmRrexdhbZ1tcJUGpO95ivbRhWXz++F4Ko+n21AY5PNln2ovoJw+8ZMNDTtip+CNFQfrtLVh/w4009dXO/eQ==}
     dev: true
 
-  /devtools-protocol@0.0.1249869:
-    resolution: {integrity: sha512-Ctp4hInA0BEavlUoRy9mhGq0i+JSo/AwVyX2EFgZmV1kYB+Zq+EMBAn52QWu6FbRr10hRb6pBl420upbp4++vg==}
+  /devtools-protocol@0.0.1263784:
+    resolution: {integrity: sha512-k0SCZMwj587w4F8QYbP5iIbSonL6sd3q8aVJch036r9Tv2t9b5/Oq7AiJ/FJvRuORm/pJNXZtrdNNWlpRnl56A==}
     dev: true
 
   /dezalgo@1.0.4:
@@ -28416,10 +27925,6 @@ packages:
     dependencies:
       asap: 2.0.6
       wrappy: 1.0.2
-    dev: true
-
-  /diacritics@1.3.0:
-    resolution: {integrity: sha512-wlwEkqcsaxvPJML+rDh/2iS824jbREk6DUMUKkEaSlxdYHeS43cClJtsWglvw2RfeXGm6ohKDqsXteJ5sP5enA==}
     dev: true
 
   /didyoumean@1.2.2:
@@ -28475,13 +27980,6 @@ packages:
 
   /dijkstrajs@1.0.2:
     resolution: {integrity: sha512-QV6PMaHTCNmKSeP6QoXhVTw9snc9VD8MulTT0Bd99Pacp4SS1cjcrYPgBPmibqKVtMJJfqC6XvOXgPMEEPH/fg==}
-    dev: true
-
-  /dir-glob@2.2.2:
-    resolution: {integrity: sha512-f9LBi5QWzIW3I6e//uxZoLBlUt9kcp66qo0sSCxL6YZKc75R1c4MFCoe/LaZiBGmgujvQdxc5Bn3QhfyvK5Hsw==}
-    engines: {node: '>=4'}
-    dependencies:
-      path-type: 3.0.0
     dev: true
 
   /dir-glob@3.0.1:
@@ -28841,6 +28339,10 @@ packages:
   /emittery@0.6.0:
     resolution: {integrity: sha512-6EMRGr9KzYWp8DzHFZsKVZBsMO6QhAeHMeHND8rhyBNCHKMLpgW9tZv40bwN3rAIKRS5CxcK8oLRKUJSB9h7yQ==}
     engines: {node: '>=10'}
+    dev: false
+
+  /emoji-mart@5.5.2:
+    resolution: {integrity: sha512-Sqc/nso4cjxhOwWJsp9xkVm8OF5c+mJLZJFoFfzRuKO+yWiN7K8c96xmtughYb0d/fZ8UC6cLIQ/p4BR6Pv3/A==}
     dev: false
 
   /emoji-regex@10.3.0:
@@ -29941,7 +29443,6 @@ packages:
   /event-target-shim@5.0.1:
     resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
     engines: {node: '>=6'}
-    dev: false
 
   /eventemitter3@4.0.7:
     resolution: {integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==}
@@ -30263,20 +29764,6 @@ packages:
 
   /fast-fifo@1.3.2:
     resolution: {integrity: sha512-/d9sfos4yxzpwkDkuN7k2SqFKtYNmCTzgfEpz82x34IM9/zc8KGxQoXg1liNC/izpRM/MBdt44Nmx41ZWqk+FQ==}
-
-  /fast-glob@2.2.7:
-    resolution: {integrity: sha512-g1KuQwHOZAmOZMuBtHdxDtju+T2RT8jgCC9aANsbpdiDDTSnjgfuVsIBNKbUeJI3oKMRExcfNDtJl4OhbffMsw==}
-    engines: {node: '>=4.0.0'}
-    dependencies:
-      '@mrmlnc/readdir-enhanced': 2.2.1
-      '@nodelib/fs.stat': 1.1.3
-      glob-parent: 3.1.0
-      is-glob: 4.0.3
-      merge2: 1.4.1
-      micromatch: 3.1.10
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
 
   /fast-glob@3.2.12:
     resolution: {integrity: sha512-DVj4CQIYYow0BlaelwK1pHl5n5cRSJfM60UA0zK891sVInoPri2Ekj7+e1CT3/3qxXenpI+nBBmQAcJPJgaj4w==}
@@ -31078,10 +30565,6 @@ packages:
       tiny-each-async: 2.0.3
     dev: false
 
-  /get-func-name@2.0.0:
-    resolution: {integrity: sha512-Hm0ixYtaSZ/V7C8FJrtZIuBBI+iSgL+1Aq82zSu8VQNB4S3Gk8e7Qs3VwBDJAhmRZcFqkl3tQu36g/Foh5I5ig==}
-    dev: true
-
   /get-func-name@2.0.2:
     resolution: {integrity: sha512-8vXOvuE167CtIc3OyItco7N/dpRtBbYOsPsXCz7X/PMnlGjYjSGuZJgM1Y7mmew7BKf9BqvLX2tnOVy1BBUsxQ==}
     dev: true
@@ -31231,13 +30714,6 @@ packages:
       is-glob: 2.0.1
     dev: true
 
-  /glob-parent@3.1.0:
-    resolution: {integrity: sha512-E8Ak/2+dZY6fnzlR7+ueWvhsH1SjHr4jjss4YS/h4py44jY9MhK/VFdaZJAWDz6BbL21KeteKxFSFpq8OS5gVA==}
-    dependencies:
-      is-glob: 3.1.0
-      path-dirname: 1.0.2
-    dev: true
-
   /glob-parent@5.1.2:
     resolution: {integrity: sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==}
     engines: {node: '>= 6'}
@@ -31258,10 +30734,6 @@ packages:
     dependencies:
       '@types/glob': 7.1.4
       glob: 7.2.3
-    dev: true
-
-  /glob-to-regexp@0.3.0:
-    resolution: {integrity: sha512-Iozmtbqv0noj0uDDqoL0zNq0VBEfK2YFoMAZoxJe4cwphvLR+JskfF30QhXHOR4m3KrE6NLRYw+U9MRXvifyig==}
     dev: true
 
   /glob-to-regexp@0.4.1:
@@ -31462,22 +30934,6 @@ packages:
       path-type: 5.0.0
       slash: 5.1.0
       unicorn-magic: 0.1.0
-    dev: true
-
-  /globby@9.2.0:
-    resolution: {integrity: sha512-ollPHROa5mcxDEkwg6bPt3QbEf4pDQSNtd6JPL1YvOvAo/7/0VAm9TccUeoTmarjPw4pfUthSCqcyfNB1I3ZSg==}
-    engines: {node: '>=6'}
-    dependencies:
-      '@types/glob': 7.1.4
-      array-union: 1.0.2
-      dir-glob: 2.2.2
-      fast-glob: 2.2.7
-      glob: 7.1.7
-      ignore: 4.0.6
-      pify: 4.0.1
-      slash: 2.0.0
-    transitivePeerDependencies:
-      - supports-color
     dev: true
 
   /globrex@0.1.2:
@@ -32454,11 +31910,6 @@ packages:
       minimatch: 3.1.2
     dev: true
 
-  /ignore@4.0.6:
-    resolution: {integrity: sha512-cyFDKrqc/YdcWFniJhzI42+AzS+gNwmUzOSFcRCQYwySuBBBy/KjuxWLZ/FHEH6Moq1NizMOBWyTcv8O4OZIMg==}
-    engines: {node: '>= 4'}
-    dev: true
-
   /ignore@5.2.4:
     resolution: {integrity: sha512-MAb38BcSbH0eHNBxn7ql2NH/kX33OkB3lZ1BNdh7ENeRChHTYsTvWrMubiIAMNS2llXEEgZ1MUOBtXChP3kaFQ==}
     engines: {node: '>= 4'}
@@ -33100,13 +32551,6 @@ packages:
       is-extglob: 1.0.0
     dev: true
 
-  /is-glob@3.1.0:
-    resolution: {integrity: sha512-UFpDDrPgM6qpnFNI+rh/p3bUaq9hKLZN8bMUWzxmcnZVS3omf4IPK+BrewlnWjO1WmUsMYuSjKh4UJuV4+Lqmw==}
-    engines: {node: '>=0.10.0'}
-    dependencies:
-      is-extglob: 2.1.1
-    dev: true
-
   /is-glob@4.0.3:
     resolution: {integrity: sha512-xelSayHH36ZgE7ZWhli7pW34hNbNl8Ojv5KVmkJD4hBdD3th8Tfk9vYasLM+mXWOZhFkgZfxhLSnrwRr4elSSg==}
     engines: {node: '>=0.10.0'}
@@ -33690,14 +33134,6 @@ packages:
 
   /javascript-natural-sort@0.7.1:
     resolution: {integrity: sha512-nO6jcEfZWQXDhOiBtG2KvKyEptz7RVbpGP4vTD2hLBdmNQSsCiicO2Ioinv6UI4y9ukqnBpy+XZ9H6uLNgJTlw==}
-    dev: false
-
-  /jdenticon@3.2.0:
-    resolution: {integrity: sha512-z6Iq3fTODUMSOiR2nNYrqigS6Y0GvdXfyQWrUby7htDHvX7GNEwaWR4hcaL+FmhEgBe08Xkup/BKxXQhDJByPA==}
-    engines: {node: '>=6.4.0'}
-    hasBin: true
-    dependencies:
-      canvas-renderer: 2.2.1
     dev: false
 
   /jest-changed-files@28.1.3:
@@ -34727,6 +34163,10 @@ packages:
   /js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
+  /js-tokens@8.0.3:
+    resolution: {integrity: sha512-UfJMcSJc+SEXEl9lH/VLHSZbThQyLpw1vLO1Lb+j4RWDvG3N2f7yj3PVQA3cmkTBNldJ9eFnM+xEXxHIXrYiJw==}
+    dev: true
+
   /js-yaml@3.14.1:
     resolution: {integrity: sha512-okMH7OXXJ7YrN9Ok3/SXrnu4iX9yOk+25nqX4imS2npuvTYDmo/QEZoqwZkYaIDk3jVvBOTOIEgEhaLOynBS9g==}
     hasBin: true
@@ -35753,10 +35193,6 @@ packages:
   /lodash.debounce@4.0.8:
     resolution: {integrity: sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==}
 
-  /lodash.deburr@4.1.0:
-    resolution: {integrity: sha512-m/M1U1f3ddMCs6Hq2tAsYThTBDaAKFDX3dwDo97GEYzamXi9SqUpjWi/Rrj/gf3X2n8ktwgZrlP1z6E3v/IExQ==}
-    dev: true
-
   /lodash.defaults@4.2.0:
     resolution: {integrity: sha512-qjxPLHd3r5DnsdGacqOMU6pb/avJzdh9tFX2ymgoZE27BmjXrNy/y4LoaiTeAb+O3gL8AfpJGtqfX/ae2leYYQ==}
 
@@ -35843,10 +35279,6 @@ packages:
 
   /lodash.throttle@4.1.1:
     resolution: {integrity: sha512-wIkUCfVKpVsWo3JSZlc+8MB5it+2AN5W8J7YVMST30UrvcQNZ1Okbj+rbVniijTWE6FGYy4XJq/rHkas8qJMLQ==}
-    dev: false
-
-  /lodash.toarray@4.4.0:
-    resolution: {integrity: sha512-QyffEA3i5dma5q2490+SgCvDN0pXLmRGSyAANuVi0HQ01Pkfr9fuoKQW8wm1wGBnJITs/mS7wQvS6VshUEBFCw==}
     dev: false
 
   /lodash.truncate@4.4.2:
@@ -35939,12 +35371,6 @@ packages:
       currently-unhandled: 0.4.1
       signal-exit: 3.0.7
     dev: false
-
-  /loupe@2.3.6:
-    resolution: {integrity: sha512-RaPMZKiMy8/JruncMU5Bt6na1eftNoo++R4Y+N2FrxkDVTrGvcyzFTsaGif4QTeKESheMGegbhw6iUAq+5A8zA==}
-    dependencies:
-      get-func-name: 2.0.2
-    dev: true
 
   /loupe@2.3.7:
     resolution: {integrity: sha512-zSMINGVYkdpYSOBmLi0D1Uo7JU9nVdQKrHxC8eYlV+9YKK9WePqAlL7lSlorG/U2Fw1w0hTBmaa/jrQ3UbPHtA==}
@@ -39085,10 +38511,6 @@ packages:
       dot-case: 3.0.4
       tslib: 2.6.0
 
-  /path-dirname@1.0.2:
-    resolution: {integrity: sha512-ALzNPpyNq9AqXMBjeymIjFDAkAFH06mHJH/cSBHAgU0s4vfpBn6b2nf8tiRLvagKD8RbTpq2FKTBg7cl9l3c7Q==}
-    dev: true
-
   /path-exists@2.1.0:
     resolution: {integrity: sha512-yTltuKuhtNeFJKa1PiRzfLAU5182q1y4Eb4XCJ3PBqyzEDkAZRzBrKKBct682ls9reBVHf9udYLN5Nd+K1B9BQ==}
     engines: {node: '>=0.10.0'}
@@ -39150,13 +38572,6 @@ packages:
       pify: 2.3.0
       pinkie-promise: 2.0.1
     dev: false
-
-  /path-type@3.0.0:
-    resolution: {integrity: sha512-T2ZUsdZFHgA3u4e5PfPbjd7HDDpxPnQb5jN0SrDsjNSuVXHJqtwTnWqG0B1jZrgmJ/7lj1EmVIByWt1gxGkWvg==}
-    engines: {node: '>=4'}
-    dependencies:
-      pify: 3.0.0
-    dev: true
 
   /path-type@4.0.0:
     resolution: {integrity: sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==}
@@ -39245,11 +38660,6 @@ packages:
   /pify@2.3.0:
     resolution: {integrity: sha512-udgsAY+fTnvv7kI7aaxbqwWNb0AHiB0qBO89PZKPkoTmGOgdbrHDKD+0B2X4uTfJ/FT1R09r9gTsjUjNJotuog==}
     engines: {node: '>=0.10.0'}
-
-  /pify@3.0.0:
-    resolution: {integrity: sha512-C3FsVNH1udSEX48gGX1xfvwTWfsYWj5U+8/uK15BGzIGrKoUpghX8hWZwa/OFnakBiiVNmBvemTJR5mcy7iPcg==}
-    engines: {node: '>=4'}
-    dev: true
 
   /pify@4.0.1:
     resolution: {integrity: sha512-uB80kBFb/tfd68bVleG9T5GGsGPjJrLAUpR5PZIrhBnIaRTQRjqdJSsIKkOP6OAIFbj7GOrcudc5pNjZ+geV2g==}
@@ -39389,7 +38799,7 @@ packages:
     engines: {node: '>=10.0'}
     dependencies:
       camelcase-css: 2.0.1
-      postcss: 8.4.33
+      postcss: 8.4.35
     dev: false
 
   /postcss-js@4.0.1(postcss@8.4.33):
@@ -40838,6 +40248,17 @@ packages:
       string_decoder: 1.3.0
       util-deprecate: 1.0.2
 
+  /readable-stream@4.5.2:
+    resolution: {integrity: sha512-yjavECdqeZ3GLXNgRXgeQEdz9fvDDkNKyHnbHRFtOr7/LcfgBcmct7t/ET+HaCTqfh06OzoAxrkN/IfjJBVe+g==}
+    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    dependencies:
+      abort-controller: 3.0.0
+      buffer: 6.0.3
+      events: 3.3.0
+      process: 0.11.10
+      string_decoder: 1.3.0
+    dev: true
+
   /readdir-glob@1.1.3:
     resolution: {integrity: sha512-v05I2k7xN8zXvPD9N+z/uhXPaj0sUFCe2rcWZIpBsqxfP7xXFQ0tipAd/wjj1YxWyWtUS5IDJpOG82JKt2EAVA==}
     dependencies:
@@ -42120,8 +41541,8 @@ packages:
   /shellwords@0.1.1:
     resolution: {integrity: sha512-vFwSUfQvqybiICwZY5+DAWIPLKsWO31Q91JSKl3UYv+K5c2QRPzn0qzec6QPu1Qc9eHYItiP3NdJqNVqetYAww==}
 
-  /shiki@0.14.2:
-    resolution: {integrity: sha512-ltSZlSLOuSY0M0Y75KA+ieRaZ0Trf5Wl3gutE7jzLuIcWxLp5i/uEnLoQWNvgKXQ5OMpGkJnVMRLAuzjc0LJ2A==}
+  /shiki@0.14.7:
+    resolution: {integrity: sha512-dNPAPrxSc87ua2sKJ3H5dQ/6ZaY8RNnaAqK+t0eG7p0Soi2ydiqbGOTaZCqaYvA/uZYfS1LJnemt3Q+mSfcPCg==}
     dependencies:
       ansi-sequence-parser: 1.1.0
       jsonc-parser: 3.2.0
@@ -42277,11 +41698,6 @@ packages:
       '@types/sax': 1.2.4
       arg: 5.0.2
       sax: 1.2.4
-    dev: true
-
-  /slash@2.0.0:
-    resolution: {integrity: sha512-ZYKh3Wh2z1PpEXWr0MpSBZ0V6mZHAQfYevttO11c51CaWjGTaadiKZ+wVt1PbMlDV5qhMFslpZCemhwOK7C89A==}
-    engines: {node: '>=6'}
     dev: true
 
   /slash@3.0.0:
@@ -43011,10 +42427,10 @@ packages:
     engines: {node: '>=14.16'}
     dev: true
 
-  /strip-literal@1.3.0:
-    resolution: {integrity: sha512-PugKzOsyXpArk0yWmUwqOZecSO0GH0bPoctLcqNDH9J04pVW3lflYE0ujElBGTloevcxF5MofAOZ7C5l2b+wLg==}
+  /strip-literal@2.0.0:
+    resolution: {integrity: sha512-f9vHgsCWBq2ugHAkGMiiYY+AYG0D/cbloKKg0nhaaaSNsujdGIpVXCNsrJpCKr5M0f4aI31mr13UjY6GAuXCKA==}
     dependencies:
-      acorn: 8.11.3
+      js-tokens: 8.0.3
     dev: true
 
   /striptags@3.2.0:
@@ -44137,22 +43553,23 @@ packages:
   /typedarray@0.0.6:
     resolution: {integrity: sha512-/aCDEGatGvZ2BIk+HmLf4ifCJFwvKFNb9/JeZPMulfgFracn9QFcAf5GO8B/mweUjSoblS5In0cWhqpfs/5PQA==}
 
-  /typedoc@0.23.28(typescript@5.2.2):
-    resolution: {integrity: sha512-9x1+hZWTHEQcGoP7qFmlo4unUoVJLB0H/8vfO/7wqTnZxg4kPuji9y3uRzEu0ZKez63OJAUmiGhUrtukC6Uj3w==}
-    engines: {node: '>= 14.14'}
+  /typedoc@0.25.11(typescript@5.2.2):
+    resolution: {integrity: sha512-5MbI1W/FOG6oXsd8bdssQidSTeKh8Kt3xA5uKVzI+K99uzP8EGN45uPnPvQesyaWdD+89s4wCQdtWEd8QUbiRg==}
+    engines: {node: '>= 16'}
     hasBin: true
     peerDependencies:
       typescript: ^5.0.0
     dependencies:
       lunr: 2.3.9
       marked: 4.3.0
-      minimatch: 7.4.6
-      shiki: 0.14.2
+      minimatch: 9.0.3
+      shiki: 0.14.7
       typescript: 5.2.2
     dev: true
 
   /types-package-json@2.0.39:
     resolution: {integrity: sha512-c8ua5W1Uu6x7LAwtwSGCl46cHmj+r2eAA+lXR1CluIZotu9V03ZHcGB9wKRZE2oIAX5IzMP/rxDV9g9ikCg9Nw==}
+    dev: true
 
   /typescript@5.2.2:
     resolution: {integrity: sha512-mI4WrpHsbCIcwT9cF4FZvr80QUeKvsUsUvKDoR+X/7XHQH98xYD8YHZg7ANtz2GtZt/CBq2QJ0thkGJMHfqc1w==}
@@ -45061,8 +44478,8 @@ packages:
       replace-ext: 1.0.1
     dev: true
 
-  /vite-node@1.2.2(@types/node@18.11.9):
-    resolution: {integrity: sha512-1as4rDTgVWJO3n1uHmUYqq7nsFgINQ9u+mRcXpjeOMJUmviqNKjcZB7UfRZrlM7MjYXMKpuWp5oGkjaFLnjawg==}
+  /vite-node@1.3.1(@types/node@18.11.9):
+    resolution: {integrity: sha512-azbRrqRxlWTJEVbzInZCTchx0X69M/XPTCz4H+TLvlTcR/xH/3hkRqhOakT41fMJCMzXTu4UvegkZiEoJAWvng==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     dependencies:
@@ -45070,7 +44487,7 @@ packages:
       debug: 4.3.4(supports-color@8.1.1)
       pathe: 1.1.1
       picocolors: 1.0.0
-      vite: 5.1.3(@types/node@18.11.9)
+      vite: 5.1.5(@types/node@18.11.9)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -45082,17 +44499,17 @@ packages:
       - terser
     dev: true
 
-  /vite-plugin-fonts@0.7.0(vite@5.1.3):
+  /vite-plugin-fonts@0.7.0(vite@5.1.5):
     resolution: {integrity: sha512-fisKirkQrA2RFwcyI96SENLu1FyRYNIiC/l5DGdD8oV3OsAWGrYKs0e7/VZF6l0rm0QiYA2sOVTzYfrLAzP9cw==}
     deprecated: renamed to `unplugin-fonts`, see https://github.com/cssninjaStudio/unplugin-fonts/releases/tag/v1.0.0
     peerDependencies:
       vite: ^5.0.0
     dependencies:
       fast-glob: 3.2.12
-      vite: 5.1.3(@types/node@18.11.9)
+      vite: 5.1.5(@types/node@18.11.9)
     dev: true
 
-  /vite-plugin-inspect@0.8.3(rollup@3.23.0)(vite@5.1.3):
+  /vite-plugin-inspect@0.8.3(rollup@3.23.0)(vite@5.1.5):
     resolution: {integrity: sha512-SBVzOIdP/kwe6hjkt7LSW4D0+REqqe58AumcnCfRNw4Kt3mbS9pEBkch+nupu2PBxv2tQi69EQHQ1ZA1vgB/Og==}
     engines: {node: '>=14'}
     peerDependencies:
@@ -45111,14 +44528,14 @@ packages:
       perfect-debounce: 1.0.0
       picocolors: 1.0.0
       sirv: 2.0.4
-      vite: 5.1.3(@types/node@18.11.9)
+      vite: 5.1.5(@types/node@18.11.9)
     transitivePeerDependencies:
       - rollup
       - supports-color
     dev: true
 
-  /vite-plugin-pwa@0.17.5(vite@5.1.3)(workbox-window@7.0.0):
-    resolution: {integrity: sha512-UxRNPiJBzh4tqU/vc8G2TxmrUTzT6BqvSzhszLk62uKsf+npXdvLxGDz9C675f4BJi6MbD2tPnJhi5txlMzxbQ==}
+  /vite-plugin-pwa@0.18.2(vite@5.1.5)(workbox-window@7.0.0):
+    resolution: {integrity: sha512-LVFHHLcRLkP7y5xwAqMmtWQhSw34V2+vk59c18fumejiQPUBar+Au1AnOcVr96hlEWLHXI6BM31QOHq+Rey4EA==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
       vite: ^3.1.0 || ^4.0.0 || ^5.0.0
@@ -45127,7 +44544,7 @@ packages:
       debug: 4.3.4(supports-color@8.1.1)
       fast-glob: 3.3.2
       pretty-bytes: 6.1.1
-      vite: 5.1.3(@types/node@18.11.9)
+      vite: 5.1.5(@types/node@18.11.9)
       workbox-build: 7.0.0
       workbox-window: 7.0.0
     transitivePeerDependencies:
@@ -45135,7 +44552,7 @@ packages:
       - supports-color
     dev: true
 
-  /vite-plugin-top-level-await@1.4.1(rollup@3.23.0)(vite@5.1.3):
+  /vite-plugin-top-level-await@1.4.1(rollup@3.23.0)(vite@5.1.5):
     resolution: {integrity: sha512-hogbZ6yT7+AqBaV6lK9JRNvJDn4/IJvHLu6ET06arNfo0t2IsyCaon7el9Xa8OumH+ESuq//SDf8xscZFE0rWw==}
     peerDependencies:
       vite: '>=2.8'
@@ -45143,7 +44560,7 @@ packages:
       '@rollup/plugin-virtual': 3.0.2(rollup@3.23.0)
       '@swc/core': 1.3.104
       uuid: 9.0.1
-      vite: 5.1.3(@types/node@18.11.9)
+      vite: 5.1.5(@types/node@18.11.9)
     transitivePeerDependencies:
       - '@swc/helpers'
       - rollup
@@ -45151,12 +44568,12 @@ packages:
   /vite-plugin-turbosnap@1.0.2:
     resolution: {integrity: sha512-irjKcKXRn7v5bPAg4mAbsS6DgibpP1VUFL9tlgxU6lloK6V9yw9qCZkS+s2PtbkZpWNzr3TN3zVJAc6J7gJZmA==}
 
-  /vite-plugin-wasm@3.3.0(vite@5.1.3):
+  /vite-plugin-wasm@3.3.0(vite@5.1.5):
     resolution: {integrity: sha512-tVhz6w+W9MVsOCHzxo6SSMSswCeIw4HTrXEi6qL3IRzATl83jl09JVO1djBqPSwfjgnpVHNLYcaMbaDX5WB/pg==}
     peerDependencies:
       vite: ^2 || ^3 || ^4 || ^5
     dependencies:
-      vite: 5.1.3(@types/node@18.11.9)
+      vite: 5.1.5(@types/node@18.11.9)
 
   /vite-plugin-web-extension@4.1.1(@types/node@18.11.9):
     resolution: {integrity: sha512-YUObXUXilgYuNGLdn5v+VUCcIQY4Aodo/1tgv6DrNAeZTLnvfa0fKSXjq86FB+XTplbumVZ6UANLrOxZItWOvw==}
@@ -45170,7 +44587,7 @@ packages:
       lodash.uniq: 4.5.0
       lodash.uniqby: 4.7.0
       md5: 2.3.0
-      vite: 5.1.3(@types/node@18.11.9)
+      vite: 5.1.5(@types/node@18.11.9)
       web-ext-run: 0.1.1
       webextension-polyfill: 0.10.0
       yaml: 2.3.4
@@ -45187,7 +44604,7 @@ packages:
       - utf-8-validate
     dev: true
 
-  /vite-tsconfig-paths@4.3.1(typescript@5.2.2)(vite@5.1.3):
+  /vite-tsconfig-paths@4.3.1(typescript@5.2.2)(vite@5.1.5):
     resolution: {integrity: sha512-cfgJwcGOsIxXOLU/nELPny2/LUD/lcf1IbfyeKTv2bsupVbTH/xpFtdQlBmIP1GEK2CjjLxYhFfB+QODFAx5aw==}
     peerDependencies:
       vite: '*'
@@ -45198,7 +44615,7 @@ packages:
       debug: 4.3.4(supports-color@8.1.1)
       globrex: 0.1.2
       tsconfck: 3.0.2(typescript@5.2.2)
-      vite: 5.1.3(@types/node@18.11.9)
+      vite: 5.1.5(@types/node@18.11.9)
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -45240,8 +44657,8 @@ packages:
       fsevents: 2.3.3
     dev: true
 
-  /vite@5.1.3(@types/node@18.11.9):
-    resolution: {integrity: sha512-UfmUD36DKkqhi/F75RrxvPpry+9+tTkrXfMNZD+SboZqBCMsxKtO52XeGzzuh7ioz+Eo/SYDBbdb0Z7vgcDJew==}
+  /vite@5.1.5(@types/node@18.11.9):
+    resolution: {integrity: sha512-BdN1xh0Of/oQafhU+FvopafUp6WaYenLU/NFoL5WyJL++GxkNfieKzBhM24H3HVsPQrlAqB7iJYTHabzaRed5Q==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     peerDependencies:
@@ -45275,15 +44692,15 @@ packages:
     optionalDependencies:
       fsevents: 2.3.3
 
-  /vitest@1.2.2(@types/node@18.11.9)(@vitest/browser@1.2.2)(@vitest/ui@1.2.2)(happy-dom@13.3.4)(jsdom@20.0.1):
-    resolution: {integrity: sha512-d5Ouvrnms3GD9USIK36KG8OZ5bEvKEkITFtnGv56HFaSlbItJuYr7hv2Lkn903+AvRAgSixiamozUVfORUekjw==}
+  /vitest@1.3.1(@types/node@18.11.9)(@vitest/browser@1.3.1)(@vitest/ui@1.3.1)(happy-dom@13.3.4)(jsdom@20.0.1):
+    resolution: {integrity: sha512-/1QJqXs8YbCrfv/GPQ05wAZf2eakUPLPa18vkJAKE7RXOKfVHqMZZ1WlTjiwl6Gcn65M5vpNUB6EFLnEdRdEXQ==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     peerDependencies:
       '@edge-runtime/vm': '*'
       '@types/node': ^18.0.0 || >=20.0.0
-      '@vitest/browser': ^1.0.0
-      '@vitest/ui': ^1.0.0
+      '@vitest/browser': 1.3.1
+      '@vitest/ui': 1.3.1
       happy-dom: '*'
       jsdom: '*'
     peerDependenciesMeta:
@@ -45301,15 +44718,14 @@ packages:
         optional: true
     dependencies:
       '@types/node': 18.11.9
-      '@vitest/browser': 1.2.2(vitest@1.2.2)(webdriverio@8.29.3)
-      '@vitest/expect': 1.2.2
-      '@vitest/runner': 1.2.2
-      '@vitest/snapshot': 1.2.2
-      '@vitest/spy': 1.2.2
-      '@vitest/ui': 1.2.2(vitest@1.2.2)
-      '@vitest/utils': 1.2.2
+      '@vitest/browser': 1.3.1(vitest@1.3.1)(webdriverio@8.33.0)
+      '@vitest/expect': 1.3.1
+      '@vitest/runner': 1.3.1
+      '@vitest/snapshot': 1.3.1
+      '@vitest/spy': 1.3.1
+      '@vitest/ui': 1.3.1(vitest@1.3.1)
+      '@vitest/utils': 1.3.1
       acorn-walk: 8.3.2
-      cac: 6.7.14
       chai: 4.4.1
       debug: 4.3.4(supports-color@8.1.1)
       execa: 8.0.1
@@ -45320,11 +44736,11 @@ packages:
       pathe: 1.1.1
       picocolors: 1.0.0
       std-env: 3.7.0
-      strip-literal: 1.3.0
+      strip-literal: 2.0.0
       tinybench: 2.6.0
       tinypool: 0.8.2
-      vite: 5.1.3(@types/node@18.11.9)
-      vite-node: 1.2.2(@types/node@18.11.9)
+      vite: 5.1.5(@types/node@18.11.9)
+      vite-node: 1.3.1(@types/node@18.11.9)
       why-is-node-running: 2.2.2
     transitivePeerDependencies:
       - less
@@ -45462,14 +44878,6 @@ packages:
       - '@vue/composition-api'
       - supports-color
       - typescript
-    dev: true
-
-  /vuepress-plugin-check-md@0.0.3:
-    resolution: {integrity: sha512-ov9lw0g/b4ZIxjr3dcwYNDwMpfxLaOBhgOsDLnehdphx1eqaeJQ8MZO8PODE6aQWUuIUBzHOM3xQ9Kuvps3X3g==}
-    dependencies:
-      check-md: 1.0.0
-    transitivePeerDependencies:
-      - supports-color
     dev: true
 
   /vuepress-plugin-comment2@2.0.0-rc.5(typescript@5.2.2)(vuepress@2.0.0-rc.0):
@@ -46239,17 +45647,17 @@ packages:
     resolution: {integrity: sha512-PgF341avzqyx60neE9DD+XS26MMNMoUQRz9NOZwW32nPQrF6p77f1htcnjBSEV8BGMKZ16choqUG4hyI0Hx7mA==}
     dev: false
 
-  /webdriver@8.29.3:
-    resolution: {integrity: sha512-VL9SNV4FBX/8ak45aS35SYYDWc6HLXsfbnhVJnPSku8DgfDbfG8g9bCKQckpQcP7Te8a81/XbbrCjZfuqhVHfA==}
+  /webdriver@8.33.0:
+    resolution: {integrity: sha512-00iTlsKYM1zWhkabQKqI3U0NpiZ8H81SCmRDoReP4Z13aHAesWVMW3qJu2tZgEHlj5DVCxt2aV/eTE1nUUEZRQ==}
     engines: {node: ^16.13 || >=18}
     dependencies:
       '@types/node': 20.11.16
       '@types/ws': 8.5.9
-      '@wdio/config': 8.29.3
+      '@wdio/config': 8.33.0
       '@wdio/logger': 8.28.0
-      '@wdio/protocols': 8.24.12
-      '@wdio/types': 8.29.1
-      '@wdio/utils': 8.29.3
+      '@wdio/protocols': 8.32.0
+      '@wdio/types': 8.32.4
+      '@wdio/utils': 8.33.0
       deepmerge-ts: 5.1.0
       got: 12.6.1
       ky: 0.33.3
@@ -46260,8 +45668,8 @@ packages:
       - utf-8-validate
     dev: true
 
-  /webdriverio@8.29.3(typescript@5.2.2):
-    resolution: {integrity: sha512-U8JQuBXSJhdSdSnDttekN3o6WCTf3o805HDncOYtRebFd3/4vy2PmYBOOhbY5lmEq7/ROA8KSbe7TfogWskzTQ==}
+  /webdriverio@8.33.0(typescript@5.2.2):
+    resolution: {integrity: sha512-i7Ey+pvQOOlwLgLOI/5Kohoys1V3o8QZwM2/UtOW8q9MFcq4trUlgHrnEcRk79diWKmMjc/DO55PdZ9LitykcA==}
     engines: {node: ^16.13 || >=18}
     peerDependencies:
       devtools: ^8.14.0
@@ -46270,17 +45678,17 @@ packages:
         optional: true
     dependencies:
       '@types/node': 20.11.16
-      '@wdio/config': 8.29.3
+      '@wdio/config': 8.33.0
       '@wdio/logger': 8.28.0
-      '@wdio/protocols': 8.24.12
+      '@wdio/protocols': 8.32.0
       '@wdio/repl': 8.24.12
-      '@wdio/types': 8.29.1
-      '@wdio/utils': 8.29.3
-      archiver: 6.0.1
+      '@wdio/types': 8.32.4
+      '@wdio/utils': 8.33.0
+      archiver: 7.0.0
       aria-query: 5.0.2
       css-shorthand-properties: 1.1.1
       css-value: 0.0.1
-      devtools-protocol: 0.0.1249869
+      devtools-protocol: 0.0.1263784
       grapheme-splitter: 1.0.4
       import-meta-resolve: 4.0.0
       is-plain-obj: 4.1.0
@@ -46292,7 +45700,7 @@ packages:
       resq: 1.11.0
       rgb2hex: 0.2.5
       serialize-error: 11.0.3
-      webdriver: 8.29.3
+      webdriver: 8.33.0
     transitivePeerDependencies:
       - bufferutil
       - encoding
@@ -46641,7 +46049,7 @@ packages:
     dependencies:
       '@apideck/better-ajv-errors': 0.3.6(ajv@8.12.0)
       '@babel/core': 7.23.9
-      '@babel/preset-env': 7.22.15(@babel/core@7.23.9)
+      '@babel/preset-env': 7.23.9(@babel/core@7.23.9)
       '@babel/runtime': 7.23.9
       '@rollup/plugin-babel': 5.3.1(@babel/core@7.23.9)(rollup@2.79.1)
       '@rollup/plugin-node-resolve': 11.2.1(rollup@2.79.1)
@@ -47347,13 +46755,13 @@ packages:
       readable-stream: 3.6.0
     dev: true
 
-  /zip-stream@5.0.1:
-    resolution: {integrity: sha512-UfZ0oa0C8LI58wJ+moL46BDIMgCQbnsb+2PoiJYtonhBsMh2bq1eRBVkvjfVsqbEHd9/EgKPUuL9saSSsec8OA==}
-    engines: {node: '>= 12.0.0'}
+  /zip-stream@6.0.0:
+    resolution: {integrity: sha512-X0WFquRRDtL9HR9hc1OrabOP/VKJEX7gAr2geayt3b7dLgXgSXI6ucC4CphLQP/aQt2GyHIYgmXxtC+dVdghAQ==}
+    engines: {node: '>= 14'}
     dependencies:
-      archiver-utils: 4.0.1
-      compress-commons: 5.0.1
-      readable-stream: 3.6.0
+      archiver-utils: 5.0.1
+      compress-commons: 6.0.1
+      readable-stream: 4.5.2
     dev: true
 
   /zod-to-json-schema@3.22.0(zod@3.22.4):

@@ -25,6 +25,7 @@ import {
   type ProfileDocument,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DeviceAdmissionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { type Presence } from '@dxos/teleport-extension-gossip';
 import { trace } from '@dxos/tracing';
 import { type ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -35,6 +36,7 @@ export type IdentityParams = {
   deviceKey: PublicKey;
   signer: Signer;
   space: Space;
+  presence?: Presence;
 };
 
 /**
@@ -44,6 +46,7 @@ export type IdentityParams = {
 export class Identity {
   public readonly space: Space;
   private readonly _signer: Signer;
+  private readonly _presence?: Presence;
   private readonly _deviceStateMachine: DeviceStateMachine;
   private readonly _profileStateMachine: ProfileStateMachine;
   public readonly authVerifier: TrustedKeySetAuthVerifier;
@@ -53,9 +56,10 @@ export class Identity {
 
   public readonly stateUpdate = new Event();
 
-  constructor({ space, signer, identityKey, deviceKey }: IdentityParams) {
+  constructor({ space, signer, identityKey, deviceKey, presence }: IdentityParams) {
     this.space = space;
     this._signer = signer;
+    this._presence = presence;
 
     this.identityKey = identityKey;
     this.deviceKey = deviceKey;
@@ -126,6 +130,10 @@ export class Identity {
 
   get deviceCredentialChain() {
     return this._deviceStateMachine.deviceCredentialChain;
+  }
+
+  get presence() {
+    return this._presence;
   }
 
   /**

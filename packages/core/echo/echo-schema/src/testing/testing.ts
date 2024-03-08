@@ -3,7 +3,6 @@
 //
 
 import { DocumentModel } from '@dxos/document-model';
-import { type DatabaseProxy } from '@dxos/echo-db';
 import {
   DatabaseTestBuilder,
   createMemoryDatabase,
@@ -15,16 +14,20 @@ import { ModelFactory } from '@dxos/model-factory';
 import { TextModel } from '@dxos/text-model';
 import { ComplexMap } from '@dxos/util';
 
-import { AutomergeContext } from '../automerge';
+import { AutomergeContext, type AutomergeContextConfig } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 import { schemaBuiltin } from '../proto';
+
+export type CreateDatabaseOpts = {
+  useReactiveObjectApi?: boolean;
+};
 
 /**
  * @deprecated Use TestBuilder.
  */
 // TODO(burdon): Builder pattern.
-export const createDatabase = async (graph = new Hypergraph()) => {
+export const createDatabase = async (graph = new Hypergraph(), { useReactiveObjectApi }: CreateDatabaseOpts = {}) => {
   // prettier-ignore
   const modelFactory = new ModelFactory()
     .registerModel(DocumentModel)
@@ -36,28 +39,33 @@ export const createDatabase = async (graph = new Hypergraph()) => {
   const host = await createMemoryDatabase(modelFactory);
   const proxy = await createRemoteDatabaseFromDataServiceHost(modelFactory, host.backend.createDataServiceHost());
   const automergeContext = new AutomergeContext();
-  const db = new EchoDatabaseImpl(proxy.itemManager, proxy.backend as DatabaseProxy, graph, automergeContext);
+  const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey: proxy.backend.spaceKey, useReactiveObjectApi });
   await db.automerge.open({
     rootUrl: automergeContext.repo.create().url,
   });
   graph._register(proxy.backend.spaceKey, db); // TODO(burdon): Database should have random id?
-  return { db, host };
+  return { db, host, graph };
 };
 
 export class TestBuilder {
   public readonly defaultSpaceKey = PublicKey.random();
-  public readonly automergeContext = new AutomergeContext();
+  public readonly graph = new Hypergraph();
+  public readonly base = new DatabaseTestBuilder();
 
-  constructor(
-    public readonly graph = new Hypergraph(),
-    public readonly base = new DatabaseTestBuilder(),
-  ) {}
+  public readonly automergeContext;
+
+  constructor(automergeConfig?: AutomergeContextConfig) {
+    this.automergeContext = new AutomergeContext(undefined, automergeConfig);
+  }
 
   public readonly peers = new ComplexMap<PublicKey, TestPeer>(PublicKey.hash);
 
-  async createPeer(spaceKey = this.defaultSpaceKey): Promise<TestPeer> {
+  async createPeer(
+    spaceKey = this.defaultSpaceKey,
+    automergeDocUrl: string = this.automergeContext.repo.create().url,
+  ): Promise<TestPeer> {
     const base = await this.base.createPeer(spaceKey);
-    const peer = new TestPeer(this, base, spaceKey, this.automergeContext.repo.create().url);
+    const peer = new TestPeer(this, base, spaceKey, automergeDocUrl);
     this.peers.set(peer.base.key, peer);
     await peer.db.automerge.open({
       rootUrl: peer.automergeDocId,
@@ -74,7 +82,11 @@ export class TestBuilder {
 }
 
 export class TestPeer {
-  public db = new EchoDatabaseImpl(this.base.items, this.base.proxy, this.builder.graph, this.builder.automergeContext);
+  public db = new EchoDatabaseImpl({
+    spaceKey: this.base.proxy.spaceKey,
+    graph: this.builder.graph,
+    automergeContext: this.builder.automergeContext,
+  });
 
   constructor(
     public readonly builder: TestBuilder,
@@ -85,7 +97,11 @@ export class TestPeer {
 
   async reload() {
     await this.base.reload();
-    this.db = new EchoDatabaseImpl(this.base.items, this.base.proxy, this.builder.graph, this.builder.automergeContext);
+    this.db = new EchoDatabaseImpl({
+      spaceKey: this.base.proxy.spaceKey,
+      graph: this.builder.graph,
+      automergeContext: this.builder.automergeContext,
+    });
     await this.db.automerge.open({
       rootUrl: this.automergeDocId,
     });
@@ -97,9 +113,6 @@ export class TestPeer {
   }
 
   async flush() {
-    if (this.db._backend.currentBatch) {
-      this.db._backend.commitBatch();
-    }
     await this.base.confirm();
     await this.db.flush();
   }

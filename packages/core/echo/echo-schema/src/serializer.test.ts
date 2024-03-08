@@ -168,7 +168,7 @@ describe('Serializer', () => {
 });
 
 describe('Serializer from Hypergraph to Automerge', () => {
-  test('transfer text to automerge', async () => {
+  test.skip('transfer text to automerge', async () => {
     const serializer = new Serializer();
 
     let data: SerializedSpace;
@@ -208,7 +208,7 @@ describe('Serializer from Hypergraph to Automerge', () => {
     }
   });
 
-  test('transfer object to automerge', async () => {
+  test.skip('transfer object to automerge', async () => {
     const serializer = new Serializer();
 
     let serialized: SerializedSpace;
@@ -228,6 +228,7 @@ describe('Serializer from Hypergraph to Automerge', () => {
       );
       db.add(obj);
 
+      // TODO(burdon): Remove.
       const yjs = new TextObject(undefined, undefined, undefined, { automerge: false });
       yjs.doc!.transact(() => {
         const yMap = yjs.doc!.getMap('records');

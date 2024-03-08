@@ -4,12 +4,24 @@
 
 import { Reference } from '@dxos/document-model';
 
-import { type ObjectMeta, type EchoObject } from '../object';
+import { type ObjectMeta, type OpaqueEchoObject } from '../object';
 import { type Schema } from '../proto';
 
-export interface DocStructure {
-  objects: {
+export interface SpaceDoc {
+  access?: {
+    spaceKey: string;
+  };
+  /**
+   * Objects inlined in the current document.
+   */
+  objects?: {
     [key: string]: ObjectStructure;
+  };
+  /**
+   * Object id points to an automerge doc url where the object is embedded.
+   */
+  links?: {
+    [echoId: string]: string;
   };
 }
 
@@ -77,5 +89,5 @@ export type DecodedAutomergeValue =
   | boolean
   | DecodedAutomergeValue[]
   | { [key: string]: DecodedAutomergeValue }
-  | Reference // TODO(dmaretskyi): Raw references shouldn't be here.
-  | EchoObject;
+  | Reference
+  | OpaqueEchoObject;

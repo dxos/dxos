@@ -31,8 +31,13 @@ window.__DXOS_SANDBOX_MODULES__ = await init(async () => ({
   '@braneframe/types': await import('@braneframe/types'), // TODO(burdon): Make runtime dep?
 }));
 
-// eslint-disable-next-line no-new-func
-const Component = Function('React', "return React.lazy(() => import('@frame/bundle'))")(React);
+const code = new URLSearchParams(window.location.hash.slice(1)).get('code');
+
+if (!code) {
+  throw new Error('No code provided.');
+}
+
+const Component = React.lazy(() => import(/* @vite-ignore */ `data:text/javascript;base64,${btoa(code)}`));
 
 const services = new ClientServicesProxy(
   createIFramePort({

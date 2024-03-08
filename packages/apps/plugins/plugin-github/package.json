@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-github",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "DXOS Surface plugin for integrating with GitHub",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -25,10 +25,12 @@
   "dependencies": {
     "@braneframe/plugin-settings": "workspace:*",
     "@braneframe/types": "workspace:*",
+    "@dxos/async": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.5.1",
     "dompurify": "^3.0.3",
     "github-markdown-css": "^5.2.0",
@@ -37,6 +39,7 @@
     "octokit": "^2.0.14"
   },
   "devDependencies": {
+    "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
@@ -52,9 +55,10 @@
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "vite": "^5.1.3"
+    "vite": "^5.1.5"
   },
   "peerDependencies": {
+    "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",

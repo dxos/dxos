@@ -3,4 +3,3 @@
 //
 
 export * from './useStatus';
-export * from './useMessageMetadata';

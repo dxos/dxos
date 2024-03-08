@@ -1,0 +1,79 @@
+/* TODO(thure): This should be on the `components` layer, but utility classes like `pli-0` weren’t getting precedence like they should. */
+@layer base {
+  /* Base styles */
+  .ch-button {
+    @apply font-medium text-sm shrink-0 inline-flex select-none items-center justify-center overflow-hidden transition-colors duration-100 ease-linear surface-input min-bs-[2.5rem] pli-4;
+    &[aria-pressed='true'],
+    &[aria-checked='true'] {
+      @apply fg-accent surface-attention;
+    }
+    /* Disabled styles */
+    &[disabled]:not([disabled='false']) {
+      @apply opacity-40 cursor-not-allowed shadow-none;
+    }
+    /* Enabled styles */
+    &:not([disabled]),
+    &[disabled='false'] {
+      /* Focus */
+      &:focus {
+        @apply outline-none;
+      }
+      &:focus-visible {
+        @apply z-[1] ring-2 ring-offset-0 ring-primary-350 ring-offset-white;
+        .dark & {
+          @apply ring-primary-450 ring-offset-black;
+        }
+        &:hover {
+          @apply outline-none;
+          .dark & {
+            @apply outline-none;
+          }
+        }
+      }
+      /* Hover */
+      &:hover {
+        @apply surface-hover;
+      }
+      /* Variants */
+      &[data-variant='outline'] {
+        @apply border separator-base bg-transparent;
+        &:hover {
+          @apply surface-hover;
+        }
+      }
+      &[data-variant='ghost'] {
+        @apply bg-transparent;
+        &:hover {
+          @apply surface-hover text-inherit;
+        }
+        &[data-state='open'] {
+          @apply surface-input;
+        }
+        &[aria-pressed='true'],
+        &[aria-checked='true'] {
+          @apply surface-base fg-accent;
+        }
+      }
+      &[data-variant='primary'] {
+        @apply fg-inverse surface-accent;
+        &:hover,
+        &[aria-pressed='true'],
+        &[aria-checked='true'] &[dara-state='open'] {
+          @apply surface-accentHover;
+        }
+      }
+    }
+  }
+  /* Props */
+  .ch-button:not([data-props~='grouped']) {
+    @apply rounded-sm;
+  }
+  .ch-button:not([data-props~='wrap']) {
+    @apply truncate;
+  }
+  @media (pointer: fine) {
+    .ch-button[data-density='fine'] {
+      @apply min-bs-[2rem] pli-2.5;
+    }
+  }
+}

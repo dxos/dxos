@@ -41,6 +41,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <Root
         ref={ref}
         {...props}
+        data-variant={variant}
+        data-density={density}
+        data-props={inGroup ? 'grouped' : ''}
         className={tx(
           'button.root',
           'button',

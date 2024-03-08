@@ -99,7 +99,10 @@ export class Client {
   private _shellManager?: ShellManager;
   private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
 
-  private readonly _graph = new Hypergraph();
+  /**
+   * @internal
+   */
+  readonly _graph = new Hypergraph();
 
   /**
    * Unique id of the Client, local to the current peer.
@@ -114,7 +117,7 @@ export class Client {
       window.location.protocol !== 'socket:' &&
       !window.location.hostname.endsWith('localhost')
     ) {
-      console.warn(
+      log.warn(
         `DXOS Client will not function in a non-secure context ${window.location.origin}. Either serve with a certificate or use a tunneling service (https://docs.dxos.org/guide/kube/tunneling.html).`,
       );
     }
@@ -346,6 +349,7 @@ export class Client {
     const mesh = new MeshProxy(this._services, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);
     const spaces = new SpaceList(
+      this._config,
       this._services,
       modelFactory,
       this._graph,

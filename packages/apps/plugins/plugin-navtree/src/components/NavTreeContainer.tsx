@@ -5,7 +5,6 @@
 import React, { useCallback } from 'react';
 
 import { NavigationAction, Surface, useIntent } from '@dxos/app-framework';
-import { type Node, type Graph, isGraphNode } from '@dxos/app-graph';
 import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import {
@@ -14,6 +13,7 @@ import {
   type TreeNode,
   type NavTreeProps,
   emptyBranchDroppableId,
+  getTreeNode,
 } from '@dxos/react-ui-navtree';
 import { arrayMove } from '@dxos/util';
 
@@ -23,27 +23,23 @@ import { getPersistenceParent } from '../util';
 
 export const NODE_TYPE = 'dxos/app-graph/node';
 
-const getMosaicPath = (graph: Graph, id: string) => {
-  const parts = graph.getPath(id)?.filter((part) => part !== 'childrenMap');
-  return parts ? Path.create('root', ...parts) : undefined;
+const getMosaicPath = (paths: Map<string, string[]>, id: string) => {
+  const parts = paths.get(id);
+  return parts ? Path.create(...parts) : undefined;
 };
 
 const trimPlaceholder = (path: string) => (Path.last(path) === emptyBranchDroppableId ? Path.parent(path) : path);
 
-const renderPresence = (node: TreeNode) => {
-  if (isGraphNode(node)) {
-    return <Surface role='presence' data={{ object: node.data }} />;
-  }
-
-  return null;
-};
+const renderPresence = (node: TreeNode) => <Surface role='presence--glyph' data={{ object: node.data }} />;
 
 export const NavTreeContainer = ({
-  graph,
+  root,
+  paths,
   activeId,
   popoverAnchorId,
 }: {
-  graph: Graph;
+  root: TreeNode;
+  paths: Map<string, string[]>;
   activeId?: string;
   popoverAnchorId?: string;
 }) => {
@@ -52,7 +48,7 @@ export const NavTreeContainer = ({
   const { dispatch } = useIntent();
 
   const handleSelect: NavTreeContextType['onSelect'] = async ({ node }: { node: TreeNode }) => {
-    if (!(node as Node).data) {
+    if (!node.data) {
       return;
     }
 
@@ -64,19 +60,21 @@ export const NavTreeContainer = ({
     });
 
     const defaultAction = node.actions.find((action) => action.properties.disposition === 'default');
-    void defaultAction?.invoke();
+    if (defaultAction && 'invoke' in defaultAction) {
+      void defaultAction.invoke();
+    }
     !isLg && closeNavigationSidebar();
   };
 
-  const currentPath = (activeId && getMosaicPath(graph, activeId)) ?? 'never';
+  const currentPath = (activeId && getMosaicPath(paths, activeId)) ?? 'never';
 
   const isOver: NavTreeProps['isOver'] = ({ path, operation, activeItem, overItem }) => {
-    const activeNode = activeItem && graph.findNode(Path.last(activeItem.path));
-    const overNode = overItem && graph.findNode(Path.last(trimPlaceholder(overItem.path)));
+    const activeNode = activeItem && getTreeNode(root, paths.get(Path.last(activeItem.path)));
+    const overNode = overItem && getTreeNode(root, paths.get(Path.last(trimPlaceholder(overItem.path))));
     if (
       !activeNode ||
       !overNode ||
-      !Path.hasRoot(overItem.path, graph.root.id) ||
+      !Path.hasRoot(overItem.path, root.id) ||
       (operation !== 'transfer' && operation !== 'copy')
     ) {
       return false;
@@ -87,32 +85,34 @@ export const NavTreeContainer = ({
       return trimPlaceholder(overItem.path) === path;
     } else {
       const overAcceptParent = getPersistenceParent(overNode, activeClass);
-      return overAcceptParent ? getMosaicPath(graph, overAcceptParent.id) === path : false;
+      return overAcceptParent ? getMosaicPath(paths, overAcceptParent.id) === path : false;
     }
   };
 
   const handleOver = useCallback(
     ({ active, over }: MosaicMoveEvent<number>) => {
-      // Reject all operations that don’t match the graph’s root id
-      if (Path.first(active.path) !== graph.root.id || Path.first(over.path) !== Path.first(active.path)) {
+      // Reject all operations that don’t match the root's id
+      if (Path.first(active.path) !== root.id || Path.first(over.path) !== Path.first(active.path)) {
         return 'reject';
       }
       // Rearrange if rearrange is supported and active and over are siblings
       else if (Path.siblings(over.path, active.path)) {
-        return graph.findNode(Path.last(Path.parent(over.path)))?.properties.onRearrangeChildren
+        return getTreeNode(root, paths.get(Path.last(Path.parent(over.path))))?.properties.onRearrangeChildren
           ? 'rearrange'
           : 'reject';
       }
       // Rearrange if rearrange is supported and active is or would be a child of over
       else if (Path.hasChild(over.path, active.path)) {
-        return graph.findNode(Path.last(over.path))?.properties.onRearrangeChildren ? 'rearrange' : 'reject';
+        return getTreeNode(root, paths.get(Path.last(over.path)))?.properties.onRearrangeChildren
+          ? 'rearrange'
+          : 'reject';
       }
       // Check if transfer is supported
       else {
         // Adjust overPath if over is empty placeholder.
         const overPath = trimPlaceholder(over.path);
-        const overNode = graph.findNode(Path.last(overPath));
-        const activeNode = graph.findNode(Path.last(active.path));
+        const overNode = getTreeNode(root, paths.get(Path.last(overPath)));
+        const activeNode = getTreeNode(root, paths.get(Path.last(active.path)));
         const activeClass = activeNode?.properties.persistenceClass;
         const activeKey = activeNode?.properties.persistenceKey;
         if (overNode && activeNode && activeClass && activeKey) {
@@ -129,22 +129,23 @@ export const NavTreeContainer = ({
         }
       }
     },
-    [graph],
+    [root, paths],
   );
 
   const handleDrop = useCallback(
     ({ operation, active, over }: MosaicDropEvent<number>) => {
       const overPath = trimPlaceholder(over.path);
-      const activeNode = graph.findNode(Path.last(active.path));
-      const overNode = graph.findNode(Path.last(overPath));
+      const activeNode = getTreeNode(root, paths.get(Path.last(active.path)));
+      const overNode = getTreeNode(root, paths.get(Path.last(overPath)));
       if (activeNode && overNode) {
         const activeClass = activeNode.properties.persistenceClass;
-        if (operation === 'rearrange') {
-          const ids = Object.keys(activeNode.parent!.childrenMap);
-          const nodes = Object.values(activeNode.parent!.childrenMap).map(({ data }) => data);
+        const activeParent = activeNode.parent;
+        if (activeParent && operation === 'rearrange') {
+          const ids = activeParent.children.map((node) => node.id);
+          const nodes = activeParent.children.map(({ data }) => data);
           const activeIndex = ids.indexOf(activeNode.id);
           const overIndex = ids.indexOf(overNode.id);
-          activeNode.parent!.properties.onRearrangeChildren(
+          activeParent.properties.onRearrangeChildren(
             arrayMove(nodes, activeIndex, overIndex > -1 ? overIndex : ids.length - 1),
           );
         }
@@ -168,7 +169,7 @@ export const NavTreeContainer = ({
         }
       }
     },
-    [graph],
+    [root, paths],
   );
 
   return (
@@ -177,7 +178,7 @@ export const NavTreeContainer = ({
         <Surface role='search-input' limit={1} />
         <div role='none' className='overflow-y-auto p-0.5'>
           <NavTree
-            node={graph.root}
+            node={root}
             current={currentPath}
             type={NODE_TYPE}
             onSelect={handleSelect}

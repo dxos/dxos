@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Space } from '@dxos/client-protocol';
+import { type Halo, type Space } from '@dxos/client-protocol';
 import type { ClientServicesHost, DataSpace } from '@dxos/client-services';
+import { importModule } from '@dxos/debug';
 import { DocumentModel, type DocumentModelState } from '@dxos/document-model';
 import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
@@ -27,6 +28,7 @@ export interface DevtoolsHook {
 
   spaces?: Accessor<Space | DataSpace>;
   feeds?: Accessor<FeedWrapper>;
+  halo?: Halo;
 
   openClientRpcServer: () => Promise<boolean>;
 
@@ -35,6 +37,11 @@ export interface DevtoolsHook {
   downloadDiagnostics?: () => Promise<void>;
 
   reset: () => void;
+
+  /**
+   * Import modules exposed by `exposeModule` from @dxos/debug.
+   */
+  importModule: (module: string) => unknown;
 }
 
 export type MountOptions = {
@@ -80,6 +87,8 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     },
 
     reset,
+
+    importModule,
   };
 
   if (client) {
@@ -94,6 +103,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
           ]),
         ),
     });
+    hook.halo = client.halo;
 
     hook.openDevtoolsApp = async () => {
       const vault = client.config?.values.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';
@@ -151,7 +161,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     get: () => {
       if (!warningShown) {
         warningShown = true;
-        console.warn('globalThis.dxos is an undocumented API and may changed or removed entirely without notice.');
+        log.warn('globalThis.dxos is an undocumented API and may changed or removed entirely without notice.');
       }
       return hook;
     },
@@ -251,11 +261,11 @@ const port: RpcPort = {
  * Delete all data in the browser without depending on other packages.
  */
 const reset = async () => {
-  console.log(`Deleting all data from ${typeof window.localStorage !== 'undefined' ? window.location?.origin : ''}`);
+  log.info(`Deleting all data from ${typeof window.localStorage !== 'undefined' ? window.location?.origin : ''}`);
 
   if (typeof localStorage !== 'undefined') {
     localStorage.clear();
-    console.log('Cleared local storage');
+    log.info('Cleared local storage');
   }
 
   if (
@@ -268,10 +278,10 @@ const reset = async () => {
       try {
         await root.removeEntry(entry, { recursive: true });
       } catch (err) {
-        console.error(`Failed to delete ${entry}: ${err}`);
+        log.error(`Failed to delete ${entry}: ${err}`);
       }
     }
-    console.log('Cleared OPFS');
+    log.info('Cleared OPFS');
 
     if (typeof location !== 'undefined' && typeof location.reload === 'function') {
       location.reload();

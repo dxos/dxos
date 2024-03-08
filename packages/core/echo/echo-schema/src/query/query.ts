@@ -9,6 +9,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type Filter } from './filter';
+import { prohibitSignalActions } from '../guarded-scope';
 import { type EchoObject, type TypedObject } from '../object';
 
 // TODO(burdon): Reconcile with echo-db/database/selection.
@@ -45,7 +46,7 @@ export type QueryResult<T extends EchoObject> = {
    */
   resolution?: {
     // TODO(dmaretskyi): Make this more generic.
-    source: 'remote' | 'local';
+    source: 'remote' | 'local' | 'index';
 
     /**
      * Query resolution time in milliseconds.
@@ -152,8 +153,15 @@ export class Query<T extends TypedObject = TypedObject> {
 
   private _ensureCachePresent() {
     if (!this._resultCache) {
-      this._resultCache = Array.from(this._sources).flatMap((source) => source.getResults()) as QueryResult<T>[];
-      this._objectCache = this._resultCache.map((result) => result.object!).filter((object): object is T => !!object);
+      prohibitSignalActions(() => {
+        // TODO(dmaretskyi): Clean up getters in the internal signals so they don't use the Proxy API and don't hit the signals.
+        compositeRuntime.untracked(() => {
+          this._resultCache = Array.from(this._sources).flatMap((source) => source.getResults()) as QueryResult<T>[];
+          this._objectCache = this._resultCache
+            .map((result) => result.object!)
+            .filter((object): object is T => !!object);
+        });
+      });
     }
   }
 

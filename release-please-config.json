@@ -214,11 +214,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/plugins/plugin-undo/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/plugins/plugin-wildcard/package.json",
           "jsonpath": "$.version"
         },
@@ -230,6 +225,11 @@
         {
           "type": "json",
           "path": "packages/apps/templates/hello-template/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/templates/plugin-template/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -554,6 +554,11 @@
         },
         {
           "type": "json",
+          "path": "packages/devtools/initializers/create-app-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/devtools/initializers/create-bare/package.json",
           "jsonpath": "$.version"
         },
@@ -715,6 +720,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-card/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-deck/package.json",
           "jsonpath": "$.version"
         },
         {

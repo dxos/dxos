@@ -22,7 +22,7 @@ export default defineConfig({
             key: './key.pem',
             cert: './cert.pem',
           }
-        : false,
+        : undefined,
     fs: {
       strict: false,
       allow: [
@@ -45,14 +45,11 @@ export default defineConfig({
           dxos: ['@dxos/react-client'],
         },
       },
-    }
+    },
   },
   worker: {
     format: 'es',
-    plugins: () => [
-      TopLevelAwaitPlugin(),
-      WasmPlugin(),
-    ],
+    plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
   },
   plugins: [
     ConfigPlugin({ env: ['DX_VAULT'] }),
@@ -69,7 +66,7 @@ export default defineConfig({
         assets: './packages/apps/todomvc/out/todomvc/**',
       },
       authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
-      dryRun: process.env.DX_ENVIRONMENT !== 'production',
+      disable: process.env.DX_ENVIRONMENT !== 'production',
     }),
     // https://www.bundle-buddy.com/rollup
     {
