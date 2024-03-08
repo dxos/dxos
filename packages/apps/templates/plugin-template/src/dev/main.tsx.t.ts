@@ -10,9 +10,7 @@ export default template.define.script({
     import { defaultTx } from "@dxos/react-ui-theme";
     import { createApp, Plugin } from "@dxos/app-framework";
     import { createRoot } from "react-dom/client";
-    import { createClientServices } from "@dxos/react-client";
     import translations from "./translations";
-    import { createConfig } from "./config";
     
     import ThemeMeta from "@braneframe/plugin-theme/meta";
     ${defaultPlugins && plate/* javascript */`
@@ -24,22 +22,26 @@ export default template.define.script({
     import StackMeta from "@braneframe/plugin-stack/meta";
     import SettingsMeta from "@braneframe/plugin-settings/meta";
     import MetadataMeta from "@braneframe/plugin-metadata/meta";
+    
+    import { createClientServices } from "@dxos/react-client";
+    import { createConfig } from "./config";
     `}
     
     import { meta } from "../src/plugin";
     
     (async function () {
-      const config = await createConfig();
-    
-      const services = await createClientServices(
-        config,
-        // () =>
-        //   new SharedWorker(new URL("@dxos/client/shared-worker", import.meta.url), {
-        //     type: "module",
-        //     name: "dxos-client-worker",
-        //   })
-      );
-
+      ${
+        defaultPlugins && plate/* javascript */`
+        const config = await createConfig();
+        const services = await createClientServices(
+          config,
+          // () =>
+          //   new SharedWorker(new URL("@dxos/client/shared-worker", import.meta.url), {
+          //     type: "module",
+          //     name: "dxos-client-worker",
+          //   })
+        );`
+      }
       const App = createApp({
         fallback: ({ error }) => (
           <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
@@ -62,12 +64,9 @@ export default template.define.script({
             appName: "Composer",
           }),
           ${defaultPlugins && plate/* javascript */`
-          [MetadataMeta.id]: Plugin.lazy(
-            () => import("@braneframe/plugin-metadata")
-          ),
-          [GraphMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-graph")),
           [LayoutMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-layout")),
           [NavTreeMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-navTree")),
+          [SettingsMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-settings")),
           [ClientMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-client"), {
             appKey: "composer.local",
             config,
@@ -75,6 +74,10 @@ export default template.define.script({
             shell: "./shell.html",
           }),
           [SpaceMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-space")),
+          [GraphMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-graph")),
+          [MetadataMeta.id]: Plugin.lazy(
+            () => import("@braneframe/plugin-metadata")
+          ),
           [StackMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-stack")),
           `}
           [meta.id]: Plugin.lazy(() => import("../src/plugin")),
