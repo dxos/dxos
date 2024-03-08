@@ -11,7 +11,7 @@ import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
+import { Device, DeviceKind, Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Client } from '../client';
@@ -112,8 +112,14 @@ describe('Client services', () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
 
-    const peer1 = testBuilder.createClientServicesHost();
-    const peer2 = testBuilder.createClientServicesHost();
+    const peer1 = testBuilder.createClientServicesHost({
+      devicePresenceAnnounceInterval: 1_000,
+      devicePresenceOfflineTimeout: 2_000,
+    });
+    const peer2 = testBuilder.createClientServicesHost({
+      devicePresenceAnnounceInterval: 1_000,
+      devicePresenceOfflineTimeout: 2_000,
+    });
 
     await peer1.open(new Context());
     await peer2.open(new Context());
@@ -152,6 +158,26 @@ describe('Client services', () => {
     await waitForExpect(async () => {
       expect(client1.halo.devices.get()).to.have.lengthOf(2);
       expect(client2.halo.devices.get()).to.have.lengthOf(2);
+    });
+
+    await waitForExpect(async () => {
+      expect(client1.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence).to.eq(
+        Device.PresenceState.ONLINE,
+      );
+      expect(client2.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence).to.eq(
+        Device.PresenceState.ONLINE,
+      );
+    });
+
+    // Ensure peer2 shows up as offline to peer1.
+    await client2.destroy();
+    await server2.close();
+    await peer2.close();
+
+    await waitForExpect(async () => {
+      expect(client1.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence).to.eq(
+        Device.PresenceState.OFFLINE,
+      );
     });
   });
 

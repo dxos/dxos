@@ -4,6 +4,7 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
+import { Folder } from '@braneframe/types';
 import { type TypedObject } from '@dxos/react-client/echo';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
@@ -12,12 +13,15 @@ import { SPACE_PLUGIN } from '../meta';
 export const PopoverRenameObject = ({ object }: { object: TypedObject }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const doneButton = useRef<HTMLButtonElement>(null);
-  // TODO(wittjosiah): Normalize title vs name.
-  // TODO(burdon): Field should not be hard-code 'title' field.
-  const [name, setName] = useState(object.title || '');
+  // TODO(burdon): Field should not be hardcoded field.
+  const [name, setName] = useState(object.title || object.name || '');
 
   const handleDone = useCallback(() => {
-    object.title = name;
+    if (object instanceof Folder) {
+      object.name = name;
+    } else {
+      object.title = name;
+    }
   }, [object, name]);
 
   return (

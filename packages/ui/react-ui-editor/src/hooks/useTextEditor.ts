@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { closeBrackets } from '@codemirror/autocomplete';
+import { history } from '@codemirror/commands';
+import { bracketMatching } from '@codemirror/language';
 import {
   EditorSelection,
   EditorState,
@@ -9,7 +12,17 @@ import {
   type Extension,
   type StateEffect,
 } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
+import {
+  crosshairCursor,
+  drawSelection,
+  dropCursor,
+  EditorView,
+  highlightActiveLine,
+  lineNumbers,
+  placeholder,
+  scrollPastEnd,
+} from '@codemirror/view';
+import defaultsDeep from 'lodash.defaultsdeep';
 import { type DependencyList, type RefObject, useEffect, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
@@ -38,7 +51,7 @@ export type UseTextEditor = {
 // TODO(wittjosiah): Does not work in strict mode.
 export const useTextEditor = (
   { autoFocus, scrollTo, debug, doc, selection, extensions }: UseTextEditorOptions = {},
-  deps?: DependencyList,
+  deps: DependencyList = [],
 ): UseTextEditor => {
   const onUpdate = useRef<() => void>();
   const [view, setView] = useState<EditorView>();
@@ -114,23 +127,66 @@ export const useTextEditor = (
 
 // TODO(burdon): Factor out extension factories.
 
-export type DataExtensionsOptions = {
+/**
+ * https://codemirror.net/docs/extensions
+ * https://github.com/codemirror/basic-setup
+ */
+// TODO(burdon): Reconcile with createMarkdownExtensions.
+export type BasicExtensionsOptions = {
+  allowMultipleSelections?: boolean;
+  bracketMatching?: boolean;
+  closeBrackets?: boolean;
+  crosshairCursor?: boolean;
+  dropCursor?: boolean;
+  drawSelection?: boolean;
+  editable?: boolean;
+  highlightActiveLine?: boolean;
+  history?: boolean;
+  lineNumbers?: boolean;
+  lineWrapping?: boolean;
+  placeholder?: string;
   readonly?: boolean;
+  scrollPastEnd?: boolean;
+  tabSize?: number;
 };
 
-// TODO(burdon): Pass in TextObject (remove model).
-export const createDataExtensions = ({ readonly = false } = {}): Extension => {
+const defaults: BasicExtensionsOptions = {
+  bracketMatching: true,
+  closeBrackets: true,
+  drawSelection: true,
+  editable: true,
+  history: true,
+  lineWrapping: true,
+};
+
+export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extension => {
+  const props: BasicExtensionsOptions = defaultsDeep({}, _props, defaults);
   return [
-    //
-    EditorState.readOnly.of(readonly),
-    EditorView.editable.of(!readonly),
-  ];
+    // TODO(burdon): Doesn't catch errors in keymap functions.
+    EditorView.exceptionSink.of((err) => {
+      log.catch(err);
+    }),
+
+    props.allowMultipleSelections && EditorState.allowMultipleSelections.of(true),
+    props.bracketMatching && bracketMatching(),
+    props.closeBrackets && closeBrackets(),
+    props.crosshairCursor && crosshairCursor(),
+    props.dropCursor && dropCursor(),
+    props.drawSelection && drawSelection(),
+    props.highlightActiveLine && highlightActiveLine(),
+    props.history && history(),
+    props.lineNumbers && lineNumbers(),
+    props.lineWrapping && EditorView.lineWrapping,
+    props.placeholder && placeholder(props.placeholder),
+    props.readonly && [EditorState.readOnly.of(true), EditorView.editable.of(false)],
+    props.scrollPastEnd && scrollPastEnd(),
+    props.tabSize && EditorState.tabSize.of(props.tabSize),
+  ].filter(isNotFalsy);
 };
 
 export type ThemeExtensionsOptions = {
   theme?: ThemeStyles;
   themeMode?: ThemeMode;
-  lineWrap?: boolean;
   slots?: {
     editor?: {
       className?: string;
@@ -143,11 +199,10 @@ export type ThemeExtensionsOptions = {
 
 export const createThemeExtensions = ({ theme, themeMode, slots }: ThemeExtensionsOptions = {}): Extension => {
   return [
-    //
     EditorView.baseTheme(defaultTheme),
-    theme && EditorView.theme(theme),
     EditorView.darkTheme.of(themeMode === 'dark'),
-    EditorView.editorAttributes.of({ class: slots?.editor?.className ?? '' }),
-    EditorView.contentAttributes.of({ class: slots?.content?.className ?? '' }),
+    theme && EditorView.theme(theme),
+    slots?.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
+    slots?.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
   ].filter(isNotFalsy);
 };

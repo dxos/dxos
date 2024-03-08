@@ -5,6 +5,7 @@
 import { type Callback, Redis, type RedisOptions } from 'ioredis';
 
 import { Trigger } from '@dxos/async';
+import { log } from '@dxos/log';
 
 import { type AgentParams } from '../spec';
 
@@ -25,8 +26,8 @@ export class AgentEnv<S, C> {
     this.redis = new Redis(this._redisOptions ?? { port: REDIS_PORT });
     this.redisSub = new Redis(this._redisOptions ?? { port: REDIS_PORT });
 
-    this.redis.on('error', (err) => console.log('Redis Client Error', err));
-    this.redisSub.on('error', (err) => console.log('Redis Client Error', err));
+    this.redis.on('error', (err) => log.info('Redis Client Error', err));
+    this.redisSub.on('error', (err) => log.info('Redis Client Error', err));
   }
 
   async open() {

@@ -14,6 +14,7 @@ import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
 import { type AutomergeDb, type ItemsUpdatedEvent } from './automerge';
 import { type EchoDatabaseImpl, type EchoDatabase } from './database';
+import { prohibitSignalActions } from './guarded-scope';
 import { type EchoObject, type TypedObject } from './object';
 import {
   Filter,
@@ -56,7 +57,6 @@ export class Hypergraph {
   _register(spaceKey: PublicKey, database: EchoDatabaseImpl, owningObject?: unknown) {
     this._databases.set(spaceKey, database);
     this._owningObjects.set(spaceKey, owningObject);
-    database._updateEvent.on(this._onUpdate.bind(this));
     database.automerge._updateEvent.on(this._onUpdate.bind(this));
 
     const map = this._resolveEvents.get(spaceKey);
@@ -216,22 +216,25 @@ class SpaceQuerySource implements QuerySource {
       return;
     }
 
-    // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
-    const changed = updateEvent.itemsUpdated.some((object) => {
-      return (
-        !this._results ||
-        this._results.find((result) => result.id === object.id) ||
-        (this._database._legacy._objects.has(object.id) &&
-          filterMatch(this._filter!, this._database._legacy._objects.get(object.id)!)) ||
-        (this._database.automerge._objects.has(object.id) &&
-          filterMatch(this._filter!, this._database.automerge._objects.get(object.id)!))
-      );
-    });
+    prohibitSignalActions(() => {
+      // TODO(dmaretskyi): Clean up getters in the internal signals so they don't use the Proxy API and don't hit the signals.
+      compositeRuntime.untracked(() => {
+        // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
+        const changed = updateEvent.itemsUpdated.some((object) => {
+          return (
+            !this._results ||
+            this._results.find((result) => result.id === object.id) ||
+            (this._database.automerge._objects.has(object.id) &&
+              filterMatch(this._filter!, this._database.automerge.getObjectById(object.id)!))
+          );
+        });
 
-    if (changed) {
-      this._results = undefined;
-      this.changed.emit();
-    }
+        if (changed) {
+          this._results = undefined;
+          this.changed.emit();
+        }
+      });
+    });
   };
 
   getResults(): QueryResult<EchoObject>[] {
@@ -240,20 +243,26 @@ class SpaceQuerySource implements QuerySource {
     }
 
     if (!this._results) {
-      this._results = [...this._database._legacy._objects.values(), ...this._database.automerge._objects.values()]
-        .filter((object) => filterMatch(this._filter!, object))
-        .map((object) => ({
-          id: object.id,
-          spaceKey: this.spaceKey,
-          object,
-          resolution: {
-            source: 'local',
-            time: 0,
-          },
-        }));
+      prohibitSignalActions(() => {
+        // TODO(dmaretskyi): Clean up getters in the internal signals so they don't use the Proxy API and don't hit the signals.
+        compositeRuntime.untracked(() => {
+          this._results = this._database.automerge
+            .allObjects()
+            .filter((object) => filterMatch(this._filter!, object))
+            .map((object) => ({
+              id: object.id,
+              spaceKey: this.spaceKey,
+              object,
+              resolution: {
+                source: 'local',
+                time: 0,
+              },
+            }));
+        });
+      });
     }
 
-    return this._results;
+    return this._results!;
   }
 
   update(filter: Filter<EchoObject>): void {
@@ -272,7 +281,6 @@ class SpaceQuerySource implements QuerySource {
     this._filter = filter;
 
     // TODO(dmaretskyi): Allow to specify a retainer.
-    this._database._updateEvent.on(new Context(), this._onUpdate, { weak: true });
     this._database.automerge._updateEvent.on(new Context(), this._onUpdate, { weak: true });
 
     this._results = undefined;

@@ -61,7 +61,8 @@ export class Plate<I = null, TSlots extends Slots<I> = {}> {
         ...options,
       };
       const absoluteTemplateRelativeTo = path.resolve(relativeTo ?? path.dirname(templateFile));
-      const relativeOutputPath = getOutputNameFromTemplateName(templateFile).slice(
+      const cleanTemplateFile = templateFile.replace(/^file:\/\//g, '');
+      const relativeOutputPath = getOutputNameFromTemplateName(cleanTemplateFile).slice(
         absoluteTemplateRelativeTo.length + 1,
       );
       const { slots: _slots, ...restOpts } = options;
@@ -208,6 +209,12 @@ export const executeDirectoryTemplate = async <I extends InquirableZodType>(
   const template = await loadTemplate(src, { verbose });
   if (!template) {
     throw new Error(`failed to load template function from ${src}`);
+  }
+  if (!(template instanceof DirectoryTemplate)) {
+    throw new Error(`template is not an executable template ${src}`);
+  }
+  if (!template.apply) {
+    throw new Error(`template does not have an apply function ${src}`);
   }
   try {
     return template.apply(options);

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, WaveTriangle } from '@phosphor-icons/react';
+import { type IconProps, Info } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
 import { deepSignal } from 'deepsignal/react';
 import React from 'react';
@@ -94,7 +94,7 @@ export const ObservabilityPlugin = (options: {
               description: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast description'],
               duration: Infinity,
               icon: (props: IconProps) => (
-                <WaveTriangle className={mx(getSize(5), props.className)} weight='duotone' {...props} />
+                <Info className={mx(getSize(5), props.className)} weight='duotone' {...props} />
               ),
               actionLabel: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast action label'],
               actionAlt: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast action alt'],

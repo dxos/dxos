@@ -6,7 +6,9 @@ import '@dxosTheme';
 
 import React from 'react';
 
-import { Avatar, useJdenticonHref } from './Avatar';
+import { toEmoji } from '@dxos/util';
+
+import { Avatar } from './Avatar';
 import { AvatarGroup, AvatarGroupItem } from './AvatarGroup';
 import { withTheme } from '../../testing';
 
@@ -18,11 +20,11 @@ const items = [
 ];
 
 const StorybookAvatarGroupItem = ({ n }: { n: number }) => {
-  const href = useJdenticonHref(`StorybookAvatarGroupItem--${n}`, 4);
+  const emoji = toEmoji(n);
   return (
     <AvatarGroupItem.Root>
       <Avatar.Frame classNames={items[n]}>
-        <Avatar.Fallback href={href} />
+        <Avatar.Fallback text={emoji} />
       </Avatar.Frame>
     </AvatarGroupItem.Root>
   );

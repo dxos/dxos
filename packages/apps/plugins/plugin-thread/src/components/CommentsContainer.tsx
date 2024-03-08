@@ -5,8 +5,8 @@ import { Quotes } from '@phosphor-icons/react';
 import React, { useEffect } from 'react';
 
 import { type Thread as ThreadType } from '@braneframe/types';
-import { Button, useTranslation } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
+import { useTranslation } from '@dxos/react-ui';
+import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
 
 import { CommentContainer } from './CommentContainer';
 import { type ThreadContainerProps } from './types';
@@ -27,17 +27,17 @@ export type ThreadsContainerProps = Omit<
   onThreadDelete?: (thread: ThreadType) => void;
 };
 
-export const CommentsHeading = () => {
+export const CommentsHeading = ({ attendableId }: { attendableId?: string }) => {
   const { t } = useTranslation(THREAD_PLUGIN);
   return (
     <div
       role='none'
       className='grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)] items-center border-be separator-separator -mbe-px'
     >
-      <Button variant='primary' classNames='m-1 pli-0 min-bs-0 is-[--rail-action] bs-[--rail-action] rounded-sm'>
-        <Quotes weight='duotone' className={getSize(5)} />
-      </Button>
-      <h1 className='font-medium fg-accent pli-1 truncate'>{t('comments heading')}</h1>
+      <PlankHeading.Button attendableId={attendableId}>
+        <Quotes {...plankHeadingIconProps} />
+      </PlankHeading.Button>
+      <PlankHeading.Label attendableId={attendableId}>{t('comments heading')}</PlankHeading.Label>
     </div>
   );
 };

@@ -17,9 +17,8 @@ import '@dxosTheme';
 
 import React, { useEffect, useState } from 'react';
 
-import { TextObject } from '@dxos/client/echo';
-import { createDocAccessor, type DocAccessor } from '@dxos/echo-schema';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
+import { createDocAccessor, TextObject, type DocAccessor } from '@dxos/react-client/echo';
 
 import { ScriptEditor } from './ScriptEditor';
 

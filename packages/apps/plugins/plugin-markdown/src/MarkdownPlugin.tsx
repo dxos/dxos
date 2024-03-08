@@ -3,23 +3,24 @@
 //
 
 import { ArticleMedium, type IconProps } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-core';
+import { batch, effect } from '@preact/signals-core';
 import { deepSignal } from 'deepsignal/react';
 import React, { useMemo, type Ref } from 'react';
 
-import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
-import { Document as DocumentType, Folder } from '@braneframe/types';
+import { parseClientPlugin } from '@braneframe/plugin-client';
+import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
+import { Document as DocumentType } from '@braneframe/types';
 import {
   isObject,
   parseIntentPlugin,
   resolvePlugin,
-  NavigationAction,
   type IntentPluginProvides,
   type Plugin,
   type PluginDefinition,
 } from '@dxos/app-framework';
+import { EventSubscriptions } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
+import { isTypedObject } from '@dxos/react-client/echo';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
@@ -110,56 +111,91 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       },
       translations: [...translations, ...editorTranslations],
       graph: {
-        builder: ({ parent }) => {
-          if (parent.data instanceof Folder || parent.data instanceof SpaceProxy) {
-            parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
-              id: `${MARKDOWN_PLUGIN}/create`,
-              label: ['create document label', { ns: MARKDOWN_PLUGIN }],
-              icon: (props) => <ArticleMedium {...props} />,
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch([
-                  {
-                    plugin: MARKDOWN_PLUGIN,
-                    action: MarkdownAction.CREATE,
-                  },
-                  {
-                    action: SpaceAction.ADD_OBJECT,
-                    data: { target: parent.data },
-                  },
-                  {
-                    action: NavigationAction.ACTIVATE,
-                  },
-                ]),
-              properties: {
-                testId: 'markdownPlugin.createObject',
-              },
-            });
-          } else if (parent.data instanceof DocumentType) {
-            parent.addAction({
-              id: `${MARKDOWN_PLUGIN}/toggle-readonly`,
-              label: ['toggle view mode label', { ns: MARKDOWN_PLUGIN }],
-              icon: (props) => <ArticleMedium {...props} />,
-              keyBinding: 'shift+F5',
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch([
-                  {
-                    plugin: MARKDOWN_PLUGIN,
-                    action: MarkdownAction.TOGGLE_READONLY,
-                    data: {
-                      objectId: parent.data.id,
-                    },
-                  },
-                ]),
-            });
-
-            if (!parent.data.title) {
-              effect(() => {
-                const document = parent.data;
-                parent.label = document.title ||
-                  getFallbackTitle(document) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }];
-              });
-            }
+        builder: (plugins, graph) => {
+          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+          if (!client || !dispatch) {
+            return;
           }
+
+          const subscriptions = new EventSubscriptions();
+          const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            spaces.forEach((space) => {
+              subscriptions.add(
+                updateGraphWithAddObjectAction({
+                  graph,
+                  space,
+                  dispatch,
+                  plugin: MARKDOWN_PLUGIN,
+                  action: MarkdownAction.CREATE,
+                  properties: {
+                    label: ['create document label', { ns: MARKDOWN_PLUGIN }],
+                    icon: (props: IconProps) => <ArticleMedium {...props} />,
+                    testId: 'markdownPlugin.createObject',
+                  },
+                }),
+              );
+
+              // Add all documents to the graph.
+              const query = space.db.query(DocumentType.filter());
+              let previousObjects: DocumentType[] = [];
+              subscriptions.add(
+                effect(() => {
+                  const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+                  previousObjects = query.objects;
+                  batch(() => {
+                    removedObjects.forEach((object) => graph.removeNode(object.id));
+                    query.objects.forEach((object) => {
+                      graph.addNodes({
+                        id: object.id,
+                        data: object,
+                        properties: {
+                          // TODO(wittjosiah): Reconcile with metadata provides.
+
+                          // Provide the label as a getter so we don't have to rebuild the graph node when the title changes while editing the document.
+                          get label() {
+                            return (
+                              object.title ||
+                              getFallbackTitle(object) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }]
+                            );
+                          },
+                          icon: (props: IconProps) => <ArticleMedium {...props} />,
+                          testId: 'spacePlugin.object',
+                          persistenceClass: 'echo',
+                          persistenceKey: space?.key.toHex(),
+                        },
+                        nodes: [
+                          {
+                            id: `${MARKDOWN_PLUGIN}/toggle-readonly/${object.id}`,
+                            data: () =>
+                              intentPlugin?.provides.intent.dispatch([
+                                {
+                                  plugin: MARKDOWN_PLUGIN,
+                                  action: MarkdownAction.TOGGLE_READONLY,
+                                  data: {
+                                    objectId: object.id,
+                                  },
+                                },
+                              ]),
+                            properties: {
+                              label: ['toggle view mode label', { ns: MARKDOWN_PLUGIN }],
+                              icon: (props: IconProps) => <ArticleMedium {...props} />,
+                              keyBinding: 'shift+F5',
+                            },
+                          },
+                        ],
+                      });
+                    });
+                  });
+                }),
+              );
+            });
+          });
+
+          return () => {
+            unsubscribe();
+            subscriptions.clear();
+          };
         },
       },
       stack: {
@@ -266,7 +302,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             // TODO(burdon): Generalize for every object.
             case MarkdownAction.TOGGLE_READONLY: {
               const objectId = data?.objectId;
-              const state = settings.values.state[objectId as string];
+              const state = settings.values.state[objectId as string] ?? {};
               settings.values.state[objectId as string] = { ...state, readonly: !state.readonly };
               return { data: true };
             }

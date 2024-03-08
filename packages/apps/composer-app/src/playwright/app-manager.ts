@@ -13,6 +13,9 @@ import { setupPage } from '@dxos/test/playwright';
 // TODO(wittjosiah): Normalize data-testids between snake and camel case.
 // TODO(wittjosiah): Consider structuring tests in such that they could be run with different sets of plugins enabled.
 
+const isMac = os.platform() === 'darwin';
+const modifier = isMac ? 'Meta' : 'Control';
+
 export class AppManager {
   page!: Page;
   shell!: ShellManager;
@@ -56,29 +59,26 @@ export class AppManager {
 
   // Based on https://github.com/microsoft/playwright/issues/8114#issuecomment-1584033229.
   async copy(): Promise<void> {
-    const isMac = os.platform() === 'darwin';
-    const modifier = isMac ? 'Meta' : 'Control';
     await this.page.keyboard.press(`${modifier}+KeyC`);
   }
 
   async cut(): Promise<void> {
-    const isMac = os.platform() === 'darwin';
-    const modifier = isMac ? 'Meta' : 'Control';
     await this.page.keyboard.press(`${modifier}+KeyX`);
   }
 
   async paste(): Promise<void> {
-    const isMac = os.platform() === 'darwin';
-    const modifier = isMac ? 'Meta' : 'Control';
     await this.page.keyboard.press(`${modifier}+KeyV`);
   }
 
   async openIdentityManager() {
-    await this.page.keyboard.press('Meta+Shift+.');
+    const platform = os.platform();
+    const shortcut = platform === 'darwin' ? 'Meta+Shift+.' : platform === 'win32' ? 'Alt+Shift+.' : 'Alt+Shift+>';
+    await this.page.keyboard.press(shortcut);
   }
 
   async openSpaceManager() {
-    await this.page.keyboard.press('Meta+.');
+    const shortcut = isMac ? 'Meta+.' : 'Alt+.';
+    await this.page.keyboard.press(shortcut);
   }
 
   isAuthenticated({ timeout = 5_000 } = {}) {

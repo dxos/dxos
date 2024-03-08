@@ -6,6 +6,7 @@ import { Contact as ContactType, Message as MessageType } from '@braneframe/type
 import { hasType } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 export const handler = subscriptionHandler(async ({ event: { space, objects } }) => {
   let i = 0;
@@ -54,7 +55,7 @@ export const handler = subscriptionHandler(async ({ event: { space, objects } })
 
   // TODO(burdon): Auto-flush (in wrapper).
   // TODO(burdon): Causes recursion. Scheduler must check. Also check that there are NO mutations if nothing changed.
-  console.log('>>>', i);
+  log.info(`>>> ${i}`);
   await space.db.flush();
-  console.log('<<<', i);
+  log.info(`<<< ${i}`);
 });

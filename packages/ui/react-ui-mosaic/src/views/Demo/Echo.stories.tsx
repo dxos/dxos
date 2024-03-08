@@ -13,7 +13,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { Mosaic } from '../../mosaic';
 import { FullscreenDecorator, TestObjectGenerator, range, Status, Priority } from '../../testing';
 import { EchoKanban } from '../Kanban/testing';
-import { GraphTree } from '../Tree/testing';
+// import { GraphTree } from '../Tree/testing';
 
 faker.seed(3);
 const debug = true;
@@ -30,9 +30,7 @@ const Story: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
     <Mosaic.Root debug={debug}>
       <Mosaic.DragOverlay />
       <div className='flex grow overflow-hidden'>
-        <div className='flex shrink-0 w-[280px] overflow-hidden'>
-          <GraphTree id='graph' debug={debug} />
-        </div>
+        <div className='flex shrink-0 w-[280px] overflow-hidden'>{/* <GraphTree id='graph' debug={debug} /> */}</div>
         <div className='flex grow overflow-hidden'>
           <EchoKanban id='projects' spaceKey={spaceKey} generator={generator} debug={debug} />
         </div>
@@ -73,4 +71,4 @@ export default {
 
 // TODO(wittjosiah): This currently has a bug where empty over events are fired when dragging from tree onto kanban.
 //   The bug didn't exist before the cleanup refactor so seems likely it's a side effect of that.
-export const ECHO = {};
+// export const ECHO = {};

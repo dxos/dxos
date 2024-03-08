@@ -61,12 +61,13 @@ const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) =
   }
 
   return (
-    <div role='none' className={mx('fixed inset-0 flex flex-col')}>
+    <div role='none' className='fixed inset-0 flex flex-col'>
       <Toolbar.Root onAction={handleAction} state={formattingState} classNames={textBlockWidth}>
         <Toolbar.Markdown />
         <Toolbar.Separator />
         <Toolbar.Extended />
       </Toolbar.Root>
+
       <MarkdownEditor
         ref={editorRef}
         model={model}

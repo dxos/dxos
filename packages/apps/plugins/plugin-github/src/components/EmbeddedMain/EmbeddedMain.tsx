@@ -30,10 +30,11 @@ import {
   useTranslation,
   DropdownMenu,
   Tooltip,
-  useJdenticonHref,
+  toLocalizedString,
 } from '@dxos/react-ui';
 import { useTextModel } from '@dxos/react-ui-editor';
 import { defaultTx, descriptionText, getSize, mx } from '@dxos/react-ui-theme';
+import { hexToFallback } from '@dxos/util';
 
 import { GfmPreview } from './GfmPreview';
 import { useDocGhId } from '../../hooks';
@@ -84,7 +85,7 @@ const EmbeddedLayoutImpl = () => {
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [resolverDialogOpen, setResolverDialogOpen] = useState(false);
 
-  const spaceJdenticon = useJdenticonHref(space?.key.toHex() ?? '', 6);
+  const spaceFallbackValue = hexToFallback(space?.key.toHex() ?? '0');
 
   const model = useTextModel({
     identity,
@@ -188,10 +189,10 @@ const EmbeddedLayoutImpl = () => {
                     <Avatar.Root size={5} variant='circle'>
                       <div role='none' className='flex gap-1 mlb-1 items-center'>
                         <Avatar.Frame>
-                          <Avatar.Fallback href={spaceJdenticon} />
+                          <Avatar.Fallback text={spaceFallbackValue.emoji} />
                         </Avatar.Frame>
                         <Avatar.Label classNames='text-sm text-[--surface-text]'>
-                          {Array.isArray(name) ? t(...name) : name}
+                          {name && toLocalizedString(name, t)}
                         </Avatar.Label>
                       </div>
                     </Avatar.Root>
