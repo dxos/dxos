@@ -8,9 +8,10 @@ import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Message as MessageType } from '@braneframe/types';
 import { TextObject, getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { ScrollArea, useTranslation } from '@dxos/react-ui';
+import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
 import { useTextModel } from '@dxos/react-ui-editor';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadLayout } from '@dxos/react-ui-thread';
 
 import { MessageContainer } from './MessageContainer';
@@ -19,17 +20,17 @@ import { type ThreadContainerProps } from './types';
 import { useStatus, createMessageData } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
 
-export const ChatHeading = () => {
+export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
   const { t } = useTranslation(THREAD_PLUGIN);
   return (
     <div
       role='none'
       className='grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)] items-center border-be separator-separator -mbe-px'
     >
-      <Button variant='primary' classNames='m-1 pli-0 min-bs-0 is-[--rail-action] bs-[--rail-action] rounded-sm'>
-        <Chat weight='duotone' className={getSize(5)} />
-      </Button>
-      <h1 className='font-medium fg-accent pli-1 truncate'>{t('chat heading')}</h1>
+      <PlankHeading.Button attendableId={attendableId}>
+        <Chat {...plankHeadingIconProps} />
+      </PlankHeading.Button>
+      <PlankHeading.Label attendableId={attendableId}>{t('chat heading')}</PlankHeading.Label>
     </div>
   );
 };

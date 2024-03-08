@@ -234,7 +234,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
                 return (
                   <>
-                    <CommentsHeading />
+                    <CommentsHeading attendableId={data.subject.id} />
                     <ScrollArea.Root>
                       <ScrollArea.Viewport>
                         <CommentsContainer
@@ -273,7 +273,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               } else if (isThread(data.subject)) {
                 return (
                   <>
-                    <ChatHeading />
+                    <ChatHeading attendableId={data.subject.id} />
                     <ChatContainer thread={data.subject} context={{ object: location?.active }} />
                   </>
                 );

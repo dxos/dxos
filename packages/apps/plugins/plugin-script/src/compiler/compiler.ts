@@ -24,9 +24,11 @@ export type CompilerResult = {
 
 export type CompilerOptions = {
   platform: BuildOptions['platform'];
+  providedModules: string[];
 };
 
 let initialized: Promise<void>;
+
 export const initializeCompiler = async (options: { wasmURL: string }) => {
   await (initialized ??= initialize({
     wasmURL: options.wasmURL,
@@ -40,6 +42,8 @@ export class Compiler {
   constructor(private readonly _options: CompilerOptions) {}
 
   async compile(source: string): Promise<CompilerResult> {
+    const { providedModules, ...options } = this._options;
+
     const createResult = async (result?: Partial<CompilerResult>) => {
       return {
         timestamp: Date.now(),
@@ -53,13 +57,17 @@ export class Compiler {
       await initialized;
     }
 
+    const imports = analyzeSourceFileImports(source);
+
     // https://esbuild.github.io/api/#build
     try {
       const result = await build({
-        ...this._options,
+        ...options,
         metafile: true,
         write: false,
         entryPoints: ['memory:main.tsx'],
+        bundle: true,
+        format: 'esm',
         plugins: [
           {
             name: 'memory',
@@ -67,6 +75,7 @@ export class Compiler {
               build.onResolve({ filter: /^memory:/ }, ({ path }) => {
                 return { path: path.split(':')[1], namespace: 'memory' };
               });
+
               build.onLoad({ filter: /.*/, namespace: 'memory' }, ({ path }) => {
                 const imports = ["import React from 'react';"];
                 if (path === 'main.tsx') {
@@ -75,6 +84,24 @@ export class Compiler {
                     loader: 'tsx',
                   };
                 }
+              });
+
+              for (const module of providedModules) {
+                build.onResolve({ filter: new RegExp(`^${module}$`) }, ({ path }) => {
+                  return { path, namespace: 'injected-module' };
+                });
+              }
+
+              build.onLoad({ filter: /.*/, namespace: 'injected-module' }, ({ path }) => {
+                const namedImports = imports.find((entry) => entry.moduleIdentifier === path)?.namedImports ?? [];
+                return {
+                  contents: `
+                  const { ${namedImports.join(',')} } = window.__DXOS_SANDBOX_MODULES__[${JSON.stringify(path)}];
+                  export { ${namedImports.join(',')} };
+                  export default window.__DXOS_SANDBOX_MODULES__[${JSON.stringify(path)}].default;
+                `,
+                  loader: 'tsx',
+                };
               });
             },
           },
@@ -117,6 +144,20 @@ export class Compiler {
       };
     });
   }
+
+  analyzeSourceFileImports(code: string) {
+    // TODO(dmaretskyi): Support import aliases and wildcard imports.
+    const parsedImports = allMatches(IMPORT_REGEX, code);
+    return parsedImports.map((capture) => {
+      return {
+        defaultImportName: capture[1],
+        namedImports: capture[2]?.split(',').map((importName) => importName.trim()),
+        wildcardImportName: capture[3],
+        moduleIdentifier: capture[4],
+        quotes: capture[5],
+      };
+    });
+  }
 }
 
 // https://regex101.com/r/FEN5ks/1
@@ -141,4 +182,30 @@ const allMatches = (regex: RegExp, str: string) => {
   }
 
   return matches;
+};
+
+type ParsedImport = {
+  defaultImportName?: string;
+  namedImports: string[];
+  wildcardImportName?: string;
+  moduleIdentifier: string;
+  quotes: string;
+};
+
+const analyzeSourceFileImports = (code: string): ParsedImport[] => {
+  // TODO(dmaretskyi): Support import aliases and wildcard imports.
+  const parsedImports = allMatches(IMPORT_REGEX, code);
+  return parsedImports.map((capture) => {
+    return {
+      defaultImportName: capture[1],
+      namedImports: capture[2]
+        ?.trim()
+        .slice(1, -1)
+        .split(',')
+        .map((importName) => importName.trim()),
+      wildcardImportName: capture[3],
+      moduleIdentifier: capture[4],
+      quotes: capture[5],
+    };
+  });
 };

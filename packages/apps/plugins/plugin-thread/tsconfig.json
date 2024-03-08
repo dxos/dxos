@@ -56,6 +56,9 @@
       "path": "../../../ui/react-ui-card"
     },
     {
+      "path": "../../../ui/react-ui-deck"
+    },
+    {
       "path": "../../../ui/react-ui-editor"
     },
     {

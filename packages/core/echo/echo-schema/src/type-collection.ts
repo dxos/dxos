@@ -60,6 +60,8 @@ export class TypeCollection {
       }
       this._effectSchemaDefs.set(typename, schema);
     });
+
+    return this;
   }
 
   isEffectSchemaRegistered(schema: S.Schema<any>): boolean {

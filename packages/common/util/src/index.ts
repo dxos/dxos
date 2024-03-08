@@ -31,3 +31,4 @@ export * from './for-each-async';
 export * from './weak';
 export * from './map-values';
 export * from './defer';
+export * from './circular-buffer';
