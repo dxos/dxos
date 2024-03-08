@@ -11,12 +11,13 @@ import { Reference } from '@dxos/document-model';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log'; // Keep type-only
 import { TextModel } from '@dxos/text-model';
-import { assignDeep, defer } from '@dxos/util';
+import { assignDeep, defer, getDeep } from '@dxos/util';
 
 import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
-import { AutomergeObject, getRawDoc } from './automerge-object';
+import { AutomergeObject, getAutomergeObjectCore, getRawDoc } from './automerge-object';
 import { docChangeSemaphore } from './doc-semaphore';
 import {
   encodeReference,
@@ -26,12 +27,21 @@ import {
   type DecodedAutomergeValue,
   type SpaceDoc,
 } from './types';
-import { base, type TypedObjectOptions, type EchoObject, TextObject, type AutomergeTextCompat } from '../object';
+import { isReactiveProxy } from '../effect/proxy';
+import {
+  type TypedObjectOptions,
+  type EchoObject,
+  TextObject,
+  type AutomergeTextCompat,
+  type OpaqueEchoObject,
+} from '../object';
 import { AbstractEchoObject } from '../object/object';
-import { type Schema } from '../proto'; // Keep type-only
+import { type Schema } from '../proto';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
+
+const SYSTEM_NAMESPACE = 'system';
 
 // TODO(dmaretskyi): Rename to `AutomergeObject`.
 export class AutomergeObjectCore {
@@ -63,6 +73,7 @@ export class AutomergeObjectCore {
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * Set only when the object is not bound to a database.
    */
+  // TODO(dmaretskyi): Change to object core.
   public linkCache?: Map<string, EchoObject> = new Map<string, EchoObject>();
 
   /**
@@ -79,7 +90,13 @@ export class AutomergeObjectCore {
   /**
    * Reactive signal for update propagation.
    */
-  public signal = compositeRuntime.createSignal();
+  public signal = compositeRuntime.createSignal(this);
+
+  /**
+   * User-facing proxy for the object.
+   * Either an instance of `AutomergeObject` or a `ReactiveEchoObject<T>`.
+   */
+  public rootProxy: unknown;
 
   /**
    * Create local doc with initial state from this object.
@@ -243,7 +260,7 @@ export class AutomergeObjectCore {
     } catch (err) {
       // Print the error message synchronously for easier debugging.
       // The stack trace and details will be printed asynchronously.
-      console.error('' + err);
+      log.catch(err);
 
       // Reports all errors that happen during even propagation as unhandled.
       // This is important since we don't want to silently swallow errors.
@@ -258,21 +275,23 @@ export class AutomergeObjectCore {
   /**
    * Store referenced object.
    */
-  linkObject(obj: EchoObject): Reference {
+  linkObject(obj: OpaqueEchoObject): Reference {
+    const core = getAutomergeObjectCore(obj);
+
     if (this.database) {
-      if (!obj[base]._database) {
+      if (!core.database) {
         this.database.add(obj);
-        return new Reference(obj.id);
+        return new Reference(core.id);
       } else {
-        if ((obj[base]._database as any) !== this.database) {
-          return new Reference(obj.id, undefined, obj[base]._database.spaceKey.toHex());
+        if ((core.database as any) !== this.database) {
+          return new Reference(core.id, undefined, core.database.spaceKey.toHex());
         } else {
-          return new Reference(obj.id);
+          return new Reference(core.id);
         }
       }
     } else {
       invariant(this.linkCache);
-      this.linkCache.set(obj.id, obj);
+      this.linkCache.set(obj.id, obj as EchoObject);
       return new Reference(obj.id);
     }
   }
@@ -300,22 +319,21 @@ export class AutomergeObjectCore {
     if (value === undefined) {
       return null;
     }
-    if (value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
-      const reference = this.linkObject(value);
+    // TODO(dmaretskyi): Move proxy handling out of this class.
+    if (
+      value instanceof AbstractEchoObject ||
+      value instanceof AutomergeObject ||
+      (isReactiveProxy(value) as boolean)
+    ) {
+      const reference = this.linkObject(value as OpaqueEchoObject);
       return encodeReference(reference);
     }
-    if (value instanceof Reference && value.protocol === 'protobuf') {
+    if (value instanceof Reference) {
       // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
       return encodeReference(value);
     }
     if (value instanceof AutomergeArray || Array.isArray(value)) {
-      const values: any = value.map((val) => {
-        if (val instanceof AutomergeArray || Array.isArray(val)) {
-          // TODO(mykola): Add support for nested arrays.
-          throw new Error('Nested arrays are not supported');
-        }
-        return this.encode(val);
-      });
+      const values: any = value.map((val) => this.encode(val));
       return values;
     }
     if (typeof value === 'object' && value !== null) {
@@ -332,9 +350,10 @@ export class AutomergeObjectCore {
   /**
    * Decode a value from the Automerge document.
    */
-  decode(value: any): DecodedAutomergeValue {
+  // TODO(dmaretskyi): Cleanup to not do resolution in this method.
+  decode(value: any, { resolveLinks = true }: { resolveLinks?: boolean } = {}): DecodedAutomergeValue {
     if (value === null) {
-      return undefined;
+      return value;
     }
     if (Array.isArray(value)) {
       return value.map((val) => this.decode(val));
@@ -342,7 +361,8 @@ export class AutomergeObjectCore {
     if (value instanceof A.RawString) {
       return value.toString();
     }
-    if (isEncodedReferenceObject(value)) {
+    // For some reason references without `@type` are being stored in the document.
+    if (isEncodedReferenceObject(value) || looksLikeReferenceObject(value)) {
       if (value.protocol === 'protobuf') {
         // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
         // TODO(dmaretskyi): Why are we returning raw reference here instead of doing lookup?
@@ -350,7 +370,12 @@ export class AutomergeObjectCore {
       }
 
       const reference = decodeReference(value);
-      return this.lookupLink(reference);
+
+      if (resolveLinks) {
+        return this.lookupLink(reference);
+      } else {
+        return reference;
+      }
     }
     if (typeof value === 'object') {
       return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this.decode(value)]));
@@ -376,6 +401,38 @@ export class AutomergeObjectCore {
     this.change((doc) => {
       assignDeep(doc, fullPath, value);
     });
+  }
+
+  setType(reference: Reference) {
+    this.set([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
+  }
+
+  delete(path: (string | number)[]) {
+    const fullPath = [...this.mountPath, ...path];
+
+    this.change((doc) => {
+      const value: any = getDeep(doc, fullPath.slice(0, fullPath.length - 1));
+      delete value[fullPath[fullPath.length - 1]];
+    });
+  }
+
+  getType(): Reference | undefined {
+    const value = this.decode(this.get([SYSTEM_NAMESPACE, 'type']), { resolveLinks: false });
+    if (!value) {
+      return undefined;
+    }
+
+    invariant(value instanceof Reference);
+    return value;
+  }
+
+  isDeleted() {
+    const value = this.get([SYSTEM_NAMESPACE, 'deleted']);
+    return typeof value === 'boolean' ? value : false;
+  }
+
+  setDeleted(value: boolean) {
+    this.set([SYSTEM_NAMESPACE, 'deleted'], value);
   }
 }
 
@@ -443,3 +500,11 @@ const getSchemaProto = (): typeof Schema => {
 
   return schemaProto;
 };
+
+const looksLikeReferenceObject = (value: unknown) =>
+  typeof value === 'object' &&
+  value !== null &&
+  Object.keys(value).length === 3 &&
+  'itemId' in value &&
+  'protocol' in value &&
+  'host' in value;

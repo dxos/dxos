@@ -3,13 +3,14 @@
 //
 
 import { type IconProps, ShieldChevron } from '@phosphor-icons/react';
+import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
-import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
-import { Folder } from '@braneframe/types';
-import { type PluginDefinition, resolvePlugin, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
+import { parseClientPlugin } from '@braneframe/plugin-client';
+import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
+import { type PluginDefinition, resolvePlugin, parseIntentPlugin } from '@dxos/app-framework';
+import { EventSubscriptions } from '@dxos/async';
 import { Game } from '@dxos/chess-app';
-import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { ChessMain } from './components';
 import meta, { CHESS_PLUGIN } from './meta';
@@ -29,35 +30,65 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
         },
       },
       graph: {
-        builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
+        builder: (plugins, graph) => {
+          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+          if (!client || !dispatch) {
             return;
           }
 
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
-          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
-            id: `${CHESS_PLUGIN}/create`,
-            label: ['create game label', { ns: CHESS_PLUGIN }],
-            icon: (props) => <ShieldChevron {...props} />,
-            invoke: () =>
-              intentPlugin?.provides.intent.dispatch([
-                {
+          const subscriptions = new EventSubscriptions();
+          const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            spaces.forEach((space) => {
+              subscriptions.add(
+                updateGraphWithAddObjectAction({
+                  graph,
+                  space,
                   plugin: CHESS_PLUGIN,
                   action: ChessAction.CREATE,
-                },
-                {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { target: parent.data },
-                },
-                {
-                  action: NavigationAction.ACTIVATE,
-                },
-              ]),
-            properties: {
-              testId: 'chessPlugin.createObject',
-            },
+                  properties: {
+                    label: ['create game label', { ns: CHESS_PLUGIN }],
+                    icon: (props: IconProps) => <ShieldChevron {...props} />,
+                    testId: 'chessPlugin.createObject',
+                  },
+                  dispatch,
+                }),
+              );
+
+              // Add all games to the graph.
+              const query = space.db.query(Game.filter());
+              let previousObjects: Game[] = [];
+              subscriptions.add(
+                effect(() => {
+                  const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+                  previousObjects = query.objects;
+
+                  batch(() => {
+                    removedObjects.forEach((object) => graph.removeNode(object.id));
+                    query.objects.forEach((object) => {
+                      graph.addNodes({
+                        id: object.id,
+                        data: object,
+                        properties: {
+                          // TODO(wittjosiah): Reconcile with metadata provides.
+                          label: ['grid title placeholder', { ns: CHESS_PLUGIN }],
+                          icon: (props: IconProps) => <ShieldChevron {...props} />,
+                          testId: 'spacePlugin.object',
+                          persistenceClass: 'echo',
+                          persistenceKey: space?.key.toHex(),
+                        },
+                      });
+                    });
+                  });
+                }),
+              );
+            });
           });
+
+          return () => {
+            unsubscribe();
+            subscriptions.clear();
+          };
         },
       },
       translations,

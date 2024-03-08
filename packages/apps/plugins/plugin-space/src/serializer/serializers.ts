@@ -6,9 +6,9 @@ import get from 'lodash.get';
 
 import { Document, Thread } from '@braneframe/types';
 import { next as A, type Prop } from '@dxos/automerge/automerge';
-import { AutomergeObject, type IDocHandle } from '@dxos/echo-schema';
+import { AutomergeObject, base, getTypeRef, type IDocHandle } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type TypedObject, TextObject, getRawDoc } from '@dxos/react-client/echo';
+import { TypedObject, TextObject, getRawDoc } from '@dxos/react-client/echo';
 
 export interface CursorConverter {
   toCursor(position: number, assoc?: -1 | 1 | undefined): string;
@@ -148,6 +148,32 @@ export const serializers: Record<string, TypedObjectSerializer> = {
 
     deserialize: async (text: string) => {
       throw new Error('Not implemented.');
+    },
+  },
+
+  default: {
+    filename: () => ({ name: 'Untitled', extension: 'json' }),
+    serialize: async (object: TypedObject) => JSON.stringify(object.toJSON(), null, 2),
+    deserialize: async (text: string, object?: TypedObject) => {
+      const { '@id': id, '@type': type, '@meta': meta, ...data } = JSON.parse(text);
+      if (!object) {
+        const deserializedObject = new TypedObject(
+          Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@'))),
+          {
+            meta,
+            type: getTypeRef(type),
+          },
+        );
+        deserializedObject[base]._id = id;
+        return deserializedObject;
+      } else {
+        Object.entries(data)
+          .filter(([key]) => !key.startsWith('@'))
+          .forEach(([key, value]: any) => {
+            object[key] = value;
+          });
+        return object;
+      }
     },
   },
 };

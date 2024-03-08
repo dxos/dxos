@@ -43,6 +43,8 @@ const config: UserConfig = defineUserConfig({
   },
   theme: hopeTheme({
     hostname: process.env.HOSTNAME ?? 'https://docs.dxos.org',
+    iconAssets: 'https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css',
+    iconPrefix: 'ph ph-',
     // Header logotype.
     logo: '/images/logotype/dxos-horizontal.svg',
     logoDark: '/images/logotype/dxos-horizontal-white.svg',
@@ -53,6 +55,7 @@ const config: UserConfig = defineUserConfig({
     sidebar: sidebar({
       '/guide/': 'structure',
       '/api/': await apiSidebar(),
+      '/composer/': 'structure',
     }),
     navbarLayout: {
       start: ['Brand', 'Links'],
@@ -69,6 +72,10 @@ const config: UserConfig = defineUserConfig({
         text: 'API',
         link: '/api/',
       },
+      {
+        text: 'Composer',
+        link: '/composer/',
+      },
     ],
     plugins: {
       mdEnhance: {
@@ -78,7 +85,7 @@ const config: UserConfig = defineUserConfig({
         attrs: true,
         figure: true,
         imgMark: true,
-      },
+      }
     },
   }),
   plugins: [

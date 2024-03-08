@@ -17,6 +17,7 @@ import { type DatadogMetrics } from './datadog';
 import { type IPData, getTelemetryIdentifier, mapSpaces } from './helpers';
 import { type SegmentTelemetry, type EventOptions, type PageOptions } from './segment';
 import { type InitOptions, type captureException as SentryCaptureException } from './sentry';
+import { SentryLogProcessor } from './sentry/sentry-log-processor';
 
 const SPACE_METRICS_MIN_INTERVAL = 1000 * 60;
 // const DATADOG_IDLE_INTERVAL = 1000 * 60 * 5;
@@ -55,7 +56,6 @@ export type ObservabilityOptions = {
 
   errorLog?: {
     sentryInitOptions?: InitOptions;
-    logProcessor?: boolean;
   };
 };
 
@@ -71,7 +71,6 @@ export class Observability {
   private _telemetry?: SegmentTelemetry;
   // TODO(wittjosiah): Generic error logging interface.
   private _errorReportingOptions?: InitOptions;
-  private _errorLogProcessor: boolean;
   private _captureException?: typeof SentryCaptureException;
   private _setTag?: (key: string, value: string) => void;
 
@@ -103,7 +102,6 @@ export class Observability {
     this._secrets = this._loadSecrets(config, secrets);
     this._telemetryBatchSize = telemetry?.batchSize ?? 30;
     this._errorReportingOptions = errorLog?.sentryInitOptions;
-    this._errorLogProcessor = errorLog?.logProcessor ?? false;
 
     if (this._group) {
       this.setTag('group', this._group);
@@ -447,7 +445,7 @@ export class Observability {
 
   private async _initErrorLogs() {
     if (this._secrets.SENTRY_DESTINATION && this._mode !== 'disabled') {
-      const { captureException, enableSentryLogProcessor, configureTracing, init, setTag } = await import('./sentry');
+      const { captureException, configureTracing, init, setTag } = await import('./sentry');
       this._captureException = captureException;
       this._setTag = setTag;
 
@@ -456,18 +454,21 @@ export class Observability {
         dest: this._secrets.SENTRY_DESTINATION,
         options: this._errorReportingOptions,
       });
+
+      const logProcessor = new SentryLogProcessor();
       init({
         ...this._errorReportingOptions,
         destination: this._secrets.SENTRY_DESTINATION,
         scrubFilenames: this._mode !== 'full',
+        onError: (event) => logProcessor.addLogBreadcrumbsTo(event),
       });
       if (this._errorReportingOptions?.tracing) {
         configureTracing();
       }
+
       // TODO(nf): set platform at instantiation? needed for node.
-      if (this._errorLogProcessor) {
-        enableSentryLogProcessor();
-      }
+      log.runtimeConfig.processors.push(logProcessor.logProcessor);
+
       // TODO(nf): is this different than passing as properties in options?
       this._tags.forEach((v, k) => {
         if (v.scope === 'all' || v.scope === 'errors') {

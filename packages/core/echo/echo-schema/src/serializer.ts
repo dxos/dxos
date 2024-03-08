@@ -56,6 +56,18 @@ export type SerializedReference = {
 
 export type SerializedObject = {
   /**
+   * Format version number.
+   *
+   * Current version: 1.
+   */
+  '@version': number;
+
+  /**
+   * Human-readable date of creation.
+   */
+  '@timestamp'?: string;
+
+  /**
    * Unique object identifier.
    */
   '@id': string;
@@ -88,9 +100,7 @@ export class Serializer {
     const { objects } = database.query(undefined, { models: ['*'] });
     const data = {
       objects: objects.map((object) => {
-        return stripUndefinedValues({
-          ...object[base].toJSON(), // TODO(burdon): Not working unless schema.
-        });
+        return this.exportObject(object);
       }),
 
       version: Serializer.version,
@@ -125,11 +135,19 @@ export class Serializer {
         continue;
       }
 
-      await this._importObject(database, object);
+      await this.importObject(database, object);
     }
   }
 
-  private async _importObject(database: EchoDatabase, object: SerializedObject) {
+  exportObject(object: TypedObject): SerializedObject {
+    return stripUndefinedValues({
+      ...object[base].toJSON(), // TODO(burdon): Not working unless schema.
+      '@version': Serializer.version,
+      '@timestamp': new Date().toUTCString(),
+    });
+  }
+
+  async importObject(database: EchoDatabase, object: SerializedObject) {
     const { '@id': id, '@type': type, '@deleted': deleted, '@meta': meta, ...data } = object;
 
     const obj = new TypedObject(Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@'))), {
@@ -144,6 +162,7 @@ export class Serializer {
       database.remove(obj);
     }
     await database.flush();
+    return obj;
   }
 }
 

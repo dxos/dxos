@@ -86,7 +86,7 @@ export class EchoProxyPlugin extends Plugin {
 
     const { port } = this._config.config!;
     const server = app.listen(port, () => {
-      console.log('proxy listening', { port });
+      log.info('proxy listening', { port });
     });
 
     this._ctx.onDispose(() => {

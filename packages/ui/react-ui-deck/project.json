@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "react-ui-deck",
+  "sourceRoot": "packages/ui/react-ui-deck/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/ui/react-ui-deck/src/index.ts"
+        ],
+        "platforms": [
+          "browser"
+        ]
+      }
+    },
+    "lint": {}
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

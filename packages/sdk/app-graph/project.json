@@ -8,8 +8,7 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/sdk/app-graph/src/index.ts",
-          "packages/sdk/app-graph/src/testing.ts"
+          "packages/sdk/app-graph/src/index.ts"
         ]
       }
     },

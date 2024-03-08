@@ -7,6 +7,11 @@ import { raise } from '@dxos/debug';
 import { type Plugin } from './PluginHost';
 
 /**
+ * Define a plugin
+ */
+export const definePlugin = <TProvides>(plugin: Plugin<TProvides>): Plugin<TProvides> => plugin;
+
+/**
  * Find a plugin by ID.
  */
 export const findPlugin = <T>(plugins: Plugin[], id: string): Plugin<T> | undefined => {

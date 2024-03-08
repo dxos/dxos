@@ -5,9 +5,8 @@
 import { type IconProps } from '@phosphor-icons/react';
 import React, { type FC, type MutableRefObject, type PropsWithChildren, useRef, useState } from 'react';
 
-import { type Label } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
-import { Button, Dialog, DropdownMenu, ContextMenu, Tooltip, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, DropdownMenu, ContextMenu, Tooltip, useTranslation, toLocalizedString } from '@dxos/react-ui';
 import { type MosaicActiveType, useMosaic } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { descriptionText, getSize, hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
@@ -19,7 +18,6 @@ import type { TreeNodeAction } from '../types';
 type NavTreeItemActionProps = {
   label?: string;
   icon: FC<IconProps>;
-  variant?: 'plank-heading' | 'tree-item';
   action?: TreeNodeAction;
   actions?: TreeNodeAction[];
   active?: MosaicActiveType;
@@ -31,17 +29,15 @@ type NavTreeItemActionProps = {
 
 export const NavTreeItemActionDropdownMenu = ({
   icon: Icon,
-  variant,
   active,
   testId,
   actions,
   suppressNextTooltip,
   onAction,
-}: Pick<NavTreeItemActionProps, 'icon' | 'variant' | 'actions' | 'testId' | 'active' | 'onAction'> & {
+}: Pick<NavTreeItemActionProps, 'icon' | 'actions' | 'testId' | 'active' | 'onAction'> & {
   suppressNextTooltip: MutableRefObject<boolean>;
 }) => {
   const { t } = useTranslation(translationKey);
-  const getLabel = (label: Label) => (Array.isArray(label) ? t(...label) : label);
 
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
@@ -60,21 +56,17 @@ export const NavTreeItemActionDropdownMenu = ({
       <Tooltip.Trigger asChild>
         <DropdownMenu.Trigger asChild>
           <Button
-            variant={variant === 'plank-heading' ? 'primary' : 'ghost'}
+            variant='ghost'
             classNames={[
               'shrink-0 pli-2 pointer-fine:pli-1',
               hoverableControlItem,
               hoverableOpenControlItem,
-              variant === 'plank-heading' && 'min-bs-0 is-[--rail-action] bs-[--rail-action] rounded-sm pli-0',
               active === 'overlay' && 'invisible',
             ]}
             data-testid={testId}
             aria-label={t('tree item actions label')}
           >
-            <Icon
-              className={getSize(variant === 'plank-heading' ? 5 : 4)}
-              weight={variant === 'plank-heading' ? 'duotone' : 'regular'}
-            />
+            <Icon className={getSize(4)} />
           </Button>
         </DropdownMenu.Trigger>
       </Tooltip.Trigger>
@@ -102,7 +94,7 @@ export const NavTreeItemActionDropdownMenu = ({
                   {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                 >
                   {action.icon && <action.icon className={mx(getSize(4), 'shrink-0')} />}
-                  <span className='grow truncate'>{getLabel(action.label)}</span>
+                  <span className='grow truncate'>{toLocalizedString(action.label, t)}</span>
                   {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
                 </DropdownMenu.Item>
               );
@@ -127,7 +119,6 @@ const NavTreeItemActionContextMenuImpl = ({
   children,
 }: PropsWithChildren<Pick<NavTreeItemActionProps, 'actions' | 'onAction'>>) => {
   const { t } = useTranslation(translationKey);
-  const getLabel = (label: Label) => (Array.isArray(label) ? t(...label) : label);
   const { activeItem } = useMosaic();
 
   return (
@@ -155,7 +146,7 @@ const NavTreeItemActionContextMenuImpl = ({
                   {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                 >
                   {action.icon && <action.icon className={mx(getSize(4), 'shrink-0')} />}
-                  <span className='grow truncate'>{getLabel(action.label)}</span>
+                  <span className='grow truncate'>{toLocalizedString(action.label, t)}</span>
                   {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
                 </ContextMenu.Item>
               );
@@ -180,15 +171,14 @@ export const NavTreeItemActionSearchList = ({
   suppressNextTooltip: MutableRefObject<boolean>;
 }) => {
   const { t } = useTranslation(translationKey);
-  const getLabel = (label: Label) => (Array.isArray(label) ? t(...label) : label);
 
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
   const button = useRef<HTMLButtonElement | null>(null);
 
   // TODO(burdon): Optionally sort.
   const sortedActions = actions?.sort(({ label: l1 }, { label: l2 }) => {
-    const t1 = getLabel(l1).toLowerCase();
-    const t2 = getLabel(l2).toLowerCase();
+    const t1 = toLocalizedString(l1, t).toLowerCase();
+    const t2 = toLocalizedString(l2, t).toLowerCase();
     return t1.localeCompare(t2);
   });
 
@@ -243,7 +233,7 @@ export const NavTreeItemActionSearchList = ({
               <SearchList.Input placeholder={t('tree item searchlist input placeholder')} classNames={mx('px-3')} />
               <SearchList.Content classNames={['min-bs-[12rem] bs-[50dvh] max-bs-[30rem] overflow-auto']}>
                 {sortedActions?.map((action) => {
-                  const label = getLabel(action.label);
+                  const label = toLocalizedString(action.label, t);
                   const shortcut =
                     typeof action.keyBinding === 'string' ? action.keyBinding : action.keyBinding?.[getHostPlatform()];
                   return (
@@ -286,7 +276,6 @@ export const NavTreeItemActionSearchList = ({
 export const NavTreeItemAction = ({
   label,
   icon: Icon,
-  variant,
   action,
   actions,
   active,
@@ -320,6 +309,7 @@ export const NavTreeItemAction = ({
       {action ? (
         <Tooltip.Trigger asChild>
           <Button
+            variant='ghost'
             classNames={[
               'shrink-0 pli-2 pointer-fine:pli-1',
               hoverableControlItem,
@@ -355,7 +345,6 @@ export const NavTreeItemAction = ({
           active={active}
           suppressNextTooltip={suppressNextTooltip}
           icon={Icon}
-          variant={variant}
           onAction={(action) => action.invoke(caller ? { caller } : undefined)}
         />
       )}

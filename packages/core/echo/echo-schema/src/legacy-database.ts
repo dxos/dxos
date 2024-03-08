@@ -3,6 +3,7 @@
 //
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
+import { todo } from '@dxos/debug';
 import { DocumentModel, type DocumentModelState, type Reference } from '@dxos/document-model';
 import { UpdateEvent, type BatchUpdate, type DatabaseProxy, type Item, type ItemManager } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
@@ -12,7 +13,7 @@ import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/o
 import { TextModel } from '@dxos/text-model';
 import { WeakDictionary, getDebugName } from '@dxos/util';
 
-import { AutomergeDb, AutomergeObject, type AutomergeContext } from './automerge';
+import { type AutomergeDb, AutomergeObject, type AutomergeContext } from './automerge';
 import { type Hypergraph } from './hypergraph';
 import { TextObject, TypedObject, base, db, type EchoObject } from './object';
 import { AbstractEchoObject } from './object/object';
@@ -51,7 +52,7 @@ export class EchoLegacyDatabase {
     private readonly _graph: Hypergraph,
     automergeContext: AutomergeContext,
   ) {
-    this.automerge = new AutomergeDb(this._graph, automergeContext, this);
+    this.automerge = null as any; // new AutomergeDb(this._graph, automergeContext, this);
 
     this._backend.itemUpdate.on(this._update.bind(this));
 
@@ -60,7 +61,7 @@ export class EchoLegacyDatabase {
   }
 
   get objects(): EchoObject[] {
-    return [...this._objects.values(), ...this.automerge._objects.values()];
+    return [...this._objects.values(), ...this.automerge.allObjects()];
   }
 
   get graph() {
@@ -90,7 +91,8 @@ export class EchoLegacyDatabase {
    */
   add<T extends EchoObject>(obj: T): T {
     if (obj[base] instanceof AutomergeObject) {
-      return this.automerge.add(obj);
+      // return this.automerge.add(obj);
+      todo();
     }
 
     log('add', { id: obj.id, type: (obj as any).__typename });
@@ -190,7 +192,7 @@ export class EchoLegacyDatabase {
    */
   clone<T extends EchoObject>(obj: T) {
     log('clone', { id: obj.id, type: (obj as any).__typename });
-    console.warn('deprecated'); // TODO(burdon): ???
+    log.warn('clone is deprecated'); // TODO(burdon): ???
 
     // TODO(burdon): Keep id.
     this.add(obj);
