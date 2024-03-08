@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, MulticastObservable, type Observable, PushStream } from '@dxos/async';
+import { Event, MulticastObservable, type Observable, PushStream, Trigger } from '@dxos/async';
 import {
   AuthenticatingInvitation,
   CancellableInvitation,
@@ -49,10 +49,13 @@ export class InvitationsProxy implements Invitations {
   private _ctx!: Context;
   private _createdUpdate = new Event<CancellableInvitation[]>();
   private _acceptedUpdate = new Event<AuthenticatingInvitation[]>();
+  private _savedUpdate = new Event<Invitation[]>();
   private _created = MulticastObservable.from(this._createdUpdate, []);
   private _accepted = MulticastObservable.from(this._acceptedUpdate, []);
+  private _saved = MulticastObservable.from(this._savedUpdate, []);
   // Invitations originating from this proxy.
   private _invitations = new Set<string>();
+  private _invitationsLoaded = new Trigger();
 
   private _opened = false;
 
@@ -70,6 +73,13 @@ export class InvitationsProxy implements Invitations {
     return this._accepted;
   }
 
+  /**
+   * @test-only
+   */
+  get saved(): MulticastObservable<Invitation[]> {
+    return this._saved;
+  }
+
   get isOpen(): boolean {
     return this._opened;
   }
@@ -81,34 +91,63 @@ export class InvitationsProxy implements Invitations {
 
     log('opening...', this._getInvitationContext());
     this._ctx = new Context();
+    const persistentLoaded = new Trigger();
+    const initialCreatedReceived = new Trigger();
+    // TODO(nf): actually needed?
+    const initialAcceptedReceived = new Trigger();
 
     const stream = this._invitationsService.queryInvitations();
-    stream.subscribe(({ action, type, invitations }: QueryInvitationsResponse) => {
-      if (action === QueryInvitationsResponse.Action.ADDED) {
-        log('remote invitations added', { type, invitations });
-        invitations
-          ?.filter((invitation) => this._matchesInvitationContext(invitation))
-          .filter((invitation) => !this._invitations.has(invitation.invitationId))
-          .forEach((invitation) => {
-            type === QueryInvitationsResponse.Type.CREATED ? this.share(invitation) : this.join(invitation);
+    stream.subscribe(({ action, type, invitations, existing }: QueryInvitationsResponse) => {
+      switch (action) {
+        case QueryInvitationsResponse.Action.ADDED: {
+          log('remote invitations added', { type, invitations });
+          invitations
+            ?.filter((invitation) => this._matchesInvitationContext(invitation))
+            .filter((invitation) => !this._invitations.has(invitation.invitationId))
+            .forEach((invitation) => {
+              type === QueryInvitationsResponse.Type.CREATED ? this.share(invitation) : this.join(invitation);
+            });
+          if (existing) {
+            type === QueryInvitationsResponse.Type.CREATED
+              ? initialCreatedReceived.wake()
+              : initialAcceptedReceived.wake();
+          }
+          break;
+        }
+        case QueryInvitationsResponse.Action.REMOVED: {
+          log('remote invitations removed', { type, invitations });
+          const cache = type === QueryInvitationsResponse.Type.CREATED ? this._created : this._accepted;
+          const cacheUpdate =
+            type === QueryInvitationsResponse.Type.CREATED ? this._createdUpdate : this._acceptedUpdate;
+          invitations?.forEach((removed) => {
+            const index = cache.get().findIndex((invitation) => invitation.get().invitationId === removed.invitationId);
+            void cache.get()[index]?.cancel();
+            index >= 0 &&
+              cacheUpdate.emit([
+                ...cache.get().slice(0, index),
+                ...cache.get().slice(index + 1),
+              ] as AuthenticatingInvitation[]);
           });
-      } else if (action === QueryInvitationsResponse.Action.REMOVED) {
-        log('remote invitations removed', { type, invitations });
-        const cache = type === QueryInvitationsResponse.Type.CREATED ? this._created : this._accepted;
-        const cacheUpdate = type === QueryInvitationsResponse.Type.CREATED ? this._createdUpdate : this._acceptedUpdate;
-        invitations?.forEach((removed) => {
-          const index = cache.get().findIndex((invitation) => invitation.get().invitationId === removed.invitationId);
-          void cache.get()[index]?.cancel();
-          index >= 0 &&
-            cacheUpdate.emit([
-              ...cache.get().slice(0, index),
-              ...cache.get().slice(index + 1),
-            ] as AuthenticatingInvitation[]);
-        });
+          existing && initialAcceptedReceived.wake();
+          break;
+        }
+        case QueryInvitationsResponse.Action.LOAD_COMPLETE: {
+          persistentLoaded.wake();
+          break;
+        }
+        case QueryInvitationsResponse.Action.SAVED: {
+          log('remote invitations saved', { invitations });
+          this._savedUpdate.emit(invitations ?? []);
+          break;
+        }
       }
     });
 
     this._ctx.onDispose(() => stream.close());
+    await persistentLoaded.wait();
+    // wait until remote invitations are added and removed in case .created is called early.
+    await initialAcceptedReceived.wait();
+    await initialCreatedReceived.wait();
     this._opened = true;
     log('opened', this._getInvitationContext());
   }
@@ -136,6 +175,7 @@ export class InvitationsProxy implements Invitations {
     };
   }
 
+  // TODO(nf): Some way to retrieve observables for resumed invitations?
   share(options?: Partial<Invitation>): CancellableInvitation {
     const invitation: Invitation = { ...this.getInvitationOptions(), ...options };
     this._invitations.add(invitation.invitationId);
