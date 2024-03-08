@@ -1,0 +1,14 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "create-app-plugin",
+  "sourceRoot": "packages/devtools/initializers/create-app-plugin/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "options": {
+        "outputPath": "packages/devtools/initializers/create-app-plugin/dist"
+      }
+    },
+    "lint": {}
+  }
+}

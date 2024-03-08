@@ -324,7 +324,7 @@ importers:
         specifier: ^2.0.39
         version: 2.0.39
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
       unplugin:
         specifier: ^1.7.1
@@ -486,7 +486,7 @@ importers:
         specifier: ^0.25.10
         version: 0.25.11(typescript@5.3.3)
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
       vite:
         specifier: ^5.1.5
@@ -745,7 +745,7 @@ importers:
         specifier: ^0.10.0
         version: 0.10.0
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
       vite:
         specifier: ^5.1.5
@@ -842,7 +842,7 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1(vite@5.1.5)
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
       vite:
         specifier: ^5.1.5
@@ -2736,9 +2736,6 @@ importers:
       '@codemirror/language':
         specifier: ^6.10.1
         version: 6.10.1
-      '@codemirror/lint':
-        specifier: ^6.5.0
-        version: 6.5.0
       '@codemirror/state':
         specifier: ^6.4.0
         version: 6.4.0
@@ -2793,33 +2790,15 @@ importers:
       '@preact/signals-core':
         specifier: ^1.5.1
         version: 1.5.1
-      '@typescript/ata':
-        specifier: ^0.9.4
-        version: 0.9.4(typescript@5.3.3)
-      '@typescript/vfs':
-        specifier: ^1.5.0
-        version: 1.5.0
-      '@valtown/codemirror-ts':
-        specifier: ^2.1.0
-        version: 2.1.0(@codemirror/autocomplete@6.12.0)(@codemirror/lint@6.5.0)(@codemirror/view@6.25.0)
       codemirror:
         specifier: ^6.0.1
         version: 6.0.1(@lezer/common@1.2.1)
-      comlink:
-        specifier: ^4.4.1
-        version: 4.4.1
       esbuild-wasm:
         specifier: ^0.16.14
         version: 0.16.17
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
-      lz-string:
-        specifier: ^1.5.0
-        version: 1.5.0
-      typescript:
-        specifier: ^5.3.3
-        version: 5.3.3
     devDependencies:
       '@braneframe/plugin-client':
         specifier: workspace:*
@@ -3646,7 +3625,7 @@ importers:
         specifier: ~3.4.1
         version: 3.4.1(ts-node@10.9.1)
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
       vite:
         specifier: ^5.1.5
@@ -3695,7 +3674,7 @@ importers:
         specifier: ^2.0.39
         version: 2.0.39
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/apps/templates/hello-template:
@@ -3723,7 +3702,7 @@ importers:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.3.3)
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/apps/templates/plugin-template:
@@ -3757,7 +3736,7 @@ importers:
         specifier: ^2.0.39
         version: 2.0.39
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/apps/templates/tasks-template:
@@ -3785,7 +3764,7 @@ importers:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.3.3)
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/apps/todomvc:
@@ -4198,7 +4177,7 @@ importers:
         specifier: ^18.11.9
         version: 18.11.9
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/common/keyboard:
@@ -4285,7 +4264,7 @@ importers:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.3.3)
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/common/log:
@@ -4343,7 +4322,7 @@ importers:
         specifier: ^0.10.0
         version: 0.10.0
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/common/node-std:
@@ -4490,13 +4469,13 @@ importers:
         specifier: ~16.0.1
         version: 16.0.4
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/common/process:
     devDependencies:
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/common/protobuf-compiler:
@@ -4554,7 +4533,7 @@ importers:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.3.3)
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/common/random:
@@ -4846,7 +4825,7 @@ importers:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.3.3)
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/core/chain:
@@ -5328,7 +5307,7 @@ importers:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.3.3)
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
       wait-for-expect:
         specifier: ^3.0.2
@@ -5672,7 +5651,7 @@ importers:
         specifier: ~0.1.10
         version: 0.1.12(typescript@5.3.3)
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
       wait-for-expect:
         specifier: ^3.0.2
@@ -5775,7 +5754,7 @@ importers:
         specifier: ^3.15.1
         version: 3.15.1
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/core/mesh/rpc:
@@ -5809,7 +5788,7 @@ importers:
         specifier: ~0.1.10
         version: 0.1.12(typescript@5.3.3)
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/core/mesh/rpc-tunnel:
@@ -5902,7 +5881,7 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
       wait-for-expect:
         specifier: ^3.0.2
@@ -5945,7 +5924,7 @@ importers:
         version: link:../../../common/util
     devDependencies:
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/core/mesh/teleport-extension-gossip:
@@ -5985,7 +5964,7 @@ importers:
         version: link:../../../common/util
     devDependencies:
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/core/mesh/teleport-extension-object-sync:
@@ -6031,7 +6010,7 @@ importers:
         version: link:../../../common/util
     devDependencies:
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/core/mesh/teleport-extension-replicator:
@@ -6086,7 +6065,7 @@ importers:
         specifier: ^3.15.1
         version: 3.15.1
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/core/mesh/websocket-rpc:
@@ -6129,7 +6108,7 @@ importers:
         specifier: ^18.11.9
         version: 18.11.9
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/core/protocols:
@@ -6332,7 +6311,7 @@ importers:
         specifier: ^0.3.3
         version: 0.3.4
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/devtools/cli/testing/app: {}
@@ -6515,7 +6494,7 @@ importers:
         specifier: ~3.4.1
         version: 3.4.1(ts-node@10.9.1)
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
       vite:
         specifier: ^5.1.5
@@ -6685,7 +6664,23 @@ importers:
         specifier: ^1.2.2
         version: 1.2.2
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
+        version: 5.3.3
+
+  packages/devtools/initializers/create-app-plugin:
+    dependencies:
+      '@dxos/plugin-template':
+        specifier: workspace:*
+        version: link:../../../apps/templates/plugin-template
+      minimist:
+        specifier: ^1.2.7
+        version: 1.2.8
+    devDependencies:
+      '@types/minimist':
+        specifier: ^1.2.2
+        version: 1.2.2
+      typescript:
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/devtools/initializers/create-bare:
@@ -6701,7 +6696,7 @@ importers:
         specifier: ^1.2.2
         version: 1.2.2
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/devtools/initializers/create-tasks:
@@ -6717,7 +6712,7 @@ importers:
         specifier: ^1.2.2
         version: 1.2.2
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/e2e/rpc-tunnel-e2e:
@@ -6818,7 +6813,7 @@ importers:
         specifier: ^18.0.6
         version: 18.0.6
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
       vite:
         specifier: ^5.1.5
@@ -7269,7 +7264,7 @@ importers:
         specifier: ~3.4.1
         version: 3.4.1(ts-node@10.9.1)
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
       vite:
         specifier: ^5.1.5
@@ -7400,7 +7395,7 @@ importers:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.3.3)
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/gravity/gravity-dashboard:
@@ -7471,7 +7466,7 @@ importers:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.3.3)
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/gravity/kube-testing:
@@ -7616,7 +7611,7 @@ importers:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.3.3)
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/gravity/proto-guard:
@@ -7650,7 +7645,7 @@ importers:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.3.3)
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   packages/sdk/app-framework:
@@ -8145,7 +8140,7 @@ importers:
         specifier: ~3.4.1
         version: 3.4.1(ts-node@10.9.1)
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
       vite:
         specifier: ^5.1.5
@@ -8869,7 +8864,7 @@ importers:
         specifier: ^6.3.1
         version: 6.3.1(@codemirror/state@6.4.0)(@codemirror/view@6.25.0)(@lezer/common@1.2.1)
       '@codemirror/lint':
-        specifier: ^6.5.0
+        specifier: ^6.4.2
         version: 6.5.0
       '@codemirror/search':
         specifier: ^6.5.5
@@ -9628,7 +9623,7 @@ importers:
         specifier: ^0.25.10
         version: 0.25.11(typescript@5.3.3)
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
       unified:
         specifier: ^11.0.0
@@ -9701,7 +9696,7 @@ importers:
         specifier: ~16.0.1
         version: 16.0.4
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   tools/codemods:
@@ -9720,7 +9715,7 @@ importers:
         specifier: ^0.11.5
         version: 0.11.5
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   tools/conform:
@@ -9809,7 +9804,7 @@ importers:
         specifier: ^8.49.0
         version: 8.49.0
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   tools/eslint-rules: {}
@@ -9879,7 +9874,7 @@ importers:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.3.3)
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   tools/log-hook:
@@ -9904,7 +9899,7 @@ importers:
         specifier: ^18.11.9
         version: 18.11.9
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   tools/protobuf-test: {}
@@ -10000,7 +9995,7 @@ importers:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.3.3)
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
   tools/stories:
@@ -10159,7 +10154,7 @@ importers:
         specifier: ~16.0.1
         version: 16.0.4
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.2.2
         version: 5.3.3
 
 packages:
@@ -22870,22 +22865,6 @@ packages:
       '@typescript-eslint/types': 6.20.0
       eslint-visitor-keys: 3.4.3
 
-  /@typescript/ata@0.9.4(typescript@5.3.3):
-    resolution: {integrity: sha512-PaJ16WouPV/SaA+c0tnOKIqYq24+m93ipl/e0Dkxuianer+ibc5b0/6ZgfCFF8J7QEp57dySMSP9nWOFaCfJnw==}
-    peerDependencies:
-      typescript: ^4.4.4
-    dependencies:
-      typescript: 5.3.3
-    dev: false
-
-  /@typescript/vfs@1.5.0:
-    resolution: {integrity: sha512-AJS307bPgbsZZ9ggCT3wwpg3VbTKMFNHfaY/uF0ahSkYYrPF2dSSKDNIDIQAHm9qJqbLvCsSJH7yN4Vs/CsMMg==}
-    dependencies:
-      debug: 4.3.4(supports-color@8.1.1)
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
-
   /@use-gesture/core@10.2.27:
     resolution: {integrity: sha512-V4XV7hn9GAD2MYu8yBBVi5iuWBsAMfjPRMsEVzoTNGYH72tf0kFP+OKqGKc8YJFQIJx6yj+AOqxmEHOmx2/MEA==}
     dev: false
@@ -22897,18 +22876,6 @@ packages:
     dependencies:
       '@use-gesture/core': 10.2.27
       react: 18.2.0
-    dev: false
-
-  /@valtown/codemirror-ts@2.1.0(@codemirror/autocomplete@6.12.0)(@codemirror/lint@6.5.0)(@codemirror/view@6.25.0):
-    resolution: {integrity: sha512-DMXcC4HWuSAAjlzNfUCV8BxdST8AcRged6H9QjuVw2TAWGoqiMnWNcPM2Mue2Qm1YaeDZ8e5LB44XPLK8tqdhg==}
-    peerDependencies:
-      '@codemirror/autocomplete': ^6
-      '@codemirror/lint': ^6
-      '@codemirror/view': ^6
-    dependencies:
-      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.25.0)(@lezer/common@1.2.1)
-      '@codemirror/lint': 6.5.0
-      '@codemirror/view': 6.25.0
     dev: false
 
   /@vitejs/plugin-react-swc@3.6.0(vite@5.1.5):
@@ -26282,10 +26249,6 @@ packages:
     engines: {node: '>= 0.8'}
     dependencies:
       delayed-stream: 1.0.0
-
-  /comlink@4.4.1:
-    resolution: {integrity: sha512-+1dlx0aY5Jo1vHy/tSsIGpSkN4tS9rZSW8FIhG0JH/crs9wwweswIo/POr451r7bZww3hFbPAKnTpimzL/mm4Q==}
-    dev: false
 
   /comma-separated-tokens@1.0.8:
     resolution: {integrity: sha512-GHuDRO12Sypu2cV70d1dkA2EUmXHgntrzbpvOB+Qy+49ypNfGgFQIC2fhhXbnyrJRynDCAARsT7Ou0M6hirpfw==}
