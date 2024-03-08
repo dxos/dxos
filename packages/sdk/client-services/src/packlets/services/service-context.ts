@@ -199,6 +199,7 @@ export class ServiceContext {
     await this.signalManager.close();
     this.dataServiceSubscriptions.clear();
     await this.metadataStore.close();
+    await this.indexer.destroy();
     log('closed');
   }
 
