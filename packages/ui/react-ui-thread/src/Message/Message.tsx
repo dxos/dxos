@@ -15,7 +15,7 @@ import {
   hoverableFocusedWithinControls,
   mx,
 } from '@dxos/react-ui-theme';
-import { safeParseJson, hexToEmoji } from '@dxos/util';
+import { safeParseJson, hexToEmoji, hexToHue } from '@dxos/util';
 
 import { translationKey } from '../translations';
 import { type MessageEntity, type MessageEntityBlock, type MessageMetadata } from '../types';
@@ -29,11 +29,11 @@ export type MessageMetaProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
 
 export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
   (
-    { authorImgSrc, authorStatus, authorId, authorName, continues = true, children, classNames, ...rootProps },
+    { authorImgSrc, authorId, authorName, authorAvatarProps, continues = true, children, classNames, ...rootProps },
     forwardedRef,
   ) => {
     return (
-      <Avatar.Root status={authorStatus ?? 'inactive'} size={avatarSize}>
+      <Avatar.Root size={avatarSize} hue={authorAvatarProps?.hue || hexToHue(authorId ?? '0')}>
         <div
           role='none'
           data-testid='thread.message'
@@ -43,7 +43,7 @@ export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
         >
           <div role='none' className={mx('flex flex-col items-center gap-2', messageCell)}>
             <Avatar.Frame>
-              <Avatar.Fallback text={authorId && hexToEmoji(authorId)} />
+              <Avatar.Fallback text={authorAvatarProps?.emoji || hexToEmoji(authorId ?? '0')} />
               {authorImgSrc && <Avatar.Image href={authorImgSrc} />}
             </Avatar.Frame>
             {continues && <div role='none' className='is-px grow surface-separator' />}
@@ -130,7 +130,7 @@ export type MessageTextboxProps = {
   onClear?: () => void;
   onEditorFocus?: () => void;
   disabled?: boolean;
-} & Omit<MessageMetadata, 'id' | 'authorStatus'> &
+} & Omit<MessageMetadata, 'id'> &
   TextEditorProps;
 
 export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
@@ -142,6 +142,7 @@ export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
       authorId,
       authorName,
       authorImgSrc,
+      authorAvatarProps,
       disabled,
       extensions: _extensions,
       ...editorProps
@@ -188,8 +189,7 @@ export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
 
     return (
       <MessageMeta
-        {...{ id: editorProps.model.id, authorId, authorName, authorImgSrc }}
-        authorStatus='active'
+        {...{ id: editorProps.model.id, authorId, authorName, authorImgSrc, authorAvatarProps }}
         continues={false}
       >
         {/* TODO(burdon): Change to hook. */}

@@ -74,8 +74,8 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
     const { tx } = useThemeContext();
     const numericSize = size === 'px' ? 1 : Number(size);
     const sizePx = numericSize * 4;
-    const ringWidth = numericSize > 4 ? 2 : numericSize > 3 ? 1 : 1;
-    const ringGap = numericSize > 12 ? 3 : numericSize > 4 ? 2 : numericSize > 3 ? 1 : 0;
+    const ringWidth = status ? (numericSize > 4 ? 2 : numericSize > 3 ? 1 : 1) : 0;
+    const ringGap = status ? (numericSize > 12 ? 3 : numericSize > 4 ? 2 : numericSize > 3 ? 1 : 0) : 0;
     const r = sizePx / 2 - ringGap - ringWidth;
     return (
       <AvatarRootPrimitive

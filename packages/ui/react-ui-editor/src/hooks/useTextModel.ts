@@ -11,7 +11,7 @@ import { type AutomergeTextCompat, getRawDoc } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { isAutomergeObject, type Space, type TextObject } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
-import { hueTokens } from '@dxos/react-ui-theme';
+import { type HuePalette, hueTokens } from '@dxos/react-ui-theme';
 import { hexToHue } from '@dxos/util';
 
 import { SpaceAwarenessProvider } from './awareness-provider';
@@ -31,7 +31,8 @@ export const useTextExtensions = ({ id, text, space, identity }: useTextExtensio
   const extensions: Extension[] = [automerge(text)];
 
   const peerId = identity?.identityKey.toHex();
-  const { cursorLightValue, cursorDarkValue } = hueTokens[hexToHue(peerId ?? '0')];
+  const { cursorLightValue, cursorDarkValue } =
+    hueTokens[(identity?.profile?.data?.hue as HuePalette | undefined) ?? hexToHue(peerId ?? '0')];
 
   if (space && identity) {
     const awarenessProvider = new SpaceAwarenessProvider({
@@ -90,7 +91,8 @@ const createModel = ({ space, identity, text }: UseTextModelProps): EditorModel 
   const doc = getRawDoc(obj, [obj.field]);
 
   const peerId = identity?.identityKey.toHex();
-  const { cursorLightValue, cursorDarkValue } = hueTokens[hexToHue(peerId ?? '0')];
+  const { cursorLightValue, cursorDarkValue } =
+    hueTokens[(identity?.profile?.data?.hue as HuePalette | undefined) ?? hexToHue(peerId ?? '0')];
 
   const awarenessProvider =
     space &&
