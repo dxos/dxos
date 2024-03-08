@@ -4,7 +4,8 @@
 
 import '@dxosTheme';
 import { runShell } from '@dxos/shell/react';
+
 import { createConfig } from './config';
 
-createConfig().then(runShell);
-
+// eslint-disable-next-line no-console
+createConfig().then(runShell).catch(console.error);
