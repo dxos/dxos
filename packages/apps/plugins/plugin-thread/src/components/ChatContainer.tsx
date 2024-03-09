@@ -6,11 +6,11 @@ import { Chat } from '@phosphor-icons/react';
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Message as MessageType } from '@braneframe/types';
-import { TextObject, getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
+import { TextObject, createDocAccessor, getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ScrollArea, useTranslation } from '@dxos/react-ui';
 import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
-import { useTextModel } from '@dxos/react-ui-editor';
+import { createBasicExtensions } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadLayout } from '@dxos/react-ui-thread';
 
@@ -42,13 +42,21 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
   const members = useMembers(space?.key);
   const activity = useStatus(space, thread.id);
   const { t } = useTranslation(THREAD_PLUGIN);
-  const extensions = useMemo(() => [command], []);
-
-  const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
   const [autoFocus, setAutoFocus] = useState(autoFocusTextbox);
-  const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
-  const textboxMetadata = getMessageMetadata(thread.id, identity);
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
+
+  // TODO(burdon): Change to extension.
+  const textboxMetadata = getMessageMetadata(thread.id, identity);
+  const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
+  const doc = useMemo(() => createDocAccessor(nextMessage.text), [nextMessage]);
+  const extensions = useMemo(
+    () => [
+      //
+      createBasicExtensions({ placeholder: t('message placeholder') }),
+      command,
+    ],
+    [],
+  );
 
   // TODO(thure): Factor out.
   // TODO(thure): `flex-col-reverse` does not work to start the container scrolled to the end while also using
@@ -123,19 +131,14 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
           </ScrollArea.Scrollbar>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-      {nextMessageModel && (
-        <>
-          <MessageTextbox
-            autoFocus={autoFocus}
-            placeholder={t('message placeholder')}
-            model={nextMessageModel}
-            extensions={extensions}
-            onSend={handleCreate}
-            {...textboxMetadata}
-          />
-          <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
-        </>
-      )}
+      <MessageTextbox
+        autoFocus={autoFocus}
+        doc={doc}
+        extensions={extensions}
+        onSend={handleCreate}
+        {...textboxMetadata}
+      />
+      <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
     </Thread>
   );
 };

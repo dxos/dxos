@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { Check, Trash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { createDocAccessor, getTextContent, TextObject } from '@dxos/echo-schema';
+import { createDocAccessor, DocAccessor, getTextContent, TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
@@ -131,9 +131,11 @@ const StoryThread: FC<{
   onResolve: () => void;
 }> = ({ thread, selected, onSelect, onResolve }) => {
   const [autoFocus, setAutoFocus] = useState(false);
-  const [item, setItem] = useState({ text: new TextObject() });
-  const model = useTextModel({ text: item.text });
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // const model = useTextModel({ text: item.text });
+  const [item, setItem] = useState({ text: new TextObject() });
+  const doc = useMemo(() => createDocAccessor(item.text), [item.text]);
 
   useEffect(() => {
     if (selected) {
@@ -145,7 +147,7 @@ const StoryThread: FC<{
   }, [selected]);
 
   const handleCreateMessage = () => {
-    const text = model?.text().trim();
+    const text = DocAccessor.getValue(doc).trim();
     if (text?.length) {
       thread.messages.push({
         id: item.text.id,
@@ -156,10 +158,6 @@ const StoryThread: FC<{
       setAutoFocus(true);
     }
   };
-
-  if (!model) {
-    return null;
-  }
 
   return (
     <Thread current={selected} onClickCapture={onSelect}>
@@ -179,9 +177,10 @@ const StoryThread: FC<{
 
       <div ref={containerRef} className='contents'>
         <MessageTextbox
+          id={item.text.id}
           authorId={authorId}
           autoFocus={autoFocus}
-          model={model}
+          doc={doc}
           onEditorFocus={onSelect}
           onSend={handleCreateMessage}
         />

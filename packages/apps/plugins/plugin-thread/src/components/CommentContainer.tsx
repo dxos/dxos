@@ -6,10 +6,10 @@ import { X } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Message as MessageType } from '@braneframe/types';
-import { TextObject, getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
+import { TextObject, createDocAccessor, getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, Tooltip, useTranslation } from '@dxos/react-ui';
-import { useTextModel } from '@dxos/react-ui-editor';
+import { createBasicExtensions } from '@dxos/react-ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, ThreadHeading } from '@dxos/react-ui-thread';
 
@@ -34,12 +34,20 @@ export const CommentContainer = ({
   const members = useMembers(space?.key);
   const activity = useStatus(space, thread.id);
   const { t } = useTranslation(THREAD_PLUGIN);
-  const extensions = useMemo(() => [command], []);
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
-
-  const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
-  const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
   const [autoFocus, setAutoFocus] = useState(!!autoFocusTextbox);
+
+  // TODO(burdon): Change to extension.
+  const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
+  const doc = useMemo(() => createDocAccessor(nextMessage.text), [nextMessage]);
+  const extensions = useMemo(
+    () => [
+      //
+      createBasicExtensions({ placeholder: t('message placeholder') }),
+      command,
+    ],
+    [],
+  );
 
   // TODO(thure): Because of the way the `autoFocus` property is handled by TextEditor, this is the least-bad way of
   //   moving focus at the right time, though it is an antipattern. Refactor to behave more like <input/>’s `autoFocus`
@@ -76,7 +84,6 @@ export const CommentContainer = ({
     });
 
     setAutoFocus(true);
-
     scrollToEnd('instant');
 
     // TODO(burdon): Scroll to bottom.
@@ -138,21 +145,16 @@ export const CommentContainer = ({
       {thread.messages.map((message) => (
         <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
       ))}
-      {nextMessageModel && (
-        <>
-          <MessageTextbox
-            autoFocus={autoFocus}
-            placeholder={t('message placeholder')}
-            model={nextMessageModel}
-            extensions={extensions}
-            onSend={handleCreate}
-            {...textboxMetadata}
-          />
-          <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
-          {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
-          <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
-        </>
-      )}
+      <MessageTextbox
+        autoFocus={autoFocus}
+        doc={doc}
+        extensions={extensions}
+        onSend={handleCreate}
+        {...textboxMetadata}
+      />
+      <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
+      {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
+      <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
     </Thread>
   );
 };

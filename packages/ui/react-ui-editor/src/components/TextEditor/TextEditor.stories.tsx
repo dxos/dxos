@@ -4,21 +4,21 @@
 
 import '@dxosTheme';
 
-import { type EditorView } from '@codemirror/view';
 import { ArrowSquareOut, X } from '@phosphor-icons/react';
+import { type EditorView } from 'codemirror';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { type FC, type KeyboardEvent, StrictMode, useRef, useState } from 'react';
+import React, { type FC, type KeyboardEvent, StrictMode, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { TextObject } from '@dxos/echo-schema';
+import { createDocAccessor, TextObject } from '@dxos/echo-schema';
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
-import { Button, DensityProvider, Input, ThemeProvider } from '@dxos/react-ui';
+import { Button, DensityProvider, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
 import { baseSurface, defaultTx, getSize, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { MarkdownEditor, type TextEditorProps } from './TextEditor';
+import { MarkdownEditor, type TextEditorProps, TransitionalTextEditor } from './TextEditor';
 import {
   annotations,
   autocomplete,
@@ -34,14 +34,16 @@ import {
   mention,
   table,
   typewriter,
-  useComments,
   EditorModes,
   type CommandAction,
   type CommandOptions,
   type CommentsOptions,
   listener,
+  createMarkdownExtensions,
+  useComments,
 } from '../../extensions';
-import { type Comment, useTextModel } from '../../hooks';
+import { type DocAccessor } from '../../extensions/automerge/defs';
+import { type Comment, createDataExtensions, createThemeExtensions } from '../../hooks';
 import translations from '../../translations';
 
 faker.seed(101);
@@ -223,31 +225,59 @@ const renderLinkButton = (el: Element, url: string) => {
   );
 };
 
+//
+// Story
+//
+
 type StoryProps = {
   id?: string;
   text?: string;
   comments?: Comment[];
 } & Pick<TextEditorProps, 'readonly' | 'placeholder' | 'extensions'>;
 
-const Story = ({ id = 'test', text, comments, placeholder = 'New document.', ...props }: StoryProps) => {
-  const [item] = useState({ text: new TextObject(text) });
-  const view = useRef<EditorView>(null);
-  const model = useTextModel({ text: item.text });
-  useComments(view.current, id, comments);
-  if (!model) {
-    return null;
-  }
+const Story = ({
+  id = 'test',
+  text,
+  comments,
+  extensions: _extensions = [],
+  placeholder = 'New document.',
+  ...props
+}: StoryProps) => {
+  const doc = useMemo<DocAccessor>(() => {
+    return createDocAccessor(new TextObject(text));
+  }, []);
+
+  // TODO(burdon): Change to hook?
+  // TODO(burdon): 1). How to get view if using wrapper (e.g., for comments).
+  // TODO(burdon): 2). Util hooks for standard bundles (e.g., compute theme, etc.)
+  const viewRef = useRef<EditorView>(null);
+  useComments(viewRef.current, id, comments);
+
+  const { themeMode } = useThemeContext();
+  const extensions = useMemo(
+    () => [
+      createMarkdownExtensions({ themeMode, placeholder }),
+      createThemeExtensions({
+        themeMode,
+        slots: {
+          editor: { className: 'min-bs-dvh px-8 bg-white dark:bg-black' },
+        },
+      }),
+      createDataExtensions({ id, text: doc }),
+      ..._extensions,
+    ],
+    [_extensions],
+  );
 
   return (
-    <MarkdownEditor
-      ref={view}
-      model={model}
-      placeholder={placeholder}
+    <TransitionalTextEditor
+      {...props}
+      ref={viewRef}
+      doc={text}
+      extensions={extensions}
       slots={{
         root: { className: mx(textBlockWidth, 'min-bs-dvh') },
-        editor: { className: 'min-bs-dvh px-8 bg-white dark:bg-black' },
       }}
-      {...props}
     />
   );
 };
@@ -421,7 +451,6 @@ export const Command = {
 export const Comments = {
   render: () => {
     const [_comments, setComments] = useState<Comment[]>([]);
-
     return (
       <Story
         text={str('# Comments', '', text.paragraphs, text.footer)}

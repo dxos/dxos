@@ -6,8 +6,9 @@ import { X } from '@phosphor-icons/react';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, { type ComponentPropsWithRef, type FC, forwardRef, useMemo } from 'react';
 
+import { DocAccessor } from '@dxos/echo-schema';
 import { Avatar, Button, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { TextEditor, type TextEditorProps, keymap, listener } from '@dxos/react-ui-editor';
+import { type TextEditorProps, keymap, listener, TransitionalTextEditor } from '@dxos/react-ui-editor';
 import {
   focusRing,
   hoverableControlItem,
@@ -126,12 +127,13 @@ export const Message = <BlockValue,>(props: MessageProps<BlockValue>) => {
 };
 
 export type MessageTextboxProps = {
+  disabled?: boolean;
+  doc: DocAccessor;
   onSend?: () => void;
   onClear?: () => void;
   onEditorFocus?: () => void;
-  disabled?: boolean;
-} & Omit<MessageMetadata, 'id'> &
-  TextEditorProps;
+} & MessageMetadata &
+  Omit<TextEditorProps, 'model' | 'doc'>; // TODO(burdon): Temp.
 
 const keyBindings = ({ onSend, onClear }: Pick<MessageTextboxProps, 'onSend' | 'onClear'>) => [
   {
@@ -160,6 +162,8 @@ const keyBindings = ({ onSend, onClear }: Pick<MessageTextboxProps, 'onSend' | '
 ];
 
 export const MessageTextbox = ({
+  id,
+  doc,
   onSend,
   onClear,
   onEditorFocus,
@@ -191,19 +195,20 @@ export const MessageTextbox = ({
   //   doc: getTextContent(),
   //   extensions,
   // });
+  // <div ref={parentRef} className={mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50')} />;
+
+  // TODO(burdon): Set extensions directly.
+  // TODO(burdon): Set data extension.
+  // readonly = { disabled };
 
   return (
-    <MessageMeta
-      {...{ id: editorProps.model.id, authorId, authorName, authorImgSrc, authorAvatarProps }}
-      continues={false}
-    >
-      <TextEditor
-        readonly={disabled}
+    <MessageMeta {...{ id, authorId, authorName, authorImgSrc, authorAvatarProps }} continues={false}>
+      <TransitionalTextEditor
+        doc={DocAccessor.getValue(doc)}
         extensions={extensions}
         slots={{ root: { className: mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50') } }}
         {...editorProps}
       />
-      {/* <div ref={parentRef} className={mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50')} /> */}
     </MessageMeta>
   );
 };
