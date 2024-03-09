@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { Check, Trash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { createDocAccessor, getTextContent, TextObject } from '@dxos/echo-schema';
+import { getTextContent, TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
@@ -27,6 +27,7 @@ import {
   createThemeExtensions,
   automerge,
   defaultSlots,
+  useDocAccessor,
 } from '@dxos/react-ui-editor';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -107,13 +108,14 @@ type StoryCommentThread = {
 
 const StoryMessageBlock = (props: MessageBlockProps<{ text: TextObject }>) => {
   const { themeMode } = useThemeContext();
+  const { doc, accessor } = useDocAccessor(props.block.text);
   const { parentRef } = useTextEditor(
     {
-      doc: getTextContent(props.block.text),
+      doc,
       extensions: [
         createBasicExtensions(),
         createThemeExtensions({ themeMode, slots: defaultSlots }),
-        automerge(createDocAccessor(props.block.text)),
+        automerge(accessor),
       ],
     },
     [themeMode],

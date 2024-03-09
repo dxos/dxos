@@ -6,11 +6,16 @@ import { Chat } from '@phosphor-icons/react';
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Message as MessageType } from '@braneframe/types';
-import { TextObject, createDocAccessor, getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
+import { TextObject, getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ScrollArea, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
-import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
+import {
+  createBasicExtensions,
+  createDataExtensions,
+  createThemeExtensions,
+  useDocAccessor,
+} from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadLayout } from '@dxos/react-ui-thread';
 
@@ -48,15 +53,15 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
 
   const textboxMetadata = getMessageMetadata(thread.id, identity);
   const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
-  const doc = useMemo(() => getTextContent(nextMessage.text), [nextMessage]);
+  const { doc, accessor } = useDocAccessor(nextMessage.text);
   const extensions = useMemo(
     () => [
       createBasicExtensions({ placeholder: t('message placeholder') }),
       createThemeExtensions({ themeMode }),
-      createDataExtensions({ id: nextMessage.text.id, text: createDocAccessor(nextMessage.text) }),
+      createDataExtensions({ id: nextMessage.text.id, text: accessor }),
       command,
     ],
-    [nextMessage],
+    [accessor],
   );
 
   // TODO(thure): Factor out.

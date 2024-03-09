@@ -10,7 +10,7 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import React, { type FC, type KeyboardEvent, StrictMode, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { createDocAccessor, TextObject } from '@dxos/echo-schema';
+import { TextObject } from '@dxos/echo-schema';
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
@@ -42,8 +42,7 @@ import {
   createMarkdownExtensions,
   useComments,
 } from '../../extensions';
-import { type DocAccessor } from '../../extensions/automerge/defs';
-import { type Comment, createDataExtensions, createThemeExtensions } from '../../hooks';
+import { type Comment, createDataExtensions, createThemeExtensions, useDocAccessor } from '../../hooks';
 import translations from '../../translations';
 
 faker.seed(101);
@@ -243,9 +242,7 @@ const Story = ({
   placeholder = 'New document.',
   ...props
 }: StoryProps) => {
-  const doc = useMemo<DocAccessor>(() => {
-    return createDocAccessor(new TextObject(text));
-  }, []);
+  const { accessor } = useDocAccessor(new TextObject(text));
 
   // TODO(burdon): Change to hook?
   // TODO(burdon): 1). How to get view if using wrapper (e.g., for comments).
@@ -263,7 +260,7 @@ const Story = ({
           editor: { className: 'min-bs-dvh px-8 bg-white dark:bg-black' },
         },
       }),
-      createDataExtensions({ id, text: doc }),
+      createDataExtensions({ id, text: accessor }),
       ..._extensions,
     ],
     [_extensions],

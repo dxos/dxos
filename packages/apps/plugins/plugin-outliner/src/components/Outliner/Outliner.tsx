@@ -8,16 +8,16 @@ import { ArrowSquareOut, Circle, DotsThreeVertical, X } from '@phosphor-icons/re
 import React, { type HTMLAttributes, StrictMode, useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { createDocAccessor, getTextContent } from '@dxos/react-client/echo';
 import { Button, DensityProvider, DropdownMenu, Input, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type CursorInfo,
   type YText,
   useTextEditor,
-  defaultTheme,
   automerge,
   decorateMarkdown,
   createMarkdownExtensions,
+  useDocAccessor,
+  createThemeExtensions,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
@@ -240,26 +240,21 @@ const OutlinerItem = (props: OutlinerItemProps) => {
     }
   }, [focus]);
 
+  const { doc, accessor } = useDocAccessor(item.text);
   const extensions = useMemo<Extension[]>(
     () =>
-      item.text
-        ? [
-            EditorView.baseTheme(defaultTheme),
-            EditorView.darkTheme.of(themeMode === 'dark'),
-            EditorView.editorAttributes.of({ class: 'grow' }),
-            EditorView.updateListener.of(({ view }) => setFocus(view.hasFocus)),
-
-            // lineNumbers(), // Debug-only.
-            createMarkdownExtensions({ themeMode, placeholder }),
-            decorateMarkdown({ renderLinkButton: onRenderLink }),
-            automerge(createDocAccessor(item.text)),
-            keymap,
-          ].filter(isNotFalsy)
-        : [],
-    [item.text],
+      [
+        EditorView.updateListener.of(({ view }) => setFocus(view.hasFocus)),
+        createMarkdownExtensions({ themeMode, placeholder }),
+        createThemeExtensions({ themeMode }),
+        decorateMarkdown({ renderLinkButton: onRenderLink }),
+        automerge(accessor),
+        keymap,
+      ].filter(isNotFalsy),
+    [themeMode, accessor],
   );
 
-  const { parentRef, view } = useTextEditor({ extensions, doc: getTextContent(item.text) }, [extensions]);
+  const { parentRef, view } = useTextEditor({ extensions, doc }, [extensions]);
   useEffect(() => {
     if (active) {
       view?.focus();
