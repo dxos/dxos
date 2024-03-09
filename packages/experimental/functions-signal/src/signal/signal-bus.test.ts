@@ -79,17 +79,23 @@ describe('Signal bus', () => {
     });
   });
 
-  const setupPeer = async (displayName: string = 'host', testBuilder: TestBuilder = new TestBuilder()) => {
+  const createTestBuilder = (): TestBuilder => {
+    const builder = new TestBuilder();
+    afterTest(() => builder.destroy());
+    return builder;
+  };
+
+  const setupPeer = async (displayName: string = 'host', testBuilder: TestBuilder = createTestBuilder()) => {
     const client = new Client({ services: testBuilder.createLocal() });
     await client.initialize();
+    afterTest(() => client.destroy());
     await client.halo.createIdentity({ displayName });
     const space = await client.spaces.create();
-    afterTest(() => client.destroy());
     return { space, client };
   };
 
   const setupMultiPeer = async () => {
-    const testBuilder = new TestBuilder();
+    const testBuilder = createTestBuilder();
     const { space: hostSpace } = await setupPeer('host', testBuilder);
     const { client: guest } = await setupPeer('guest', testBuilder);
     await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
