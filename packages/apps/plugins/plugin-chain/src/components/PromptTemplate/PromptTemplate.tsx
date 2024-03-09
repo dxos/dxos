@@ -98,7 +98,9 @@ type PromptTemplateProps = {
 export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
   const { t } = useTranslation(CHAIN_PLUGIN);
   const { themeMode } = useThemeContext();
+
   // TODO(burdon): Remove.
+  const doc = useMemo(() => getTextContent(prompt.source), [prompt]);
   const model = useTextModel({ text: prompt.source });
   const extensions = useMemo<Extension[]>(
     () =>
@@ -121,7 +123,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
         : [],
     [model, themeMode],
   );
-  const doc = useMemo(() => getTextContent(prompt.source), [prompt]);
+
   const { parentRef } = useTextEditor({ doc, extensions });
   usePromptInputs(prompt);
 
