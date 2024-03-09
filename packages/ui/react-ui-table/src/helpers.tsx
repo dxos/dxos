@@ -165,17 +165,20 @@ const NumberBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
     (!document.activeElement || document.activeElement !== ref.current) && setText(displayNumber(value, digits));
   }, [digits, value]);
 
-  const handleEdit = () => {
-    if (onUpdate) {
-      setText(value !== undefined ? String(value) : '');
-    }
-  };
+  const handleEdit = () => setText(value !== undefined ? String(value) : '');
 
   // TODO(burdon): Property is encoded as float (e.g., 6.1 => 6.099)
   const handleSave = () => {
     const nextValue = parseNumber(text);
-    onUpdate?.(cellContext.row.original, cellContext.column.id, isNaN(nextValue) ? undefined : nextValue);
-    setText(displayNumber(nextValue, digits));
+
+    if (!isNaN(nextValue)) {
+      onUpdate?.(cellContext.row.original, cellContext.column.id, nextValue);
+      setText(displayNumber(nextValue, digits));
+    } else {
+      // Reset the text to display the original value without updating the model.
+      setText(displayNumber(value, digits));
+    }
+
     // Shift focus only if input is focused on save (e.g. on `Enter`).
     ref.current && document.activeElement === ref.current && findPrevFocusable(ref.current)?.focus();
   };

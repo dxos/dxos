@@ -90,6 +90,7 @@ const columns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, any>[
     builder.number({
       label: 'Count',
       meta: { resizable: true },
+      onUpdate,
       getGroupingValue: (row) => (row.count ? (row.count < 2000 ? 'A' : row.count < 5000 ? 'B' : 'C') : 'D'),
     }),
   ),
@@ -226,7 +227,6 @@ export const Editable = {
     };
 
     const builtColumns = columns(onUpdate);
-    console.log('builtColumns', builtColumns);
 
     return (
       <div ref={containerRef} className='fixed inset-0 overflow-auto'>
