@@ -11,6 +11,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { ScrollArea, useTranslation } from '@dxos/react-ui';
 import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
 import { createBasicExtensions } from '@dxos/react-ui-editor';
+import { DocAccessor } from '@dxos/react-ui-editor/dist/types/src/extensions/automerge/defs';
 import { mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadLayout } from '@dxos/react-ui-thread';
 
@@ -133,7 +134,7 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
       </ScrollArea.Root>
       <MessageTextbox
         autoFocus={autoFocus}
-        doc={doc}
+        doc={DocAccessor.getValue(doc)}
         extensions={extensions}
         onSend={handleCreate}
         {...textboxMetadata}

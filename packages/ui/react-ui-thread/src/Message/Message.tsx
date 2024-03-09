@@ -6,7 +6,7 @@ import { X } from '@phosphor-icons/react';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, { type ComponentPropsWithRef, type FC, forwardRef, useMemo } from 'react';
 
-import { DocAccessor } from '@dxos/echo-schema'; // TODO(burdon): Remove dep.
+// TODO(burdon): Remove dep.
 import { Avatar, Button, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type TextEditorProps, keymap, listener, TransitionalTextEditor } from '@dxos/react-ui-editor';
 import {
@@ -128,12 +128,11 @@ export const Message = <BlockValue,>(props: MessageProps<BlockValue>) => {
 
 export type MessageTextboxProps = {
   disabled?: boolean;
-  doc: DocAccessor;
   onSend?: () => void;
   onClear?: () => void;
   onEditorFocus?: () => void;
 } & MessageMetadata &
-  Omit<TextEditorProps, 'model' | 'doc'>; // TODO(burdon): Temp.
+  Omit<TextEditorProps, 'model'>;
 
 const keyBindings = ({ onSend, onClear }: Pick<MessageTextboxProps, 'onSend' | 'onClear'>) => [
   {
@@ -163,7 +162,6 @@ const keyBindings = ({ onSend, onClear }: Pick<MessageTextboxProps, 'onSend' | '
 
 export const MessageTextbox = ({
   id,
-  doc,
   onSend,
   onClear,
   onEditorFocus,
@@ -171,7 +169,7 @@ export const MessageTextbox = ({
   authorName,
   authorImgSrc,
   authorAvatarProps,
-  disabled,
+  disabled, // TODO(burdon): Move upstream to extension.
   extensions: _extensions,
   ...editorProps
 }: MessageTextboxProps) => {
@@ -190,21 +188,9 @@ export const MessageTextbox = ({
     [_extensions, onSend, onClear, onEditorFocus],
   );
 
-  // TODO(burdon): Merge with useMemo above.
-  // const { parentRef } = useTextEditor({
-  //   doc: getTextContent(),
-  //   extensions,
-  // });
-  // <div ref={parentRef} className={mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50')} />;
-
-  // TODO(burdon): Set extensions directly.
-  // TODO(burdon): Set data extension.
-  // readonly = { disabled };
-
   return (
     <MessageMeta {...{ id, authorId, authorName, authorImgSrc, authorAvatarProps }} continues={false}>
       <TransitionalTextEditor
-        doc={DocAccessor.getValue(doc)}
         extensions={extensions}
         slots={{ root: { className: mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50') } }}
         {...editorProps}

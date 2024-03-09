@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { Check, Trash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { createDocAccessor, DocAccessor, getTextContent, TextObject } from '@dxos/echo-schema';
+import { createDocAccessor, getTextContent, TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
@@ -133,9 +133,7 @@ const StoryThread: FC<{
   const [autoFocus, setAutoFocus] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // const model = useTextModel({ text: item.text });
   const [item, setItem] = useState({ text: new TextObject() });
-  const doc = useMemo(() => createDocAccessor(item.text), [item.text]);
 
   useEffect(() => {
     if (selected) {
@@ -147,7 +145,7 @@ const StoryThread: FC<{
   }, [selected]);
 
   const handleCreateMessage = () => {
-    const text = DocAccessor.getValue(doc).trim();
+    const text = getTextContent(item.text)?.trim();
     if (text?.length) {
       thread.messages.push({
         id: item.text.id,
@@ -180,7 +178,7 @@ const StoryThread: FC<{
           id={item.text.id}
           authorId={authorId}
           autoFocus={autoFocus}
-          doc={doc}
+          doc={getTextContent(item.text)}
           onEditorFocus={onSelect}
           onSend={handleCreateMessage}
         />

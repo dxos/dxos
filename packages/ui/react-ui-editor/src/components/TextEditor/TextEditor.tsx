@@ -26,9 +26,9 @@ import { focusRing } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
 
 import { createMarkdownExtensions, editorMode } from '../../extensions';
-import { createBasicExtensions, createThemeExtensions, type EditorModel } from '../../hooks';
+import { type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
-import { defaultTheme, markdownTheme, textTheme } from '../../themes';
+import { defaultTheme, markdownTheme } from '../../themes';
 import { logChanges } from '../../util';
 
 export type CursorInfo = {
@@ -51,7 +51,7 @@ export type TextEditorSlots = {
 };
 
 export type TextEditorProps = {
-  doc?: string;
+  doc?: string; // TODO(burdon): Rename value.
   model: EditorModel; // TODO(burdon): Optional (e.g., just provide content if readonly).
   readonly?: boolean; // TODO(burdon): Move into model.
   autoFocus?: boolean;
@@ -239,34 +239,34 @@ export const defaultSlots: TextEditorSlots = {
  * @deprecated
  */
 // TODO(burdon): Replace with hooks.
-export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
-  (
-    { readonly, placeholder, lineWrapping = true, theme = textTheme, slots, extensions: _extensions, ...props },
-    forwardedRef,
-  ) => {
-    const { themeMode } = useThemeContext();
-    const updatedSlots = defaultsDeep({}, slots, defaultSlots);
-    const extensions = useMemo(
-      () => [
-        createBasicExtensions({ lineWrapping, placeholder }),
-        createThemeExtensions({ themeMode }),
-        ...(_extensions ?? []),
-      ],
-      [themeMode, placeholder, lineWrapping, _extensions],
-    );
-
-    return (
-      <BaseTextEditor
-        ref={forwardedRef}
-        readonly={readonly}
-        extensions={extensions}
-        theme={theme}
-        slots={updatedSlots}
-        {...props}
-      />
-    );
-  },
-);
+// export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
+//   (
+//     { readonly, placeholder, lineWrapping = true, theme = textTheme, slots, extensions: _extensions, ...props },
+//     forwardedRef,
+//   ) => {
+//     const { themeMode } = useThemeContext();
+//     const updatedSlots = defaultsDeep({}, slots, defaultSlots);
+//     const extensions = useMemo(
+//       () => [
+//         createBasicExtensions({ lineWrapping, placeholder }),
+//         createThemeExtensions({ themeMode }),
+//         ...(_extensions ?? []),
+//       ],
+//       [themeMode, placeholder, lineWrapping, _extensions],
+//     );
+//
+//     return (
+//       <BaseTextEditor
+//         ref={forwardedRef}
+//         readonly={readonly}
+//         extensions={extensions}
+//         theme={theme}
+//         slots={updatedSlots}
+//         {...props}
+//       />
+//     );
+//   },
+// );
 
 /**
  * @deprecated

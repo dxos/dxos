@@ -10,6 +10,7 @@ import { TextObject, createDocAccessor, getSpaceForObject, getTextContent, useMe
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, Tooltip, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions } from '@dxos/react-ui-editor';
+import { DocAccessor } from '@dxos/react-ui-editor/dist/types/src/extensions/automerge/defs';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, ThreadHeading } from '@dxos/react-ui-thread';
 
@@ -147,7 +148,7 @@ export const CommentContainer = ({
       ))}
       <MessageTextbox
         autoFocus={autoFocus}
-        doc={doc}
+        doc={DocAccessor.getValue(doc)}
         extensions={extensions}
         onSend={handleCreate}
         {...textboxMetadata}

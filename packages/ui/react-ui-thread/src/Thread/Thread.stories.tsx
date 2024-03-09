@@ -3,9 +3,9 @@
 //
 
 import '@dxosTheme';
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 
-import { createDocAccessor, setTextContent, TextObject } from '@dxos/echo-schema';
+import { getTextContent, setTextContent, TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -45,7 +45,6 @@ const Story = () => {
 
   // TODO(burdon): Change to extension.
   const [item] = useState(new TextObject());
-  const doc = useMemo(() => createDocAccessor(item), [item]);
 
   // TODO(thure): Why does pressing Enter clear the text content?
   //  Something to do with the in-memory text model perhaps?
@@ -62,7 +61,13 @@ const Story = () => {
       {messages.map((message) => (
         <Message key={message.id} {...message} />
       ))}
-      <MessageTextbox id={item.id} doc={doc} authorId={identityKey1.toHex()} disabled={pending} onSend={handleSend} />
+      <MessageTextbox
+        id={item.id}
+        doc={getTextContent(item)}
+        authorId={identityKey1.toHex()}
+        disabled={pending}
+        onSend={handleSend}
+      />
       <ThreadFooter activity>Processing...</ThreadFooter>
     </Thread>
   );
