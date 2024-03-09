@@ -3,13 +3,13 @@
 //
 
 import { X } from '@phosphor-icons/react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Message as MessageType } from '@braneframe/types';
 import { TextObject, createDocAccessor, getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
+import { createBasicExtensions, createThemeExtensions, useDataExtensions } from '@dxos/react-ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, ThreadHeading } from '@dxos/react-ui-thread';
 
@@ -40,16 +40,31 @@ export const CommentContainer = ({
 
   const textboxMetadata = getMessageMetadata(thread.id, identity);
   const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
-  const doc = useMemo(() => getTextContent(nextMessage.text), [nextMessage]);
-  const extensions = useMemo(
-    () => [
-      createBasicExtensions({ placeholder: t('message placeholder') }),
-      createThemeExtensions({ themeMode }),
-      createDataExtensions({ id: nextMessage.text.id, text: createDocAccessor(nextMessage.text) }),
-      command,
-    ],
+
+  // TODO(burdon): Extension factory/builder abstraction?
+  const { doc, extensions } = useDataExtensions(
+    {
+      id: nextMessage.text.id,
+      text: createDocAccessor(nextMessage.text),
+      extensions: [
+        createBasicExtensions({ placeholder: t('message placeholder') }),
+        createThemeExtensions({ themeMode }),
+        command,
+      ],
+    },
     [nextMessage],
   );
+
+  // const doc = useMemo(() => getTextContent(nextMessage.text), [nextMessage]);
+  // const extensions = useMemo(
+  //   () => [
+  //     createBasicExtensions({ placeholder: t('message placeholder') }),
+  //     createThemeExtensions({ themeMode }),
+  //     createDataExtensions({ id: nextMessage.text.id, text: createDocAccessor(nextMessage.text) }),
+  //     command,
+  //   ],
+  //   [nextMessage],
+  // );
 
   // TODO(thure): Because of the way the `autoFocus` property is handled by TextEditor,
   //  this is the least-bad way of moving focus at the right time, though it is an anti-pattern.

@@ -11,7 +11,7 @@ import { decorateMarkdown, MarkdownEditor, type TextEditorProps, useTextModel } 
 import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
 import { type Meta, withTheme } from '@dxos/storybook-utils';
 
-import { mermaid } from './extensions';
+import { mermaid } from './mermaid';
 
 const str = (...lines: string[]) => lines.join('\n');
 

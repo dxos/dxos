@@ -13,9 +13,9 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
   useState,
-  useMemo,
 } from 'react';
 
 import { DocAccessor } from '@dxos/echo-schema';
@@ -31,11 +31,11 @@ import { type ThemeStyles } from '../../styles';
 import { defaultTheme, markdownTheme } from '../../themes';
 import { logChanges } from '../../util';
 
-// TODO(burdon): Factor out DocAccessor (remove echo-schema dep).
-// TODO(burdon): Create single wrapper component.
-// TODO(burdon): Remove EditorModel/useTextModel.
-// TODO(burdon): Remove useEditorView.
-// TODO(burdon): Clean-up extension creators.
+// TODO(burdon): GOAL: Remove EditorModel/useTextModel.
+//  - Create single wrapper component.
+//  - Remove useEditorView.
+//  - Clean-up extension creators.
+//  - Factor out and rename DocAccessor (remove echo-schema dep).
 
 export type CursorInfo = {
   from: number;
@@ -57,7 +57,7 @@ export type TextEditorSlots = {
 };
 
 export type TextEditorProps = {
-  doc?: string; // TODO(burdon): Rename value.
+  doc?: string; // TODO(burdon): Rename text/value?
   model: EditorModel; // TODO(burdon): Optional (e.g., just provide content if readonly).
   readonly?: boolean; // TODO(burdon): Move into model.
   autoFocus?: boolean;
@@ -74,10 +74,43 @@ export type TextEditorProps = {
 };
 
 /**
- * Base text editor.
+ * @deprecated
  */
-// TODO(burdon): Replace with useTextEditor.
-export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
+export const defaultSlots: TextEditorSlots = {
+  root: {
+    className: focusRing,
+  },
+  editor: {
+    className: 'bs-full',
+  },
+};
+
+/**
+ * @deprecated
+ */
+export const MarkdownEditor = forwardRef<EditorView | null, TextEditorProps>(
+  ({ readonly, placeholder, theme = markdownTheme, slots, extensions: _extensions, ...props }, forwardedRef) => {
+    const { themeMode } = useThemeContext();
+    const updatedSlots = defaultsDeep({}, slots, defaultSlots);
+    const extensions = useMemo(
+      () => [createMarkdownExtensions({ themeMode, placeholder }), ...(_extensions ?? [])],
+      [themeMode, placeholder, _extensions],
+    );
+
+    return (
+      <BaseTextEditor
+        ref={forwardedRef}
+        readonly={readonly}
+        extensions={extensions}
+        theme={theme}
+        slots={updatedSlots}
+        {...props}
+      />
+    );
+  },
+);
+
+const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
   (
     {
       model,
@@ -230,48 +263,9 @@ export const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
 );
 
 /**
- * @deprecated
- */
-export const defaultSlots: TextEditorSlots = {
-  root: {
-    className: focusRing,
-  },
-  editor: {
-    className: 'bs-full',
-  },
-};
-
-/**
- * @deprecated
- */
-// TODO(burdon): Replace with hooks.
-export const MarkdownEditor = forwardRef<EditorView | null, TextEditorProps>(
-  ({ readonly, placeholder, theme = markdownTheme, slots, extensions: _extensions, ...props }, forwardedRef) => {
-    const { themeMode } = useThemeContext();
-    const updatedSlots = defaultsDeep({}, slots, defaultSlots);
-    const extensions = useMemo(
-      () => [createMarkdownExtensions({ themeMode, placeholder }), ...(_extensions ?? [])],
-      [themeMode, placeholder, _extensions],
-    );
-
-    return (
-      <BaseTextEditor
-        ref={forwardedRef}
-        readonly={readonly}
-        extensions={extensions}
-        theme={theme}
-        slots={updatedSlots}
-        {...props}
-      />
-    );
-  },
-);
-
-/**
  * Thin wrapper for text editor.
  * Handles tabster and focus management.
  */
-// TODO(burdon): No model or default extensions.
 export const TransitionalTextEditor = forwardRef<EditorView | null, Omit<TextEditorProps, 'model' | 'readonly'>>(
   (
     {

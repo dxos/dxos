@@ -32,7 +32,6 @@ import {
   useTextEditor,
 } from '../../hooks';
 import translations from '../../translations';
-import { defaultSlots } from '../TextEditor';
 
 faker.seed(101);
 
@@ -45,8 +44,7 @@ const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) =
     extensions: [
       createBasicExtensions(),
       createMarkdownExtensions({ themeMode }),
-      createThemeExtensions({ themeMode, slots: { ...defaultSlots, editor: { className: 'p-2' } } }),
-      decorateMarkdown(),
+      createThemeExtensions({ themeMode, slots: { editor: { className: 'p-2' } } }),
       comments({
         onCreate: ({ cursor }) => {
           const id = PublicKey.random().toHex();
@@ -54,6 +52,7 @@ const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) =
           return id;
         },
       }),
+      decorateMarkdown(),
       formatting(),
       image(),
       table(),

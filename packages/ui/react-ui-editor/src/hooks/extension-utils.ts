@@ -17,6 +17,7 @@ import {
   scrollPastEnd,
 } from '@codemirror/view';
 import defaultsDeep from 'lodash.defaultsdeep';
+import { useMemo } from 'react';
 
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
@@ -28,7 +29,7 @@ import { hexToHue, isNotFalsy } from '@dxos/util';
 
 import { SpaceAwarenessProvider } from './awareness-provider';
 import { automerge, awareness } from '../extensions';
-import { type DocAccessor } from '../extensions/automerge/defs';
+import { DocAccessor } from '../extensions/automerge/defs';
 import { type ThemeStyles } from '../styles';
 import { defaultTheme } from '../themes';
 
@@ -157,4 +158,16 @@ export const createDataExtensions = ({ id, text, space, identity }: DataExtensio
   }
 
   return extensions;
+};
+
+export const useDataExtensions = (
+  { text, extensions, ...rest }: DataExtensionsProps & { extensions?: Extension[] },
+  ...deps: any[]
+): { doc: string; extensions: Extension[] } => {
+  return useMemo(() => {
+    return {
+      doc: DocAccessor.getValue(text),
+      extensions: [...createDataExtensions({ text, ...rest }), extensions || []],
+    };
+  }, [text, extensions, rest, deps]);
 };
