@@ -12,7 +12,7 @@ export const Signal = S.struct({
   id: S.string,
   kind: S.literal('echo-mutation', 'timer', 'attention', 'suggestion'),
   metadata: S.struct({
-    created: S.number,
+    createdMs: S.number,
     source: S.string,
     triggerSignalId: S.optional(S.string),
     spaceKey: S.optional(S.string),

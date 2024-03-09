@@ -53,7 +53,7 @@ export class MutationSignalEmitter {
           metadata: {
             source: 'echo',
             spaceKey: space.key.toHex(),
-            created: Date.now(),
+            createdMs: Date.now(),
           },
           data: {
             type: (object as TypedObject).__typename ?? 'any',

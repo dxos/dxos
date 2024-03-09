@@ -3,3 +3,4 @@
 //
 
 export * from './signal';
+export * from './trigger';

@@ -106,7 +106,7 @@ describe('Signal bus', () => {
   const newTestSignal = (): Signal => ({
     id: PublicKey.random().toHex(),
     kind: 'attention',
-    metadata: { created: Date.now(), source: 'composer' },
+    metadata: { createdMs: Date.now(), source: 'composer' },
     data: { type: 'string', value: 'Playing chess' },
   });
 });

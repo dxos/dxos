@@ -57,7 +57,7 @@ export default class Signal extends BaseCommand<typeof Signal> {
         id: PublicKey.random().toHex(),
         kind: this.flags.kind as any,
         metadata: {
-          created: Date.now(),
+          createdMs: Date.now(),
           source: 'cli',
         },
         data: {
