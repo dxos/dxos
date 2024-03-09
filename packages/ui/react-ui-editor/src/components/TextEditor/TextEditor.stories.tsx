@@ -18,7 +18,7 @@ import { Button, DensityProvider, Input, ThemeProvider, useThemeContext } from '
 import { baseSurface, defaultTx, getSize, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { MarkdownEditor, TextEditor, type OldTextEditorProps } from './TextEditor';
+import { MarkdownEditor, TextEditor, type BaseTextEditorProps } from './TextEditor';
 import {
   annotations,
   autocomplete,
@@ -233,7 +233,7 @@ type StoryProps = {
   id?: string;
   text?: string;
   comments?: Comment[];
-} & Pick<OldTextEditorProps, 'readonly' | 'placeholder' | 'extensions'>;
+} & Pick<BaseTextEditorProps, 'readonly' | 'placeholder' | 'extensions'>;
 
 const Story = ({
   id = 'test',

@@ -7,7 +7,7 @@ import '@dxosTheme';
 import React, { useState } from 'react';
 
 import { TextObject } from '@dxos/echo-schema';
-import { decorateMarkdown, MarkdownEditor, type OldTextEditorProps, useTextModel } from '@dxos/react-ui-editor';
+import { decorateMarkdown, MarkdownEditor, type BaseTextEditorProps, useTextModel } from '@dxos/react-ui-editor';
 import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
 import { type Meta, withTheme } from '@dxos/storybook-utils';
 
@@ -17,7 +17,7 @@ const str = (...lines: string[]) => lines.join('\n');
 
 type StoryProps = {
   text?: string;
-} & Pick<OldTextEditorProps, 'readonly' | 'extensions' | 'slots'>;
+} & Pick<BaseTextEditorProps, 'readonly' | 'extensions' | 'slots'>;
 
 const Story = ({ text, ...props }: StoryProps) => {
   const [item] = useState({ text: new TextObject(text) });

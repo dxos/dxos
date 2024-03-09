@@ -9,7 +9,7 @@ import { useTranslation } from '@dxos/react-ui';
 import {
   type Comment,
   MarkdownEditor,
-  type OldTextEditorProps,
+  type BaseTextEditorProps,
   Toolbar,
   cursorLineMargin,
   editorFillLayoutRoot,
@@ -27,7 +27,7 @@ import { MARKDOWN_PLUGIN } from '../meta';
 export type EditorMainProps = {
   comments?: Comment[];
   toolbar?: boolean;
-} & Pick<OldTextEditorProps, 'model' | 'readonly' | 'extensions'>;
+} & Pick<BaseTextEditorProps, 'model' | 'readonly' | 'extensions'>;
 
 export const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);

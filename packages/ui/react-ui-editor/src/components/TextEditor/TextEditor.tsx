@@ -71,9 +71,9 @@ export const defaultSlots: TextEditorSlots = {
 /**
  * @deprecated
  */
-export type OldTextEditorProps = Omit<TextEditorProps, 'doc'> & {
-  model: EditorModel; // TODO(burdon): Optional (e.g., just provide content if readonly).
-  readonly?: boolean; // TODO(burdon): Move into model.
+export type BaseTextEditorProps = Omit<TextEditorProps, 'doc'> & {
+  model: EditorModel;
+  readonly?: boolean;
   scrollPastEnd?: boolean;
   lineWrapping?: boolean;
   placeholder?: string;
@@ -83,7 +83,7 @@ export type OldTextEditorProps = Omit<TextEditorProps, 'doc'> & {
 /**
  * @deprecated
  */
-export const MarkdownEditor = forwardRef<EditorView | null, OldTextEditorProps>(
+export const MarkdownEditor = forwardRef<EditorView | null, BaseTextEditorProps>(
   ({ readonly, placeholder, theme = markdownTheme, slots, extensions: _extensions, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const updatedSlots = defaultsDeep({}, slots, defaultSlots);
@@ -105,7 +105,10 @@ export const MarkdownEditor = forwardRef<EditorView | null, OldTextEditorProps>(
   },
 );
 
-const BaseTextEditor = forwardRef<EditorView | null, OldTextEditorProps>(
+/**
+ * @deprecated
+ */
+const BaseTextEditor = forwardRef<EditorView | null, BaseTextEditorProps>(
   (
     {
       model,
@@ -122,9 +125,8 @@ const BaseTextEditor = forwardRef<EditorView | null, OldTextEditorProps>(
     },
     forwardedRef,
   ) => {
-    const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
     const { themeMode } = useThemeContext();
-
+    const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
     const rootRef = useRef<HTMLDivElement>(null);
     const [view, setView] = useState<EditorView | null>(null);
 
