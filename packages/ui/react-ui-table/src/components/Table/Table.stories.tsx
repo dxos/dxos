@@ -249,13 +249,15 @@ export const Editable = {
       setItems((items) => updateItems(items, item.publicKey, prop, value));
     };
 
+    const builtColumns = columns(onUpdate);
+
     return (
       <div ref={containerRef} className='fixed inset-0 overflow-auto'>
         <Table<Item>
           role='grid'
           rowsSelectable='multi'
           keyAccessor={(row) => row.publicKey.toHex()}
-          columns={columns(onUpdate)}
+          columns={builtColumns}
           data={items}
           fullWidth
           stickyHeader

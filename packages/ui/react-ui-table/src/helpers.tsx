@@ -210,6 +210,7 @@ const RowSelectorBuilderCell = <TData extends RowData>(cellContext: CellContext<
   const checked = row.getCanSelect()
     ? row.getIsSelected()
     : row.getCanSelectSubRows() && (row.getIsSomeSelected() ? 'indeterminate' : row.getIsAllSubRowsSelected());
+
   return (
     <Input.Root>
       <Input.Checkbox
