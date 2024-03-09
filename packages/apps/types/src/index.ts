@@ -18,6 +18,7 @@ import {
   Thread as ThreadType,
   Tree as TreeType,
   View as ViewType,
+  Message as MessageType,
 } from './proto';
 
 export * from './proto';
@@ -40,3 +41,4 @@ export * from './proto';
 (globalThis as any)[ThreadType.name] = ThreadType;
 (globalThis as any)[TreeType.name] = TreeType;
 (globalThis as any)[ViewType.name] = ViewType;
+(globalThis as any)[MessageType.name] = MessageType;

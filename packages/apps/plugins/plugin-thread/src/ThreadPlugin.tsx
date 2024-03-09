@@ -39,6 +39,7 @@ import {
   ChatHeading,
 } from './components';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
+import { createEffector } from './signal-effector';
 import translations from './translations';
 import { ThreadAction, type ThreadPluginProvides, isThread, type ThreadSettingsProps } from './types';
 
@@ -158,6 +159,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   dispatch,
                 }),
               );
+
+              subscriptions.add(createEffector(space, settings));
 
               // Add all threads not linked to documents to the graph.
               const query = space.db.query(ThreadType.filter());
