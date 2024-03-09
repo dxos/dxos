@@ -175,6 +175,8 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
     );
   }
 
+  const isResizingColumn = table.getState().columnSizingInfo.isResizingColumn;
+
   return (
     <table
       role={role}
@@ -185,7 +187,11 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
 
       {grouping?.length !== 0 ? (
         getScrollElement ? (
-          <VirtualizedTableContent getScrollElement={getScrollElement} />
+          isResizingColumn ? (
+            <MemoizedVirtualisedTableContent getScrollElement={getScrollElement} />
+          ) : (
+            <VirtualizedTableContent getScrollElement={getScrollElement} />
+          )
         ) : (
           <TableBody rows={rows} />
         )
@@ -240,6 +246,8 @@ const VirtualizedTableContent = ({
     </>
   );
 };
+
+export const MemoizedVirtualisedTableContent = React.memo(VirtualizedTableContent) as typeof VirtualizedTableContent;
 
 const GroupedTableContent = () => {
   const {
