@@ -48,6 +48,7 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
 
   const textboxMetadata = getMessageMetadata(thread.id, identity);
   const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
+  const doc = useMemo(() => getTextContent(nextMessage.text), [nextMessage]);
   const extensions = useMemo(
     () => [
       createBasicExtensions({ placeholder: t('message placeholder') }),
@@ -133,7 +134,7 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
       </ScrollArea.Root>
       <MessageTextbox
         autoFocus={autoFocus}
-        doc={getTextContent(nextMessage.text)}
+        doc={doc}
         extensions={extensions}
         onSend={handleCreate}
         {...textboxMetadata}

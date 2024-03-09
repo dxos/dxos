@@ -40,6 +40,7 @@ export const CommentContainer = ({
 
   const textboxMetadata = getMessageMetadata(thread.id, identity);
   const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
+  const doc = useMemo(() => getTextContent(nextMessage.text), [nextMessage]);
   const extensions = useMemo(
     () => [
       createBasicExtensions({ placeholder: t('message placeholder') }),
@@ -50,9 +51,9 @@ export const CommentContainer = ({
     [nextMessage],
   );
 
-  // TODO(thure): Because of the way the `autoFocus` property is handled by TextEditor, this is the least-bad way of
-  //   moving focus at the right time, though it is an antipattern. Refactor to behave more like <input/>’s `autoFocus`
-  //   or `autofocus` (yes, they’re different).
+  // TODO(thure): Because of the way the `autoFocus` property is handled by TextEditor,
+  //  this is the least-bad way of moving focus at the right time, though it is an anti-pattern.
+  //  Refactor to behave more like <input/>’s `autoFocus` or `autofocus` (yes, they’re different).
   useEffect(() => {
     setAutoFocus(!!autoFocusTextbox);
   }, [autoFocusTextbox]);
@@ -146,7 +147,7 @@ export const CommentContainer = ({
       ))}
       <MessageTextbox
         autoFocus={autoFocus}
-        doc={getTextContent(nextMessage.text)}
+        doc={doc}
         extensions={extensions}
         onSend={handleCreate}
         {...textboxMetadata}

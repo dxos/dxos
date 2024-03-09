@@ -31,6 +31,12 @@ import { type ThemeStyles } from '../../styles';
 import { defaultTheme, markdownTheme } from '../../themes';
 import { logChanges } from '../../util';
 
+// TODO(burdon): Factor out DocAccessor (remove echo-schema dep).
+// TODO(burdon): Create single wrapper component.
+// TODO(burdon): Remove EditorModel/useTextModel.
+// TODO(burdon): Remove useEditorView.
+// TODO(burdon): Clean-up extension creators.
+
 export type CursorInfo = {
   from: number;
   to: number;
@@ -263,7 +269,7 @@ export const MarkdownEditor = forwardRef<EditorView | null, TextEditorProps>(
 
 /**
  * Thin wrapper for text editor.
- * Handles tabster.
+ * Handles tabster and focus management.
  */
 // TODO(burdon): No model or default extensions.
 export const TransitionalTextEditor = forwardRef<EditorView | null, Omit<TextEditorProps, 'model' | 'readonly'>>(
@@ -299,6 +305,8 @@ export const TransitionalTextEditor = forwardRef<EditorView | null, Omit<TextEdi
     // Create editor state and view.
     // The view is recreated if the model or extensions are changed.
     useEffect(() => {
+      log.info('updating view', { doc, selection, scrollTo, extensions: extensions.length });
+
       //
       // EditorState
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
@@ -322,7 +330,7 @@ export const TransitionalTextEditor = forwardRef<EditorView | null, Omit<TextEdi
           }),
 
           ...extensions,
-        ].filter(isNotFalsy),
+        ],
       });
 
       //
