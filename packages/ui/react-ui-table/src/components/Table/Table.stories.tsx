@@ -90,26 +90,13 @@ const columns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, any>[
     builder.number({
       label: 'Count',
       meta: { resizable: true },
-      // TODO(burdon): Sorting.
-      getGroupingValue: (row) => (row.count ? (row.count < 2_000 ? 'A' : row.count < 5_000 ? 'B' : 'C') : 'D'),
+      getGroupingValue: (row) => (row.count ? (row.count < 2000 ? 'A' : row.count < 5000 ? 'B' : 'C') : 'D'),
     }),
   ),
-  helper.accessor(
-    'company',
-    builder.combobox({
-      label: 'Company',
-      model: tableStorySelectModel,
-      onUpdate,
-    }),
-  ),
+  helper.accessor('company', builder.combobox({ label: 'Company', model: tableStorySelectModel, onUpdate })),
   helper.accessor(
     'complete',
-    builder.switch({
-      // enableGrouping: true,
-      getGroupingValue: (row) => row.complete === true,
-      label: '',
-      onUpdate,
-    }),
+    builder.switch({ getGroupingValue: (row) => row.complete === true, label: '', onUpdate }),
   ),
   helper.accessor('complete', builder.icon({ id: 'done', label: '' })),
   helper.accessor(
@@ -135,18 +122,10 @@ export default {
     keyAccessor: (item: Item) => item.publicKey.toHex(),
   },
   argTypes: {
-    header: {
-      control: 'boolean',
-    },
-    footer: {
-      control: 'boolean',
-    },
-    border: {
-      control: 'boolean',
-    },
-    fullWidth: {
-      control: 'boolean',
-    },
+    header: { control: 'boolean' },
+    footer: { control: 'boolean' },
+    border: { control: 'boolean' },
+    fullWidth: { control: 'boolean' },
     grouping: {
       control: 'select',
       options: ['none', 'complete', 'count'],
@@ -164,10 +143,7 @@ export default {
         limited: { key: false, started: false },
       },
     },
-    rowsSelectable: {
-      control: 'select',
-      options: [false, true, 'multi'],
-    },
+    rowsSelectable: { control: 'select', options: [false, true, 'multi'] },
   },
   decorators: [
     withTheme,
@@ -250,6 +226,7 @@ export const Editable = {
     };
 
     const builtColumns = columns(onUpdate);
+    console.log('builtColumns', builtColumns);
 
     return (
       <div ref={containerRef} className='fixed inset-0 overflow-auto'>

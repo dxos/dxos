@@ -109,6 +109,8 @@ const StringBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
   });
 
   const handleSave = () => {
+    inputRef.current?.blur();
+
     if (value === initialValue) {
       return;
     }
