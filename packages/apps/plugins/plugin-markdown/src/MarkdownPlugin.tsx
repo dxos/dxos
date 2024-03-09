@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArticleMedium, type IconProps } from '@phosphor-icons/react';
+import { type IconProps, TextAa } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
 import { deepSignal } from 'deepsignal/react';
 import React, { useMemo, type Ref } from 'react';
@@ -105,7 +105,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         records: {
           [DocumentType.schema.typename]: {
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
-            icon: (props: IconProps) => <ArticleMedium {...props} />,
+            icon: (props: IconProps) => <TextAa {...props} />,
           },
         },
       },
@@ -130,7 +130,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   action: MarkdownAction.CREATE,
                   properties: {
                     label: ['create document label', { ns: MARKDOWN_PLUGIN }],
-                    icon: (props: IconProps) => <ArticleMedium {...props} />,
+                    icon: (props: IconProps) => <TextAa {...props} />,
                     testId: 'markdownPlugin.createObject',
                   },
                 }),
@@ -159,7 +159,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                               getFallbackTitle(object) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }]
                             );
                           },
-                          icon: (props: IconProps) => <ArticleMedium {...props} />,
+                          icon: (props: IconProps) => <TextAa {...props} />,
                           testId: 'spacePlugin.object',
                           persistenceClass: 'echo',
                           persistenceKey: space?.key.toHex(),
@@ -179,7 +179,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                               ]),
                             properties: {
                               label: ['toggle view mode label', { ns: MARKDOWN_PLUGIN }],
-                              icon: (props: IconProps) => <ArticleMedium {...props} />,
+                              icon: (props: IconProps) => <TextAa {...props} />,
                               keyBinding: 'shift+F5',
                             },
                           },
@@ -204,7 +204,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             id: 'create-stack-section-doc',
             testId: 'markdownPlugin.createSection',
             label: ['create stack section label', { ns: MARKDOWN_PLUGIN }],
-            icon: (props: any) => <ArticleMedium {...props} />,
+            icon: (props: any) => <TextAa {...props} />,
             intent: {
               plugin: MARKDOWN_PLUGIN,
               action: MarkdownAction.CREATE,
