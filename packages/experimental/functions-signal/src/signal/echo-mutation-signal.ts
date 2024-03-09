@@ -60,7 +60,7 @@ export class MutationSignalEmitter {
             value: object,
           },
         }));
-      signals.forEach(bus.emit.bind(bus));
+      signals.forEach(bus.emitLocal.bind(bus));
     });
     subscriptions.push(() => subscription.unsubscribe());
 

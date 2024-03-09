@@ -33,7 +33,7 @@ export class MutationsSignalTriggerBuilder<T extends EchoObject> {
     return this;
   }
 
-  public unique(comparator: (prev: T, curr: T) => boolean = (p, c) => p === c): MutationsSignalTriggerBuilder<T> {
+  public unique(comparator: (prev: T, curr: T) => boolean = Object.is): MutationsSignalTriggerBuilder<T> {
     this._uniqueComparator = comparator;
     return this;
   }
@@ -51,14 +51,14 @@ export class MutationsSignalTriggerBuilder<T extends EchoObject> {
         return;
       }
       const object = mutationSignal.data.value;
-      if (!filterCheck(object)) {
+      if (!(object && filterCheck(object))) {
         return;
       }
       const previous = previousCheckedById.get(object.id);
       if (previous && areEqual(previous, object)) {
         return;
       }
-      previousCheckedById.set(object.id, object);
+      previousCheckedById.set(object.id, { ...object });
       const timeout = timeoutById.get(object.id);
       if (timeout) {
         clearTimeout(timeout);

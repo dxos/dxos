@@ -32,7 +32,7 @@ export const createSignalTrigger = (space: Space) => {
           type: 'suggest-next-chess-move',
           value: {
             gameState: game.pgn,
-            outputFormat: JSONSchema.make(MoveSuggestionOutputFormat),
+            outputFormat: JSON.stringify(JSONSchema.make(MoveSuggestionOutputFormat)),
             activeObjectId: game.id,
           },
         },

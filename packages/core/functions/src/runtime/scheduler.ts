@@ -214,7 +214,7 @@ export class Scheduler {
           id: PublicKey.random().toHex(),
           kind: 'suggestion',
           metadata: {
-            created: Date.now(),
+            createdMs: Date.now(),
             source: def.id,
             spaceKey: space.key.toHex(),
             triggerSignalId: signalToProcess.id,
