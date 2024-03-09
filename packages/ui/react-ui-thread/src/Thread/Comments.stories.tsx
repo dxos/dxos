@@ -75,7 +75,6 @@ const Editor: FC<{
   }, [selected, commentRanges, selectedValue]);
 
   useComments(view.current, id, commentRanges);
-
   const extensions = useMemo(() => {
     return [
       comments({
@@ -91,7 +90,6 @@ const Editor: FC<{
     return null;
   }
 
-  // TODO(burdon): Highlight currently selected comment.
   return <MarkdownEditor ref={view} model={model} extensions={extensions} />;
 };
 

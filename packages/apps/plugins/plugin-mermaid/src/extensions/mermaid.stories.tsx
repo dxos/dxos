@@ -3,11 +3,9 @@
 //
 
 import '@dxosTheme';
+import React, { useMemo } from 'react';
 
-import React, { useState } from 'react';
-
-import { TextObject } from '@dxos/echo-schema';
-import { decorateMarkdown, MarkdownEditor, type BaseTextEditorProps, useTextModel } from '@dxos/react-ui-editor';
+import { createMarkdownExtensions, decorateMarkdown, MarkdownEditor, TextEditor } from '@dxos/react-ui-editor';
 import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
 import { type Meta, withTheme } from '@dxos/storybook-utils';
 
@@ -17,21 +15,24 @@ const str = (...lines: string[]) => lines.join('\n');
 
 type StoryProps = {
   text?: string;
-} & Pick<BaseTextEditorProps, 'readonly' | 'extensions' | 'slots'>;
+};
 
-const Story = ({ text, ...props }: StoryProps) => {
-  const [item] = useState({ text: new TextObject(text) });
-  const model = useTextModel({ text: item.text });
-  if (!model) {
-    return null;
-  }
+const Story = ({ text }: StoryProps) => {
+  const extensions = useMemo(
+    () => [
+      // TODO(burdon): Bug if mermaid extension is provided after decorateMarkdown.
+      mermaid(),
+      decorateMarkdown(),
+      createMarkdownExtensions(),
+    ],
+    [],
+  );
 
   return (
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex justify-center overflow-y-scroll'>
         <div className='flex flex-col w-[800px] py-16'>
-          <MarkdownEditor model={model} {...props} />
-          <div className='flex shrink-0 h-[300px]'></div>
+          <TextEditor doc={text} extensions={extensions} />
         </div>
       </div>
     </div>
@@ -67,7 +68,6 @@ export const Mermaid = {
         'Inside a markdown document.',
         '',
       )}
-      extensions={[decorateMarkdown(), mermaid()]}
     />
   ),
 };
@@ -88,7 +88,6 @@ export const Error = {
         '',
         '',
       )}
-      extensions={[decorateMarkdown(), mermaid()]}
     />
   ),
 };
