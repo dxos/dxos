@@ -95,8 +95,11 @@ const ComboboxBuilderCell = <TData extends RowData>(cellContext: CellContext<TDa
 };
 
 const StringBuilderCell = <TData extends RowData>(cellContext: CellContext<TData, string>) => {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const { onUpdate } = cellContext.column.columnDef.meta as ColumnMeta<TData, string>;
+  const ref = useRef<HTMLInputElement>(null);
+  const { findPrevFocusable } = useFocusFinders();
+
+  const { onUpdate, cell } = cellContext.column.columnDef.meta as ColumnMeta<TData, string>;
+
   // https://tanstack.com/table/v8/docs/examples/react/editable-data
   const initialValue = cellContext.getValue();
   const [value, setValue] = useState(() => {
@@ -109,18 +112,14 @@ const StringBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
   });
 
   const handleSave = () => {
-    inputRef.current?.blur();
+    ref.current && document.activeElement === ref.current && findPrevFocusable(ref.current)?.focus();
 
-    if (value === initialValue) {
-      return;
+    if (value !== initialValue) {
+      onUpdate?.(cellContext.row.original, cellContext.column.id, value);
     }
-
-    onUpdate?.(cellContext.row.original, cellContext.column.id, value);
   };
 
-  const handleCancel = () => {
-    setValue(initialValue);
-  };
+  const handleCancel = () => setValue(initialValue);
 
   // Check if first input column of last row.
   const rows = cellContext.table.getRowModel().flatRows;
@@ -131,12 +130,12 @@ const StringBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
   return (
     <Input.Root>
       <Input.TextInput
-        ref={inputRef}
+        ref={ref}
         variant='subdued'
         placeholder={placeholder ? 'Add row...' : undefined}
-        classNames={['is-full', textPadding]}
+        classNames={['is-full', textPadding, cell?.classNames]}
         value={value ?? ''}
-        onBlur={() => handleSave()}
+        onBlur={handleSave}
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={(event) => (event.key === 'Enter' && handleSave()) || (event.key === 'Escape' && handleCancel())}
       />
