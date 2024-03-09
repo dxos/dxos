@@ -6,7 +6,7 @@ import { X } from '@phosphor-icons/react';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, { type ComponentPropsWithRef, type FC, forwardRef, useMemo } from 'react';
 
-import { DocAccessor } from '@dxos/echo-schema';
+import { DocAccessor } from '@dxos/echo-schema'; // TODO(burdon): Remove dep.
 import { Avatar, Button, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type TextEditorProps, keymap, listener, TransitionalTextEditor } from '@dxos/react-ui-editor';
 import {
