@@ -130,11 +130,10 @@ const StoryThread: FC<{
   onSelect: () => void;
   onResolve: () => void;
 }> = ({ thread, selected, onSelect, onResolve }) => {
-  const [autoFocus, setAutoFocus] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-
   const [item, setItem] = useState({ text: new TextObject() });
 
+  const [autoFocus, setAutoFocus] = useState(false);
   useEffect(() => {
     if (selected) {
       containerRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });

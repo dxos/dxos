@@ -25,8 +25,8 @@ export {
   getTextInRange,
   fromCursor,
   toCursor,
+  DocAccessor,
   type AutomergeTextCompat,
-  type DocAccessor,
   type EchoDatabase,
   type EchoObject, // TODO(burdon): Remove from API.
   type FilterSource,

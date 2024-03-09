@@ -6,12 +6,18 @@ import { Chat } from '@phosphor-icons/react';
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Message as MessageType } from '@braneframe/types';
-import { TextObject, createDocAccessor, getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
+import {
+  DocAccessor,
+  TextObject,
+  createDocAccessor,
+  getSpaceForObject,
+  getTextContent,
+  useMembers,
+} from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ScrollArea, useTranslation } from '@dxos/react-ui';
+import { ScrollArea, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
-import { createBasicExtensions } from '@dxos/react-ui-editor';
-import { DocAccessor } from '@dxos/react-ui-editor/dist/types/src/extensions/automerge/defs';
+import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadLayout } from '@dxos/react-ui-thread';
 
@@ -45,15 +51,17 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
   const { t } = useTranslation(THREAD_PLUGIN);
   const [autoFocus, setAutoFocus] = useState(autoFocusTextbox);
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
+  const { themeMode } = useThemeContext();
 
-  // TODO(burdon): Change to extension.
   const textboxMetadata = getMessageMetadata(thread.id, identity);
   const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
   const doc = useMemo(() => createDocAccessor(nextMessage.text), [nextMessage]);
   const extensions = useMemo(
     () => [
-      //
+      // TODO(burdon): Theme.
       createBasicExtensions({ placeholder: t('message placeholder') }),
+      createThemeExtensions({ themeMode }),
+      createDataExtensions({ id: nextMessage.text.id, text: doc }),
       command,
     ],
     [],

@@ -43,7 +43,6 @@ const Story = () => {
     },
   ]);
 
-  // TODO(burdon): Change to extension.
   const [item] = useState(new TextObject());
 
   // TODO(thure): Why does pressing Enter clear the text content?

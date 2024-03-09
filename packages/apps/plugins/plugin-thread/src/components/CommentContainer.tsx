@@ -6,11 +6,17 @@ import { X } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Message as MessageType } from '@braneframe/types';
-import { TextObject, createDocAccessor, getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
+import {
+  DocAccessor,
+  TextObject,
+  createDocAccessor,
+  getSpaceForObject,
+  getTextContent,
+  useMembers,
+} from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button, Tooltip, useTranslation } from '@dxos/react-ui';
-import { createBasicExtensions } from '@dxos/react-ui-editor';
-import { DocAccessor } from '@dxos/react-ui-editor/dist/types/src/extensions/automerge/defs';
+import { Button, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, ThreadHeading } from '@dxos/react-ui-thread';
 
@@ -37,14 +43,16 @@ export const CommentContainer = ({
   const { t } = useTranslation(THREAD_PLUGIN);
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
   const [autoFocus, setAutoFocus] = useState(!!autoFocusTextbox);
+  const { themeMode } = useThemeContext();
 
-  // TODO(burdon): Change to extension.
+  const textboxMetadata = getMessageMetadata(thread.id, identity);
   const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
   const doc = useMemo(() => createDocAccessor(nextMessage.text), [nextMessage]);
   const extensions = useMemo(
     () => [
-      //
       createBasicExtensions({ placeholder: t('message placeholder') }),
+      createThemeExtensions({ themeMode }),
+      createDataExtensions({ id: nextMessage.text.id, text: doc }),
       command,
     ],
     [],
@@ -104,8 +112,6 @@ export const CommentContainer = ({
       }
     }
   };
-
-  const textboxMetadata = getMessageMetadata(thread.id, identity);
 
   return (
     <Thread onClickCapture={onAttend} onFocusCapture={onAttend} current={current} id={thread.id}>

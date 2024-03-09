@@ -169,7 +169,7 @@ export const MessageTextbox = ({
   authorName,
   authorImgSrc,
   authorAvatarProps,
-  disabled, // TODO(burdon): Move upstream to extension.
+  disabled,
   extensions: _extensions,
   ...editorProps
 }: MessageTextboxProps) => {
