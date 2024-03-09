@@ -7,9 +7,9 @@ import React, { type HTMLAttributes, useMemo, useEffect } from 'react';
 import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
 import { useTranslation } from '@dxos/react-ui';
 import {
-  type TextEditorProps,
   type Comment,
   MarkdownEditor,
+  type OldTextEditorProps,
   Toolbar,
   cursorLineMargin,
   editorFillLayoutRoot,
@@ -27,7 +27,7 @@ import { MARKDOWN_PLUGIN } from '../meta';
 export type EditorMainProps = {
   comments?: Comment[];
   toolbar?: boolean;
-} & Pick<TextEditorProps, 'model' | 'readonly' | 'extensions'>;
+} & Pick<OldTextEditorProps, 'model' | 'readonly' | 'extensions'>;
 
 export const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);

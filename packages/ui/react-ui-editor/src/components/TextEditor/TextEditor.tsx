@@ -56,23 +56,6 @@ export type TextEditorSlots = {
   };
 };
 
-export type TextEditorProps = {
-  doc?: string; // TODO(burdon): Rename text/value?
-  model: EditorModel; // TODO(burdon): Optional (e.g., just provide content if readonly).
-  readonly?: boolean; // TODO(burdon): Move into model.
-  autoFocus?: boolean;
-  scrollPastEnd?: boolean;
-  moveToEndOfLine?: boolean;
-  lineWrapping?: boolean;
-  scrollTo?: StateEffect<any>; // TODO(burdon): Restore scroll position: scrollTo EditorView.scrollSnapshot().
-  selection?: { anchor: number; head?: number };
-  placeholder?: string;
-  theme?: ThemeStyles;
-  slots?: TextEditorSlots;
-  extensions?: Extension[];
-  debug?: boolean;
-};
-
 /**
  * @deprecated
  */
@@ -88,7 +71,19 @@ export const defaultSlots: TextEditorSlots = {
 /**
  * @deprecated
  */
-export const MarkdownEditor = forwardRef<EditorView | null, TextEditorProps>(
+export type OldTextEditorProps = Omit<TextEditorProps, 'doc'> & {
+  model: EditorModel; // TODO(burdon): Optional (e.g., just provide content if readonly).
+  readonly?: boolean; // TODO(burdon): Move into model.
+  scrollPastEnd?: boolean;
+  lineWrapping?: boolean;
+  placeholder?: string;
+  theme?: ThemeStyles;
+};
+
+/**
+ * @deprecated
+ */
+export const MarkdownEditor = forwardRef<EditorView | null, OldTextEditorProps>(
   ({ readonly, placeholder, theme = markdownTheme, slots, extensions: _extensions, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const updatedSlots = defaultsDeep({}, slots, defaultSlots);
@@ -110,7 +105,7 @@ export const MarkdownEditor = forwardRef<EditorView | null, TextEditorProps>(
   },
 );
 
-const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
+const BaseTextEditor = forwardRef<EditorView | null, OldTextEditorProps>(
   (
     {
       model,
@@ -262,11 +257,22 @@ const BaseTextEditor = forwardRef<EditorView | null, TextEditorProps>(
   },
 );
 
+export type TextEditorProps = {
+  doc?: string; // TODO(burdon): Rename text/value?
+  autoFocus?: boolean;
+  scrollTo?: StateEffect<any>; // TODO(burdon): Restore scroll position: scrollTo EditorView.scrollSnapshot().
+  moveToEndOfLine?: boolean;
+  selection?: { anchor: number; head?: number };
+  extensions?: Extension[];
+  slots?: TextEditorSlots;
+  debug?: boolean;
+};
+
 /**
  * Thin wrapper for text editor.
  * Handles tabster and focus management.
  */
-export const TransitionalTextEditor = forwardRef<EditorView | null, Omit<TextEditorProps, 'model' | 'readonly'>>(
+export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
   (
     {
       doc,

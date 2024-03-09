@@ -8,7 +8,7 @@ import React, { type ComponentPropsWithRef, type FC, forwardRef, useMemo } from 
 
 // TODO(burdon): Remove dep.
 import { Avatar, Button, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { type TextEditorProps, keymap, listener, TransitionalTextEditor } from '@dxos/react-ui-editor';
+import { type TextEditorProps, keymap, listener, TextEditor } from '@dxos/react-ui-editor';
 import {
   focusRing,
   hoverableControlItem,
@@ -190,7 +190,7 @@ export const MessageTextbox = ({
 
   return (
     <MessageMeta {...{ id, authorId, authorName, authorImgSrc, authorAvatarProps }} continues={false}>
-      <TransitionalTextEditor
+      <TextEditor
         extensions={extensions}
         slots={{ root: { className: mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50') } }}
         {...editorProps}

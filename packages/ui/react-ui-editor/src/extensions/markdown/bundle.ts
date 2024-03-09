@@ -16,11 +16,11 @@ import { type ThemeMode } from '@dxos/react-ui';
 import { isNotFalsy } from '@dxos/util';
 
 import { markdownHighlightStyle, markdownTagsExtensions } from './highlight';
-import { type TextEditorProps } from '../../components';
+import { type OldTextEditorProps } from '../../components';
 
 export type MarkdownBundleOptions = {
   themeMode?: ThemeMode;
-} & Pick<TextEditorProps, 'lineWrapping' | 'placeholder'>;
+} & Pick<OldTextEditorProps, 'lineWrapping' | 'placeholder'>;
 
 /**
  * Markdown bundle.
