@@ -1038,6 +1038,9 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../../core/echo/echo-signals
+      '@dxos/functions-signal':
+        specifier: workspace:*
+        version: link:../../../experimental/functions-signal
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage

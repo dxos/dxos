@@ -42,7 +42,7 @@ export class MutationsSignalTriggerBuilder<T extends EchoObject> {
     const bus = this._busInterconnect.createConnected(this._space);
     const filter = this._filter;
     const filterCheck = filter ? (obj: T) => filterMatch(filter, obj) : () => true;
-    const isUnique = this._uniqueComparator;
+    const areEqual = this._uniqueComparator;
     const debounceMs = this._debounceIntervalMs;
     const previousCheckedById = new Map<string, T>();
     const timeoutById = new Map<string, any>();
@@ -55,7 +55,7 @@ export class MutationsSignalTriggerBuilder<T extends EchoObject> {
         return;
       }
       const previous = previousCheckedById.get(object.id);
-      if (previous && isUnique(previous, object)) {
+      if (previous && areEqual(previous, object)) {
         return;
       }
       previousCheckedById.set(object.id, object);

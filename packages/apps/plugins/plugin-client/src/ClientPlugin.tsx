@@ -16,6 +16,7 @@ import {
 } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
+import { MutationSignalEmitter } from '@dxos/functions-signal';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
 import { type TypeCollection } from '@dxos/react-client/echo';
 
@@ -58,6 +59,7 @@ export const ClientPlugin = ({
   registerSignalFactory();
 
   let client: Client;
+  let mutationSignals: MutationSignalEmitter;
   let error: unknown = null;
 
   return {
@@ -66,6 +68,7 @@ export const ClientPlugin = ({
       let firstRun = false;
 
       client = new Client({ config: new Config(await Storage(), Envs(), Local(), Defaults()), ...options });
+      mutationSignals = new MutationSignalEmitter(client);
 
       try {
         await client.initialize();
@@ -107,6 +110,8 @@ export const ClientPlugin = ({
           // firstRun = !client.spaces.default.properties[key];
           client.spaces.default.properties[key] = Date.now();
         }
+
+        mutationSignals.start();
       } catch (err) {
         error = err;
       }
@@ -135,6 +140,7 @@ export const ClientPlugin = ({
       }
     },
     unload: async () => {
+      mutationSignals.stop();
       await client.destroy();
     },
     provides: {
