@@ -6,14 +6,7 @@ import { X } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Message as MessageType } from '@braneframe/types';
-import {
-  DocAccessor,
-  TextObject,
-  createDocAccessor,
-  getSpaceForObject,
-  getTextContent,
-  useMembers,
-} from '@dxos/react-client/echo';
+import { TextObject, createDocAccessor, getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
@@ -47,15 +40,14 @@ export const CommentContainer = ({
 
   const textboxMetadata = getMessageMetadata(thread.id, identity);
   const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
-  const doc = useMemo(() => createDocAccessor(nextMessage.text), [nextMessage]);
   const extensions = useMemo(
     () => [
       createBasicExtensions({ placeholder: t('message placeholder') }),
       createThemeExtensions({ themeMode }),
-      createDataExtensions({ id: nextMessage.text.id, text: doc }),
+      createDataExtensions({ id: nextMessage.text.id, text: createDocAccessor(nextMessage.text) }),
       command,
     ],
-    [],
+    [nextMessage],
   );
 
   // TODO(thure): Because of the way the `autoFocus` property is handled by TextEditor, this is the least-bad way of
@@ -154,7 +146,7 @@ export const CommentContainer = ({
       ))}
       <MessageTextbox
         autoFocus={autoFocus}
-        doc={DocAccessor.getValue(doc)}
+        doc={getTextContent(nextMessage.text)}
         extensions={extensions}
         onSend={handleCreate}
         {...textboxMetadata}

@@ -239,39 +239,6 @@ export const defaultSlots: TextEditorSlots = {
  * @deprecated
  */
 // TODO(burdon): Replace with hooks.
-// export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
-//   (
-//     { readonly, placeholder, lineWrapping = true, theme = textTheme, slots, extensions: _extensions, ...props },
-//     forwardedRef,
-//   ) => {
-//     const { themeMode } = useThemeContext();
-//     const updatedSlots = defaultsDeep({}, slots, defaultSlots);
-//     const extensions = useMemo(
-//       () => [
-//         createBasicExtensions({ lineWrapping, placeholder }),
-//         createThemeExtensions({ themeMode }),
-//         ...(_extensions ?? []),
-//       ],
-//       [themeMode, placeholder, lineWrapping, _extensions],
-//     );
-//
-//     return (
-//       <BaseTextEditor
-//         ref={forwardedRef}
-//         readonly={readonly}
-//         extensions={extensions}
-//         theme={theme}
-//         slots={updatedSlots}
-//         {...props}
-//       />
-//     );
-//   },
-// );
-
-/**
- * @deprecated
- */
-// TODO(burdon): Replace with hooks.
 export const MarkdownEditor = forwardRef<EditorView | null, TextEditorProps>(
   ({ readonly, placeholder, theme = markdownTheme, slots, extensions: _extensions, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();

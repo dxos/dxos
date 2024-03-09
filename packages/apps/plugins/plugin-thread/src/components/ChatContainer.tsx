@@ -6,14 +6,7 @@ import { Chat } from '@phosphor-icons/react';
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Message as MessageType } from '@braneframe/types';
-import {
-  DocAccessor,
-  TextObject,
-  createDocAccessor,
-  getSpaceForObject,
-  getTextContent,
-  useMembers,
-} from '@dxos/react-client/echo';
+import { TextObject, createDocAccessor, getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ScrollArea, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
@@ -55,16 +48,14 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
 
   const textboxMetadata = getMessageMetadata(thread.id, identity);
   const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
-  const doc = useMemo(() => createDocAccessor(nextMessage.text), [nextMessage]);
   const extensions = useMemo(
     () => [
-      // TODO(burdon): Theme.
       createBasicExtensions({ placeholder: t('message placeholder') }),
       createThemeExtensions({ themeMode }),
-      createDataExtensions({ id: nextMessage.text.id, text: doc }),
+      createDataExtensions({ id: nextMessage.text.id, text: createDocAccessor(nextMessage.text) }),
       command,
     ],
-    [],
+    [nextMessage],
   );
 
   // TODO(thure): Factor out.
@@ -142,7 +133,7 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
       </ScrollArea.Root>
       <MessageTextbox
         autoFocus={autoFocus}
-        doc={DocAccessor.getValue(doc)}
+        doc={getTextContent(nextMessage.text)}
         extensions={extensions}
         onSend={handleCreate}
         {...textboxMetadata}
