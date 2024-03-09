@@ -4,7 +4,7 @@
 
 import '@dxosTheme';
 
-import { BookBookmark } from '@phosphor-icons/react';
+import { Chat, ImageSquare, StackSimple, TextAa } from '@phosphor-icons/react';
 import React from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
@@ -29,7 +29,25 @@ const StorybookPlankHeading = ({
     <AttentionProvider attended={storybookAttended}>
       <div role='none' className={plankHeadingLayout}>
         <PlankHeading.Button attendableId={attendableId}>
-          <BookBookmark {...plankHeadingIconProps} />
+          <Chat {...plankHeadingIconProps} />
+        </PlankHeading.Button>
+        <PlankHeading.Label attendableId={attendableId}>{label}</PlankHeading.Label>
+      </div>
+      <div role='none' className={plankHeadingLayout}>
+        <PlankHeading.Button attendableId={attendableId}>
+          <StackSimple {...plankHeadingIconProps} />
+        </PlankHeading.Button>
+        <PlankHeading.Label attendableId={attendableId}>{label}</PlankHeading.Label>
+      </div>
+      <div role='none' className={plankHeadingLayout}>
+        <PlankHeading.Button attendableId={attendableId}>
+          <TextAa {...plankHeadingIconProps} />
+        </PlankHeading.Button>
+        <PlankHeading.Label attendableId={attendableId}>{label}</PlankHeading.Label>
+      </div>
+      <div role='none' className={plankHeadingLayout}>
+        <PlankHeading.Button attendableId={attendableId}>
+          <ImageSquare {...plankHeadingIconProps} />
         </PlankHeading.Button>
         <PlankHeading.Label attendableId={attendableId}>{label}</PlankHeading.Label>
       </div>

@@ -54,9 +54,9 @@ Loading and unloading plugins at runtime from external sources.
 
 Discovery and installation of plugins from a registry.
 
----
+***
 
-::: note Under Development 
+::: note Under Development
 
 Share your feature requests and feedback anytime on [Discord](https://discord.gg/eXVfryv3sW)!
 

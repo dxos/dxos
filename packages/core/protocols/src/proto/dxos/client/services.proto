@@ -419,6 +419,7 @@ message Invitation {
     CANCELLED = 6;
     TIMEOUT = 7;
     ERROR = 8;
+    EXPIRED = 9;
   }
 
   /// Local identifier (random).
@@ -439,7 +440,7 @@ message Invitation {
   /// Local state.
   State state = 6;
 
-  /// Timeout (ms).
+  /// Timeout for guest to complete invitation once connected (ms).
   optional int32 timeout = 7;
 
   /// Guest's identity.
@@ -453,6 +454,17 @@ message Invitation {
 
   /// Path or identifier to navigate to after successful authentication.
   optional string target = 11;
+
+  // TODO(nf): should these exist elsewhere since they only have meaning to the host?
+  /// Host should resume invitation on startup until timeout.
+  optional bool persistent = 12;
+
+  optional google.protobuf.Timestamp created = 13;
+
+  /// Number of seconds the host will honor the invitation. 0 means the invitation persists forever.
+  // TODO(nf): some feedback mechanism or GC for immortal invitations?
+  // TODO(nf): should the creator have a way to make an invitation last as long as the client? this was the previous behavior.
+  optional int32 lifetime = 14;
 }
 
 message AcceptInvitationRequest {
@@ -480,6 +492,8 @@ message QueryInvitationsResponse {
   enum Action {
     ADDED = 0;
     REMOVED = 1;
+    SAVED = 2;
+    LOAD_COMPLETE = 3;
   }
 
   enum Type {
@@ -490,6 +504,13 @@ message QueryInvitationsResponse {
   Action action = 1;
   Type type = 2;
   repeated Invitation invitations = 3;
+  // indicate to caller that invitations of this action/type were existing at time of initial response.
+  optional bool existing = 4;
+}
+
+// Informational, consumers must share invitations to receive CancellableInvitation
+message LoadPersistentInvitationsResponse {
+  repeated Invitation invitations = 1;
 }
 
 service InvitationsService {
@@ -498,6 +519,7 @@ service InvitationsService {
   rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
   rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
   rpc QueryInvitations(google.protobuf.Empty) returns (stream QueryInvitationsResponse);
+  rpc LoadPersistentInvitations(google.protobuf.Empty) returns (LoadPersistentInvitationsResponse);
 }
 
 //
