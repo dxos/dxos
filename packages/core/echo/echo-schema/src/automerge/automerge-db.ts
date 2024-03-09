@@ -108,7 +108,7 @@ export class AutomergeDb {
   @synchronized
   async update(spaceState: SpaceState) {
     if (!this._ctx) {
-      return this.open(spaceState);
+      return;
     }
     if (spaceState.rootUrl === this._automergeDocLoader.getSpaceRootDocHandle().url) {
       return;

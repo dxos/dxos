@@ -10,14 +10,14 @@ import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
 import { type Signal } from './signal-bus';
-import { type SignalBusInterconnect } from './signal-bus-interconnect';
+import { SignalBusInterconnect } from './signal-bus-interconnect';
 
 export class MutationSignalEmitter {
   private readonly spaceSubscriptions = new ComplexMap<Space, Context>((space) => space.key.toHex());
 
   constructor(
     private readonly _client: Client,
-    private readonly _busInterconnect: SignalBusInterconnect,
+    private readonly _busInterconnect: SignalBusInterconnect = SignalBusInterconnect.global,
   ) {}
 
   public start() {

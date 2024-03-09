@@ -33,7 +33,7 @@
     "@dxos/echo-generator": "workspace:*",
     "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
-    "@dxos/functions": "workspace:*",
+    "@dxos/functions-signal": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/local-storage": "workspace:*",

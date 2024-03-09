@@ -1,13 +1,18 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import React, { useContext, useEffect, useState } from 'react';
+
 import { SignalBusContext } from '@braneframe/plugin-script';
-import { useContext, useEffect, useState } from 'react';
 import { raise } from '@dxos/debug';
-import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
-import { type Signal } from '@dxos/functions';
-import React from 'react';
+import { type Signal } from '@dxos/functions-signal';
 import { PublicKey } from '@dxos/keys';
-import { Select } from '@dxos/react-ui';
-import { humanize } from '@dxos/util';
 import { useClient } from '@dxos/react-client';
+import { Select } from '@dxos/react-ui';
+import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table';
+import { humanize } from '@dxos/util';
+
 import { Json } from './Tree';
 
 const { helper, builder } = createColumnBuilder<Signal>();

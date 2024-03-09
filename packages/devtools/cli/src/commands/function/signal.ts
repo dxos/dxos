@@ -6,7 +6,7 @@ import * as S from '@effect/schema/Schema';
 import { Flags } from '@oclif/core';
 
 import { type Client, PublicKey } from '@dxos/client';
-import { type Signal as SignalType, Signal as SignalSchema, SignalBusInterconnect } from '@dxos/functions';
+import { type Signal as SignalType, Signal as SignalSchema, SignalBusInterconnect } from '@dxos/functions-signal';
 
 import { BaseCommand } from '../../base-command';
 

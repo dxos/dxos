@@ -27,6 +27,7 @@
     "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/chess-app": "workspace:*",
+    "@dxos/functions-signal": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@preact/signals-core": "^1.5.1",

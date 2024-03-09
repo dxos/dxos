@@ -53,9 +53,6 @@
       "path": "../../../core/echo/text-model"
     },
     {
-      "path": "../../../core/functions"
-    },
-    {
       "path": "../../../core/mesh/rpc"
     },
     {
@@ -63,6 +60,9 @@
     },
     {
       "path": "../../../core/protocols"
+    },
+    {
+      "path": "../../../experimental/functions-signal"
     },
     {
       "path": "../../../sdk/app-framework"

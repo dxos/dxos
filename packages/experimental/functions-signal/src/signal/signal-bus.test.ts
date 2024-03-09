@@ -12,7 +12,7 @@ import { test, describe, afterTest } from '@dxos/test';
 import { type Signal, SignalBus } from './signal-bus';
 import { SignalBusInterconnect } from './signal-bus-interconnect';
 
-describe.only('Signal bus', () => {
+describe('Signal bus', () => {
   test('inter-peer emit', async () => {
     const { hostSpace, guestSpace } = await setupMultiPeer();
     const hostBus = new SignalBus(hostSpace);

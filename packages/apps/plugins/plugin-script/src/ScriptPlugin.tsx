@@ -11,7 +11,7 @@ import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { Script as ScriptType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { SignalBus } from '@dxos/functions';
+import { SignalBus } from '@dxos/functions-signal';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import {
   type Space,

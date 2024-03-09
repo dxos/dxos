@@ -30,6 +30,7 @@
     "@codemirror/view": "^6.25.0",
     "@dxos/async": "workspace:*",
     "@dxos/display-name": "workspace:*",
+    "@dxos/functions-signal": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",

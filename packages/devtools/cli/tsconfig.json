@@ -74,6 +74,9 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../experimental/functions-signal"
+    },
+    {
       "path": "../../sdk/client"
     },
     {

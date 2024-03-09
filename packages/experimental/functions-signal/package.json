@@ -1,0 +1,36 @@
+{
+  "name": "@dxos/functions-signal",
+  "version": "0.4.6",
+  "private": false,
+  "description": "Ephemeral messaging and function invocation framework",
+  "homepage": "https://github.com/dxos/dxos/tree/master/packages/protocols",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": "github:dxos/dxos",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect/schema": "^0.62.1",
+    "@types/node": "^18.11.9",
+    "effect": "^2.3.1"
+  },
+  "devDependencies": {
+    "@dxos/test": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

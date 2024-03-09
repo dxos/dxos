@@ -4,3 +4,4 @@
 
 export * from './signal-bus';
 export * from './signal-bus-interconnect';
+export * from './echo-mutation-signal';

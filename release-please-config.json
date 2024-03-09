@@ -584,6 +584,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/functions-signal/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/gem-core/package.json",
           "jsonpath": "$.version"
         },

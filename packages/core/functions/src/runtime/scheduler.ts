@@ -11,6 +11,7 @@ import { type Client, PublicKey } from '@dxos/client';
 import { type Space, TextObject } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { Filter, createSubscription, type Query, subscribe } from '@dxos/echo-schema';
+import { type Signal, type SignalBus, MutationSignalEmitter, SignalBusInterconnect } from '@dxos/functions-signal';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
@@ -24,9 +25,6 @@ import {
   type SignalSubscription,
   type TriggerSubscription,
 } from '../manifest';
-import { type Signal, type SignalBus } from '../signal';
-import { MutationSignalEmitter } from '../signal/echo-mutation-signal';
-import { SignalBusInterconnect } from '../signal/signal-bus-interconnect';
 
 type Callback = (data: FunctionSubscriptionEvent) => Promise<number>;
 

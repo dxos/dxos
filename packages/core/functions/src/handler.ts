@@ -8,10 +8,9 @@ import * as Either from 'effect/Either';
 import { type Client, PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { isTypedObject, type TypedObject } from '@dxos/echo-schema';
+import { type Signal } from '@dxos/functions-signal';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
-
-import { type Signal } from './signal/signal-bus';
 
 // TODO(burdon): No response?
 export interface Response {

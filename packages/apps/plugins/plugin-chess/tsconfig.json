@@ -32,6 +32,9 @@
       "path": "../../../experimental/chess-app"
     },
     {
+      "path": "../../../experimental/functions-signal"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {

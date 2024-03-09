@@ -13,31 +13,22 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../../tools/executors/test"
     },
     {
       "path": "../../common/context"
     },
     {
-      "path": "../../common/invariant"
-    },
-    {
       "path": "../../common/log"
-    },
-    {
-      "path": "../../common/node-std"
     },
     {
       "path": "../../common/util"
     },
     {
-      "path": "../../experimental/functions-signal"
+      "path": "../../core/echo/echo-schema"
     },
     {
       "path": "../../sdk/client"
-    },
-    {
-      "path": "../echo/echo-schema"
     }
   ]
 }

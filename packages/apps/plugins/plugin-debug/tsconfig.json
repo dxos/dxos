@@ -62,13 +62,13 @@
       "path": "../../../core/echo/text-model"
     },
     {
-      "path": "../../../core/functions"
-    },
-    {
       "path": "../../../core/protocols"
     },
     {
       "path": "../../../devtools/devtools"
+    },
+    {
+      "path": "../../../experimental/functions-signal"
     },
     {
       "path": "../../../sdk/app-framework"
