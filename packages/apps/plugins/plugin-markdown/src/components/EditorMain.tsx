@@ -49,13 +49,13 @@ export type EditorMainProps = {
 } & Pick<TextEditorProps, 'doc' | 'extensions'>;
 
 // TODO(burdon): Invalid cursor error when switching between editors.
-
 export const EditorMain = ({ id, readonly, toolbar, comments, doc, extensions: _extensions }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
 
+  // TODO(burdon): Remove useEditorView. Check interaction with useComments with @wittjosiah.
   const [editorRef, viewInvalidated] = useEditorView(id);
-  useComments(viewInvalidated ? null : editorRef.current, id, comments); // TODO(burdon): Reconcile id.
+  useComments(viewInvalidated ? null : editorRef.current, id, comments);
   const handleAction = useActionHandler(editorRef.current);
   useTest(editorRef.current);
 
@@ -73,11 +73,11 @@ export const EditorMain = ({ id, readonly, toolbar, comments, doc, extensions: _
     }
   });
 
-  // Toolbar state.
   const [formattingState, formattingObserver] = useFormattingState();
   const extensions = useMemo(() => {
     return [
       _extensions,
+      formattingObserver,
       createBasicExtensions({ readonly, placeholder: t('editor placeholder'), scrollPastEnd: true }),
       createMarkdownExtensions({ themeMode }),
       createThemeExtensions({
@@ -85,15 +85,14 @@ export const EditorMain = ({ id, readonly, toolbar, comments, doc, extensions: _
         slots: {
           editor: { className: editorFillLayoutEditor },
           content: {
-            // TODO(burdon): Override (!) required since base theme sets padding and scrollPastEnd sets bottom.
+            // TODO(burdon): Overrides (!) are required since the built-in base theme sets padding and scrollPastEnd sets bottom.
             className: mx('!pli-2 sm:!pli-6 md:!pli-8 !pbs-2 sm:!pbs-6 md:!pbs-8'),
           },
         },
       }),
-      // TODO(burdon): Other extensions.
+      // TODO(burdon): Other extensions?
       decorateMarkdown(),
       cursorLineMargin,
-      formattingObserver,
     ].filter(nonNullable);
   }, [_extensions, formattingObserver]);
 
@@ -118,10 +117,10 @@ export const EditorMain = ({ id, readonly, toolbar, comments, doc, extensions: _
         <TextEditor
           dataTestId='composer.markdownRoot'
           ref={editorRef}
-          autoFocus
-          moveToEndOfLine
           doc={doc}
           extensions={extensions}
+          autoFocus
+          moveToEndOfLine
           className={mx(
             focusRing,
             attentionSurface,

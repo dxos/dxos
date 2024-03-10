@@ -7,23 +7,22 @@ import { type MutableRefObject, useRef, useState } from 'react';
 
 /**
  * Hook for accessing the editor view.
- * @deprecated
+ * @deprecated use useTextEditor instead.
  *
  * ```tsx
  * const Test = () => {
  *   const [editorRef, viewInvalidated] = useEditorView();
  *   useEffect(() => {
  *     if (editorRef.current && !viewInvalidated) {
- *       editorView?.focus();
+ *       editorRef.current.focus();
  *     }
- *   }, [editorView]);
+ *   }, [editorRef]);
  *   return <TextEditor ref={editorRef} />;
  * };
  * ```
  */
-// TODO(burdon): Remove.
 export const useEditorView = (id: string): [MutableRefObject<EditorView | null>, boolean] => {
-  const editorRef = useRef<EditorView | null>(null);
+  const editorRef = useRef<EditorView>(null);
   const [prev, setPrev] = useState<[EditorView | null, string]>([null, '']);
   if (prev[0] !== editorRef.current) {
     setPrev([editorRef.current, id]);
