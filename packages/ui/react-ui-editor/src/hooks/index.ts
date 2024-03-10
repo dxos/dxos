@@ -8,5 +8,4 @@ export * from './extension-utils';
 
 export * from './useActionHandler';
 export * from './useEditorView';
-export * from './useTextEditor';
 export * from './useTextModel';

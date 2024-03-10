@@ -7,7 +7,7 @@ import React, { type FC, useMemo } from 'react';
 import { type Document as DocumentType } from '@braneframe/types';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { type Comment, useTextModel } from '@dxos/react-ui-editor';
+import { type Comment, createDataExtensions, useDocAccessor } from '@dxos/react-ui-editor';
 
 import EditorMain, { type EditorMainProps } from './EditorMain';
 
@@ -21,16 +21,20 @@ const DocumentMain: FC<{ document: DocumentType } & Pick<EditorMainProps, 'toolb
 }) => {
   const identity = useIdentity();
   const space = getSpaceForObject(document);
-  const model = useTextModel({ identity, space, text: document.content });
+  const { id, doc, accessor } = useDocAccessor(document.content);
+  const extensions = useMemo(
+    () => [
+      //
+      createDataExtensions({ id, text: accessor, space, identity }),
+    ],
+    [doc, accessor],
+  );
+
   const comments = useMemo<Comment[]>(() => {
     return document.comments?.map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! }));
   }, [document.comments]);
 
-  if (!model) {
-    return null;
-  }
-
-  return <EditorMain model={model} comments={comments} {...props} />;
+  return <EditorMain id={id} doc={doc} extensions={extensions} comments={comments} {...props} />;
 };
 
 export default DocumentMain;

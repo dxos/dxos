@@ -2,48 +2,69 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type HTMLAttributes, useMemo, useEffect } from 'react';
+import { type EditorView } from '@codemirror/view';
+import React, { useMemo, useEffect } from 'react';
 
 import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
-import { useTranslation } from '@dxos/react-ui';
+import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type Comment,
-  MarkdownEditor,
-  type BaseTextEditorProps,
   Toolbar,
   cursorLineMargin,
   editorFillLayoutRoot,
   editorFillLayoutEditor,
-  focusComment,
   useComments,
   useEditorView,
   useActionHandler,
   useFormattingState,
+  TextEditor,
+  type TextEditorProps,
+  createThemeExtensions,
+  createMarkdownExtensions,
+  decorateMarkdown,
+  focusComment,
+  createBasicExtensions,
 } from '@dxos/react-ui-editor';
 import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
+import { nonNullable } from '@dxos/util';
 
 import { MARKDOWN_PLUGIN } from '../meta';
 
-export type EditorMainProps = {
-  comments?: Comment[];
-  toolbar?: boolean;
-} & Pick<BaseTextEditorProps, 'model' | 'readonly' | 'extensions'>;
-
-export const EditorMain = ({ model, comments, toolbar, extensions: _extensions, ...props }: EditorMainProps) => {
-  const { t } = useTranslation(MARKDOWN_PLUGIN);
-
-  const [editorRef, viewInvalidated] = useEditorView(model.id);
-  useComments(viewInvalidated ? null : editorRef.current, model.id, comments);
-  const handleAction = useActionHandler(editorRef.current);
-
-  // Expose editor view for playwright tests.
-  // TODO(wittjosiah): Find a better way to expose this or find a way to limit it to test runs.
+// Expose editor view for playwright tests.
+// TODO(wittjosiah): Find a better way to expose this or find a way to limit it to test runs.
+const useTest = (view: EditorView | null) => {
   useEffect(() => {
     const composer = (window as any).composer;
     if (composer) {
-      composer.editorView = editorRef.current;
+      composer.editorView = view;
     }
-  }, [editorRef.current]);
+  }, [view]);
+};
+
+export type EditorMainProps = {
+  id: string;
+  doc?: string; // TODO(burdon): Rename content.
+  comments?: Comment[];
+  toolbar?: boolean;
+  readonly?: boolean;
+} & Pick<TextEditorProps, 'extensions'>;
+
+export const EditorMain = ({
+  id,
+  doc,
+  comments,
+  toolbar,
+  readonly,
+  extensions: _extensions,
+  ...props
+}: EditorMainProps) => {
+  const { t } = useTranslation(MARKDOWN_PLUGIN);
+  const { themeMode } = useThemeContext();
+
+  const [editorRef, viewInvalidated] = useEditorView(id);
+  useComments(viewInvalidated ? null : editorRef.current, id, comments);
+  const handleAction = useActionHandler(editorRef.current);
+  useTest(editorRef.current);
 
   // Focus comment.
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
@@ -61,10 +82,28 @@ export const EditorMain = ({ model, comments, toolbar, extensions: _extensions, 
 
   // Toolbar state.
   const [formattingState, formattingObserver] = useFormattingState();
-  const extensions = useMemo(
-    () => [...(_extensions ?? []), formattingObserver, cursorLineMargin],
-    [_extensions, formattingObserver],
-  );
+  const extensions = useMemo(() => {
+    console.log('??', _extensions?.length);
+    return [
+      createBasicExtensions({ readonly, placeholder: t('editor placeholder'), scrollPastEnd: true }),
+      createMarkdownExtensions({ themeMode }),
+      createThemeExtensions({
+        themeMode,
+        slots: {
+          editor: { className: editorFillLayoutEditor },
+          content: {
+            // TODO(burdon): Override (!) required since base theme sets padding and scrollPastEnd sets bottom.
+            className: mx('!pli-2 sm:!pli-6 md:!pli-8 !pbs-2 sm:!pbs-6 md:!pbs-8'),
+          },
+        },
+      }),
+      // TODO(burdon): Other extensions.
+      decorateMarkdown(),
+      cursorLineMargin,
+      formattingObserver,
+      _extensions,
+    ].filter(nonNullable);
+  }, [_extensions, formattingObserver]);
 
   return (
     <>
@@ -84,33 +123,21 @@ export const EditorMain = ({ model, comments, toolbar, extensions: _extensions, 
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
         className='is-full bs-full overflow-hidden data-[toolbar=disabled]:pbs-2'
       >
-        <MarkdownEditor
+        <TextEditor
+          dataTestId='composer.markdownRoot'
           ref={editorRef}
           autoFocus
-          scrollPastEnd
           moveToEndOfLine
-          placeholder={t('editor placeholder')}
-          model={model}
+          doc={doc}
           extensions={extensions}
-          slots={{
-            root: {
-              className: mx(
-                focusRing,
-                attentionSurface,
-                textBlockWidth,
-                editorFillLayoutRoot,
-                'md:border-is md:border-ie separator-separator focus-visible:ring-inset',
-                !toolbar && 'border-bs separator-separator',
-              ),
-              'data-testid': 'composer.markdownRoot',
-            } as HTMLAttributes<HTMLDivElement>,
-            content: {
-              // TODO(burdon): Override (!) required since base theme sets padding and scrollPastEnd sets bottom.
-              className: mx('!pli-2 sm:!pli-6 md:!pli-8 !pbs-2 sm:!pbs-6 md:!pbs-8'),
-            },
-            editor: { className: editorFillLayoutEditor },
-          }}
-          {...props}
+          className={mx(
+            focusRing,
+            attentionSurface,
+            textBlockWidth,
+            editorFillLayoutRoot,
+            'md:border-is md:border-ie separator-separator focus-visible:ring-inset',
+            !toolbar && 'border-bs separator-separator',
+          )}
         />
       </div>
     </>

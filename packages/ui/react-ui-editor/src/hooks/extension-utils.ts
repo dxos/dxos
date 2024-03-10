@@ -161,9 +161,12 @@ export const createDataExtensions = ({ id, text, space, identity }: DataExtensio
 };
 
 // TODO(burdon): Factor out.
-export const useDocAccessor = <T = any>(text: TextObject): { doc: string | undefined; accessor: DocAccessor<T> } => {
+export const useDocAccessor = <T = any>(
+  text: TextObject,
+): { id: string; doc: string | undefined; accessor: DocAccessor<T> } => {
   return useMemo(
     () => ({
+      id: text.id,
       doc: getTextContent(text),
       accessor: createDocAccessor<T>(text),
     }),

@@ -25,6 +25,7 @@
   "dependencies": {
     "@braneframe/plugin-settings": "workspace:*",
     "@braneframe/types": "workspace:*",
+    "@codemirror/view": "^6.25.0",
     "@dxos/async": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/keys": "workspace:*",

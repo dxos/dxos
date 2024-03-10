@@ -2099,6 +2099,9 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@codemirror/view':
+        specifier: ^6.25.0
+        version: 6.25.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async

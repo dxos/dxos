@@ -9,10 +9,10 @@ import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
+  type Extension,
   createBasicExtensions,
   createDataExtensions,
   createThemeExtensions,
-  type Extension,
   useDocAccessor,
   useTextEditor,
 } from '@dxos/react-ui-editor';

@@ -29,7 +29,7 @@ export type EditorModel = {
 };
 
 // TODO(burdon): Remove.
-export type UseTextModelProps = {
+type UseTextModelProps = {
   text?: TextObject;
   space?: Space;
   identity?: Identity | null;
@@ -39,7 +39,7 @@ export type UseTextModelProps = {
  * @deprecated
  */
 // TODO(burdon): Remove.
-export const useTextModel = (props: UseTextModelProps): EditorModel | undefined =>
+const useTextModel = (props: UseTextModelProps): EditorModel | undefined =>
   useMemo(() => createEditorModel(props), Object.values(props));
 
 // TODO(burdon): Remove.
