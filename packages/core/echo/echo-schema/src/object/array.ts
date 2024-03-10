@@ -4,15 +4,9 @@
 
 import { inspect, type CustomInspectFunction } from 'node:util';
 
-import { type DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
-import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
-
-import { AbstractEchoObject } from './object';
-import { type AutomergeOptions, type TypedObject, isAutomergeObject } from './typed-object';
+import { todo } from '@dxos/debug';
+import { type AutomergeOptions, type TypedObject } from './typed-object';
 import { base } from './types';
-import { AutomergeArray } from '../automerge';
-import { REFERENCE_TYPE_TAG } from '../automerge/types';
 
 const isIndex = (property: string | symbol): property is string =>
   typeof property === 'string' && parseInt(property).toString() === property;
@@ -48,72 +42,11 @@ export class EchoArray<T> implements Array<T> {
   }
 
   constructor(items: T[] = [], opts?: AutomergeOptions) {
-    // Redirect to automerge by default.
-    if (opts?.automerge ?? true) {
-      return new AutomergeArray(items) as any;
-    }
-
-    this._uninitialized = [...items];
-
-    // Change type returned by `new`.
-    return new Proxy<EchoArray<T>>([] as any as EchoArray<T>, {
-      defineProperty: (_, property: string | symbol, attributes: PropertyDescriptor): boolean => {
-        Object.defineProperty(this, property, attributes);
-        return true;
-      },
-
-      deleteProperty: (_, p: string | symbol): boolean => {
-        return delete this[p as any];
-      },
-
-      get: (_, property, receiver) => {
-        if (isIndex(property)) {
-          return this._get(+property);
-        } else {
-          return Reflect.get(this, property, receiver);
-        }
-      },
-
-      set: (_, property, value, receiver) => {
-        if (isIndex(property)) {
-          this._set(+property, value);
-          return true;
-        } else {
-          return Reflect.set(this, property, value, receiver);
-        }
-      },
-
-      has: (_, symbol) => {
-        return this._has(symbol);
-      },
-
-      getOwnPropertyDescriptor: (_, p: string | symbol): PropertyDescriptor | undefined => {
-        return Object.getOwnPropertyDescriptor(this, p);
-      },
-
-      getPrototypeOf: (_): object | null => {
-        return Object.getPrototypeOf(this);
-      },
-
-      ownKeys: (_): ArrayLike<string | symbol> => {
-        return Reflect.ownKeys(this);
-      },
-    });
+    todo();
   }
 
   get length(): number {
-    const model = this._getBackingModel();
-    if (model) {
-      const array = this._isMeta ? model.getMeta(this._property!) : model.get(this._property!);
-      if (!array) {
-        return 0;
-      }
-      invariant(array instanceof OrderedArray);
-      return array.array.length;
-    } else {
-      invariant(this._uninitialized);
-      return this._uninitialized.length;
-    }
+    return todo();
   }
 
   toString(): string {
@@ -157,31 +90,7 @@ export class EchoArray<T> implements Array<T> {
   splice(start: number, deleteCount?: number | undefined): T[];
   splice(start: number, deleteCount: number, ...items: T[]): T[];
   splice(start: number, deleteCount?: number | undefined, ...items: T[]): T[] {
-    const model = this._getBackingModel();
-    if (model) {
-      const deletedItems = deleteCount !== undefined ? this.slice(start, start + deleteCount) : [];
-
-      void model
-        .builder(this._isMeta)
-        .arrayDelete(this._property!, start, deleteCount)
-        .arrayInsert(
-          this._property!,
-          start,
-          items.map((item) => this._encode(item)),
-        )
-        .commit();
-
-      return deletedItems;
-    } else {
-      invariant(this._uninitialized);
-      // TODO(burdon): Check param types.
-      return this._uninitialized.splice(start as number, deleteCount as number, ...(items as any[]));
-    }
-
-    // console.log({
-    //   links: (this._orderedList as any)._model.get((this._orderedList as any)._property) ?? {},
-    //   values: this._orderedList.values
-    // })
+    return todo();
   }
 
   unshift(...items: T[]): number {
@@ -283,23 +192,7 @@ export class EchoArray<T> implements Array<T> {
   }
 
   values(): IterableIterator<T> {
-    const model = this._getBackingModel();
-    if (model) {
-      const array = this._isMeta ? model.getMeta(this._property!) : model.get(this._property!);
-      if (!array) {
-        return [][Symbol.iterator]();
-      }
-      invariant(array instanceof OrderedArray);
-
-      return array
-        .toArray()
-        .map((value: string) => this._decode(value))
-        .filter(Boolean)
-        .values();
-    } else {
-      invariant(this._uninitialized);
-      return this._uninitialized[Symbol.iterator]();
-    }
+    return todo();
   }
 
   includes(searchElement: T, fromIndex?: number | undefined): boolean {
@@ -318,26 +211,11 @@ export class EchoArray<T> implements Array<T> {
   }
 
   at(index: number): T | undefined {
-    const trueIndex = index < 0 ? this.length + index : index;
-    return this._get(trueIndex);
+    return todo();
   }
 
   push(...items: T[]) {
-    const model = this._getBackingModel();
-    if (model) {
-      void model
-        .builder(this._isMeta)
-        .arrayPush(
-          this._property!,
-          items.map((item) => this._encode(item)),
-        )
-        .commit();
-    } else {
-      invariant(this._uninitialized);
-      this._uninitialized.push(...items);
-    }
-
-    return this.length;
+    return todo();
   }
 
   [inspect.custom]: CustomInspectFunction = (depth, options) => {
@@ -364,134 +242,10 @@ export class EchoArray<T> implements Array<T> {
     throw new Error('Method not implemented.');
   }
 
-  //
-  // Impl.
-  //
-
-  private _getBackingModel(): DocumentModel | undefined {
-    return this._object?._model;
-  }
-
-  private _decode(value: any): T | undefined {
-    if (value instanceof Reference) {
-      return this._object!._lookupLink(value) as T | undefined;
-    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      return decodeRecords(value, this._object!);
-    } else {
-      return value;
-    }
-  }
-
-  private _encode(value: T) {
-    if (value instanceof AbstractEchoObject || isAutomergeObject(value)) {
-      return this._object!._linkObject(value);
-    } else if (
-      typeof value === 'object' &&
-      value !== null &&
-      Object.getOwnPropertyNames(value).length === 1 &&
-      (value as any)['@id']
-    ) {
-      return new Reference((value as any)['@id']);
-    } else if (typeof value === 'object' && value !== null && (value as any)['@type'] === REFERENCE_TYPE_TAG) {
-      return new Reference((value as any).itemId, (value as any).protocol, (value as any).host);
-    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      log('Freezing object before encoding', value);
-      Object.freeze(value);
-      return encodeRecords(value, this._object!);
-    } else {
-      invariant(
-        value === null ||
-          value === undefined ||
-          typeof value === 'boolean' ||
-          typeof value === 'number' ||
-          typeof value === 'string',
-        `Invalid type: ${JSON.stringify(value)}`,
-      );
-      return value;
-    }
-  }
-
   /**
    * @internal
    */
   _attach(document: TypedObject, property: string, isMeta?: boolean) {
-    this._object = document;
-    this._property = property;
-    this._isMeta = isMeta;
-    this._uninitialized = undefined;
-
-    return this;
-  }
-
-  private _get(index: number): T | undefined {
-    if (this._getBackingModel()) {
-      return this._getModel(index);
-    } else {
-      invariant(this._uninitialized);
-      return this._uninitialized[index];
-    }
-  }
-
-  private _has(property: string | symbol) {
-    if (typeof property === 'symbol') {
-      return property in this;
-    }
-    const parsedIndex = parseInt(property);
-    if (!Number.isNaN(parsedIndex)) {
-      return parsedIndex < this.length;
-    }
-    return property in this;
-  }
-
-  private _set(index: number, value: T) {
-    if (this._getBackingModel()) {
-      this._setModel(index, value);
-    } else {
-      invariant(this._uninitialized);
-      this._uninitialized[index] = value;
-    }
-  }
-
-  private _getModel(index: number): T | undefined {
-    const model = this._getBackingModel()!;
-    const array = this._isMeta ? model.getMeta(this._property!) : model.get(this._property!);
-    invariant(array instanceof OrderedArray);
-
-    return this._decode(array.get(index)) as T | undefined;
-  }
-
-  private _setModel(index: number, value: T) {
-    const model = this._getBackingModel()!;
-    void model
-      .builder(this._isMeta)
-      .arrayDelete(this._property!, index)
-      .arrayInsert(this._property!, index, [this._encode(value)])
-      .commit();
+    return todo();
   }
 }
-
-const encodeRecords = (value: any, document: TypedObject): any => {
-  if (value instanceof AbstractEchoObject) {
-    return document!._linkObject(value);
-  } else if (Array.isArray(value)) {
-    return value.map((value) => encodeRecords(value, document));
-  } else if (typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, value]): [string, any] => [key, encodeRecords(value, document)]),
-    );
-  }
-  return value;
-};
-
-const decodeRecords = (value: any, document: TypedObject): any => {
-  if (value instanceof Reference) {
-    return document._lookupLink(value);
-  } else if (Array.isArray(value)) {
-    return value.map((value) => decodeRecords(value, document));
-  } else if (typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, value]): [string, any] => [key, decodeRecords(value, document)]),
-    );
-  }
-  return value;
-};
