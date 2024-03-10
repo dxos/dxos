@@ -13,20 +13,16 @@ import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { Button, useThemeContext } from '@dxos/react-ui';
 import {
-  MarkdownEditor,
   comments,
   type CommentsOptions,
   focusComment,
   useComments,
   type Comment,
   type Range,
-  useTextModel,
-  type EditorView,
   useTextEditor,
   createBasicExtensions,
   createThemeExtensions,
   automerge,
-  defaultSlots,
   useDocAccessor,
 } from '@dxos/react-ui-editor';
 import { withTheme } from '@dxos/storybook-utils';
@@ -63,35 +59,38 @@ const Editor: FC<{
   onUpdateComment,
   onSelectComment,
 }) => {
-  const model = useTextModel({ text: item.text });
-  const view = useRef<EditorView>(null);
   const [selected, setSelected] = useState<string>();
+
+  const { themeMode } = useThemeContext();
+  const { doc, accessor } = useDocAccessor(item.text);
+  const { parentRef, view } = useTextEditor(
+    {
+      doc,
+      extensions: [
+        createBasicExtensions(),
+        createThemeExtensions({ themeMode }),
+        automerge(accessor),
+        comments({
+          onCreate: onCreateComment,
+          onDelete: onDeleteComment,
+          onUpdate: onUpdateComment,
+          onSelect: onSelectComment,
+        }),
+      ],
+    },
+    [themeMode, doc, accessor],
+  );
+  useComments(view, id, commentRanges);
   useEffect(() => {
-    if (!view.current?.hasFocus && selectedValue !== selected) {
+    if (view && !view.hasFocus && selectedValue !== selected) {
       setSelected(selectedValue);
       if (selectedValue) {
-        focusComment(view.current!, selectedValue);
+        focusComment(view, selectedValue);
       }
     }
-  }, [selected, commentRanges, selectedValue]);
+  }, [view, selected, commentRanges, selectedValue]);
 
-  useComments(view.current, id, commentRanges);
-  const extensions = useMemo(() => {
-    return [
-      comments({
-        onCreate: onCreateComment,
-        onDelete: onDeleteComment,
-        onUpdate: onUpdateComment,
-        onSelect: onSelectComment,
-      }),
-    ];
-  }, []);
-
-  if (!model) {
-    return null;
-  }
-
-  return <MarkdownEditor ref={view} model={model} extensions={extensions} />;
+  return <div ref={parentRef} />;
 };
 
 //
@@ -113,12 +112,13 @@ const StoryMessageBlock = (props: MessageBlockProps<{ text: TextObject }>) => {
     {
       doc,
       extensions: [
+        //
         createBasicExtensions(),
-        createThemeExtensions({ themeMode, slots: defaultSlots }),
+        createThemeExtensions({ themeMode }),
         automerge(accessor),
       ],
     },
-    [themeMode],
+    [themeMode, doc, accessor],
   );
 
   return <div ref={parentRef} className='col-span-3' />;
@@ -131,13 +131,24 @@ const StoryThread: FC<{
   onResolve: () => void;
 }> = ({ thread, selected, onSelect, onResolve }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const { themeMode } = useThemeContext();
   const [item, setItem] = useState({ text: new TextObject() });
+  const { doc, accessor } = useDocAccessor(item.text);
+  const extensions = useMemo(
+    () => [
+      createBasicExtensions({ placeholder: 'Enter comment' }),
+      createThemeExtensions({ themeMode }),
+      automerge(accessor),
+    ],
+    [themeMode, accessor],
+  );
 
   const [autoFocus, setAutoFocus] = useState(false);
   useEffect(() => {
     if (selected) {
       containerRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
       if (thread.messages.length === 0) {
+        // TODO(burdon): Causes thread to be reselected when loses focus.
         setAutoFocus(true);
       }
     }
@@ -164,6 +175,7 @@ const StoryThread: FC<{
         <span className='grow' />
         {!thread.cursor && <Trash />}
       </div>
+
       <ThreadHeading>
         {thread.range?.from} &ndash; {thread.range?.to}
       </ThreadHeading>
@@ -175,9 +187,10 @@ const StoryThread: FC<{
       <div ref={containerRef} className='contents'>
         <MessageTextbox
           id={item.text.id}
+          doc={doc}
           authorId={authorId}
           autoFocus={autoFocus}
-          doc={getTextContent(item.text)}
+          extensions={extensions}
           onEditorFocus={onSelect}
           onSend={handleCreateMessage}
         />
@@ -264,7 +277,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
           : [],
       },
     ]);
-    setSelected(id); // TODO(burdon): Not required.
+
     return id;
   };
 
@@ -310,9 +323,10 @@ const Story = ({ text, autoCreate }: StoryProps) => {
       }),
     );
 
-    setSelected(current ?? closest);
+    setSelected(current);
   };
 
+  // TODO(burdon): Focus switches to other thread.
   const handleSelectThread = (id: string) => {
     setSelected(id);
   };
@@ -368,12 +382,5 @@ const document = str(
 export const Default = {
   args: {
     text: document,
-  },
-};
-
-export const Testing = {
-  args: {
-    text: document,
-    autoCreate: true,
   },
 };

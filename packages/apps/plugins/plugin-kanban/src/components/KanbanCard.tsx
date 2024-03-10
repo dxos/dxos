@@ -15,7 +15,6 @@ import {
   createThemeExtensions,
   TextEditor,
   useDocAccessor,
-  useTextModel,
 } from '@dxos/react-ui-editor';
 import { getSize, mx, attentionSurface, focusRing } from '@dxos/react-ui-theme';
 
@@ -45,7 +44,6 @@ export const KanbanCardComponent: FC<{
   });
   const tx = transform ? Object.assign(transform, { scaleY: 1 }) : null;
 
-  const model = useTextModel({ text: item.title });
   const { doc, accessor } = useDocAccessor(item.title);
   const extensions = useMemo(
     () => [
@@ -69,7 +67,7 @@ export const KanbanCardComponent: FC<{
           <DotsSixVertical className={getSize(5)} />
         </button>
         <div className='flex flex-col grow pt-1'>
-          {model && <TextEditor doc={doc} extensions={extensions} className={mx(focusRing, 'p-1')} />}
+          <TextEditor doc={doc} extensions={extensions} className={mx(focusRing, 'p-1')} />
           {debug && <div className='text-xs text-red-800'>{item.id.slice(0, 9)}</div>}
         </div>
         {onDelete && (

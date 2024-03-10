@@ -132,7 +132,7 @@ export type MessageTextboxProps = {
   onClear?: () => void;
   onEditorFocus?: () => void;
 } & MessageMetadata &
-  Omit<TextEditorProps, 'model'>;
+  TextEditorProps;
 
 const keyBindings = ({ onSend, onClear }: Pick<MessageTextboxProps, 'onSend' | 'onClear'>) => [
   {
@@ -173,27 +173,26 @@ export const MessageTextbox = ({
   extensions: _extensions,
   ...editorProps
 }: MessageTextboxProps) => {
-  const extensions = useMemo(
-    () => [
+  const extensions = useMemo(() => {
+    return [
       ...(_extensions ?? []),
       keymap.of(keyBindings({ onSend, onClear })),
       listener({
-        onFocus: (focused) => {
-          if (focused) {
+        onFocus: (focusing) => {
+          if (focusing) {
             onEditorFocus?.();
           }
         },
       }),
-    ],
-    [_extensions, onSend, onClear, onEditorFocus],
-  );
+    ];
+  }, [_extensions]);
 
   return (
     <MessageMeta {...{ id, authorId, authorName, authorImgSrc, authorAvatarProps }} continues={false}>
       <TextEditor
+        {...editorProps}
         extensions={extensions}
         className={mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50')}
-        {...editorProps}
       />
     </MessageMeta>
   );

@@ -10,12 +10,7 @@ import { TextObject, getSpaceForObject, getTextContent, useMembers } from '@dxos
 import { useIdentity } from '@dxos/react-client/halo';
 import { ScrollArea, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
-import {
-  createBasicExtensions,
-  createDataExtensions,
-  createThemeExtensions,
-  useDocAccessor,
-} from '@dxos/react-ui-editor';
+import { automerge, createBasicExtensions, createThemeExtensions, useDocAccessor } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadLayout } from '@dxos/react-ui-thread';
 
@@ -58,10 +53,10 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
     () => [
       createBasicExtensions({ placeholder: t('message placeholder') }),
       createThemeExtensions({ themeMode }),
-      createDataExtensions({ id: nextMessage.text.id, text: accessor }),
+      automerge(accessor),
       command,
     ],
-    [accessor],
+    [themeMode, accessor],
   );
 
   // TODO(thure): Factor out.

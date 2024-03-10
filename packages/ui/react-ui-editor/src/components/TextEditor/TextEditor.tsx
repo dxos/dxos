@@ -308,7 +308,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
     // Create editor state and view.
     // The view is recreated if the model or extensions are changed.
     useEffect(() => {
-      log.info('updating view', { doc, selection, scrollTo, extensions: extensions.length });
+      log.info('updating', { doc, selection, scrollTo, extensions: extensions.length });
 
       //
       // EditorState
