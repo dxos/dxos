@@ -9,19 +9,19 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { AutomergeObjectCore, getAutomergeObjectCore } from '../automerge';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
+import { AutomergeObjectCore } from '../automerge';
 import { getSchemaTypeRefOrThrow } from '../effect/echo-handler';
-import { isReactiveProxy } from '../effect/proxy';
 import {
   getReferenceWithSpaceKey,
   immutable,
   isTypedObject,
   type EchoObject,
   type Expando,
-  type OpaqueEchoObject,
   type TypedObject,
 } from '../object';
 import { type Schema } from '../proto';
+import { isReactiveProxy } from '../effect/proxy';
 
 export const hasType =
   <T extends TypedObject>(schema: Schema) =>
@@ -204,9 +204,6 @@ export const filterMatch = (filter: Filter, core: AutomergeObjectCore | undefine
 };
 
 const filterMatchInner = (filter: Filter, core: AutomergeObjectCore): boolean => {
-  const object = core.rootProxy;
-  invariant(isTypedObject(object) || isReactiveProxy(object));
-
   const deleted = filter.options.deleted ?? QueryOptions.ShowDeletedOption.HIDE_DELETED;
   if (core.isDeleted()) {
     if (deleted === QueryOptions.ShowDeletedOption.HIDE_DELETED) {
@@ -230,13 +227,12 @@ const filterMatchInner = (filter: Filter, core: AutomergeObjectCore): boolean =>
 
   if (filter.type) {
     const type = core.getType();
-
-    const dynamicSchema = isTypedObject(object) ? object.__schema : undefined;
+    const dynamicSchemaTypename = legacyGetDynamicSchemaTypename(core);
 
     // Separate branch for objects with dynamic schema and typename filters.
     // TODO(dmaretskyi): Better way to check if schema is dynamic.
-    if (filter.type.protocol === 'protobuf' && dynamicSchema && !dynamicSchema[immutable]) {
-      if (dynamicSchema.typename !== filter.type.itemId) {
+    if (filter.type.protocol === 'protobuf' && dynamicSchemaTypename) {
+      if (dynamicSchemaTypename !== filter.type.itemId) {
         return false;
       }
     } else {
@@ -266,12 +262,10 @@ const filterMatchInner = (filter: Filter, core: AutomergeObjectCore): boolean =>
   }
 
   if (filter.text !== undefined) {
-    if (!isTypedObject(object)) {
-      return false;
-    }
+    const objectText = legacyGetTextForMatch(core);
 
     const text = filter.text.toLowerCase();
-    if (!JSON.stringify(object.toJSON()).toLowerCase().includes(text)) {
+    if (!objectText.toLowerCase().includes(text)) {
       return false;
     }
   }
@@ -304,3 +298,35 @@ export const compareType = (expected: Reference, actual: Reference, spaceKey?: P
     return true;
   }
 };
+
+/**
+ * @deprecated
+ */
+// TODO(dmaretskyi): Cleanup.
+const legacyGetDynamicSchemaTypename = (core: AutomergeObjectCore): string | undefined =>
+  compositeRuntime.untracked(() => {
+    const object = core.rootProxy;
+    if (!isTypedObject(object)) {
+      return undefined;
+    }
+
+    const schema = object.__schema;
+    if (!schema || schema[immutable]) {
+      return undefined;
+    }
+
+    return schema.typename;
+  });
+
+/**
+ * @deprecated
+ */
+// TODO(dmaretskyi): Cleanup.
+const legacyGetTextForMatch = (core: AutomergeObjectCore): string =>
+  compositeRuntime.untracked(() => {
+    if (!isTypedObject(core.rootProxy)) {
+      return '';
+    }
+
+    return JSON.stringify(core.rootProxy.toJSON());
+  });
