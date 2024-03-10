@@ -9,56 +9,62 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
 import { compareType, Filter, filterMatch } from './filter';
+import { getAutomergeObjectCore } from '../automerge';
 import { Expando } from '../object';
 import { Schema } from '../proto';
 
 describe('Filter', () => {
   test('properties', () => {
     const object = new Expando({ title: 'test', value: 100, complete: true });
+    const core = getAutomergeObjectCore(object);
 
-    expect(filterMatch(Filter.from({ title: 'test' }), object)).to.be.true;
-    expect(filterMatch(Filter.from({ value: 100 }), object)).to.be.true;
-    expect(filterMatch(Filter.from({ complete: false }), object)).to.be.false;
-    expect(filterMatch(Filter.from({ missing: undefined }), object)).to.be.true;
+    expect(filterMatch(Filter.from({ title: 'test' }), core)).to.be.true;
+    expect(filterMatch(Filter.from({ value: 100 }), core)).to.be.true;
+    expect(filterMatch(Filter.from({ complete: false }), core)).to.be.false;
+    expect(filterMatch(Filter.from({ missing: undefined }), core)).to.be.true;
   });
 
   test('and', () => {
     const object = new Expando({ title: 'test', value: 100, complete: true });
+    const core = getAutomergeObjectCore(object);
 
     const filter1 = Filter.from({ title: 'test' });
     const filter2 = Filter.from({ value: 100 });
     const filter3 = Filter.from({ complete: true });
 
-    expect(filterMatch(Filter.and(filter1, filter2, filter3), object)).to.be.true;
-    expect(filterMatch(Filter.from([filter1, filter2, filter3]), object)).to.be.true;
+    expect(filterMatch(Filter.and(filter1, filter2, filter3), core)).to.be.true;
+    expect(filterMatch(Filter.from([filter1, filter2, filter3]), core)).to.be.true;
   });
 
   test('or', () => {
     const object = new Expando({ title: 'test', value: 100, complete: true });
+    const core = getAutomergeObjectCore(object);
 
     const filter1 = Filter.from({ value: 200 });
     const filter2 = Filter.from({ title: 'test' });
     const filter3 = Filter.from({ complete: false });
 
-    expect(filterMatch(Filter.or(filter1, filter2, filter3), object)).to.be.true;
+    expect(filterMatch(Filter.or(filter1, filter2, filter3), core)).to.be.true;
   });
 
   test('not', () => {
     const object = new Expando({ title: 'test' });
+    const core = getAutomergeObjectCore(object);
 
     const filter1 = Filter.from({ title: 'test' });
     const filter2 = Filter.not(filter1);
 
-    expect(filterMatch(filter1, object)).to.be.true;
-    expect(filterMatch(filter2, object)).to.be.false;
+    expect(filterMatch(filter1, core)).to.be.true;
+    expect(filterMatch(filter2, core)).to.be.false;
   });
 
   test('complex', () => {
     const object = new Expando({ title: 'test', value: 100, complete: true });
+    const core = getAutomergeObjectCore(object);
 
     const filter1 = Filter.from({ title: 'bad' });
     const filter2 = Filter.from({ value: 0 });
-    expect(filterMatch(Filter.not(Filter.or(filter1, filter2)), object)).to.be.true;
+    expect(filterMatch(Filter.not(Filter.or(filter1, filter2)), core)).to.be.true;
   });
 
   // TODO(burdon): Test schema.
@@ -107,9 +113,10 @@ describe('Filter', () => {
       },
       { schema },
     );
+    const core = getAutomergeObjectCore(object);
     expect(object.__schema).to.eq(schema);
 
     const filter = Filter.typename('example.TestSchema');
-    expect(filterMatch(filter, object)).to.be.true;
+    expect(filterMatch(filter, core)).to.be.true;
   });
 });

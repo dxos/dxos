@@ -26,6 +26,7 @@ import {
   decodeReference,
   type DecodedAutomergeValue,
   type SpaceDoc,
+  type DecodedAutomergePrimaryValue,
 } from './types';
 import { isReactiveProxy } from '../effect/proxy';
 import { type TypedObjectOptions, type EchoObject, TextObject, type OpaqueEchoObject } from '../object';
@@ -306,7 +307,7 @@ export class AutomergeObjectCore {
   /**
    * Encode a value to be stored in the Automerge document.
    */
-  encode(value: DecodedAutomergeValue) {
+  encode(value: DecodedAutomergeValue, { allowLinks = true }: { allowLinks?: boolean } = {}) {
     if (value instanceof A.RawString) {
       return value;
     }
@@ -319,6 +320,10 @@ export class AutomergeObjectCore {
       value instanceof AutomergeObject ||
       (isReactiveProxy(value) as boolean)
     ) {
+      if (!allowLinks) {
+        throw new TypeError('Linking is not allowed');
+      }
+
       const reference = this.linkObject(value as OpaqueEchoObject);
       return encodeReference(reference);
     }
@@ -378,6 +383,9 @@ export class AutomergeObjectCore {
     return value;
   }
 
+  /**
+   * @deprecated Use getDecoded.
+   */
   get(path: (string | number)[]) {
     const fullPath = [...this.mountPath, ...path];
 
@@ -389,12 +397,25 @@ export class AutomergeObjectCore {
     return value;
   }
 
+  /**
+   * @deprecated Use setDecoded.
+   */
   set(path: (string | number)[], value: any) {
     const fullPath = [...this.mountPath, ...path];
 
     this.change((doc) => {
       assignDeep(doc, fullPath, value);
     });
+  }
+
+  // TODO(dmaretskyi): Rename to `get`.
+  getDecoded(path: (string | number)[]): DecodedAutomergePrimaryValue {
+    return this.decode(this.get(path), { resolveLinks: false }) as DecodedAutomergePrimaryValue;
+  }
+
+  // TODO(dmaretskyi): Rename to `set`.
+  setDecoded(path: (string | number)[], value: DecodedAutomergePrimaryValue) {
+    this.set(path, this.encode(value, { allowLinks: false }));
   }
 
   setType(reference: Reference) {
