@@ -7,13 +7,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { Contact } from '@braneframe/types';
-import { Trigger, asyncTimeout } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { type Space } from '@dxos/client-protocol';
 import { warnAfterTimeout } from '@dxos/debug';
 import { IndexServiceImpl, IndexStore, Indexer } from '@dxos/indexing';
 import { type PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
@@ -23,7 +22,7 @@ import { Client } from '../client';
 import { IndexQuerySourceProvider } from '../echo/index-query-source-provider';
 import { TestBuilder } from '../testing';
 
-describe('Index queries', () => {
+describe.only('Index queries', () => {
   test('indexing stack', async () => {
     const builder = new TestBuilder();
     builder.storage = createStorage({ type: StorageType.RAM });
@@ -109,13 +108,12 @@ describe('Index queries', () => {
     builder.destroy();
   });
 
-  test.only('indexes persists between client restarts', async () => {
+  test('indexes persists between client restarts', async () => {
     const testStoragePath = fs.mkdtempSync(path.join('tmp', 'client-indexing-'));
     const storage = createStorage({ type: StorageType.NODE, root: testStoragePath });
     afterTest(() => fs.rmSync(testStoragePath, { recursive: true, force: true }));
 
     let spaceKey: PublicKey;
-    let objId: string;
     {
       const builder = new TestBuilder();
       builder.storage = storage;
@@ -133,15 +131,16 @@ describe('Index queries', () => {
         spaceKey = space.key;
 
         const contact = new Contact({ name: 'John Doe' });
-        objId = contact.id;
         space.db.add(contact);
         await space.db.flush();
-        log.info('db', { length: space.db.objects.length });
       }
 
       await asyncTimeout(indexingDone, 1000);
+
       const indexedContact = await queryIndexedContact(space);
       expect(indexedContact.name).to.equal('John Doe');
+
+      await sleep(200); // Sleep to get services storage to finish writing.
       await client.destroy();
       await builder.storage.close();
       builder.destroy();
@@ -158,16 +157,12 @@ describe('Index queries', () => {
       await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] });
 
       await client.spaces.isReady.wait();
+
       const space = client.spaces.get(spaceKey)!;
+
       await space.waitUntilReady();
 
-      log.info('objects', { length: space.db.objects.length });
-      const contact = await space.db.automerge.loadObjectById(objId);
-
-      log.info('contact', { length: space.db.automerge.allObjects().length, contact: contact?.toJSON() });
-
       const indexedContact = await queryIndexedContact(space);
-
       expect(indexedContact.name).to.equal('John Doe');
     }
   });
@@ -177,7 +172,6 @@ const queryIndexedContact = async (space: Space) => {
   const receivedIndexedContact = new Trigger<Contact>();
   const query = space.db.query(Contact.filter());
   query.subscribe((query) => {
-    log.info('query', { resolutions: query.results.map((res) => res.resolution) });
     for (const result of query.results) {
       if (result.object instanceof Contact && result.resolution?.source === 'index') {
         receivedIndexedContact.wake(result.object);
