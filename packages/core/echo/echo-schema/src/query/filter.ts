@@ -22,6 +22,7 @@ import {
 } from '../object';
 import { getReferenceWithSpaceKey } from '../object';
 import { type Schema } from '../proto';
+import { log } from '@dxos/log';
 
 export const hasType =
   <T extends TypedObject>(schema: Schema) =>
@@ -255,7 +256,11 @@ const filterMatchInner = (filter: Filter, object: OpaqueEchoObject): boolean => 
     for (const key in filter.properties) {
       invariant(key !== '@type');
       const value = filter.properties[key];
-      if ((object as any)[key] !== value) {
+
+      // TODO(dmaretskyi): Should `id` be allowed in filter.properties?
+      const actualValue = key === 'id' ? core.id : core.getDecoded(['data', key]);
+
+      if (actualValue !== value) {
         return false;
       }
     }
