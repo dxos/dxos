@@ -116,7 +116,7 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
     <Thread
       current={current}
       id={thread.id}
-      classNames='bs-full grid-rows-[1fr_min-content_min-content] overflow-hidden transition-[padding-block-end] pbe-[--rail-size] [[data-sidebar-inline-start-state=open]_&]:lg:pbe-0'
+      classNames='bs-full grid-rows-[1fr_min-content_min-content] overflow-hidden transition-[padding-block-end] [[data-sidebar-inline-start-state=open]_&]:lg:pbe-0'
     >
       <ScrollArea.Root classNames='col-span-2'>
         <ScrollArea.Viewport classNames='overflow-anchored after:overflow-anchor after:block after:bs-px after:-mbs-px [&>div]:min-bs-full [&>div]:!grid [&>div]:grid-rows-[1fr_0]'>

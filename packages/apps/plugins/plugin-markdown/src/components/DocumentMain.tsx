@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { type Document as DocumentType } from '@braneframe/types';
 import { getSpaceForObject } from '@dxos/react-client/echo';
@@ -11,22 +11,17 @@ import { type Comment, createDataExtensions, useDocAccessor } from '@dxos/react-
 
 import EditorMain, { type EditorMainProps } from './EditorMain';
 
+type DocumentMainProps = { document: DocumentType } & Omit<EditorMainProps, 'id'>;
+
 /**
  * @deprecated
  */
-// TODO(burdon): Move logic into plugin.
-const DocumentMain: FC<{ document: DocumentType } & Pick<EditorMainProps, 'toolbar' | 'readonly' | 'extensions'>> = ({
-  document,
-  ...props
-}) => {
+const DocumentMain = ({ document, extensions: _extensions, ...props }: DocumentMainProps) => {
   const identity = useIdentity();
   const space = getSpaceForObject(document);
   const { id, doc, accessor } = useDocAccessor(document.content);
   const extensions = useMemo(
-    () => [
-      //
-      createDataExtensions({ id, text: accessor, space, identity }),
-    ],
+    () => [_extensions, createDataExtensions({ id, text: accessor, space, identity })],
     [doc, accessor],
   );
 
@@ -34,7 +29,7 @@ const DocumentMain: FC<{ document: DocumentType } & Pick<EditorMainProps, 'toolb
     return document.comments?.map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! }));
   }, [document.comments]);
 
-  return <EditorMain id={id} doc={doc} extensions={extensions} comments={comments} {...props} />;
+  return <EditorMain id={id} doc={doc} {...props} extensions={extensions} comments={comments} />;
 };
 
 export default DocumentMain;

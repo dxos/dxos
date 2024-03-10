@@ -43,26 +43,19 @@ const useTest = (view: EditorView | null) => {
 
 export type EditorMainProps = {
   id: string;
-  doc?: string; // TODO(burdon): Rename content.
-  comments?: Comment[];
-  toolbar?: boolean;
   readonly?: boolean;
-} & Pick<TextEditorProps, 'extensions'>;
+  toolbar?: boolean;
+  comments?: Comment[];
+} & Pick<TextEditorProps, 'doc' | 'extensions'>;
 
-export const EditorMain = ({
-  id,
-  doc,
-  comments,
-  toolbar,
-  readonly,
-  extensions: _extensions,
-  ...props
-}: EditorMainProps) => {
+// TODO(burdon): Invalid cursor error when switching between editors.
+
+export const EditorMain = ({ id, readonly, toolbar, comments, doc, extensions: _extensions }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
 
   const [editorRef, viewInvalidated] = useEditorView(id);
-  useComments(viewInvalidated ? null : editorRef.current, id, comments);
+  useComments(viewInvalidated ? null : editorRef.current, id, comments); // TODO(burdon): Reconcile id.
   const handleAction = useActionHandler(editorRef.current);
   useTest(editorRef.current);
 
@@ -84,6 +77,7 @@ export const EditorMain = ({
   const [formattingState, formattingObserver] = useFormattingState();
   const extensions = useMemo(() => {
     return [
+      _extensions,
       createBasicExtensions({ readonly, placeholder: t('editor placeholder'), scrollPastEnd: true }),
       createMarkdownExtensions({ themeMode }),
       createThemeExtensions({
@@ -100,7 +94,6 @@ export const EditorMain = ({
       decorateMarkdown(),
       cursorLineMargin,
       formattingObserver,
-      _extensions,
     ].filter(nonNullable);
   }, [_extensions, formattingObserver]);
 

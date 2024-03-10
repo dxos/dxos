@@ -15,6 +15,7 @@ import {
   createThemeExtensions,
   useDocAccessor,
   useTextEditor,
+  createMarkdownExtensions,
 } from '@dxos/react-ui-editor';
 import { attentionSurface, focusRing, mx } from '@dxos/react-ui-theme';
 
@@ -34,6 +35,7 @@ const DocumentSection: FC<{
     doc,
     extensions: [
       createBasicExtensions({ placeholder: t('editor placeholder') }),
+      createMarkdownExtensions({ themeMode }),
       createThemeExtensions({
         themeMode,
         slots: {

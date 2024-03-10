@@ -113,7 +113,20 @@ export type ThemeExtensionsOptions = {
   };
 };
 
-export const createThemeExtensions = ({ theme, themeMode, slots }: ThemeExtensionsOptions = {}): Extension => {
+const defaultSlots = {
+  editor: {
+    className: 'w-full bs-full',
+  },
+  content: {
+    className: 'p-2',
+  },
+};
+
+export const createThemeExtensions = ({
+  theme,
+  themeMode,
+  slots = defaultSlots,
+}: ThemeExtensionsOptions = {}): Extension => {
   return [
     EditorView.baseTheme(defaultTheme),
     EditorView.darkTheme.of(themeMode === 'dark'),
