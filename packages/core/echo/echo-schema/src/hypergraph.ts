@@ -217,23 +217,22 @@ class SpaceQuerySource implements QuerySource {
     }
 
     prohibitSignalActions(() => {
-      // TODO(dmaretskyi): Clean up getters in the internal signals so they don't use the Proxy API and don't hit the signals.
-      compositeRuntime.untracked(() => {
-        // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
-        const changed = updateEvent.itemsUpdated.some((object) => {
-          return (
-            !this._results ||
-            this._results.find((result) => result.id === object.id) ||
-            (this._database.automerge._objects.has(object.id) &&
-              filterMatch(this._filter!, this._database.automerge.getObjectCoreById(object.id)!))
-          );
-        });
-
-        if (changed) {
-          this._results = undefined;
-          this.changed.emit();
-        }
+      // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
+      const changed = updateEvent.itemsUpdated.some((object) => {
+        return (
+          !this._results ||
+          this._results.find((result) => result.id === object.id) ||
+          (this._database.automerge._objects.has(object.id) &&
+            filterMatch(this._filter!, this._database.automerge.getObjectCoreById(object.id)!))
+        );
       });
+
+      if (changed) {
+        this._results = undefined;
+        compositeRuntime.untracked(() => {
+          this.changed.emit();
+        });
+      }
     });
   };
 
@@ -244,22 +243,19 @@ class SpaceQuerySource implements QuerySource {
 
     if (!this._results) {
       prohibitSignalActions(() => {
-        // TODO(dmaretskyi): Clean up getters in the internal signals so they don't use the Proxy API and don't hit the signals.
-        compositeRuntime.untracked(() => {
-          this._results = this._database.automerge
-            .allObjectCores()
-            // TODO(dmaretskyi): Cleanup proxy <-> core.
-            .filter((core) => filterMatch(this._filter!, core))
-            .map((core) => ({
-              id: core.id,
-              spaceKey: this.spaceKey,
-              object: core.rootProxy as EchoObject,
-              resolution: {
-                source: 'local',
-                time: 0,
-              },
-            }));
-        });
+        this._results = this._database.automerge
+          .allObjectCores()
+          // TODO(dmaretskyi): Cleanup proxy <-> core.
+          .filter((core) => filterMatch(this._filter!, core))
+          .map((core) => ({
+            id: core.id,
+            spaceKey: this.spaceKey,
+            object: core.rootProxy as EchoObject,
+            resolution: {
+              source: 'local',
+              time: 0,
+            },
+          }));
       });
     }
 

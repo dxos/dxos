@@ -270,7 +270,8 @@ const filterMatchInner = (filter: Filter, core: AutomergeObjectCore): boolean =>
     }
   }
 
-  if (filter.predicate && !filter.predicate(core.rootProxy)) {
+  // Untracked will prevent signals in the callback from being subscribed to.
+  if (filter.predicate && !compositeRuntime.untracked(() => filter.predicate!(core.rootProxy))) {
     return false;
   }
 
