@@ -11,7 +11,7 @@ import { createRoot } from 'react-dom/client';
 import { Button, DensityProvider, DropdownMenu, Input, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type CursorInfo,
-  type YText,
+  type YText, // TODO(burdon): Remove.
   useTextEditor,
   automerge,
   createBasicExtensions,
