@@ -9,7 +9,7 @@ import '@preact/signals-react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Repo } from '@dxos/automerge/automerge-repo';
-import { createDocAccessor, createMockDocAccessor, Filter, DocAccessor } from '@dxos/echo-schema';
+import { createDocAccessor, createRawDocAccessor, Filter, DocAccessor } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { Expando, TextObject, useSpace } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
@@ -68,8 +68,8 @@ const Story = () => {
       const object2 = repo2.find(object1.url);
       await object2.whenReady();
 
-      setObject1(createMockDocAccessor({ handle: object1, path: ['text'] }));
-      setObject2(createMockDocAccessor({ handle: object2, path: ['text'] }));
+      setObject1(createRawDocAccessor({ handle: object1, path: ['text'] }));
+      setObject2(createRawDocAccessor({ handle: object2, path: ['text'] }));
     });
   }, []);
 

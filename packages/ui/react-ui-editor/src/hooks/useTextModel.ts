@@ -6,7 +6,7 @@ import get from 'lodash.get';
 import { type Dispatch, type SetStateAction, useState, useMemo } from 'react';
 
 import { generateName } from '@dxos/display-name';
-import { type AutomergeTextCompat, createMockDocAccessor, getRawDoc } from '@dxos/echo-schema';
+import { type AutomergeTextCompat, createRawDocAccessor, getRawDoc } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { isAutomergeObject, type Space, type TextObject } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
@@ -72,7 +72,7 @@ const createModel = ({ space, identity, text }: UseTextModelProps): EditorModel 
       peerId: identity?.identityKey.toHex() ?? 'Anonymous',
     });
 
-  const extensions = [automerge(createMockDocAccessor({ handle: doc.handle, path: doc.path }))];
+  const extensions = [automerge(createRawDocAccessor({ handle: doc.handle, path: doc.path }))];
   if (awarenessProvider) {
     extensions.push(awareness(awarenessProvider));
   }

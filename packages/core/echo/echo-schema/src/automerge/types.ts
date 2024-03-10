@@ -118,8 +118,8 @@ export const DocAccessor = {
   getValue: (accessor: DocAccessor) => get(accessor.handle.docSync(), accessor.path),
 };
 
-// TODO(burdon): Remove.
-export const createMockDocAccessor = <T = any>(props: { handle: IDocHandle<T>; path: string[] }): DocAccessor<T> => {
+// TODO(burdon): Remove?
+export const createRawDocAccessor = <T = any>(props: { handle: IDocHandle<T>; path: string[] }): DocAccessor<T> => {
   return {
     [isDocument]: true,
     ...props,

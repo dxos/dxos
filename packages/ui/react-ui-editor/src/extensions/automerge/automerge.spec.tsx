@@ -12,7 +12,7 @@ import React, { type FC, useEffect, useRef, useState } from 'react';
 import { describe, test } from 'vitest';
 
 import { type DocHandle, Repo } from '@dxos/automerge/automerge-repo';
-import { createMockDocAccessor } from '@dxos/echo-schema';
+import { createRawDocAccessor } from '@dxos/echo-schema';
 
 import { automerge } from './automerge';
 
@@ -36,7 +36,7 @@ const Test: FC<{ handle: DocHandle<TestObject>; generator: Generator }> = ({ han
   const [view, setView] = useState<EditorView>();
   useEffect(() => {
     const extensions = [
-      automerge(createMockDocAccessor({ handle, path })),
+      automerge(createRawDocAccessor({ handle, path })),
       EditorView.updateListener.of((update) => {
         if (view.state.doc.toString() === 'hello!') {
           // Update editor.
