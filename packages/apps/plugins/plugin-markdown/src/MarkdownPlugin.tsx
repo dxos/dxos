@@ -247,6 +247,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 'properties' in data &&
                 isMarkdownProperties(data.properties)
               ) {
+                // TODO(burdon): Replace model with object ID.
                 const main = <EditorMain model={data.model} extensions={extensions} />;
                 if ('view' in data && data.view === 'embedded') {
                   return <EmbeddedLayout>{main}</EmbeddedLayout>;

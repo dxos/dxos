@@ -18,6 +18,7 @@ import {
   createMarkdownExtensions,
   useDocAccessor,
   createThemeExtensions,
+  createBasicExtensions,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
@@ -245,7 +246,8 @@ const OutlinerItem = (props: OutlinerItemProps) => {
     () =>
       [
         EditorView.updateListener.of(({ view }) => setFocus(view.hasFocus)),
-        createMarkdownExtensions({ themeMode, placeholder }),
+        createBasicExtensions({ placeholder }),
+        createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode }),
         decorateMarkdown({ renderLinkButton: onRenderLink }),
         automerge(accessor),

@@ -18,7 +18,7 @@ import { Button, DensityProvider, Input, ThemeProvider, useThemeContext } from '
 import { baseSurface, defaultTx, getSize, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { MarkdownEditor, TextEditor, type BaseTextEditorProps } from './TextEditor';
+import { TextEditor, type TextEditorProps } from './TextEditor';
 import {
   annotations,
   autocomplete,
@@ -42,7 +42,13 @@ import {
   createMarkdownExtensions,
   useComments,
 } from '../../extensions';
-import { type Comment, createDataExtensions, createThemeExtensions, useDocAccessor } from '../../hooks';
+import {
+  type Comment,
+  createBasicExtensions,
+  createDataExtensions,
+  createThemeExtensions,
+  useDocAccessor,
+} from '../../hooks';
 import translations from '../../translations';
 
 faker.seed(101);
@@ -232,13 +238,16 @@ type StoryProps = {
   id?: string;
   text?: string;
   comments?: Comment[];
-} & Pick<BaseTextEditorProps, 'readonly' | 'placeholder' | 'extensions'>;
+  readonly?: boolean;
+  placeholder?: string;
+} & Pick<TextEditorProps, 'extensions'>;
 
 const Story = ({
   id = 'test',
   text,
   comments,
   extensions: _extensions = [],
+  readonly,
   placeholder = 'New document.',
   ...props
 }: StoryProps) => {
@@ -253,7 +262,8 @@ const Story = ({
   const { themeMode } = useThemeContext();
   const extensions = useMemo(
     () => [
-      createMarkdownExtensions({ themeMode, placeholder }),
+      createBasicExtensions({ readonly, placeholder }),
+      createMarkdownExtensions({ themeMode }),
       createThemeExtensions({
         themeMode,
         slots: {
@@ -279,7 +289,7 @@ const Story = ({
 
 export default {
   title: 'react-ui-editor/TextEditor',
-  component: MarkdownEditor,
+  component: TextEditor,
   decorators: [withTheme],
   render: Story,
   parameters: { translations, layout: 'fullscreen' },

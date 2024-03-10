@@ -47,7 +47,8 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
   const extensions = useMemo(
     () => [
       editorMode ? EditorModes[editorMode] : [],
-      createBasicExtensions({ readonly }),
+      createBasicExtensions({ placeholder, lineWrapping: true, readonly }),
+      createMarkdownExtensions({ themeMode }),
       createThemeExtensions({
         themeMode,
         theme: markdownTheme,
@@ -55,8 +56,6 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
           editor: { className: 'p-2' },
         },
       }),
-      // TODO(burdon): Move lineWrapping.
-      createMarkdownExtensions({ placeholder, lineWrapping: true }),
       // TODO(burdon): Move into markdown bundle (with React callbacks).
       decorateMarkdown(),
       formatting(),

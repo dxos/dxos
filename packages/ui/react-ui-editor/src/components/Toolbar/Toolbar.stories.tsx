@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { type FC, useState } from 'react';
 
-import { getTextContent, TextObject } from '@dxos/echo-schema';
+import { TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { Tooltip, useThemeContext } from '@dxos/react-ui';
@@ -27,38 +27,45 @@ import {
 import {
   type Comment,
   createBasicExtensions,
+  createDataExtensions,
   createThemeExtensions,
   useActionHandler,
+  useDocAccessor,
   useTextEditor,
 } from '../../hooks';
 import translations from '../../translations';
 
 faker.seed(101);
 
-const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) => {
+const Story: FC<{ content: string }> = ({ content }) => {
   const { themeMode } = useThemeContext();
   const [item] = useState({ text: new TextObject(content) });
+  const { id, doc, accessor } = useDocAccessor(item.text);
   const [formattingState, formattingObserver] = useFormattingState();
-  const { parentRef, view } = useTextEditor({
-    doc: getTextContent(item.text),
-    extensions: [
-      createBasicExtensions(),
-      createMarkdownExtensions({ themeMode }),
-      createThemeExtensions({ themeMode, slots: { editor: { className: 'p-2' } } }),
-      comments({
-        onCreate: ({ cursor }) => {
-          const id = PublicKey.random().toHex();
-          setComments((comments) => [...comments, { id, cursor }]);
-          return id;
-        },
-      }),
-      decorateMarkdown(),
-      formatting(),
-      image(),
-      table(),
-      formattingObserver,
-    ],
-  });
+  const { parentRef, view } = useTextEditor(
+    {
+      doc,
+      extensions: [
+        createBasicExtensions(),
+        createMarkdownExtensions({ themeMode }),
+        createThemeExtensions({ themeMode, slots: { editor: { className: 'p-2' } } }),
+        createDataExtensions({ id, text: accessor }),
+        comments({
+          onCreate: ({ cursor }) => {
+            const id = PublicKey.random().toHex();
+            setComments((comments) => [...comments, { id, cursor }]);
+            return id;
+          },
+        }),
+        decorateMarkdown(),
+        formatting(),
+        image(),
+        table(),
+        formattingObserver,
+      ],
+    },
+    [themeMode],
+  );
 
   const [_comments, setComments] = useState<Comment[]>([]);
   useComments(view, id, _comments);

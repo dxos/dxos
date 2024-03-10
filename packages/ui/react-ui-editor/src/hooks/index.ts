@@ -8,4 +8,4 @@ export * from './extension-utils';
 
 export * from './useActionHandler';
 export * from './useEditorView';
-export * from './useTextModel';
+export * from './useTextEditor';

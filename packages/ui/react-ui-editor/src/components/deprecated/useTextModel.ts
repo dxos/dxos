@@ -14,8 +14,8 @@ import { type Identity } from '@dxos/react-client/halo';
 import { type HuePalette, hueTokens } from '@dxos/react-ui-theme';
 import { hexToHue } from '@dxos/util';
 
-import { SpaceAwarenessProvider } from './awareness-provider';
-import { automerge, awareness } from '../extensions';
+import { automerge, awareness } from '../../extensions';
+import { SpaceAwarenessProvider } from '../../hooks';
 
 /**
  * @deprecated
@@ -39,7 +39,7 @@ type UseTextModelProps = {
  * @deprecated
  */
 // TODO(burdon): Remove.
-const useTextModel = (props: UseTextModelProps): EditorModel | undefined =>
+export const useTextModel = (props: UseTextModelProps): EditorModel | undefined =>
   useMemo(() => createEditorModel(props), Object.values(props));
 
 // TODO(burdon): Remove.

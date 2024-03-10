@@ -129,7 +129,7 @@ export const createThemeExtensions = ({ theme, themeMode, slots }: ThemeExtensio
 
 export type DataExtensionsProps = {
   id: string;
-  text: DocAccessor;
+  text: DocAccessor; // TODO(burdon): Rename content.
   space?: Space;
   identity?: Identity | null;
 };
