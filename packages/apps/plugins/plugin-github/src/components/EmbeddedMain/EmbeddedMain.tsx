@@ -32,7 +32,6 @@ import {
   Tooltip,
   toLocalizedString,
 } from '@dxos/react-ui';
-import { useTextModel } from '@dxos/react-ui-editor';
 import { defaultTx, descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 import { hexToFallback } from '@dxos/util';
 
@@ -86,12 +85,6 @@ const EmbeddedLayoutImpl = () => {
   const [resolverDialogOpen, setResolverDialogOpen] = useState(false);
 
   const spaceFallbackValue = hexToFallback(space?.key.toHex() ?? '0');
-
-  const model = useTextModel({
-    identity,
-    space: space ?? undefined,
-    text: document ? document.content : undefined,
-  });
 
   const docGhId = useDocGhId(document?.__meta?.keys ?? []);
   const name = space && getSpaceDisplayName(space);
@@ -251,7 +244,8 @@ const EmbeddedLayoutImpl = () => {
               />
             </Main.Content>
           ) : (
-            <Surface role='main' data={{ model, properties: document, view: 'embedded' }} />
+            // TODO(burdon): This will break since model is not defined.
+            <Surface role='main' data={{ properties: document, view: 'embedded' }} />
           )
         ) : source && id && identityHex ? (
           <Dialog.Root open onOpenChange={() => true}>

@@ -131,7 +131,7 @@ export type DataExtensionsProps = {
   id: string;
   text: DocAccessor;
   space?: Space;
-  identity?: Identity;
+  identity?: Identity | null;
 };
 
 // TODO(burdon): Factor out automerge defs and extension (not hook).
