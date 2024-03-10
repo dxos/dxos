@@ -68,7 +68,7 @@ const sampleImage =
 
 const row = (size: Size) => (
   <>
-    <StorybookAvatar size={size} description='Offline' />
+    <StorybookAvatar size={size} status='inactive' description='Offline' />
     <StorybookAvatar size={size} status='active' />
     <StorybookAvatar size={size} status='active' imgSrc={sampleImage} />
   </>
@@ -99,7 +99,7 @@ export const Image = () => (
 
 export const Square = () => (
   <div className='flex flex-row gap-4'>
-    <StorybookAvatar variant='square' description='Offline' />
+    <StorybookAvatar variant='square' status='inactive' description='Offline' />
     <StorybookAvatar variant='square' status='active' />
     <StorybookAvatar variant='square' status='error' />
     <StorybookAvatar variant='square' status='warning' />
@@ -109,8 +109,9 @@ export const Square = () => (
 export const DefaultEmoji = () => (
   <div className='flex flex-row gap-4'>
     <StorybookAvatar fallbackText='🦄' status='active' animation='pulse' />
-    <StorybookAvatar fallbackText='🐒' animation='pulse' />
-    <StorybookAvatar fallbackText='🪲' />
+    <StorybookAvatar fallbackText='🐒' status='warning' animation='pulse' />
+    <StorybookAvatar fallbackText='🪲' status='inactive' />
+    <StorybookAvatar fallbackText='🦁' />
   </div>
 );
 

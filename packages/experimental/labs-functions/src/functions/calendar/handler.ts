@@ -9,6 +9,7 @@ import process from 'node:process';
 
 import { Event as EventType, type Message as MessageType } from '@braneframe/types';
 import { subscriptionHandler } from '@dxos/functions';
+import { log } from '@dxos/log';
 
 import { ObjectSyncer } from '../../sync';
 import { getYaml } from '../../util';
@@ -69,12 +70,12 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   // Etag represents specific version of a resource (like content addressing for caching).
   // NOTE: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag
   const { kind, etag, summary, updated, nextPageToken } = events.data;
-  console.log({ kind, etag, summary, updated, nextPageToken });
+  log.info('calendarHandler', { kind, etag, summary, updated, nextPageToken });
   for (const event of events.data.items ?? []) {
     const { kind, id, created, updated, summary, creator, start, end, recurrence, attendees } = event;
     if (id) {
       const existing = syncer.getObject(id);
-      console.log(summary, attendees);
+      log.info('event data', { summary, attendees });
       // TODO(burdon): Upsert.
       if (!existing) {
         space.db.add(
@@ -82,7 +83,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
             {
               title: summary || '',
               attendees: attendees?.map(
-                ({ email, displayName }) => ({ email: email!, name: displayName } as MessageType.Recipient),
+                ({ email, displayName }) => ({ email: email!, name: displayName }) as MessageType.Recipient,
               ),
             },
             { meta: { keys: [{ source: sourceId, id }] } },

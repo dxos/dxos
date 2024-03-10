@@ -29,6 +29,12 @@
     },
     {
       "path": "../../../sdk/app-framework"
+    },
+    {
+      "path": "../../../sdk/config"
+    },
+    {
+      "path": "../../../sdk/shell"
     }
   ]
 }

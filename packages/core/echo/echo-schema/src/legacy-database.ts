@@ -192,7 +192,7 @@ export class EchoLegacyDatabase {
    */
   clone<T extends EchoObject>(obj: T) {
     log('clone', { id: obj.id, type: (obj as any).__typename });
-    console.warn('deprecated'); // TODO(burdon): ???
+    log.warn('clone is deprecated'); // TODO(burdon): ???
 
     // TODO(burdon): Keep id.
     this.add(obj);

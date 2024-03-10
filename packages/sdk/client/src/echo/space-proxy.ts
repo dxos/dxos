@@ -36,6 +36,7 @@ import {
   type Space as SpaceData,
   type SpaceMember,
   SpaceState,
+  type CreateEpochRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -282,6 +283,15 @@ export class SpaceProxy implements Space {
       this._error = decodeError(space.error);
     }
 
+    {
+      // Transition onto new automerge root.
+      const automergeRoot = space.pipeline?.currentEpoch?.subject.assertion.automergeRoot;
+      if (automergeRoot) {
+        // NOOP if the root is the same.
+        await this._db.automerge.update({ rootUrl: automergeRoot });
+      }
+    }
+
     if (emitEvent) {
       this._stateUpdate.emit(this._currentState);
     }
@@ -442,8 +452,8 @@ export class SpaceProxy implements Space {
     // });
   }
 
-  private async _createEpoch() {
-    await this._clientServices.services.SpacesService!.createEpoch({ spaceKey: this.key });
+  private async _createEpoch({ migration }: { migration?: CreateEpochRequest.Migration } = {}) {
+    await this._clientServices.services.SpacesService!.createEpoch({ spaceKey: this.key, migration });
   }
 
   private async _activate() {

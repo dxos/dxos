@@ -183,6 +183,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     });
     this._ctx.onDispose(() => subscription.unsubscribe());
 
+    // TODO(nf): implement/verify works
+    // TODO(nf): trigger automatically? feedback on how many were resumed?
+
     await gotInitialUpdate.wait();
     log.trace('dxos.sdk.echo-proxy.open', Trace.end({ id: this._instanceId }));
   }
