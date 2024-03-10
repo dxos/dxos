@@ -20,10 +20,10 @@ import {
   EmbeddedMain,
   ExportDialog,
   ImportDialog,
-  MarkdownActions,
   OctokitProvider,
   GitHubSettings,
   UrlDialog,
+  MarkdownActions,
 } from './components';
 import meta, { GITHUB_PLUGIN, GITHUB_PLUGIN_SHORT_ID } from './meta';
 import translations from './translations';
@@ -140,8 +140,10 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                   return null;
               }
             case 'menuitem':
-              return isEditorModel(data.model) && isMarkdownProperties(data.properties) && !data.properties.readonly ? (
-                <MarkdownActions model={data.model} properties={data.properties} />
+              return typeof data.content === 'string' &&
+                isMarkdownProperties(data.properties) &&
+                !data.properties.readonly ? (
+                <MarkdownActions content={data.content} properties={data.properties} />
               ) : null;
             case 'settings':
               return data.plugin === meta.id ? <GitHubSettings /> : null;

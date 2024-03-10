@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import type { Extension } from '@codemirror/state';
 import get from 'lodash.get';
-import { type Dispatch, type SetStateAction, useState, useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { generateName } from '@dxos/display-name';
-import { type AutomergeTextCompat, createRawDocAccessor, getRawDoc } from '@dxos/echo-schema';
+import { type AutomergeTextCompat, createRawDocAccessor, type DocAccessor, getRawDoc } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { isAutomergeObject, type Space, type TextObject } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
@@ -14,9 +15,20 @@ import { type HuePalette, hueTokens } from '@dxos/react-ui-theme';
 import { hexToHue } from '@dxos/util';
 
 import { SpaceAwarenessProvider } from './awareness-provider';
-import { type EditorModel } from './defs';
 import { automerge, awareness } from '../extensions';
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Remove.
+export type EditorModel = {
+  id: string;
+  text: () => string;
+  content: string | DocAccessor;
+  extension?: Extension;
+};
+
+// TODO(burdon): Remove.
 export type UseTextModelProps = {
   text?: TextObject;
   space?: Space;
@@ -26,27 +38,12 @@ export type UseTextModelProps = {
 /**
  * @deprecated
  */
-// TODO(burdon): Remove once automerge lands.
-export const useTextModel = (props: UseTextModelProps): EditorModel | undefined =>
-  useMemo(() => createModel(props), Object.values(props));
-
-/**
- * For use primarily in stories & tests so the dependence on TextObject can be avoided.
- * @deprecated
- */
 // TODO(burdon): Remove.
-export const useInMemoryTextModel = ({
-  id,
-  defaultContent,
-}: {
-  id: string;
-  defaultContent?: string;
-}): EditorModel & { setContent: Dispatch<SetStateAction<string>> } => {
-  const [content, setContent] = useState(defaultContent ?? '');
-  return { id, content, text: () => content, setContent };
-};
+export const useTextModel = (props: UseTextModelProps): EditorModel | undefined =>
+  useMemo(() => createEditorModel(props), Object.values(props));
 
-const createModel = ({ space, identity, text }: UseTextModelProps): EditorModel | undefined => {
+// TODO(burdon): Remove.
+const createEditorModel = ({ space, identity, text }: UseTextModelProps): EditorModel | undefined => {
   if (!text) {
     return undefined;
   }

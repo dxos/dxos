@@ -98,20 +98,28 @@ export type DecodedAutomergeValue =
 
 //
 // Automerge types.
+// TODO(burdon): Factor out to @dxos/types.
 //
 
-// TODO(burdon): Why is this needed? Remove?
+// TODO(burdon): Remove?
 export const isDocument = Symbol.for('isDocument');
-
 export const isDocAccessor = (obj: any): obj is DocAccessor => {
   return !!obj?.[isDocument];
 };
 
+export interface IDocHandle<T = any> {
+  docSync(): Doc<T> | undefined;
+  change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
+  changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): string[] | undefined;
+  addListener(event: 'change', listener: () => void): void;
+  removeListener(event: 'change', listener: () => void): void;
+}
+
 // TODO(burdon): Rename ValueAccessor.
 export interface DocAccessor<T = any> {
   [isDocument]: true; // TODO(burdon): Remove.
-  handle: IDocHandle<T>;
-  get path(): string[]; // TODO(burdon): Getter or prop?
+  get handle(): IDocHandle<T>;
+  get path(): string[];
 }
 
 export const DocAccessor = {
@@ -130,11 +138,3 @@ export const createDocAccessor = <T = any>(text: TextObject): DocAccessor<T> => 
   const obj = text as any as AutomergeTextCompat;
   return getRawDoc(obj, [obj.field]);
 };
-
-export interface IDocHandle<T = any> {
-  docSync(): Doc<T> | undefined;
-  change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
-  changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): string[] | undefined;
-  addListener(event: 'change', listener: () => void): void;
-  removeListener(event: 'change', listener: () => void): void;
-}
