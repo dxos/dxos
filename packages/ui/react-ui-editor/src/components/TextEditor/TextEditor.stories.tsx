@@ -25,22 +25,22 @@ import {
   blast,
   command,
   comments,
+  createMarkdownExtensions,
   decorateMarkdown,
   defaultOptions,
   dnd,
   formattingKeymap,
   image,
   linkTooltip,
+  listener,
   mention,
+  useComments,
   table,
   typewriter,
   EditorModes,
   type CommandAction,
   type CommandOptions,
   type CommentsOptions,
-  listener,
-  createMarkdownExtensions,
-  useComments,
 } from '../../extensions';
 import {
   type Comment,
@@ -253,9 +253,6 @@ const Story = ({
 }: StoryProps) => {
   const { accessor } = useDocAccessor(new TextObject(text));
 
-  // TODO(burdon): Change to hook?
-  // TODO(burdon): 1). How to get view if using wrapper (e.g., for comments).
-  // TODO(burdon): 2). Util hooks for standard bundles (e.g., compute theme, etc.)
   const viewRef = useRef<EditorView>(null);
   useComments(viewRef.current, id, comments);
 

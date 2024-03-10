@@ -91,7 +91,6 @@ export const EditorMain = ({ id, readonly, toolbar, comments, doc, extensions: _
           },
         },
       }),
-      // TODO(burdon): Other extensions?
       decorateMarkdown(),
       formattingKeymap(),
       image(),

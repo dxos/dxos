@@ -49,14 +49,7 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
       editorMode ? EditorModes[editorMode] : [],
       createBasicExtensions({ placeholder, lineWrapping: true, readonly }),
       createMarkdownExtensions({ themeMode }),
-      createThemeExtensions({
-        themeMode,
-        theme: markdownTheme,
-        slots: {
-          editor: { className: 'p-2' },
-        },
-      }),
-      // TODO(burdon): Move into markdown bundle (with React callbacks).
+      createThemeExtensions({ themeMode, theme: markdownTheme }),
       decorateMarkdown(),
       formattingKeymap(),
       image(),
