@@ -5,12 +5,12 @@
 import * as S from '@effect/schema/Schema';
 
 import { Reference } from '@dxos/document-model';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
-import { AutomergeObjectCore } from '../automerge';
+import { type AutomergeObjectCore } from '../automerge';
 import { getSchemaTypeRefOrThrow } from '../effect/echo-handler';
 import {
   getReferenceWithSpaceKey,
@@ -21,7 +21,6 @@ import {
   type TypedObject,
 } from '../object';
 import { type Schema } from '../proto';
-import { isReactiveProxy } from '../effect/proxy';
 
 export const hasType =
   <T extends TypedObject>(schema: Schema) =>

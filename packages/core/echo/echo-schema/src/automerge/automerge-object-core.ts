@@ -26,7 +26,7 @@ import {
   decodeReference,
   type DecodedAutomergeValue,
   type SpaceDoc,
-  DecodedAutomergePrimaryValue,
+  type DecodedAutomergePrimaryValue,
 } from './types';
 import { isReactiveProxy } from '../effect/proxy';
 import {

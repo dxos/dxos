@@ -9,9 +9,9 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
 import { compareType, Filter, filterMatch } from './filter';
+import { getAutomergeObjectCore } from '../automerge';
 import { Expando } from '../object';
 import { Schema } from '../proto';
-import { getAutomergeObjectCore } from '../automerge';
 
 describe('Filter', () => {
   test('properties', () => {
