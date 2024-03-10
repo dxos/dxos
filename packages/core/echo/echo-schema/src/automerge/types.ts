@@ -82,6 +82,18 @@ export const decodeReference = (value: any) =>
 export const isEncodedReferenceObject = (value: any): value is EncodedReferenceObject =>
   typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG;
 
+export type DecodedAutomergePrimaryValue =
+  | undefined
+  | string
+  | number
+  | boolean
+  | DecodedAutomergePrimaryValue[]
+  | { [key: string]: DecodedAutomergePrimaryValue }
+  | Reference;
+
+/**
+ * @deprecated Use DecodedAutomergePrimaryValue instead.
+ */
 export type DecodedAutomergeValue =
   | undefined
   | string
