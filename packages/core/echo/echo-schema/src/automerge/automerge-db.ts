@@ -63,8 +63,12 @@ export class AutomergeDb {
     this._dbApi = dbApi;
   }
 
+  allObjectCores() {
+    return Array.from(this._objects.values());
+  }
+
   allObjects(): EchoObject[] {
-    return Array.from(this._objects.values()).map((core) => core.rootProxy as EchoObject);
+    return this.allObjectCores().map((core) => core.rootProxy as EchoObject);
   }
 
   @synchronized
@@ -139,7 +143,7 @@ export class AutomergeDb {
     this._ctx = undefined;
   }
 
-  getObjectById(id: string): EchoObject | undefined {
+  getObjectCoreById(id: string): AutomergeObjectCore | undefined {
     const objCore = this._objects.get(id);
     if (!objCore) {
       this._automergeDocLoader.loadObjectDocument(id);
@@ -151,6 +155,15 @@ export class AutomergeDb {
     }
 
     invariant(objCore instanceof AutomergeObjectCore);
+    return objCore;
+  }
+
+  getObjectById(id: string): EchoObject | undefined {
+    const objCore = this.getObjectCoreById(id);
+    if (!objCore) {
+      return undefined;
+    }
+
     const root = objCore.rootProxy;
     invariant(isAutomergeObject(root) || isReactiveProxy(root));
     return root as any;
