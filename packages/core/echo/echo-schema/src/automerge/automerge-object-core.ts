@@ -19,7 +19,6 @@ import { AutomergeObject, getAutomergeObjectCore } from './automerge-object';
 import { docChangeSemaphore } from './doc-semaphore';
 import {
   type DocAccessor,
-  isDocument,
   encodeReference,
   type ObjectStructure,
   isEncodedReferenceObject,
@@ -213,7 +212,6 @@ export class AutomergeObjectCore {
   getDocAccessor(path: string[] = []): DocAccessor {
     const self = this;
     return {
-      [isDocument]: true, // TODO(burdon): Remove.
       handle: {
         docSync: () => this.getDoc(),
         change: (callback, options) => {

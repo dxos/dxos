@@ -113,12 +113,6 @@ export type DecodedAutomergeValue =
 // TODO(burdon): Factor out to @dxos/types.
 //
 
-// TODO(burdon): Remove?
-export const isDocument = Symbol.for('isDocument');
-export const isDocAccessor = (obj: any): obj is DocAccessor => {
-  return !!obj?.[isDocument];
-};
-
 export interface IDocHandle<T = any> {
   docSync(): Doc<T> | undefined;
   change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
@@ -127,23 +121,14 @@ export interface IDocHandle<T = any> {
   removeListener(event: 'change', listener: () => void): void;
 }
 
-// TODO(burdon): Rename ValueAccessor.
+// TODO(burdon): Rename ValueAccessor?
 export interface DocAccessor<T = any> {
-  [isDocument]: true; // TODO(burdon): Remove.
   get handle(): IDocHandle<T>;
   get path(): string[];
 }
 
 export const DocAccessor = {
-  getValue: (accessor: DocAccessor) => get(accessor.handle.docSync(), accessor.path),
-};
-
-// TODO(burdon): Remove?
-export const createRawDocAccessor = <T = any>(props: { handle: IDocHandle<T>; path: string[] }): DocAccessor<T> => {
-  return {
-    [isDocument]: true,
-    ...props,
-  };
+  getValue: <T>(accessor: DocAccessor): T => get(accessor.handle.docSync(), accessor.path) as T,
 };
 
 export const createDocAccessor = <T = any>(text: TextObject): DocAccessor<T> => {

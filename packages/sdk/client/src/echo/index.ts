@@ -21,7 +21,6 @@ export {
   Schema,
   TypedObject,
   getRawDoc,
-  isDocAccessor,
   getTextInRange,
   fromCursor,
   toCursor,
