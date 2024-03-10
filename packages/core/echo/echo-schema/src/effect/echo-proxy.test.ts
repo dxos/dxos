@@ -10,15 +10,15 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
+import { createEchoReactiveObject, isEchoReactiveObject, type EchoReactiveObject } from './echo-handler';
+import * as E from './reactive';
+import { TestClass, TestSchema, type TestSchemaWithClass } from './testing/schema';
 import { AutomergeContext, type SpaceDoc } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 import { Filter } from '../query';
 import { createDatabase } from '../testing';
 import { Task } from '../tests/proto';
-import { createEchoReactiveObject, isEchoReactiveObject, type EchoReactiveObject } from './echo-handler';
-import * as E from './reactive';
-import { TestClass, TestSchema, type TestSchemaWithClass } from './testing/schema';
 
 registerSignalRuntime();
 

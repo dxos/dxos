@@ -6,7 +6,6 @@ import { ArrowSquareDown, ArrowSquareOut, type Icon } from '@phosphor-icons/reac
 import React, { type AnchorHTMLAttributes, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { Document as DocumentType } from '@braneframe/types';
 import { type IntentDispatcher, NavigationAction } from '@dxos/app-framework';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import {
@@ -24,7 +23,7 @@ import {
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
-import type { MarkdownSettingsProps } from './types';
+import { DocumentSchema, type DocumentType, type MarkdownSettingsProps } from './types';
 
 export type ExtensionsOptions = {
   settings?: MarkdownSettingsProps;
@@ -79,7 +78,7 @@ export const getExtensions = ({ settings, document, dispatch }: ExtensionsOption
       autocomplete({
         onSearch: (text: string) => {
           // TODO(burdon): Specify filter (e.g., stack).
-          const { objects = [] } = space?.db.query(DocumentType.filter()) ?? {};
+          const { objects = [] } = space?.db.query(Filter.schema(DocumentSchema)) ?? {};
           return objects
             .map<AutocompleteResult | undefined>((object) =>
               object.title?.length && object.id !== document?.id

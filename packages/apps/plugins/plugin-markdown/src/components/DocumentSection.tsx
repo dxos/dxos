@@ -4,7 +4,6 @@
 
 import React, { type FC, type HTMLAttributes } from 'react';
 
-import { type Document as DocumentType } from '@braneframe/types';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useTranslation } from '@dxos/react-ui';
@@ -12,6 +11,7 @@ import { type Extension, MarkdownEditor, useTextModel } from '@dxos/react-ui-edi
 import { attentionSurface, focusRing, mx } from '@dxos/react-ui-theme';
 
 import { MARKDOWN_PLUGIN } from '../meta';
+import { type DocumentType } from '../types';
 
 const DocumentSection: FC<{
   document: DocumentType;

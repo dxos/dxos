@@ -2096,12 +2096,12 @@ importers:
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
@@ -2129,12 +2129,18 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: ^0.63.2
+        version: 0.63.2(effect@2.4.1)(fast-check@3.15.1)
       '@preact/signals-core':
         specifier: ^1.5.1
         version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
         version: 1.5.0(@preact/signals-core@1.5.1)
+      effect:
+        specifier: ^2.4.1
+        version: 2.4.1
     devDependencies:
       '@braneframe/plugin-client':
         specifier: workspace:*
@@ -5220,14 +5226,14 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@effect/schema':
-        specifier: ^0.62.1
-        version: 0.62.6(effect@2.3.5)(fast-check@3.15.1)
+        specifier: ^0.63.2
+        version: 0.63.2(effect@2.4.1)(fast-check@3.15.1)
       '@orama/orama':
         specifier: ^2.0.8
         version: 2.0.8
       effect:
-        specifier: ^2.3.1
-        version: 2.3.5
+        specifier: ^2.4.1
+        version: 2.4.1
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -7027,8 +7033,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/schema':
-        specifier: ^0.62.1
-        version: 0.62.6(effect@2.3.5)(fast-check@3.15.1)
+        specifier: ^0.63.2
+        version: 0.63.2(effect@2.4.1)(fast-check@3.15.1)
       '@langchain/community':
         specifier: ^0.0.26
         version: 0.0.26(discord.js@14.14.1)(faiss-node@0.5.1)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@20.0.1)
@@ -7063,8 +7069,8 @@ importers:
         specifier: ^14.14.1
         version: 14.14.1
       effect:
-        specifier: ^2.3.1
-        version: 2.3.5
+        specifier: ^2.4.1
+        version: 2.4.1
       email-addresses:
         specifier: ^5.0.0
         version: 5.0.0
@@ -7921,14 +7927,14 @@ importers:
         specifier: workspace:*
         version: link:../../core/echo/text-model
       '@effect/schema':
-        specifier: ^0.62.1
-        version: 0.62.6(effect@2.3.5)(fast-check@3.15.1)
+        specifier: ^0.63.2
+        version: 0.63.2(effect@2.4.1)(fast-check@3.15.1)
       base-x:
         specifier: ~3.0.9
         version: 3.0.9
       effect:
-        specifier: ^2.3.1
-        version: 2.3.5
+        specifier: ^2.4.1
+        version: 2.4.1
     devDependencies:
       '@dxos/echo-typegen':
         specifier: workspace:*
@@ -13619,13 +13625,13 @@ packages:
       - supports-color
     dev: true
 
-  /@effect/schema@0.62.6(effect@2.3.5)(fast-check@3.15.1):
-    resolution: {integrity: sha512-Y/vkQ63EXcQUiJM01lbZ5lb7wCEK8gTcM5wZ1L20TvqFuAXHLp0cs66L3Sk3eIbiX0mv4aYxBWSKhwvhWAhc6g==}
+  /@effect/schema@0.63.2(effect@2.4.1)(fast-check@3.15.1):
+    resolution: {integrity: sha512-piS+6dlGmcX8sAPGXdY4T6QmBbY2YXVnYjUguXpClk6FL7lQ9u2aIDib5kjCpciawJjil2VwltmPnMj0NJKKQQ==}
     peerDependencies:
-      effect: ^2.3.5
+      effect: ^2.4.1
       fast-check: ^3.13.2
     dependencies:
-      effect: 2.3.5
+      effect: 2.4.1
       fast-check: 3.15.1
     dev: false
 
@@ -28255,8 +28261,8 @@ packages:
   /ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  /effect@2.3.5:
-    resolution: {integrity: sha512-qarp/WBRty4VM//ZEKDY8Bu3Tolr1afEIwFVZtU3eMOtBZpRIQkLVQMTOjUTt3qeJAAIHfYfEk7GiKg6ABCWlg==}
+  /effect@2.4.1:
+    resolution: {integrity: sha512-YsoMB/EGCohGKFyTPYqaFe2B7UCU2MM303dkoowF8DNOdks/4q/00cyhTbBUmM/0FMDoUPmUi/AJ0Aj3E7vO1A==}
     dev: false
 
   /ejs@3.1.8:

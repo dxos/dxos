@@ -4,12 +4,12 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { type Document as DocumentType } from '@braneframe/types';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type Comment, useTextModel } from '@dxos/react-ui-editor';
 
 import EditorMain, { type EditorMainProps } from './EditorMain';
+import { type DocumentType } from './types';
 
 /**
  * @deprecated

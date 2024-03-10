@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Document as DocumentType } from '@braneframe/types';
+import * as S from '@effect/schema/Schema';
+
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -11,6 +12,7 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
+import * as E from '@dxos/echo-schema';
 import { type ObjectMeta } from '@dxos/react-client/echo';
 import { type Extension, type EditorMode } from '@dxos/react-ui-editor';
 
@@ -69,3 +71,17 @@ export type MarkdownPluginProvides = SurfaceProvides &
   SettingsProvides<MarkdownSettingsProps> &
   TranslationsProvides &
   StackProvides;
+
+export const DocumentSchema = S.struct({
+  title: S.optional(S.string),
+  content: S.optional(S.string),
+  comments: S.optional(
+    S.struct({
+      // TODO(wittjosiah): Add thread schema.
+      // thread: S.optional(ThreadSchema),
+      cursor: S.optional(S.string),
+    }),
+  ),
+}).pipe(E.echoObject('dxos.sdk.client.Properties', '0.1.0'));
+
+export type DocumentType = S.Schema.To<typeof DocumentSchema>;

@@ -2,14 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as S from '@effect/schema/Schema';
 import { type IconProps, TextAa } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
 import { deepSignal } from 'deepsignal/react';
+import { Effect } from 'effect';
 import React, { useMemo, type Ref } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { Document as DocumentType } from '@braneframe/types';
 import {
   isObject,
   parseIntentPlugin,
@@ -19,8 +20,8 @@ import {
   type PluginDefinition,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
+import { Filter } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { isTypedObject } from '@dxos/react-client/echo';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
@@ -41,12 +42,21 @@ import {
   type ExtensionsProvider,
   type MarkdownPluginProvides,
   type MarkdownSettingsProps,
+  type DocumentType,
   MarkdownAction,
+  DocumentSchema,
 } from './types';
 import { getFallbackTitle, isEditorModel, isMarkdownProperties, markdownExtensionPlugins } from './util';
 
-export const isDocument = (data: unknown): data is DocumentType =>
-  isTypedObject(data) && DocumentType.schema.typename === data.__typename;
+export const isDocument = (data: unknown): data is DocumentType => {
+  // TODO(wittjosiah): More concise way to do this?
+  const result = S.validate(DocumentSchema)(data);
+  const program = Effect.match(result, {
+    onFailure: () => false,
+    onSuccess: () => true,
+  });
+  return Effect.runSync(program);
+};
 
 export type MarkdownPluginState = {
   // Codemirror extensions provided by other plugins.
@@ -137,7 +147,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               );
 
               // Add all documents to the graph.
-              const query = space.db.query(DocumentType.filter());
+              const query = space.db.query(Filter.schema(DocumentSchema));
               let previousObjects: DocumentType[] = [];
               subscriptions.add(
                 effect(() => {

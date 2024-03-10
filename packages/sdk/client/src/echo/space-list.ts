@@ -8,6 +8,7 @@ import { Event, MulticastObservable, PushStream, Trigger, scheduleTask } from '@
 import {
   CREATE_SPACE_TIMEOUT,
   Properties,
+  PropertiesSchema,
   defaultKey,
   type ClientServicesProvider,
   type Echo,
@@ -17,6 +18,7 @@ import {
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
+import * as E from '@dxos/echo-schema';
 import {
   type FilterSource,
   type Hypergraph,
@@ -246,6 +248,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
     await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
     if (this._config?.values?.runtime?.client?.useReactiveObjectApi ?? false) {
+      // TODO(wittjosiah): Remove cast.
+      spaceProxy.db.add(E.object(PropertiesSchema, meta as any));
     } else {
       spaceProxy.db.add(new Properties(meta));
     }

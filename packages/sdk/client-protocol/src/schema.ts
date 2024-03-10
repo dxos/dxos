@@ -1,4 +1,9 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import * as S from '@effect/schema/Schema';
+
 import * as E from '@dxos/echo-schema';
 
 export const PropertiesSchema = S.struct({
