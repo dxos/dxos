@@ -229,9 +229,7 @@ class SpaceQuerySource implements QuerySource {
 
       if (changed) {
         this._results = undefined;
-        compositeRuntime.untracked(() => {
-          this.changed.emit();
-        });
+        this.changed.emit();
       }
     });
   };

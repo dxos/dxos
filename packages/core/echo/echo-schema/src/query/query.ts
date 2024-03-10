@@ -113,8 +113,12 @@ export class Query<T extends TypedObject = TypedObject> {
       source.changed.on(this._ctx, () => {
         this._resultCache = undefined;
         this._objectCache = undefined;
-        this._signal.notifyWrite();
-        this._event.emit(this);
+
+        // Clear `prohibitSignalActions` to allow the signal to be emitted.
+        compositeRuntime.untracked(() => {
+          this._signal.notifyWrite();
+          this._event.emit(this);
+        });
       });
       source.update(this._filter);
     });
