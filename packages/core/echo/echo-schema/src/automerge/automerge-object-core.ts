@@ -9,7 +9,7 @@ import { Reference } from '@dxos/document-model';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log'; // Keep type-only
+import { log } from '@dxos/log'; // Keep type-only.
 import { TextModel } from '@dxos/text-model';
 import { assignDeep, defer, getDeep } from '@dxos/util';
 
@@ -100,7 +100,7 @@ export class AutomergeObjectCore {
 
     initialProps ??= {};
 
-    // Init schema defaults
+    // Init schema defaults.
     if (opts?.schema) {
       for (const field of opts.schema.props) {
         if (field.repeated) {
