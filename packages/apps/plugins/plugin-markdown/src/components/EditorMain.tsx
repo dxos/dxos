@@ -83,7 +83,6 @@ export const EditorMain = ({
   // Toolbar state.
   const [formattingState, formattingObserver] = useFormattingState();
   const extensions = useMemo(() => {
-    console.log('??', _extensions?.length);
     return [
       createBasicExtensions({ readonly, placeholder: t('editor placeholder'), scrollPastEnd: true }),
       createMarkdownExtensions({ themeMode }),
