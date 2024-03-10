@@ -272,9 +272,7 @@ const Story = ({
       ref={viewRef}
       doc={text}
       extensions={extensions}
-      slots={{
-        root: { className: mx(textBlockWidth, 'min-bs-dvh') },
-      }}
+      className={mx(textBlockWidth, 'min-bs-dvh')}
     />
   );
 };

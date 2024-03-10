@@ -2,9 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import get from 'lodash.get';
+
+import type { ChangeFn, ChangeOptions, Doc, Heads } from '@dxos/automerge/dist/types/src/automerge';
 import { Reference } from '@dxos/document-model';
 
-import { type ObjectMeta, type OpaqueEchoObject } from '../object';
+import { getRawDoc } from './automerge-object';
+import { type AutomergeTextCompat, type ObjectMeta, type OpaqueEchoObject, type TextObject } from '../object';
 import { type Schema } from '../proto';
 
 export interface SpaceDoc {
@@ -91,3 +95,46 @@ export type DecodedAutomergeValue =
   | { [key: string]: DecodedAutomergeValue }
   | Reference
   | OpaqueEchoObject;
+
+//
+// Automerge types.
+//
+
+// TODO(burdon): Why is this needed? Remove?
+export const isDocument = Symbol.for('isDocument');
+
+export const isDocAccessor = (obj: any): obj is DocAccessor => {
+  return !!obj?.[isDocument];
+};
+
+// TODO(burdon): Rename ValueAccessor.
+export interface DocAccessor<T = any> {
+  [isDocument]: true; // TODO(burdon): Remove.
+  handle: IDocHandle<T>;
+  get path(): string[]; // TODO(burdon): Getter or prop?
+}
+
+export const DocAccessor = {
+  getValue: (accessor: DocAccessor) => get(accessor.handle.docSync(), accessor.path),
+};
+
+// TODO(burdon): Remove.
+export const createMockDocAccessor = <T = any>(props: { handle: IDocHandle<T>; path: string[] }): DocAccessor<T> => {
+  return {
+    [isDocument]: true,
+    ...props,
+  };
+};
+
+export const createDocAccessor = <T = any>(text: TextObject): DocAccessor<T> => {
+  const obj = text as any as AutomergeTextCompat;
+  return getRawDoc(obj, [obj.field]);
+};
+
+export interface IDocHandle<T = any> {
+  docSync(): Doc<T> | undefined;
+  change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
+  changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): string[] | undefined;
+  addListener(event: 'change', listener: () => void): void;
+  removeListener(event: 'change', listener: () => void): void;
+}

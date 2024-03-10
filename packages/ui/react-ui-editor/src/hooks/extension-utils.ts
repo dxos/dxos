@@ -20,7 +20,7 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import { useMemo } from 'react';
 
 import { generateName } from '@dxos/display-name';
-import { createDocAccessor, getTextContent, type TextObject } from '@dxos/echo-schema';
+import { createDocAccessor, getTextContent, type TextObject, type DocAccessor } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
@@ -30,7 +30,6 @@ import { hexToHue, isNotFalsy } from '@dxos/util';
 
 import { SpaceAwarenessProvider } from './awareness-provider';
 import { automerge, awareness } from '../extensions';
-import { type DocAccessor } from '../extensions/automerge/defs';
 import { type ThemeStyles } from '../styles';
 import { defaultTheme } from '../themes';
 
@@ -162,11 +161,11 @@ export const createDataExtensions = ({ id, text, space, identity }: DataExtensio
 };
 
 // TODO(burdon): Factor out.
-export const useDocAccessor = (text: TextObject) => {
+export const useDocAccessor = <T = any>(text: TextObject): { doc: string | undefined; accessor: DocAccessor<T> } => {
   return useMemo(
     () => ({
       doc: getTextContent(text),
-      accessor: createDocAccessor(text),
+      accessor: createDocAccessor<T>(text),
     }),
     [text],
   );

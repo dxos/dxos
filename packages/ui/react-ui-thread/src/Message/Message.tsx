@@ -192,7 +192,7 @@ export const MessageTextbox = ({
     <MessageMeta {...{ id, authorId, authorName, authorImgSrc, authorAvatarProps }} continues={false}>
       <TextEditor
         extensions={extensions}
-        slots={{ root: { className: mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50') } }}
+        className={mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50')}
         {...editorProps}
       />
     </MessageMeta>

@@ -71,13 +71,14 @@ export const defaultSlots: TextEditorSlots = {
 /**
  * @deprecated
  */
-export type BaseTextEditorProps = Omit<TextEditorProps, 'doc'> & {
+export type BaseTextEditorProps = Omit<TextEditorProps, 'doc' | 'className'> & {
   model: EditorModel;
   readonly?: boolean;
   scrollPastEnd?: boolean;
   lineWrapping?: boolean;
   placeholder?: string;
   theme?: ThemeStyles;
+  slots?: TextEditorSlots;
 };
 
 /**
@@ -261,12 +262,12 @@ const BaseTextEditor = forwardRef<EditorView | null, BaseTextEditorProps>(
 
 export type TextEditorProps = {
   doc?: string; // TODO(burdon): Rename text/value?
+  className?: string;
   autoFocus?: boolean;
   scrollTo?: StateEffect<any>; // TODO(burdon): Restore scroll position: scrollTo EditorView.scrollSnapshot().
   moveToEndOfLine?: boolean;
   selection?: { anchor: number; head?: number };
   extensions?: Extension[];
-  slots?: TextEditorSlots;
   debug?: boolean;
 };
 
@@ -278,12 +279,12 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
   (
     {
       doc,
+      className,
       autoFocus,
       scrollTo = EditorView.scrollIntoView(0),
       moveToEndOfLine,
       selection,
       extensions = [],
-      slots,
       debug,
     },
     forwardedRef,
@@ -391,7 +392,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
         role='none'
         ref={rootRef}
         tabIndex={0}
-        className={slots?.root?.className}
+        className={className}
         onKeyUp={handleKeyUp}
         {...tabsterDOMAttribute}
       />

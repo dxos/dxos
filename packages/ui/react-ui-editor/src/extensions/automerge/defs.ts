@@ -5,9 +5,8 @@
 //
 
 import { Annotation, StateEffect, type StateField, type EditorState, type Transaction } from '@codemirror/state';
-import get from 'lodash.get';
 
-import { type ChangeFn, type ChangeOptions, type Doc, type Heads, type Prop } from '@dxos/automerge/automerge';
+import { type Heads, type Prop } from '@dxos/automerge/automerge';
 
 export type State = {
   path: Prop[];
@@ -31,23 +30,3 @@ export const reconcileAnnotation = Annotation.define<boolean>();
 export const isReconcile = (tr: Transaction): boolean => {
   return !!tr.annotation(reconcileAnnotation);
 };
-
-// TODO(burdon): Reconcile with echo.
-export interface DocAccessor<T = any> {
-  handle: IDocHandle<T>;
-  get path(): string[]; // TODO(burdon): Getter or prop?
-}
-
-// TODO(burdon): Reconcile with echo.
-export const DocAccessor = {
-  getValue: (accessor: DocAccessor): string => get(accessor.handle, accessor.path),
-};
-
-// TODO(burdon): Reconcile with echo.
-export interface IDocHandle<T = any> {
-  docSync(): Doc<T> | undefined;
-  change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
-  changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): string[] | undefined;
-  addListener(event: 'change', listener: () => void): void;
-  removeListener(event: 'change', listener: () => void): void;
-}
