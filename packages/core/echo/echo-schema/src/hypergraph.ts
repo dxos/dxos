@@ -15,7 +15,7 @@ import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 import { type AutomergeDb, type ItemsUpdatedEvent } from './automerge';
 import { type EchoDatabaseImpl, type EchoDatabase } from './database';
 import { prohibitSignalActions } from './guarded-scope';
-import { type EchoObject, type TypedObject } from './object';
+import { OpaqueEchoObject, type EchoObject, type TypedObject } from './object';
 import {
   Filter,
   Query,
@@ -88,7 +88,7 @@ export class Hypergraph {
   /**
    * Filter by type.
    */
-  query<T extends TypedObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
+  query<T extends OpaqueEchoObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
     const spaces = options?.spaces;
     invariant(!spaces || spaces.every((space) => space instanceof PublicKey), 'Invalid spaces filter');
     return new Query(this._createQueryContext(), Filter.from(filter, options));

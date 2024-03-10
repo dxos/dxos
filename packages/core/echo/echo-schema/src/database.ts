@@ -116,7 +116,7 @@ export class EchoDatabaseImpl implements EchoDatabase {
     return this._automerge.getObjectById(id) as T | undefined;
   }
 
-  add<T extends OpaqueEchoObject>(obj: T): T extends EchoObject ? T : EchoReactiveObject<T> {
+  add<T extends OpaqueEchoObject>(obj: T): T extends EchoObject ? T : EchoReactiveObject<{ [K in keyof T]: T[K] }> {
     if (!this._useReactiveObjectApi) {
       invariant(isAutomergeObject(obj));
       this._automerge.add(obj);
@@ -138,7 +138,10 @@ export class EchoDatabaseImpl implements EchoDatabase {
     return this._automerge.remove(obj);
   }
 
-  query<T extends TypedObject>(filter?: FilterSource<T> | undefined, options?: QueryOptions | undefined): Query<T> {
+  query<T extends OpaqueEchoObject>(
+    filter?: FilterSource<T> | undefined,
+    options?: QueryOptions | undefined,
+  ): Query<T> {
     options ??= {};
     options.spaces = [this.spaceKey];
 

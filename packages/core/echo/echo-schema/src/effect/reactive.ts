@@ -21,6 +21,7 @@ import {
 import { SchemaValidator, symbolSchema } from './schema-validator';
 import { TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
+import { Mutable } from 'effect/Types';
 
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
@@ -57,10 +58,11 @@ export type ReactiveObject<T> = { [K in keyof T]: T[K] };
  * Optionally provides a TS-effect schema.
  */
 // TODO(burdon): Option to return mutable object.
+// TODO(dmaretskyi): Deep mutability.
 export const object: {
-  <T extends {}>(obj: T): ReactiveObject<T>;
-  <T extends {}>(schema: S.Schema<T>, obj: T): ReactiveObject<T>;
-} = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: T): ReactiveObject<T> => {
+  <T extends {}>(obj: T): ReactiveObject<Mutable<T>>;
+  <T extends {}>(schema: S.Schema<T>, obj: T): ReactiveObject<Mutable<T>>;
+} = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: T): ReactiveObject<Mutable<T>> => {
   if (obj) {
     if (!isValidProxyTarget(obj)) {
       throw new Error('Value cannot be made into a reactive object.');

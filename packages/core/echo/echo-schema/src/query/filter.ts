@@ -10,7 +10,7 @@ import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { getAutomergeObjectCore } from '../automerge';
-import { getSchemaTypeRefOrThrow } from '../effect/echo-handler';
+import { EchoReactiveObject, getSchemaTypeRefOrThrow } from '../effect/echo-handler';
 import { isReactiveProxy } from '../effect/proxy';
 import {
   getReferenceWithSpaceKey,
@@ -22,6 +22,7 @@ import {
   type TypedObject,
 } from '../object';
 import { type Schema } from '../proto';
+import { Mutable } from 'effect/Types';
 
 export const hasType =
   <T extends TypedObject>(schema: Schema) =>
@@ -31,9 +32,13 @@ export const hasType =
 // TODO(burdon): Operators (EQ, NE, GT, LT, IN, etc.)
 export type PropertyFilter = Record<string, any>;
 
-export type OperatorFilter<T extends EchoObject> = (object: T) => boolean;
+export type OperatorFilter<T extends OpaqueEchoObject> = (object: T) => boolean;
 
-export type FilterSource<T extends EchoObject = EchoObject> = PropertyFilter | OperatorFilter<T> | Filter<T> | string;
+export type FilterSource<T extends OpaqueEchoObject = EchoObject> =
+  | PropertyFilter
+  | OperatorFilter<T>
+  | Filter<T>
+  | string;
 
 // TODO(burdon): Remove class.
 // TODO(burdon): Disambiguate if multiple are defined (i.e., AND/OR).
@@ -47,7 +52,7 @@ export type FilterParams<T extends EchoObject> = {
   or?: Filter[];
 };
 
-export class Filter<T extends EchoObject = EchoObject> {
+export class Filter<T extends OpaqueEchoObject = EchoObject> {
   static from<T extends TypedObject>(source?: FilterSource<T>, options?: QueryOptions): Filter<T> {
     if (source === undefined || source === null) {
       return new Filter({}, options);
@@ -86,7 +91,9 @@ export class Filter<T extends EchoObject = EchoObject> {
     }
   }
 
-  static schema(schema: S.Schema<any> | Schema): Filter<Expando> {
+  static schema<T>(schema: S.Schema<T>): Filter<EchoReactiveObject<Mutable<T>>>;
+  static schema(schema: Schema): Filter<Expando>;
+  static schema(schema: S.Schema<any> | Schema): Filter<OpaqueEchoObject> {
     if (S.isSchema(schema)) {
       const ref = getSchemaTypeRefOrThrow(schema);
       return new Filter({
