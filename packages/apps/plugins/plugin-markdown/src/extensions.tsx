@@ -19,7 +19,7 @@ import {
   linkTooltip,
   table,
   typewriter,
-  formatting,
+  formattingKeymap,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -55,10 +55,10 @@ export const getExtensions = ({ settings, document, dispatch }: ExtensionsOption
           })
         : undefined,
     }),
-    linkTooltip(renderLinkTooltip),
-    formatting(),
+    formattingKeymap(),
     image(),
     table(),
+    linkTooltip(renderLinkTooltip),
   ];
 
   //

@@ -19,7 +19,7 @@ import {
   EditorModes,
   decorateMarkdown,
   createMarkdownExtensions,
-  formatting,
+  formattingKeymap,
   image,
   table,
   useFormattingState,
@@ -58,7 +58,7 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
       }),
       // TODO(burdon): Move into markdown bundle (with React callbacks).
       decorateMarkdown(),
-      formatting(),
+      formattingKeymap(),
       image(),
       table(),
       trackFormatting,

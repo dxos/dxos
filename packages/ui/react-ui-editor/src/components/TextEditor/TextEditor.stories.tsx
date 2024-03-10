@@ -28,7 +28,7 @@ import {
   decorateMarkdown,
   defaultOptions,
   dnd,
-  formatting,
+  formattingKeymap,
   image,
   linkTooltip,
   mention,
@@ -300,10 +300,10 @@ const defaults = [
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
   decorateMarkdown({ renderLinkButton }),
-  formatting(),
+  formattingKeymap(),
   image(),
-  linkTooltip(renderLinkTooltip),
   table(),
+  linkTooltip(renderLinkTooltip),
 ];
 
 export const Default = {

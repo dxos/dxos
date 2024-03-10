@@ -250,6 +250,7 @@ const OutlinerItem = (props: OutlinerItemProps) => {
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode }),
         decorateMarkdown({ renderLinkButton: onRenderLink }),
+        formattingKeymap(),
         automerge(accessor),
         keymap,
       ].filter(isNotFalsy),

@@ -25,6 +25,7 @@ import {
   focusComment,
   createBasicExtensions,
 } from '@dxos/react-ui-editor';
+import { formattingKeymap, image, table } from '@dxos/react-ui-editor/src';
 import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
@@ -92,6 +93,9 @@ export const EditorMain = ({ id, readonly, toolbar, comments, doc, extensions: _
       }),
       // TODO(burdon): Other extensions?
       decorateMarkdown(),
+      formattingKeymap(),
+      image(),
+      table(),
       cursorLineMargin,
     ].filter(nonNullable);
   }, [_extensions, formattingObserver]);

@@ -17,7 +17,7 @@ import { Toolbar } from './Toolbar';
 import {
   decorateMarkdown,
   comments,
-  formatting,
+  formattingKeymap,
   image,
   table,
   useComments,
@@ -58,7 +58,7 @@ const Story: FC<{ content: string }> = ({ content }) => {
           },
         }),
         decorateMarkdown(),
-        formatting(),
+        formattingKeymap(),
         image(),
         table(),
         formattingObserver,

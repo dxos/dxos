@@ -987,7 +987,7 @@ export const toggleCodeblock: StateCommand = (target) => {
 
 export type FormattingOptions = {};
 
-export const formatting = (options: FormattingOptions = {}): Extension => {
+export const formattingKeymap = (options: FormattingOptions = {}): Extension => {
   return [
     keymap.of([
       {
