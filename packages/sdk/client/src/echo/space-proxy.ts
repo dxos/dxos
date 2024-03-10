@@ -283,7 +283,7 @@ export class SpaceProxy implements Space {
       this._error = decodeError(space.error);
     }
 
-    {
+    if (this._initialized) {
       // Transition onto new automerge root.
       const automergeRoot = space.pipeline?.currentEpoch?.subject.assertion.automergeRoot;
       if (automergeRoot) {
