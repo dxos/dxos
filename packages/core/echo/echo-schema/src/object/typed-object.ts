@@ -163,7 +163,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    * Convert to JSON object. Used by `JSON.stringify`.
    * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#description
    */
-  toJSON() {
+  toJSON(): any {
     return todo();
   }
 
@@ -171,7 +171,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    * @internal
    */
   // TODO(dmaretskyi): Make public.
-  _getType() {
+  _getType(): Reference | undefined {
     return todo();
   }
 
