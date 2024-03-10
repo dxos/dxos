@@ -5,11 +5,8 @@
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { devtoolsFormatter, todo, type DevtoolsFormatter } from '@dxos/debug';
-import { DocumentModel, Reference } from '@dxos/document-model';
+import { DocumentModel, type Reference } from '@dxos/document-model';
 
-import { AutomergeObject } from '../automerge';
-import { type Schema } from '../proto'; // NOTE: Keep as type-import.
-import { getBody, getHeader } from '../util';
 import { AbstractEchoObject } from './object';
 import {
   base,
@@ -22,6 +19,9 @@ import {
   type ObjectMeta,
   type TypedObjectProperties,
 } from './types';
+import { AutomergeObject } from '../automerge';
+import { type Schema } from '../proto'; // NOTE: Keep as type-import.
+import { getBody, getHeader } from '../util';
 
 export const isTypedObject = (object: unknown): object is TypedObject =>
   typeof object === 'object' && object !== null && !!(object as any)[base];

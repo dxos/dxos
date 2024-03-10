@@ -5,15 +5,15 @@
 import get from 'lodash.get';
 
 import { next as A } from '@dxos/automerge/automerge';
+import { todo } from '@dxos/debug';
 import { Reference } from '@dxos/document-model';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { TextModel, type Doc, type YText, type YXmlFragment } from '@dxos/text-model';
 
-import { todo } from '@dxos/debug';
-import { AutomergeObject, getRawDoc } from '../automerge';
 import { AbstractEchoObject } from './object';
 import { isAutomergeObject, type AutomergeOptions, type TypedObject } from './typed-object';
 import { base } from './types';
+import { AutomergeObject, getRawDoc } from '../automerge';
 
 export type TextObjectOptions = AutomergeOptions;
 

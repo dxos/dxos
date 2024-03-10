@@ -5,6 +5,7 @@
 import { inspect, type CustomInspectFunction } from 'node:util';
 
 import { todo } from '@dxos/debug';
+
 import { type AutomergeOptions, type TypedObject } from './typed-object';
 import { base } from './types';
 import { AutomergeArray } from '../automerge';
