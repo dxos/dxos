@@ -9,20 +9,19 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { getAutomergeObjectCore } from '../automerge';
+import { AutomergeObjectCore, getAutomergeObjectCore } from '../automerge';
 import { getSchemaTypeRefOrThrow } from '../effect/echo-handler';
 import { isReactiveProxy } from '../effect/proxy';
 import {
+  getReferenceWithSpaceKey,
+  immutable,
   isTypedObject,
   type EchoObject,
   type Expando,
-  type TypedObject,
-  immutable,
   type OpaqueEchoObject,
+  type TypedObject,
 } from '../object';
-import { getReferenceWithSpaceKey } from '../object';
 import { type Schema } from '../proto';
-import { log } from '@dxos/log';
 
 export const hasType =
   <T extends TypedObject>(schema: Schema) =>
@@ -196,17 +195,17 @@ export class Filter<T extends EchoObject = EchoObject> {
 }
 
 // TODO(burdon): Move logic into Filter.
-export const filterMatch = (filter: Filter, object: OpaqueEchoObject | undefined): boolean => {
-  if (!object) {
+export const filterMatch = (filter: Filter, core: AutomergeObjectCore | undefined): boolean => {
+  if (!core) {
     return false;
   }
-  const result = filterMatchInner(filter, object);
+  const result = filterMatchInner(filter, core);
   return filter.not ? !result : result;
 };
 
-const filterMatchInner = (filter: Filter, object: OpaqueEchoObject): boolean => {
+const filterMatchInner = (filter: Filter, core: AutomergeObjectCore): boolean => {
+  const object = core.rootProxy;
   invariant(isTypedObject(object) || isReactiveProxy(object));
-  const core = getAutomergeObjectCore(object);
 
   const deleted = filter.options.deleted ?? QueryOptions.ShowDeletedOption.HIDE_DELETED;
   if (core.isDeleted()) {
@@ -221,7 +220,7 @@ const filterMatchInner = (filter: Filter, object: OpaqueEchoObject): boolean => 
 
   if (filter.or.length) {
     for (const orFilter of filter.or) {
-      if (filterMatch(orFilter, object)) {
+      if (filterMatch(orFilter, core)) {
         return true;
       }
     }
@@ -232,7 +231,7 @@ const filterMatchInner = (filter: Filter, object: OpaqueEchoObject): boolean => 
   if (filter.type) {
     const type = core.getType();
 
-    const dynamicSchema = isTypedObject(core.rootProxy) ? core.rootProxy.__schema : undefined;
+    const dynamicSchema = isTypedObject(object) ? object.__schema : undefined;
 
     // Separate branch for objects with dynamic schema and typename filters.
     // TODO(dmaretskyi): Better way to check if schema is dynamic.
@@ -277,12 +276,12 @@ const filterMatchInner = (filter: Filter, object: OpaqueEchoObject): boolean => 
     }
   }
 
-  if (filter.predicate && !filter.predicate(object)) {
+  if (filter.predicate && !filter.predicate(core.rootProxy)) {
     return false;
   }
 
   for (const andFilter of filter.and) {
-    if (!filterMatch(andFilter, object)) {
+    if (!filterMatch(andFilter, core)) {
       return false;
     }
   }

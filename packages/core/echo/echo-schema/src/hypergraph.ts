@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
-import { type AutomergeDb, type ItemsUpdatedEvent } from './automerge';
+import { getAutomergeObjectCore, type AutomergeDb, type ItemsUpdatedEvent } from './automerge';
 import { type EchoDatabaseImpl, type EchoDatabase } from './database';
 import { prohibitSignalActions } from './guarded-scope';
 import { type EchoObject, type TypedObject } from './object';
@@ -225,7 +225,7 @@ class SpaceQuerySource implements QuerySource {
             !this._results ||
             this._results.find((result) => result.id === object.id) ||
             (this._database.automerge._objects.has(object.id) &&
-              filterMatch(this._filter!, this._database.automerge.getObjectById(object.id)!))
+              filterMatch(this._filter!, this._database.automerge.getObjectCoreById(object.id)!))
           );
         });
 
@@ -247,12 +247,13 @@ class SpaceQuerySource implements QuerySource {
         // TODO(dmaretskyi): Clean up getters in the internal signals so they don't use the Proxy API and don't hit the signals.
         compositeRuntime.untracked(() => {
           this._results = this._database.automerge
-            .allObjects()
-            .filter((object) => filterMatch(this._filter!, object))
-            .map((object) => ({
-              id: object.id,
+            .allObjectCores()
+            // TODO(dmaretskyi): Cleanup proxy <-> core.
+            .filter((core) => filterMatch(this._filter!, core))
+            .map((core) => ({
+              id: core.id,
               spaceKey: this.spaceKey,
-              object,
+              object: core.rootProxy as EchoObject,
               resolution: {
                 source: 'local',
                 time: 0,
