@@ -7,9 +7,7 @@ import { inspect, type CustomInspectFunction } from 'node:util';
 import { todo } from '@dxos/debug';
 import { type AutomergeOptions, type TypedObject } from './typed-object';
 import { base } from './types';
-
-const isIndex = (property: string | symbol): property is string =>
-  typeof property === 'string' && parseInt(property).toString() === property;
+import { AutomergeArray } from '../automerge';
 
 /**
  * Array of complex or scalar values.
@@ -19,15 +17,6 @@ export class EchoArray<T> implements Array<T> {
   static get [Symbol.species]() {
     return Array;
   }
-
-  /**
-   * Until this array is attached a document, the items are stored in this array.
-   */
-  private _uninitialized?: T[] = [];
-
-  private _object?: TypedObject;
-  private _property?: string;
-  private _isMeta?: boolean;
 
   [base]: EchoArray<T> = this;
 
@@ -42,7 +31,11 @@ export class EchoArray<T> implements Array<T> {
   }
 
   constructor(items: T[] = [], opts?: AutomergeOptions) {
-    todo();
+    if (opts?.automerge === false) {
+      throw new Error('Legacy hypercore-based ECHO objects are not supported');
+    }
+
+    return new AutomergeArray(items) as any;
   }
 
   get length(): number {
