@@ -14,11 +14,12 @@ import {
   type YText,
   useTextEditor,
   automerge,
-  decorateMarkdown,
-  createMarkdownExtensions,
-  useDocAccessor,
-  createThemeExtensions,
   createBasicExtensions,
+  createMarkdownExtensions,
+  createThemeExtensions,
+  decorateMarkdown,
+  formattingKeymap,
+  useDocAccessor,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';

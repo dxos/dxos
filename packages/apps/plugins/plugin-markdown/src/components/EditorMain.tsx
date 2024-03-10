@@ -25,7 +25,7 @@ import {
   focusComment,
   createBasicExtensions,
 } from '@dxos/react-ui-editor';
-import { formattingKeymap, image, table } from '@dxos/react-ui-editor/src';
+import { formattingKeymap, image, table } from '@dxos/react-ui-editor';
 import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
