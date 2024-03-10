@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { manageNodes } from '@braneframe/plugin-graph';
-import { isEditorModel, isMarkdownProperties } from '@braneframe/plugin-markdown';
+import { isMarkdownProperties } from '@braneframe/plugin-markdown';
 import { type Document } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
@@ -16,18 +16,10 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { SpaceState } from '@dxos/react-client/echo';
 
-import {
-  EmbeddedMain,
-  ExportDialog,
-  ImportDialog,
-  OctokitProvider,
-  GitHubSettings,
-  UrlDialog,
-  MarkdownActions,
-} from './components';
+import { EmbeddedMain, ImportDialog, OctokitProvider, GitHubSettings, UrlDialog, MarkdownActions } from './components';
 import meta, { GITHUB_PLUGIN, GITHUB_PLUGIN_SHORT_ID } from './meta';
 import translations from './translations';
-import { type ExportViewState, type GhIdentifier, type GithubPluginProvides, type GithubSettingsProps } from './types';
+import { type GhIdentifier, type GithubPluginProvides, type GithubSettingsProps } from './types';
 
 // TODO(dmaretskyi): Meta filters?.
 const filter = (obj: Document) => obj.__meta?.keys?.find((key) => key?.source?.includes('github'));
@@ -117,15 +109,17 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
               switch (data.content) {
                 case 'dxos.org/plugin/github/BindDialog':
                   return isMarkdownProperties(data.properties) ? <UrlDialog properties={data.properties} /> : null;
+                // TODO(burdon): Model should not be passed via surfaces.
+                // return isEditorModel(data.model) ? (
+                //   <ExportDialog
+                //     model={data.model}
+                //     type={data.type as ExportViewState}
+                //     target={data.target as string | null}
+                //     docGhId={data.docGhId as GhIdentifier}
+                //   />
+                // ) : null;
                 case 'dxos.org/plugin/github/ExportDialog':
-                  return isEditorModel(data.model) ? (
-                    <ExportDialog
-                      model={data.model}
-                      type={data.type as ExportViewState}
-                      target={data.target as string | null}
-                      docGhId={data.docGhId as GhIdentifier}
-                    />
-                  ) : null;
+                  return null;
                 case 'dxos.org/plugin/github/ImportDialog':
                   return (
                     <ImportDialog

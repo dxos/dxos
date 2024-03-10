@@ -6,10 +6,10 @@ import '@dxosTheme';
 import React, { useMemo } from 'react';
 
 import {
+  createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  MarkdownEditor,
   TextEditor,
 } from '@dxos/react-ui-editor';
 import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
@@ -26,11 +26,12 @@ type StoryProps = {
 const Story = ({ text }: StoryProps) => {
   const extensions = useMemo(
     () => [
+      createBasicExtensions(),
+      createMarkdownExtensions(),
+      createThemeExtensions(),
       // TODO(burdon): Bug if mermaid extension is provided after decorateMarkdown.
       mermaid(),
       decorateMarkdown(),
-      createThemeExtensions(),
-      createMarkdownExtensions(),
     ],
     [],
   );
@@ -48,7 +49,7 @@ const Story = ({ text }: StoryProps) => {
 
 const meta: Meta = {
   title: 'plugin-mermaid/extensions',
-  component: MarkdownEditor,
+  component: TextEditor,
   decorators: [withTheme],
 };
 
