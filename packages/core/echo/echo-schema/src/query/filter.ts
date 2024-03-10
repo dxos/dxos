@@ -42,7 +42,7 @@ export type FilterSource<T extends OpaqueEchoObject = EchoObject> =
 
 // TODO(burdon): Remove class.
 // TODO(burdon): Disambiguate if multiple are defined (i.e., AND/OR).
-export type FilterParams<T extends EchoObject> = {
+export type FilterParams<T extends OpaqueEchoObject> = {
   type?: Reference;
   properties?: Record<string, any>;
   text?: string;

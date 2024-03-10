@@ -23,7 +23,7 @@ import {
 import { getSchema } from './effect/reactive';
 import { type Hypergraph } from './hypergraph';
 import { isAutomergeObject, type EchoObject, type TypedObject, type OpaqueEchoObject, base } from './object';
-import { type FilterSource, type Query } from './query';
+import { Filter, type FilterSource, type Query } from './query';
 
 export interface EchoDatabase {
   get graph(): Hypergraph;
@@ -138,6 +138,9 @@ export class EchoDatabaseImpl implements EchoDatabase {
     return this._automerge.remove(obj);
   }
 
+  query(): Query<TypedObject>;
+  query<T extends OpaqueEchoObject>(filter?: Filter<T> | undefined, options?: QueryOptions | undefined): Query<T>;
+  query<T extends {}>(filter?: T | undefined, options?: QueryOptions | undefined): Query<TypedObject>;
   query<T extends OpaqueEchoObject>(
     filter?: FilterSource<T> | undefined,
     options?: QueryOptions | undefined,
