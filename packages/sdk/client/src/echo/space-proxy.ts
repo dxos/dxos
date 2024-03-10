@@ -129,7 +129,7 @@ export class SpaceProxy implements Space {
       spaceKey: this.key,
     });
     this._db = new EchoDatabaseImpl({
-      spaceKey: this._dbBackend.spaceKey,
+      spaceKey: this.key,
       graph,
       automergeContext,
       useReactiveObjectApi: options.useReactiveObjectApi,
