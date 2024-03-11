@@ -6,6 +6,7 @@ import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect } from 'react';
 
 import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
+import { useRefCallback } from '@dxos/react-async';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type Comment,
@@ -15,18 +16,13 @@ import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
-  decorateMarkdown,
   editorFillLayoutRoot,
   editorFillLayoutEditor,
   focusComment,
-  table,
-  image,
   useComments,
-  useEditorView,
   useActionHandler,
   useFormattingState,
 } from '@dxos/react-ui-editor';
-import { formattingKeymap } from '@dxos/react-ui-editor';
 import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
@@ -50,28 +46,24 @@ export type EditorMainProps = {
   comments?: Comment[];
 } & Pick<TextEditorProps, 'doc' | 'extensions'>;
 
-// TODO(burdon): Invalid cursor error when switching between editors.
 export const EditorMain = ({ id, readonly, toolbar, comments, doc, extensions: _extensions }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
 
-  // TODO(burdon): Remove useEditorView. Check interaction with useComments with @wittjosiah.
-  const [editorRef, viewInvalidated] = useEditorView(id);
-  useTest(editorRef.current);
+  const { ref: editorRef, value: view } = useRefCallback<EditorView>();
+  useComments(view, id, comments);
+  useTest(view);
 
   // Toolbar actions.
-  const handleAction = useActionHandler(editorRef.current);
-
-  // TODO(burdon): Doesn't show comments until first render.
-  useComments(viewInvalidated ? null : editorRef.current, id, comments);
+  const handleAction = useActionHandler(view);
 
   // Focus comment.
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
     switch (action) {
       case LayoutAction.FOCUS: {
         const object = data?.object;
-        if (editorRef.current) {
-          focusComment(editorRef.current, object);
+        if (view) {
+          focusComment(view, object);
           return { data: true };
         }
         break;
@@ -96,10 +88,6 @@ export const EditorMain = ({ id, readonly, toolbar, comments, doc, extensions: _
           },
         },
       }),
-      decorateMarkdown(),
-      formattingKeymap(),
-      image(),
-      table(),
     ].filter(nonNullable);
   }, [_extensions, formattingObserver]);
 

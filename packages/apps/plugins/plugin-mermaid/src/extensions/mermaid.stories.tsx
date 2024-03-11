@@ -5,6 +5,7 @@
 import '@dxosTheme';
 import React, { useMemo } from 'react';
 
+import { useThemeContext } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -24,11 +25,12 @@ type StoryProps = {
 };
 
 const Story = ({ text }: StoryProps) => {
+  const { themeMode } = useThemeContext();
   const extensions = useMemo(
     () => [
       createBasicExtensions(),
-      createMarkdownExtensions(),
-      createThemeExtensions(),
+      createMarkdownExtensions({ themeMode }),
+      createThemeExtensions({ themeMode }),
       // TODO(burdon): Bug if mermaid extension is provided after decorateMarkdown.
       mermaid(),
       decorateMarkdown(),

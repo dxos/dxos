@@ -20,11 +20,10 @@ import {
   decorateMarkdown,
   createMarkdownExtensions,
   formattingKeymap,
-  image,
   table,
   useFormattingState,
+  image,
 } from '../extensions';
-import { markdownTheme } from '../themes';
 import translations from '../translations';
 
 // TODO(burdon): Demo toolbar with hooks.
@@ -49,7 +48,7 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
       editorMode ? EditorModes[editorMode] : [],
       createBasicExtensions({ placeholder, lineWrapping: true, readonly }),
       createMarkdownExtensions({ themeMode }),
-      createThemeExtensions({ themeMode, theme: markdownTheme }),
+      createThemeExtensions({ themeMode }),
       decorateMarkdown(),
       formattingKeymap(),
       image(),

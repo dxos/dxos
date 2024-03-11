@@ -18,11 +18,11 @@ import {
   decorateMarkdown,
   comments,
   formattingKeymap,
-  image,
   table,
   useComments,
   useFormattingState,
   createMarkdownExtensions,
+  image,
 } from '../../extensions';
 import {
   type Comment,

@@ -22,7 +22,6 @@ import { translationKey } from '../translations';
 import { type MessageEntity, type MessageEntityBlock, type MessageMetadata } from '../types';
 
 const avatarSize = 7;
-const messageCell = 'plb-1 min-is-0';
 
 export type MessageMetaProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
   MessageMetadata &
@@ -42,14 +41,14 @@ export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
           className={mx('grid grid-cols-subgrid col-span-2', classNames)}
           ref={forwardedRef}
         >
-          <div role='none' className={mx('flex flex-col items-center gap-2', messageCell)}>
+          <div role='none' className={mx('flex flex-col items-center gap-2 plb-2 min-is-0')}>
             <Avatar.Frame>
               <Avatar.Fallback text={authorAvatarProps?.emoji || hexToEmoji(authorId ?? '0')} />
               {authorImgSrc && <Avatar.Image href={authorImgSrc} />}
             </Avatar.Frame>
             {continues && <div role='none' className='is-px grow surface-separator' />}
           </div>
-          <div role='none' className={messageCell}>
+          <div role='none' className='plb-1 min-is-0'>
             {children}
           </div>
         </div>

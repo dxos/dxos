@@ -41,6 +41,8 @@ export type TextEditorProps = {
   debug?: boolean;
 };
 
+let instanceCount = 0;
+
 /**
  * Thin wrapper for text editor.
  * Handles tabster and focus management.
@@ -59,6 +61,9 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
     },
     forwardedRef,
   ) => {
+    // TODO(burdon): Increments by 2!
+    const [id] = useState(() => `text-editor-${++instanceCount}`);
+
     // TODO(burdon): Make tabster optional.
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
     const rootRef = useRef<HTMLDivElement>(null);
@@ -78,7 +83,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
     // Create editor state and view.
     // The view is recreated if the model or extensions are changed.
     useEffect(() => {
-      log.info('updating', { selection, scrollTo, extensions: extensions.length });
+      log('updating', { id, selection, scrollTo, extensions: extensions.length });
 
       //
       // EditorState

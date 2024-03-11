@@ -508,7 +508,6 @@ export const focusComment = (view: EditorView, id: string, center = true) => {
 /**
  * Update comments state field.
  */
-// TODO(burdon): Replace with extension that has callback or deepsignal.
 export const useComments = (view: EditorView | null | undefined, id: string, comments: Comment[] = []) => {
   useEffect(() => {
     if (view) {
