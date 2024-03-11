@@ -3,35 +3,46 @@
 //
 
 import '@dxosTheme';
+import React, { useMemo } from 'react';
 
-import React, { useState } from 'react';
-
-import { TextObject } from '@dxos/echo-schema';
-import { decorateMarkdown, MarkdownEditor, type TextEditorProps, useTextModel } from '@dxos/react-ui-editor';
+import { useThemeContext } from '@dxos/react-ui';
+import {
+  createBasicExtensions,
+  createMarkdownExtensions,
+  createThemeExtensions,
+  decorateMarkdown,
+  TextEditor,
+} from '@dxos/react-ui-editor';
 import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
 import { type Meta, withTheme } from '@dxos/storybook-utils';
 
-import { mermaid } from './extensions';
+import { mermaid } from './mermaid';
 
 const str = (...lines: string[]) => lines.join('\n');
 
 type StoryProps = {
   text?: string;
-} & Pick<TextEditorProps, 'readonly' | 'extensions' | 'slots'>;
+};
 
-const Story = ({ text, ...props }: StoryProps) => {
-  const [item] = useState({ text: new TextObject(text) });
-  const model = useTextModel({ text: item.text });
-  if (!model) {
-    return null;
-  }
+const Story = ({ text }: StoryProps) => {
+  const { themeMode } = useThemeContext();
+  const extensions = useMemo(
+    () => [
+      createBasicExtensions(),
+      createMarkdownExtensions({ themeMode }),
+      createThemeExtensions({ themeMode }),
+      // TODO(burdon): Bug if mermaid extension is provided after decorateMarkdown.
+      mermaid(),
+      decorateMarkdown(),
+    ],
+    [],
+  );
 
   return (
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex justify-center overflow-y-scroll'>
         <div className='flex flex-col w-[800px] py-16'>
-          <MarkdownEditor model={model} {...props} />
-          <div className='flex shrink-0 h-[300px]'></div>
+          <TextEditor doc={text} extensions={extensions} />
         </div>
       </div>
     </div>
@@ -40,7 +51,7 @@ const Story = ({ text, ...props }: StoryProps) => {
 
 const meta: Meta = {
   title: 'plugin-mermaid/extensions',
-  component: MarkdownEditor,
+  component: TextEditor,
   decorators: [withTheme],
 };
 
@@ -67,7 +78,6 @@ export const Mermaid = {
         'Inside a markdown document.',
         '',
       )}
-      extensions={[decorateMarkdown(), mermaid()]}
     />
   ),
 };
@@ -88,7 +98,6 @@ export const Error = {
         '',
         '',
       )}
-      extensions={[decorateMarkdown(), mermaid()]}
     />
   ),
 };
