@@ -16,9 +16,9 @@ import { assignDeep, defer, getDeep } from '@dxos/util';
 import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
 import { AutomergeObject, getAutomergeObjectCore } from './automerge-object';
+import { type DocAccessor } from './automerge-types';
 import { docChangeSemaphore } from './doc-semaphore';
 import {
-  type DocAccessor,
   encodeReference,
   type ObjectStructure,
   isEncodedReferenceObject,

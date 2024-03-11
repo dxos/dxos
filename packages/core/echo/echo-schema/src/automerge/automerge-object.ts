@@ -13,7 +13,7 @@ import { assignDeep } from '@dxos/util';
 
 import { AutomergeArray } from './automerge-array';
 import { AutomergeObjectCore, type BindOptions } from './automerge-object-core';
-import { type DocAccessor } from './defs';
+import { type DocAccessor } from './automerge-types';
 import { REFERENCE_TYPE_TAG, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
 import { EchoReactiveHandler } from '../effect/echo-handler';
