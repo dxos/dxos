@@ -4,13 +4,14 @@
 
 import { expect } from 'chai';
 
+import { type Filter } from '@dxos/echo-schema';
+import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { IndexMetadataStore } from './index-metadata-store';
 import { IndexStore } from './index-store';
 import { Indexer, type ObjectSnapshot } from './indexer';
-import { type Filter } from '../query';
 
 describe('Indexer', () => {
   test('objects that are marked as dirty are getting indexed', async () => {
@@ -35,7 +36,7 @@ describe('Indexer', () => {
     objects.forEach((object) => documents.push({ id: object.id, object, currentHash: 'hash' }));
 
     {
-      indexer.setIndexConfig({ indexes: [{ kind: 'SCHEMA_MATCH' }] });
+      indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] });
       await indexer.initialize();
     }
 
