@@ -22,6 +22,7 @@ import {
 import { getSchema, getTypeReference, type ReactiveObject } from './reactive';
 import { SchemaValidator } from './schema-validator';
 import { AutomergeObjectCore, encodeReference } from '../automerge';
+import { type ObjectMeta } from '../object';
 import { defineHiddenProperty } from '../util/property';
 
 export type EchoReactiveObject<T> = ReactiveObject<T> & { id: string };
@@ -30,16 +31,19 @@ export const isEchoReactiveObject = (value: unknown): value is EchoReactiveObjec
   isReactiveProxy(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;
 
 const symbolPath = Symbol('path');
+const symbolNamespace = Symbol('namespace');
 const symbolHandler = Symbol('handler');
 
 type PropPath = string[];
 
 type ProxyTarget = {
   [symbolPath]: PropPath;
+  [symbolNamespace]: string;
   [symbolHandler]?: EchoReactiveHandler;
 } & ({ [key: keyof any]: any } | any[]);
 
 const DATA_NAMESPACE = 'data';
+const META_NAMESPACE = 'meta';
 
 /**
  * Shared for all targets within one ECHO object.
@@ -112,7 +116,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return this._arrayGet(target, prop);
     }
 
-    if (prop === 'id') {
+    if (prop === 'id' && target[symbolPath].length === 0) {
       return this._objectCore.id;
     }
 
@@ -121,7 +125,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _wrapInProxyIfRequired(decodedValueAtPath: DecodedValueAtPath) {
-    const { value: decoded, dataPath } = decodedValueAtPath;
+    const { value: decoded, dataPath, namespace } = decodedValueAtPath;
     if (decoded == null) {
       return decoded;
     }
@@ -135,6 +139,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const target = defaultMap(this._targetsMap, dataPath, (): ProxyTarget => {
         const array = new EchoArrayTwoPointO();
         array[symbolPath] = dataPath;
+        array[symbolNamespace] = namespace;
         array[symbolHandler] = this;
         return array;
       });
@@ -142,7 +147,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
     if (typeof decoded === 'object') {
       // TODO(dmaretskyi): Materialize properties for easier debugging.
-      const target = defaultMap(this._targetsMap, dataPath, (): ProxyTarget => ({ [symbolPath]: dataPath }));
+      const target = defaultMap(
+        this._targetsMap,
+        dataPath,
+        (): ProxyTarget => ({ [symbolPath]: dataPath, [symbolNamespace]: namespace }),
+      );
       return createReactiveProxy(target, this);
     }
     return decoded;
@@ -165,9 +174,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (prop != null) {
       dataPath.push(prop);
     }
-    const fullPath = [DATA_NAMESPACE, ...dataPath];
+    const fullPath = [getNamespace(target), ...dataPath];
     const value = this._objectCore.get(fullPath);
-    return { value: this._objectCore.decode(value), dataPath };
+    return { namespace: getNamespace(target), value: this._objectCore.decode(value), dataPath };
   }
 
   private _arrayGet(target: ProxyTarget, prop: string) {
@@ -200,12 +209,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     invariant(typeof prop === 'string');
 
     if (target instanceof EchoArrayTwoPointO && prop === 'length') {
-      this._arraySetLength(target[symbolPath], value);
+      this._arraySetLength(target, target[symbolPath], value);
       return true;
     }
 
     this.validateValue(target, prop, value);
-    const fullPath = [DATA_NAMESPACE, ...target[symbolPath], prop];
+    const fullPath = [getNamespace(target), ...target[symbolPath], prop];
 
     if (value === undefined) {
       this._objectCore.delete(fullPath);
@@ -270,8 +279,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return effectSchema;
   }
 
-  arrayPush(_: any, path: PropPath, ...items: any[]): number {
-    const fullPath = this._getPropertyMountPath(path);
+  arrayPush(target: any, path: PropPath, ...items: any[]): number {
+    const fullPath = this._getPropertyMountPath(target, path);
 
     const encodedItems = items.map((value) => this._objectCore.encode(value));
 
@@ -288,8 +297,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return newLength;
   }
 
-  arrayPop(_: any, path: PropPath): any {
-    const fullPath = this._getPropertyMountPath(path);
+  arrayPop(target: any, path: PropPath): any {
+    const fullPath = this._getPropertyMountPath(target, path);
 
     let returnValue: any | undefined;
     this._objectCore.change((doc) => {
@@ -303,8 +312,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return returnValue;
   }
 
-  arrayShift(_: any, path: PropPath): any {
-    const fullPath = this._getPropertyMountPath(path);
+  arrayShift(target: any, path: PropPath): any {
+    const fullPath = this._getPropertyMountPath(target, path);
 
     let returnValue: any | undefined;
     this._objectCore.change((doc) => {
@@ -318,8 +327,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return returnValue;
   }
 
-  arrayUnshift(_: any, path: PropPath, ...items: any[]): number {
-    const fullPath = this._getPropertyMountPath(path);
+  arrayUnshift(target: any, path: PropPath, ...items: any[]): number {
+    const fullPath = this._getPropertyMountPath(target, path);
 
     const encodedItems = items?.map((value) => this._objectCore.encode(value)) ?? [];
 
@@ -336,8 +345,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return newLength;
   }
 
-  arraySplice(_: any, path: PropPath, start: number, deleteCount?: number, ...items: any[]): any[] {
-    const fullPath = this._getPropertyMountPath(path);
+  arraySplice(target: any, path: PropPath, start: number, deleteCount?: number, ...items: any[]): any[] {
+    const fullPath = this._getPropertyMountPath(target, path);
 
     const encodedItems = items?.map((value) => this._objectCore.encode(value)) ?? [];
 
@@ -359,7 +368,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arraySort(target: any, path: PropPath, compareFn?: (v1: any, v2: any) => number): any[] {
-    const fullPath = this._getPropertyMountPath(path);
+    const fullPath = this._getPropertyMountPath(target, path);
 
     this._objectCore.change((doc) => {
       const array = getDeep(doc, fullPath);
@@ -374,7 +383,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayReverse(target: any, path: PropPath): any[] {
-    const fullPath = this._getPropertyMountPath(path);
+    const fullPath = this._getPropertyMountPath(target, path);
 
     this._objectCore.change((doc) => {
       const array = getDeep(doc, fullPath);
@@ -388,11 +397,16 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return target;
   }
 
-  private _arraySetLength(path: PropPath, newLength: number) {
+  getMeta(): ObjectMeta {
+    const target: any = { [symbolPath]: [], [symbolNamespace]: META_NAMESPACE };
+    return createReactiveProxy(target, this) as ObjectMeta;
+  }
+
+  private _arraySetLength(target: any, path: PropPath, newLength: number) {
     if (newLength < 0) {
       throw new RangeError('Invalid array length');
     }
-    const fullPath = this._getPropertyMountPath(path);
+    const fullPath = this._getPropertyMountPath(target, path);
 
     this._objectCore.change((doc) => {
       const array = getDeep(doc, fullPath);
@@ -405,8 +419,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     this._signal.notifyWrite();
   }
 
-  private _getPropertyMountPath(path: PropPath): string[] {
-    return [...this._objectCore.mountPath, DATA_NAMESPACE, ...path];
+  private _getPropertyMountPath(target: any, path: PropPath): string[] {
+    return [...this._objectCore.mountPath, getNamespace(target), ...path];
   }
 
   // Will be bound to the proxy target.
@@ -440,6 +454,7 @@ class EchoArrayTwoPointO<T> extends Array<T> {
   }
 
   [symbolPath]: PropPath = null as any;
+  [symbolNamespace]: string = null as any;
   [symbolHandler]: EchoReactiveHandler = null as any;
 
   static {
@@ -494,12 +509,13 @@ export const createEchoReactiveObject = <T extends {}>(init: T): EchoReactiveObj
     slot.handler = echoHandler;
     const target = slot.target as ProxyTarget;
     target[symbolPath] = [];
+    target[symbolNamespace] = DATA_NAMESPACE;
     slot.handler._proxyMap.set(target, proxy);
     slot.handler._init(target);
     saveTypeInAutomerge(echoHandler, schema);
     return proxy;
   } else {
-    const target = { [symbolPath]: [], ...(init as any) };
+    const target = { [symbolPath]: [], [symbolNamespace]: DATA_NAMESPACE, ...(init as any) };
     const handler = new EchoReactiveHandler();
     const proxy = createReactiveProxy<ProxyTarget>(target, handler) as any;
     handler._objectCore.rootProxy = proxy;
@@ -509,7 +525,7 @@ export const createEchoReactiveObject = <T extends {}>(init: T): EchoReactiveObj
 };
 
 export const initEchoReactiveObjectRootProxy = (core: AutomergeObjectCore) => {
-  const target = { [symbolPath]: [] };
+  const target = { [symbolPath]: [], [symbolNamespace]: DATA_NAMESPACE };
   const handler = new EchoReactiveHandler();
   handler._objectCore = core;
   handler._objectCore.rootProxy = createReactiveProxy<ProxyTarget>(target, handler) as any;
@@ -540,7 +556,10 @@ export const getSchemaTypeRefOrThrow = (schema: S.Schema<any>): Reference => {
   return typeReference;
 };
 
+const getNamespace = (target: any): string => target[symbolNamespace];
+
 interface DecodedValueAtPath {
   value: any;
+  namespace: string;
   dataPath: string[];
 }

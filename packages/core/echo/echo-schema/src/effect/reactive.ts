@@ -21,6 +21,7 @@ import {
 import { SchemaValidator, symbolSchema } from './schema-validator';
 import { TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
+import { type ObjectMeta } from '../object';
 
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
@@ -108,6 +109,12 @@ export const getSchema = <T extends {}>(obj: T): S.Schema<T> | undefined => {
 
   invariant(S.isSchema(schema), 'Invalid schema.');
   return schema as S.Schema<T>;
+};
+
+export const metaOf = <T extends {}>(obj: T): ObjectMeta => {
+  const proxy = getProxyHandlerSlot(obj);
+  invariant(proxy.handler instanceof EchoReactiveHandler, 'Not a reactive ECHO object');
+  return proxy.handler.getMeta();
 };
 
 export const getTypeReference = (schema: S.Schema<any>): Reference | undefined => {
