@@ -74,9 +74,13 @@ export type MarkdownPluginProvides = SurfaceProvides &
   TranslationsProvides &
   StackProvides;
 
+export const TextV0Schema = S.struct({
+  content: S.string,
+}).pipe(E.echoObject('dxos.Text.v0', '0.1.0'));
+
 export const DocumentSchema = S.struct({
   title: S.optional(S.string),
-  content: S.optional(S.string),
+  content: E.ref(TextV0Schema),
   comments: S.optional(
     S.struct({
       // TODO(wittjosiah): Add thread schema.
@@ -84,6 +88,6 @@ export const DocumentSchema = S.struct({
       cursor: S.optional(S.string),
     }),
   ),
-}).pipe(E.echoObject('dxos.sdk.client.Properties', '0.1.0'));
+}).pipe(E.echoObject('braneframe.Document', '0.1.0'));
 
 export type DocumentType = EchoReactiveObject<Mutable<S.Schema.To<typeof DocumentSchema>>>;
