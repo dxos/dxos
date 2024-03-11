@@ -10,10 +10,10 @@ import { Toolbar as NaturalToolbar, Select, useThemeContext, Tooltip } from '@dx
 import { attentionSurface, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { createBasicExtensions, createThemeExtensions } from './extension-utils';
 import { useActionHandler } from './useActionHandler';
 import { useTextEditor } from './useTextEditor';
 import { Toolbar } from '../components';
+import { createBasicExtensions, createThemeExtensions } from '../extensions';
 import {
   type EditorMode,
   EditorModes,
