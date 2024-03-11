@@ -3,10 +3,8 @@
 //
 
 import { type Event } from '@dxos/async';
-
-import { type Filter } from '../query';
-
-export type IndexKind = { kind: 'SCHEMA_MATCH' } | { kind: 'FIELD_MATCH'; field: string } | { kind: 'FULL_TEXT' };
+import { type Filter } from '@dxos/echo-schema';
+import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
 export type ObjectType = Record<string, any> & { id: string };
 

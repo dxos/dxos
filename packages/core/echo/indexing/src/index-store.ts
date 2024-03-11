@@ -4,10 +4,11 @@
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type Directory } from '@dxos/random-access-storage';
 
 import { IndexConstructors } from './index-constructors';
-import { type IndexKind, type Index } from './types';
+import { type Index } from './types';
 import { overrideFile } from './util';
 
 const RESERVED_SIZE = 4; // 4 bytes

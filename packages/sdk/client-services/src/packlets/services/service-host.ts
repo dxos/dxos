@@ -9,6 +9,7 @@ import { Context } from '@dxos/context';
 import { DocumentModel } from '@dxos/document-model';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
 import { type TypedObject, getRawDoc, type SpaceDoc, getAutomergeObjectCore } from '@dxos/echo-schema';
+import { IndexServiceImpl } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -278,6 +279,11 @@ export class ClientServicesHost {
         this._serviceContext.dataServiceSubscriptions,
         this._serviceContext.automergeHost,
       ),
+
+      IndexService: new IndexServiceImpl({
+        indexer: this._serviceContext.indexer,
+        automergeHost: this._serviceContext.automergeHost,
+      }),
 
       NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager, this._serviceContext.signalManager),
 

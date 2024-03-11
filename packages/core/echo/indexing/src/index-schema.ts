@@ -4,18 +4,12 @@
 import * as orama from '@orama/orama';
 
 import { Event } from '@dxos/async';
+import { type Filter } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
-import {
-  type ObjectType,
-  type Index,
-  type IndexKind,
-  type IndexStaticProps,
-  type LoadParams,
-  staticImplements,
-} from './types';
-import { type Filter } from '../query';
+import { type ObjectType, type Index, type IndexStaticProps, type LoadParams, staticImplements } from './types';
 
 // TODO(mykola): Correct schema ref?
 type OramaSchemaType = orama.Orama<
@@ -31,7 +25,7 @@ type OramaSchemaType = orama.Orama<
 @staticImplements<IndexStaticProps>()
 export class IndexSchema implements Index {
   private _identifier = PublicKey.random().toString();
-  public readonly kind: IndexKind = { kind: 'SCHEMA_MATCH' };
+  public readonly kind: IndexKind = { kind: IndexKind.Kind.SCHEMA_MATCH };
   public readonly updated = new Event<void>();
 
   private readonly _orama: Promise<OramaSchemaType>;

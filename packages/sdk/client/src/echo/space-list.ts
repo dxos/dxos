@@ -32,10 +32,12 @@ import { type ModelFactory } from '@dxos/model-factory';
 import { ApiError, trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { trace } from '@dxos/tracing';
 
 import { AgentQuerySourceProvider } from './agent-query-source-provider';
+import { IndexQuerySourceProvider } from './index-query-source-provider';
 import { SpaceProxy } from './space-proxy';
 import { InvitationsProxy } from '../invitations';
 
@@ -179,6 +181,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       await agentQuerySourceProvider.open();
       this._graph.registerQuerySourceProvider(agentQuerySourceProvider);
       this._ctx.onDispose(() => agentQuerySourceProvider.close());
+
+      this._graph.registerQuerySourceProvider(
+        new IndexQuerySourceProvider({ spaceList: this, service: this._serviceProvider.services.IndexService! }),
+      );
     });
     this._ctx.onDispose(() => subscription.unsubscribe());
 
@@ -187,6 +193,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
     await gotInitialUpdate.wait();
     log.trace('dxos.sdk.echo-proxy.open', Trace.end({ id: this._instanceId }));
+  }
+
+  async setIndexConfig(config: IndexConfig) {
+    await this._serviceProvider.services.IndexService?.setConfig(config);
   }
 
   /**
