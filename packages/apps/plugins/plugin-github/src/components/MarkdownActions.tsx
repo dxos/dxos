@@ -9,7 +9,6 @@ import { type MarkdownProperties } from '@braneframe/plugin-markdown';
 import { LayoutAction, useIntent } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { DropdownMenu, useTranslation } from '@dxos/react-ui';
-import { type EditorModel } from '@dxos/react-ui-editor';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { useOctokitContext } from './GithubApiProviders';
@@ -17,8 +16,9 @@ import { useDocGhId } from '../hooks';
 import { GITHUB_PLUGIN } from '../meta';
 import { type GhIssueIdentifier } from '../types';
 
+// TODO(burdon): Requires test; very likely out of date.
 // TODO(burdon): Where do "properties" come from? Is this the graph node datum?
-export const MarkdownActions = ({ model, properties }: { model: EditorModel; properties: MarkdownProperties }) => {
+export const MarkdownActions = ({ content, properties }: { content: string; properties: MarkdownProperties }) => {
   // TODO(burdon): Ad hoc assumption that underlying object is ECHO?
   const ghId = properties.__meta?.keys?.find((key) => key.source === 'github.com')?.id;
   const { octokit } = useOctokitContext();
@@ -33,12 +33,12 @@ export const MarkdownActions = ({ model, properties }: { model: EditorModel; pro
       owner,
       repo,
       issue_number: issueNumber,
-      body: model.content.toString(),
+      body: content,
     });
-  }, [octokit, docGhId, model.content]);
+  }, [octokit, docGhId, content]);
 
   const exportGhIssueContent = useCallback(async () => {
-    if (octokit && docGhId && 'issueNumber' in docGhId && model.content) {
+    if (octokit && docGhId && 'issueNumber' in docGhId && content) {
       try {
         const {
           data: { html_url: issueUrl },
@@ -48,7 +48,7 @@ export const MarkdownActions = ({ model, properties }: { model: EditorModel; pro
           data: {
             element: 'dialog',
             component: 'dxos.org/plugin/github/ExportDialog',
-            subject: { type: 'response', target: issueUrl, model, docGhId },
+            subject: { type: 'response', target: issueUrl, docGhId, content },
           },
         });
       } catch (err) {
@@ -57,7 +57,7 @@ export const MarkdownActions = ({ model, properties }: { model: EditorModel; pro
     } else {
       log.error('Not prepared to export to Github issue when requested.');
     }
-  }, [octokit, docGhId, model.content]);
+  }, [octokit, docGhId, content]);
 
   const handleGhExport = useCallback(() => {
     if ('issueNumber' in docGhId!) {
@@ -68,7 +68,7 @@ export const MarkdownActions = ({ model, properties }: { model: EditorModel; pro
         data: {
           element: 'dialog',
           component: 'dxos.org/plugin/github/ExportDialog',
-          subject: { type: 'create-pr', model, docGhId },
+          subject: { type: 'create-pr', content, docGhId },
         },
       });
     }

@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-gpt",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "description": "Demo plugin for GPT",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -30,6 +30,7 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/local-storage": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@preact/signals-core": "^1.5.1",
     "deepsignal": "^1.5.0",

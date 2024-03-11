@@ -444,6 +444,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/echo/indexing/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/messenger-model/package.json",
           "jsonpath": "$.version"
         },
@@ -550,6 +555,11 @@
         {
           "type": "json",
           "path": "packages/devtools/initializers/create/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/devtools/initializers/create-app-plugin/package.json",
           "jsonpath": "$.version"
         },
         {

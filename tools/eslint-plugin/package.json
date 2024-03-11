@@ -1,6 +1,6 @@
 {
   "name": "@dxos/eslint-plugin",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -27,6 +27,6 @@
   },
   "devDependencies": {
     "eslint": "^8.49.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.2.2"
   }
 }

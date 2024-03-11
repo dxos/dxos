@@ -13,7 +13,7 @@ import {
 } from '@dxos/automerge/automerge-repo';
 import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
 import { type Stream } from '@dxos/codec-protobuf';
-import { Context, cancelWithContext } from '@dxos/context';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
@@ -31,7 +31,7 @@ import { MeshNetworkAdapter } from './mesh-network-adapter';
 export type { DocumentId };
 
 export interface MetadataMethods {
-  markDirty(id: string, lastAvailableHash: string): Promise<void>;
+  markDirty(idToLastHash: Map<string, string>): Promise<void>;
 }
 
 export type AutomergeHostParams = {
@@ -83,7 +83,7 @@ export class AutomergeHost {
       // Hosts, running in the worker, don't share documents unless requested by other peers.
       sharePolicy: async (peerId /* device key */, documentId /* space key */) => {
         if (peerId.startsWith('client-')) {
-          return true;
+          return false; // Only send docs to clients if they are requested.
         }
 
         if (!documentId) {
@@ -98,15 +98,13 @@ export class AutomergeHost {
         }
 
         try {
-          // experimental_spaceKey is set on old documents, new ones are created with doc.access.spaceKey
-          const rawSpaceKey = doc.access?.spaceKey ?? doc.experimental_spaceKey;
-          if (!rawSpaceKey) {
+          const spaceKey = getSpaceKeyFromDoc(doc);
+          if (!spaceKey) {
             log('space key not found for share policy check', { peerId, documentId });
             return false;
           }
 
-          const spaceKey = PublicKey.from(rawSpaceKey);
-          const authorizedDevices = this._authorizedDevices.get(spaceKey);
+          const authorizedDevices = this._authorizedDevices.get(PublicKey.from(spaceKey));
 
           // TODO(mykola): Hack, stop abusing `peerMetadata` field.
           const deviceKeyHex = (this.repo.peerMetadataByPeerId[peerId] as any)?.dxos_deviceKey;
@@ -164,8 +162,8 @@ export class AutomergeHost {
   }
 
   private _onUpdate(event: DocHandleChangePayload<any>) {
-    const spaceKey = event.doc.access?.spaceKey;
-    if (!spaceKey) {
+    const spaceKey = getSpaceKeyFromDoc(event.doc);
+    if (!spaceKey || this._metadata == null) {
       return;
     }
 
@@ -180,24 +178,18 @@ export class AutomergeHost {
       return;
     }
 
-    const markingDirtyPromise = Promise.all(
-      objectIds.map(async (objectId) => {
-        await cancelWithContext(
-          this._ctx,
-          this._metadata!.markDirty(
-            idCodec.encode({ documentId: event.handle.documentId, objectId }),
-            lastAvailableHash,
-          ),
-        );
-      }),
-    )
+    const encodedIds = objectIds.map((objectId) =>
+      idCodec.encode({ documentId: event.handle.documentId, objectId, spaceKey }),
+    );
+    const idToLastHash = new Map(encodedIds.map((id) => [id, lastAvailableHash]));
+    const markingDirtyPromise = this._metadata
+      .markDirty(idToLastHash)
       .then(() => {
         this._updatingMetadata.delete(event.handle.documentId);
       })
       .catch((err: Error) => {
-        !this._ctx.disposed && log.catch(err);
+        this._ctx.disposed && log.catch(err);
       });
-
     this._updatingMetadata.set(event.handle.documentId, markingDirtyPromise);
   }
 
@@ -284,4 +276,14 @@ const getInlineChanges = (event: DocHandleChangePayload<any>) => {
     }
   }
   return [...inlineChangedObjectIds];
+};
+
+export const getSpaceKeyFromDoc = (doc: any): string | null => {
+  // experimental_spaceKey is set on old documents, new ones are created with doc.access.spaceKey
+  const rawSpaceKey = doc.access?.spaceKey ?? doc.experimental_spaceKey;
+  if (rawSpaceKey == null) {
+    return null;
+  }
+
+  return String(rawSpaceKey);
 };

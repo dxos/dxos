@@ -3,7 +3,7 @@
 function lockfileWarning() {
   const fs = require('fs')
   const cp = require('child_process')
-
+  
   // get repo root
   const repoRoot = process.env.DX_BUILD_ROOT_DIR ?? cp.execSync('git rev-parse --show-toplevel').toString().trim()
 
@@ -20,6 +20,7 @@ function lockfileWarning() {
 }
 
 lockfileWarning();
+
 
 function readPackage(packageJson, context) {
   switch (packageJson.name) {
@@ -95,11 +96,6 @@ function readPackage(packageJson, context) {
     case 'ink-text-input':
     case 'react-reconciler': {
       packageJson.peerDependencies['react'] = '^18.0.0'
-      break;
-    }
-
-    case '@typescript/ata': {
-      packageJson.dependencies['typescript'] = '^4.4.4'
       break;
     }
 

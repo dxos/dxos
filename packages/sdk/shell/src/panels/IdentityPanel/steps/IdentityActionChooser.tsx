@@ -5,6 +5,7 @@
 import { CaretRight, Devices, Plus, Power, UserGear, HardDrive } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
+import { log } from '@dxos/log';
 import { useAgentHostingProviderClient, useClient } from '@dxos/react-client';
 import { useHaloInvitations } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
@@ -24,12 +25,13 @@ export const IdentityActionChooser = (props: IdentityPanelStepProps) => {
   const onInvitationEvent = useCallback((invitation: Invitation) => {
     const invitationCode = InvitationEncoder.encode(invitation);
     if (invitation.state === Invitation.State.CONNECTING) {
-      console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+      log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
     }
   }, []);
   const createInvitation = (e: React.MouseEvent) => {
     const testing = e.altKey && e.shiftKey;
     invitations.forEach((invitation) => invitation.cancel());
+    // TODO(nf): allow user to make invitations non-persistent?
     const invitation = client.halo.share(
       testing ? { type: Invitation.Type.MULTIUSE, authMethod: Invitation.AuthMethod.NONE } : undefined,
     );

@@ -7,10 +7,13 @@ import {
   setTag,
   addBreadcrumb as naturalAddBreadcrumb,
   captureException as naturalCaptureException,
+  captureMessage as naturalCaptureMessage,
+  withScope as naturalWithScope,
   BrowserTracing,
   replayIntegration,
+  breadcrumbsIntegration,
 } from '@sentry/browser';
-import { captureConsoleIntegration, httpClientIntegration } from '@sentry/integrations';
+import { httpClientIntegration } from '@sentry/integrations';
 
 import { log } from '@dxos/log';
 
@@ -37,7 +40,7 @@ export const init = (options: InitOptions) => {
       release: options.release,
       environment: options.environment,
       integrations: [
-        captureConsoleIntegration({ levels: ['error', 'warn'] }),
+        breadcrumbsIntegration({ console: false, fetch: false }),
         httpClientIntegration({ failedRequestStatusCodes: [[400, 599]] }),
         ...(options.tracing ? [new BrowserTracing()] : []),
         ...(options.replay ? [replayIntegration({ blockAllMedia: true, maskAllText: true })] : []),
@@ -96,5 +99,15 @@ export const captureException: typeof naturalCaptureException = (exception, capt
   }
 };
 
-// Not needed for browser.
-export const enableSentryLogProcessor = () => {};
+export const captureMessage: typeof naturalCaptureMessage = (exception, captureContext) => {
+  try {
+    const eventId = naturalCaptureMessage(exception, captureContext);
+    log('capture message', { exception, eventId, captureContext });
+    return eventId;
+  } catch (err) {
+    log.catch('Failed to capture message', err);
+    return 'unknown';
+  }
+};
+
+export const withScope = naturalWithScope;

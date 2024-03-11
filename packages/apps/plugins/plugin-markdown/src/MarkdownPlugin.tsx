@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArticleMedium, type IconProps } from '@phosphor-icons/react';
+import { type IconProps, TextAa } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
 import { deepSignal } from 'deepsignal/react';
 import React, { useMemo, type Ref } from 'react';
@@ -29,8 +29,6 @@ import {
   DocumentCard,
   DocumentMain,
   DocumentSection,
-  EditorMain,
-  EmbeddedLayout,
   MainLayout,
   MarkdownSettings,
 } from './components';
@@ -43,7 +41,7 @@ import {
   type MarkdownSettingsProps,
   MarkdownAction,
 } from './types';
-import { getFallbackTitle, isEditorModel, isMarkdownProperties, markdownExtensionPlugins } from './util';
+import { getFallbackTitle, isMarkdownProperties, markdownExtensionPlugins } from './util';
 
 export const isDocument = (data: unknown): data is DocumentType =>
   isTypedObject(data) && DocumentType.schema.typename === data.__typename;
@@ -105,7 +103,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         records: {
           [DocumentType.schema.typename]: {
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
-            icon: (props: IconProps) => <ArticleMedium {...props} />,
+            icon: (props: IconProps) => <TextAa {...props} />,
           },
         },
       },
@@ -130,7 +128,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   action: MarkdownAction.CREATE,
                   properties: {
                     label: ['create document label', { ns: MARKDOWN_PLUGIN }],
-                    icon: (props: IconProps) => <ArticleMedium {...props} />,
+                    icon: (props: IconProps) => <TextAa {...props} />,
                     testId: 'markdownPlugin.createObject',
                   },
                 }),
@@ -159,7 +157,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                               getFallbackTitle(object) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }]
                             );
                           },
-                          icon: (props: IconProps) => <ArticleMedium {...props} />,
+                          icon: (props: IconProps) => <TextAa {...props} />,
                           testId: 'spacePlugin.object',
                           persistenceClass: 'echo',
                           persistenceKey: space?.key.toHex(),
@@ -179,7 +177,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                               ]),
                             properties: {
                               label: ['toggle view mode label', { ns: MARKDOWN_PLUGIN }],
-                              icon: (props: IconProps) => <ArticleMedium {...props} />,
+                              icon: (props: IconProps) => <TextAa {...props} />,
                               keyBinding: 'shift+F5',
                             },
                           },
@@ -204,7 +202,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             id: 'create-stack-section-doc',
             testId: 'markdownPlugin.createSection',
             label: ['create stack section label', { ns: MARKDOWN_PLUGIN }],
-            icon: (props: any) => <ArticleMedium {...props} />,
+            icon: (props: any) => <TextAa {...props} />,
             intent: {
               plugin: MARKDOWN_PLUGIN,
               action: MarkdownAction.CREATE,
@@ -242,17 +240,19 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   </MainLayout>
                 );
               } else if (
-                'model' in data &&
-                isEditorModel(data.model) &&
+                // TODO(burdon): Replace model with object ID.
+                // 'model' in data &&
+                // isEditorModel(data.model) &&
                 'properties' in data &&
                 isMarkdownProperties(data.properties)
               ) {
-                const main = <EditorMain model={data.model} extensions={extensions} />;
-                if ('view' in data && data.view === 'embedded') {
-                  return <EmbeddedLayout>{main}</EmbeddedLayout>;
-                } else {
-                  return <MainLayout>{main}</MainLayout>;
-                }
+                return null;
+                // const main = <EditorMain extensions={extensions} />;
+                // if ('view' in data && data.view === 'embedded') {
+                //   return <EmbeddedLayout>{main}</EmbeddedLayout>;
+                // } else {
+                //   return <MainLayout>{main}</MainLayout>;
+                // }
               }
               break;
             }

@@ -2,49 +2,52 @@
 // Copyright 2023 DXOS.org
 //
 
+// TODO(burdon): Typescript.
+// TODO(burdon): Effect schema.
+// TODO(burdon): JSX.
+// TODO(burdon): react-buddy for storybook?
+
+// Marijn
+// - language support for S
+// - hierarchical editor (DND)
+// - virtual document image rendering
+// - mobile rendering error
+
 import '@dxosTheme';
-import React, { useEffect, useState } from 'react';
+
+import React from 'react';
 
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
-import { createDocAccessor, TextObject, type DocAccessor } from '@dxos/react-client/echo';
+import { TextObject } from '@dxos/react-client/echo';
+import { useDocAccessor } from '@dxos/react-ui-editor';
 
 import { ScriptEditor } from './ScriptEditor';
-import { TS } from '../../ts';
 
 const examples: string[] = [
   [
     '// Example schema.',
-    "import * as S from '@effect/schema/Schema';",
-    '',
-    'const Contact = S.struct({',
+    'export default function() {',
+    '  const value = 100',
+    '  return <div>{value}</div>;',
+    '}',
+  ].join('\n'),
+  [
+    '// Example schema.',
+    'S.struct({',
     '  timestamp: S.Date,',
     '  title: S.string,',
-    '  content: S.string,',
+    '  content: R.Text,',
     "}).pipe(S.identifier('dxos.org/schema/Test'))",
     '',
   ].join('\n'),
 ];
 
 const Story = () => {
-  const [source, setSource] = useState<DocAccessor>();
-  const [ts, setTs] = useState<TS>();
-  useEffect(() => {
-    setSource(createDocAccessor(new TextObject(examples[0], TextKind.PLAIN)));
-    setTimeout(async () => {
-      const ts = new TS();
-      await ts.initialize();
-      setTs(ts);
-    });
-  }, []);
-
-  if (!source || !ts) {
-    return null;
-  }
-
+  const { accessor } = useDocAccessor(new TextObject(examples[1], TextKind.PLAIN));
   return (
     <div className='flex fixed inset-0 bg-neutral-50'>
       <div className='flex w-[700px] mx-auto'>
-        <ScriptEditor ts={ts} path='test.ts' source={source} className='bg-white text-lg' />
+        <ScriptEditor source={accessor} className='bg-white text-lg' />
       </div>
     </div>
   );

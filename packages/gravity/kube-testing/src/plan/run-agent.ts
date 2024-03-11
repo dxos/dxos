@@ -36,8 +36,7 @@ const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) =
     ctx.onDispose(() => env.close());
     await plan.run(env);
   } catch (err) {
-    log.error('agent error', { agentId: params.agentId, error: err });
-    console.error(err);
+    log.catch(err, { agentId: params.agentId });
     finish(1);
   } finally {
     log.info('agent complete', { agentId: params.agentId });

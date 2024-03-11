@@ -17,6 +17,7 @@ import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { type PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { type ClassNameValue, Input, Tooltip } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
@@ -359,7 +360,7 @@ export class ColumnBuilder<TData extends RowData> {
 
           return <div className={mx(textPadding, classNames)}>{str}</div>;
         } catch (err) {
-          console.log(value);
+          log.info('formatError', { value });
           return null;
         }
       },

@@ -74,6 +74,9 @@ export class InvitationsHandler {
       state = Invitation.State.INIT,
       timeout = INVITATION_TIMEOUT,
       swarmKey = PublicKey.random(),
+      persistent = true,
+      created = new Date(),
+      lifetime = 86400, // 1 day
     } = options ?? {};
     const authCode =
       options?.authCode ??
@@ -88,14 +91,17 @@ export class InvitationsHandler {
       swarmKey,
       authCode,
       timeout,
+      persistent,
+      created,
+      lifetime,
       ...protocol.getInvitationContext(),
     };
 
     const stream = new PushStream<Invitation>();
     const ctx = new Context({
       onError: (err) => {
-        void ctx.dispose();
         stream.error(err);
+        void ctx.dispose();
       },
     });
 
@@ -181,7 +187,27 @@ export class InvitationsHandler {
       return extension;
     };
 
+    if (invitation.lifetime && invitation.created && invitation.lifetime !== 0) {
+      if (invitation.created.getTime() + invitation.lifetime * 1000 < Date.now()) {
+        log.warn('invitation has already expired');
+      } else {
+        scheduleTask(
+          ctx,
+          async () => {
+            // ensure the swarm is closed before changing state and closing the stream.
+            await swarmConnection.close();
+            stream.next({ ...invitation, state: Invitation.State.EXPIRED });
+            await ctx.dispose();
+          },
+          invitation.created.getTime() + invitation.lifetime * 1000 - Date.now(),
+        );
+      }
+    }
+
     let swarmConnection: SwarmConnection;
+    const invitationLabel =
+      'invitation host for ' +
+      (invitation.kind === Invitation.Kind.DEVICE ? 'device' : `space ${invitation.spaceKey?.truncate()}`);
     scheduleTask(ctx, async () => {
       const topic = invitation.swarmKey!;
       swarmConnection = await this._networkManager.joinSwarm({
@@ -191,7 +217,7 @@ export class InvitationsHandler {
           teleport.addExtension('dxos.halo.invitations', createExtension());
         }),
         topology: new StarTopology(topic),
-        label: 'invitation host',
+        label: invitationLabel,
       });
       ctx.onDispose(() => swarmConnection.close());
 
@@ -398,3 +424,12 @@ export class InvitationsHandler {
     return observable;
   }
 }
+
+export const invitationExpired = (invitation: Invitation) => {
+  return (
+    invitation.created &&
+    invitation.lifetime &&
+    invitation.lifetime !== 0 &&
+    invitation.created.getTime() + invitation.lifetime * 1000 < Date.now()
+  );
+};

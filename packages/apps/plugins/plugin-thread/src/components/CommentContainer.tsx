@@ -8,16 +8,22 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Message as MessageType } from '@braneframe/types';
 import { TextObject, getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button, Tooltip, useTranslation } from '@dxos/react-ui';
-import { useTextModel } from '@dxos/react-ui-editor';
+import { Button, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
+import {
+  createBasicExtensions,
+  createDataExtensions,
+  createThemeExtensions,
+  useDocAccessor,
+} from '@dxos/react-ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, ThreadHeading } from '@dxos/react-ui-thread';
 
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
 import { type ThreadContainerProps } from './types';
-import { useStatus, createMessageData } from '../hooks';
+import { useStatus } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
+import { getMessageMetadata } from '../util';
 
 export const CommentContainer = ({
   thread,
@@ -33,16 +39,26 @@ export const CommentContainer = ({
   const members = useMembers(space?.key);
   const activity = useStatus(space, thread.id);
   const { t } = useTranslation(THREAD_PLUGIN);
-  const extensions = useMemo(() => [command], []);
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
-
-  const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
-  const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
   const [autoFocus, setAutoFocus] = useState(!!autoFocusTextbox);
+  const { themeMode } = useThemeContext();
 
-  // TODO(thure): Because of the way the `autoFocus` property is handled by TextEditor, this is the least-bad way of
-  //   moving focus at the right time, though it is an antipattern. Refactor to behave more like <input/>’s `autoFocus`
-  //   or `autofocus` (yes, they’re different).
+  const textboxMetadata = getMessageMetadata(thread.id, identity);
+  const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
+  const { doc, accessor } = useDocAccessor(nextMessage.text);
+  const extensions = useMemo(
+    () => [
+      createDataExtensions({ id: nextMessage.text.id, text: accessor }),
+      createBasicExtensions({ placeholder: t('message placeholder') }),
+      createThemeExtensions({ themeMode }),
+      command,
+    ],
+    [accessor],
+  );
+
+  // TODO(thure): Because of the way the `autoFocus` property is handled by TextEditor,
+  //  this is the least-bad way of moving focus at the right time, though it is an anti-pattern.
+  //  Refactor to behave more like <input/>’s `autoFocus` or `autofocus` (yes, they’re different).
   useEffect(() => {
     setAutoFocus(!!autoFocusTextbox);
   }, [autoFocusTextbox]);
@@ -75,7 +91,6 @@ export const CommentContainer = ({
     });
 
     setAutoFocus(true);
-
     scrollToEnd('instant');
 
     // TODO(burdon): Scroll to bottom.
@@ -95,8 +110,6 @@ export const CommentContainer = ({
       }
     }
   };
-
-  const textboxMetadata = createMessageData(thread.id, identity);
 
   return (
     <Thread onClickCapture={onAttend} onFocusCapture={onAttend} current={current} id={thread.id}>
@@ -137,21 +150,16 @@ export const CommentContainer = ({
       {thread.messages.map((message) => (
         <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
       ))}
-      {nextMessageModel && (
-        <>
-          <MessageTextbox
-            onSend={handleCreate}
-            autoFocus={autoFocus}
-            placeholder={t('message placeholder')}
-            {...textboxMetadata}
-            model={nextMessageModel}
-            extensions={extensions}
-          />
-          <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
-          {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
-          <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
-        </>
-      )}
+      <MessageTextbox
+        doc={doc}
+        extensions={extensions}
+        autoFocus={autoFocus}
+        onSend={handleCreate}
+        {...textboxMetadata}
+      />
+      <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
+      {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
+      <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
     </Thread>
   );
 };

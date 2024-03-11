@@ -1,6 +1,6 @@
 {
   "name": "@dxos/dxos",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "private": true,
   "description": "A decentralized alternative to the commercial cloud for privacy preserving software.",
   "homepage": "https://dxos.org",
@@ -131,7 +131,7 @@
     "ts-node": "10.9.1",
     "tsx": "^4.6.2",
     "types-package-json": "^2.0.39",
-    "typescript": "^5.3.3",
+    "typescript": "^5.2.2",
     "unplugin": "^1.7.1",
     "uuid": "^8.3.2",
     "vite": "^5.1.5",

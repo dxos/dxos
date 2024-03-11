@@ -88,7 +88,7 @@ const editingRange = (state: EditorState, range: { from: number; to: number }, f
       main: { head },
     },
   } = state;
-  return focus && !readOnly && head >= range.from && head < range.to;
+  return focus && !readOnly && head >= range.from && head <= range.to;
 };
 
 const MarksByParent = new Set(['CodeMark', 'EmphasisMark', 'StrikethroughMark', 'SubscriptMark', 'SuperscriptMark']);
@@ -148,9 +148,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
                 marks[1].from,
                 node.to,
                 options.renderLinkButton
-                  ? Decoration.replace({
-                      widget: new LinkButton(url, options.renderLinkButton),
-                    })
+                  ? Decoration.replace({ widget: new LinkButton(url, options.renderLinkButton) })
                   : hide,
               );
             }
