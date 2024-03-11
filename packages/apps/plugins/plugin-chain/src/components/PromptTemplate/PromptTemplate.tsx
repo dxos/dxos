@@ -3,13 +3,18 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
 import React, { type PropsWithChildren, useEffect, useMemo } from 'react';
 
 import { Chain as ChainType } from '@braneframe/types';
 import { getTextContent } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { createBasicBundle, useTextEditor, useTextModel } from '@dxos/react-ui-editor';
+import {
+  createBasicExtensions,
+  createDataExtensions,
+  createThemeExtensions,
+  useDocAccessor,
+  useTextEditor,
+} from '@dxos/react-ui-editor';
 import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
 
 import { nameRegex, promptExtension } from './prompt-extension';
@@ -99,32 +104,29 @@ type PromptTemplateProps = {
 export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
   const { t } = useTranslation(CHAIN_PLUGIN);
   const { themeMode } = useThemeContext();
-  const model = useTextModel({ text: prompt.source }); // TODO(burdon): Remove.
-  const extensions = useMemo<Extension[]>(
-    () =>
-      model
-        ? [
-            promptExtension,
-            createBasicBundle({
-              themeMode,
-              bracketMatching: false,
-              lineWrapping: true,
-              placeholder: t('template placeholder'),
-            }),
-            EditorView.darkTheme.of(themeMode === 'dark'),
-            EditorView.contentAttributes.of({ class: '!p-3' }),
-            model.extension!,
-          ]
-        : [],
-    [model, themeMode],
-  );
-  const doc = useMemo(() => getTextContent(prompt.source), [prompt]);
-  const { parentRef } = useTextEditor({ doc, extensions });
-  usePromptInputs(prompt);
 
-  if (!model) {
-    return null;
-  }
+  const { doc, accessor } = useDocAccessor(prompt.source);
+  const extensions = useMemo<Extension[]>(
+    () => [
+      createDataExtensions({ id: prompt.id, text: accessor }),
+      createBasicExtensions({
+        bracketMatching: false,
+        lineWrapping: true,
+        placeholder: t('template placeholder'),
+      }),
+      createThemeExtensions({
+        themeMode,
+        slots: {
+          content: { className: '!p-3' },
+        },
+      }),
+      promptExtension,
+    ],
+    [themeMode, accessor],
+  );
+
+  const { parentRef } = useTextEditor(() => ({ doc, extensions }));
+  usePromptInputs(prompt);
 
   return (
     <DensityProvider density='fine'>
@@ -146,7 +148,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
         </Section>
 
         <Section title='Template'>
-          <div ref={parentRef} className={attentionSurface} />
+          <div role='textbox' ref={parentRef} className={attentionSurface} />
         </Section>
 
         {prompt.inputs?.length > 0 && (

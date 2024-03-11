@@ -5,6 +5,8 @@
 import { DragOverlay } from '@dnd-kit/core';
 import React, { Component, type PropsWithChildren, useEffect, useRef, useState } from 'react';
 
+import { log } from '@dxos/log';
+
 import { type MosaicContainerProps } from './Container';
 import { DefaultComponent } from './DefaultComponent';
 import { type MosaicTileComponent } from './Tile';
@@ -122,7 +124,7 @@ class OverlayErrorBoundary extends Component<OverlayErrorBoundaryProps> {
   };
 
   override componentDidCatch(error: any, info: any) {
-    console.warn(error, info);
+    log.catch(error, { info });
   }
 
   override render() {

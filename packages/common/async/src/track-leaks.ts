@@ -3,6 +3,7 @@
 //
 
 import { StackTrace } from '@dxos/debug';
+import { log } from '@dxos/log';
 
 const enabled = typeof process !== 'undefined' && !!process.env.DX_TRACK_LEAKS;
 
@@ -78,11 +79,11 @@ export const dumpLeaks = () => {
     return;
   }
 
-  console.log(`Leaked resources ${openResources.size}:`);
+  log.info(`Leaked resources ${openResources.size}:`);
   for (const resource of openResources) {
-    console.log(`- ${resource.name} at`);
-    console.log(resource.openStack.getStack(1));
-    console.log();
+    log.info(`- ${resource.name} at`);
+    log.info(resource.openStack.getStack(1));
+    log.info('\n');
   }
 };
 

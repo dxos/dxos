@@ -44,7 +44,7 @@ export const createDatabase = async (graph = new Hypergraph(), { useReactiveObje
     rootUrl: automergeContext.repo.create().url,
   });
   graph._register(proxy.backend.spaceKey, db); // TODO(burdon): Database should have random id?
-  return { db, host };
+  return { db, host, graph };
 };
 
 export class TestBuilder {

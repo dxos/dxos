@@ -2,10 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as S from '@effect/schema/Schema';
+
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
-import { TypedObject, dangerouslyMutateImmutableObject } from './object';
+import { getSchemaTypeRefOrThrow } from './effect/echo-handler';
+import { TypedObject, dangerouslyMutateImmutableObject, LEGACY_TEXT_TYPE } from './object';
 import type { SchemaProps, Schema as SchemaProto } from './proto';
 
 type Prototype = {
@@ -21,6 +25,12 @@ export class TypeCollection {
   private readonly _prototypes = new Map<string, Prototype>();
   private readonly _types = new Map<string, SchemaProto>();
   private readonly _schemaDefs = new Map<string, SchemaProps>();
+
+  private readonly _effectSchemaDefs = new Map<string, S.Schema<any>>();
+
+  constructor() {
+    this._effectSchemaDefs.set(LEGACY_TEXT_TYPE, TextCompatibilitySchema);
+  }
 
   get schemas(): SchemaProto[] {
     log.info('schemas', {
@@ -40,6 +50,27 @@ export class TypeCollection {
       invariant(!this._types.has(name), `Schema already exists: ${name}`);
       this._types.set(name, type);
     });
+  }
+
+  registerEffectSchema(...schemaList: S.Schema<any>[]) {
+    schemaList.forEach((schema) => {
+      const typename = getTypenameOrThrow(schema);
+      if (this._effectSchemaDefs.has(typename)) {
+        throw new Error(`Schema was already registered or identifier is not unique: ${typename}`);
+      }
+      this._effectSchemaDefs.set(typename, schema);
+    });
+
+    return this;
+  }
+
+  isEffectSchemaRegistered(schema: S.Schema<any>): boolean {
+    const typename = getTypenameOrThrow(schema);
+    return this._effectSchemaDefs.has(typename);
+  }
+
+  getEffectSchema(typename: string): S.Schema<any> | undefined {
+    return this._effectSchemaDefs.get(typename);
   }
 
   /**
@@ -124,3 +155,13 @@ export const linkDeferred = () => {
   const { schemaBuiltin } = require('./proto');
   schemaBuiltin.link();
 };
+
+const getTypenameOrThrow = (schema: S.Schema<any>): string => getSchemaTypeRefOrThrow(schema).itemId;
+
+const TextCompatibilitySchema = S.partial(
+  S.struct({
+    kind: S.enums(TextKind),
+    field: S.string,
+    content: S.string,
+  }),
+);

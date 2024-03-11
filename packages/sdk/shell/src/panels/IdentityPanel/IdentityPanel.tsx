@@ -29,9 +29,9 @@ const IdentityHeading = ({ titleId, title, identity, onDone }: IdentityPanelHead
   const fallbackValue = keyToFallback(identity.identityKey);
   return (
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
-      <Avatar.Root size={12} variant='circle' status='active' hue={identity.profile?.hue || fallbackValue.hue}>
+      <Avatar.Root size={12} variant='circle' status='active' hue={identity.profile?.data?.hue || fallbackValue.hue}>
         <Avatar.Frame classNames='block mbs-4 mbe-2 mli-auto chromatic-ignore'>
-          <Avatar.Fallback text={identity.profile?.emoji || fallbackValue.emoji} />
+          <Avatar.Fallback text={identity.profile?.data?.emoji || fallbackValue.emoji} />
         </Avatar.Frame>
         <Avatar.Label classNames='block text-center font-light text-xl' data-testid='identityHeading.displayName'>
           {identity.profile?.displayName ?? generateName(identity.identityKey.toHex())}
@@ -129,7 +129,7 @@ export const IdentityPanel = ({
   const invitations = useHaloInvitations();
   const agentProps = useAgentHandlers({ client, identity, invitations });
   if (!identity) {
-    console.error('IdentityPanel rendered with no active identity.');
+    log.error('IdentityPanel rendered with no active identity.');
     return null;
   }
   const [identityState, identitySend, identityService] = useIdentityMachine(client);

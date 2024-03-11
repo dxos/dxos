@@ -209,7 +209,10 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
             properties: {
               label: ['open commands label', { ns: NAVTREE_PLUGIN }],
               icon: (props: IconProps) => <MagnifyingGlass {...props} />,
-              keyBinding: 'meta+k',
+              keyBinding: {
+                macos: 'meta+k',
+                windows: 'ctrl+k',
+              },
             },
             edges: [['root', 'inbound']],
           });

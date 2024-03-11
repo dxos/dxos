@@ -26,4 +26,3 @@ message QueryResponse {
   repeated QueryResult results = 2;
   repeated object.EchoObject objects = 3;
 }
-

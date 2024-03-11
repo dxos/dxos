@@ -101,22 +101,20 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
         {/* Top (header) bar. */}
         <Main.Content classNames={['fixed inset-inline-0 block-start-0 z-[2]', baseSurface]} asChild>
           <div aria-label={t('main header label')} role='none'>
-            <div role='none' className='flex items-center gap-1 p-1 bs-[--rail-size]'>
-              <DensityProvider density='coarse'>
-                <Surface role='navbar-start' />
-                <div role='none' className='grow' />
-                <Surface role='navbar-end' direction='inline-reverse' />
-                {complementarySidebarContent && (
-                  <Button
-                    onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
-                    variant='ghost'
-                    classNames='p-0 bs-[var(--rail-action)] is-[var(--rail-action)]'
-                  >
-                    <span className='sr-only'>{t('open complementary sidebar label')}</span>
-                    <MenuIcon weight='light' mirrored className={getSize(5)} />
-                  </Button>
-                )}
-              </DensityProvider>
+            <div role='none' className='flex items-center gap-1 bs-[--rail-size]'>
+              <Surface role='navbar-start' />
+              <div role='none' className='grow' />
+              <Surface role='navbar-end' direction='inline-reverse' />
+              {complementarySidebarContent && (
+                <Button
+                  onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
+                  variant='ghost'
+                  classNames='p-0 bs-[var(--rail-action)] is-[var(--rail-action)] m-1'
+                >
+                  <span className='sr-only'>{t('open complementary sidebar label')}</span>
+                  <MenuIcon weight='light' mirrored className={getSize(5)} />
+                </Button>
+              )}
             </div>
           </div>
         </Main.Content>

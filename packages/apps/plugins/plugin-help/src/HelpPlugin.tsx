@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, Info, Keyboard as KeyboardIcon } from '@phosphor-icons/react';
+import { type IconProps, Keyboard as KeyboardIcon } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 import { type Step } from 'react-joyride';
@@ -47,23 +47,29 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
         builder: (plugins, graph) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
           graph.addNodes(
-            {
-              id: HelpAction.START,
-              data: () => {
-                settings.values.showHints = true;
-                return intentPlugin?.provides.intent.dispatch({
-                  plugin: HELP_PLUGIN,
-                  action: HelpAction.START,
-                });
-              },
-              properties: {
-                label: ['open help tour', { ns: HELP_PLUGIN }],
-                icon: (props: IconProps) => <Info {...props} />,
-                keyBinding: 'shift+meta+/',
-                testId: 'helpPlugin.openHelp',
-              },
-              edges: [['root', 'inbound']],
-            },
+            // TODO(wittjosiah): Welcome tour is broken.
+            // {
+            //   id: HelpAction.START,
+            //   data: () => {
+            //     settings.values.showHints = true;
+            //     return intentPlugin?.provides.intent.dispatch({
+            //       plugin: HELP_PLUGIN,
+            //       action: HelpAction.START,
+            //     });
+            //   },
+            //   properties: {
+            //     label: ['open help tour', { ns: HELP_PLUGIN }],
+            //     icon: (props: IconProps) => <Info {...props} />,
+            //     keyBinding: {
+            //       macos: 'shift+meta+/',
+            //       // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
+            //       windows: 'shift+ctrl+/',
+            //       linux: 'shift+ctrl+?',
+            //     },
+            //     testId: 'helpPlugin.openHelp',
+            //   },
+            //   edges: [['root', 'inbound']],
+            // },
             {
               id: 'dxos.org/plugin/help/open-shortcuts',
               data: () => {
@@ -79,7 +85,10 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
               properties: {
                 label: ['open shortcuts label', { ns: HELP_PLUGIN }],
                 icon: (props: IconProps) => <KeyboardIcon {...props} />,
-                keyBinding: 'meta+/',
+                keyBinding: {
+                  macos: 'meta+/',
+                  windows: 'ctrl+/',
+                },
               },
               edges: [['root', 'inbound']],
             },

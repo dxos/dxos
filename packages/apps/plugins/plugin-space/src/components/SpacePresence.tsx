@@ -7,7 +7,7 @@ import React from 'react';
 import { NavigationAction, useIntentDispatcher, usePlugin } from '@dxos/app-framework';
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
-import { type PublicKey, useClient } from '@dxos/react-client';
+import { PublicKey, useClient } from '@dxos/react-client';
 import { type TypedObject, getSpaceForObject, useSpace, useMembers, type SpaceMember } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import {
@@ -19,15 +19,17 @@ import {
   Tooltip,
   useDensityContext,
   useTranslation,
-  Button,
   List,
   ListItem,
 } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
-import { ComplexMap, hexToHue, keyToFallback } from '@dxos/util';
+import { AttentionGlyph } from '@dxos/react-ui-deck';
+import { ComplexMap, keyToFallback } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';
-import type { SpacePluginProvides } from '../types';
+import type { ObjectViewerProps, SpacePluginProvides } from '../types';
+
+// TODO(thure): This is chiefly meant to satisfy TS & provide an empty map after `deepSignal` interactions.
+const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 
 // TODO(wittjosiah): Factor out?
 const getName = (identity: Identity) => identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
@@ -42,48 +44,40 @@ export const SpacePresence = ({ object, spaceKey }: { object: TypedObject; space
   const space = spaceKey ? client.spaces.get(spaceKey) : getSpaceForObject(object);
   const spaceMembers = useMembers(space?.key);
 
+  // TODO(thure): Could it be a smell to return early when there are interactions with `deepSignal` later, since it
+  //  prevents reactivity?
   if (!identity || !spacePlugin || !space || defaultSpace?.key.equals(space.key)) {
     return null;
   }
 
-  // TODO(wittjosiah): This isn't working because of issue w/ deepsignal state.
-  //  Assigning plugin to deepsignal seems to create a new instance of objects in provides and breaks the reference.
-  const viewers = spacePlugin.provides.space.viewers
-    .filter((viewer) => {
-      return (
-        space.key.equals(viewer.spaceKey) && object.id === viewer.objectId && Date.now() - viewer.lastSeen < 30_000
-      );
-    })
-    .reduce(
-      (viewers, viewer) => {
-        viewers.set(viewer.identityKey, viewer.lastSeen);
-        return viewers;
-      },
-      new ComplexMap<PublicKey, number>((key) => key.toHex()),
-    );
+  const spaceState = spacePlugin.provides.space;
+  const currentObjectViewers = spaceState.viewersByObject[object.id] ?? noViewers;
+  const viewing = spaceState.viewersByIdentity;
 
   const members = spaceMembers
     .filter((member) => member.presence === 1 && !identity.identityKey.equals(member.identity.identityKey))
     .map((member) => ({
       ...member,
-      match: viewers.has(member.identity.identityKey),
-      lastSeen: viewers.get(member.identity.identityKey) ?? Infinity,
+      match: currentObjectViewers.has(member.identity.identityKey),
+      lastSeen: currentObjectViewers.get(member.identity.identityKey)?.lastSeen ?? Infinity,
     }))
     .toSorted((a, b) => a.lastSeen - b.lastSeen);
 
   return density === 'fine' ? (
-    <SmallPresence members={members.filter((member) => member.match)} />
+    <SmallPresence count={members.filter((member) => member.match).length} />
   ) : (
     <FullPresence
       members={members}
       onMemberClick={(member) => {
-        const viewing = spacePlugin.provides.space.viewers.find((viewer) =>
-          viewer.identityKey.equals(member.identity.identityKey),
-        )?.objectId;
-        if (viewing) {
+        if (
+          !currentObjectViewers.has(member.identity.identityKey) &&
+          (viewing.get(member.identity.identityKey)?.size ?? 0) > 0
+        ) {
           void dispatch({
             action: NavigationAction.ACTIVATE,
-            data: { id: viewing },
+            // TODO(thure): Multitasking will make this multifarious; implement a way to follow other members that
+            //  doesn’t assume they can only view one object at a time.
+            data: { id: Array.from(viewing.get(member.identity.identityKey)!)[0] },
           });
         } else {
           log.warn('No viewing object found for member');
@@ -181,51 +175,37 @@ type PresenceAvatarProps = {
   group?: boolean;
   index?: number;
   onClick?: () => void;
-} & Pick<NonNullable<Identity['profile']>, 'hue' | 'emoji'>;
+};
 
-const PrensenceAvatar = ({ identity, showName, match, group, index, onClick, hue, emoji }: PresenceAvatarProps) => {
+const PrensenceAvatar = ({ identity, showName, match, group, index, onClick }: PresenceAvatarProps) => {
   const Root = group ? AvatarGroupItem.Root : Avatar.Root;
   const status = match ? 'current' : 'active';
   const fallbackValue = keyToFallback(identity.identityKey);
   return (
-    <Root status={status} hue={hue || fallbackValue.hue}>
+    <Root status={status} hue={identity.profile?.data?.hue || fallbackValue.hue}>
       <Avatar.Frame
         data-testid='spacePlugin.presence.member'
         data-status={status}
         {...(index ? { style: { zIndex: index } } : {})}
         onClick={() => onClick?.()}
       >
-        <Avatar.Fallback text={emoji || fallbackValue.emoji} />
+        <Avatar.Fallback text={identity.profile?.data?.emoji || fallbackValue.emoji} />
       </Avatar.Frame>
       {showName && <Avatar.Label classNames='text-sm truncate pli-2'>{getName(identity)}</Avatar.Label>}
     </Root>
   );
 };
 
-export const SmallPresence = (props: MemberPresenceProps) => {
-  const { members = [], size = 2, classNames } = props;
+export const SmallPresence = ({ count }: { count: number }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
-  return members.length === 0 ? (
-    <div role='none' className={mx(classNames)} />
-  ) : (
+  return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
-        <Button variant='ghost' classNames={['pli-0', classNames]}>
-          <AvatarGroup.Root size={size} classNames='m-1 mie-2'>
-            {members.slice(0, 3).map((viewer, i) => {
-              const viewerHex = viewer.identity.identityKey.toHex();
-              return (
-                <AvatarGroupItem.Root key={viewerHex} hue={viewer.identity.profile?.hue || hexToHue(viewerHex)}>
-                  <Avatar.Frame style={{ zIndex: members.length - i }} />
-                </AvatarGroupItem.Root>
-              );
-            })}
-          </AvatarGroup.Root>
-        </Button>
+        <AttentionGlyph presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'} classNames='self-center mie-1' />
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content side='bottom' classNames='z-[70]'>
-          <span>{t('presence label', { count: members.length })}</span>
+          <span>{t('presence label', { count })}</span>
           <Tooltip.Arrow />
         </Tooltip.Content>
       </Tooltip.Portal>

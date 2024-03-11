@@ -229,6 +229,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/templates/plugin-template/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/templates/tasks-template/package.json",
           "jsonpath": "$.version"
         },
@@ -439,6 +444,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/echo/indexing/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/messenger-model/package.json",
           "jsonpath": "$.version"
         },
@@ -545,6 +555,11 @@
         {
           "type": "json",
           "path": "packages/devtools/initializers/create/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/devtools/initializers/create-app-plugin/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -710,6 +725,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-card/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-deck/package.json",
           "jsonpath": "$.version"
         },
         {

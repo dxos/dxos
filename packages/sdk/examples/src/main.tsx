@@ -19,7 +19,7 @@ import { Input, ThemeProvider, Tooltip, Status } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import type { MaybePromise } from '@dxos/util';
 
-import EditorExample from './examples/Editor';
+import TaskList from './examples/TaskList';
 
 const root = createRoot(document.getElementById('root')!);
 
@@ -131,7 +131,7 @@ const main = async () => {
           </Tooltip.Provider>
           {clients.map((client, index) => (
             <ClientContext.Provider key={index} value={{ client }}>
-              <EditorExample id={index} spaceKey={spaceKey} />
+              <TaskList id={index} spaceKey={spaceKey} />
             </ClientContext.Provider>
           ))}
         </div>

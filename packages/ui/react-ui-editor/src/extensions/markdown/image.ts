@@ -61,6 +61,7 @@ const buildDecorations = (from: number, to: number, state: EditorState) => {
         if (urlNode) {
           const hide = state.readOnly || cursor < node.from || cursor > node.to;
           const url = state.sliceDoc(urlNode.from, urlNode.to);
+          // TODO(burdon): Doesn't load if scrolling with mouse.
           preloadImage(url);
           decorations.push(
             Decoration.replace({

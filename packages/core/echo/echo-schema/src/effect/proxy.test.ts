@@ -8,33 +8,46 @@ import jestExpect from 'expect';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
-import { createEchoReactiveObject } from './echo-handler';
 import * as R from './reactive';
 import { TestSchema } from './testing/schema';
 import { updateCounter } from './testutils';
+import { Hypergraph } from '../hypergraph';
+import { createDatabase } from '../testing';
 
 registerSignalRuntime();
 
 for (const schema of [undefined, TestSchema]) {
   for (const useDatabase of [false, true]) {
-    const createObject = (props: Partial<TestSchema> = {}): TestSchema => {
-      const obj = schema == null ? (R.object(props) as TestSchema) : R.object(schema, props);
-
-      // TODO: extract echo-schema into a separate package and export a test suite, use it in echo-database
-      return useDatabase ? createEchoReactiveObject(obj) : obj;
+    const testSetup = useDatabase ? createDatabase(new Hypergraph(), { useReactiveObjectApi: true }) : undefined;
+    const createObject = async (props: Partial<TestSchema> = {}): Promise<TestSchema> => {
+      const testSchema = useDatabase && schema ? schema.pipe(R.echoObject('TestSchema', '1.0.0')) : schema;
+      const obj = testSchema == null ? (R.object(props) as TestSchema) : R.object(testSchema, props);
+      if (!useDatabase) {
+        return obj;
+      }
+      const { db, graph } = await testSetup!;
+      if (testSchema && !graph.types.isEffectSchemaRegistered(testSchema)) {
+        graph.types.registerEffectSchema(testSchema);
+      }
+      return db.add(obj);
     };
 
+    // TODO(dmaretskyi): Remove.
+    if (!schema || useDatabase) {
+      continue;
+    }
+
     describe(`Proxy properties${schema == null ? '' : ' with schema'}`, () => {
-      test('object initializer', () => {
-        const obj = createObject({ string: 'bar' });
+      test('object initializer', async () => {
+        const obj = await createObject({ string: 'bar' });
         expect(obj.string).to.eq('bar');
 
         obj.string = 'baz';
         expect(obj.string).to.eq('baz');
       });
 
-      test('can assign scalar values', () => {
-        const obj = createObject();
+      test('can assign scalar values', async () => {
+        const obj = await createObject();
 
         obj.string = 'foo';
         obj.number = 42;
@@ -49,8 +62,8 @@ for (const schema of [undefined, TestSchema]) {
         expect(obj.undefined).to.eq(undefined);
       });
 
-      test('can assign object values', () => {
-        const obj = createObject();
+      test('can assign object values', async () => {
+        const obj = await createObject();
 
         obj.object = { field: 'bar' };
         expect(obj.object.field).to.eq('bar');
@@ -59,16 +72,16 @@ for (const schema of [undefined, TestSchema]) {
         expect(obj.object.field).to.eq('baz');
       });
 
-      test('sub-proxies maintain their identity', () => {
-        const obj = createObject();
+      test('sub-proxies maintain their identity', async () => {
+        const obj = await createObject();
 
         obj.object = { field: 'bar' };
         // eslint-disable-next-line no-self-compare
         expect(obj.object === obj.object).to.be.true;
       });
 
-      test('can assign array values', () => {
-        const obj = createObject();
+      test('can assign array values', async () => {
+        const obj = await createObject();
 
         obj.numberArray = [1, 2, 3];
         expect(obj.numberArray).to.deep.eq([1, 2, 3]);
@@ -77,8 +90,8 @@ for (const schema of [undefined, TestSchema]) {
         expect(obj.numberArray).to.deep.eq([4, 2, 3]);
       });
 
-      test('can assign arrays with objects', () => {
-        const obj = createObject();
+      test('can assign arrays with objects', async () => {
+        const obj = await createObject();
 
         obj.objectArray = [{ field: 'bar' }, { field: 'baz' }];
         expect(obj.objectArray[0].field).to.eq('bar');
@@ -90,8 +103,8 @@ for (const schema of [undefined, TestSchema]) {
         expect(obj.objectArray[1].field).to.eq('bar');
       });
 
-      test('can assign arrays with arrays', () => {
-        const obj = createObject();
+      test('can assign arrays with arrays', async () => {
+        const obj = await createObject();
 
         obj.twoDimNumberArray = [
           [1, 2, 3],
@@ -103,18 +116,18 @@ for (const schema of [undefined, TestSchema]) {
         expect(obj.twoDimNumberArray[0][0]).to.eq(4);
       });
 
-      test('array sub-proxies maintain their identity', () => {
-        const obj = createObject();
+      test('array sub-proxies maintain their identity', async () => {
+        const obj = await createObject();
 
         obj.objectArray = [{ field: 'bar' }];
         // eslint-disable-next-line no-self-compare
         expect(obj.objectArray === obj.objectArray).to.be.true;
       });
 
-      test('assigning another reactive object', () => {
-        const obj = createObject();
+      test('assigning another reactive object', async () => {
+        const obj = await createObject();
 
-        const other = createObject({ string: 'bar' });
+        const other = await createObject({ string: 'bar' });
         obj.other = other;
         expect(obj.other.string).to.eq('bar');
 
@@ -137,8 +150,8 @@ for (const schema of [undefined, TestSchema]) {
         expect(updates.count, 'update count').to.eq(2);
       });
 
-      test('keys enumeration', () => {
-        const obj = createObject({ string: 'bar' });
+      test('keys enumeration', async () => {
+        const obj = await createObject({ string: 'bar' });
 
         expect(Object.keys(obj)).to.deep.eq(['string']);
 
@@ -146,8 +159,8 @@ for (const schema of [undefined, TestSchema]) {
         expect(Object.keys(obj)).to.deep.eq(['string', 'number']);
       });
 
-      test('has', () => {
-        const obj = createObject({ string: 'bar' });
+      test('has', async () => {
+        const obj = await createObject({ string: 'bar' });
         expect('string' in obj).to.be.true;
         expect('number' in obj).to.be.false;
 
@@ -155,13 +168,13 @@ for (const schema of [undefined, TestSchema]) {
         expect('number' in obj).to.be.true;
       });
 
-      test('Array.isArray', () => {
-        const obj = createObject({ numberArray: [1, 2, 3] });
+      test('Array.isArray', async () => {
+        const obj = await createObject({ numberArray: [1, 2, 3] });
         expect(Array.isArray(obj.numberArray)).to.be.true;
       });
 
-      test('instanceof', () => {
-        const obj = createObject({ numberArray: [1, 2, 3], object: { field: 'foo' } });
+      test('instanceof', async () => {
+        const obj = await createObject({ numberArray: [1, 2, 3], object: { field: 'foo' } });
 
         expect(obj instanceof Object).to.be.true;
         expect(obj instanceof Array).to.be.false;
@@ -171,40 +184,40 @@ for (const schema of [undefined, TestSchema]) {
         expect(obj.object instanceof Array).to.be.false;
       });
 
-      test('toString', () => {
-        const obj = createObject({ string: 'bar' });
+      test('toString', async () => {
+        const obj = await createObject({ string: 'bar' });
         expect(obj.toString()).to.eq('[object Object]'); // TODO(dmaretskyi): Change to `[object ECHO]`?
       });
 
-      test('object spreading', () => {
-        const obj = createObject({ ...TEST_OBJECT });
+      test('object spreading', async () => {
+        const obj = await createObject({ ...TEST_OBJECT });
         expect({ ...obj }).to.deep.eq({ ...TEST_OBJECT });
       });
 
-      test('toJSON', () => {
-        const obj = createObject({ ...TEST_OBJECT });
+      test('toJSON', async () => {
+        const obj = await createObject({ ...TEST_OBJECT });
         const expected = JSON.parse(JSON.stringify(TEST_OBJECT));
         const actual = JSON.parse(JSON.stringify(obj));
         expect(actual).to.deep.eq(expected);
       });
 
-      test('chai deep equal works', () => {
-        const obj = createObject({ ...TEST_OBJECT });
+      test('chai deep equal works', async () => {
+        const obj = await createObject({ ...TEST_OBJECT });
 
         expect(obj).to.deep.eq(TEST_OBJECT);
         expect(obj).to.not.deep.eq({ ...TEST_OBJECT, number: 11 });
       });
 
-      test('jest deep equal works', () => {
-        const obj = createObject({ ...TEST_OBJECT });
+      test('jest deep equal works', async () => {
+        const obj = await createObject({ ...TEST_OBJECT });
 
         jestExpect(obj).toEqual(TEST_OBJECT);
         jestExpect(obj).not.toEqual({ ...TEST_OBJECT, number: 11 });
       });
 
       // Not a typical use case, but might come up when interacting with 3rd party libraries.
-      test('defineProperty', () => {
-        const obj = createObject();
+      test('defineProperty', async () => {
+        const obj = await createObject();
         using updates = updateCounter(() => {
           obj.string;
         });
@@ -214,8 +227,8 @@ for (const schema of [undefined, TestSchema]) {
         expect(updates.count, 'update count').to.eq(1);
       });
 
-      test('getOwnPropertyDescriptor', () => {
-        const obj = createObject({ string: 'bar' });
+      test('getOwnPropertyDescriptor', async () => {
+        const obj = await createObject({ string: 'bar' });
         const descriptor = Object.getOwnPropertyDescriptor(obj, 'string');
 
         expect(descriptor).to.deep.eq({
@@ -227,8 +240,8 @@ for (const schema of [undefined, TestSchema]) {
       });
 
       describe('signal updates', () => {
-        test('are synchronous', () => {
-          const obj = createObject({ string: 'bar' });
+        test('are synchronous', async () => {
+          const obj = await createObject({ string: 'bar' });
 
           using updates = updateCounter(() => {
             obj.string;
@@ -239,8 +252,8 @@ for (const schema of [undefined, TestSchema]) {
           expect(updates.count, 'update count').to.eq(1);
         });
 
-        test('in nested objects', () => {
-          const obj = createObject({ object: { field: 'bar' } });
+        test('in nested objects', async () => {
+          const obj = await createObject({ object: { field: 'bar' } });
 
           using updates = updateCounter(() => {
             obj.object!.field;
@@ -251,8 +264,8 @@ for (const schema of [undefined, TestSchema]) {
           expect(updates.count, 'update count').to.eq(1);
         });
 
-        test('in nested arrays', () => {
-          const obj = createObject({ numberArray: [7] });
+        test('in nested arrays', async () => {
+          const obj = await createObject({ numberArray: [7] });
 
           using updates = updateCounter(() => {
             obj.numberArray![0];
@@ -263,8 +276,8 @@ for (const schema of [undefined, TestSchema]) {
           expect(updates.count, 'update count').to.eq(1);
         });
 
-        test('in nested arrays with objects', () => {
-          const obj = createObject({ objectArray: [{ field: 'bar' }] });
+        test('in nested arrays with objects', async () => {
+          const obj = await createObject({ objectArray: [{ field: 'bar' }] });
 
           using updates = updateCounter(() => {
             obj.objectArray![0].field;
@@ -275,8 +288,8 @@ for (const schema of [undefined, TestSchema]) {
           expect(updates.count, 'update count').to.eq(1);
         });
 
-        test('in nested arrays with arrays', () => {
-          const obj = createObject({ twoDimNumberArray: [[1, 2, 3]] });
+        test('in nested arrays with arrays', async () => {
+          const obj = await createObject({ twoDimNumberArray: [[1, 2, 3]] });
 
           using updates = updateCounter(() => {
             obj.twoDimNumberArray![0][0];
@@ -289,13 +302,13 @@ for (const schema of [undefined, TestSchema]) {
       });
 
       describe('array operations', () => {
-        const createReactiveArray = (numberArray: number[]): number[] => {
-          const obj = createObject({ numberArray });
+        const createReactiveArray = async (numberArray: number[]): Promise<number[]> => {
+          const obj = await createObject({ numberArray });
           return obj.numberArray!;
         };
 
-        test('set by index', () => {
-          const array = createReactiveArray([1, 2, 3]);
+        test('set by index', async () => {
+          const array = await createReactiveArray([1, 2, 3]);
           using updates = updateCounter(() => {
             array[0];
           });
@@ -305,8 +318,8 @@ for (const schema of [undefined, TestSchema]) {
           expect(updates.count, 'update count').to.eq(1);
         });
 
-        test('length', () => {
-          const array = createReactiveArray([1, 2, 3]);
+        test('length', async () => {
+          const array = await createReactiveArray([1, 2, 3]);
           using updates = updateCounter(() => {
             array[0];
           });
@@ -317,8 +330,8 @@ for (const schema of [undefined, TestSchema]) {
           expect(updates.count, 'update count').to.eq(1);
         });
 
-        test('set length', () => {
-          const array = createReactiveArray([1, 2, 3]);
+        test('set length', async () => {
+          const array = await createReactiveArray([1, 2, 3]);
           using updates = updateCounter(() => {
             array[0];
           });
@@ -328,8 +341,8 @@ for (const schema of [undefined, TestSchema]) {
           expect(updates.count, 'update count').to.eq(1);
         });
 
-        test('push', () => {
-          const array = createReactiveArray([1, 2, 3]);
+        test('push', async () => {
+          const array = await createReactiveArray([1, 2, 3]);
           using updates = updateCounter(() => {
             array[0];
           });
@@ -339,8 +352,8 @@ for (const schema of [undefined, TestSchema]) {
           expect(updates.count, 'update count').to.eq(1);
         });
 
-        test('pop', () => {
-          const array = createReactiveArray([1, 2, 3]);
+        test('pop', async () => {
+          const array = await createReactiveArray([1, 2, 3]);
           using updates = updateCounter(() => {
             array[0];
           });
@@ -351,8 +364,8 @@ for (const schema of [undefined, TestSchema]) {
           expect(updates.count, 'update count').to.eq(1);
         });
 
-        test('shift', () => {
-          const array = createReactiveArray([1, 2, 3]);
+        test('shift', async () => {
+          const array = await createReactiveArray([1, 2, 3]);
           using updates = updateCounter(() => {
             array[0];
           });
@@ -363,8 +376,8 @@ for (const schema of [undefined, TestSchema]) {
           expect(updates.count, 'update count').to.eq(1);
         });
 
-        test('unshift', () => {
-          const array = createReactiveArray([1, 2, 3]);
+        test('unshift', async () => {
+          const array = await createReactiveArray([1, 2, 3]);
           using updates = updateCounter(() => {
             array[0];
           });
@@ -375,8 +388,8 @@ for (const schema of [undefined, TestSchema]) {
           expect(updates.count, 'update count').to.eq(1);
         });
 
-        test('splice', () => {
-          const array = createReactiveArray([1, 2, 3]);
+        test('splice', async () => {
+          const array = await createReactiveArray([1, 2, 3]);
           using updates = updateCounter(() => {
             array[0];
           });
@@ -387,8 +400,8 @@ for (const schema of [undefined, TestSchema]) {
           expect(updates.count, 'update count').to.eq(1);
         });
 
-        test('sort', () => {
-          const array = createReactiveArray([3, 2, 1]);
+        test('sort', async () => {
+          const array = await createReactiveArray([3, 2, 1]);
           using updates = updateCounter(() => {
             array[0];
           });
@@ -399,14 +412,14 @@ for (const schema of [undefined, TestSchema]) {
           expect(updates.count, 'update count').to.eq(1);
         });
 
-        test('filter', () => {
-          const array = createReactiveArray([1, 2, 3]);
+        test('filter', async () => {
+          const array = await createReactiveArray([1, 2, 3]);
           const returnValue = array.filter((v) => v & 1);
           expect(returnValue).to.deep.eq([1, 3]);
         });
 
-        test('reverse', () => {
-          const array = createReactiveArray([1, 2, 3]);
+        test('reverse', async () => {
+          const array = await createReactiveArray([1, 2, 3]);
           using updates = updateCounter(() => {
             array[0];
           });
@@ -417,8 +430,8 @@ for (const schema of [undefined, TestSchema]) {
           expect(updates.count, 'update count').to.eq(1);
         });
 
-        test('map', () => {
-          const array = createReactiveArray([1, 2, 3]);
+        test('map', async () => {
+          const array = await createReactiveArray([1, 2, 3]);
           using updates = updateCounter(() => {
             array[0];
           });
@@ -430,8 +443,8 @@ for (const schema of [undefined, TestSchema]) {
           expect(updates.count, 'update count').to.eq(0);
         });
 
-        test('flatMap', () => {
-          const array = createReactiveArray([1, 2, 3]);
+        test('flatMap', async () => {
+          const array = await createReactiveArray([1, 2, 3]);
           using updates = updateCounter(() => {
             array[0];
           });
@@ -443,8 +456,8 @@ for (const schema of [undefined, TestSchema]) {
           expect(updates.count, 'update count').to.eq(0);
         });
 
-        test('flat', () => {
-          const obj = createObject({ twoDimNumberArray: [[1], [2, 3]] });
+        test('flat', async () => {
+          const obj = await createObject({ twoDimNumberArray: [[1], [2, 3]] });
           const array = obj.twoDimNumberArray!;
           using updates = updateCounter(() => {
             array[0];
@@ -457,8 +470,8 @@ for (const schema of [undefined, TestSchema]) {
           expect(updates.count, 'update count').to.eq(0);
         });
 
-        test('forEach', () => {
-          const array = createReactiveArray([1, 2, 3]);
+        test('forEach', async () => {
+          const array = await createReactiveArray([1, 2, 3]);
           using updates = updateCounter(() => {
             array[0];
           });
@@ -471,8 +484,8 @@ for (const schema of [undefined, TestSchema]) {
           expect(updates.count, 'update count').to.eq(0);
         });
 
-        test('spreading', () => {
-          const array = createReactiveArray([1, 2, 3]);
+        test('spreading', async () => {
+          const array = await createReactiveArray([1, 2, 3]);
           using updates = updateCounter(() => {
             array[0];
           });
@@ -484,8 +497,8 @@ for (const schema of [undefined, TestSchema]) {
           expect(updates.count, 'update count').to.eq(0);
         });
 
-        test('values', () => {
-          const array = createReactiveArray([1, 2, 3]);
+        test('values', async () => {
+          const array = await createReactiveArray([1, 2, 3]);
           using updates = updateCounter(() => {
             array[0];
           });
@@ -498,8 +511,8 @@ for (const schema of [undefined, TestSchema]) {
           expect(updates.count, 'update count').to.eq(0);
         });
 
-        test('for loop', () => {
-          const array = createReactiveArray([1, 2, 3]);
+        test('for loop', async () => {
+          const array = await createReactiveArray([1, 2, 3]);
           using updates = updateCounter(() => {
             array[0];
           });

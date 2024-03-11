@@ -49,7 +49,7 @@ const Story = () => {
       value={{
         components: {
           ObjectMessage: ({ role }) => {
-            return role === 'message-block' ? <span>MessageBlock</span> : <span>Not</span>;
+            return <span>{JSON.stringify({ role })}</span>;
           },
         },
       }}

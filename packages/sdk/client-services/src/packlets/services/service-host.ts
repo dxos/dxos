@@ -9,6 +9,7 @@ import { Context } from '@dxos/context';
 import { DocumentModel } from '@dxos/document-model';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
 import { type TypedObject, getRawDoc, type SpaceDoc, getAutomergeObjectCore } from '@dxos/echo-schema';
+import { IndexServiceImpl } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -256,8 +257,10 @@ export class ClientServicesHost {
         (profile) => this._serviceContext.broadcastProfileUpdate(profile),
       ),
 
-      InvitationsService: new InvitationsServiceImpl(this._serviceContext.invitations, (invitation) =>
-        this._serviceContext.getInvitationHandler(invitation),
+      InvitationsService: new InvitationsServiceImpl(
+        this._serviceContext.invitations,
+        (invitation) => this._serviceContext.getInvitationHandler(invitation),
+        this._serviceContext.metadataStore,
       ),
 
       DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager),
@@ -277,6 +280,11 @@ export class ClientServicesHost {
         this._serviceContext.automergeHost,
       ),
 
+      IndexService: new IndexServiceImpl({
+        indexer: this._serviceContext.indexer,
+        automergeHost: this._serviceContext.automergeHost,
+      }),
+
       NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager, this._serviceContext.signalManager),
 
       LoggingService: this._loggingService,
@@ -291,6 +299,11 @@ export class ClientServicesHost {
     });
 
     await this._serviceContext.open(ctx);
+    // TODO(nf): move to InvitationManager in ServiceContext?
+    invariant(this.serviceRegistry.services.InvitationsService);
+    const loadedInvitations = await this.serviceRegistry.services.InvitationsService.loadPersistentInvitations();
+
+    log('loaded persistent invitations', { count: loadedInvitations.invitations?.length });
 
     const devtoolsProxy = this._config?.get('runtime.client.devtoolsProxy');
     if (devtoolsProxy) {
