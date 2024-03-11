@@ -18,19 +18,18 @@ import React, { useCallback, useContext, useRef, useState } from 'react';
 import { SPACE_PLUGIN, SpaceAction, getSpaceDisplayName } from '@braneframe/plugin-space';
 import { Surface, useIntent } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
-import { useIdentity } from '@dxos/react-client/halo';
 import {
   Avatar,
   Button,
   ButtonGroup,
   DensityProvider,
   Dialog,
-  Toggle,
-  Main,
-  useTranslation,
   DropdownMenu,
+  Main,
+  Toggle,
   Tooltip,
   toLocalizedString,
+  useTranslation,
 } from '@dxos/react-ui';
 import { defaultTx, descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 import { hexToFallback } from '@dxos/util';
@@ -50,7 +49,6 @@ import {
 const overlayAttrs = { side: 'top' as const, sideOffset: 4 };
 
 const EmbeddedLayoutImpl = () => {
-  const identity = useIdentity();
   const { t } = useTranslation(GITHUB_PLUGIN);
   const { space, source, id, identityHex } = useContext(SpaceResolverContext);
   const { document } = useContext(DocumentResolverContext);
