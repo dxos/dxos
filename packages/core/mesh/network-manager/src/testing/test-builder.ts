@@ -16,16 +16,16 @@ import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
-import { TestWireProtocol, type TestTeleportExtensionFactory } from './test-wire-protocol';
+import { type TestTeleportExtensionFactory, TestWireProtocol } from './test-wire-protocol';
 import { NetworkManager } from '../network-manager';
 import { FullyConnectedTopology } from '../topology';
 import {
+  createLibDataChannelTransportFactory,
+  createSimplePeerTransportFactory,
   MemoryTransportFactory,
-  type TransportFactory,
   SimplePeerTransportProxyFactory,
   SimplePeerTransportService,
-  createSimplePeerTransportFactory,
-  createLibDataChannelTransportFactory,
+  type TransportFactory,
   TransportKind,
 } from '../transport';
 import { TcpTransportFactory } from '../transport/tcp-transport';
@@ -90,7 +90,8 @@ export class TestPeer {
     this._signalManager = this.testBuilder.createSignalManager();
     if (!transport) {
       if (this.testBuilder.options.signalHosts) {
-        transport = TransportKind.SIMPLE_PEER;
+        // TODO(nf): configure better
+        transport = process.env.MOCHA_ENV === 'nodejs' ? TransportKind.LIBDATACHANNEL : TransportKind.SIMPLE_PEER;
       } else {
         transport = TransportKind.MEMORY;
       }
