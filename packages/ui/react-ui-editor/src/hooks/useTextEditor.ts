@@ -2,20 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EditorSelection, EditorState, type EditorStateConfig, type StateEffect } from '@codemirror/state';
+import { EditorSelection, EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { type DependencyList, type RefObject, useEffect, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { isNotFalsy } from '@dxos/util';
 
+import { type TextEditorProps } from '../components';
+import { documentId } from '../extensions';
 import { logChanges } from '../util';
-
-export type UseTextEditorOptions = {
-  autoFocus?: boolean;
-  scrollTo?: StateEffect<any>;
-  debug?: boolean;
-} & EditorStateConfig;
 
 export type UseTextEditor = {
   parentRef: RefObject<HTMLDivElement>;
@@ -25,9 +21,16 @@ export type UseTextEditor = {
 /**
  * Hook for creating editor.
  */
-// TODO(wittjosiah): Does not work in strict mode.
 export const useTextEditor = (
-  { autoFocus, scrollTo, debug, doc, selection, extensions }: UseTextEditorOptions = {},
+  {
+    id,
+    doc,
+    selection,
+    extensions,
+    autoFocus,
+    scrollTo,
+    debug,
+  }: Omit<TextEditorProps, 'moveToEndOfLine' | 'dataTestId'> = {},
   deps: DependencyList = [],
 ): UseTextEditor => {
   const onUpdate = useRef<() => void>();
@@ -42,6 +45,7 @@ export const useTextEditor = (
         doc,
         selection,
         extensions: [
+          id && documentId.of(id),
           // TODO(burdon): Doesn't catch errors in keymap functions.
           EditorView.exceptionSink.of((err) => {
             log.catch(err);
@@ -84,7 +88,6 @@ export const useTextEditor = (
       }
 
       // Set selection after first update (since content may rerender on focus).
-      // TODO(burdon): BUG on first render may appear in middle of formatted heading.
       // TODO(burdon): Make invisible until first render?
       if (selection || scrollTo) {
         onUpdate.current = () => {

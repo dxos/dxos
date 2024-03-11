@@ -268,7 +268,7 @@ const Story = ({
         },
       }),
       createDataExtensions({ id, text: accessor }),
-      ..._extensions,
+      _extensions,
     ],
     [_extensions],
   );
@@ -355,15 +355,6 @@ export const Lists = {
 export const Table = {
   render: () => <Story text={str(text.table, text.footer)} extensions={[table()]} />,
 };
-
-// export const Outliner = {
-//   render: () => (
-//     <Story
-//       text={str('# Outliner', '', 'Block', ': this is a block', ': with multiple lines', text.footer)}
-//       extensions={[outliner()]}
-//     />
-//   ),
-// };
 
 export const Autocomplete = {
   render: () => (

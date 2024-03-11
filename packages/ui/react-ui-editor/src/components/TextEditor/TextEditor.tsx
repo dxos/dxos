@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { EditorState, type Extension, type StateEffect } from '@codemirror/state';
+import { EditorState, type EditorStateConfig, type StateEffect } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import React, {
@@ -16,8 +16,9 @@ import React, {
 } from 'react';
 
 import { log } from '@dxos/log';
+import { isNotFalsy } from '@dxos/util';
 
-import { editorMode } from '../../extensions';
+import { documentId, editorMode } from '../../extensions';
 import { logChanges } from '../../util';
 
 export type CursorInfo = {
@@ -29,16 +30,14 @@ export type CursorInfo = {
   after?: string;
 };
 
-export type TextEditorProps = {
-  dataTestId?: string; // TODO(burdon): Generalize?
-  doc?: string; // TODO(burdon): Rename text/value/content?
+export type TextEditorProps = Pick<EditorStateConfig, 'doc' | 'selection' | 'extensions'> & {
+  id?: string;
   className?: string;
   autoFocus?: boolean;
   scrollTo?: StateEffect<any>; // TODO(burdon): Restore scroll position: scrollTo EditorView.scrollSnapshot().
   moveToEndOfLine?: boolean;
-  selection?: { anchor: number; head?: number };
-  extensions?: Extension[];
   debug?: boolean;
+  dataTestId?: string;
 };
 
 let instanceCount = 0;
@@ -47,22 +46,25 @@ let instanceCount = 0;
  * Thin wrapper for text editor.
  * Handles tabster and focus management.
  */
+// TODO(burdon): Use useTextEditor internally.
 export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
   (
     {
+      id,
       doc,
+      selection,
+      extensions,
       className,
       autoFocus,
       scrollTo = EditorView.scrollIntoView(0),
       moveToEndOfLine,
-      selection,
-      extensions = [],
       debug,
+      dataTestId,
     },
     forwardedRef,
   ) => {
     // TODO(burdon): Increments by 2!
-    const [id] = useState(() => `text-editor-${++instanceCount}`);
+    const [instanceId] = useState(() => `text-editor-${++instanceCount}`);
 
     // TODO(burdon): Make tabster optional.
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
@@ -83,7 +85,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
     // Create editor state and view.
     // The view is recreated if the model or extensions are changed.
     useEffect(() => {
-      log('updating', { id, selection, scrollTo, extensions: extensions.length });
+      log('updating', { id, instanceId });
 
       //
       // EditorState
@@ -93,6 +95,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
         doc,
         selection,
         extensions: [
+          id && documentId.of(id),
           // TODO(burdon): NOTE: Doesn't catch errors in keymap functions.
           EditorView.exceptionSink.of((err) => {
             log.catch(err);
@@ -107,8 +110,8 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
             });
           }),
 
-          ...extensions,
-        ],
+          extensions,
+        ].filter(isNotFalsy),
       });
 
       //
@@ -168,8 +171,9 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
         ref={rootRef}
         tabIndex={0}
         className={className}
-        onKeyUp={handleKeyUp}
+        data-testid={dataTestId}
         {...tabsterDOMAttribute}
+        onKeyUp={handleKeyUp}
       />
     );
   },

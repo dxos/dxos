@@ -110,8 +110,7 @@ export const EditorMain = ({ id, readonly, toolbar, comments, doc, extensions: _
         className='is-full bs-full overflow-hidden data-[toolbar=disabled]:pbs-2'
       >
         <TextEditor
-          dataTestId='composer.markdownRoot'
-          ref={editorRef}
+          id={id}
           doc={doc}
           extensions={extensions}
           autoFocus
@@ -124,6 +123,8 @@ export const EditorMain = ({ id, readonly, toolbar, comments, doc, extensions: _
             'md:border-is md:border-ie separator-separator focus-visible:ring-inset',
             !toolbar && 'border-bs separator-separator',
           )}
+          dataTestId='composer.markdownRoot'
+          ref={editorRef}
         />
       </div>
     </>

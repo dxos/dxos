@@ -9,6 +9,7 @@ import sortBy from 'lodash.sortby';
 import { useEffect } from 'react';
 
 import { debounce } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
@@ -508,12 +509,18 @@ export const focusComment = (view: EditorView, id: string, center = true) => {
 /**
  * Update comments state field.
  */
-export const useComments = (view: EditorView | null | undefined, id: string, comments: Comment[] = []) => {
+export const useComments = (view: EditorView | null, id: string, comments: Comment[] = []) => {
   useEffect(() => {
     if (view) {
-      view.dispatch({
-        effects: setComments.of({ id, comments }),
-      });
+      // Check same document.
+      // NOTE: Hook might be called before editor state is updated.
+      const docId = view.state.facet(documentId);
+      invariant(docId);
+      if (id === docId) {
+        view.dispatch({
+          effects: setComments.of({ id, comments }),
+        });
+      }
     }
   }, [id, view, comments]);
 };

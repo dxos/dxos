@@ -151,9 +151,9 @@ export const CommentContainer = ({
         <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
       ))}
       <MessageTextbox
-        autoFocus={autoFocus}
         doc={doc}
         extensions={extensions}
+        autoFocus={autoFocus}
         onSend={handleCreate}
         {...textboxMetadata}
       />

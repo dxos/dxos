@@ -16,7 +16,7 @@ import {
   hoverableFocusedWithinControls,
   mx,
 } from '@dxos/react-ui-theme';
-import { safeParseJson, hexToEmoji, hexToHue } from '@dxos/util';
+import { safeParseJson, hexToEmoji, hexToHue, isNotFalsy } from '@dxos/util';
 
 import { translationKey } from '../translations';
 import { type MessageEntity, type MessageEntityBlock, type MessageMetadata } from '../types';
@@ -172,9 +172,9 @@ export const MessageTextbox = ({
   extensions: _extensions,
   ...editorProps
 }: MessageTextboxProps) => {
-  const extensions = useMemo(() => {
+  const extensions = useMemo<TextEditorProps['extensions']>(() => {
     return [
-      ...(_extensions ?? []),
+      _extensions,
       keymap.of(keyBindings({ onSend, onClear })),
       listener({
         onFocus: (focusing) => {
@@ -183,7 +183,7 @@ export const MessageTextbox = ({
           }
         },
       }),
-    ];
+    ].filter(isNotFalsy);
   }, [_extensions]);
 
   return (

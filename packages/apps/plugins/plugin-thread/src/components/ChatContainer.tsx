@@ -133,9 +133,9 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
         </ScrollArea.Viewport>
       </ScrollArea.Root>
       <MessageTextbox
-        autoFocus={autoFocus}
         doc={doc}
         extensions={extensions}
+        autoFocus={autoFocus}
         onSend={handleCreate}
         {...textboxMetadata}
       />
