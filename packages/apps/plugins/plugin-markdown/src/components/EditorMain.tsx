@@ -57,12 +57,13 @@ export const EditorMain = ({ id, readonly, toolbar, comments, doc, extensions: _
 
   // TODO(burdon): Remove useEditorView. Check interaction with useComments with @wittjosiah.
   const [editorRef, viewInvalidated] = useEditorView(id);
-  useComments(viewInvalidated ? null : editorRef.current, id, comments);
-  const handleAction = useActionHandler(editorRef.current);
   useTest(editorRef.current);
 
+  // Toolbar actions.
+  const handleAction = useActionHandler(editorRef.current);
+
   // TODO(burdon): Doesn't show comments until first render.
-  console.log('>', editorRef.current);
+  useComments(viewInvalidated ? null : editorRef.current, id, comments);
 
   // Focus comment.
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {

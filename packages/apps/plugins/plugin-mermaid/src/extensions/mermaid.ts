@@ -62,12 +62,6 @@ const update = (state: EditorState, options: MermaidOptions) => {
   return builder.finish();
 };
 
-class Dummy extends WidgetType {
-  toDOM() {
-    return document.createElement('div');
-  }
-}
-
 class MermaidWidget extends WidgetType {
   _svg: string | undefined;
   _error: string | undefined;
