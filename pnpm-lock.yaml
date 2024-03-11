@@ -2099,9 +2099,15 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@codemirror/view':
+        specifier: ^6.25.0
+        version: 6.25.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
@@ -2111,6 +2117,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/react-async':
+        specifier: workspace:*
+        version: link:../../../common/react-async
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client

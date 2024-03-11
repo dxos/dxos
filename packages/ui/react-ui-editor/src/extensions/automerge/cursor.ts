@@ -5,9 +5,9 @@
 import get from 'lodash.get';
 
 import { next as A } from '@dxos/automerge/automerge';
+import { type DocAccessor } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { type DocAccessor } from './defs';
 import { type CursorConverter } from '../cursor';
 
 export const cursorConverter = ({ handle, path }: DocAccessor): CursorConverter => ({

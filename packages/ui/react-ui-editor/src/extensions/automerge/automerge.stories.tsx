@@ -9,7 +9,7 @@ import '@preact/signals-react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Repo } from '@dxos/automerge/automerge-repo';
-import { createDocAccessor, Filter } from '@dxos/echo-schema';
+import { createDocAccessor, Filter, DocAccessor } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { Expando, TextObject, useSpace } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
@@ -17,7 +17,6 @@ import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { automerge } from './automerge';
-import { DocAccessor } from './defs';
 import { createBasicExtensions, createThemeExtensions, useTextEditor } from '../../hooks';
 import translations from '../../translations';
 
@@ -34,20 +33,18 @@ type EditorProps = {
 
 const Editor = ({ source, autoFocus }: EditorProps) => {
   const { themeMode } = useThemeContext();
-  const extensions = useMemo(
-    () => [
-      createBasicExtensions({ placeholder: 'Type here...' }),
-      createThemeExtensions({ themeMode, slots: { editor: { className: 'p-2 bg-white dark:bg-black' } } }),
-      automerge(source),
-    ],
-    [themeMode, source],
+  const { parentRef } = useTextEditor(
+    () => ({
+      doc: DocAccessor.getValue(source),
+      extensions: [
+        createBasicExtensions({ placeholder: 'Type here...' }),
+        createThemeExtensions({ themeMode, slots: { editor: { className: 'p-2 bg-white dark:bg-black' } } }),
+        automerge(source),
+      ],
+      autoFocus,
+    }),
+    [source, themeMode],
   );
-
-  const { parentRef } = useTextEditor({
-    doc: DocAccessor.getValue(source),
-    extensions,
-    autoFocus,
-  });
 
   return <div ref={parentRef} />;
 };
@@ -114,7 +111,8 @@ const EchoStory = ({ spaceKey }: { spaceKey: PublicKey }) => {
 
 export const Default = {};
 
-// TODO(burdon): Feed already added error.
+// TODO(burdon): Error:
+//  chunk-6NX3RPDS.mjs:2021 ControlPipeline#5 Error: invariant violation: Feed already added
 export const WithEcho = {
   decorators: [withTheme],
   render: () => {
