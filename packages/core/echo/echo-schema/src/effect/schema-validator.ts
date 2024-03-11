@@ -10,7 +10,6 @@ import { invariant } from '@dxos/invariant';
 
 import { isValidProxyTarget } from './proxy';
 import { ReactiveArray } from './reactive-array';
-import { log } from '@dxos/log';
 import { defineHiddenProperty } from '../util/property';
 
 export const symbolSchema = Symbol.for('@dxos/schema');

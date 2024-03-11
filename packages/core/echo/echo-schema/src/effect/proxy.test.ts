@@ -33,7 +33,9 @@ for (const schema of [undefined, TestSchema]) {
     };
 
     // TODO(dmaretskyi): Remove.
-    if (!schema || useDatabase) continue;
+    if (!schema || useDatabase) {
+      continue;
+    }
 
     describe(`Proxy properties${schema == null ? '' : ' with schema'}`, () => {
       test('object initializer', async () => {
