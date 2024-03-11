@@ -32,11 +32,14 @@ export class IndexMetadataStore implements MetadataMethods {
     this._directory = directory;
   }
 
-  async markDirty(id: string, lastAvailableHash: string) {
-    const metadata = await this._getMetadata(id);
-    metadata.lastAvailableHash = lastAvailableHash;
-    await this._setMetadata(id, metadata);
-    this.dirty.emit();
+  async markDirty(idToLastHash: Map<string, string>) {
+    const tasks = [...idToLastHash.entries()].map(async ([id, lastAvailableHash]) => {
+      const metadata = await this._getMetadata(id);
+      metadata.lastAvailableHash = lastAvailableHash;
+      await this._setMetadata(id, metadata);
+      this.dirty.emit();
+    });
+    await Promise.all(tasks);
   }
 
   async getDirtyDocuments(): Promise<string[]> {
