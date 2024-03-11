@@ -33,7 +33,7 @@ Answer `no` to the question `Include default plugins?` to generate an empty conf
 
 ::: warning Under Development
 
-The Composer Extensibility APIs are under active development. The API may change often, and these docs may not be accurate. 
+The Composer Extensibility APIs are under active development. The API may change often, and these docs may not be accurate.
 
 Talk to us on [Discord](https://discord.gg/eXVfryv3sW) with feedback anytime.
 

@@ -296,7 +296,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     this._failing = true;
 
-    if (this.flags.verbose) {
+    if (!this.flags || this.flags?.verbose) {
       // NOTE: Default method displays stack trace. And exits the process.
       super.error(err, options as any);
       return;

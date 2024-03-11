@@ -24,6 +24,17 @@ export default class Share extends BaseCommand<typeof Share> {
     origin: Flags.string({
       description: 'Base URL of the application to join the invitation, e.g. https://composer.dxos.org',
     }),
+    lifetime: Flags.integer({
+      description: 'Lifetime of the invitation in seconds',
+      default: 86400,
+    }),
+    // TODO(nf): --no- doesn't work
+    'no-persistent': Flags.boolean({
+      description: "Don't resume invitation if client restarts",
+    }),
+    'no-wait': Flags.boolean({
+      description: "Don't wait for a peer to connect before exiting CLI.",
+    }),
   };
 
   async run(): Promise<any> {
@@ -35,6 +46,8 @@ export default class Share extends BaseCommand<typeof Share> {
 
       const observable = client.halo.share({
         authMethod: this.flags.noCode ? Invitation.AuthMethod.NONE : Invitation.AuthMethod.SHARED_SECRET,
+        persistent: this.flags.persistent,
+        lifetime: this.flags.lifetime,
       });
       const invitationSuccess = hostInvitation({
         observable,
@@ -51,12 +64,17 @@ export default class Share extends BaseCommand<typeof Share> {
             !this.flags.noCode && this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
           },
         },
+        waitForSuccess: false,
       });
 
-      ux.action.start('Waiting for peer to connect');
-      await invitationSuccess;
-      ux.action.stop();
-      ux.log(chalk`{green Joined successfully.}`);
+      if (!this.flags['no-wait']) {
+        ux.action.start('Waiting for peer to connect');
+        await invitationSuccess;
+        ux.action.stop();
+        ux.log(chalk`{green Joined successfully.}`);
+      } else {
+        await invitationSuccess;
+      }
     });
   }
 }

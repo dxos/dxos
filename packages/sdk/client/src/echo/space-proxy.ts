@@ -116,7 +116,7 @@ export class SpaceProxy implements Space {
       itemManager: this._itemManager,
       spaceKey: this.key,
     });
-    this._db = new EchoDatabaseImpl({ spaceKey: this._dbBackend.spaceKey, graph, automergeContext });
+    this._db = new EchoDatabaseImpl({ spaceKey: this.key, graph, automergeContext });
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
@@ -262,7 +262,7 @@ export class SpaceProxy implements Space {
       this._error = decodeError(space.error);
     }
 
-    {
+    if (this._initialized) {
       // Transition onto new automerge root.
       const automergeRoot = space.pipeline?.currentEpoch?.subject.assertion.automergeRoot;
       if (automergeRoot) {

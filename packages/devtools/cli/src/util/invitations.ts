@@ -15,6 +15,7 @@ export const hostInvitation = async ({
   observable,
   callbacks,
   peersNumber = 1,
+  waitForSuccess = true,
 }: {
   observable: CancellableInvitationObservable;
   callbacks?: {
@@ -22,8 +23,10 @@ export const hostInvitation = async ({
     onSuccess?: (invitation: Invitation) => Promise<void>;
   };
   peersNumber?: number;
+  waitForSuccess?: boolean;
 }): Promise<Invitation> => {
   const invitationEvent = new Event<Invitation>();
+  const connectingEvent = new Event<Invitation>();
 
   const done = invitationEvent.waitForCount(peersNumber);
   const unsubscribeHandle = observable.subscribe(
@@ -31,6 +34,7 @@ export const hostInvitation = async ({
       switch (invitation.state) {
         case Invitation.State.CONNECTING: {
           await callbacks?.onConnecting?.(invitation);
+          connectingEvent.emit(invitation);
           break;
         }
 
@@ -46,7 +50,12 @@ export const hostInvitation = async ({
     },
   );
 
-  const invitation = await done;
+  let invitation: Invitation;
+  if (waitForSuccess) {
+    invitation = await done;
+  } else {
+    invitation = await connectingEvent.waitForCount(1);
+  }
   unsubscribeHandle.unsubscribe();
   return invitation;
 };
