@@ -29,8 +29,6 @@ import {
   DocumentCard,
   DocumentMain,
   DocumentSection,
-  EditorMain,
-  EmbeddedLayout,
   MainLayout,
   MarkdownSettings,
 } from './components';
@@ -43,7 +41,7 @@ import {
   type MarkdownSettingsProps,
   MarkdownAction,
 } from './types';
-import { getFallbackTitle, isEditorModel, isMarkdownProperties, markdownExtensionPlugins } from './util';
+import { getFallbackTitle, isMarkdownProperties, markdownExtensionPlugins } from './util';
 
 export const isDocument = (data: unknown): data is DocumentType =>
   isTypedObject(data) && DocumentType.schema.typename === data.__typename;
@@ -242,17 +240,19 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   </MainLayout>
                 );
               } else if (
-                'model' in data &&
-                isEditorModel(data.model) &&
+                // TODO(burdon): Replace model with object ID.
+                // 'model' in data &&
+                // isEditorModel(data.model) &&
                 'properties' in data &&
                 isMarkdownProperties(data.properties)
               ) {
-                const main = <EditorMain model={data.model} extensions={extensions} />;
-                if ('view' in data && data.view === 'embedded') {
-                  return <EmbeddedLayout>{main}</EmbeddedLayout>;
-                } else {
-                  return <MainLayout>{main}</MainLayout>;
-                }
+                return null;
+                // const main = <EditorMain extensions={extensions} />;
+                // if ('view' in data && data.view === 'embedded') {
+                //   return <EmbeddedLayout>{main}</EmbeddedLayout>;
+                // } else {
+                //   return <MainLayout>{main}</MainLayout>;
+                // }
               }
               break;
             }

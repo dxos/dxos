@@ -7,7 +7,6 @@ import React, { type FC, useMemo } from 'react';
 import { type Action, useGraph } from '@braneframe/plugin-graph';
 import { Surface } from '@dxos/app-framework';
 import { Button, Main, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { type EditorModel } from '@dxos/react-ui-editor';
 import { baseSurface, descriptionText, mx, textBlockWidth, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
 import { FILES_PLUGIN } from '../meta';
@@ -18,7 +17,8 @@ const LocalFileMain: FC<{ file: LocalFile }> = ({ file }) => {
     () =>
       file.text
         ? {
-            model: { id: file.id, text: () => file.text } as EditorModel,
+            // TODO(burdon): Broken pending replacement of EditorModel.
+            // model: { id: file.id, text: () => file.text } as EditorModel,
             properties: { title: file.title, readOnly: true },
           }
         : { file },

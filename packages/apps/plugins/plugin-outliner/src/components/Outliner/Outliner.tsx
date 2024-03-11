@@ -2,25 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Extension, Prec } from '@codemirror/state';
+import { Prec } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { ArrowSquareOut, Circle, DotsThreeVertical, X } from '@phosphor-icons/react';
 import React, { type HTMLAttributes, StrictMode, useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { createDocAccessor, getTextContent } from '@dxos/react-client/echo';
 import { Button, DensityProvider, DropdownMenu, Input, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type CursorInfo,
-  type YText,
+  type YText, // TODO(burdon): Remove.
   useTextEditor,
-  defaultTheme,
   automerge,
-  decorateMarkdown,
+  createBasicExtensions,
   createMarkdownExtensions,
+  createThemeExtensions,
+  decorateMarkdown,
+  formattingKeymap,
+  useDocAccessor,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
-import { isNotFalsy } from '@dxos/util';
 
 import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
 import { OUTLINER_PLUGIN } from '../../meta';
@@ -240,26 +241,23 @@ const OutlinerItem = (props: OutlinerItemProps) => {
     }
   }, [focus]);
 
-  const extensions = useMemo<Extension[]>(
-    () =>
-      item.text
-        ? [
-            EditorView.baseTheme(defaultTheme),
-            EditorView.darkTheme.of(themeMode === 'dark'),
-            EditorView.editorAttributes.of({ class: 'grow' }),
-            EditorView.updateListener.of(({ view }) => setFocus(view.hasFocus)),
-
-            // lineNumbers(), // Debug-only.
-            createMarkdownExtensions({ themeMode, placeholder }),
-            decorateMarkdown({ renderLinkButton: onRenderLink }),
-            automerge(createDocAccessor(item.text)),
-            keymap,
-          ].filter(isNotFalsy)
-        : [],
-    [item.text],
+  const { doc, accessor } = useDocAccessor(item.text);
+  const { parentRef, view } = useTextEditor(
+    () => ({
+      doc,
+      extensions: [
+        EditorView.updateListener.of(({ view }) => setFocus(view.hasFocus)),
+        createBasicExtensions({ placeholder }),
+        createMarkdownExtensions({ themeMode }),
+        createThemeExtensions({ themeMode }),
+        decorateMarkdown({ renderLinkButton: onRenderLink }),
+        formattingKeymap(),
+        automerge(accessor),
+        keymap,
+      ],
+    }),
+    [accessor, themeMode],
   );
-
-  const { parentRef, view } = useTextEditor({ extensions, doc: getTextContent(item.text) }, [extensions]);
   useEffect(() => {
     if (active) {
       view?.focus();
@@ -288,7 +286,7 @@ const OutlinerItem = (props: OutlinerItemProps) => {
         )}
       </div>
 
-      <div ref={parentRef} className='flex grow pt-1' />
+      <div role='textbox' ref={parentRef} className='flex grow pt-1' />
 
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>

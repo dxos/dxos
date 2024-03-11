@@ -148,9 +148,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
                 marks[1].from,
                 node.to,
                 options.renderLinkButton
-                  ? Decoration.replace({
-                      widget: new LinkButton(url, options.renderLinkButton),
-                    })
+                  ? Decoration.replace({ widget: new LinkButton(url, options.renderLinkButton) })
                   : hide,
               );
             }
