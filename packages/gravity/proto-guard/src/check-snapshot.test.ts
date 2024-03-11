@@ -12,7 +12,7 @@ import { TestBuilder } from '@dxos/client/testing';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
-import { afterTest, beforeAll, describe, test } from '@dxos/test';
+import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
 import { data } from './testing';
 import { contains, copySync, getConfig, getStorageDir } from './util';
@@ -29,6 +29,10 @@ describe('Tests against old storage', () => {
     log.info('Copy storage', { src: storagePath, dest: testStoragePath });
 
     copySync(storagePath, testStoragePath);
+  });
+
+  afterAll(() => {
+    fs.rmSync(testStoragePath, { recursive: true, force: true });
   });
 
   test('check if space loads', async () => {

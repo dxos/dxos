@@ -270,6 +270,30 @@ describe('AutomergeDb', () => {
         await waitObjectLoaded(peer, obj, { triggerLoading: false });
       }
     });
+
+    test('reload objects', async () => {
+      const testBuilder = new TestBuilder();
+      const testPeer = await testBuilder.createPeer();
+      const object = new TypedObject({ title: 'first object' });
+      testPeer.db.add(object);
+
+      const spaceKey = testPeer.spaceKey;
+      const docId = testPeer.automergeDocId;
+      const objectId = object.id;
+      {
+        const testPeer = await testBuilder.createPeer(spaceKey, docId);
+        const object = await testPeer.db.automerge.loadObjectById(objectId);
+        expect(object).not.to.be.undefined;
+        expect((object as any).title).to.eq('first object');
+      }
+    });
+
+    test('load object', async () => {
+      const object = new Expando({ title: 'Hello' });
+      const peer = await createPeerInSpaceWithObject(object);
+      const loadedObject = await peer.db.automerge.loadObjectById(object.id);
+      expect(loadedObject).to.deep.eq(object);
+    });
   });
 });
 
