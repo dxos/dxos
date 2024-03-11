@@ -284,7 +284,7 @@ describe('AutomergeDb', () => {
         const testPeer = await testBuilder.createPeer(spaceKey, docId);
         const object = await testPeer.db.automerge.loadObjectById(objectId);
         expect(object).not.to.be.undefined;
-        expect(object.title).to.eq('first object');
+        expect((object as any).title).to.eq('first object');
       }
     });
 
