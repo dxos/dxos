@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event, synchronized } from '@dxos/async';
+import { Event, asyncTimeout, synchronized } from '@dxos/async';
 import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { type Reference } from '@dxos/document-model';
@@ -111,7 +111,7 @@ export class AutomergeDb {
   // TODO(dmaretskyi): should it be synchronized and/or cancelable?
   @synchronized
   async update(spaceState: SpaceState) {
-    invariant(this._ctx);
+    invariant(this._ctx, 'Must be open');
     if (spaceState.rootUrl === this._automergeDocLoader.getSpaceRootDocHandle().url) {
       return;
     }
@@ -167,6 +167,20 @@ export class AutomergeDb {
     const root = objCore.rootProxy;
     invariant(isAutomergeObject(root) || isReactiveProxy(root));
     return root as any;
+  }
+
+  // TODO(Mykola): Reconcile with `getObjectById`.
+  async loadObjectById(objectId: string, { timeout = 1000 }: { timeout?: number } = {}): Promise<EchoObject> {
+    const obj = this.getObjectById(objectId);
+    if (obj) {
+      return obj;
+    }
+    return asyncTimeout(
+      this._updateEvent
+        .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId))
+        .then(() => this.getObjectById(objectId)!),
+      timeout,
+    );
   }
 
   add(obj: OpaqueEchoObject) {

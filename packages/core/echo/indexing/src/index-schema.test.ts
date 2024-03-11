@@ -4,10 +4,10 @@
 
 import { expect } from 'chai';
 
+import { type Filter } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
 import { IndexSchema } from './index-schema';
-import { type Filter } from '../query';
 
 describe('IndexSchema', () => {
   test('basic', async () => {

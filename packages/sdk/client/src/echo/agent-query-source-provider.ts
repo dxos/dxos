@@ -113,7 +113,7 @@ export class AgentQuerySource implements QuerySource {
   }
 
   update(filter: Filter<EchoObject>): void {
-    if (!filter.options.dataLocation || filter.options.dataLocation === QueryOptions.DataLocation.LOCAL) {
+    if (filter.options.dataLocation === undefined || filter.options.dataLocation === QueryOptions.DataLocation.LOCAL) {
       // Disabled by dataLocation filter.
       return;
     }

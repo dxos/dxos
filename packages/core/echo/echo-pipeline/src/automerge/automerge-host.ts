@@ -98,15 +98,13 @@ export class AutomergeHost {
         }
 
         try {
-          // experimental_spaceKey is set on old documents, new ones are created with doc.access.spaceKey
-          const rawSpaceKey = doc.access?.spaceKey ?? doc.experimental_spaceKey;
-          if (!rawSpaceKey) {
+          const spaceKey = getSpaceKeyFromDoc(doc);
+          if (!spaceKey) {
             log('space key not found for share policy check', { peerId, documentId });
             return false;
           }
 
-          const spaceKey = PublicKey.from(rawSpaceKey);
-          const authorizedDevices = this._authorizedDevices.get(spaceKey);
+          const authorizedDevices = this._authorizedDevices.get(PublicKey.from(spaceKey));
 
           // TODO(mykola): Hack, stop abusing `peerMetadata` field.
           const deviceKeyHex = (this.repo.peerMetadataByPeerId[peerId] as any)?.dxos_deviceKey;
@@ -182,10 +180,14 @@ export class AutomergeHost {
 
     const markingDirtyPromise = Promise.all(
       objectIds.map(async (objectId) => {
+        const spaceKey = getSpaceKeyFromDoc(event.doc);
+        if (!spaceKey) {
+          return;
+        }
         await cancelWithContext(
           this._ctx,
           this._metadata!.markDirty(
-            idCodec.encode({ documentId: event.handle.documentId, objectId }),
+            idCodec.encode({ documentId: event.handle.documentId, objectId, spaceKey }),
             lastAvailableHash,
           ),
         );
@@ -284,4 +286,14 @@ const getInlineChanges = (event: DocHandleChangePayload<any>) => {
     }
   }
   return [...inlineChangedObjectIds];
+};
+
+export const getSpaceKeyFromDoc = (doc: any): string | null => {
+  // experimental_spaceKey is set on old documents, new ones are created with doc.access.spaceKey
+  const rawSpaceKey = doc.access?.spaceKey ?? doc.experimental_spaceKey;
+  if (rawSpaceKey == null) {
+    return null;
+  }
+
+  return String(rawSpaceKey);
 };

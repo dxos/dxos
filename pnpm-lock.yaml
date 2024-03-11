@@ -2117,6 +2117,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/react-async':
+        specifier: workspace:*
+        version: link:../../../common/react-async
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -5226,14 +5229,14 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@effect/schema':
-        specifier: ^0.62.1
-        version: 0.62.6(effect@2.3.5)(fast-check@3.15.1)
+        specifier: ^0.63.4
+        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
       '@orama/orama':
         specifier: ^2.0.8
         version: 2.0.8
       effect:
-        specifier: ^2.3.1
-        version: 2.3.5
+        specifier: ^2.4.3
+        version: 2.4.3
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -5327,6 +5330,67 @@ importers:
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
+      wait-for-expect:
+        specifier: ^3.0.2
+        version: 3.0.2
+
+  packages/core/echo/indexing:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/automerge':
+        specifier: workspace:*
+        version: link:../automerge
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../../common/context
+      '@dxos/echo-pipeline':
+        specifier: workspace:*
+        version: link:../echo-pipeline
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../../common/node-std
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../protocols
+      '@dxos/random-access-storage':
+        specifier: workspace:*
+        version: link:../../../common/random-access-storage
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      '@effect/schema':
+        specifier: ^0.63.4
+        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
+      '@orama/orama':
+        specifier: ^2.0.8
+        version: 2.0.8
+      effect:
+        specifier: ^2.4.3
+        version: 2.4.3
+      lodash.isequal:
+        specifier: ^4.5.0
+        version: 4.5.0
+    devDependencies:
+      '@types/lodash.isequal':
+        specifier: ^4.5.0
+        version: 4.5.6
+      fast-check:
+        specifier: ^3.15.1
+        version: 3.15.1
       wait-for-expect:
         specifier: ^3.0.2
         version: 3.0.2
@@ -7033,8 +7097,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/schema':
-        specifier: ^0.62.1
-        version: 0.62.6(effect@2.3.5)(fast-check@3.15.1)
+        specifier: ^0.63.4
+        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
       '@langchain/community':
         specifier: ^0.0.26
         version: 0.0.26(discord.js@14.14.1)(faiss-node@0.5.1)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@20.0.1)
@@ -7069,8 +7133,8 @@ importers:
         specifier: ^14.14.1
         version: 14.14.1
       effect:
-        specifier: ^2.3.1
-        version: 2.3.5
+        specifier: ^2.4.3
+        version: 2.4.3
       email-addresses:
         specifier: ^5.0.0
         version: 5.0.0
@@ -7802,6 +7866,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/indexing':
+        specifier: workspace:*
+        version: link:../../core/echo/indexing
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -7939,6 +8006,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/automerge':
+        specifier: workspace:*
+        version: link:../../core/echo/automerge
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../client-protocol
@@ -7975,6 +8045,9 @@ importers:
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../common/feed-store
+      '@dxos/indexing':
+        specifier: workspace:*
+        version: link:../../core/echo/indexing
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -13618,13 +13691,13 @@ packages:
       - supports-color
     dev: true
 
-  /@effect/schema@0.62.6(effect@2.3.5)(fast-check@3.15.1):
-    resolution: {integrity: sha512-Y/vkQ63EXcQUiJM01lbZ5lb7wCEK8gTcM5wZ1L20TvqFuAXHLp0cs66L3Sk3eIbiX0mv4aYxBWSKhwvhWAhc6g==}
+  /@effect/schema@0.63.4(effect@2.4.3)(fast-check@3.15.1):
+    resolution: {integrity: sha512-59b7N0XntkfivwhTSutyP13t1utlbJ9wDWDwEdAivNPpXBfpUlAWnZw7MAi86qI8J1LVz3ZDlz5p0pkDSu7p9g==}
     peerDependencies:
-      effect: ^2.3.5
+      effect: ^2.4.3
       fast-check: ^3.13.2
     dependencies:
-      effect: 2.3.5
+      effect: 2.4.3
       fast-check: 3.15.1
     dev: false
 
@@ -28256,8 +28329,8 @@ packages:
   /ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  /effect@2.3.5:
-    resolution: {integrity: sha512-qarp/WBRty4VM//ZEKDY8Bu3Tolr1afEIwFVZtU3eMOtBZpRIQkLVQMTOjUTt3qeJAAIHfYfEk7GiKg6ABCWlg==}
+  /effect@2.4.3:
+    resolution: {integrity: sha512-OmIgfNgQMZsQt5l7qLQqLOUxIXq7ku8/RK3Wv3LqxSE2zMyU1mHXof5QeyCt7m9sXv3Vui52Urk1vVsEd2szMQ==}
     dev: false
 
   /ejs@3.1.8:

@@ -7,6 +7,7 @@ import { type Context } from '@dxos/context';
 import { schema } from '@dxos/protocols';
 import { type FunctionRegistryService } from '@dxos/protocols/proto/dxos/agent/functions';
 import {
+  type IndexService,
   type DevicesService,
   type IdentityService,
   type InvitationsService,
@@ -33,6 +34,7 @@ export type ClientServices = {
 
   IdentityService: IdentityService;
   InvitationsService: InvitationsService;
+  IndexService: IndexService;
   DevicesService: DevicesService;
   SpacesService: SpacesService;
   DataService: DataService;
@@ -71,6 +73,7 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
   LoggingService: schema.getService('dxos.client.services.LoggingService'),
 
   IdentityService: schema.getService('dxos.client.services.IdentityService'),
+  IndexService: schema.getService('dxos.client.services.IndexService'),
   InvitationsService: schema.getService('dxos.client.services.InvitationsService'),
   DevicesService: schema.getService('dxos.client.services.DevicesService'),
   SpacesService: schema.getService('dxos.client.services.SpacesService'),

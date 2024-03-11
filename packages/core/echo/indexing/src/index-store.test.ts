@@ -4,12 +4,12 @@
 
 import { expect } from 'chai';
 
+import { type Filter } from '@dxos/echo-schema';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { IndexSchema } from './index-schema';
 import { IndexStore } from './index-store';
-import { type Filter } from '../query';
 
 describe('IndexStore', () => {
   test('basic', async () => {
