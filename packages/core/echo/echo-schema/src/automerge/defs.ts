@@ -11,7 +11,7 @@ import { type AutomergeTextCompat, type TextObject } from '../object';
 
 //
 // Automerge types.
-// TODO(burdon): Factor out to new low-level type package: @dxos/types.
+// TODO(burdon): Factor out to new low-level type package: @dxos/types or to @dxos/automerge?
 //
 
 export interface IDocHandle<T = any> {
