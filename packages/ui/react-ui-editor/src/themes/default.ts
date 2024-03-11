@@ -261,30 +261,3 @@ export const defaultTheme: ThemeStyles = {
     marginRight: '0.4rem !important',
   },
 };
-
-// export const textTheme: ThemeStyles = {
-//   '.cm-scroller': {
-//     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
-//   },
-//   '.cm-placeholder': {
-//     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
-//   },
-// };
-//
-// export const markdownTheme: ThemeStyles = {
-//   '.cm-scroller': {
-//     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
-//   },
-//   '.cm-placeholder': {
-//     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
-//   },
-// };
-//
-// export const codeTheme: ThemeStyles = {
-//   '.cm-scroller': {
-//     fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
-//   },
-//   '.cm-placeholder': {
-//     fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
-//   },
-// };
