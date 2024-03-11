@@ -7,7 +7,7 @@ import get from 'lodash.get';
 import { type Dispatch, type SetStateAction, useState, useMemo } from 'react';
 
 import { generateName } from '@dxos/display-name';
-import { type AutomergeTextCompat, getRawDoc } from '@dxos/echo-schema';
+import { type AutomergeTextCompat, isReactiveProxy, getRawDoc } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { isAutomergeObject, type Space, type TextObject } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
@@ -18,7 +18,6 @@ import { SpaceAwarenessProvider } from './awareness-provider';
 import { type EditorModel } from './defs';
 import { automerge, awareness } from '../extensions';
 import { type DocAccessor } from '../extensions/automerge/defs';
-import { isReactiveProxy } from '@dxos/echo-schema/src/effect/proxy';
 
 export type useTextExtensionsProps = {
   id: string;

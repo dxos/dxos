@@ -19,12 +19,12 @@ export const DocumentHeadingMenu: FC<{ document: DocumentType }> = ({ document }
   const identity = useIdentity();
   // TODO(wittjosiah): Should this be a hook?
   const space = getSpaceForObject(document);
-  const model = useTextModel({ identity, space, text: document?.content });
+  const model = useTextModel({ identity, space, text: document?.content as any });
   if (!model) {
     return null;
   }
 
-  return <HeadingMenu properties={document} model={model} />;
+  return <HeadingMenu properties={document as any} model={model} />;
 };
 
 /**

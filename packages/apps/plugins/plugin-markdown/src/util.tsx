@@ -2,13 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Document } from '@braneframe/types';
 import { type Plugin } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { getTextContent, isTypedObject } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
 import { type EditorModel, YText } from '@dxos/react-ui-editor';
 
-import { type MarkdownProperties, type MarkdownExtensionProvides } from './types';
+import { type DocumentType, type MarkdownProperties, type MarkdownExtensionProvides } from './types';
 
 // TODO(burdon): These tests clash with Diagram.content.
 //  Uncaught Error: Type with the name content has already been defined with a different constructor.
@@ -52,7 +51,7 @@ export const markdownExtensionPlugins = (plugins: Plugin[]): MarkdownExtensionPl
 
 const nonTitleChars = /[^\w ]/g;
 
-export const getFallbackTitle = (document: Document) => {
-  const content = getTextContent(document.content);
+export const getFallbackTitle = (document: DocumentType) => {
+  const content = getTextContent(document.content as any);
   return content?.substring(0, 31).split('\n')[0].replaceAll(nonTitleChars, '').trim();
 };

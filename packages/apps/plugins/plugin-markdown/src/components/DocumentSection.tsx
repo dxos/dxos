@@ -20,7 +20,7 @@ const DocumentSection: FC<{
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const identity = useIdentity();
   const space = getSpaceForObject(document);
-  const model = useTextModel({ identity, space, text: document?.content });
+  const model = useTextModel({ identity, space, text: document?.content as any });
   if (!model) {
     return null;
   }

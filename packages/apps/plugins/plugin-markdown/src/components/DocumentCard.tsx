@@ -40,7 +40,7 @@ export const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement
     forwardRef,
   ) => {
     const { t } = useTranslation(MARKDOWN_PLUGIN);
-    const model = useTextModel({ text: object.content });
+    const model = useTextModel({ text: object.content as any });
     if (!model) {
       return null;
     }

@@ -2,11 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
 import { type IconProps, TextAa } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
 import { deepSignal } from 'deepsignal/react';
-import { Effect } from 'effect';
 import React, { useMemo, type Ref } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
@@ -20,7 +18,8 @@ import {
   type PluginDefinition,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { Filter } from '@dxos/echo-schema';
+import * as E from '@dxos/echo-schema';
+import { Filter, getEchoObjectAnnotation } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
@@ -48,15 +47,7 @@ import {
 } from './types';
 import { getFallbackTitle, isEditorModel, isMarkdownProperties, markdownExtensionPlugins } from './util';
 
-export const isDocument = (data: unknown): data is DocumentType => {
-  // TODO(wittjosiah): More concise way to do this?
-  const result = S.validate(DocumentSchema)(data);
-  const program = Effect.match(result, {
-    onFailure: () => false,
-    onSuccess: () => true,
-  });
-  return Effect.runSync(program);
-};
+export const isDocument = (data: unknown): data is DocumentType => data && E.getSchema(data) === DocumentSchema;
 
 export type MarkdownPluginState = {
   // Codemirror extensions provided by other plugins.
@@ -108,12 +99,15 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         const { extensions } = plugin.provides.markdown;
         state.extensions.push(extensions);
       });
+
+      const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
+      clientPlugin?.provides.client._graph.types.registerEffectSchema(DocumentSchema);
     },
     provides: {
       settings: settings.values,
       metadata: {
         records: {
-          [DocumentType.schema.typename]: {
+          [getEchoObjectAnnotation(DocumentSchema)!.typename]: {
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: (props: IconProps) => <TextAa {...props} />,
           },
@@ -239,6 +233,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           switch (role) {
             // TODO(burdon): Normalize layout (reduce variants).
             case 'main': {
+              console.log('MarkdownPlugin', data.active);
               if (isDocument(data.active)) {
                 const { readonly } = settings.values.state[data.active.id] ?? {};
                 return (

@@ -7,7 +7,7 @@ import React, { type AnchorHTMLAttributes, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { type IntentDispatcher, NavigationAction } from '@dxos/app-framework';
-import { getSpaceForObject } from '@dxos/react-client/echo';
+import { Filter, getSpaceForObject } from '@dxos/react-client/echo';
 import {
   type AutocompleteResult,
   type Extension,

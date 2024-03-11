@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, useMemo } from 'react';
+import React, { type FC } from 'react';
 
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { type Comment, useTextModel } from '@dxos/react-ui-editor';
+import { useTextModel } from '@dxos/react-ui-editor';
 
 import EditorMain, { type EditorMainProps } from './EditorMain';
-import { type DocumentType } from './types';
+import { type DocumentType } from '../types';
 
 /**
  * @deprecated
@@ -21,16 +21,16 @@ const DocumentMain: FC<{ document: DocumentType } & Pick<EditorMainProps, 'toolb
 }) => {
   const identity = useIdentity();
   const space = getSpaceForObject(document);
-  const model = useTextModel({ identity, space, text: document.content });
-  const comments = useMemo<Comment[]>(() => {
-    return document.comments?.map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! }));
-  }, [document.comments]);
+  const model = useTextModel({ identity, space, text: document.content as any });
+  // const comments = useMemo<Comment[]>(() => {
+  //   return document.comments?.map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! }));
+  // }, [document.comments]);
 
   if (!model) {
     return null;
   }
 
-  return <EditorMain model={model} comments={comments} {...props} />;
+  return <EditorMain model={model} comments={[]} {...props} />;
 };
 
 export default DocumentMain;

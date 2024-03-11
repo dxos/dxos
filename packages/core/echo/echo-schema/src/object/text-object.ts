@@ -14,6 +14,8 @@ import { AbstractEchoObject } from './object';
 import { isAutomergeObject, type AutomergeOptions, type TypedObject } from './typed-object';
 import { base } from './types';
 import { AutomergeObject, getRawDoc } from '../automerge';
+import { type EchoReactiveObject } from '../effect/echo-handler';
+import { isReactiveProxy } from '../effect/proxy';
 
 export type TextObjectOptions = AutomergeOptions;
 
@@ -107,17 +109,19 @@ export const setTextContent = (object: TextObject, text: string) => {
  * @deprecated
  */
 export const getTextContent: {
-  (object: TextObject | undefined): string | undefined;
-  (object: TextObject | undefined, defaultValue: string): string;
-} = (object: TextObject | undefined, defaultValue?: string) => {
+  (object: TextObject | EchoReactiveObject<{ content: string }> | undefined): string | undefined;
+  (object: TextObject | EchoReactiveObject<{ content: string }> | undefined, defaultValue: string): string;
+} = (object: TextObject | EchoReactiveObject<{ content: string }> | undefined, defaultValue?: string) => {
   if (!object) {
     return defaultValue;
   }
 
   if (isAutomergeObject(object)) {
     return (object as any)?.content ?? defaultValue;
+  } else if (isReactiveProxy(object)) {
+    return (object as any)?.content ?? defaultValue;
   } else {
-    return object?.text ?? defaultValue;
+    return (object as any)?.text ?? defaultValue;
   }
 };
 
