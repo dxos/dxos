@@ -104,7 +104,7 @@ export class AutomergeHost {
             return false;
           }
 
-          const authorizedDevices = this._authorizedDevices.get(spaceKey);
+          const authorizedDevices = this._authorizedDevices.get(PublicKey.from(spaceKey));
 
           // TODO(mykola): Hack, stop abusing `peerMetadata` field.
           const deviceKeyHex = (this.repo.peerMetadataByPeerId[peerId] as any)?.dxos_deviceKey;
@@ -288,12 +288,12 @@ const getInlineChanges = (event: DocHandleChangePayload<any>) => {
   return [...inlineChangedObjectIds];
 };
 
-export const getSpaceKeyFromDoc = (doc: any) => {
+export const getSpaceKeyFromDoc = (doc: any): string | null => {
   // experimental_spaceKey is set on old documents, new ones are created with doc.access.spaceKey
   const rawSpaceKey = doc.access?.spaceKey ?? doc.experimental_spaceKey;
-  if (!rawSpaceKey) {
-    return;
+  if (rawSpaceKey == null) {
+    return null;
   }
 
-  return rawSpaceKey;
+  return String(rawSpaceKey);
 };
