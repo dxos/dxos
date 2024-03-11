@@ -10,6 +10,7 @@ import { invariant } from '@dxos/invariant';
 
 import { isValidProxyTarget } from './proxy';
 import { ReactiveArray } from './reactive-array';
+import { defineHiddenProperty } from '../util/property';
 
 export const symbolSchema = Symbol.for('@dxos/schema');
 export const symbolTypeAst = Symbol.for('@dxos/type/AST');
@@ -52,9 +53,12 @@ export class SchemaValidator {
 
   private static _getTargetPropertySchema(target: any, prop: string | symbol): S.Schema<any> {
     if (target instanceof ReactiveArray) {
-      return getArrayElementSchema((target as any)[symbolSchema]);
+      const schema = (target as any)[symbolSchema];
+      invariant(schema, 'target has no schema');
+      return getArrayElementSchema(schema);
     }
     const ast = target[symbolTypeAst] as AST.AST;
+    invariant(ast, 'target has no schema AST');
     const properties = AST.getPropertySignatures(ast).find((property) => property.name === prop);
     if (!properties) {
       throw new Error(`Invalid property: ${prop.toString()}`);
@@ -81,7 +85,7 @@ export class SchemaValidator {
 }
 
 const getArrayElementSchema = (arraySchema: S.Schema<any>): S.Schema<any> => {
-  return S.make((arraySchema.ast as any).rest.value[0]);
+  return S.make((unwrapOptionality(arraySchema.ast) as any).rest.value[0]);
 };
 
 /**
@@ -90,31 +94,51 @@ const getArrayElementSchema = (arraySchema: S.Schema<any>): S.Schema<any> => {
 // TODO(burdon): Use visitProperties.
 export const setSchemaProperties = (obj: any, schema: S.Schema<any>) => {
   if (!obj[symbolSchema]) {
-    Object.defineProperty(obj, symbolSchema, {
-      enumerable: false,
-      configurable: true,
-      value: schema,
-    });
+    defineHiddenProperty(obj, symbolSchema, schema);
   }
-  if (AST.isTypeLiteral(schema.ast)) {
+
+  const unwrapped = unwrapOptionality(schema.ast);
+
+  if (AST.isTypeLiteral(unwrapped)) {
     Object.defineProperty(obj, symbolTypeAst, {
       enumerable: false,
       configurable: true,
-      value: schema.ast,
+      value: unwrapped,
     });
 
-    for (const property of schema.ast.propertySignatures) {
+    for (const property of unwrapped.propertySignatures) {
       const value = (obj as any)[property.name];
       if (isValidProxyTarget(value)) {
-        setSchemaProperties(value, S.make(property.type));
+        setSchemaProperties(value, S.make(unwrapOptionality(property.type)));
       }
     }
-  } else if (Array.isArray(obj) && AST.isTuple(schema.ast)) {
+  } else if (Array.isArray(obj) && AST.isTuple(unwrapped)) {
     const elementSchema = getArrayElementSchema(schema);
     for (const value of obj) {
       if (isValidProxyTarget(value)) {
         setSchemaProperties(value, elementSchema);
       }
     }
+  } else {
+    // log.warn('unable to set schema properties', { obj, ast: schema });
+    // TODO(dmaretskyi): Throw an error?
   }
+};
+
+/**
+ * Handles unions with undefined and returns the AST for the other union member.
+ */
+const unwrapOptionality = (ast: AST.AST): AST.AST => {
+  if (AST.isUnion(ast) && ast.types.length === 2) {
+    const undefinedIdx = ast.types.findIndex((type) => AST.isUndefinedKeyword(type));
+    if (undefinedIdx === 0) {
+      return ast.types[1];
+    } else if (undefinedIdx === 1) {
+      return ast.types[0];
+    } else {
+      return ast;
+    }
+  }
+
+  return ast;
 };
