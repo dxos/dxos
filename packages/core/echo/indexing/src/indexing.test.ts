@@ -6,12 +6,10 @@ import * as S from '@effect/schema/Schema';
 import { expect } from 'chai';
 
 import { Event, Trigger } from '@dxos/async';
+import { GraphQueryContext, Query, type Filter, type QuerySource } from '@dxos/echo-schema';
+import * as R from '@dxos/echo-schema/schema';
 import { invariant } from '@dxos/invariant';
 import { describe, test } from '@dxos/test';
-
-import * as R from '../effect/reactive';
-import { GraphQueryContext } from '../hypergraph';
-import { Query, type Filter, type QuerySource } from '../query';
 
 type IndexKind = { kind: 'typename' } | { kind: 'FIELD_MATCH'; field: string } | { kind: 'FULL_TEXT' };
 type ObjectType = R.ReactiveObject<{ id: string } & Record<string, any>>;
