@@ -5226,14 +5226,14 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@effect/schema':
-        specifier: ^0.63.2
-        version: 0.63.2(effect@2.4.1)(fast-check@3.15.1)
+        specifier: ^0.63.4
+        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
       '@orama/orama':
         specifier: ^2.0.8
         version: 2.0.8
       effect:
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.3
+        version: 2.4.3
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -7033,8 +7033,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/schema':
-        specifier: ^0.63.2
-        version: 0.63.2(effect@2.4.1)(fast-check@3.15.1)
+        specifier: ^0.63.4
+        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
       '@langchain/community':
         specifier: ^0.0.26
         version: 0.0.26(discord.js@14.14.1)(faiss-node@0.5.1)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@20.0.1)
@@ -7069,8 +7069,8 @@ importers:
         specifier: ^14.14.1
         version: 14.14.1
       effect:
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.3
+        version: 2.4.3
       email-addresses:
         specifier: ^5.0.0
         version: 5.0.0
@@ -13632,6 +13632,16 @@ packages:
       fast-check: ^3.13.2
     dependencies:
       effect: 2.4.1
+      fast-check: 3.15.1
+    dev: false
+
+  /@effect/schema@0.63.4(effect@2.4.3)(fast-check@3.15.1):
+    resolution: {integrity: sha512-59b7N0XntkfivwhTSutyP13t1utlbJ9wDWDwEdAivNPpXBfpUlAWnZw7MAi86qI8J1LVz3ZDlz5p0pkDSu7p9g==}
+    peerDependencies:
+      effect: ^2.4.3
+      fast-check: ^3.13.2
+    dependencies:
+      effect: 2.4.3
       fast-check: 3.15.1
     dev: false
 
@@ -28263,6 +28273,10 @@ packages:
 
   /effect@2.4.1:
     resolution: {integrity: sha512-YsoMB/EGCohGKFyTPYqaFe2B7UCU2MM303dkoowF8DNOdks/4q/00cyhTbBUmM/0FMDoUPmUi/AJ0Aj3E7vO1A==}
+    dev: false
+
+  /effect@2.4.3:
+    resolution: {integrity: sha512-OmIgfNgQMZsQt5l7qLQqLOUxIXq7ku8/RK3Wv3LqxSE2zMyU1mHXof5QeyCt7m9sXv3Vui52Urk1vVsEd2szMQ==}
     dev: false
 
   /ejs@3.1.8:
