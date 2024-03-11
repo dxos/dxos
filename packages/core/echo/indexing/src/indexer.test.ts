@@ -41,7 +41,8 @@ describe('Indexer', () => {
     }
 
     {
-      await Promise.all(objects.map((object) => metadataStore.markDirty(object.id, 'hash')));
+      const dirtyMap = new Map(objects.map((object) => [object.id, 'hash']));
+      await metadataStore.markDirty(dirtyMap);
     }
 
     await doneIndexing;
