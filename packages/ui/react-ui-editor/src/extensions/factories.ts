@@ -17,10 +17,9 @@ import {
   scrollPastEnd,
 } from '@codemirror/view';
 import defaultsDeep from 'lodash.defaultsdeep';
-import { useMemo } from 'react';
 
 import { generateName } from '@dxos/display-name';
-import { createDocAccessor, getTextContent, type TextObject, type DocAccessor } from '@dxos/echo-schema';
+import { type DocAccessor } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
@@ -28,8 +27,8 @@ import { type ThemeMode } from '@dxos/react-ui';
 import { type HuePalette, hueTokens } from '@dxos/react-ui-theme';
 import { hexToHue, isNotFalsy } from '@dxos/util';
 
-import { SpaceAwarenessProvider } from './awareness-provider';
-import { automerge, awareness } from '../extensions';
+import { automerge } from './automerge';
+import { awareness, SpaceAwarenessProvider } from './awareness';
 import { type ThemeStyles } from '../styles';
 import { defaultTheme } from '../themes';
 
@@ -168,18 +167,4 @@ export const createDataExtensions = ({ id, text, space, identity }: DataExtensio
   }
 
   return extensions;
-};
-
-// TODO(burdon): Factor out.
-export const useDocAccessor = <T = any>(
-  text: TextObject,
-): { id: string; doc: string | undefined; accessor: DocAccessor<T> } => {
-  return useMemo(
-    () => ({
-      id: text.id,
-      doc: getTextContent(text),
-      accessor: createDocAccessor<T>(text),
-    }),
-    [text],
-  );
 };
