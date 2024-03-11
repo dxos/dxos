@@ -17,8 +17,9 @@ import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { automerge } from './automerge';
-import { createBasicExtensions, createThemeExtensions, useTextEditor } from '../../hooks';
+import { useTextEditor } from '../../hooks';
 import translations from '../../translations';
+import { createBasicExtensions, createThemeExtensions } from '../factories';
 
 const initialContent = 'Hello world!';
 
