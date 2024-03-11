@@ -2,7 +2,7 @@
 /* TODO(thure): This should be on the `components` layer, but utility classes like `pli-0` weren’t getting precedence like they should. */
 @layer base {
   .ch-checkbox {
-    @apply is-4 bs-4 border-0 shadow-inner transition-colors surface-unAccent s-accent-unAccent shrink-0 inline-grid place-items-center rounded-sm fg-inverse;
+    @apply is-4 bs-4 border-0 shadow-inner transition-colors surface-unAccent s-accent-unAccent fg-inverse shrink-0 inline-grid place-items-center rounded-sm;
     /* Not-unchecked styles */
     &[aria-checked='true'],
     &[aria-checked='mixed'],
