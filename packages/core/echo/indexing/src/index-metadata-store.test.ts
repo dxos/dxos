@@ -17,7 +17,8 @@ describe('IndexMetadataStore', () => {
     const metadataStore = new IndexMetadataStore({ directory });
 
     const ids = ['1', '2', '3'];
-    await Promise.all(ids.map((id) => metadataStore.markDirty(id, `hash-${id}`)));
+    const dirtyMap = new Map(ids.map((id) => [id, `hash-${id}`]));
+    await metadataStore.markDirty(dirtyMap);
     expect(await metadataStore.getDirtyDocuments()).to.deep.equal(ids);
 
     await metadataStore.markClean('1', 'hash-1');
