@@ -43,7 +43,8 @@ const Story: FC<{ content: string }> = ({ content }) => {
   const { id, doc, accessor } = useDocAccessor(item.text);
   const [formattingState, formattingObserver] = useFormattingState();
   const { parentRef, view } = useTextEditor(
-    {
+    () => ({
+      id,
       doc,
       extensions: [
         createBasicExtensions(),
@@ -63,8 +64,8 @@ const Story: FC<{ content: string }> = ({ content }) => {
         table(),
         formattingObserver,
       ],
-    },
-    [themeMode],
+    }),
+    [id, accessor, themeMode],
   );
 
   const [_comments, setComments] = useState<Comment[]>([]);
@@ -79,7 +80,7 @@ const Story: FC<{ content: string }> = ({ content }) => {
         <Toolbar.Separator />
         <Toolbar.Extended />
       </Toolbar.Root>
-      <div ref={parentRef} className={textBlockWidth} />;
+      <div role='textbox' ref={parentRef} className={textBlockWidth} />;
     </div>
   );
 };

@@ -4,7 +4,7 @@
 
 import { EditorSelection, EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { type DependencyList, type RefObject, useEffect, useRef, useState } from 'react';
+import { type DependencyList, type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { isNotFalsy } from '@dxos/util';
@@ -18,21 +18,14 @@ export type UseTextEditor = {
   view?: EditorView;
 };
 
+export type UseTextEditorProps = Omit<TextEditorProps, 'moveToEndOfLine' | 'dataTestId'>;
+
 /**
  * Hook for creating editor.
  */
-export const useTextEditor = (
-  {
-    id,
-    doc,
-    selection,
-    extensions,
-    autoFocus,
-    scrollTo,
-    debug,
-  }: Omit<TextEditorProps, 'moveToEndOfLine' | 'dataTestId'> = {},
-  deps: DependencyList = [],
-): UseTextEditor => {
+export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: DependencyList = []): UseTextEditor => {
+  let { id, doc, selection, extensions, autoFocus, scrollTo, debug } = useMemo<UseTextEditorProps>(cb, deps ?? []);
+
   const onUpdate = useRef<() => void>();
   const [view, setView] = useState<EditorView>();
   const parentRef = useRef<HTMLDivElement>(null);

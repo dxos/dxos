@@ -31,29 +31,33 @@ const DocumentSection: FC<{
 
   const { themeMode } = useThemeContext();
   const { doc, accessor } = useDocAccessor(document.content);
-  const { parentRef } = useTextEditor({
-    doc,
-    extensions: [
-      createBasicExtensions({ placeholder: t('editor placeholder') }),
-      createMarkdownExtensions({ themeMode }),
-      createThemeExtensions({
-        themeMode,
-        slots: {
-          editor: {
-            className: 'h-full py-4',
+  const { parentRef } = useTextEditor(
+    () => ({
+      doc,
+      extensions: [
+        createBasicExtensions({ placeholder: t('editor placeholder') }),
+        createMarkdownExtensions({ themeMode }),
+        createThemeExtensions({
+          themeMode,
+          slots: {
+            editor: {
+              className: 'h-full py-4',
+            },
           },
-        },
-      }),
-      createDataExtensions({ id: document.id, text: accessor, space, identity }),
-      ...extensions,
-    ],
-  });
+        }),
+        createDataExtensions({ id: document.id, text: accessor, space, identity }),
+        ...extensions,
+      ],
+    }),
+    [document, extensions, themeMode],
+  );
 
   return (
     <div
+      role='textbox'
       ref={parentRef}
-      {...{ 'data-testid': 'composer.markdownRoot' }}
       className={mx('flex flex-col grow m-0.5 min-bs-[8rem]', attentionSurface, focusRing)}
+      {...{ 'data-testid': 'composer.markdownRoot' }}
     />
   );
 };

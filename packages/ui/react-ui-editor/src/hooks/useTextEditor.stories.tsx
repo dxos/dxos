@@ -4,7 +4,7 @@
 
 import '@dxosTheme';
 
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Toolbar as NaturalToolbar, Select, useThemeContext, Tooltip } from '@dxos/react-ui';
 import { attentionSurface, mx, textBlockWidth } from '@dxos/react-ui-theme';
@@ -26,12 +26,6 @@ import {
 } from '../extensions';
 import translations from '../translations';
 
-// TODO(burdon): Demo toolbar with hooks.
-// TODO(burdon): Build components from hooks and adapters for model/extensions, etc.
-// TODO(burdon): Remove BaseTextEditor.
-// TODO(burdon): Move scrolling container layout/logic into TextEditor/MarkdownEditor components.
-// TODO(burdon): Define keymap in composer framework format.
-
 type StoryProps = {
   autoFocus?: boolean;
   placeholder?: string;
@@ -43,21 +37,24 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
   const { themeMode } = useThemeContext();
   const [formattingState, trackFormatting] = useFormattingState();
   const [editorMode, setEditorMode] = useState<EditorMode>('default');
-  const extensions = useMemo(
-    () => [
-      editorMode ? EditorModes[editorMode] : [],
-      createBasicExtensions({ placeholder, lineWrapping: true, readonly }),
-      createMarkdownExtensions({ themeMode }),
-      createThemeExtensions({ themeMode }),
-      decorateMarkdown(),
-      formattingKeymap(),
-      image(),
-      table(),
-      trackFormatting,
-    ],
-    [editorMode, themeMode, placeholder, trackFormatting, readonly],
+  const { parentRef, view } = useTextEditor(
+    () => ({
+      autoFocus,
+      doc,
+      extensions: [
+        editorMode ? EditorModes[editorMode] : [],
+        createBasicExtensions({ placeholder, lineWrapping: true, readonly }),
+        createMarkdownExtensions({ themeMode }),
+        createThemeExtensions({ themeMode }),
+        decorateMarkdown(),
+        formattingKeymap(),
+        image(),
+        table(),
+        trackFormatting,
+      ],
+    }),
+    [editorMode, themeMode, placeholder, readonly],
   );
-  const { parentRef, view } = useTextEditor({ autoFocus, doc, extensions });
 
   const handleAction = useActionHandler(view);
 
@@ -108,7 +105,6 @@ const EditorModeToolbar = ({
 
 export default {
   title: 'react-ui-editor/useTextEditor',
-  // component: TextEditor,
   decorators: [withTheme],
   render: (args: StoryProps) => (
     <Tooltip.Provider>
@@ -119,6 +115,23 @@ export default {
 };
 
 export const Default = {
+  render: () => {
+    const { parentRef } = useTextEditor();
+    return <div role='textbox' className={mx(textBlockWidth, attentionSurface)} ref={parentRef} />;
+  },
+};
+
+export const Basic = {
+  render: () => {
+    const { themeMode } = useThemeContext();
+    const { parentRef } = useTextEditor(() => ({
+      extensions: [createBasicExtensions({ placeholder: 'Enter text...' }), createThemeExtensions({ themeMode })],
+    }));
+    return <div role='textbox' className={mx(textBlockWidth, attentionSurface)} ref={parentRef} />;
+  },
+};
+
+export const Markdown = {
   args: {
     autoFocus: true,
     placeholder: 'Text...',

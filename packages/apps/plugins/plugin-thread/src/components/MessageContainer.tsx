@@ -73,22 +73,25 @@ const TextboxBlock = ({
   const identity = useIdentity();
   const readonly = identity?.identityKey.toHex() !== authorId;
   const textboxWidth = onBlockDelete ? 'col-span-2' : 'col-span-3';
-  const { parentRef } = useTextEditor({
-    doc: getTextContent(text),
-    extensions: [
-      //
-      createBasicExtensions({ readonly }),
-      createThemeExtensions({ themeMode }),
-      command,
-    ],
-  });
+  const { parentRef } = useTextEditor(
+    () => ({
+      doc: getTextContent(text),
+      extensions: [
+        //
+        createBasicExtensions({ readonly }),
+        createThemeExtensions({ themeMode }),
+        command,
+      ],
+    }),
+    [text, readonly, themeMode],
+  );
 
   return (
     <div
       role='none'
       className={mx('col-span-3 grid grid-cols-subgrid', hoverableControls, hoverableFocusedWithinControls)}
     >
-      <div ref={parentRef} className={textboxWidth} />
+      <div role='textbox' ref={parentRef} className={textboxWidth} />
       {onBlockDelete && (
         <Button
           variant='ghost'

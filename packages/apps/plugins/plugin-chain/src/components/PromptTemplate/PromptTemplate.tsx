@@ -125,7 +125,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
     [themeMode, accessor],
   );
 
-  const { parentRef } = useTextEditor({ doc, extensions });
+  const { parentRef } = useTextEditor(() => ({ doc, extensions }));
   usePromptInputs(prompt);
 
   return (
@@ -148,7 +148,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
         </Section>
 
         <Section title='Template'>
-          <div ref={parentRef} className={attentionSurface} />
+          <div role='textbox' ref={parentRef} className={attentionSurface} />
         </Section>
 
         {prompt.inputs?.length > 0 && (

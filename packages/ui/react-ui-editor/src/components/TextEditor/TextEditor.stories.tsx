@@ -276,6 +276,7 @@ const Story = ({
   return (
     <TextEditor
       {...props}
+      id={id}
       ref={viewRef}
       doc={text}
       extensions={extensions}

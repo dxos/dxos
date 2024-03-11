@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Extension, Prec } from '@codemirror/state';
+import { Prec } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { ArrowSquareOut, Circle, DotsThreeVertical, X } from '@phosphor-icons/react';
 import React, { type HTMLAttributes, StrictMode, useEffect, useMemo, useState } from 'react';
@@ -22,7 +22,6 @@ import {
   useDocAccessor,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
-import { isNotFalsy } from '@dxos/util';
 
 import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
 import { OUTLINER_PLUGIN } from '../../meta';
@@ -243,9 +242,10 @@ const OutlinerItem = (props: OutlinerItemProps) => {
   }, [focus]);
 
   const { doc, accessor } = useDocAccessor(item.text);
-  const extensions = useMemo<Extension[]>(
-    () =>
-      [
+  const { parentRef, view } = useTextEditor(
+    () => ({
+      doc,
+      extensions: [
         EditorView.updateListener.of(({ view }) => setFocus(view.hasFocus)),
         createBasicExtensions({ placeholder }),
         createMarkdownExtensions({ themeMode }),
@@ -254,11 +254,10 @@ const OutlinerItem = (props: OutlinerItemProps) => {
         formattingKeymap(),
         automerge(accessor),
         keymap,
-      ].filter(isNotFalsy),
-    [themeMode, accessor],
+      ],
+    }),
+    [accessor, themeMode],
   );
-
-  const { parentRef, view } = useTextEditor({ extensions, doc }, [extensions]);
   useEffect(() => {
     if (active) {
       view?.focus();
@@ -287,7 +286,7 @@ const OutlinerItem = (props: OutlinerItemProps) => {
         )}
       </div>
 
-      <div ref={parentRef} className='flex grow pt-1' />
+      <div role='textbox' ref={parentRef} className='flex grow pt-1' />
 
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>

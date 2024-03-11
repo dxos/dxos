@@ -49,19 +49,22 @@ export const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement
     const { t } = useTranslation(MARKDOWN_PLUGIN);
     const { themeMode } = useThemeContext();
     const { doc, accessor } = useDocAccessor(object.content);
-    const { parentRef } = useTextEditor({
-      doc,
-      extensions: [
-        createBasicExtensions({ placeholder: t('editor placeholder') }),
-        createThemeExtensions({ themeMode }),
-        createDataExtensions({ id: object.id, text: accessor }),
-        getExtensions({
-          document: object,
-          debug: settings.debug,
-          experimental: settings.experimental,
-        }),
-      ],
-    });
+    const { parentRef } = useTextEditor(
+      () => ({
+        doc,
+        extensions: [
+          createBasicExtensions({ placeholder: t('editor placeholder') }),
+          createThemeExtensions({ themeMode }),
+          createDataExtensions({ id: object.id, text: accessor }),
+          getExtensions({
+            document: object,
+            debug: settings.debug,
+            experimental: settings.experimental,
+          }),
+        ],
+      }),
+      [object, accessor, themeMode],
+    );
 
     return (
       <div role='none' ref={forwardRef} className='flex w-full' style={draggableStyle}>

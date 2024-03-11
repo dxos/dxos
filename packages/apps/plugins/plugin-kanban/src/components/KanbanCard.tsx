@@ -5,7 +5,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, X } from '@phosphor-icons/react';
-import React, { type FC, useMemo } from 'react';
+import React, { type FC } from 'react';
 
 import type { Kanban as KanbanType } from '@braneframe/types';
 import { Button, useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -13,8 +13,8 @@ import {
   createBasicExtensions,
   createDataExtensions,
   createThemeExtensions,
-  TextEditor,
   useDocAccessor,
+  useTextEditor,
 } from '@dxos/react-ui-editor';
 import { getSize, mx, attentionSurface, focusRing } from '@dxos/react-ui-theme';
 
@@ -44,15 +44,17 @@ export const KanbanCardComponent: FC<{
   });
   const tx = transform ? Object.assign(transform, { scaleY: 1 }) : null;
 
-  const { doc, accessor } = useDocAccessor(item.title);
-  const extensions = useMemo(
-    () => [
-      //
-      createDataExtensions({ id: item.id, text: accessor }),
-      createBasicExtensions({ placeholder: t('item title placeholder') }),
-      createThemeExtensions({ themeMode }),
-    ],
-    [accessor],
+  const { id, doc, accessor } = useDocAccessor(item.title);
+  const { parentRef } = useTextEditor(
+    () => ({
+      doc,
+      extensions: [
+        createDataExtensions({ id, text: accessor }),
+        createBasicExtensions({ placeholder: t('item title placeholder') }),
+        createThemeExtensions({ themeMode }),
+      ],
+    }),
+    [id, accessor, themeMode],
   );
 
   return (
@@ -67,7 +69,7 @@ export const KanbanCardComponent: FC<{
           <DotsSixVertical className={getSize(5)} />
         </button>
         <div className='flex flex-col grow pt-1'>
-          <TextEditor doc={doc} extensions={extensions} className={mx(focusRing, 'p-1')} />
+          <div role='textbox' className={mx(focusRing, 'p-1')} ref={parentRef} />
           {debug && <div className='text-xs text-red-800'>{item.id.slice(0, 9)}</div>}
         </div>
         {onDelete && (

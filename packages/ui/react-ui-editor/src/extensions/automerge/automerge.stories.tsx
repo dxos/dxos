@@ -33,20 +33,18 @@ type EditorProps = {
 
 const Editor = ({ source, autoFocus }: EditorProps) => {
   const { themeMode } = useThemeContext();
-  const extensions = useMemo(
-    () => [
-      createBasicExtensions({ placeholder: 'Type here...' }),
-      createThemeExtensions({ themeMode, slots: { editor: { className: 'p-2 bg-white dark:bg-black' } } }),
-      automerge(source),
-    ],
-    [themeMode, source],
+  const { parentRef } = useTextEditor(
+    () => ({
+      doc: DocAccessor.getValue(source),
+      extensions: [
+        createBasicExtensions({ placeholder: 'Type here...' }),
+        createThemeExtensions({ themeMode, slots: { editor: { className: 'p-2 bg-white dark:bg-black' } } }),
+        automerge(source),
+      ],
+      autoFocus,
+    }),
+    [source, themeMode],
   );
-
-  const { parentRef } = useTextEditor({
-    doc: DocAccessor.getValue(source),
-    extensions,
-    autoFocus,
-  });
 
   return <div ref={parentRef} />;
 };
@@ -113,7 +111,8 @@ const EchoStory = ({ spaceKey }: { spaceKey: PublicKey }) => {
 
 export const Default = {};
 
-// TODO(burdon): Feed already added error.
+// TODO(burdon): Error:
+//  chunk-6NX3RPDS.mjs:2021 ControlPipeline#5 Error: invariant violation: Feed already added
 export const WithEcho = {
   decorators: [withTheme],
   render: () => {

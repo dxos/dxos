@@ -118,21 +118,18 @@ const defaultSlots = {
     className: 'w-full bs-full',
   },
   content: {
-    className: 'p-2',
+    className: '!p-2',
   },
 };
 
-export const createThemeExtensions = ({
-  theme,
-  themeMode,
-  slots = defaultSlots,
-}: ThemeExtensionsOptions = {}): Extension => {
+export const createThemeExtensions = ({ theme, themeMode, slots: _slots }: ThemeExtensionsOptions = {}): Extension => {
+  const slots = defaultsDeep({}, _slots, defaultSlots);
   return [
     EditorView.baseTheme(defaultTheme),
     EditorView.darkTheme.of(themeMode === 'dark'),
     theme && EditorView.theme(theme),
-    slots?.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
-    slots?.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
+    slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
+    slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
   ].filter(isNotFalsy);
 };
 

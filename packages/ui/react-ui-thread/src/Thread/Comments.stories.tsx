@@ -64,7 +64,8 @@ const Editor: FC<{
   const { themeMode } = useThemeContext();
   const { doc, accessor } = useDocAccessor(item.text);
   const { parentRef, view } = useTextEditor(
-    {
+    () => ({
+      id,
       doc,
       extensions: [
         createBasicExtensions(),
@@ -77,8 +78,8 @@ const Editor: FC<{
           onSelect: onSelectComment,
         }),
       ],
-    },
-    [themeMode, doc, accessor],
+    }),
+    [doc, accessor, themeMode],
   );
   useComments(view, id, commentRanges);
   useEffect(() => {
@@ -109,7 +110,7 @@ const StoryMessageBlock = (props: MessageBlockProps<{ text: TextObject }>) => {
   const { themeMode } = useThemeContext();
   const { doc, accessor } = useDocAccessor(props.block.text);
   const { parentRef } = useTextEditor(
-    {
+    () => ({
       doc,
       extensions: [
         //
@@ -117,8 +118,8 @@ const StoryMessageBlock = (props: MessageBlockProps<{ text: TextObject }>) => {
         createThemeExtensions({ themeMode }),
         automerge(accessor),
       ],
-    },
-    [themeMode, doc, accessor],
+    }),
+    [doc, accessor, themeMode],
   );
 
   return <div ref={parentRef} className='col-span-3' />;
