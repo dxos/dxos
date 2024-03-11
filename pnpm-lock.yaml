@@ -977,6 +977,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -1044,6 +1047,9 @@ importers:
       '@dxos/functions-signal':
         specifier: workspace:*
         version: link:../../../experimental/functions-signal
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
@@ -3474,6 +3480,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage

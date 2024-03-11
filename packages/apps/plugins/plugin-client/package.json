@@ -27,6 +27,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/functions-signal": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",

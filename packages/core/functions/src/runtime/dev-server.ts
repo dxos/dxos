@@ -186,7 +186,7 @@ export class DevServer {
     };
 
     await handler({ context, event, response });
-    log.info('res', { seq, name, statusCode, duration: Date.now() - now });
+    log.info('res', { seq, name, body, statusCode, duration: Date.now() - now });
 
     return { statusCode, body };
   }

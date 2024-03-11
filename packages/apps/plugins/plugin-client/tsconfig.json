@@ -23,6 +23,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/keys"
+    },
+    {
       "path": "../../../common/local-storage"
     },
     {

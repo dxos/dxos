@@ -210,6 +210,7 @@ export class Scheduler {
       }
       const functionResult = await this._execFunction(def, signalToProcess);
       if (functionResult != null) {
+        log.info('function result', { result: functionResult });
         bus.emit({
           id: PublicKey.random().toHex(),
           kind: 'suggestion',
@@ -225,6 +226,9 @@ export class Scheduler {
       signalToProcess = null;
     });
     const unsubscribeFromBus = bus.subscribe((signal: Signal) => {
+      if (signal.kind !== 'echo-mutation') {
+        log.info('received a signal', signal);
+      }
       if (signalToProcess != null) {
         return;
       }
@@ -258,7 +262,7 @@ export class Scheduler {
         status = await callback(data);
       }
 
-      log('result', { function: def.id, result: status });
+      log('result', { function: def.id, result: status, body: functionResult });
       return functionResult;
     } catch (err: any) {
       log.error('error', { function: def.id, error: err.message });
@@ -268,9 +272,10 @@ export class Scheduler {
 
   private async _parseFunctionResult(response: Response): Promise<FunctionResult | null> {
     try {
-      if (response.headers.get('Content-Type') !== 'application/json') {
-        return null;
-      }
+      // if (response.headers.get('Content-Type') !== 'application/json') {
+      //   return null;
+      // }
+      log.info('response', { headers: JSON.stringify(response.headers) });
       const json = await response.json();
       const result = S.validateEither(FunctionResult)(json);
       if (Either.isLeft(result)) {
@@ -279,6 +284,7 @@ export class Scheduler {
       }
       return result.right;
     } catch (error) {
+      log.catch(error);
       return null;
     }
   }

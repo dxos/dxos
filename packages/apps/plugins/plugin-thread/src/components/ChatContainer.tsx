@@ -6,9 +6,12 @@ import { Chat } from '@phosphor-icons/react';
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Message as MessageType } from '@braneframe/types';
-import { TextObject, getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
+import { SignalBusInterconnect } from '@dxos/functions-signal';
+import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { type Space, TextObject, getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Button, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
 import { useTextModel } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
@@ -19,6 +22,7 @@ import { command } from './command-extension';
 import { type ThreadContainerProps } from './types';
 import { useStatus } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
+import { SIGNAL_CONFIRMATION } from '../signal-effector';
 import { getMessageMetadata } from '../util';
 
 export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
@@ -103,6 +107,15 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
     }
   };
 
+  let applyButton;
+  const lastMessage = thread.messages[thread.messages.length - 1];
+  const confirmationSignalData = lastMessage?.context?.object;
+  if (lastMessage && lastMessage.type === SIGNAL_CONFIRMATION && confirmationSignalData && space) {
+    applyButton = (
+      <ApplySuggestionButton message={lastMessage} confirmationSignalData={confirmationSignalData} space={space} />
+    );
+  }
+
   return (
     <Thread
       current={current}
@@ -115,6 +128,7 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
             {thread.messages.map((message) => (
               <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
             ))}
+            {applyButton}
           </div>
           {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
           <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
@@ -137,5 +151,43 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
         </>
       )}
     </Thread>
+  );
+};
+
+const ApplySuggestionButton = ({
+  message,
+  confirmationSignalData,
+  space,
+}: {
+  message: MessageType;
+  confirmationSignalData: string;
+  space: Space;
+}) => {
+  return (
+    <div role='none' className='col-span-3 grid grid-cols-subgrid'>
+      <p className='grid grid-cols-[1fr_max-content] gap-2 pie-2'></p>
+      <div role='none' className='plb-1 min-is-0'>
+        <Button
+          onClick={() => {
+            try {
+              SignalBusInterconnect.global.createConnected(space).emit({
+                id: PublicKey.random().toHex(),
+                kind: 'suggestion',
+                metadata: {
+                  source: 'plugin-thread',
+                  createdMs: Date.now(),
+                },
+                data: JSON.parse(confirmationSignalData),
+              });
+            } catch (e) {
+              log.catch(e);
+            }
+            message.context.object = undefined;
+          }}
+        >
+          Apply
+        </Button>
+      </div>
+    </div>
   );
 };

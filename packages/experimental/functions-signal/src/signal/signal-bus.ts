@@ -32,6 +32,9 @@ export class SignalBus {
   public constructor(private readonly space: Space) {}
 
   emit(signal: Signal) {
+    if (signal.kind !== 'echo-mutation') {
+      log.info('signal', { signal });
+    }
     this.space.postMessage('signals', signal).catch((error) => {
       log.warn('failed to emit a signal', { signal, error });
     });

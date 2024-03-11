@@ -3,7 +3,7 @@
 //
 
 import { type Space } from '@dxos/client/echo';
-import { type EchoObject, type Filter, filterMatch } from '@dxos/echo-schema';
+import { type EchoObject, type Filter, filterMatch, getAutomergeObjectCore } from '@dxos/echo-schema';
 
 import { type Signal, SignalBusInterconnect } from '../signal';
 
@@ -38,10 +38,10 @@ export class MutationsSignalTriggerBuilder<T extends EchoObject> {
     return this;
   }
 
-  public create(signalProvider: (object: T) => Signal): UnsubscribeCallback {
+  public create(signalProvider: (object: T) => Signal | null): UnsubscribeCallback {
     const bus = this._busInterconnect.createConnected(this._space);
     const filter = this._filter;
-    const filterCheck = filter ? (obj: T) => filterMatch(filter, obj) : () => true;
+    const filterCheck = filter ? (obj: T) => filterMatch(filter, getAutomergeObjectCore(obj)) : () => true;
     const areEqual = this._uniqueComparator;
     const debounceMs = this._debounceIntervalMs;
     const previousCheckedById = new Map<string, T>();
@@ -58,12 +58,15 @@ export class MutationsSignalTriggerBuilder<T extends EchoObject> {
       if (previous && areEqual(previous, object)) {
         return;
       }
-      previousCheckedById.set(object.id, { ...object });
       const timeout = timeoutById.get(object.id);
       if (timeout) {
         clearTimeout(timeout);
       }
       const signal = signalProvider(object);
+      if (signal == null) {
+        return;
+      }
+      previousCheckedById.set(object.id, { ...object });
       if (debounceMs) {
         const timer = setTimeout(() => bus.emit(signal), debounceMs);
         timeoutById.set(object.id, timer);

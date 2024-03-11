@@ -44,10 +44,10 @@ functions:
     handler: 'github'
     description: 'Github Sync.'
 
-  - id: 'dxos.org/function/suggest-reference'
-    name: 'suggest-reference'
-    handler: 'suggest-reference'
-    description: 'Listens to document changes, extracts subjects and suggests references'
+  - id: 'dxos.org/function/suggest-chess-move'
+    name: 'suggest-chess-move'
+    handler: 'suggest-chess-move'
+    description: 'Listens to suggest next move signals, uses llm to generate response signals'
 
 triggers:
 #  - function: 'dxos.org/function/calendar'
@@ -55,13 +55,9 @@ triggers:
 #    subscriptions:
 #     - type: 'braneframe.Calendar'
 
-  - function: 'dxos.org/function/chat'
-    subscriptions:
-      - type: 'braneframe.Message'
-
-  - function: 'dxos.org/function/chess'
-    subscriptions:
-      - type: 'dxos.experimental.chess.Game'
+#  - function: 'dxos.org/function/chat'
+#    subscriptions:
+#      - type: 'braneframe.Message'
 
   # - function: 'dxos.org/function/email'
   #   schedule: '*/30 * * * * *'
@@ -75,17 +71,10 @@ triggers:
 #        props:
 #          type: 'email'
 
-  - function: 'dxos.org/function/embedding'
-    subscriptions:
-      - type: 'braneframe.Document'
-        deep: true
-        delay: 5
-      - type: 'braneframe.File'
-
-  - function: 'dxos.org/function/suggest-reference'
+  - function: 'dxos.org/function/suggest-chess-move'
     signals:
-      - kind: 'echo-mutation'
-        dataType: 'dxos.Text.v0'
+      - kind: 'suggestion'
+        dataType: 'suggest-next-chess-move'
 
 #  - function: 'dxos.org/function/github'
 #    subscriptions:

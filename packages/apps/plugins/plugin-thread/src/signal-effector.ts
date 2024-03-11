@@ -8,9 +8,12 @@ import * as Either from 'effect/Either';
 import { Thread as ThreadType, Message as MessageType } from '@braneframe/types';
 import { type Signal, SignalBusInterconnect } from '@dxos/functions-signal';
 import { type LocalStorageStore } from '@dxos/local-storage';
+import { log } from '@dxos/log';
 import { TextObject, type Space } from '@dxos/react-client/echo';
 
 import { type ThreadSettingsProps } from './types';
+
+export const SIGNAL_CONFIRMATION = 'signal-confirmation';
 
 export const StandaloneSuggestionSignal = S.struct({
   kind: S.literal('suggestion'),
@@ -19,7 +22,7 @@ export const StandaloneSuggestionSignal = S.struct({
     value: S.struct({
       senderKey: S.string,
       message: S.string,
-      confirmationSignal: S.string,
+      confirmationSignalData: S.string,
       activeObjectId: S.string,
     }),
   }),
@@ -37,6 +40,7 @@ export const createEffector = (space: Space, settings: LocalStorageStore<ThreadS
       return;
     }
     const validatedSignal = validation.right;
+    log.info('thread confirmation signal received', { validatedSignal });
     const [thread] = space?.db.query(ThreadType.filter((thread) => !thread.context)).objects ?? [];
     if (!thread) {
       return;
@@ -44,11 +48,11 @@ export const createEffector = (space: Space, settings: LocalStorageStore<ThreadS
     const data = validatedSignal.data.value;
     thread.messages.push(
       new MessageType({
-        type: 'signal-confirmation',
+        type: SIGNAL_CONFIRMATION,
         subject: data.activeObjectId,
         from: { identityKey: data.senderKey },
         blocks: [{ content: new TextObject(data.message) }],
-        context: { object: data.confirmationSignal },
+        context: { object: data.confirmationSignalData },
       }),
     );
   });
