@@ -9,6 +9,7 @@ export type Range = {
 };
 
 // Persistent data structure.
+// TODO(burdon): Rename annotation?
 export type Comment = {
   id: string;
   cursor?: string;

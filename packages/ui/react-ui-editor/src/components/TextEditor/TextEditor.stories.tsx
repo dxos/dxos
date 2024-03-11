@@ -25,7 +25,10 @@ import {
   blast,
   command,
   comments,
+  createBasicExtensions,
+  createDataExtensions,
   createMarkdownExtensions,
+  createThemeExtensions,
   decorateMarkdown,
   defaultOptions,
   dnd,
@@ -40,15 +43,10 @@ import {
   EditorModes,
   type CommandAction,
   type CommandOptions,
+  type Comment,
   type CommentsOptions,
 } from '../../extensions';
-import {
-  type Comment,
-  createBasicExtensions,
-  createDataExtensions,
-  createThemeExtensions,
-  useDocAccessor,
-} from '../../hooks';
+import { useDocAccessor } from '../../hooks';
 import translations from '../../translations';
 
 faker.seed(101);
