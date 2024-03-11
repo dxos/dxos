@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
 import { Cursor } from './cursor';
-import { type Comment, type Range } from '../hooks';
+import { type Comment, type Range } from './types';
 import { getToken } from '../styles';
 import { callbackWrapper } from '../util';
 

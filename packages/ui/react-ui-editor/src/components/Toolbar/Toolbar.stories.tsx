@@ -15,8 +15,12 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { Toolbar } from './Toolbar';
 import {
+  type Comment,
   decorateMarkdown,
   comments,
+  createBasicExtensions,
+  createDataExtensions,
+  createThemeExtensions,
   formattingKeymap,
   table,
   useComments,
@@ -24,15 +28,7 @@ import {
   createMarkdownExtensions,
   image,
 } from '../../extensions';
-import {
-  type Comment,
-  createBasicExtensions,
-  createDataExtensions,
-  createThemeExtensions,
-  useActionHandler,
-  useDocAccessor,
-  useTextEditor,
-} from '../../hooks';
+import { useActionHandler, useDocAccessor, useTextEditor } from '../../hooks';
 import translations from '../../translations';
 
 faker.seed(101);
