@@ -86,8 +86,7 @@ export class SchemaValidator {
 }
 
 const getArrayElementSchema = (arraySchema: S.Schema<any>): S.Schema<any> => {
-  log.info('getArrayElementSchema', { ast: arraySchema.ast });
-  return S.make((arraySchema.ast as any).rest.value[0]);
+  return S.make((unwrapOptionality(arraySchema.ast) as any).rest.value[0]);
 };
 
 /**
@@ -95,7 +94,6 @@ const getArrayElementSchema = (arraySchema: S.Schema<any>): S.Schema<any> => {
  */
 // TODO(burdon): Use visitProperties.
 export const setSchemaProperties = (obj: any, schema: S.Schema<any>) => {
-  log.info('setSchemaProperties', { ast: schema.ast, obj });
   if (!obj[symbolSchema]) {
     defineHiddenProperty(obj, symbolSchema, schema);
   }
@@ -123,7 +121,8 @@ export const setSchemaProperties = (obj: any, schema: S.Schema<any>) => {
       }
     }
   } else {
-    log.warn('unable to set schema properties', { obj, ast: schema });
+    // log.warn('unable to set schema properties', { obj, ast: schema });
+    // TODO(dmaretskyi): Throw an error?
   }
 };
 
