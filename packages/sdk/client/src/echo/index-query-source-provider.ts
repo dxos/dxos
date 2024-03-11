@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Event, asyncTimeout } from '@dxos/async';
+import { Event } from '@dxos/async';
+import { warnAfterTimeout } from '@dxos/debug';
 import {
   type QuerySourceProvider,
   db,
@@ -39,8 +40,12 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
         if (!space) {
           return;
         }
-        await asyncTimeout(space?.waitUntilReady(), 5000);
-        const object = space?.db.getObjectById(result.id);
+
+        const object = await warnAfterTimeout(2000, 'takes to long to load object', async () => {
+          await space.waitUntilReady();
+          return space.db.automerge.loadObjectById(result.id);
+        });
+
         if (!object) {
           return;
         }
