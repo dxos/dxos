@@ -11,10 +11,14 @@ import {
   type Filter,
   type QueryResult,
   type QuerySource,
+  filterMatch,
+  base,
+  getAutomergeObjectCore,
 } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
+import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { type SpaceList } from './space-list';
 
@@ -47,6 +51,10 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
         });
 
         if (!object) {
+          return;
+        }
+
+        if (!filterMatch(filter, getAutomergeObjectCore(object[base]))) {
           return;
         }
 
@@ -83,6 +91,10 @@ export class IndexQuerySource implements QuerySource {
   }
 
   update(filter: Filter<EchoObject>): void {
+    if (filter.options.dataLocation === undefined || filter.options.dataLocation === QueryOptions.DataLocation.LOCAL) {
+      // Disabled by dataLocation filter.
+      return;
+    }
     this._results = undefined;
     this.changed.emit();
 

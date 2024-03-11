@@ -19,10 +19,11 @@ import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Client } from '../client';
+import { QueryOptions } from '../echo';
 import { IndexQuerySourceProvider } from '../echo/index-query-source-provider';
 import { TestBuilder } from '../testing';
 
-describe.only('Index queries', () => {
+describe('Index queries', () => {
   test('indexing stack', async () => {
     const builder = new TestBuilder();
     builder.storage = createStorage({ type: StorageType.RAM });
@@ -170,7 +171,7 @@ describe.only('Index queries', () => {
 
 const queryIndexedContact = async (space: Space) => {
   const receivedIndexedContact = new Trigger<Contact>();
-  const query = space.db.query(Contact.filter());
+  const query = space.db.query(Contact.filter(), { dataLocation: QueryOptions.DataLocation.ALL });
   query.subscribe((query) => {
     for (const result of query.results) {
       if (result.object instanceof Contact && result.resolution?.source === 'index') {
