@@ -249,7 +249,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
     if (this._config?.values?.runtime?.client?.useReactiveObjectApi ?? false) {
       // TODO(wittjosiah): Remove cast.
-      spaceProxy.db.add(E.object(PropertiesSchema, meta as any));
+      spaceProxy.db.add(E.object(PropertiesSchema, (meta ?? {}) as any));
     } else {
       spaceProxy.db.add(new Properties(meta));
     }
