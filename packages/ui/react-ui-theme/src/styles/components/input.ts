@@ -118,15 +118,8 @@ export const inputInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
           ...etc,
         );
 
-export const inputCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5, disabled }, ...etc) =>
-  mx(
-    getSize(size),
-    booleanInputSurface,
-    !disabled && booleanInputSurfaceHover,
-    'shrink-0 flex items-center justify-center rounded text-white',
-    focusRing,
-    ...etc,
-  );
+export const inputCheckbox: ComponentFunction<InputStyleProps> = (_props, ...etc) =>
+  mx('ch-checkbox ch-focus-ring', ...etc);
 
 export const inputCheckboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
   mx(getSize(computeSize(sizeValue(size) * 0.7, 4)), ...etc);
