@@ -18,6 +18,7 @@ import { SpaceAwarenessProvider } from './awareness-provider';
 import { type EditorModel } from './defs';
 import { automerge, awareness } from '../extensions';
 import { type DocAccessor } from '../extensions/automerge/defs';
+import { isReactiveProxy } from '@dxos/echo-schema/src/effect/proxy';
 
 export type useTextExtensionsProps = {
   id: string;
@@ -86,7 +87,7 @@ const createModel = ({ space, identity, text }: UseTextModelProps): EditorModel 
     return undefined;
   }
 
-  invariant(isAutomergeObject(text));
+  invariant(isAutomergeObject(text) || isReactiveProxy(text));
   const obj = text as any as AutomergeTextCompat;
   const doc = getRawDoc(obj, [obj.field]);
 
