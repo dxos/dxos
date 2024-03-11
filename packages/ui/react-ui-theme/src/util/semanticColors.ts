@@ -17,11 +17,18 @@ export const semanticColors = plugin(({ addUtilities, theme, e }) => {
   const values: Record<string, SemanticColorValue> = theme('semanticColors');
   const semanticColorUtilities = Object.entries(values).map(([key, value]) => {
     return {
+      // TODO(thure): Refactor all of these tokens to simply prefix the properties they apply with `s-` as with `s-accent`.
       [`.fg-${e(`${key}`)}`]: {
         color: `${value.fg?.light ?? value.light}`,
       },
       [`.dark .fg-${e(`${key}`)}`]: {
         color: `${value.fg?.dark ?? value.dark}`,
+      },
+      [`.s-accent-${e(`${key}`)}`]: {
+        accentColor: `${value.fg?.light ?? value.light}`,
+      },
+      [`.dark .s-accent-${e(`${key}`)}`]: {
+        accentColor: `${value.fg?.dark ?? value.dark}`,
       },
       [`.surface-${e(`${key}`)}`]: {
         backgroundColor: `${value.light}`,
