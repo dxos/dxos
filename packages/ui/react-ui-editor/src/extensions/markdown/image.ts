@@ -59,9 +59,10 @@ const buildDecorations = (from: number, to: number, state: EditorState) => {
       if (node.name === 'Image') {
         const urlNode = node.node.getChild('URL');
         if (urlNode) {
+          console.log('::::', urlNode);
           const hide = state.readOnly || cursor < node.from || cursor > node.to;
           const url = state.sliceDoc(urlNode.from, urlNode.to);
-          preloadImage(url);
+          preloadImage(url); // TODO(burdon): Make optional.
           decorations.push(
             Decoration.replace({
               block: true, // Prevent cursor from entering.

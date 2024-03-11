@@ -9,23 +9,24 @@ import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type Comment,
+  type TextEditorProps,
+  TextEditor,
   Toolbar,
-  cursorLineMargin,
+  createBasicExtensions,
+  createMarkdownExtensions,
+  createThemeExtensions,
+  decorateMarkdown,
   editorFillLayoutRoot,
   editorFillLayoutEditor,
+  focusComment,
+  table,
+  image,
   useComments,
   useEditorView,
   useActionHandler,
   useFormattingState,
-  TextEditor,
-  type TextEditorProps,
-  createThemeExtensions,
-  createMarkdownExtensions,
-  decorateMarkdown,
-  focusComment,
-  createBasicExtensions,
 } from '@dxos/react-ui-editor';
-import { formattingKeymap, image, table } from '@dxos/react-ui-editor';
+import { formattingKeymap } from '@dxos/react-ui-editor';
 import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
@@ -59,6 +60,9 @@ export const EditorMain = ({ id, readonly, toolbar, comments, doc, extensions: _
   useComments(viewInvalidated ? null : editorRef.current, id, comments);
   const handleAction = useActionHandler(editorRef.current);
   useTest(editorRef.current);
+
+  // TODO(burdon): Doesn't show comments until first render.
+  console.log('>', editorRef.current);
 
   // Focus comment.
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
@@ -95,7 +99,6 @@ export const EditorMain = ({ id, readonly, toolbar, comments, doc, extensions: _
       formattingKeymap(),
       image(),
       table(),
-      cursorLineMargin,
     ].filter(nonNullable);
   }, [_extensions, formattingObserver]);
 

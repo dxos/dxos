@@ -161,7 +161,7 @@ export const setStyle =
   ({ state, dispatch }) => {
     const marker = inlineMarkerText(type);
     const changes = state.changeByRange((range) => {
-      // Special case for markers directly around the cursor, which will often not be parsed as valid styling
+      // Special case for markers directly around the cursor, which will often not be parsed as valid styling.
       if (!enable && range.empty) {
         const after = state.doc.sliceString(range.head, range.head + 6);
         const found = after.indexOf(marker);
@@ -190,16 +190,16 @@ export const setStyle =
       let startCovered: boolean | { from: number; to: number } = false;
       let endCovered: boolean | { from: number; to: number } = false;
       let { from, to } = range;
-      // Iterate the selected range. For each textblock, determine a
-      // start and end position, the overlap of the selected range and
-      // the block's extent, that should be styled/unstyled.
+
+      // Iterate the selected range. For each textblock, determine a start and end position,
+      // the overlap of the selected range and the block's extent, that should be styled/unstyled.
       syntaxTree(state).iterate({
         from,
         to,
         enter: (node) => {
           const { name } = node;
           if (Object.hasOwn(Textblocks, name) && Textblocks[name] !== 'codeblock') {
-            // Set up for this textblock
+            // Set up for this textblock.
             blockStart = blockContentStart(node);
             blockEnd = blockContentEnd(node, state.doc);
             startCovered = endCovered = false;
@@ -243,8 +243,7 @@ export const setStyle =
                     : true;
               }
             }
-            // Marks of the same type in range, or any mark if we're
-            // adding code style, need to be removed.
+            // Marks of the same type in range, or any mark if we're adding code style, need to be removed.
             if (markType === type || (type === Inline.Code && enable)) {
               if (node.from >= from && openEnd <= to) {
                 changes.push({ from: node.from, to: openEnd });
@@ -271,7 +270,7 @@ export const setStyle =
         },
         leave: (node) => {
           if (Object.hasOwn(Textblocks, node.name) && Textblocks[node.name] !== 'codeblock') {
-            // Finish opening/closing the marks for this textblock
+            // Finish opening/closing the marks for this textblock.
             const rangeStart = Math.max(from, blockStart);
             const rangeEnd = Math.min(to, blockEnd);
             if (enable) {
@@ -296,12 +295,14 @@ export const setStyle =
           }
         },
       });
+
       if (blockStart < 0 && range.empty && enable && !/\S/.test(state.doc.lineAt(range.from).text)) {
         return {
           changes: { from: range.head, insert: marker + marker },
           range: EditorSelection.cursor(range.head + marker.length),
         };
       }
+
       const changeSet = state.changes(changes.concat(changesAtEnd));
       return {
         changes: changeSet,
@@ -313,8 +314,12 @@ export const setStyle =
     });
 
     dispatch(
-      state.update(changes, { userEvent: enable ? 'format.style.add' : 'format.style.remove', scrollIntoView: true }),
+      state.update(changes, {
+        userEvent: enable ? 'format.style.add' : 'format.style.remove',
+        scrollIntoView: true,
+      }),
     );
+
     return true;
   };
 
