@@ -5,12 +5,12 @@
 import '@dxosTheme';
 
 import { Plugs, PlugsConnected } from '@phosphor-icons/react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as E from '@dxos/echo-schema/schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
-import { DensityProvider, AnchoredOverflow } from '@dxos/react-ui';
+import { AnchoredOverflow, DensityProvider } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 import { range } from '@dxos/util';
 
@@ -72,7 +72,7 @@ const tableStorySelectModel: SearchListQueryModel<Item> = {
 
 const { helper, builder } = createColumnBuilder<Item>();
 
-const columns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, any>[] => [
+const makeColumns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, any>[] => [
   helper.display(builder.selectRow()),
   helper.accessor((item) => item.publicKey, { id: 'key', ...builder.key({ tooltip: true }) }),
   helper.accessor(
@@ -158,21 +158,21 @@ export default {
 
 export const Default = {
   args: {
-    columns: columns(),
+    columns: makeColumns(),
     data: createItems(20),
   },
 };
 
 export const Scrolling = {
   args: {
-    columns: columns(),
+    columns: makeColumns(),
     data: createItems(200),
   },
 };
 
 export const Visibility = {
   args: {
-    columns: columns(),
+    columns: makeColumns(),
     data: createItems(10),
     columnVisibility: { key: false, started: false },
   },
@@ -180,7 +180,7 @@ export const Visibility = {
 
 export const Empty = {
   args: {
-    columns: columns(),
+    columns: makeColumns(),
   },
 };
 
@@ -188,6 +188,7 @@ export const Dynamic = {
   render: () => {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [items, setItems] = useState<Item[]>(createItems(50));
+
     useEffect(() => {
       const interval = setInterval(() => {
         setItems((items) => {
@@ -200,12 +201,14 @@ export const Dynamic = {
       return () => clearInterval(interval);
     }, []);
 
+    const columns = useMemo(() => makeColumns(), []);
+
     return (
       <AnchoredOverflow.Root classNames='max-bs-[80dvh]' ref={containerRef}>
         <Table<Item>
           rowsSelectable='multi'
           keyAccessor={(row) => row.publicKey.toHex()}
-          columns={columns()}
+          columns={columns}
           data={items}
           fullWidth
           footer
@@ -222,11 +225,13 @@ export const Editable = {
   render: () => {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [items, setItems] = useState<Item[]>(createItems(200));
-    const onUpdate: ValueUpdater<Item, any> = (item, prop, value) => {
-      setItems((items) => updateItems(items, item.publicKey, prop, value));
-    };
 
-    const builtColumns = columns(onUpdate);
+    const onUpdate: ValueUpdater<Item, any> = useCallback(
+      (item, prop, value) => setItems((items) => updateItems(items, item.publicKey, prop, value)),
+      [setItems],
+    );
+
+    const columns = useMemo(() => makeColumns(onUpdate), [onUpdate]);
 
     return (
       <div ref={containerRef} className='fixed inset-0 overflow-auto'>
@@ -234,7 +239,7 @@ export const Editable = {
           role='grid'
           rowsSelectable='multi'
           keyAccessor={(row) => row.publicKey.toHex()}
-          columns={builtColumns}
+          columns={columns}
           data={items}
           fullWidth
           stickyHeader
@@ -248,25 +253,27 @@ export const Editable = {
 
 export const Resizable = {
   render: () => {
+    const containerRef = useRef<HTMLDivElement | null>(null);
     const [items, setItems] = useState<Item[]>(createItems(10));
-    const onUpdate: ValueUpdater<Item, any> = (item, prop, value) => {
-      setItems((items) => updateItems(items, item.publicKey, prop, value));
-    };
 
-    // const handleColumnResize = (state) => {
-    //   console.log('resize', state);
-    // };
+    const onUpdate: ValueUpdater<Item, any> = useCallback(
+      (item, prop, value) => setItems((items) => updateItems(items, item.publicKey, prop, value)),
+      [setItems],
+    );
 
     return (
-      <Table<Item>
-        rowsSelectable='multi'
-        keyAccessor={(row) => row.publicKey.toHex()}
-        columns={columns(onUpdate)}
-        data={items}
-        fullWidth
-        stickyHeader
-        // onColumnResize={handleColumnResize}
-      />
+      <div ref={containerRef} className='fixed inset-0 overflow-auto'>
+        <Table<Item>
+          rowsSelectable='multi'
+          keyAccessor={(row) => row.publicKey.toHex()}
+          columns={makeColumns(onUpdate)}
+          data={items}
+          fullWidth
+          stickyHeader
+          getScrollElement={() => containerRef.current}
+          // onColumnResize={handleColumnResize}
+        />
+      </div>
     );
   },
 };
@@ -276,9 +283,12 @@ export const TenThousandRows = {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [items, setItems] = useState<Item[]>(createItems(10000));
 
-    const onUpdate: ValueUpdater<Item, any> = (item, prop, value) => {
-      setItems((items) => updateItems(items, item.publicKey, prop, value));
-    };
+    const onUpdate: ValueUpdater<Item, any> = useCallback(
+      (item, prop, value) => setItems((items) => updateItems(items, item.publicKey, prop, value)),
+      [setItems],
+    );
+
+    const columns = useMemo(() => makeColumns(onUpdate), [onUpdate]);
 
     return (
       <div ref={containerRef} className='fixed inset-0 overflow-auto'>
@@ -286,7 +296,7 @@ export const TenThousandRows = {
           role='grid'
           rowsSelectable='multi'
           keyAccessor={(row) => row.publicKey.toHex()}
-          columns={columns(onUpdate)}
+          columns={columns}
           data={items}
           fullWidth
           stickyHeader
