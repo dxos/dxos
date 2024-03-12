@@ -18,7 +18,7 @@ import React, {
 import { log } from '@dxos/log';
 import { isNotFalsy } from '@dxos/util';
 
-import { documentId, editorMode } from '../../extensions';
+import { documentId, editorMode, focusEvent } from '../../extensions';
 import { logChanges } from '../../util';
 
 export type CursorInfo = {
@@ -34,7 +34,7 @@ export type TextEditorProps = Pick<EditorStateConfig, 'doc' | 'selection' | 'ext
   id?: string;
   className?: string;
   autoFocus?: boolean;
-  scrollTo?: StateEffect<any>; // TODO(burdon): Restore scroll position: scrollTo EditorView.scrollSnapshot().
+  scrollTo?: StateEffect<unknown>;
   moveToEndOfLine?: boolean;
   debug?: boolean;
   dataTestId?: string;
@@ -56,14 +56,14 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
       extensions,
       className,
       autoFocus,
-      scrollTo = EditorView.scrollIntoView(0),
+      scrollTo = EditorView.scrollIntoView(0, { yMargin: 0 }),
       moveToEndOfLine,
       debug,
       dataTestId,
     },
     forwardedRef,
   ) => {
-    // TODO(burdon): Increments by 2!
+    // NOTE: Increments by 2 in strict mode.
     const [instanceId] = useState(() => `text-editor-${++instanceCount}`);
 
     // TODO(burdon): Make tabster optional.
@@ -104,7 +104,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
           // Focus.
           EditorView.updateListener.of((update) => {
             update.transactions.forEach((transaction) => {
-              if (transaction.isUserEvent('focus.container')) {
+              if (transaction.isUserEvent(focusEvent)) {
                 rootRef.current?.focus();
               }
             });
@@ -122,6 +122,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
         state,
         parent: rootRef.current!,
         scrollTo,
+
         // NOTE: Uncomment to debug/monitor all transactions.
         // https://codemirror.net/docs/ref/#view.EditorView.dispatch
         dispatchTransactions: (trs, view) => {
@@ -132,18 +133,18 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
         },
       });
 
-      setView(view);
-
-      // Position cursor at end of line.
-      if (moveToEndOfLine) {
+      // Position cursor at end of first line.
+      if (moveToEndOfLine && !(scrollTo || selection)) {
         const { to } = view.state.doc.lineAt(0);
-        view?.dispatch({ selection: { anchor: to } });
+        view.dispatch({ selection: { anchor: to } });
       }
 
       // Remove tabster attribute (rely on custom keymap).
       if (state.facet(editorMode).noTabster) {
         rootRef.current?.removeAttribute('data-tabster');
       }
+
+      setView(view);
 
       return () => {
         view?.destroy();
