@@ -127,7 +127,7 @@ export const SpacePlugin = ({
       // Create root folder structure.
       if (clientPlugin.provides.firstRun) {
         const defaultSpace = client.spaces.default;
-        const personalSpaceFolder = E.object(FolderSchema);
+        const personalSpaceFolder = E.object(FolderSchema, { objects: [] });
         defaultSpace.properties[E.getEchoObjectAnnotation(FolderSchema)!.typename] = personalSpaceFolder;
         if (Migrations.versionProperty) {
           defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
@@ -488,7 +488,7 @@ export const SpacePlugin = ({
                 objects: [sharedSpacesFolder],
               } = defaultSpace.db.query({ key: SHARED });
               const space = await client.spaces.create(intent.data as PropertiesProps);
-              const folder = E.object(FolderSchema);
+              const folder = E.object(FolderSchema, { objects: [] });
               space.properties[E.getEchoObjectAnnotation(FolderSchema)!.typename] = folder;
               sharedSpacesFolder?.objects.push(folder);
               if (Migrations.versionProperty) {
