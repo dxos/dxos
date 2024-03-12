@@ -81,11 +81,13 @@ export const DocumentSchema = S.struct({
   title: S.optional(S.string),
   content: E.ref(TextV0Schema),
   comments: S.optional(
-    S.struct({
-      // TODO(wittjosiah): Add thread schema.
-      // thread: S.optional(ThreadSchema),
-      cursor: S.optional(S.string),
-    }),
+    S.array(
+      S.struct({
+        // TODO(wittjosiah): Add thread schema.
+        // thread: S.optional(ThreadSchema),
+        cursor: S.optional(S.string),
+      }),
+    ),
   ),
 }).pipe(E.echoObject('braneframe.Document', '0.1.0'));
 

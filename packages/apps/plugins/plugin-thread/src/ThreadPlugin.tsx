@@ -80,7 +80,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           : undefined;
         untracked(() => {
           const [thread] = space?.db.query(ThreadType.filter((thread) => !thread.context)).objects ?? [];
-          if (activeNode && isDocument(activeNode?.data) && activeNode.data.comments.length > 0) {
+          if (activeNode && isDocument(activeNode?.data) && activeNode.data.comments?.length > 0) {
             void intentPlugin?.provides.intent.dispatch({
               action: LayoutAction.SET_LAYOUT,
               data: {
@@ -224,12 +224,12 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 // Sort threads by y-position.
                 // TODO(burdon): Should just use document position?
                 const threads = comments
-                  .map(({ thread }) => thread)
+                  ?.map(({ thread }) => thread)
                   .filter(nonNullable)
                   .toSorted((a, b) => state.threads[a.id] - state.threads[b.id]);
 
                 const detached = comments
-                  .filter(({ cursor }) => !cursor)
+                  ?.filter(({ cursor }) => !cursor)
                   .map(({ thread }) => thread?.id)
                   .filter(nonNullable);
 
@@ -239,8 +239,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     <ScrollArea.Root>
                       <ScrollArea.Viewport>
                         <CommentsContainer
-                          threads={threads}
-                          detached={detached}
+                          threads={threads ?? []}
+                          detached={detached ?? []}
                           currentId={state.current}
                           context={{ object: location?.active }}
                           autoFocusCurrentTextbox={state.focus}
@@ -306,10 +306,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               }
 
               if (!intent.undo) {
-                const index = doc.comments.findIndex((comment) => comment.thread?.id === thread.id);
-                const cursor = doc.comments[index]?.cursor;
+                const index = doc.comments?.findIndex((comment) => comment.thread?.id === thread.id);
+                const cursor = doc.comments?.[index]?.cursor;
                 if (index !== -1) {
-                  doc.comments.splice(index, 1);
+                  doc.comments?.splice(index, 1);
                 }
 
                 return {
@@ -319,7 +319,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   },
                 };
               } else if (intent.undo && typeof cursor === 'string') {
-                doc.comments.push({ thread, cursor });
+                doc.comments?.push({ thread, cursor });
                 return { data: true };
               }
             }
@@ -337,7 +337,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           return [
             listener({
               onChange: () => {
-                doc.comments.forEach(({ thread, cursor }) => {
+                doc.comments?.forEach(({ thread, cursor }) => {
                   if (thread && cursor) {
                     const [start, end] = cursor.split(':');
                     const title = getTextInRange(doc.content, start, end);
@@ -358,7 +358,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 const [start, end] = cursor.split(':');
                 const title = getTextInRange(doc.content, start, end);
                 const thread = space.db.add(new ThreadType({ title, context: { object: doc.id } }));
-                doc.comments.push({ thread, cursor });
+                doc.comments?.push({ thread, cursor });
                 void intentPlugin?.provides.intent.dispatch([
                   {
                     action: ThreadAction.SELECT,
@@ -377,13 +377,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 return thread.id;
               },
               onDelete: ({ id }) => {
-                const comment = doc.comments.find(({ thread }) => thread?.id === id);
+                const comment = doc.comments?.find(({ thread }) => thread?.id === id);
                 if (comment) {
                   comment.cursor = undefined;
                 }
               },
               onUpdate: ({ id, cursor }) => {
-                const comment = doc.comments.find(({ thread }) => thread?.id === id);
+                const comment = doc.comments?.find(({ thread }) => thread?.id === id);
                 if (comment && comment.thread) {
                   const [start, end] = cursor.split(':');
                   comment.thread.title = getTextInRange(doc.content, start, end);
