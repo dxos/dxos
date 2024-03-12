@@ -2,12 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
+import { EditorView } from '@codemirror/view';
 import React, { useMemo } from 'react';
 
 import { type Document as DocumentType } from '@braneframe/types';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { type Comment, createDataExtensions, useDocAccessor } from '@dxos/react-ui-editor';
+import {
+  type Comment,
+  createDataExtensions,
+  localStorageStateStoreAdapter,
+  state,
+  useDocAccessor,
+} from '@dxos/react-ui-editor';
 
 import EditorMain, { type EditorMainProps } from './EditorMain';
 
@@ -21,15 +28,38 @@ const DocumentMain = ({ document, extensions: _extensions = [], ...props }: Docu
   const space = getSpaceForObject(document);
   const { id, doc, accessor } = useDocAccessor(document.content);
   const extensions = useMemo(
-    () => [_extensions, createDataExtensions({ id, text: accessor, space, identity })],
+    () => [
+      //
+      _extensions,
+      createDataExtensions({ id, text: accessor, space, identity }),
+      state(localStorageStateStoreAdapter),
+    ],
     [doc, accessor],
   );
+
+  const { scrollTo, selection } = useMemo(() => {
+    const { scrollTo, selection } = localStorageStateStoreAdapter.getState(id) ?? {};
+    return {
+      scrollTo: scrollTo?.from ? EditorView.scrollIntoView(scrollTo.from, { y: 'start', yMargin: 0 }) : undefined,
+      selection,
+    };
+  }, [id]);
 
   const comments = useMemo<Comment[]>(() => {
     return document.comments?.map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! }));
   }, [document.comments]);
 
-  return <EditorMain id={id} doc={doc} {...props} extensions={extensions} comments={comments} />;
+  return (
+    <EditorMain
+      id={id}
+      doc={doc}
+      scrollTo={scrollTo}
+      selection={selection}
+      extensions={extensions}
+      comments={comments}
+      {...props}
+    />
+  );
 };
 
 export default DocumentMain;
