@@ -47,7 +47,7 @@ describe.only('Index queries', () => {
           await warnAfterTimeout(1000, 'to long to load doc', () => handle.whenReady());
           const doc = handle.docSync();
           const heads = getHeads(doc);
-          yield { id, object: doc.objects[objectId], currentHash: heads.at(-1)! };
+          yield [{ id, object: doc.objects[objectId], currentHash: heads.at(-1)! }];
         }
       },
       getAllDocuments: async function* () {},
@@ -164,6 +164,33 @@ describe.only('Index queries', () => {
       const indexedContact = await queryIndexedContact(space);
       expect(indexedContact.name).to.equal('John Doe');
     }
+  });
+
+  test('index already available data', async () => {
+    const builder = new TestBuilder();
+    builder.storage = createStorage({ type: StorageType.RAM });
+    afterTest(() => builder.destroy());
+
+    const services = builder.createLocal();
+    const client = new Client({ services });
+    afterTest(() => client.destroy());
+    await client.initialize();
+    await client.halo.createIdentity();
+
+    await client.spaces.isReady.wait();
+
+    const space = await client.spaces.create();
+    await space.waitUntilReady();
+
+    const contact = new Contact({ name: 'John Doe' });
+    space.db.add(contact);
+    await space.db.flush();
+    const indexingDone = services.host!.context.indexer._indexed.waitForCount(2);
+    await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] });
+    await asyncTimeout(indexingDone, 1000);
+
+    const indexedContact = await queryIndexedContact(space);
+    expect(indexedContact.name).to.equal('John Doe');
   });
 });
 

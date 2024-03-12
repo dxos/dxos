@@ -30,9 +30,9 @@ export type IndexerParams = {
   metadataStore: IndexMetadataStore;
   indexStore: IndexStore;
 
-  loadDocuments: (ids: string[]) => AsyncGenerator<ObjectSnapshot>;
+  loadDocuments: (ids: string[]) => AsyncGenerator<ObjectSnapshot[]>;
 
-  getAllDocuments: () => AsyncGenerator<ObjectSnapshot>;
+  getAllDocuments: () => AsyncGenerator<ObjectSnapshot[]>;
 
   /**
    * Amount of updates to save indexes after.
@@ -68,47 +68,20 @@ export class Indexer {
       return;
     }
 
-    // Promote new indexes to `_indexes` map and save them to disk.
     if (this._newIndexes.length > 0) {
-      for await (const document of this._getAllDocuments()) {
-        for (const index of this._newIndexes) {
-          await index.update(document.id, document.object);
-        }
-      }
-      this._newIndexes.forEach((index) => this._indexes.set(index.kind, index));
-      this._newIndexes.length = 0; // Clear new indexes.
+      await this._promoteNewIndexes();
       await this._saveIndexes();
     }
 
-    const ids = await this._metadataStore.getDirtyDocuments();
-    if (ids.length === 0 || this._ctx.disposed) {
-      this._indexed.emit();
-      return;
-    }
-
-    for await (const document of this._loadDocuments(ids)) {
-      for (const [kind, index] of this._indexes.entries()) {
-        switch (kind.kind) {
-          case IndexKind.Kind.FIELD_MATCH:
-            invariant(kind.field, 'Field match index kind should have a field');
-            kind.field! in document.object && (await index.update(document.id, document.object));
-            break;
-          case IndexKind.Kind.SCHEMA_MATCH:
-            await index.update(document.id, document.object);
-            break;
-        }
-      }
-      await this._metadataStore.markClean(document.id, document.currentHash);
-    }
-
+    await this._indexUpdatedObjects();
     await this._maybeSaveIndexes();
     this._indexed.emit();
   });
 
   private readonly _metadataStore: IndexMetadataStore;
   private readonly _indexStore: IndexStore;
-  private readonly _loadDocuments: (ids: string[]) => AsyncGenerator<ObjectSnapshot>;
-  private readonly _getAllDocuments: () => AsyncGenerator<ObjectSnapshot>;
+  private readonly _loadDocuments: (ids: string[]) => AsyncGenerator<ObjectSnapshot[]>;
+  private readonly _getAllDocuments: () => AsyncGenerator<ObjectSnapshot[]>;
   private readonly _saveAfterUpdates: number;
   private readonly _saveAfterTime: number;
 
@@ -196,6 +169,54 @@ export class Indexer {
     return arraysOfIds.reduce((acc, ids) => acc.concat(ids), []);
   }
 
+  private async _promoteNewIndexes() {
+    for await (const documents of this._getAllDocuments()) {
+      if (this._ctx.disposed) {
+        return;
+      }
+      await this._updateIndexes(Array.from(this._newIndexes), documents);
+    }
+    this._newIndexes.forEach((index) => this._indexes.set(index.kind, index));
+    this._newIndexes.length = 0; // Clear new indexes.
+  }
+
+  private async _indexUpdatedObjects() {
+    const ids = await this._metadataStore.getDirtyDocuments();
+    if (ids.length === 0 || this._ctx.disposed) {
+      return;
+    }
+
+    for await (const documents of this._loadDocuments(ids)) {
+      if (this._ctx.disposed) {
+        return;
+      }
+      await this._updateIndexes(Array.from(this._indexes.values()), documents);
+      await Promise.all(
+        documents.map(async (document) => this._metadataStore.markClean(document.id, document.currentHash)),
+      );
+    }
+  }
+
+  private async _updateIndexes(indexes: Index[], documents: ObjectSnapshot[]) {
+    for (const index of indexes) {
+      if (this._ctx.disposed) {
+        return;
+      }
+      switch (index.kind.kind) {
+        case IndexKind.Kind.FIELD_MATCH:
+          invariant(index.kind.field, 'Field match index kind should have a field');
+          await updateIndexWithObjects(
+            index,
+            documents.filter((document) => index.kind.field! in document.object),
+          );
+          break;
+        case IndexKind.Kind.SCHEMA_MATCH:
+          await updateIndexWithObjects(index, documents);
+          break;
+      }
+    }
+  }
+
   private async _maybeSaveIndexes() {
     this._updatesAfterSave++;
     if (this._updatesAfterSave >= this._saveAfterUpdates || Date.now() - this._lastSave >= this._saveAfterTime) {
@@ -206,6 +227,9 @@ export class Indexer {
   @synchronized
   private async _saveIndexes() {
     for (const index of this._indexes.values()) {
+      if (this._ctx.disposed) {
+        return;
+      }
       await this._indexStore.save(index);
     }
     this._updatesAfterSave = 0;
@@ -213,7 +237,10 @@ export class Indexer {
   }
 
   async destroy() {
-    await this._ctx.dispose();
     await this._saveIndexes();
+    await this._ctx.dispose();
   }
 }
+
+const updateIndexWithObjects = async (index: Index, snapshots: ObjectSnapshot[]) =>
+  Promise.all(snapshots.map((snapshot) => index.update(snapshot.id, snapshot.object)));

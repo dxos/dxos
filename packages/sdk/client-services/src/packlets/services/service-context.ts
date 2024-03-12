@@ -3,10 +3,9 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { getHeads } from '@dxos/automerge/automerge';
 import { Context } from '@dxos/context';
 import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
-import { failUndefined, warnAfterTimeout } from '@dxos/debug';
+import { failUndefined } from '@dxos/debug';
 import {
   valueEncoding,
   MetadataStore,
@@ -24,7 +23,7 @@ import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type ModelFactory } from '@dxos/model-factory';
 import { type NetworkManager } from '@dxos/network-manager';
-import { InvalidStorageVersionError, STORAGE_VERSION, idCodec, trace } from '@dxos/protocols';
+import { InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type ProfileDocument, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -39,6 +38,7 @@ import {
   type IdentityManagerRuntimeParams,
   type JoinIdentityParams,
 } from '../identity';
+import { createGetAllDocuments, createLoadDocuments } from '../indexing';
 import {
   DeviceInvitationProtocol,
   InvitationsHandler,
@@ -128,26 +128,16 @@ export class ServiceContext {
 
     this.indexMetadata = new IndexMetadataStore({ directory: storage.createDirectory('index-metadata') });
 
-    const automergeHost = new AutomergeHost({
+    this.automergeHost = new AutomergeHost({
       directory: storage.createDirectory('automerge'),
       metadata: this.indexMetadata,
     });
-    this.automergeHost = automergeHost;
 
     this.indexer = new Indexer({
       indexStore: new IndexStore({ directory: storage.createDirectory('index-store') }),
       metadataStore: this.indexMetadata,
-      loadDocuments: async function* (ids: string[]) {
-        for (const id of ids) {
-          const { documentId, objectId } = idCodec.decode(id);
-          const handle = automergeHost.repo.find(documentId as any);
-          await warnAfterTimeout(1000, 'to long to load doc', () => handle.whenReady());
-          const doc = handle.docSync();
-          const heads = getHeads(doc);
-          yield { id, object: doc.objects[objectId], currentHash: heads.at(-1)! };
-        }
-      },
-      getAllDocuments: async function* () {},
+      loadDocuments: createLoadDocuments(this.automergeHost),
+      getAllDocuments: createGetAllDocuments(this.automergeHost),
     });
 
     this.invitations = new InvitationsHandler(this.networkManager);
