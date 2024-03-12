@@ -6,7 +6,6 @@ import { expect } from 'chai';
 import jestExpect from 'expect';
 
 import { registerSignalRuntime } from '@dxos/echo-signals';
-import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 import * as R from './reactive';
@@ -17,10 +16,8 @@ import { createDatabase } from '../testing';
 
 registerSignalRuntime();
 
-test('', () => {});
-
-for (const schema of [TestSchema]) {
-  for (const useDatabase of [true]) {
+for (const schema of [undefined, TestSchema]) {
+  for (const useDatabase of [false, true]) {
     const testSetup = useDatabase ? createDatabase(new Hypergraph(), { useReactiveObjectApi: true }) : undefined;
     const createObject = async (props: Partial<TestSchema> = {}): Promise<TestSchema> => {
       const testSchema = useDatabase && schema ? schema.pipe(R.echoObject('TestSchema', '1.0.0')) : schema;
@@ -89,7 +86,6 @@ for (const schema of [TestSchema]) {
       });
 
       test('can work with complex types', async () => {
-        log.info('schema', { schema: schema != null, useDatabase });
         const circle: any = { type: 'circle', radius: 42 };
         const obj = await createObject({ nullableShapeArray: [circle] });
 
@@ -116,9 +112,11 @@ for (const schema of [TestSchema]) {
         obj.object = { field: 'bar' };
         expect(() => (obj.object!.field = 1 as any)).to.throw();
         expect(() => obj.objectArray?.push({ field: 1 } as any)).to.throw();
+        expect(() => obj.objectArray?.unshift({ field: 1 } as any)).to.throw();
         expect(() => (obj.objectArray![0] = { field: 1 } as any)).to.throw();
         expect(() => (obj.objectArray![0].field = 1 as any)).to.throw();
         obj.objectArray?.push({ field: 'bar' });
+        expect(() => obj.objectArray?.splice(1, 0, { field: 1 } as any)).to.throw();
         expect(() => (obj.objectArray![1].field = 1 as any)).to.throw();
       });
 
