@@ -105,7 +105,12 @@ export const SpacePlugin = ({
   return {
     meta,
     ready: async (plugins) => {
-      settings.prop(settings.values.$showHidden!, 'show-hidden', LocalStorageStore.bool);
+      settings.prop({
+        key: 'showHidden',
+        storageKey: 'show-hidden',
+        type: LocalStorageStore.bool({ allowUndefined: true }),
+      });
+
       const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
@@ -454,7 +459,7 @@ export const SpacePlugin = ({
           };
 
           const { unsubscribe } = client.spaces.subscribe((spaces) => createSpaceNodes(spaces));
-          const unsubscribeHidden = settings.values.$showHidden!.subscribe(() => createSpaceNodes(client.spaces.get()));
+          const unsubscribeHidden = effect(() => createSpaceNodes(client.spaces.get()));
 
           return () => {
             unsubscribe();
