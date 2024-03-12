@@ -21,7 +21,7 @@ import {
 import { EventSubscriptions } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { isTypedObject } from '@dxos/react-client/echo';
-import { translations as editorTranslations } from '@dxos/react-ui-editor';
+import { type EditorMode, translations as editorTranslations } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import {
@@ -84,11 +84,15 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     meta,
     ready: async (plugins) => {
       settings
-        .prop(settings.values.$editorMode!, 'editor-mode', LocalStorageStore.string)
-        .prop(settings.values.$toolbar!, 'toolbar', LocalStorageStore.bool)
-        .prop(settings.values.$experimental!, 'experimental', LocalStorageStore.bool)
-        .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool)
-        .prop(settings.values.$typewriter!, 'typewriter', LocalStorageStore.string);
+        .prop({
+          key: 'editorMode',
+          storageKey: 'editor-mode',
+          type: LocalStorageStore.enum<EditorMode>({ allowUndefined: true }),
+        })
+        .prop({ key: 'toolbar', type: LocalStorageStore.bool({ allowUndefined: true }) })
+        .prop({ key: 'experimental', type: LocalStorageStore.bool({ allowUndefined: true }) })
+        .prop({ key: 'debug', type: LocalStorageStore.bool({ allowUndefined: true }) })
+        .prop({ key: 'typewriter', type: LocalStorageStore.string({ allowUndefined: true }) });
 
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
