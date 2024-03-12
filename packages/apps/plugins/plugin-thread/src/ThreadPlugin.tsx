@@ -169,7 +169,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               subscriptions.add(
                 effect(() => {
                   const documentThreads = documentQuery.objects
-                    .flatMap((doc) => doc.comments.map((comment) => comment.thread?.id))
+                    .flatMap((doc) => doc.comments?.map((comment) => comment.thread?.id))
                     .filter(nonNullable);
                   const objects = query.objects.filter((thread) => !documentThreads.includes(thread.id));
                   const removedObjects = previousObjects.filter((object) => !objects.includes(object));
