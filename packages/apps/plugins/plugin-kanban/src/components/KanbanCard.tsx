@@ -69,7 +69,7 @@ export const KanbanCardComponent: FC<{
           <DotsSixVertical className={getSize(5)} />
         </button>
         <div className='flex flex-col grow pt-1'>
-          <div role='textbox' className={mx(focusRing, 'p-1')} ref={parentRef} />
+          <div className={mx(focusRing, 'p-1')} ref={parentRef} />
           {debug && <div className='text-xs text-red-800'>{item.id.slice(0, 9)}</div>}
         </div>
         {onDelete && (
