@@ -1,3 +1,4 @@
+/* TODO(thure): Focus is handled by .ch-focus-ring, but should ideally be applied as part of this component.*/
 /* TODO(thure): This should be on the `components` layer, but utility classes like `pli-0` weren’t getting precedence like they should. */
 @layer base {
   /* Base styles */
@@ -14,22 +15,6 @@
     /* Enabled styles */
     &:not([disabled]),
     &[disabled='false'] {
-      /* Focus */
-      &:focus {
-        @apply outline-none;
-      }
-      &:focus-visible {
-        @apply z-[1] ring-2 ring-offset-0 ring-primary-350 ring-offset-white;
-        .dark & {
-          @apply ring-primary-450 ring-offset-black;
-        }
-        &:hover {
-          @apply outline-none;
-          .dark & {
-            @apply outline-none;
-          }
-        }
-      }
       /* Hover */
       &:hover {
         @apply surface-hover;
