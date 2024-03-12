@@ -7096,6 +7096,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/core':
+        specifier: ^0.0.16
+        version: 0.0.16
       '@effect/schema':
         specifier: ^0.63.4
         version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
@@ -13690,6 +13693,19 @@ packages:
       - '@types/react'
       - supports-color
     dev: true
+
+  /@effect/core@0.0.16:
+    resolution: {integrity: sha512-JugbKcqo9CPdm4n7t/buO4nYxKwThafh0tXVvPgRC3RcwuOS1dzo3tIk6RVq1wYh8Kg4df5SwmdED2VvN4c/RA==}
+    dependencies:
+      '@effect/printer': 0.0.4
+      '@tsplus/stdlib': 0.2.8
+    dev: false
+
+  /@effect/printer@0.0.4:
+    resolution: {integrity: sha512-oTn6U9GCg01E+kYwUBs4LM6k6hVq0pA7ZAYKdj972n2LjYeqg4+We6ZqoYWH2Pw5TDHOavtIEdYqt61uUxiZgg==}
+    dependencies:
+      '@tsplus/stdlib': 0.2.8
+    dev: false
 
   /@effect/schema@0.63.4(effect@2.4.3)(fast-check@3.15.1):
     resolution: {integrity: sha512-59b7N0XntkfivwhTSutyP13t1utlbJ9wDWDwEdAivNPpXBfpUlAWnZw7MAi86qI8J1LVz3ZDlz5p0pkDSu7p9g==}
@@ -21585,6 +21601,10 @@ packages:
 
   /@tsconfig/node16@1.0.3:
     resolution: {integrity: sha512-yOlFc+7UtL/89t2ZhjPvvB/DeAr3r+Dq58IgzsFkOAvVC6NMJXmCGjbptdXdR9qsX7pKcTL+s87FtYREi2dEEQ==}
+
+  /@tsplus/stdlib@0.2.8:
+    resolution: {integrity: sha512-UKAN06h9V/wUflSbOU1WwACisXEi4+PHwGqR+bwxqcClrEAA8KKTTLZ0ATMbqbVAVTudE0vW4pd5iY6vGvSFBw==}
+    dev: false
 
   /@types/abstract-leveldown@7.2.0:
     resolution: {integrity: sha512-q5veSX6zjUy/DlDhR4Y4cU0k2Ar+DT2LUraP00T19WLmTO6Se1djepCCaqU6nQrwcJ5Hyo/CWqxTzrrFg8eqbQ==}
