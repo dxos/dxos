@@ -4,6 +4,7 @@
 
 import { JSONSchema } from '@effect/schema';
 import * as S from '@effect/schema/Schema';
+import { Chess } from 'chess.js';
 
 import { Game } from '@dxos/chess-app';
 import { SignalTrigger } from '@dxos/functions-signal';
@@ -24,6 +25,11 @@ export const createSignalTrigger = (space: Space) => {
     .debounceMs(2_000)
     .unique((prev, curr) => prev.pgn === curr.pgn)
     .create((game) => {
+      const chess = new Chess();
+      chess.loadPgn(game.pgn);
+      if (chess.turn() === 'b') {
+        return null;
+      }
       return {
         id: PublicKey.random().toHex(),
         kind: 'suggestion',

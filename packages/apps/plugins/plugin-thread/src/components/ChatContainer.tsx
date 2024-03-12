@@ -170,6 +170,7 @@ const ApplySuggestionButton = ({
         <Button
           onClick={() => {
             try {
+              const parsedPayload = JSON.parse(confirmationSignalData);
               SignalBusInterconnect.global.createConnected(space).emit({
                 id: PublicKey.random().toHex(),
                 kind: 'suggestion',
@@ -177,7 +178,7 @@ const ApplySuggestionButton = ({
                   source: 'plugin-thread',
                   createdMs: Date.now(),
                 },
-                data: JSON.parse(confirmationSignalData),
+                data: parsedPayload,
               });
             } catch (e) {
               log.catch(e);

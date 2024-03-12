@@ -4,43 +4,30 @@
 
 import * as S from '@effect/schema/Schema';
 import { Chess } from 'chess.js';
-import * as Either from 'effect/Either';
 
 import { type Game } from '@dxos/chess-app';
-import { type Signal, SignalBusInterconnect } from '@dxos/functions-signal';
+import { Effector } from '@dxos/functions-signal';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 
 import { MoveSuggestionOutputFormat } from './signal-trigger';
 
-const MoveSuggestionSignal = S.struct({
-  kind: S.literal('suggestion'),
-  data: S.struct({
-    type: S.literal('make-next-chess-move'),
-    value: MoveSuggestionOutputFormat,
-  }),
-});
-
-const ConfirmedMoveSuggestionSignal = S.struct({
-  kind: S.literal('suggestion'),
-  data: S.struct({
-    type: S.literal('make-next-chess-move-confirmed'),
-    value: MoveSuggestionOutputFormat,
-  }),
-});
+const TYPE_MAKE_NEXT_CHESS_MOVE = 'make-next-chess-move';
+const TYPE_MAKE_NEXT_CHESS_MOVE_CONFIRMED = `${TYPE_MAKE_NEXT_CHESS_MOVE}-confirmed`;
 
 export const createMoveConfirmationEffector = (space: Space) => {
-  const bus = SignalBusInterconnect.global.createConnected(space);
-  const validator = S.validateEither(MoveSuggestionSignal);
-  return bus.subscribe((signal: Signal) => {
-    const validation = validator(signal);
-    if (Either.isLeft(validation)) {
-      return;
-    }
-    const data = validation.right.data.value;
+  const MoveSuggestionSignal = S.struct({
+    kind: S.literal('suggestion'),
+    data: S.struct({
+      type: S.literal(TYPE_MAKE_NEXT_CHESS_MOVE),
+      value: MoveSuggestionOutputFormat,
+    }),
+  });
+  return Effector.forSignalSchema(space, MoveSuggestionSignal, (effectorCtx, signal) => {
+    const data = signal.data.value;
     log.info('move suggestion received', { data });
-    bus.emit({
+    effectorCtx.bus.emitLocal({
       id: PublicKey.random().toHex(),
       kind: 'suggestion',
       metadata: {
@@ -53,8 +40,8 @@ export const createMoveConfirmationEffector = (space: Space) => {
           senderKey: PublicKey.random().toHex(),
           message: data.explanation,
           confirmationSignalData: JSON.stringify({
-            type: 'make-next-chess-move-confirmed',
-            data,
+            type: TYPE_MAKE_NEXT_CHESS_MOVE_CONFIRMED,
+            value: data,
           }),
           activeObjectId: data.gameId,
         },
@@ -64,21 +51,22 @@ export const createMoveConfirmationEffector = (space: Space) => {
 };
 
 export const createExecuteMoveEffector = (space: Space) => {
-  const bus = SignalBusInterconnect.global.createConnected(space);
-  const validator = S.validateEither(ConfirmedMoveSuggestionSignal);
-  return bus.subscribe((signal: Signal) => {
-    const validation = validator(signal);
-    if (Either.isLeft(validation)) {
-      return;
-    }
-    const data = validation.right.data.value;
+  const ConfirmedMoveSuggestionSignal = S.struct({
+    kind: S.literal('suggestion'),
+    data: S.struct({
+      type: S.literal(TYPE_MAKE_NEXT_CHESS_MOVE_CONFIRMED),
+      value: MoveSuggestionOutputFormat,
+    }),
+  });
+  return Effector.forSignalSchema(space, ConfirmedMoveSuggestionSignal, (effectorCtx, signal) => {
+    const data = signal.data.value;
     log.info('user confirmed move suggestion', { data });
     const game: Game | undefined = space.db.getObjectById(data.gameId);
     if (game == null || game.pgn !== data.inputGameState) {
       return;
     }
     const chess = new Chess();
-    chess.load(data.inputGameState);
+    chess.loadPgn(data.inputGameState);
     chess.move({ from: data.from, to: data.to });
     game.pgn = chess.pgn();
   });

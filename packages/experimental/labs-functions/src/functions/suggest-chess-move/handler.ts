@@ -32,8 +32,7 @@ export const handler = signalHandler(SuggestNextMoveFunctionInput, async ({ even
     PromptTemplate.fromTemplate(
       `You are a machine that is an expert chess player. 
        The move history of the current game is: {history}
-       And the next suggested move is from {from} to {to}. 
-       In a few sentences explain why the suggested move is good.
+       Explain why a move from {from} to {to} is good. Use no more than 4 sentences.
       `.replace(/ +/g, ' '),
     ),
     resources.model,

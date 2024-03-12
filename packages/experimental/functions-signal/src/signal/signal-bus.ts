@@ -32,16 +32,28 @@ export class SignalBus {
   public constructor(private readonly space: Space) {}
 
   emit(signal: Signal) {
-    if (signal.kind !== 'echo-mutation') {
-      log.info('signal', { signal });
-    }
-    this.space.postMessage('signals', signal).catch((error) => {
-      log.warn('failed to emit a signal', { signal, error });
-    });
-    this.emitLocal(signal);
+    logIfNotMutation('', signal);
+    this._emitRemote(signal);
+    this._emitLocal(signal);
+  }
+
+  emitRemote(signal: Signal) {
+    logIfNotMutation('remote ', signal);
+    this._emitRemote(signal);
   }
 
   emitLocal(signal: Signal) {
+    logIfNotMutation('local', signal);
+    this._emitLocal(signal);
+  }
+
+  private _emitRemote(signal: Signal) {
+    this.space.postMessage('signals', signal).catch((error) => {
+      log.warn('failed to emit a signal', { signal, error });
+    });
+  }
+
+  private _emitLocal(signal: Signal) {
     for (const callback of this.callbacks) {
       callback(signal);
     }
@@ -69,3 +81,9 @@ export class SignalBus {
     };
   }
 }
+
+const logIfNotMutation = (prefix: string, signal: Signal) => {
+  if (signal.kind !== 'echo-mutation') {
+    log.info(`${prefix}signal`, { signal });
+  }
+};
