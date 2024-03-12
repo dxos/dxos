@@ -14,7 +14,7 @@ import { IndexMetadataStore } from './index-metadata-store';
 import { IndexStore } from './index-store';
 import { Indexer, type ObjectSnapshot } from './indexer';
 
-describe.only('Indexer', () => {
+describe('Indexer', () => {
   test('objects that are marked as dirty are getting indexed', async () => {
     const storage = createStorage({ type: StorageType.RAM });
     afterTest(() => storage.close());
@@ -22,11 +22,15 @@ describe.only('Indexer', () => {
     const documents: ObjectSnapshot[] = [];
 
     const metadataStore = new IndexMetadataStore({ directory: storage.createDirectory('IndexMetadataStore') });
-    const doneIndexing = metadataStore.clean.waitForCount(1);
+    const doneIndexing = metadataStore.clean.waitForCount(2);
     const indexer = new Indexer({
       indexStore: new IndexStore({ directory: storage.createDirectory('IndexStore') }),
       metadataStore,
-      loadDocuments: async (ids) => documents.filter((doc) => ids.includes(doc.object.id)),
+      loadDocuments: async function* (ids) {
+        for (const document of documents.filter((doc) => ids.includes(doc.object.id))) {
+          yield document;
+        }
+      },
       getAllDocuments: async function* () {},
     });
 
@@ -47,7 +51,7 @@ describe.only('Indexer', () => {
       await metadataStore.markDirty(dirtyMap);
     }
 
-    await doneIndexing;
+    await asyncTimeout(doneIndexing, 1000);
 
     {
       const ids = await indexer.find({ type: { itemId: schemaURI } } as Filter);
@@ -73,7 +77,7 @@ describe.only('Indexer', () => {
     const indexer = new Indexer({
       indexStore: new IndexStore({ directory: storage.createDirectory('IndexStore') }),
       metadataStore,
-      loadDocuments: async () => [],
+      loadDocuments: async function* () {},
       getAllDocuments: async function* () {
         for (const object of objects) {
           yield { id: object.id, object, currentHash: 'hash' };

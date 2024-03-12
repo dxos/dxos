@@ -128,27 +128,26 @@ export class ServiceContext {
 
     this.indexMetadata = new IndexMetadataStore({ directory: storage.createDirectory('index-metadata') });
 
-    this.automergeHost = new AutomergeHost({
+    const automergeHost = new AutomergeHost({
       directory: storage.createDirectory('automerge'),
       metadata: this.indexMetadata,
     });
+    this.automergeHost = automergeHost;
 
     this.indexer = new Indexer({
       indexStore: new IndexStore({ directory: storage.createDirectory('index-store') }),
       metadataStore: this.indexMetadata,
-      loadDocuments: async (ids: string[]) => {
-        const snapshots = await Promise.all(
-          ids.map(async (id) => {
-            const { documentId, objectId } = idCodec.decode(id);
-            const handle = this.automergeHost.repo.find(documentId as any);
-            await warnAfterTimeout(1000, 'to long to load doc', () => handle.whenReady());
-            const doc = handle.docSync();
-            const heads = getHeads(doc);
-            return { id, object: doc.objects[objectId], currentHash: heads.at(-1)! };
-          }),
-        );
-        return snapshots.filter((snapshot) => snapshot.object);
+      loadDocuments: async function* (ids: string[]) {
+        for (const id of ids) {
+          const { documentId, objectId } = idCodec.decode(id);
+          const handle = automergeHost.repo.find(documentId as any);
+          await warnAfterTimeout(1000, 'to long to load doc', () => handle.whenReady());
+          const doc = handle.docSync();
+          const heads = getHeads(doc);
+          yield { id, object: doc.objects[objectId], currentHash: heads.at(-1)! };
+        }
       },
+      getAllDocuments: async function* () {},
     });
 
     this.invitations = new InvitationsHandler(this.networkManager);

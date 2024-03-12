@@ -29,8 +29,8 @@ export type ObjectSnapshot = {
 export type IndexerParams = {
   metadataStore: IndexMetadataStore;
   indexStore: IndexStore;
-  // TODO(mykola): `loadDocuments` should be a async generator.
-  loadDocuments: (ids: string[]) => Promise<ObjectSnapshot[]>;
+
+  loadDocuments: (ids: string[]) => AsyncGenerator<ObjectSnapshot>;
 
   getAllDocuments: () => AsyncGenerator<ObjectSnapshot>;
 
@@ -68,6 +68,7 @@ export class Indexer {
       return;
     }
 
+    // Promote new indexes to `_indexes` map and save them to disk.
     if (this._newIndexes.length > 0) {
       for await (const document of this._getAllDocuments()) {
         for (const index of this._newIndexes) {
@@ -76,6 +77,7 @@ export class Indexer {
       }
       this._newIndexes.forEach((index) => this._indexes.set(index.kind, index));
       this._newIndexes.length = 0; // Clear new indexes.
+      await this._saveIndexes();
     }
 
     const ids = await this._metadataStore.getDirtyDocuments();
@@ -84,28 +86,20 @@ export class Indexer {
       return;
     }
 
-    const snapshots = await this._loadDocuments(ids);
-    if (snapshots.length === 0 || this._ctx.disposed) {
-      this._indexed.emit();
-      return;
-    }
-
-    for (const [kind, index] of this._indexes.entries()) {
-      switch (kind.kind) {
-        case IndexKind.Kind.FIELD_MATCH:
-          invariant(kind.field, 'Field match index kind should have a field');
-          await updateIndexWithObjects(
-            index,
-            snapshots.filter((snapshot) => kind.field! in snapshot.object),
-          );
-          break;
-        case IndexKind.Kind.SCHEMA_MATCH:
-          await updateIndexWithObjects(index, snapshots);
-          break;
+    for await (const document of this._loadDocuments(ids)) {
+      for (const [kind, index] of this._indexes.entries()) {
+        switch (kind.kind) {
+          case IndexKind.Kind.FIELD_MATCH:
+            invariant(kind.field, 'Field match index kind should have a field');
+            kind.field! in document.object && (await index.update(document.id, document.object));
+            break;
+          case IndexKind.Kind.SCHEMA_MATCH:
+            await index.update(document.id, document.object);
+            break;
+        }
       }
+      await this._metadataStore.markClean(document.id, document.currentHash);
     }
-
-    await Promise.all(snapshots.map((snapshot) => this._metadataStore.markClean(snapshot.id, snapshot.currentHash)));
 
     await this._maybeSaveIndexes();
     this._indexed.emit();
@@ -113,7 +107,7 @@ export class Indexer {
 
   private readonly _metadataStore: IndexMetadataStore;
   private readonly _indexStore: IndexStore;
-  private readonly _loadDocuments: (ids: string[]) => Promise<ObjectSnapshot[]>;
+  private readonly _loadDocuments: (ids: string[]) => AsyncGenerator<ObjectSnapshot>;
   private readonly _getAllDocuments: () => AsyncGenerator<ObjectSnapshot>;
   private readonly _saveAfterUpdates: number;
   private readonly _saveAfterTime: number;
@@ -223,6 +217,3 @@ export class Indexer {
     await this._saveIndexes();
   }
 }
-
-const updateIndexWithObjects = async (index: Index, snapshots: ObjectSnapshot[]) =>
-  Promise.all(snapshots.map((snapshot) => index.update(snapshot.id, snapshot.object)));

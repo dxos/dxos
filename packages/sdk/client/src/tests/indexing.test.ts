@@ -23,7 +23,7 @@ import { QueryOptions } from '../echo';
 import { IndexQuerySourceProvider } from '../echo/index-query-source-provider';
 import { TestBuilder } from '../testing';
 
-describe('Index queries', () => {
+describe.only('Index queries', () => {
   test('indexing stack', async () => {
     const builder = new TestBuilder();
     builder.storage = createStorage({ type: StorageType.RAM });
@@ -40,18 +40,15 @@ describe('Index queries', () => {
     const indexer = new Indexer({
       indexStore: new IndexStore({ directory: builder.storage!.createDirectory('index-store') }),
       metadataStore: services.host!.context.indexMetadata,
-      loadDocuments: async (ids: string[]) => {
-        const snapshots = await Promise.all(
-          ids.map(async (id) => {
-            const { documentId, objectId } = idCodec.decode(id);
-            const handle = services.host!.context.automergeHost.repo.find(documentId as any);
-            await warnAfterTimeout(1000, 'to long to load doc', () => handle.whenReady());
-            const doc = handle.docSync();
-            const heads = getHeads(doc);
-            return { id, object: doc.objects[objectId], currentHash: heads.at(-1)! };
-          }),
-        );
-        return snapshots.filter((snapshot) => snapshot.object);
+      loadDocuments: async function* (ids: string[]) {
+        for (const id of ids) {
+          const { documentId, objectId } = idCodec.decode(id);
+          const handle = services.host!.context.automergeHost.repo.find(documentId as any);
+          await warnAfterTimeout(1000, 'to long to load doc', () => handle.whenReady());
+          const doc = handle.docSync();
+          const heads = getHeads(doc);
+          yield { id, object: doc.objects[objectId], currentHash: heads.at(-1)! };
+        }
       },
       getAllDocuments: async function* () {},
     });
@@ -92,7 +89,7 @@ describe('Index queries', () => {
     await client.halo.createIdentity();
     await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] });
 
-    const indexingDone = services.host!.context.indexMetadata.clean.waitForCount(2);
+    const indexingDone = services.host!.context.indexer._indexed.waitForCount(2);
     const space = await client.spaces.create();
     {
       await space.waitUntilReady();
@@ -125,7 +122,7 @@ describe('Index queries', () => {
       await client.halo.createIdentity();
       await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] });
 
-      const indexingDone = services.host!.context.indexMetadata.clean.waitForCount(2);
+      const indexingDone = services.host!.context.indexer._indexed.waitForCount(2);
       await client.spaces.isReady.wait();
       const space = await client.spaces.create();
       {
