@@ -74,7 +74,7 @@ export const commandState = StateField.define<CommandState>({
 
     return state;
   },
-  provide: (f) => [showTooltip.from(f, (value) => value.tooltip ?? null)],
+  provide: (field) => [showTooltip.from(field, (value) => value.tooltip ?? null)],
 });
 
 export const openEffect = StateEffect.define<{ pos: number; fullWidth?: boolean }>();

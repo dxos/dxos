@@ -153,12 +153,11 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   }
 
   private async _initDocHandle(ctx: Context, url: string) {
-    const docHandle = this._automerge.repo.find(url as DocumentId);
-    // TODO(mykola): Remove check for global preference or timeout?
+    const docHandle = this._automerge.repo.find<SpaceDoc>(url as DocumentId);
     while (true) {
       try {
         await warnAfterTimeout(5_000, 'Automerge root doc load timeout (AutomergeDb)', async () => {
-          await cancelWithContext(ctx, docHandle.whenReady(['ready'])); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
+          await cancelWithContext(ctx, docHandle.whenReady()); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
         });
         break;
       } catch (err) {

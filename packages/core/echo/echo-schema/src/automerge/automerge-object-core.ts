@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import get from 'lodash.get';
-
 import { Event } from '@dxos/async';
 import { next as A, type ChangeFn, type ChangeOptions, type Doc, type Heads } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
@@ -11,13 +9,14 @@ import { Reference } from '@dxos/document-model';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log'; // Keep type-only
+import { log } from '@dxos/log'; // Keep type-only.
 import { TextModel } from '@dxos/text-model';
 import { assignDeep, defer, getDeep } from '@dxos/util';
 
 import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
-import { AutomergeObject, getAutomergeObjectCore, getRawDoc } from './automerge-object';
+import { AutomergeObject, getAutomergeObjectCore } from './automerge-object';
+import { type DocAccessor } from './automerge-types';
 import { docChangeSemaphore } from './doc-semaphore';
 import {
   encodeReference,
@@ -29,13 +28,7 @@ import {
   type DecodedAutomergePrimaryValue,
 } from './types';
 import { isReactiveProxy } from '../effect/proxy';
-import {
-  type TypedObjectOptions,
-  type EchoObject,
-  TextObject,
-  type AutomergeTextCompat,
-  type OpaqueEchoObject,
-} from '../object';
+import { type TypedObjectOptions, type EchoObject, TextObject, type OpaqueEchoObject } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
 
@@ -107,7 +100,7 @@ export class AutomergeObjectCore {
 
     initialProps ??= {};
 
-    // Init schema defaults
+    // Init schema defaults.
     if (opts?.schema) {
       for (const field of opts.schema.props) {
         if (field.repeated) {
@@ -219,7 +212,6 @@ export class AutomergeObjectCore {
   getDocAccessor(path: string[] = []): DocAccessor {
     const self = this;
     return {
-      [isDocument]: true,
       handle: {
         docSync: () => this.getDoc(),
         change: (callback, options) => {
@@ -457,37 +449,6 @@ export class AutomergeObjectCore {
   }
 }
 
-const isDocument = Symbol.for('isDocument');
-
-// TODO(burdon): Rename ValueAccessor.
-export interface DocAccessor<T = any> {
-  [isDocument]: true;
-  handle: IDocHandle<T>;
-  get path(): string[]; // TODO(burdon): Getter or prop?
-}
-
-export const DocAccessor = {
-  getValue: (accessor: DocAccessor) => get(accessor.handle.docSync(), accessor.path),
-};
-
-/**
- * @deprecated
- */
-// TODO(burdon): Temporary.
-export const createDocAccessor = <T = any>(text: TextObject): DocAccessor<T> => {
-  const obj = text as any as AutomergeTextCompat;
-  return getRawDoc(obj, [obj.field]);
-};
-
-export interface IDocHandle<T = any> {
-  docSync(): Doc<T> | undefined;
-  change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
-  changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): string[] | undefined;
-
-  addListener(event: 'change', listener: () => void): void;
-  removeListener(event: 'change', listener: () => void): void;
-}
-
 export type BindOptions = {
   db: AutomergeDb;
   docHandle: DocHandle<SpaceDoc>;
@@ -497,10 +458,6 @@ export type BindOptions = {
    * Assign the state from the local doc into the shared structure for the database.
    */
   assignFromLocalState?: boolean;
-};
-
-export const isDocAccessor = (obj: any): obj is DocAccessor => {
-  return !!obj?.[isDocument];
 };
 
 export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<SpaceDoc>) => {

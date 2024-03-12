@@ -2096,6 +2096,9 @@ importers:
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
+      '@codemirror/view':
+        specifier: ^6.25.0
+        version: 6.25.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -2111,6 +2114,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/react-async':
+        specifier: workspace:*
+        version: link:../../../common/react-async
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -4240,15 +4246,18 @@ importers:
 
   packages/common/local-storage:
     dependencies:
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-signals
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
       '@preact/signals-core':
         specifier: ^1.5.1
         version: 1.5.1
-      deepsignal:
-        specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-core@1.5.1)
     devDependencies:
       '@dxos/async':
         specifier: workspace:*
@@ -5327,6 +5336,67 @@ importers:
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
+      wait-for-expect:
+        specifier: ^3.0.2
+        version: 3.0.2
+
+  packages/core/echo/indexing:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/automerge':
+        specifier: workspace:*
+        version: link:../automerge
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../../common/context
+      '@dxos/echo-pipeline':
+        specifier: workspace:*
+        version: link:../echo-pipeline
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../../common/node-std
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../protocols
+      '@dxos/random-access-storage':
+        specifier: workspace:*
+        version: link:../../../common/random-access-storage
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      '@effect/schema':
+        specifier: ^0.63.4
+        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
+      '@orama/orama':
+        specifier: ^2.0.8
+        version: 2.0.8
+      effect:
+        specifier: ^2.4.3
+        version: 2.4.3
+      lodash.isequal:
+        specifier: ^4.5.0
+        version: 4.5.0
+    devDependencies:
+      '@types/lodash.isequal':
+        specifier: ^4.5.0
+        version: 4.5.6
+      fast-check:
+        specifier: ^3.15.1
+        version: 3.15.1
       wait-for-expect:
         specifier: ^3.0.2
         version: 3.0.2
@@ -7802,6 +7872,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/indexing':
+        specifier: workspace:*
+        version: link:../../core/echo/indexing
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -7945,6 +8018,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/automerge':
+        specifier: workspace:*
+        version: link:../../core/echo/automerge
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../client-protocol
@@ -7981,6 +8057,9 @@ importers:
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../common/feed-store
+      '@dxos/indexing':
+        specifier: workspace:*
+        version: link:../../core/echo/indexing
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant

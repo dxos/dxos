@@ -6,8 +6,8 @@ import { type TextObject } from '@dxos/client/echo';
 
 export type Item = {
   id: string;
+  text: TextObject;
   done?: boolean;
-  text?: TextObject;
   items?: Item[];
 };
 

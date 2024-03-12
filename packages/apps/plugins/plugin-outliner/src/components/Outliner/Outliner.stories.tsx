@@ -27,6 +27,7 @@ const Story = ({
   const [root] = useState<Item>(
     deepSignal<Item>({
       id: 'root',
+      text: new TextObject(),
       items: faker.helpers.multiple(
         () => {
           let text = '';

@@ -148,7 +148,7 @@ export class Filter<T extends OpaqueEchoObject = EchoObject> {
     };
     return new Filter(
       {
-        type: proto.type && Reference.fromValue(proto.type),
+        type: proto.type ? Reference.fromValue(proto.type) : undefined,
         properties: proto.properties,
         text: proto.text,
         not: proto.not,

@@ -12,7 +12,8 @@ import { log } from '@dxos/log';
 import { assignDeep } from '@dxos/util';
 
 import { AutomergeArray } from './automerge-array';
-import { AutomergeObjectCore, type BindOptions, type DocAccessor } from './automerge-object-core';
+import { AutomergeObjectCore, type BindOptions } from './automerge-object-core';
+import { type DocAccessor } from './automerge-types';
 import { REFERENCE_TYPE_TAG, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
 import { EchoReactiveHandler } from '../effect/echo-handler';
@@ -34,10 +35,10 @@ import {
   type TypedObjectProperties,
   type OpaqueEchoObject,
 } from '../object';
-import { AbstractEchoObject } from '../object/object';
+import { AbstractEchoObject } from '../object/object'; // TODO(burdon): Import
 import { type Schema } from '../proto';
 
-// TODO(dmaretskyi): Rename to `AutomergeObjectApi`.
+// TODO(dmaretskyi): Rename to `AutomergeObjectApi`?
 export class AutomergeObject implements TypedObjectProperties {
   /**
    * @internal

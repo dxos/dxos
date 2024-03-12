@@ -24,11 +24,13 @@
   ],
   "dependencies": {
     "@braneframe/plugin-settings": "workspace:*",
+    "@codemirror/view": "^6.25.0",
     "@dxos/async": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",

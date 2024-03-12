@@ -4,9 +4,15 @@
 
 import React, { forwardRef } from 'react';
 
-import { DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
+import { DropdownMenu, Input, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-card';
-import { MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
+import {
+  createBasicExtensions,
+  createDataExtensions,
+  createThemeExtensions,
+  useDocAccessor,
+  useTextEditor,
+} from '@dxos/react-ui-editor';
 import type { MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
@@ -40,10 +46,24 @@ export const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement
     forwardRef,
   ) => {
     const { t } = useTranslation(MARKDOWN_PLUGIN);
-    const model = useTextModel({ text: object.content as any });
-    if (!model) {
-      return null;
-    }
+    const { themeMode } = useThemeContext();
+    const { doc, accessor } = useDocAccessor(object.content);
+    const { parentRef } = useTextEditor(
+      () => ({
+        doc,
+        extensions: [
+          createBasicExtensions({ placeholder: t('editor placeholder') }),
+          createThemeExtensions({ themeMode }),
+          createDataExtensions({ id: object.id, text: accessor }),
+          getExtensions({
+            document: object,
+            debug: settings.debug,
+            experimental: settings.experimental,
+          }),
+        ],
+      }),
+      [object, accessor, themeMode],
+    );
 
     return (
       <div role='none' ref={forwardRef} className='flex w-full' style={draggableStyle}>
@@ -70,20 +90,7 @@ export const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement
             </Card.Menu>
           </Card.Header>
           <Card.Body>
-            <MarkdownEditor
-              model={model}
-              extensions={getExtensions({
-                document: object,
-                debug: settings.debug,
-                experimental: settings.experimental,
-              })}
-              placeholder={t('editor placeholder')}
-              slots={{
-                root: {
-                  className: mx(focusRing, 'h-full p-1 text-sm'),
-                },
-              }}
-            />
+            <div ref={parentRef} className={mx(focusRing, 'h-full p-1 text-sm')} />
           </Card.Body>
         </Card.Root>
       </div>
