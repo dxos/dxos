@@ -18,7 +18,7 @@ import {
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { Filter } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema/schema';
+import * as E from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type EditorMode, translations as editorTranslations } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
@@ -41,6 +41,7 @@ import {
   type DocumentType,
   MarkdownAction,
   DocumentSchema,
+  isDocument,
 } from './types';
 import { getFallbackTitle, isMarkdownProperties, markdownExtensionPlugins } from './util';
 
