@@ -23,7 +23,7 @@
     "src"
   ],
   "dependencies": {
-    "deepsignal": "^1.5.0"
+    "@dxos/echo-schema": "workspace:*"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",

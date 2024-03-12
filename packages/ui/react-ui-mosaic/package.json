@@ -30,7 +30,6 @@
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.5.1",
     "@radix-ui/react-compose-refs": "^1.0.0",
-    "deepsignal": "^1.5.0",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.pick": "^4.4.0",
     "react-resize-detector": "^7.1.2"

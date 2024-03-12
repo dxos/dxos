@@ -26,8 +26,6 @@ const isObject = <T extends EchoObject>(object: unknown, schema: Schema, filter:
   return isTypedObject(object) && object.__typename === schema.typename ? (object as T) : undefined;
 };
 
-(globalThis as any)[ScriptType.name] = ScriptType;
-
 export type ScriptPluginProps = {
   containerUrl: string;
 };
