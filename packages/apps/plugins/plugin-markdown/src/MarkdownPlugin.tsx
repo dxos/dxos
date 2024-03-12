@@ -4,7 +4,6 @@
 
 import { type IconProps, TextAa } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
-import { deepSignal } from 'deepsignal/react';
 import React, { useMemo, type Ref } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
@@ -19,6 +18,7 @@ import {
   type PluginDefinition,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
+import * as E from '@dxos/echo-schema/schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { isTypedObject } from '@dxos/react-client/echo';
 import { type EditorMode, translations as editorTranslations } from '@dxos/react-ui-editor';
@@ -58,7 +58,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     experimental: false,
   });
 
-  const state = deepSignal<MarkdownPluginState>({ extensions: [] });
+  const state = E.object<MarkdownPluginState>({ extensions: [] });
 
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 

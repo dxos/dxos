@@ -30,8 +30,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@preact/signals-core": "^1.5.1",
-    "chess.js": "1.0.0-alpha.0",
-    "deepsignal": "^1.5.0"
+    "chess.js": "1.0.0-alpha.0"
   },
   "devDependencies": {
     "@braneframe/plugin-client": "workspace:*",

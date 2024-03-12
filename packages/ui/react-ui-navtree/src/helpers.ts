@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { deepSignal, type RevertDeepSignal } from 'deepsignal/react';
-
 import { type Action, type ActionGroup, isAction, type Node, type NodeFilter } from '@dxos/app-graph';
+import * as E from '@dxos/echo-schema/schema';
 
-import { type TreeNodeAction, type TreeNode, type TreeNodeActionLike, type TreeNodeActionGroup } from './types';
+import { type TreeNodeAction, type TreeNode, type TreeNodeActionGroup } from './types';
 
 export type TreeNodeFromGraphNodeOptions = {
   filter?: NodeFilter;
@@ -37,14 +36,21 @@ export const getTreeNode = (tree: TreeNode, path?: string[]): TreeNode => {
 export const treeNodeFromGraphNode = (node: Node, options: TreeNodeFromGraphNodeOptions = {}): TreeNode => {
   const { filter, path = [] } = options;
 
-  const treeNode = deepSignal<TreeNode>({
+  const treeNode = E.object<TreeNode>({
     id: node.id,
+    data: node.data,
     get label() {
       return node.properties.label;
     },
-    icon: node.properties.icon,
-    properties: node.properties, // TODO(dmaretskyi): Is it ok that this object now includes `icon` and `label`?
-    data: node.data,
+    get icon() {
+      return node.properties.icon;
+    },
+    get properties() {
+      // This must be done inside the getter so that properties are only reactive if they are accessed.
+      // eslint-disable-next-line unused-imports/no-unused-vars
+      const { label, icon, ...properties } = node.properties;
+      return properties;
+    },
     get parent() {
       const parentId = path[path.length - 1];
       const parent = node.nodes({ direction: 'inbound' }).find((n) => n.id === parentId);
@@ -62,7 +68,7 @@ export const treeNodeFromGraphNode = (node: Node, options: TreeNodeFromGraphNode
     },
   });
 
-  return treeNode as RevertDeepSignal<TreeNode>;
+  return treeNode;
 };
 
 /**
@@ -71,7 +77,7 @@ export const treeNodeFromGraphNode = (node: Node, options: TreeNodeFromGraphNode
 export const treeActionFromGraphAction = (action: Action): TreeNodeAction => {
   const { icon, label, keyBinding, ...properties } = action.properties;
   const node = action.nodes({ direction: 'inbound' })[0];
-  const treeAction = deepSignal<TreeNodeActionLike>({
+  const treeAction = E.object<TreeNodeAction>({
     id: action.id,
     label,
     icon,
@@ -80,7 +86,7 @@ export const treeActionFromGraphAction = (action: Action): TreeNodeAction => {
     invoke: (params) => action.data({ node, ...params }),
   });
 
-  return treeAction as RevertDeepSignal<TreeNodeAction>;
+  return treeAction;
 };
 
 /**
@@ -88,7 +94,7 @@ export const treeActionFromGraphAction = (action: Action): TreeNodeAction => {
  */
 export const treeActionGroupFromGraphActionGroup = (actionGroup: ActionGroup): TreeNodeActionGroup => {
   const { icon, label, ...properties } = actionGroup.properties;
-  const treeActionGroup = deepSignal<TreeNodeActionGroup>({
+  const treeActionGroup = E.object<TreeNodeActionGroup>({
     id: actionGroup.id,
     label,
     icon,
@@ -99,5 +105,5 @@ export const treeActionGroupFromGraphActionGroup = (actionGroup: ActionGroup): T
     },
   });
 
-  return treeActionGroup as RevertDeepSignal<TreeNodeActionGroup>;
+  return treeActionGroup;
 };
