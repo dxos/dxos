@@ -303,7 +303,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         resolver: ({ action, data }) => {
           switch (action) {
             case MarkdownAction.CREATE: {
-              return { data: new DocumentType() };
+              return { data: E.object(DocumentSchema, { content: { content: '' } }) };
             }
 
             // TODO(burdon): Generalize for every object.

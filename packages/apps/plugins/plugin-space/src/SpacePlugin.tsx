@@ -124,6 +124,8 @@ export const SpacePlugin = ({
       const location = navigationPlugin.provides.location;
       const dispatch = intentPlugin.provides.intent.dispatch;
 
+      client._graph.types.registerEffectSchema(FolderSchema);
+
       // Create root folder structure.
       if (clientPlugin.provides.firstRun) {
         const defaultSpace = client.spaces.default;
@@ -488,7 +490,7 @@ export const SpacePlugin = ({
                 objects: [sharedSpacesFolder],
               } = defaultSpace.db.query({ key: SHARED });
               const space = await client.spaces.create(intent.data as PropertiesProps);
-              const folder = space.db.add(E.object(FolderSchema, { objects: [] }));
+              const folder = E.object(FolderSchema, { objects: [] });
               space.properties[E.getEchoObjectAnnotation(FolderSchema)!.typename] = folder;
               sharedSpacesFolder?.objects.push(folder);
               if (Migrations.versionProperty) {
@@ -625,7 +627,7 @@ export const SpacePlugin = ({
 
               if (intent.data?.target instanceof SpaceProxy) {
                 const space = intent.data.target;
-                const folder = space.properties[Folder.schema.typename];
+                const folder = space.properties[E.getEchoObjectAnnotation(FolderSchema)!.typename];
                 if (isFolder(folder)) {
                   folder.objects.push(object);
                   return { data: object };
