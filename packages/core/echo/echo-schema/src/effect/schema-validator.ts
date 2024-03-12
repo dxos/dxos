@@ -20,9 +20,32 @@ export class SchemaValidator {
     if (!isTypeLiteral(schema.ast)) {
       throw new Error('schema has to describe an object type');
     }
+    this.validateSchema(schema);
     const _ = S.asserts(schema)(target);
     this.makeArraysReactive(target);
     setSchemaProperties(target, schema);
+  }
+
+  /**
+   * Recursively check that schema specifies constructions we can handle.
+   * Validates there are no ambiguous discriminated union types.
+   */
+  public static validateSchema(schema: S.Schema<any>) {
+    const visitAll = (astList: AST.AST[]) => astList.forEach((ast) => this.validateSchema(S.make(ast)));
+    if (AST.isUnion(schema.ast)) {
+      const typeAstList = schema.ast.types.filter((type) => isTypeLiteral(type)) as AST.TypeLiteral[];
+      // check we can handle a discriminated union
+      if (typeAstList.length > 1) {
+        getTypeDiscriminators(typeAstList);
+      }
+      visitAll(typeAstList);
+    } else if (AST.isTuple(schema.ast)) {
+      const positionalTypes = schema.ast.elements.map((e) => e.type);
+      const allTypes = positionalTypes.concat(Option.getOrElse(schema.ast.rest, () => []));
+      visitAll(allTypes);
+    } else if (AST.isTypeLiteral(schema.ast)) {
+      visitAll(AST.getPropertySignatures(schema.ast).map((p) => p.type));
+    }
   }
 
   private static makeArraysReactive(target: any) {
@@ -101,11 +124,19 @@ const getProperties = (
   getTargetPropertyFn: (propertyName: string) => any,
 ): AST.PropertySignature[] => {
   const astCandidates = AST.isUnion(typeAst) ? typeAst.types : [typeAst];
-  const typeAstList = astCandidates.filter((type) => AST.isTypeLiteral(type));
+  const typeAstList = astCandidates.filter((type) => AST.isTypeLiteral(type)) as AST.TypeLiteral[];
   invariant(typeAstList.length > 0, `target can't have properties since it's not a type: ${typeAst._tag}`);
   if (typeAstList.length === 1) {
     return AST.getPropertySignatures(typeAstList[0]);
   }
+  const typeDiscriminators = getTypeDiscriminators(typeAstList);
+  const targetPropertyValue = getTargetPropertyFn(String(typeDiscriminators[0].name));
+  const typeIndex = typeDiscriminators.findIndex((p) => targetPropertyValue === (p.type as AST.Literal).literal);
+  invariant(typeIndex !== -1, 'discriminator field not set on target');
+  return AST.getPropertySignatures(typeAstList[typeIndex]);
+};
+
+const getTypeDiscriminators = (typeAstList: AST.TypeLiteral[]): AST.PropertySignature[] => {
   const discriminatorPropCandidates = typeAstList
     .flatMap(AST.getPropertySignatures)
     .filter((p) => AST.isLiteral(p.type));
@@ -114,12 +145,7 @@ const getProperties = (
   const everyTypeHasDiscriminator = discriminatorPropCandidates.length === typeAstList.length;
   const isDiscriminatedUnion = isValidDiscriminator && everyTypeHasDiscriminator;
   invariant(isDiscriminatedUnion, 'type ambiguity: every type in a union must have a single unique-literal field');
-  const targetPropertyValue = getTargetPropertyFn(String(propertyName));
-  const typeIndex = discriminatorPropCandidates.findIndex(
-    (p) => targetPropertyValue === (p.type as AST.Literal).literal,
-  );
-  invariant(typeIndex !== -1, 'discriminator field not set on target');
-  return AST.getPropertySignatures(typeAstList[typeIndex]);
+  return discriminatorPropCandidates;
 };
 
 const getTargetPropertySchema = (target: any, prop: string | symbol): S.Schema<any> => {

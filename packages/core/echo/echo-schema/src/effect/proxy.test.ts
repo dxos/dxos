@@ -32,7 +32,7 @@ for (const schema of [undefined, TestSchema]) {
       return db.add(obj);
     };
 
-    describe.only(`Proxy properties${schema == null ? '' : ' with schema'}`, () => {
+    describe(`Proxy properties${schema == null ? '' : ' with schema'}`, () => {
       test('object initializer', async () => {
         const obj = await createObject({ string: 'bar' });
         expect(obj.string).to.eq('bar');

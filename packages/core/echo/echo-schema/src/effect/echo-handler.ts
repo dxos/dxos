@@ -551,6 +551,7 @@ const validateSchema = (schema: S.Schema<any>) => {
     throw new Error('"id" property name is reserved');
   }
   getSchemaTypeRefOrThrow(schema);
+  SchemaValidator.validateSchema(schema);
 };
 
 const saveTypeInAutomerge = (handler: EchoReactiveHandler, schema: S.Schema<any> | undefined) => {
