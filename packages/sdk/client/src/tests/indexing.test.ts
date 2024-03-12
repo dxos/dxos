@@ -53,6 +53,7 @@ describe('Index queries', () => {
         );
         return snapshots.filter((snapshot) => snapshot.object);
       },
+      getAllDocuments: async function* () {},
     });
 
     indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] });
