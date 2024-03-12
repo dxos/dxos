@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsSixVertical, X, ArrowSquareOut, DotsThreeVertical } from '@phosphor-icons/react';
+import { ArrowSquareOut, DotsNine, type IconProps, X } from '@phosphor-icons/react';
 import React, {
   forwardRef,
   useState,
@@ -12,7 +12,7 @@ import React, {
   type PropsWithChildren,
 } from 'react';
 
-import { Button, DensityProvider, DropdownMenu, List, ListItem, useTranslation } from '@dxos/react-ui';
+import { Button, DropdownMenu, List, ListItem, useTranslation } from '@dxos/react-ui';
 import {
   type MosaicActiveType,
   type MosaicDataItem,
@@ -26,9 +26,7 @@ import {
   getSize,
   hoverableControlItem,
   hoverableControls,
-  hoverableFocusedControls,
   hoverableFocusedKeyboardControls,
-  hoverableOpenControlItem,
   attentionSurface,
   mx,
   staticFocusRing,
@@ -62,6 +60,7 @@ export type SectionProps = PropsWithChildren<{
   id: string;
   title: string;
   separation: boolean;
+  icon?: FC<IconProps>;
 
   // Tile props.
   active?: MosaicActiveType;
@@ -74,16 +73,30 @@ export type SectionProps = PropsWithChildren<{
 export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElement>> = forwardRef<
   HTMLLIElement,
   SectionProps
->(({ id, title, separation, active, draggableProps, draggableStyle, onDelete, onNavigate, children }, forwardedRef) => {
-  const { t } = useTranslation(translationKey);
-  const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
+>(
+  (
+    {
+      id,
+      title,
+      icon: Icon = DotsNine,
+      separation,
+      active,
+      draggableProps,
+      draggableStyle,
+      onDelete,
+      onNavigate,
+      children,
+    },
+    forwardedRef,
+  ) => {
+    const { t } = useTranslation(translationKey);
+    const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
-  return (
-    <DensityProvider density='fine'>
+    return (
       <ListItem.Root
         ref={forwardedRef}
         id={id}
-        classNames={['block group', separation && 'pbe-2']}
+        classNames={['grid col-span-2 grid-cols-subgrid group', separation && 'pbe-2']}
         style={draggableStyle}
       >
         <div
@@ -91,7 +104,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
           className={mx(
             attentionSurface,
             hoverableControls,
-            'flex separator-separator border-is border-ie group-first:border-bs border-be',
+            'grid col-span-2 grid-cols-subgrid separator-separator border-is border-ie group-first:border-bs border-be',
             separation ? 'min-bs-[4rem] border-bs' : 'border-bs-0',
             active && staticHoverableControls,
             active && 'border-bs border-be',
@@ -100,73 +113,58 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
         >
           <ListItem.Heading classNames='sr-only'>{title}</ListItem.Heading>
 
-          {/* Drag handle */}
-          <div
-            className={mx(
-              fineButtonDimensions,
-              hoverableFocusedKeyboardControls,
-              'self-stretch flex items-center rounded-is justify-center bs-auto is-auto',
-              active === 'overlay' && document.body.hasAttribute('data-is-keyboard') ? staticFocusRing : focusRing,
-            )}
-            data-testid='section.drag-handle'
-            {...draggableProps}
+          <DropdownMenu.Root
+            {...{
+              open: optionsMenuOpen,
+              onOpenChange: (nextOpen: boolean) => {
+                return setOptionsMenuOpen(nextOpen);
+              },
+            }}
           >
-            <DotsSixVertical className={mx(getSize(5), hoverableControlItem, 'transition-opacity')} />
-          </div>
+            {/* TODO(thure): Somehow we need to anchor the DropdownMenu.Content against the trigger, but only open the DropdownMenu on `mouseUp` and `keyDown`. */}
+            <DropdownMenu.Trigger asChild>
+              <Button
+                variant='ghost'
+                className={mx(
+                  fineButtonDimensions,
+                  hoverableFocusedKeyboardControls,
+                  'self-stretch flex items-center rounded-is justify-center bs-auto is-auto',
+                  active === 'overlay' && document.body.hasAttribute('data-is-keyboard') ? staticFocusRing : focusRing,
+                )}
+                onMouseUp={() => setOptionsMenuOpen(true)}
+                onKeyDown={({ key }) => (key === 'Enter' || key === ' ') && setOptionsMenuOpen(true)}
+                data-testid='section.drag-handle'
+                {...draggableProps}
+              >
+                <Icon className={mx(getSize(5), hoverableControlItem, 'transition-opacity')} />
+              </Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content>
+                <DropdownMenu.Viewport>
+                  <DropdownMenu.Item onClick={onNavigate} data-testid='section.navigate-to'>
+                    <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
+                    <span className='grow'>{t('navigate to section label')}</span>
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item onClick={() => onDelete?.()} data-testid='section.remove'>
+                    <X className={mx(getSize(5), 'mr-2')} />
+                    <span className='grow'>{t('remove section label')}</span>
+                  </DropdownMenu.Item>
+                </DropdownMenu.Viewport>
+                <DropdownMenu.Arrow />
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
 
           {/* Main content */}
           <div role='none' className='flex flex-1 min-is-0'>
             {children}
           </div>
-
-          {/* Menu */}
-          <div>
-            <DropdownMenu.Root
-              {...{
-                open: optionsMenuOpen,
-                onOpenChange: (nextOpen: boolean) => {
-                  return setOptionsMenuOpen(nextOpen);
-                },
-              }}
-            >
-              <DropdownMenu.Trigger asChild>
-                <Button
-                  variant='ghost'
-                  classNames={[
-                    'm-1 shrink-0',
-                    hoverableControlItem,
-                    hoverableFocusedControls,
-                    hoverableOpenControlItem,
-                    active === 'overlay' && 'invisible',
-                  ]}
-                  data-testid='section.options-menu'
-                >
-                  <DotsThreeVertical className={getSize(4)} />
-                </Button>
-              </DropdownMenu.Trigger>
-
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content>
-                  <DropdownMenu.Viewport>
-                    <DropdownMenu.Item onClick={onNavigate} data-testid='section.navigate-to'>
-                      <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
-                      <span className='grow'>{t('navigate to section label')}</span>
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item onClick={() => onDelete?.()} data-testid='section.remove'>
-                      <X className={mx(getSize(5), 'mr-2')} />
-                      <span className='grow'>{t('remove section label')}</span>
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Viewport>
-                  <DropdownMenu.Arrow />
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
-            </DropdownMenu.Root>
-          </div>
         </div>
       </ListItem.Root>
-    </DensityProvider>
-  );
-});
+    );
+  },
+);
 
 export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLLIElement> = forwardRef(
   ({ path, type, active, draggableStyle, draggableProps, item, itemContext }, forwardedRef) => {
