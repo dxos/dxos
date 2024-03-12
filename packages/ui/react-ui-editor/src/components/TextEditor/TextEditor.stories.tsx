@@ -20,6 +20,7 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { TextEditor, type TextEditorProps } from './TextEditor';
 import {
+  EditorModes,
   annotations,
   autocomplete,
   blast,
@@ -37,14 +38,15 @@ import {
   linkTooltip,
   listener,
   mention,
-  useComments,
+  state,
   table,
   typewriter,
-  EditorModes,
+  useComments,
   type CommandAction,
   type CommandOptions,
   type Comment,
   type CommentsOptions,
+  type SelectionState,
 } from '../../extensions';
 import { useDocAccessor } from '../../hooks';
 import translations from '../../translations';
@@ -241,7 +243,7 @@ type StoryProps = {
 } & Pick<TextEditorProps, 'extensions'>;
 
 const Story = ({
-  id = 'test',
+  id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
   text,
   comments,
   extensions: _extensions = [],
@@ -325,8 +327,18 @@ export const Empty = {
   render: () => <Story />,
 };
 
+const global = new Map<string, SelectionState>();
+
 export const Scrolling = {
-  render: () => <Story text={str('# Large Document', '', large)} />,
+  render: () => (
+    <Story
+      text={str('# Large Document', '', large)}
+      extensions={state({
+        setState: (id, state) => global.set(id, state),
+        getState: (id) => global.get(id),
+      })}
+    />
+  ),
 };
 
 export const ScrollingWithImages = {
