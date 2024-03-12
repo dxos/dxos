@@ -42,8 +42,8 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
     ready: async (plugins) => {
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
       settings
-        .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool)
-        .prop(settings.values.$devtools!, 'devtools', LocalStorageStore.bool);
+        .prop({ key: 'debug', type: LocalStorageStore.bool({ allowUndefined: true }) })
+        .prop({ key: 'devtools', type: LocalStorageStore.bool({ allowUndefined: true }) });
 
       // TODO(burdon): Remove hacky dependency on global variable.
       // Used to test how composer handles breaking protocol changes.
