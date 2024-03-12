@@ -39,6 +39,23 @@ export class CancellableInvitation extends MulticastObservable<Invitation> {
   cancel(): Promise<void> {
     return this._onCancel();
   }
+
+  get expired() {
+    const invitation = this.get();
+    return (
+      invitation.created &&
+      invitation.lifetime &&
+      invitation.lifetime !== 0 &&
+      invitation.created.getTime() + invitation.lifetime * 1000 < Date.now()
+    );
+  }
+
+  get expiry() {
+    const invitation = this.get();
+    return invitation.created && invitation.lifetime && invitation.lifetime !== 0
+      ? new Date(invitation.created.getTime() + invitation.lifetime * 1000)
+      : undefined;
+  }
 }
 
 /**

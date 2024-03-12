@@ -25,6 +25,11 @@ export interface AutomergeDocumentLoader {
   createDocumentForObject(objectId: string): DocHandle<SpaceDoc>;
   onObjectLinksUpdated(links: SpaceDocumentLinks): void;
   onObjectBoundToDocument(handle: DocHandle<SpaceDoc>, objectId: string): void;
+
+  /**
+   * @returns objectIds for which we had document handles or were loading one.
+   */
+  clearHandleReferences(): string[];
 }
 
 /**
@@ -115,6 +120,13 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     this._objectDocumentHandles.set(objectId, handle);
   }
 
+  public clearHandleReferences(): string[] {
+    const objectsWithHandles = [...this._objectDocumentHandles.keys()];
+    this._objectDocumentHandles.clear();
+    this._spaceRootDocHandle = null;
+    return objectsWithHandles;
+  }
+
   private _loadLinkedObjects(links: SpaceDocumentLinks) {
     if (!links) {
       return;
@@ -141,12 +153,11 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   }
 
   private async _initDocHandle(ctx: Context, url: string) {
-    const docHandle = this._automerge.repo.find(url as DocumentId);
-    // TODO(mykola): Remove check for global preference or timeout?
+    const docHandle = this._automerge.repo.find<SpaceDoc>(url as DocumentId);
     while (true) {
       try {
         await warnAfterTimeout(5_000, 'Automerge root doc load timeout (AutomergeDb)', async () => {
-          await cancelWithContext(ctx, docHandle.whenReady(['ready'])); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
+          await cancelWithContext(ctx, docHandle.whenReady()); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
         });
         break;
       } catch (err) {

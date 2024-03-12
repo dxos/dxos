@@ -8,6 +8,7 @@ import React, { type FC, useEffect, useRef, useState } from 'react';
 import { getActiveSpace } from '@braneframe/plugin-space';
 import { parseGraphPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { TimeoutError } from '@dxos/async';
+import { log } from '@dxos/log';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -67,10 +68,10 @@ const ErrorIndicator: FC<IconProps> = (props) => {
       // event.preventDefault();
       // TODO(burdon): Handler is called twice.
       if (error.current !== event.error) {
-        console.error(event);
+        log.error('onError', { event });
         error.current = event.error;
         if (debug) {
-          console.error(event.error);
+          log.catch(event.error);
         }
         forceUpdate({});
       }

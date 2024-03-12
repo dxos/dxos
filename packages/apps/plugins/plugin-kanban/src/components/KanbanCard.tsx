@@ -8,8 +8,14 @@ import { DotsSixVertical, X } from '@phosphor-icons/react';
 import React, { type FC } from 'react';
 
 import type { Kanban as KanbanType } from '@braneframe/types';
-import { Button, useTranslation } from '@dxos/react-ui';
-import { MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
+import { Button, useThemeContext, useTranslation } from '@dxos/react-ui';
+import {
+  createBasicExtensions,
+  createDataExtensions,
+  createThemeExtensions,
+  useDocAccessor,
+  useTextEditor,
+} from '@dxos/react-ui-editor';
 import { getSize, mx, attentionSurface, focusRing } from '@dxos/react-ui-theme';
 
 import { KANBAN_PLUGIN } from '../meta';
@@ -30,13 +36,26 @@ export const KanbanCardComponent: FC<{
   debug?: boolean;
   onDelete?: () => void;
 }> = ({ column, item, debug = false, onDelete }) => {
+  const { themeMode } = useThemeContext();
   const { t } = useTranslation(KANBAN_PLUGIN);
   const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({
     id: item.id,
     data: { type: 'item', column },
   });
   const tx = transform ? Object.assign(transform, { scaleY: 1 }) : null;
-  const model = useTextModel({ text: item.title });
+
+  const { id, doc, accessor } = useDocAccessor(item.title);
+  const { parentRef } = useTextEditor(
+    () => ({
+      doc,
+      extensions: [
+        createDataExtensions({ id, text: accessor }),
+        createBasicExtensions({ placeholder: t('item title placeholder') }),
+        createThemeExtensions({ themeMode }),
+      ],
+    }),
+    [id, accessor, themeMode],
+  );
 
   return (
     <div
@@ -50,15 +69,7 @@ export const KanbanCardComponent: FC<{
           <DotsSixVertical className={getSize(5)} />
         </button>
         <div className='flex flex-col grow pt-1'>
-          {model && (
-            <MarkdownEditor
-              model={model}
-              placeholder={t('item title placeholder')}
-              slots={{
-                root: { className: mx(focusRing, 'p-1') },
-              }}
-            />
-          )}
+          <div role='textbox' className={mx(focusRing, 'p-1')} ref={parentRef} />
           {debug && <div className='text-xs text-red-800'>{item.id.slice(0, 9)}</div>}
         </div>
         {onDelete && (

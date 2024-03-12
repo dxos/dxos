@@ -48,7 +48,7 @@ class CheckboxWidget extends WidgetType {
 
   override toDOM(view: EditorView) {
     const input = document.createElement('input');
-    input.className = 'cm-task-checkbox';
+    input.className = 'cm-task-checkbox ch-checkbox ch-focus-ring -mbs-0.5';
     input.type = 'checkbox';
     input.checked = this._checked;
     if (view.state.readOnly) {
@@ -88,7 +88,7 @@ const editingRange = (state: EditorState, range: { from: number; to: number }, f
       main: { head },
     },
   } = state;
-  return focus && !readOnly && head >= range.from && head < range.to;
+  return focus && !readOnly && head >= range.from && head <= range.to;
 };
 
 const MarksByParent = new Set(['CodeMark', 'EmphasisMark', 'StrikethroughMark', 'SubscriptMark', 'SuperscriptMark']);
@@ -114,7 +114,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
               break;
             }
             const first = block.from <= node.from;
-            const last = block.to >= node.to;
+            const last = block.to >= node.to && /^(\s>)*```$/.test(state.doc.sliceString(block.from, block.to));
             deco.add(block.from, block.from, first ? fencedCodeLineFirst : last ? fencedCodeLineLast : fencedCodeLine);
             if (!editing && (first || last)) {
               atomicDeco.add(block.from, block.to, hide);
@@ -148,9 +148,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
                 marks[1].from,
                 node.to,
                 options.renderLinkButton
-                  ? Decoration.replace({
-                      widget: new LinkButton(url, options.renderLinkButton),
-                    })
+                  ? Decoration.replace({ widget: new LinkButton(url, options.renderLinkButton) })
                   : hide,
               );
             }
@@ -186,6 +184,9 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
 
 export interface DecorateOptions {
   renderLinkButton?: (el: Element, url: string) => void;
+  /**
+   * Prevents triggering decorations as the cursor moves through the document.
+   */
   selectionChangeDelay?: number;
 }
 
@@ -195,9 +196,9 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
   return [
     ViewPlugin.fromClass(
       class {
-        pendingUpdate = -1;
         deco: DecorationSet;
         atomicDeco: DecorationSet;
+        pendingUpdate?: NodeJS.Timeout;
 
         constructor(view: EditorView) {
           ({ deco: this.deco, atomicDeco: this.atomicDeco } = buildDecorations(view, options, view.hasFocus));
@@ -208,31 +209,35 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
             update.docChanged ||
             update.viewportChanged ||
             update.focusChanged ||
-            update.transactions.some((tr) => tr.effects.some((e) => e.is(forceUpdate)))
+            update.transactions.some((tr) => tr.effects.some((e) => e.is(forceUpdate))) ||
+            (update.selectionSet && !options.selectionChangeDelay)
           ) {
             ({ deco: this.deco, atomicDeco: this.atomicDeco } = buildDecorations(
               update.view,
               options,
               update.view.hasFocus,
             ));
+
             this.clearUpdate();
           } else if (update.selectionSet) {
             this.scheduleUpdate(update.view);
           }
         }
 
-        clearUpdate() {
-          if (this.pendingUpdate > -1) {
-            window.clearTimeout(this.pendingUpdate);
-            this.pendingUpdate = -1;
-          }
-        }
-
+        // TODO(burdon): BUG: If the cursor is at the end of a link at the end of a line,
+        //  the cursor will float in space or be in the wrong position after the decoration is applied.
         scheduleUpdate(view: EditorView) {
           this.clearUpdate();
-          this.pendingUpdate = window.setTimeout(() => {
+          this.pendingUpdate = setTimeout(() => {
             view.dispatch({ effects: forceUpdate.of(null) });
-          }, options.selectionChangeDelay ?? 400);
+          }, options.selectionChangeDelay);
+        }
+
+        clearUpdate() {
+          if (this.pendingUpdate) {
+            clearTimeout(this.pendingUpdate);
+            this.pendingUpdate = undefined;
+          }
         }
 
         destroy() {
@@ -242,8 +247,8 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
       {
         provide: (plugin) => [
           EditorView.atomicRanges.of((view) => view.plugin(plugin)?.atomicDeco ?? Decoration.none),
-          EditorView.decorations.of((view) => view.plugin(plugin)?.deco ?? Decoration.none),
           EditorView.decorations.of((view) => view.plugin(plugin)?.atomicDeco ?? Decoration.none),
+          EditorView.decorations.of((view) => view.plugin(plugin)?.deco ?? Decoration.none),
         ],
       },
     ),

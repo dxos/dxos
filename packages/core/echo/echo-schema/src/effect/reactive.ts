@@ -4,16 +4,44 @@
 
 import * as AST from '@effect/schema/AST';
 import * as S from '@effect/schema/Schema';
+import { pipe } from 'effect';
+import * as Option from 'effect/Option';
 
+import { Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 
-import { type ReactiveHandler, createReactiveProxy, isValidProxyTarget } from './proxy';
+import { EchoReactiveHandler } from './echo-handler';
+import {
+  type ReactiveHandler,
+  createReactiveProxy,
+  isValidProxyTarget,
+  isReactiveProxy,
+  getProxyHandlerSlot,
+} from './proxy';
 import { SchemaValidator, symbolSchema } from './schema-validator';
 import { TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
+import { type ObjectMeta } from '../object';
 
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
+
+export const EchoObjectAnnotationId = Symbol.for('@dxos/echo-schema/annotation/NamedSchema');
+export type EchoObjectAnnotation = {
+  typename: string;
+  version: string;
+};
+
+export const echoObject =
+  (typename: string, version: string) =>
+  <A, I, R>(self: S.Schema<A, I, R>): S.Schema<A, I, R> =>
+    S.make(AST.setAnnotation(self.ast, EchoObjectAnnotationId, { typename, version }));
+
+export const getEchoObjectAnnotation = (schema: S.Schema<any>) =>
+  pipe(
+    AST.getAnnotation<EchoObjectAnnotation>(EchoObjectAnnotationId)(schema.ast),
+    Option.getOrElse(() => undefined),
+  );
 
 // https://github.com/Effect-TS/effect/blob/main/packages/schema/README.md#introduction
 // https://effect-ts.github.io/effect/schema/Schema.ts.html
@@ -51,10 +79,29 @@ export const object: {
   }
 };
 
+export const ReferenceAnnotation = Symbol.for('@dxos/schema/annotation/Reference');
+export type ReferenceAnnotationValue = {};
+
+export const ref = <T>(targetType: S.Schema<T>): S.Schema<T> =>
+  S.make(AST.setAnnotation(targetType.ast, ReferenceAnnotation, {}));
+
+export const getRefAnnotation = (schema: S.Schema<any>) =>
+  pipe(
+    AST.getAnnotation<ReferenceAnnotationValue>(ReferenceAnnotation)(schema.ast),
+    Option.getOrElse(() => undefined),
+  );
+
 /**
  * Returns the schema for the given object if one is defined.
  */
 export const getSchema = <T extends {}>(obj: T): S.Schema<T> | undefined => {
+  if (isReactiveProxy(obj)) {
+    const proxyHandlerSlot = getProxyHandlerSlot(obj);
+    if (proxyHandlerSlot.handler instanceof EchoReactiveHandler) {
+      return proxyHandlerSlot.handler.getSchema();
+    }
+  }
+
   const schema = (obj as any)[symbolSchema];
   if (!schema) {
     return undefined;
@@ -62,6 +109,20 @@ export const getSchema = <T extends {}>(obj: T): S.Schema<T> | undefined => {
 
   invariant(S.isSchema(schema), 'Invalid schema.');
   return schema as S.Schema<T>;
+};
+
+export const metaOf = <T extends {}>(obj: T): ObjectMeta => {
+  const proxy = getProxyHandlerSlot(obj);
+  invariant(proxy.handler instanceof EchoReactiveHandler, 'Not a reactive ECHO object');
+  return proxy.handler.getMeta();
+};
+
+export const getTypeReference = (schema: S.Schema<any>): Reference | undefined => {
+  const annotation = getEchoObjectAnnotation(schema);
+  if (annotation == null) {
+    return undefined;
+  }
+  return Reference.fromLegacyTypename(annotation.typename);
 };
 
 export type PropertyVisitor<T> = (property: AST.PropertySignature, path: PropertyKey[]) => T;

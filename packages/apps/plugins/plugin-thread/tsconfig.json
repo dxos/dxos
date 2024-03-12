@@ -35,6 +35,9 @@
       "path": "../../../common/local-storage"
     },
     {
+      "path": "../../../common/log"
+    },
+    {
       "path": "../../../common/random"
     },
     {
@@ -54,6 +57,9 @@
     },
     {
       "path": "../../../ui/react-ui-card"
+    },
+    {
+      "path": "../../../ui/react-ui-deck"
     },
     {
       "path": "../../../ui/react-ui-editor"

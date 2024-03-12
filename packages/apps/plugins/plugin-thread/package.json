@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-thread",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "description": "DXOS Threads Surface plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -33,7 +33,9 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/local-storage": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-deck": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/react-ui-thread": "workspace:*",
@@ -58,7 +60,7 @@
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "vite": "^5.1.3"
+    "vite": "^5.1.5"
   },
   "peerDependencies": {
     "@braneframe/plugin-client": "workspace:*",

@@ -38,6 +38,8 @@ type WriteRequest = {
   trigger: Trigger;
 };
 
+// TODO(dmaretskyi): Still used in echo-schema test builder.
+
 export class DatabaseTestPeer {
   public readonly modelFactory = new ModelFactory().registerModel(DocumentModel).registerModel(TextModel);
 

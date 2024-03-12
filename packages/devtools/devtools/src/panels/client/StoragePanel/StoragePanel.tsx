@@ -6,6 +6,7 @@ import { GitCommit, HardDrive, Queue, Rows, Bookmarks, Bookmark, Files, FileArch
 import bytes from 'bytes';
 import React, { type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
+import { log } from '@dxos/log';
 import {
   type GetBlobsResponse,
   type GetSnapshotsResponse,
@@ -134,21 +135,21 @@ export const StoragePanel = () => {
     try {
       storageInfo = await devtoolsHost.getStorageInfo();
     } catch (err) {
-      console.error(err);
+      log.catch(err);
       retry = true;
     }
 
     try {
       snapshotInfo = await devtoolsHost.getSnapshots();
     } catch (err) {
-      console.error(err);
+      log.catch(err);
       retry = true;
     }
 
     try {
       blobsInfo = await devtoolsHost.getBlobs();
     } catch (err) {
-      console.error(err);
+      log.catch(err);
       retry = true;
     }
 

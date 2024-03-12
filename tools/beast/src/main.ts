@@ -46,9 +46,9 @@ const main = async () => {
         const projects = processor.getProjects().map((p) => p.package.name);
 
         if (json) {
-          console.log(JSON.stringify({ projects }, undefined, 2));
+          log.info(JSON.stringify({ projects }, undefined, 2));
         } else {
-          projects.forEach((m) => console.log(`- ${m}`));
+          projects.forEach((m) => log.info(`- ${m}`));
         }
       },
     })
@@ -82,7 +82,7 @@ const main = async () => {
         if (project) {
           const descendents = [...project.descendents!.values()].sort();
           if (json) {
-            console.log(
+            log.info(
               JSON.stringify(
                 {
                   package: project.package.name,
@@ -93,8 +93,8 @@ const main = async () => {
               ),
             );
           } else {
-            console.log(`${project.package.name}`);
-            descendents.forEach((p) => console.log(`- ${p}`));
+            log.info(`${project.package.name}`);
+            descendents.forEach((p) => log.info(`- ${p}`));
           }
         }
       },
@@ -150,7 +150,7 @@ const main = async () => {
         });
         processor.getProjects(pattern).forEach((project) => {
           if (verbose) {
-            console.log(`Updating: ${project.name.padEnd(32)} ${project.subDir}`);
+            log.info(`Updating: ${project.name.padEnd(32)} ${project.subDir}`);
           }
           builder.createDocs(project, outDir, baseUrl);
         });

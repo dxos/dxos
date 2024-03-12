@@ -55,7 +55,7 @@ export const defaultTheme: ThemeStyles = {
     // TODO(burdon): Reconcile with docs: https://codemirror.net/docs/guide
     //  Inside of that is the scroller element. If the editor has its own scrollbar, this one should be styled with overflow: auto. But it doesn't have to—the editor also supports growing to accomodate its content, or growing up to a certain max-height and then scrolling.
     overflowY: 'auto',
-    fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
+    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
     lineHeight: 1.5,
   },
 
@@ -152,6 +152,7 @@ export const defaultTheme: ThemeStyles = {
   //
   '.cm-tooltip': {
     border: 'none',
+    background: 'unset',
   },
   '.cm-tooltip-below': {},
 
@@ -258,32 +259,5 @@ export const defaultTheme: ThemeStyles = {
   },
   '.cm-panel input[type=checkbox]': {
     marginRight: '0.4rem !important',
-  },
-};
-
-export const textTheme: ThemeStyles = {
-  '.cm-scroller': {
-    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
-  },
-  '.cm-placeholder': {
-    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
-  },
-};
-
-export const markdownTheme: ThemeStyles = {
-  '.cm-scroller': {
-    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
-  },
-  '.cm-placeholder': {
-    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
-  },
-};
-
-export const codeTheme: ThemeStyles = {
-  '.cm-scroller': {
-    fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
-  },
-  '.cm-placeholder': {
-    fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
   },
 };

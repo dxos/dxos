@@ -135,7 +135,7 @@ export class TypeStringifier implements AllStringifiers {
     return `...${this.type(node.elementType)}`;
   }
 
-  'template-literal'(node: Schema.TemplateLiteralType): string {
+  templateLiteral(node: Schema.TemplateLiteralType): string {
     const { head, tail } = node;
     return [
       '`',
@@ -147,7 +147,7 @@ export class TypeStringifier implements AllStringifiers {
     ].join('');
   }
 
-  'named-tuple-member'(node: Schema.NamedTupleMemberType): string {
+  namedTupleMember(node: Schema.NamedTupleMemberType): string {
     const { name, isOptional, element } = node;
     return `${name}${isOptional ? '?' : ''}: ${this.type(element)}`;
   }

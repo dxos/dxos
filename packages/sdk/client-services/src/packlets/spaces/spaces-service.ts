@@ -178,10 +178,10 @@ export class SpacesServiceImpl implements SpacesService {
     }
   }
 
-  async createEpoch({ spaceKey }: CreateEpochRequest) {
+  async createEpoch({ spaceKey, migration }: CreateEpochRequest) {
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
-    await space.createEpoch();
+    await space.createEpoch({ migration });
   }
 
   private _serializeSpace(space: DataSpace): Space {
@@ -215,9 +215,7 @@ export class SpacesServiceImpl implements SpacesService {
         return {
           identity: {
             identityKey: member.key,
-            profile: {
-              displayName: member.profile?.displayName,
-            },
+            profile: member.profile ?? {},
           },
           presence: member.removed
             ? SpaceMember.PresenceState.REMOVED

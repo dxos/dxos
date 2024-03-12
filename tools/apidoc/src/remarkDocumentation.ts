@@ -15,6 +15,7 @@ import { VFile } from 'vfile';
 
 import { Remark } from './apiDocDirective.js';
 import { type Config } from './config.js';
+import { warn, info } from './log.js';
 
 export const remarkDocumentation = async (config: Config) => {
   const { include } = config;
@@ -40,14 +41,13 @@ export const remarkDocumentation = async (config: Config) => {
           }),
         );
       if (content !== processed.value && !!processed.value) {
-        console.log('processing', file);
+        info('updated', file);
         // fix invalid \::: directives as a quick hack here
         const content2 = processed.value.toString().replace(/\\:::/g, ':::');
         await fs.writeFile(file, content2);
       }
     } catch (err: any) {
-      console.warn(`problem in file ${file}`);
-      console.error(err);
+      warn(`problem in file ${file}: ${err.message}`);
     }
   });
   await Promise.all(promises);

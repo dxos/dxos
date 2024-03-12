@@ -169,7 +169,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               subscriptions.add(
                 effect(() => {
                   const documentThreads = documentQuery.objects
-                    .flatMap((doc) => doc.comments.map((comment) => comment.thread?.id))
+                    .flatMap((doc) => doc.comments?.map((comment) => comment.thread?.id))
                     .filter(nonNullable);
                   const objects = query.objects.filter((thread) => !documentThreads.includes(thread.id));
                   const removedObjects = previousObjects.filter((object) => !objects.includes(object));
@@ -235,7 +235,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
                 return (
                   <>
-                    <CommentsHeading />
+                    <CommentsHeading attendableId={data.subject.id} />
                     <ScrollArea.Root>
                       <ScrollArea.Viewport>
                         <CommentsContainer
@@ -274,7 +274,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               } else if (isThread(data.subject)) {
                 return (
                   <>
-                    <ChatHeading />
+                    <ChatHeading attendableId={data.subject.id} />
                     <ChatContainer thread={data.subject} context={{ object: location?.active }} />
                   </>
                 );

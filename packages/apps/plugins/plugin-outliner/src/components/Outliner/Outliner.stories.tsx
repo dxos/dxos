@@ -27,6 +27,7 @@ const Story = ({
   const [root] = useState<Item>(
     E.object<Item>({
       id: 'root',
+      text: new TextObject(),
       items: faker.helpers.multiple(
         () => {
           let text = '';

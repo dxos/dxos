@@ -4,14 +4,14 @@
 
 import '@dxosTheme';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 
 import { TextObject } from '@dxos/client/echo';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { useClient } from '@dxos/react-client';
-import { createDocAccessor, type DocAccessor } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
+import { useDocAccessor } from '@dxos/react-ui-editor';
 
 // @ts-ignore
 import mainUrl from './FrameContainer/frame?url';
@@ -30,27 +30,19 @@ const code = [
 ].join('\n');
 
 const Story = () => {
-  const [source, setSource] = useState<DocAccessor>();
-  useEffect(() => {
-    setSource(createDocAccessor(new TextObject(code, TextKind.PLAIN)));
-  }, []);
-
   const client = useClient();
+  const { accessor } = useDocAccessor(new TextObject(code, TextKind.PLAIN));
   useEffect(() => {
     const generator = createSpaceObjectGenerator(client.spaces.default);
     generator.addSchemas();
     generator.createObjects({ [TestSchemaType.organization]: 20, [TestSchemaType.contact]: 50 });
   }, []);
 
-  if (!source) {
-    return null;
-  }
-
   // TODO(dmaretskyi): Not sure how to provide `containerUrl` here since the html now lives in composer-app.
   // TODO(burdon): Normalize html/frame.tsx with composer-app to test locally.
   return (
     <div className={'flex fixed inset-0'}>
-      <ScriptBlock id='test' source={source} containerUrl={mainUrl} />
+      <ScriptBlock id='test' source={accessor} containerUrl={mainUrl} />
     </div>
   );
 };

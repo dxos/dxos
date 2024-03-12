@@ -14,12 +14,12 @@ import {
   type Extension,
   EditorModes,
   autocomplete,
-  image,
   decorateMarkdown,
   linkTooltip,
   table,
   typewriter,
-  formatting,
+  formattingKeymap,
+  image,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -45,6 +45,7 @@ export const getExtensions = ({ settings, document, dispatch }: ExtensionsOption
     // Common.
     //
     decorateMarkdown({
+      selectionChangeDelay: 400,
       renderLinkButton: dispatch
         ? onRenderLink((id: string) => {
             void dispatch({
@@ -54,10 +55,10 @@ export const getExtensions = ({ settings, document, dispatch }: ExtensionsOption
           })
         : undefined,
     }),
-    linkTooltip(renderLinkTooltip),
-    formatting(),
+    formattingKeymap(),
     image(),
     table(),
+    linkTooltip(renderLinkTooltip),
   ];
 
   //

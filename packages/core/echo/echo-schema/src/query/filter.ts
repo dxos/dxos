@@ -2,21 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as S from '@effect/schema/Schema';
+
 import { Reference } from '@dxos/document-model';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { getAutomergeObjectCore } from '../automerge';
+import { type AutomergeObjectCore } from '../automerge';
+import { getSchemaTypeRefOrThrow } from '../effect/echo-handler';
 import {
-  getDatabaseFromObject,
+  getReferenceWithSpaceKey,
+  immutable,
   isTypedObject,
   type EchoObject,
   type Expando,
   type TypedObject,
-  immutable,
 } from '../object';
-import { getReferenceWithSpaceKey } from '../object';
 import { type Schema } from '../proto';
 
 export const hasType =
@@ -82,12 +85,19 @@ export class Filter<T extends EchoObject = EchoObject> {
     }
   }
 
-  static schema(schema: Schema): Filter<Expando> {
-    const ref = getReferenceWithSpaceKey(schema);
-    invariant(ref, 'Invalid schema; check persisted in the database.');
-    return new Filter({
-      type: ref,
-    });
+  static schema(schema: S.Schema<any> | Schema): Filter<Expando> {
+    if (S.isSchema(schema)) {
+      const ref = getSchemaTypeRefOrThrow(schema);
+      return new Filter({
+        type: ref,
+      });
+    } else {
+      const ref = getReferenceWithSpaceKey(schema);
+      invariant(ref, 'Invalid schema; check persisted in the database.');
+      return new Filter({
+        type: ref,
+      });
+    }
   }
 
   static typename(typename: string, filter?: Record<string, any> | OperatorFilter<any>): Filter<any> {
@@ -130,7 +140,7 @@ export class Filter<T extends EchoObject = EchoObject> {
     };
     return new Filter(
       {
-        type: proto.type && Reference.fromValue(proto.type),
+        type: proto.type ? Reference.fromValue(proto.type) : undefined,
         properties: proto.properties,
         text: proto.text,
         not: proto.not,
@@ -184,33 +194,29 @@ export class Filter<T extends EchoObject = EchoObject> {
 }
 
 // TODO(burdon): Move logic into Filter.
-export const filterMatch = (filter: Filter, object: EchoObject | undefined): boolean => {
-  if (!object) {
+export const filterMatch = (filter: Filter, core: AutomergeObjectCore | undefined): boolean => {
+  if (!core) {
     return false;
   }
-  const result = filterMatchInner(filter, object);
+  const result = filterMatchInner(filter, core);
   return filter.not ? !result : result;
 };
 
-const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
-  if (isTypedObject(object)) {
-    const core = getAutomergeObjectCore(object);
-
-    const deleted = filter.options.deleted ?? QueryOptions.ShowDeletedOption.HIDE_DELETED;
-    if (core.isDeleted()) {
-      if (deleted === QueryOptions.ShowDeletedOption.HIDE_DELETED) {
-        return false;
-      }
-    } else {
-      if (deleted === QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY) {
-        return false;
-      }
+const filterMatchInner = (filter: Filter, core: AutomergeObjectCore): boolean => {
+  const deleted = filter.options.deleted ?? QueryOptions.ShowDeletedOption.HIDE_DELETED;
+  if (core.isDeleted()) {
+    if (deleted === QueryOptions.ShowDeletedOption.HIDE_DELETED) {
+      return false;
+    }
+  } else {
+    if (deleted === QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY) {
+      return false;
     }
   }
 
   if (filter.or.length) {
     for (const orFilter of filter.or) {
-      if (filterMatch(orFilter, object)) {
+      if (filterMatch(orFilter, core)) {
         return true;
       }
     }
@@ -219,24 +225,22 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
   }
 
   if (filter.type) {
-    if (!isTypedObject(object)) {
-      return false;
-    }
+    const type = core.getType();
+    const dynamicSchemaTypename = legacyGetDynamicSchemaTypename(core);
 
     // Separate branch for objects with dynamic schema and typename filters.
     // TODO(dmaretskyi): Better way to check if schema is dynamic.
-    if (filter.type.protocol === 'protobuf' && object.__schema && !object.__schema[immutable]) {
-      if (object.__schema.typename !== filter.type.itemId) {
+    if (filter.type.protocol === 'protobuf' && dynamicSchemaTypename) {
+      if (dynamicSchemaTypename !== filter.type.itemId) {
         return false;
       }
     } else {
-      const type = getAutomergeObjectCore(object).getType();
       if (!type) {
         return false;
       }
 
       // TODO(burdon): Comment.
-      if (!compareType(filter.type, type, getDatabaseFromObject(object)?.spaceKey)) {
+      if (!compareType(filter.type, type, core.database?.spaceKey)) {
         return false;
       }
     }
@@ -246,29 +250,32 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
     for (const key in filter.properties) {
       invariant(key !== '@type');
       const value = filter.properties[key];
-      if ((object as any)[key] !== value) {
+
+      // TODO(dmaretskyi): Should `id` be allowed in filter.properties?
+      const actualValue = key === 'id' ? core.id : core.getDecoded(['data', key]);
+
+      if (actualValue !== value) {
         return false;
       }
     }
   }
 
   if (filter.text !== undefined) {
-    if (!isTypedObject(object)) {
-      return false;
-    }
+    const objectText = legacyGetTextForMatch(core);
 
     const text = filter.text.toLowerCase();
-    if (!JSON.stringify(object.toJSON()).toLowerCase().includes(text)) {
+    if (!objectText.toLowerCase().includes(text)) {
       return false;
     }
   }
 
-  if (filter.predicate && !filter.predicate(object)) {
+  // Untracked will prevent signals in the callback from being subscribed to.
+  if (filter.predicate && !compositeRuntime.untracked(() => filter.predicate!(core.rootProxy))) {
     return false;
   }
 
   for (const andFilter of filter.and) {
-    if (!filterMatch(andFilter, object)) {
+    if (!filterMatch(andFilter, core)) {
       return false;
     }
   }
@@ -291,3 +298,35 @@ export const compareType = (expected: Reference, actual: Reference, spaceKey?: P
     return true;
   }
 };
+
+/**
+ * @deprecated
+ */
+// TODO(dmaretskyi): Cleanup.
+const legacyGetDynamicSchemaTypename = (core: AutomergeObjectCore): string | undefined =>
+  compositeRuntime.untracked(() => {
+    const object = core.rootProxy;
+    if (!isTypedObject(object)) {
+      return undefined;
+    }
+
+    const schema = object.__schema;
+    if (!schema || schema[immutable]) {
+      return undefined;
+    }
+
+    return schema.typename;
+  });
+
+/**
+ * @deprecated
+ */
+// TODO(dmaretskyi): Cleanup.
+const legacyGetTextForMatch = (core: AutomergeObjectCore): string =>
+  compositeRuntime.untracked(() => {
+    if (!isTypedObject(core.rootProxy)) {
+      return '';
+    }
+
+    return JSON.stringify(core.rootProxy.toJSON());
+  });

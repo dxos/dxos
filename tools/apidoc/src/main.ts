@@ -6,6 +6,7 @@ import { exec } from 'child_process';
 
 import { loadConfig } from './config.js';
 import { generateApiDocs } from './generateApiDocs.js';
+import { err } from './log.js';
 import { remarkDocumentation } from './remarkDocumentation.js';
 
 const isGitClean = async () => {
@@ -25,7 +26,7 @@ const isGitClean = async () => {
 
 const main = async () => {
   if (!(process.env.CI || process.env.DIRTY_OK) && !(await isGitClean())) {
-    console.error('ERROR: git repository not clean prior to regenerating docs, bailing.');
+    err('\ngit repository not clean prior to regenerating docs, bailing.\n');
     process.exit(1);
   }
   const config = await loadConfig();

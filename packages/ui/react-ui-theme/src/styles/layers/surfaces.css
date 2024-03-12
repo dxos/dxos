@@ -1,0 +1,39 @@
+@layer utilities {
+  .base-surface {
+    background-color: theme(colors.neutral.25);
+    --surface-bg: theme(colors.neutral.25);
+    --input-bg: theme(colors.neutral.50);
+    --input-bg-hover: theme(colors.neutral.75);
+  }
+
+  .dark .base-surface {
+    background-color: theme(colors.neutral.850);
+    --surface-bg: theme(colors.neutral.850);
+    --input-bg: theme(colors.neutral.825);
+    --input-bg-hover: theme(colors.neutral.800);
+  }
+
+  .fixed-surface {
+    background-color: theme(colors.neutral.25 / 90%);
+    --surface-bg: theme(colors.neutral.25);
+    --input-bg: theme(colors.neutral.50);
+    --input-bg-hover: theme(colors.neutral.75);
+  }
+
+  .dark .fixed-surface {
+    background-color: theme(colors.neutral.850 / 90%);
+    --surface-bg: theme(colors.neutral.850);
+    --input-bg: theme(colors.neutral.825);
+    --input-bg-hover: theme(colors.neutral.800);
+  }
+
+  .modal-surface {
+    background-color: #ffffff;
+    --surface-bg: white;
+  }
+
+  .dark .modal-surface {
+    background-color: theme(colors.neutral.750);
+    --surface-bg: theme(colors.neutral.750);
+  }
+}

@@ -61,11 +61,11 @@ export class TestBuilder {
     config?: Config,
     private readonly _modelFactory = createDefaultModelFactory(),
     public signalManagerContext = new MemorySignalManagerContext(),
-    transport = TransportKind.SIMPLE_PEER,
+    // TODO(nf): configure better
+    transport = process.env.MOCHA_ENV === 'nodejs' ? TransportKind.LIBDATACHANNEL : TransportKind.SIMPLE_PEER,
   ) {
     this.config = config ?? new Config();
     this._transport = transport;
-
   }
 
   /**

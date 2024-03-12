@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 import { X } from '@phosphor-icons/react';
+import { formatDistanceToNow } from 'date-fns';
 import React, { type ComponentPropsWithoutRef, useCallback } from 'react';
 
 import {
@@ -111,6 +112,10 @@ export const InvitationListItemImpl = ({
 
   const invitationUrl = invitationCode && createInvitationUrl(invitationCode);
   const invitationId = invitation?.get().invitationId;
+  const invitationHasLifetime = invitation?.get().lifetime;
+  const invitationTimeLeft = invitation?.expiry
+    ? formatDistanceToNow(invitation?.expiry, { addSuffix: true })
+    : undefined;
 
   const avatarAnimation = [
     Invitation.State.INIT,
@@ -163,17 +168,26 @@ export const InvitationListItemImpl = ({
         </Tooltip.Portal>
       </Tooltip.Root>
       {showShare && invitationUrl ? (
-        <>
-          <Button
-            variant='ghost'
-            classNames='grow justify-start font-medium'
-            onClick={() => send({ type: 'selectInvitation', invitation })}
-            data-testid='show-qrcode'
-          >
-            <span>{t('open share panel label')}</span>
-          </Button>
-          <CopyButtonIconOnly variant='ghost' value={invitationUrl} />
-        </>
+        <Tooltip.Root>
+          <>
+            <Tooltip.Trigger asChild>
+              <Button
+                variant='ghost'
+                classNames='grow justify-start font-medium'
+                onClick={() => send({ type: 'selectInvitation', invitation })}
+                data-testid='show-qrcode'
+              >
+                <span>{t('open share panel label')}</span>
+              </Button>
+            </Tooltip.Trigger>
+            <CopyButtonIconOnly variant='ghost' value={invitationUrl} />
+          </>
+          <Tooltip.Portal>
+            <Tooltip.Content side='left' classNames='z-[70]'>
+              {invitationHasLifetime && <span>Expires {invitationTimeLeft}</span>}
+            </Tooltip.Content>
+          </Tooltip.Portal>
+        </Tooltip.Root>
       ) : showAuthCode ? (
         <AuthCode code={authCode} classNames='grow' />
       ) : invitationStatus === Invitation.State.CONNECTING ? (

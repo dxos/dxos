@@ -33,6 +33,7 @@ import { type Client, PublicKey } from '@dxos/react-client';
 import { type Space, SpaceProxy, getSpaceForObject, type PropertiesProps } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
+import { ComplexMap } from '@dxos/util';
 
 import {
   AwaitingObject,
@@ -45,6 +46,7 @@ import {
   PopoverRenameObject,
   PopoverRenameSpace,
   ShareSpaceButton,
+  SmallPresence,
   SpaceMain,
   SpacePresence,
   SpaceSettings,
@@ -89,7 +91,8 @@ export const SpacePlugin = ({
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
   const state = E.object<PluginState>({
     awaiting: undefined,
-    viewers: [],
+    viewersByObject: {},
+    viewersByIdentity: new ComplexMap(PublicKey.hash),
   });
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
@@ -192,25 +195,27 @@ export const SpacePlugin = ({
                 const identityKey = PublicKey.safeFrom(message.payload.identityKey);
                 const spaceKey = PublicKey.safeFrom(message.payload.spaceKey);
                 if (identityKey && spaceKey && Array.isArray(added) && Array.isArray(removed)) {
-                  const newViewers = [
-                    ...state.viewers.filter(
-                      (viewer) =>
-                        !viewer.identityKey.equals(identityKey) ||
-                        !viewer.spaceKey.equals(spaceKey) ||
-                        (viewer.identityKey.equals(identityKey) &&
-                          viewer.spaceKey.equals(spaceKey) &&
-                          !removed.some((objectId) => objectId === viewer.objectId) &&
-                          !added.some((objectId) => objectId === viewer.objectId)),
-                    ),
-                    ...added.map((objectId) => ({
-                      identityKey,
-                      spaceKey,
-                      objectId,
-                      lastSeen: Date.now(),
-                    })),
-                  ];
-                  newViewers.sort((a, b) => b.lastSeen - a.lastSeen);
-                  state.viewers = newViewers;
+                  added.forEach((objectIdAny) => {
+                    if (objectIdAny) {
+                      const objectId = objectIdAny.toString();
+                      if (!(objectId in state.viewersByObject)) {
+                        state.viewersByObject[objectId] = new ComplexMap(PublicKey.hash);
+                      }
+                      state.viewersByObject[objectId]!.set(identityKey, { lastSeen: Date.now(), spaceKey });
+                      if (!state.viewersByIdentity.has(identityKey)) {
+                        state.viewersByIdentity.set(identityKey, new Set());
+                      }
+                      state.viewersByIdentity.get(identityKey)!.add(objectId);
+                    }
+                  });
+                  removed.forEach((objectIdAny) => {
+                    if (objectIdAny) {
+                      const objectId = objectIdAny.toString();
+                      state.viewersByObject[objectId]?.delete(identityKey);
+                      state.viewersByIdentity.get(identityKey)?.delete(objectId);
+                      // It’s okay for these to be empty sets/maps, reduces churn.
+                    }
+                  });
                 }
               }),
             );
@@ -295,6 +300,13 @@ export const SpacePlugin = ({
               } else {
                 return null;
               }
+            case 'presence--glyph': {
+              return (
+                <SmallPresence
+                  count={isTypedObject(data.object) ? state.viewersByObject[data.object.id]?.size ?? 0 : 0}
+                />
+              );
+            }
             case 'navbar-start': {
               const space =
                 isGraphNode(data.activeNode) && isTypedObject(data.activeNode.data)
