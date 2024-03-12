@@ -5,6 +5,7 @@
 import * as AST from '@effect/schema/AST';
 import { isTypeLiteral } from '@effect/schema/AST';
 import * as S from '@effect/schema/Schema';
+import * as Option from 'effect/Option';
 
 import { invariant } from '@dxos/invariant';
 
@@ -55,7 +56,7 @@ export class SchemaValidator {
     if (target instanceof ReactiveArray) {
       const schema = (target as any)[symbolSchema];
       invariant(schema, 'target has no schema');
-      return getArrayElementSchema(schema);
+      return getArrayElementSchema(schema, prop);
     }
     const ast = target[symbolTypeAst] as AST.AST;
     invariant(ast, 'target has no schema AST');
@@ -73,7 +74,7 @@ export class SchemaValidator {
     let schema: S.Schema<any> = rootObjectSchema;
     for (const propertyName of propertyPath) {
       if (AST.isTuple(schema.ast)) {
-        schema = getArrayElementSchema(schema);
+        schema = getArrayElementSchema(schema, propertyName);
       } else {
         const property = AST.getPropertySignatures(schema.ast).find((p) => p.name === propertyName);
         invariant(property, `unknown property: ${String(propertyName)}, path: ${propertyPath}`);
@@ -84,8 +85,23 @@ export class SchemaValidator {
   }
 }
 
-const getArrayElementSchema = (arraySchema: S.Schema<any>): S.Schema<any> => {
-  return S.make((unwrapOptionality(arraySchema.ast) as any).rest.value[0]);
+const getArrayElementSchema = (arraySchema: S.Schema<any>, property: string | symbol): S.Schema<any> => {
+  const elementIndex = typeof property === 'string' ? parseInt(property, 10) : Number.NaN;
+  if (Number.isNaN(elementIndex)) {
+    invariant(property === 'length', `invalid array property: ${String(property)}`);
+    return S.number;
+  }
+  let arrayAst = AST.isTuple(arraySchema.ast) ? arraySchema.ast : null;
+  if (AST.isUnion(arraySchema.ast)) {
+    arrayAst = arraySchema.ast.types.find((ast) => AST.isTuple(ast)) as AST.Tuple;
+  }
+  invariant(arrayAst, 'not an array');
+  if (elementIndex < arrayAst.elements.length) {
+    return S.make(arrayAst.elements[elementIndex].type);
+  }
+  const restType = Option.getOrNull(arrayAst.rest);
+  invariant(restType, 'element index out of bounds');
+  return S.make(restType[0]);
 };
 
 /**
@@ -113,10 +129,10 @@ export const setSchemaProperties = (obj: any, schema: S.Schema<any>) => {
       }
     }
   } else if (Array.isArray(obj) && AST.isTuple(unwrapped)) {
-    const elementSchema = getArrayElementSchema(schema);
-    for (const value of obj) {
-      if (isValidProxyTarget(value)) {
-        setSchemaProperties(value, elementSchema);
+    for (const key in obj) {
+      if (isValidProxyTarget(obj[key])) {
+        const elementSchema = getArrayElementSchema(schema, key);
+        setSchemaProperties(obj[key], elementSchema);
       }
     }
   } else {
