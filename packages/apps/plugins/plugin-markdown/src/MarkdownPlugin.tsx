@@ -18,7 +18,6 @@ import {
   type PluginDefinition,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import * as E from '@dxos/echo-schema';
 import { Filter, getEchoObjectAnnotation } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type EditorMode, translations as editorTranslations } from '@dxos/react-ui-editor';
@@ -44,8 +43,6 @@ import {
   DocumentSchema,
 } from './types';
 import { getFallbackTitle, isMarkdownProperties, markdownExtensionPlugins } from './util';
-
-export const isDocument = (data: unknown): data is DocumentType => data && E.getSchema(data) === DocumentSchema;
 
 export type MarkdownPluginState = {
   // Codemirror extensions provided by other plugins.

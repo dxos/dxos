@@ -3052,9 +3052,6 @@ importers:
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -3103,12 +3100,18 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: ^0.63.4
+        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
       '@preact/signals-core':
         specifier: ^1.5.1
         version: 1.5.1
       deepsignal:
         specifier: ^1.5.0
         version: 1.5.0(@preact/signals-core@1.5.1)
+      effect:
+        specifier: ^2.4.3
+        version: 2.4.3
       jszip:
         specifier: ^3.10.1
         version: 3.10.1

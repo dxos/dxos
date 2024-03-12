@@ -4,11 +4,9 @@
 
 import get from 'lodash.get';
 
-import { Document, Thread } from '@braneframe/types';
 import { next as A, type Prop } from '@dxos/automerge/automerge';
-import { AutomergeObject, base, getTypeRef, type IDocHandle } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
-import { TypedObject, TextObject, getRawDoc } from '@dxos/react-client/echo';
+import { base, getTypeRef, type IDocHandle } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/react-client/echo';
 
 export interface CursorConverter {
   toCursor(position: number, assoc?: -1 | 1 | undefined): string;
@@ -71,85 +69,85 @@ export interface TypedObjectSerializer {
 
 // TODO(mykola): Factor out to respective plugins as providers.
 export const serializers: Record<string, TypedObjectSerializer> = {
-  [Document.schema.typename]: {
-    filename: (object: Document) => ({
-      name: object.title?.replace(/[/\\?%*:|"<>]/g, '-'),
-      extension: 'md',
-    }),
+  // [Document.schema.typename]: {
+  //   filename: (object: Document) => ({
+  //     name: object.title?.replace(/[/\\?%*:|"<>]/g, '-'),
+  //     extension: 'md',
+  //   }),
 
-    serialize: async (object: Document): Promise<string> => {
-      // TODO(mykola): Factor out.
-      const getRangeFromCursor = (cursorConverter: CursorConverter, cursor: string) => {
-        const parts = cursor.split(':');
-        const from = cursorConverter.fromCursor(parts[0]);
-        const to = cursorConverter.fromCursor(parts[1]);
-        return from && to ? { from, to } : undefined;
-      };
+  //   serialize: async (object: Document): Promise<string> => {
+  //     // TODO(mykola): Factor out.
+  //     const getRangeFromCursor = (cursorConverter: CursorConverter, cursor: string) => {
+  //       const parts = cursor.split(':');
+  //       const from = cursorConverter.fromCursor(parts[0]);
+  //       const to = cursorConverter.fromCursor(parts[1]);
+  //       return from && to ? { from, to } : undefined;
+  //     };
 
-      const content = object.content;
-      let text: string = content instanceof AutomergeObject ? (content as any)[(content as any).field] : content.text;
+  //     const content = object.content;
+  //     let text: string = content instanceof AutomergeObject ? (content as any)[(content as any).field] : content.text;
 
-      // Insert comments.
-      const comments = object.comments;
-      const threadSerializer = serializers[Thread.schema.typename];
-      if (!threadSerializer || !comments || comments.length === 0 || content instanceof TextObject) {
-        return text;
-      }
-      const doc = getRawDoc(content, [(content as any).field]);
-      const convertor = cursorConverter(doc.handle, doc.path);
+  //     // Insert comments.
+  //     const comments = object.comments;
+  //     const threadSerializer = serializers[Thread.schema.typename];
+  //     if (!threadSerializer || !comments || comments.length === 0 || content instanceof TextObject) {
+  //       return text;
+  //     }
+  //     const doc = getRawDoc(content, [(content as any).field]);
+  //     const convertor = cursorConverter(doc.handle, doc.path);
 
-      const insertions: Record<number, string> = {};
-      let footnote = '---\n';
-      {
-        for (const [index, comment] of comments.entries()) {
-          if (!comment.cursor || !comment.thread) {
-            continue;
-          }
-          const range = getRangeFromCursor(convertor, comment.cursor);
-          if (!range) {
-            continue;
-          }
-          const pointer = `[^${index}]`;
-          insertions[range.to] = (insertions[range.to] || '') + pointer;
-          footnote += `${pointer}: ${await threadSerializer.serialize(comment.thread)}\n`;
-        }
-      }
+  //     const insertions: Record<number, string> = {};
+  //     let footnote = '---\n';
+  //     {
+  //       for (const [index, comment] of comments.entries()) {
+  //         if (!comment.cursor || !comment.thread) {
+  //           continue;
+  //         }
+  //         const range = getRangeFromCursor(convertor, comment.cursor);
+  //         if (!range) {
+  //           continue;
+  //         }
+  //         const pointer = `[^${index}]`;
+  //         insertions[range.to] = (insertions[range.to] || '') + pointer;
+  //         footnote += `${pointer}: ${await threadSerializer.serialize(comment.thread)}\n`;
+  //       }
+  //     }
 
-      text = text.replace(/(?:)/g, (_, index) => insertions[index] || '');
+  //     text = text.replace(/(?:)/g, (_, index) => insertions[index] || '');
 
-      return `${text}\n\n${footnote}`;
-    },
+  //     return `${text}\n\n${footnote}`;
+  //   },
 
-    deserialize: async (text: string, existingDoc?: TypedObject) => {
-      if (existingDoc) {
-        invariant(existingDoc instanceof Document, 'Invalid document');
-        invariant(existingDoc.content instanceof AutomergeObject, 'Invalid content');
-        (existingDoc.content as any)[(existingDoc.content as any).field] = text;
-        return existingDoc;
-      } else {
-        return new Document({ content: new TextObject(text) });
-      }
-    },
-  },
+  //   deserialize: async (text: string, existingDoc?: TypedObject) => {
+  //     if (existingDoc) {
+  //       invariant(existingDoc instanceof Document, 'Invalid document');
+  //       invariant(existingDoc.content instanceof AutomergeObject, 'Invalid content');
+  //       (existingDoc.content as any)[(existingDoc.content as any).field] = text;
+  //       return existingDoc;
+  //     } else {
+  //       return new Document({ content: new TextObject(text) });
+  //     }
+  //   },
+  // },
 
-  [Thread.schema.typename]: {
-    filename: (object: Thread) => ({
-      name: object.title?.replace(/[/\\?%*:|"<>]/g, '-'),
-      extension: 'md',
-    }),
+  // [Thread.schema.typename]: {
+  //   filename: (object: Thread) => ({
+  //     name: object.title?.replace(/[/\\?%*:|"<>]/g, '-'),
+  //     extension: 'md',
+  //   }),
 
-    serialize: async (object: Thread): Promise<string> => {
-      return (
-        object.messages
-          .map((message) => message.blocks.map((block) => `${block.content?.text}`).join(' - '))
-          .join(' | ') ?? ''
-      );
-    },
+  //   serialize: async (object: Thread): Promise<string> => {
+  //     return (
+  //       object.messages
+  //         .map((message) => message.blocks.map((block) => `${block.content?.text}`).join(' - '))
+  //         .join(' | ') ?? ''
+  //     );
+  //   },
 
-    deserialize: async (text: string) => {
-      throw new Error('Not implemented.');
-    },
-  },
+  //   deserialize: async (text: string) => {
+  //     throw new Error('Not implemented.');
+  //   },
+  // },
 
   default: {
     filename: () => ({ name: 'Untitled', extension: 'json' }),

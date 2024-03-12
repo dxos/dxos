@@ -3,6 +3,7 @@
 //
 
 import * as S from '@effect/schema/Schema';
+import { type Mutable } from 'effect/Types';
 
 import type {
   GraphBuilderProvides,
@@ -17,8 +18,6 @@ import { type ObjectMeta } from '@dxos/react-client/echo';
 import { type Extension, type EditorMode } from '@dxos/react-ui-editor';
 
 import { MARKDOWN_PLUGIN } from './meta';
-import { EchoReactiveObject } from '@dxos/echo-schema/src/effect/echo-handler';
-import { Mutable } from 'effect/Types';
 
 const MARKDOWN_ACTION = `${MARKDOWN_PLUGIN}/action`;
 
@@ -90,4 +89,6 @@ export const DocumentSchema = S.struct({
   ),
 }).pipe(E.echoObject('braneframe.Document', '0.1.0'));
 
-export type DocumentType = EchoReactiveObject<Mutable<S.Schema.To<typeof DocumentSchema>>>;
+export type DocumentType = E.ReactiveObject<Mutable<S.Schema.To<typeof DocumentSchema>>>;
+
+export const isDocument = (data: unknown): data is DocumentType => data && E.getSchema(data) === DocumentSchema;

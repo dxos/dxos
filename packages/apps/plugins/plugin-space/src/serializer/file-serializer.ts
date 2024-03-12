@@ -4,11 +4,12 @@
 
 import md5 from 'md5';
 
-import { Folder } from '@braneframe/types';
+import * as E from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { type Space, base } from '@dxos/react-client/echo';
 
 import { serializers } from './serializers';
+import { FolderSchema, type FolderType } from '../types';
 
 export const TypeOfExpando = 'dxos.org/typename/expando';
 
@@ -50,7 +51,7 @@ export class FileSerializer {
       data: [],
     };
 
-    const spaceRoot = space.properties[Folder.schema.typename];
+    const spaceRoot = space.properties[E.getEchoObjectAnnotation(FolderSchema)!.typename];
     if (!spaceRoot) {
       throw new Error('No root folder.');
     }
@@ -64,7 +65,7 @@ export class FileSerializer {
   async deserializeSpace(space: Space, serializedSpace: SerializedSpace): Promise<Space> {
     await space.waitUntilReady();
 
-    const spaceRoot = space.properties[Folder.schema.typename];
+    const spaceRoot = space.properties[E.getEchoObjectAnnotation(FolderSchema)!.typename];
     if (!spaceRoot) {
       throw new Error('No root folder.');
     }
@@ -74,11 +75,11 @@ export class FileSerializer {
     return space;
   }
 
-  private async _serializeFolder(folder: Folder): Promise<SerializedObject & { type: 'folder' }> {
+  private async _serializeFolder(folder: FolderType): Promise<SerializedObject & { type: 'folder' }> {
     const files: SerializedObject[] = [];
 
     for (const child of folder.objects) {
-      if (child instanceof Folder) {
+      if (isFolder(child)) {
         files.push(await this._serializeFolder(child));
         continue;
       }
@@ -112,19 +113,19 @@ export class FileSerializer {
     };
   }
 
-  private async _deserializeFolder(folder: Folder, data: SerializedObject[]): Promise<void> {
+  private async _deserializeFolder(folder: FolderType, data: SerializedObject[]): Promise<void> {
     for (const object of data) {
       try {
         let child = folder.objects.find((item) => item.id === object.id);
         switch (object.type) {
           case 'folder': {
             if (!child) {
-              child = new Folder({ name: object.name });
+              child = E.object(FolderSchema, { name: object.name });
               child[base]._id = object.id;
               folder.objects.push(child);
             }
 
-            await this._deserializeFolder(child as Folder, object.children);
+            await this._deserializeFolder(child as FolderType, object.children);
             break;
           }
           case 'file': {

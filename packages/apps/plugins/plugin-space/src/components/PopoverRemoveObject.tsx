@@ -4,12 +4,13 @@
 
 import React, { useCallback, useRef } from 'react';
 
-import { Folder } from '@braneframe/types';
 import { NavigationAction, parseIntentPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { getEchoObjectAnnotation } from '@dxos/echo-schema';
 import { TypedObject, getSpaceForObject } from '@dxos/react-client/echo';
 import { Button, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
+import { FolderSchema, type FolderType, isFolder } from '../types';
 
 export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: TypedObject; folder?: Folder }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
@@ -34,14 +35,14 @@ export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: T
     const space = getSpaceForObject(object);
 
     // Remove object from folder it's in.
-    const folder: Folder = propsFolder ?? space?.properties[Folder.schema.typename];
+    const folder: FolderType = propsFolder ?? space?.properties[getEchoObjectAnnotation(FolderSchema)!.typename];
     if (folder) {
       const index = folder.objects.indexOf(object);
       index !== -1 && folder.objects.splice(index, 1);
     }
 
     // If the object is a folder, move the objects inside of it to the folder above it.
-    if (object instanceof Folder && folder) {
+    if (isFolder(object) && folder) {
       object.objects.forEach((obj) => {
         folder.objects.push(obj);
       });

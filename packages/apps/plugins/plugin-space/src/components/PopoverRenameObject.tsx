@@ -4,11 +4,11 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { Folder } from '@braneframe/types';
 import { type TypedObject } from '@dxos/react-client/echo';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
+import { isFolder } from '../types';
 
 export const PopoverRenameObject = ({ object }: { object: TypedObject }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
@@ -17,7 +17,7 @@ export const PopoverRenameObject = ({ object }: { object: TypedObject }) => {
   const [name, setName] = useState(object.title || object.name || '');
 
   const handleDone = useCallback(() => {
-    if (object instanceof Folder) {
+    if (isFolder(object)) {
       object.name = name;
     } else {
       object.title = name;
