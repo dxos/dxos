@@ -488,7 +488,7 @@ export const SpacePlugin = ({
                 objects: [sharedSpacesFolder],
               } = defaultSpace.db.query({ key: SHARED });
               const space = await client.spaces.create(intent.data as PropertiesProps);
-              const folder = E.object(FolderSchema, { objects: [] });
+              const folder = space.db.add(E.object(FolderSchema, { objects: [] }));
               space.properties[E.getEchoObjectAnnotation(FolderSchema)!.typename] = folder;
               sharedSpacesFolder?.objects.push(folder);
               if (Migrations.versionProperty) {
