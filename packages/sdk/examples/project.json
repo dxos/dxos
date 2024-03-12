@@ -4,28 +4,6 @@
   "projectType": "application",
   "targets": {
     "build": {},
-    "bundle": {
-      "executor": "@nx/vite:build",
-      "options": {
-        "generatePackageJson": false,
-        "outputPath": "{projectRoot}/out/demo"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
-    "e2e": {
-      "options": {
-        "playwrightConfigPath": "{projectRoot}/src/playwright/playwright.config.ts",
-        "serve": "examples:preview",
-        "testPatterns": [
-          "{projectRoot}/src/playwright/**/*.spec.{ts,js}"
-        ],
-        "watchPatterns": [
-          "{projectRoot}/src/**/*"
-        ]
-      }
-    },
     "lint": {
       "options": {
         "format": "unix",
@@ -43,19 +21,6 @@
       "outputs": [
         "{projectRoot}/src/proto/gen"
       ]
-    },
-    "preview": {
-      "executor": "@nx/web:file-server",
-      "options": {
-        "buildTarget": "examples:bundle",
-        "staticFilePath": "{projectRoot}/out/demo"
-      }
-    },
-    "serve": {
-      "executor": "@nx/vite:dev-server",
-      "options": {
-        "buildTarget": "examples:bundle"
-      }
     }
   }
 }

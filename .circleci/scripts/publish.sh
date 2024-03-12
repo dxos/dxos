@@ -6,7 +6,6 @@ set -euo pipefail
 
 APPS=(
   ./docs
-  ./packages/sdk/examples
   ./packages/devtools/devtools
   ./packages/apps/halo-app
   ./packages/apps/composer-app
@@ -67,10 +66,10 @@ for APP in "${APPS[@]}"; do
     eval "export DX_TELEMETRY_API_KEY=$""${PACKAGE_ENV}"_SEGMENT_API_KEY""
 
     # NOTE: reads IPFS RPC API secret from IPFS_API_SECRET
-    $ROOT/packages/devtools/cli/bin/dx app publish \
-      --config=$DX_CONFIG \
-      --accessToken=$KUBE_ACCESS_TOKEN \
-      --version=$VERSION \
+    "$ROOT"/packages/devtools/cli/bin/dx app publish \
+      --config="$DX_CONFIG" \
+      --accessToken="$KUBE_ACCESS_TOKEN" \
+      --version="$VERSION" \
       --skipExisting \
       --verbose
     if [[ $? -eq 0 ]]; then
@@ -87,10 +86,10 @@ for APP in "${APPS[@]}"; do
 
     set +e
     # NOTE: reads IPFS RPC API secret from IPFS_API_SECRET
-    $ROOT/packages/devtools/cli/bin/dx app publish \
-      --config=$DX_CONFIG \
-      --accessToken=$KUBE_ACCESS_TOKEN \
-      --version=$VERSION \
+    "$ROOT"/packages/devtools/cli/bin/dx app publish \
+      --config="$DX_CONFIG" \
+      --accessToken="$KUBE_ACCESS_TOKEN" \
+      --version="$VERSION" \
       --verbose
     if [[ $? -eq 0 ]]; then
       succeded="${succeded:+$succeded,}$PACKAGE"
