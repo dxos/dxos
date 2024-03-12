@@ -148,7 +148,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
         </Section>
 
         <Section title='Template'>
-          <div role='textbox' ref={parentRef} className={attentionSurface} />
+          <div ref={parentRef} className={attentionSurface} />
         </Section>
 
         {prompt.inputs?.length > 0 && (
