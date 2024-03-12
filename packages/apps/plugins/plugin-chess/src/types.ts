@@ -28,10 +28,6 @@ export type ChessPluginProvides = SurfaceProvides &
   MetadataRecordsProvides &
   TranslationsProvides;
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[Game.name] = Game;
-
 export const isObject = (object: unknown): object is Game => {
   return isTypedObject(object) && object.__typename === Game.schema.typename;
 };

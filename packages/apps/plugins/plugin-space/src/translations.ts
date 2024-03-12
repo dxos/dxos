@@ -64,7 +64,7 @@ export default [
         'active space members heading': 'Online ({{count}})',
         'inactive space members heading': 'Offline ({{count}})',
         'persisted locally label': 'Changes saved locally.',
-        'persisted locally message': 'All changes have been persisted to disk on this device.',
+        'persisted locally message': 'All changes have been saved to disk on this device.',
         'persistence pending label': 'Saving…',
         'persistence error label': 'Error saving changes.',
         'more actions label': 'More actions',

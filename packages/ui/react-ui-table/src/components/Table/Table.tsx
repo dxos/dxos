@@ -62,7 +62,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
 
   const [columnSizingInfo, setColumnSizingInfo] = useState<ColumnSizingInfoState>({} as ColumnSizingInfoState);
 
-  const onColumnResizeDebounced = onColumnResize && debounce<ColumnSizingState>(onColumnResize, 1_000);
+  const onColumnResizeDebounced = onColumnResize && debounce(onColumnResize, 1_000);
   useEffect(() => {
     if (columnSizingInfo.columnSizingStart?.length === 0) {
       onColumnResizeDebounced?.(table.getState().columnSizing);
