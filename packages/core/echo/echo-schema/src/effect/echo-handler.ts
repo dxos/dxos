@@ -256,6 +256,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     throwIfCustomClass(prop, value);
     const rootObjectSchema = this.getSchema();
     if (rootObjectSchema == null) {
+      const typeReference = this._objectCore.getType();
+      if (!!typeReference) {
+        throw new Error(`Schema not found in schema registry: ${typeReference.itemId}`);
+      }
       return;
     }
     const propertySchema: S.Schema<any> = SchemaValidator.getPropertySchema(rootObjectSchema, [
@@ -274,7 +278,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
     const effectSchema = this._objectCore.database.graph.types.getEffectSchema(typeReference.itemId);
     if (effectSchema == null) {
-      throw new Error(`Schema not found in schema registry: ${typeReference.itemId}`);
+      return undefined;
     }
     return effectSchema;
   }
