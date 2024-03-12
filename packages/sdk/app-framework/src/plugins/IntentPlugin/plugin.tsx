@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
+import * as E from '@dxos/echo-schema/schema';
 import { log } from '@dxos/log';
 
 import { type IntentContext, IntentProvider, type IntentExecution } from './IntentContext';
@@ -28,7 +28,7 @@ const HISTORY_LIMIT = 100;
  * Inspired by https://developer.android.com/reference/android/content/Intent.
  */
 const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
-  const state = deepSignal<IntentContext>({
+  const state = E.object<IntentContext>({
     dispatch: async () => ({}),
     undo: async () => ({}),
     history: [],

@@ -4,7 +4,6 @@
 
 import { type IconProps, Info } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
-import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
@@ -23,6 +22,7 @@ import {
   parsePluginHost,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
+import * as E from '@dxos/echo-schema/schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import {
   type Observability,
@@ -58,7 +58,7 @@ export const ObservabilityPlugin = (options: {
   namespace: string;
   observability: () => Promise<Observability>;
 }): PluginDefinition<ObservabilityPluginProvides> => {
-  const settings = deepSignal<ObservabilitySettingsProps>({});
+  const settings = E.object<ObservabilitySettingsProps>({});
   const state = new LocalStorageStore<ObservabilityPluginState>(OBSERVABILITY_PLUGIN);
   const subscriptions = new EventSubscriptions();
   let observability: Observability | undefined;

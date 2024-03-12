@@ -28,7 +28,6 @@
     "@dxos/async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@preact/signals-core": "^1.5.1",
-    "deepsignal": "^1.5.0",
     "lodash.defaultsdeep": "^4.6.1",
     "react-markdown": "^8.0.5",
     "react-resize-detector": "^7.1.2"
