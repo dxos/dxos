@@ -4,7 +4,6 @@
 
 import { type IconProps, TextAa } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
-import { deepSignal } from 'deepsignal/react';
 import React, { useMemo, type Ref } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
@@ -18,7 +17,8 @@ import {
   type PluginDefinition,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { Filter, getEchoObjectAnnotation } from '@dxos/echo-schema';
+import { Filter } from '@dxos/echo-schema';
+import * as E from '@dxos/echo-schema/schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type EditorMode, translations as editorTranslations } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
@@ -56,7 +56,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     experimental: false,
   });
 
-  const state = deepSignal<MarkdownPluginState>({ extensions: [] });
+  const state = E.object<MarkdownPluginState>({ extensions: [] });
 
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
@@ -106,7 +106,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       settings: settings.values,
       metadata: {
         records: {
-          [getEchoObjectAnnotation(DocumentSchema)!.typename]: {
+          [E.getEchoObjectAnnotation(DocumentSchema)!.typename]: {
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: (props: IconProps) => <TextAa {...props} />,
           },

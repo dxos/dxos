@@ -156,7 +156,7 @@ export const updateGraphWithSpace = ({
 
       manageNodes({
         graph,
-        condition: isFolder(folder) && (hidden ? true : space.state.get() !== SpaceState.INACTIVE),
+        condition: isFolder(folder) && (hidden ? true : space.state.get() === SpaceState.READY),
         removeEdges: true,
         nodes: [
           {
@@ -178,7 +178,7 @@ export const updateGraphWithSpace = ({
 
       manageNodes({
         graph,
-        condition: isFolder(folder) && (hidden ? true : space.state.get() !== SpaceState.INACTIVE),
+        condition: isFolder(folder) && (hidden ? true : space.state.get() === SpaceState.READY),
         removeEdges: true,
         nodes: [
           {
