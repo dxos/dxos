@@ -6,6 +6,7 @@ import { expect } from 'chai';
 import jestExpect from 'expect';
 
 import { registerSignalRuntime } from '@dxos/echo-signals';
+import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 import * as R from './reactive';
@@ -19,7 +20,7 @@ registerSignalRuntime();
 test('', () => {});
 
 for (const schema of [TestSchema]) {
-  for (const useDatabase of [false]) {
+  for (const useDatabase of [true]) {
     const testSetup = useDatabase ? createDatabase(new Hypergraph(), { useReactiveObjectApi: true }) : undefined;
     const createObject = async (props: Partial<TestSchema> = {}): Promise<TestSchema> => {
       const testSchema = useDatabase && schema ? schema.pipe(R.echoObject('TestSchema', '1.0.0')) : schema;
@@ -33,11 +34,6 @@ for (const schema of [TestSchema]) {
       }
       return db.add(obj);
     };
-
-    // TODO(dmaretskyi): Remove.
-    if (!schema || useDatabase) {
-      continue;
-    }
 
     describe.only(`Proxy properties${schema == null ? '' : ' with schema'}`, () => {
       test('object initializer', async () => {
@@ -90,6 +86,24 @@ for (const schema of [TestSchema]) {
 
         obj.stringArray[0] = '4';
         expect(obj.stringArray).to.deep.eq(['4', '2', '3']);
+      });
+
+      test('can work with complex types', async () => {
+        log.info('schema', { schema: schema != null, useDatabase });
+        const circle: any = { type: 'circle', radius: 42 };
+        const obj = await createObject({ nullableShapeArray: [circle] });
+
+        expect(obj.nullableShapeArray![0]).to.deep.eq(circle);
+
+        obj.nullableShapeArray?.push(null);
+        expect(obj.nullableShapeArray).to.deep.eq([circle, null]);
+
+        const square: any = { type: 'square', side: 24 };
+        obj.nullableShapeArray?.push(square);
+        expect(obj.nullableShapeArray).to.deep.eq([circle, null, square]);
+
+        (obj.nullableShapeArray![2] as any).side = 33;
+        expect((obj.nullableShapeArray![2] as any).side).to.eq(33);
       });
 
       test('validation failures', async () => {

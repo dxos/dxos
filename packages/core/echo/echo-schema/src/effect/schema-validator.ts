@@ -14,7 +14,6 @@ import { ReactiveArray } from './reactive-array';
 import { defineHiddenProperty } from '../util/property';
 
 export const symbolSchema = Symbol.for('@dxos/schema');
-export const symbolTypeAst = Symbol.for('@dxos/type/AST');
 
 export class SchemaValidator {
   public static prepareTarget<T>(target: T, schema: S.Schema<T>) {
@@ -22,26 +21,23 @@ export class SchemaValidator {
       throw new Error('schema has to describe an object type');
     }
     const _ = S.asserts(schema)(target);
-    setSchemaProperties(target, schema);
-  }
-
-  public static initTypedTarget(target: any) {
-    invariant(target[symbolSchema]);
     this.makeArraysReactive(target);
+    setSchemaProperties(target, schema);
   }
 
   private static makeArraysReactive(target: any) {
     for (const key in target) {
-      if (Array.isArray(target[key]) && !(target[key] instanceof ReactiveArray)) {
+      if (Array.isArray(target[key])) {
         target[key] = ReactiveArray.from(target[key]);
-        const schema = this._getTargetPropertySchema(target, key);
-        setSchemaProperties(target[key], schema);
+      }
+      if (typeof target[key] === 'object') {
+        this.makeArraysReactive(target[key]);
       }
     }
   }
 
   public static validateValue(target: any, prop: string | symbol, value: any) {
-    const schema = this._getTargetPropertySchema(target, prop);
+    const schema = getTargetPropertySchema(target, prop);
     const _ = S.asserts(schema)(value);
     if (Array.isArray(value)) {
       value = new ReactiveArray(...value);
@@ -50,21 +46,6 @@ export class SchemaValidator {
       setSchemaProperties(value, schema);
     }
     return value;
-  }
-
-  private static _getTargetPropertySchema(target: any, prop: string | symbol): S.Schema<any> {
-    if (target instanceof ReactiveArray) {
-      const schema = (target as any)[symbolSchema];
-      invariant(schema, 'target has no schema');
-      return getArrayElementSchema(schema, prop);
-    }
-    const ast = target[symbolTypeAst] as AST.AST;
-    invariant(ast, 'target has no schema AST');
-    const properties = AST.getPropertySignatures(ast).find((property) => property.name === prop);
-    if (!properties) {
-      throw new Error(`Invalid property: ${prop.toString()}`);
-    }
-    return S.make(properties.type);
   }
 
   public static getPropertySchema(
@@ -85,6 +66,11 @@ export class SchemaValidator {
   }
 }
 
+/**
+ * tuple AST is used both for:
+ * fixed-length tuples ([string, number]) in which case AST will be { elements: [S.string, S.number] }
+ * variable-length arrays (Array<string | number>) in which case AST will be { rest: [S.union(S.string, S.number)] }
+ */
 const getArrayElementSchema = (arraySchema: S.Schema<any>, property: string | symbol): S.Schema<any> => {
   const elementIndex = typeof property === 'string' ? parseInt(property, 10) : Number.NaN;
   if (Number.isNaN(elementIndex)) {
@@ -104,57 +90,46 @@ const getArrayElementSchema = (arraySchema: S.Schema<any>, property: string | sy
   return S.make(restType[0]);
 };
 
-/**
- * Recursively set AST property on the object.
- */
-// TODO(burdon): Use visitProperties.
-export const setSchemaProperties = (obj: any, schema: S.Schema<any>) => {
-  if (!obj[symbolSchema]) {
-    defineHiddenProperty(obj, symbolSchema, schema);
+const getProperties = (typeAst: AST.AST, target: any): AST.PropertySignature[] => {
+  const astCandidates = AST.isUnion(typeAst) ? typeAst.types : [typeAst];
+  const typeAstList = astCandidates.filter((type) => AST.isTypeLiteral(type));
+  invariant(typeAstList.length > 0, `target can't have properties since it's not a type: ${typeAst._tag}`);
+  if (typeAstList.length === 1) {
+    return AST.getPropertySignatures(typeAstList[0]);
   }
+  const discriminatorProperties = typeAstList.flatMap(AST.getPropertySignatures).filter((p) => AST.isLiteral(p.type));
+  const propertyName = discriminatorProperties[0].name;
+  const isValidDiscriminator = discriminatorProperties.every((p) => p.name === propertyName && !p.isOptional);
+  const everyTypeHasDiscriminator = discriminatorProperties.length === typeAstList.length;
+  const isDiscriminatedUnion = isValidDiscriminator && everyTypeHasDiscriminator;
+  invariant(isDiscriminatedUnion, 'type ambiguity: every type in a union must have a single unique-literal field');
+  const typeIndex = discriminatorProperties.findIndex((p) => target[p.name] === (p.type as AST.Literal).literal);
+  invariant(typeIndex !== -1, 'discriminator field not set on target');
+  return AST.getPropertySignatures(typeAstList[typeIndex]);
+};
 
-  const unwrapped = unwrapOptionality(schema.ast);
-
-  if (AST.isTypeLiteral(unwrapped)) {
-    Object.defineProperty(obj, symbolTypeAst, {
-      enumerable: false,
-      configurable: true,
-      value: unwrapped,
-    });
-
-    for (const property of unwrapped.propertySignatures) {
-      const value = (obj as any)[property.name];
-      if (isValidProxyTarget(value)) {
-        setSchemaProperties(value, S.make(unwrapOptionality(property.type)));
-      }
-    }
-  } else if (Array.isArray(obj) && AST.isTuple(unwrapped)) {
-    for (const key in obj) {
-      if (isValidProxyTarget(obj[key])) {
-        const elementSchema = getArrayElementSchema(schema, key);
-        setSchemaProperties(obj[key], elementSchema);
-      }
-    }
-  } else {
-    // log.warn('unable to set schema properties', { obj, ast: schema });
-    // TODO(dmaretskyi): Throw an error?
+const getTargetPropertySchema = (target: any, prop: string | symbol): S.Schema<any> => {
+  const schema = (target as any)[symbolSchema];
+  invariant(schema, 'target has no schema');
+  if (target instanceof ReactiveArray) {
+    return getArrayElementSchema(schema, prop);
   }
+  const properties = getProperties(schema.ast as AST.AST, target).find((property) => property.name === prop);
+  if (!properties) {
+    throw new Error(`Invalid property: ${prop.toString()}`);
+  }
+  return S.make(properties.type);
 };
 
 /**
- * Handles unions with undefined and returns the AST for the other union member.
+ * Recursively set AST on all potential proxy targets.
  */
-const unwrapOptionality = (ast: AST.AST): AST.AST => {
-  if (AST.isUnion(ast) && ast.types.length === 2) {
-    const undefinedIdx = ast.types.findIndex((type) => AST.isUndefinedKeyword(type));
-    if (undefinedIdx === 0) {
-      return ast.types[1];
-    } else if (undefinedIdx === 1) {
-      return ast.types[0];
-    } else {
-      return ast;
+export const setSchemaProperties = (obj: any, schema: S.Schema<any>) => {
+  defineHiddenProperty(obj, symbolSchema, schema);
+  for (const key in obj) {
+    if (isValidProxyTarget(obj[key])) {
+      const elementSchema = getTargetPropertySchema(obj, key);
+      setSchemaProperties(obj[key], elementSchema);
     }
   }
-
-  return ast;
 };
