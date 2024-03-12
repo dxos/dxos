@@ -22,6 +22,7 @@ import { SchemaValidator, symbolSchema } from './schema-validator';
 import { TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 import { type ObjectMeta } from '../object';
+import { Mutable } from 'effect/Types';
 
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
