@@ -92,6 +92,22 @@ for (const schema of [TestSchema]) {
         expect(obj.stringArray).to.deep.eq(['4', '2', '3']);
       });
 
+      test('validation failures', async () => {
+        if (schema == null) {
+          return;
+        }
+        const obj = await createObject({ objectArray: [{ field: 'foo' }] });
+        expect(() => (obj.string = 1 as any)).to.throw();
+        expect(() => (obj.object = { field: 1 } as any)).to.throw();
+        obj.object = { field: 'bar' };
+        expect(() => (obj.object!.field = 1 as any)).to.throw();
+        expect(() => obj.objectArray?.push({ field: 1 } as any)).to.throw();
+        expect(() => (obj.objectArray![0] = { field: 1 } as any)).to.throw();
+        expect(() => (obj.objectArray![0].field = 1 as any)).to.throw();
+        obj.objectArray?.push({ field: 'bar' });
+        expect(() => (obj.objectArray![1].field = 1 as any)).to.throw();
+      });
+
       test('can assign arrays with objects', async () => {
         const obj = await createObject();
 
