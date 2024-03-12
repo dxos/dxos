@@ -37,7 +37,6 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/core": "^0.0.16",
     "@effect/schema": "^0.63.4",
     "@langchain/community": "^0.0.26",
     "@langchain/core": "^0.1.22",

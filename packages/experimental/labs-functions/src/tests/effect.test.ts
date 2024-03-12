@@ -10,7 +10,8 @@ import { describe, test } from '@dxos/test';
 describe('Effect', () => {
   test.only('simple', () => {
     // https://effect.website/docs/guides/essentials/creating-effects
-    const program = Effect.succeed(42);
-    expect(program.value).to.equal(42);
+    const program = Effect.sync(() => 42);
+    const result = Effect.runSync(program);
+    expect(result).to.equal(42);
   });
 });
