@@ -116,9 +116,6 @@ const defaultSlots = {
   editor: {
     className: 'w-full bs-full',
   },
-  content: {
-    className: '!p-2',
-  },
 };
 
 export const createThemeExtensions = ({ theme, themeMode, slots: _slots }: ThemeExtensionsOptions = {}): Extension => {
