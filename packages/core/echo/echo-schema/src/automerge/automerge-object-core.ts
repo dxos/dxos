@@ -27,10 +27,11 @@ import {
   type SpaceDoc,
   type DecodedAutomergePrimaryValue,
 } from './types';
-import { isReactiveProxy } from '../effect/proxy';
+import { getProxyHandlerSlot, isReactiveProxy } from '../effect/proxy';
 import { type TypedObjectOptions, type EchoObject, TextObject, type OpaqueEchoObject } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
+import { EchoReactiveHandler } from '../effect/echo-handler';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
@@ -269,6 +270,11 @@ export class AutomergeObjectCore {
    * Store referenced object.
    */
   linkObject(obj: OpaqueEchoObject): Reference {
+    // TODO(dmaretskyi): Fix this.
+    if (isReactiveProxy(obj) && !(getProxyHandlerSlot(obj).handler instanceof EchoReactiveHandler)) {
+      this.database?._dbApi.add(obj);
+    }
+
     const core = getAutomergeObjectCore(obj);
 
     if (this.database) {
