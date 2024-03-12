@@ -23,14 +23,17 @@ import { TableBody } from './TableBody';
 import { TableProvider as UntypedTableProvider, type TypedTableProvider, useTableContext } from './TableContext';
 import { TableFooter } from './TableFooter';
 import { TableHead } from './TableHead';
-import { type TableProps } from './props';
+import { type TableColumnDef, type TableProps } from './props';
 import { groupTh, tableRoot } from '../../theme';
+
+// A stable array reference that doesn't get reassigned on each render
+const defaultArray: any[] = [];
 
 export const Table = <TData extends RowData>(props: TableProps<TData>) => {
   const {
     role,
-    data = [],
-    columns = [],
+    data = defaultArray as TData[],
+    columns = defaultArray as TableColumnDef<TData>[],
     onColumnResize,
     columnVisibility,
     header = true,
@@ -53,7 +56,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
           return state;
         }, {}),
     );
-  }, [columns]);
+  }, [columns, setColumnSizing]);
 
   const [columnSizingInfo, setColumnSizingInfo] = useState<ColumnSizingInfoState>({} as ColumnSizingInfoState);
 
