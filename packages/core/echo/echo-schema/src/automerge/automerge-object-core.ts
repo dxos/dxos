@@ -130,7 +130,7 @@ export class AutomergeObjectCore {
 
     if (this.linkCache) {
       for (const obj of this.linkCache.values()) {
-        this.database!.add(obj);
+        this.database!._dbApi.add(obj);
       }
 
       this.linkCache = undefined;
@@ -270,14 +270,15 @@ export class AutomergeObjectCore {
    * Store referenced object.
    */
   linkObject(obj: OpaqueEchoObject): Reference {
-    // TODO(dmaretskyi): Fix this.
-    if (isReactiveProxy(obj) && !(getProxyHandlerSlot(obj).handler instanceof EchoReactiveHandler)) {
-      this.database?._dbApi.add(obj);
-    }
-
-    const core = getAutomergeObjectCore(obj);
-
     if (this.database) {
+      // TODO(dmaretskyi): Fix this.
+      if (isReactiveProxy(obj) && !(getProxyHandlerSlot(obj).handler instanceof EchoReactiveHandler)) {
+        invariant(this.database, 'BUG');
+        this.database._dbApi.add(obj);
+      }
+
+      const core = getAutomergeObjectCore(obj);
+
       if (!core.database) {
         this.database.add(obj);
         return new Reference(core.id);
