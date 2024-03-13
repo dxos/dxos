@@ -44,9 +44,9 @@ export type EditorMainProps = {
   readonly?: boolean;
   toolbar?: boolean;
   comments?: Comment[];
-} & Pick<TextEditorProps, 'doc' | 'extensions'>;
+} & Pick<TextEditorProps, 'doc' | 'selection' | 'scrollTo' | 'extensions'>;
 
-export const EditorMain = ({ id, readonly, toolbar, comments, doc, extensions: _extensions }: EditorMainProps) => {
+export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _extensions, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
 
@@ -89,7 +89,7 @@ export const EditorMain = ({ id, readonly, toolbar, comments, doc, extensions: _
         },
       }),
     ].filter(nonNullable);
-  }, [_extensions, formattingObserver]);
+  }, [_extensions, formattingObserver, themeMode]);
 
   return (
     <>
@@ -110,8 +110,8 @@ export const EditorMain = ({ id, readonly, toolbar, comments, doc, extensions: _
         className='is-full bs-full overflow-hidden data-[toolbar=disabled]:pbs-2'
       >
         <TextEditor
+          {...props}
           id={id}
-          doc={doc}
           extensions={extensions}
           autoFocus
           moveToEndOfLine

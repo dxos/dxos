@@ -54,7 +54,6 @@ const DocumentSection: FC<{
 
   return (
     <div
-      role='textbox'
       ref={parentRef}
       className={mx('flex flex-col grow m-0.5 min-bs-[8rem]', attentionSurface, focusRing)}
       {...{ 'data-testid': 'composer.markdownRoot' }}

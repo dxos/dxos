@@ -162,8 +162,7 @@ export class AutomergeHost {
   }
 
   private _onUpdate(event: DocHandleChangePayload<any>) {
-    const spaceKey = getSpaceKeyFromDoc(event.doc);
-    if (!spaceKey || this._metadata == null) {
+    if (this._metadata == null) {
       return;
     }
 
@@ -178,9 +177,7 @@ export class AutomergeHost {
       return;
     }
 
-    const encodedIds = objectIds.map((objectId) =>
-      idCodec.encode({ documentId: event.handle.documentId, objectId, spaceKey }),
-    );
+    const encodedIds = objectIds.map((objectId) => idCodec.encode({ documentId: event.handle.documentId, objectId }));
     const idToLastHash = new Map(encodedIds.map((id) => [id, lastAvailableHash]));
     const markingDirtyPromise = this._metadata
       .markDirty(idToLastHash)
