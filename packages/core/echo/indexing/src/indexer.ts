@@ -58,10 +58,7 @@ export class Indexer {
   private _updatesAfterSave = 0;
   private _lastSave = Date.now();
 
-  /**
-   * @internal
-   */
-  _indexed = new Event<void>();
+  public readonly indexed = new Event<void>();
 
   private readonly _run = new DeferredTask(this._ctx, async () => {
     if (!this._initialized) {
@@ -75,7 +72,7 @@ export class Indexer {
 
     await this._indexUpdatedObjects();
     await this._maybeSaveIndexes();
-    this._indexed.emit();
+    this.indexed.emit();
   });
 
   private readonly _metadataStore: IndexMetadataStore;

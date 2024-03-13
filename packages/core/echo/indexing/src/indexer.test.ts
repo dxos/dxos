@@ -27,9 +27,7 @@ describe('Indexer', () => {
       indexStore: new IndexStore({ directory: storage.createDirectory('IndexStore') }),
       metadataStore,
       loadDocuments: async function* (ids) {
-        for (const document of documents.filter((doc) => ids.includes(doc.object.id))) {
-          yield document;
-        }
+        yield documents.filter((doc) => ids.includes(doc.object.id));
       },
       getAllDocuments: async function* () {},
     });
@@ -80,12 +78,12 @@ describe('Indexer', () => {
       loadDocuments: async function* () {},
       getAllDocuments: async function* () {
         for (const object of objects) {
-          yield { id: object.id, object, currentHash: 'hash' };
+          yield [{ id: object.id, object, currentHash: 'hash' }];
         }
       },
     });
 
-    const doneIndexing = indexer._indexed.waitForCount(1);
+    const doneIndexing = indexer.indexed.waitForCount(1);
 
     {
       indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] });

@@ -89,7 +89,7 @@ describe('Index queries', () => {
     await client.halo.createIdentity();
     await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] });
 
-    const indexingDone = services.host!.context.indexer._indexed.waitForCount(2);
+    const indexingDone = services.host!.context.indexer.indexed.waitForCount(2);
     const space = await client.spaces.create();
     {
       await space.waitUntilReady();
@@ -122,7 +122,7 @@ describe('Index queries', () => {
       await client.halo.createIdentity();
       await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] });
 
-      const indexingDone = services.host!.context.indexer._indexed.waitForCount(2);
+      const indexingDone = services.host!.context.indexer.indexed.waitForCount(2);
       await client.spaces.isReady.wait();
       const space = await client.spaces.create();
       {
@@ -185,7 +185,7 @@ describe('Index queries', () => {
     const contact = new Contact({ name: 'John Doe' });
     space.db.add(contact);
     await space.db.flush();
-    const indexingDone = services.host!.context.indexer._indexed.waitForCount(2);
+    const indexingDone = services.host!.context.indexer.indexed.waitForCount(2);
     await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] });
     await asyncTimeout(indexingDone, 1000);
 
