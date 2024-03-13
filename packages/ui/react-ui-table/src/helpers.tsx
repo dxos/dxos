@@ -462,7 +462,7 @@ export class ColumnBuilder<TData extends RowData> {
       minSize: 50,
       header: (column) => label ?? column.header.id,
       // TODO(Zan): Implement sort algorithm
-      enableSorting: false,
+      enableSorting: true,
       cell: SwitchBuilderCell,
       ...props,
       meta: { ...props.meta, onUpdate, cell: { ...props.meta?.cell, classNames: [textPadding, classNames] } },
