@@ -4,7 +4,7 @@
 
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
-import { isAutomerge, type ChangeFn, type Doc } from '@dxos/automerge/automerge';
+import { type ChangeFn, type Doc } from '@dxos/automerge/automerge';
 import { Reference } from '@dxos/document-model';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -14,6 +14,7 @@ import { assignDeep } from '@dxos/util';
 import { AutomergeArray } from './automerge-array';
 import { AutomergeObjectCore, type BindOptions } from './automerge-object-core';
 import { type DocAccessor } from './automerge-types';
+import { isValidKeyPath, type KeyPath } from './key-path';
 import { REFERENCE_TYPE_TAG, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
 import { EchoReactiveHandler } from '../effect/echo-handler';
@@ -29,7 +30,6 @@ import {
   proxy,
   subscribe,
   TextObject,
-  type EchoObject,
   type ObjectMeta,
   type TypedObjectOptions,
   type TypedObjectProperties,
@@ -37,7 +37,6 @@ import {
 } from '../object';
 import { AbstractEchoObject } from '../object/object'; // TODO(burdon): Import
 import { type Schema } from '../proto';
-import { isValidKeyPath, KeyPath } from './key-path';
 
 // TODO(dmaretskyi): Rename to `AutomergeObjectApi`?
 export class AutomergeObject implements TypedObjectProperties {

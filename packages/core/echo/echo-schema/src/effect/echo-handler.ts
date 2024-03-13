@@ -20,9 +20,9 @@ import {
 import { type EchoReactiveObject, getSchema, getTypeReference } from './reactive';
 import { SchemaValidator } from './schema-validator';
 import { AutomergeObjectCore, encodeReference, REFERENCE_TYPE_TAG } from '../automerge';
+import { type KeyPath } from '../automerge/key-path';
 import { data, type ObjectMeta } from '../object';
 import { defineHiddenProperty } from '../util/property';
-import { KeyPath } from '../automerge/key-path';
 
 const symbolPath = Symbol('path');
 const symbolNamespace = Symbol('namespace');

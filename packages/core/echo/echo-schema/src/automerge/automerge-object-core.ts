@@ -18,6 +18,7 @@ import { type AutomergeDb } from './automerge-db';
 import { AutomergeObject, getAutomergeObjectCore } from './automerge-object';
 import { type DocAccessor } from './automerge-types';
 import { docChangeSemaphore } from './doc-semaphore';
+import { type KeyPath, isValidKeyPath } from './key-path';
 import {
   encodeReference,
   type ObjectStructure,
@@ -27,12 +28,11 @@ import {
   type SpaceDoc,
   type DecodedAutomergePrimaryValue,
 } from './types';
+import { EchoReactiveHandler } from '../effect/echo-handler';
 import { getProxyHandlerSlot, isReactiveProxy } from '../effect/proxy';
 import { type TypedObjectOptions, type EchoObject, TextObject, type OpaqueEchoObject } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
-import { EchoReactiveHandler } from '../effect/echo-handler';
-import { KeyPath, isValidKeyPath } from './key-path';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;

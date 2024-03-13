@@ -3,6 +3,7 @@
 //
 
 import * as S from '@effect/schema/Schema';
+import { type Mutable } from 'effect/Types';
 
 import { Reference } from '@dxos/document-model';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -10,9 +11,9 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { Mutable } from 'effect/Types';
 import { type AutomergeObjectCore } from '../automerge';
 import { getSchemaTypeRefOrThrow } from '../effect/echo-handler';
+import { type EchoReactiveObject } from '../effect/reactive';
 import {
   getReferenceWithSpaceKey,
   immutable,
@@ -23,7 +24,6 @@ import {
   type TypedObject,
 } from '../object';
 import { type Schema } from '../proto';
-import { EchoReactiveObject } from '../effect/reactive';
 
 export const hasType =
   <T extends TypedObject>(schema: Schema) =>

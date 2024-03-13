@@ -9,10 +9,10 @@ import * as Option from 'effect/Option';
 
 import { invariant } from '@dxos/invariant';
 
-import { KeyPath } from '../automerge/key-path';
-import { defineHiddenProperty } from '../util/property';
 import { isValidProxyTarget } from './proxy';
 import { ReactiveArray } from './reactive-array';
+import { type KeyPath } from '../automerge/key-path';
+import { defineHiddenProperty } from '../util/property';
 
 export const symbolSchema = Symbol.for('@dxos/schema');
 

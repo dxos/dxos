@@ -16,10 +16,10 @@ import {
   type AutomergeObjectCore,
 } from './automerge';
 import { createEchoReactiveObject, initEchoReactiveObjectRootProxy } from './effect/echo-handler';
-import { EchoReactiveObject, getSchema } from './effect/reactive';
+import { type EchoReactiveObject, getSchema } from './effect/reactive';
 import { type Hypergraph } from './hypergraph';
 import { isAutomergeObject, type EchoObject, type TypedObject, type OpaqueEchoObject, base } from './object';
-import { OperatorFilter, type Filter, type FilterSource, type Query } from './query';
+import { type OperatorFilter, type Filter, type FilterSource, type Query } from './query';
 
 export interface EchoDatabase {
   get graph(): Hypergraph;
