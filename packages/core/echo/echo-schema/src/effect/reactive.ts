@@ -6,10 +6,11 @@ import * as AST from '@effect/schema/AST';
 import * as S from '@effect/schema/Schema';
 import { pipe } from 'effect';
 import * as Option from 'effect/Option';
-import { Simplify, type Mutable } from 'effect/Types';
+import { type Simplify, type Mutable } from 'effect/Types';
 
 import { Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 
 import { EchoReactiveHandler } from './echo-handler';
 import {
@@ -23,7 +24,6 @@ import { SchemaValidator, symbolSchema, validateIdNotPresentOnSchema } from './s
 import { TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 import { data, type ObjectMeta } from '../object';
-import { PublicKey } from '@dxos/keys';
 
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
@@ -150,7 +150,7 @@ export const getRefAnnotation = (schema: S.Schema<any>) =>
 /**
  * Returns the schema for the given object if one is defined.
  */
-export const getSchema = <T extends {} = any>(obj: T): S.Schema<any, any, any> | undefined => {
+export const getSchema = <T extends {} = any>(obj: T): S.Schema<any> | undefined => {
   if (isReactiveProxy(obj)) {
     const proxyHandlerSlot = getProxyHandlerSlot(obj);
     if (proxyHandlerSlot.handler instanceof EchoReactiveHandler) {

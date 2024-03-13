@@ -14,7 +14,7 @@ import { createEchoReactiveObject } from './echo-handler';
 import * as E from './reactive';
 import { getTypeReference } from './reactive';
 import { TEST_OBJECT, TestClass, TestSchema, type TestSchemaWithClass } from './testing/schema';
-import { AutomergeContext, getAutomergeObjectCore, type SpaceDoc } from '../automerge';
+import { AutomergeContext, type SpaceDoc } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 import { data } from '../object';
@@ -47,7 +47,7 @@ for (const schema of [undefined, EchoObjectSchema]) {
 
       const str = inspect(obj, { colors: false });
       expect(str.startsWith(`${schema == null ? '' : 'Typed'}EchoObject`)).to.be.true;
-      expect(str.includes(`string: 'bar'`)).to.be.true;
+      expect(str.includes("string: 'bar'")).to.be.true;
       if (schema) {
         expect(str.includes(`id: '${obj.id}'`)).to.be.true;
       }
@@ -67,11 +67,7 @@ for (const schema of [undefined, EchoObjectSchema]) {
 
     test('removes undefined fields on creation', () => {
       const obj = createObject({ undefined });
-      if (!schema) {
-        expect(obj).to.deep.eq({});
-      } else {
-        expect(obj).to.deep.eq({ id: obj.id });
-      }
+      expect(obj).to.deep.eq({ id: obj.id });
     });
 
     test('isEchoReactiveObject', () => {

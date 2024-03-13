@@ -20,7 +20,7 @@ for (const schema of [undefined, TestSchema]) {
   for (const useDatabase of [false, true]) {
     const testSetup = useDatabase ? createDatabase(new Hypergraph(), { useReactiveObjectApi: true }) : undefined;
 
-    const objectsHaveId = schema != null && useDatabase;
+    const objectsHaveId = useDatabase;
 
     const createObject = async (props: Partial<TestSchema> = {}): Promise<TestSchema> => {
       const testSchema = useDatabase && schema ? schema.pipe(R.echoObject('TestSchema', '1.0.0')) : schema;
@@ -186,10 +186,10 @@ for (const schema of [undefined, TestSchema]) {
       test('keys enumeration', async () => {
         const obj = await createObject({ string: 'bar' });
 
-        expect(Object.keys(obj)).to.deep.eq(objectsHaveId ? ['id', 'string'] : ['string']);
+        expect(Object.keys(obj)).to.deep.eq(objectsHaveId ? ['string', 'id'] : ['string']);
 
         obj.number = 42;
-        expect(Object.keys(obj)).to.deep.eq(objectsHaveId ? ['id', 'string', 'number'] : ['string', 'number']);
+        expect(Object.keys(obj)).to.deep.eq(objectsHaveId ? ['string', 'number', 'id'] : ['string', 'number']);
       });
 
       test('has', async () => {
