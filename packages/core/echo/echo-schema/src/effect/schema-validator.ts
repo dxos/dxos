@@ -9,9 +9,10 @@ import * as Option from 'effect/Option';
 
 import { invariant } from '@dxos/invariant';
 
+import { KeyPath } from '../automerge/key-path';
+import { defineHiddenProperty } from '../util/property';
 import { isValidProxyTarget } from './proxy';
 import { ReactiveArray } from './reactive-array';
-import { defineHiddenProperty } from '../util/property';
 
 export const symbolSchema = Symbol.for('@dxos/schema');
 
@@ -73,8 +74,8 @@ export class SchemaValidator {
 
   public static getPropertySchema(
     rootObjectSchema: S.Schema<any>,
-    propertyPath: string[],
-    getPropertyFn: (path: string[]) => any,
+    propertyPath: KeyPath,
+    getPropertyFn: (path: KeyPath) => any,
   ): S.Schema<any> {
     let schema: S.Schema<any> = rootObjectSchema;
     for (let i = 0; i < propertyPath.length; i++) {
@@ -100,7 +101,7 @@ export class SchemaValidator {
  * fixed-length tuples ([string, number]) in which case AST will be { elements: [S.string, S.number] }
  * variable-length arrays (Array<string | number>) in which case AST will be { rest: [S.union(S.string, S.number)] }
  */
-const getArrayElementSchema = (arraySchema: S.Schema<any>, property: string | symbol): S.Schema<any> => {
+const getArrayElementSchema = (arraySchema: S.Schema<any>, property: string | symbol | number): S.Schema<any> => {
   const elementIndex = typeof property === 'string' ? parseInt(property, 10) : Number.NaN;
   if (Number.isNaN(elementIndex)) {
     invariant(property === 'length', `invalid array property: ${String(property)}`);

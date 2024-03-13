@@ -9,6 +9,7 @@ import type { ChangeFn, ChangeOptions, Doc, Heads } from '@dxos/automerge/autome
 import { getRawDoc } from './automerge-object';
 import { type AutomergeTextCompat, type TextObject } from '../object';
 import { EchoReactiveObject } from '../effect/reactive';
+import { KeyPath } from './key-path';
 
 //
 // Automerge types.
@@ -26,7 +27,7 @@ export interface IDocHandle<T = any> {
 // TODO(burdon): Rename ValueAccessor?
 export interface DocAccessor<T = any> {
   get handle(): IDocHandle<T>;
-  get path(): string[];
+  get path(): KeyPath;
 }
 
 export const DocAccessor = {

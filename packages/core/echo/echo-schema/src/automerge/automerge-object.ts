@@ -37,7 +37,7 @@ import {
 } from '../object';
 import { AbstractEchoObject } from '../object/object'; // TODO(burdon): Import
 import { type Schema } from '../proto';
-import { isValidKeyPath } from './key-path';
+import { isValidKeyPath, KeyPath } from './key-path';
 
 // TODO(dmaretskyi): Rename to `AutomergeObjectApi`?
 export class AutomergeObject implements TypedObjectProperties {
@@ -354,13 +354,13 @@ export class AutomergeObject implements TypedObjectProperties {
   /**
    * @internal
    */
-  _getRawDoc(path?: string[]): DocAccessor {
+  _getRawDoc(path?: KeyPath): DocAccessor {
     invariant(!this[proxy]);
     return this._core.getDocAccessor(path);
   }
 }
 
-const isRootDataObjectKey = (relativePath: string[], key: string | symbol) => {
+const isRootDataObjectKey = (relativePath: KeyPath, key: string | symbol) => {
   if (relativePath.length !== 1 || relativePath[0] !== 'data') {
     return false;
   }
@@ -380,7 +380,7 @@ const isRootDataObjectKey = (relativePath: string[], key: string | symbol) => {
   );
 };
 
-export const getRawDoc = (obj: OpaqueEchoObject, path?: string[]): DocAccessor => {
+export const getRawDoc = (obj: OpaqueEchoObject, path?: KeyPath): DocAccessor => {
   invariant(isAutomergeObject(obj) || isReactiveProxy(obj));
   invariant(path === undefined || isValidKeyPath(path));
 
