@@ -216,19 +216,21 @@ const RowSelectorBuilderCell = <TData extends RowData>(cellContext: CellContext<
     : row.getCanSelectSubRows() && (row.getIsSomeSelected() ? 'indeterminate' : row.getIsAllSubRowsSelected());
 
   return (
-    <Input.Root>
-      <Input.Checkbox
-        size={4}
-        classNames={['mli-auto', cell?.classNames]}
-        checked={checked}
-        onCheckedChange={(event) => {
-          if (row.getCanSelect()) {
-            row.getToggleSelectedHandler()(event);
-          }
-        }}
-        disabled={!(row.getCanSelect() || row.getCanSelectSubRows())}
-      />
-    </Input.Root>
+    <div className='flex justify-center w-full h-full'>
+      <Input.Root>
+        <Input.Checkbox
+          size={4}
+          classNames={[cell?.classNames]}
+          checked={checked}
+          onCheckedChange={(event) => {
+            if (row.getCanSelect()) {
+              row.getToggleSelectedHandler()(event);
+            }
+          }}
+          disabled={!(row.getCanSelect() || row.getCanSelectSubRows())}
+        />
+      </Input.Root>
+    </div>
   );
 };
 
@@ -427,21 +429,22 @@ export class ColumnBuilder<TData extends RowData> {
     return {
       id,
       size: 32,
-      minSize: 32,
-      maxSize: 32,
+      enableResizing: false,
       meta: { onUpdate, cell: { classNames } },
       header: ({ table }) => {
         const { rowsSelectable } = useTableContext('HELPER_SELECT_ROW_HEADER_CELL');
         const checked = table.getIsSomeRowsSelected() ? 'indeterminate' : table.getIsAllRowsSelected();
         return rowsSelectable === 'multi' ? (
-          <Input.Root>
-            <Input.Checkbox
-              size={4}
-              classNames={['mli-auto', classNames]}
-              checked={checked}
-              onCheckedChange={() => table.toggleAllRowsSelected()}
-            />
-          </Input.Root>
+          <div className='flex justify-center w-full h-full'>
+            <Input.Root>
+              <Input.Checkbox
+                size={4}
+                classNames={['mli-auto', classNames]}
+                checked={checked}
+                onCheckedChange={() => table.toggleAllRowsSelected()}
+              />
+            </Input.Root>
+          </div>
         ) : null;
       },
       cell: RowSelectorBuilderCell,
