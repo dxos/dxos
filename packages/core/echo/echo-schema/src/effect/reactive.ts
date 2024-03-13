@@ -6,6 +6,7 @@ import * as AST from '@effect/schema/AST';
 import * as S from '@effect/schema/Schema';
 import { pipe } from 'effect';
 import * as Option from 'effect/Option';
+import { type Mutable } from 'effect/Types';
 
 import { Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
@@ -21,8 +22,7 @@ import {
 import { SchemaValidator, symbolSchema } from './schema-validator';
 import { TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
-import { type ObjectMeta } from '../object';
-import { Mutable } from 'effect/Types';
+import { data, type ObjectMeta } from '../object';
 
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
@@ -53,7 +53,7 @@ export const getEchoObjectAnnotation = (schema: S.Schema<any>) =>
  * Accessing properties triggers signal semantics.
  */
 // This type doesn't change the shape of the object, it is rather used as an indicator that the object is reactive.
-export type ReactiveObject<T> = { [K in keyof T]: T[K] };
+export type ReactiveObject<T> = { [K in keyof T]: T[K] } & { [data]?(): any };
 
 export type EchoReactiveObject<T> = ReactiveObject<T> & { id: string };
 
@@ -76,14 +76,17 @@ export const object: {
     }
     const schema: S.Schema<T> = schemaOrObj as S.Schema<T>;
     SchemaValidator.prepareTarget(obj, schema);
-    return createReactiveProxy(obj, new TypedReactiveHandler());
+    return createReactiveProxy(obj, new TypedReactiveHandler()) as ReactiveObject<Mutable<T>>;
   } else {
     if (!isValidProxyTarget(schemaOrObj)) {
       throw new Error('Value cannot be made into a reactive object.');
     }
 
     // Untyped.
-    return createReactiveProxy(schemaOrObj as T, UntypedReactiveHandler.instance as ReactiveHandler<any>);
+    return createReactiveProxy(
+      schemaOrObj as T,
+      UntypedReactiveHandler.instance as ReactiveHandler<any>,
+    ) as ReactiveObject<Mutable<T>>;
   }
 };
 

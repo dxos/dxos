@@ -21,8 +21,8 @@ import {
 } from './proxy';
 import { type EchoReactiveObject, getSchema, getTypeReference } from './reactive';
 import { SchemaValidator } from './schema-validator';
-import { AutomergeObjectCore, encodeReference } from '../automerge';
-import { type ObjectMeta } from '../object';
+import { AutomergeObjectCore, encodeReference, REFERENCE_TYPE_TAG } from '../automerge';
+import { data, type ObjectMeta } from '../object';
 import { defineHiddenProperty } from '../util/property';
 
 const symbolPath = Symbol('path');
@@ -105,7 +105,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     this._signal.notifyRead();
 
+    const isRootObject = target[symbolPath].length === 0;
+
     if (typeof prop === 'symbol') {
+      if (isRootObject && prop === data) {
+        return this._toJSON(target);
+      }
       return Reflect.get(target, prop);
     }
 
@@ -113,7 +118,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return this._arrayGet(target, prop);
     }
 
-    if (prop === 'id' && target[symbolPath].length === 0) {
+    if (prop === 'id' && isRootObject) {
       return this._objectCore.id;
     }
 
@@ -446,7 +451,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   ) {
     const handler = this[symbolHandler] as EchoReactiveHandler;
     const isTyped = !!handler._objectCore.getType();
-    const proxy = handler._proxyMap.get(this);
+    const proxy = handler.getReified(this);
     invariant(proxy, '_proxyMap corrupted');
     const reified = { ...proxy }; // Will call proxy methods and construct a plain JS object.
     return `${isTyped ? 'Typed' : ''}EchoObject ${inspectFn(reified, {
@@ -456,6 +461,26 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       customInspect: false,
     })}`;
   };
+
+  private _toJSON(target: any): any {
+    const typeRef = this._objectCore.getType();
+    return {
+      '@type': typeRef
+        ? { '@type': REFERENCE_TYPE_TAG, itemId: typeRef.itemId, protocol: typeRef.protocol, host: typeRef.host }
+        : undefined,
+      ...(this._objectCore.isDeleted() ? { '@deleted': true } : {}),
+      '@meta': { ...this.getMeta() },
+      id: this._objectCore.id,
+      ...this.getReified(target),
+    };
+  }
+
+  private getReified(target: any) {
+    const proxy = this._proxyMap.get(target);
+    invariant(proxy, '_proxyMap corrupted');
+    // Will call proxy methods and construct a plain JS object.
+    return { ...proxy };
+  }
 }
 
 /**

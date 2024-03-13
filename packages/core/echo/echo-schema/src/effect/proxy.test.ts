@@ -9,7 +9,7 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
 import * as R from './reactive';
-import { TestSchema } from './testing/schema';
+import { TEST_OBJECT, TestSchema } from './testing/schema';
 import { updateCounter } from './testutils';
 import { Hypergraph } from '../hypergraph';
 import { createDatabase } from '../testing';
@@ -558,12 +558,3 @@ for (const schema of [undefined, TestSchema]) {
     });
   }
 }
-
-const TEST_OBJECT: TestSchema = {
-  string: 'foo',
-  number: 42,
-  boolean: true,
-  null: null,
-  stringArray: ['1', '2', '3'],
-  object: { field: 'bar' },
-};

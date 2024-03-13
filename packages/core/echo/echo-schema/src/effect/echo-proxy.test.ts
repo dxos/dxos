@@ -12,10 +12,12 @@ import { describe, test } from '@dxos/test';
 
 import { createEchoReactiveObject } from './echo-handler';
 import * as E from './reactive';
-import { TestClass, TestSchema, type TestSchemaWithClass } from './testing/schema';
+import { getTypeReference } from './reactive';
+import { TEST_OBJECT, TestClass, TestSchema, type TestSchemaWithClass } from './testing/schema';
 import { AutomergeContext, type SpaceDoc } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
+import { data } from '../object';
 import { Filter } from '../query';
 import { createDatabase } from '../testing';
 import { Task } from '../tests/proto';
@@ -194,6 +196,19 @@ describe('Reactive Object with ECHO database', () => {
         expect(query.objects.length).to.eq(1);
       }
     });
+  });
+
+  test('data symbol', async () => {
+    const { db, graph } = await createDatabase(undefined, { useReactiveObjectApi: true });
+    graph.types.registerEffectSchema(EchoObjectSchema);
+    const obj = db.add(E.object(EchoObjectSchema, { ...TEST_OBJECT }));
+    const objData: any = obj[data];
+    expect(objData).to.deep.contain({
+      '@meta': { keys: [] },
+      '@type': { '@type': 'dxos.echo.model.document.Reference', ...getTypeReference(EchoObjectSchema) },
+      ...TEST_OBJECT,
+    });
+    expect(objData.id).to.be.a('string');
   });
 
   test('references', async () => {
