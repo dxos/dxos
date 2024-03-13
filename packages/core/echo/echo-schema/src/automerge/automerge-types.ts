@@ -34,5 +34,5 @@ export const DocAccessor = {
 
 export const createDocAccessor = <T = any>(text: TextObject): DocAccessor<T> => {
   const obj = text as any as AutomergeTextCompat;
-  return getRawDoc(obj, [obj.field]);
+  return getRawDoc(obj, [obj.field ?? 'content']);
 };

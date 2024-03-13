@@ -14,7 +14,7 @@ import { assignDeep } from '@dxos/util';
 import { AutomergeArray } from './automerge-array';
 import { AutomergeObjectCore, type BindOptions } from './automerge-object-core';
 import { type DocAccessor } from './automerge-types';
-import { REFERENCE_TYPE_TAG, type ObjectSystem } from './types';
+import { REFERENCE_TYPE_TAG, type ObjectSystem, isValidKeyPath } from './types';
 import { type EchoDatabase } from '../database';
 import { EchoReactiveHandler } from '../effect/echo-handler';
 import { getProxyHandlerSlot, isReactiveProxy } from '../effect/proxy';
@@ -381,6 +381,7 @@ const isRootDataObjectKey = (relativePath: string[], key: string | symbol) => {
 
 export const getRawDoc = (obj: OpaqueEchoObject, path?: string[]): DocAccessor => {
   invariant(isAutomergeObject(obj) || isReactiveProxy(obj));
+  invariant(path === undefined || isValidKeyPath(path));
 
   if (isAutomergeObject(obj)) {
     return obj[base]._getRawDoc(path);
