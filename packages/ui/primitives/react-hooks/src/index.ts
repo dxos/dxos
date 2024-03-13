@@ -7,3 +7,4 @@ export * from './useForwardedRef';
 export * from './useId';
 export * from './useIsFocused';
 export * from './useMediaQuery';
+export * from './useDefaultValue';
