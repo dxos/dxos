@@ -11,5 +11,5 @@ export const PropertiesSchema = S.struct({
   // TODO(dmaretskyi): Remove.
   'composer.dxos.org.opened': S.optional(S.number),
   'composer.dxos.org.version': S.optional(S.union(S.string, S.number)),
-  'braneframe.Folder': S.optional(E.ref(S.any)),
+  'braneframe.Folder': S.optional(E.ref(E.AnyEchoObject)),
 }).pipe(E.echoObject('dxos.sdk.client.Properties', '0.1.0'));

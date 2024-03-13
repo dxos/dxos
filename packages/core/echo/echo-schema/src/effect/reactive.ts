@@ -11,7 +11,7 @@ import { Simplify, type Mutable } from 'effect/Types';
 import { Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 
-import { EchoReactiveHandler, validateIdNotPresentOnSchema } from './echo-handler';
+import { EchoReactiveHandler } from './echo-handler';
 import {
   type ReactiveHandler,
   createReactiveProxy,
@@ -19,7 +19,7 @@ import {
   isReactiveProxy,
   getProxyHandlerSlot,
 } from './proxy';
-import { SchemaValidator, symbolSchema } from './schema-validator';
+import { SchemaValidator, symbolSchema, validateIdNotPresentOnSchema } from './schema-validator';
 import { TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 import { data, type ObjectMeta } from '../object';
@@ -37,7 +37,7 @@ export type EchoObjectAnnotation = {
 // TODO(dmaretskyi): Add `id` field to the schema type.
 export const echoObject =
   (typename: string, version: string) =>
-  <A, I, R>(self: S.Schema<A, I, R>): S.Schema<Identifiable & Mutable<A>> => {
+  <A, I, R>(self: S.Schema<A, I, R>): S.Schema<Simplify<Identifiable & Mutable<A>>> => {
     if (!AST.isTypeLiteral(self.ast)) {
       throw new Error('echoObject can only be applied to S.struct instances.');
     }
@@ -47,9 +47,11 @@ export const echoObject =
     const schemaWithId = S.extend(S.mutable(self), S.struct({ id: S.string }));
 
     return S.make(AST.setAnnotation(schemaWithId.ast, EchoObjectAnnotationId, { typename, version })) as S.Schema<
-      Identifiable & Mutable<A>
+      Simplify<Identifiable & Mutable<A>>
     >;
   };
+
+export const AnyEchoObject = S.struct({}).pipe(echoObject('Any', '0.1.0'));
 
 /**
  * Has `id`.
