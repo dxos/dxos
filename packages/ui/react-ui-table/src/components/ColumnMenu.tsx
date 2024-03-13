@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Check, CaretDown, Trash, X } from '@phosphor-icons/react';
+import { Check, Trash, X, GearSix } from '@phosphor-icons/react';
 import { type HeaderContext, type RowData } from '@tanstack/react-table';
 import React, { type FC, type PropsWithChildren, useRef, useState } from 'react';
 
@@ -100,7 +100,7 @@ export const ColumnPanel = <TData extends RowData, TValue>({
     <Popover.Root open={open} onOpenChange={(nextOpen) => setOpen(nextOpen)}>
       <Popover.Trigger asChild>
         <Button variant='ghost' classNames='p-1'>
-          <CaretDown className={getSize(4)} />
+          <GearSix className={getSize(4)} />
         </Button>
       </Popover.Trigger>
       <Popover.Portal>
