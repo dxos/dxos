@@ -82,7 +82,7 @@ export type SpacePluginOptions = {
     defaultSpace: Space;
     personalSpaceFolder: FolderType;
     dispatch: IntentDispatcher;
-  }) => void;
+  }) => Promise<void>;
 };
 
 export const SpacePlugin = ({
@@ -134,7 +134,7 @@ export const SpacePlugin = ({
         if (Migrations.versionProperty) {
           defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
         }
-        onFirstRun?.({
+        await onFirstRun?.({
           client,
           defaultSpace,
           personalSpaceFolder,
