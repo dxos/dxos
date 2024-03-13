@@ -54,7 +54,7 @@ export const echoObject =
 /**
  * Has `id`.
  */
-interface Identifiable {
+export interface Identifiable {
   readonly id: string;
 }
 
