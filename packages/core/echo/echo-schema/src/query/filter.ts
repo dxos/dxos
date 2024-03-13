@@ -12,7 +12,7 @@ import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/
 
 import { Mutable } from 'effect/Types';
 import { type AutomergeObjectCore } from '../automerge';
-import { EchoReactiveObject, getSchemaTypeRefOrThrow } from '../effect/echo-handler';
+import { getSchemaTypeRefOrThrow } from '../effect/echo-handler';
 import {
   getReferenceWithSpaceKey,
   immutable,
@@ -23,6 +23,7 @@ import {
   type TypedObject,
 } from '../object';
 import { type Schema } from '../proto';
+import { EchoReactiveObject } from '../effect/reactive';
 
 export const hasType =
   <T extends TypedObject>(schema: Schema) =>

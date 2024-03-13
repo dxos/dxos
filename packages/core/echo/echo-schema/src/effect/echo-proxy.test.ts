@@ -10,7 +10,7 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
-import { createEchoReactiveObject, isEchoReactiveObject, type EchoReactiveObject } from './echo-handler';
+import { createEchoReactiveObject } from './echo-handler';
 import * as E from './reactive';
 import { TestClass, TestSchema, type TestSchemaWithClass } from './testing/schema';
 import { AutomergeContext, type SpaceDoc } from '../automerge';
@@ -30,7 +30,7 @@ test('id property name is reserved', () => {
 });
 
 for (const schema of [undefined, EchoObjectSchema]) {
-  const createObject = (props: Partial<TestSchemaWithClass> = {}): EchoReactiveObject<TestSchemaWithClass> => {
+  const createObject = (props: Partial<TestSchemaWithClass> = {}): E.EchoReactiveObject<TestSchemaWithClass> => {
     return createEchoReactiveObject(schema ? E.object(schema, props) : E.object(props));
   };
 
@@ -66,7 +66,7 @@ for (const schema of [undefined, EchoObjectSchema]) {
 
     test('isEchoReactiveObject', () => {
       const obj = createObject({ string: 'bar' });
-      expect(isEchoReactiveObject(obj)).to.be.true;
+      expect(E.isEchoReactiveObject(obj)).to.be.true;
     });
   });
 }
@@ -125,8 +125,8 @@ describe('Reactive Object with ECHO database', () => {
       const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey, useReactiveObjectApi: true });
       await db._automerge.open({ rootUrl: doc.url });
 
-      const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
-      expect(isEchoReactiveObject(obj)).to.be.true;
+      const obj = db.getObjectById(id) as E.EchoReactiveObject<TestSchema>;
+      expect(E.isEchoReactiveObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
 
@@ -157,8 +157,8 @@ describe('Reactive Object with ECHO database', () => {
       const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey, useReactiveObjectApi: true });
       await db._automerge.open({ rootUrl: doc.url });
 
-      const obj = db.getObjectById(id) as any as EchoReactiveObject<TaskSchema>;
-      expect(isEchoReactiveObject(obj)).to.be.true;
+      const obj = db.getObjectById(id) as any as E.EchoReactiveObject<TaskSchema>;
+      expect(E.isEchoReactiveObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
 
       expect(obj.title).to.eq(task.title);
@@ -256,7 +256,7 @@ describe('Reactive Object with ECHO database', () => {
       {
         const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey, useReactiveObjectApi: true });
         await db._automerge.open({ rootUrl: doc.url });
-        const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
+        const obj = db.getObjectById(id) as E.EchoReactiveObject<TestSchema>;
         expect(E.metaOf(obj).keys).to.deep.eq([metaKey]);
       }
     });

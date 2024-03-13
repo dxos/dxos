@@ -19,16 +19,11 @@ import {
   symbolIsProxy,
   type ReactiveHandler,
 } from './proxy';
-import { getSchema, getTypeReference, type ReactiveObject } from './reactive';
+import { EchoReactiveObject, getSchema, getTypeReference, type ReactiveObject } from './reactive';
 import { SchemaValidator } from './schema-validator';
 import { AutomergeObjectCore, encodeReference } from '../automerge';
 import { type ObjectMeta } from '../object';
 import { defineHiddenProperty } from '../util/property';
-
-export type EchoReactiveObject<T> = ReactiveObject<T> & { id: string };
-
-export const isEchoReactiveObject = (value: unknown): value is EchoReactiveObject<any> =>
-  isReactiveProxy(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;
 
 const symbolPath = Symbol('path');
 const symbolNamespace = Symbol('namespace');

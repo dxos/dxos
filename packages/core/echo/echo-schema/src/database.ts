@@ -15,12 +15,8 @@ import {
   type InitRootProxyFn,
   type AutomergeObjectCore,
 } from './automerge';
-import {
-  type EchoReactiveObject,
-  createEchoReactiveObject,
-  initEchoReactiveObjectRootProxy,
-} from './effect/echo-handler';
-import { getSchema } from './effect/reactive';
+import { createEchoReactiveObject, initEchoReactiveObjectRootProxy } from './effect/echo-handler';
+import { EchoReactiveObject, getSchema } from './effect/reactive';
 import { type Hypergraph } from './hypergraph';
 import { isAutomergeObject, type EchoObject, type TypedObject, type OpaqueEchoObject, base } from './object';
 import { type Filter, type FilterSource, type Query } from './query';

@@ -11,8 +11,9 @@ import { type AbstractEchoObject } from './object';
 import { isAutomergeObject } from './typed-object';
 import { base, type OpaqueEchoObject, type EchoObject, type ForeignKey } from './types';
 import type { EchoDatabase } from '../database';
-import { type EchoReactiveHandler, isEchoReactiveObject } from '../effect/echo-handler';
+import { type EchoReactiveHandler } from '../effect/echo-handler';
 import { getProxyHandlerSlot } from '../effect/proxy';
+import { isEchoReactiveObject } from '../effect/reactive';
 
 export const setStateFromSnapshot = (obj: AbstractEchoObject, snapshot: ObjectSnapshot | TextSnapshot) => {
   invariant(obj[base]._stateMachine);

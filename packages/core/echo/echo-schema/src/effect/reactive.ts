@@ -54,6 +54,11 @@ export const getEchoObjectAnnotation = (schema: S.Schema<any>) =>
 // This type doesn't change the shape of the object, it is rather used as an indicator that the object is reactive.
 export type ReactiveObject<T> = { [K in keyof T]: T[K] };
 
+export type EchoReactiveObject<T> = ReactiveObject<T> & { id: string };
+
+export const isEchoReactiveObject = (value: unknown): value is EchoReactiveObject<any> =>
+  isReactiveProxy(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;
+
 /**
  * Creates a reactive object from a plain Javascript object.
  * Optionally provides a TS-effect schema.
@@ -96,7 +101,7 @@ export const getRefAnnotation = (schema: S.Schema<any>) =>
 /**
  * Returns the schema for the given object if one is defined.
  */
-export const getSchema = <T extends {}>(obj: T): S.Schema<T> | undefined => {
+export const getSchema = <T extends {} = any>(obj: T): S.Schema<T> | undefined => {
   if (isReactiveProxy(obj)) {
     const proxyHandlerSlot = getProxyHandlerSlot(obj);
     if (proxyHandlerSlot.handler instanceof EchoReactiveHandler) {
