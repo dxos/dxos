@@ -15,15 +15,11 @@ import {
   type InitRootProxyFn,
   type AutomergeObjectCore,
 } from './automerge';
-import {
-  type EchoReactiveObject,
-  createEchoReactiveObject,
-  initEchoReactiveObjectRootProxy,
-} from './effect/echo-handler';
-import { getSchema } from './effect/reactive';
+import { createEchoReactiveObject, initEchoReactiveObjectRootProxy } from './effect/echo-handler';
+import { EchoReactiveObject, getSchema } from './effect/reactive';
 import { type Hypergraph } from './hypergraph';
 import { isAutomergeObject, type EchoObject, type TypedObject, type OpaqueEchoObject, base } from './object';
-import { type FilterSource, type Query } from './query';
+import { type Filter, type FilterSource, type Query } from './query';
 
 export interface EchoDatabase {
   get graph(): Hypergraph;
@@ -45,7 +41,12 @@ export interface EchoDatabase {
   /**
    * Query objects.
    */
-  query<T extends TypedObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T>;
+  query(): Query<TypedObject>;
+  query<T extends OpaqueEchoObject = TypedObject>(
+    filter?: Filter<T> | undefined,
+    options?: QueryOptions | undefined,
+  ): Query<T>;
+  query<T extends {}>(filter?: T | undefined, options?: QueryOptions | undefined): Query<TypedObject>;
 
   /**
    * Wait for all pending changes to be saved to disk.
@@ -116,7 +117,7 @@ export class EchoDatabaseImpl implements EchoDatabase {
     return this._automerge.getObjectById(id) as T | undefined;
   }
 
-  add<T extends OpaqueEchoObject>(obj: T): T extends EchoObject ? T : EchoReactiveObject<T> {
+  add<T extends OpaqueEchoObject>(obj: T): T extends EchoObject ? T : EchoReactiveObject<{ [K in keyof T]: T[K] }> {
     if (!this._useReactiveObjectApi) {
       invariant(isAutomergeObject(obj));
       this._automerge.add(obj);
@@ -138,7 +139,13 @@ export class EchoDatabaseImpl implements EchoDatabase {
     return this._automerge.remove(obj);
   }
 
-  query<T extends TypedObject>(filter?: FilterSource<T> | undefined, options?: QueryOptions | undefined): Query<T> {
+  query(): Query<TypedObject>;
+  query<T extends OpaqueEchoObject>(filter?: Filter<T> | undefined, options?: QueryOptions | undefined): Query<T>;
+  query<T extends {}>(filter?: T | undefined, options?: QueryOptions | undefined): Query<TypedObject>;
+  query<T extends OpaqueEchoObject>(
+    filter?: FilterSource<T> | undefined,
+    options?: QueryOptions | undefined,
+  ): Query<T> {
     options ??= {};
     options.spaces = [this.spaceKey];
 

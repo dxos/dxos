@@ -4,7 +4,7 @@
 
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
-import { type ChangeFn, type Doc } from '@dxos/automerge/automerge';
+import { isAutomerge, type ChangeFn, type Doc } from '@dxos/automerge/automerge';
 import { Reference } from '@dxos/document-model';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -14,10 +14,10 @@ import { assignDeep } from '@dxos/util';
 import { AutomergeArray } from './automerge-array';
 import { AutomergeObjectCore, type BindOptions } from './automerge-object-core';
 import { type DocAccessor } from './automerge-types';
-import { REFERENCE_TYPE_TAG, type ObjectSystem } from './types';
+import { REFERENCE_TYPE_TAG, type ObjectSystem, isValidKeyPath } from './types';
 import { type EchoDatabase } from '../database';
 import { EchoReactiveHandler } from '../effect/echo-handler';
-import { getProxyHandlerSlot } from '../effect/proxy';
+import { getProxyHandlerSlot, isReactiveProxy } from '../effect/proxy';
 import {
   base,
   data,
@@ -379,9 +379,17 @@ const isRootDataObjectKey = (relativePath: string[], key: string | symbol) => {
   );
 };
 
-export const getRawDoc = (obj: EchoObject, path?: string[]): DocAccessor => {
-  invariant(isAutomergeObject(obj));
-  return obj[base]._getRawDoc(path);
+export const getRawDoc = (obj: OpaqueEchoObject, path?: string[]): DocAccessor => {
+  invariant(isAutomergeObject(obj) || isReactiveProxy(obj));
+  invariant(path === undefined || isValidKeyPath(path));
+
+  if (isAutomergeObject(obj)) {
+    return obj[base]._getRawDoc(path);
+  } else {
+    const handler = getProxyHandlerSlot(obj).handler;
+    invariant(handler instanceof EchoReactiveHandler);
+    return handler._objectCore.getDocAccessor(path);
+  }
 };
 
 export const getAutomergeObjectCore = (obj: OpaqueEchoObject): AutomergeObjectCore => {
