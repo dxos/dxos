@@ -46,7 +46,11 @@ for (const schema of [undefined, EchoObjectSchema]) {
       const obj = createObject({ string: 'bar' });
 
       const str = inspect(obj, { colors: false });
-      expect(str).to.eq(`${schema == null ? '' : 'Typed'}EchoObject { string: 'bar' }`);
+      expect(str.startsWith(`${schema == null ? '' : 'Typed'}EchoObject`)).to.be.true;
+      expect(str.includes(`string: 'bar'`)).to.be.true;
+      if (schema) {
+        expect(str.includes(`id: '${obj.id}'`)).to.be.true;
+      }
     });
 
     test('throws when assigning a class instances', () => {
@@ -63,7 +67,11 @@ for (const schema of [undefined, EchoObjectSchema]) {
 
     test('removes undefined fields on creation', () => {
       const obj = createObject({ undefined });
-      expect(obj).to.deep.eq({});
+      if (!schema) {
+        expect(obj).to.deep.eq({});
+      } else {
+        expect(obj).to.deep.eq({ id: obj.id });
+      }
     });
 
     test('isEchoReactiveObject', () => {

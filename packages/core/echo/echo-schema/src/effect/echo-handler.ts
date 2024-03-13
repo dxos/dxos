@@ -570,12 +570,15 @@ export const initEchoReactiveObjectRootProxy = (core: AutomergeObjectCore) => {
   handler._objectCore.rootProxy = createReactiveProxy<ProxyTarget>(target, handler) as any;
 };
 
-const validateSchema = (schema: S.Schema<any>) => {
+export const validateIdNotPresentOnSchema = (schema: S.Schema<any, any, any>) => {
   invariant(isTypeLiteral(schema.ast));
   const idProperty = AST.getPropertySignatures(schema.ast).find((prop) => prop.name === 'id');
   if (idProperty != null) {
     throw new Error('"id" property name is reserved');
   }
+};
+
+const validateSchema = (schema: S.Schema<any>) => {
   getSchemaTypeRefOrThrow(schema);
   SchemaValidator.validateSchema(schema);
 };
