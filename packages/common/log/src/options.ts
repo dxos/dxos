@@ -46,13 +46,7 @@ export const getConfig = (options?: LogOptions): LogConfig => {
         }
       : undefined;
 
-  const mergedOptions: LogOptions = defaultsDeep(
-    {},
-    options,
-    nodeOptions && loadOptions(nodeOptions.file),
-    nodeOptions,
-  );
-
+  const mergedOptions: LogOptions = defaultsDeep({}, loadOptions(nodeOptions?.file), nodeOptions, options);
   return {
     options: mergedOptions,
     filters: parseFilter(mergedOptions.filter ?? LogLevel.INFO),
