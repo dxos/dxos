@@ -81,7 +81,7 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
     // Convert arrays to reactive arrays on write.
     if (Array.isArray(value)) {
-      value = new ReactiveArray(...value);
+      value = ReactiveArray.from(value);
     }
 
     const result = Reflect.set(target, prop, value);
