@@ -12,7 +12,7 @@ import React, {
   type PropsWithChildren,
 } from 'react';
 
-import { Button, DropdownMenu, List, ListItem, useTranslation } from '@dxos/react-ui';
+import { DropdownMenu, List, ListItem, useTranslation } from '@dxos/react-ui';
 import {
   type MosaicActiveType,
   type MosaicDataItem,
@@ -33,6 +33,7 @@ import {
   staticHoverableControls,
 } from '@dxos/react-ui-theme';
 
+import { DropDownMenuDragHandleTrigger } from './DropDownMenuDragHandleTrigger';
 import { translationKey } from '../translations';
 
 export type StackSectionContent = MosaicDataItem & { title?: string };
@@ -119,8 +120,8 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
               onOpenChange: setOptionsMenuOpen,
             }}
           >
-            {/* TODO(thure): Somehow we need to anchor the DropdownMenu.Content against the trigger, but only open the DropdownMenu on `mouseUp` and `keyDown`. */}
-            <Button
+            <DropDownMenuDragHandleTrigger
+              active={!!active}
               variant='ghost'
               className={mx(
                 fineButtonDimensions,
@@ -130,21 +131,9 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
               )}
               data-testid='section.drag-handle'
               {...draggableProps}
-              onPointerUp={() => {
-                if (!active) {
-                  console.log('[open menu]', 'todo');
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  console.log('[open menu]', 'todo');
-                } else {
-                  draggableProps?.onKeyDown?.(e);
-                }
-              }}
             >
               <Icon className={mx(getSize(5), hoverableControlItem, 'transition-opacity')} />
-            </Button>
+            </DropDownMenuDragHandleTrigger>
             <DropdownMenu.Portal>
               <DropdownMenu.Content>
                 <DropdownMenu.Viewport>
