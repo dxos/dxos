@@ -15,6 +15,7 @@ import {
   base,
   getAutomergeObjectCore,
 } from '@dxos/echo-schema';
+import { prohibitSignalActions } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
@@ -38,34 +39,36 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
       return [];
     }
 
-    const results: (QueryResult<EchoObject> | undefined)[] = await Promise.all(
-      response.results.map(async (result) => {
-        const space = this._params.spaceList.get(result.spaceKey);
-        if (!space) {
-          return;
-        }
+    const results: (QueryResult<EchoObject> | undefined)[] = await prohibitSignalActions(() =>
+      Promise.all(
+        response.results!.map(async (result) => {
+          const space = this._params.spaceList.get(result.spaceKey);
+          if (!space) {
+            return;
+          }
 
-        const object = await warnAfterTimeout(2000, 'takes to long to load object', async () => {
-          await space.waitUntilReady();
-          return space.db.automerge.loadObjectById(result.id);
-        });
+          const object = await warnAfterTimeout(2000, 'takes to long to load object', async () => {
+            await space.waitUntilReady();
+            return space.db.automerge.loadObjectById(result.id);
+          });
 
-        if (!object) {
-          return;
-        }
+          if (!object) {
+            return;
+          }
 
-        if (!filterMatch(filter, getAutomergeObjectCore(object[base]))) {
-          return;
-        }
+          if (!filterMatch(filter, getAutomergeObjectCore(object[base]))) {
+            return;
+          }
 
-        return {
-          id: object.id,
-          spaceKey: object[db]!.spaceKey,
-          object,
-          match: { rank: result.rank },
-          resolution: { source: 'index', time: Date.now() - start },
-        };
-      }),
+          return {
+            id: object.id,
+            spaceKey: object[db]!.spaceKey,
+            object,
+            match: { rank: result.rank },
+            resolution: { source: 'index', time: Date.now() - start },
+          };
+        }),
+      ),
     );
 
     return results.filter(Boolean) as QueryResult<EchoObject>[];
@@ -101,8 +104,10 @@ export class IndexQuerySource implements QuerySource {
     this._params
       .find(filter)
       .then((results) => {
-        this._results = results;
-        this.changed.emit();
+        prohibitSignalActions(() => {
+          this._results = results;
+          this.changed.emit();
+        });
       })
       .catch((error) => log.catch(error));
   }
