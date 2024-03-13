@@ -18,8 +18,11 @@ const CELL_NAME = 'Cell';
 const FocusableCell = <TData extends RowData, TValue>({ cell, children }: CellProps<TData, TValue>) => {
   const tableContext = useTableContext(CELL_NAME);
   const domAttributes = useFocusableGroup({ tabBehavior: 'limited' });
+
+  const className = tdRoot(tableContext, cell.column.columnDef.meta?.cell?.classNames);
+
   return (
-    <td tabIndex={0} {...domAttributes} className={tdRoot(tableContext, cell.column.columnDef.meta?.cell?.classNames)}>
+    <td tabIndex={0} {...domAttributes} className={className}>
       {children}
     </td>
   );
