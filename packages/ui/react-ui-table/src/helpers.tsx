@@ -95,8 +95,11 @@ const ComboboxBuilderCell = <TData extends RowData>(cellContext: CellContext<TDa
 };
 
 const StringBuilderCell = <TData extends RowData>(cellContext: CellContext<TData, string>) => {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const { onUpdate } = cellContext.column.columnDef.meta as ColumnMeta<TData, string>;
+  const ref = useRef<HTMLInputElement>(null);
+  const { findPrevFocusable } = useFocusFinders();
+
+  const { onUpdate, cell } = cellContext.column.columnDef.meta as ColumnMeta<TData, string>;
+
   // https://tanstack.com/table/v8/docs/examples/react/editable-data
   const initialValue = cellContext.getValue();
   const [value, setValue] = useState(() => {
@@ -109,16 +112,14 @@ const StringBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
   });
 
   const handleSave = () => {
-    if (value === initialValue) {
-      return;
+    ref.current && document.activeElement === ref.current && findPrevFocusable(ref.current)?.focus();
+
+    if (value !== initialValue) {
+      onUpdate?.(cellContext.row.original, cellContext.column.id, value);
     }
-
-    onUpdate?.(cellContext.row.original, cellContext.column.id, value);
   };
 
-  const handleCancel = () => {
-    setValue(initialValue);
-  };
+  const handleCancel = () => setValue(initialValue);
 
   // Check if first input column of last row.
   const rows = cellContext.table.getRowModel().flatRows;
@@ -129,12 +130,12 @@ const StringBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
   return (
     <Input.Root>
       <Input.TextInput
-        ref={inputRef}
+        ref={ref}
         variant='subdued'
         placeholder={placeholder ? 'Add row...' : undefined}
-        classNames={['is-full', textPadding]}
+        classNames={['is-full', textPadding, cell?.classNames]}
         value={value ?? ''}
-        onBlur={() => handleSave()}
+        onBlur={handleSave}
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={(event) => (event.key === 'Enter' && handleSave()) || (event.key === 'Escape' && handleCancel())}
       />
@@ -164,17 +165,20 @@ const NumberBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
     (!document.activeElement || document.activeElement !== ref.current) && setText(displayNumber(value, digits));
   }, [digits, value]);
 
-  const handleEdit = () => {
-    if (onUpdate) {
-      setText(value !== undefined ? String(value) : '');
-    }
-  };
+  const handleEdit = () => setText(value !== undefined ? String(value) : '');
 
   // TODO(burdon): Property is encoded as float (e.g., 6.1 => 6.099)
   const handleSave = () => {
     const nextValue = parseNumber(text);
-    onUpdate?.(cellContext.row.original, cellContext.column.id, isNaN(nextValue) ? undefined : nextValue);
-    setText(displayNumber(nextValue, digits));
+
+    if (!isNaN(nextValue)) {
+      onUpdate?.(cellContext.row.original, cellContext.column.id, nextValue);
+      setText(displayNumber(nextValue, digits));
+    } else {
+      // Reset the text to display the original value without updating the model.
+      setText(displayNumber(value, digits));
+    }
+
     // Shift focus only if input is focused on save (e.g. on `Enter`).
     ref.current && document.activeElement === ref.current && findPrevFocusable(ref.current)?.focus();
   };
@@ -210,20 +214,23 @@ const RowSelectorBuilderCell = <TData extends RowData>(cellContext: CellContext<
   const checked = row.getCanSelect()
     ? row.getIsSelected()
     : row.getCanSelectSubRows() && (row.getIsSomeSelected() ? 'indeterminate' : row.getIsAllSubRowsSelected());
+
   return (
-    <Input.Root>
-      <Input.Checkbox
-        size={4}
-        classNames={['mli-auto', cell?.classNames]}
-        checked={checked}
-        onCheckedChange={(event) => {
-          if (row.getCanSelect()) {
-            row.getToggleSelectedHandler()(event);
-          }
-        }}
-        disabled={!(row.getCanSelect() || row.getCanSelectSubRows())}
-      />
-    </Input.Root>
+    <div className='flex justify-center w-full h-full' role='presentation'>
+      <Input.Root>
+        <Input.Checkbox
+          size={4}
+          classNames={[cell?.classNames]}
+          checked={checked}
+          onCheckedChange={(event) => {
+            if (row.getCanSelect()) {
+              row.getToggleSelectedHandler()(event);
+            }
+          }}
+          disabled={!(row.getCanSelect() || row.getCanSelectSubRows())}
+        />
+      </Input.Root>
+    </div>
   );
 };
 
@@ -422,21 +429,22 @@ export class ColumnBuilder<TData extends RowData> {
     return {
       id,
       size: 32,
-      minSize: 32,
-      maxSize: 32,
+      enableResizing: false,
       meta: { onUpdate, cell: { classNames } },
       header: ({ table }) => {
         const { rowsSelectable } = useTableContext('HELPER_SELECT_ROW_HEADER_CELL');
         const checked = table.getIsSomeRowsSelected() ? 'indeterminate' : table.getIsAllRowsSelected();
         return rowsSelectable === 'multi' ? (
-          <Input.Root>
-            <Input.Checkbox
-              size={4}
-              classNames={['mli-auto', classNames]}
-              checked={checked}
-              onCheckedChange={() => table.toggleAllRowsSelected()}
-            />
-          </Input.Root>
+          <div className='flex justify-center w-full h-full' role='presentation'>
+            <Input.Root>
+              <Input.Checkbox
+                size={4}
+                classNames={['mli-auto', classNames]}
+                checked={checked}
+                onCheckedChange={() => table.toggleAllRowsSelected()}
+              />
+            </Input.Root>
+          </div>
         ) : null;
       },
       cell: RowSelectorBuilderCell,
