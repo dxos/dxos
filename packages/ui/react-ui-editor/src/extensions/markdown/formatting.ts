@@ -470,90 +470,94 @@ export const removeLink: StateCommand = ({ state, dispatch }) => {
 };
 
 // Add link markup around the selection
-export const addLink: StateCommand = ({ state, dispatch }) => {
-  const changes = state.changeByRange((range) => {
-    let { from, to } = range;
-    const cutStyles: SyntaxNode[] = [];
-    let okay: boolean | null = null;
-    // Check whether this range is in a position where a link makes sense
-    syntaxTree(state).iterate({
-      from,
-      to,
-      enter: (node) => {
-        if (Object.hasOwn(Textblocks, node.name)) {
-          // If the selection spans multiple textblocks or is in a
-          // code block, abort
-          okay =
-            Textblocks[node.name] !== 'codeblock' &&
-            from >= blockContentStart(node) &&
-            to <= blockContentEnd(node, state.doc);
-        } else if (Object.hasOwn(InlineMarker, node.name)) {
-          // Look for inline styles that partially overlap the range.
-          // Expand the range over them if they start directly
-          // outside, otherwise mark them for later
-          const sNode = node.node;
-          if (node.from < from && node.to <= to) {
-            if (sNode.firstChild!.to === from) {
-              from = node.from;
-            } else {
-              cutStyles.push(sNode);
-            }
-          } else if (node.from >= from && node.to > to) {
-            if (sNode.lastChild!.from === to) {
-              to = node.to;
-            } else {
-              cutStyles.push(sNode);
+export const addLink =
+  ({ url, image }: { url?: string; image?: boolean } = {}): StateCommand =>
+  ({ state, dispatch }) => {
+    const changes = state.changeByRange((range) => {
+      let { from, to } = range;
+      const cutStyles: SyntaxNode[] = [];
+      let okay: boolean | null = null;
+      // Check whether this range is in a position where a link makes sense.
+      syntaxTree(state).iterate({
+        from,
+        to,
+        enter: (node) => {
+          if (Object.hasOwn(Textblocks, node.name)) {
+            // If the selection spans multiple textblocks or is in a code block, abort.
+            okay =
+              Textblocks[node.name] !== 'codeblock' &&
+              from >= blockContentStart(node) &&
+              to <= blockContentEnd(node, state.doc);
+          } else if (Object.hasOwn(InlineMarker, node.name)) {
+            // Look for inline styles that partially overlap the range.
+            // Expand the range over them if they start directly outside, otherwise mark them for later.
+            const sNode = node.node;
+            if (node.from < from && node.to <= to) {
+              if (sNode.firstChild!.to === from) {
+                from = node.from;
+              } else {
+                cutStyles.push(sNode);
+              }
+            } else if (node.from >= from && node.to > to) {
+              if (sNode.lastChild!.from === to) {
+                to = node.to;
+              } else {
+                cutStyles.push(sNode);
+              }
             }
           }
-        }
-      },
-    });
+        },
+      });
 
-    if (okay === null) {
-      // No textblock found around selection. Check if the rest of the line is empty.
-      const line = state.doc.lineAt(from);
-      okay = to <= line.to && !/\S/.test(line.text.slice(from - line.from));
-    }
-    if (!okay) {
-      return { range };
-    }
-
-    const changes: ChangeSpec[] = [];
-    // Some changes must be moved to end of change array so that they are applied in the right order
-    const changesAfter: ChangeSpec[] = [];
-    // Clear existing links.
-    removeLinkInner(from, to, changesAfter, state);
-    let cursorOffset = 1;
-    // Close and reopen inline styles that partially overlap the range.
-    for (const style of cutStyles) {
-      const type = InlineMarker[style.name];
-      const mark = inlineMarkerText(type);
-      if (style.from < from) {
-        // Extends before.
-        changes.push({ from: skipSpaces(from, state.doc, -1), insert: mark });
-        changesAfter.push({ from: skipSpaces(from, state.doc, 1, to), insert: mark });
-      } else {
-        changes.push({ from: skipSpaces(to, state.doc, -1, from), insert: mark });
-        const after = skipSpaces(to, state.doc, 1);
-        if (after === to) {
-          cursorOffset += mark.length;
-        }
-        changesAfter.push({ from: after, insert: mark });
+      if (okay === null) {
+        // No textblock found around selection. Check if the rest of the line is empty.
+        const line = state.doc.lineAt(from);
+        okay = to <= line.to && !/\S/.test(line.text.slice(from - line.from));
       }
-    }
-    // Add the link markup.
-    changes.push({ from, insert: '[' }, { from: to, insert: ']()' });
-    const changeSet = state.changes(changes.concat(changesAfter));
-    // Put the cursor between the parenthesis.
-    return { changes: changeSet, range: EditorSelection.cursor(changeSet.mapPos(to, 1) - cursorOffset) };
-  });
-  if (changes.changes.empty) {
-    return false;
-  }
+      if (!okay) {
+        return { range };
+      }
 
-  dispatch(state.update(changes, { userEvent: 'format.link.add', scrollIntoView: true }));
-  return true;
-};
+      const changes: ChangeSpec[] = [];
+      // Some changes must be moved to end of change array so that they are applied in the right order
+      const changesAfter: ChangeSpec[] = [];
+      // Clear existing links.
+      removeLinkInner(from, to, changesAfter, state);
+      let cursorOffset = 1;
+      // Close and reopen inline styles that partially overlap the range.
+      for (const style of cutStyles) {
+        const type = InlineMarker[style.name];
+        const mark = inlineMarkerText(type);
+        if (style.from < from) {
+          // Extends before.
+          changes.push({ from: skipSpaces(from, state.doc, -1), insert: mark });
+          changesAfter.push({ from: skipSpaces(from, state.doc, 1, to), insert: mark });
+        } else {
+          changes.push({ from: skipSpaces(to, state.doc, -1, from), insert: mark });
+          const after = skipSpaces(to, state.doc, 1);
+          if (after === to) {
+            cursorOffset += mark.length;
+          }
+          changesAfter.push({ from: after, insert: mark });
+        }
+      }
+
+      // Add the link markup.
+      changes.push({ from, insert: image ? '![' : '[' }, { from: to, insert: `](${url})` });
+      const changeSet = state.changes(changes.concat(changesAfter));
+      // Put the cursor between the title or parenthesis.
+      return {
+        changes: changeSet,
+        range: EditorSelection.cursor(changeSet.mapPos(to, 1) - cursorOffset - (url ? url.length + 2 : 0)),
+      };
+    });
+    if (changes.changes.empty) {
+      return false;
+    }
+
+    dispatch(state.update(changes, { userEvent: 'format.link.add', scrollIntoView: true }));
+    return true;
+  };
 
 //
 // Lists
