@@ -79,9 +79,9 @@ export type SpacePluginProvides = SurfaceProvides &
 // TODO(wittjosiah): Factor out.
 export const FolderSchema = S.struct({
   name: S.optional(S.string),
-  objects: S.array(E.ref(S.unknown)),
+  objects: S.array(E.ref(E.AnyEchoObject)),
 }).pipe(E.echoObject('braneframe.Folder', '0.1.0'));
 
 export type FolderType = E.ReactiveObject<Mutable<S.Schema.To<typeof FolderSchema>>>;
 
-export const isFolder = (data: unknown): data is FolderType => data && E.getSchema(data) === FolderSchema;
+export const isFolder = (data: unknown): data is FolderType => !!data && E.getSchema(data) === FolderSchema;
