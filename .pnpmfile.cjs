@@ -1,26 +1,30 @@
 // https://pnpm.io/pnpmfile
 
 function lockfileWarning() {
-  const fs = require('fs')
-  const cp = require('child_process')
-  
-  // get repo root
-  const repoRoot = process.env.DX_BUILD_ROOT_DIR ?? cp.execSync('git rev-parse --show-toplevel').toString().trim()
+  const fs = require('fs');
+  const cp = require('child_process');
 
-  if(!fs.existsSync(`${repoRoot}/pnpm-lock.yaml`)) {
-    if(!process.env.REGENERATE_LOCKFILE) {
-      console.log('\n\nRegenerating lockfile from scratch is not recommended. Rerun with REGENERATE_LOCKFILE=1 if you know what you\'re doing.\n\n\n')
-      process.exit(1)
+  // get repo root
+  const repoRoot = process.env.DX_BUILD_ROOT_DIR ?? cp.execSync('git rev-parse --show-toplevel').toString().trim();
+
+  if (!fs.existsSync(`${repoRoot}/pnpm-lock.yaml`)) {
+    if (!process.env.REGENERATE_LOCKFILE) {
+      console.log(
+        "\n\nRegenerating lockfile from scratch is not recommended. Rerun with REGENERATE_LOCKFILE=1 if you know what you're doing.\n\n\n",
+      );
+      process.exit(1);
     } else {
       process.on('exit', () => {
-        fs.appendFileSync(`${repoRoot}/pnpm-lock.yaml`, `\n# First generated on ${new Date().toISOString()} by ${process.env.USER}\n`)
-      })
+        fs.appendFileSync(
+          `${repoRoot}/pnpm-lock.yaml`,
+          `\n# First generated on ${new Date().toISOString()} by ${process.env.USER}\n`,
+        );
+      });
     }
   }
 }
 
 lockfileWarning();
-
 
 function readPackage(packageJson, context) {
   switch (packageJson.name) {
@@ -33,19 +37,19 @@ function readPackage(packageJson, context) {
     case 'level-js':
     case 'random-access-idb-mutable-file':
     case 'unbzip2-stream': {
-      packageJson.dependencies['buffer'] = '^6.0.3'
+      packageJson.dependencies['buffer'] = '^6.0.3';
       break;
     }
 
     // Package has an unneccessarily strict peer dep of 17.0.1
     case '@hot-loader/react-dom': {
-      packageJson.peerDependencies['react'] = '^18.0.0'
+      packageJson.peerDependencies['react'] = '^18.0.0';
       break;
     }
 
     // https://github.com/nrwl/nx/issues/11456#issuecomment-1211214171
     case '@nx/nx-cloud': {
-      packageJson.dependencies['dotenv'] = '*'
+      packageJson.dependencies['dotenv'] = '*';
       break;
     }
 
@@ -74,19 +78,12 @@ function readPackage(packageJson, context) {
     // Conflict between web-ext and addons-scanner-utils.
     // web-ext > addons-linter > addons-scanner-utils.
     case 'addons-scanner-utils': {
-      delete packageJson.peerDependencies['node-fetch']
-      break;
-    }
-
-    // We don't use Preact within the monorepo.
-    case 'deepsignal': {
-      delete packageJson.peerDependencies['preact'];
-      delete packageJson.dependencies['@preact/signals'];
+      delete packageJson.peerDependencies['node-fetch'];
       break;
     }
 
     case 'esbuild-plugin-raw': {
-      packageJson.peerDependencies['esbuild'] = '^0.19.0'
+      packageJson.peerDependencies['esbuild'] = '^0.19.0';
       break;
     }
 
@@ -95,20 +92,20 @@ function readPackage(packageJson, context) {
     case 'ink-syntax-highlight':
     case 'ink-text-input':
     case 'react-reconciler': {
-      packageJson.peerDependencies['react'] = '^18.0.0'
+      packageJson.peerDependencies['react'] = '^18.0.0';
       break;
     }
 
     // @dxos/presenter
     case '@react-pdf/renderer': {
-      packageJson.peerDependencies['react'] = '^18.0.0'
+      packageJson.peerDependencies['react'] = '^18.0.0';
       break;
     }
 
     // @storybook/react transitive dep
     case 'react-element-to-jsx-string': {
-      packageJson.peerDependencies['react'] = '^18.0.0'
-      packageJson.peerDependencies['react-dom'] = '^18.0.0'
+      packageJson.peerDependencies['react'] = '^18.0.0';
+      packageJson.peerDependencies['react-dom'] = '^18.0.0';
       break;
     }
 
@@ -117,72 +114,72 @@ function readPackage(packageJson, context) {
     case '@mdx-js/react':
     // https://github.com/FezVrasta/react-resize-aware/issues/59
     case 'react-resize-aware': {
-      packageJson.peerDependencies['react'] = '^18.0.0'
+      packageJson.peerDependencies['react'] = '^18.0.0';
       break;
     }
 
     // @dxos/devtools
     case 'react-vis':
     case 'react-motion': {
-      packageJson.peerDependencies['react'] = '^18.0.0'
-      packageJson.peerDependencies['react-dom'] = '^18.0.0'
+      packageJson.peerDependencies['react'] = '^18.0.0';
+      packageJson.peerDependencies['react-dom'] = '^18.0.0';
       break;
     }
 
     // @dxos/devtools-extension
     case '@crxjs/vite-plugin': {
-      packageJson.peerDependencies['vite'] = '^5.0.0'
+      packageJson.peerDependencies['vite'] = '^5.0.0';
       break;
     }
 
     // https://github.com/dxos/dxos/issues/3330
     case 'simple-hypercore-protocol': {
-      packageJson.dependencies['noise-protocol'] = '3.0.1'
+      packageJson.dependencies['noise-protocol'] = '3.0.1';
       break;
     }
 
     case 'simple-handshake': {
-      packageJson.dependencies['noise-protocol'] = '3.0.1'
+      packageJson.dependencies['noise-protocol'] = '3.0.1';
       break;
     }
 
     case 'storybook-addon-react-router-v6': {
-      packageJson.peerDependencies['@storybook/addons'] = '^7.0.0-beta'
-      packageJson.peerDependencies['@storybook/api'] = '^7.0.0-beta'
-      packageJson.peerDependencies['@storybook/components'] = '^7.0.0-beta'
-      packageJson.peerDependencies['@storybook/core-events'] = '^7.0.0-beta'
-      packageJson.peerDependencies['@storybook/theming'] = '^7.0.0-beta'
+      packageJson.peerDependencies['@storybook/addons'] = '^7.0.0-beta';
+      packageJson.peerDependencies['@storybook/api'] = '^7.0.0-beta';
+      packageJson.peerDependencies['@storybook/components'] = '^7.0.0-beta';
+      packageJson.peerDependencies['@storybook/core-events'] = '^7.0.0-beta';
+      packageJson.peerDependencies['@storybook/theming'] = '^7.0.0-beta';
       break;
     }
 
     // @dxos/apidoc doesn't work with the latest version of typedoc (yet).
     case 'typedoc': {
-      packageJson.peerDependencies['typescript'] = '^5.0.0'
+      packageJson.peerDependencies['typescript'] = '^5.0.0';
       break;
     }
 
     case 'vite-plugin-fonts': {
-      packageJson.peerDependencies['vite'] = '^5.0.0'
+      packageJson.peerDependencies['vite'] = '^5.0.0';
       break;
     }
 
     // Ensure zen-push is using the same version of zen-observable.
     case 'zen-push': {
-      packageJson.dependencies['zen-observable'] = '^0.10.0'
+      packageJson.dependencies['zen-observable'] = '^0.10.0';
       break;
     }
   }
 
-  return packageJson
+  return packageJson;
 }
 
 function afterAllResolved(lockfile, context) {
-  return lockfile
+  return lockfile;
 }
 
 module.exports = {
   hooks: {
     readPackage,
     afterAllResolved,
-  }
-}
+  },
+};

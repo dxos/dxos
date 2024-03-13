@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { shallow } from 'deepsignal/react';
 import React, { useEffect, type FC, type PropsWithChildren, type ReactNode, useState } from 'react';
 
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -55,7 +54,7 @@ export const PluginHost = ({
     },
   });
 
-  state.prop(state.values.$enabled!, 'enabled', LocalStorageStore.json);
+  state.prop({ key: 'enabled', type: LocalStorageStore.json<string[]>() });
 
   return {
     meta: {
@@ -129,7 +128,7 @@ const Root = ({ order, core: corePluginIds, definitions, state, placeholder }: R
         await Promise.all(enabled.map((pluginDefinition) => pluginDefinition.ready?.(plugins)));
         log('plugins ready', { plugins });
 
-        state.plugins = shallow(plugins);
+        state.plugins = plugins;
         state.ready = true;
       } catch (err) {
         setError(err);

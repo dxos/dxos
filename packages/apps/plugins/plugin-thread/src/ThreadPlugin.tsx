@@ -4,7 +4,6 @@
 
 import { Chat, type IconProps } from '@phosphor-icons/react';
 import { batch, effect, untracked } from '@preact/signals-core';
-import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
@@ -23,6 +22,7 @@ import {
   parseGraphPlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
+import * as E from '@dxos/echo-schema/schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type TypedObject, getSpaceForObject, getTextInRange, SpaceProxy } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
@@ -53,7 +53,7 @@ const isMinSm = () => window.matchMedia('(min-width:768px)').matches;
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
-  const state = deepSignal<ThreadState>({ threads: {} });
+  const state = E.object<ThreadState>({ threads: {} });
 
   let navigationPlugin: Plugin<LocationProvides> | undefined;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
@@ -62,7 +62,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   return {
     meta,
     ready: async (plugins) => {
-      settings.prop(settings.values.$standalone!, 'standalone', LocalStorageStore.bool);
+      settings.prop({ key: 'standalone', type: LocalStorageStore.bool({ allowUndefined: true }) });
+
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);

@@ -4,8 +4,6 @@
 
 import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-core';
-import { type RevertDeepSignal } from 'deepsignal/react';
-import { deepSignal } from 'deepsignal/react';
 import React, { type PropsWithChildren, useEffect, useMemo } from 'react';
 
 import { type Node, useGraph } from '@braneframe/plugin-graph';
@@ -31,6 +29,7 @@ import {
   type Layout,
   IntentAction,
 } from '@dxos/app-framework';
+import * as E from '@dxos/echo-schema/schema';
 import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -85,7 +84,7 @@ export const LayoutPlugin = ({
     toasts: [],
   });
 
-  const location = deepSignal<NavigationState>({
+  const location = E.object<NavigationState>({
     active: undefined,
     previous: undefined,
 
@@ -146,11 +145,12 @@ export const LayoutPlugin = ({
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
 
-      layout.prop(layout.values.$sidebarOpen!, 'sidebar-open', LocalStorageStore.bool);
+      layout.prop({ key: 'sidebarOpen', storageKey: 'sidebar-open', type: LocalStorageStore.bool() });
 
+      // prettier-ignore
       settings
-        .prop(settings.values.$showFooter!, 'show-footer', LocalStorageStore.bool)
-        .prop(settings.values.$enableNativeRedirect!, 'enable-native-redirect', LocalStorageStore.bool);
+        .prop({ key: 'showFooter', storageKey: 'show-footer', type: LocalStorageStore.bool() })
+        .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() });
 
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);
@@ -161,8 +161,8 @@ export const LayoutPlugin = ({
     },
     provides: {
       settings: settings.values,
-      layout: layout.values as RevertDeepSignal<Layout>,
-      location: location as RevertDeepSignal<Location>,
+      layout: layout.values,
+      location,
       translations,
       graph: {
         builder: (_, graph) => {
@@ -189,9 +189,7 @@ export const LayoutPlugin = ({
       },
       context: (props: PropsWithChildren) => (
         <Mosaic.Root>
-          <LayoutContext.Provider value={layout.values as RevertDeepSignal<Layout>}>
-            {props.children}
-          </LayoutContext.Provider>
+          <LayoutContext.Provider value={layout.values}>{props.children}</LayoutContext.Provider>
         </Mosaic.Root>
       ),
       root: () => {

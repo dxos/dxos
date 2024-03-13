@@ -3,7 +3,6 @@
 //
 
 import type { IconProps } from '@phosphor-icons/react';
-import type { DeepSignal } from 'deepsignal/react';
 import type { FC } from 'react';
 
 import { Stack as StackType } from '@braneframe/types';
@@ -44,9 +43,9 @@ export type StackProvides = {
   };
 };
 
-export type StackState = DeepSignal<{
+export type StackState = {
   creators: StackSectionCreator[];
-}>;
+};
 
 export type StackSettingsProps = { separation: boolean };
 

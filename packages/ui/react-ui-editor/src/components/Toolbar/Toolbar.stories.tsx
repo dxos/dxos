@@ -76,7 +76,7 @@ const Story: FC<{ content: string }> = ({ content }) => {
         <Toolbar.Separator />
         <Toolbar.Extended />
       </Toolbar.Root>
-      <div role='textbox' ref={parentRef} className={textBlockWidth} />;
+      <div ref={parentRef} className={textBlockWidth} />;
     </div>
   );
 };

@@ -29,7 +29,7 @@ export class DatadogMetrics {
   constructor(options: DatadogOptions) {
     this._getTags = options.getTags;
     this._datadogmetrics = Datadog;
-    debug && debug.enable('metrics');
+    options.debug && debug.enable('metrics');
 
     this._datadogmetrics.init(defaultOptions(options));
   }
