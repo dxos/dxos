@@ -131,7 +131,6 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
 
   // Global hotkey listener
   binding.addEventListener('hotkey', () => {
-    console.log('Key pressed');
     appWindow.restore();
     void intentPlugin?.provides.intent.dispatch({
       action: LayoutAction.SET_LAYOUT,
