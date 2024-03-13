@@ -30,7 +30,6 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
   const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
   const binding = await socketWindow.hotkey.bind('cmd + k');
-  console.log(binding);
 
   //
   // Window size.
