@@ -103,8 +103,3 @@ export type DecodedAutomergeValue =
   | { [key: string]: DecodedAutomergeValue }
   | Reference
   | OpaqueEchoObject;
-
-export type KeyPath = (string | number)[];
-
-export const isValidKeyPath = (value: unknown): value is KeyPath =>
-  Array.isArray(value) && value.every((v) => typeof v === 'string' || typeof v === 'number');
