@@ -20,6 +20,7 @@ faker.seed(1);
 const Story = () => {
   const client = useClient();
   const [table, setTable] = useState<TableType>();
+
   useEffect(() => {
     const space = client.spaces.default;
     const generator = createSpaceObjectGenerator(space);
@@ -31,11 +32,17 @@ const Story = () => {
     setTable(table);
   }, []);
 
+  const containerRef = React.createRef<HTMLDivElement>();
+
   if (!table) {
     return null;
   }
 
-  return <ObjectTable table={table} />;
+  return (
+    <div ref={containerRef} className='inset-0 overflow-auto'>
+      <ObjectTable table={table} getScrollElement={() => containerRef.current} />
+    </div>
+  );
 };
 
 export default {

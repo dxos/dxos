@@ -118,6 +118,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
   const debug = false;
 
   const [showSettings, setShowSettings] = useState(false);
+
   useEffect(() => {
     setShowSettings(!table.schema);
   }, [table]);

@@ -4,6 +4,7 @@
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import {
   getCoreRowModel,
+  getSortedRowModel,
   useReactTable,
   type ColumnSizingInfoState,
   type GroupingState,
@@ -113,6 +114,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
 
     // Rows
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
 
     // Grouping
     getGroupedRowModel: grouping.length > 1 ? getGroupedRowModel() : undefined,
@@ -122,6 +124,9 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     enableRowSelection: rowsSelectable === true ? true : undefined,
 
     onRowSelectionChange: handleRowSelectionChange,
+
+    // Sorting
+    enableSorting: true,
 
     // Debug
     debugTable: debug,

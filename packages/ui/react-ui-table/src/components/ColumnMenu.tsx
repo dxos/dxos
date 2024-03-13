@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Check, Trash, X, GearSix } from '@phosphor-icons/react';
-import { type HeaderContext, type RowData } from '@tanstack/react-table';
-import React, { type FC, type PropsWithChildren, useRef, useState } from 'react';
+import { Check, Trash, X, GearSix, CaretUpDown, SortAscending, SortDescending } from '@phosphor-icons/react';
+import { type SortDirection, type HeaderContext, type RowData } from '@tanstack/react-table';
+import React, { type FC, type PropsWithChildren, useRef, useState, type ReactElement } from 'react';
 
 import { Button, DensityProvider, Input, Popover, Select, Separator, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -12,6 +12,30 @@ import { safeParseInt } from '@dxos/util';
 
 import { type TableDef, type ColumnProps, type ColumnType } from '../schema';
 import { translationKey } from '../translations';
+
+type SortButtonProps = { sortDirection: false | SortDirection; onClick: (e: any) => void };
+
+const SortButton = ({ sortDirection, onClick }: SortButtonProps) => {
+  let icon: ReactElement;
+  const size = getSize(4);
+
+  switch (sortDirection) {
+    case 'asc':
+      icon = <SortAscending className={size} />;
+      break;
+    case 'desc':
+      icon = <SortDescending className={size} />;
+      break;
+    default:
+      icon = <CaretUpDown className={size} />;
+  }
+
+  return (
+    <Button variant='ghost' onClick={onClick}>
+      {icon}
+    </Button>
+  );
+};
 
 export type ColumnMenuProps<TData extends RowData, TValue> = {
   context: HeaderContext<TData, TValue>;
@@ -24,12 +48,20 @@ export type ColumnMenuProps<TData extends RowData, TValue> = {
 
 export const ColumnMenu = <TData extends RowData, TValue>({ column, ...props }: ColumnMenuProps<TData, TValue>) => {
   const title = column.label?.length ? column.label : column.id;
+
+  const header = props.context.header;
+
+  const canSort = header.column.getCanSort();
+  const sortDirection = header.column.getIsSorted();
+  const toggleSort = header.column.getToggleSortingHandler();
+
   return (
     <div className='flex items-center gap-2'>
       <div className='flex-1 min-is-0 truncate' title={title}>
         {title}
       </div>
-      <div className='flex shrink-0'>
+      <div className='flex gap-0'>
+        {canSort && toggleSort && <SortButton sortDirection={sortDirection} onClick={toggleSort} />}
         <ColumnPanel {...props} column={column} />
       </div>
     </div>
@@ -99,7 +131,7 @@ export const ColumnPanel = <TData extends RowData, TValue>({
   return (
     <Popover.Root open={open} onOpenChange={(nextOpen) => setOpen(nextOpen)}>
       <Popover.Trigger asChild>
-        <Button variant='ghost' classNames='p-1'>
+        <Button variant='ghost'>
           <GearSix className={getSize(4)} />
         </Button>
       </Popover.Trigger>
