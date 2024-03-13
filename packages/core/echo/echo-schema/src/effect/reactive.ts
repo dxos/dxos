@@ -33,6 +33,7 @@ export type EchoObjectAnnotation = {
   version: string;
 };
 
+// TODO(dmaretskyi): Add `id` field to the schema type.
 export const echoObject =
   (typename: string, version: string) =>
   <A, I, R>(self: S.Schema<A, I, R>): S.Schema<A, I, R> =>
@@ -89,6 +90,7 @@ export const object: {
 export const ReferenceAnnotation = Symbol.for('@dxos/schema/annotation/Reference');
 export type ReferenceAnnotationValue = {};
 
+// TODO(dmaretskyi): Assert that schema has `id`.
 export const ref = <T>(targetType: S.Schema<T>): S.Schema<T> =>
   S.make(AST.setAnnotation(targetType.ast, ReferenceAnnotation, {}));
 

@@ -42,6 +42,7 @@ import {
   MarkdownAction,
   DocumentSchema,
   isDocument,
+  TextV0Schema,
 } from './types';
 import { getFallbackTitle, isMarkdownProperties, markdownExtensionPlugins } from './util';
 
@@ -303,7 +304,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         resolver: ({ action, data }) => {
           switch (action) {
             case MarkdownAction.CREATE: {
-              return { data: E.object(DocumentSchema, { content: { content: '' } }) };
+              return {
+                data: E.object(DocumentSchema, {
+                  content: E.object(TextV0Schema, { content: '' }),
+                }) satisfies E.ReactiveObject<DocumentType>,
+              };
             }
 
             // TODO(burdon): Generalize for every object.

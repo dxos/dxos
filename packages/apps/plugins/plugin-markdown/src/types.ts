@@ -73,11 +73,13 @@ export type MarkdownPluginProvides = SurfaceProvides &
   TranslationsProvides &
   StackProvides;
 
-export const TextV0Schema = S.struct({
+const _TextV0Schema = S.struct({
   content: S.string,
 }).pipe(E.echoObject('dxos.Text.v0', '0.1.0'));
+interface TextV0Type extends Mutable<S.Schema.To<typeof _TextV0Schema>> {}
+export const TextV0Schema: S.Schema<TextV0Type> = _TextV0Schema;
 
-export const DocumentSchema = S.struct({
+export const _DocumentSchema = S.struct({
   title: S.optional(S.string),
   content: E.ref(TextV0Schema),
   comments: S.optional(
@@ -90,7 +92,8 @@ export const DocumentSchema = S.struct({
     ),
   ),
 }).pipe(E.echoObject('braneframe.Document', '0.1.0'));
+export interface DocumentType extends Mutable<S.Schema.To<typeof _DocumentSchema>> {}
+export const DocumentSchema: S.Schema<DocumentType> = _DocumentSchema;
 
-export type DocumentType = E.ReactiveObject<Mutable<S.Schema.To<typeof DocumentSchema>>>;
-
-export const isDocument = (data: unknown): data is DocumentType => data && E.getSchema(data) === DocumentSchema;
+export const isDocument = (data: unknown): data is E.EchoReactiveObject<DocumentType> =>
+  !!data && E.getSchema<any>(data) === DocumentSchema;
