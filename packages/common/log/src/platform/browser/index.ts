@@ -6,9 +6,21 @@ import { type LogOptions } from '../../config';
 
 // NOTE: Implementation for the browser. See `package.json`.
 export const loadOptions = (filepath?: string): LogOptions | undefined => {
+  let dxlog: string | undefined;
+  if (typeof localStorage === 'undefined') {
+    if ((globalThis as any).localStorage_dxlog) {
+      dxlog = (globalThis as any).localStorage_dxlog;
+    }
+  } else {
+    dxlog = localStorage.getItem('dxlog') ?? undefined;
+  }
+  if (!dxlog) {
+    return undefined;
+  }
   try {
-    return JSON.parse(localStorage.getItem('dxlog')!);
+    return JSON.parse(dxlog);
   } catch (err) {
+    console.info("can't parse dxlog config", err);
     return undefined;
   }
 };
