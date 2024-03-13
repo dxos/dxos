@@ -216,7 +216,7 @@ const RowSelectorBuilderCell = <TData extends RowData>(cellContext: CellContext<
     : row.getCanSelectSubRows() && (row.getIsSomeSelected() ? 'indeterminate' : row.getIsAllSubRowsSelected());
 
   return (
-    <div className='flex justify-center w-full h-full'>
+    <div className='flex justify-center w-full h-full' role='presentation'>
       <Input.Root>
         <Input.Checkbox
           size={4}
@@ -435,7 +435,7 @@ export class ColumnBuilder<TData extends RowData> {
         const { rowsSelectable } = useTableContext('HELPER_SELECT_ROW_HEADER_CELL');
         const checked = table.getIsSomeRowsSelected() ? 'indeterminate' : table.getIsAllRowsSelected();
         return rowsSelectable === 'multi' ? (
-          <div className='flex justify-center w-full h-full'>
+          <div className='flex justify-center w-full h-full' role='presentation'>
             <Input.Root>
               <Input.Checkbox
                 size={4}
