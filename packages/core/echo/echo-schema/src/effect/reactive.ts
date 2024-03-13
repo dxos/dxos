@@ -150,7 +150,7 @@ export const getRefAnnotation = (schema: S.Schema<any>) =>
 /**
  * Returns the schema for the given object if one is defined.
  */
-export const getSchema = <T extends {} = any>(obj: T): S.Schema<T> | undefined => {
+export const getSchema = <T extends {} = any>(obj: T): S.Schema<any, any, any> | undefined => {
   if (isReactiveProxy(obj)) {
     const proxyHandlerSlot = getProxyHandlerSlot(obj);
     if (proxyHandlerSlot.handler instanceof EchoReactiveHandler) {

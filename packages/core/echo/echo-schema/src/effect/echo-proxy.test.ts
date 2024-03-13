@@ -14,7 +14,7 @@ import { createEchoReactiveObject } from './echo-handler';
 import * as E from './reactive';
 import { getTypeReference } from './reactive';
 import { TEST_OBJECT, TestClass, TestSchema, type TestSchemaWithClass } from './testing/schema';
-import { AutomergeContext, type SpaceDoc } from '../automerge';
+import { AutomergeContext, getAutomergeObjectCore, type SpaceDoc } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 import { data } from '../object';
@@ -219,7 +219,7 @@ describe('Reactive Object with ECHO database', () => {
     expect(objData.id).to.be.a('string');
   });
 
-  test('references', async () => {
+  describe('references', () => {
     const Org = S.struct({
       name: S.string,
     }).pipe(E.echoObject('example.Org', '1.0.0'));
@@ -229,14 +229,27 @@ describe('Reactive Object with ECHO database', () => {
       worksAt: E.ref(Org),
     }).pipe(E.echoObject('example.Person', '1.0.0'));
 
-    const graph = new Hypergraph();
-    graph.types.registerEffectSchema(Org).registerEffectSchema(Person);
-    const { db } = await createDatabase(graph, { useReactiveObjectApi: true });
+    test('references', async () => {
+      const graph = new Hypergraph();
+      graph.types.registerEffectSchema(Org).registerEffectSchema(Person);
+      const { db } = await createDatabase(graph, { useReactiveObjectApi: true });
 
-    const org = db.add(E.object(Org, { name: 'DXOS' }));
-    const person = db.add(E.object(Person, { name: 'John', worksAt: org }));
+      const org = db.add(E.object(Org, { name: 'DXOS' }));
+      const person = db.add(E.object(Person, { name: 'John', worksAt: org }));
 
-    expect(person.worksAt).to.eq(org);
+      expect(person.worksAt).to.eq(org);
+    });
+
+    test('adding nested structures to DB', async () => {
+      const graph = new Hypergraph();
+      graph.types.registerEffectSchema(Org).registerEffectSchema(Person);
+      const { db } = await createDatabase(graph, { useReactiveObjectApi: true });
+
+      const person = db.add(E.object(Person, { name: 'John', worksAt: E.object(Org, { name: 'DXOS' }) }));
+
+      expect(person.worksAt.name).to.eq('DXOS');
+      expect(person.worksAt.id).to.be.a('string');
+    });
   });
 
   describe('meta', () => {
