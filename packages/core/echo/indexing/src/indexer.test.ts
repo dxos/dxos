@@ -4,6 +4,7 @@
 
 import { expect } from 'chai';
 
+import { asyncTimeout } from '@dxos/async';
 import { type Filter } from '@dxos/echo-schema';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
@@ -21,11 +22,14 @@ describe('Indexer', () => {
     const documents: ObjectSnapshot[] = [];
 
     const metadataStore = new IndexMetadataStore({ directory: storage.createDirectory('IndexMetadataStore') });
-    const doneIndexing = metadataStore.clean.waitForCount(1);
+    const doneIndexing = metadataStore.clean.waitForCount(2);
     const indexer = new Indexer({
       indexStore: new IndexStore({ directory: storage.createDirectory('IndexStore') }),
       metadataStore,
-      loadDocuments: async (ids) => documents.filter((doc) => ids.includes(doc.object.id)),
+      loadDocuments: async function* (ids) {
+        yield documents.filter((doc) => ids.includes(doc.object.id));
+      },
+      getAllDocuments: async function* () {},
     });
 
     const schemaURI = '@example.org/schema/Contact';
@@ -45,7 +49,48 @@ describe('Indexer', () => {
       await metadataStore.markDirty(dirtyMap);
     }
 
-    await doneIndexing;
+    await asyncTimeout(doneIndexing, 1000);
+
+    {
+      const ids = await indexer.find({ type: { itemId: schemaURI } } as Filter);
+      expect(ids.length).to.equal(1);
+      expect(ids[0].id).to.equal('1');
+    }
+  });
+
+  test('objects are indexed for first time', async () => {
+    const storage = createStorage({ type: StorageType.RAM });
+    afterTest(() => storage.close());
+
+    const documents: ObjectSnapshot[] = [];
+
+    const schemaURI = '@example.org/schema/Contact';
+    const objects = [
+      { id: '1', data: { name: 'John' }, system: { type: { itemId: schemaURI } } },
+      { id: '2', data: { title: 'first document' }, system: { type: { itemId: '@example.org/schema/Document' } } },
+    ];
+    objects.forEach((object) => documents.push({ id: object.id, object, currentHash: 'hash' }));
+
+    const metadataStore = new IndexMetadataStore({ directory: storage.createDirectory('IndexMetadataStore') });
+    const indexer = new Indexer({
+      indexStore: new IndexStore({ directory: storage.createDirectory('IndexStore') }),
+      metadataStore,
+      loadDocuments: async function* () {},
+      getAllDocuments: async function* () {
+        for (const object of objects) {
+          yield [{ id: object.id, object, currentHash: 'hash' }];
+        }
+      },
+    });
+
+    const doneIndexing = indexer.indexed.waitForCount(1);
+
+    {
+      indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] });
+      await indexer.initialize();
+    }
+
+    await asyncTimeout(doneIndexing, 1000);
 
     {
       const ids = await indexer.find({ type: { itemId: schemaURI } } as Filter);

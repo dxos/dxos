@@ -208,7 +208,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return true;
     }
 
-    this.validateValue(target, prop, value);
+    this.validateValue(target, [...target[symbolPath], prop], value);
     const fullPath = [getNamespace(target), ...target[symbolPath], prop];
 
     if (value === undefined) {
@@ -247,8 +247,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
   }
 
-  private validateValue(target: ProxyTarget, prop: string | symbol, value: any) {
-    throwIfCustomClass(prop, value);
+  private validateValue(target: any, path: string[], value: any) {
+    invariant(path.length > 0);
+    throwIfCustomClass(path[path.length - 1], value);
     const rootObjectSchema = this.getSchema();
     if (rootObjectSchema == null) {
       const typeReference = this._objectCore.getType();
@@ -257,10 +258,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
       return;
     }
-    const propertySchema: S.Schema<any> = SchemaValidator.getPropertySchema(rootObjectSchema, [
-      ...target[symbolPath],
-      prop,
-    ]);
+    const propertySchema: S.Schema<any> = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) =>
+      this._objectCore.getDecoded([getNamespace(target), ...path]),
+    );
     const _ = S.asserts(propertySchema)(value);
   }
 
@@ -279,6 +279,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayPush(target: any, path: PropPath, ...items: any[]): number {
+    this._validateForArray(target, path, items, target.length);
+
     const fullPath = this._getPropertyMountPath(target, path);
 
     const encodedItems = items.map((value) => this._objectCore.encode(value));
@@ -327,6 +329,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayUnshift(target: any, path: PropPath, ...items: any[]): number {
+    this._validateForArray(target, path, items, 0);
+
     const fullPath = this._getPropertyMountPath(target, path);
 
     const encodedItems = items?.map((value) => this._objectCore.encode(value)) ?? [];
@@ -345,6 +349,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arraySplice(target: any, path: PropPath, start: number, deleteCount?: number, ...items: any[]): any[] {
+    this._validateForArray(target, path, items, start);
+
     const fullPath = this._getPropertyMountPath(target, path);
 
     const encodedItems = items?.map((value) => this._objectCore.encode(value)) ?? [];
@@ -416,6 +422,13 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
 
     this._signal.notifyWrite();
+  }
+
+  private _validateForArray(target: any, path: PropPath, items: any[], start: number) {
+    let index = start;
+    for (const item of items) {
+      this.validateValue(target, [...path, String(index++)], item);
+    }
   }
 
   private _getPropertyMountPath(target: any, path: PropPath): string[] {
@@ -537,6 +550,7 @@ const validateSchema = (schema: S.Schema<any>) => {
     throw new Error('"id" property name is reserved');
   }
   getSchemaTypeRefOrThrow(schema);
+  SchemaValidator.validateSchema(schema);
 };
 
 const saveTypeInAutomerge = (handler: EchoReactiveHandler, schema: S.Schema<any> | undefined) => {

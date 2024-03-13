@@ -286,7 +286,7 @@ const OutlinerItem = (props: OutlinerItemProps) => {
         )}
       </div>
 
-      <div role='textbox' ref={parentRef} className='flex grow pt-1' />
+      <div ref={parentRef} className='flex grow pt-1' />
 
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
