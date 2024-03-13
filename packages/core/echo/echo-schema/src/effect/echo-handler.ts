@@ -19,7 +19,7 @@ import {
   symbolIsProxy,
   type ReactiveHandler,
 } from './proxy';
-import { EchoReactiveObject, getSchema, getTypeReference, type ReactiveObject } from './reactive';
+import { type EchoReactiveObject, getSchema, getTypeReference } from './reactive';
 import { SchemaValidator } from './schema-validator';
 import { AutomergeObjectCore, encodeReference } from '../automerge';
 import { type ObjectMeta } from '../object';
@@ -73,7 +73,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     defineHiddenProperty(target, symbolHandler, this);
-    defineHiddenProperty(target, inspect.custom, this._inspect.bind(target));
+    if (inspect.custom) {
+      defineHiddenProperty(target, inspect.custom, this._inspect.bind(target));
+    }
   }
 
   private validateInitialProps(target: any) {
@@ -253,7 +255,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const rootObjectSchema = this.getSchema();
     if (rootObjectSchema == null) {
       const typeReference = this._objectCore.getType();
-      if (!!typeReference) {
+      if (typeReference) {
         throw new Error(`Schema not found in schema registry: ${typeReference.itemId}`);
       }
       return;

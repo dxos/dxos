@@ -17,7 +17,9 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
 
   _init(target: any): void {
     invariant(target[symbolSchema]);
-    defineHiddenProperty(target, inspect.custom, this._inspect.bind(target));
+    if (inspect.custom) {
+      defineHiddenProperty(target, inspect.custom, this._inspect.bind(target));
+    }
   }
 
   get(target: any, prop: string | symbol, receiver: any): any {
