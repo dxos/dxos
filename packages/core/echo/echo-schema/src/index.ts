@@ -13,6 +13,7 @@ export * from './serializer';
 export { TypeCollection } from './type-collection';
 export * from './util';
 export * from './automerge';
+export * from './automerge/key-path';
 
 // TODO(dmaretskyi): Until we resolve the circular dependencies lets avoid using "barrel" index.ts files in subdirectories.
 export * from './effect/json-schema';
