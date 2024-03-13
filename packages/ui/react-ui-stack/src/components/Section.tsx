@@ -116,29 +116,35 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
           <DropdownMenu.Root
             {...{
               open: optionsMenuOpen,
-              onOpenChange: (nextOpen: boolean) => {
-                return setOptionsMenuOpen(nextOpen);
-              },
+              onOpenChange: setOptionsMenuOpen,
             }}
           >
             {/* TODO(thure): Somehow we need to anchor the DropdownMenu.Content against the trigger, but only open the DropdownMenu on `mouseUp` and `keyDown`. */}
-            <DropdownMenu.Trigger asChild>
-              <Button
-                variant='ghost'
-                className={mx(
-                  fineButtonDimensions,
-                  hoverableFocusedKeyboardControls,
-                  'self-stretch flex items-center rounded-is justify-center bs-auto is-auto',
-                  active === 'overlay' && document.body.hasAttribute('data-is-keyboard') ? staticFocusRing : focusRing,
-                )}
-                onMouseUp={() => setOptionsMenuOpen(true)}
-                onKeyDown={({ key }) => (key === 'Enter' || key === ' ') && setOptionsMenuOpen(true)}
-                data-testid='section.drag-handle'
-                {...draggableProps}
-              >
-                <Icon className={mx(getSize(5), hoverableControlItem, 'transition-opacity')} />
-              </Button>
-            </DropdownMenu.Trigger>
+            <Button
+              variant='ghost'
+              className={mx(
+                fineButtonDimensions,
+                hoverableFocusedKeyboardControls,
+                'self-stretch flex items-center rounded-is justify-center bs-auto is-auto',
+                active === 'overlay' && document.body.hasAttribute('data-is-keyboard') ? staticFocusRing : focusRing,
+              )}
+              data-testid='section.drag-handle'
+              {...draggableProps}
+              onPointerUp={() => {
+                if (!active) {
+                  console.log('[open menu]', 'todo');
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  console.log('[open menu]', 'todo');
+                } else {
+                  draggableProps?.onKeyDown?.(e);
+                }
+              }}
+            >
+              <Icon className={mx(getSize(5), hoverableControlItem, 'transition-opacity')} />
+            </Button>
             <DropdownMenu.Portal>
               <DropdownMenu.Content>
                 <DropdownMenu.Viewport>

@@ -108,6 +108,7 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
     const { t } = useTranslation(translationKey);
     const { Component, type } = useContainer();
     const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
+    const { activeItem } = useMosaic();
 
     // NOTE: Keep outer padding the same as MarkdownMain.
     return (
@@ -119,7 +120,7 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
           isOver && dropRingInner,
           classNames,
         )}
-        {...domAttributes}
+        {...(!activeItem && domAttributes)}
       >
         {items.length > 0 ? (
           <Mosaic.SortableContext items={items} direction='vertical'>
