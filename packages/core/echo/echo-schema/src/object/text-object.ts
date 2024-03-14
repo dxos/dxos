@@ -28,6 +28,7 @@ export type AutomergeTextCompat = TypedObject<{
 /**
  * @deprecated
  */
+// TODO(burdon): Remove TextObject and TextModel.
 export class TextObject extends AbstractEchoObject<TextModel> {
   static [Symbol.hasInstance](instance: any) {
     return !!instance?.[base] && (isActualTextObject(instance) || isAutomergeText(instance));

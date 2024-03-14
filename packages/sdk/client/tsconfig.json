@@ -75,6 +75,9 @@
       "path": "../../core/echo/echo-schema"
     },
     {
+      "path": "../../core/echo/indexing"
+    },
+    {
       "path": "../../core/echo/model-factory"
     },
     {

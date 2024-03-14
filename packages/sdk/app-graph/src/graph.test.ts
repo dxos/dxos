@@ -5,6 +5,7 @@
 import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
 
+import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
 import { Graph } from './graph';
@@ -263,6 +264,7 @@ describe('Graph', () => {
   });
 
   test('traversing the graph subscribes to changes', () => {
+    registerSignalRuntime();
     const graph = new Graph();
 
     graph.addNodes({

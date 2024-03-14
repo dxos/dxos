@@ -19,6 +19,7 @@ export default [
         'blockquote label': 'Block quote',
         'codeblock label': 'Code block',
         'comment label': 'Create comment',
+        'image label': 'Insert image',
         'heading label': 'Heading level',
         'table label': 'Create table',
       },

@@ -15,7 +15,7 @@ import { ConnectionLimiter } from './connection-limiter';
 import { Swarm } from './swarm';
 import { TestWireProtocol } from '../testing/test-wire-protocol';
 import { FullyConnectedTopology } from '../topology';
-import { createSimplePeerTransportFactory } from '../transport';
+import { createLibDataChannelTransportFactory, createSimplePeerTransportFactory } from '../transport';
 
 type TestPeer = {
   swarm: Swarm;
@@ -48,8 +48,8 @@ describe('Swarm', () => {
       new FullyConnectedTopology(),
       protocol.factory,
       new Messenger({ signalManager }),
-      // TODO(nf): configure?
-      createSimplePeerTransportFactory(),
+      // TODO(nf): configure better
+      process.env.MOCHA_ENV === 'nodejs' ? createLibDataChannelTransportFactory() : createSimplePeerTransportFactory(),
       undefined,
       connectionLimiter,
       initiationDelay,

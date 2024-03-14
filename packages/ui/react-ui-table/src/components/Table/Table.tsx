@@ -18,6 +18,7 @@ import React, { Fragment, useCallback, useEffect, useState } from 'react';
 
 import { debounce } from '@dxos/async';
 import { log } from '@dxos/log';
+import { useDefaultValue } from '@dxos/react-ui';
 
 import { TableBody } from './TableBody';
 import { TableProvider as UntypedTableProvider, type TypedTableProvider, useTableContext } from './TableContext';
@@ -29,8 +30,6 @@ import { groupTh, tableRoot } from '../../theme';
 export const Table = <TData extends RowData>(props: TableProps<TData>) => {
   const {
     role,
-    data = [],
-    columns = [],
     onColumnResize,
     columnVisibility,
     header = true,
@@ -40,16 +39,14 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     getScrollElement,
   } = props;
 
-  const TableProvider = UntypedTableProvider as TypedTableProvider<TData>;
+  const columns = useDefaultValue(props.columns, []);
+  const data = useDefaultValue(props.data, []);
 
-  //
-  // Column resizing
-  //
+  const TableProvider = UntypedTableProvider as TypedTableProvider<TData>;
 
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
 
   useEffect(() => {
-    // Set initial state.
     setColumnSizing(
       columns
         .filter((column) => !!column.size && (column as any).prop !== undefined)
@@ -58,30 +55,15 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
           return state;
         }, {}),
     );
-  }, [columns]);
+  }, [columns, setColumnSizing]);
 
   const [columnSizingInfo, setColumnSizingInfo] = useState<ColumnSizingInfoState>({} as ColumnSizingInfoState);
-
-  const onColumnResizeDebounced = onColumnResize && debounce<ColumnSizingState>(onColumnResize, 1_000);
-  useEffect(() => {
-    if (columnSizingInfo.columnSizingStart?.length === 0) {
-      onColumnResizeDebounced?.(table.getState().columnSizing);
-    }
-  }, [columnSizingInfo]);
-
-  //
-  // Row selection
-  //
 
   const [rowSelection = {}, setRowSelection] = useControllableState({
     prop: props.rowSelection,
     onChange: props.onRowSelectionChange,
     defaultProp: props.defaultRowSelection,
   });
-
-  useEffect(() => {
-    onDataSelectionChange?.(Object.keys(rowSelection).map((id) => table.getRowModel().rowsById[id].original));
-  }, [onDataSelectionChange, rowSelection]);
 
   // TODO(thure): Does @tanstack/react-table really need this intervention? It did seem necessary to enforce single-selection...
   const handleRowSelectionChange = useCallback<OnChangeFn<RowSelectionState>>(
@@ -96,15 +78,11 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
         setRowSelection({});
       }
     },
-    [rowSelection, setRowSelection],
+    [rowsSelectable, setRowSelection, rowSelection],
   );
 
-  //
-  // Row grouping
-  //
-
   const [grouping, handleGroupingChange] = useState<GroupingState>(props.grouping ?? []);
-  useEffect(() => handleGroupingChange(props.grouping ?? []), [props.grouping]);
+  useEffect(() => handleGroupingChange(props.grouping ?? []), [handleGroupingChange, props.grouping]);
 
   const table = useReactTable({
     // Data
@@ -140,17 +118,28 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     getGroupedRowModel: grouping.length > 1 ? getGroupedRowModel() : undefined,
     onGroupingChange: handleGroupingChange,
 
-    // Selection
-    ...(rowsSelectable === 'multi'
-      ? { enableMultiRowSelection: true }
-      : rowsSelectable
-        ? { enableRowSelection: true }
-        : {}),
+    enableMultiRowSelection: rowsSelectable === 'multi' ? true : undefined,
+    enableRowSelection: rowsSelectable === true ? true : undefined,
+
     onRowSelectionChange: handleRowSelectionChange,
 
     // Debug
     debugTable: debug,
   });
+
+  const onColumnResizeDebounced = onColumnResize && debounce(onColumnResize, 1_000);
+
+  useEffect(() => {
+    onDataSelectionChange?.(Object.keys(rowSelection).map((id) => table.getRowModel().rowsById[id].original));
+  }, [onDataSelectionChange, rowSelection, table]);
+
+  useEffect(() => {
+    const shouldTriggerResize = columnSizingInfo.columnSizingStart?.length === 0;
+
+    if (shouldTriggerResize) {
+      onColumnResizeDebounced?.(table.getState().columnSizing);
+    }
+  }, [columnSizingInfo, onColumnResizeDebounced, table]);
 
   // Create additional expansion column if all columns have fixed width.
   const expand = false; // columns.map((column) => column.size).filter(Boolean).length === columns?.length;
@@ -188,6 +177,8 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
     );
   }
 
+  const isResizingColumn = table.getState().columnSizingInfo.isResizingColumn;
+
   return (
     <table
       role={role}
@@ -198,7 +189,11 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
 
       {grouping?.length !== 0 ? (
         getScrollElement ? (
-          <VirtualizedTableContent getScrollElement={getScrollElement} />
+          isResizingColumn ? (
+            <MemoizedVirtualisedTableContent getScrollElement={getScrollElement} />
+          ) : (
+            <VirtualizedTableContent getScrollElement={getScrollElement} />
+          )
         ) : (
           <TableBody rows={rows} />
         )
@@ -217,6 +212,7 @@ const VirtualizedTableContent = ({
   const {
     table: { getRowModel },
   } = useTableContext('VirtualizedTableContent');
+
   const rows = getRowModel().rows;
 
   const { getTotalSize, getVirtualItems } = useVirtualizer({
@@ -225,6 +221,7 @@ const VirtualizedTableContent = ({
     overscan: 4,
     estimateSize: () => 33,
   });
+
   const virtualRows = getVirtualItems();
   const totalSize = getTotalSize();
 
@@ -251,6 +248,8 @@ const VirtualizedTableContent = ({
     </>
   );
 };
+
+export const MemoizedVirtualisedTableContent = React.memo(VirtualizedTableContent) as typeof VirtualizedTableContent;
 
 const GroupedTableContent = () => {
   const {

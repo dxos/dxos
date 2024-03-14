@@ -26,6 +26,7 @@
     "@braneframe/plugin-settings": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/observability": "workspace:*",
@@ -33,7 +34,6 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.5.1",
-    "deepsignal": "^1.5.0",
     "localforage": "^1.10.0"
   },
   "devDependencies": {

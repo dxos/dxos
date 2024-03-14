@@ -11,9 +11,9 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Space, TextObject, getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Button, ScrollArea, useTranslation, useThemeContext } from '@dxos/react-ui';
 import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
-import { useTextModel } from '@dxos/react-ui-editor';
+import { automerge, createBasicExtensions, createThemeExtensions, useDocAccessor } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadLayout } from '@dxos/react-ui-thread';
 
@@ -46,13 +46,22 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
   const members = useMembers(space?.key);
   const activity = useStatus(space, thread.id);
   const { t } = useTranslation(THREAD_PLUGIN);
-  const extensions = useMemo(() => [command], []);
-
-  const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
   const [autoFocus, setAutoFocus] = useState(autoFocusTextbox);
-  const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
-  const textboxMetadata = getMessageMetadata(thread.id, identity);
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
+  const { themeMode } = useThemeContext();
+
+  const textboxMetadata = getMessageMetadata(thread.id, identity);
+  const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
+  const { doc, accessor } = useDocAccessor(nextMessage.text);
+  const extensions = useMemo(
+    () => [
+      createBasicExtensions({ placeholder: t('message placeholder') }),
+      createThemeExtensions({ themeMode }),
+      automerge(accessor),
+      command,
+    ],
+    [themeMode, accessor],
+  );
 
   // TODO(thure): Factor out.
   // TODO(thure): `flex-col-reverse` does not work to start the container scrolled to the end while also using
@@ -120,7 +129,7 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
     <Thread
       current={current}
       id={thread.id}
-      classNames='bs-full grid-rows-[1fr_min-content_min-content] overflow-hidden transition-[padding-block-end] pbe-[--rail-size] [[data-sidebar-inline-start-state=open]_&]:lg:pbe-0'
+      classNames='bs-full grid-rows-[1fr_min-content_min-content] overflow-hidden transition-[padding-block-end] [[data-sidebar-inline-start-state=open]_&]:lg:pbe-0'
     >
       <ScrollArea.Root classNames='col-span-2'>
         <ScrollArea.Viewport classNames='overflow-anchored after:overflow-anchor after:block after:bs-px after:-mbs-px [&>div]:min-bs-full [&>div]:!grid [&>div]:grid-rows-[1fr_0]'>
@@ -137,19 +146,14 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
           </ScrollArea.Scrollbar>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-      {nextMessageModel && (
-        <>
-          <MessageTextbox
-            onSend={handleCreate}
-            placeholder={t('message placeholder')}
-            {...textboxMetadata}
-            model={nextMessageModel}
-            extensions={extensions}
-            autoFocus={autoFocus}
-          />
-          <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
-        </>
-      )}
+      <MessageTextbox
+        doc={doc}
+        extensions={extensions}
+        autoFocus={autoFocus}
+        onSend={handleCreate}
+        {...textboxMetadata}
+      />
+      <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
     </Thread>
   );
 };

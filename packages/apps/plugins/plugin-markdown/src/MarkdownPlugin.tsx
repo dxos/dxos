@@ -4,7 +4,6 @@
 
 import { type IconProps, TextAa } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
-import { deepSignal } from 'deepsignal/react';
 import React, { useMemo, type Ref } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
@@ -19,9 +18,10 @@ import {
   type PluginDefinition,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
+import * as E from '@dxos/echo-schema/schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { isTypedObject } from '@dxos/react-client/echo';
-import { translations as editorTranslations } from '@dxos/react-ui-editor';
+import { type EditorMode, translations as editorTranslations } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import {
@@ -29,8 +29,6 @@ import {
   DocumentCard,
   DocumentMain,
   DocumentSection,
-  EditorMain,
-  EmbeddedLayout,
   MainLayout,
   MarkdownSettings,
 } from './components';
@@ -43,7 +41,7 @@ import {
   type MarkdownSettingsProps,
   MarkdownAction,
 } from './types';
-import { getFallbackTitle, isEditorModel, isMarkdownProperties, markdownExtensionPlugins } from './util';
+import { getFallbackTitle, isMarkdownProperties, markdownExtensionPlugins } from './util';
 
 export const isDocument = (data: unknown): data is DocumentType =>
   isTypedObject(data) && DocumentType.schema.typename === data.__typename;
@@ -60,7 +58,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     experimental: false,
   });
 
-  const state = deepSignal<MarkdownPluginState>({ extensions: [] });
+  const state = E.object<MarkdownPluginState>({ extensions: [] });
 
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
@@ -86,11 +84,15 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     meta,
     ready: async (plugins) => {
       settings
-        .prop(settings.values.$editorMode!, 'editor-mode', LocalStorageStore.string)
-        .prop(settings.values.$toolbar!, 'toolbar', LocalStorageStore.bool)
-        .prop(settings.values.$experimental!, 'experimental', LocalStorageStore.bool)
-        .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool)
-        .prop(settings.values.$typewriter!, 'typewriter', LocalStorageStore.string);
+        .prop({
+          key: 'editorMode',
+          storageKey: 'editor-mode',
+          type: LocalStorageStore.enum<EditorMode>({ allowUndefined: true }),
+        })
+        .prop({ key: 'toolbar', type: LocalStorageStore.bool({ allowUndefined: true }) })
+        .prop({ key: 'experimental', type: LocalStorageStore.bool({ allowUndefined: true }) })
+        .prop({ key: 'debug', type: LocalStorageStore.bool({ allowUndefined: true }) })
+        .prop({ key: 'typewriter', type: LocalStorageStore.string({ allowUndefined: true }) });
 
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
@@ -242,17 +244,19 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   </MainLayout>
                 );
               } else if (
-                'model' in data &&
-                isEditorModel(data.model) &&
+                // TODO(burdon): Replace model with object ID.
+                // 'model' in data &&
+                // isEditorModel(data.model) &&
                 'properties' in data &&
                 isMarkdownProperties(data.properties)
               ) {
-                const main = <EditorMain model={data.model} extensions={extensions} />;
-                if ('view' in data && data.view === 'embedded') {
-                  return <EmbeddedLayout>{main}</EmbeddedLayout>;
-                } else {
-                  return <MainLayout>{main}</MainLayout>;
-                }
+                return null;
+                // const main = <EditorMain extensions={extensions} />;
+                // if ('view' in data && data.view === 'embedded') {
+                //   return <EmbeddedLayout>{main}</EmbeddedLayout>;
+                // } else {
+                //   return <MainLayout>{main}</MainLayout>;
+                // }
               }
               break;
             }

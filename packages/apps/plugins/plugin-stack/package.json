@@ -26,15 +26,16 @@
     "@braneframe/plugin-settings": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.5.1",
-    "deepsignal": "^1.5.0",
     "node-fetch": "^2.6.0",
     "react-drag-drop-files": "^2.3.8",
+    "react-dropzone": "^14.2.3",
     "react-is": "^18.2.0"
   },
   "devDependencies": {

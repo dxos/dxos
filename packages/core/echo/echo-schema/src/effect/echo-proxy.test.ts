@@ -215,4 +215,50 @@ describe('Reactive Object with ECHO database', () => {
 
     expect(person.worksAt).to.eq(org);
   });
+
+  describe('meta', () => {
+    test('throws if accessing meta on a non-ECHO object', async () => {
+      const obj = E.object({ string: 'foo' });
+      expect(() => E.metaOf(obj)).to.throw();
+      expect(() => E.metaOf({})).to.throw();
+
+      const { db } = await createDatabase(undefined, { useReactiveObjectApi: true });
+      db.add(obj);
+      expect(() => E.metaOf(obj)).not.to.throw();
+    });
+
+    test('meta updates', async () => {
+      const { db } = await createDatabase(undefined, { useReactiveObjectApi: true });
+      const obj = db.add({ string: 'foo' });
+
+      expect(E.metaOf(obj).keys).to.deep.eq([]);
+      const key = { source: 'github.com', id: '123' };
+      E.metaOf(obj).keys.push(key);
+      expect(E.metaOf(obj).keys).to.deep.eq([key]);
+    });
+
+    test('meta persistence', async () => {
+      const metaKey = { source: 'github.com', id: '123' };
+      const graph = new Hypergraph();
+      const automergeContext = new AutomergeContext();
+      const doc = automergeContext.repo.create<SpaceDoc>();
+      const spaceKey = PublicKey.random();
+
+      let id: string;
+      {
+        const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey, useReactiveObjectApi: true });
+        await db._automerge.open({ rootUrl: doc.url });
+        const obj = db.add({ string: 'foo' });
+        id = obj.id;
+        E.metaOf(obj).keys.push(metaKey);
+      }
+
+      {
+        const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey, useReactiveObjectApi: true });
+        await db._automerge.open({ rootUrl: doc.url });
+        const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
+        expect(E.metaOf(obj).keys).to.deep.eq([metaKey]);
+      }
+    });
+  });
 });

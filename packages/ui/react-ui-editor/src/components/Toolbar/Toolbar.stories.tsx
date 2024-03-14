@@ -4,79 +4,80 @@
 
 import '@dxosTheme';
 
-import React, { type FC, useMemo, useState } from 'react';
+import React, { type FC, useState } from 'react';
 
 import { TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
-import { Tooltip } from '@dxos/react-ui';
-import { mx, textBlockWidth } from '@dxos/react-ui-theme';
+import { Tooltip, useThemeContext } from '@dxos/react-ui';
+import { textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Toolbar } from './Toolbar';
 import {
+  type Comment,
   decorateMarkdown,
   comments,
-  formatting,
-  image,
+  createBasicExtensions,
+  createDataExtensions,
+  createThemeExtensions,
+  formattingKeymap,
   table,
   useComments,
   useFormattingState,
+  createMarkdownExtensions,
+  image,
 } from '../../extensions';
-import { type Comment, useActionHandler, useEditorView, useTextModel } from '../../hooks';
+import { useActionHandler, useDocAccessor, useTextEditor } from '../../hooks';
 import translations from '../../translations';
-import { MarkdownEditor } from '../TextEditor';
 
 faker.seed(101);
 
-const Story: FC<{ id?: string; content: string }> = ({ id = 'test', content }) => {
+const Story: FC<{ content: string }> = ({ content }) => {
+  const { themeMode } = useThemeContext();
   const [item] = useState({ text: new TextObject(content) });
-  const [_comments, setComments] = useState<Comment[]>([]);
-  const [editorRef, viewInvalidated] = useEditorView(id);
-  const model = useTextModel({ text: item.text });
+  const { id, doc, accessor } = useDocAccessor(item.text);
   const [formattingState, formattingObserver] = useFormattingState();
-  const extensions = useMemo(
-    () => [
-      decorateMarkdown(),
-      comments({
-        onCreate: ({ cursor }) => {
-          const id = PublicKey.random().toHex();
-          setComments((comments) => [...comments, { id, cursor }]);
-          return id;
-        },
-      }),
-      formatting(),
-      image(),
-      table(),
-      formattingObserver,
-    ],
-    [],
+  const { parentRef, view } = useTextEditor(
+    () => ({
+      id,
+      doc,
+      extensions: [
+        createBasicExtensions(),
+        createMarkdownExtensions({ themeMode }),
+        createThemeExtensions({ themeMode, slots: { editor: { className: 'p-2' } } }),
+        createDataExtensions({ id, text: accessor }),
+        comments({
+          onCreate: ({ cursor }) => {
+            const id = PublicKey.random().toHex();
+            setComments((comments) => [...comments, { id, cursor }]);
+            return id;
+          },
+        }),
+        decorateMarkdown(),
+        formattingKeymap(),
+        image(),
+        table(),
+        formattingObserver,
+      ],
+    }),
+    [id, accessor, themeMode],
   );
 
-  useComments(viewInvalidated ? null : editorRef.current, id, _comments);
-  const handleAction = useActionHandler(editorRef.current);
+  const [_comments, setComments] = useState<Comment[]>([]);
+  useComments(view, id, _comments);
 
-  if (!model) {
-    return null;
-  }
+  const handleAction = useActionHandler(view);
 
   return (
     <div role='none' className='fixed inset-0 flex flex-col'>
       <Toolbar.Root onAction={handleAction} state={formattingState} classNames={textBlockWidth}>
         <Toolbar.Markdown />
+        <Toolbar.Custom onUpload={async (file) => ({ url: file.name })} />
         <Toolbar.Separator />
-        <Toolbar.Extended />
+        <Toolbar.Actions />
       </Toolbar.Root>
-
-      <MarkdownEditor
-        ref={editorRef}
-        model={model}
-        extensions={extensions}
-        slots={{
-          root: { className: mx(textBlockWidth) },
-          editor: { className: 'p-2' },
-        }}
-      />
+      <div ref={parentRef} className={textBlockWidth} />
     </div>
   );
 };

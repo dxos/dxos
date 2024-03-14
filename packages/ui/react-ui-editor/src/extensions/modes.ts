@@ -6,6 +6,8 @@ import { type Extension, Facet } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { vim } from '@replit/codemirror-vim';
 
+export const focusEvent = 'focus.container';
+
 export type EditorMode = 'default' | 'vim' | undefined;
 
 export type EditorConfig = {
@@ -27,7 +29,7 @@ export const EditorModes: { [mode: string]: Extension } = {
         key: 'Alt-Escape',
         run: (view) => {
           // Focus container for tab navigation.
-          view.dispatch({ userEvent: 'focus.container' });
+          view.dispatch({ userEvent: focusEvent });
           return true;
         },
       },

@@ -28,14 +28,14 @@ export default class Join extends BaseCommand<typeof Join> {
       description: 'Timeout in seconds',
       default: 300,
     }),
-    deviceLabel: Flags.string({
+    'device-label': Flags.string({
       description: 'Set device label',
     }),
-    managedAgent: Flags.boolean({ description: 'Managed agent', default: false }),
+    'managed-agent': Flags.boolean({ description: 'set device type as managed agent', default: false }),
   };
 
   async run(): Promise<any> {
-    let { invitation: encoded, secret, deviceLabel, managedAgent } = this.flags;
+    let { invitation: encoded, secret, 'device-label': deviceLabel, 'managed-agent': managedAgent } = this.flags;
 
     return await this.execWithClient(async (client: Client) => {
       if (client.halo.identity.get()) {

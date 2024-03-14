@@ -43,7 +43,10 @@ export const SpaceMembersSection = ({ space }: { space: Space }) => {
   const { dispatch } = useIntent();
 
   const handleCloseDialog = () =>
-    dispatch({ action: LayoutAction.SET_LAYOUT, data: { element: 'dialog', state: false } });
+    dispatch({
+      action: LayoutAction.SET_LAYOUT,
+      data: { element: 'dialog', state: false },
+    });
 
   const handleInvitationSelect = ({
     invitation: invitationObservable,

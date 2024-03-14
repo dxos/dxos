@@ -5,26 +5,26 @@
 // Based upon @acheronfail’s implementation, fetched 16 Feb 2024
 // https://discuss.codemirror.net/t/cursorscrollmargin-for-v6/7448/5
 
-import { type EditorState, type Extension, Facet, Transaction } from '@codemirror/state';
+import { type EditorState, type Extension, Transaction } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
 import { log } from '@dxos/log';
 
-/**
- * Number of lines above/below the cursor to keep visible in the viewport.
- * Defaults to 3.
- */
-export const cursorLineMarginFacet = Facet.define<number, number>({
-  combine: (input) => input[0] ?? 3,
-});
-
 const annotation = 'cursorLineMargin';
 const lineAtPos = (s: EditorState, pos: number) => s.doc.lineAt(pos).number;
 
-// Seems to the best approximation of CM5's `cursorScrollMargin`
-// https://discuss.codemirror.net/t/cursorscrollmargin-for-v6/7448
-export const cursorLineMargin: Extension = EditorView.updateListener.of(
-  ({ transactions, state, selectionSet, startState, view }) => {
+type Options = {
+  lines?: number;
+};
+
+// TODO(burdon): Remove. Buggy and creates scrolling problems. Find better (more general) way to deal with HALO notch.
+export const cursorLineMargin = (options: Options = { lines: 3 }): Extension => {
+  const { lines } = options;
+  if (!lines || lines <= 0) {
+    return [];
+  }
+
+  return EditorView.updateListener.of(({ transactions, state, selectionSet, startState, view }) => {
     // make sure we don't trigger an infinite loop and ignore our own changes
     if (transactions.length < 1 || transactions.some((tr) => tr.isUserEvent(annotation))) {
       return;
@@ -32,7 +32,6 @@ export const cursorLineMargin: Extension = EditorView.updateListener.of(
 
     const s = state;
     const { main } = s.selection;
-    const cursorLineMargin = s.facet(cursorLineMarginFacet);
 
     // editor rect
     const rect = view.dom.getBoundingClientRect();
@@ -59,7 +58,7 @@ export const cursorLineMargin: Extension = EditorView.updateListener.of(
 
     // const needsScrollTop = mainLine <= visTopLine + cursorLineMargin;
     const needsScrollTop = false;
-    const needsScrollBot = mainLine >= visBotLine - cursorLineMargin;
+    const needsScrollBot = mainLine >= visBotLine - lines;
 
     // the scroll margins are overlapping
     if (needsScrollTop && needsScrollBot) {
@@ -88,8 +87,8 @@ export const cursorLineMargin: Extension = EditorView.updateListener.of(
       annotations: Transaction.userEvent.of(annotation),
       effects: EditorView.scrollIntoView(s.selection.main.head, {
         y: needsScrollTop ? 'start' : 'end',
-        yMargin: view.defaultLineHeight * cursorLineMargin,
+        yMargin: view.defaultLineHeight * lines,
       }),
     });
-  },
-);
+  });
+};

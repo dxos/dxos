@@ -8,7 +8,7 @@ import { type ClientServicesHost, type ClientServicesHostParams } from '@dxos/cl
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { type NetworkManagerOptions } from '@dxos/network-manager';
+import { createLibDataChannelTransportFactory, type NetworkManagerOptions } from '@dxos/network-manager';
 import { type ServiceBundle } from '@dxos/rpc';
 import { trace } from '@dxos/tracing';
 
@@ -39,9 +39,12 @@ const setupNetworking = async (config: Config, options: Partial<NetworkManagerOp
   if (signals) {
     const {
       signalManager = new WebsocketSignalManager(signals),
-      transportFactory = createSimplePeerTransportFactory({
-        iceServers: config.get('runtime.services.ice'),
-      }),
+      // TODO(nf): configure better
+      transportFactory = process.env.MOCHA_ENV === 'nodejs'
+        ? createLibDataChannelTransportFactory({ iceServers: config.get('runtime.services.ice') })
+        : createSimplePeerTransportFactory({
+            iceServers: config.get('runtime.services.ice'),
+          }),
     } = options;
 
     return {

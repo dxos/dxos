@@ -2,35 +2,64 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, useMemo } from 'react';
+import { EditorView } from '@codemirror/view';
+import React, { useMemo } from 'react';
 
 import { type Document as DocumentType } from '@braneframe/types';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { type Comment, useTextModel } from '@dxos/react-ui-editor';
+import {
+  type Comment,
+  createDataExtensions,
+  localStorageStateStoreAdapter,
+  state,
+  useDocAccessor,
+} from '@dxos/react-ui-editor';
 
 import EditorMain, { type EditorMainProps } from './EditorMain';
+
+type DocumentMainProps = { document: DocumentType } & Omit<EditorMainProps, 'id'>;
 
 /**
  * @deprecated
  */
-// TODO(burdon): Move logic into plugin.
-const DocumentMain: FC<{ document: DocumentType } & Pick<EditorMainProps, 'toolbar' | 'readonly' | 'extensions'>> = ({
-  document,
-  ...props
-}) => {
+const DocumentMain = ({ document, extensions: _extensions = [], ...props }: DocumentMainProps) => {
   const identity = useIdentity();
   const space = getSpaceForObject(document);
-  const model = useTextModel({ identity, space, text: document.content });
+  const { id, doc, accessor } = useDocAccessor(document.content);
+  const extensions = useMemo(
+    () => [
+      //
+      _extensions,
+      createDataExtensions({ id, text: accessor, space, identity }),
+      state(localStorageStateStoreAdapter),
+    ],
+    [doc, accessor],
+  );
+
+  const { scrollTo, selection } = useMemo(() => {
+    const { scrollTo, selection } = localStorageStateStoreAdapter.getState(id) ?? {};
+    return {
+      scrollTo: scrollTo?.from ? EditorView.scrollIntoView(scrollTo.from, { y: 'start', yMargin: 0 }) : undefined,
+      selection,
+    };
+  }, [id]);
+
   const comments = useMemo<Comment[]>(() => {
     return document.comments?.map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! }));
   }, [document.comments]);
 
-  if (!model) {
-    return null;
-  }
-
-  return <EditorMain model={model} comments={comments} {...props} />;
+  return (
+    <EditorMain
+      id={id}
+      doc={doc}
+      scrollTo={scrollTo}
+      selection={selection}
+      extensions={extensions}
+      comments={comments}
+      {...props}
+    />
+  );
 };
 
 export default DocumentMain;
