@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { scheduleTask, Trigger } from '@dxos/async';
+import { scheduleTask, sleep, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { subscriptionHandler } from '@dxos/functions';
 
@@ -11,6 +11,8 @@ export const handler = subscriptionHandler(async ({ event }) => {
   if (!space || !objects?.length) {
     return;
   }
+
+  await sleep(1200);
 
   // Wait until done otherwise could be shut down prematurely.
   const done = new Trigger();

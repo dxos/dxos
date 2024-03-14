@@ -81,7 +81,7 @@ export class DevServer {
         const { statusCode, body } = await this._invoke(name, req.body);
         res.statusCode = statusCode;
         if (body != null) {
-          res.setHeader('Content-Type', 'application/json');
+          res.header('Content-Type', 'application/json');
           res.end(JSON.stringify(body));
         } else {
           res.end();

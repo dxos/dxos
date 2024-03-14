@@ -70,6 +70,9 @@ triggers:
 #        delay: 5
 #        props:
 #          type: 'email'
+  - function: 'dxos.org/function/chess'
+    subscriptions:
+      - type: 'dxos.experimental.chess.Game'
 
   - function: 'dxos.org/function/suggest-chess-move'
     signals:

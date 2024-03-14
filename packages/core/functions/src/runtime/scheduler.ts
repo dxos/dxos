@@ -271,21 +271,21 @@ export class Scheduler {
   }
 
   private async _parseFunctionResult(response: Response): Promise<FunctionResult | null> {
+    log.info('response', { headers: JSON.stringify(response) });
+    // if (response.headers.get('Content-Type') !== 'application/json') {
+    //   return null;
+    // }
+    let json;
     try {
-      // if (response.headers.get('Content-Type') !== 'application/json') {
-      //   return null;
-      // }
-      log.info('response', { headers: JSON.stringify(response.headers) });
-      const json = await response.json();
-      const result = S.validateEither(FunctionResult)(json);
-      if (Either.isLeft(result)) {
-        log.warn('incorrectly formatted function result', { json, error: result.left });
-        return null;
-      }
-      return result.right;
-    } catch (error) {
-      log.catch(error);
+      json = await response.json();
+    } catch (e) {
       return null;
     }
+    const result = S.validateEither(FunctionResult)(json);
+    if (Either.isLeft(result)) {
+      log.warn('incorrectly formatted function result', { json, error: result.left });
+      return null;
+    }
+    return result.right;
   }
 }
