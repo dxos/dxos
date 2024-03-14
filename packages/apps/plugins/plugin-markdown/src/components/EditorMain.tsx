@@ -90,7 +90,7 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
         },
       }),
     ].filter(nonNullable);
-  }, [_extensions, formattingObserver, themeMode]);
+  }, [_extensions, formattingObserver, readonly, themeMode]);
 
   return (
     <>
