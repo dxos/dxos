@@ -28,6 +28,7 @@ import { ComplexMap, keyToFallback } from '@dxos/util';
 import { SPACE_PLUGIN } from '../meta';
 import type { ObjectViewerProps, SpacePluginProvides } from '../types';
 
+// TODO(thure): Get/derive these values from protocol
 const REFRESH_INTERVAL = 10_000;
 const ACTIVITY_DURATION = 30_000;
 
@@ -49,6 +50,7 @@ export const SpacePresence = ({ object, spaceKey }: { object: TypedObject; space
 
   const [moment, setMoment] = useState(Date.now());
 
+  // NOTE(thure): This is necessary so Presence updates without any underlying data updating.
   useEffect(() => {
     const interval = setInterval(() => setMoment(Date.now()), REFRESH_INTERVAL);
     return () => clearInterval(interval);
@@ -210,6 +212,7 @@ const PrensenceAvatar = ({ identity, showName, match, group, index, onClick }: P
 export const SmallPresenceLive = ({ viewers }: { viewers?: ComplexMap<PublicKey, ObjectViewerProps> }) => {
   const [moment, setMoment] = useState(Date.now());
 
+  // NOTE(thure): This is necessary so Presence updates without any underlying data updating.
   useEffect(() => {
     const interval = setInterval(() => setMoment(Date.now()), REFRESH_INTERVAL);
     return () => clearInterval(interval);
