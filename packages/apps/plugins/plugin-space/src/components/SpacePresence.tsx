@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { NavigationAction, useIntentDispatcher, usePlugin } from '@dxos/app-framework';
 import { generateName } from '@dxos/display-name';
@@ -28,6 +28,9 @@ import { ComplexMap, keyToFallback } from '@dxos/util';
 import { SPACE_PLUGIN } from '../meta';
 import type { ObjectViewerProps, SpacePluginProvides } from '../types';
 
+const REFRESH_INTERVAL = 10_000;
+const ACTIVITY_DURATION = 30_000;
+
 // TODO(thure): This is chiefly meant to satisfy TS & provide an empty map after `deepSignal` interactions.
 const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 
@@ -44,6 +47,13 @@ export const SpacePresence = ({ object, spaceKey }: { object: TypedObject; space
   const space = spaceKey ? client.spaces.get(spaceKey) : getSpaceForObject(object);
   const spaceMembers = useMembers(space?.key);
 
+  const [moment, setMoment] = useState(Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => setMoment(Date.now()), REFRESH_INTERVAL);
+    return () => clearInterval(interval);
+  }, []);
+
   // TODO(thure): Could it be a smell to return early when there are interactions with `deepSignal` later, since it
   //  prevents reactivity?
   if (!identity || !spacePlugin || !space || defaultSpace?.key.equals(space.key)) {
@@ -59,8 +69,9 @@ export const SpacePresence = ({ object, spaceKey }: { object: TypedObject; space
     .map((member) => ({
       ...member,
       match: currentObjectViewers.has(member.identity.identityKey),
-      lastSeen: currentObjectViewers.get(member.identity.identityKey)?.lastSeen ?? Infinity,
+      lastSeen: currentObjectViewers.get(member.identity.identityKey)?.lastSeen ?? -Infinity,
     }))
+    .filter((member) => moment - member.lastSeen < ACTIVITY_DURATION)
     .toSorted((a, b) => a.lastSeen - b.lastSeen);
 
   return density === 'fine' ? (
@@ -194,6 +205,21 @@ const PrensenceAvatar = ({ identity, showName, match, group, index, onClick }: P
       {showName && <Avatar.Label classNames='text-sm truncate pli-2'>{getName(identity)}</Avatar.Label>}
     </Root>
   );
+};
+
+export const SmallPresenceLive = ({ viewers }: { viewers?: ComplexMap<PublicKey, ObjectViewerProps> }) => {
+  const [moment, setMoment] = useState(Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => setMoment(Date.now()), REFRESH_INTERVAL);
+    return () => clearInterval(interval);
+  }, []);
+
+  const activeViewers = viewers
+    ? Array.from(viewers.values()).filter(({ lastSeen }) => moment - lastSeen < ACTIVITY_DURATION)
+    : [];
+
+  return <SmallPresence count={activeViewers.length} />;
 };
 
 export const SmallPresence = ({ count }: { count: number }) => {
