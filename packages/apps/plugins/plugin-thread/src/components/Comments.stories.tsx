@@ -6,10 +6,9 @@ import '@dxosTheme';
 
 import React, { useEffect } from 'react';
 
-import { Thread as ThreadType, types } from '@braneframe/types';
 import { faker } from '@dxos/random';
 import { type PublicKey } from '@dxos/react-client';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { Tooltip } from '@dxos/react-ui';
@@ -19,13 +18,14 @@ import { withTheme } from '@dxos/storybook-utils';
 import { CommentsContainer } from './CommentsContainer';
 import { createCommentThread } from './testing';
 import translations from '../translations';
+import { ThreadSchema } from '../types';
 
 faker.seed(1);
 
 const Story = ({ spaceKey }: { spaceKey: PublicKey }) => {
   const identity = useIdentity();
   const space = useSpace(spaceKey);
-  const threads = useQuery(space, ThreadType.filter());
+  const threads = useQuery(space, Filter.schema(ThreadSchema));
   const [detached, setDetached] = React.useState<string[]>([]);
 
   useEffect(() => {
@@ -53,6 +53,7 @@ const Story = ({ spaceKey }: { spaceKey: PublicKey }) => {
 export default {
   title: 'plugin-thread/Comments',
   component: Thread,
+  // TODO(wittjosiah): Register schemas.
   render: () => <ClientRepeater component={Story} types={types} createIdentity createSpace />,
   decorators: [withTheme],
   parameters: { translations },

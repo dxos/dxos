@@ -7,9 +7,8 @@ import { batch, effect, untracked } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { isDocument } from '@braneframe/plugin-markdown';
+import { DocumentSchema, isDocument } from '@braneframe/plugin-markdown';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { Document as DocumentType, Thread as ThreadType } from '@braneframe/types';
 import {
   type IntentPluginProvides,
   LayoutAction,
@@ -22,9 +21,9 @@ import {
   parseGraphPlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import * as E from '@dxos/echo-schema/schema';
+import * as E from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { type TypedObject, getSpaceForObject, getTextInRange, SpaceProxy } from '@dxos/react-client/echo';
+import { type TypedObject, getSpaceForObject, getTextInRange, SpaceProxy, Filter } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
 import { comments, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
@@ -40,7 +39,15 @@ import {
 } from './components';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
-import { ThreadAction, type ThreadPluginProvides, isThread, type ThreadSettingsProps } from './types';
+import {
+  ThreadAction,
+  type ThreadPluginProvides,
+  isThread,
+  type ThreadSettingsProps,
+  ThreadSchema,
+  type ThreadType,
+  MessageSchema,
+} from './types';
 
 type ThreadState = {
   threads: Record<string, number>;
@@ -67,6 +74,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+      const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
+      clientPlugin?.provides.client._graph.types.registerEffectSchema(ThreadSchema, MessageSchema);
 
       // TODO(wittjosiah): This is a hack to make standalone threads work in the c11y sidebar.
       //  This should have a better solution when deck is introduced.
@@ -79,7 +88,9 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             : getSpaceForObject(activeNode.data)
           : undefined;
         untracked(() => {
-          const [thread] = space?.db.query(ThreadType.filter((thread) => !thread.context)).objects ?? [];
+          // const [thread] = space?.db.query(ThreadType.filter((thread) => !thread.context)).objects ?? [];
+          const [thread] =
+            space?.db.query(Filter.schema(ThreadSchema)).objects.filter((thread) => !thread.context) ?? [];
           if (activeNode && isDocument(activeNode?.data) && activeNode.data.comments?.length > 0) {
             void intentPlugin?.provides.intent.dispatch({
               action: LayoutAction.SET_LAYOUT,
@@ -114,7 +125,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       settings: settings.values,
       metadata: {
         records: {
-          [ThreadType.schema.typename]: {
+          [E.getEchoObjectAnnotation(ThreadSchema)!.typename]: {
             placeholder: ['thread title placeholder', { ns: THREAD_PLUGIN }],
             icon: (props: IconProps) => <Chat {...props} />,
           },
@@ -161,10 +172,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               );
 
               // Add all threads not linked to documents to the graph.
-              const query = space.db.query(ThreadType.filter());
+              const query = space.db.query(Filter.schema(ThreadSchema));
               // TODO(wittjosiah): There should be a better way to do this.
               //  Resolvers in echo schema is likely the solution.
-              const documentQuery = space.db.query(DocumentType.filter());
+              const documentQuery = space.db.query(Filter.schema(DocumentSchema));
               let previousObjects: ThreadType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -289,7 +300,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ThreadAction.CREATE: {
-              return { data: new ThreadType() };
+              return { data: E.object(ThreadSchema, { messages: [] }) };
             }
 
             case ThreadAction.SELECT: {
@@ -307,7 +318,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
               if (!intent.undo) {
                 const index = doc.comments?.findIndex((comment) => comment.thread?.id === thread.id);
-                const cursor = doc.comments?.[index]?.cursor;
+                const cursor = index && doc.comments?.[index]?.cursor;
                 if (index !== -1) {
                   doc.comments?.splice(index, 1);
                 }
@@ -338,7 +349,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             listener({
               onChange: () => {
                 doc.comments?.forEach(({ thread, cursor }) => {
-                  if (thread && cursor) {
+                  if (isThread(thread) && cursor) {
                     const [start, end] = cursor.split(':');
                     const title = getTextInRange(doc.content, start, end);
                     // TODO(burdon): This seems unsafe; review.
@@ -357,8 +368,14 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 // Create comment thread.
                 const [start, end] = cursor.split(':');
                 const title = getTextInRange(doc.content, start, end);
-                const thread = space.db.add(new ThreadType({ title, context: { object: doc.id } }));
-                doc.comments?.push({ thread, cursor });
+                const thread = space.db.add(
+                  E.object(ThreadSchema, { title, messages: [], context: { object: doc.id } }),
+                );
+                if (doc.comments) {
+                  doc.comments.push({ thread, cursor });
+                } else {
+                  doc.comments = [{ thread, cursor }];
+                }
                 void intentPlugin?.provides.intent.dispatch([
                   {
                     action: ThreadAction.SELECT,

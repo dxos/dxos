@@ -4,13 +4,13 @@
 import { Quotes } from '@phosphor-icons/react';
 import React, { useEffect } from 'react';
 
-import { type Thread as ThreadType } from '@braneframe/types';
 import { useTranslation } from '@dxos/react-ui';
 import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
 
 import { CommentContainer } from './CommentContainer';
 import { type ThreadContainerProps } from './types';
 import { THREAD_PLUGIN } from '../meta';
+import { type ThreadType } from '../types';
 
 export type ThreadsContainerProps = Omit<
   ThreadContainerProps,

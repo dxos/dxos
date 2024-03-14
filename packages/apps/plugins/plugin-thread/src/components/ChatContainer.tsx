@@ -5,8 +5,9 @@
 import { Chat } from '@phosphor-icons/react';
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { Message as MessageType } from '@braneframe/types';
-import { TextObject, getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
+import { TextV0Schema } from '@braneframe/plugin-markdown';
+import * as E from '@dxos/echo-schema';
+import { getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ScrollArea, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
@@ -19,6 +20,7 @@ import { command } from './command-extension';
 import { type ThreadContainerProps } from './types';
 import { useStatus } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
+import { MessageSchema } from '../types';
 import { getMessageMetadata } from '../util';
 
 export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
@@ -47,7 +49,7 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
   const { themeMode } = useThemeContext();
 
   const textboxMetadata = getMessageMetadata(thread.id, identity);
-  const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
+  const [nextMessage, setNextMessage] = useState({ text: E.object(TextV0Schema, { content: '' }) });
   const { doc, accessor } = useDocAccessor(nextMessage.text);
   const extensions = useMemo(
     () => [
@@ -77,21 +79,21 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
       return false;
     }
 
-    const block = {
-      timestamp: new Date().toISOString(),
-      content,
-    };
-
     thread.messages.push(
-      new MessageType({
+      E.object(MessageSchema, {
         from: { identityKey: identity.identityKey.toHex() },
         context,
-        blocks: [block],
+        blocks: [
+          {
+            timestamp: new Date().toISOString(),
+            content,
+          },
+        ],
       }),
     );
 
     setNextMessage(() => {
-      return { text: new TextObject() };
+      return { text: E.object(TextV0Schema, { content: '' }) };
     });
 
     setAutoFocus(true);

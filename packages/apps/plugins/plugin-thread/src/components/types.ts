@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { Thread as ThreadType } from '@braneframe/types';
 import type { ThreadProps } from '@dxos/react-ui-thread';
+
+import { type ThreadType } from '../types';
 
 /**
  * Props for components which connect an ECHO Thread object to the UI component Thread.

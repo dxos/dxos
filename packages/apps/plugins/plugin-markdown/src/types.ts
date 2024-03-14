@@ -3,7 +3,6 @@
 //
 
 import * as S from '@effect/schema/Schema';
-import { type Mutable } from 'effect/Types';
 
 import type {
   GraphBuilderProvides,
@@ -79,14 +78,13 @@ const _TextV0Schema = S.struct({
 interface TextV0Type extends E.ObjectType<typeof _TextV0Schema> {}
 export const TextV0Schema: S.Schema<TextV0Type> = _TextV0Schema;
 
-export const _DocumentSchema = S.struct({
+const _DocumentSchema = S.struct({
   title: S.optional(S.string),
   content: E.ref(TextV0Schema),
   comments: S.optional(
     S.array(
       S.struct({
-        // TODO(wittjosiah): Add thread schema.
-        // thread: S.optional(ThreadSchema),
+        thread: S.optional(E.ref(E.AnyEchoObject)),
         cursor: S.optional(S.string),
       }),
     ),
