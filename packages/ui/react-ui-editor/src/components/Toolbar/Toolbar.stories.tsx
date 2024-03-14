@@ -73,10 +73,11 @@ const Story: FC<{ content: string }> = ({ content }) => {
     <div role='none' className='fixed inset-0 flex flex-col'>
       <Toolbar.Root onAction={handleAction} state={formattingState} classNames={textBlockWidth}>
         <Toolbar.Markdown />
+        <Toolbar.Custom onUpload={async (file) => ({ url: file.name })} />
         <Toolbar.Separator />
-        <Toolbar.Extended />
+        <Toolbar.Actions />
       </Toolbar.Root>
-      <div ref={parentRef} className={textBlockWidth} />;
+      <div ref={parentRef} className={textBlockWidth} />
     </div>
   );
 };
