@@ -118,10 +118,10 @@ export class Stream<T> {
   /**
    * Maps all data coming through the stream.
    */
-  static map<T, U>(source: Stream<T>, map: (data: T) => MaybePromise<U>): Stream<Awaited<U>> {
+  static map<T, U>(source: Stream<T>, map: (data: T) => U): Stream<U> {
     return new Stream(({ ready, next, close }) => {
       source.onReady(ready);
-      source.subscribe(async (data) => next(await map(data)), close);
+      source.subscribe((data) => next(map(data)), close);
 
       return () => source.close();
     });
