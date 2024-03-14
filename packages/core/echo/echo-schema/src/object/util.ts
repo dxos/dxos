@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { todo } from '@dxos/debug';
 import { Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
@@ -12,6 +11,8 @@ import { type AbstractEchoObject } from './object';
 import { isAutomergeObject } from './typed-object';
 import { base, type EchoObject, type ForeignKey } from './types';
 import type { EchoDatabase } from '../database';
+import { type EchoReactiveHandler, isEchoReactiveObject } from '../effect/echo-handler';
+import { getProxyHandlerSlot } from '../effect/proxy';
 
 export const setStateFromSnapshot = (obj: AbstractEchoObject, snapshot: ObjectSnapshot | TextSnapshot) => {
   invariant(obj[base]._stateMachine);
@@ -26,9 +27,11 @@ export const getDatabaseFromObject = (obj: EchoObject): EchoDatabase | undefined
   if (isAutomergeObject(obj)) {
     return obj[base]._core.database?._dbApi;
   }
-
-  todo();
-  // return (obj[base] as AbstractEchoObject)._database.;
+  if (isEchoReactiveObject(obj)) {
+    const handler = getProxyHandlerSlot(obj).handler as EchoReactiveHandler;
+    return handler._objectCore.database?._dbApi;
+  }
+  return undefined;
 };
 
 export const getReferenceWithSpaceKey = (obj: EchoObject): Reference | undefined => {
