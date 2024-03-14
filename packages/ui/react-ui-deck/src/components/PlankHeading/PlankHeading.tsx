@@ -32,7 +32,14 @@ const plankHeadingIconProps: IconProps = {
 };
 
 const MenuSignifierHorizontal = () => (
-  <svg className='absolute block-end-2' width={20} height={2} viewBox='0 0 20 2' stroke='currentColor' opacity={0.5}>
+  <svg
+    className='absolute block-end-[7px]'
+    width={20}
+    height={2}
+    viewBox='0 0 20 2'
+    stroke='currentColor'
+    opacity={0.5}
+  >
     <line
       x1={0.5}
       y1={0.75}
