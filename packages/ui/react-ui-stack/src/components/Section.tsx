@@ -3,7 +3,8 @@
 //
 
 import { useTabsterAttributes } from '@fluentui/react-tabster';
-import { ArrowSquareOut, DotsNine, type IconProps, X } from '@phosphor-icons/react';
+import { ArrowSquareOut, CaretUpDown, DotsNine, type IconProps, X } from '@phosphor-icons/react';
+import * as CollapsiblePrimitive from '@radix-ui/react-collapsible';
 import React, {
   forwardRef,
   useState,
@@ -13,7 +14,7 @@ import React, {
   type PropsWithChildren,
 } from 'react';
 
-import { DropdownMenu, List, ListItem, useTranslation } from '@dxos/react-ui';
+import { Button, DropdownMenu, List, ListItem, useTranslation } from '@dxos/react-ui';
 import {
   type MosaicActiveType,
   type MosaicDataItem,
@@ -28,7 +29,6 @@ import {
   hoverableFocusedKeyboardControls,
   attentionSurface,
   mx,
-  staticFocusRing,
   staticHoverableControls,
   hoverableOpenControlItem,
   hoverableFocusedWithinControls,
@@ -99,83 +99,86 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
       focusable: {},
       mover: { cyclic: true, direction: 1, memorizeCurrent: false },
     });
+    const [collapsed, setCollapsed] = useState(active === 'overlay');
 
     return (
-      <ListItem.Root
-        ref={forwardedRef}
-        id={id}
-        classNames={[
-          'grid col-span-2 group',
-          active === 'overlay' ? stackColumns : 'grid-cols-subgrid',
-          separation && 'pbe-2',
-        ]}
-        style={draggableStyle}
-      >
-        <div
-          role='none'
-          className={mx(
-            attentionSurface,
-            hoverableControls,
-            hoverableFocusedWithinControls,
-            'grid col-span-2 grid-cols-subgrid separator-separator border-is border-ie group-first:border-bs border-be',
-            active && staticHoverableControls,
-            active && 'border-bs border-be',
-            separation ? 'border-bs' : 'border-bs-0',
-            (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
-          )}
+      <CollapsiblePrimitive.Root asChild open={!collapsed} onOpenChange={(nextOpen) => setCollapsed(!nextOpen)}>
+        <ListItem.Root
+          ref={forwardedRef}
+          id={id}
+          classNames={[
+            'grid col-span-2 group',
+            active === 'overlay' ? stackColumns : 'grid-cols-subgrid',
+            separation && 'pbe-2',
+          ]}
+          style={draggableStyle}
         >
-          <ListItem.Heading classNames='sr-only'>{title}</ListItem.Heading>
-
           <div
-            role='toolbar'
-            aria-label={t('section controls label')}
-            {...(!active && { tabIndex: 0 })}
-            {...(!active && sectionActionsToolbar)}
-            className='grid grid-rows-subgrid grid-cols-subgrid ch-focus-ring rounded-sm'
+            role='none'
+            className={mx(
+              attentionSurface,
+              hoverableControls,
+              hoverableFocusedWithinControls,
+              'grid col-span-2 grid-cols-subgrid separator-separator border-is border-ie group-first:border-bs border-be',
+              active && staticHoverableControls,
+              active && 'border-bs border-be',
+              separation ? 'border-bs' : 'border-bs-0',
+              (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
+            )}
           >
-            <DropdownMenu.Root
-              {...{
-                open: optionsMenuOpen,
-                onOpenChange: setOptionsMenuOpen,
-              }}
+            <div
+              role='toolbar'
+              aria-label={t('section controls label')}
+              {...(!active && { tabIndex: 0 })}
+              {...(!active && sectionActionsToolbar)}
+              className='grid grid-cols-subgrid ch-focus-ring rounded-sm grid-rows-[min-content_min-content_1fr]'
             >
-              <DropDownMenuDragHandleTrigger
-                active={!!active}
-                variant='ghost'
-                classNames={[
-                  hoverableFocusedKeyboardControls,
-                  hoverableOpenControlItem,
-                  active === 'overlay' && document.body.hasAttribute('data-is-keyboard') && staticFocusRing,
-                ]}
-                data-testid='section.drag-handle'
-                {...draggableProps}
+              <DropdownMenu.Root
+                {...{
+                  open: optionsMenuOpen,
+                  onOpenChange: setOptionsMenuOpen,
+                }}
               >
-                <Icon className={mx(getSize(5), hoverableControlItem, 'transition-opacity')} />
-              </DropDownMenuDragHandleTrigger>
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content>
-                  <DropdownMenu.Viewport>
-                    <DropdownMenu.Item onClick={onNavigate} data-testid='section.navigate-to'>
-                      <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
-                      <span className='grow'>{t('navigate to section label')}</span>
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item onClick={() => onDelete?.()} data-testid='section.remove'>
-                      <X className={mx(getSize(5), 'mr-2')} />
-                      <span className='grow'>{t('remove section label')}</span>
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Viewport>
-                  <DropdownMenu.Arrow />
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
-            </DropdownMenu.Root>
-          </div>
+                <DropDownMenuDragHandleTrigger
+                  active={!!active}
+                  variant='ghost'
+                  classNames={[hoverableFocusedKeyboardControls, hoverableOpenControlItem]}
+                  data-testid='section.drag-handle'
+                  {...draggableProps}
+                >
+                  <Icon className={mx(getSize(5), 'transition-opacity')} />
+                </DropDownMenuDragHandleTrigger>
+                <DropdownMenu.Portal>
+                  <DropdownMenu.Content>
+                    <DropdownMenu.Viewport>
+                      <DropdownMenu.Item onClick={onNavigate} data-testid='section.navigate-to'>
+                        <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
+                        <span className='grow'>{t('navigate to section label')}</span>
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item onClick={() => onDelete?.()} data-testid='section.remove'>
+                        <X className={mx(getSize(5), 'mr-2')} />
+                        <span className='grow'>{t('remove section label')}</span>
+                      </DropdownMenu.Item>
+                    </DropdownMenu.Viewport>
+                    <DropdownMenu.Arrow />
+                  </DropdownMenu.Content>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Root>
+              <CollapsiblePrimitive.Trigger asChild>
+                <Button variant='ghost' data-state='' classNames={hoverableControlItem}>
+                  <span className='sr-only'>{t(collapsed ? 'expand label' : 'collapse label')}</span>
+                  {collapsed ? <CaretUpDown /> : <CaretUpDown />}
+                </Button>
+              </CollapsiblePrimitive.Trigger>
+            </div>
 
-          {/* Main content */}
-          <div role='none' className='flex flex-1 min-is-0'>
-            {children}
+            {/* Main content */}
+
+            <ListItem.Heading classNames={collapsed ? 'flex flex-1 min-is-0 p-4' : 'sr-only'}>{title}</ListItem.Heading>
+            <CollapsiblePrimitive.Content className='flex flex-1 min-is-0'>{children}</CollapsiblePrimitive.Content>
           </div>
-        </div>
-      </ListItem.Root>
+        </ListItem.Root>
+      </CollapsiblePrimitive.Root>
     );
   },
 );
