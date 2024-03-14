@@ -25,7 +25,7 @@ const Story = () => {
     const space = client.spaces.default;
     const generator = createSpaceObjectGenerator(space);
     generator.addSchemas();
-    generator.createObjects({ [TestSchemaType.project]: 200 });
+    generator.createObjects({ [TestSchemaType.project]: 6 });
 
     const schema = generator.getSchema(TestSchemaType.project);
     const table = space.db.add(new TableType({ schema }));

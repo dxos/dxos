@@ -13,6 +13,7 @@ import {
   type OnChangeFn,
   type RowSelectionState,
   getGroupedRowModel,
+  getExpandedRowModel,
 } from '@tanstack/react-table';
 import { useVirtualizer, type VirtualizerOptions } from '@tanstack/react-virtual';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
@@ -38,6 +39,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     debug,
     onDataSelectionChange,
     getScrollElement,
+    pinLastRow,
   } = props;
 
   const columns = useDefaultValue(props.columns, []);
@@ -115,6 +117,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     // Rows
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
 
     // Grouping
     getGroupedRowModel: grouping.length > 1 ? getGroupedRowModel() : undefined,
@@ -125,8 +128,8 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
 
     onRowSelectionChange: handleRowSelectionChange,
 
-    // Sorting
     enableSorting: true,
+    enableColumnPinning: true,
 
     // Debug
     debugTable: debug,
@@ -137,6 +140,17 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
   useEffect(() => {
     onDataSelectionChange?.(Object.keys(rowSelection).map((id) => table.getRowModel().rowsById[id].original));
   }, [onDataSelectionChange, rowSelection, table]);
+
+  useEffect(() => {
+    // TODO(zan): This is super jank, let's think of a nicer way to do this ... later.
+    if (pinLastRow) {
+      // Clear row pinning
+      table.resetRowPinning();
+
+      const rows = table.getRowModel().rows;
+      rows[rows.length - 1].pin('bottom');
+    }
+  }, [pinLastRow, table, data]);
 
   useEffect(() => {
     const shouldTriggerResize = columnSizingInfo.columnSizingStart?.length === 0;
@@ -214,11 +228,12 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
 const VirtualizedTableContent = ({
   getScrollElement,
 }: Pick<VirtualizerOptions<Element, Element>, 'getScrollElement'>) => {
-  const {
-    table: { getRowModel },
-  } = useTableContext('VirtualizedTableContent');
+  const { table } = useTableContext('VirtualizedTableContent');
 
-  const rows = getRowModel().rows;
+  const centerRows = table.getCenterRows();
+  const pinnedRows = table.getBottomRows();
+
+  const rows = [...centerRows, ...pinnedRows];
 
   const { getTotalSize, getVirtualItems } = useVirtualizer({
     getScrollElement,
