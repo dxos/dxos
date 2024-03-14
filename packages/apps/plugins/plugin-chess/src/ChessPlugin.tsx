@@ -71,7 +71,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
                         data: object,
                         properties: {
                           // TODO(wittjosiah): Reconcile with metadata provides.
-                          label: ['grid title placeholder', { ns: CHESS_PLUGIN }],
+                          label: ['game title placeholder', { ns: CHESS_PLUGIN }],
                           icon: (props: IconProps) => <ShieldChevron {...props} />,
                           testId: 'spacePlugin.object',
                           persistenceClass: 'echo',

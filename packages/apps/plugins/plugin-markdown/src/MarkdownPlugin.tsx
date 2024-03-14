@@ -62,13 +62,13 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
-  // TODO(burdon): Cant this be memoized?
+  // TODO(burdon): Move downstream outside of plugin.
   const getCustomExtensions = (document?: DocumentType) => {
     // Configure extensions.
     const extensions = getExtensions({
+      dispatch: intentPlugin?.provides.intent.dispatch,
       settings: settings.values,
       document,
-      dispatch: intentPlugin?.provides.intent.dispatch,
     });
 
     // Add extensions from other plugins.
@@ -236,8 +236,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 return (
                   <MainLayout toolbar={settings.values.toolbar}>
                     <DocumentMain
-                      toolbar={settings.values.toolbar}
                       readonly={readonly}
+                      toolbar={settings.values.toolbar}
                       document={data.active}
                       extensions={extensions}
                     />
