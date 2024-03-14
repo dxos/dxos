@@ -12,3 +12,4 @@ runtime:
       gateway: https://dev.kube.dxos.org/ipfs/gateway
     agentHosting:
       type: LOCAL_TESTING
+
