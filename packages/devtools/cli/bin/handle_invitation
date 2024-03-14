@@ -13,5 +13,5 @@ while true; do
   sleep 1
 done
 
-dx halo join --invitation=$DXOS_AGENT_INVITATION
+dx halo join --invitation=$DXOS_AGENT_INVITATION --managed-agent --device-label "agent running in ${DX_AGENT_ENVIRONMENT-}"
 touch $HOME/.agent-invitation-complete

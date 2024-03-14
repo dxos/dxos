@@ -5,7 +5,7 @@
 import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect } from 'react';
 
-import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
+import { LayoutAction, parseFileManagerPlugin, useResolvePlugin, useIntentResolver } from '@dxos/app-framework';
 import { useRefCallback } from '@dxos/react-async';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
@@ -44,11 +44,12 @@ export type EditorMainProps = {
   readonly?: boolean;
   toolbar?: boolean;
   comments?: Comment[];
-} & Pick<TextEditorProps, 'doc' | 'extensions'>;
+} & Pick<TextEditorProps, 'doc' | 'selection' | 'scrollTo' | 'extensions'>;
 
-export const EditorMain = ({ id, readonly, toolbar, comments, doc, extensions: _extensions }: EditorMainProps) => {
+export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _extensions, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
+  const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
 
   const { ref: editorRef, value: view } = useRefCallback<EditorView>();
   useComments(view, id, comments);
@@ -89,7 +90,7 @@ export const EditorMain = ({ id, readonly, toolbar, comments, doc, extensions: _
         },
       }),
     ].filter(nonNullable);
-  }, [_extensions, formattingObserver]);
+  }, [_extensions, formattingObserver, themeMode]);
 
   return (
     <>
@@ -100,8 +101,16 @@ export const EditorMain = ({ id, readonly, toolbar, comments, doc, extensions: _
           onAction={handleAction}
         >
           <Toolbar.Markdown />
+          {fileManagerPlugin?.provides.file.upload && (
+            <Toolbar.Custom
+              onUpload={async (file) => {
+                const info = await fileManagerPlugin.provides.file.upload!(file);
+                return { url: info?.url };
+              }}
+            />
+          )}
           <Toolbar.Separator />
-          <Toolbar.Extended />
+          <Toolbar.Actions />
         </Toolbar.Root>
       )}
       <div
@@ -110,8 +119,8 @@ export const EditorMain = ({ id, readonly, toolbar, comments, doc, extensions: _
         className='is-full bs-full overflow-hidden data-[toolbar=disabled]:pbs-2'
       >
         <TextEditor
+          {...props}
           id={id}
-          doc={doc}
           extensions={extensions}
           autoFocus
           moveToEndOfLine

@@ -67,7 +67,7 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
         <EditorModeToolbar editorMode={editorMode} setEditorMode={setEditorMode} />
       </Toolbar.Root>
       <div role='none' className='grow overflow-hidden'>
-        <div role='textbox' className={mx(textBlockWidth, attentionSurface)} ref={parentRef} />
+        <div className={mx(textBlockWidth, attentionSurface)} ref={parentRef} />
       </div>
     </div>
   );
@@ -117,7 +117,7 @@ export default {
 export const Default = {
   render: () => {
     const { parentRef } = useTextEditor();
-    return <div role='textbox' className={mx(textBlockWidth, attentionSurface)} ref={parentRef} />;
+    return <div className={mx(textBlockWidth, attentionSurface)} ref={parentRef} />;
   },
 };
 
@@ -127,7 +127,7 @@ export const Basic = {
     const { parentRef } = useTextEditor(() => ({
       extensions: [createBasicExtensions({ placeholder: 'Enter text...' }), createThemeExtensions({ themeMode })],
     }));
-    return <div role='textbox' className={mx(textBlockWidth, attentionSurface)} ref={parentRef} />;
+    return <div className={mx(textBlockWidth, attentionSurface)} ref={parentRef} />;
   },
 };
 

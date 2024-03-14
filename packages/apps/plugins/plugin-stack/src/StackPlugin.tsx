@@ -4,7 +4,6 @@
 
 import { StackSimple, type IconProps } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
-import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
@@ -12,6 +11,7 @@ import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { Stack as StackType } from '@braneframe/types';
 import { resolvePlugin, type Plugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
+import * as E from '@dxos/echo-schema/schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 
 import { StackMain, StackSettings } from './components';
@@ -28,12 +28,12 @@ import {
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
   const settings = new LocalStorageStore<StackSettingsProps>(STACK_PLUGIN, { separation: true });
-  const stackState: StackState = deepSignal({ creators: [] });
+  const stackState = E.object<StackState>({ creators: [] });
 
   return {
     meta,
     ready: async (plugins) => {
-      settings.prop(settings.values.$separation!, 'separation', LocalStorageStore.bool);
+      settings.prop({ key: 'separation', type: LocalStorageStore.bool() });
 
       for (const plugin of plugins) {
         if (plugin.meta.id === STACK_PLUGIN) {

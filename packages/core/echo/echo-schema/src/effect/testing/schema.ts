@@ -12,16 +12,21 @@ export class TestClass {
   }
 }
 
+const Circle = S.struct({ type: S.literal('circle'), radius: S.number });
+const Square = S.struct({ type: S.literal('square'), side: S.number });
+const Shape = S.union(Circle, Square);
+
 const TestNestedSchema = S.mutable(S.struct({ field: S.string }));
 export const TestSchema = S.mutable(
   S.partial(
     S.struct({
       string: S.string,
       number: S.number,
+      nullableShapeArray: S.mutable(S.array(S.union(Shape, S.null))),
       boolean: S.boolean,
       null: S.null,
       undefined: S.undefined,
-      numberArray: S.mutable(S.array(S.number)),
+      stringArray: S.mutable(S.array(S.string)),
       twoDimNumberArray: S.mutable(S.array(S.mutable(S.array(S.number)))),
       object: TestNestedSchema,
       objectArray: S.mutable(S.array(TestNestedSchema)),

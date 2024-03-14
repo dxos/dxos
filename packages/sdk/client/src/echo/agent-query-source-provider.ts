@@ -147,7 +147,7 @@ export class AgentQuerySource implements QuerySource {
           }) ?? [];
         this.changed.emit();
       })
-      .catch((error) => log.catch(error));
+      .catch((error) => error.message === 'Close.' || log.catch(error));
   }
 }
 

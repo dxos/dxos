@@ -3,7 +3,8 @@
 //
 
 import { Context } from '@dxos/context';
-import { type AutomergeHost } from '@dxos/echo-pipeline';
+import { warnAfterTimeout } from '@dxos/debug';
+import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
 import { Filter } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { idCodec } from '@dxos/protocols';
@@ -35,7 +36,13 @@ export class IndexServiceImpl implements IndexService {
       results: (
         await Promise.all(
           results.map(async (result) => {
-            const { objectId, spaceKey } = idCodec.decode(result.id);
+            const { objectId, documentId } = idCodec.decode(result.id);
+            const handle = this._params.automergeHost.repo.find(documentId as any);
+            await warnAfterTimeout(5000, 'to long to load doc', () => handle.whenReady());
+            const spaceKey = getSpaceKeyFromDoc(handle.docSync());
+            if (!spaceKey) {
+              return;
+            }
             return {
               id: objectId,
               spaceKey: PublicKey.from(spaceKey),

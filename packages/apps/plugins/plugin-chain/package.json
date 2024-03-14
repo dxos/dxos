@@ -37,7 +37,6 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@preact/signals-core": "^1.5.1",
-    "deepsignal": "^1.5.0",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {

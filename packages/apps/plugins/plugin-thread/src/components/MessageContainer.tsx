@@ -91,7 +91,7 @@ const TextboxBlock = ({
       role='none'
       className={mx('col-span-3 grid grid-cols-subgrid', hoverableControls, hoverableFocusedWithinControls)}
     >
-      <div role='textbox' ref={parentRef} className={textboxWidth} />
+      <div ref={parentRef} className={textboxWidth} />
       {onBlockDelete && (
         <Button
           variant='ghost'
