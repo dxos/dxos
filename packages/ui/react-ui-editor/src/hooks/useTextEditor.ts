@@ -33,6 +33,8 @@ export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: D
   useEffect(() => {
     let view: EditorView;
     if (parentRef.current) {
+      log('create', { id });
+
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
       const state = EditorState.create({
         doc,
@@ -69,6 +71,7 @@ export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: D
     }
 
     return () => {
+      log('destroy', { id });
       view?.destroy();
     };
   }, deps);
