@@ -9,20 +9,20 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import {
-  setHeading,
-  addStyle,
-  removeStyle,
-  addLink,
-  removeLink,
-  addList,
-  removeList,
   addBlockquote,
-  removeBlockquote,
   addCodeblock,
+  addLink,
+  addList,
+  addStyle,
+  getFormatting,
+  removeStyle,
+  removeLink,
+  removeList,
+  removeBlockquote,
   removeCodeblock,
+  setHeading,
   Inline,
   List,
-  getFormatting,
   type Formatting,
 } from './formatting';
 
@@ -204,22 +204,22 @@ describe('removeStyle', () => {
 });
 
 describe('addLink', () => {
-  testCommand('adds a link', '{}', addLink, '[]({})');
+  testCommand('adds a link', '{}', addLink(), '[]({})');
 
-  testCommand('adds a link around text', 'hello {world}', addLink, 'hello [world]({})');
+  testCommand('adds a link around text', 'hello {world}', addLink(), 'hello [world]({})');
 
-  testCommand('clears existing links', '[hello {world}](foo)', addLink, 'hello [world]({})');
+  testCommand('clears existing links', '[hello {world}](foo)', addLink(), 'hello [world]({})');
 
-  testCommand('does nothing across blocks', '{one\n\ntwo}', addLink, null);
+  testCommand('does nothing across blocks', '{one\n\ntwo}', addLink(), null);
 
-  testCommand('does nothing in code blocks', '```\n{one}\n```', addLink, null);
+  testCommand('does nothing in code blocks', '```\n{one}\n```', addLink(), null);
 
-  testCommand('patches up overlapping styles before', '*foo {bar* baz}', addLink, '*foo* [*bar* baz]({})');
+  testCommand('patches up overlapping styles before', '*foo {bar* baz}', addLink(), '*foo* [*bar* baz]({})');
 
   testCommand(
     'patches up overlapping styles after',
     'one {two ~~three} four~~',
-    addLink,
+    addLink(),
     'one [two ~~three~~]({}) ~~four~~',
   );
 });

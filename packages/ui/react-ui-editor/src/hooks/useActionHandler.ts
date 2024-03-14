@@ -75,7 +75,11 @@ export const useActionHandler = (view?: EditorView | null): ToolbarProps['onActi
         break;
 
       case 'link':
-        (action.data === false ? removeLink : addLink)(view);
+        (action.data === false ? removeLink : addLink())(view);
+        break;
+
+      case 'image':
+        addLink({ url: action.data, image: true })(view);
         break;
 
       case 'comment':
