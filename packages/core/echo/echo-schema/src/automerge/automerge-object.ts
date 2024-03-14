@@ -36,7 +36,7 @@ import {
   type OpaqueEchoObject,
 } from '../object';
 import { AbstractEchoObject } from '../object/object'; // TODO(burdon): Import
-import { type Schema } from '../proto';
+import { Schema } from '../proto';
 
 // TODO(dmaretskyi): Rename to `AutomergeObjectApi`?
 export class AutomergeObject implements TypedObjectProperties {
@@ -343,8 +343,10 @@ export class AutomergeObject implements TypedObjectProperties {
     invariant(!this[proxy]);
     if (!this._schema && this._core.database) {
       const type = this.__system.type;
-      if (type) {
+      if (type instanceof Reference) {
         this._schema = this._core.database._resolveSchema(type);
+      } else if ((type as any) instanceof Schema) {
+        this._schema = type;
       }
     }
     return this._schema;
