@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useArrowNavigationGroup } from '@fluentui/react-tabster';
+import { useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
 import React, { forwardRef, useCallback } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -25,6 +25,7 @@ import {
   type StackSectionContent,
   type StackSectionItem,
 } from './Section';
+import { stackColumns } from './style-fragments';
 import { translationKey } from '../translations';
 
 export type Direction = 'horizontal' | 'vertical';
@@ -109,6 +110,8 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
     const { Component, type } = useContainer();
     const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
     const { activeItem } = useMosaic();
+    // NOTE(thure): Ensure “groupper” is available.
+    const _group = useFocusableGroup();
 
     // NOTE: Keep outer padding the same as MarkdownMain.
     return (
@@ -116,7 +119,8 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
         ref={forwardedRef}
         classNames={mx(
           textBlockWidth,
-          'mbs-1 mbe-2 rounded-sm grid grid-cols-[var(--rail-size)_1fr]',
+          'mbs-1 mbe-2 rounded-sm grid',
+          stackColumns,
           isOver && dropRingInner,
           classNames,
         )}

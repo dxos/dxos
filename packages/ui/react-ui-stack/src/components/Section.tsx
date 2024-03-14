@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useTabsterAttributes } from '@fluentui/react-tabster';
 import { ArrowSquareOut, DotsNine, type IconProps, X } from '@phosphor-icons/react';
 import React, {
   forwardRef,
@@ -21,8 +22,6 @@ import {
   useMosaic,
 } from '@dxos/react-ui-mosaic';
 import {
-  fineButtonDimensions,
-  focusRing,
   getSize,
   hoverableControlItem,
   hoverableControls,
@@ -31,9 +30,12 @@ import {
   mx,
   staticFocusRing,
   staticHoverableControls,
+  hoverableOpenControlItem,
+  hoverableFocusedWithinControls,
 } from '@dxos/react-ui-theme';
 
 import { DropDownMenuDragHandleTrigger } from './DropDownMenuDragHandleTrigger';
+import { stackColumns } from './style-fragments';
 import { translationKey } from '../translations';
 
 export type StackSectionContent = MosaicDataItem & { title?: string };
@@ -92,12 +94,21 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
   ) => {
     const { t } = useTranslation(translationKey);
     const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
+    const sectionActionsToolbar = useTabsterAttributes({
+      groupper: {},
+      focusable: {},
+      mover: { cyclic: true, direction: 1, memorizeCurrent: false },
+    });
 
     return (
       <ListItem.Root
         ref={forwardedRef}
         id={id}
-        classNames={['grid col-span-2 grid-cols-subgrid group', separation && 'pbe-2']}
+        classNames={[
+          'grid col-span-2 group',
+          active === 'overlay' ? stackColumns : 'grid-cols-subgrid',
+          separation && 'pbe-2',
+        ]}
         style={draggableStyle}
       >
         <div
@@ -105,51 +116,59 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
           className={mx(
             attentionSurface,
             hoverableControls,
+            hoverableFocusedWithinControls,
             'grid col-span-2 grid-cols-subgrid separator-separator border-is border-ie group-first:border-bs border-be',
-            separation ? 'min-bs-[4rem] border-bs' : 'border-bs-0',
             active && staticHoverableControls,
             active && 'border-bs border-be',
+            separation ? 'border-bs' : 'border-bs-0',
             (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
           )}
         >
           <ListItem.Heading classNames='sr-only'>{title}</ListItem.Heading>
 
-          <DropdownMenu.Root
-            {...{
-              open: optionsMenuOpen,
-              onOpenChange: setOptionsMenuOpen,
-            }}
+          <div
+            role='toolbar'
+            aria-label={t('section controls label')}
+            {...(!active && { tabIndex: 0 })}
+            {...(!active && sectionActionsToolbar)}
+            className='grid grid-rows-subgrid grid-cols-subgrid ch-focus-ring rounded-sm'
           >
-            <DropDownMenuDragHandleTrigger
-              active={!!active}
-              variant='ghost'
-              className={mx(
-                fineButtonDimensions,
-                hoverableFocusedKeyboardControls,
-                'self-stretch flex items-center rounded-is justify-center bs-auto is-auto',
-                active === 'overlay' && document.body.hasAttribute('data-is-keyboard') ? staticFocusRing : focusRing,
-              )}
-              data-testid='section.drag-handle'
-              {...draggableProps}
+            <DropdownMenu.Root
+              {...{
+                open: optionsMenuOpen,
+                onOpenChange: setOptionsMenuOpen,
+              }}
             >
-              <Icon className={mx(getSize(5), hoverableControlItem, 'transition-opacity')} />
-            </DropDownMenuDragHandleTrigger>
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content>
-                <DropdownMenu.Viewport>
-                  <DropdownMenu.Item onClick={onNavigate} data-testid='section.navigate-to'>
-                    <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
-                    <span className='grow'>{t('navigate to section label')}</span>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item onClick={() => onDelete?.()} data-testid='section.remove'>
-                    <X className={mx(getSize(5), 'mr-2')} />
-                    <span className='grow'>{t('remove section label')}</span>
-                  </DropdownMenu.Item>
-                </DropdownMenu.Viewport>
-                <DropdownMenu.Arrow />
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
+              <DropDownMenuDragHandleTrigger
+                active={!!active}
+                variant='ghost'
+                classNames={[
+                  hoverableFocusedKeyboardControls,
+                  hoverableOpenControlItem,
+                  active === 'overlay' && document.body.hasAttribute('data-is-keyboard') && staticFocusRing,
+                ]}
+                data-testid='section.drag-handle'
+                {...draggableProps}
+              >
+                <Icon className={mx(getSize(5), hoverableControlItem, 'transition-opacity')} />
+              </DropDownMenuDragHandleTrigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content>
+                  <DropdownMenu.Viewport>
+                    <DropdownMenu.Item onClick={onNavigate} data-testid='section.navigate-to'>
+                      <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
+                      <span className='grow'>{t('navigate to section label')}</span>
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item onClick={() => onDelete?.()} data-testid='section.remove'>
+                      <X className={mx(getSize(5), 'mr-2')} />
+                      <span className='grow'>{t('remove section label')}</span>
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Viewport>
+                  <DropdownMenu.Arrow />
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
+          </div>
 
           {/* Main content */}
           <div role='none' className='flex flex-1 min-is-0'>
