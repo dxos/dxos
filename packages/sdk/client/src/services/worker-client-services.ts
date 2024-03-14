@@ -77,7 +77,6 @@ export class WorkerClientServices implements ClientServicesProvider {
 
     const ports = new Trigger<{ systemPort: MessagePort; appPort: MessagePort }>();
     const worker = this._createWorker();
-    worker.port.postMessage({ dxlog: localStorage.getItem('dxlog') });
     worker.port.onmessage = (event) => {
       const { command, payload } = event.data;
       if (command === 'init') {
