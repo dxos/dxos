@@ -5,7 +5,7 @@
 import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect } from 'react';
 
-import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
+import { LayoutAction, parseFileManagerPlugin, useResolvePlugin, useIntentResolver } from '@dxos/app-framework';
 import { useRefCallback } from '@dxos/react-async';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
@@ -49,6 +49,7 @@ export type EditorMainProps = {
 export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _extensions, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
+  const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
 
   const { ref: editorRef, value: view } = useRefCallback<EditorView>();
   useComments(view, id, comments);
@@ -100,8 +101,16 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
           onAction={handleAction}
         >
           <Toolbar.Markdown />
+          {fileManagerPlugin?.provides.file.upload && (
+            <Toolbar.Custom
+              onUpload={async (file) => {
+                const info = await fileManagerPlugin.provides.file.upload!(file);
+                return { url: info?.url };
+              }}
+            />
+          )}
           <Toolbar.Separator />
-          <Toolbar.Extended />
+          <Toolbar.Actions />
         </Toolbar.Root>
       )}
       <div
