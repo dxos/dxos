@@ -2,40 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Check, Trash, X, GearSix, CaretUpDown, SortAscending, SortDescending } from '@phosphor-icons/react';
-import { type SortDirection, type HeaderContext, type RowData } from '@tanstack/react-table';
-import React, { type FC, type PropsWithChildren, useRef, useState, type ReactElement } from 'react';
+import { Check, Trash, X, GearSix } from '@phosphor-icons/react';
+import { type HeaderContext, type RowData } from '@tanstack/react-table';
+import React, { type FC, type PropsWithChildren, useRef, useState } from 'react';
 
 import { Button, DensityProvider, Input, Popover, Select, Separator, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { safeParseInt } from '@dxos/util';
 
+import { SortButton } from './SortButton';
 import { type TableDef, type ColumnProps, type ColumnType } from '../schema';
 import { translationKey } from '../translations';
-
-type SortButtonProps = { sortDirection: false | SortDirection; onClick: (e: any) => void };
-
-const SortButton = ({ sortDirection, onClick }: SortButtonProps) => {
-  let icon: ReactElement;
-  const size = getSize(4);
-
-  switch (sortDirection) {
-    case 'asc':
-      icon = <SortAscending className={size} />;
-      break;
-    case 'desc':
-      icon = <SortDescending className={size} />;
-      break;
-    default:
-      icon = <CaretUpDown className={size} />;
-  }
-
-  return (
-    <Button variant='ghost' onClick={onClick}>
-      {icon}
-    </Button>
-  );
-};
 
 export type ColumnMenuProps<TData extends RowData, TValue> = {
   context: HeaderContext<TData, TValue>;
