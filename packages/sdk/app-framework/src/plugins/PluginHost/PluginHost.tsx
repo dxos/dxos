@@ -47,9 +47,10 @@ export const PluginHost = ({
     available: order.filter(({ id }) => !core.includes(id)),
     setPlugin: (id: string, enabled: boolean) => {
       if (enabled) {
-        state.values.enabled = [...state.values.enabled, id];
+        state.values.enabled.push(id);
       } else {
-        state.values.enabled = state.values.enabled.filter((enabled) => enabled !== id);
+        const index = state.values.enabled.findIndex((enabled) => enabled === id);
+        index !== -1 && state.values.enabled.splice(index, 1);
       }
     },
   });
