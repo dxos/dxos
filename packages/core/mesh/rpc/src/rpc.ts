@@ -14,6 +14,7 @@ import { exponentialBackoffInterval } from '@dxos/util';
 import { decodeRpcError } from './errors';
 
 const DEFAULT_TIMEOUT = 3_000;
+const BYE_SEND_TIMEOUT = 2_000;
 
 type MaybePromise<T> = Promise<T> | T;
 
@@ -41,6 +42,8 @@ export interface RpcPort {
   send: (msg: Uint8Array, timeout?: number) => MaybePromise<void>;
   subscribe: (cb: (msg: Uint8Array) => void) => (() => void) | void;
 }
+
+const CLOSE_TIMEOUT = 3_000;
 
 export type CloseOptions = {
   /**
@@ -186,7 +189,7 @@ export class RpcPeer {
    * Will wait for confirmation from the other side.
    * Any responses for RPC calls made before close will be delivered.
    */
-  async close({ timeout = DEFAULT_TIMEOUT }: CloseOptions = {}) {
+  async close({ timeout = CLOSE_TIMEOUT }: CloseOptions = {}) {
     if (this._state === RpcState.CLOSED) {
       return;
     }
@@ -196,7 +199,7 @@ export class RpcPeer {
     if (this._state === RpcState.OPENED && !this._params.noHandshake) {
       try {
         this._state = RpcState.CLOSING;
-        await this._sendMessage({ bye: {} }, DEFAULT_TIMEOUT);
+        await this._sendMessage({ bye: {} }, BYE_SEND_TIMEOUT);
       } catch (err: any) {
         log('error closing peer, sending bye', { err });
       }
