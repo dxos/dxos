@@ -23,7 +23,14 @@ import { actionGroupSymbol, type InvokeParams, type Graph, type Node, manageNode
 import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
-import { EchoDatabaseImpl, Filter, LEGACY_TEXT_TYPE, getEchoObjectAnnotation, isTypedObject } from '@dxos/echo-schema';
+import {
+  EchoDatabaseImpl,
+  Filter,
+  LEGACY_TEXT_TYPE,
+  getEchoObjectAnnotation,
+  isTypedObject,
+  type OpaqueEchoObject,
+} from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { Migrations } from '@dxos/migrations';
 import { SpaceState, getSpaceForObject, type Space, type TypedObject } from '@dxos/react-client/echo';
@@ -319,7 +326,15 @@ export const updateGraphWithSpace = ({
 
   // Update graph with all objects in the space.
   // TODO(wittjosiah): If text objects are included in this query then it updates on every keystroke in the editor.
-  const query = space.db.query((obj: TypedObject) => obj.__typename !== LEGACY_TEXT_TYPE);
+  const query = space.db.query((obj: OpaqueEchoObject) => {
+    if (isTypedObject(obj) && obj.__typename === LEGACY_TEXT_TYPE) {
+      return false;
+    }
+    if (E.typeOf(obj)?.itemId === LEGACY_TEXT_TYPE) {
+      return false;
+    }
+    return true;
+  });
   const previousObjects = new Map<string, TypedObject[]>();
   const unsubscribeQuery = effect(() => {
     const folder: FolderType = space.properties[getEchoObjectAnnotation(FolderSchema)!.typename];

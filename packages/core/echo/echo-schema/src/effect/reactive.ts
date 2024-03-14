@@ -167,19 +167,24 @@ export const getSchema = <T extends {} = any>(obj: T): S.Schema<any> | undefined
   return schema as S.Schema<T>;
 };
 
-export const metaOf = <T extends {}>(obj: T): ObjectMeta => {
-  const proxy = getProxyHandlerSlot(obj);
-  invariant(proxy.handler instanceof EchoReactiveHandler, 'Not a reactive ECHO object');
-  return proxy.handler.getMeta();
-};
-
-export const getTypeReference = (schema: S.Schema<any>): Reference | undefined => {
+export const getTypeReference = (schema: S.Schema<any> | undefined): Reference | undefined => {
+  if (!schema) {
+    return undefined;
+  }
   const annotation = getEchoObjectAnnotation(schema);
   if (annotation == null) {
     return undefined;
   }
   return Reference.fromLegacyTypename(annotation.typename);
 };
+
+export const metaOf = <T extends {}>(obj: T): ObjectMeta => {
+  const proxy = getProxyHandlerSlot(obj);
+  invariant(proxy.handler instanceof EchoReactiveHandler, 'Not a reactive ECHO object');
+  return proxy.handler.getMeta();
+};
+
+export const typeOf = <T extends {}>(obj: T): Reference | undefined => getTypeReference(getSchema(obj));
 
 export type PropertyVisitor<T> = (property: AST.PropertySignature, path: PropertyKey[]) => T;
 
