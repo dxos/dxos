@@ -15,6 +15,7 @@ export const FileUpload: FC<{
   onUpload: (file: File) => void;
 }> = ({ fileTypes, onUpload }) => {
   return (
+    // TODO(burdon): Replace with https://www.npmjs.com/package/react-dropzone
     <Button variant='ghost'>
       <FileUploader
         name='file'
