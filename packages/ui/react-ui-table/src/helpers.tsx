@@ -121,10 +121,14 @@ const StringBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
 
   const handleCancel = () => setValue(initialValue);
 
-  // Check if first input column of last row.
-  const rows = cellContext.table.getRowModel().flatRows;
+  let placeholder = false;
   const columns = cellContext.table.getVisibleFlatColumns();
-  const placeholder = cellContext.row.index === rows.length - 1 && columns[0].id === cellContext.column.id;
+
+  // Calling getRowModel is expensive, so only do it when we're a cell in the first position
+  if (columns[0].id === cellContext.column.id) {
+    const rowCount = cellContext.table.getRowModel().rows.length;
+    placeholder = cellContext.row.index === rowCount - 1 && columns[0].id === cellContext.column.id;
+  }
 
   // TODO(burdon): Don't render inputs unless mouse over (Show ellipsis when div)?
   return (
