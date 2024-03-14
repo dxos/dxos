@@ -543,7 +543,7 @@ export const addLink =
       }
 
       // Add the link markup.
-      changes.push({ from, insert: image ? '![' : '[' }, { from: to, insert: `](${url})` });
+      changes.push({ from, insert: image ? '![' : '[' }, { from: to, insert: `](${url ?? ''})` });
       const changeSet = state.changes(changes.concat(changesAfter));
       // Put the cursor between the title or parenthesis.
       return {
