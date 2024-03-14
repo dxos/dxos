@@ -7,15 +7,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { TextV0Schema } from '@braneframe/plugin-markdown';
 import * as E from '@dxos/echo-schema';
-import { getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
+import { getSpaceForObject, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
-import {
-  createBasicExtensions,
-  createDataExtensions,
-  createThemeExtensions,
-  useDocAccessor,
-} from '@dxos/react-ui-editor';
+import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, ThreadHeading } from '@dxos/react-ui-thread';
 
@@ -46,16 +41,18 @@ export const CommentContainer = ({
   const { themeMode } = useThemeContext();
 
   const textboxMetadata = getMessageMetadata(thread.id, identity);
-  const [nextMessage, setNextMessage] = useState({ text: E.object(TextV0Schema, { content: '' }) });
-  const { doc, accessor } = useDocAccessor(nextMessage.text);
+  // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
+  const [_count, _setCount] = useState(0);
+  const rerenderEditor = () => _setCount((count) => count + 1);
+  const messageRef = useRef('');
   const extensions = useMemo(
     () => [
-      createDataExtensions({ id: nextMessage.text.id, text: accessor }),
       createBasicExtensions({ placeholder: t('message placeholder') }),
       createThemeExtensions({ themeMode }),
+      listener({ onChange: (text) => (messageRef.current = text) }),
       command,
     ],
-    [accessor],
+    [_count],
   );
 
   // TODO(thure): Because of the way the `autoFocus` property is handled by TextEditor,
@@ -70,8 +67,7 @@ export const CommentContainer = ({
     setTimeout(() => threadScrollRef.current?.scrollIntoView({ behavior, block: 'end' }), 10);
 
   const handleCreate: MessageTextboxProps['onSend'] = useCallback(() => {
-    const content = nextMessage.text;
-    if (!getTextContent(content)) {
+    if (!messageRef.current) {
       return false;
     }
 
@@ -82,22 +78,20 @@ export const CommentContainer = ({
         blocks: [
           {
             timestamp: new Date().toISOString(),
-            content,
+            content: E.object(TextV0Schema, { content: messageRef.current }),
           },
         ],
       }),
     );
 
-    setNextMessage(() => {
-      return { text: E.object(TextV0Schema, { content: '' }) };
-    });
-
+    messageRef.current = '';
     setAutoFocus(true);
     scrollToEnd('instant');
+    rerenderEditor();
 
     // TODO(burdon): Scroll to bottom.
     return true;
-  }, [nextMessage, thread, identity]);
+  }, [thread, identity]);
 
   const handleDelete = (id: string, index: number) => {
     const messageIndex = thread.messages.findIndex((message) => message.id === id);
@@ -152,13 +146,7 @@ export const CommentContainer = ({
       {thread.messages.map((message) => (
         <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
       ))}
-      <MessageTextbox
-        doc={doc}
-        extensions={extensions}
-        autoFocus={autoFocus}
-        onSend={handleCreate}
-        {...textboxMetadata}
-      />
+      <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleCreate} {...textboxMetadata} />
       <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
       {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
       <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
