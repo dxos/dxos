@@ -14,9 +14,6 @@
   ],
   "references": [
     {
-      "path": "../../common/esbuild-plugins"
-    },
-    {
       "path": "../../common/random"
     },
     {

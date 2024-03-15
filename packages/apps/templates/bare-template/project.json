@@ -6,8 +6,11 @@
   "targets": {
     "build": {
       "options": {
-        "main": "packages/apps/templates/bare-template/src/config.t.ts",
+        "main": "packages/apps/templates/bare-template/src/template.t.ts",
         "outputPath": "packages/apps/templates/bare-template/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
         "tsConfig": "packages/apps/templates/bare-template/tsconfig.json"
       }
     },

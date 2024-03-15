@@ -200,12 +200,6 @@
       "@braneframe/plugin-table/meta": [
         "packages/apps/plugins/plugin-table/src/meta.tsx"
       ],
-      "@braneframe/plugin-template": [
-        "packages/apps/plugins/plugin-template/src/index.ts"
-      ],
-      "@braneframe/plugin-template/meta": [
-        "packages/apps/plugins/plugin-template/src/meta.tsx"
-      ],
       "@braneframe/plugin-theme": [
         "packages/apps/plugins/plugin-theme/src/index.ts"
       ],

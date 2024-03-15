@@ -192,9 +192,6 @@
       "path": "../plugins/plugin-table"
     },
     {
-      "path": "../plugins/plugin-template"
-    },
-    {
       "path": "../plugins/plugin-theme"
     },
     {

@@ -24,11 +24,11 @@
     "@dxos/document-model": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/model-factory": "workspace:*",
-    "@swc-node/register": "1.6.8",
+    "@swc-node/register": "1.9.0",
     "@types/mocha": "^8.2.2",
     "@types/node": "^18.11.9",
     "ts-node": "10.9.1",
-    "typescript": "^5.2.2",
+    "typescript": "5.4.2",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {

@@ -6,7 +6,7 @@ import { css } from '@emotion/css';
 import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Knobs, KnobsProvider, useButton } from '@dxos/esbuild-book-knobs';
+// import { Knobs, KnobsProvider, useButton } from '@dxos/esbuild-book-knobs';
 import {
   type D3Callable,
   type D3Selection,
@@ -210,6 +210,8 @@ class KubeLayout {
               .transition()
               .duration(500)
               .attr('transform', 'translate(0,0)')
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore
               .attrTween('opacity', () => d3.interpolate(1, 0))
               .remove(),
         )
@@ -284,6 +286,8 @@ class MeshLayout {
                 .selectAll('*')
                 .transition()
                 .duration(1000)
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
                 .attrTween('opacity', () => d3.interpolate(0, 1)),
             ),
         (update) => update.call(this._kubeLayout.layout),
@@ -293,6 +297,8 @@ class MeshLayout {
           remove
             .transition()
             .duration(1000)
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             .attrTween('opacity', () => d3.interpolate(1, 0))
             .remove(),
       )
@@ -320,26 +326,26 @@ const Container = () => {
   const layout = new MeshLayout(context);
   const [objects, setObjects] = useState<Kube[]>(() => createObjects(5));
 
-  useButton('Reset', () => setObjects([]));
-  useButton('Add', () => setObjects((objects) => [...objects, ...createObjects(1)]));
-  useButton('Remove', () =>
-    setObjects((objects) => objects.map((obj) => (faker.datatype.boolean() ? obj : undefined)).filter(Boolean)),
-  );
-  useButton('Mutate', () => {
-    setObjects((objects) =>
-      objects.map(({ bots, ...rest }) => ({
-        bots: faker.datatype.boolean()
-          ? bots
-          : [
-              ...bots.map((bot) => (faker.number.int(10) > 7 ? bot : undefined)).filter(Boolean),
-              ...Array.from({ length: faker.number.int(4) }).map(() => ({
-                id: faker.string.uuid(),
-              })),
-            ],
-        ...rest,
-      })),
-    );
-  });
+  // useButton('Reset', () => setObjects([]));
+  // useButton('Add', () => setObjects((objects) => [...objects, ...createObjects(1)]));
+  // useButton('Remove', () =>
+  //   setObjects((objects) => objects.map((obj) => (faker.datatype.boolean() ? obj : undefined)).filter(Boolean)),
+  // );
+  // useButton('Mutate', () => {
+  //   setObjects((objects) =>
+  //     objects.map(({ bots, ...rest }) => ({
+  //       bots: faker.datatype.boolean()
+  //         ? bots
+  //         : [
+  //             ...bots.map((bot) => (faker.number.int(10) > 7 ? bot : undefined)).filter(Boolean),
+  //             ...Array.from({ length: faker.number.int(4) }).map(() => ({
+  //               id: faker.string.uuid(),
+  //             })),
+  //           ],
+  //       ...rest,
+  //     })),
+  //   );
+  // });
 
   useEffect(() => {
     // console.log(JSON.stringify(objects, undefined, 2));
@@ -358,15 +364,15 @@ export const Primary = () => {
 
   return (
     <FullScreen>
-      <KnobsProvider>
+      {/* <KnobsProvider> */}
         <SVGContextProvider>
           <SVG>
             {showGrid && <Grid axis />}
             <Container />
           </SVG>
         </SVGContextProvider>
-        <Knobs className={styles.knobs} />
-      </KnobsProvider>
+        {/* <Knobs className={styles.knobs} />
+      </KnobsProvider> */}
     </FullScreen>
   );
 };

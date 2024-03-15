@@ -41,7 +41,7 @@ export class PipelineState {
   _ctx = new Context();
 
   // TODO(dmaretskyi): Remove?.
-  public readonly timeframeUpdate = this._timeframeClock.update;
+  public readonly timeframeUpdate: Event<Timeframe>;
 
   public readonly stalled = new Event();
 
@@ -68,7 +68,9 @@ export class PipelineState {
   constructor(
     private _feeds: ComplexMap<PublicKey, FeedWrapper<FeedMessage>>,
     private _timeframeClock: TimeframeClock,
-  ) {}
+  ) {
+    this.timeframeUpdate = this._timeframeClock.update;
+  }
 
   /**
    * Latest theoretical timeframe based on the last mutation in each feed.

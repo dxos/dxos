@@ -12,7 +12,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { schema, TimeoutError } from '@dxos/protocols';
 import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
-import { Command } from '@dxos/protocols/proto/dxos/mesh/muxer';
+import { type Command } from '@dxos/protocols/proto/dxos/mesh/muxer';
 
 import { Balancer } from './balancer';
 import { type RpcPort } from './rpc-port';

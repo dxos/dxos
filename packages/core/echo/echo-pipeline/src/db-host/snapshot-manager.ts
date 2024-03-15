@@ -6,7 +6,7 @@ import { type Context, cancelWithContext } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
 import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
-import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type BlobStore, type BlobSync } from '@dxos/teleport-extension-object-sync';
 
 import { type SnapshotStore } from './snapshot-store';

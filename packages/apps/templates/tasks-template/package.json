@@ -8,9 +8,6 @@
   "author": "info@dxos.org",
   "main": "dist/src/template.t.js",
   "types": "dist/src/template.t.d.ts",
-  "scripts": {
-    "build": "tsc"
-  },
   "dependencies": {
     "@dxos/bare-template": "workspace:*",
     "@dxos/plate": "workspace:*",
@@ -21,7 +18,7 @@
     "@types/node": "^18.11.9",
     "tmp-promise": "^3.0.3",
     "ts-node": "10.9.1",
-    "typescript": "^5.2.2"
+    "typescript": "5.4.2"
   },
   "publishConfig": {
     "access": "public"
