@@ -186,7 +186,11 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
 const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
   const { debug, classNames, getScrollElement, role, footer, grouping, fullWidth } = props;
   const { table } = useTableContext<TData>('TableImpl');
-  const { rows } = table.getRowModel();
+
+  const centerRows = table.getCenterRows();
+  const bottomRows = table.getBottomRows();
+
+  const rows = [...centerRows, ...bottomRows];
 
   if (debug) {
     return (
