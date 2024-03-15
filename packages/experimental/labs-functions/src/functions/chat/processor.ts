@@ -27,44 +27,64 @@ export type SequenceOptions = {
   noTrainingData?: boolean;
 };
 
+export interface RequestProcessorInput {
+  prompt: string;
+  content: string;
+  contextObjectId?: string;
+}
+
 export class RequestProcessor {
   constructor(
     private readonly _resources: ChainResources,
     private readonly _resolvers?: ResolverMap,
   ) {}
 
-  async processThread(
-    space: Space,
-    thread: ThreadType,
-    message: MessageType,
-  ): Promise<MessageType.Block[] | undefined> {
-    let blocks: MessageType.Block[] | undefined;
-    const { start, stop } = createStatusNotifier(space, thread.id);
+  public createInputFromMessage(thread: ThreadType, message: MessageType): RequestProcessorInput | null {
     try {
       const text = message.blocks
         .map((block) => getTextContent(block.content))
         .filter(Boolean)
         .join('\n');
-
-      // Match prompt, and include content over multiple lines.
       const match = text.match(/\/([\w-]+)\s*(.*)/s);
-      if (match) {
-        start();
+      if (!match) {
+        return null;
+      }
+      return {
+        prompt: match[1],
+        content: match[2],
+        contextObjectId: message.context?.object ?? thread.context?.object,
+      };
+    } catch (error) {
+      log.catch('error creating context from message', error);
+      return null;
+    }
+  }
 
-        const prompt = match[1];
-        const content = match[2];
-        const context = createContext(space, message, thread);
+  async processThread(
+    space: Space,
+    thread: ThreadType,
+    processingContext: RequestProcessorInput | null,
+  ): Promise<MessageType.Block[] | undefined> {
+    if (processingContext == null) {
+      return undefined;
+    }
 
-        log.info('processing', { prompt, content });
-        const sequence = await this.createSequence(space, context, { prompt });
-        if (sequence) {
-          const response = await sequence.invoke(content);
-          const result = parseMessage(response);
+    let blocks: MessageType.Block[] | undefined;
+    const { start, stop } = createStatusNotifier(space, thread.id);
+    try {
+      start();
+      const { prompt, content } = processingContext;
+      const context = createContext(space, thread, processingContext.contextObjectId);
 
-          const builder = new ResponseBuilder(space, context);
-          blocks = builder.build(result);
-          log.info('response', { blocks });
-        }
+      log.info('processing', { prompt, content });
+      const sequence = await this.createSequence(space, context, { prompt });
+      if (sequence) {
+        const response = await sequence.invoke(content);
+        const result = parseMessage(response);
+
+        const builder = new ResponseBuilder(space, context);
+        blocks = builder.build(result);
+        log.info('response', { blocks });
       }
     } catch (err) {
       log.error('processing message', err);
