@@ -29,8 +29,6 @@ export class IndexStore {
   }
 
   async save(index: Index) {
-    const file = this._directory.getOrCreateFile(index.identifier);
-
     const serialized = Buffer.from(await index.serialize());
     const header = Buffer.from(JSON.stringify(headerCodec.encode(index.kind)));
 
@@ -38,7 +36,7 @@ export class IndexStore {
     metadata.writeInt32LE(header.length, 0);
     const data = Buffer.concat([metadata, header, serialized]);
 
-    await overrideFile(file, data);
+    await overrideFile({ path: index.identifier, directory: this._directory, content: data });
   }
 
   async load(identifier: string): Promise<Index> {
@@ -67,7 +65,7 @@ export class IndexStore {
    *
    * @returns Map of index identifiers vs their kinds.
    */
-  async loadIndexKinds(): Promise<Map<string, IndexKind>> {
+  async loadIndexKindsFromDisk(): Promise<Map<string, IndexKind>> {
     const identifiers = await this._directory.list();
     const headers = new Map<string, IndexKind>();
 
@@ -80,6 +78,25 @@ export class IndexStore {
         }
       }),
     );
+
+    // Delete all indexes that are colliding with the same kind.
+    {
+      const seenKinds = new Set<IndexKind>();
+      const allKinds = Array.from(headers.values());
+      for (const kind of allKinds) {
+        if (!seenKinds.has(kind)) {
+          seenKinds.add(kind);
+          continue;
+        }
+
+        for (const [identifier, indexKind] of Array.from(headers.entries())) {
+          if (indexKind === kind) {
+            headers.delete(identifier);
+            await this.remove(identifier);
+          }
+        }
+      }
+    }
 
     return headers;
   }
