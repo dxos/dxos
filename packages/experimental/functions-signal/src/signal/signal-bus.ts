@@ -8,7 +8,7 @@ import * as Either from 'effect/Either';
 import { type Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 
-export const Signal = S.struct({
+export const SignalSchema = S.struct({
   id: S.string,
   kind: S.literal('echo-mutation', 'timer', 'attention', 'suggestion'),
   metadata: S.struct({
@@ -22,7 +22,7 @@ export const Signal = S.struct({
     value: S.any,
   }),
 });
-export type Signal = S.Schema.Type<typeof Signal>;
+export type Signal = S.Schema.Type<typeof SignalSchema>;
 
 export type OnSignalCallback = (signal: Signal) => void;
 
@@ -64,7 +64,7 @@ export class SignalBus {
       throw new Error('double registration of a callback');
     }
     const unsubscribe = this.space.listen('signals', (message) => {
-      const decoded = S.decodeEither<Signal, Signal>(Signal)(message.payload);
+      const decoded = S.decodeEither<Signal, Signal>(SignalSchema)(message.payload);
       if (Either.isRight(decoded)) {
         callback(decoded.right);
       } else {

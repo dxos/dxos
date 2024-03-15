@@ -7184,6 +7184,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-signal':
+        specifier: workspace:*
+        version: link:../functions-signal
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
