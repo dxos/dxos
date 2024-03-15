@@ -66,16 +66,19 @@ export const Stack = ({
   const { operation, overItem } = useMosaic();
   const itemsWithPreview = useItemsWithPreview({ path: id, items });
 
-  // TODO(burdon): Why callback not useMemo?
-  const getOverlayStyle = useCallback(() => ({ width: Math.min(width, 59 * 16) }), [width]);
-
-  const getOverlayProps = useCallback(() => ({ itemContext: { SectionContent } }), [SectionContent]);
-
   const [collapsedSections = {}, setCollapsedSections] = useControllableState<CollapsedSections>({
     prop: propsCollapsedSections,
     defaultProp: defaultCollapsedSections,
     onChange: onChangeCollapsedSections,
   });
+
+  // TODO(burdon): Why callback not useMemo?
+  const getOverlayStyle = useCallback(() => ({ width: Math.min(width, 59 * 16) }), [width]);
+
+  const getOverlayProps = useCallback(
+    () => ({ itemContext: { SectionContent, collapsedSections } }),
+    [SectionContent, collapsedSections],
+  );
 
   // TODO(thure): The root cause of the discrepancy between `activeNodeRect.top` and `overlayNodeRect.top` in Composer
   //  in particular is not yet known, so this solution may may backfire in unforeseeable cases.
