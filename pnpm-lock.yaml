@@ -3034,6 +3034,9 @@ importers:
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
