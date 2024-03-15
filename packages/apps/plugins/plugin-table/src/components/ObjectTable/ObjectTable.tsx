@@ -36,8 +36,11 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
     [table.schema],
   );
 
+  const filteredObjects = useFilteredObjects(objects);
+
   const [newObject, setNewObject] = useState(new Expando({}, { schema: table.schema }));
-  const rows = [...useFilteredObjects(objects), newObject];
+
+  const rows = useMemo(() => [...filteredObjects, newObject], [filteredObjects, newObject]);
 
   const tables = useQuery<TableType>(space, TableType.filter());
   const updateSchemaProp = (update: Schema.Prop) => {
@@ -118,6 +121,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
   const debug = false;
 
   const [showSettings, setShowSettings] = useState(false);
+
   useEffect(() => {
     setShowSettings(!table.schema);
   }, [table]);
@@ -166,6 +170,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
         stickyHeader={stickyHeader}
         getScrollElement={getScrollElement}
         onColumnResize={handleColumnResize}
+        pinLastRow
       />
       {debug && (
         <div className='flex text-xs'>
