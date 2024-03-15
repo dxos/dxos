@@ -3,7 +3,7 @@
 //
 
 import { Plus, Placeholder } from '@phosphor-icons/react';
-import React, { useCallback, type FC } from 'react';
+import React, { useCallback, type FC, useState } from 'react';
 
 import { File as FileType, Stack as StackType, Folder } from '@braneframe/types';
 import {
@@ -20,6 +20,7 @@ import { getSpaceForObject, isTypedObject, useQuery } from '@dxos/react-client/e
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import { Stack, type StackProps } from '@dxos/react-ui-stack';
+import { type CollapsedSections } from '@dxos/react-ui-stack/dist/types/src/components/Section';
 import {
   baseSurface,
   topbarBlockPaddingStart,
@@ -48,9 +49,15 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
   const items = stack.sections
     // TODO(wittjosiah): Should the database handle this differently?
     // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
-    .filter(({ object }) => Boolean(object));
+    .filter(({ object }) => Boolean(object))
+    .map(({ id, object }) => {
+      const rest = metadataPlugin?.provides.metadata.resolver(object.__typename ?? 'never');
+      return { id, object, ...rest };
+    });
   const space = getSpaceForObject(stack);
   const [folder] = useQuery(space, Folder.filter());
+
+  const [collapsedSections, onChangeCollapsedSections] = useState<CollapsedSections>({});
 
   const handleOver = ({ active }: MosaicMoveEvent<number>) => {
     const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
@@ -140,6 +147,8 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
         onOver={handleOver}
         onDeleteSection={handleDelete}
         onNavigateToSection={handleNavigate}
+        collapsedSections={collapsedSections}
+        onChangeCollapsedSections={onChangeCollapsedSections}
       />
 
       <div role='none' className='flex justify-center mlb-4'>

@@ -42,7 +42,7 @@ export type StackProps<TData extends StackSectionContent = StackSectionContent> 
     items?: StackSectionItem[];
     separation?: boolean; // TODO(burdon): Style.
     defaultCollapsedSections?: CollapsedSections;
-    onChangeCollapsedSections?: (nextCollapsedSections: CollapsedSections) => CollapsedSections;
+    onChangeCollapsedSections?: (nextCollapsedSections: CollapsedSections) => void;
   };
 
 export const Stack = ({

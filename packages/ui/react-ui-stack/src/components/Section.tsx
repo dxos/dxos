@@ -16,7 +16,7 @@ import React, {
   type SetStateAction,
 } from 'react';
 
-import { Button, DropdownMenu, List, ListItem, useTranslation } from '@dxos/react-ui';
+import { Button, DropdownMenu, List, ListItem, useTranslation, type TFunction } from '@dxos/react-ui';
 import {
   type MosaicActiveType,
   type MosaicDataItem,
@@ -60,6 +60,8 @@ export type StackItem = MosaicDataItem &
 
 export type StackSectionItem = MosaicDataItem & {
   object: StackSectionContent;
+  icon?: FC<IconProps>;
+  placeholder?: string | [string, Parameters<TFunction>[1]];
 };
 
 export type StackSectionItemWithContext = StackSectionItem & StackContextValue;
@@ -228,11 +230,19 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
     // TODO(thure): When `item` is a preview, it is a Graph.Node and has `data` instead of `object`.
     const itemObject = transformedItem.object ?? (transformedItem as unknown as { data: StackSectionContent }).data;
 
+    const title =
+      itemObject?.title ?? typeof transformedItem.placeholder === 'string'
+        ? (transformedItem.placeholder as string)
+        : transformedItem.placeholder
+          ? t(...transformedItem.placeholder)
+          : t('untitled section title');
+
     const section = (
       <Section
         ref={forwardedRef}
         id={transformedItem.id}
-        title={itemObject?.title ?? t('untitled section title')}
+        title={title}
+        icon={transformedItem.icon}
         separation={separation}
         active={active}
         draggableProps={draggableProps}
