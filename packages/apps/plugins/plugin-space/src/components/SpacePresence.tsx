@@ -21,6 +21,7 @@ import {
   useTranslation,
   List,
   ListItem,
+  useDefaultValue,
 } from '@dxos/react-ui';
 import { AttentionGlyph } from '@dxos/react-ui-deck';
 import { ComplexMap, keyToFallback } from '@dxos/util';
@@ -121,7 +122,8 @@ export type MemberPresenceProps = ThemedClassName<{
 }>;
 
 export const FullPresence = (props: MemberPresenceProps) => {
-  const { members = [], size = 9, onMemberClick } = props;
+  const { size = 9, onMemberClick } = props;
+  const members = useDefaultValue(props.members, []);
 
   if (members.length === 0) {
     return null;
