@@ -7,6 +7,8 @@ import get from 'lodash.get';
 import type { ChangeFn, ChangeOptions, Doc, Heads } from '@dxos/automerge/automerge';
 
 import { getRawDoc } from './automerge-object';
+import { type KeyPath } from './key-path';
+import { type EchoReactiveObject } from '../effect/reactive';
 import { type AutomergeTextCompat, type TextObject } from '../object';
 
 //
@@ -25,14 +27,17 @@ export interface IDocHandle<T = any> {
 // TODO(burdon): Rename ValueAccessor?
 export interface DocAccessor<T = any> {
   get handle(): IDocHandle<T>;
-  get path(): string[];
+  get path(): KeyPath;
 }
 
 export const DocAccessor = {
   getValue: <T>(accessor: DocAccessor): T => get(accessor.handle.docSync(), accessor.path) as T,
 };
 
-export const createDocAccessor = <T = any>(text: TextObject): DocAccessor<T> => {
+export const createDocAccessor = <T = any>(
+  text: TextObject | EchoReactiveObject<{ content: string }>,
+): DocAccessor<T> => {
   const obj = text as any as AutomergeTextCompat;
-  return getRawDoc(obj, [obj.field]);
+  // TODO(dmaretskyi): I don't think `obj.field` is a thing anymore, can we remove it?
+  return getRawDoc(obj, [obj.field ?? 'content']);
 };

@@ -14,10 +14,11 @@ import { assignDeep } from '@dxos/util';
 import { AutomergeArray } from './automerge-array';
 import { AutomergeObjectCore, type BindOptions } from './automerge-object-core';
 import { type DocAccessor } from './automerge-types';
+import { isValidKeyPath, type KeyPath } from './key-path';
 import { REFERENCE_TYPE_TAG, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
 import { EchoReactiveHandler } from '../effect/echo-handler';
-import { getProxyHandlerSlot } from '../effect/proxy';
+import { getProxyHandlerSlot, isReactiveProxy } from '../effect/proxy';
 import {
   base,
   data,
@@ -29,7 +30,6 @@ import {
   proxy,
   subscribe,
   TextObject,
-  type EchoObject,
   type ObjectMeta,
   type TypedObjectOptions,
   type TypedObjectProperties,
@@ -355,13 +355,13 @@ export class AutomergeObject implements TypedObjectProperties {
   /**
    * @internal
    */
-  _getRawDoc(path?: string[]): DocAccessor {
+  _getRawDoc(path?: KeyPath): DocAccessor {
     invariant(!this[proxy]);
     return this._core.getDocAccessor(path);
   }
 }
 
-const isRootDataObjectKey = (relativePath: string[], key: string | symbol) => {
+const isRootDataObjectKey = (relativePath: KeyPath, key: string | symbol) => {
   if (relativePath.length !== 1 || relativePath[0] !== 'data') {
     return false;
   }
@@ -381,9 +381,17 @@ const isRootDataObjectKey = (relativePath: string[], key: string | symbol) => {
   );
 };
 
-export const getRawDoc = (obj: EchoObject, path?: string[]): DocAccessor => {
-  invariant(isAutomergeObject(obj));
-  return obj[base]._getRawDoc(path);
+export const getRawDoc = (obj: OpaqueEchoObject, path?: KeyPath): DocAccessor => {
+  invariant(isAutomergeObject(obj) || isReactiveProxy(obj));
+  invariant(path === undefined || isValidKeyPath(path));
+
+  if (isAutomergeObject(obj)) {
+    return obj[base]._getRawDoc(path);
+  } else {
+    const handler = getProxyHandlerSlot(obj).handler;
+    invariant(handler instanceof EchoReactiveHandler);
+    return handler._objectCore.getDocAccessor(path);
+  }
 };
 
 export const getAutomergeObjectCore = (obj: OpaqueEchoObject): AutomergeObjectCore => {
