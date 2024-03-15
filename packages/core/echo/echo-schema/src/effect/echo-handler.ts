@@ -118,10 +118,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     this._signal.notifyRead();
 
-    if (typeof prop === 'symbol') {
-      if (isRootDataObject(target) && prop === data) {
-        return this._toJSON(target);
+    if (isRootDataObject(target)) {
+      const handled = this._handleRootObjectProperty(target, prop);
+      if (handled != null) {
+        return handled;
       }
+    }
+
+    if (typeof prop === 'symbol') {
       return Reflect.get(target, prop);
     }
 
@@ -129,12 +133,21 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return this._arrayGet(target, prop);
     }
 
-    if (prop === PROPERTY_ID && isRootDataObject(target)) {
-      return this._objectCore.id;
-    }
-
     const decodedValueAtPath = this.getDecodedValueAtPath(target, prop);
     return this._wrapInProxyIfRequired(decodedValueAtPath);
+  }
+
+  private _handleRootObjectProperty(target: ProxyTarget, prop: string | symbol) {
+    if (prop === data) {
+      return this._toJSON(target);
+    }
+    if (prop === 'toJSON') {
+      return () => this._toJSON(target);
+    }
+    if (prop === PROPERTY_ID) {
+      return this._objectCore.id;
+    }
+    return null;
   }
 
   private _wrapInProxyIfRequired(decodedValueAtPath: DecodedValueAtPath) {
