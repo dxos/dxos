@@ -3,6 +3,7 @@
 //
 
 import { useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
+import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { forwardRef, useCallback } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -19,6 +20,7 @@ import {
 import { dropRingInner, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
 import {
+  type CollapsedSections,
   SectionTile,
   type StackContextValue,
   type StackItem,
@@ -36,9 +38,11 @@ export type StackProps<TData extends StackSectionContent = StackSectionContent> 
   MosaicContainerProps<TData, number>,
   'debug' | 'Component'
 > &
-  StackContextValue<TData> & {
+  Omit<StackContextValue<TData>, 'setCollapsedSections'> & {
     items?: StackSectionItem[];
     separation?: boolean; // TODO(burdon): Style.
+    defaultCollapsedSections?: CollapsedSections;
+    onChangeCollapsedSections?: (nextCollapsedSections: CollapsedSections) => CollapsedSections;
   };
 
 export const Stack = ({
@@ -53,6 +57,9 @@ export const Stack = ({
   onDrop,
   onDeleteSection,
   onNavigateToSection,
+  collapsedSections: propsCollapsedSections,
+  defaultCollapsedSections,
+  onChangeCollapsedSections,
   ...props
 }: StackProps) => {
   const { ref: containerRef, width = 0 } = useResizeDetector<HTMLDivElement>({ refreshRate: 200 });
@@ -63,6 +70,12 @@ export const Stack = ({
   const getOverlayStyle = useCallback(() => ({ width: Math.min(width, 59 * 16) }), [width]);
 
   const getOverlayProps = useCallback(() => ({ itemContext: { SectionContent } }), [SectionContent]);
+
+  const [collapsedSections = {}, setCollapsedSections] = useControllableState<CollapsedSections>({
+    prop: propsCollapsedSections,
+    defaultProp: defaultCollapsedSections,
+    onChange: onChangeCollapsedSections,
+  });
 
   // TODO(thure): The root cause of the discrepancy between `activeNodeRect.top` and `overlayNodeRect.top` in Composer
   //  in particular is not yet known, so this solution may may backfire in unforeseeable cases.
@@ -95,7 +108,15 @@ export const Stack = ({
           type={type}
           classNames={classNames}
           item={{ id, items: itemsWithPreview }}
-          itemContext={{ separation, transform, onDeleteSection, onNavigateToSection, SectionContent }}
+          itemContext={{
+            separation,
+            transform,
+            onDeleteSection,
+            onNavigateToSection,
+            SectionContent,
+            collapsedSections,
+            setCollapsedSections,
+          }}
           isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
           Component={StackTile}
         />

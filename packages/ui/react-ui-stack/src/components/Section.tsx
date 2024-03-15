@@ -12,6 +12,8 @@ import React, {
   type RefAttributes,
   type FC,
   type PropsWithChildren,
+  type Dispatch,
+  type SetStateAction,
 } from 'react';
 
 import { Button, DropdownMenu, List, ListItem, useTranslation } from '@dxos/react-ui';
@@ -40,11 +42,15 @@ import { translationKey } from '../translations';
 
 export type StackSectionContent = MosaicDataItem & { title?: string };
 
+export type CollapsedSections = Record<string, boolean>;
+
 export type StackContextValue<TData extends StackSectionContent = StackSectionContent> = {
   SectionContent: FC<{ data: TData }>;
   transform?: (item: MosaicDataItem, type?: string) => StackSectionItem;
   onDeleteSection?: (path: string) => void;
   onNavigateToSection?: (id: string) => void;
+  collapsedSections?: CollapsedSections;
+  setCollapsedSections?: Dispatch<SetStateAction<CollapsedSections>>;
 };
 
 export type StackItem = MosaicDataItem &
@@ -58,20 +64,22 @@ export type StackSectionItem = MosaicDataItem & {
 
 export type StackSectionItemWithContext = StackSectionItem & StackContextValue;
 
-export type SectionProps = PropsWithChildren<{
-  // Data props.
-  id: string;
-  title: string;
-  separation: boolean;
-  icon?: FC<IconProps>;
+export type SectionProps = PropsWithChildren<
+  {
+    // Data props.
+    id: string;
+    title: string;
+    separation: boolean;
+    icon?: FC<IconProps>;
 
-  // Tile props.
-  active?: MosaicActiveType;
-  draggableProps?: MosaicTileProps['draggableProps'];
-  draggableStyle?: MosaicTileProps['draggableStyle'];
-  onDelete?: MosaicTileProps['onDelete'];
-  onNavigate?: MosaicTileProps['onNavigate'];
-}>;
+    // Tile props.
+    active?: MosaicActiveType;
+    draggableProps?: MosaicTileProps['draggableProps'];
+    draggableStyle?: MosaicTileProps['draggableStyle'];
+    onDelete?: MosaicTileProps['onDelete'];
+    onNavigate?: MosaicTileProps['onNavigate'];
+  } & Pick<StackContextValue, 'collapsedSections' | 'setCollapsedSections'>
+>;
 
 export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElement>> = forwardRef<
   HTMLLIElement,
@@ -86,6 +94,8 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
       active,
       draggableProps,
       draggableStyle,
+      collapsedSections,
+      setCollapsedSections,
       onDelete,
       onNavigate,
       children,
@@ -99,10 +109,15 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
       focusable: {},
       mover: { cyclic: true, direction: 1, memorizeCurrent: false },
     });
-    const [collapsed, setCollapsed] = useState(active === 'overlay');
+
+    const collapsed = !!collapsedSections?.[id];
 
     return (
-      <CollapsiblePrimitive.Root asChild open={!collapsed} onOpenChange={(nextOpen) => setCollapsed(!nextOpen)}>
+      <CollapsiblePrimitive.Root
+        asChild
+        open={!collapsed}
+        onOpenChange={(nextOpen) => setCollapsedSections?.({ ...(collapsedSections ?? {}), [id]: !nextOpen })}
+      >
         <ListItem.Root
           ref={forwardedRef}
           id={id}
@@ -189,7 +204,15 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
     const { activeItem } = useMosaic();
 
     const separation = !!itemContext?.separation;
-    const { transform, onDeleteSection, onNavigateToSection, SectionContent, ...contentItem } = {
+    const {
+      transform,
+      onDeleteSection,
+      onNavigateToSection,
+      SectionContent,
+      collapsedSections,
+      setCollapsedSections,
+      ...contentItem
+    } = {
       ...itemContext,
       ...item,
     };
@@ -214,6 +237,8 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
         active={active}
         draggableProps={draggableProps}
         draggableStyle={draggableStyle}
+        collapsedSections={collapsedSections}
+        setCollapsedSections={setCollapsedSections}
         onDelete={() => onDeleteSection?.(path)}
         onNavigate={() => onNavigateToSection?.(itemObject.id)}
       >
