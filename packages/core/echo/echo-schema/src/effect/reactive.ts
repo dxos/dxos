@@ -38,7 +38,7 @@ export type EchoObjectAnnotation = {
 // TODO(dmaretskyi): Add `id` field to the schema type.
 export const echoObject =
   (typename: string, version: string) =>
-  <A, I, R>(self: S.Schema<A, I, R>): S.Schema<Simplify<Identifiable & DeepMutable<A>>> => {
+  <A, I, R>(self: S.Schema<A, I, R>): S.Schema<Simplify<Identifiable & ToMutable<A>>> => {
     if (!AST.isTypeLiteral(self.ast)) {
       throw new Error('echoObject can only be applied to S.struct instances.');
     }
@@ -49,7 +49,7 @@ export const echoObject =
     const schemaWithId = S.extend(S.mutable(self), S.struct({ id: S.string }));
 
     return S.make(AST.setAnnotation(schemaWithId.ast, EchoObjectAnnotationId, { typename, version })) as S.Schema<
-      Simplify<Identifiable & DeepMutable<A>>
+      Simplify<Identifiable & ToMutable<A>>
     >;
   };
 
@@ -64,20 +64,16 @@ export interface Identifiable {
   readonly id: string;
 }
 
-type ExcludeId<T> = Omit<T, 'id'>;
+type ExcludeId<T> = Simplify<Omit<T, 'id'>>;
 
 // TODO(dmaretskyi): UUID v8.
 const generateId = () => PublicKey.random().toHex();
 
-export type ObjectType<T extends S.Schema<any>> = DeepMutable<S.Schema.To<T>>;
+export type ObjectType<T extends S.Schema<any>> = ToMutable<S.Schema.To<T>>;
 
-export type DeepMutable<T> = T extends { readonly id: string } // Detect refs.
-  ? T
-  : T extends {}
-    ? { -readonly [K in keyof T]: T[K] }
-    : T extends readonly (infer U)[]
-      ? U[]
-      : T;
+export type ToMutable<T> = T extends {}
+  ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
+  : T;
 
 export const getEchoObjectAnnotation = (schema: S.Schema<any>) =>
   pipe(
@@ -107,9 +103,9 @@ export const isEchoReactiveObject = (value: unknown): value is EchoReactiveObjec
 // TODO(burdon): Option to return mutable object.
 // TODO(dmaretskyi): Deep mutability.
 export const object: {
-  <T extends {}>(obj: T): ReactiveObject<DeepMutable<T>>;
-  <T extends {}>(schema: S.Schema<T>, obj: ExcludeId<T>): ReactiveObject<DeepMutable<T>>;
-} = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: ExcludeId<T>): ReactiveObject<DeepMutable<T>> => {
+  <T extends {}>(obj: T): ReactiveObject<T>;
+  <T extends {}>(schema: S.Schema<T>, obj: ExcludeId<T>): ReactiveObject<T>;
+} = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: ExcludeId<T>): ReactiveObject<T> => {
   if (obj) {
     if (!isValidProxyTarget(obj)) {
       throw new Error('Value cannot be made into a reactive object.');
@@ -117,7 +113,7 @@ export const object: {
     const schema: S.Schema<T> = schemaOrObj as S.Schema<T>;
     const echoAnnotation = getEchoObjectAnnotation(schema);
     if (echoAnnotation) {
-      if ('id' in obj) {
+      if ('id' in (obj as any)) {
         throw new Error(
           'Provided object already has an `id` field. `id` field is reserved and will be automatically generated.',
         );
@@ -127,7 +123,7 @@ export const object: {
     }
 
     SchemaValidator.prepareTarget(obj as T, schema);
-    return createReactiveProxy(obj, new TypedReactiveHandler()) as ReactiveObject<DeepMutable<T>>;
+    return createReactiveProxy(obj, new TypedReactiveHandler()) as ReactiveObject<T>;
   } else {
     if (!isValidProxyTarget(schemaOrObj)) {
       throw new Error('Value cannot be made into a reactive object.');
@@ -137,7 +133,7 @@ export const object: {
     return createReactiveProxy(
       schemaOrObj as T,
       UntypedReactiveHandler.instance as ReactiveHandler<any>,
-    ) as ReactiveObject<DeepMutable<T>>;
+    ) as ReactiveObject<T>;
   }
 };
 

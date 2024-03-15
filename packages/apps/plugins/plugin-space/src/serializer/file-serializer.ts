@@ -120,7 +120,9 @@ export class FileSerializer {
         switch (object.type) {
           case 'folder': {
             if (!child) {
-              child = E.object(FolderSchema, { name: object.name });
+              child = E.object(FolderSchema, { name: object.name, objects: [] });
+
+              // TODO(dmaretskyi): This won't work.
               child[base]._id = object.id;
               folder.objects.push(child);
             }
