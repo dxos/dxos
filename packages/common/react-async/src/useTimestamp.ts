@@ -18,6 +18,7 @@ import { useEffect, useState } from 'react';
  * ```
  *
  * @param deps
+ * @deprecated This function is deprecated and may be removed in future versions.
  */
 export const useTimestamp = (deps?: any[]): [number, () => void, number | undefined] => {
   const [{ timestamp, previous }, setTimestamp] = useState<{

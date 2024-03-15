@@ -17,6 +17,7 @@ import { type RefObject, useEffect, useRef, useState } from 'react';
  *
  * @param initialValue
  * @param deps
+ * @deprecated This function is deprecated and may be removed in future versions.
  */
 export const useDynamicRef = <V>(initialValue: () => V, deps: any[]): RefObject<V> => {
   const [, setValue] = useState<V>(initialValue);

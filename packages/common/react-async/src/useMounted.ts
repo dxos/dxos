@@ -26,6 +26,7 @@ import { useEffect, useRef } from 'react';
  *   );
  * }
  * ```
+ * @deprecated This function is deprecated and may be removed in future versions.
  */
 export const useMounted = () => {
   const mounted = useRef(false);

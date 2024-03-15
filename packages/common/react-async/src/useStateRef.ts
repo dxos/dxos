@@ -14,8 +14,8 @@ import { type Dispatch, type RefObject, type SetStateAction, useEffect, useRef, 
  *   console.log(valueRef.current);
  * }
  * ```
- *
  * @param initialValue
+ * @deprecated This function is deprecated and may be removed in future versions.
  */
 export const useStateRef = <V>(
   initialValue?: V | (() => V),

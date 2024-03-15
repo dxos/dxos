@@ -17,6 +17,7 @@ import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
  * @param controlledValue
  * @param onChange
  * @param deps other deps that may change the state
+ * @deprecated This function is deprecated and may be removed in future versions.
  */
 export const useControlledState = <T>(
   controlledValue: T,
