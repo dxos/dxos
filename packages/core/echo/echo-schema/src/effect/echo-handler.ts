@@ -488,14 +488,16 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   private _toJSON(target: any): any {
     const typeRef = this._objectCore.getType();
+    const reified = this.getReified(target);
+    delete reified.id;
     return {
       '@type': typeRef
         ? { '@type': REFERENCE_TYPE_TAG, itemId: typeRef.itemId, protocol: typeRef.protocol, host: typeRef.host }
         : undefined,
       ...(this._objectCore.isDeleted() ? { '@deleted': true } : {}),
       '@meta': { ...this.getMeta() },
-      id: this._objectCore.id,
-      ...this.getReified(target),
+      '@id': this._objectCore.id,
+      ...reified,
     };
   }
 
