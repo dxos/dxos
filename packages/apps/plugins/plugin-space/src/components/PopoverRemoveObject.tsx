@@ -12,7 +12,7 @@ import { Button, Popover, useTranslation } from '@dxos/react-ui';
 import { SPACE_PLUGIN } from '../meta';
 import { FolderSchema, type FolderType, isFolder } from '../types';
 
-export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: TypedObject; folder?: Folder }) => {
+export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: TypedObject; folder?: FolderType }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const deleteButton = useRef<HTMLButtonElement>(null);
 

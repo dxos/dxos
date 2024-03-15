@@ -24,6 +24,7 @@ import { SchemaValidator, symbolSchema, validateIdNotPresentOnSchema } from './s
 import { TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 import { data, type ObjectMeta } from '../object';
+import { TypeId } from 'effect/Either';
 
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
@@ -37,17 +38,18 @@ export type EchoObjectAnnotation = {
 // TODO(dmaretskyi): Add `id` field to the schema type.
 export const echoObject =
   (typename: string, version: string) =>
-  <A, I, R>(self: S.Schema<A, I, R>): S.Schema<Simplify<Identifiable & Mutable<A>>> => {
+  <A, I, R>(self: S.Schema<A, I, R>): S.Schema<Simplify<Identifiable & DeepMutable<A>>> => {
     if (!AST.isTypeLiteral(self.ast)) {
       throw new Error('echoObject can only be applied to S.struct instances.');
     }
 
     validateIdNotPresentOnSchema(self);
 
+    // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?
     const schemaWithId = S.extend(S.mutable(self), S.struct({ id: S.string }));
 
     return S.make(AST.setAnnotation(schemaWithId.ast, EchoObjectAnnotationId, { typename, version })) as S.Schema<
-      Simplify<Identifiable & Mutable<A>>
+      Simplify<Identifiable & DeepMutable<A>>
     >;
   };
 
@@ -65,7 +67,15 @@ type ExcludeId<T> = Omit<T, 'id'>;
 // TODO(dmaretskyi): UUID v8.
 const generateId = () => PublicKey.random().toHex();
 
-export type ObjectType<T extends S.Schema<any>> = Identifiable & Mutable<S.Schema.To<T>>;
+export type ObjectType<T extends S.Schema<any>> = Identifiable & DeepMutable<S.Schema.To<T>>;
+
+export type DeepMutable<T> = T extends { readonly id: string } // Detect refs.
+  ? T
+  : T extends {}
+    ? { -readonly [K in keyof T]: DeepMutable<T[K]> }
+    : T extends readonly (infer U)[]
+      ? DeepMutable<U>[]
+      : T;
 
 export const getEchoObjectAnnotation = (schema: S.Schema<any>) =>
   pipe(
@@ -95,9 +105,9 @@ export const isEchoReactiveObject = (value: unknown): value is EchoReactiveObjec
 // TODO(burdon): Option to return mutable object.
 // TODO(dmaretskyi): Deep mutability.
 export const object: {
-  <T extends {}>(obj: T): ReactiveObject<Mutable<T>>;
-  <T extends {}>(schema: S.Schema<T>, obj: ExcludeId<T>): ReactiveObject<Mutable<T>>;
-} = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: ExcludeId<T>): ReactiveObject<Mutable<T>> => {
+  <T extends {}>(obj: T): ReactiveObject<DeepMutable<T>>;
+  <T extends {}>(schema: S.Schema<T>, obj: ExcludeId<T>): ReactiveObject<DeepMutable<T>>;
+} = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: ExcludeId<T>): ReactiveObject<DeepMutable<T>> => {
   if (obj) {
     if (!isValidProxyTarget(obj)) {
       throw new Error('Value cannot be made into a reactive object.');
@@ -115,7 +125,7 @@ export const object: {
     }
 
     SchemaValidator.prepareTarget(obj as T, schema);
-    return createReactiveProxy(obj, new TypedReactiveHandler()) as ReactiveObject<Mutable<T>>;
+    return createReactiveProxy(obj, new TypedReactiveHandler()) as ReactiveObject<DeepMutable<T>>;
   } else {
     if (!isValidProxyTarget(schemaOrObj)) {
       throw new Error('Value cannot be made into a reactive object.');
@@ -125,7 +135,7 @@ export const object: {
     return createReactiveProxy(
       schemaOrObj as T,
       UntypedReactiveHandler.instance as ReactiveHandler<any>,
-    ) as ReactiveObject<Mutable<T>>;
+    ) as ReactiveObject<DeepMutable<T>>;
   }
 };
 
