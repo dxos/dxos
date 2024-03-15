@@ -66,7 +66,7 @@ export const Stack = ({
   const { operation, overItem } = useMosaic();
   const itemsWithPreview = useItemsWithPreview({ path: id, items });
 
-  const [collapsedSections = {}, setCollapsedSections] = useControllableState<CollapsedSections>({
+  const [collapsedSections, setCollapsedSections] = useControllableState<CollapsedSections>({
     prop: propsCollapsedSections,
     defaultProp: defaultCollapsedSections,
     onChange: onChangeCollapsedSections,
