@@ -394,7 +394,12 @@ const MarkdownActions = () => {
       {/* <ToolbarButton value='comment' Icon={BookOpenText} onClick={() => onAction?.({ type: 'comment' })}> */}
       {/*  {t('comment label')} */}
       {/* </ToolbarButton> */}
-      <ToolbarButton value='comment' Icon={ChatText} onClick={() => onAction?.({ type: 'comment' })}>
+      <ToolbarButton
+        value='comment'
+        Icon={ChatText}
+        data-testid='editor.toolbar.comment'
+        onClick={() => onAction?.({ type: 'comment' })}
+      >
         {t('comment label')}
       </ToolbarButton>
     </>
