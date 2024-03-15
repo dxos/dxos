@@ -53,7 +53,9 @@ export const echoObject =
     >;
   };
 
-export const AnyEchoObject = S.struct({}).pipe(echoObject('Any', '0.1.0'));
+const _AnyEchoObject = S.struct({}).pipe(echoObject('Any', '0.1.0'));
+export interface AnyEchoObject extends S.Schema.To<typeof _AnyEchoObject> {}
+export const AnyEchoObject: S.Schema<AnyEchoObject> = _AnyEchoObject;
 
 /**
  * Has `id`.
@@ -67,14 +69,14 @@ type ExcludeId<T> = Omit<T, 'id'>;
 // TODO(dmaretskyi): UUID v8.
 const generateId = () => PublicKey.random().toHex();
 
-export type ObjectType<T extends S.Schema<any>> = Identifiable & DeepMutable<S.Schema.To<T>>;
+export type ObjectType<T extends S.Schema<any>> = DeepMutable<S.Schema.To<T>>;
 
 export type DeepMutable<T> = T extends { readonly id: string } // Detect refs.
   ? T
   : T extends {}
-    ? { -readonly [K in keyof T]: DeepMutable<T[K]> }
+    ? { -readonly [K in keyof T]: T[K] }
     : T extends readonly (infer U)[]
-      ? DeepMutable<U>[]
+      ? U[]
       : T;
 
 export const getEchoObjectAnnotation = (schema: S.Schema<any>) =>
@@ -91,7 +93,7 @@ export const getEchoObjectAnnotation = (schema: S.Schema<any>) =>
  * Accessing properties triggers signal semantics.
  */
 // This type doesn't change the shape of the object, it is rather used as an indicator that the object is reactive.
-export type ReactiveObject<T> = { [K in keyof T]: T[K] } & { [data]?(): any };
+export type ReactiveObject<T> = { [K in keyof T]: T[K] };
 
 export type EchoReactiveObject<T> = ReactiveObject<T> & { id: string };
 
