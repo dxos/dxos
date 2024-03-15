@@ -71,7 +71,8 @@ export const SpacePresence = ({ object, spaceKey }: { object: TypedObject; space
     .map((member) => ({
       ...member,
       match: currentObjectViewers.has(member.identity.identityKey),
-      lastSeen: currentObjectViewers.get(member.identity.identityKey)?.lastSeen ?? -Infinity,
+      // Infinity if not seen before on this document, to ensure that all online members are included.
+      lastSeen: currentObjectViewers.get(member.identity.identityKey)?.lastSeen ?? Infinity,
     }))
     .filter((member) => moment - member.lastSeen < ACTIVITY_DURATION)
     .toSorted((a, b) => a.lastSeen - b.lastSeen);
