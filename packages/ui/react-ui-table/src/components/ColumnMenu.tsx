@@ -109,7 +109,7 @@ export const ColumnPanel = <TData extends RowData, TValue>({
     <Popover.Root open={open} onOpenChange={(nextOpen) => setOpen(nextOpen)}>
       <Popover.Trigger asChild>
         <Button variant='ghost'>
-          <GearSix className={getSize(4)} />
+          <GearSix className={mx(getSize(4), 'rotate-90')} />
         </Button>
       </Popover.Trigger>
       <Popover.Portal>
