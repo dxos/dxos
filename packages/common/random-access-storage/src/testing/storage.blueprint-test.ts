@@ -390,7 +390,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
     });
 
     test('list all files after reopen', async (t) => {
-      if (testGroupName !== StorageType.WEBFS && testGroupName !== StorageType.NODE) {
+      if (testGroupName === StorageType.RAM) {
         t.skip();
       }
 
