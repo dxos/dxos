@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.4.8](https://github.com/dxos/dxos/compare/v0.4.7...v0.4.8) (2024-03-15)
+
+
+### Features
+
+* Add indexing of all documents on index creation ([#5924](https://github.com/dxos/dxos/issues/5924)) ([f998f66](https://github.com/dxos/dxos/commit/f998f66ff15cd64d8a755211c3de0716899c6b32))
+* allow localStorage.dxlog to override config ([#5935](https://github.com/dxos/dxos/issues/5935)) ([c9440e4](https://github.com/dxos/dxos/commit/c9440e454fce1053ce92ec5a2397833483ebcee1))
+* **cli:** show device presence ([#5920](https://github.com/dxos/dxos/issues/5920)) ([c67d72c](https://github.com/dxos/dxos/commit/c67d72c77e0c2e02cffa432a0f286722304cffe8))
+* **devtools:** show device presence in table ([#5913](https://github.com/dxos/dxos/issues/5913)) ([0602afb](https://github.com/dxos/dxos/commit/0602afbae90e8303b0b25cc13ea6a9d8ec863655))
+* **echo:** metaOf for reactive echo objects ([#5906](https://github.com/dxos/dxos/issues/5906)) ([a4c603b](https://github.com/dxos/dxos/commit/a4c603bad4e7af6a9c175e9bc42e21d54dfb8068))
+* **indexing:** Add IndexingService ([#5866](https://github.com/dxos/dxos/issues/5866)) ([2d8e727](https://github.com/dxos/dxos/commit/2d8e727572dfac000b79bb7d443c3148475e421a))
+* Memo scroll position and selection for each document. ([#5922](https://github.com/dxos/dxos/issues/5922)) ([6919ef3](https://github.com/dxos/dxos/commit/6919ef379fbc5084c46e952b45cef68726690c19))
+* Menu annotation ([#5898](https://github.com/dxos/dxos/issues/5898)) ([27faba7](https://github.com/dxos/dxos/commit/27faba770f4f92fc87b430a2afe8e51807fcb738))
+* set device label and type for managed agent ([#5925](https://github.com/dxos/dxos/issues/5925)) ([0457648](https://github.com/dxos/dxos/commit/04576488e84ada17ef758422b193d6efae260385))
+* Upload image to document ([#5934](https://github.com/dxos/dxos/issues/5934)) ([0d78178](https://github.com/dxos/dxos/commit/0d781782d76d430c7ee1951b94117e5e65248f07))
+
+
+### Bug Fixes
+
+* allow localStorage.dxlog to override config ([#5931](https://github.com/dxos/dxos/issues/5931)) ([59ec3a0](https://github.com/dxos/dxos/commit/59ec3a0a92e3e6e2115c2db6e43aca65f09df787))
+* **app-framework:** stop app from flashing when plugins are toggled ([#5939](https://github.com/dxos/dxos/issues/5939)) ([0c411f0](https://github.com/dxos/dxos/commit/0c411f06428a8af685f5bb37ff0a08de88648879))
+* change dev to composer folder in plugin-template ([#5945](https://github.com/dxos/dxos/issues/5945)) ([fff1521](https://github.com/dxos/dxos/commit/fff15210d4381278baf8f4591c047549bed18184))
+* Checkbox styles ([#5914](https://github.com/dxos/dxos/issues/5914)) ([ec0899a](https://github.com/dxos/dxos/commit/ec0899a41956ac6a26b1a1946216114d03d024dd))
+* **echo:** effect schema fixes and discriminated union support ([#5923](https://github.com/dxos/dxos/issues/5923)) ([a32da92](https://github.com/dxos/dxos/commit/a32da92f6a132380c0c8529c9eb1f637de84f295))
+* **echo:** fix for key.toHex is not a function ([#5908](https://github.com/dxos/dxos/issues/5908)) ([efb0880](https://github.com/dxos/dxos/commit/efb08809278322b17e4d16ac6d9ed85157f611e6))
+* **echo:** removed unnecessary cancelWithContext ([#5909](https://github.com/dxos/dxos/issues/5909)) ([eb5ae94](https://github.com/dxos/dxos/commit/eb5ae947a3bf93f0acc717ba8b3c39634a58f9b4))
+* **echo:** using Schema objects as References to resolve ([#5942](https://github.com/dxos/dxos/issues/5942)) ([932d824](https://github.com/dxos/dxos/commit/932d824e4a0597f0fef404fd3350cb10bbaa76c1))
+* Fix comments NPE bug ([#5915](https://github.com/dxos/dxos/issues/5915)) ([97e86fe](https://github.com/dxos/dxos/commit/97e86fe9b3e44a2b77b23898b78fca4044a8c2b7))
+* observability metrics ([#5921](https://github.com/dxos/dxos/issues/5921)) ([8cb190e](https://github.com/dxos/dxos/commit/8cb190ea67a97426dee31ad9b8535b58f8a4f1a7))
+* Only call update when db is initialized ([#5903](https://github.com/dxos/dxos/issues/5903)) ([05fda5d](https://github.com/dxos/dxos/commit/05fda5d935beca5c626981142625da76252e9054))
+* **plugin-presenter:** give present actions unique ids ([#5938](https://github.com/dxos/dxos/issues/5938)) ([5cead28](https://github.com/dxos/dxos/commit/5cead28cd6349eb573b862cc62354358c38ac5cf))
+* Presence reactivity ([#5940](https://github.com/dxos/dxos/issues/5940)) ([beadd4b](https://github.com/dxos/dxos/commit/beadd4be444c6617383069184f3a157c467d56cb))
+* **tables:** Table improvements ([#5900](https://github.com/dxos/dxos/issues/5900)) ([1473255](https://github.com/dxos/dxos/commit/147325559810e5e9857fb5a5554384add7a11b18))
+* use libdatachannel in nodejs tests ([#5911](https://github.com/dxos/dxos/issues/5911)) ([512e4c8](https://github.com/dxos/dxos/commit/512e4c89c307cf99b52ca1ca24bcdd3db3af3f2d))
+
 ## [0.4.7](https://github.com/dxos/dxos/compare/v0.4.6...v0.4.7) (2024-03-08)
 
 
