@@ -36,9 +36,12 @@ import {
   hoverableFocusedWithinControls,
 } from '@dxos/react-ui-theme';
 
+import { CaretDownUp } from './CaretDownUp';
 import { DropDownMenuDragHandleTrigger } from './DropDownMenuDragHandleTrigger';
 import { stackColumns } from './style-fragments';
 import { translationKey } from '../translations';
+
+const sectionActionDimensions = 'mli-1 p-1 shrink-0 min-bs-0 is-[--rail-action] bs-min';
 
 export type StackSectionContent = MosaicDataItem & { title?: string };
 
@@ -148,7 +151,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
               aria-label={t('section controls label')}
               {...(!active && { tabIndex: 0 })}
               {...(!active && sectionActionsToolbar)}
-              className='grid grid-cols-subgrid ch-focus-ring rounded-sm grid-rows-[min-content_min-content_1fr]'
+              className='grid grid-cols-subgrid ch-focus-ring rounded-sm grid-rows-[min-content_min-content_1fr] pbe-1'
             >
               <DropdownMenu.Root
                 {...{
@@ -182,16 +185,24 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                 </DropdownMenu.Portal>
               </DropdownMenu.Root>
               <CollapsiblePrimitive.Trigger asChild>
-                <Button variant='ghost' data-state='' classNames={hoverableControlItem}>
+                <Button
+                  variant='ghost'
+                  data-state=''
+                  classNames={[sectionActionDimensions, !collapsed && hoverableControlItem]}
+                >
                   <span className='sr-only'>{t(collapsed ? 'expand label' : 'collapse label')}</span>
-                  {collapsed ? <CaretUpDown /> : <CaretUpDown />}
+                  {collapsed ? <CaretUpDown className={getSize(4)} /> : <CaretDownUp className={getSize(4)} />}
                 </Button>
               </CollapsiblePrimitive.Trigger>
             </div>
 
             {/* Main content */}
 
-            <ListItem.Heading classNames={collapsed ? 'flex flex-1 min-is-0 p-4' : 'sr-only'}>{title}</ListItem.Heading>
+            <ListItem.Heading
+              classNames={collapsed ? 'grid grid-rows-subgrid grid-cols-subgrid items-center' : 'sr-only'}
+            >
+              <span className='truncate'>{title}</span>
+            </ListItem.Heading>
             <CollapsiblePrimitive.Content className='flex flex-1 min-is-0'>{children}</CollapsiblePrimitive.Content>
           </div>
         </ListItem.Root>
