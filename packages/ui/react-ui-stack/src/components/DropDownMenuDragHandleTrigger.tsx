@@ -15,6 +15,7 @@ import {
   useDropdownMenuMenuScope,
   useTranslation,
 } from '@dxos/react-ui';
+import { PlankHeading } from '@dxos/react-ui-deck';
 
 import { translationKey } from '../translations';
 
@@ -49,7 +50,7 @@ export const DropDownMenuDragHandleTrigger = forwardRef<HTMLButtonElement, DropD
       <div role='none' className='inline-grid relative'>
         <MenuPrimitive.Anchor asChild {...menuScope}>
           {/* See §“Purpose” */}
-          <Button
+          <PlankHeading.Button
             id={context.triggerId}
             aria-haspopup='menu'
             aria-expanded={context.open}
