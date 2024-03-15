@@ -5,7 +5,6 @@ import path from 'path';
 import { promises as fs } from 'fs';
 import { InputOf, Slot } from '@dxos/plate';
 import { PackageJson } from './utils.t/packageJson';
-import ownPackageJson from '../package.json';
 import merge from 'lodash.merge';
 
 import template from './template.t';
@@ -79,12 +78,22 @@ export const base = ({ name, version, frameworkVersion }: Context): Partial<Pack
   };
 };
 
+// TODO(wittjosiah): Factor out.
+const loadJson = async (moduleRelativePath: string) => {
+  const content = await fs.readFile(path.resolve(__dirname, moduleRelativePath));
+  return JSON.parse(content.toString());
+};
+
 export default template.define
   .slots<{ packageJson?: Slot<Partial<PackageJson>, InputOf<typeof template>, { depVersion?: string }> }>({
     packageJson: {},
   })
   .text({
     content: async ({ input, slots: { packageJson: slotPackageJson } }) => {
+      // TODO(wittjosiah): Importing directly causes package.json to be included in the output.
+      //   Including package.json in the output causes syncpack to fail sometimes.
+      //   Upgrading syncpack will likely fix this but this is simpler for now.
+      const ownPackageJson = await loadJson('../package.json'); // relative to dist/src
       const context = {
         version: '0.0.1',
         frameworkVersion: ownPackageJson.version,

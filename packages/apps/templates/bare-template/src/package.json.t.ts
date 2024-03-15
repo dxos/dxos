@@ -116,6 +116,7 @@ export const base = ({ name, monorepo, version, depVersion }: Context): Partial<
   };
 };
 
+// TODO(wittjosiah): Factor out.
 const loadJson = async (moduleRelativePath: string) => {
   const content = await fs.readFile(path.resolve(__dirname, moduleRelativePath));
   return JSON.parse(content.toString());
@@ -128,6 +129,9 @@ export default template.define
   .text({
     content: async ({ input, slots: { packageJson: slotPackageJson } }) => {
       const { react, monorepo, pwa, storybook, dxosUi, tailwind, proto } = input;
+      // TODO(wittjosiah): Importing directly causes package.json to be included in the output.
+      //   Including package.json in the output causes syncpack to fail sometimes.
+      //   Upgrading syncpack will likely fix this but this is simpler for now.
       const ownPackageJson = await loadJson('../package.json'); // relative to dist/src
       const { version: packageVersion } = monorepo ? await getDxosRepoInfo() : ownPackageJson;
       const version = monorepo ? packageVersion : '0.1.0';
