@@ -40,3 +40,12 @@ export const TestSchemaWithClass = S.extend(
   S.mutable(S.struct({ classInstance: S.optional(S.instanceOf(TestClass)) })),
 );
 export type TestSchemaWithClass = S.Schema.To<typeof TestSchemaWithClass>;
+
+export const TEST_OBJECT: TestSchema = {
+  string: 'foo',
+  number: 42,
+  boolean: true,
+  null: null,
+  stringArray: ['1', '2', '3'],
+  object: { field: 'bar' },
+};

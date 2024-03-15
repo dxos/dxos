@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 
 import { type Filter } from './filter';
 import { prohibitSignalActions } from '../guarded-scope';
-import { type EchoObject, type TypedObject } from '../object';
+import { type OpaqueEchoObject, type EchoObject, type TypedObject } from '../object';
 
 // TODO(burdon): Reconcile with echo-db/database/selection.
 
@@ -23,7 +23,7 @@ export type Subscription = () => void;
 // TODO(burdon): Fix garbage collection.
 const queries: Query<any>[] = [];
 
-export type QueryResult<T extends EchoObject> = {
+export type QueryResult<T extends OpaqueEchoObject> = {
   id: string;
   spaceKey: PublicKey;
 
@@ -87,7 +87,7 @@ export interface QueryContext {
 /**
  * Predicate based query.
  */
-export class Query<T extends TypedObject = TypedObject> {
+export class Query<T extends OpaqueEchoObject = TypedObject> {
   private readonly _ctx = new Context({
     onError: (err) => {
       log.catch(err);

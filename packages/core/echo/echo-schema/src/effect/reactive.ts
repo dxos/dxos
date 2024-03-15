@@ -6,9 +6,11 @@ import * as AST from '@effect/schema/AST';
 import * as S from '@effect/schema/Schema';
 import { pipe } from 'effect';
 import * as Option from 'effect/Option';
+import { type Simplify, type Mutable } from 'effect/Types';
 
 import { Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 
 import { EchoReactiveHandler } from './echo-handler';
 import {
@@ -18,10 +20,10 @@ import {
   isReactiveProxy,
   getProxyHandlerSlot,
 } from './proxy';
-import { SchemaValidator, symbolSchema } from './schema-validator';
+import { SchemaValidator, symbolSchema, validateIdNotPresentOnSchema } from './schema-validator';
 import { TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
-import { type ObjectMeta } from '../object';
+import { data, type ObjectMeta } from '../object';
 
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
@@ -32,10 +34,38 @@ export type EchoObjectAnnotation = {
   version: string;
 };
 
+// TODO(dmaretskyi): Add `id` field to the schema type.
 export const echoObject =
   (typename: string, version: string) =>
-  <A, I, R>(self: S.Schema<A, I, R>): S.Schema<A, I, R> =>
-    S.make(AST.setAnnotation(self.ast, EchoObjectAnnotationId, { typename, version }));
+  <A, I, R>(self: S.Schema<A, I, R>): S.Schema<Simplify<Identifiable & Mutable<A>>> => {
+    if (!AST.isTypeLiteral(self.ast)) {
+      throw new Error('echoObject can only be applied to S.struct instances.');
+    }
+
+    validateIdNotPresentOnSchema(self);
+
+    const schemaWithId = S.extend(S.mutable(self), S.struct({ id: S.string }));
+
+    return S.make(AST.setAnnotation(schemaWithId.ast, EchoObjectAnnotationId, { typename, version })) as S.Schema<
+      Simplify<Identifiable & Mutable<A>>
+    >;
+  };
+
+export const AnyEchoObject = S.struct({}).pipe(echoObject('Any', '0.1.0'));
+
+/**
+ * Has `id`.
+ */
+export interface Identifiable {
+  readonly id: string;
+}
+
+type ExcludeId<T> = Omit<T, 'id'>;
+
+// TODO(dmaretskyi): UUID v8.
+const generateId = () => PublicKey.random().toHex();
+
+export type ObjectType<T extends S.Schema<any>> = Identifiable & Mutable<S.Schema.To<T>>;
 
 export const getEchoObjectAnnotation = (schema: S.Schema<any>) =>
   pipe(
@@ -51,39 +81,65 @@ export const getEchoObjectAnnotation = (schema: S.Schema<any>) =>
  * Accessing properties triggers signal semantics.
  */
 // This type doesn't change the shape of the object, it is rather used as an indicator that the object is reactive.
-export type ReactiveObject<T> = { [K in keyof T]: T[K] };
+export type ReactiveObject<T> = { [K in keyof T]: T[K] } & { [data]?(): any };
+
+export type EchoReactiveObject<T> = ReactiveObject<T> & { id: string };
+
+export const isEchoReactiveObject = (value: unknown): value is EchoReactiveObject<any> =>
+  isReactiveProxy(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;
 
 /**
  * Creates a reactive object from a plain Javascript object.
  * Optionally provides a TS-effect schema.
  */
 // TODO(burdon): Option to return mutable object.
+// TODO(dmaretskyi): Deep mutability.
 export const object: {
-  <T extends {}>(obj: T): ReactiveObject<T>;
-  <T extends {}>(schema: S.Schema<T>, obj: T): ReactiveObject<T>;
-} = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: T): ReactiveObject<T> => {
+  <T extends {}>(obj: T): ReactiveObject<Mutable<T>>;
+  <T extends {}>(schema: S.Schema<T>, obj: ExcludeId<T>): ReactiveObject<Mutable<T>>;
+} = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: ExcludeId<T>): ReactiveObject<Mutable<T>> => {
   if (obj) {
     if (!isValidProxyTarget(obj)) {
       throw new Error('Value cannot be made into a reactive object.');
     }
     const schema: S.Schema<T> = schemaOrObj as S.Schema<T>;
-    SchemaValidator.prepareTarget(obj, schema);
-    return createReactiveProxy(obj, new TypedReactiveHandler());
+    const echoAnnotation = getEchoObjectAnnotation(schema);
+    if (echoAnnotation) {
+      if ('id' in obj) {
+        throw new Error(
+          'Provided object already has an `id` field. `id` field is reserved and will be automatically generated.',
+        );
+      }
+
+      (obj as any).id = generateId();
+    }
+
+    SchemaValidator.prepareTarget(obj as T, schema);
+    return createReactiveProxy(obj, new TypedReactiveHandler()) as ReactiveObject<Mutable<T>>;
   } else {
     if (!isValidProxyTarget(schemaOrObj)) {
       throw new Error('Value cannot be made into a reactive object.');
     }
 
     // Untyped.
-    return createReactiveProxy(schemaOrObj as T, UntypedReactiveHandler.instance as ReactiveHandler<any>);
+    return createReactiveProxy(
+      schemaOrObj as T,
+      UntypedReactiveHandler.instance as ReactiveHandler<any>,
+    ) as ReactiveObject<Mutable<T>>;
   }
 };
 
 export const ReferenceAnnotation = Symbol.for('@dxos/schema/annotation/Reference');
 export type ReferenceAnnotationValue = {};
 
-export const ref = <T>(targetType: S.Schema<T>): S.Schema<T> =>
-  S.make(AST.setAnnotation(targetType.ast, ReferenceAnnotation, {}));
+// TODO(dmaretskyi): Assert that schema has `id`.
+export const ref = <T extends Identifiable>(targetType: S.Schema<T>): S.Schema<T> => {
+  if (!getEchoObjectAnnotation(targetType)) {
+    throw new Error('Reference target must be an ECHO object.');
+  }
+
+  return S.make(AST.setAnnotation(targetType.ast, ReferenceAnnotation, {}));
+};
 
 export const getRefAnnotation = (schema: S.Schema<any>) =>
   pipe(
@@ -94,7 +150,7 @@ export const getRefAnnotation = (schema: S.Schema<any>) =>
 /**
  * Returns the schema for the given object if one is defined.
  */
-export const getSchema = <T extends {}>(obj: T): S.Schema<T> | undefined => {
+export const getSchema = <T extends {} = any>(obj: T): S.Schema<any> | undefined => {
   if (isReactiveProxy(obj)) {
     const proxyHandlerSlot = getProxyHandlerSlot(obj);
     if (proxyHandlerSlot.handler instanceof EchoReactiveHandler) {
