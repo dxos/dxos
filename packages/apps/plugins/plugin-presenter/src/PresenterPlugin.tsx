@@ -17,7 +17,7 @@ import * as E from '@dxos/echo-schema/schema';
 import { PresenterMain, MarkdownSlideMain } from './components';
 import meta, { PRESENTER_PLUGIN } from './meta';
 import translations from './translations';
-import { PresenterContext, type PresenterPluginProvides } from './types';
+import { PresenterContext, TOGGLE_PRESENTATION, type PresenterPluginProvides } from './types';
 
 // TODO(burdon): Only scale markdown content.
 // TODO(burdon): Map stack content; Slide content type (e.g., markdown, sketch, IPFS image, table, etc.)
@@ -55,18 +55,18 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
 
                   batch(() => {
                     removedObjects.forEach((object) => {
-                      graph.removeNode(object.id, true);
+                      graph.removeNode(`${TOGGLE_PRESENTATION}/object.id`, true);
                     });
                     query.objects.forEach((object) => {
                       graph.addNodes({
-                        id: object.id,
+                        id: `${TOGGLE_PRESENTATION}/object.id`,
                         // TODO(burdon): Allow function so can generate state when activated.
                         //  So can set explicit fullscreen state coordinated with current presenter state.
                         data: () =>
                           dispatch([
                             {
                               plugin: PRESENTER_PLUGIN,
-                              action: 'toggle-presentation',
+                              action: TOGGLE_PRESENTATION,
                             },
                             {
                               action: LayoutAction.SET_LAYOUT,
@@ -125,7 +125,7 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
       intent: {
         resolver: (intent) => {
           switch (intent.action) {
-            case 'toggle-presentation': {
+            case TOGGLE_PRESENTATION: {
               state.presenting = intent.data?.state ?? !state.presenting;
               break;
             }

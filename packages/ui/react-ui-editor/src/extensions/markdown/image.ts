@@ -97,3 +97,9 @@ class ImageWidget extends WidgetType {
     return img;
   }
 }
+
+export type ImageUploadOptions = {
+  onSelect: () => { url: string };
+};
+
+export const imageUpload = (options: ImageOptions = {}) => {};

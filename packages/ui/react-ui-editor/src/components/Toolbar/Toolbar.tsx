@@ -7,11 +7,13 @@ import {
   ChatText,
   Code,
   CodeBlock,
+  Image,
   Link,
   ListBullets,
   ListChecks,
   ListNumbers,
   Paragraph,
+  Quotes,
   TextStrikethrough,
   Table,
   TextB,
@@ -22,19 +24,20 @@ import {
   TextHFive,
   TextHSix,
   TextItalic,
-  Quotes,
 } from '@phosphor-icons/react';
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useRef, useState } from 'react';
+import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
+import { useDropzone } from 'react-dropzone';
 
 import {
   DensityProvider,
   ElevationProvider,
   Select,
-  type ThemedClassName,
   Toolbar as NaturalToolbar,
   Tooltip,
-  type ToolbarToggleGroupItemProps,
+  type ThemedClassName,
+  type ToolbarToggleGroupItemProps as NaturalToolbarToggleGroupItemProps,
+  type ToolbarButtonProps as NaturalToolbarButtonProps,
   useTranslation,
 } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
@@ -80,7 +83,7 @@ export type Action = {
 
 export type ToolbarProps = ThemedClassName<
   PropsWithChildren<{
-    state: Formatting | null;
+    state: Formatting | undefined;
     onAction?: (action: Action) => void;
   }>
 >;
@@ -111,9 +114,9 @@ type ButtonProps = {
   disabled?: (state: Formatting) => boolean;
 };
 
-type ToolbarButtonProps = ToolbarToggleGroupItemProps & { Icon: Icon };
+type ToolbarToggleButtonProps = NaturalToolbarToggleGroupItemProps & { Icon: Icon };
 
-const ToolbarButton = ({ Icon, children, ...props }: ToolbarButtonProps) => {
+const ToolbarToggleButton = ({ Icon, children, ...props }: ToolbarToggleButtonProps) => {
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
@@ -121,6 +124,27 @@ const ToolbarButton = ({ Icon, children, ...props }: ToolbarButtonProps) => {
           <Icon className={iconStyles} />
           <span className='sr-only'>{children}</span>
         </NaturalToolbar.ToggleGroupItem>
+      </Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Content {...tooltipProps}>
+          {children}
+          <Tooltip.Arrow />
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
+  );
+};
+
+type ToolbarButtonProps = NaturalToolbarButtonProps & { Icon: Icon };
+
+const ToolbarButton = ({ Icon, children, ...props }: ToolbarButtonProps) => {
+  return (
+    <Tooltip.Root>
+      <Tooltip.Trigger asChild>
+        <NaturalToolbar.Button variant='ghost' {...props} classNames={buttonStyles}>
+          <Icon className={iconStyles} />
+          <span className='sr-only'>{children}</span>
+        </NaturalToolbar.Button>
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content {...tooltipProps}>
@@ -227,7 +251,7 @@ const MarkdownStyles = () => {
       value={markdownStyles.filter(({ getState }) => state && getState(state)).map(({ type }) => type)}
     >
       {markdownStyles.map(({ type, getState, Icon }) => (
-        <ToolbarButton
+        <ToolbarToggleButton
           key={type}
           value={type}
           Icon={Icon}
@@ -235,7 +259,7 @@ const MarkdownStyles = () => {
           onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
         >
           {t(`${type} label`)}
-        </ToolbarButton>
+        </ToolbarToggleButton>
       ))}
     </NaturalToolbar.ToggleGroup>
   );
@@ -253,14 +277,14 @@ const MarkdownLists = () => {
   return (
     <NaturalToolbar.ToggleGroup type='single' value={state?.listStyle ? `list-${state.listStyle}` : ''}>
       {markdownLists.map(({ type, getState, Icon }) => (
-        <ToolbarButton
+        <ToolbarToggleButton
           key={type}
           value={type}
           Icon={Icon}
           onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
         >
           {t(`${type} label`)}
-        </ToolbarButton>
+        </ToolbarToggleButton>
       ))}
     </NaturalToolbar.ToggleGroup>
   );
@@ -292,7 +316,7 @@ const MarkdownBlocks = () => {
   return (
     <NaturalToolbar.ToggleGroup type='single' value={value?.type ?? ''}>
       {markdownBlocks.map(({ type, disabled, getState, Icon }) => (
-        <ToolbarButton
+        <ToolbarToggleButton
           key={type}
           value={type}
           Icon={Icon}
@@ -300,7 +324,7 @@ const MarkdownBlocks = () => {
           onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
         >
           {t(`${type} label`)}
-        </ToolbarButton>
+        </ToolbarToggleButton>
       ))}
     </NaturalToolbar.ToggleGroup>
   );
@@ -315,38 +339,75 @@ const MarkdownStandard = () => (
   </>
 );
 
-const MarkdownExtended = () => {
+// TODO(burdon): Make extensible.
+export type MarkdownCustomOptions = {
+  onUpload?: (file: File) => Promise<{ url?: string }>;
+};
+
+const MarkdownCustom = ({ onUpload }: MarkdownCustomOptions = {}) => {
+  const { onAction } = useToolbarContext('MarkdownStyles');
+  const { t } = useTranslation(translationKey);
+  // https://react-dropzone.js.org/#src
+  const { acceptedFiles, getInputProps, open } = useDropzone({
+    multiple: false,
+    noDrag: true,
+    accept: {
+      'image/*': ['.jpg', '.jpeg', '.png', '.gif'],
+    },
+  });
+
+  useEffect(() => {
+    if (onUpload && acceptedFiles.length) {
+      setTimeout(async () => {
+        // NOTE: Clone file since react-dropzone patches in a non-standard `path` property, which confuses IPFS.
+        const f = acceptedFiles[0];
+        const file = new File([f], f.name, {
+          type: f.type,
+          lastModified: f.lastModified,
+        });
+
+        const { url } = await onUpload(file);
+        if (url) {
+          onAction?.({ type: 'image', data: url });
+        }
+      });
+    }
+  }, [acceptedFiles]);
+
+  return (
+    <>
+      <input {...getInputProps()} />
+      <ToolbarButton value='image' Icon={Image} onClick={() => open()}>
+        {t('image label')}
+      </ToolbarButton>
+    </>
+  );
+};
+
+// TODO(burdon): Make extensible.
+const MarkdownActions = () => {
   const { onAction } = useToolbarContext('MarkdownStyles');
   const { t } = useTranslation(translationKey);
   return (
-    <Tooltip.Root>
-      <Tooltip.Trigger asChild>
-        <NaturalToolbar.Button
-          variant='ghost'
-          data-testid='editor.toolbar.comment'
-          onClick={() => onAction?.({ type: 'comment' })}
-          classNames={buttonStyles}
-        >
-          <ChatText className={iconStyles} />
-          <span className='sr-only'>{t('comment label')}</span>
-        </NaturalToolbar.Button>
-      </Tooltip.Trigger>
-      <Tooltip.Portal>
-        <Tooltip.Content {...tooltipProps}>
-          {t('comment label')}
-          <Tooltip.Arrow />
-        </Tooltip.Content>
-      </Tooltip.Portal>
-    </Tooltip.Root>
+    <>
+      {/* TODO(burdon): Toggle readonly state. */}
+      {/* <ToolbarButton value='comment' Icon={BookOpenText} onClick={() => onAction?.({ type: 'comment' })}> */}
+      {/*  {t('comment label')} */}
+      {/* </ToolbarButton> */}
+      <ToolbarButton value='comment' Icon={ChatText} onClick={() => onAction?.({ type: 'comment' })}>
+        {t('comment label')}
+      </ToolbarButton>
+    </>
   );
 };
 
 export const Toolbar = {
   Root: ToolbarRoot,
-  Button: ToolbarButton,
+  Button: ToolbarToggleButton,
   Separator: ToolbarSeparator,
   Markdown: MarkdownStandard,
-  Extended: MarkdownExtended,
+  Custom: MarkdownCustom,
+  Actions: MarkdownActions,
 };
 
 export { useToolbarContext };
