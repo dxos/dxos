@@ -20,6 +20,21 @@ describe('Context', () => {
     void ctx.dispose();
     expect(called).toBeTruthy();
   });
+  test('canceling a context with derived contexts calls dispose hooks', async () => {
+    let parentCalled = false;
+    let childCalled = false;
+    parentCtx.onDispose(() => {
+      parentCalled = true;
+    });
+    const childCtx = parentCtx.derive();
+    childCtx.onDispose(() => {
+      childCalled = true;
+    });
+    void parentCtx.dispose();
+    expect(parentCalled).toBeTruthy();
+    expect(childCalled).toBeTruthy();
+  });
+  test;
 
   test('dispose waits for async callbacks', () => {});
 
