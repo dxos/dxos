@@ -13,14 +13,14 @@ import template from '../src/template.t';
 
 chai.use(chaiAsPromised);
 
-describe('hello template', () => {
+describe('tasks template', () => {
   it('exists', () => {
     expect(true).to.be.true;
   });
 
   it('execute with permuted inputs', async () => {
     console.log('executing', scenarios.length, 'configurations');
-    const tempFolder = await tmp.dir({ unsafeCleanup: false, keep: true, prefix: 'hello-template' });
+    const tempFolder = await tmp.dir({ unsafeCleanup: false, keep: true, prefix: 'tasks-template' });
     const packageJson = JSON.parse(
       await readFile(path.resolve(__dirname, '..', 'package.json'), { encoding: 'utf-8' }),
     );

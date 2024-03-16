@@ -14,9 +14,7 @@
     "lint": {},
     "test": {
       "dependsOn": [
-        {
-          "target": "build"
-        }
+        "build"
       ],
       "options": {
         "checkLeaks": false,
