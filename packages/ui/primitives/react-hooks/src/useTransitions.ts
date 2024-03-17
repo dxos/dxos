@@ -4,7 +4,6 @@
 
 import { useRef, useEffect, useState } from 'react';
 
-// Type guard to check if toValue is a function
 const isFunction = <T>(functionToCheck: any): functionToCheck is (value: T) => boolean => {
   return functionToCheck instanceof Function;
 };
@@ -13,9 +12,9 @@ const isFunction = <T>(functionToCheck: any): functionToCheck is (value: T) => b
  * This is an internal custom hook that checks if a value has transitioned from a specified 'from' value to a 'to' value.
  *
  * @param currentValue - The value that is being monitored for transitions.
- * @param fromValue - The initial value or a predicate function that determines the start of the transition.
- * @param toValue - The final value or a predicate function that determines the end of the transition.
- * @returns A boolean indicating whether the transition from 'fromValue' to 'toValue' has occurred.
+ * @param fromValue - The *from* value or a predicate function that determines the start of the transition.
+ * @param toValue - The *to* value or a predicate function that determines the end of the transition.
+ * @returns A boolean indicating whether the transition from *fromValue* to *toValue* has occurred.
  *
  * @internal Consider using `useOnTransition` for handling transitions instead of this hook.
  */
@@ -28,19 +27,20 @@ export const useDidTransition = <T>(
   const previousValue = useRef<T>(currentValue);
 
   useEffect(() => {
-    // Check for the specific transition
     const toValueValid = isFunction<T>(toValue) ? toValue(currentValue) : toValue === currentValue;
+
     const fromValueValid = isFunction<T>(fromValue)
       ? fromValue(previousValue.current)
       : fromValue === previousValue.current;
 
-    if (fromValueValid && toValueValid) {
+    const transitioned = fromValueValid && toValueValid;
+
+    if (transitioned) {
       setHasTransitioned(true);
     } else {
       setHasTransitioned(false);
     }
 
-    // Update previous value
     previousValue.current = currentValue;
   }, [currentValue, fromValue, toValue, setHasTransitioned, previousValue]);
 
@@ -61,7 +61,7 @@ export const useOnTransition = <T>(
   const dirty = useRef(false);
   const hasTransitioned = useDidTransition(currentValue, fromValue, toValue);
 
-  // When currentValue changes, set dirty to true
+  // When currentValue changes, set dirty to true.
   useEffect(() => {
     dirty.current = false;
   }, [currentValue, dirty]);

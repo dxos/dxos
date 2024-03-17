@@ -19,14 +19,13 @@ import { useVirtualizer, type VirtualizerOptions } from '@tanstack/react-virtual
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { useDefaultValue } from '@dxos/react-ui';
+import { useDefaultValue, useOnTransition } from '@dxos/react-ui';
 
 import { TableBody } from './TableBody';
 import { TableProvider as UntypedTableProvider, type TypedTableProvider, useTableContext } from './TableContext';
 import { TableFooter } from './TableFooter';
 import { TableHead } from './TableHead';
 import { type TableProps } from './props';
-import { useOnTransition } from '../../hooks/useTransitions';
 import { groupTh, tableRoot } from '../../theme';
 
 export const Table = <TData extends RowData>(props: TableProps<TData>) => {
@@ -47,7 +46,6 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
 
   const TableProvider = UntypedTableProvider as TypedTableProvider<TData>;
 
-  // --- Column resizing
   const [columnsInitialised, setColumnsInitialised] = useState(false);
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
 
@@ -70,11 +68,10 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
 
   const [columnSizingInfo, setColumnSizingInfo] = useState<ColumnSizingInfoState>({} as ColumnSizingInfoState);
 
-  // Notify on column resize
+  // Notify on column resize.
   const notifyColumnResize = useCallback(() => onColumnResize?.(columnSizing), [onColumnResize, columnSizing]);
   useOnTransition(columnSizingInfo.isResizingColumn, (v) => typeof v === 'string', false, notifyColumnResize);
 
-  // --- Row selection
   const [rowSelection = {}, setRowSelection] = useControllableState({
     prop: props.rowSelection,
     onChange: props.onRowSelectionChange,
