@@ -121,9 +121,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
 
   const handleColumnResize = useCallback(
     (state: Record<string, number>) => {
-      Object.entries(state).forEach(([id, size]) => {
-        updateTableProp({ id, size });
-      });
+      Object.entries(state).forEach(([id, size]) => updateTableProp({ id, size }));
     },
     [updateTableProp],
   );

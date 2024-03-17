@@ -26,6 +26,7 @@ import { TableProvider as UntypedTableProvider, type TypedTableProvider, useTabl
 import { TableFooter } from './TableFooter';
 import { TableHead } from './TableHead';
 import { type TableProps } from './props';
+import { useOnTransition } from '../../hooks/useTransitions';
 import { groupTh, tableRoot } from '../../theme';
 
 export const Table = <TData extends RowData>(props: TableProps<TData>) => {
@@ -46,9 +47,15 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
 
   const TableProvider = UntypedTableProvider as TypedTableProvider<TData>;
 
+  // --- Column resizing
+  const [columnsInitialised, setColumnsInitialised] = useState(false);
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
 
   useEffect(() => {
+    if (columnsInitialised) {
+      return;
+    }
+
     setColumnSizing(
       columns
         .filter((column) => !!column.size && (column as any).prop !== undefined)
@@ -57,18 +64,17 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
           return state;
         }, {}),
     );
+
+    setColumnsInitialised(true);
   }, [columns, setColumnSizing]);
 
   const [columnSizingInfo, setColumnSizingInfo] = useState<ColumnSizingInfoState>({} as ColumnSizingInfoState);
 
-  useEffect(() => {
-    if (columnSizingInfo.columnSizingStart?.length !== 0) {
-      return;
-    }
+  // Notify on column resize
+  const notifyColumnResize = useCallback(() => onColumnResize?.(columnSizing), [onColumnResize, columnSizing]);
+  useOnTransition(columnSizingInfo.isResizingColumn, (v) => typeof v === 'string', false, notifyColumnResize);
 
-    onColumnResize?.(columnSizing);
-  }, [columnSizingInfo, onColumnResize]);
-
+  // --- Row selection
   const [rowSelection = {}, setRowSelection] = useControllableState({
     prop: props.rowSelection,
     onChange: props.onRowSelectionChange,
