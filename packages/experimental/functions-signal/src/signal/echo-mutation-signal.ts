@@ -5,7 +5,7 @@
 import { type Client, PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { createSubscription, type Query, subscribe, TextObject, type TypedObject } from '@dxos/echo-schema';
+import { createSubscription, type OpaqueEchoObject, type Query, TextObject, type TypedObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
@@ -44,22 +44,21 @@ export class MutationSignalEmitter {
     const ctx = new Context();
     const bus = this._busInterconnect.createConnected(space);
     const subscriptions: (() => void)[] = [];
+    const textToHostId = new Map<string, string>();
     const subscription = createSubscription(({ added, updated }) => {
       const signals: Signal[] = [added, updated]
         .flatMap((arr) => arr)
-        .map((object) => ({
-          id: PublicKey.random().toHex(),
-          kind: 'echo-mutation',
-          metadata: {
-            source: 'echo',
-            spaceKey: space.key.toHex(),
-            createdMs: Date.now(),
-          },
-          data: {
-            type: (object as TypedObject).__typename ?? 'any',
-            value: object,
-          },
-        }));
+        .flatMap((object) => {
+          const result = [createMutationSignal(space, object)];
+          const changedTextHostId = textToHostId.get(object.id);
+          if (changedTextHostId) {
+            const changedTextHost = space.db.getObjectById(changedTextHostId);
+            if (changedTextHost) {
+              result.push(createMutationSignal(space, changedTextHost));
+            }
+          }
+          return result;
+        });
       signals.forEach(bus.emitLocal.bind(bus));
     });
     subscriptions.push(() => subscription.unsubscribe());
@@ -67,13 +66,13 @@ export class MutationSignalEmitter {
     const query = space.db.query();
     subscriptions.push(
       query.subscribe(({ objects }: Query) => {
-        subscription.update(objects);
         for (const object of objects) {
           const content = object.content;
           if (content instanceof TextObject) {
-            subscriptions.push(content[subscribe](() => subscription.update([object])));
+            textToHostId.set(content.id, object.id);
           }
         }
+        subscription.update(objects);
       }),
     );
     ctx.onDispose(() => {
@@ -83,3 +82,19 @@ export class MutationSignalEmitter {
     return ctx;
   }
 }
+
+const createMutationSignal = (space: Space, object: OpaqueEchoObject): Signal => {
+  return {
+    id: PublicKey.random().toHex(),
+    kind: 'echo-mutation',
+    metadata: {
+      source: 'echo',
+      spaceKey: space.key.toHex(),
+      createdMs: Date.now(),
+    },
+    data: {
+      type: (object as TypedObject).__typename ?? 'any',
+      value: object,
+    },
+  };
+};

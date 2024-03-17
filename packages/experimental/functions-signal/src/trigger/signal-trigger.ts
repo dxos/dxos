@@ -59,16 +59,17 @@ export class MutationsSignalTriggerBuilder<T extends EchoObject> {
       const timeout = timeoutById.get(object.id);
       if (timeout) {
         clearTimeout(timeout);
+        timeoutById.delete(object.id);
       }
       const previous = previousCheckedById.get(object.id);
       if (previous && areEqual(previous, object)) {
         return;
       }
+      previousCheckedById.set(object.id, deepCopy(object));
       const signal = signalProvider(object);
       if (signal == null) {
         return;
       }
-      previousCheckedById.set(object.id, JSON.parse(JSON.stringify(object)));
       if (debounceMs) {
         const timer = setTimeout(() => bus.emit(signal), debounceMs);
         timeoutById.set(object.id, timer);
@@ -78,6 +79,17 @@ export class MutationsSignalTriggerBuilder<T extends EchoObject> {
     });
   }
 }
+
+const deepCopy = (object: any): any => {
+  if (typeof object !== 'object') {
+    return object;
+  }
+  const result: any = {};
+  for (const key in object) {
+    result[key] = Array.isArray(object[key]) ? object[key].map(deepCopy) : deepCopy(object[key]);
+  }
+  return result;
+};
 
 export class TimerSignalTriggerBuilder {
   private _interval: number = 0;
