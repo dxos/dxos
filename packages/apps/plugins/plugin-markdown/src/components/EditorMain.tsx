@@ -6,8 +6,7 @@ import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect } from 'react';
 
 import { LayoutAction, parseFileManagerPlugin, useResolvePlugin, useIntentResolver } from '@dxos/app-framework';
-import { useRefCallback } from '@dxos/react-async';
-import { useThemeContext, useTranslation } from '@dxos/react-ui';
+import { useThemeContext, useTranslation, useRefCallback } from '@dxos/react-ui';
 import {
   type Comment,
   type TextEditorProps,
@@ -51,20 +50,21 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   const { themeMode } = useThemeContext();
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
 
-  const { ref: editorRef, value: view } = useRefCallback<EditorView>();
-  useComments(view, id, comments);
-  useTest(view);
+  const { refCallback: editorRefCallback, value: editorView } = useRefCallback<EditorView>();
+
+  useComments(editorView, id, comments);
+  useTest(editorView);
 
   // Toolbar actions.
-  const handleAction = useActionHandler(view);
+  const handleAction = useActionHandler(editorView);
 
   // Focus comment.
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
     switch (action) {
       case LayoutAction.FOCUS: {
         const object = data?.object;
-        if (view) {
-          focusComment(view, object);
+        if (editorView) {
+          focusComment(editorView, object);
           return { data: true };
         }
         break;
@@ -133,7 +133,7 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
             !toolbar && 'border-bs separator-separator',
           )}
           dataTestId='composer.markdownRoot'
-          ref={editorRef}
+          ref={editorRefCallback}
         />
       </div>
     </>
