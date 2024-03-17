@@ -7136,6 +7136,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/automerge':
+        specifier: workspace:*
+        version: link:../../core/echo/automerge
       '@dxos/chess-app':
         specifier: workspace:*
         version: link:../chess-app

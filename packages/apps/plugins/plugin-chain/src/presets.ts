@@ -14,6 +14,7 @@ export const str = (...text: (string | undefined | boolean)[]): string =>
 export type Preset = {
   id: string;
   title: string;
+  signals?: () => ChainType.FunctionSignal[];
   prompt: () => ChainType.Prompt;
 };
 
@@ -61,8 +62,9 @@ export const presets = [
             'Suggest the next move and very briefly explain your strategy in a couple of sentences.',
           ),
         ),
-        echoTriggers: [
-          new ChainType.EchoTrigger({
+        triggers: [
+          new ChainType.Trigger({
+            type: ChainType.Trigger.Type.ECHO,
             typename: 'dxos.experimental.chess.Game',
             compareBy: 'pgn',
             debounceMs: 1000,
@@ -181,6 +183,33 @@ export const presets = [
           new ChainType.Input({ name: 'input', type: ChainType.Input.Type.CONTEXT, value: 'text' }),
         ],
       }),
+    signals: () => [
+      new ChainType.FunctionSignal({
+        type: 'dxos.signal.extract-terms',
+        inputs: [],
+        triggers: [
+          new ChainType.Trigger({
+            type: ChainType.Trigger.Type.ECHO,
+            typename: 'braneframe.Document',
+            compareBy: 'content.content',
+            debounceMs: 5000,
+            enabled: false,
+          }),
+        ],
+      }),
+      new ChainType.FunctionSignal({
+        type: 'dxos.signal.lookup-next-term',
+        inputs: [],
+        triggers: [
+          new ChainType.Trigger({
+            type: ChainType.Trigger.Type.TIMER,
+            typename: 'Timer',
+            debounceMs: 5000,
+            enabled: false,
+          }),
+        ],
+      }),
+    ],
   },
   {
     id: 'dxos.org/prompt/extract',

@@ -327,13 +327,19 @@ message Calendar {
 message Chain {
   option (object) = true;
 
-  message EchoTrigger {
+  message Trigger {
     option (object) = true;
 
-    string typename = 1;
-    string compare_by = 2;
-    int32 debounce_ms = 3;
-    bool enabled = 4;
+    enum Type {
+      ECHO = 0;
+      TIMER = 1;
+    }
+
+    Type type = 1;
+    string typename = 2;
+    string compare_by = 3;
+    int32 debounce_ms = 4;
+    bool enabled = 5;
   }
 
   message Input {
@@ -363,11 +369,20 @@ message Chain {
     string command = 1;
     dxos.schema.Text source = 2;
     repeated Input inputs = 3;
-    repeated EchoTrigger echo_triggers = 4;
+    repeated Trigger triggers = 4;
+  }
+
+  message FunctionSignal {
+    option (object) = true;
+
+    string type = 1;
+    repeated Input inputs = 2;
+    repeated Trigger triggers = 3;
   }
 
   string title = 1;
   repeated Prompt prompts = 2;
+  repeated FunctionSignal signals = 3;
 }
 
 message Map {

@@ -52,6 +52,9 @@
       "path": "../../core/agent"
     },
     {
+      "path": "../../core/echo/automerge"
+    },
+    {
       "path": "../../core/echo/document-model"
     },
     {

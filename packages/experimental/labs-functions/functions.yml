@@ -49,6 +49,16 @@ functions:
     handler: 'suggest-chess-move'
     description: 'Listens to suggest next move signals, uses llm to generate response signals'
 
+  - id: 'dxos.org/function/lookup-next-term'
+    name: 'lookup-next-term'
+    handler: 'lookup-next-term'
+    description: 'Triggers a /lookup prompt for a document highlight with no responses'
+
+  - id: 'dxos.org/function/extract-terms'
+    name: 'extract-terms'
+    handler: 'extract-terms'
+    description: 'Rapid Automatic Keyword Extraction for document contents'
+
 triggers:
 #  - function: 'dxos.org/function/calendar'
 #    schedule: '*/30 * * * * *'
@@ -89,6 +99,16 @@ triggers:
 #    signals:
 #      - kind: 'suggestion'
 #        dataType: 'suggest-next-chess-move'
+
+  - function: 'dxos.org/function/extract-terms'
+    signals:
+      - kind: 'suggestion'
+        dataType: 'dxos.signal.extract-terms'
+
+  - function: 'dxos.org/function/lookup-next-term'
+    signals:
+      - kind: 'suggestion'
+        dataType: 'dxos.signal.lookup-next-term'
 
 #  - function: 'dxos.org/function/github'
 #    subscriptions:

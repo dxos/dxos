@@ -69,7 +69,8 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   const locatableTerms: Array<[string, number]> = terms
     .map((term) => [term, textContent.indexOf(term)] as [string, number])
     .filter(([, index]) => index >= 0);
-  for (const termAndPosition of locatableTerms.slice(0, 5)) {
+
+  for (const termAndPosition of locatableTerms) {
     const [term, termStart] = termAndPosition;
     const existingHighlight = document.comments.find((comment) => comment.thread?.title === term);
     log.info(`looking for ${term} in`, { comm: document.comments.map((c) => c.thread?.title) });
@@ -85,7 +86,13 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
       }),
     });
   }
-  log.info('terms extracted', { terms: locatableTerms.slice(0, 5) });
+
+  if (locatableTerms.length > 0) {
+    log.info('terms extracted', { terms: locatableTerms.slice(0, 5), length: locatableTerms.length });
+  } else {
+    log.info('failed to extract terms', { inputLength: content.content?.length, modelOutput: responseLines });
+  }
+
   return response.status(200);
 });
 

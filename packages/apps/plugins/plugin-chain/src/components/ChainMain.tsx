@@ -10,6 +10,7 @@ import { DensityProvider, Main, Select, useTranslation } from '@dxos/react-ui';
 import { baseSurface, mx, textBlockWidth, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
 import { PromptTemplate, Section } from './PromptTemplate';
+import { SignalTemplate } from './SignalTemplate';
 import { CHAIN_PLUGIN } from '../meta';
 import { type Preset, presets } from '../presets';
 
@@ -21,16 +22,21 @@ const ChainMain: FC<{ chain: ChainType }> = ({ chain }) => {
 
   const handleSelectPreset = (preset: Preset) => {
     chain.title = preset.title;
+    chain.prompts.forEach((p) => space.db.remove(p));
+    chain.signals.forEach((p) => space.db.remove(p));
     chain.prompts = [preset.prompt()];
+    chain.signals = [...(preset?.signals?.() ?? [])];
   };
 
   return (
     <Main.Content classNames={[baseSurface, topbarBlockPaddingStart]}>
       <div role='none' className={mx(textBlockWidth, 'pli-2')}>
-        <div className='flex flex-col my-2'>
+        <div className='flex flex-col my-2 gap-6'>
           {chain.prompts.map((prompt, i) => (
             <PromptTemplate key={i} prompt={prompt} />
           ))}
+          {...chain.signals?.map((signal, i) => <SignalTemplate key={chain.prompts.length + i} signal={signal} />) ??
+            []}
         </div>
         <Presets presets={presets} onSelect={handleSelectPreset} />
       </div>

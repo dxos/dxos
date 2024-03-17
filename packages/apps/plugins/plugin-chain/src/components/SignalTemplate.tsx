@@ -5,37 +5,30 @@
 import React, { type PropsWithChildren } from 'react';
 
 import { type Chain as ChainType } from '@braneframe/types';
-import { DensityProvider, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { DensityProvider } from '@dxos/react-ui';
 import { groupBorder, mx } from '@dxos/react-ui-theme';
 
 import { InputRow } from './InputRow';
 import { TriggerRow } from './TriggerRow';
-import { CHAIN_PLUGIN } from '../meta';
 
-type PromptTemplateProps = {
-  fn: ChainType.Function;
+type SignalTemplateProps = {
+  signal: ChainType.FunctionSignal;
 };
 
-export const FunctionTemplate = ({ fn }: PromptTemplateProps) => {
-  const { t } = useTranslation(CHAIN_PLUGIN);
-  const { themeMode } = useThemeContext();
-
+export const SignalTemplate = ({ signal }: SignalTemplateProps) => {
   return (
     <DensityProvider density='fine'>
       <div className={mx('flex flex-col w-full overflow-hidden gap-4', groupBorder)}>
-        <Section title='Function ID'>
-          <div className='flex items-center pl-4'>
-            <span className='text-neutral-500'>/</span>
-            {fn.id}
-          </div>
+        <Section title='Signal'>
+          <div className='flex items-center pl-4 py-2'>{signal.type}</div>
         </Section>
 
-        {(fn.echoTriggers?.length ?? 0) > 0 && (
+        {(signal.triggers?.length ?? 0) > 0 && (
           <Section title='Trigger on change'>
             <div className='flex flex-col divide-y'>
               <table className='table-fixed border-collapse'>
                 <tbody>
-                  {fn.echoTriggers.map((input) => (
+                  {signal.triggers.map((input) => (
                     <TriggerRow trigger={input} key={input.typename} />
                   ))}
                 </tbody>
@@ -44,12 +37,12 @@ export const FunctionTemplate = ({ fn }: PromptTemplateProps) => {
           </Section>
         )}
 
-        {fn.inputs?.length > 0 && (
+        {signal.inputs?.length > 0 && (
           <Section title='Inputs'>
             <div className='flex flex-col divide-y'>
               <table className='table-fixed border-collapse'>
                 <tbody>
-                  {fn.inputs.map((input) => (
+                  {signal.inputs.map((input) => (
                     <InputRow input={input} key={input.name} />
                   ))}
                 </tbody>
