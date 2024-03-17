@@ -61,7 +61,6 @@ export const useOnTransition = <T>(
   const dirty = useRef(false);
   const hasTransitioned = useDidTransition(currentValue, fromValue, toValue);
 
-  // When currentValue changes, set dirty to true.
   useEffect(() => {
     dirty.current = false;
   }, [currentValue, dirty]);
