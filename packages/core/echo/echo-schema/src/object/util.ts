@@ -9,10 +9,11 @@ import { type TextSnapshot } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 import { type AbstractEchoObject } from './object';
 import { isAutomergeObject } from './typed-object';
-import { base, type EchoObject, type ForeignKey } from './types';
+import { base, type OpaqueEchoObject, type EchoObject, type ForeignKey } from './types';
 import type { EchoDatabase } from '../database';
-import { type EchoReactiveHandler, isEchoReactiveObject } from '../effect/echo-handler';
+import { type EchoReactiveHandler } from '../effect/echo-handler';
 import { getProxyHandlerSlot } from '../effect/proxy';
+import { isEchoReactiveObject } from '../effect/reactive';
 
 export const setStateFromSnapshot = (obj: AbstractEchoObject, snapshot: ObjectSnapshot | TextSnapshot) => {
   invariant(obj[base]._stateMachine);
@@ -23,7 +24,7 @@ export const forceUpdate = (obj: AbstractEchoObject) => {
   obj[base]._itemUpdate();
 };
 
-export const getDatabaseFromObject = (obj: EchoObject): EchoDatabase | undefined => {
+export const getDatabaseFromObject = (obj: OpaqueEchoObject): EchoDatabase | undefined => {
   if (isAutomergeObject(obj)) {
     return obj[base]._core.database?._dbApi;
   }

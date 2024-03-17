@@ -10,12 +10,14 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
-import { type EchoReactiveObject, createEchoReactiveObject, isEchoReactiveObject } from './echo-handler';
+import { createEchoReactiveObject } from './echo-handler';
 import * as E from './reactive';
-import { TestClass, TestSchema, type TestSchemaWithClass } from './testing/schema';
+import { getTypeReference } from './reactive';
+import { TEST_OBJECT, TestClass, TestSchema, type TestSchemaWithClass } from './testing/schema';
 import { AutomergeContext, type SpaceDoc } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
+import { data } from '../object';
 import { Filter } from '../query';
 import { createDatabase } from '../testing';
 import { Task } from '../tests/proto';
@@ -30,7 +32,7 @@ test('id property name is reserved', () => {
 });
 
 for (const schema of [undefined, EchoObjectSchema]) {
-  const createObject = (props: Partial<TestSchemaWithClass> = {}): EchoReactiveObject<TestSchemaWithClass> => {
+  const createObject = (props: Partial<TestSchemaWithClass> = {}): E.EchoReactiveObject<TestSchemaWithClass> => {
     return createEchoReactiveObject(schema ? E.object(schema, props) : E.object(props));
   };
 
@@ -44,7 +46,11 @@ for (const schema of [undefined, EchoObjectSchema]) {
       const obj = createObject({ string: 'bar' });
 
       const str = inspect(obj, { colors: false });
-      expect(str).to.eq(`${schema == null ? '' : 'Typed'}EchoObject { string: 'bar' }`);
+      expect(str.startsWith(`${schema == null ? '' : 'Typed'}EchoObject`)).to.be.true;
+      expect(str.includes("string: 'bar'")).to.be.true;
+      if (schema) {
+        expect(str.includes(`id: '${obj.id}'`)).to.be.true;
+      }
     });
 
     test('throws when assigning a class instances', () => {
@@ -61,12 +67,12 @@ for (const schema of [undefined, EchoObjectSchema]) {
 
     test('removes undefined fields on creation', () => {
       const obj = createObject({ undefined });
-      expect(obj).to.deep.eq({});
+      expect(obj).to.deep.eq({ id: obj.id });
     });
 
     test('isEchoReactiveObject', () => {
       const obj = createObject({ string: 'bar' });
-      expect(isEchoReactiveObject(obj)).to.be.true;
+      expect(E.isEchoReactiveObject(obj)).to.be.true;
     });
   });
 }
@@ -125,8 +131,8 @@ describe('Reactive Object with ECHO database', () => {
       const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey, useReactiveObjectApi: true });
       await db._automerge.open({ rootUrl: doc.url });
 
-      const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
-      expect(isEchoReactiveObject(obj)).to.be.true;
+      const obj = db.getObjectById(id) as E.EchoReactiveObject<TestSchema>;
+      expect(E.isEchoReactiveObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
 
@@ -157,8 +163,8 @@ describe('Reactive Object with ECHO database', () => {
       const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey, useReactiveObjectApi: true });
       await db._automerge.open({ rootUrl: doc.url });
 
-      const obj = db.getObjectById(id) as any as EchoReactiveObject<TaskSchema>;
-      expect(isEchoReactiveObject(obj)).to.be.true;
+      const obj = db.getObjectById(id) as any as E.EchoReactiveObject<TaskSchema>;
+      expect(E.isEchoReactiveObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
 
       expect(obj.title).to.eq(task.title);
@@ -196,7 +202,20 @@ describe('Reactive Object with ECHO database', () => {
     });
   });
 
-  test('references', async () => {
+  test('data symbol', async () => {
+    const { db, graph } = await createDatabase(undefined, { useReactiveObjectApi: true });
+    graph.types.registerEffectSchema(EchoObjectSchema);
+    const obj = db.add(E.object(EchoObjectSchema, { ...TEST_OBJECT }));
+    const objData: any = obj[data];
+    expect(objData).to.deep.contain({
+      '@meta': { keys: [] },
+      '@type': { '@type': 'dxos.echo.model.document.Reference', ...getTypeReference(EchoObjectSchema) },
+      ...TEST_OBJECT,
+    });
+    expect(objData.id).to.be.a('string');
+  });
+
+  describe('references', () => {
     const Org = S.struct({
       name: S.string,
     }).pipe(E.echoObject('example.Org', '1.0.0'));
@@ -206,14 +225,27 @@ describe('Reactive Object with ECHO database', () => {
       worksAt: E.ref(Org),
     }).pipe(E.echoObject('example.Person', '1.0.0'));
 
-    const graph = new Hypergraph();
-    graph.types.registerEffectSchema(Org).registerEffectSchema(Person);
-    const { db } = await createDatabase(graph, { useReactiveObjectApi: true });
+    test('references', async () => {
+      const graph = new Hypergraph();
+      graph.types.registerEffectSchema(Org).registerEffectSchema(Person);
+      const { db } = await createDatabase(graph, { useReactiveObjectApi: true });
 
-    const org = db.add(E.object(Org, { name: 'DXOS' }));
-    const person = db.add(E.object(Person, { name: 'John', worksAt: org }));
+      const org = db.add(E.object(Org, { name: 'DXOS' }));
+      const person = db.add(E.object(Person, { name: 'John', worksAt: org }));
 
-    expect(person.worksAt).to.eq(org);
+      expect(person.worksAt).to.eq(org);
+    });
+
+    test('adding nested structures to DB', async () => {
+      const graph = new Hypergraph();
+      graph.types.registerEffectSchema(Org).registerEffectSchema(Person);
+      const { db } = await createDatabase(graph, { useReactiveObjectApi: true });
+
+      const person = db.add(E.object(Person, { name: 'John', worksAt: E.object(Org, { name: 'DXOS' }) }));
+
+      expect(person.worksAt.name).to.eq('DXOS');
+      expect(person.worksAt.id).to.be.a('string');
+    });
   });
 
   describe('meta', () => {
@@ -256,7 +288,7 @@ describe('Reactive Object with ECHO database', () => {
       {
         const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey, useReactiveObjectApi: true });
         await db._automerge.open({ rootUrl: doc.url });
-        const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
+        const obj = db.getObjectById(id) as E.EchoReactiveObject<TestSchema>;
         expect(E.metaOf(obj).keys).to.deep.eq([metaKey]);
       }
     });
