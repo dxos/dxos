@@ -18,9 +18,8 @@ import {
 import { useVirtualizer, type VirtualizerOptions } from '@tanstack/react-virtual';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 
-import { debounce } from '@dxos/async';
 import { log } from '@dxos/log';
-import { useDefaultValue } from '@dxos/react-ui';
+import { useDefaultValue, useOnTransition } from '@dxos/react-ui';
 
 import { TableBody } from './TableBody';
 import { TableProvider as UntypedTableProvider, type TypedTableProvider, useTableContext } from './TableContext';
@@ -47,9 +46,14 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
 
   const TableProvider = UntypedTableProvider as TypedTableProvider<TData>;
 
+  const [columnsInitialised, setColumnsInitialised] = useState(false);
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
 
   useEffect(() => {
+    if (columnsInitialised) {
+      return;
+    }
+
     setColumnSizing(
       columns
         .filter((column) => !!column.size && (column as any).prop !== undefined)
@@ -58,9 +62,15 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
           return state;
         }, {}),
     );
+
+    setColumnsInitialised(true);
   }, [columns, setColumnSizing]);
 
   const [columnSizingInfo, setColumnSizingInfo] = useState<ColumnSizingInfoState>({} as ColumnSizingInfoState);
+
+  // Notify on column resize.
+  const notifyColumnResize = useCallback(() => onColumnResize?.(columnSizing), [onColumnResize, columnSizing]);
+  useOnTransition(columnSizingInfo.isResizingColumn, (v) => typeof v === 'string', false, notifyColumnResize);
 
   const [rowSelection = {}, setRowSelection] = useControllableState({
     prop: props.rowSelection,
@@ -135,30 +145,21 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     debugTable: debug,
   });
 
-  const onColumnResizeDebounced = onColumnResize && debounce(onColumnResize, 1_000);
-
   useEffect(() => {
     onDataSelectionChange?.(Object.keys(rowSelection).map((id) => table.getRowModel().rowsById[id].original));
   }, [onDataSelectionChange, rowSelection, table]);
 
   useEffect(() => {
-    // TODO(zan): This is super jank, let's think of a nicer way to do this ... later.
-    if (pinLastRow) {
-      // Clear row pinning
-      table.resetRowPinning();
-
-      const rows = table.getRowModel().rows;
-      rows[rows.length - 1].pin('bottom');
+    if (!pinLastRow) {
+      return;
     }
+
+    // Clear row pinning
+    table.resetRowPinning();
+
+    const rows = table.getRowModel().rows;
+    rows[rows.length - 1].pin('bottom');
   }, [pinLastRow, table, data]);
-
-  useEffect(() => {
-    const shouldTriggerResize = columnSizingInfo.columnSizingStart?.length === 0;
-
-    if (shouldTriggerResize) {
-      onColumnResizeDebounced?.(table.getState().columnSizing);
-    }
-  }, [columnSizingInfo, onColumnResizeDebounced, table]);
 
   // Create additional expansion column if all columns have fixed width.
   const expand = false; // columns.map((column) => column.size).filter(Boolean).length === columns?.length;
