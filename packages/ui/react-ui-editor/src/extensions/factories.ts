@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { closeBrackets } from '@codemirror/autocomplete';
-import { history } from '@codemirror/commands';
+import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
+import { history, historyKeymap, indentWithTab, standardKeymap } from '@codemirror/commands';
 import { bracketMatching } from '@codemirror/language';
+import { searchKeymap } from '@codemirror/search';
 import { EditorState, type Extension } from '@codemirror/state';
 import {
   EditorView,
@@ -15,6 +16,8 @@ import {
   lineNumbers,
   placeholder,
   scrollPastEnd,
+  keymap,
+  highlightSpecialChars,
 } from '@codemirror/view';
 import defaultsDeep from 'lodash.defaultsdeep';
 
@@ -41,8 +44,8 @@ import { defaultTheme } from '../themes';
 /**
  * https://codemirror.net/docs/extensions
  * https://github.com/codemirror/basic-setup
+ * https://github.com/codemirror/basic-setup/blob/main/src/codemirror.ts
  */
-// TODO(burdon): Reconcile with createMarkdownExtensions.
 export type BasicExtensionsOptions = {
   allowMultipleSelections?: boolean;
   bracketMatching?: boolean;
@@ -53,10 +56,12 @@ export type BasicExtensionsOptions = {
   editable?: boolean;
   highlightActiveLine?: boolean;
   history?: boolean;
+  indentWithTab?: boolean;
   lineNumbers?: boolean;
   lineWrapping?: boolean;
   placeholder?: string;
   readonly?: boolean;
+  search?: boolean;
   scrollPastEnd?: boolean;
   tabSize?: number;
 };
@@ -68,6 +73,7 @@ const defaults: BasicExtensionsOptions = {
   editable: true,
   history: true,
   lineWrapping: true,
+  search: true,
 };
 
 export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extension => {
@@ -85,6 +91,7 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     props.dropCursor && dropCursor(),
     props.drawSelection && drawSelection(),
     props.highlightActiveLine && highlightActiveLine(),
+    highlightSpecialChars(), // TODO(burdon): ???
     props.history && history(),
     props.lineNumbers && lineNumbers(),
     props.lineWrapping && EditorView.lineWrapping,
@@ -92,6 +99,25 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     props.readonly && [EditorState.readOnly.of(true), EditorView.editable.of(false)],
     props.scrollPastEnd && scrollPastEnd(),
     props.tabSize && EditorState.tabSize.of(props.tabSize),
+
+    // https://codemirror.net/docs/ref/#view.KeyBinding
+    keymap.of(
+      [
+        // TODO(burdon): Option (vi, vscode, osx)???
+        // https://codemirror.net/docs/ref/#commands.standardKeymap
+        ...standardKeymap,
+
+        // https://codemirror.net/docs/ref/#commands.indentWithTab
+        props.indentWithTab && indentWithTab,
+
+        // https://codemirror.net/docs/ref/#autocomplete.closeBracketsKeymap
+        ...(props.closeBrackets ? closeBracketsKeymap : []),
+        // https://codemirror.net/docs/ref/#commands.historyKeymap
+        ...(props.history ? historyKeymap : []),
+        // https://codemirror.net/docs/ref/#search.searchKeymap
+        ...(props.search ? searchKeymap : []),
+      ].filter(isNotFalsy),
+    ),
   ].filter(isNotFalsy);
 };
 
