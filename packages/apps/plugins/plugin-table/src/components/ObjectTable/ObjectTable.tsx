@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, useEffect, useMemo, useState } from 'react';
+import React, { type FC, useEffect, useMemo, useState, useCallback } from 'react';
 
 import { useFilteredObjects } from '@braneframe/plugin-search';
 import { Table as TableType } from '@braneframe/types';
@@ -43,25 +43,32 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
   const rows = useMemo(() => [...filteredObjects, newObject], [filteredObjects, newObject]);
 
   const tables = useQuery<TableType>(space, TableType.filter());
-  const updateSchemaProp = (update: Schema.Prop) => {
-    const idx = table.schema?.props.findIndex((prop) => prop.id === update.id);
-    if (idx !== -1) {
-      const current = table.schema?.props[idx];
-      table.schema?.props.splice(idx, 1, { ...current, ...update });
-    } else {
-      table.schema?.props.push(update);
-    }
-  };
 
-  const updateTableProp = (update: TableType.Prop) => {
-    const idx = table.props?.findIndex((prop) => prop.id === update.id);
-    if (idx !== -1) {
-      const current = table.props![idx];
-      table.props.splice(idx, 1, { ...current, ...update });
-    } else {
-      table.props.push(update);
-    }
-  };
+  const updateSchemaProp = useCallback(
+    (update: Schema.Prop) => {
+      const idx = table.schema?.props.findIndex((prop) => prop.id === update.id);
+      if (idx !== -1) {
+        const current = table.schema?.props[idx];
+        table.schema?.props.splice(idx, 1, { ...current, ...update });
+      } else {
+        table.schema?.props.push(update);
+      }
+    },
+    [table.schema],
+  );
+
+  const updateTableProp = useCallback(
+    (update: TableType.Prop) => {
+      const idx = table.props?.findIndex((prop) => prop.id === update.id);
+      if (idx !== -1) {
+        const current = table.props![idx];
+        table.props.splice(idx, 1, { ...current, ...update });
+      } else {
+        table.props.push(update);
+      }
+    },
+    [table.props],
+  );
 
   const columns = useMemo(() => {
     if (!space || !table.schema || !tables.length) {
@@ -112,11 +119,14 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
     return builder.createColumns();
   }, [space, tables, reactDeps(table, table.schema), newObject]);
 
-  const handleColumnResize = (state: Record<string, number>) => {
-    Object.entries(state).forEach(([id, size]) => {
-      updateTableProp({ id, size });
-    });
-  };
+  const handleColumnResize = useCallback(
+    (state: Record<string, number>) => {
+      Object.entries(state).forEach(([id, size]) => {
+        updateTableProp({ id, size });
+      });
+    },
+    [updateTableProp],
+  );
 
   const debug = false;
 
