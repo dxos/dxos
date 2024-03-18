@@ -92,26 +92,27 @@ export class Filter<T extends OpaqueEchoObject = EchoObject> {
     }
   }
 
-  static schema<T>(schema: S.Schema<T>): Filter<EchoReactiveObject<Mutable<T>>>;
-  static schema(schema: Schema): Filter<Expando>;
-  static schema(schema: S.Schema<any> | Schema): Filter<OpaqueEchoObject> {
-    if (S.isSchema(schema)) {
-      const ref = getSchemaTypeRefOrThrow(schema);
-      return new Filter({
-        type: ref,
-      });
-    } else {
-      const ref = getReferenceWithSpaceKey(schema);
-      invariant(ref, 'Invalid schema; check persisted in the database.');
-      return new Filter({
-        type: ref,
-      });
-    }
+  static schema<T>(
+    schema: S.Schema<T>,
+    filter?: Record<string, any> | OperatorFilter<any>,
+  ): Filter<EchoReactiveObject<Mutable<T>>>;
+
+  static schema(schema: Schema, filter?: Record<string, any> | OperatorFilter<any>): Filter<Expando>;
+  static schema(
+    schema: S.Schema<any> | Schema,
+    filter?: Record<string, any> | OperatorFilter<any>,
+  ): Filter<OpaqueEchoObject> {
+    const typeReference = S.isSchema(schema) ? getSchemaTypeRefOrThrow(schema) : getReferenceWithSpaceKey(schema);
+    invariant(typeReference, 'Invalid schema; check persisted in the database.');
+    return this._fromTypeWithPredicate(typeReference, filter);
   }
 
   static typename(typename: string, filter?: Record<string, any> | OperatorFilter<any>): Filter<any> {
     const type = Reference.fromLegacyTypename(typename);
+    return this._fromTypeWithPredicate(type, filter);
+  }
 
+  private static _fromTypeWithPredicate(type: Reference, filter?: Record<string, any> | OperatorFilter<any>) {
     switch (typeof filter) {
       case 'function':
         return new Filter({ type, predicate: filter as any });

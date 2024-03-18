@@ -319,7 +319,7 @@ export const updateGraphWithSpace = ({
 
   // Update graph with all objects in the space.
   // TODO(wittjosiah): If text objects are included in this query then it updates on every keystroke in the editor.
-  const query = space.db.query((obj) => obj.__typename !== LEGACY_TEXT_TYPE);
+  const query = space.db.query((obj: TypedObject) => obj.__typename !== LEGACY_TEXT_TYPE);
   const previousObjects = new Map<string, TypedObject[]>();
   const unsubscribeQuery = effect(() => {
     const folder: Folder = space.properties[Folder.schema.typename];
