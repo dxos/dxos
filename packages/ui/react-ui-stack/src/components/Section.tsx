@@ -183,6 +183,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
               }
               {...(collapsed && { ...sectionContentGroup, tabIndex: 0 })}
             >
+              {/* TODO(thure): This needs to be made extensible; Markdown document titles especially are difficult */}
               <span className='truncate'>{title}</span>
             </ListItem.Heading>
             <CollapsiblePrimitive.Content
