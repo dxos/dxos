@@ -32,7 +32,7 @@ export interface CursorConverter {
 }
 
 // TODO(burdon): Reconcile with cursorConverter.
-const cursorConverter = (handle: IDocHandle, path: Prop[]) => ({
+const cursorConverter = (handle: IDocHandle, path: readonly Prop[]) => ({
   toCursor: (pos: number): string => {
     const doc = handle.docSync();
     if (!doc) {
