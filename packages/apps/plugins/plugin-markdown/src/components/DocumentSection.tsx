@@ -38,11 +38,6 @@ const DocumentSection: FC<{
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({
           themeMode,
-          slots: {
-            editor: {
-              className: 'plb-1',
-            },
-          },
         }),
         createDataExtensions({ id: document.id, text: accessor, space, identity }),
         ...extensions,

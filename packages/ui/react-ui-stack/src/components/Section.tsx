@@ -178,7 +178,9 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
 
             <ListItem.Heading
               classNames={
-                collapsed ? ['grid grid-rows-subgrid grid-cols-subgrid items-center rounded-sm', focusRing] : 'sr-only'
+                collapsed
+                  ? ['grid grid-rows-subgrid grid-cols-subgrid items-center rounded-sm mlb-1 mie-1', focusRing]
+                  : 'sr-only'
               }
               {...(collapsed && { ...sectionContentGroup, tabIndex: 0 })}
             >
@@ -186,7 +188,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
             </ListItem.Heading>
             <CollapsiblePrimitive.Content
               {...(!collapsed && { ...sectionContentGroup, tabIndex: 0 })}
-              className={mx(focusRing, 'rounded-sm')}
+              className={mx(focusRing, 'rounded-sm mlb-1 mie-1')}
             >
               {children}
             </CollapsiblePrimitive.Content>
