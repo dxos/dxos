@@ -206,13 +206,13 @@ describe('Reactive Object with ECHO database', () => {
     const { db, graph } = await createDatabase(undefined, { useReactiveObjectApi: true });
     graph.types.registerEffectSchema(EchoObjectSchema);
     const obj = db.add(E.object(EchoObjectSchema, { ...TEST_OBJECT }));
-    const objData: any = obj[data];
+    const objData: any = (obj as any)[data];
     expect(objData).to.deep.contain({
+      '@id': obj.id,
       '@meta': { keys: [] },
       '@type': { '@type': 'dxos.echo.model.document.Reference', ...getTypeReference(EchoObjectSchema) },
       ...TEST_OBJECT,
     });
-    expect(objData.id).to.be.a('string');
   });
 
   describe('references', () => {

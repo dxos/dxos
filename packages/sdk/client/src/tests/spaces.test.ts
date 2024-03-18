@@ -12,6 +12,7 @@ import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Expando, getTextContent, subscribe } from '@dxos/echo-schema';
+import * as E from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type EchoSnapshot, type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
@@ -262,21 +263,26 @@ describe('Spaces', () => {
     expect(space.properties.name).to.equal('example');
   });
 
-  test('objects are owned by spaces', async () => {
-    const testBuilder = new TestBuilder();
-    testBuilder.storage = createStorage({ type: StorageType.RAM });
+  for (const useReactiveObjectApi of [false, true]) {
+    test(`objects are owned by spaces, reactive api = ${useReactiveObjectApi}`, async () => {
+      const config = new Config({ runtime: { client: { useReactiveObjectApi } } });
+      const testBuilder = new TestBuilder(config);
+      testBuilder.storage = createStorage({ type: StorageType.RAM });
 
-    const client = new Client({ services: testBuilder.createLocal() });
-    await client.initialize();
-    afterTest(() => client.destroy());
+      const client = new Client({ config, services: testBuilder.createLocal() });
+      await client.initialize();
+      afterTest(() => client.destroy());
 
-    await client.halo.createIdentity({ displayName: 'test-user' });
+      await client.halo.createIdentity({ displayName: 'test-user' });
 
-    const space = await client.spaces.create();
+      const space = await client.spaces.create();
 
-    const obj = space.db.add(new Expando({ data: 'test' }));
-    expect(getSpaceForObject(obj)).to.equal(space);
-  });
+      const obj = useReactiveObjectApi
+        ? space.db.add(E.object({ data: 'test ' }))
+        : space.db.add(new Expando({ data: 'test' }));
+      expect(getSpaceForObject(obj)).to.equal(space);
+    });
+  }
 
   // TODO(mykola): Automerge epochs are not supported yet.
   test.skip('epoch correctly resets database', async () => {

@@ -9,6 +9,7 @@ import { log } from '@dxos/log';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 import { getSchemaTypeRefOrThrow } from './effect/echo-handler';
+import * as E from './effect/reactive';
 import { TypedObject, dangerouslyMutateImmutableObject, LEGACY_TEXT_TYPE } from './object';
 import type { SchemaProps, Schema as SchemaProto } from './proto';
 
@@ -164,4 +165,4 @@ const TextCompatibilitySchema = S.partial(
     field: S.string,
     content: S.string,
   }),
-);
+).pipe(E.echoObject('dxos.Text.v0', '0.1.0'));

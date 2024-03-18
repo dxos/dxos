@@ -181,7 +181,7 @@ class QueryModel implements SearchListQueryModel<TypedObject> {
   }
 
   async query(text?: string) {
-    const { objects = [] } = this._db.query((object) => {
+    const { objects = [] } = this._db.query((object: TypedObject) => {
       if (!text?.length) {
         return null;
       }

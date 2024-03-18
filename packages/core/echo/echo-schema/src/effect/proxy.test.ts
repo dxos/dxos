@@ -239,7 +239,7 @@ for (const schema of [undefined, TestSchema]) {
         if (!objectsHaveId) {
           expect(actual).to.deep.eq(expected);
         } else {
-          expect(actual).to.deep.eq({ id: (obj as any).id, ...expected });
+          expect(actual).to.deep.contain({ '@id': (obj as any).id, ...expected });
         }
       });
 
