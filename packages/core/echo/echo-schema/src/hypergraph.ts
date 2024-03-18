@@ -13,7 +13,7 @@ import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
 import { type AutomergeDb, type ItemsUpdatedEvent } from './automerge';
-import { type EchoDatabaseImpl, type EchoDatabase } from './database';
+import { type EchoDatabase, type EchoDatabaseImpl } from './database';
 import { prohibitSignalActions } from './guarded-scope';
 import { type OpaqueEchoObject, type EchoObject } from './object';
 import {

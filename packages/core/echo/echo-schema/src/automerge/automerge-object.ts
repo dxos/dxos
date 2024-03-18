@@ -31,9 +31,9 @@ import {
   subscribe,
   TextObject,
   type ObjectMeta,
+  type OpaqueEchoObject,
   type TypedObjectOptions,
   type TypedObjectProperties,
-  type OpaqueEchoObject,
 } from '../object';
 import { AbstractEchoObject } from '../object/object'; // TODO(burdon): Import
 import { Schema } from '../proto';
