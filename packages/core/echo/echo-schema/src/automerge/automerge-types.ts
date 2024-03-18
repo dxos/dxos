@@ -6,11 +6,10 @@ import get from 'lodash.get';
 
 import type { ChangeFn, ChangeOptions, Doc, Heads } from '@dxos/automerge/automerge';
 
-import { getRawDoc } from './automerge-object';
-import { type KeyPath } from './key-path';
 import { type EchoReactiveObject } from '../effect/reactive';
 import { type AutomergeTextCompat, type TextObject } from '../object';
-import { EchoReactiveObject } from '../effect/reactive';
+import { getRawDoc } from './automerge-object';
+import { type KeyPath } from './key-path';
 
 //
 // Automerge types.

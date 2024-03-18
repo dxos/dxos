@@ -28,7 +28,6 @@ import {
   type SpaceDoc,
   type DecodedAutomergePrimaryValue,
 } from './types';
-import { EchoReactiveHandler } from '../effect/echo-handler';
 import { getProxyHandlerSlot, isReactiveProxy } from '../effect/proxy';
 import { type TypedObjectOptions, type EchoObject, TextObject, type OpaqueEchoObject } from '../object';
 import { AbstractEchoObject } from '../object/object';

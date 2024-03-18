@@ -35,8 +35,8 @@ import { Schema } from '../proto';
 import { AutomergeArray } from './automerge-array';
 import { AutomergeObjectCore, type BindOptions } from './automerge-object-core';
 import { type DocAccessor } from './automerge-types';
-import { type KeyPath } from './key-path';
-import { isValidKeyPath, REFERENCE_TYPE_TAG, type ObjectSystem } from './types';
+import { isValidKeyPath, type KeyPath } from './key-path';
+import { REFERENCE_TYPE_TAG, type ObjectSystem } from './types';
 
 // TODO(dmaretskyi): Rename to `AutomergeObjectApi`?
 export class AutomergeObject implements TypedObjectProperties {

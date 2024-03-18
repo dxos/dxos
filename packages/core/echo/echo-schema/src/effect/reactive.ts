@@ -96,11 +96,6 @@ export type EchoReactiveObject<T> = ReactiveObject<T> & { id: string };
 export const isEchoReactiveObject = (value: unknown): value is EchoReactiveObject<any> =>
   isReactiveProxy(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;
 
-export type EchoReactiveObject<T> = ReactiveObject<T> & { id: string };
-
-export const isEchoReactiveObject = (value: unknown): value is EchoReactiveObject<any> =>
-  isReactiveProxy(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;
-
 /**
  * Creates a reactive object from a plain Javascript object.
  * Optionally provides a TS-effect schema.
