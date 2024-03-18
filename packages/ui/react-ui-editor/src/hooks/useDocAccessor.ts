@@ -9,7 +9,7 @@ import {
   type DocAccessor,
   getTextContent,
   type TextObject,
-  EchoReactiveObject,
+  type EchoReactiveObject,
 } from '@dxos/echo-schema';
 
 // TODO(burdon): Factor out.

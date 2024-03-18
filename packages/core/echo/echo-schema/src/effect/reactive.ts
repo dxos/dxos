@@ -6,7 +6,7 @@ import * as AST from '@effect/schema/AST';
 import * as S from '@effect/schema/Schema';
 import { pipe } from 'effect';
 import * as Option from 'effect/Option';
-import { type Simplify, type Mutable } from 'effect/Types';
+import { type Simplify } from 'effect/Types';
 
 import { Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
@@ -24,7 +24,6 @@ import { SchemaValidator, symbolSchema, validateIdNotPresentOnSchema } from './s
 import { TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 import { data, type ObjectMeta } from '../object';
-import { TypeId } from 'effect/Either';
 
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);

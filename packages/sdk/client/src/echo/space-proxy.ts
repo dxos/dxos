@@ -26,6 +26,7 @@ import {
   type TypedObject,
   EchoDatabaseImpl,
 } from '@dxos/echo-schema';
+import * as E from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -41,7 +42,6 @@ import {
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { trace } from '@dxos/tracing';
-import * as E from '@dxos/echo-schema';
 
 import { InvitationsProxy } from '../invitations';
 

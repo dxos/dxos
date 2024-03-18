@@ -11,6 +11,11 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { assignDeep } from '@dxos/util';
 
+import { AutomergeArray } from './automerge-array';
+import { AutomergeObjectCore, type BindOptions } from './automerge-object-core';
+import { type DocAccessor } from './automerge-types';
+import { isValidKeyPath, type KeyPath } from './key-path';
+import { REFERENCE_TYPE_TAG, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
 import { EchoReactiveHandler } from '../effect/echo-handler';
 import { getProxyHandlerSlot, isReactiveProxy } from '../effect/proxy';
@@ -32,11 +37,6 @@ import {
 } from '../object';
 import { AbstractEchoObject } from '../object/object'; // TODO(burdon): Import
 import { Schema } from '../proto';
-import { AutomergeArray } from './automerge-array';
-import { AutomergeObjectCore, type BindOptions } from './automerge-object-core';
-import { type DocAccessor } from './automerge-types';
-import { isValidKeyPath, type KeyPath } from './key-path';
-import { REFERENCE_TYPE_TAG, type ObjectSystem } from './types';
 
 // TODO(dmaretskyi): Rename to `AutomergeObjectApi`?
 export class AutomergeObject implements TypedObjectProperties {

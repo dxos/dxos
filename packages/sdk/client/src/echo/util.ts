@@ -5,7 +5,7 @@
 
 import { type Space } from '@dxos/client-protocol';
 import { DocumentModel } from '@dxos/document-model';
-import { OpaqueEchoObject, getDatabaseFromObject } from '@dxos/echo-schema';
+import { type OpaqueEchoObject, getDatabaseFromObject } from '@dxos/echo-schema';
 import { ModelFactory } from '@dxos/model-factory';
 import { TextModel } from '@dxos/text-model';
 

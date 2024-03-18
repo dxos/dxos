@@ -10,12 +10,12 @@ import { Reference } from '@dxos/document-model';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { TextModel, type Doc, type YText, type YXmlFragment } from '@dxos/text-model';
 
-import { AutomergeObject, getRawDoc } from '../automerge';
-import { isReactiveProxy } from '../effect/proxy';
-import { type EchoReactiveObject } from '../effect/reactive';
 import { AbstractEchoObject } from './object';
 import { isAutomergeObject, type AutomergeOptions, type TypedObject } from './typed-object';
 import { base } from './types';
+import { AutomergeObject, getRawDoc } from '../automerge';
+import { isReactiveProxy } from '../effect/proxy';
+import { type EchoReactiveObject } from '../effect/reactive';
 
 export type TextObjectOptions = AutomergeOptions;
 

@@ -12,7 +12,6 @@ import {
   type ClientServices,
   clientServiceBundle,
   DEFAULT_CLIENT_CHANNEL,
-  Properties,
   PropertiesSchema,
 } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf';

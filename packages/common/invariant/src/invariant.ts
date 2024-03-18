@@ -22,6 +22,7 @@ export const invariant: InvariantFn = (
 
   if (message?.startsWith('BUG')) {
     // This invariant is a debug bug-check: break if the debugger is attached.
+    // eslint-disable-next-line no-debugger
     debugger;
   }
 
