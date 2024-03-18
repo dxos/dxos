@@ -89,7 +89,7 @@ export interface TypedObjectSerializer {
 export const serializers: Record<string, TypedObjectSerializer> = {
   [getEchoObjectAnnotation(DocumentSchema)!.typename]: {
     filename: (object: DocumentType) => ({
-      name: object.title?.replace(/[/\\?%*:|"<>]/g, '-'),
+      name: object.title?.replace(/[/\\?%*:|"<>]/g, '-') ?? '',
       extension: 'md',
     }),
 
@@ -147,11 +147,11 @@ export const serializers: Record<string, TypedObjectSerializer> = {
         return E.object(DocumentSchema, { content: E.object(TextV0Schema, { content: text }) });
       }
     },
-  },
+  } satisfies TypedObjectSerializer,
 
   [getEchoObjectAnnotation(ThreadSchema)!.typename]: {
     filename: (object: ThreadType) => ({
-      name: object.title?.replace(/[/\\?%*:|"<>]/g, '-'),
+      name: object.title?.replace(/[/\\?%*:|"<>]/g, '-') ?? '',
       extension: 'md',
     }),
 
@@ -166,7 +166,7 @@ export const serializers: Record<string, TypedObjectSerializer> = {
     deserialize: async (text: string) => {
       throw new Error('Not implemented.');
     },
-  },
+  } satisfies TypedObjectSerializer,
 
   default: {
     filename: () => ({ name: 'Untitled', extension: 'json' }),
