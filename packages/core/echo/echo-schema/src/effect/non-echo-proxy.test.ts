@@ -32,7 +32,7 @@ for (const schema of [undefined, TestSchemaWithClass]) {
 
     test('data symbol', async () => {
       const obj = createObject({ ...TEST_OBJECT });
-      const objData: any = obj[data];
+      const objData: any = (obj as any)[data];
       expect(objData).to.deep.contain({
         '@type': `${schema ? 'Typed' : ''}ReactiveObject`,
         ...TEST_OBJECT,

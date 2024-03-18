@@ -10,16 +10,16 @@ import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import {
   AutomergeDb,
-  type AutomergeContext,
   AutomergeObject,
-  type InitRootProxyFn,
+  type AutomergeContext,
   type AutomergeObjectCore,
+  type InitRootProxyFn,
 } from './automerge';
 import { createEchoReactiveObject, initEchoReactiveObjectRootProxy } from './effect/echo-handler';
 import { type EchoReactiveObject, getSchema } from './effect/reactive';
 import { type Hypergraph } from './hypergraph';
-import { isAutomergeObject, type EchoObject, type TypedObject, type OpaqueEchoObject, base } from './object';
-import { type OperatorFilter, type Filter, type FilterSource, type Query } from './query';
+import { base, isAutomergeObject, type EchoObject, type OpaqueEchoObject, type TypedObject } from './object';
+import { type Filter, type FilterSource, type Query } from './query';
 
 export interface EchoDatabase {
   get graph(): Hypergraph;
@@ -46,7 +46,6 @@ export interface EchoDatabase {
     filter?: Filter<T> | undefined,
     options?: QueryOptions | undefined,
   ): Query<T>;
-  query(filter: OperatorFilter<TypedObject>, options?: QueryOptions): Query<TypedObject>;
   query<T extends {}>(filter?: T | undefined, options?: QueryOptions | undefined): Query<TypedObject>;
 
   /**
