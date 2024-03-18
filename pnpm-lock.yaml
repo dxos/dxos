@@ -6328,6 +6328,9 @@ importers:
       ws:
         specifier: ^8.14.2
         version: 8.14.2
+      wtfnode:
+        specifier: ^0.9.1
+        version: 0.9.1
     devDependencies:
       '@oclif/test':
         specifier: ^2.3.31
