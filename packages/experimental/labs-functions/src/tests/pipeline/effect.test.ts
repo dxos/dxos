@@ -8,7 +8,6 @@ import { Effect, type Exit, pipe } from 'effect';
 import { isFailType } from 'effect/Cause';
 import { isFailure } from 'effect/Exit';
 
-import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 chai.use(chaiAsPromised);
@@ -20,7 +19,7 @@ chai.use(chaiAsPromised);
 
 // TODO(burdon): Effect.schedule(), Effect.cron()
 
-describe.only('Effect', () => {
+describe('Effect', () => {
   test('sync', async () => {
     type SyncTest = {
       program: Effect.Effect<unknown, Error>;
@@ -145,9 +144,21 @@ describe.only('Effect', () => {
   });
 
   test('simple async pipeline', async () => {
-    type PipelineFunction = (value: number) => Effect.Effect<number, Error, never>;
+    type PipelineFunction = (value: number) => Promise<number>;
+    type PipelineFunctionEffect = (value: number) => Effect.Effect<number, Error, never>;
 
-    const inc: PipelineFunction = (value: number) => {
+    const tryFunction = (f: PipelineFunction) => (value: number) => {
+      return Effect.tryPromise({
+        try: async () => f(value),
+        catch: (err) => {
+          return new Error('failed', { cause: err });
+        },
+      });
+    };
+
+    const inc: PipelineFunction = async (value: number) => value + 1;
+
+    const inc2: PipelineFunctionEffect = (value: number) => {
       return Effect.tryPromise({
         try: async () => {
           if (value === 3) {
@@ -162,11 +173,10 @@ describe.only('Effect', () => {
     };
 
     const pipeline = pipe(
-      //
       Effect.succeed(1),
-      Effect.andThen(inc),
-      Effect.andThen(inc),
-      Effect.andThen(inc),
+      Effect.andThen(tryFunction(inc)),
+      Effect.andThen(inc2),
+      Effect.andThen(inc2),
       Effect.mapError((err) => {
         return new Error('caught', { cause: err });
       }),
@@ -185,122 +195,5 @@ describe.only('Effect', () => {
       const { value } = result;
       expect(value).to.eq(3);
     }
-  });
-
-  test('pipeline', async () => {
-    type PromptInput = {
-      name: string;
-      type: 'const' | 'selection' | 'schema';
-      value?: any;
-    };
-
-    type PromptTemplate = {
-      template: string;
-      inputs?: PromptInput[];
-    };
-
-    type Request = {
-      prompt?: PromptTemplate;
-    };
-
-    type Response = {
-      code: number;
-    };
-
-    type Context = {
-      request: Request;
-      response?: Response;
-    };
-
-    type Resolver = (input: PromptInput) => string | null;
-
-    // TODO(burdon): Async?
-    type PipelineFunction = <R>(self: Effect.Effect<Context, Error, R>) => Effect.Effect<Context, Error, R>;
-
-    const processTemplate = (resolver: Resolver): PipelineFunction =>
-      Effect.flatMap((context: Context) => {
-        const { template } = context.request.prompt ?? {};
-        if (template) {
-          const regExp = /\{([^}]+)\}/g;
-          const parts = [];
-          let last = 0;
-          for (const match of template.matchAll(regExp)) {
-            const [, name] = match;
-            const input = context.request.prompt!.inputs?.find((input) => input.name === name);
-            // TODO(burdon): Make async.
-            const value = input && resolver(input);
-            if (!value) {
-              return Effect.fail(new Error(`invalid input: ${name}`));
-            }
-
-            parts.push(template.slice(last, match.index));
-            parts.push(value);
-            last = match.index! + name.length + 2;
-          }
-
-          if (parts.length) {
-            parts.push(template.slice(last));
-            return Effect.succeed({
-              request: {
-                prompt: {
-                  template: parts.join(''),
-                },
-              },
-            });
-          }
-        }
-
-        return Effect.succeed(context);
-      });
-
-    const logger: PipelineFunction = Effect.tap<Context, void>((context) => {
-      log('context', context);
-    });
-
-    const createPromptTemplate = (template: string, inputs?: PromptInput[]) =>
-      Effect.succeed<Context>({
-        request: {
-          prompt: {
-            template,
-            inputs,
-          },
-        },
-      });
-
-    // TODO(burdon): Langchain resolver.
-    const processPrompt = Effect.map(async (context: Context) => {
-      const { request } = context;
-      return {
-        request,
-        response: {
-          code: 0,
-        },
-      };
-    });
-
-    const template = createPromptTemplate('translate the following text into {language}:\n{content}', [
-      { name: 'language', type: 'const', value: 'japanese' },
-      { name: 'content', type: 'selection' },
-    ]);
-
-    const resolver: Resolver = (input) => {
-      switch (input.type) {
-        case 'const': {
-          return input.value;
-        }
-
-        case 'selection': {
-          return ['hello world', 'welcome'].join('\n');
-        }
-
-        default:
-          return null;
-      }
-    };
-
-    const pipeline = pipe(template, processTemplate(resolver), logger, processPrompt);
-
-    const { response } = await Effect.runPromise(pipeline);
-    expect(response?.code).to.eq(0);
   });
 });
