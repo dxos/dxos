@@ -405,4 +405,5 @@ export const getAutomergeObjectCore = (obj: OpaqueEchoObject): AutomergeObjectCo
 };
 
 // Circular deps.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const requireSchema = (): typeof Schema => require('../proto').Schema;

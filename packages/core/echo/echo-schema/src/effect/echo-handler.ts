@@ -10,11 +10,6 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { assignDeep, ComplexMap, defaultMap, getDeep } from '@dxos/util';
 
-import { type KeyPath } from '../automerge/key-path';
-import { encodeReference, REFERENCE_TYPE_TAG } from '../automerge/types';
-import { AutomergeObjectCore } from '../automerge/automerge-object-core';
-import { data, type ObjectMeta } from '../object';
-import { defineHiddenProperty } from '../util/property';
 import {
   createReactiveProxy,
   getProxyHandlerSlot,
@@ -24,6 +19,11 @@ import {
 } from './proxy';
 import { getSchema, getTypeReference, type EchoReactiveObject } from './reactive';
 import { SchemaValidator } from './schema-validator';
+import { AutomergeObjectCore } from '../automerge/automerge-object-core';
+import { type KeyPath } from '../automerge/key-path';
+import { encodeReference, REFERENCE_TYPE_TAG } from '../automerge/types';
+import { data, type ObjectMeta } from '../object';
+import { defineHiddenProperty } from '../util/property';
 
 const symbolPath = Symbol('path');
 const symbolNamespace = Symbol('namespace');
