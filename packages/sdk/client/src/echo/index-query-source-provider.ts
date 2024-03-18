@@ -16,10 +16,8 @@ import {
   getAutomergeObjectCore,
 } from '@dxos/echo-schema';
 import { prohibitSignalActions } from '@dxos/echo-schema';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
-import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { type SpaceList } from './space-list';
 
@@ -34,23 +32,26 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
 
   private async find(filter: Filter): Promise<QueryResult<EchoObject>[]> {
     const start = Date.now();
-    const response = await this._params.service.find({ queryId: PublicKey.random().toHex(), filter: filter.toProto() });
+    const response = await this._params.service.find({ filter: filter.toProto() });
+
     if (!response.results) {
       return [];
     }
 
-    const results: (QueryResult<EchoObject> | undefined)[] = await prohibitSignalActions(() =>
-      Promise.all(
-        response.results!.map(async (result) => {
-          const space = this._params.spaceList.get(result.spaceKey);
-          if (!space) {
-            return;
-          }
+    const results: (QueryResult<EchoObject> | undefined)[] = await Promise.all(
+      response.results!.map(async (result) => {
+        const space = this._params.spaceList.get(result.spaceKey);
+        if (!space) {
+          return;
+        }
 
-          const object = await warnAfterTimeout(2000, 'takes to long to load object', async () => {
-            await space.waitUntilReady();
-            return space.db.automerge.loadObjectById(result.id);
-          });
+        await warnAfterTimeout(2000, 'takes to long to load object', async () => {
+          await space.waitUntilReady();
+          return space.db.automerge.waitForObject(result.id);
+        });
+
+        return prohibitSignalActions(() => {
+          const object = space.db.getObjectById(result.id);
 
           if (!object) {
             return;
@@ -67,8 +68,8 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
             match: { rank: result.rank },
             resolution: { source: 'index', time: Date.now() - start },
           };
-        }),
-      ),
+        });
+      }),
     );
 
     return results.filter(Boolean) as QueryResult<EchoObject>[];
@@ -94,21 +95,19 @@ export class IndexQuerySource implements QuerySource {
   }
 
   update(filter: Filter<EchoObject>): void {
-    if (filter.options.dataLocation === undefined || filter.options.dataLocation === QueryOptions.DataLocation.LOCAL) {
-      // Disabled by dataLocation filter.
-      return;
-    }
-    this._results = undefined;
-    this.changed.emit();
+    prohibitSignalActions(() => {
+      this._results = undefined;
+      this.changed.emit();
 
-    this._params
-      .find(filter)
-      .then((results) => {
-        prohibitSignalActions(() => {
-          this._results = results;
-          this.changed.emit();
-        });
-      })
-      .catch((error) => log.catch(error));
+      this._params
+        .find(filter)
+        .then((results) => {
+          prohibitSignalActions(() => {
+            this._results = results;
+            this.changed.emit();
+          });
+        })
+        .catch((error) => log.catch(error));
+    });
   }
 }

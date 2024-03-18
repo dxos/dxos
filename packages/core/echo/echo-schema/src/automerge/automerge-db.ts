@@ -25,7 +25,7 @@ import { getInlineAndLinkChanges } from './utils';
 import { type EchoDatabase } from '../database';
 import { isReactiveProxy } from '../effect/proxy';
 import { type Hypergraph } from '../hypergraph';
-import { LEGACY_TEXT_TYPE, isAutomergeObject, type EchoObject, type OpaqueEchoObject } from '../object';
+import { isAutomergeObject, type EchoObject, type OpaqueEchoObject } from '../object';
 import { type Schema } from '../proto';
 
 export type SpaceState = {
@@ -170,15 +170,12 @@ export class AutomergeDb {
   }
 
   // TODO(Mykola): Reconcile with `getObjectById`.
-  async loadObjectById(objectId: string, { timeout = 1000 }: { timeout?: number } = {}): Promise<EchoObject> {
-    const obj = this.getObjectById(objectId);
-    if (obj) {
-      return obj;
+  async waitForObject(objectId: string, { timeout = 5000 }: { timeout?: number } = {}): Promise<void> {
+    if (this._objects.has(objectId)) {
+      return Promise.resolve();
     }
     return asyncTimeout(
-      this._updateEvent
-        .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId))
-        .then(() => this.getObjectById(objectId)!),
+      this._updateEvent.waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId)).then(() => {}),
       timeout,
     );
   }
@@ -397,7 +394,7 @@ export interface ItemsUpdatedEvent {
 
 const shouldObjectGoIntoFragmentedSpace = (core: AutomergeObjectCore) => {
   if (isAutomergeObject(core.rootProxy)) {
-    return core.rootProxy.__typename === LEGACY_TEXT_TYPE;
+    return true;
   } else {
     return false;
   }
