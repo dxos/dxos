@@ -8,6 +8,7 @@ import React, { useMemo, type Ref } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
+import { type DocumentType, DocumentSchema, isDocument, TextV0Schema } from '@braneframe/types';
 import {
   isObject,
   parseIntentPlugin,
@@ -38,11 +39,7 @@ import {
   type ExtensionsProvider,
   type MarkdownPluginProvides,
   type MarkdownSettingsProps,
-  type DocumentType,
   MarkdownAction,
-  DocumentSchema,
-  isDocument,
-  TextV0Schema,
 } from './types';
 import { getFallbackTitle, isMarkdownProperties, markdownExtensionPlugins } from './util';
 
@@ -234,7 +231,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           switch (role) {
             // TODO(burdon): Normalize layout (reduce variants).
             case 'main': {
-              console.log('MarkdownPlugin', data.active);
               if (isDocument(data.active)) {
                 const { readonly } = settings.values.state[data.active.id] ?? {};
                 return (

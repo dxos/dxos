@@ -6,6 +6,7 @@ import { ArrowSquareDown, ArrowSquareOut, type Icon } from '@phosphor-icons/reac
 import React, { type AnchorHTMLAttributes, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { DocumentSchema, type DocumentType } from '@braneframe/types';
 import { type IntentDispatcher, NavigationAction } from '@dxos/app-framework';
 import { Filter, getSpaceForObject } from '@dxos/react-client/echo';
 import {
@@ -23,7 +24,7 @@ import {
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
-import { DocumentSchema, type DocumentType, type MarkdownSettingsProps } from './types';
+import { type MarkdownSettingsProps } from './types';
 
 export type ExtensionsOptions = {
   dispatch?: IntentDispatcher;

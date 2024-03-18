@@ -4,12 +4,12 @@
 
 import md5 from 'md5';
 
+import { FolderSchema, isFolder, type FolderType } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { type Space, base } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 
 import { serializers } from './serializers';
-import { FolderSchema, type FolderType } from '../types';
 
 export const TypeOfExpando = 'dxos.org/typename/expando';
 
@@ -84,12 +84,14 @@ export class FileSerializer {
         continue;
       }
 
-      if (!child.__typename) {
+      const schema = E.getSchema(child);
+
+      if (!schema) {
         continue;
       }
 
-      const serializer = serializers[child.__typename] ?? serializers.default;
-      const typename = child.__typename ?? TypeOfExpando;
+      const typename = E.getEchoObjectAnnotation(schema)?.typename ?? TypeOfExpando;
+      const serializer = serializers[typename] ?? serializers.default;
 
       const filename = serializer.filename(child);
       const content = await serializer.serialize(child);
@@ -123,7 +125,7 @@ export class FileSerializer {
               child = E.object(FolderSchema, { name: object.name, objects: [] });
 
               // TODO(dmaretskyi): This won't work.
-              child[base]._id = object.id;
+              // child[base]._id = object.id;
               folder.objects.push(child);
             }
 
@@ -136,7 +138,8 @@ export class FileSerializer {
             const deserialized = await serializer.deserialize(object.content!, child);
 
             if (!child) {
-              deserialized[base]._id = object.id;
+              // TODO(dmaretskyi): This won't work.
+              // deserialized[base]._id = object.id;
               folder.objects.push(deserialized);
             }
             break;

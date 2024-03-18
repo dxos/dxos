@@ -4,15 +4,17 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { type TypedObject } from '@dxos/react-client/echo';
+import { isFolder } from '@braneframe/types';
+import { type AnyEchoObject } from '@dxos/echo-schema';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
-import { isFolder } from '../types';
 
-export const PopoverRenameObject = ({ object }: { object: TypedObject }) => {
+export const PopoverRenameObject = ({ object: obj }: { object: AnyEchoObject }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const doneButton = useRef<HTMLButtonElement>(null);
+  // TODO(wittjosiah): Use schema here.
+  const object = obj as any;
   // TODO(burdon): Field should not be hardcoded field.
   const [name, setName] = useState(object.title || object.name || '');
 

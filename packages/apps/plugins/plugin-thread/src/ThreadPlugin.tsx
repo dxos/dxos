@@ -7,8 +7,8 @@ import { batch, effect, untracked } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { DocumentSchema, isDocument } from '@braneframe/plugin-markdown';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
+import { isThread, ThreadSchema, type ThreadType, MessageSchema, isDocument, DocumentSchema } from '@braneframe/types';
 import {
   type IntentPluginProvides,
   LayoutAction,
@@ -39,15 +39,7 @@ import {
 } from './components';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
-import {
-  ThreadAction,
-  type ThreadPluginProvides,
-  isThread,
-  type ThreadSettingsProps,
-  ThreadSchema,
-  type ThreadType,
-  MessageSchema,
-} from './types';
+import { ThreadAction, type ThreadPluginProvides, type ThreadSettingsProps } from './types';
 
 type ThreadState = {
   threads: Record<string, number>;
@@ -351,7 +343,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 doc.comments?.forEach(({ thread, cursor }) => {
                   if (isThread(thread) && cursor) {
                     const [start, end] = cursor.split(':');
-                    const title = getTextInRange(doc.content, start, end);
+                    // TODO(wittjosiah): Don't cast.
+                    const title = getTextInRange(doc.content as unknown as E.TextObject, start, end);
                     // TODO(burdon): This seems unsafe; review.
                     // Only update if the title has changed, otherwise this will cause an infinite loop.
                     // Skip if the title is empty - this means comment text was deleted, but thread title should remain.
@@ -367,7 +360,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               onCreate: ({ cursor, location }) => {
                 // Create comment thread.
                 const [start, end] = cursor.split(':');
-                const title = getTextInRange(doc.content, start, end);
+                // TODO(wittjosiah): Don't cast.
+                const title = getTextInRange(doc.content as unknown as E.TextObject, start, end);
                 const thread = space.db.add(
                   E.object(ThreadSchema, { title, messages: [], context: { object: doc.id } }),
                 );

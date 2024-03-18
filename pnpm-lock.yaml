@@ -2081,6 +2081,9 @@ importers:
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
       '@codemirror/view':
         specifier: ^6.25.0
         version: 6.25.0
@@ -3417,6 +3420,9 @@ importers:
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
       '@codemirror/language':
         specifier: ^6.10.1
         version: 6.10.1
@@ -3857,6 +3863,12 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@effect/schema':
+        specifier: 0.63.4
+        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
+      effect:
+        specifier: 2.4.3
+        version: 2.4.3
     devDependencies:
       '@dxos/echo-typegen':
         specifier: workspace:*
