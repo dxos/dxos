@@ -77,4 +77,20 @@ describe('Context', () => {
     expect(parentCalled).toBeTruthy();
     expect(childCalled).toBeTruthy();
   });
+
+  test('callbacks are called in reverse order', async () => {
+    const ctx = new Context();
+
+    const order: number[] = [];
+    ctx.onDispose(() => {
+      order.push(1);
+    });
+
+    ctx.onDispose(() => {
+      order.push(2);
+    });
+
+    await ctx.dispose();
+    expect(order).toEqual([2, 1]);
+  });
 });
