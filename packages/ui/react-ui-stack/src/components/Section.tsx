@@ -122,9 +122,8 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
           <div
             role='none'
             className={mx(
-              'grid col-span-2 grid-cols-subgrid border border-transparent',
-              'focus:separator-separator focus:surface-attention focus-within:separator-separator focus-within:surface-attention',
-              active && 'separator-separator surface-attention',
+              'grid col-span-2 grid-cols-subgrid outline outline-1 outline-transparent focus-within:s-outline-separator focus-within:surface-attention',
+              active && 'surface-attention after:separator-separator',
               (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
             )}
           >
