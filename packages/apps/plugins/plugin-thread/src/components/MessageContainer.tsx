@@ -5,10 +5,11 @@
 import { X } from '@phosphor-icons/react';
 import React, { forwardRef } from 'react';
 
+import { type TextV0Type, type BlockType, type MessageType } from '@braneframe/types';
 import { Surface } from '@dxos/app-framework';
 import { type SpaceMember } from '@dxos/client/echo';
 import { PublicKey } from '@dxos/react-client';
-import { type Expando, getTextContent, type TextObject } from '@dxos/react-client/echo';
+import { type Expando, getTextContent } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, DensityProvider, useThemeContext } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
@@ -19,7 +20,6 @@ import { Message, type MessageBlockProps, type MessageProps } from '@dxos/react-
 
 import { command } from './command-extension';
 import { THREAD_ITEM } from '../meta';
-import { type BlockType, type MessageType } from '../types';
 import { getMessageMetadata } from '../util';
 
 const messageControlClassNames = ['p-1 min-bs-0 mie-1 transition-opacity items-start', hoverableControlItem];
@@ -68,7 +68,7 @@ const TextboxBlock = ({
   text,
   authorId,
   onBlockDelete,
-}: { text: TextObject } & Pick<MessageBlockProps<BlockType>, 'authorId' | 'onBlockDelete'>) => {
+}: { text: TextV0Type } & Pick<MessageBlockProps<BlockType>, 'authorId' | 'onBlockDelete'>) => {
   const { themeMode } = useThemeContext();
   const identity = useIdentity();
   const readonly = identity?.identityKey.toHex() !== authorId;

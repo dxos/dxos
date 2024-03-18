@@ -5,7 +5,7 @@
 import { X } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { TextV0Schema } from '@braneframe/plugin-markdown';
+import { MessageSchema, TextV0Schema } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
 import { getSpaceForObject, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -19,7 +19,6 @@ import { command } from './command-extension';
 import { type ThreadContainerProps } from './types';
 import { useStatus } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
-import { MessageSchema } from '../types';
 import { getMessageMetadata } from '../util';
 
 export const CommentContainer = ({

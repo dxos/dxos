@@ -4,13 +4,13 @@
 
 import React, { useCallback, useRef } from 'react';
 
+import { FolderSchema, type FolderType, isFolder } from '@braneframe/types';
 import { NavigationAction, parseIntentPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { getEchoObjectAnnotation } from '@dxos/echo-schema';
 import { TypedObject, getSpaceForObject } from '@dxos/react-client/echo';
 import { Button, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
-import { FolderSchema, type FolderType, isFolder } from '../types';
 
 export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: TypedObject; folder?: FolderType }) => {
   const { t } = useTranslation(SPACE_PLUGIN);

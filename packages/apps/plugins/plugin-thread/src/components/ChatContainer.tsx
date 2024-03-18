@@ -5,7 +5,7 @@
 import { Chat } from '@phosphor-icons/react';
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { TextV0Schema } from '@braneframe/plugin-markdown';
+import { TextV0Schema, MessageSchema } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
 import { getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -20,7 +20,6 @@ import { command } from './command-extension';
 import { type ThreadContainerProps } from './types';
 import { useStatus } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
-import { MessageSchema } from '../types';
 import { getMessageMetadata } from '../util';
 
 export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {

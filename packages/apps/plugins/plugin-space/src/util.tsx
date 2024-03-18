@@ -20,6 +20,7 @@ import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { actionGroupSymbol, type InvokeParams, type Graph, type Node, manageNodes } from '@braneframe/plugin-graph';
+import { FolderSchema, type FolderType, isFolder } from '@braneframe/types';
 import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
@@ -37,7 +38,7 @@ import { SpaceState, getSpaceForObject, type Space, type TypedObject } from '@dx
 
 import { SPACE_PLUGIN } from './meta';
 import { clone } from './serializer';
-import { FolderSchema, type FolderType, SpaceAction, isFolder } from './types';
+import { SpaceAction } from './types';
 
 export const SHARED = 'shared-spaces';
 export const HIDDEN = 'hidden-spaces';
@@ -335,7 +336,7 @@ export const updateGraphWithSpace = ({
     }
     return true;
   });
-  const previousObjects = new Map<string, TypedObject[]>();
+  const previousObjects = new Map<string, E.AnyEchoObject[]>();
   const unsubscribeQuery = effect(() => {
     const folder: FolderType = space.properties[getEchoObjectAnnotation(FolderSchema)!.typename];
     const folderObjects = folder?.objects ?? [];
@@ -376,7 +377,7 @@ export const updateGraphWithSpace = ({
               ...partials,
               label: object.name ||
                 // TODO(wittjosiah): This is here for backwards compatibility.
-                (object as TypedObject).title || ['unnamed folder label', { ns: SPACE_PLUGIN }],
+                (object as any).title || ['unnamed folder label', { ns: SPACE_PLUGIN }],
               icon: (props: IconProps) => <FolderOpen {...props} />,
               testId: 'spacePlugin.object',
               persistenceClass: 'echo',

@@ -9,6 +9,7 @@ import React from 'react';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
+import { FolderSchema, type FolderType, isFolder } from '@braneframe/types';
 import {
   type IntentDispatcher,
   type PluginDefinition,
@@ -59,9 +60,6 @@ import {
   type SpaceSettingsProps,
   type PluginState,
   SPACE_DIRECTORY_HANDLE,
-  type FolderType,
-  FolderSchema,
-  isFolder,
 } from './types';
 import { SHARED, getActiveSpace, isSpace, updateGraphWithSpace } from './util';
 
@@ -286,7 +284,7 @@ export const SpacePlugin = ({
                 return <PopoverRenameSpace space={data.subject} />;
               } else if (
                 data.component === 'dxos.org/plugin/space/RenameObjectPopover' &&
-                E.isReactiveProxy(data.subject)
+                E.isEchoReactiveObject(data.subject)
               ) {
                 return <PopoverRenameObject object={data.subject} />;
               } else if (
@@ -324,7 +322,7 @@ export const SpacePlugin = ({
               return space ? <PersistenceStatus db={space.db} /> : null;
             }
             case 'navbar-end': {
-              if (!E.isReactiveProxy(data.object)) {
+              if (!E.isEchoReactiveObject(data.object)) {
                 return null;
               }
 
@@ -622,12 +620,12 @@ export const SpacePlugin = ({
 
             case SpaceAction.ADD_OBJECT: {
               const object = intent.data?.object ?? intent.data?.result;
-              if (!E.isReactiveProxy(object)) {
+              if (!E.isEchoReactiveObject(object)) {
                 return;
               }
 
               if (isFolder(intent.data?.target)) {
-                intent.data.target.objects.push(object);
+                intent.data?.target.objects.push(object);
                 return { data: object };
               }
 
@@ -695,7 +693,7 @@ export const SpacePlugin = ({
 
             case SpaceAction.DUPLICATE_OBJECT: {
               const originalObject = intent.data?.object ?? intent.data?.result;
-              if (!E.isReactiveProxy(originalObject)) {
+              if (!E.isEchoReactiveObject(originalObject)) {
                 return;
               }
 
