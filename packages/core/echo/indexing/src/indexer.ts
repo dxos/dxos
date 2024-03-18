@@ -67,11 +67,9 @@ export class Indexer {
 
     if (this._newIndexes.length > 0) {
       await this._promoteNewIndexes();
-      await this._saveIndexes();
     }
 
     await this._indexUpdatedObjects();
-    await this._maybeSaveIndexes();
     this.indexed.emit();
   });
 
@@ -126,7 +124,7 @@ export class Indexer {
     }
 
     // Load indexes from disk.
-    const kinds = await this._indexStore.loadIndexKinds();
+    const kinds = await this._indexStore.loadIndexKindsFromDisk();
     for (const [identifier, kind] of kinds.entries()) {
       if (!this._indexConfig || this._indexConfig.indexes?.some((configKind) => isEqual(configKind, kind))) {
         await this._indexStore
@@ -171,10 +169,11 @@ export class Indexer {
       if (this._ctx.disposed) {
         return;
       }
-      await this._updateIndexes(Array.from(this._newIndexes), documents);
+      await this._updateIndexes(this._newIndexes, documents);
     }
     this._newIndexes.forEach((index) => this._indexes.set(index.kind, index));
     this._newIndexes.length = 0; // Clear new indexes.
+    await this._saveIndexes();
   }
 
   private async _indexUpdatedObjects() {
@@ -188,6 +187,7 @@ export class Indexer {
         return;
       }
       await this._updateIndexes(Array.from(this._indexes.values()), documents);
+      await this._saveIndexes();
       await Promise.all(
         documents.map(async (document) => this._metadataStore.markClean(document.id, document.currentHash)),
       );
