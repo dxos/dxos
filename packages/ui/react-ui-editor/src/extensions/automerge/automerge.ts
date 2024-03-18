@@ -60,16 +60,16 @@ export const automerge = (accessor: DocAccessor): Extension => {
     ViewPlugin.fromClass(
       class {
         constructor(private readonly _view: EditorView) {
-          accessor.handle.addListener('change', this._handleChange.bind(this));
+          accessor.handle.addListener('change', this._handleChange);
         }
 
         destroy() {
-          accessor.handle.removeListener('change', this._handleChange.bind(this));
+          accessor.handle.removeListener('change', this._handleChange);
         }
 
-        _handleChange() {
+        readonly _handleChange = () => {
           syncer.reconcile(this._view, false);
-        }
+        };
       },
     ),
 

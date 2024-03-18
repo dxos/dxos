@@ -13,6 +13,7 @@ import {
   ListChecks,
   ListNumbers,
   Paragraph,
+  Quotes,
   TextStrikethrough,
   Table,
   TextB,
@@ -23,7 +24,6 @@ import {
   TextHFive,
   TextHSix,
   TextItalic,
-  Quotes,
 } from '@phosphor-icons/react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
@@ -33,9 +33,9 @@ import {
   DensityProvider,
   ElevationProvider,
   Select,
-  type ThemedClassName,
   Toolbar as NaturalToolbar,
   Tooltip,
+  type ThemedClassName,
   type ToolbarToggleGroupItemProps as NaturalToolbarToggleGroupItemProps,
   type ToolbarButtonProps as NaturalToolbarButtonProps,
   useTranslation,
@@ -83,7 +83,7 @@ export type Action = {
 
 export type ToolbarProps = ThemedClassName<
   PropsWithChildren<{
-    state: Formatting | null;
+    state: Formatting | undefined;
     onAction?: (action: Action) => void;
   }>
 >;
@@ -355,6 +355,7 @@ const MarkdownCustom = ({ onUpload }: MarkdownCustomOptions = {}) => {
       'image/*': ['.jpg', '.jpeg', '.png', '.gif'],
     },
   });
+
   useEffect(() => {
     if (onUpload && acceptedFiles.length) {
       setTimeout(async () => {
@@ -388,9 +389,20 @@ const MarkdownActions = () => {
   const { onAction } = useToolbarContext('MarkdownStyles');
   const { t } = useTranslation(translationKey);
   return (
-    <ToolbarButton value='comment' Icon={ChatText} onClick={() => onAction?.({ type: 'comment' })}>
-      {t('comment label')}
-    </ToolbarButton>
+    <>
+      {/* TODO(burdon): Toggle readonly state. */}
+      {/* <ToolbarButton value='comment' Icon={BookOpenText} onClick={() => onAction?.({ type: 'comment' })}> */}
+      {/*  {t('comment label')} */}
+      {/* </ToolbarButton> */}
+      <ToolbarButton
+        value='comment'
+        Icon={ChatText}
+        data-testid='editor.toolbar.comment'
+        onClick={() => onAction?.({ type: 'comment' })}
+      >
+        {t('comment label')}
+      </ToolbarButton>
+    </>
   );
 };
 

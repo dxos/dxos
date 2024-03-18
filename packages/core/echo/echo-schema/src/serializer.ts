@@ -100,7 +100,7 @@ export class Serializer {
     const { objects } = database.query(undefined, { models: ['*'] });
     const data = {
       objects: objects.map((object) => {
-        return this.exportObject(object);
+        return this.exportObject(object as any);
       }),
 
       version: Serializer.version,

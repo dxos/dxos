@@ -52,6 +52,7 @@ export type TableProps<
       onDataSelectionChange: (dataSelection: TData[]) => void;
       // `table` element props
       classNames: ClassNameValue;
+      pinLastRow: boolean;
     } & Pick<VirtualizerOptions<ScrollElement, ItemElement>, 'getScrollElement'>
   >;
 

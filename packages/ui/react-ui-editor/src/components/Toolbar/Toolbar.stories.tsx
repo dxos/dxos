@@ -16,17 +16,17 @@ import { withTheme } from '@dxos/storybook-utils';
 import { Toolbar } from './Toolbar';
 import {
   type Comment,
-  decorateMarkdown,
   comments,
   createBasicExtensions,
   createDataExtensions,
+  createMarkdownExtensions,
   createThemeExtensions,
+  decorateMarkdown,
   formattingKeymap,
+  image,
   table,
   useComments,
   useFormattingState,
-  createMarkdownExtensions,
-  image,
 } from '../../extensions';
 import { useActionHandler, useDocAccessor, useTextEditor } from '../../hooks';
 import translations from '../../translations';
@@ -34,15 +34,17 @@ import translations from '../../translations';
 faker.seed(101);
 
 const Story: FC<{ content: string }> = ({ content }) => {
+  console.log('STORY');
   const { themeMode } = useThemeContext();
   const [item] = useState({ text: new TextObject(content) });
   const { id, doc, accessor } = useDocAccessor(item.text);
   const [formattingState, formattingObserver] = useFormattingState();
-  const { parentRef, view } = useTextEditor(
-    () => ({
+  const { parentRef, view } = useTextEditor(() => {
+    return {
       id,
       doc,
       extensions: [
+        formattingObserver,
         createBasicExtensions(),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode, slots: { editor: { className: 'p-2' } } }),
@@ -58,40 +60,36 @@ const Story: FC<{ content: string }> = ({ content }) => {
         formattingKeymap(),
         image(),
         table(),
-        formattingObserver,
       ],
-    }),
-    [id, accessor, themeMode],
-  );
+    };
+  }, [id, accessor, formattingObserver, themeMode]);
+
+  const handleAction = useActionHandler(view);
 
   const [_comments, setComments] = useState<Comment[]>([]);
   useComments(view, id, _comments);
 
-  const handleAction = useActionHandler(view);
-
   return (
-    <div role='none' className='fixed inset-0 flex flex-col'>
-      <Toolbar.Root onAction={handleAction} state={formattingState} classNames={textBlockWidth}>
-        <Toolbar.Markdown />
-        <Toolbar.Custom onUpload={async (file) => ({ url: file.name })} />
-        <Toolbar.Separator />
-        <Toolbar.Actions />
-      </Toolbar.Root>
-      <div ref={parentRef} className={textBlockWidth} />
-    </div>
+    <Tooltip.Provider>
+      <div role='none' className='fixed inset-0 flex flex-col'>
+        <Toolbar.Root onAction={handleAction} state={formattingState} classNames={textBlockWidth}>
+          <Toolbar.Markdown />
+          <Toolbar.Custom onUpload={async (file) => ({ url: file.name })} />
+          <Toolbar.Separator />
+          <Toolbar.Actions />
+        </Toolbar.Root>
+        <div ref={parentRef} className={textBlockWidth} />
+      </div>
+    </Tooltip.Provider>
   );
 };
 
 export default {
   title: 'react-ui-editor/Toolbar',
   component: Toolbar,
-  render: (args: any) => (
-    <Tooltip.Provider>
-      <Story {...args} />
-    </Tooltip.Provider>
-  ),
   decorators: [withTheme],
   parameters: { translations, layout: 'fullscreen' },
+  render: (args: any) => <Story {...args} />,
 };
 
 const content = [

@@ -114,8 +114,16 @@ export class Context {
     }
     this._isDisposed = true;
 
+    // Set the promise before running the callbacks.
+    let resolveDispose: () => void;
+    this._disposePromise = new Promise<void>((resolve) => {
+      resolveDispose = resolve;
+    });
+
     const promises = [];
-    for (const callback of this._disposeCallbacks.reverse()) {
+    // Clone the array so that any mutations to the original array don't affect the dispose process.
+    const callbacks = Array.from(this._disposeCallbacks).reverse();
+    for (const callback of callbacks) {
       promises.push(
         (async () => {
           try {
@@ -128,7 +136,11 @@ export class Context {
     }
     this._disposeCallbacks.length = 0;
 
-    return (this._disposePromise = Promise.all(promises).then(() => {}));
+    void Promise.all(promises).then(() => {
+      resolveDispose();
+    });
+
+    return this._disposePromise;
   }
 
   /**
