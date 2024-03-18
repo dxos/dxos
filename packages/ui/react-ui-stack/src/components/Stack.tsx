@@ -32,6 +32,8 @@ import { translationKey } from '../translations';
 
 export type Direction = 'horizontal' | 'vertical';
 
+export { type CollapsedSections };
+
 export const DEFAULT_TYPE = 'stack-section';
 
 export type StackProps<TData extends StackSectionContent = StackSectionContent> = Omit<

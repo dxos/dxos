@@ -19,8 +19,7 @@ import {
 import { getSpaceForObject, isTypedObject, useQuery } from '@dxos/react-client/echo';
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
-import { Stack, type StackProps } from '@dxos/react-ui-stack';
-import { type CollapsedSections } from '@dxos/react-ui-stack/dist/types/src/components/Section';
+import { Stack, type StackProps, type CollapsedSections } from '@dxos/react-ui-stack';
 import {
   baseSurface,
   topbarBlockPaddingStart,
