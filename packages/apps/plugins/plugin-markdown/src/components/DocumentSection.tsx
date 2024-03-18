@@ -17,7 +17,6 @@ import {
   useTextEditor,
   createMarkdownExtensions,
 } from '@dxos/react-ui-editor';
-import { attentionSurface, focusRing, mx } from '@dxos/react-ui-theme';
 
 import { MARKDOWN_PLUGIN } from '../meta';
 
@@ -41,7 +40,7 @@ const DocumentSection: FC<{
           themeMode,
           slots: {
             editor: {
-              className: 'h-full py-4',
+              className: 'plb-1',
             },
           },
         }),
@@ -52,13 +51,7 @@ const DocumentSection: FC<{
     [document, extensions, themeMode],
   );
 
-  return (
-    <div
-      ref={parentRef}
-      className={mx('flex flex-col grow m-0.5 min-bs-[8rem]', attentionSurface, focusRing)}
-      {...{ 'data-testid': 'composer.markdownRoot' }}
-    />
-  );
+  return <div ref={parentRef} className='min-bs-[8rem]' data-testid='composer.markdownRoot' />;
 };
 
 export default DocumentSection;

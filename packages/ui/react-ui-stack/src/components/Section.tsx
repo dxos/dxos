@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useTabsterAttributes } from '@fluentui/react-tabster';
+import { useFocusableGroup, useTabsterAttributes } from '@fluentui/react-tabster';
 import { ArrowSquareOut, CaretUpDown, DotsNine, type IconProps, X } from '@phosphor-icons/react';
 import * as CollapsiblePrimitive from '@radix-ui/react-collapsible';
 import React, {
@@ -24,24 +24,14 @@ import {
   type MosaicTileProps,
   useMosaic,
 } from '@dxos/react-ui-mosaic';
-import {
-  getSize,
-  hoverableControlItem,
-  hoverableControls,
-  hoverableFocusedKeyboardControls,
-  attentionSurface,
-  mx,
-  staticHoverableControls,
-  hoverableOpenControlItem,
-  hoverableFocusedWithinControls,
-} from '@dxos/react-ui-theme';
+import { focusRing, getSize, mx } from '@dxos/react-ui-theme';
 
 import { CaretDownUp } from './CaretDownUp';
 import { DropDownMenuDragHandleTrigger } from './DropDownMenuDragHandleTrigger';
 import { stackColumns } from './style-fragments';
 import { translationKey } from '../translations';
 
-const sectionActionDimensions = 'mli-1 p-1 shrink-0 min-bs-0 is-[--rail-action] bs-min';
+const sectionActionDimensions = 'p-1 shrink-0 min-bs-0 is-[--rail-action] bs-min';
 
 export type StackSectionContent = MosaicDataItem & { title?: string };
 
@@ -95,7 +85,6 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
       id,
       title,
       icon: Icon = DotsNine,
-      separation,
       active,
       draggableProps,
       draggableStyle,
@@ -114,6 +103,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
       focusable: {},
       mover: { cyclic: true, direction: 1, memorizeCurrent: false },
     });
+    const sectionContentGroup = useFocusableGroup({});
 
     const collapsed = !!collapsedSections?.[id];
 
@@ -126,23 +116,15 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
         <ListItem.Root
           ref={forwardedRef}
           id={id}
-          classNames={[
-            'grid col-span-2 group',
-            active === 'overlay' ? stackColumns : 'grid-cols-subgrid',
-            separation && 'pbe-2',
-          ]}
+          classNames={['grid col-span-2 group', active === 'overlay' ? stackColumns : 'grid-cols-subgrid']}
           style={draggableStyle}
         >
           <div
             role='none'
             className={mx(
-              attentionSurface,
-              hoverableControls,
-              hoverableFocusedWithinControls,
-              'grid col-span-2 grid-cols-subgrid separator-separator border-is border-ie group-first:border-bs border-be',
-              active && staticHoverableControls,
-              active && 'border-bs border-be',
-              separation ? 'border-bs' : 'border-bs-0',
+              'grid col-span-2 grid-cols-subgrid border border-transparent',
+              'focus:separator-separator focus:surface-attention focus-within:separator-separator focus-within:surface-attention',
+              active && 'separator-separator surface-attention',
               (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
             )}
           >
@@ -151,7 +133,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
               aria-label={t('section controls label')}
               {...(!active && { tabIndex: 0 })}
               {...(!active && sectionActionsToolbar)}
-              className='grid grid-cols-subgrid ch-focus-ring rounded-sm grid-rows-[min-content_min-content_1fr] pbe-1'
+              className='grid grid-cols-subgrid ch-focus-ring rounded-sm grid-rows-[min-content_min-content_1fr] m-1'
             >
               <DropdownMenu.Root
                 {...{
@@ -162,7 +144,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                 <DropDownMenuDragHandleTrigger
                   active={!!active}
                   variant='ghost'
-                  classNames={[hoverableFocusedKeyboardControls, hoverableOpenControlItem]}
+                  classNames='m-0'
                   data-testid='section.drag-handle'
                   {...draggableProps}
                 >
@@ -185,11 +167,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                 </DropdownMenu.Portal>
               </DropdownMenu.Root>
               <CollapsiblePrimitive.Trigger asChild>
-                <Button
-                  variant='ghost'
-                  data-state=''
-                  classNames={[sectionActionDimensions, !collapsed && hoverableControlItem]}
-                >
+                <Button variant='ghost' data-state='' classNames={sectionActionDimensions}>
                   <span className='sr-only'>{t(collapsed ? 'expand label' : 'collapse label')}</span>
                   {collapsed ? <CaretUpDown className={getSize(4)} /> : <CaretDownUp className={getSize(4)} />}
                 </Button>
@@ -199,11 +177,19 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
             {/* Main content */}
 
             <ListItem.Heading
-              classNames={collapsed ? 'grid grid-rows-subgrid grid-cols-subgrid items-center' : 'sr-only'}
+              classNames={
+                collapsed ? ['grid grid-rows-subgrid grid-cols-subgrid items-center rounded-sm', focusRing] : 'sr-only'
+              }
+              {...(collapsed && { ...sectionContentGroup, tabIndex: 0 })}
             >
               <span className='truncate'>{title}</span>
             </ListItem.Heading>
-            <CollapsiblePrimitive.Content className='flex flex-1 min-is-0'>{children}</CollapsiblePrimitive.Content>
+            <CollapsiblePrimitive.Content
+              {...(!collapsed && { ...sectionContentGroup, tabIndex: 0 })}
+              className={mx(focusRing, 'rounded-sm')}
+            >
+              {children}
+            </CollapsiblePrimitive.Content>
           </div>
         </ListItem.Root>
       </CollapsiblePrimitive.Root>
