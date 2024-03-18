@@ -123,7 +123,7 @@ export class Context {
     const promises = [];
     // Clone the array so that any mutations to the original array don't affect the dispose process.
     const callbacks = Array.from(this._disposeCallbacks).reverse();
-    for (const callback of callbacks.reverse()) {
+    for (const callback of callbacks) {
       promises.push(
         (async () => {
           try {
