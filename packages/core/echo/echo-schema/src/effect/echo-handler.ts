@@ -20,6 +20,7 @@ import {
 import { type EchoReactiveObject, getSchema, getTypeReference } from './reactive';
 import { SchemaValidator } from './schema-validator';
 import { AutomergeObjectCore, encodeReference, REFERENCE_TYPE_TAG } from '../automerge';
+import { type KeyPath } from '../automerge/key-path';
 import { data, type ObjectMeta } from '../object';
 import { defineHiddenProperty } from '../util/property';
 
@@ -27,10 +28,8 @@ const symbolPath = Symbol('path');
 const symbolNamespace = Symbol('namespace');
 const symbolHandler = Symbol('handler');
 
-type PropPath = string[];
-
 type ProxyTarget = {
-  [symbolPath]: PropPath;
+  [symbolPath]: KeyPath;
   [symbolNamespace]: string;
   [symbolHandler]?: EchoReactiveHandler;
 } & ({ [key: keyof any]: any } | any[]);
@@ -50,7 +49,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   private _signal = compositeRuntime.createSignal();
 
-  private _targetsMap = new ComplexMap<PropPath, ProxyTarget>((key) => JSON.stringify(key));
+  private _targetsMap = new ComplexMap<KeyPath, ProxyTarget>((key) => JSON.stringify(key));
 
   _init(target: ProxyTarget): void {
     invariant(!(target as any)[symbolIsProxy]);
@@ -126,11 +125,18 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     if (typeof prop === 'symbol') {
+      if (isRootDataObject(target) && prop === data) {
+        return this._toJSON(target);
+      }
       return Reflect.get(target, prop);
     }
 
     if (target instanceof EchoArrayTwoPointO) {
       return this._arrayGet(target, prop);
+    }
+
+    if (prop === PROPERTY_ID && isRootDataObject(target)) {
+      return this._objectCore.id;
     }
 
     const decodedValueAtPath = this.getDecodedValueAtPath(target, prop);
@@ -278,7 +284,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
   }
 
-  private validateValue(target: any, path: string[], value: any) {
+  private validateValue(target: any, path: KeyPath, value: any) {
     invariant(path.length > 0);
     throwIfCustomClass(path[path.length - 1], value);
     const rootObjectSchema = this.getSchema();
@@ -309,7 +315,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return effectSchema;
   }
 
-  arrayPush(target: any, path: PropPath, ...items: any[]): number {
+  arrayPush(target: any, path: KeyPath, ...items: any[]): number {
     this._validateForArray(target, path, items, target.length);
 
     const fullPath = this._getPropertyMountPath(target, path);
@@ -329,7 +335,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return newLength;
   }
 
-  arrayPop(target: any, path: PropPath): any {
+  arrayPop(target: any, path: KeyPath): any {
     const fullPath = this._getPropertyMountPath(target, path);
 
     let returnValue: any | undefined;
@@ -344,7 +350,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return returnValue;
   }
 
-  arrayShift(target: any, path: PropPath): any {
+  arrayShift(target: any, path: KeyPath): any {
     const fullPath = this._getPropertyMountPath(target, path);
 
     let returnValue: any | undefined;
@@ -359,7 +365,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return returnValue;
   }
 
-  arrayUnshift(target: any, path: PropPath, ...items: any[]): number {
+  arrayUnshift(target: any, path: KeyPath, ...items: any[]): number {
     this._validateForArray(target, path, items, 0);
 
     const fullPath = this._getPropertyMountPath(target, path);
@@ -379,7 +385,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return newLength;
   }
 
-  arraySplice(target: any, path: PropPath, start: number, deleteCount?: number, ...items: any[]): any[] {
+  arraySplice(target: any, path: KeyPath, start: number, deleteCount?: number, ...items: any[]): any[] {
     this._validateForArray(target, path, items, start);
 
     const fullPath = this._getPropertyMountPath(target, path);
@@ -403,7 +409,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return deletedElements;
   }
 
-  arraySort(target: any, path: PropPath, compareFn?: (v1: any, v2: any) => number): any[] {
+  arraySort(target: any, path: KeyPath, compareFn?: (v1: any, v2: any) => number): any[] {
     const fullPath = this._getPropertyMountPath(target, path);
 
     this._objectCore.change((doc) => {
@@ -418,7 +424,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return target;
   }
 
-  arrayReverse(target: any, path: PropPath): any[] {
+  arrayReverse(target: any, path: KeyPath): any[] {
     const fullPath = this._getPropertyMountPath(target, path);
 
     this._objectCore.change((doc) => {
@@ -438,7 +444,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return createReactiveProxy(target, this) as ObjectMeta;
   }
 
-  private _arraySetLength(target: any, path: PropPath, newLength: number) {
+  private _arraySetLength(target: any, path: KeyPath, newLength: number) {
     if (newLength < 0) {
       throw new RangeError('Invalid array length');
     }
@@ -455,14 +461,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     this._signal.notifyWrite();
   }
 
-  private _validateForArray(target: any, path: PropPath, items: any[], start: number) {
+  private _validateForArray(target: any, path: KeyPath, items: any[], start: number) {
     let index = start;
     for (const item of items) {
       this.validateValue(target, [...path, String(index++)], item);
     }
   }
 
-  private _getPropertyMountPath(target: any, path: PropPath): string[] {
+  private _getPropertyMountPath(target: any, path: KeyPath): KeyPath {
     return [...this._objectCore.mountPath, getNamespace(target), ...path];
   }
 
@@ -518,7 +524,8 @@ class EchoArrayTwoPointO<T> extends Array<T> {
     return Array;
   }
 
-  [symbolPath]: PropPath = null as any;
+  // Will be initialize when the proxy is created.
+  [symbolPath]: KeyPath = null as any;
   [symbolNamespace]: string = null as any;
   [symbolHandler]: EchoReactiveHandler = null as any;
 
@@ -547,7 +554,7 @@ class EchoArrayTwoPointO<T> extends Array<T> {
   }
 }
 
-const throwIfCustomClass = (prop: string | symbol, value: any) => {
+const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
   if (value != null) {
     const proto = Object.getPrototypeOf(value);
     if (typeof value === 'object' && !Array.isArray(value) && proto !== Object.prototype) {
@@ -630,5 +637,5 @@ const isRootDataObject = (target: any) => {
 interface DecodedValueAtPath {
   value: any;
   namespace: string;
-  dataPath: string[];
+  dataPath: KeyPath;
 }

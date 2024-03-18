@@ -26,17 +26,17 @@ import { nonNullable } from '@dxos/util';
 import { DocumentSchema, type DocumentType, type MarkdownSettingsProps } from './types';
 
 export type ExtensionsOptions = {
+  dispatch?: IntentDispatcher;
   settings?: MarkdownSettingsProps;
   document?: DocumentType;
   debug?: boolean;
   experimental?: boolean;
-  dispatch?: IntentDispatcher;
 };
 
 /**
  * Create extension instances for editor.
  */
-export const getExtensions = ({ settings, document, dispatch }: ExtensionsOptions): Extension[] => {
+export const getExtensions = ({ dispatch, settings, document }: ExtensionsOptions): Extension[] => {
   const space = document ? getSpaceForObject(document) : undefined;
 
   const extensions: Extension[] = [

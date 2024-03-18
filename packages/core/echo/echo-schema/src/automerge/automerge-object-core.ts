@@ -18,6 +18,7 @@ import { type AutomergeDb } from './automerge-db';
 import { AutomergeObject, getAutomergeObjectCore } from './automerge-object';
 import { type DocAccessor } from './automerge-types';
 import { docChangeSemaphore } from './doc-semaphore';
+import { type KeyPath, isValidKeyPath } from './key-path';
 import {
   encodeReference,
   type ObjectStructure,
@@ -27,6 +28,7 @@ import {
   type SpaceDoc,
   type DecodedAutomergePrimaryValue,
 } from './types';
+import { EchoReactiveHandler } from '../effect/echo-handler';
 import { getProxyHandlerSlot, isReactiveProxy } from '../effect/proxy';
 import { type TypedObjectOptions, type EchoObject, TextObject, type OpaqueEchoObject } from '../object';
 import { AbstractEchoObject } from '../object/object';
@@ -75,7 +77,7 @@ export class AutomergeObjectCore {
    * Key path at where we are mounted in the `doc` or `docHandle`.
    * The value at path must be of type `ObjectStructure`.
    */
-  public mountPath: string[] = [];
+  public mountPath: KeyPath = [];
 
   /**
    * Handles link resolution as well as manual changes.
@@ -210,7 +212,8 @@ export class AutomergeObjectCore {
     return result;
   }
 
-  getDocAccessor(path: string[] = []): DocAccessor {
+  getDocAccessor(path: KeyPath = []): DocAccessor {
+    invariant(isValidKeyPath(path));
     const self = this;
     return {
       handle: {
@@ -391,7 +394,7 @@ export class AutomergeObjectCore {
   /**
    * @deprecated Use getDecoded.
    */
-  get(path: (string | number)[]) {
+  get(path: KeyPath) {
     const fullPath = [...this.mountPath, ...path];
 
     let value = this.getDoc();
@@ -405,7 +408,7 @@ export class AutomergeObjectCore {
   /**
    * @deprecated Use setDecoded.
    */
-  set(path: (string | number)[], value: any) {
+  set(path: KeyPath, value: any) {
     const fullPath = [...this.mountPath, ...path];
 
     this.change((doc) => {
@@ -414,12 +417,12 @@ export class AutomergeObjectCore {
   }
 
   // TODO(dmaretskyi): Rename to `get`.
-  getDecoded(path: (string | number)[]): DecodedAutomergePrimaryValue {
+  getDecoded(path: KeyPath): DecodedAutomergePrimaryValue {
     return this.decode(this.get(path), { resolveLinks: false }) as DecodedAutomergePrimaryValue;
   }
 
   // TODO(dmaretskyi): Rename to `set`.
-  setDecoded(path: (string | number)[], value: DecodedAutomergePrimaryValue) {
+  setDecoded(path: KeyPath, value: DecodedAutomergePrimaryValue) {
     this.set(path, this.encode(value, { allowLinks: false }));
   }
 
@@ -427,7 +430,7 @@ export class AutomergeObjectCore {
     this.set([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
   }
 
-  delete(path: (string | number)[]) {
+  delete(path: KeyPath) {
     const fullPath = [...this.mountPath, ...path];
 
     this.change((doc) => {
@@ -459,7 +462,7 @@ export class AutomergeObjectCore {
 export type BindOptions = {
   db: AutomergeDb;
   docHandle: DocHandle<SpaceDoc>;
-  path: string[];
+  path: KeyPath;
 
   /**
    * Assign the state from the local doc into the shared structure for the database.

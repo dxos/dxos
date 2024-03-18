@@ -4,17 +4,13 @@
 
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
-import { isAutomerge, type ChangeFn, type Doc } from '@dxos/automerge/automerge';
+import { type ChangeFn, type Doc } from '@dxos/automerge/automerge';
 import { Reference } from '@dxos/document-model';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { assignDeep } from '@dxos/util';
 
-import { AutomergeArray } from './automerge-array';
-import { AutomergeObjectCore, type BindOptions } from './automerge-object-core';
-import { type DocAccessor } from './automerge-types';
-import { REFERENCE_TYPE_TAG, type ObjectSystem, isValidKeyPath } from './types';
 import { type EchoDatabase } from '../database';
 import { EchoReactiveHandler } from '../effect/echo-handler';
 import { getProxyHandlerSlot, isReactiveProxy } from '../effect/proxy';
@@ -29,14 +25,18 @@ import {
   proxy,
   subscribe,
   TextObject,
-  type EchoObject,
   type ObjectMeta,
+  type OpaqueEchoObject,
   type TypedObjectOptions,
   type TypedObjectProperties,
-  type OpaqueEchoObject,
 } from '../object';
 import { AbstractEchoObject } from '../object/object'; // TODO(burdon): Import
-import { type Schema } from '../proto';
+import { Schema } from '../proto';
+import { AutomergeArray } from './automerge-array';
+import { AutomergeObjectCore, type BindOptions } from './automerge-object-core';
+import { type DocAccessor } from './automerge-types';
+import { type KeyPath } from './key-path';
+import { isValidKeyPath, REFERENCE_TYPE_TAG, type ObjectSystem } from './types';
 
 // TODO(dmaretskyi): Rename to `AutomergeObjectApi`?
 export class AutomergeObject implements TypedObjectProperties {
@@ -343,8 +343,10 @@ export class AutomergeObject implements TypedObjectProperties {
     invariant(!this[proxy]);
     if (!this._schema && this._core.database) {
       const type = this.__system.type;
-      if (type) {
+      if (type instanceof Reference) {
         this._schema = this._core.database._resolveSchema(type);
+      } else if ((type as any) instanceof Schema) {
+        this._schema = type;
       }
     }
     return this._schema;
@@ -353,13 +355,13 @@ export class AutomergeObject implements TypedObjectProperties {
   /**
    * @internal
    */
-  _getRawDoc(path?: string[]): DocAccessor {
+  _getRawDoc(path?: KeyPath): DocAccessor {
     invariant(!this[proxy]);
     return this._core.getDocAccessor(path);
   }
 }
 
-const isRootDataObjectKey = (relativePath: string[], key: string | symbol) => {
+const isRootDataObjectKey = (relativePath: KeyPath, key: string | symbol) => {
   if (relativePath.length !== 1 || relativePath[0] !== 'data') {
     return false;
   }
@@ -379,7 +381,7 @@ const isRootDataObjectKey = (relativePath: string[], key: string | symbol) => {
   );
 };
 
-export const getRawDoc = (obj: OpaqueEchoObject, path?: string[]): DocAccessor => {
+export const getRawDoc = (obj: OpaqueEchoObject, path?: KeyPath): DocAccessor => {
   invariant(isAutomergeObject(obj) || isReactiveProxy(obj));
   invariant(path === undefined || isValidKeyPath(path));
 

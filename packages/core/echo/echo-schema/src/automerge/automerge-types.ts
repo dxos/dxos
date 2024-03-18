@@ -7,6 +7,8 @@ import get from 'lodash.get';
 import type { ChangeFn, ChangeOptions, Doc, Heads } from '@dxos/automerge/automerge';
 
 import { getRawDoc } from './automerge-object';
+import { type KeyPath } from './key-path';
+import { type EchoReactiveObject } from '../effect/reactive';
 import { type AutomergeTextCompat, type TextObject } from '../object';
 import { EchoReactiveObject } from '../effect/reactive';
 
@@ -26,7 +28,7 @@ export interface IDocHandle<T = any> {
 // TODO(burdon): Rename ValueAccessor?
 export interface DocAccessor<T = any> {
   get handle(): IDocHandle<T>;
-  get path(): string[];
+  get path(): KeyPath;
 }
 
 export const DocAccessor = {

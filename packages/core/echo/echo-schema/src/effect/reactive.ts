@@ -89,7 +89,12 @@ export const getEchoObjectAnnotation = (schema: S.Schema<any>) =>
  * Accessing properties triggers signal semantics.
  */
 // This type doesn't change the shape of the object, it is rather used as an indicator that the object is reactive.
-export type ReactiveObject<T> = { [K in keyof T]: T[K] };
+export type ReactiveObject<T> = { [K in keyof T]: T[K] } & { [data]?(): any };
+
+export type EchoReactiveObject<T> = ReactiveObject<T> & { id: string };
+
+export const isEchoReactiveObject = (value: unknown): value is EchoReactiveObject<any> =>
+  isReactiveProxy(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;
 
 export type EchoReactiveObject<T> = ReactiveObject<T> & { id: string };
 

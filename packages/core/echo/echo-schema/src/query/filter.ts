@@ -96,7 +96,6 @@ export class Filter<T extends OpaqueEchoObject = EchoObject> {
     schema: S.Schema<T>,
     filter?: Record<string, any> | OperatorFilter<any>,
   ): Filter<EchoReactiveObject<Mutable<T>>>;
-
   static schema(schema: Schema, filter?: Record<string, any> | OperatorFilter<any>): Filter<Expando>;
   static schema(
     schema: S.Schema<any> | Schema,

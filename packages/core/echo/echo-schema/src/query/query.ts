@@ -8,9 +8,9 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type Filter } from './filter';
 import { prohibitSignalActions } from '../guarded-scope';
 import { OpaqueEchoObject, type EchoObject, type TypedObject } from '../object';
+import { type Filter } from './filter';
 
 // TODO(burdon): Reconcile with echo-db/database/selection.
 

@@ -3203,6 +3203,9 @@ importers:
       react-drag-drop-files:
         specifier: ^2.3.8
         version: 2.3.8(react-dom@18.2.0)(react-is@18.2.0)(react@18.2.0)
+      react-dropzone:
+        specifier: ^14.2.3
+        version: 14.2.3(react@18.2.0)
       react-is:
         specifier: ^18.2.0
         version: 18.2.0
@@ -5784,8 +5787,8 @@ importers:
         specifier: ^3.0.0
         version: 3.2.0
       node-datachannel:
-        specifier: ^0.5.2
-        version: 0.5.2
+        specifier: ^0.5.4
+        version: 0.5.4
       p-defer:
         specifier: ^3.0.0
         version: 3.0.0
@@ -9047,6 +9050,9 @@ importers:
       lodash.sortby:
         specifier: ^4.7.0
         version: 4.7.0
+      react-dropzone:
+        specifier: ^14.2.3
+        version: 14.2.3(react@18.2.0)
       style-mod:
         specifier: ^4.1.0
         version: 4.1.0
@@ -9461,8 +9467,8 @@ importers:
         specifier: ^1.0.0
         version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@tanstack/react-table':
-        specifier: ^8.9.3
-        version: 8.9.3(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^8.13.2
+        version: 8.13.2(react-dom@18.2.0)(react@18.2.0)
       '@tanstack/react-virtual':
         specifier: ^3.0.1
         version: 3.0.1(react-dom@18.2.0)(react@18.2.0)
@@ -21128,14 +21134,14 @@ packages:
       tailwindcss: 3.4.1(ts-node@10.9.1)
     dev: false
 
-  /@tanstack/react-table@8.9.3(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-Ng9rdm3JPoSCi6cVZvANsYnF+UoGVRxflMb270tVj0+LjeT/ZtZ9ckxF6oLPLcKesza6VKBqtdF9mQ+vaz24Aw==}
+  /@tanstack/react-table@8.13.2(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-b6mR3mYkjRtJ443QZh9sc7CvGTce81J35F/XMr0OoWbx0KIM7TTTdyNP2XKObvkLpYnLpCrYDwI3CZnLezWvpg==}
     engines: {node: '>=12'}
     peerDependencies:
       react: '>=16'
       react-dom: '>=16'
     dependencies:
-      '@tanstack/table-core': 8.9.3
+      '@tanstack/table-core': 8.13.2
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
     dev: false
@@ -21151,8 +21157,8 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
-  /@tanstack/table-core@8.9.3:
-    resolution: {integrity: sha512-NpHZBoHTfqyJk0m/s/+CSuAiwtebhYK90mDuf5eylTvgViNOujiaOaxNDxJkQQAsVvHWZftUGAx1EfO1rkKtLg==}
+  /@tanstack/table-core@8.13.2:
+    resolution: {integrity: sha512-/2saD1lWBUV6/uNAwrsg2tw58uvMJ07bO2F1IWMxjFRkJiXKQRuc3Oq2aufeobD3873+4oIM/DRySIw7+QsPPw==}
     engines: {node: '>=12'}
     dev: false
 
@@ -24580,6 +24586,11 @@ packages:
   /atomic-batcher@1.0.2:
     resolution: {integrity: sha512-EFGCRj4kLX1dHv1cDzTk+xbjBFj1GnJDpui52YmEcxxHHEWjYyT6l51U7n6WQ28osZH4S9gSybxe56Vm7vB61Q==}
     dev: true
+
+  /attr-accept@2.2.2:
+    resolution: {integrity: sha512-7prDjvt9HmqiZ0cl5CRjtS84sEyhsHP2coDkaZKRKVfCDo9s7iw7ChVmar78Gu9pC4SoR/28wFu/G5JJhTnqEg==}
+    engines: {node: '>=4'}
+    dev: false
 
   /auto-bind@4.0.0:
     resolution: {integrity: sha512-Hdw8qdNiqdJ8LqT0iK0sVzkFbzg6fhnQqqfWhBDxcHZvU75+B+ayzTy8x+k5Ix0Y92XOhOUlx74ps+bA6BeYMQ==}
@@ -29932,6 +29943,13 @@ packages:
     engines: {node: ^10.12.0 || >=12.0.0}
     dependencies:
       flat-cache: 3.0.4
+
+  /file-selector@0.6.0:
+    resolution: {integrity: sha512-QlZ5yJC0VxHxQQsQhXvBaC7VRJ2uaxTf+Tfpu4Z/OcVQJVpZO+DGU0rkoVW5ce2SccxugvpBJoMvUs59iILYdw==}
+    engines: {node: '>= 12'}
+    dependencies:
+      tslib: 2.6.2
+    dev: false
 
   /file-stat@0.1.3:
     resolution: {integrity: sha512-f72m4132aOd5DVtREdDX8I0Dd7Zf/3PiUYYvn4BFCxfsLqj6r8joBZzrRlfvsNvxhADw+jpEa0AnWPII9H0Fbg==}
@@ -37281,8 +37299,8 @@ packages:
       yargs: 7.1.2
     dev: false
 
-  /node-datachannel@0.5.2:
-    resolution: {integrity: sha512-COuQtVSZc80jt7TV2/BlksOiqZyNFbitDENy8MensezoA7pEGB+lmd9Qk3dnmSZ1nr1vyhF44FL7IkKsQ52Mvw==}
+  /node-datachannel@0.5.4:
+    resolution: {integrity: sha512-kMdkt3QRzKEQsaI+CdxFchh0c/KiKMNuttNitHx8YSWDmdd39vJoTcAvVyam9WFOGkc+H8oM6fYRPclYOy5EdA==}
     engines: {node: '>=16.0.0'}
     requiresBuild: true
     dependencies:
@@ -39775,6 +39793,18 @@ packages:
       styled-components: 5.3.6(react-dom@18.2.0)(react-is@18.2.0)(react@18.2.0)
     transitivePeerDependencies:
       - react-is
+    dev: false
+
+  /react-dropzone@14.2.3(react@18.2.0):
+    resolution: {integrity: sha512-O3om8I+PkFKbxCukfIR3QAGftYXDZfOE2N1mr/7qebQJHs7U+/RSL/9xomJNpRg9kM5h9soQSdf0Gc7OHF5Fug==}
+    engines: {node: '>= 10.13'}
+    peerDependencies:
+      react: '>= 16.8 || 18.0.0'
+    dependencies:
+      attr-accept: 2.2.2
+      file-selector: 0.6.0
+      prop-types: 15.8.1
+      react: 18.2.0
     dev: false
 
   /react-element-to-jsx-string@15.0.0(react-dom@18.2.0)(react@18.2.0):

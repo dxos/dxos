@@ -5,6 +5,7 @@
 import { FileCloud, type IconProps } from '@phosphor-icons/react';
 import { create as createIpfsClient } from 'kubo-rpc-client';
 import React, { type Ref } from 'react';
+import urljoin from 'url-join';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { File } from '@braneframe/types';
@@ -16,6 +17,8 @@ import { FileCard, FileMain, FileSection, FileSlide } from './components';
 import meta, { IPFS_PLUGIN } from './meta';
 import translations from './translations';
 import { type IpfsPluginProvides, isFile } from './types';
+
+const DEFAULT_TIMEOUT = 30_000;
 
 export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
   let clientPlugin: Plugin<ClientPluginProvides> | undefined;
@@ -41,8 +44,9 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
           try {
             const config = clientPlugin?.provides.client.config;
 
-            // TODO(nf): dedupe with publish.ts in @dxos/cli
+            // TODO(nf): Dedupe with publish.ts in @dxos/cli.
             const server = config?.values.runtime?.services?.ipfs?.server;
+            const gateway = config?.values.runtime?.services?.ipfs?.gateway;
             if (server) {
               let authorizationHeader;
               const serverAuthSecret = config?.get('runtime.services.ipfs.serverAuthSecret');
@@ -60,15 +64,21 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
                     throw new Error(`Unsupported authType: ${splitSecret[0]}`);
                 }
               }
+
               const ipfsClient = createIpfsClient({
                 url: server,
-                timeout: 30_000,
+                timeout: DEFAULT_TIMEOUT,
                 ...(authorizationHeader ? { headers: { authorization: authorizationHeader } } : {}),
               });
-              const { cid } = await ipfsClient.add(file);
-              return {
+
+              const { cid, path } = await ipfsClient.add(file, { pin: true });
+              const info = {
+                url: gateway ? urljoin(gateway, cid.toString()) : undefined,
                 cid: cid.toString(),
               };
+
+              log.info('upload', { file, info, path });
+              return info;
             }
           } catch (err) {
             log.catch(err);

@@ -508,14 +508,14 @@ export const focusComment = (view: EditorView, id: string, center = true) => {
 /**
  * Update comments state field.
  */
-export const useComments = (view: EditorView | null | undefined, id: string, comments: Comment[] = []) => {
+export const useComments = (view: EditorView | null | undefined, id: string, comments?: Comment[]) => {
   useEffect(() => {
     if (view) {
       // Check same document.
       // NOTE: Hook might be called before editor state is updated.
       if (id === view.state.facet(documentId)) {
         view.dispatch({
-          effects: setComments.of({ id, comments }),
+          effects: setComments.of({ id, comments: comments ?? [] }),
         });
       }
     }
