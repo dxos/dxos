@@ -58,4 +58,23 @@ describe('Context', () => {
     void ctx.dispose();
     expect(called).toBeTruthy();
   });
+
+  test('canceling a context with derived contexts calls dispose hooks', async () => {
+    let childCalled = false;
+    let parentCalled = false;
+
+    const parentCtx = new Context();
+    parentCtx.onDispose(() => {
+      parentCalled = true;
+    });
+
+    const childCtx = parentCtx.derive();
+    childCtx.onDispose(() => {
+      childCalled = true;
+    });
+
+    await parentCtx.dispose();
+    expect(parentCalled).toBeTruthy();
+    expect(childCalled).toBeTruthy();
+  });
 });
