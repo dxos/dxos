@@ -46,7 +46,6 @@ import {
   PopoverRenameSpace,
   ShareSpaceButton,
   SmallPresence,
-  SmallPresenceLive,
   SpaceMain,
   SpacePresence,
   SpaceSettings,
@@ -370,7 +369,7 @@ export const SpacePlugin = ({
 
           // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
           //  Instead, we store order as an array of space keys.
-          let spacesOrder: Expando | undefined;
+          let spacesOrder: E.EchoReactiveObject<Record<string, any>> | undefined;
           const [groupNode] = graph.addNodes({
             id: SHARED,
             properties: {
@@ -381,11 +380,12 @@ export const SpacePlugin = ({
               childrenPersistenceClass: 'echo',
               onRearrangeChildren: (nextOrder: Space[]) => {
                 if (!spacesOrder) {
-                  const nextObjectOrder = new Expando({
-                    key: SHARED,
-                    order: nextOrder.map(({ key }) => key.toHex()),
-                  });
-                  client.spaces.default.db.add(nextObjectOrder);
+                  const nextObjectOrder = client.spaces.default.db.add(
+                    E.object({
+                      key: SHARED,
+                      order: nextOrder.map(({ key }) => key.toHex()),
+                    }),
+                  );
                   spacesOrder = nextObjectOrder;
                 } else {
                   spacesOrder.order = nextOrder.map(({ key }) => key.toHex());
@@ -430,7 +430,7 @@ export const SpacePlugin = ({
             ],
           });
 
-          const updateSpacesOrder = (spacesOrder?: Expando) => {
+          const updateSpacesOrder = (spacesOrder?: E.EchoReactiveObject<Record<string, any>>) => {
             if (!spacesOrder) {
               return;
             }
