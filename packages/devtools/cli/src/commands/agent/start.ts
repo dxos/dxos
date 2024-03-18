@@ -150,11 +150,9 @@ export default class Start extends BaseCommand<typeof Start> {
     await this._sendTelemetry();
     const platform = (await this._agent.client!.services.services.SystemService?.getPlatform()) as Platform;
     if (!platform) {
-      log.warn('failed to get platform, could not initialize observability');
+      this.log('failed to get platform, could not initialize observability');
     } else {
       if (this._observability?.enabled) {
-        log('Metrics initialized!');
-
         await this._observability.initialize();
         await this._observability.setIdentityTags(this._agent.client!);
         await this._observability.startNetworkMetrics(this._agent.client!);
