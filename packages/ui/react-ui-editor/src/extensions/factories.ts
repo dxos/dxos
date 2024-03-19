@@ -35,8 +35,6 @@ import { awareness, SpaceAwarenessProvider } from './awareness';
 import { type ThemeStyles } from '../styles';
 import { defaultTheme } from '../themes';
 
-// TODO(burdon): Move into extensions folder.
-
 //
 // Basic
 //
