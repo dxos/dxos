@@ -33,7 +33,9 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/text-model": "workspace:*",
-    "base-x": "~3.0.9"
+    "@effect/schema": "0.63.4",
+    "base-x": "~3.0.9",
+    "effect": "2.4.3"
   },
   "devDependencies": {
     "@dxos/echo-typegen": "workspace:*"
