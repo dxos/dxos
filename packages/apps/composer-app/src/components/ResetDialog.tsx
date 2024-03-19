@@ -17,6 +17,9 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { type Provider } from '@dxos/util';
+import { killWorker } from '../worker';
+import { asyncTimeout } from '@dxos/async';
+import { resetStoredData } from '../reset';
 
 // TODO(burdon): Factor out.
 const parseError = (t: (name: string, context?: object) => string, error: Error) => {
@@ -65,9 +68,11 @@ export const ResetDialog = ({
   const handleReset = async () => {
     const config = new Config(await Storage(), Envs(), Local(), Defaults());
 
-    const { ClientServicesHost } = await import('@dxos/client-services');
-    const services = new ClientServicesHost({ config });
-    await services.reset();
+    if (!config.values.runtime?.app?.env?.DX_HOST) {
+      await asyncTimeout(killWorker(), 1_000, 'Kill worker');
+    }
+
+    await resetStoredData();
     window.location.reload();
   };
 
