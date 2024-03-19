@@ -17,10 +17,11 @@ import {
   symbolIsProxy,
   type ReactiveHandler,
 } from './proxy';
-import { type EchoReactiveObject, getSchema, getTypeReference } from './reactive';
+import { getSchema, getTypeReference, type EchoReactiveObject } from './reactive';
 import { SchemaValidator } from './schema-validator';
-import { AutomergeObjectCore, encodeReference, REFERENCE_TYPE_TAG } from '../automerge';
+import { AutomergeObjectCore } from '../automerge/automerge-object-core';
 import { type KeyPath } from '../automerge/key-path';
+import { encodeReference, REFERENCE_TYPE_TAG } from '../automerge/types';
 import { data, type ObjectMeta } from '../object';
 import { defineHiddenProperty } from '../util/property';
 
@@ -117,6 +118,13 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     this._signal.notifyRead();
 
+    if (isRootDataObject(target)) {
+      const handled = this._handleRootObjectProperty(target, prop);
+      if (handled != null) {
+        return handled;
+      }
+    }
+
     if (typeof prop === 'symbol') {
       if (isRootDataObject(target) && prop === data) {
         return this._toJSON(target);
@@ -134,6 +142,19 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const decodedValueAtPath = this.getDecodedValueAtPath(target, prop);
     return this._wrapInProxyIfRequired(decodedValueAtPath);
+  }
+
+  private _handleRootObjectProperty(target: ProxyTarget, prop: string | symbol) {
+    if (prop === data) {
+      return this._toJSON(target);
+    }
+    if (prop === 'toJSON') {
+      return () => this._toJSON(target);
+    }
+    if (prop === PROPERTY_ID) {
+      return this._objectCore.id;
+    }
+    return null;
   }
 
   private _wrapInProxyIfRequired(decodedValueAtPath: DecodedValueAtPath) {
@@ -474,14 +495,16 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   private _toJSON(target: any): any {
     const typeRef = this._objectCore.getType();
+    const reified = this.getReified(target);
+    delete reified.id;
     return {
       '@type': typeRef
         ? { '@type': REFERENCE_TYPE_TAG, itemId: typeRef.itemId, protocol: typeRef.protocol, host: typeRef.host }
         : undefined,
       ...(this._objectCore.isDeleted() ? { '@deleted': true } : {}),
       '@meta': { ...this.getMeta() },
-      id: this._objectCore.id,
-      ...this.getReified(target),
+      '@id': this._objectCore.id,
+      ...reified,
     };
   }
 
