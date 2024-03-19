@@ -341,7 +341,9 @@ export const updateGraphWithSpace = ({
     const folder: FolderType = space.properties[getEchoObjectAnnotation(FolderSchema)!.typename];
     const folderObjects = folder?.objects ?? [];
     const removedObjects =
-      previousObjects.get(space.key.toHex())?.filter((object) => !query.objects.includes(object)) ?? [];
+      previousObjects
+        .get(space.key.toHex())
+        ?.filter((object) => !(query.objects as E.AnyEchoObject[]).includes(object)) ?? [];
     previousObjects.set(space.key.toHex(), [...query.objects]);
     const unsortedObjects = query.objects.filter((object) => !folderObjects.includes(object));
     const objects = [...folderObjects, ...unsortedObjects].filter((object) => object !== folder);

@@ -2,13 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type DocumentType } from '@braneframe/types';
 import { type Plugin } from '@dxos/app-framework';
+import { isEchoReactiveObject } from '@dxos/echo-schema';
 import { getTextContent, isTypedObject } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
 
-import { type DocumentType, type MarkdownProperties, type MarkdownExtensionProvides } from './types';
+import { type MarkdownProperties, type MarkdownExtensionProvides } from './types';
 
 export const isMarkdownProperties = (data: unknown): data is MarkdownProperties =>
-  isTypedObject(data)
+  isTypedObject(data) || isEchoReactiveObject(data)
     ? true
     : data && typeof data === 'object'
       ? 'title' in data && typeof data.title === 'string'

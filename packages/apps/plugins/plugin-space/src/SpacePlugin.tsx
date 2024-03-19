@@ -122,7 +122,7 @@ export const SpacePlugin = ({
       const location = navigationPlugin.provides.location;
       const dispatch = intentPlugin.provides.intent.dispatch;
 
-      client._graph.types.registerEffectSchema(FolderSchema);
+      client.addSchema(FolderSchema);
 
       // Create root folder structure.
       if (clientPlugin.provides.firstRun) {

@@ -5,6 +5,7 @@
 import { EditorView } from '@codemirror/view';
 import React, { useMemo } from 'react';
 
+import { type DocumentType } from '@braneframe/types';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import {
@@ -16,7 +17,6 @@ import {
 } from '@dxos/react-ui-editor';
 
 import EditorMain, { type EditorMainProps } from './EditorMain';
-import { type DocumentType } from '../types';
 
 type DocumentMainProps = { document: DocumentType } & Omit<EditorMainProps, 'id'>;
 
@@ -46,7 +46,7 @@ const DocumentMain = ({ document, extensions: _extensions = [], ...props }: Docu
   }, [id]);
 
   const comments = useMemo<Comment[]>(() => {
-    return document.comments?.map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! }));
+    return document.comments?.map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! })) ?? [];
   }, [document.comments]);
 
   return (
