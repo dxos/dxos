@@ -15,11 +15,6 @@ import { Table, type TableDef, type TableProps } from '@dxos/react-ui-table';
 import { getSchema, schemaPropMapper, TableColumnBuilder } from '../../schema';
 import { TableSettings } from '../TableSettings';
 
-// TODO(burdon): Factor out echo fn to update when changed.
-const reactDeps = (...obj: TypedObject[]) => {
-  return JSON.stringify(obj);
-};
-
 export type ObjectTableProps = Pick<TableProps<any>, 'stickyHeader' | 'role' | 'getScrollElement'> & {
   table: TableType;
 };
@@ -115,7 +110,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
     });
 
     return builder.createColumns();
-  }, [space, tables, reactDeps(table, table.schema), newObject]);
+  }, [space, tables, table, table.schema, newObject]);
 
   const handleColumnResize = useCallback(
     (state: Record<string, number>) => {
