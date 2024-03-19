@@ -171,7 +171,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
                 data: {
                   element: 'dialog',
                   component: 'dxos.org/plugin/stack/AddSectionDialog',
-                  subject: { position: 'afterAll' },
+                  subject: { position: 'afterAll', stack },
                 },
               })
             }
