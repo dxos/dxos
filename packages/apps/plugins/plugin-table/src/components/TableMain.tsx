@@ -19,7 +19,7 @@ const TableMain: FC<ObjectTableProps> = ({ table }) => {
     >
       <ObjectTable
         table={table}
-        key={table.id.toString()}
+        key={table.id} // New component instance per table.
         stickyHeader
         role='grid'
         getScrollElement={() => containerRef.current}
