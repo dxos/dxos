@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
+import { asyncTimeout, Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
 import {
   types as clientSchema,
   type ClientServicesProvider,
@@ -37,7 +37,7 @@ import { ClientRuntime } from './client-runtime';
 import type { SpaceList, TypeCollection } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
-import type { IFrameManager, Shell, ShellManager } from '../services';
+import { WorkerClientServices, type IFrameManager, type Shell, type ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
 
 /**
@@ -473,6 +473,9 @@ export class Client {
     this._resetting = true;
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
     await this._services?.services.SystemService.reset();
+    debugger;
+    await asyncTimeout(this._services?.terminate?.() ?? Promise.resolve(), 1_000, 'terminate worker');
+
     await this._close();
     await this._open();
     this._resetting = false;

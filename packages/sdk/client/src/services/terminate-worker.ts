@@ -1,15 +1,4 @@
-import { Trigger } from '@dxos/async';
-
-export const createWorker = () =>
-  new SharedWorker(new URL('@dxos/client/shared-worker', import.meta.url), {
-    type: 'module',
-    name: 'dxos-client-worker',
-  });
-
-// TODO(dmaretskyi): Unify with packages/sdk/client/src/services/worker-client-services.ts.
-export const killWorker = async () => {
-  const worker = createWorker();
-
+export const terminateWorker = async (worker: SharedWorker) => {
   const terminated = new Promise<void>((resolve) => {
     worker.port.onmessage = (event) => {
       // See: packages/sdk/client/src/worker/onconnect.ts

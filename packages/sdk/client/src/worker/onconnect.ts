@@ -28,10 +28,7 @@ const workerRuntime = new WorkerRuntime(
   {
     acquireLock: () => lockAcquired.wait(),
     releaseLock: () => releaseLock(),
-    onReset: async () => {
-      // Close the shared worker, lock will be released automatically.
-      self.close();
-    },
+    onReset: async () => {},
   },
 );
 
@@ -58,6 +55,7 @@ export const onconnect = async (event: MessageEvent<any>) => {
   const appChannel = new MessageChannel();
 
   port.onmessage = (event: MessageEvent<WorkerMessage>) => {
+    log.info('onmessage', { event });
     switch (event.data.command) {
       case 'close': {
         queueMicrotask(async () => {
@@ -71,6 +69,7 @@ export const onconnect = async (event: MessageEvent<any>) => {
             });
           });
 
+          log.info('bequest', { lockName });
           port.postMessage({ command: 'bequest', lockName } satisfies WorkerMessage);
 
           // Terminate the worker.

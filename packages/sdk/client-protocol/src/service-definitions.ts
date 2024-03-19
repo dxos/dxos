@@ -62,6 +62,11 @@ export interface ClientServicesProvider {
 
   open(ctx: Context): Promise<void>;
   close(ctx: Context): Promise<void>;
+
+  /**
+   * Kill the client services provider.
+   */
+  terminate?(): Promise<void>;
 }
 
 /**

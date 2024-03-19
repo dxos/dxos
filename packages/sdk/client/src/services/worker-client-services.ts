@@ -16,6 +16,7 @@ import { trace } from '@dxos/tracing';
 
 import { ClientServicesProxy } from './service-proxy';
 import { LOCK_KEY } from '../lock-key';
+import { terminateWorker } from './terminate-worker';
 
 /**
  * Creates services provider connected via worker.
@@ -44,6 +45,7 @@ export class WorkerClientServices implements ClientServicesProvider {
   private readonly _createWorker: () => SharedWorker;
   private readonly _logFilter: LogFilter[];
 
+  private _worker: SharedWorker | null = null;
   private _runtime!: SharedWorkerConnection;
   private _services!: ClientServicesProxy;
   private _loggingStream?: Stream<LogEntry>;
@@ -76,9 +78,9 @@ export class WorkerClientServices implements ClientServicesProvider {
     const { SharedWorkerConnection } = await import('@dxos/client-services');
 
     const ports = new Trigger<{ systemPort: MessagePort; appPort: MessagePort }>();
-    const worker = this._createWorker();
-    worker.port.postMessage({ dxlog: localStorage.getItem('dxlog') });
-    worker.port.onmessage = (event) => {
+    this._worker = this._createWorker();
+    this._worker.port.postMessage({ dxlog: localStorage.getItem('dxlog') });
+    this._worker.port.onmessage = (event) => {
       const { command, payload } = event.data;
       if (command === 'init') {
         ports.wake(payload);
@@ -138,6 +140,12 @@ export class WorkerClientServices implements ClientServicesProvider {
 
     log('closed');
     this._isOpen = false;
+  }
+
+  async terminate(): Promise<void> {
+    if (this._worker) {
+      await terminateWorker(this._worker);
+    }
   }
 }
 

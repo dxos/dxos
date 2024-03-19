@@ -39,10 +39,7 @@ const workerRuntime = new WorkerRuntime(
   {
     acquireLock: () => lockAcquired.wait(),
     releaseLock: () => releaseLock(),
-    onReset: async () => {
-      // Close the shared worker, lock will be released automatically.
-      self.close();
-    },
+    onReset: async () => {},
   },
 );
 
