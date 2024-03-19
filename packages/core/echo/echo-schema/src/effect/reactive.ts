@@ -23,7 +23,7 @@ import {
 import { SchemaValidator, symbolSchema, validateIdNotPresentOnSchema } from './schema-validator';
 import { TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
-import { data, type ObjectMeta } from '../object';
+import { type ObjectMeta } from '../object';
 
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
@@ -62,7 +62,7 @@ const _Expando = S.struct({}).pipe(echoObject('Expando', '0.1.0'));
 /**
  * @deprecated Need API review.
  */
-export interface ExpandoType extends S.Schema.To<typeof _Expando> {
+export interface ExpandoType extends S.Schema.Type<typeof _Expando> {
   [ExpandoMarker]: true;
 }
 /**
