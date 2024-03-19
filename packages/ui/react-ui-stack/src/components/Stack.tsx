@@ -21,6 +21,7 @@ import { dropRingInner, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
 import {
   type CollapsedSections,
+  type AddSectionPosition,
   SectionTile,
   type StackContextValue,
   type StackItem,
@@ -32,7 +33,7 @@ import { translationKey } from '../translations';
 
 export type Direction = 'horizontal' | 'vertical';
 
-export { type CollapsedSections };
+export type { CollapsedSections, AddSectionPosition };
 
 export const DEFAULT_TYPE = 'stack-section';
 
@@ -57,6 +58,7 @@ export const Stack = ({
   transform,
   onOver,
   onDrop,
+  onAddSection,
   onDeleteSection,
   onNavigateToSection,
   collapsedSections: propsCollapsedSections,
@@ -118,6 +120,7 @@ export const Stack = ({
             transform,
             onDeleteSection,
             onNavigateToSection,
+            onAddSection,
             SectionContent,
             collapsedSections,
             onCollapseSection: setCollapsedSections,
