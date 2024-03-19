@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { closeBracketsKeymap } from '@codemirror/autocomplete';
-import { historyKeymap, indentWithTab, standardKeymap } from '@codemirror/commands';
+import { completionKeymap } from '@codemirror/autocomplete';
+import { defaultKeymap, indentWithTab } from '@codemirror/commands';
 import { markdownLanguage, markdown } from '@codemirror/lang-markdown';
 import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
-import { searchKeymap } from '@codemirror/search';
+import { lintKeymap } from '@codemirror/lint';
 import { type Extension } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import { keymap } from '@codemirror/view';
@@ -60,14 +60,11 @@ export const createMarkdownExtensions = ({ themeMode }: MarkdownBundleOptions = 
     keymap.of([
       // https://codemirror.net/docs/ref/#commands.indentWithTab
       indentWithTab,
-      // https://codemirror.net/docs/ref/#autocomplete.closeBracketsKeymap
-      ...closeBracketsKeymap,
-      // https://codemirror.net/docs/ref/#commands.historyKeymap
-      ...historyKeymap,
-      // https://codemirror.net/docs/ref/#search.searchKeymap
-      ...searchKeymap,
-      // https://codemirror.net/docs/ref/#commands.standardKeymap
-      ...standardKeymap,
+
+      // https://codemirror.net/docs/ref/#commands.defaultKeymap
+      ...defaultKeymap,
+      ...completionKeymap,
+      ...lintKeymap,
     ]),
   ];
 };
