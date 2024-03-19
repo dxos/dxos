@@ -30,7 +30,7 @@ We have a few [app templates](./cli/app-templates.md) that are designed to get y
 For this guide, we're going to start with the [`bare`](./cli/app-templates.md#bare-template) template and create a simple shared counter. Initialize the app with `npm create`:
 
 ```bash
-npm create @dxos/bare
+npm create @dxos/bare@latest
 ```
 
 Running `npm create` will give you different options to customize your app. For this tutorial, default to saying "yes" to all the prompts with the exception of "Include PWA support", to which you should say "no".

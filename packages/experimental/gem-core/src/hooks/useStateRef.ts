@@ -8,6 +8,8 @@ import { type Dispatch, type RefObject, type SetStateAction, useEffect, useRef, 
  * Extension of useState to return an up-to-date reference.
  * E.g., to use in callbacks where the state value is stale.
  * @param initialValue
+ *
+ * @deprecated This function has been deprecated.
  */
 export const useStateRef = <V>(
   initialValue?: V | (() => V),
