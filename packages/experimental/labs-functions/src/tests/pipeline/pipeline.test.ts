@@ -14,6 +14,7 @@ import { processTemplate, type Resolver } from './prompt';
 
 describe.only('Pipeline', () => {
   test('basic', async () => {
+    // TODO(burdon): Port existing function stack.
     const resolver: Resolver = (input) => {
       switch (input.type) {
         case 'const': {
