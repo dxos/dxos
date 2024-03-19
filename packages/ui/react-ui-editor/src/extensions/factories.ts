@@ -67,6 +67,7 @@ export type BasicExtensionsOptions = {
 };
 
 const defaults: BasicExtensionsOptions = {
+  allowMultipleSelections: true,
   bracketMatching: true,
   closeBrackets: true,
   drawSelection: true,
