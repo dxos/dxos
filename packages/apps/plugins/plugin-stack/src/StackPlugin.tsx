@@ -8,10 +8,10 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { Stack as StackType } from '@braneframe/types';
+import { SectionSchema, type SectionType, StackSchema, type StackType, isStack } from '@braneframe/types';
 import { resolvePlugin, type Plugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import * as E from '@dxos/echo-schema/schema';
+import * as E from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 
 import { StackMain, StackSettings } from './components';
@@ -19,7 +19,6 @@ import meta, { STACK_PLUGIN } from './meta';
 import translations from './translations';
 import {
   StackAction,
-  isStack,
   type StackPluginProvides,
   type StackProvides,
   type StackState,
@@ -49,15 +48,16 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       settings: settings.values,
       metadata: {
         records: {
-          [StackType.schema.typename]: {
+          [E.getEchoObjectAnnotation(StackSchema)!.typename]: {
             placeholder: ['stack title placeholder', { ns: STACK_PLUGIN }],
             icon: (props: IconProps) => <StackSimple {...props} />,
           },
-          [StackType.Section.schema.typename]: {
-            parse: (section: StackType.Section, type: string) => {
+          [E.getEchoObjectAnnotation(SectionSchema)!.typename]: {
+            parse: (section: SectionType, type: string) => {
               switch (type) {
                 case 'node':
-                  return { id: section.object.id, label: section.object.title, data: section.object };
+                  // TODO(wittjosiah): Remove cast.
+                  return { id: section.object.id, label: (section.object as any).title, data: section.object };
                 case 'object':
                   return section.object;
                 case 'view-object':
@@ -95,7 +95,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
               );
 
               // Add all stacks to the graph.
-              const query = space.db.query(StackType.filter());
+              const query = space.db.query(E.Filter.schema(StackSchema));
               let previousObjects: StackType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -148,7 +148,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case StackAction.CREATE: {
-              return { data: new StackType() };
+              return { data: E.object(StackSchema, { sections: [] }) };
             }
           }
         },

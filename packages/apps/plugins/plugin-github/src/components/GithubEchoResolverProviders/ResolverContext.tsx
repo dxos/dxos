@@ -15,7 +15,7 @@ import React, {
 import { Document } from '@braneframe/types';
 import { log } from '@dxos/log';
 import { useMulticastObservable } from '@dxos/react-client';
-import { type Space, SpaceState, TextObject, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Space, SpaceState, TextObject, useQuery, useSpaces, metaOf } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
 import { type DocumentResolverProps, type SpaceResolverProps } from './ResolverProps';
@@ -80,7 +80,7 @@ const DocumentResolverProviderImpl = ({
   const defaultDisplayName = displayName(source, id);
 
   const documents = useQuery(space, (obj) => {
-    const keys = obj.__meta?.keys;
+    const keys = metaOf(obj)?.keys;
     return keys?.find((key: any) => key.source === source && key.id === id);
   });
 

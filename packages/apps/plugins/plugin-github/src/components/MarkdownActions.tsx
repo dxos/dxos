@@ -8,6 +8,7 @@ import React, { useCallback } from 'react';
 import { type MarkdownProperties } from '@braneframe/plugin-markdown';
 import { LayoutAction, useIntent } from '@dxos/app-framework';
 import { log } from '@dxos/log';
+import { metaOf } from '@dxos/react-client/echo';
 import { DropdownMenu, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
@@ -20,7 +21,7 @@ import { type GhIssueIdentifier } from '../types';
 // TODO(burdon): Where do "properties" come from? Is this the graph node datum?
 export const MarkdownActions = ({ content, properties }: { content: string; properties: MarkdownProperties }) => {
   // TODO(burdon): Ad hoc assumption that underlying object is ECHO?
-  const ghId = properties.__meta?.keys?.find((key) => key.source === 'github.com')?.id;
+  const ghId = metaOf(properties)?.keys?.find((key) => key.source === 'github.com')?.id;
   const { octokit } = useOctokitContext();
   const { t } = useTranslation(GITHUB_PLUGIN);
   const { dispatch } = useIntent();
@@ -108,7 +109,7 @@ export const MarkdownActions = ({ content, properties }: { content: string; prop
           <DropdownMenu.Item
             classNames='gap-2'
             onClick={() => {
-              const index = properties.__meta?.keys?.findIndex((key) => key.source === 'github.com');
+              const index = metaOf(properties)?.keys?.findIndex((key) => key.source === 'github.com');
               typeof index !== 'undefined' && index >= 0 && properties.__meta?.keys?.splice(index, 1);
             }}
           >

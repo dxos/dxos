@@ -5,7 +5,7 @@
 import { Plus, Placeholder } from '@phosphor-icons/react';
 import React, { useCallback, type FC } from 'react';
 
-import { File as FileType, Stack as StackType, Folder } from '@braneframe/types';
+import { FileSchema, SectionSchema, type StackType, type SectionType, FolderSchema, isStack } from '@braneframe/types';
 import {
   NavigationAction,
   Surface,
@@ -16,6 +16,7 @@ import {
   usePlugin,
   useResolvePlugin,
 } from '@dxos/app-framework';
+import * as E from '@dxos/echo-schema';
 import { getSpaceForObject, isTypedObject, useQuery } from '@dxos/react-client/echo';
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
@@ -30,7 +31,7 @@ import {
 
 import { FileUpload } from './FileUpload';
 import { STACK_PLUGIN } from '../meta';
-import { type StackPluginProvides, isStack } from '../types';
+import { type StackPluginProvides } from '../types';
 
 const SectionContent: StackProps['SectionContent'] = ({ data }) => {
   // TODO(wittjosiah): Better section placeholder.
@@ -50,7 +51,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
     // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
     .filter(({ object }) => Boolean(object));
   const space = getSpaceForObject(stack);
-  const [folder] = useQuery(space, Folder.filter());
+  const [folder] = useQuery(space, E.Filter.schema(FolderSchema));
 
   const handleOver = ({ active }: MosaicMoveEvent<number>) => {
     const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
@@ -58,7 +59,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
 
     // TODO(wittjosiah): Prevent dropping items which don't have a section renderer?
     //  Perhaps stack plugin should just provide a fallback section renderer.
-    if (!isTypedObject(data) || isStack(data)) {
+    if (!isTypedObject(data) || !E.isEchoReactiveObject(data) || isStack(data)) {
       return 'reject';
     }
 
@@ -82,9 +83,9 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
     const object = parseData?.(active.item, 'object');
     // TODO(wittjosiah): Stop creating new section objects for each drop.
     if (object && over.path === Path.create(id, over.item.id)) {
-      stack.sections.splice(over.position!, 0, new StackType.Section({ object }));
+      stack.sections.splice(over.position!, 0, E.object(SectionSchema, { object }));
     } else if (object && over.path === id) {
-      stack.sections.push(new StackType.Section({ object }));
+      stack.sections.push(E.object(SectionSchema, { object }));
     }
   };
 
@@ -96,20 +97,22 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
   };
 
   const handleAdd = useCallback(
-    (sectionObject: StackType.Section['object']) => {
-      stack.sections.push(new StackType.Section({ object: sectionObject }));
+    (sectionObject: SectionType['object']) => {
+      stack.sections.push(E.object(SectionSchema, { object: sectionObject }));
       // TODO(wittjosiah): Remove once stack items can be added to folders separately.
       folder?.objects.push(sectionObject);
     },
     [stack, stack.sections],
   );
 
+  // TODO(wittjosiah): Factor out.
   const handleFileUpload = fileManagerPlugin?.provides.file.upload
     ? async (file: File) => {
         const filename = file.name.split('.')[0];
         const info = await fileManagerPlugin.provides.file.upload?.(file);
         if (info) {
-          handleAdd(new FileType({ type: file.type, title: filename, filename, cid: info.cid }));
+          const obj = E.object(FileSchema, { type: file.type, title: filename, filename, cid: info.cid });
+          handleAdd(obj);
         }
       }
     : undefined;
@@ -132,7 +135,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
         id={id}
         data-testid='main.stack'
         SectionContent={SectionContent}
-        type={StackType.Section.schema.typename}
+        type={E.getEchoObjectAnnotation(SectionSchema)!.typename}
         items={items}
         separation={separation}
         transform={handleTransform}

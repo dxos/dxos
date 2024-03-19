@@ -5,7 +5,7 @@
 import React, { type FC, useContext, useState } from 'react';
 
 import { useLayout } from '@braneframe/plugin-layout';
-import { type Stack as StackType } from '@braneframe/types';
+import { type StackType } from '@braneframe/types';
 import { LayoutAction, Surface, useIntent } from '@dxos/app-framework';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';

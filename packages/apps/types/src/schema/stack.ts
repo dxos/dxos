@@ -13,7 +13,7 @@ export interface SectionType extends E.ObjectType<typeof _SectionSchema> {}
 export const SectionSchema: S.Schema<SectionType> = _SectionSchema;
 
 const _StackSchema = S.struct({
-  title: S.string,
+  title: S.optional(S.string),
   sections: S.array(E.ref(SectionSchema)),
 }).pipe(E.echoObject('braneframe.Stack', '0.1.0'));
 export interface StackType extends E.ObjectType<typeof _StackSchema> {}
