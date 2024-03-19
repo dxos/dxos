@@ -17,10 +17,11 @@ import {
   symbolIsProxy,
   type ReactiveHandler,
 } from './proxy';
-import { type EchoReactiveObject, getSchema, getTypeReference } from './reactive';
+import { getSchema, getTypeReference, type EchoReactiveObject } from './reactive';
 import { SchemaValidator } from './schema-validator';
-import { AutomergeObjectCore, encodeReference, REFERENCE_TYPE_TAG } from '../automerge';
+import { AutomergeObjectCore } from '../automerge/automerge-object-core';
 import { type KeyPath } from '../automerge/key-path';
+import { encodeReference, REFERENCE_TYPE_TAG } from '../automerge/types';
 import { data, type ObjectMeta } from '../object';
 import { defineHiddenProperty } from '../util/property';
 

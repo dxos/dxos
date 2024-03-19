@@ -52,6 +52,8 @@ export type NodeOptions = {
   bail?: boolean;
   envVariables?: Record<string, string>;
   profile: boolean;
+  dryRun: boolean;
+  reporterOutputPath?: string;
 };
 
 export const runNode = async (context: ExecutorContext, options: NodeOptions): Promise<ExecutionResult> => {
@@ -123,6 +125,7 @@ const getNodeArgs = async (context: ExecutorContext, options: NodeOptions) => {
       '--inspect': options.inspect,
       '--inspect-brk': options.inspectBrk,
       '--bail': options.bail,
+      '--dry-run': options.dryRun,
     },
     options.grep && ['--grep', options.grep],
   ]);
@@ -131,7 +134,11 @@ const getNodeArgs = async (context: ExecutorContext, options: NodeOptions) => {
 const setupReporter = async (context: ExecutorContext, options: NodeOptions) => {
   // NOTE: A custom reporter may be provided by the IDE.
   if (options.reporter) {
-    return ['--reporter', options.reporter];
+    return [
+      '--reporter',
+      options.reporter,
+      ...(options.reporterOutputPath ? ['--reporter-option', `output=${options.reporterOutputPath}`] : []),
+    ];
   }
 
   if (options.watch) {
