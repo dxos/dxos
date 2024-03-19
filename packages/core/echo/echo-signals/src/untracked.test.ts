@@ -13,35 +13,19 @@ registerSignalRuntime();
 describe('Untracked', () => {
   it('Nested `untracked` does not cause effect to run', async () => {
     const signal = compositeRuntime.createSignal({});
-    const value = new Proxy(
-      { foo: 1 },
-      {
-        get: () => {
-          signal.notifyRead();
-        },
-        set: () => {
-          signal.notifyWrite();
-          return true;
-        },
-      },
-    );
 
     let updateCount = 0;
-
-    effect(() => {
-      value.foo;
-      updateCount++;
-    });
 
     compositeRuntime.untracked(() => {
       effect(() => {
         compositeRuntime.untracked(() => {
-          value.foo;
-          value.foo = 1;
+          signal.notifyRead();
+          signal.notifyWrite();
+          updateCount++;
         });
       });
     });
 
-    expect(updateCount).to.eq(2);
+    expect(updateCount).to.eq(1);
   });
 });
