@@ -2,13 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { TextV0Schema } from '@braneframe/plugin-markdown';
+import { MessageSchema, ThreadSchema, TextV0Schema, type BlockType } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { type Identity } from '@dxos/react-client/halo';
-
-import { MessageSchema, ThreadSchema } from '../types';
 
 export const createChatThread = (identity: Identity) => {
   return E.object(ThreadSchema, {
@@ -20,12 +18,14 @@ export const createChatThread = (identity: Identity) => {
         blocks: faker.helpers.multiple(
           () =>
             faker.datatype.boolean({ probability: 0.8 })
-              ? {
+              ? ({
+                  timestamp: new Date().toISOString(),
                   content: E.object(TextV0Schema, { content: faker.lorem.sentences(3) }),
-                }
-              : {
-                  object: E.object({ title: faker.lorem.sentence() }),
-                },
+                } satisfies BlockType)
+              : ({
+                  timestamp: new Date().toISOString(),
+                  object: E.object(E.ExpandoType, { title: faker.lorem.sentence() }),
+                } satisfies BlockType),
           { count: { min: 1, max: 3 } },
         ),
       }),

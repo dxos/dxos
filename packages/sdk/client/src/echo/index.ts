@@ -28,6 +28,7 @@ export {
   type EchoObject, // TODO(burdon): Remove from API.
   type FilterSource,
   type ObjectMeta,
+  type OpaqueEchoObject,
   type Selection,
   type Subscription,
   type SubscriptionHandle,

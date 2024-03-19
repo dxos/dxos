@@ -4,17 +4,17 @@
 
 import { useMemo, useSyncExternalStore } from 'react';
 
-import type { QueryOptions, TypedObject, Query, FilterSource, Space } from '@dxos/client/echo';
+import type { QueryOptions, OpaqueEchoObject, Query, FilterSource, Space } from '@dxos/client/echo';
 
 type UseQuery = {
-  <T extends TypedObject>(space?: Space, filter?: FilterSource<T>, options?: QueryOptions, deps?: any[]): T[];
+  <T extends OpaqueEchoObject>(space?: Space, filter?: FilterSource<T>, options?: QueryOptions, deps?: any[]): T[];
 };
 
 /**
  * Create subscription.
  */
 // TODO(burdon): Support typed operator filters (e.g., Note.filter(note => ...)).
-export const useQuery: UseQuery = <T extends TypedObject>(
+export const useQuery: UseQuery = <T extends OpaqueEchoObject>(
   space?: Space,
   filter?: FilterSource<T>,
   options?: QueryOptions,

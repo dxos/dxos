@@ -67,7 +67,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      clientPlugin?.provides.client._graph.types.registerEffectSchema(ThreadSchema, MessageSchema);
+      clientPlugin?.provides.client.addSchema(ThreadSchema, MessageSchema);
 
       // TODO(wittjosiah): This is a hack to make standalone threads work in the c11y sidebar.
       //  This should have a better solution when deck is introduced.
@@ -83,7 +83,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           // const [thread] = space?.db.query(ThreadType.filter((thread) => !thread.context)).objects ?? [];
           const [thread] =
             space?.db.query(Filter.schema(ThreadSchema)).objects.filter((thread) => !thread.context) ?? [];
-          if (activeNode && isDocument(activeNode?.data) && activeNode.data.comments?.length > 0) {
+          if (activeNode && isDocument(activeNode?.data) && (activeNode.data.comments?.length ?? 0) > 0) {
             void intentPlugin?.provides.intent.dispatch({
               action: LayoutAction.SET_LAYOUT,
               data: {
@@ -228,7 +228,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 // TODO(burdon): Should just use document position?
                 const threads = comments
                   ?.map(({ thread }) => thread)
-                  .filter(nonNullable)
+                  .filter(isThread)
                   .toSorted((a, b) => state.threads[a.id] - state.threads[b.id]);
 
                 const detached = comments
@@ -397,7 +397,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 const comment = doc.comments?.find(({ thread }) => thread?.id === id);
                 if (comment && comment.thread) {
                   const [start, end] = cursor.split(':');
-                  comment.thread.title = getTextInRange(doc.content, start, end);
+                  comment.thread.title = getTextInRange(doc.content as unknown as E.TextObject, start, end);
                   comment.cursor = cursor;
                 }
               },

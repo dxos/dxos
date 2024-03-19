@@ -56,6 +56,22 @@ const _AnyEchoObject = S.struct({}).pipe(echoObject('Any', '0.1.0'));
 export interface AnyEchoObject extends S.Schema.To<typeof _AnyEchoObject> {}
 export const AnyEchoObject: S.Schema<AnyEchoObject> = _AnyEchoObject;
 
+export const ExpandoMarker = Symbol.for('@dxos/echo-schema/Expando');
+
+const _Expando = S.struct({}).pipe(echoObject('Expando', '0.1.0'));
+/**
+ * @deprecated Need API review.
+ */
+export interface ExpandoType extends S.Schema.To<typeof _Expando> {
+  [ExpandoMarker]: true;
+}
+/**
+ * Marker value to be passed to `object` constructor to create an ECHO object with a generated ID.
+ *
+ * @deprecated Need API review.
+ */
+export const ExpandoType: S.Schema<ExpandoType> = _Expando as any;
+
 /**
  * Has `id`.
  */
@@ -90,7 +106,7 @@ export const getEchoObjectAnnotation = (schema: S.Schema<any>) =>
 // This type doesn't change the shape of the object, it is rather used as an indicator that the object is reactive.
 export type ReactiveObject<T> = { [K in keyof T]: T[K] } & { [data]?(): any };
 
-export type EchoReactiveObject<T> = ReactiveObject<T> & { id: string };
+export type EchoReactiveObject<T> = ReactiveObject<T> & Identifiable;
 
 export const isEchoReactiveObject = (value: unknown): value is EchoReactiveObject<any> =>
   isReactiveProxy(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;
@@ -103,9 +119,10 @@ export const isEchoReactiveObject = (value: unknown): value is EchoReactiveObjec
 // TODO(dmaretskyi): Deep mutability.
 export const object: {
   <T extends {}>(obj: T): ReactiveObject<T>;
+  <T extends {}>(schema: typeof ExpandoType, obj: T): ReactiveObject<Identifiable & T>;
   <T extends {}>(schema: S.Schema<T>, obj: ExcludeId<T>): ReactiveObject<T>;
 } = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: ExcludeId<T>): ReactiveObject<T> => {
-  if (obj) {
+  if (obj && (schemaOrObj as any) !== ExpandoType) {
     if (!isValidProxyTarget(obj)) {
       throw new Error('Value cannot be made into a reactive object.');
     }
@@ -123,6 +140,21 @@ export const object: {
 
     SchemaValidator.prepareTarget(obj as T, schema);
     return createReactiveProxy(obj, new TypedReactiveHandler()) as ReactiveObject<T>;
+  } else if (obj && (schemaOrObj as any) === ExpandoType) {
+    if (!isValidProxyTarget(obj)) {
+      throw new Error('Value cannot be made into a reactive object.');
+    }
+
+    if ('id' in (obj as any)) {
+      throw new Error(
+        'Provided object already has an `id` field. `id` field is reserved and will be automatically generated.',
+      );
+    }
+
+    (obj as any).id = generateId();
+
+    // Untyped.
+    return createReactiveProxy(obj as T, UntypedReactiveHandler.instance as ReactiveHandler<any>) as ReactiveObject<T>;
   } else {
     if (!isValidProxyTarget(schemaOrObj)) {
       throw new Error('Value cannot be made into a reactive object.');

@@ -6,6 +6,7 @@ import '@dxosTheme';
 
 import React, { useEffect } from 'react';
 
+import { ThreadSchema } from '@braneframe/types';
 import { faker } from '@dxos/random';
 import { type PublicKey } from '@dxos/react-client';
 import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
@@ -18,7 +19,6 @@ import { withTheme } from '@dxos/storybook-utils';
 import { CommentsContainer } from './CommentsContainer';
 import { createCommentThread } from './testing';
 import translations from '../translations';
-import { ThreadSchema } from '../types';
 
 faker.seed(1);
 
@@ -54,7 +54,7 @@ export default {
   title: 'plugin-thread/Comments',
   component: Thread,
   // TODO(wittjosiah): Register schemas.
-  render: () => <ClientRepeater component={Story} types={types} createIdentity createSpace />,
+  render: () => <ClientRepeater component={Story} createIdentity createSpace />,
   decorators: [withTheme],
   parameters: { translations },
 };
