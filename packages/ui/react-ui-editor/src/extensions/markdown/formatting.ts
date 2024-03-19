@@ -15,9 +15,7 @@ import {
 } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { type SyntaxNodeRef, type SyntaxNode } from '@lezer/common';
-import { useMemo } from 'react';
-
-import { useStateRef } from '@dxos/react-async';
+import { useMemo, useState } from 'react';
 
 // Markdown refs:
 // https://github.github.com/gfm
@@ -1225,20 +1223,22 @@ export const getFormatting = (state: EditorState): Formatting => {
  * Hook provides an extension to compute the current formatting state.
  */
 export const useFormattingState = (): [Formatting | undefined, Extension] => {
-  const [state, setState, stateRef] = useStateRef<Formatting>();
+  const [state, setState] = useState<Formatting>();
+
   const observer = useMemo(
     () =>
       EditorView.updateListener.of((update) => {
         if (update.docChanged || update.selectionSet) {
-          const newState = getFormatting(update.state);
-          if (!stateRef.current || !formattingEquals(stateRef.current, newState)) {
-            // TODO(burdon): Error on first click on toolbar.
-            //  Warning: React has detected a change in the order of Hooks called by ForwardRef. This will lead to bugs and errors if not fixed. For more information, read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks
-            setState(newState);
-          }
+          setState((prevState) => {
+            const newState = getFormatting(update.state);
+            if (!prevState || !formattingEquals(prevState, newState)) {
+              return newState;
+            }
+            return prevState;
+          });
         }
       }),
-    [],
+    [setState],
   );
 
   return [state, observer];
