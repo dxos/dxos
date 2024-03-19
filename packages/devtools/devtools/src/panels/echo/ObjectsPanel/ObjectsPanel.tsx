@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { type TypedObject, useQuery, QueryOptions } from '@dxos/react-client/echo';
+import { type OpaqueEchoObject, useQuery, QueryOptions } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
 
@@ -20,7 +20,7 @@ const textFilter = (text?: string) => {
 
   // TODO(burdon): Structured query (e.g., "type:Text").
   const matcher = new RegExp(text, 'i');
-  return (item: TypedObject) => {
+  return (item: OpaqueEchoObject) => {
     const model = item.toJSON()['@model'];
     let match = false;
     match ||= !!model?.match(matcher);
@@ -30,8 +30,8 @@ const textFilter = (text?: string) => {
   };
 };
 
-const { helper, builder } = createColumnBuilder<TypedObject>();
-const columns: TableColumnDef<TypedObject, any>[] = [
+const { helper, builder } = createColumnBuilder<OpaqueEchoObject>();
+const columns: TableColumnDef<OpaqueEchoObject, any>[] = [
   helper.accessor((item) => PublicKey.from(item.id), { id: 'id', ...builder.key({ tooltip: true }) }),
   helper.accessor((item) => item.toJSON()['@model'], {
     id: 'model',
@@ -65,7 +65,7 @@ export const ObjectsPanel = () => {
         </Toolbar.Root>
       }
     >
-      <MasterDetailTable<TypedObject>
+      <MasterDetailTable<OpaqueEchoObject>
         columns={columns}
         data={items.filter(textFilter(filter))}
         widths={['is-1/3 shrink-0', '']}
