@@ -42,6 +42,8 @@ export type StackContextValue<TData extends StackSectionContent = StackSectionCo
   transform?: (item: MosaicDataItem, type?: string) => StackSectionItem;
   onDeleteSection?: (path: string) => void;
   onNavigateToSection?: (id: string) => void;
+  // TODO(thure): This should be improved when refactored to implement longer persistence. Sections only need to know
+  //   about and modify their own collapsed state.
   collapsedSections?: CollapsedSections;
   setCollapsedSections?: Dispatch<SetStateAction<CollapsedSections>>;
 };
