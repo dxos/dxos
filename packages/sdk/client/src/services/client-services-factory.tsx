@@ -37,6 +37,10 @@ export const Remote = (target: string | undefined): Partial<ConfigProto> => {
 
 /**
  * Create services from config.
+ * @param config
+ * @param createWorker
+ * @param observabilityGroup - Optional observability group that will be sent with Signaling metadata.
+ * @param signalTelemetryEnabled - Optional flag to enable telemetry metadata sent with Signaling requests.
  */
 export const createClientServices = (
   config: Config,
