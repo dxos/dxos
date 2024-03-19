@@ -61,7 +61,6 @@ export const createMarkdownExtensions = ({ themeMode }: MarkdownBundleOptions = 
       // https://codemirror.net/docs/ref/#commands.indentWithTab
       indentWithTab,
 
-      // TODO(burdon): ???
       // https://codemirror.net/docs/ref/#commands.defaultKeymap
       ...defaultKeymap,
       ...completionKeymap,

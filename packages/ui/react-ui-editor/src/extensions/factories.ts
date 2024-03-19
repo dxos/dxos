@@ -92,7 +92,7 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     props.dropCursor && dropCursor(),
     props.drawSelection && drawSelection(),
     props.highlightActiveLine && highlightActiveLine(),
-    highlightSpecialChars(), // TODO(burdon): ???
+    highlightSpecialChars(),
     props.history && history(),
     props.lineNumbers && lineNumbers(),
     props.lineWrapping && EditorView.lineWrapping,
@@ -104,7 +104,6 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     // https://codemirror.net/docs/ref/#view.KeyBinding
     keymap.of(
       [
-        // TODO(burdon): Option (vi, vscode, osx)???
         // https://codemirror.net/docs/ref/#commands.standardKeymap
         ...standardKeymap,
 
@@ -162,12 +161,11 @@ export const createThemeExtensions = ({ theme, themeMode, slots: _slots }: Theme
 
 export type DataExtensionsProps = {
   id: string;
-  text: DocAccessor; // TODO(burdon): Rename content.
+  text: DocAccessor;
   space?: Space;
   identity?: Identity | null;
 };
 
-// TODO(burdon): Factor out automerge defs and extension (not hook).
 // TODO(burdon): Move out of react-ui-editor (remove echo deps).
 export const createDataExtensions = ({ id, text, space, identity }: DataExtensionsProps): Extension[] => {
   const extensions: Extension[] = [automerge(text)];
