@@ -99,7 +99,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       });
 
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      clientPlugin?.provides.client._graph.types.registerEffectSchema(DocumentSchema);
+      clientPlugin?.provides.client.addSchema(DocumentSchema);
     },
     provides: {
       settings: settings.values,
@@ -303,6 +303,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               return {
                 data: E.object(DocumentSchema, {
                   content: E.object(TextV0Schema, { content: '' }),
+                  comments: [],
                 }) satisfies E.ReactiveObject<DocumentType>,
               };
             }

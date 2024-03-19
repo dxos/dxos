@@ -11,7 +11,6 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { type ObjectMeta } from '@dxos/react-client/echo';
 import { type Extension, type EditorMode } from '@dxos/react-ui-editor';
 
 import { MARKDOWN_PLUGIN } from './meta';
@@ -24,13 +23,7 @@ export enum MarkdownAction {
 }
 
 // TODO(burdon): Remove?
-export type MarkdownProperties = {
-  title: string;
-
-  // TODO(burdon): Since this is always very precisely an ECHO object why obfuscate it?
-  __meta: ObjectMeta;
-  readonly?: boolean;
-};
+export type MarkdownProperties = Record<string, any>;
 
 export type ExtensionsProvider = (props: { document?: DocumentType }) => Extension[];
 export type OnChange = (text: string) => void;

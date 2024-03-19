@@ -144,7 +144,7 @@ export const serializers: Record<string, TypedObjectSerializer> = {
         (existingDoc.content as any)[(existingDoc.content as any).field] = text;
         return existingDoc;
       } else {
-        return E.object(DocumentSchema, { content: E.object(TextV0Schema, { content: text }) });
+        return E.object(DocumentSchema, { content: E.object(TextV0Schema, { content: text }), comments: [] });
       }
     },
   } satisfies TypedObjectSerializer,
