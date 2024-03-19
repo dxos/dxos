@@ -25,7 +25,7 @@ export const fromHost = async (
 ): Promise<ClientServicesProvider> => {
   const getSignalMetadata = () => {
     return {
-      ...lcs.signalMetadataTags,
+      ...services.signalMetadataTags,
       ...(observabilityGroup ? { group: observabilityGroup } : {}),
     };
   };
@@ -34,7 +34,7 @@ export const fromHost = async (
     ...(await setupNetworking(config, {}, getSignalMetadata)),
     ...params,
   });
-  return lcs;
+  return services;
 };
 
 /**
