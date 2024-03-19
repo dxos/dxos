@@ -13,11 +13,11 @@ import {
   drawSelection,
   dropCursor,
   highlightActiveLine,
+  highlightSpecialChars,
+  keymap,
   lineNumbers,
   placeholder,
   scrollPastEnd,
-  keymap,
-  highlightSpecialChars,
 } from '@codemirror/view';
 import defaultsDeep from 'lodash.defaultsdeep';
 
