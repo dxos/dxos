@@ -25,8 +25,8 @@ export type ObjectTableProps = Pick<TableProps<any>, 'stickyHeader' | 'role' | '
 };
 
 export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
-  const [, forceUpdate] = useState({});
   const space = getSpaceForObject(table);
+
   const objects = useQuery<TypedObject>(
     space,
     // TODO(dmaretskyi): Reference comparison broken by deepsignal wrapping.
@@ -93,13 +93,11 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
           ref: type === 'ref' ? tables.find((table) => table.schema.id === refTable)?.schema : undefined,
           digits,
         });
-        forceUpdate({});
       },
       onColumnDelete: (id) => {
         const idx = table.schema?.props.findIndex((prop) => prop.id === id);
         if (idx !== -1) {
           table.schema?.props.splice(idx, 1);
-          forceUpdate({});
         }
       },
       onRowUpdate: (object, prop, value) => {
