@@ -42,10 +42,10 @@ export type StackContextValue<TData extends StackSectionContent = StackSectionCo
   transform?: (item: MosaicDataItem, type?: string) => StackSectionItem;
   onDeleteSection?: (path: string) => void;
   onNavigateToSection?: (id: string) => void;
-  // TODO(thure): This should be improved when refactored to implement longer persistence. Sections only need to know
-  //   about and modify their own collapsed state.
   collapsedSections?: CollapsedSections;
-  setCollapsedSections?: Dispatch<SetStateAction<CollapsedSections>>;
+  // TODO(thure): Sections only need to know about and modify their own collapsed state. This should be improved when
+  //  refactored to implement longer persistence.
+  onCollapseSection?: Dispatch<SetStateAction<CollapsedSections>>;
 };
 
 export type StackItem = MosaicDataItem &
@@ -75,7 +75,7 @@ export type SectionProps = PropsWithChildren<
     draggableStyle?: MosaicTileProps['draggableStyle'];
     onDelete?: MosaicTileProps['onDelete'];
     onNavigate?: MosaicTileProps['onNavigate'];
-  } & Pick<StackContextValue, 'collapsedSections' | 'setCollapsedSections'>
+  } & Pick<StackContextValue, 'collapsedSections' | 'onCollapseSection'>
 >;
 
 export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElement>> = forwardRef<
@@ -91,7 +91,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
       draggableProps,
       draggableStyle,
       collapsedSections,
-      setCollapsedSections,
+      onCollapseSection,
       onDelete,
       onNavigate,
       children,
@@ -113,7 +113,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
       <CollapsiblePrimitive.Root
         asChild
         open={!collapsed}
-        onOpenChange={(nextOpen) => setCollapsedSections?.({ ...(collapsedSections ?? {}), [id]: !nextOpen })}
+        onOpenChange={(nextOpen) => onCollapseSection?.({ ...(collapsedSections ?? {}), [id]: !nextOpen })}
       >
         <ListItem.Root
           ref={forwardedRef}
@@ -217,7 +217,7 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
       onNavigateToSection,
       SectionContent,
       collapsedSections,
-      setCollapsedSections,
+      onCollapseSection,
       ...contentItem
     } = {
       ...itemContext,
@@ -253,7 +253,7 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
         draggableProps={draggableProps}
         draggableStyle={draggableStyle}
         collapsedSections={collapsedSections}
-        setCollapsedSections={setCollapsedSections}
+        onCollapseSection={onCollapseSection}
         onDelete={() => onDeleteSection?.(path)}
         onNavigate={() => onNavigateToSection?.(itemObject.id)}
       >
