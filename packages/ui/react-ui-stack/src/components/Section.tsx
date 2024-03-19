@@ -183,7 +183,11 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
               }
               {...(collapsed && { ...sectionContentGroup, tabIndex: 0 })}
             >
-              {/* TODO(thure): This needs to be made extensible; Markdown document titles especially are difficult */}
+              {/* TODO(thure): This needs to be made extensible; Markdown document titles especially are difficult.
+                    Using `Surface` in a UI package like this would be unprecedented and needs motivation. Refactoring
+                    to use subcomponents is complicated by sections being a sortable Mosaic Tile. Reevaluate when
+                    work on collections (Folders, Stacks, etc) settles.
+              */}
               <span className='truncate'>{title}</span>
             </ListItem.Heading>
             <CollapsiblePrimitive.Content
