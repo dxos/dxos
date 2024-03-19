@@ -133,7 +133,6 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         component: ({ data, role }) => {
           switch (data.component) {
             case `${STACK_PLUGIN}/AddSectionDialog`:
-              console.log('[add section dialog]', data);
               return dataHasAddSectionDialogProps(data) ? <AddSectionDialog {...data.subject} /> : null;
           }
           switch (role) {

@@ -136,7 +136,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
       data: {
         element: 'dialog',
         component: `${STACK_PLUGIN}/AddSectionDialog`,
-        subject: { path, position },
+        subject: { path, position, stack },
       },
     });
   };
@@ -160,7 +160,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
         onChangeCollapsedSections={onChangeCollapsedSections}
       />
 
-      <div role='none' className='flex justify-center mlb-4'>
+      <div role='none' className='flex justify-center mbs-4 pbe-4'>
         <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), staticDefaultButtonColors]}>
           <Button
             variant='ghost'
