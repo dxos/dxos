@@ -21,6 +21,7 @@ import {
   useTranslation,
   List,
   ListItem,
+  useDefaultValue,
 } from '@dxos/react-ui';
 import { AttentionGlyph } from '@dxos/react-ui-deck';
 import { ComplexMap, keyToFallback } from '@dxos/util';
@@ -71,7 +72,8 @@ export const SpacePresence = ({ object, spaceKey }: { object: TypedObject; space
     .map((member) => ({
       ...member,
       match: currentObjectViewers.has(member.identity.identityKey),
-      lastSeen: currentObjectViewers.get(member.identity.identityKey)?.lastSeen ?? -Infinity,
+      // Infinity if not seen before on this document, to ensure that all online members are included.
+      lastSeen: currentObjectViewers.get(member.identity.identityKey)?.lastSeen ?? Infinity,
     }))
     .filter((member) => moment - member.lastSeen < ACTIVITY_DURATION)
     .toSorted((a, b) => a.lastSeen - b.lastSeen);
@@ -120,7 +122,8 @@ export type MemberPresenceProps = ThemedClassName<{
 }>;
 
 export const FullPresence = (props: MemberPresenceProps) => {
-  const { members = [], size = 9, onMemberClick } = props;
+  const { size = 9, onMemberClick } = props;
+  const members = useDefaultValue(props.members, []);
 
   if (members.length === 0) {
     return null;

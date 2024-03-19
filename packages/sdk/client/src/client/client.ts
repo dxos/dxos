@@ -12,6 +12,7 @@ import {
   type ClientServices,
   clientServiceBundle,
   DEFAULT_CLIENT_CHANNEL,
+  PropertiesSchema,
 } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
@@ -136,6 +137,8 @@ export class Client {
     if (this._options.types) {
       this.addTypes(this._options.types);
     }
+
+    this._graph.types.registerEffectSchema(PropertiesSchema);
   }
 
   [inspect.custom]() {
