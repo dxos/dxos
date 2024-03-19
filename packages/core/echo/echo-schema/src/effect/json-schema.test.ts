@@ -68,7 +68,7 @@ describe('JSON Schema', () => {
 
     // Convert to ts-effect schema.
     const Contact = toEffectSchema(echoSchema);
-    type Contact = S.Schema.To<typeof Contact>;
+    type Contact = S.Schema.Type<typeof Contact>;
 
     const person: Contact = object(Contact, {
       name: 'Satoshi',
