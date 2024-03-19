@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useArrowNavigationGroup } from '@fluentui/react-tabster';
+import { useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
+import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { forwardRef, useCallback } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -19,15 +20,19 @@ import {
 import { dropRingInner, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
 import {
+  type CollapsedSections,
   SectionTile,
   type StackContextValue,
   type StackItem,
   type StackSectionContent,
   type StackSectionItem,
 } from './Section';
+import { stackColumns } from './style-fragments';
 import { translationKey } from '../translations';
 
 export type Direction = 'horizontal' | 'vertical';
+
+export { type CollapsedSections };
 
 export const DEFAULT_TYPE = 'stack-section';
 
@@ -35,9 +40,11 @@ export type StackProps<TData extends StackSectionContent = StackSectionContent> 
   MosaicContainerProps<TData, number>,
   'debug' | 'Component'
 > &
-  StackContextValue<TData> & {
+  Omit<StackContextValue<TData>, 'setCollapsedSections'> & {
     items?: StackSectionItem[];
     separation?: boolean; // TODO(burdon): Style.
+    defaultCollapsedSections?: CollapsedSections;
+    onChangeCollapsedSections?: (nextCollapsedSections: CollapsedSections) => void;
   };
 
 export const Stack = ({
@@ -52,16 +59,28 @@ export const Stack = ({
   onDrop,
   onDeleteSection,
   onNavigateToSection,
+  collapsedSections: propsCollapsedSections,
+  defaultCollapsedSections,
+  onChangeCollapsedSections,
   ...props
 }: StackProps) => {
   const { ref: containerRef, width = 0 } = useResizeDetector<HTMLDivElement>({ refreshRate: 200 });
   const { operation, overItem } = useMosaic();
   const itemsWithPreview = useItemsWithPreview({ path: id, items });
 
+  const [collapsedSections, setCollapsedSections] = useControllableState<CollapsedSections>({
+    prop: propsCollapsedSections,
+    defaultProp: defaultCollapsedSections,
+    onChange: onChangeCollapsedSections,
+  });
+
   // TODO(burdon): Why callback not useMemo?
   const getOverlayStyle = useCallback(() => ({ width: Math.min(width, 59 * 16) }), [width]);
 
-  const getOverlayProps = useCallback(() => ({ itemContext: { SectionContent } }), [SectionContent]);
+  const getOverlayProps = useCallback(
+    () => ({ itemContext: { SectionContent, collapsedSections } }),
+    [SectionContent, collapsedSections],
+  );
 
   // TODO(thure): The root cause of the discrepancy between `activeNodeRect.top` and `overlayNodeRect.top` in Composer
   //  in particular is not yet known, so this solution may may backfire in unforeseeable cases.
@@ -94,7 +113,15 @@ export const Stack = ({
           type={type}
           classNames={classNames}
           item={{ id, items: itemsWithPreview }}
-          itemContext={{ separation, transform, onDeleteSection, onNavigateToSection, SectionContent }}
+          itemContext={{
+            separation,
+            transform,
+            onDeleteSection,
+            onNavigateToSection,
+            SectionContent,
+            collapsedSections,
+            setCollapsedSections,
+          }}
           isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
           Component={StackTile}
         />
@@ -108,13 +135,22 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
     const { t } = useTranslation(translationKey);
     const { Component, type } = useContainer();
     const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
+    const { activeItem } = useMosaic();
+    // NOTE(thure): Ensure “groupper” is available.
+    const _group = useFocusableGroup();
 
     // NOTE: Keep outer padding the same as MarkdownMain.
     return (
       <List
         ref={forwardedRef}
-        classNames={mx(textBlockWidth, 'mbs-1 mbe-2 rounded-sm', isOver && dropRingInner, classNames)}
-        {...domAttributes}
+        classNames={mx(
+          textBlockWidth,
+          'mbs-1 mbe-2 rounded-sm grid',
+          stackColumns,
+          isOver && dropRingInner,
+          classNames,
+        )}
+        {...(!activeItem && domAttributes)}
       >
         {items.length > 0 ? (
           <Mosaic.SortableContext items={items} direction='vertical'>
@@ -132,7 +168,7 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
           </Mosaic.SortableContext>
         ) : (
           <p
-            className='text-center m-1 p-4 border border-dashed border-neutral-500/50 rounded'
+            className='grid col-span-2 text-center m-1 p-4 border border-dashed border-neutral-500/50 rounded'
             data-testid='stack.empty'
           >
             {t('empty stack message')}
