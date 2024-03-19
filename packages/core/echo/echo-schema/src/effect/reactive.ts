@@ -13,6 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
 import { EchoReactiveHandler } from './echo-handler';
+import { type EchoObjectClassType, getEchoObjectSubclassSchema } from './echo-object-class';
 import {
   type ReactiveHandler,
   createReactiveProxy,
@@ -23,7 +24,7 @@ import {
 import { SchemaValidator, symbolSchema, validateIdNotPresentOnSchema } from './schema-validator';
 import { TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
-import { data, type ObjectMeta } from '../object';
+import { type ObjectMeta } from '../object';
 
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
@@ -104,8 +105,16 @@ export const isEchoReactiveObject = (value: unknown): value is EchoReactiveObjec
 export const object: {
   <T extends {}>(obj: T): ReactiveObject<T>;
   <T extends {}>(schema: S.Schema<T>, obj: ExcludeId<T>): ReactiveObject<T>;
-} = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: ExcludeId<T>): ReactiveObject<T> => {
-  if (obj) {
+  <T extends {}>(schema: EchoObjectClassType<T>, obj: ExcludeId<T>): ReactiveObject<T>;
+} = <T extends {}>(
+  schemaOrObjOrConstructor: S.Schema<T> | T | (new () => T),
+  obj?: ExcludeId<T>,
+): ReactiveObject<T> => {
+  const schemaOrObj =
+    typeof schemaOrObjOrConstructor === 'function'
+      ? getEchoObjectSubclassSchema(schemaOrObjOrConstructor)
+      : schemaOrObjOrConstructor;
+  if (obj && (schemaOrObj as any) !== ExpandoType) {
     if (!isValidProxyTarget(obj)) {
       throw new Error('Value cannot be made into a reactive object.');
     }
@@ -158,6 +167,10 @@ export const getRefAnnotation = (schema: S.Schema<any>) =>
  * Returns the schema for the given object if one is defined.
  */
 export const getSchema = <T extends {} = any>(obj: T): S.Schema<any> | undefined => {
+  if (typeof obj === 'function') {
+    return getEchoObjectSubclassSchema(obj);
+  }
+
   if (isReactiveProxy(obj)) {
     const proxyHandlerSlot = getProxyHandlerSlot(obj);
     if (proxyHandlerSlot.handler instanceof EchoReactiveHandler) {
