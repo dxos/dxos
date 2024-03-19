@@ -14,7 +14,7 @@ import { EventSubscriptions } from '@dxos/async';
 import * as E from '@dxos/echo-schema/schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 
-import { StackMain, StackSettings } from './components';
+import { StackMain, StackSettings, AddSectionDialog, dataHasAddSectionDialogProps } from './components';
 import meta, { STACK_PLUGIN } from './meta';
 import translations from './translations';
 import {
@@ -131,6 +131,10 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       },
       surface: {
         component: ({ data, role }) => {
+          switch (data.component) {
+            case `${STACK_PLUGIN}/AddSectionDialog`:
+              return dataHasAddSectionDialogProps(data) ? <AddSectionDialog {...data.subject} /> : null;
+          }
           switch (role) {
             case 'main':
               return isStack(data.active) ? (
