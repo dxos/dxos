@@ -45,11 +45,13 @@ export type StackSectionContent = MosaicDataItem & { title?: string };
 
 export type CollapsedSections = Record<string, boolean>;
 
+export type AddSectionPosition = 'before' | 'after' | 'beforeAll' | 'afterAll';
+
 export type StackContextValue<TData extends StackSectionContent = StackSectionContent> = {
   SectionContent: FC<{ data: TData }>;
   transform?: (item: MosaicDataItem, type?: string) => StackSectionItem;
   onDeleteSection?: (path: string) => void;
-  onAddSection?: (path: string, position: 'before' | 'after') => void;
+  onAddSection?: (path: string, position: AddSectionPosition) => void;
   onNavigateToSection?: (id: string) => void;
   collapsedSections?: CollapsedSections;
   // TODO(thure): Sections only need to know about and modify their own collapsed state. This should be improved when

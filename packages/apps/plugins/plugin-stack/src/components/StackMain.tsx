@@ -19,7 +19,7 @@ import {
 import { getSpaceForObject, isTypedObject, useQuery } from '@dxos/react-client/echo';
 import { Main, Button, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
-import { Stack, type StackProps, type CollapsedSections } from '@dxos/react-ui-stack';
+import { Stack, type StackProps, type CollapsedSections, type AddSectionPosition } from '@dxos/react-ui-stack';
 import {
   baseSurface,
   topbarBlockPaddingStart,
@@ -29,6 +29,7 @@ import {
 } from '@dxos/react-ui-theme';
 
 import { FileUpload } from './FileUpload';
+import { STACK_PLUGIN } from '../meta';
 import { isStack } from '../types';
 
 const SectionContent: StackProps['SectionContent'] = ({ data }) => {
@@ -129,12 +130,12 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
     return parseData ? parseData(item, 'view-object') : item;
   };
 
-  const handleAddSection = (path: string, position: 'before' | 'after') => {
+  const handleAddSection = (path: string, position: AddSectionPosition) => {
     void dispatch?.({
       action: LayoutAction.SET_LAYOUT,
       data: {
         element: 'dialog',
-        component: 'dxos.org/plugin/stack/AddSectionDialog',
+        component: `${STACK_PLUGIN}/AddSectionDialog`,
         subject: { path, position },
       },
     });
@@ -170,7 +171,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
                 data: {
                   element: 'dialog',
                   component: 'dxos.org/plugin/stack/AddSectionDialog',
-                  subject: { position: 'after-last' },
+                  subject: { position: 'afterAll' },
                 },
               })
             }
