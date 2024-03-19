@@ -12,6 +12,8 @@ export default [
         'remove section label': 'Remove section',
         'navigate to section label': 'Navigate to item',
         'untitled section title': 'Untitled section',
+        'add section before label': 'Add before',
+        'add section after label': 'Add after',
       },
     },
   },
