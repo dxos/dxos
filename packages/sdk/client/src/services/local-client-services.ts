@@ -29,7 +29,7 @@ export const fromHost = async (
       ...(observabilityGroup ? { group: observabilityGroup } : {}),
     };
   };
-  const lcs = new LocalClientServices({
+  const services = new LocalClientServices({
     config,
     ...(await setupNetworking(config, {}, getSignalMetadata)),
     ...params,
