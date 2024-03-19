@@ -96,7 +96,7 @@ const main = async () => {
             name: 'dxos-client-worker',
           }),
     observabilityGroup,
-    observabilityDisabled,
+    !observabilityDisabled,
   );
   const isSocket = !!(globalThis as any).__args;
 

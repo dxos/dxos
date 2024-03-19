@@ -103,7 +103,8 @@ export class LocalClientServices implements ClientServicesProvider {
     } else {
       // SocketSupply native app
       if ((globalThis as any).__args) {
-        this.signalMetadataTags.origin = 'native';
+        this.signalMetadataTags.runtime = 'native';
+        this.signalMetadataTags.origin = window.location.origin;
         // TODO(nf): access socket app metadata?
       } else {
         this.signalMetadataTags.origin = window.location.origin;
@@ -142,17 +143,13 @@ export class LocalClientServices implements ClientServicesProvider {
     });
     await this._host.open(this._ctx);
     this._isOpen = true;
-    // don't set identity tags for non-browser usage, e.g. agents
-    // TODO(nf): fix
-    if (this.signalMetadataTags.origin !== 'undefined') {
-      setIdentityTags({
-        identityService: this._host.services.IdentityService!,
-        devicesService: this._host.services.DevicesService!,
-        setTag: (k: string, v: string) => {
-          this.signalMetadataTags[k] = v;
-        },
-      });
-    }
+    setIdentityTags({
+      identityService: this._host.services.IdentityService!,
+      devicesService: this._host.services.DevicesService!,
+      setTag: (k: string, v: string) => {
+        this.signalMetadataTags[k] = v;
+      },
+    });
   }
 
   @synchronized
