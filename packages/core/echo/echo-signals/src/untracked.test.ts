@@ -5,6 +5,7 @@
 import { effect, signal, untracked } from '@preact/signals-core';
 import { expect } from 'chai';
 
+// TODO(mykola): Unskip on `preact/signals-core` version bump.
 describe.skip('Untracked', () => {
   it('Nested `untracked` does not cause effect to run', async () => {
     const thisSignal = signal({});
