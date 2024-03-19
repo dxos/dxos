@@ -2,25 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
+import { effect, signal, untracked } from '@preact/signals-core';
 import { expect } from 'chai';
-
-import { registerSignalRuntime } from './preact';
-import { compositeRuntime } from './runtime';
-
-registerSignalRuntime();
 
 describe('Untracked', () => {
   it('Nested `untracked` does not cause effect to run', async () => {
-    const signal = compositeRuntime.createSignal({});
-
+    const thisSignal = signal({});
     let updateCount = 0;
 
-    compositeRuntime.untracked(() => {
+    untracked(() => {
       effect(() => {
-        compositeRuntime.untracked(() => {
-          signal.notifyRead();
-          signal.notifyWrite();
+        untracked(() => {
+          const _ = thisSignal.value;
+          thisSignal.value = {};
           updateCount++;
         });
       });
