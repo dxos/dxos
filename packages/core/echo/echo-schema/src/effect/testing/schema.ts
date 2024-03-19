@@ -34,12 +34,13 @@ export const TestSchema = S.mutable(
     }),
   ),
 );
-export type TestSchema = S.Schema.To<typeof TestSchema>;
-export const TestSchemaWithClass = S.extend(
-  TestSchema,
-  S.mutable(S.struct({ classInstance: S.optional(S.instanceOf(TestClass)) })),
+export type TestSchema = S.Schema.Type<typeof TestSchema>;
+
+// TODO(dmaretskyi): Another top-level S.mutable call as a workaround for the regression in the last minor.
+export const TestSchemaWithClass = S.mutable(
+  S.extend(TestSchema, S.mutable(S.struct({ classInstance: S.optional(S.instanceOf(TestClass)) }))),
 );
-export type TestSchemaWithClass = S.Schema.To<typeof TestSchemaWithClass>;
+export type TestSchemaWithClass = S.Schema.Type<typeof TestSchemaWithClass>;
 
 export const TEST_OBJECT: TestSchema = {
   string: 'foo',

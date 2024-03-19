@@ -19,7 +19,7 @@ const _BlockSchema = S.struct({
   content: S.optional(E.ref(TextV0Schema)),
   object: S.optional(E.ref(E.AnyEchoObject)),
 });
-export interface BlockType extends S.Schema.To<typeof _BlockSchema> {}
+export interface BlockType extends S.Schema.Type<typeof _BlockSchema> {}
 
 const _MessageSchema = S.struct({
   type: S.optional(S.string),
