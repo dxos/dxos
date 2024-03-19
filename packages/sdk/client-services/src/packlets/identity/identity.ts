@@ -97,6 +97,7 @@ export class Identity {
 
   @trace.span()
   async close(ctx: Context) {
+    await this._presence?.destroy();
     await this.authVerifier.close();
     await this.space.spaceState.removeCredentialProcessor(this._profileStateMachine);
     await this.space.spaceState.removeCredentialProcessor(this._deviceStateMachine);
