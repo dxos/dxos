@@ -10,7 +10,7 @@ const TableSection: FC<ObjectTableProps> = ({ table }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   return (
     <div className='bs-96 mlb-2 overflow-auto' ref={containerRef}>
-      <ObjectTable table={table} role='table' getScrollElement={() => containerRef.current} />
+      <ObjectTable key={table.id.toString()} table={table} role='table' getScrollElement={() => containerRef.current} />
     </div>
   );
 };
