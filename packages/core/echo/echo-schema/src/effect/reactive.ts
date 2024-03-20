@@ -131,7 +131,7 @@ export const object: {
     typeof schemaOrObjOrConstructor === 'function'
       ? getEchoObjectSubclassSchema(schemaOrObjOrConstructor)
       : schemaOrObjOrConstructor;
-  if (obj && (schemaOrObj as any) !== ExpandoType) {
+  if (obj) {
     if (!isValidProxyTarget(obj)) {
       throw new Error('Value cannot be made into a reactive object.');
     }
