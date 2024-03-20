@@ -5,7 +5,6 @@
 import * as AST from '@effect/schema/AST';
 import { isTypeLiteral } from '@effect/schema/AST';
 import * as S from '@effect/schema/Schema';
-import * as Option from 'effect/Option';
 
 import { invariant } from '@dxos/invariant';
 
