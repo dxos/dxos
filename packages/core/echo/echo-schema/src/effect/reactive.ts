@@ -13,11 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
 import { EchoReactiveHandler } from './echo-handler';
-import {
-  type EchoObjectClassType,
-  getEchoObjectSubclassSchemaOrThrow,
-  getEchoObjectSubclassTypename,
-} from './echo-object-class';
+import { type EchoObjectClassType, getEchoObjectSubclassTypename } from './echo-object-class';
 import {
   type ReactiveHandler,
   createReactiveProxy,
@@ -126,15 +122,7 @@ export const object: {
   <T extends {}>(obj: T): ReactiveObject<T>;
   <T extends {}>(schema: typeof ExpandoType, obj: T): ReactiveObject<Identifiable & T>;
   <T extends {}>(schema: S.Schema<T>, obj: ExcludeId<T>): ReactiveObject<T>;
-  <T extends {}>(schema: EchoObjectClassType<T>, obj: ExcludeId<T>): ReactiveObject<T>;
-} = <T extends {}>(
-  schemaOrObjOrConstructor: S.Schema<T> | T | (new () => T),
-  obj?: ExcludeId<T>,
-): ReactiveObject<T> => {
-  const schemaOrObj =
-    typeof schemaOrObjOrConstructor === 'function'
-      ? getEchoObjectSubclassSchemaOrThrow(schemaOrObjOrConstructor)
-      : schemaOrObjOrConstructor;
+} = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: ExcludeId<T>): ReactiveObject<T> => {
   if (obj) {
     if (!isValidProxyTarget(obj)) {
       throw new Error('Value cannot be made into a reactive object.');
@@ -185,11 +173,7 @@ export const ReferenceAnnotation = Symbol.for('@dxos/schema/annotation/Reference
 export type ReferenceAnnotationValue = {};
 
 // TODO(dmaretskyi): Assert that schema has `id`.
-export const ref: {
-  <T extends Identifiable>(schema: S.Schema<T>): S.Schema<T>;
-  <T extends Identifiable>(schema: EchoObjectClassType<T>): S.Schema<T>;
-} = <T extends Identifiable>(schemaOrType: S.Schema<T> | EchoObjectClassType<T>): S.Schema<T> => {
-  const schema = typeof schemaOrType === 'function' ? getEchoObjectSubclassSchemaOrThrow(schemaOrType) : schemaOrType;
+export const ref = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<T> => {
   if (!getEchoObjectAnnotation(schema)) {
     throw new Error('Reference target must be an ECHO object.');
   }
@@ -207,10 +191,6 @@ export const getRefAnnotation = (schema: S.Schema<any>) =>
  * Returns the schema for the given object if one is defined.
  */
 export const getSchema = <T extends {} = any>(obj: T): S.Schema<any> | undefined => {
-  if (typeof obj === 'function') {
-    return getEchoObjectSubclassSchemaOrThrow(obj);
-  }
-
   if (isReactiveProxy(obj)) {
     const proxyHandlerSlot = getProxyHandlerSlot(obj);
     if (proxyHandlerSlot.handler instanceof EchoReactiveHandler) {
