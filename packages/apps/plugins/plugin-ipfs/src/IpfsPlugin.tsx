@@ -77,7 +77,7 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
                 cid: cid.toString(),
               };
 
-              log.info('upload', { file, info, path });
+              log('upload', { file, info, path });
               return info;
             }
           } catch (err) {

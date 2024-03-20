@@ -42,7 +42,7 @@ import {
 } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
-import { type Formatting } from '../../extensions';
+import { type Action, type ActionType, type Formatting } from '../../extensions';
 import { translationKey } from '../../translations';
 
 const tooltipProps = { side: 'top' as const, classNames: 'z-10' };
@@ -55,30 +55,6 @@ const HeadingIcons: { [key: string]: Icon } = {
   '4': TextHFour,
   '5': TextHFive,
   '6': TextHSix,
-};
-
-// TODO(burdon): Revert to string to make extensible?
-export type ActionType =
-  | 'blockquote'
-  | 'strong'
-  | 'codeblock'
-  | 'comment'
-  | 'heading'
-  | 'image'
-  | 'emphasis'
-  | 'code'
-  | 'link'
-  | 'list-bullet'
-  | 'list-ordered'
-  | 'list-task'
-  | 'mention'
-  | 'prompt'
-  | 'strikethrough'
-  | 'table';
-
-export type Action = {
-  type: ActionType;
-  data?: any;
 };
 
 export type ToolbarProps = ThemedClassName<
