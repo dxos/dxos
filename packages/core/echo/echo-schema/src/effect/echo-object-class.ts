@@ -5,28 +5,20 @@
 import * as AST from '@effect/schema/AST';
 import * as S from '@effect/schema/Schema';
 import type { Class, SimplifyMutable, Struct } from '@effect/schema/Schema';
-import { pipe } from 'effect';
-import * as Option from 'effect/Option';
 
 import { type EchoObjectAnnotation, EchoObjectAnnotationId, getEchoObjectAnnotation } from './reactive';
 
-const EchoClassOptionsAnnotationId = Symbol.for('@dxos/echo-class/annotation/Options');
-type EchoClassOptionsAnnotation = {
+type EchoClassOptions = {
   partial?: true;
 };
-const getEchoClassOptionsAnnotation = (schema: S.Schema<any>) =>
-  pipe(
-    AST.getAnnotation<EchoClassOptionsAnnotation>(EchoClassOptionsAnnotationId)(schema.ast),
-    Option.getOrElse(() => ({}) as EchoClassOptionsAnnotation),
-  );
 
 export interface EchoObjectClassType<T> {
   new (name: Omit<T, 'id'>): T;
 }
 
-export const EchoObject = <Klass>(args: EchoObjectAnnotation) => {
+export const EchoObjectSchema = <Klass>(args: EchoObjectAnnotation) => {
   return <
-    Options extends EchoClassOptionsAnnotation,
+    Options extends EchoClassOptions,
     SchemaFields extends Struct.Fields,
     SimplifiedFields = Options['partial'] extends boolean
       ? SimplifyMutable<Partial<Struct.Type<SchemaFields>>>
@@ -36,28 +28,37 @@ export const EchoObject = <Klass>(args: EchoObjectAnnotation) => {
     fields: SchemaFields,
     options?: Options,
   ): Class<Klass, SchemaFields & { id: S.$string }, Fields, Fields, Fields, SimplifiedFields, {}, {}> => {
-    return S.Class<Klass>(args.typename)(fields, {
-      [EchoObjectAnnotationId]: { typename: args.typename, version: args.version },
-      [EchoClassOptionsAnnotationId]: { partial: options?.partial },
-    }) as any;
+    const fieldsSchema = S.mutable(options?.partial ? S.partial(S.struct(fields)) : S.struct(fields));
+    const typeSchema = S.extend(fieldsSchema, S.struct({ id: S.string }));
+    const annotatedSchema = S.make(
+      AST.annotations(typeSchema.ast, {
+        [EchoObjectAnnotationId]: {
+          typename: args.typename,
+          version: args.version,
+        },
+      }),
+    );
+    return class {
+      static readonly ast = annotatedSchema.ast;
+      constructor() {
+        throw new Error('use E.object(MyClass, fields) to instantiate an object');
+      }
+    } as any;
   };
 };
 
-export const getEchoObjectSubclassSchema = <T extends {} = any>(klass: any): S.Schema<T> => {
+export const getEchoObjectSubclassSchemaOrThrow = <T extends {} = any>(klass: any): S.Schema<T> => {
   const ast = (klass as any).ast;
-  if (!AST.isTransform(ast)) {
-    throw createInvalidTypeError();
+  if (ast == null || !AST.isTypeLiteral(ast)) {
+    throw new Error('only types created using `class Type extends EchoObject<Type>(...)` are allowed');
   }
-  const transformSchema = S.make(ast.to);
-  const typeAnnotation = getEchoObjectAnnotation(transformSchema);
-  if (typeAnnotation == null) {
-    throw createInvalidTypeError();
-  }
-  const classOptions = getEchoClassOptionsAnnotation(transformSchema);
-  const typeSchema = classOptions.partial ? S.partial(S.make(ast.from)) : S.make(ast.from);
-  const schemaWithId = S.extend(S.mutable(typeSchema), S.struct({ id: S.string }));
-  return S.make(AST.annotations(schemaWithId.ast, { [EchoObjectAnnotationId]: typeAnnotation }));
+  return S.make(ast);
 };
 
-const createInvalidTypeError = () =>
-  new Error('only types created using `class Type extends EchoObject<Type>(...)` are allowed');
+export const getEchoObjectSubclassTypename = (klass: any): string | undefined => {
+  const ast = (klass as any).ast;
+  if (!AST.isTransform(ast)) {
+    return undefined;
+  }
+  return getEchoObjectAnnotation(S.make(ast.to))?.typename;
+};
