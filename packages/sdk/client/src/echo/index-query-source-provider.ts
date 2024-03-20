@@ -15,7 +15,6 @@ import {
   base,
   getAutomergeObjectCore,
 } from '@dxos/echo-schema';
-import { prohibitSignalActions } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -45,30 +44,26 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
           return;
         }
 
-        await warnAfterTimeout(2000, 'takes to long to load object', async () => {
+        const object = await warnAfterTimeout(2000, 'takes to long to load object', async () => {
           await space.waitUntilReady();
-          return space.db.automerge.waitForObject(result.id);
+          return space.db.automerge.loadObjectById(result.id);
         });
 
-        return prohibitSignalActions(() => {
-          const object = space.db.getObjectById(result.id);
+        if (!object) {
+          return;
+        }
 
-          if (!object) {
-            return;
-          }
+        if (!filterMatch(filter, getAutomergeObjectCore(object[base]))) {
+          return;
+        }
 
-          if (!filterMatch(filter, getAutomergeObjectCore(object[base]))) {
-            return;
-          }
-
-          return {
-            id: object.id,
-            spaceKey: object[db]!.spaceKey,
-            object,
-            match: { rank: result.rank },
-            resolution: { source: 'index', time: Date.now() - start },
-          };
-        });
+        return {
+          id: object.id,
+          spaceKey: object[db]!.spaceKey,
+          object,
+          match: { rank: result.rank },
+          resolution: { source: 'index', time: Date.now() - start },
+        };
       }),
     );
 
@@ -95,19 +90,18 @@ export class IndexQuerySource implements QuerySource {
   }
 
   update(filter: Filter<EchoObject>): void {
-    prohibitSignalActions(() => {
-      this._results = undefined;
-      this.changed.emit();
+    this._results = [];
+    this.changed.emit();
 
-      this._params
-        .find(filter)
-        .then((results) => {
-          prohibitSignalActions(() => {
-            this._results = results;
-            this.changed.emit();
-          });
-        })
-        .catch((error) => log.catch(error));
-    });
+    this._params
+      .find(filter)
+      .then((results) => {
+        if (results.length === 0) {
+          return;
+        }
+        this._results = results;
+        this.changed.emit();
+      })
+      .catch((error) => log.catch(error));
   }
 }
