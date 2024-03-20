@@ -303,14 +303,14 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
             case ThreadAction.DELETE: {
               const { document: doc, thread, cursor } = intent.data ?? {};
-              if (!isDocument(doc) || !isThread(thread)) {
+              if (!isDocument(doc) || !doc.comments || !isThread(thread)) {
                 return;
               }
 
               if (!intent.undo) {
-                const index = doc.comments?.findIndex((comment) => comment.thread?.id === thread.id);
-                const cursor = index && doc.comments?.[index]?.cursor;
-                if (index && index !== -1) {
+                const index = doc.comments.findIndex((comment) => comment.thread?.id === thread.id);
+                const cursor = doc.comments[index]?.cursor;
+                if (index !== -1) {
                   doc.comments?.splice(index, 1);
                 }
 

@@ -8,13 +8,7 @@ import React, { useMemo } from 'react';
 import { type DocumentType } from '@braneframe/types';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import {
-  type Comment,
-  createDataExtensions,
-  localStorageStateStoreAdapter,
-  state,
-  useDocAccessor,
-} from '@dxos/react-ui-editor';
+import { createDataExtensions, localStorageStateStoreAdapter, state, useDocAccessor } from '@dxos/react-ui-editor';
 
 import EditorMain, { type EditorMainProps } from './EditorMain';
 
@@ -29,7 +23,6 @@ const DocumentMain = ({ document, extensions: _extensions = [], ...props }: Docu
   const { id, doc, accessor } = useDocAccessor(document.content);
   const extensions = useMemo(
     () => [
-      //
       _extensions,
       createDataExtensions({ id, text: accessor, space, identity }),
       state(localStorageStateStoreAdapter),
@@ -45,9 +38,7 @@ const DocumentMain = ({ document, extensions: _extensions = [], ...props }: Docu
     };
   }, [id]);
 
-  const comments = useMemo<Comment[]>(() => {
-    return document.comments?.map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! })) ?? [];
-  }, [document.comments]);
+  const comments = document.comments?.map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! })) ?? [];
 
   return (
     <EditorMain
