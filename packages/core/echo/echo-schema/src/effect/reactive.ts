@@ -13,7 +13,6 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
 import { EchoReactiveHandler } from './echo-handler';
-import { type EchoObjectClassType, getEchoObjectSubclassTypename } from './echo-object-class';
 import {
   type ReactiveHandler,
   createReactiveProxy,
@@ -173,14 +172,6 @@ export const getSchema = <T extends {} = any>(obj: T): S.Schema<any> | undefined
 
   invariant(S.isSchema(schema), 'Invalid schema.');
   return schema as S.Schema<T>;
-};
-
-export const isOfType = <T>(type: EchoObjectClassType<T>, obj: any): obj is T => {
-  const typename = getEchoObjectSubclassTypename(type);
-  if (!typename) {
-    return false;
-  }
-  return typename === getTypeReference(obj)?.itemId;
 };
 
 export const getTypeReference = (schema: S.Schema<any> | undefined): Reference | undefined => {

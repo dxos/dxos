@@ -6,7 +6,13 @@ import * as AST from '@effect/schema/AST';
 import * as S from '@effect/schema/Schema';
 import type { SimplifyMutable, Struct } from '@effect/schema/Schema';
 
-import { type EchoObjectAnnotation, EchoObjectAnnotationId, getEchoObjectAnnotation } from './reactive';
+import {
+  type EchoObjectAnnotation,
+  EchoObjectAnnotationId,
+  getEchoObjectAnnotation,
+  getSchema,
+  getTypeReference,
+} from './reactive';
 
 type EchoClassOptions = {
   partial?: true;
@@ -49,6 +55,14 @@ export const EchoObjectSchema = <Klass>(args: EchoObjectAnnotation) => {
     const klass: any = class {
       constructor() {
         throw new Error('use E.object(MyClass, fields) to instantiate an object');
+      }
+
+      static typename() {
+        return args.typename;
+      }
+
+      static isInstance(obj: unknown): obj is Klass {
+        return obj != null && getTypeReference(getSchema(obj))?.itemId === args.typename;
       }
     };
     klass.ast = annotatedSchema.ast;

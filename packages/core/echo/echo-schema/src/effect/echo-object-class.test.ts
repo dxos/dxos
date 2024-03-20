@@ -29,6 +29,17 @@ describe('EchoObject class dsl', () => {
     expect(S.isSchema(Organization)).to.be.true;
   });
 
+  test('static typename accessor', async () => {
+    expect(Organization.typename()).to.eq('Organization');
+  });
+
+  test('static isInstance check', async () => {
+    const { db } = await setupDatabase();
+    const obj = db.add(E.object(Organization, { ...DEFAULT_ORG }));
+    expect(Organization.isInstance(obj)).to.be.true;
+    expect(Organization.isInstance({ id: '12345', ...DEFAULT_ORG })).to.be.false;
+  });
+
   test('can register schema in hypergraph', async () => {
     const { graph } = await setupDatabase();
     expect(graph.types.isEffectSchemaRegistered(Organization)).to.be.true;
