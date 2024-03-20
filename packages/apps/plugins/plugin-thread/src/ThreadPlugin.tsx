@@ -310,7 +310,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               if (!intent.undo) {
                 const index = doc.comments?.findIndex((comment) => comment.thread?.id === thread.id);
                 const cursor = index && doc.comments?.[index]?.cursor;
-                if (index !== -1) {
+                if (index && index !== -1) {
                   doc.comments?.splice(index, 1);
                 }
 
@@ -394,7 +394,11 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 const comment = doc.comments?.find(({ thread }) => thread?.id === id);
                 if (comment && comment.thread) {
                   const [start, end] = cursor.split(':');
-                  comment.thread.title = getTextInRange(doc.content as unknown as E.TextObject, start, end);
+                  (comment.thread as ThreadType).title = getTextInRange(
+                    doc.content as unknown as E.TextObject,
+                    start,
+                    end,
+                  );
                   comment.cursor = cursor;
                 }
               },

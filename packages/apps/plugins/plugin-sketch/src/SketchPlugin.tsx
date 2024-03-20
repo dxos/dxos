@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { SketchType, TextV0Type } from '@braneframe/types';
+import { SketchType, TextV0Type, isSketch } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
@@ -16,7 +16,7 @@ import * as E from '@dxos/echo-schema';
 import { SketchMain, SketchComponent } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
 import translations from './translations';
-import { SketchAction, type SketchPluginProvides, isSketch } from './types';
+import { SketchAction, type SketchPluginProvides } from './types';
 
 export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
   return {

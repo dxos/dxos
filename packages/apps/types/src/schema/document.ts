@@ -15,11 +15,15 @@ export class DocumentType extends EchoObjectSchema({ typename: 'braneframe.Docum
   title: S.optional(S.string),
   content: E.ref(TextV0Type),
   comments: S.optional(
-    S.array(
-      S.struct({
-        thread: S.optional(E.ref(E.AnyEchoObject)),
-        cursor: S.optional(S.string),
-      }),
+    S.mutable(
+      S.array(
+        S.mutable(
+          S.struct({
+            thread: S.optional(E.ref(E.AnyEchoObject)),
+            cursor: S.optional(S.string),
+          }),
+        ),
+      ),
     ),
   ),
 }) {}

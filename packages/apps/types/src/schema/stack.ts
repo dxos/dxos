@@ -13,7 +13,7 @@ export class SectionType extends EchoObjectSchema({ typename: 'braneframe.Stack.
 
 export class StackType extends EchoObjectSchema({ typename: 'braneframe.Stack', version: '0.1.0' })({
   title: S.optional(S.string),
-  sections: S.array(E.ref(SectionType)),
+  sections: S.mutable(S.array(E.ref(SectionType))),
 }) {}
 
 export const isStack = (data: unknown): data is StackType => !!data && data instanceof StackType;

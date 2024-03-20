@@ -15,7 +15,7 @@ import SketchComponent from './Sketch';
 
 const Story = () => {
   const [sketch, setSketch] = useState<SketchType>(
-    E.object(SketchType, { content: E.object(TextV0Type, { content: '' }) }),
+    E.object(SketchType, { data: E.object(TextV0Type, { content: '' }) }),
   );
 
   return (

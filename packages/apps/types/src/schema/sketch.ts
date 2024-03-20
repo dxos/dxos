@@ -13,3 +13,5 @@ export class SketchType extends EchoObjectSchema({ typename: 'braneframe.Sketch'
   title: S.optional(S.string),
   data: E.ref(TextV0Type),
 }) {}
+
+export const isSketch = (data: unknown): data is SketchType => !!data && data instanceof SketchType;

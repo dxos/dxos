@@ -36,7 +36,7 @@ export class MessageType extends EchoObjectSchema({ typename: 'braneframe.Messag
   to: S.optional(S.array(_RecipientSchema)),
   cc: S.optional(S.array(_RecipientSchema)),
   subject: S.optional(S.string),
-  blocks: S.array(_BlockSchema),
+  blocks: S.mutable(S.array(_BlockSchema)),
   links: S.optional(S.array(E.ref(E.AnyEchoObject))),
   state: S.optional(S.enums(MessageState)),
   read: S.optional(S.boolean),
@@ -56,7 +56,7 @@ export class MessageType extends EchoObjectSchema({ typename: 'braneframe.Messag
 //   It also makes the simple cases much more complex than they need to be.
 export class ThreadType extends EchoObjectSchema({ typename: 'braneframe.Thread', version: '0.1.0' })({
   title: S.optional(S.string),
-  messages: S.array(E.ref(MessageType)),
+  messages: S.mutable(S.array(E.ref(MessageType))),
   // TODO(burdon): Reconcile with Message.Context.
   context: S.optional(
     S.struct({
