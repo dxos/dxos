@@ -25,6 +25,10 @@ describe('EchoObject class dsl', () => {
     return result;
   };
 
+  test('type is a valid schema', async () => {
+    expect(S.isSchema(Organization)).to.be.true;
+  });
+
   test('can register schema in hypergraph', async () => {
     const { graph } = await setupDatabase();
     expect(graph.types.isEffectSchemaRegistered(Organization)).to.be.true;
@@ -40,7 +44,7 @@ describe('EchoObject class dsl', () => {
   test('can get object schema', async () => {
     const { db } = await setupDatabase();
     const obj = db.add(E.object(Organization, { ...DEFAULT_ORG }));
-    expect(E.getSchema(obj)).to.deep.eq(E.getSchema(Organization));
+    expect(E.getSchema(obj)).to.deep.eq(Organization);
   });
 
   test('can query objects by type', async () => {

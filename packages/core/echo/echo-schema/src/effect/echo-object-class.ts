@@ -4,7 +4,7 @@
 
 import * as AST from '@effect/schema/AST';
 import * as S from '@effect/schema/Schema';
-import type { Class, SimplifyMutable, Struct } from '@effect/schema/Schema';
+import type { SimplifyMutable, Struct } from '@effect/schema/Schema';
 
 import { type EchoObjectAnnotation, EchoObjectAnnotationId, getEchoObjectAnnotation } from './reactive';
 
@@ -14,6 +14,14 @@ type EchoClassOptions = {
 
 export interface EchoObjectClassType<T> {
   new (name: Omit<T, 'id'>): T;
+}
+
+export interface EchoSchemaClass<Self, Fields> extends S.Schema<Fields> {
+  new (): Fields;
+
+  typename(): string;
+
+  isInstance(obj: unknown): obj is Self;
 }
 
 export const EchoObjectSchema = <Klass>(args: EchoObjectAnnotation) => {
@@ -27,7 +35,7 @@ export const EchoObjectSchema = <Klass>(args: EchoObjectAnnotation) => {
   >(
     fields: SchemaFields,
     options?: Options,
-  ): Class<Klass, SchemaFields & { id: S.$string }, Fields, Fields, Fields, SimplifiedFields, {}, {}> => {
+  ): EchoSchemaClass<Klass, Fields> => {
     const fieldsSchema = S.mutable(options?.partial ? S.partial(S.struct(fields)) : S.struct(fields));
     const typeSchema = S.extend(fieldsSchema, S.struct({ id: S.string }));
     const annotatedSchema = S.make(
@@ -38,21 +46,19 @@ export const EchoObjectSchema = <Klass>(args: EchoObjectAnnotation) => {
         },
       }),
     );
-    return class {
-      static readonly ast = annotatedSchema.ast;
+    const klass: any = class {
       constructor() {
         throw new Error('use E.object(MyClass, fields) to instantiate an object');
       }
-    } as any;
+    };
+    klass.ast = annotatedSchema.ast;
+    klass[S.TypeId] = {
+      _A: (_: any) => _,
+      _I: (_: any) => _,
+      _R: (_: never) => _,
+    };
+    return klass;
   };
-};
-
-export const getEchoObjectSubclassSchemaOrThrow = <T extends {} = any>(klass: any): S.Schema<T> => {
-  const ast = (klass as any).ast;
-  if (ast == null || !AST.isTypeLiteral(ast)) {
-    throw new Error('only types created using `class Type extends EchoObject<Type>(...)` are allowed');
-  }
-  return S.make(ast);
 };
 
 export const getEchoObjectSubclassTypename = (klass: any): string | undefined => {
