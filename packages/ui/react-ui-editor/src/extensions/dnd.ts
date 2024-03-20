@@ -5,7 +5,7 @@
 import type { Extension } from '@codemirror/state';
 import { dropCursor, EditorView } from '@codemirror/view';
 
-export type DNDOptions = { onDrop?: (view: EditorView, event: { pos: number; files: FileList }) => void };
+export type DNDOptions = { onDrop?: (view: EditorView, event: { files: FileList }) => void };
 
 export const dnd = (options: DNDOptions = {}): Extension => {
   return [
@@ -16,7 +16,8 @@ export const dnd = (options: DNDOptions = {}): Extension => {
         const files = event.dataTransfer?.files;
         const pos = view.posAtCoords(event);
         if (files?.length && pos !== null) {
-          options.onDrop?.(view, { files, pos });
+          view.dispatch({ selection: { anchor: pos } });
+          options.onDrop?.(view, { files });
         }
       },
     }),
