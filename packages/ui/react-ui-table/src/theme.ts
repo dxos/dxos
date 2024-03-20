@@ -37,7 +37,12 @@ export const groupTh: ComponentFunction<TableStyleProps> = (_props, ...etc) =>
 export type TheadStyleProps = Partial<TableFlags>;
 
 export const theadRoot: ComponentFunction<TheadStyleProps> = ({ header, stickyHeader }, ...etc) =>
-  mx(header ? stickyHeader && 'sticky block-start-[--sticky-top] z-[1]' : 'collapse', header && 'base-surface', ...etc);
+  mx(
+    header ? stickyHeader && 'sticky block-start-[--sticky-top] z-[1]' : 'collapse',
+    header && 'base-surface',
+    'drop-shadow-sm',
+    ...etc,
+  );
 
 export const theadTr: ComponentFunction<TheadStyleProps> = (_props, ...etc) => mx('group', ...etc);
 
@@ -46,7 +51,7 @@ export const theadTh: ComponentFunction<TheadStyleProps> = ({ border }, ...etc) 
     'relative text-start font-medium select-none truncate',
     headPadding,
     border && groupBorder,
-    border && 'border border-neutral-200',
+    border && 'border border-t-0 border-b-0 border-neutral-200',
     ...etc,
   );
 
