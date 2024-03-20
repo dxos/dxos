@@ -56,6 +56,7 @@ export const PopoverRemoveObject = ({
 
     // Remove the object from the space.
     if (space) {
+      // TODO(wittjosiah): Attempting to remove objects throws and fails.
       space.db.remove(object);
       return true;
     }

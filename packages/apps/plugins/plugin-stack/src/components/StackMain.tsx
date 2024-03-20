@@ -56,16 +56,10 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
   const handleOver = ({ active }: MosaicMoveEvent<number>) => {
     const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
     const data = parseData ? parseData(active.item, 'object') : active.item;
-    console.log({
-      parseData,
-      active: active.item,
-      data,
-    });
 
     // TODO(wittjosiah): Prevent dropping items which don't have a section renderer?
     //  Perhaps stack plugin should just provide a fallback section renderer.
     if (!(isTypedObject(data) || E.isReactiveProxy(data)) || isStack(data)) {
-      console.log('reject', data);
       return 'reject';
     }
 
@@ -87,6 +81,8 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
 
     const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
     const object = parseData?.(active.item, 'object');
+    // TODO(wittjosiah): Pushing object into a section causes app to explode.
+    console.log('handleDrop', object);
     // TODO(wittjosiah): Stop creating new section objects for each drop.
     if (object && over.path === Path.create(id, over.item.id)) {
       stack.sections.splice(over.position!, 0, E.object(SectionType, { object }));
