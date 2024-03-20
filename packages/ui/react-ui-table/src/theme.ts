@@ -4,15 +4,7 @@
 
 import { type CellContext } from '@tanstack/react-table';
 
-import {
-  modalSurface,
-  fixedSurface,
-  focusRing,
-  ghostSelected,
-  ghostSelectedCurrent,
-  groupBorder,
-  mx,
-} from '@dxos/react-ui-theme';
+import { modalSurface, focusRing, ghostSelected, ghostSelectedCurrent, groupBorder, mx } from '@dxos/react-ui-theme';
 import { type ComponentFunction } from '@dxos/react-ui-types';
 
 import { type TableContextValue, type TableFlags } from './components';
@@ -21,7 +13,7 @@ export const currentRow = '!bg-neutral-75 !dark:bg-neutral-850';
 export const selectedRow = '!bg-primary-100 dark:!bg-primary-700';
 export const flushPadding = 'pli-0 plb-0';
 export const textPadding = 'pli-2 plb-0.5';
-export const headPadding = 'pli-2 plb-1.5';
+export const headPadding = 'pli-2 plb-1';
 
 export const gridCellFocusRing =
   'focus-within:z-[11] focus-within:outline outline-2 outline-primary-500 dark:outline-primary-400';
@@ -45,7 +37,7 @@ export const groupTh: ComponentFunction<TableStyleProps> = (_props, ...etc) =>
 export type TheadStyleProps = Partial<TableFlags>;
 
 export const theadRoot: ComponentFunction<TheadStyleProps> = ({ header, stickyHeader }, ...etc) =>
-  mx(header ? stickyHeader && 'sticky block-start-[--sticky-top] z-[1]' : 'collapse', header && fixedSurface, ...etc);
+  mx(header ? stickyHeader && 'sticky block-start-[--sticky-top] z-[1]' : 'collapse', header && 'base-surface', ...etc);
 
 export const theadTr: ComponentFunction<TheadStyleProps> = (_props, ...etc) => mx('group', ...etc);
 
@@ -53,8 +45,8 @@ export const theadTh: ComponentFunction<TheadStyleProps> = ({ border }, ...etc) 
   mx(
     'relative text-start font-medium select-none truncate',
     headPadding,
-    border && 'border',
     border && groupBorder,
+    border && 'border border-neutral-200',
     ...etc,
   );
 

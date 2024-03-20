@@ -243,8 +243,8 @@ const VirtualizedTableContent = ({
   const { getTotalSize, getVirtualItems } = useVirtualizer({
     getScrollElement,
     count: rows.length,
-    overscan: 4,
-    estimateSize: () => 33,
+    overscan: 8,
+    estimateSize: () => 40,
   });
 
   const virtualRows = getVirtualItems();

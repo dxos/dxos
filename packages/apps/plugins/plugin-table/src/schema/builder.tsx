@@ -128,24 +128,15 @@ export const createActionColumn = (
 
   return helper.display({
     id: '__new',
-    size: 36,
-    meta: {
-      header: {
-        classNames: 'p-0',
-      },
-      footer: {
-        classNames: 'p-0',
-      },
-      cell: {
-        classNames: 'p-0',
-      },
-    },
+    size: 48,
     // TODO(burdon): Translation.
     header: onColumnUpdate
       ? () => (
-          <Button variant='ghost' onClick={handleAddColumn} title='New column' classNames='m-0 p-0'>
-            <Plus className={getSize(4)} />
-          </Button>
+          <div className='flex justify-center items-center'>
+            <Button variant='ghost' onClick={handleAddColumn} title='New column'>
+              <Plus className={getSize(4)} />
+            </Button>
+          </div>
         )
       : undefined,
     cell: onRowDelete
