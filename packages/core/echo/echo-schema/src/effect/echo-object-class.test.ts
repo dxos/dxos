@@ -30,14 +30,14 @@ describe('EchoObject class dsl', () => {
   });
 
   test('static typename accessor', async () => {
-    expect(Organization.typename()).to.eq('Organization');
+    expect(Organization.typename).to.eq('Organization');
   });
 
   test('static isInstance check', async () => {
     const { db } = await setupDatabase();
     const obj = db.add(E.object(Organization, { ...DEFAULT_ORG }));
-    expect(Organization.isInstance(obj)).to.be.true;
-    expect(Organization.isInstance({ id: '12345', ...DEFAULT_ORG })).to.be.false;
+    expect(obj instanceof Organization).to.be.true;
+    expect({ id: '12345', ...DEFAULT_ORG } instanceof Organization).to.be.false;
   });
 
   test('can register schema in hypergraph', async () => {
