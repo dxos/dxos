@@ -90,10 +90,6 @@ export const defaultTheme: ThemeStyles = {
     color: get(tokens, 'extend.semanticColors.description.dark', 'rgba(255,255,255,.2)'),
   },
 
-  '.cm-dropCursor': {
-    border: '1px solid red',
-  },
-
   //
   // line
   //

@@ -16,7 +16,7 @@ import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
-  dnd,
+  dropFile,
   editorFillLayoutRoot,
   editorFillLayoutEditor,
   focusComment,
@@ -86,7 +86,7 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   const extensions = useMemo(() => {
     return [
       _extensions,
-      fileManagerPlugin?.provides.file.upload && dnd({ onDrop: handleDrop }),
+      fileManagerPlugin && dropFile({ onDrop: handleDrop }),
       formattingObserver,
       createBasicExtensions({ readonly, placeholder: t('editor placeholder'), scrollPastEnd: true }),
       createMarkdownExtensions({ themeMode }),
