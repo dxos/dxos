@@ -5,19 +5,15 @@
 import * as S from '@effect/schema/Schema';
 
 import * as E from '@dxos/echo-schema';
+import { EchoObjectSchema } from '@dxos/echo-schema';
 
-const _TextV0Schema = S.struct({
+export class TextV0Type extends EchoObjectSchema({ typename: 'dxos.Text.v0', version: '0.1.0' })({
   content: S.string,
-}).pipe(E.echoObject('dxos.Text.v0', '0.1.0'));
-export interface TextV0Type extends E.ObjectType<typeof _TextV0Schema> {}
-export const TextV0Schema: S.Schema<TextV0Type> = _TextV0Schema;
+}) {}
 
-export const isTextV0 = (data: unknown): data is E.EchoReactiveObject<TextV0Type> =>
-  !!data && E.getSchema<any>(data) === TextV0Schema;
-
-const _DocumentSchema = S.struct({
+export class DocumentType extends EchoObjectSchema({ typename: 'braneframe.Document', version: '0.1.0' })({
   title: S.optional(S.string),
-  content: E.ref(TextV0Schema),
+  content: E.ref(TextV0Type),
   comments: S.optional(
     S.array(
       S.struct({
@@ -26,9 +22,7 @@ const _DocumentSchema = S.struct({
       }),
     ),
   ),
-}).pipe(E.echoObject('braneframe.Document', '0.1.0'));
-export interface DocumentType extends E.ObjectType<typeof _DocumentSchema> {}
-export const DocumentSchema: S.Schema<DocumentType> = _DocumentSchema;
+}) {}
 
 export const isDocument = (data: unknown): data is E.EchoReactiveObject<DocumentType> =>
-  !!data && E.getSchema<any>(data) === DocumentSchema;
+  !!data && DocumentType.isInstance(data);

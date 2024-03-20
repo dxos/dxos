@@ -5,7 +5,7 @@
 import { Chat } from '@phosphor-icons/react';
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { TextV0Schema, MessageSchema } from '@braneframe/types';
+import { MessageSchema, TextV0Type } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
 import { getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -48,7 +48,7 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
   const { themeMode } = useThemeContext();
 
   const textboxMetadata = getMessageMetadata(thread.id, identity);
-  const [nextMessage, setNextMessage] = useState({ text: E.object(TextV0Schema, { content: '' }) });
+  const [nextMessage, setNextMessage] = useState({ text: E.object(TextV0Type, { content: '' }) });
   const { doc, accessor } = useDocAccessor(nextMessage.text);
   const extensions = useMemo(
     () => [
@@ -92,7 +92,7 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
     );
 
     setNextMessage(() => {
-      return { text: E.object(TextV0Schema, { content: '' }) };
+      return { text: E.object(TextV0Type, { content: '' }) };
     });
 
     setAutoFocus(true);

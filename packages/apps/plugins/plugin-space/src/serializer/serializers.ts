@@ -4,14 +4,7 @@
 
 import get from 'lodash.get';
 
-import {
-  DocumentSchema,
-  isTextV0,
-  type DocumentType,
-  TextV0Schema,
-  ThreadSchema,
-  type ThreadType,
-} from '@braneframe/types';
+import { DocumentType, ThreadSchema, type ThreadType, TextV0Type } from '@braneframe/types';
 import { next as A, type Prop } from '@dxos/automerge/automerge';
 import {
   type AnyEchoObject,
@@ -87,7 +80,7 @@ export interface TypedObjectSerializer {
 
 // TODO(mykola): Factor out to respective plugins as providers.
 export const serializers: Record<string, TypedObjectSerializer> = {
-  [getEchoObjectAnnotation(DocumentSchema)!.typename]: {
+  [DocumentType.typename()]: {
     filename: (object: DocumentType) => ({
       name: object.title?.replace(/[/\\?%*:|"<>]/g, '-') ?? '',
       extension: 'md',
@@ -109,7 +102,7 @@ export const serializers: Record<string, TypedObjectSerializer> = {
       // Insert comments.
       const comments = object.comments;
       const threadSerializer = serializers[getEchoObjectAnnotation(ThreadSchema)!.typename];
-      if (!threadSerializer || !comments || comments.length === 0 || isTextV0(content)) {
+      if (!threadSerializer || !comments || comments.length === 0 || TextV0Type.isInstance(content)) {
         return text;
       }
       const doc = getRawDoc(content, [(content as any).field]);
@@ -144,7 +137,7 @@ export const serializers: Record<string, TypedObjectSerializer> = {
         (existingDoc.content as any)[(existingDoc.content as any).field] = text;
         return existingDoc;
       } else {
-        return E.object(DocumentSchema, { content: E.object(TextV0Schema, { content: text }), comments: [] });
+        return E.object(DocumentType, { content: E.object(TextV0Type, { content: text }), comments: [] });
       }
     },
   } satisfies TypedObjectSerializer,

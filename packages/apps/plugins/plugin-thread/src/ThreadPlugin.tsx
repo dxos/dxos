@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { isThread, ThreadSchema, type ThreadType, MessageSchema, isDocument, DocumentSchema } from '@braneframe/types';
+import { isThread, ThreadSchema, type ThreadType, MessageSchema, isDocument, DocumentType } from '@braneframe/types';
 import {
   type IntentPluginProvides,
   LayoutAction,
@@ -167,7 +167,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const query = space.db.query(Filter.schema(ThreadSchema));
               // TODO(wittjosiah): There should be a better way to do this.
               //  Resolvers in echo schema is likely the solution.
-              const documentQuery = space.db.query(Filter.schema(DocumentSchema));
+              const documentQuery = space.db.query(Filter.schema(DocumentType));
               let previousObjects: ThreadType[] = [];
               subscriptions.add(
                 effect(() => {

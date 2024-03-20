@@ -122,7 +122,7 @@ export const object: {
   <T extends {}>(schema: typeof ExpandoType, obj: T): ReactiveObject<Identifiable & T>;
   <T extends {}>(schema: S.Schema<T>, obj: ExcludeId<T>): ReactiveObject<T>;
 } = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: ExcludeId<T>): ReactiveObject<T> => {
-  if (obj && (schemaOrObj as any) !== ExpandoType) {
+  if (obj) {
     if (!isValidProxyTarget(obj)) {
       throw new Error('Value cannot be made into a reactive object.');
     }
@@ -172,12 +172,12 @@ export const ReferenceAnnotation = Symbol.for('@dxos/schema/annotation/Reference
 export type ReferenceAnnotationValue = {};
 
 // TODO(dmaretskyi): Assert that schema has `id`.
-export const ref = <T extends Identifiable>(targetType: S.Schema<T>): S.Schema<T> => {
-  if (!getEchoObjectAnnotation(targetType)) {
+export const ref = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<T> => {
+  if (!getEchoObjectAnnotation(schema)) {
     throw new Error('Reference target must be an ECHO object.');
   }
 
-  return S.make(AST.annotations(targetType.ast, { [ReferenceAnnotation]: {} }));
+  return S.make(AST.annotations(schema.ast, { [ReferenceAnnotation]: {} }));
 };
 
 export const getRefAnnotation = (schema: S.Schema<any>) =>
