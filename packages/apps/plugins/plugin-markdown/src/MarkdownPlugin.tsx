@@ -105,7 +105,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       settings: settings.values,
       metadata: {
         records: {
-          [DocumentType.typename()]: {
+          [DocumentType.typename]: {
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: (props: IconProps) => <TextAa {...props} />,
           },

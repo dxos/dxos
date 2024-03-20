@@ -25,4 +25,4 @@ export class DocumentType extends EchoObjectSchema({ typename: 'braneframe.Docum
 }) {}
 
 export const isDocument = (data: unknown): data is E.EchoReactiveObject<DocumentType> =>
-  !!data && DocumentType.isInstance(data);
+  !!data && data instanceof DocumentType;

@@ -80,7 +80,7 @@ export interface TypedObjectSerializer {
 
 // TODO(mykola): Factor out to respective plugins as providers.
 export const serializers: Record<string, TypedObjectSerializer> = {
-  [DocumentType.typename()]: {
+  [DocumentType.typename]: {
     filename: (object: DocumentType) => ({
       name: object.title?.replace(/[/\\?%*:|"<>]/g, '-') ?? '',
       extension: 'md',
@@ -102,7 +102,7 @@ export const serializers: Record<string, TypedObjectSerializer> = {
       // Insert comments.
       const comments = object.comments;
       const threadSerializer = serializers[getEchoObjectAnnotation(ThreadSchema)!.typename];
-      if (!threadSerializer || !comments || comments.length === 0 || TextV0Type.isInstance(content)) {
+      if (!threadSerializer || !comments || comments.length === 0 || content instanceof TextV0Type) {
         return text;
       }
       const doc = getRawDoc(content, [(content as any).field]);
