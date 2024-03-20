@@ -54,6 +54,7 @@ export type BasicExtensionsOptions = {
   editable?: boolean;
   highlightActiveLine?: boolean;
   history?: boolean;
+  standardKeymap?: boolean;
   indentWithTab?: boolean;
   lineNumbers?: boolean;
   lineWrapping?: boolean;
@@ -71,6 +72,7 @@ const defaults: BasicExtensionsOptions = {
   drawSelection: true,
   editable: true,
   history: true,
+  standardKeymap: true,
   lineWrapping: true,
   search: true,
 };
@@ -103,11 +105,9 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     keymap.of(
       [
         // https://codemirror.net/docs/ref/#commands.standardKeymap
-        ...standardKeymap,
-
+        ...(props.standardKeymap ? standardKeymap : []),
         // https://codemirror.net/docs/ref/#commands.indentWithTab
-        props.indentWithTab && indentWithTab,
-
+        ...(props.indentWithTab ? [indentWithTab] : []),
         // https://codemirror.net/docs/ref/#autocomplete.closeBracketsKeymap
         ...(props.closeBrackets ? closeBracketsKeymap : []),
         // https://codemirror.net/docs/ref/#commands.historyKeymap
