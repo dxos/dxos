@@ -586,7 +586,7 @@ export const getActiveSpace = (graph: Graph, active?: string) => {
   }
 
   const node = graph.findNode(active);
-  if (!node || !isTypedObject(node.data)) {
+  if (!node || !(isTypedObject(node.data) || E.isEchoReactiveObject(node.data))) {
     return;
   }
 

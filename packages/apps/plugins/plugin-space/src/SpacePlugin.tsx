@@ -66,7 +66,6 @@ import { SHARED, getActiveSpace, isSpace, updateGraphWithSpace } from './util';
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 
 export type SpacePluginOptions = {
-  version?: string;
   /**
    * Root folder structure is created on application first run if it does not yet exist.
    * This callback is invoked immediately following the creation of the root folder structure.
@@ -84,10 +83,7 @@ export type SpacePluginOptions = {
   }) => Promise<void>;
 };
 
-export const SpacePlugin = ({
-  version,
-  onFirstRun,
-}: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
+export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
   const state = E.object<PluginState>({
     awaiting: undefined,
@@ -152,7 +148,7 @@ export const SpacePlugin = ({
 
           const url = new URL(window.location.href);
           const params = Array.from(url.searchParams.entries());
-          const [name] = params.find(([name, value]) => value === spaceInvitationCode) ?? [null, null];
+          const [name] = params.find(([_, value]) => value === spaceInvitationCode) ?? [null, null];
           if (name) {
             url.searchParams.delete(name);
             history.replaceState({}, document.title, url.href);
