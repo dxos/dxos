@@ -13,7 +13,6 @@ import {
   drawSelection,
   dropCursor,
   highlightActiveLine,
-  highlightSpecialChars,
   keymap,
   lineNumbers,
   placeholder,
@@ -54,7 +53,6 @@ export type BasicExtensionsOptions = {
   editable?: boolean;
   highlightActiveLine?: boolean;
   history?: boolean;
-  standardKeymap?: boolean;
   indentWithTab?: boolean;
   lineNumbers?: boolean;
   lineWrapping?: boolean;
@@ -62,6 +60,7 @@ export type BasicExtensionsOptions = {
   readonly?: boolean;
   search?: boolean;
   scrollPastEnd?: boolean;
+  standardKeymap?: boolean;
   tabSize?: number;
 };
 
@@ -92,7 +91,6 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     props.dropCursor && dropCursor(),
     props.drawSelection && drawSelection(),
     props.highlightActiveLine && highlightActiveLine(),
-    highlightSpecialChars(),
     props.history && history(),
     props.lineNumbers && lineNumbers(),
     props.lineWrapping && EditorView.lineWrapping,
