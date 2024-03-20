@@ -76,7 +76,8 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   // Toolbar actions.
   const handleAction = useActionHandler(editorView);
 
-  // TODO(burdon): Editor view stale.
+  // TODO(burdon): editorView isn't available until extensions are created,
+  //  And we cannot use useCallback since we can't change extensions after the view is created.
   const handleActionRef = useRef(handleAction);
   useEffect(() => {
     handleActionRef.current = handleAction;
