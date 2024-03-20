@@ -18,16 +18,10 @@ type EchoClassOptions = {
   partial?: true;
 };
 
-export interface EchoObjectClassType<T> {
-  new (name: Omit<T, 'id'>): T;
-}
-
-export interface EchoSchemaClass<Self, Fields> extends S.Schema<Fields> {
+export interface EchoSchemaClass<Fields> extends S.Schema<Fields> {
   new (): Fields;
 
-  typename(): string;
-
-  isInstance(obj: unknown): obj is Self;
+  readonly typename: string;
 }
 
 export const EchoObjectSchema = <Klass>(args: EchoObjectAnnotation) => {
@@ -41,7 +35,7 @@ export const EchoObjectSchema = <Klass>(args: EchoObjectAnnotation) => {
   >(
     fields: SchemaFields,
     options?: Options,
-  ): EchoSchemaClass<Klass, Fields> => {
+  ): EchoSchemaClass<Fields> => {
     const fieldsSchema = S.mutable(options?.partial ? S.partial(S.struct(fields)) : S.struct(fields));
     const typeSchema = S.extend(fieldsSchema, S.struct({ id: S.string }));
     const annotatedSchema = S.make(
@@ -53,16 +47,13 @@ export const EchoObjectSchema = <Klass>(args: EchoObjectAnnotation) => {
       }),
     );
     const klass: any = class {
+      static readonly typename = args.typename;
+      static [Symbol.hasInstance](obj: unknown): obj is Klass {
+        return obj != null && getTypeReference(getSchema(obj))?.itemId === args.typename;
+      }
+
       constructor() {
         throw new Error('use E.object(MyClass, fields) to instantiate an object');
-      }
-
-      static typename() {
-        return args.typename;
-      }
-
-      static isInstance(obj: unknown): obj is Klass {
-        return obj != null && getTypeReference(getSchema(obj))?.itemId === args.typename;
       }
     };
     klass.ast = annotatedSchema.ast;
