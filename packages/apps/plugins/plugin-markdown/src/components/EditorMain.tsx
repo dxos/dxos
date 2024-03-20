@@ -3,7 +3,7 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import React, { useMemo, useEffect, useRef } from 'react';
+import React, { useMemo, useEffect } from 'react';
 
 import { LayoutAction, parseFileManagerPlugin, useResolvePlugin, useIntentResolver } from '@dxos/app-framework';
 import { useThemeContext, useTranslation, useRefCallback } from '@dxos/react-ui';
@@ -23,6 +23,7 @@ import {
   useComments,
   useActionHandler,
   useFormattingState,
+  processAction,
 } from '@dxos/react-ui-editor';
 import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -71,23 +72,14 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
     }
   });
 
-  const [formattingState, formattingObserver] = useFormattingState();
-
   // Toolbar actions.
   const handleAction = useActionHandler(editorView);
+  const [formattingState, formattingObserver] = useFormattingState();
 
-  // TODO(burdon): editorView isn't available until extensions are created,
-  //  And we cannot use useCallback since we can't change extensions after the view is created.
-  const handleActionRef = useRef(handleAction);
-  useEffect(() => {
-    handleActionRef.current = handleAction;
-  }, [handleAction]);
-
-  // TODO(burdon): Show placeholder/wait cursor on drop.
-  const handleDrop: DNDOptions['onDrop'] = async ({ files }) => {
+  const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
     const info = await fileManagerPlugin?.provides.file.upload?.(files[0]);
     if (info) {
-      handleActionRef.current?.({ type: 'image', data: info.url });
+      processAction(view, { type: 'image', data: info.url });
     }
   };
 
