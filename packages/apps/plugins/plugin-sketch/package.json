@@ -28,7 +28,7 @@
     "@dxos/automerge": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@preact/signals-core": "^1.5.1",
+    "@preact/signals-core": "^1.6.0",
     "@tldraw/assets": "2.0.0-alpha.14",
     "@tldraw/editor": "2.0.0-alpha.14",
     "@tldraw/state": "2.0.0-alpha.14",
