@@ -33,7 +33,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.5.1",
+    "@preact/signals-core": "^1.6.0",
     "localforage": "^1.10.0"
   },
   "devDependencies": {
