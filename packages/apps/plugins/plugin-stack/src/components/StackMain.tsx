@@ -64,7 +64,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
 
     // TODO(wittjosiah): Prevent dropping items which don't have a section renderer?
     //  Perhaps stack plugin should just provide a fallback section renderer.
-    if (!isTypedObject(data) || !E.isReactiveProxy(data) || isStack(data)) {
+    if (!(isTypedObject(data) || E.isReactiveProxy(data)) || isStack(data)) {
       console.log('reject', data);
       return 'reject';
     }
