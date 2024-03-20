@@ -41,7 +41,7 @@
     "@dxos/shell": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.5.1",
+    "@preact/signals-core": "^1.6.0",
     "jszip": "^3.10.1",
     "localforage": "^1.10.0",
     "lodash.get": "^4.4.2",
