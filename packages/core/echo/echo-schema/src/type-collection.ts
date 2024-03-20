@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 import { getSchemaTypeRefOrThrow } from './effect/echo-handler';
-import { type EchoObjectClassType, getEchoObjectSubclassSchema } from './effect/echo-object-class';
+import { type EchoObjectClassType, getEchoObjectSubclassSchemaOrThrow } from './effect/echo-object-class';
 import * as E from './effect/reactive';
 import { TypedObject, dangerouslyMutateImmutableObject, LEGACY_TEXT_TYPE } from './object';
 import type { SchemaProps, Schema as SchemaProto } from './proto';
@@ -58,7 +58,8 @@ export class TypeCollection {
   registerEffectSchema<T>(...schemaList: S.Schema<T>[]): this;
   registerEffectSchema<T>(...schemaList: Array<S.Schema<T> | EchoObjectClassType<T>>) {
     schemaList.forEach((schemaOrType) => {
-      const schema = typeof schemaOrType === 'function' ? getEchoObjectSubclassSchema(schemaOrType) : schemaOrType;
+      const schema =
+        typeof schemaOrType === 'function' ? getEchoObjectSubclassSchemaOrThrow(schemaOrType) : schemaOrType;
       const typename = getTypenameOrThrow(schema);
       if (this._effectSchemaDefs.has(typename)) {
         throw new Error(`Schema was already registered or identifier is not unique: ${typename}`);
@@ -73,7 +74,7 @@ export class TypeCollection {
 
   isEffectSchemaRegistered<T>(type: EchoObjectClassType<T>): boolean;
   isEffectSchemaRegistered<T>(schemaOrType: S.Schema<T> | EchoObjectClassType<T>): boolean {
-    const schema = typeof schemaOrType === 'function' ? getEchoObjectSubclassSchema(schemaOrType) : schemaOrType;
+    const schema = typeof schemaOrType === 'function' ? getEchoObjectSubclassSchemaOrThrow(schemaOrType) : schemaOrType;
     const typename = getTypenameOrThrow(schema);
     return this._effectSchemaDefs.has(typename);
   }

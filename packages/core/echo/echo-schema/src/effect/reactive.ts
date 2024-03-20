@@ -13,7 +13,11 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
 import { EchoReactiveHandler } from './echo-handler';
-import { type EchoObjectClassType, getEchoObjectSubclassSchema } from './echo-object-class';
+import {
+  type EchoObjectClassType,
+  getEchoObjectSubclassSchemaOrThrow,
+  getEchoObjectSubclassTypename,
+} from './echo-object-class';
 import {
   type ReactiveHandler,
   createReactiveProxy,
@@ -112,7 +116,7 @@ export const object: {
 ): ReactiveObject<T> => {
   const schemaOrObj =
     typeof schemaOrObjOrConstructor === 'function'
-      ? getEchoObjectSubclassSchema(schemaOrObjOrConstructor)
+      ? getEchoObjectSubclassSchemaOrThrow(schemaOrObjOrConstructor)
       : schemaOrObjOrConstructor;
   if (obj) {
     if (!isValidProxyTarget(obj)) {
@@ -153,7 +157,7 @@ export const ref: {
   <T extends Identifiable>(schema: S.Schema<T>): S.Schema<T>;
   <T extends Identifiable>(schema: EchoObjectClassType<T>): S.Schema<T>;
 } = <T extends Identifiable>(schemaOrType: S.Schema<T> | EchoObjectClassType<T>): S.Schema<T> => {
-  const schema = typeof schemaOrType === 'function' ? getEchoObjectSubclassSchema(schemaOrType) : schemaOrType;
+  const schema = typeof schemaOrType === 'function' ? getEchoObjectSubclassSchemaOrThrow(schemaOrType) : schemaOrType;
   if (!getEchoObjectAnnotation(schema)) {
     throw new Error('Reference target must be an ECHO object.');
   }
@@ -172,7 +176,7 @@ export const getRefAnnotation = (schema: S.Schema<any>) =>
  */
 export const getSchema = <T extends {} = any>(obj: T): S.Schema<any> | undefined => {
   if (typeof obj === 'function') {
-    return getEchoObjectSubclassSchema(obj);
+    return getEchoObjectSubclassSchemaOrThrow(obj);
   }
 
   if (isReactiveProxy(obj)) {
@@ -189,6 +193,14 @@ export const getSchema = <T extends {} = any>(obj: T): S.Schema<any> | undefined
 
   invariant(S.isSchema(schema), 'Invalid schema.');
   return schema as S.Schema<T>;
+};
+
+export const isOfType = <T>(type: EchoObjectClassType<T>, obj: any): obj is T => {
+  const typename = getEchoObjectSubclassTypename(type);
+  if (!typename) {
+    return false;
+  }
+  return typename === getTypeReference(obj)?.itemId;
 };
 
 export const getTypeReference = (schema: S.Schema<any> | undefined): Reference | undefined => {
