@@ -9,20 +9,20 @@ import { LayoutAction, parseFileManagerPlugin, useResolvePlugin, useIntentResolv
 import { useThemeContext, useTranslation, useRefCallback } from '@dxos/react-ui';
 import {
   type Comment,
+  type DNDOptions,
   type TextEditorProps,
   TextEditor,
   Toolbar,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
+  dnd,
   editorFillLayoutRoot,
   editorFillLayoutEditor,
   focusComment,
   useComments,
   useActionHandler,
   useFormattingState,
-  dnd,
-  type DNDOptions,
 } from '@dxos/react-ui-editor';
 import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -83,7 +83,7 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
     handleActionRef.current = handleAction;
   }, [handleAction]);
 
-  // TODO(burdon): Show wait cursor on drop.
+  // TODO(burdon): Show placeholder/wait cursor on drop.
   const handleDrop: DNDOptions['onDrop'] = async ({ files }) => {
     const info = await fileManagerPlugin?.provides.file.upload?.(files[0]);
     if (info) {
