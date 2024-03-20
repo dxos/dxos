@@ -4,17 +4,9 @@
 
 import get from 'lodash.get';
 
-import { DocumentType, ThreadSchema, type ThreadType, TextV0Type } from '@braneframe/types';
+import { DocumentType, ThreadType, TextV0Type } from '@braneframe/types';
 import { next as A, type Prop } from '@dxos/automerge/automerge';
-import {
-  type AnyEchoObject,
-  base,
-  getTypeRef,
-  type IDocHandle,
-  getEchoObjectAnnotation,
-  AutomergeObject,
-  getRawDoc,
-} from '@dxos/echo-schema';
+import { type AnyEchoObject, base, getTypeRef, type IDocHandle, AutomergeObject, getRawDoc } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { TypedObject } from '@dxos/react-client/echo';
@@ -101,7 +93,7 @@ export const serializers: Record<string, TypedObjectSerializer> = {
 
       // Insert comments.
       const comments = object.comments;
-      const threadSerializer = serializers[getEchoObjectAnnotation(ThreadSchema)!.typename];
+      const threadSerializer = serializers[ThreadType.typename];
       if (!threadSerializer || !comments || comments.length === 0 || content instanceof TextV0Type) {
         return text;
       }
@@ -142,7 +134,7 @@ export const serializers: Record<string, TypedObjectSerializer> = {
     },
   } satisfies TypedObjectSerializer,
 
-  [getEchoObjectAnnotation(ThreadSchema)!.typename]: {
+  [ThreadType.typename]: {
     filename: (object: ThreadType) => ({
       name: object.title?.replace(/[/\\?%*:|"<>]/g, '-') ?? '',
       extension: 'md',

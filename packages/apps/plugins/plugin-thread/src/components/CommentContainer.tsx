@@ -5,7 +5,7 @@
 import { X } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { MessageSchema, TextV0Type } from '@braneframe/types';
+import { MessageType, TextV0Type } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
 import { getSpaceForObject, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -71,7 +71,7 @@ export const CommentContainer = ({
     }
 
     thread.messages.push(
-      E.object(MessageSchema, {
+      E.object(MessageType, {
         from: { identityKey: identity.identityKey.toHex() },
         context,
         blocks: [

@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { useState } from 'react';
 
-import { SketchSchema, SketchType } from '@braneframe/types';
+import { SketchType, TextV0Type } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
 import { FullscreenDecorator } from '@dxos/react-client/testing';
 import { Button, Toolbar } from '@dxos/react-ui';
@@ -15,7 +15,7 @@ import SketchComponent from './Sketch';
 
 const Story = () => {
   const [sketch, setSketch] = useState<SketchType>(
-    E.object(SketchSchema, { content: E.object(TextV0Schema, { content: '' }) }),
+    E.object(SketchType, { content: E.object(TextV0Type, { content: '' }) }),
   );
 
   return (

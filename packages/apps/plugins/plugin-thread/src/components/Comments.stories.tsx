@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { useEffect } from 'react';
 
-import { ThreadSchema } from '@braneframe/types';
+import { ThreadType } from '@braneframe/types';
 import { faker } from '@dxos/random';
 import { type PublicKey } from '@dxos/react-client';
 import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
@@ -25,7 +25,7 @@ faker.seed(1);
 const Story = ({ spaceKey }: { spaceKey: PublicKey }) => {
   const identity = useIdentity();
   const space = useSpace(spaceKey);
-  const threads = useQuery(space, Filter.schema(ThreadSchema));
+  const threads = useQuery(space, Filter.schema(ThreadType));
   const [detached, setDetached] = React.useState<string[]>([]);
 
   useEffect(() => {

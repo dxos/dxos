@@ -5,7 +5,7 @@
 import { Plus, Placeholder } from '@phosphor-icons/react';
 import React, { useCallback, type FC } from 'react';
 
-import { FileSchema, SectionSchema, type StackType, type SectionType, FolderSchema, isStack } from '@braneframe/types';
+import { FileType, type StackType, SectionType, FolderType, isStack } from '@braneframe/types';
 import {
   NavigationAction,
   Surface,
@@ -51,7 +51,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
     // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
     .filter(({ object }) => Boolean(object));
   const space = getSpaceForObject(stack);
-  const [folder] = useQuery(space, E.Filter.schema(FolderSchema));
+  const [folder] = useQuery(space, E.Filter.schema(FolderType));
 
   const handleOver = ({ active }: MosaicMoveEvent<number>) => {
     const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
@@ -89,9 +89,9 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
     const object = parseData?.(active.item, 'object');
     // TODO(wittjosiah): Stop creating new section objects for each drop.
     if (object && over.path === Path.create(id, over.item.id)) {
-      stack.sections.splice(over.position!, 0, E.object(SectionSchema, { object }));
+      stack.sections.splice(over.position!, 0, E.object(SectionType, { object }));
     } else if (object && over.path === id) {
-      stack.sections.push(E.object(SectionSchema, { object }));
+      stack.sections.push(E.object(SectionType, { object }));
     }
   };
 
@@ -104,7 +104,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
 
   const handleAdd = useCallback(
     (sectionObject: SectionType['object']) => {
-      stack.sections.push(E.object(SectionSchema, { object: sectionObject }));
+      stack.sections.push(E.object(SectionType, { object: sectionObject }));
       // TODO(wittjosiah): Remove once stack items can be added to folders separately.
       folder?.objects.push(sectionObject);
     },
@@ -117,7 +117,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
         const filename = file.name.split('.')[0];
         const info = await fileManagerPlugin.provides.file.upload?.(file);
         if (info) {
-          const obj = E.object(FileSchema, { type: file.type, title: filename, filename, cid: info.cid });
+          const obj = E.object(FileType, { type: file.type, title: filename, filename, cid: info.cid });
           handleAdd(obj);
         }
       }
@@ -141,7 +141,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
         id={id}
         data-testid='main.stack'
         SectionContent={SectionContent}
-        type={E.getEchoObjectAnnotation(SectionSchema)!.typename}
+        type={SectionType.typename}
         items={items}
         separation={separation}
         transform={handleTransform}

@@ -20,18 +20,11 @@ import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { actionGroupSymbol, type InvokeParams, type Graph, type Node, manageNodes } from '@braneframe/plugin-graph';
-import { FolderSchema, type FolderType, isFolder } from '@braneframe/types';
+import { FolderType, isFolder } from '@braneframe/types';
 import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
-import {
-  EchoDatabaseImpl,
-  Filter,
-  LEGACY_TEXT_TYPE,
-  getEchoObjectAnnotation,
-  isTypedObject,
-  type OpaqueEchoObject,
-} from '@dxos/echo-schema';
+import { EchoDatabaseImpl, Filter, LEGACY_TEXT_TYPE, isTypedObject, type OpaqueEchoObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { Migrations } from '@dxos/migrations';
 import { SpaceState, getSpaceForObject, type Space, type TypedObject } from '@dxos/react-client/echo';
@@ -132,7 +125,7 @@ export const updateGraphWithSpace = ({
   const getId = (id: string) => `${id}/${space.key.toHex()}`;
 
   const unsubscribeSpace = effect(() => {
-    const folder = space.properties[getEchoObjectAnnotation(FolderSchema)!.typename];
+    const folder = space.properties[FolderType.typename];
     const partials =
       space.state.get() === SpaceState.READY && isFolder(folder)
         ? getFolderGraphNodePartials({ graph, folder, space })
@@ -195,7 +188,7 @@ export const updateGraphWithSpace = ({
               dispatch({
                 plugin: SPACE_PLUGIN,
                 action: SpaceAction.ADD_OBJECT,
-                data: { target: folder, object: E.object(FolderSchema, { objects: [] }) },
+                data: { target: folder, object: E.object(FolderType, { objects: [] }) },
               }),
             properties: {
               label: ['create folder label', { ns: SPACE_PLUGIN }],
@@ -338,7 +331,7 @@ export const updateGraphWithSpace = ({
   });
   const previousObjects = new Map<string, E.AnyEchoObject[]>();
   const unsubscribeQuery = effect(() => {
-    const folder: FolderType = space.properties[getEchoObjectAnnotation(FolderSchema)!.typename];
+    const folder: FolderType = space.properties[FolderType.typename];
     const folderObjects = folder?.objects ?? [];
     const removedObjects =
       previousObjects
@@ -425,7 +418,7 @@ export const updateGraphWithSpace = ({
               dispatch({
                 plugin: SPACE_PLUGIN,
                 action: SpaceAction.ADD_OBJECT,
-                data: { target: folder, object: E.object(FolderSchema) },
+                data: { target: folder, object: E.object(FolderType) },
               }),
             properties: {
               label: ['create folder label', { ns: SPACE_PLUGIN }],
@@ -522,7 +515,7 @@ export const updateGraphWithAddObjectAction = ({
   dispatch: IntentDispatcher;
 }) => {
   // Include the create document action on all folders.
-  const folderQuery = space.db.query(Filter.schema(FolderSchema));
+  const folderQuery = space.db.query(Filter.schema(FolderType));
   let previousFolders: FolderType[] = [];
   return effect(() => {
     const removedFolders = previousFolders.filter((folder) => !folderQuery.objects.includes(folder));

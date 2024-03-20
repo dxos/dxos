@@ -2,16 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { MessageSchema, ThreadSchema, TextV0Type, type BlockType } from '@braneframe/types';
+import { MessageType, ThreadType, TextV0Type, type BlockType } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { type Identity } from '@dxos/react-client/halo';
 
 export const createChatThread = (identity: Identity) => {
-  return E.object(ThreadSchema, {
+  return E.object(ThreadType, {
     messages: Array.from({ length: 8 }).map(() =>
-      E.object(MessageSchema, {
+      E.object(MessageType, {
         from: {
           identityKey: faker.datatype.boolean() ? identity.identityKey.toHex() : PublicKey.random().toHex(),
         },
@@ -34,10 +34,10 @@ export const createChatThread = (identity: Identity) => {
 };
 
 export const createCommentThread = (identity: Identity) => {
-  return E.object(ThreadSchema, {
+  return E.object(ThreadType, {
     messages: faker.helpers.multiple(
       () =>
-        E.object(MessageSchema, {
+        E.object(MessageType, {
           from: {
             identityKey: faker.datatype.boolean() ? identity.identityKey.toHex() : PublicKey.random().toHex(),
           },

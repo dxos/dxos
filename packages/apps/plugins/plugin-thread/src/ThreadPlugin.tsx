@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { isThread, ThreadSchema, type ThreadType, MessageSchema, isDocument, DocumentType } from '@braneframe/types';
+import { isThread, ThreadType, isDocument, DocumentType, MessageType } from '@braneframe/types';
 import {
   type IntentPluginProvides,
   LayoutAction,
@@ -67,7 +67,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      clientPlugin?.provides.client.addSchema(ThreadSchema, MessageSchema);
+      clientPlugin?.provides.client.addSchema(ThreadType, MessageType);
 
       // TODO(wittjosiah): This is a hack to make standalone threads work in the c11y sidebar.
       //  This should have a better solution when deck is introduced.
@@ -81,8 +81,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           : undefined;
         untracked(() => {
           // const [thread] = space?.db.query(ThreadType.filter((thread) => !thread.context)).objects ?? [];
-          const [thread] =
-            space?.db.query(Filter.schema(ThreadSchema)).objects.filter((thread) => !thread.context) ?? [];
+          const [thread] = space?.db.query(Filter.schema(ThreadType)).objects.filter((thread) => !thread.context) ?? [];
           if (activeNode && isDocument(activeNode?.data) && (activeNode.data.comments?.length ?? 0) > 0) {
             void intentPlugin?.provides.intent.dispatch({
               action: LayoutAction.SET_LAYOUT,
@@ -117,7 +116,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       settings: settings.values,
       metadata: {
         records: {
-          [E.getEchoObjectAnnotation(ThreadSchema)!.typename]: {
+          [ThreadType.typename]: {
             placeholder: ['thread title placeholder', { ns: THREAD_PLUGIN }],
             icon: (props: IconProps) => <Chat {...props} />,
           },
@@ -164,7 +163,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               );
 
               // Add all threads not linked to documents to the graph.
-              const query = space.db.query(Filter.schema(ThreadSchema));
+              const query = space.db.query(Filter.schema(ThreadType));
               // TODO(wittjosiah): There should be a better way to do this.
               //  Resolvers in echo schema is likely the solution.
               const documentQuery = space.db.query(Filter.schema(DocumentType));
@@ -292,7 +291,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ThreadAction.CREATE: {
-              return { data: E.object(ThreadSchema, { messages: [] }) };
+              return { data: E.object(ThreadType, { messages: [] }) };
             }
 
             case ThreadAction.SELECT: {
@@ -362,9 +361,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 const [start, end] = cursor.split(':');
                 // TODO(wittjosiah): Don't cast.
                 const title = getTextInRange(doc.content as unknown as E.TextObject, start, end);
-                const thread = space.db.add(
-                  E.object(ThreadSchema, { title, messages: [], context: { object: doc.id } }),
-                );
+                const thread = space.db.add(E.object(ThreadType, { title, messages: [], context: { object: doc.id } }));
                 if (doc.comments) {
                   doc.comments.push({ thread, cursor });
                 } else {

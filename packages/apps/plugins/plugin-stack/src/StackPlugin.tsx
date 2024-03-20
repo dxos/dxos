@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { SectionSchema, type SectionType, StackSchema, type StackType, isStack } from '@braneframe/types';
+import { SectionType, StackType, isStack } from '@braneframe/types';
 import { resolvePlugin, type Plugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
@@ -45,17 +45,17 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       }
 
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      clientPlugin?.provides.client.addSchema(StackSchema);
+      clientPlugin?.provides.client.addSchema(StackType, SectionType);
     },
     provides: {
       settings: settings.values,
       metadata: {
         records: {
-          [E.getEchoObjectAnnotation(StackSchema)!.typename]: {
+          [StackType.typename]: {
             placeholder: ['stack title placeholder', { ns: STACK_PLUGIN }],
             icon: (props: IconProps) => <StackSimple {...props} />,
           },
-          [E.getEchoObjectAnnotation(SectionSchema)!.typename]: {
+          [SectionType.typename]: {
             parse: (section: SectionType, type: string) => {
               switch (type) {
                 case 'node':
@@ -98,7 +98,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
               );
 
               // Add all stacks to the graph.
-              const query = space.db.query(E.Filter.schema(StackSchema));
+              const query = space.db.query(E.Filter.schema(StackType));
               let previousObjects: StackType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -151,7 +151,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case StackAction.CREATE: {
-              return { data: E.object(StackSchema, { sections: [] }) };
+              return { data: E.object(StackType, { sections: [] }) };
             }
           }
         },

@@ -9,7 +9,7 @@ import React from 'react';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
-import { FolderSchema, type FolderType, isFolder } from '@braneframe/types';
+import { FolderType, isFolder } from '@braneframe/types';
 import {
   type IntentDispatcher,
   type PluginDefinition,
@@ -123,13 +123,13 @@ export const SpacePlugin = ({
       const location = navigationPlugin.provides.location;
       const dispatch = intentPlugin.provides.intent.dispatch;
 
-      client.addSchema(FolderSchema);
+      client.addSchema(FolderType);
 
       // Create root folder structure.
       if (clientPlugin.provides.firstRun) {
         const defaultSpace = client.spaces.default;
-        const personalSpaceFolder = E.object(FolderSchema, { objects: [] });
-        defaultSpace.properties[E.getEchoObjectAnnotation(FolderSchema)!.typename] = personalSpaceFolder;
+        const personalSpaceFolder = E.object(FolderType, { objects: [] });
+        defaultSpace.properties[FolderType.typename] = personalSpaceFolder;
         if (Migrations.versionProperty) {
           defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
         }
@@ -239,7 +239,7 @@ export const SpacePlugin = ({
       root: () => (state.awaiting ? <AwaitingObject id={state.awaiting} /> : null),
       metadata: {
         records: {
-          [E.getEchoObjectAnnotation(FolderSchema)!.typename]: {
+          [FolderType.typename]: {
             placeholder: ['unnamed folder label', { ns: SPACE_PLUGIN }],
             icon: (props: IconProps) => <FolderIcon {...props} />,
           },
@@ -495,8 +495,8 @@ export const SpacePlugin = ({
                 objects: [sharedSpacesFolder],
               } = defaultSpace.db.query({ key: SHARED });
               const space = await client.spaces.create(intent.data as PropertiesProps);
-              const folder = E.object(FolderSchema, { objects: [] });
-              space.properties[E.getEchoObjectAnnotation(FolderSchema)!.typename] = folder;
+              const folder = E.object(FolderType, { objects: [] });
+              space.properties[FolderType.typename] = folder;
               sharedSpacesFolder?.objects.push(folder);
               if (Migrations.versionProperty) {
                 space.properties[Migrations.versionProperty] = Migrations.targetVersion;
@@ -632,7 +632,7 @@ export const SpacePlugin = ({
 
               if (intent.data?.target instanceof SpaceProxy) {
                 const space = intent.data.target;
-                const folder = space.properties[E.getEchoObjectAnnotation(FolderSchema)!.typename];
+                const folder = space.properties[FolderType.typename];
                 if (isFolder(folder)) {
                   folder.objects.push(object as Identifiable);
                   return { data: object };

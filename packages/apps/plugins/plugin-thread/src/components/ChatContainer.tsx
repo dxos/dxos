@@ -5,7 +5,7 @@
 import { Chat } from '@phosphor-icons/react';
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { MessageSchema, TextV0Type } from '@braneframe/types';
+import { MessageType, TextV0Type } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
 import { getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -79,7 +79,7 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
     }
 
     thread.messages.push(
-      E.object(MessageSchema, {
+      E.object(MessageType, {
         from: { identityKey: identity.identityKey.toHex() },
         context,
         blocks: [

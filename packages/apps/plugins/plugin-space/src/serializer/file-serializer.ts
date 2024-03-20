@@ -4,7 +4,7 @@
 
 import md5 from 'md5';
 
-import { FolderSchema, isFolder, type FolderType } from '@braneframe/types';
+import { isFolder, FolderType } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
@@ -51,7 +51,7 @@ export class FileSerializer {
       data: [],
     };
 
-    const spaceRoot = space.properties[E.getEchoObjectAnnotation(FolderSchema)!.typename];
+    const spaceRoot = space.properties[FolderType.typename];
     if (!spaceRoot) {
       throw new Error('No root folder.');
     }
@@ -65,7 +65,7 @@ export class FileSerializer {
   async deserializeSpace(space: Space, serializedSpace: SerializedSpace): Promise<Space> {
     await space.waitUntilReady();
 
-    const spaceRoot = space.properties[E.getEchoObjectAnnotation(FolderSchema)!.typename];
+    const spaceRoot = space.properties[FolderType.typename];
     if (!spaceRoot) {
       throw new Error('No root folder.');
     }
@@ -122,7 +122,7 @@ export class FileSerializer {
         switch (object.type) {
           case 'folder': {
             if (!child) {
-              child = E.object(FolderSchema, { name: object.name, objects: [] });
+              child = E.object(FolderType, { name: object.name, objects: [] });
 
               // TODO(dmaretskyi): This won't work.
               // child[base]._id = object.id;
