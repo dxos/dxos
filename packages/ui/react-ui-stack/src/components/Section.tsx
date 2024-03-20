@@ -155,13 +155,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                   onOpenChange: setOptionsMenuOpen,
                 }}
               >
-                <DropDownMenuDragHandleTrigger
-                  active={!!active}
-                  variant='ghost'
-                  classNames='m-0'
-                  data-testid='section.drag-handle'
-                  {...draggableProps}
-                >
+                <DropDownMenuDragHandleTrigger active={!!active} variant='ghost' classNames='m-0' {...draggableProps}>
                   <Icon className={mx(getSize(5), 'transition-opacity')} />
                 </DropDownMenuDragHandleTrigger>
                 <DropdownMenu.Portal>
