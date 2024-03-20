@@ -195,6 +195,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       this._graph.registerQuerySourceProvider(
         new IndexQuerySourceProvider({ spaceList: this, service: this._serviceProvider.services.IndexService! }),
       );
+      subscription.unsubscribe();
     });
     this._ctx.onDispose(() => subscription.unsubscribe());
 
