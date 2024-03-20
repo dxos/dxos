@@ -24,7 +24,6 @@ import {
 } from './formatting';
 import { createComment } from '../comments';
 
-// TODO(burdon): Revert to string to make extensible?
 export type ActionType =
   | 'blockquote'
   | 'strong'
@@ -105,8 +104,7 @@ export const processAction: ActionHandler = (view, action) => {
       break;
   }
 
-  // TODO(burdon): Hack otherwise remains on heading selector.
-  setTimeout(() => {
+  requestAnimationFrame(() => {
     if (!view.hasFocus) {
       view.focus();
     }

@@ -334,7 +334,7 @@ const MarkdownCustom = ({ onUpload }: MarkdownCustomOptions = {}) => {
 
   useEffect(() => {
     if (onUpload && acceptedFiles.length) {
-      setTimeout(async () => {
+      requestAnimationFrame(async () => {
         // NOTE: Clone file since react-dropzone patches in a non-standard `path` property, which confuses IPFS.
         const f = acceptedFiles[0];
         const file = new File([f], f.name, {
