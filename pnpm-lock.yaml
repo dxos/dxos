@@ -2126,9 +2126,15 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
     devDependencies:
       '@braneframe/plugin-client':
         specifier: workspace:*
@@ -3085,9 +3091,15 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
@@ -3459,12 +3471,18 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
       date-fns:
         specifier: ^3.3.1
         version: 3.3.1
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -3851,6 +3869,12 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
     devDependencies:
       '@dxos/echo-typegen':
         specifier: workspace:*
@@ -5214,14 +5238,14 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@effect/schema':
-        specifier: 0.63.4
-        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@orama/orama':
         specifier: ^2.0.8
         version: 2.0.8
       effect:
-        specifier: 2.4.3
-        version: 2.4.3
+        specifier: 2.4.9
+        version: 2.4.9
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -5361,14 +5385,14 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@effect/schema':
-        specifier: 0.63.4
-        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@orama/orama':
         specifier: ^2.0.8
         version: 2.0.8
       effect:
-        specifier: 2.4.3
-        version: 2.4.3
+        specifier: 2.4.9
+        version: 2.4.9
       lodash.isequal:
         specifier: ^4.5.0
         version: 4.5.0
@@ -7082,8 +7106,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/schema':
-        specifier: 0.63.4
-        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@langchain/community':
         specifier: ^0.0.26
         version: 0.0.26(discord.js@14.14.1)(faiss-node@0.5.1)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@20.0.1)
@@ -7118,8 +7142,8 @@ importers:
         specifier: ^14.14.1
         version: 14.14.1
       effect:
-        specifier: 2.4.3
-        version: 2.4.3
+        specifier: 2.4.9
+        version: 2.4.9
       email-addresses:
         specifier: ^5.0.0
         version: 5.0.0
@@ -7982,14 +8006,14 @@ importers:
         specifier: workspace:*
         version: link:../../core/echo/text-model
       '@effect/schema':
-        specifier: 0.63.4
-        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       base-x:
         specifier: ~3.0.9
         version: 3.0.9
       effect:
-        specifier: 2.4.3
-        version: 2.4.3
+        specifier: 2.4.9
+        version: 2.4.9
     devDependencies:
       '@dxos/echo-typegen':
         specifier: workspace:*
@@ -13704,13 +13728,13 @@ packages:
       - supports-color
     dev: true
 
-  /@effect/schema@0.63.4(effect@2.4.3)(fast-check@3.15.1):
-    resolution: {integrity: sha512-59b7N0XntkfivwhTSutyP13t1utlbJ9wDWDwEdAivNPpXBfpUlAWnZw7MAi86qI8J1LVz3ZDlz5p0pkDSu7p9g==}
+  /@effect/schema@0.64.7(effect@2.4.9)(fast-check@3.15.1):
+    resolution: {integrity: sha512-iTfA7M+sjeoApwJfaalybbR25w/TW2GCerqdftxlwwNco3uOCOzB6nalmRaN4NinjSpcgg15nkDtugvAOQqrOA==}
     peerDependencies:
-      effect: ^2.4.3
+      effect: ^2.4.9
       fast-check: ^3.13.2
     dependencies:
-      effect: 2.4.3
+      effect: 2.4.9
       fast-check: 3.15.1
     dev: false
 
@@ -28328,8 +28352,8 @@ packages:
   /ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  /effect@2.4.3:
-    resolution: {integrity: sha512-OmIgfNgQMZsQt5l7qLQqLOUxIXq7ku8/RK3Wv3LqxSE2zMyU1mHXof5QeyCt7m9sXv3Vui52Urk1vVsEd2szMQ==}
+  /effect@2.4.9:
+    resolution: {integrity: sha512-hRTy37jVylIYOC4k/VKfgmGkIMEOjR8MOurLzr1J0AD7ufagbcoO7voygZkT2B1STXfBXEsKNWj8yDAzUcPpAA==}
     dev: false
 
   /ejs@3.1.8:
