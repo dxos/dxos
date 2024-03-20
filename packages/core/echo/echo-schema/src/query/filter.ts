@@ -13,6 +13,7 @@ import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/
 
 import { type AutomergeObjectCore } from '../automerge';
 import { getSchemaTypeRefOrThrow } from '../effect/echo-handler';
+import { type EchoObjectClassType, getEchoObjectSubclassSchema } from '../effect/echo-object-class';
 import { type EchoReactiveObject } from '../effect/reactive';
 import {
   getReferenceWithSpaceKey,
@@ -97,11 +98,20 @@ export class Filter<T extends OpaqueEchoObject = EchoObject> {
     filter?: Record<string, any> | OperatorFilter<any>,
   ): Filter<EchoReactiveObject<Mutable<T>>>;
 
+  static schema<T>(
+    schema: EchoObjectClassType<T>,
+    filter?: Record<string, any> | OperatorFilter<any>,
+  ): Filter<EchoReactiveObject<Mutable<T>>>;
+
   static schema(schema: Schema, filter?: Record<string, any> | OperatorFilter<any>): Filter<Expando>;
   static schema(
-    schema: S.Schema<any> | Schema,
+    schemaOrClassConstructor: EchoObjectClassType<any> | S.Schema<any> | Schema,
     filter?: Record<string, any> | OperatorFilter<any>,
   ): Filter<OpaqueEchoObject> {
+    const schema =
+      typeof schemaOrClassConstructor === 'function'
+        ? getEchoObjectSubclassSchema(schemaOrClassConstructor)
+        : schemaOrClassConstructor;
     const typeReference = S.isSchema(schema) ? getSchemaTypeRefOrThrow(schema) : getReferenceWithSpaceKey(schema);
     invariant(typeReference, 'Invalid schema; check persisted in the database.');
     return this._fromTypeWithPredicate(typeReference, filter);

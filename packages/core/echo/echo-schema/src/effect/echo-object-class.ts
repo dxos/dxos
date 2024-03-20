@@ -8,41 +8,35 @@ import type { Class, SimplifyMutable, Struct } from '@effect/schema/Schema';
 import { pipe } from 'effect';
 import * as Option from 'effect/Option';
 
-import { EchoObjectAnnotationId, getEchoObjectAnnotation } from './reactive';
+import { type EchoObjectAnnotation, EchoObjectAnnotationId, getEchoObjectAnnotation } from './reactive';
 
 const EchoClassOptionsAnnotationId = Symbol.for('@dxos/echo-class/annotation/Options');
 type EchoClassOptionsAnnotation = {
-  partial: boolean;
+  partial?: true;
 };
-const DEFAULT_ECHO_CLASS_OPTIONS: EchoClassOptionsAnnotation = { partial: false };
 const getEchoClassOptionsAnnotation = (schema: S.Schema<any>) =>
   pipe(
     AST.getAnnotation<EchoClassOptionsAnnotation>(EchoClassOptionsAnnotationId)(schema.ast),
-    Option.getOrElse(() => DEFAULT_ECHO_CLASS_OPTIONS),
+    Option.getOrElse(() => ({}) as EchoClassOptionsAnnotation),
   );
 
 export type EchoObjectClassType<T> = new (props: Omit<T, 'id'>) => T;
 
-export const EchoObject = <Klass>(
-  typename: string,
-  version: string,
-  options: { partial: boolean } = DEFAULT_ECHO_CLASS_OPTIONS,
-) => {
-  return <SchemaFields extends Struct.Fields, Fields = SimplifyMutable<Struct.Type<SchemaFields>> & { id: string }>(
+export const EchoObject = <Klass>(args: EchoObjectAnnotation) => {
+  return <
+    Options extends EchoClassOptionsAnnotation,
+    SchemaFields extends Struct.Fields,
+    SimplifiedFields = Options['partial'] extends boolean
+      ? SimplifyMutable<Partial<Struct.Type<SchemaFields>>>
+      : SimplifyMutable<Struct.Type<SchemaFields>>,
+    Fields = SimplifiedFields & { id: string },
+  >(
     fields: SchemaFields,
-  ): Class<
-    Klass,
-    SchemaFields & { id: S.$string },
-    Fields,
-    Fields,
-    Fields,
-    SimplifyMutable<Struct.Type<SchemaFields>>,
-    {},
-    {}
-  > => {
-    return S.Class<Klass>(typename)(fields, {
-      [EchoObjectAnnotationId]: { typename, version },
-      [EchoClassOptionsAnnotationId]: options,
+    options?: Options,
+  ): Class<Klass, SchemaFields & { id: S.$string }, Fields, Fields, Fields, SimplifiedFields, {}, {}> => {
+    return S.Class<Klass>(args.typename)(fields, {
+      [EchoObjectAnnotationId]: { typename: args.typename, version: args.version },
+      [EchoClassOptionsAnnotationId]: { partial: options?.partial },
     }) as any;
   };
 };

@@ -34,9 +34,10 @@ const fields = {
   other: S.any,
 };
 
-export class TestSchemaClass extends EchoObject<TestSchemaClass>('TestSchemaClass', '1.0.0', { partial: true })(
-  fields,
-) {}
+export class TestSchemaClass extends EchoObject<TestSchemaClass>({
+  typename: 'TestSchema',
+  version: '1.0.0',
+})(fields, { partial: true }) {}
 
 export const TestSchema = S.mutable(S.partial(S.struct(fields)));
 export type TestSchema = S.Schema.Type<typeof TestSchema>;
