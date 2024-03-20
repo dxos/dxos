@@ -54,6 +54,8 @@ export class TypeCollection {
     });
   }
 
+  registerEffectSchema<T>(...schemaList: EchoObjectClassType<T>[]): this;
+  registerEffectSchema<T>(...schemaList: S.Schema<T>[]): this;
   registerEffectSchema<T>(...schemaList: Array<S.Schema<T> | EchoObjectClassType<T>>) {
     schemaList.forEach((schemaOrType) => {
       const schema = typeof schemaOrType === 'function' ? getEchoObjectSubclassSchema(schemaOrType) : schemaOrType;
@@ -67,6 +69,9 @@ export class TypeCollection {
     return this;
   }
 
+  isEffectSchemaRegistered<T>(schema: S.Schema<T>): boolean;
+
+  isEffectSchemaRegistered<T>(type: EchoObjectClassType<T>): boolean;
   isEffectSchemaRegistered<T>(schemaOrType: S.Schema<T> | EchoObjectClassType<T>): boolean {
     const schema = typeof schemaOrType === 'function' ? getEchoObjectSubclassSchema(schemaOrType) : schemaOrType;
     const typename = getTypenameOrThrow(schema);

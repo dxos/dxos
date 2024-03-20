@@ -149,12 +149,16 @@ export const ReferenceAnnotation = Symbol.for('@dxos/schema/annotation/Reference
 export type ReferenceAnnotationValue = {};
 
 // TODO(dmaretskyi): Assert that schema has `id`.
-export const ref = <T extends Identifiable>(targetType: S.Schema<T>): S.Schema<T> => {
-  if (!getEchoObjectAnnotation(targetType)) {
+export const ref: {
+  <T extends Identifiable>(schema: S.Schema<T>): S.Schema<T>;
+  <T extends Identifiable>(schema: EchoObjectClassType<T>): S.Schema<T>;
+} = <T extends Identifiable>(schemaOrType: S.Schema<T> | EchoObjectClassType<T>): S.Schema<T> => {
+  const schema = typeof schemaOrType === 'function' ? getEchoObjectSubclassSchema(schemaOrType) : schemaOrType;
+  if (!getEchoObjectAnnotation(schema)) {
     throw new Error('Reference target must be an ECHO object.');
   }
 
-  return S.make(AST.annotations(targetType.ast, { [ReferenceAnnotation]: {} }));
+  return S.make(AST.annotations(schema.ast, { [ReferenceAnnotation]: {} }));
 };
 
 export const getRefAnnotation = (schema: S.Schema<any>) =>

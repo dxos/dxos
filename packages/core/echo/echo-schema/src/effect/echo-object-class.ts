@@ -41,17 +41,21 @@ export const EchoObject = <Klass>(args: EchoObjectAnnotation) => {
   };
 };
 
-export const getEchoObjectSubclassSchema = (klass: any): S.Schema<any> => {
-  const ast = klass.ast;
+export const getEchoObjectSubclassSchema = <T extends {} = any>(klass: T): S.Schema<T> => {
+  const ast = (klass as any).ast;
   if (AST.isTransform(ast)) {
-    const transformSchema = S.make(ast.to);
-    const typeAnnotation = getEchoObjectAnnotation(transformSchema);
-    if (typeAnnotation != null) {
-      const classOptions = getEchoClassOptionsAnnotation(transformSchema);
-      const typeSchema = classOptions.partial ? S.partial(S.make(ast.from)) : S.make(ast.from);
-      const schemaWithId = S.extend(S.mutable(typeSchema), S.struct({ id: S.string }));
-      return S.make(AST.annotations(schemaWithId.ast, { [EchoObjectAnnotationId]: typeAnnotation }));
-    }
+    throw createInvalidTypeError();
   }
-  throw new Error('only types created using `class Type extends EchoObject<Type>(...)` are allowed');
+  const transformSchema = S.make(ast.to);
+  const typeAnnotation = getEchoObjectAnnotation(transformSchema);
+  if (typeAnnotation == null) {
+    throw createInvalidTypeError();
+  }
+  const classOptions = getEchoClassOptionsAnnotation(transformSchema);
+  const typeSchema = classOptions.partial ? S.partial(S.make(ast.from)) : S.make(ast.from);
+  const schemaWithId = S.extend(S.mutable(typeSchema), S.struct({ id: S.string }));
+  return S.make(AST.annotations(schemaWithId.ast, { [EchoObjectAnnotationId]: typeAnnotation }));
 };
+
+const createInvalidTypeError = () =>
+  new Error('only types created using `class Type extends EchoObject<Type>(...)` are allowed');
