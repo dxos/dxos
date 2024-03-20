@@ -24,6 +24,7 @@ import {
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
+import { type Identifiable } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
@@ -620,12 +621,12 @@ export const SpacePlugin = ({
 
             case SpaceAction.ADD_OBJECT: {
               const object = intent.data?.object ?? intent.data?.result;
-              if (!E.isEchoReactiveObject(object)) {
+              if (!E.isReactiveProxy(object)) {
                 return;
               }
 
               if (isFolder(intent.data?.target)) {
-                intent.data?.target.objects.push(object);
+                intent.data?.target.objects.push(object as Identifiable);
                 return { data: object };
               }
 
@@ -633,7 +634,7 @@ export const SpacePlugin = ({
                 const space = intent.data.target;
                 const folder = space.properties[E.getEchoObjectAnnotation(FolderSchema)!.typename];
                 if (isFolder(folder)) {
-                  folder.objects.push(object);
+                  folder.objects.push(object as Identifiable);
                   return { data: object };
                 } else {
                   return { data: space.db.add(object) };

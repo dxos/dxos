@@ -204,7 +204,7 @@ const main = async () => {
       [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {
         onFirstRun: async ({ personalSpaceFolder, dispatch }) => {
           const { object } = await import('@dxos/echo-schema');
-          const { DocumentSchema, TextV0Schema } = await import('@braneframe/plugin-markdown');
+          const { DocumentSchema, TextV0Schema } = await import('@braneframe/types');
           const content = object(TextV0Schema, { content: INITIAL_CONTENT });
           const document = object(DocumentSchema, { title: INITIAL_TITLE, content });
           personalSpaceFolder.objects.push(document);
