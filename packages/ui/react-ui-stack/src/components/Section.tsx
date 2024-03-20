@@ -3,7 +3,15 @@
 //
 
 import { useFocusableGroup, useTabsterAttributes } from '@fluentui/react-tabster';
-import { ArrowSquareOut, CaretUpDown, DotsNine, type IconProps, X } from '@phosphor-icons/react';
+import {
+  ArrowLineDown,
+  ArrowLineUp,
+  ArrowSquareOut,
+  CaretUpDown,
+  DotsNine,
+  type IconProps,
+  X,
+} from '@phosphor-icons/react';
 import * as CollapsiblePrimitive from '@radix-ui/react-collapsible';
 import React, {
   forwardRef,
@@ -37,10 +45,13 @@ export type StackSectionContent = MosaicDataItem & { title?: string };
 
 export type CollapsedSections = Record<string, boolean>;
 
+export type AddSectionPosition = 'before' | 'after' | 'beforeAll' | 'afterAll';
+
 export type StackContextValue<TData extends StackSectionContent = StackSectionContent> = {
   SectionContent: FC<{ data: TData }>;
   transform?: (item: MosaicDataItem, type?: string) => StackSectionItem;
   onDeleteSection?: (path: string) => void;
+  onAddSection?: (path: string, position: AddSectionPosition) => void;
   onNavigateToSection?: (id: string) => void;
   collapsedSections?: CollapsedSections;
   // TODO(thure): Sections only need to know about and modify their own collapsed state. This should be improved when
@@ -71,11 +82,11 @@ export type SectionProps = PropsWithChildren<
 
     // Tile props.
     active?: MosaicActiveType;
-    draggableProps?: MosaicTileProps['draggableProps'];
-    draggableStyle?: MosaicTileProps['draggableStyle'];
-    onDelete?: MosaicTileProps['onDelete'];
-    onNavigate?: MosaicTileProps['onNavigate'];
-  } & Pick<StackContextValue, 'collapsedSections' | 'onCollapseSection'>
+  } & Pick<
+    MosaicTileProps,
+    'draggableProps' | 'draggableStyle' | 'onDelete' | 'onNavigate' | 'onAddAfter' | 'onAddBefore'
+  > &
+    Pick<StackContextValue, 'collapsedSections' | 'onCollapseSection'>
 >;
 
 export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElement>> = forwardRef<
@@ -94,6 +105,8 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
       onCollapseSection,
       onDelete,
       onNavigate,
+      onAddBefore,
+      onAddAfter,
       children,
     },
     forwardedRef,
@@ -154,6 +167,14 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content>
                     <DropdownMenu.Viewport>
+                      <DropdownMenu.Item onClick={onAddBefore} data-testid='section.add-before'>
+                        <ArrowLineUp className={mx(getSize(5), 'mr-2')} />
+                        <span className='grow'>{t('add section before label')}</span>
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item onClick={onAddAfter} data-testid='section.add-after'>
+                        <ArrowLineDown className={mx(getSize(5), 'mr-2')} />
+                        <span className='grow'>{t('add section after label')}</span>
+                      </DropdownMenu.Item>
                       <DropdownMenu.Item onClick={onNavigate} data-testid='section.navigate-to'>
                         <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
                         <span className='grow'>{t('navigate to section label')}</span>
@@ -215,6 +236,7 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
       transform,
       onDeleteSection,
       onNavigateToSection,
+      onAddSection,
       SectionContent,
       collapsedSections,
       onCollapseSection,
@@ -256,6 +278,8 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
         onCollapseSection={onCollapseSection}
         onDelete={() => onDeleteSection?.(path)}
         onNavigate={() => onNavigateToSection?.(itemObject.id)}
+        onAddAfter={() => onAddSection?.(path, 'after')}
+        onAddBefore={() => onAddSection?.(path, 'before')}
       >
         {SectionContent && <SectionContent data={itemObject} />}
       </Section>
