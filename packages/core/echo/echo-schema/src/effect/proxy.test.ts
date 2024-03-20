@@ -9,28 +9,33 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
 import * as R from './reactive';
-import { TEST_OBJECT, TestSchema } from './testing/schema';
+import { TEST_OBJECT, TestSchema, TestSchemaClass } from './testing/schema';
 import { updateCounter } from './testutils';
 import { Hypergraph } from '../hypergraph';
 import { createDatabase } from '../testing';
 
 registerSignalRuntime();
 
-for (const schema of [undefined, TestSchema]) {
+for (const schema of [undefined, TestSchema, TestSchemaClass]) {
   for (const useDatabase of [false, true]) {
+    if (!useDatabase && typeof schema === 'function') {
+      continue;
+    }
+
     const testSetup = useDatabase ? createDatabase(new Hypergraph(), { useReactiveObjectApi: true }) : undefined;
 
     const objectsHaveId = useDatabase;
 
     const createObject = async (props: Partial<TestSchema> = {}): Promise<TestSchema> => {
-      const testSchema = useDatabase && schema ? schema.pipe(R.echoObject('TestSchema', '1.0.0')) : schema;
+      const testSchema =
+        useDatabase && schema === TestSchema ? schema.pipe(R.echoObject('TestSchema', '1.0.0')) : schema;
       const obj = testSchema == null ? (R.object(props) as TestSchema) : R.object(testSchema as any, props);
       if (!useDatabase) {
         return obj as any;
       }
       const { db, graph } = await testSetup!;
-      if (testSchema && !graph.types.isEffectSchemaRegistered(testSchema)) {
-        graph.types.registerEffectSchema(testSchema);
+      if (testSchema && !graph.types.isEffectSchemaRegistered(testSchema as any)) {
+        graph.types.registerEffectSchema(testSchema as any);
       }
       return db.add(obj) as any;
     };
