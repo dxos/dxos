@@ -40,7 +40,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/react-ui-thread": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.5.1",
+    "@preact/signals-core": "^1.6.0",
     "date-fns": "^3.3.1",
     "lodash.get": "^4.4.2"
   },
