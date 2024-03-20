@@ -2946,12 +2946,18 @@ importers:
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
       '@dxos/automerge':
         specifier: workspace:*
         version: link:../../../core/echo/automerge
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -2995,9 +3001,6 @@ importers:
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework

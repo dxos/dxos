@@ -8,10 +8,10 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { Sketch as SketchType } from '@braneframe/types';
+import { SketchSchema, type SketchType, TextV0Schema } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { Expando } from '@dxos/react-client/echo';
+import * as E from '@dxos/echo-schema';
 
 import { SketchMain, SketchComponent } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
@@ -24,7 +24,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
     provides: {
       metadata: {
         records: {
-          [SketchType.schema.typename]: {
+          [E.getEchoObjectAnnotation(SketchSchema)!.typename]: {
             placeholder: ['object title placeholder', { ns: SKETCH_PLUGIN }],
             icon: (props: IconProps) => <CompassTool {...props} />,
           },
@@ -58,7 +58,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
               );
 
               // Add all sketches to the graph.
-              const query = space.db.query(SketchType.filter());
+              const query = space.db.query(E.Filter.schema(SketchSchema));
               let previousObjects: SketchType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -136,8 +136,8 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
           switch (intent.action) {
             case SketchAction.CREATE: {
               return {
-                data: new SketchType({
-                  data: new Expando() as any,
+                data: E.object(SketchSchema, {
+                  data: E.object(TextV0Schema, { content: '' }),
                 }),
               };
             }

@@ -6,13 +6,19 @@ import React, { useCallback, useRef } from 'react';
 
 import { FolderSchema, type FolderType, isFolder } from '@braneframe/types';
 import { NavigationAction, parseIntentPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
-import { getEchoObjectAnnotation } from '@dxos/echo-schema';
-import { TypedObject, getSpaceForObject } from '@dxos/react-client/echo';
+import { type AnyEchoObject, getEchoObjectAnnotation, isEchoReactiveObject } from '@dxos/echo-schema';
+import { getSpaceForObject } from '@dxos/react-client/echo';
 import { Button, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
 
-export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: TypedObject; folder?: FolderType }) => {
+export const PopoverRemoveObject = ({
+  object,
+  folder: propsFolder,
+}: {
+  object: AnyEchoObject;
+  folder?: FolderType;
+}) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const deleteButton = useRef<HTMLButtonElement>(null);
 
@@ -20,7 +26,7 @@ export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: T
   const intentPlugin = useResolvePlugin(parseIntentPlugin);
 
   const handleDelete = useCallback(async () => {
-    if (!(object instanceof TypedObject)) {
+    if (!isEchoReactiveObject(object)) {
       return;
     }
 

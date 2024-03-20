@@ -43,6 +43,9 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           stackState.creators.push(...((plugin as Plugin<StackProvides>).provides.stack.creators ?? []));
         }
       }
+
+      const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
+      clientPlugin?.provides.client.addSchema(StackSchema);
     },
     provides: {
       settings: settings.values,

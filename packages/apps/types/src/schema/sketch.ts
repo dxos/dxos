@@ -9,7 +9,7 @@ import * as E from '@dxos/echo-schema';
 import { TextV0Schema } from './document';
 
 const _SketchSchema = S.struct({
-  title: S.string,
+  title: S.optional(S.string),
   // TODO(burdon): YJS document (map).
   data: E.ref(TextV0Schema),
 }).pipe(E.echoObject('braneframe.Sketch', '0.1.0'));
