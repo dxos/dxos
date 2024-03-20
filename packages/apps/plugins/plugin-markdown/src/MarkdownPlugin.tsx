@@ -8,7 +8,7 @@ import React, { useMemo, type Ref } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { type DocumentType, DocumentSchema, isDocument, TextV0Schema } from '@braneframe/types';
+import { DocumentType, isDocument, TextV0Type } from '@braneframe/types';
 import {
   isObject,
   parseIntentPlugin,
@@ -99,13 +99,13 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       });
 
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      clientPlugin?.provides.client.addSchema(DocumentSchema);
+      clientPlugin?.provides.client.addSchema(DocumentType);
     },
     provides: {
       settings: settings.values,
       metadata: {
         records: {
-          [E.getEchoObjectAnnotation(DocumentSchema)!.typename]: {
+          [DocumentType.typename()]: {
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: (props: IconProps) => <TextAa {...props} />,
           },
@@ -139,7 +139,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               );
 
               // Add all documents to the graph.
-              const query = space.db.query(Filter.schema(DocumentSchema));
+              const query = space.db.query(Filter.schema(DocumentType));
               let previousObjects: DocumentType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -301,8 +301,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           switch (action) {
             case MarkdownAction.CREATE: {
               return {
-                data: E.object(DocumentSchema, {
-                  content: E.object(TextV0Schema, { content: '' }),
+                data: E.object(DocumentType, {
+                  content: E.object(TextV0Type, { content: '' }),
                   comments: [],
                 }) satisfies E.ReactiveObject<DocumentType>,
               };

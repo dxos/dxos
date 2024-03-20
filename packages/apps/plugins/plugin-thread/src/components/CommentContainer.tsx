@@ -5,7 +5,7 @@
 import { X } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { MessageSchema, TextV0Schema } from '@braneframe/types';
+import { MessageSchema, TextV0Type } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
 import { getSpaceForObject, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -77,7 +77,7 @@ export const CommentContainer = ({
         blocks: [
           {
             timestamp: new Date().toISOString(),
-            content: E.object(TextV0Schema, { content: messageRef.current }),
+            content: E.object(TextV0Type, { content: messageRef.current }),
           },
         ],
       }),

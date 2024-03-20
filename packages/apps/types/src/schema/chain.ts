@@ -6,7 +6,7 @@ import * as S from '@effect/schema/Schema';
 
 import * as E from '@dxos/echo-schema';
 
-import { TextV0Schema } from './document';
+import { TextV0Type } from './document';
 
 export enum ChainInputType {
   VALUE = 0,
@@ -29,7 +29,7 @@ export const ChainInput: S.Schema<ChainInput> = _ChainInput;
 
 const _ChainPromptSchema = S.struct({
   command: S.string,
-  source: E.ref(TextV0Schema),
+  source: E.ref(TextV0Type),
   inputs: S.array(E.ref(_ChainInput)),
 }).pipe(E.echoObject('braneframe.Chain.Prompt', '0.1.0'));
 export interface ChainPromptType extends E.ObjectType<typeof _ChainPromptSchema> {}

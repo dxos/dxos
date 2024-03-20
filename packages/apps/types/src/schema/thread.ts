@@ -6,7 +6,7 @@ import * as S from '@effect/schema/Schema';
 
 import * as E from '@dxos/echo-schema';
 
-import { TextV0Schema } from './document';
+import { TextV0Type } from './document';
 
 export enum MessageState {
   NONE = 0,
@@ -23,7 +23,7 @@ const _RecipientSchema = S.struct({
 
 const _BlockSchema = S.struct({
   timestamp: S.string,
-  content: S.optional(E.ref(TextV0Schema)),
+  content: S.optional(E.ref(TextV0Type)),
   object: S.optional(E.ref(E.AnyEchoObject)),
 });
 export interface BlockType extends S.Schema.Type<typeof _BlockSchema> {}
