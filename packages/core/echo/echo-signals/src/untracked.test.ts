@@ -5,8 +5,10 @@
 import { effect, signal, untracked } from '@preact/signals-core';
 import { expect } from 'chai';
 
+import { describe, test } from '@dxos/test';
+
 describe('Untracked', () => {
-  it('Nested `untracked` does not cause effect to run', async () => {
+  test('Nested `untracked` does not cause effect to run', async () => {
     const thisSignal = signal({});
     let updateCount = 0;
 
