@@ -3,15 +3,22 @@
 //
 
 import type { Extension } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
+import { dropCursor, EditorView } from '@codemirror/view';
 
-import { log } from '@dxos/log';
+export type DNDOptions = { onDrop?: (event: { pos: number; files: FileList }) => void };
 
-// TODO(burdon): DND experiment.
-export const dnd = (): Extension => {
-  return EditorView.domEventHandlers({
-    drop: (event, view) => {
-      log.info('domEventHandlersDrop', { event });
-    },
-  });
+export const dnd = (options: DNDOptions = {}): Extension => {
+  return [
+    dropCursor(),
+    EditorView.domEventHandlers({
+      drop: (event, view) => {
+        event.preventDefault();
+        const files = event.dataTransfer?.files;
+        const pos = view.posAtCoords(event);
+        if (files?.length && pos !== null) {
+          options.onDrop?.({ files, pos });
+        }
+      },
+    }),
+  ];
 };

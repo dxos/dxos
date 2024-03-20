@@ -3,7 +3,7 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 
 import { LayoutAction, parseFileManagerPlugin, useResolvePlugin, useIntentResolver } from '@dxos/app-framework';
 import { useThemeContext, useTranslation, useRefCallback } from '@dxos/react-ui';
@@ -21,6 +21,8 @@ import {
   useComments,
   useActionHandler,
   useFormattingState,
+  dnd,
+  type DNDOptions,
 } from '@dxos/react-ui-editor';
 import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -55,9 +57,6 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   useComments(editorView, id, comments);
   useTest(editorView);
 
-  // Toolbar actions.
-  const handleAction = useActionHandler(editorView);
-
   // Focus comment.
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
     switch (action) {
@@ -73,9 +72,28 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   });
 
   const [formattingState, formattingObserver] = useFormattingState();
+
+  // Toolbar actions.
+  const handleAction = useActionHandler(editorView);
+
+  // TODO(burdon): Editor view stale.
+  const handleActionRef = useRef(handleAction);
+  useEffect(() => {
+    handleActionRef.current = handleAction;
+  }, [handleAction]);
+
+  // TODO(burdon): Show wait cursor on drop.
+  const handleDrop: DNDOptions['onDrop'] = async ({ files }) => {
+    const info = await fileManagerPlugin?.provides.file.upload?.(files[0]);
+    if (info) {
+      handleActionRef.current?.({ type: 'image', data: info.url });
+    }
+  };
+
   const extensions = useMemo(() => {
     return [
       _extensions,
+      fileManagerPlugin?.provides.file.upload && dnd({ onDrop: handleDrop }),
       formattingObserver,
       createBasicExtensions({ readonly, placeholder: t('editor placeholder'), scrollPastEnd: true }),
       createMarkdownExtensions({ themeMode }),
