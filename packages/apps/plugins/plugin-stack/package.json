@@ -33,7 +33,7 @@
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.5.1",
+    "@preact/signals-core": "^1.6.0",
     "node-fetch": "^2.6.0",
     "react-drag-drop-files": "^2.3.8",
     "react-dropzone": "^14.2.3",
