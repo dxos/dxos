@@ -4,9 +4,9 @@
 
 import * as S from '@effect/schema/Schema';
 
-import * as E from '@dxos/echo-schema';
+import { EchoObjectSchema } from '@dxos/echo-schema';
 
-const _TableSchema = S.struct({
+export class TableType extends EchoObjectSchema({ typename: 'braneframe.Table', version: '0.1.0' })({
   title: S.string,
   // schema: ???,
   props: S.array(
@@ -18,8 +18,6 @@ const _TableSchema = S.struct({
       size: S.number,
     }),
   ),
-}).pipe(E.echoObject('braneframe.Table', '0.1.0'));
-export interface TableType extends E.ObjectType<typeof _TableSchema> {}
-export const TableSchema: S.Schema<TableType> = _TableSchema;
+}) {}
 
-export const isTable = (data: unknown): data is TableType => !!data && E.getSchema(data) === TableSchema;
+export const isTable = (data: unknown): data is TableType => !!data && data instanceof TableType;

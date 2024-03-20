@@ -4,13 +4,11 @@
 
 import * as S from '@effect/schema/Schema';
 
-import * as E from '@dxos/echo-schema';
+import { EchoObjectSchema } from '@dxos/echo-schema';
 
-const _ScriptSchema = S.struct({
+export class ScriptType extends EchoObjectSchema({ typename: 'braneframe.Script', version: '0.1.0' })({
   title: S.string,
   source: S.string,
-}).pipe(E.echoObject('braneframe.Script', '0.1.0'));
-export interface ScriptType extends E.ObjectType<typeof _ScriptSchema> {}
-export const ScriptSchema: S.Schema<ScriptType> = _ScriptSchema;
+}) {}
 
-export const isScript = (data: unknown): data is ScriptType => !!data && E.getSchema(data) === ScriptSchema;
+export const isScript = (data: unknown): data is ScriptType => !!data && data instanceof ScriptType;

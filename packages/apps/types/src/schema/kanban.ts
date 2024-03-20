@@ -5,29 +5,22 @@
 import * as S from '@effect/schema/Schema';
 
 import * as E from '@dxos/echo-schema';
+import { EchoObjectSchema } from '@dxos/echo-schema';
 
-// TODO(wittjosiah): Reconcile w/ GridItem.
-const _KanbanItemSchema = S.struct({
+export class KanbanItemType extends EchoObjectSchema({ typename: 'braneframe.Kanban.Item', version: '0.1.0' })({
   object: E.ref(E.AnyEchoObject),
   title: S.string,
   index: S.string,
-}).pipe(E.echoObject('braneframe.Kanban.Item', '0.1.0'));
-export interface KanbanItemType extends E.ObjectType<typeof _KanbanItemSchema> {}
-export const KanbanItemSchema: S.Schema<KanbanItemType> = _KanbanItemSchema;
+}) {}
 
-const _KanbanColumnSchema = S.struct({
+export class KanbanColumnType extends EchoObjectSchema({ typename: 'braneframe.Kanban.Column', version: '0.1.0' })({
   title: S.string,
   index: S.string,
-  items: S.array(E.ref(KanbanItemSchema)),
-}).pipe(E.echoObject('braneframe.Kanban.Column', '0.1.0'));
-export interface KanbanColumnType extends E.ObjectType<typeof _KanbanColumnSchema> {}
-export const KanbanColumnSchema: S.Schema<KanbanColumnType> = _KanbanColumnSchema;
+  items: S.array(E.ref(KanbanItemType)),
+}) {}
 
-const _KanbanSchema = S.struct({
+export class KanbanType extends EchoObjectSchema({ typename: 'braneframe.Kanban', version: '0.1.0' })({
   title: S.string,
-  columns: S.array(E.ref(KanbanColumnSchema)),
-}).pipe(E.echoObject('braneframe.Kanban', '0.1.0'));
-export interface KanbanType extends E.ObjectType<typeof _KanbanSchema> {}
-export const KanbanSchema: S.Schema<KanbanType> = _KanbanSchema;
-
-export const isKanban = (data: unknown): data is KanbanType => !!data && E.getSchema(data) === KanbanSchema;
+  columns: S.array(E.ref(KanbanColumnType)),
+}) {}
+export const isKanban = (data: unknown): data is KanbanType => !!data && data instanceof KanbanType;

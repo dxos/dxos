@@ -5,6 +5,7 @@
 import * as S from '@effect/schema/Schema';
 
 import * as E from '@dxos/echo-schema';
+import { EchoObjectSchema } from '@dxos/echo-schema';
 
 import { TextV0Type } from './document';
 
@@ -28,7 +29,7 @@ const _BlockSchema = S.struct({
 });
 export interface BlockType extends S.Schema.Type<typeof _BlockSchema> {}
 
-const _MessageSchema = S.struct({
+export class MessageType extends EchoObjectSchema({ typename: 'braneframe.Message', version: '0.1.0' })({
   type: S.optional(S.string),
   date: S.optional(S.string),
   from: _RecipientSchema,
@@ -46,18 +47,16 @@ const _MessageSchema = S.struct({
       object: S.optional(S.string),
     }),
   ),
-}).pipe(E.echoObject('braneframe.Message', '0.1.0'));
-export interface MessageType extends E.ObjectType<typeof _MessageSchema> {}
-export const MessageSchema: S.Schema<MessageType> = _MessageSchema;
+}) {}
 
 // TODO(wittjosiah): This is way too coupled with email.
 //   Thread messages and email messages should not be the same thing.
 //   Interoperability should be handled by lenses or some other transformation mechanism.
 //   Requiring the same schema for all types of messages will not scale -
 //   It also makes the simple cases much more complex than they need to be.
-const _ThreadSchema = S.struct({
+export class ThreadType extends EchoObjectSchema({ typename: 'braneframe.Thread', version: '0.1.0' })({
   title: S.optional(S.string),
-  messages: S.array(E.ref(_MessageSchema)),
+  messages: S.array(E.ref(MessageType)),
   // TODO(burdon): Reconcile with Message.Context.
   context: S.optional(
     S.struct({
@@ -66,22 +65,18 @@ const _ThreadSchema = S.struct({
       object: S.optional(S.string),
     }),
   ),
-}).pipe(E.echoObject('braneframe.Thread', '0.1.0'));
-export interface ThreadType extends E.ObjectType<typeof _ThreadSchema> {}
-export const ThreadSchema: S.Schema<ThreadType> = _ThreadSchema;
+}) {}
 
 export const isThread = (data: unknown): data is E.EchoReactiveObject<ThreadType> =>
-  !!data && E.getSchema<any>(data) === ThreadSchema;
+  !!data && data instanceof ThreadType;
 
 // TODO(burdon): Reconcile with Thread?
-const _MailboxSchema = S.struct({
+export class MailboxType extends EchoObjectSchema({ typename: 'braneframe.Mailbox', version: '0.1.0' })({
   title: S.string,
-  messages: S.array(E.ref(MessageSchema)),
-}).pipe(E.echoObject('braneframe.Mailbox', '0.1.0'));
-export interface MailboxType extends E.ObjectType<typeof _MailboxSchema> {}
-export const MailboxSchema: S.Schema<MailboxType> = _MailboxSchema;
+  messages: S.array(E.ref(MessageType)),
+}) {}
 
-const _ContactSchema = S.struct({
+export class ContactType extends EchoObjectSchema({ typename: 'braneframe.Contact', version: '0.1.0' })({
   name: S.string,
   identifiers: S.array(
     S.struct({
@@ -89,24 +84,16 @@ const _ContactSchema = S.struct({
       value: S.string,
     }),
   ),
-}).pipe(E.echoObject('braneframe.Contact', '0.1.0'));
-export interface ContactType extends E.ObjectType<typeof _ContactSchema> {}
-export const ContactSchema: S.Schema<ContactType> = _ContactSchema;
+}) {}
 
-const _EventSchema = S.struct({
+export class EventType extends EchoObjectSchema({ typename: 'braneframe.Event', version: '0.1.0' })({
   title: S.string,
   owner: _RecipientSchema,
   attendees: S.array(_RecipientSchema),
   startDate: S.string,
   links: S.array(E.ref(E.AnyEchoObject)),
-}).pipe(E.echoObject('braneframe.Event', '0.1.0'));
-export interface EventType extends E.ObjectType<typeof _EventSchema> {}
-export const EventSchema: S.Schema<EventType> = _EventSchema;
+}) {}
 
-const _AddressBookSchema = S.struct({}).pipe(E.echoObject('braneframe.AddressBook', '0.1.0'));
-export interface AddressBookType extends E.ObjectType<typeof _AddressBookSchema> {}
-export const AddressBookSchema: S.Schema<AddressBookType> = _AddressBookSchema;
+export class AddressBookType extends EchoObjectSchema({ typename: 'braneframe.AddressBook', version: '0.1.0' })({}) {}
 
-const _CalendarSchema = S.struct({}).pipe(E.echoObject('braneframe.Calendar', '0.1.0'));
-export interface CalendarType extends E.ObjectType<typeof _CalendarSchema> {}
-export const CalendarSchema: S.Schema<CalendarType> = _CalendarSchema;
+export class CalendarType extends EchoObjectSchema({ typename: 'braneframe.Calendar', version: '0.1.0' })({}) {}
