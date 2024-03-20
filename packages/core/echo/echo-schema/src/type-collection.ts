@@ -53,7 +53,7 @@ export class TypeCollection {
     });
   }
 
-  registerEffectSchema(...schemaList: S.Schema<any>[]) {
+  registerEffectSchema<T>(...schemaList: S.Schema<T>[]) {
     schemaList.forEach((schema) => {
       const typename = getTypenameOrThrow(schema);
       if (this._effectSchemaDefs.has(typename)) {
@@ -65,7 +65,7 @@ export class TypeCollection {
     return this;
   }
 
-  isEffectSchemaRegistered(schema: S.Schema<any>): boolean {
+  isEffectSchemaRegistered<T>(schema: S.Schema<T>): boolean {
     const typename = getTypenameOrThrow(schema);
     return this._effectSchemaDefs.has(typename);
   }
