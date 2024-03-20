@@ -5,7 +5,7 @@
 
 import { type Space } from '@dxos/client-protocol';
 import { DocumentModel } from '@dxos/document-model';
-import { type EchoObject, getDatabaseFromObject } from '@dxos/echo-schema';
+import { type OpaqueEchoObject, getDatabaseFromObject } from '@dxos/echo-schema';
 import { ModelFactory } from '@dxos/model-factory';
 import { TextModel } from '@dxos/text-model';
 
@@ -19,7 +19,7 @@ export const createDefaultModelFactory = () => {
  * @deprecated
  */
 // TODO(burdon): Normalize API getters.
-export const getSpaceForObject = (object: EchoObject): Space | undefined => {
+export const getSpaceForObject = (object: OpaqueEchoObject): Space | undefined => {
   const db = getDatabaseFromObject(object);
   const key = db?.spaceKey;
   if (key) {

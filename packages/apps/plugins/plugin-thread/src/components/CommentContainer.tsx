@@ -49,7 +49,7 @@ export const CommentContainer = ({
   const extensions = useMemo(
     () => [
       createDataExtensions({ id: nextMessage.text.id, text: accessor }),
-      createBasicExtensions({ placeholder: t('message placeholder') }),
+      createBasicExtensions({ placeholder: t('message placeholder'), standardKeymap: false }),
       createThemeExtensions({ themeMode }),
       command,
     ],

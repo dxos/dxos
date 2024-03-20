@@ -8,9 +8,9 @@ import { invariant } from '@dxos/invariant';
 import { type ItemID } from '@dxos/protocols';
 import { stripUndefinedValues } from '@dxos/util';
 
+import { getAutomergeObjectCore } from './automerge';
 import { type EchoDatabase } from './database';
-import { TypedObject, base, isAutomergeObject, type EchoObject } from './object';
-import { AbstractEchoObject } from './object/object';
+import { TypedObject, base, type EchoObject } from './object';
 import { Filter } from './query';
 
 /**
@@ -141,7 +141,7 @@ export class Serializer {
 
   exportObject(object: TypedObject): SerializedObject {
     return stripUndefinedValues({
-      ...object[base].toJSON(), // TODO(burdon): Not working unless schema.
+      ...(object[base] ? object[base].toJSON() : object.toJSON()), // TODO(burdon): Not working unless schema.
       '@version': Serializer.version,
       '@timestamp': new Date().toUTCString(),
     });
@@ -179,10 +179,7 @@ export const getTypeRef = (type?: SerializedReference | string): Reference | und
  * Works with both automerge and legacy objects.
  */
 const setObjectId = (obj: EchoObject, id: string) => {
-  if (isAutomergeObject(obj)) {
-    obj[base]._core.id = id;
-  } else {
-    invariant(obj[base] instanceof AbstractEchoObject);
-    obj[base]._id = id;
-  }
+  const core = getAutomergeObjectCore(obj);
+  invariant(core);
+  core.id = id;
 };

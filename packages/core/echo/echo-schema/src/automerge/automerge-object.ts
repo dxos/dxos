@@ -31,12 +31,12 @@ import {
   subscribe,
   TextObject,
   type ObjectMeta,
+  type OpaqueEchoObject,
   type TypedObjectOptions,
   type TypedObjectProperties,
-  type OpaqueEchoObject,
 } from '../object';
 import { AbstractEchoObject } from '../object/object'; // TODO(burdon): Import
-import { Schema } from '../proto';
+import { type Schema } from '../proto'; // Keep as type-only import.
 
 // TODO(dmaretskyi): Rename to `AutomergeObjectApi`?
 export class AutomergeObject implements TypedObjectProperties {
@@ -345,7 +345,7 @@ export class AutomergeObject implements TypedObjectProperties {
       const type = this.__system.type;
       if (type instanceof Reference) {
         this._schema = this._core.database._resolveSchema(type);
-      } else if ((type as any) instanceof Schema) {
+      } else if ((type as any) instanceof requireSchema()) {
         this._schema = type;
       }
     }
@@ -403,3 +403,7 @@ export const getAutomergeObjectCore = (obj: OpaqueEchoObject): AutomergeObjectCo
     return handler._objectCore;
   }
 };
+
+// Circular deps.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const requireSchema = (): typeof Schema => require('../proto').Schema;

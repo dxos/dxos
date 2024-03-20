@@ -29,9 +29,9 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.63.4",
+    "@effect/schema": "0.64.7",
     "@orama/orama": "^2.0.8",
-    "effect": "^2.4.3",
+    "effect": "2.4.9",
     "lodash.isequal": "^4.5.0"
   },
   "devDependencies": {

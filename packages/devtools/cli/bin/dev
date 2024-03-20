@@ -1,6 +1,10 @@
 #!/usr/bin/env -S node --no-warnings
 // NOTE: Specify --no-warnings in production script.
 
+if (process.env.DX_TRACK_LEAKS) {
+  globalThis.wtf = require('wtfnode')
+}
+
 const oclif = require('@oclif/core')
 const path = require('path')
 const project = path.join(__dirname, '..', 'tsconfig.json')
