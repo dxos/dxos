@@ -272,7 +272,7 @@ describe('AutomergeDb', () => {
     });
 
     test('reload objects', async () => {
-      const testBuilder = new TestBuilder();
+      const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
       const testPeer = await testBuilder.createPeer();
       const object = new TypedObject({ title: 'first object' });
       testPeer.db.add(object);
@@ -282,7 +282,7 @@ describe('AutomergeDb', () => {
       const objectId = object.id;
       {
         const testPeer = await testBuilder.createPeer(spaceKey, docId);
-        await testPeer.db.automerge.waitForObject(objectId);
+        await testPeer.db.automerge.loadObjectById(objectId);
         const object = testPeer.db.getObjectById(objectId);
         expect(object).not.to.be.undefined;
         expect((object as any).title).to.eq('first object');
@@ -292,7 +292,7 @@ describe('AutomergeDb', () => {
     test('load object', async () => {
       const object = new Expando({ title: 'Hello' });
       const peer = await createPeerInSpaceWithObject(object);
-      await peer.db.automerge.waitForObject(object.id);
+      await peer.db.automerge.loadObjectById(object.id);
       const loadedObject = peer.db.getObjectById(object.id);
       expect(loadedObject).to.deep.eq(object);
     });

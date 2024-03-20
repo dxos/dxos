@@ -170,12 +170,15 @@ export class AutomergeDb {
   }
 
   // TODO(Mykola): Reconcile with `getObjectById`.
-  async waitForObject(objectId: string, { timeout = 5000 }: { timeout?: number } = {}): Promise<void> {
-    if (this._objects.has(objectId)) {
-      return Promise.resolve();
+  async loadObjectById(objectId: string, { timeout = 5000 }: { timeout?: number } = {}): Promise<EchoObject> {
+    const obj = this.getObjectById(objectId);
+    if (obj) {
+      return Promise.resolve(obj);
     }
     return asyncTimeout(
-      this._updateEvent.waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId)).then(() => {}),
+      this._updateEvent
+        .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId))
+        .then(() => this.getObjectById(objectId)!),
       timeout,
     );
   }
