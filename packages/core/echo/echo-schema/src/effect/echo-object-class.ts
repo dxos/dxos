@@ -20,7 +20,9 @@ const getEchoClassOptionsAnnotation = (schema: S.Schema<any>) =>
     Option.getOrElse(() => ({}) as EchoClassOptionsAnnotation),
   );
 
-export type EchoObjectClassType<T> = new (props: Omit<T, 'id'>) => T;
+export interface EchoObjectClassType<T> {
+  new (name: Omit<T, 'id'>): T;
+}
 
 export const EchoObject = <Klass>(args: EchoObjectAnnotation) => {
   return <
@@ -41,9 +43,9 @@ export const EchoObject = <Klass>(args: EchoObjectAnnotation) => {
   };
 };
 
-export const getEchoObjectSubclassSchema = <T extends {} = any>(klass: T): S.Schema<T> => {
+export const getEchoObjectSubclassSchema = <T extends {} = any>(klass: any): S.Schema<T> => {
   const ast = (klass as any).ast;
-  if (AST.isTransform(ast)) {
+  if (!AST.isTransform(ast)) {
     throw createInvalidTypeError();
   }
   const transformSchema = S.make(ast.to);
