@@ -58,7 +58,7 @@ const getFolderGraphNodePartials = ({ graph, folder, space }: { graph: Graph; fo
     role: 'branch',
     onRearrangeChildren: (nextOrder: unknown[]) => {
       // Change on disk.
-      folder.objects = nextOrder.filter(isTypedObject);
+      folder.objects = nextOrder.filter(E.isEchoReactiveObject);
     },
     onTransferStart: (child: Node<TypedObject>) => {
       // TODO(wittjosiah): Support transfer between spaces.
