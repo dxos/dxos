@@ -57,7 +57,7 @@ export const theadTh: ComponentFunction<TheadStyleProps> = ({ border }, ...etc) 
 
 export const theadResizeRoot: ComponentFunction<TheadStyleProps> = (_props, ...etc) =>
   mx(
-    'absolute top-0 pis-1 h-full z-[10] w-[7px] -right-[5px] cursor-col-resize select-none touch-none opacity-20 hover:opacity-100',
+    'absolute top-0 pis-1 h-full z-[10] w-[7px] -right-[5px] cursor-col-resize select-none opacity-20 hover:opacity-100',
     ...etc,
   );
 

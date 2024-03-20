@@ -36,6 +36,15 @@ const TableHead = <TData extends RowData>(_props: TableHeadProps) => {
               const isResizing = header.column.getIsResizing();
               const resizeHandler = header.getResizeHandler();
 
+              const onResize = (e: React.MouseEvent | React.TouchEvent) => {
+                // Stop propagation and prevent default on touch events to stop side scrolling the view while resizing.
+                if ('touches' in e) {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }
+                resizeHandler(e);
+              };
+
               return (
                 <th
                   key={header.id}
@@ -58,8 +67,8 @@ const TableHead = <TData extends RowData>(_props: TableHeadProps) => {
                       style={{
                         transform: `translateX(${isResizing ? state.columnSizingInfo.deltaOffset : 0}px)`,
                       }}
-                      onMouseDown={resizeHandler}
-                      onTouchStart={resizeHandler}
+                      onMouseDown={onResize}
+                      onTouchStart={onResize}
                     >
                       <div className={mx(theadResizeThumb(tableContext))} />
                     </div>
