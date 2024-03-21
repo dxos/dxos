@@ -418,7 +418,7 @@ export const updateGraphWithSpace = ({
               dispatch({
                 plugin: SPACE_PLUGIN,
                 action: SpaceAction.ADD_OBJECT,
-                data: { target: folder, object: E.object(FolderType) },
+                data: { target: folder, object: E.object(FolderType, { objects: [] }) },
               }),
             properties: {
               label: ['create folder label', { ns: SPACE_PLUGIN }],
