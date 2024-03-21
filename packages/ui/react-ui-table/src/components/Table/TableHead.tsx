@@ -31,17 +31,8 @@ const TableHead = <TData extends RowData>(_props: TableHeadProps) => {
 
             {headerGroup.headers.map((header) => {
               const isResizing = header.column.getIsResizing();
-              const resizeHandler = header.getResizeHandler();
+              const onResize = header.getResizeHandler();
               const resizable = header.column.columnDef.meta?.resizable;
-
-              const onResize = (e: React.MouseEvent | React.TouchEvent) => {
-                // Stop propagation and prevent default on touch events to stop side scrolling the view while resizing.
-                if ('touches' in e) {
-                  e.stopPropagation();
-                  e.preventDefault();
-                }
-                resizeHandler(e);
-              };
 
               return (
                 <th
@@ -61,7 +52,12 @@ const TableHead = <TData extends RowData>(_props: TableHeadProps) => {
                    */}
 
                   {resizable && (
-                    <div className={theadResizeRoot({ isResizing })} onMouseDown={onResize} onTouchStart={onResize} />
+                    <div
+                      className={theadResizeRoot({ isResizing })}
+                      onDoubleClick={header.column.resetSize}
+                      onMouseDown={onResize}
+                      onTouchStart={onResize}
+                    />
                   )}
                 </th>
               );

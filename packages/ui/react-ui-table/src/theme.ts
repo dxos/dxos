@@ -65,7 +65,6 @@ export const theadResizeRoot: ComponentFunction<{ isResizing: boolean }> = ({ is
     !isResizing && 'group-hover:bg-neutral-100 dark:group-hover:bg-neutral-800',
     'pointer-coarse:bg-neutral-100 dark:pointer-coarse:bg-neutral-800',
     isResizing && 'bg-primary-500 dark:bg-primary-400',
-    'transition-colors duration-100',
   );
 };
 
