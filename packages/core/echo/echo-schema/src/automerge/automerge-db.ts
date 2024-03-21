@@ -215,10 +215,8 @@ export class AutomergeDb {
     return obj;
   }
 
-  remove<T extends EchoObject>(obj: T) {
-    invariant(isAutomergeObject(obj));
+  remove(obj: OpaqueEchoObject) {
     const core = getAutomergeObjectCore(obj);
-
     invariant(this._objects.has(core.id));
     core.setDeleted(true);
   }
