@@ -8,11 +8,11 @@ import * as Y from 'yjs';
 import { describe, test } from '@dxos/test';
 import { numericalValues, range } from '@dxos/util';
 
-describe.only('Automerge', () => {
+describe('Automerge', () => {
   const CHANGE_COUNT = 10_000;
   const PROP_COUNT = 4;
 
-  test('example', () => {
+  test.skip('example', () => {
     const diffSizes: number[] = [];
 
     let doc1 = A.init<any>();
@@ -33,7 +33,7 @@ describe.only('Automerge', () => {
     );
   });
 
-  test('yjs', () => {
+  test.skip('yjs', () => {
     const diffSizes: number[] = [];
     const doc = new Y.Doc();
     for (let i = 0; i < CHANGE_COUNT; i++) {
@@ -76,7 +76,7 @@ describe.only('Automerge', () => {
     console.log(diff);
   });
 
-  test.only('repo', async () => {
+  test('repo', async () => {
     // eslint-disable-next-line no-eval
     const { Repo } = await eval('import("@automerge/automerge-repo")');
 
@@ -89,7 +89,7 @@ describe.only('Automerge', () => {
     const handle = repo.create();
     handle.change((doc: any) => {
       doc.text = 'hello world';
-      console.log(doc.text);
+      // console.log(doc.text);
     });
   });
 });
