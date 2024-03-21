@@ -9,6 +9,7 @@ import { searchKeymap } from '@codemirror/search';
 import { EditorState, type Extension } from '@codemirror/state';
 import {
   EditorView,
+  type KeyBinding,
   drawSelection,
   dropCursor,
   highlightActiveLine,
@@ -16,7 +17,6 @@ import {
   lineNumbers,
   placeholder,
   scrollPastEnd,
-  type KeyBinding,
 } from '@codemirror/view';
 import defaultsDeep from 'lodash.defaultsdeep';
 
