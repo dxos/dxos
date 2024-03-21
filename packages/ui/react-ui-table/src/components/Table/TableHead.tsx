@@ -5,10 +5,8 @@
 import { flexRender, type RowData } from '@tanstack/react-table';
 import React from 'react';
 
-import { mx } from '@dxos/react-ui-theme';
-
 import { useTableContext } from './TableContext';
-import { theadResizeRoot, theadResizeThumb, theadRoot, theadTh, theadTr } from '../../theme';
+import { theadResizeRoot, theadRoot, theadTh, theadTr } from '../../theme';
 
 const TABLE_HEAD_NAME = 'TableHeader';
 
@@ -17,7 +15,6 @@ type TableHeadProps = {};
 const TableHead = <TData extends RowData>(_props: TableHeadProps) => {
   const tableContext = useTableContext<TData>(TABLE_HEAD_NAME);
   const headerGroups = tableContext.table.getHeaderGroups();
-  const state = tableContext.table.getState();
 
   return (
     <thead className={theadRoot(tableContext)}>
@@ -35,6 +32,7 @@ const TableHead = <TData extends RowData>(_props: TableHeadProps) => {
             {headerGroup.headers.map((header) => {
               const isResizing = header.column.getIsResizing();
               const resizeHandler = header.getResizeHandler();
+              const resizable = header.column.columnDef.meta?.resizable;
 
               const onResize = (e: React.MouseEvent | React.TouchEvent) => {
                 // Stop propagation and prevent default on touch events to stop side scrolling the view while resizing.
@@ -61,17 +59,9 @@ const TableHead = <TData extends RowData>(_props: TableHeadProps) => {
                    * Resize handle.
                    * https://codesandbox.io/p/sandbox/github/tanstack/table/tree/main/examples/react/column-sizing
                    */}
-                  {header.column.columnDef.meta?.resizable && (
-                    <div
-                      className={theadResizeRoot(tableContext, isResizing && 'hidden')}
-                      style={{
-                        transform: `translateX(${isResizing ? state.columnSizingInfo.deltaOffset : 0}px)`,
-                      }}
-                      onMouseDown={onResize}
-                      onTouchStart={onResize}
-                    >
-                      <div className={mx(theadResizeThumb(tableContext))} />
-                    </div>
+
+                  {resizable && (
+                    <div className={theadResizeRoot({ isResizing })} onMouseDown={onResize} onTouchStart={onResize} />
                   )}
                 </th>
               );

@@ -48,21 +48,26 @@ export const theadTr: ComponentFunction<TheadStyleProps> = (_props, ...etc) => m
 
 export const theadTh: ComponentFunction<TheadStyleProps> = ({ border }, ...etc) =>
   mx(
-    'relative text-start font-medium select-none truncate',
+    'relative',
+    'text-start font-medium select-none truncate',
     headPadding,
     border && groupBorder,
     border && 'border border-t-0 border-b-0 border-neutral-200',
     ...etc,
   );
 
-export const theadResizeRoot: ComponentFunction<TheadStyleProps> = (_props, ...etc) =>
-  mx(
-    'absolute top-0 pis-1 h-full z-[10] w-[7px] -right-[5px] cursor-col-resize select-none opacity-20 hover:opacity-100',
-    ...etc,
+export const theadResizeRoot: ComponentFunction<{ isResizing: boolean }> = ({ isResizing }) => {
+  return mx(
+    'absolute h-full w-[4px] top-0 right-0',
+    'cursor-col-resize',
+    'user-select-none',
+    'touch-action-none',
+    !isResizing && 'group-hover:bg-neutral-100 dark:group-hover:bg-neutral-800',
+    'pointer-coarse:bg-neutral-100 dark:pointer-coarse:bg-neutral-800',
+    isResizing && 'bg-primary-500 dark:bg-primary-400',
+    'transition-colors duration-100',
   );
-
-export const theadResizeThumb: ComponentFunction<TheadStyleProps> = (_props, ...etc) =>
-  mx('flex group-hover:bg-neutral-700 -ml-[2px] w-[1px] h-full', ...etc);
+};
 
 //
 // tbody
