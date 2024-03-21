@@ -5,13 +5,14 @@
 import { type TLStore } from '@tldraw/tlschema';
 import { useEffect, useState } from 'react';
 
+import { isReactiveProxy } from '@dxos/echo-schema';
 import { type Expando, TypedObject, type TextObject, getRawDoc } from '@dxos/react-client/echo';
 
 import { AutomergeStoreAdapter } from './automerge';
 import { YjsStoreAdapter } from './yjs';
 
 export const useStoreAdapter = (data: TextObject | Expando, options = { timeout: 250 }): TLStore => {
-  const automerge = data instanceof TypedObject;
+  const automerge = data instanceof TypedObject || isReactiveProxy(data);
   const [adapter] = useState(() => (automerge ? new AutomergeStoreAdapter(options) : new YjsStoreAdapter(options)));
 
   useEffect(() => {

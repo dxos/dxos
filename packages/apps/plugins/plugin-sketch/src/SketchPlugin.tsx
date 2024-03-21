@@ -21,6 +21,10 @@ import { SketchAction, type SketchPluginProvides } from './types';
 export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
   return {
     meta,
+    ready: async (plugins) => {
+      const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
+      clientPlugin?.provides.client.addSchema(SketchType);
+    },
     provides: {
       metadata: {
         records: {
