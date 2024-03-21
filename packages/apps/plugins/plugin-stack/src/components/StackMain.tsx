@@ -84,8 +84,6 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
 
     const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
     const object = parseData?.(active.item, 'object');
-    // TODO(wittjosiah): Pushing object into a section causes app to explode.
-    console.log('handleDrop', object);
     // TODO(wittjosiah): Stop creating new section objects for each drop.
     if (object && over.path === Path.create(id, over.item.id)) {
       stack.sections.splice(over.position!, 0, E.object(SectionType, { object }));
