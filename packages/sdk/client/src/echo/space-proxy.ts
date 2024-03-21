@@ -4,7 +4,7 @@
 
 import isEqualWith from 'lodash.isequalwith';
 
-import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
+import { Event, MulticastObservable, scheduleMicroTask, synchronized, Trigger } from '@dxos/async';
 import {
   type ClientServicesProvider,
   Properties,
@@ -15,7 +15,7 @@ import {
 import { Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
-import { loadashEqualityFn, todo } from '@dxos/debug';
+import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
 import {
   type EchoDatabase,
@@ -344,27 +344,29 @@ export class SpaceProxy implements Space {
     }
 
     log('ready');
+
     this._databaseInitialized.wake();
 
+    const propertiesAvailable = new Trigger();
     // Set properties document when it's available.
     // NOTE: Emits state update event when properties are first available.
     //   This is needed to ensure reactivity for newly created spaces.
     // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
-      const query = this._db.query(Properties.filter());
-      if (query.objects.length > 0) {
-        this._properties = query.objects[0];
-        this._stateUpdate.emit(this._currentState);
-      } else {
-        const unsubscribe = query.subscribe((query) => {
-          if (query.objects.length === 1) {
-            this._properties = query.objects[0];
-            this._stateUpdate.emit(this._currentState);
+      const unsubscribe = this._db.query(Properties.filter()).subscribe((query) => {
+        if (query.objects.length === 1) {
+          this._properties = query.objects[0];
+          propertiesAvailable.wake();
+          this._stateUpdate.emit(this._currentState);
+          scheduleMicroTask(this._ctx, () => {
             unsubscribe();
-          }
-        });
-      }
+          });
+        }
+      }, true);
     }
+    await warnAfterTimeout(5_000, 'Could not find properties for a space', () =>
+      cancelWithContext(this._ctx, propertiesAvailable.wait()),
+    );
   }
 
   /**
