@@ -3,7 +3,7 @@
 //
 
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
-import { history, historyKeymap, indentWithTab, standardKeymap } from '@codemirror/commands';
+import { defaultKeymap, history, historyKeymap, indentWithTab, standardKeymap } from '@codemirror/commands';
 import { bracketMatching } from '@codemirror/language';
 import { searchKeymap } from '@codemirror/search';
 import { EditorState, type Extension } from '@codemirror/state';
@@ -17,6 +17,7 @@ import {
   lineNumbers,
   placeholder,
   scrollPastEnd,
+  type KeyBinding,
 } from '@codemirror/view';
 import defaultsDeep from 'lodash.defaultsdeep';
 
@@ -54,6 +55,7 @@ export type BasicExtensionsOptions = {
   highlightActiveLine?: boolean;
   history?: boolean;
   indentWithTab?: boolean;
+  keymap?: 'default' | 'standard';
   lineNumbers?: boolean;
   lineWrapping?: boolean;
   placeholder?: string;
@@ -71,9 +73,16 @@ const defaults: BasicExtensionsOptions = {
   drawSelection: true,
   editable: true,
   history: true,
-  standardKeymap: true,
   lineWrapping: true,
   search: true,
+  keymap: 'standard',
+};
+
+const keymaps: { [key: string]: readonly KeyBinding[] } = {
+  // https://codemirror.net/docs/ref/#commands.standardKeymap
+  standard: standardKeymap,
+  // https://codemirror.net/docs/ref/#commands.defaultKeymap
+  default: defaultKeymap,
 };
 
 export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extension => {
@@ -102,8 +111,7 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     // https://codemirror.net/docs/ref/#view.KeyBinding
     keymap.of(
       [
-        // https://codemirror.net/docs/ref/#commands.standardKeymap
-        ...(props.standardKeymap ? standardKeymap : []),
+        ...((props.keymap && keymaps[props.keymap]) ?? []),
         // https://codemirror.net/docs/ref/#commands.indentWithTab
         ...(props.indentWithTab ? [indentWithTab] : []),
         // https://codemirror.net/docs/ref/#autocomplete.closeBracketsKeymap
