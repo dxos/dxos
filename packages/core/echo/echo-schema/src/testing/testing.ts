@@ -3,12 +3,7 @@
 //
 
 import { DocumentModel } from '@dxos/document-model';
-import {
-  DatabaseTestBuilder,
-  createMemoryDatabase,
-  createRemoteDatabaseFromDataServiceHost,
-  type DatabaseTestPeer as BasePeer,
-} from '@dxos/echo-pipeline/testing';
+import { createMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '@dxos/echo-pipeline/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { TextModel } from '@dxos/text-model';
@@ -50,7 +45,6 @@ export const createDatabase = async (graph = new Hypergraph(), { useReactiveObje
 export class TestBuilder {
   public readonly defaultSpaceKey = PublicKey.random();
   public readonly graph = new Hypergraph();
-  public readonly base = new DatabaseTestBuilder();
 
   public readonly automergeContext;
 
@@ -64,9 +58,8 @@ export class TestBuilder {
     spaceKey = this.defaultSpaceKey,
     automergeDocUrl: string = this.automergeContext.repo.create().url,
   ): Promise<TestPeer> {
-    const base = await this.base.createPeer(spaceKey);
-    const peer = new TestPeer(this, base, spaceKey, automergeDocUrl);
-    this.peers.set(peer.base.key, peer);
+    const peer = new TestPeer(this, PublicKey.random(), spaceKey, automergeDocUrl);
+    this.peers.set(peer.key, peer);
     await peer.db.automerge.open({
       rootUrl: peer.automergeDocId,
     });
@@ -83,22 +76,21 @@ export class TestBuilder {
 
 export class TestPeer {
   public db = new EchoDatabaseImpl({
-    spaceKey: this.base.proxy.spaceKey,
+    spaceKey: this.spaceKey,
     graph: this.builder.graph,
     automergeContext: this.builder.automergeContext,
   });
 
   constructor(
     public readonly builder: TestBuilder,
-    public readonly base: BasePeer,
+    public readonly key: PublicKey,
     public readonly spaceKey: PublicKey,
     public readonly automergeDocId: string,
   ) {}
 
   async reload() {
-    await this.base.reload();
     this.db = new EchoDatabaseImpl({
-      spaceKey: this.base.proxy.spaceKey,
+      spaceKey: this.spaceKey,
       graph: this.builder.graph,
       automergeContext: this.builder.automergeContext,
     });
@@ -113,7 +105,6 @@ export class TestPeer {
   }
 
   async flush() {
-    await this.base.confirm();
     await this.db.flush();
   }
 }
