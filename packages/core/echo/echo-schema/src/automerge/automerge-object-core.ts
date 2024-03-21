@@ -131,7 +131,7 @@ export class AutomergeObjectCore {
 
     if (this.linkCache) {
       for (const obj of this.linkCache.values()) {
-        this.database!._dbApi.add(obj);
+        this.linkObject(obj);
       }
 
       this.linkCache = undefined;

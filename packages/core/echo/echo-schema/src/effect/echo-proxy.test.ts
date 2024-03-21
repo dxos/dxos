@@ -240,10 +240,12 @@ describe('Reactive Object with ECHO database', () => {
       graph.types.registerEffectSchema(Org).registerEffectSchema(Person);
       const { db } = await createDatabase(graph, { useReactiveObjectApi: true });
 
-      const org = db.add(E.object(Org, { name: 'DXOS' }));
+      const orgName = 'DXOS';
+      const org = db.add(E.object(Org, { name: orgName }));
       const person = db.add(E.object(Person, { name: 'John', worksAt: org }));
 
-      expect(person.worksAt).to.eq(org);
+      expect(person.worksAt).to.deep.eq(org);
+      expect(person.worksAt.name).to.eq(orgName);
     });
 
     test('adding nested structures to DB', async () => {
