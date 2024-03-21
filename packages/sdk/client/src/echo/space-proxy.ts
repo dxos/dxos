@@ -335,7 +335,7 @@ export class SpaceProxy implements Space {
         }
       }, true);
     }
-    await warnAfterTimeout(5_000, 'Could not find properties for a space', () =>
+    await warnAfterTimeout(5_000, 'Finding properties for a space', () =>
       cancelWithContext(this._ctx, propertiesAvailable.wait()),
     );
   }
