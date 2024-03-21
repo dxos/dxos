@@ -9,7 +9,7 @@ import { searchKeymap } from '@codemirror/search';
 import { EditorState, type Extension } from '@codemirror/state';
 import {
   EditorView,
-  crosshairCursor,
+  type KeyBinding,
   drawSelection,
   dropCursor,
   highlightActiveLine,
@@ -17,7 +17,6 @@ import {
   lineNumbers,
   placeholder,
   scrollPastEnd,
-  type KeyBinding,
 } from '@codemirror/view';
 import defaultsDeep from 'lodash.defaultsdeep';
 
@@ -48,14 +47,13 @@ export type BasicExtensionsOptions = {
   allowMultipleSelections?: boolean;
   bracketMatching?: boolean;
   closeBrackets?: boolean;
-  crosshairCursor?: boolean;
   dropCursor?: boolean;
   drawSelection?: boolean;
   editable?: boolean;
   highlightActiveLine?: boolean;
   history?: boolean;
   indentWithTab?: boolean;
-  keymap?: 'default' | 'standard';
+  keymap?: null | 'default' | 'standard';
   lineNumbers?: boolean;
   lineWrapping?: boolean;
   placeholder?: string;
@@ -66,16 +64,16 @@ export type BasicExtensionsOptions = {
   tabSize?: number;
 };
 
-const defaults: BasicExtensionsOptions = {
+const defaultBasicOptions: BasicExtensionsOptions = {
   allowMultipleSelections: true,
   bracketMatching: true,
   closeBrackets: true,
   drawSelection: true,
   editable: true,
   history: true,
+  keymap: 'standard',
   lineWrapping: true,
   search: true,
-  keymap: 'standard',
 };
 
 const keymaps: { [key: string]: readonly KeyBinding[] } = {
@@ -86,9 +84,9 @@ const keymaps: { [key: string]: readonly KeyBinding[] } = {
 };
 
 export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extension => {
-  const props: BasicExtensionsOptions = defaultsDeep({}, _props, defaults);
+  const props: BasicExtensionsOptions = defaultsDeep({}, _props, defaultBasicOptions);
   return [
-    // TODO(burdon): Doesn't catch errors in keymap functions.
+    // NOTE: Doesn't catch errors in keymap functions.
     EditorView.exceptionSink.of((err) => {
       log.catch(err);
     }),
@@ -96,7 +94,6 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     props.allowMultipleSelections && EditorState.allowMultipleSelections.of(true),
     props.bracketMatching && bracketMatching(),
     props.closeBrackets && closeBrackets(),
-    props.crosshairCursor && crosshairCursor(),
     props.dropCursor && dropCursor(),
     props.drawSelection && drawSelection(),
     props.highlightActiveLine && highlightActiveLine(),
@@ -142,14 +139,14 @@ export type ThemeExtensionsOptions = {
   };
 };
 
-const defaultSlots = {
+const defaultThemeSlots = {
   editor: {
     className: 'w-full bs-full',
   },
 };
 
 export const createThemeExtensions = ({ theme, themeMode, slots: _slots }: ThemeExtensionsOptions = {}): Extension => {
-  const slots = defaultsDeep({}, _slots, defaultSlots);
+  const slots = defaultsDeep({}, _slots, defaultThemeSlots);
   return [
     EditorView.baseTheme(defaultTheme),
     EditorView.darkTheme.of(themeMode === 'dark'),
