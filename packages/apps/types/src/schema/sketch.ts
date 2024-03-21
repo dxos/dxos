@@ -7,11 +7,9 @@ import * as S from '@effect/schema/Schema';
 import * as E from '@dxos/echo-schema';
 import { EchoObjectSchema } from '@dxos/echo-schema';
 
-import { TextV0Type } from './document';
-
 export class SketchType extends EchoObjectSchema({ typename: 'braneframe.Sketch', version: '0.1.0' })({
   title: S.optional(S.string),
-  data: E.ref(TextV0Type),
+  data: E.ref(E.AnyEchoObject),
 }) {}
 
 export const isSketch = (data: unknown): data is SketchType => !!data && data instanceof SketchType;

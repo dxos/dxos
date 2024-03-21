@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { SketchType, TextV0Type, isSketch } from '@braneframe/types';
+import { SketchType, isSketch } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
@@ -23,7 +23,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
     meta,
     ready: async (plugins) => {
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      clientPlugin?.provides.client.addSchema(SketchType);
+      clientPlugin?.provides.client.addSchema(SketchType, E.ExpandoType);
     },
     provides: {
       metadata: {
@@ -141,7 +141,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             case SketchAction.CREATE: {
               return {
                 data: E.object(SketchType, {
-                  data: E.object(TextV0Type, { content: '' }),
+                  data: E.object(E.ExpandoType, {}),
                 }),
               };
             }
