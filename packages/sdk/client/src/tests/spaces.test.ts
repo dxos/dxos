@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
 import { Document as DocumentType, types } from '@braneframe/types';
-import { asyncTimeout, Trigger } from '@dxos/async';
+import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
@@ -106,7 +106,9 @@ describe('Spaces', () => {
       itemId = item.id;
       expect(space.members.get()).to.be.length(1);
     }
-
+    // TODO(mykola): Clean as automerge team updates storage API.
+    // Need this `sleep` for automerge to finish storage write.
+    await sleep(100);
     await client.destroy();
 
     await client.initialize();
