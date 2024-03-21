@@ -29,7 +29,7 @@ const TriggerPromptSignalSchema = S.struct({
     }),
   }),
 });
-type TriggerPromptSignal = S.Schema.From<typeof TriggerPromptSignalSchema>;
+type TriggerPromptSignal = S.Schema.Type<typeof TriggerPromptSignalSchema>;
 const TriggerPromptSignalSchemaParser = S.validateEither(TriggerPromptSignalSchema);
 
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
