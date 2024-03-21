@@ -64,7 +64,7 @@ export type BasicExtensionsOptions = {
   tabSize?: number;
 };
 
-const defaults: BasicExtensionsOptions = {
+const defaultBasicOptions: BasicExtensionsOptions = {
   allowMultipleSelections: true,
   bracketMatching: true,
   closeBrackets: true,
@@ -84,7 +84,7 @@ const keymaps: { [key: string]: readonly KeyBinding[] } = {
 };
 
 export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extension => {
-  const props: BasicExtensionsOptions = defaultsDeep({}, _props, defaults);
+  const props: BasicExtensionsOptions = defaultsDeep({}, _props, defaultBasicOptions);
   return [
     // NOTE: Doesn't catch errors in keymap functions.
     EditorView.exceptionSink.of((err) => {
@@ -139,14 +139,14 @@ export type ThemeExtensionsOptions = {
   };
 };
 
-const defaultSlots = {
+const defaultThemeSlots = {
   editor: {
     className: 'w-full bs-full',
   },
 };
 
 export const createThemeExtensions = ({ theme, themeMode, slots: _slots }: ThemeExtensionsOptions = {}): Extension => {
-  const slots = defaultsDeep({}, _slots, defaultSlots);
+  const slots = defaultsDeep({}, _slots, defaultThemeSlots);
   return [
     EditorView.baseTheme(defaultTheme),
     EditorView.darkTheme.of(themeMode === 'dark'),
