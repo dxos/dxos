@@ -18,7 +18,11 @@ import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gos
 import { type CancellableInvitation } from './invitations';
 
 export interface SpaceInternal {
-  get db(): DatabaseProxy;
+  /**
+   * @deprecated
+   */
+  get db(): never;
+
   get data(): SpaceData;
 
   /**
