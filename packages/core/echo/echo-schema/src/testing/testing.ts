@@ -33,7 +33,7 @@ export const createDatabase = async (graph = new Hypergraph(), { useReactiveObje
   const spaceKey = PublicKey.random();
   const host = await createMemoryDatabase(modelFactory);
   const automergeContext = new AutomergeContext();
-  const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey: spaceKey, useReactiveObjectApi });
+  const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey, useReactiveObjectApi });
   await db.automerge.open({
     rootUrl: automergeContext.repo.create().url,
   });
