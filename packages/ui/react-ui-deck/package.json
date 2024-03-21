@@ -21,7 +21,8 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@radix-ui/react-context": "^1.0.0",
-    "@radix-ui/react-primitive": "^1.0.2"
+    "@radix-ui/react-primitive": "^1.0.2",
+    "@radix-ui/react-slot": "^1.0.1"
   },
   "devDependencies": {
     "@dnd-kit/core": "^6.0.5",
