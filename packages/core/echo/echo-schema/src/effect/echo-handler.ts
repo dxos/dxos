@@ -48,8 +48,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   _objectCore = new AutomergeObjectCore();
 
-  private _signal = this._objectCore.signal;
-
   private _targetsMap = new ComplexMap<KeyPath, ProxyTarget>((key) => JSON.stringify(key));
 
   _init(target: ProxyTarget): void {
@@ -116,7 +114,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
     invariant(Array.isArray(target[symbolPath]));
 
-    this._signal.notifyRead();
+    this._objectCore.signal.notifyRead();
 
     if (isRootDataObject(target)) {
       const handled = this._handleRootObjectProperty(target, prop);
@@ -259,7 +257,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       this._objectCore.set(fullPath, encoded);
     }
 
-    this._signal.notifyWrite();
+    this._objectCore.signal.notifyWrite();
 
     return true;
   }
@@ -331,7 +329,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
     invariant(newLength !== -1);
 
-    this._signal.notifyWrite();
+    this._objectCore.signal.notifyWrite();
 
     return newLength;
   }
@@ -346,7 +344,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       returnValue = array.pop();
     });
 
-    this._signal.notifyWrite();
+    this._objectCore.signal.notifyWrite();
 
     return returnValue;
   }
@@ -361,7 +359,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       returnValue = array.shift();
     });
 
-    this._signal.notifyWrite();
+    this._objectCore.signal.notifyWrite();
 
     return returnValue;
   }
@@ -381,7 +379,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
     invariant(newLength !== -1);
 
-    this._signal.notifyWrite();
+    this._objectCore.signal.notifyWrite();
 
     return newLength;
   }
@@ -405,7 +403,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
     invariant(deletedElements);
 
-    this._signal.notifyWrite();
+    this._objectCore.signal.notifyWrite();
 
     return deletedElements;
   }
@@ -420,7 +418,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       assignDeep(doc, fullPath, sortedArray);
     });
 
-    this._signal.notifyWrite();
+    this._objectCore.signal.notifyWrite();
 
     return target;
   }
@@ -435,7 +433,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       assignDeep(doc, fullPath, reversedArray);
     });
 
-    this._signal.notifyWrite();
+    this._objectCore.signal.notifyWrite();
 
     return target;
   }
@@ -459,7 +457,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       assignDeep(doc, fullPath, trimmedArray);
     });
 
-    this._signal.notifyWrite();
+    this._objectCore.signal.notifyWrite();
   }
 
   private _validateForArray(target: any, path: KeyPath, items: any[], start: number) {
