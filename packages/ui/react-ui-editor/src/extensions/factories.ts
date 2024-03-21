@@ -9,7 +9,6 @@ import { searchKeymap } from '@codemirror/search';
 import { EditorState, type Extension } from '@codemirror/state';
 import {
   EditorView,
-  crosshairCursor,
   drawSelection,
   dropCursor,
   highlightActiveLine,
@@ -48,14 +47,13 @@ export type BasicExtensionsOptions = {
   allowMultipleSelections?: boolean;
   bracketMatching?: boolean;
   closeBrackets?: boolean;
-  crosshairCursor?: boolean;
   dropCursor?: boolean;
   drawSelection?: boolean;
   editable?: boolean;
   highlightActiveLine?: boolean;
   history?: boolean;
   indentWithTab?: boolean;
-  keymap?: 'default' | 'standard';
+  keymap?: null | 'default' | 'standard';
   lineNumbers?: boolean;
   lineWrapping?: boolean;
   placeholder?: string;
@@ -73,9 +71,9 @@ const defaults: BasicExtensionsOptions = {
   drawSelection: true,
   editable: true,
   history: true,
+  keymap: 'standard',
   lineWrapping: true,
   search: true,
-  keymap: 'standard',
 };
 
 const keymaps: { [key: string]: readonly KeyBinding[] } = {
@@ -88,7 +86,7 @@ const keymaps: { [key: string]: readonly KeyBinding[] } = {
 export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extension => {
   const props: BasicExtensionsOptions = defaultsDeep({}, _props, defaults);
   return [
-    // TODO(burdon): Doesn't catch errors in keymap functions.
+    // NOTE: Doesn't catch errors in keymap functions.
     EditorView.exceptionSink.of((err) => {
       log.catch(err);
     }),
@@ -96,7 +94,6 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     props.allowMultipleSelections && EditorState.allowMultipleSelections.of(true),
     props.bracketMatching && bracketMatching(),
     props.closeBrackets && closeBrackets(),
-    props.crosshairCursor && crosshairCursor(),
     props.dropCursor && dropCursor(),
     props.drawSelection && drawSelection(),
     props.highlightActiveLine && highlightActiveLine(),
