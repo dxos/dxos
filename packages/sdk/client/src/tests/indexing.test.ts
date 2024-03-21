@@ -53,7 +53,7 @@ describe('Index queries', () => {
       getAllDocuments: async function* () {},
     });
 
-    indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] });
+    indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
     await indexer.initialize();
 
     const service = new IndexServiceImpl({ indexer, automergeHost: services.host!.context.automergeHost });
@@ -87,7 +87,7 @@ describe('Index queries', () => {
     afterTest(() => client.destroy());
     await client.initialize();
     await client.halo.createIdentity();
-    await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] });
+    await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
 
     const indexingDone = services.host!.context.indexer.indexed.waitForCount(2);
     const space = await client.spaces.create();
@@ -120,7 +120,7 @@ describe('Index queries', () => {
       const client = new Client({ services });
       await client.initialize();
       await client.halo.createIdentity();
-      await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] });
+      await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
 
       const indexingDone = services.host!.context.indexer.indexed.waitForCount(2);
       await client.spaces.isReady.wait();
@@ -153,7 +153,7 @@ describe('Index queries', () => {
       const client = new Client({ services });
       afterTest(() => client.destroy());
       await client.initialize();
-      await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] });
+      await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
 
       await client.spaces.isReady.wait();
 
@@ -186,7 +186,7 @@ describe('Index queries', () => {
     space.db.add(contact);
     await space.db.flush();
     const indexingDone = services.host!.context.indexer.indexed.waitForCount(2);
-    await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] });
+    await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
     await asyncTimeout(indexingDone, 1000);
 
     const indexedContact = await queryIndexedContact(space);

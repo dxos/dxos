@@ -73,7 +73,7 @@ export const ClientPlugin = ({
 
         await client.spaces.setIndexConfig(
           config.values.runtime?.client?.storage?.spaceFragmentation
-            ? { indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] }
+            ? { indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true }
             : {},
         );
 

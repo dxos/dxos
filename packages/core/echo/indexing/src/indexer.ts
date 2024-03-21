@@ -61,7 +61,7 @@ export class Indexer {
   public readonly indexed = new Event<void>();
 
   private readonly _run = new DeferredTask(this._ctx, async () => {
-    if (!this._initialized) {
+    if (!this._initialized || this._indexConfig?.enabled !== true) {
       return;
     }
 
