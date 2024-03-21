@@ -7,7 +7,6 @@ export const TYPE_PROPERTIES = 'dxos.sdk.client.Properties';
 
 export * from './batch';
 export * from './builder';
-export * from './database-proxy';
 export * from './item';
 export * from './item-demuxer';
 export * from './item-manager';

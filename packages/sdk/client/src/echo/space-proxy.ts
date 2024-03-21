@@ -5,18 +5,18 @@
 import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, scheduleMicroTask, synchronized, Trigger } from '@dxos/async';
-import { type ClientServicesProvider, Properties, type Space, type SpaceInternal } from '@dxos/client-protocol';
+import { Properties, type ClientServicesProvider, type Space, type SpaceInternal } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
-import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
+import { ItemManager } from '@dxos/echo-db';
 import {
-  type EchoDatabase,
+  EchoDatabaseImpl,
   type AutomergeContext,
+  type EchoDatabase,
   type Hypergraph,
   type TypedObject,
-  EchoDatabaseImpl,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -25,10 +25,10 @@ import { type ModelFactory } from '@dxos/model-factory';
 import { decodeError } from '@dxos/protocols';
 import {
   Invitation,
-  type Space as SpaceData,
-  type SpaceMember,
   SpaceState,
   type CreateEpochRequest,
+  type Space as SpaceData,
+  type SpaceMember,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -80,7 +80,6 @@ export class SpaceProxy implements Space {
 
   private readonly _db!: EchoDatabaseImpl;
   private readonly _internal!: SpaceInternal;
-  private readonly _dbBackend: DatabaseProxy;
   private readonly _itemManager: ItemManager;
   private readonly _invitationsProxy: InvitationsProxy;
 
@@ -89,6 +88,7 @@ export class SpaceProxy implements Space {
   private readonly _membersUpdate = new Event<SpaceMember[]>();
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
+  private _databaseOpen = false;
   private _error: Error | undefined = undefined;
   private _properties?: TypedObject = undefined;
 
@@ -113,11 +113,6 @@ export class SpaceProxy implements Space {
 
     invariant(this._clientServices.services.DataService, 'DataService not available');
     this._itemManager = new ItemManager(this._modelFactory);
-    this._dbBackend = new DatabaseProxy({
-      service: this._clientServices.services.DataService,
-      itemManager: this._itemManager,
-      spaceKey: this.key,
-    });
     this._db = new EchoDatabaseImpl({
       spaceKey: this.key,
       graph,
@@ -128,7 +123,9 @@ export class SpaceProxy implements Space {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     this._internal = {
-      db: this._dbBackend,
+      get db(): never {
+        throw new Error('Use space.db instead');
+      },
       get data() {
         return self._data;
       },
@@ -234,7 +231,7 @@ export class SpaceProxy implements Space {
     const emitMembersEvent = shouldMembersUpdate(this._data.members, space.members);
     const isFirstTimeInitializing = space.state === SpaceState.READY && !(this._initialized || this._initializing);
     const isReopening =
-      this._data.state !== SpaceState.READY && space.state === SpaceState.READY && this._dbBackend.isClosed;
+      this._data.state !== SpaceState.READY && space.state === SpaceState.READY && !this._databaseOpen;
     log('update', {
       key: space.spaceKey,
       prevState: SpaceState[this._data.state],
@@ -300,7 +297,7 @@ export class SpaceProxy implements Space {
   }
 
   private async _initializeDb() {
-    await this._dbBackend!.open(this._modelFactory);
+    this._databaseOpen = true;
 
     {
       let automergeRoot;
@@ -350,7 +347,7 @@ export class SpaceProxy implements Space {
     await this._ctx.dispose();
     await this._invitationsProxy.close();
     await this._db.automerge.close();
-    await this._dbBackend?.close();
+    this._databaseOpen = false;
     await this._itemManager?.destroy();
     log('destroyed');
   }
