@@ -30,6 +30,9 @@ export type Context = {
   response?: Response;
 };
 
+/**
+ * Pipeline transform function.
+ */
 export type PipelineFunction = (context: Context) => Promise<Context>;
 
 export const logger: PipelineFunction = async (context: Context) => {

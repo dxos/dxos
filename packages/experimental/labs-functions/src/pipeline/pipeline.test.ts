@@ -30,6 +30,7 @@ describe.only('Pipeline', () => {
       }
     };
 
+    // TODO(burdon): Signal abstraction.
     const pipeline = pipe(
       Effect.succeed<Context>({
         request: {
