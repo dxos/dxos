@@ -28,8 +28,9 @@ import { type Storage } from '@dxos/random-access-storage';
 import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 
 import { Client } from '../client';
-import { createDefaultModelFactory } from '../echo';
+import { createDefaultModelFactory, EchoDatabase, Expando } from '../echo';
 import { ClientServicesProxy, LocalClientServices } from '../services';
+import { defer } from '@dxos/util';
 
 export const testConfigWithLocalSignal = new Config({
   version: 1,
@@ -163,30 +164,29 @@ export class TestBuilder {
   }
 }
 
-export const testSpace = async (create: DatabaseProxy, check: DatabaseProxy = create) => {
-  const objectId = PublicKey.random().toHex();
+export const testSpaceAutomerge = async (create: EchoDatabase, check: EchoDatabase = create) => {
+  const object = new Expando();
 
-  const result = create.mutate(genesisMutation(objectId, DocumentModel.meta.type));
-  create.commitBatch();
+  create.add(object);
 
-  await result.batch.getReceipt();
-  // TODO(dmaretskiy): await result.waitToBeProcessed()
-  invariant(create._itemManager.entities.has(result.updateEvent.itemsUpdated[0].id));
-
-  await asyncTimeout(
-    check.itemUpdate.waitForCondition(() => check._itemManager.entities.has(objectId)),
-    1000,
+  const done = new Trigger<void>();
+  const query = check.query((o: Expando) => o.id === object.id);
+  using _ = defer(
+    query.subscribe(() => {
+      if (query.objects.length > 0) {
+        done.wake();
+      }
+    }, true),
   );
 
-  return result;
+  await done.wait({ timeout: 1000 });
+
+  return { objectId: object.id };
 };
 
-export const syncItems = async (db1: DatabaseProxy, db2: DatabaseProxy) => {
-  // Check item replicated from 1 => 2.
-  await testSpace(db1, db2);
-
-  // Check item replicated from 2 => 1.
-  await testSpace(db2, db1);
+export const syncItemsAutomerge = async (db1: EchoDatabase, db2: EchoDatabase) => {
+  await testSpaceAutomerge(db1, db2);
+  await testSpaceAutomerge(db2, db1);
 };
 
 /**
