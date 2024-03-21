@@ -488,6 +488,7 @@ export const SpacePlugin = ({
                 objects: [sharedSpacesFolder],
               } = defaultSpace.db.query({ key: SHARED });
               const space = await client.spaces.create(intent.data as PropertiesProps);
+              await space.waitUntilReady();
               const folder = new Folder();
               space.properties[Folder.schema.typename] = folder;
               sharedSpacesFolder?.objects.push(folder);
@@ -625,6 +626,7 @@ export const SpacePlugin = ({
 
               if (intent.data?.target instanceof SpaceProxy) {
                 const space = intent.data.target;
+                await space.waitUntilReady();
                 const folder = space.properties[Folder.schema.typename];
                 if (folder instanceof Folder) {
                   folder.objects.push(object);
