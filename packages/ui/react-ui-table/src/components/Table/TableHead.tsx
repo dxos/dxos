@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { flexRender, type RowData } from '@tanstack/react-table';
+import { flexRender } from '@tanstack/react-table';
 import React from 'react';
 
 import { useTableContext } from './TableContext';
@@ -12,8 +12,8 @@ const TABLE_HEAD_NAME = 'TableHeader';
 
 type TableHeadProps = {};
 
-const TableHead = <TData extends RowData>(_props: TableHeadProps) => {
-  const tableContext = useTableContext<TData>(TABLE_HEAD_NAME);
+const TableHead = (_props: TableHeadProps) => {
+  const tableContext = useTableContext();
   const headerGroups = tableContext.table.getHeaderGroups();
 
   return (

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { flexRender, type RowData } from '@tanstack/react-table';
+import { flexRender } from '@tanstack/react-table';
 import React from 'react';
 
 import { useTableContext } from './TableContext';
@@ -12,8 +12,8 @@ type TableFooterProps = {};
 
 const TABLE_FOOT_NAME = 'TableFooter';
 
-const TableFooter = <TData extends RowData>(props: TableFooterProps) => {
-  const tableContext = useTableContext<TData>(TABLE_FOOT_NAME);
+const TableFooter = (props: TableFooterProps) => {
+  const tableContext = useTableContext();
   const { table, expand, debug } = tableContext;
   const footers = table.getFooterGroups();
 
