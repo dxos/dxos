@@ -18,6 +18,7 @@ export * from './automerge/key-path';
 // TODO(dmaretskyi): Until we resolve the circular dependencies lets avoid using "barrel" index.ts files in subdirectories.
 export * from './effect/json-schema';
 export * from './effect/reactive';
+export * from './effect/echo-object-class';
 export { isReactiveProxy } from './effect/proxy';
 
 linkDeferred();

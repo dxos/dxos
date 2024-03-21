@@ -22,7 +22,7 @@ export const Signal = S.struct({
     value: S.any,
   }),
 });
-export type Signal = S.Schema.From<typeof Signal>;
+export type Signal = S.Schema.Type<typeof Signal>;
 
 export type OnSignalCallback = (signal: Signal) => void;
 

@@ -53,4 +53,4 @@ export const FunctionResult = S.struct({
   type: S.string,
   value: S.any,
 });
-export type FunctionResult = S.Schema.From<typeof FunctionResult>;
+export type FunctionResult = S.Schema.Type<typeof FunctionResult>;

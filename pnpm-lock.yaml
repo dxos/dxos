@@ -11,6 +11,9 @@ patchedDependencies:
   '@nx/js@17.3.2':
     hash: dwhumptijtisrex26nuv2tgk2a
     path: patches/@nx__js@17.3.2.patch
+  '@radix-ui/react-dropdown-menu@2.0.5':
+    hash: e5isk7r7t3hyjd7xo7tbxnvrpm
+    path: patches/@radix-ui__react-dropdown-menu@2.0.5.patch
   memdown@5.1.0:
     hash: tjbpekhnedejisbcwvc5eec3ii
     path: patches/memdown@5.1.0.patch
@@ -123,8 +126,8 @@ importers:
         specifier: 17.3.2
         version: 17.3.2(@swc-node/register@1.6.8)(@swc/core@1.4.0)
       '@playwright/test':
-        specifier: ^1.36.2
-        version: 1.36.2
+        specifier: ^1.42.1
+        version: 1.42.1
       '@rollup/plugin-inject':
         specifier: ^5.0.5
         version: 5.0.5(rollup@3.23.0)
@@ -908,8 +911,8 @@ importers:
         specifier: workspace:*
         version: link:../../../core/echo/text-model
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -984,20 +987,20 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/react-client
       '@effect/schema':
-        specifier: 0.63.4
-        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       chess.js:
         specifier: 1.0.0-alpha.0
         version: 1.0.0-alpha.0
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-core@1.5.1)
+        version: 1.5.0(@preact/signals-core@1.6.0)
       effect:
-        specifier: 2.4.3
-        version: 2.4.3
+        specifier: 2.4.9
+        version: 2.4.9
     devDependencies:
       '@braneframe/plugin-client':
         specifier: workspace:*
@@ -1157,8 +1160,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       date-fns:
         specifier: ^3.3.1
         version: 3.3.1
@@ -1260,8 +1263,8 @@ importers:
         specifier: ^0.6.11
         version: 0.6.11
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       d3:
         specifier: ^7.8.5
         version: 7.8.5
@@ -1348,8 +1351,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -1424,8 +1427,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       dompurify:
         specifier: ^3.0.3
         version: 3.0.3
@@ -1524,8 +1527,8 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/react-client
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -1622,8 +1625,8 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/react-client
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -1777,8 +1780,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       date-fns:
         specifier: ^3.3.1
         version: 3.3.1
@@ -1929,8 +1932,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
     devDependencies:
       '@braneframe/plugin-client':
         specifier: workspace:*
@@ -1999,8 +2002,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
     devDependencies:
       '@braneframe/plugin-graph':
         specifier: workspace:*
@@ -2057,8 +2060,8 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/react-client
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       leaflet:
         specifier: ^1.9.3
         version: 1.9.3
@@ -2156,9 +2159,15 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
     devDependencies:
       '@braneframe/plugin-client':
         specifier: workspace:*
@@ -2362,8 +2371,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       date-fns:
         specifier: ^3.3.1
         version: 3.3.1
@@ -2438,8 +2447,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -2505,8 +2514,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -2566,8 +2575,8 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/react-client
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       hastscript:
         specifier: ^7.1.0
         version: 7.1.0
@@ -2821,8 +2830,8 @@ importers:
         specifier: ^1.2.1
         version: 1.2.1
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       codemirror:
         specifier: ^6.0.1
         version: 6.0.1(@lezer/common@1.2.1)
@@ -2992,8 +3001,8 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/react-client
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       '@tldraw/assets':
         specifier: 2.0.0-alpha.14
         version: 2.0.0-alpha.14
@@ -3121,9 +3130,15 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
@@ -3218,6 +3233,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
+      '@dxos/react-ui-searchlist':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-searchlist
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../../ui/react-ui-stack
@@ -3225,8 +3243,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       node-fetch:
         specifier: ^2.6.0
         version: 2.6.7
@@ -3304,8 +3322,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
     devDependencies:
       '@braneframe/plugin-client':
         specifier: workspace:*
@@ -3365,8 +3383,8 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/react-client
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
     devDependencies:
       '@braneframe/plugin-client':
         specifier: workspace:*
@@ -3499,20 +3517,17 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@effect/schema':
-        specifier: 0.63.4
-        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       date-fns:
         specifier: ^3.3.1
         version: 3.3.1
-      deepsignal:
-        specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-core@1.5.1)
       effect:
-        specifier: 2.4.3
-        version: 2.4.3
+        specifier: 2.4.9
+        version: 2.4.9
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -3899,6 +3914,12 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
     devDependencies:
       '@dxos/echo-typegen':
         specifier: workspace:*
@@ -4283,8 +4304,8 @@ importers:
         specifier: workspace:*
         version: link:../node-std
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
     devDependencies:
       '@dxos/async':
         specifier: workspace:*
@@ -5262,14 +5283,14 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@effect/schema':
-        specifier: 0.63.4
-        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@orama/orama':
         specifier: ^2.0.8
         version: 2.0.8
       effect:
-        specifier: 2.4.3
-        version: 2.4.3
+        specifier: 2.4.9
+        version: 2.4.9
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -5284,8 +5305,8 @@ importers:
         specifier: workspace:*
         version: link:../echo-typegen
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -5308,8 +5329,8 @@ importers:
         specifier: ^1.2.1
         version: 1.2.1(preact@10.19.5)
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       '@preact/signals-react':
         specifier: ^1.3.8
         version: 1.3.8(react@18.2.0)
@@ -5409,14 +5430,14 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@effect/schema':
-        specifier: 0.63.4
-        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@orama/orama':
         specifier: ^2.0.8
         version: 2.0.8
       effect:
-        specifier: 2.4.3
-        version: 2.4.3
+        specifier: 2.4.9
+        version: 2.4.9
       lodash.isequal:
         specifier: ^4.5.0
         version: 4.5.0
@@ -5552,20 +5573,20 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/schema':
-        specifier: 0.63.4
-        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       cron:
         specifier: ^3.1.6
         version: 3.1.6
       deepsignal:
         specifier: ^1.5.0
-        version: 1.5.0(@preact/signals-core@1.5.1)
+        version: 1.5.0(@preact/signals-core@1.6.0)
       effect:
-        specifier: 2.4.3
-        version: 2.4.3
+        specifier: 2.4.9
+        version: 2.4.9
       express:
         specifier: ^4.17.1
         version: 4.18.2
@@ -6329,8 +6350,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/schema':
-        specifier: 0.63.4
-        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@oclif/core':
         specifier: ^2.9.4
         version: 2.9.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
@@ -6353,8 +6374,8 @@ importers:
         specifier: ^4.5.1
         version: 4.5.1
       effect:
-        specifier: 2.4.3
-        version: 2.4.3
+        specifier: 2.4.9
+        version: 2.4.9
       fs-extra:
         specifier: ^8.1.0
         version: 8.1.0
@@ -6992,14 +7013,14 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/schema':
-        specifier: 0.63.4
-        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@types/node':
         specifier: ^18.11.9
         version: 18.18.9
       effect:
-        specifier: 2.4.3
-        version: 2.4.3
+        specifier: 2.4.9
+        version: 2.4.9
     devDependencies:
       '@dxos/test':
         specifier: workspace:*
@@ -7182,8 +7203,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/schema':
-        specifier: 0.63.4
-        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@langchain/community':
         specifier: ^0.0.26
         version: 0.0.26(discord.js@14.14.1)(faiss-node@0.5.1)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@20.0.1)
@@ -7218,8 +7239,8 @@ importers:
         specifier: ^14.14.1
         version: 14.14.1
       effect:
-        specifier: 2.4.3
-        version: 2.4.3
+        specifier: 2.4.9
+        version: 2.4.9
       email-addresses:
         specifier: ^5.0.0
         version: 5.0.0
@@ -7845,8 +7866,8 @@ importers:
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       zod:
         specifier: ^3.22.4
         version: 3.22.4
@@ -7879,8 +7900,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -8082,14 +8103,14 @@ importers:
         specifier: workspace:*
         version: link:../../core/echo/text-model
       '@effect/schema':
-        specifier: 0.63.4
-        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       base-x:
         specifier: ~3.0.9
         version: 3.0.9
       effect:
-        specifier: 2.4.3
-        version: 2.4.3
+        specifier: 2.4.9
+        version: 2.4.9
     devDependencies:
       '@dxos/echo-typegen':
         specifier: workspace:*
@@ -8822,7 +8843,7 @@ importers:
         version: 1.0.3(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-dropdown-menu':
         specifier: ^2.0.5
-        version: 2.0.5(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+        version: 2.0.5(patch_hash=e5isk7r7t3hyjd7xo7tbxnvrpm)(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-popover':
         specifier: ^1.0.6
         version: 1.0.6(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -9126,6 +9147,9 @@ importers:
       '@replit/codemirror-vim':
         specifier: ^6.0.14
         version: 6.0.14(@codemirror/commands@6.3.3)(@codemirror/language@6.10.1)(@codemirror/search@6.5.5)(@codemirror/state@6.4.0)(@codemirror/view@6.25.1)
+      '@replit/codemirror-vscode-keymap':
+        specifier: ^6.0.2
+        version: 6.0.2(@codemirror/autocomplete@6.12.0)(@codemirror/commands@6.3.3)(@codemirror/language@6.10.1)(@codemirror/lint@6.4.2)(@codemirror/search@6.5.5)(@codemirror/state@6.4.0)(@codemirror/view@6.25.1)
       codemirror:
         specifier: ^6.0.1
         version: 6.0.1(@lezer/common@1.2.1)
@@ -9287,8 +9311,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       '@radix-ui/react-compose-refs':
         specifier: ^1.0.0
         version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
@@ -9381,8 +9405,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
     devDependencies:
       '@dnd-kit/core':
         specifier: ^6.0.5
@@ -9475,6 +9499,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/react-ui-deck':
+        specifier: workspace:*
+        version: link:../react-ui-deck
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../react-ui-mosaic
@@ -9484,6 +9511,24 @@ importers:
       '@fluentui/react-tabster':
         specifier: ^9.19.0
         version: 9.19.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/primitive':
+        specifier: ^1.0.0
+        version: 1.0.1
+      '@radix-ui/react-collapsible':
+        specifier: ^1.0.2
+        version: 1.0.2(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-compose-refs':
+        specifier: ^1.0.0
+        version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-context':
+        specifier: ^1.0.0
+        version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-menu':
+        specifier: ^2.0.6
+        version: 2.0.6(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-use-controllable-state':
+        specifier: ^1.0.0
+        version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
       react-resize-detector:
         specifier: ^7.1.2
         version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
@@ -13779,13 +13824,13 @@ packages:
       - supports-color
     dev: true
 
-  /@effect/schema@0.63.4(effect@2.4.3)(fast-check@3.15.1):
-    resolution: {integrity: sha512-59b7N0XntkfivwhTSutyP13t1utlbJ9wDWDwEdAivNPpXBfpUlAWnZw7MAi86qI8J1LVz3ZDlz5p0pkDSu7p9g==}
+  /@effect/schema@0.64.7(effect@2.4.9)(fast-check@3.15.1):
+    resolution: {integrity: sha512-iTfA7M+sjeoApwJfaalybbR25w/TW2GCerqdftxlwwNco3uOCOzB6nalmRaN4NinjSpcgg15nkDtugvAOQqrOA==}
     peerDependencies:
-      effect: ^2.4.3
+      effect: ^2.4.9
       fast-check: ^3.13.2
     dependencies:
-      effect: 2.4.3
+      effect: 2.4.9
       fast-check: 3.15.1
     dev: false
 
@@ -17594,15 +17639,12 @@ packages:
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
     dev: false
 
-  /@playwright/test@1.36.2:
-    resolution: {integrity: sha512-2rVZeyPRjxfPH6J0oGJqE8YxiM1IBRyM8hyrXYK7eSiAqmbNhxwcLa7dZ7fy9Kj26V7FYia5fh9XJRq4Dqme+g==}
+  /@playwright/test@1.42.1:
+    resolution: {integrity: sha512-Gq9rmS54mjBL/7/MvBaNOBwbfnh7beHvS6oS4srqXFcQHpQCV1+c8JXWE8VLPyRDhgS3H8x8A7hztqI9VnwrAQ==}
     engines: {node: '>=16'}
     hasBin: true
     dependencies:
-      '@types/node': 18.18.9
-      playwright-core: 1.36.2
-    optionalDependencies:
-      fsevents: 2.3.2
+      playwright: 1.42.1
     dev: true
 
   /@pnpm/config.env-replace@1.1.0:
@@ -17630,15 +17672,15 @@ packages:
     resolution: {integrity: sha512-2LuNTFBIO0m7kKIQvvPHN6UE63VjpmL9rnEEaOOaiSPbZK+zUOYIzBAWcED+3XYzhYsd/0mD57VdxAEqqV52CQ==}
     dev: true
 
-  /@preact/signals-core@1.5.1:
-    resolution: {integrity: sha512-dE6f+WCX5ZUDwXzUIWNMhhglmuLpqJhuy3X3xHrhZYI0Hm2LyQwOu0l9mdPiWrVNsE+Q7txOnJPgtIqHCYoBVA==}
+  /@preact/signals-core@1.6.0:
+    resolution: {integrity: sha512-O/XGxwP85h1F7+ouqTMOIZ3+V1whfaV9ToIVcuyGriD4JkSD00cQo54BKdqjvBJxbenvp7ynfqRHEwI6e+NIhw==}
 
   /@preact/signals-react@1.3.8(react@18.2.0):
     resolution: {integrity: sha512-i7mVZ/ZiD9WqNH79r+klpQsp8X+/dOd/5AtvDI0HNpgWuHyzyF9WXDViKl+1vXgB767n9VnH1W2azg+w1oyFMQ==}
     peerDependencies:
       react: ^16.14.0 || 17.x || 18.x
     dependencies:
-      '@preact/signals-core': 1.5.1
+      '@preact/signals-core': 1.6.0
       react: 18.2.0
       use-sync-external-store: 1.2.0(react@18.2.0)
 
@@ -17647,7 +17689,7 @@ packages:
     peerDependencies:
       preact: 10.x
     dependencies:
-      '@preact/signals-core': 1.5.1
+      '@preact/signals-core': 1.6.0
       preact: 10.19.5
     dev: false
 
@@ -17752,7 +17794,7 @@ packages:
   /@radix-ui/primitive@1.0.1:
     resolution: {integrity: sha512-yQ8oGX2GVsEYMWGxcovu1uGWPCxV5BFfeeYxqPmuAzUyLT9qmaMXSAhXpb0WrspIeqYzdJpkh2vHModJPgRIaw==}
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.23.9
     dev: false
 
   /@radix-ui/react-accordion@1.1.1(react-dom@18.2.0)(react@18.2.0):
@@ -17800,7 +17842,7 @@ packages:
       react: ^16.8 || ^17.0 || ^18.0
       react-dom: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.23.9
       '@radix-ui/react-primitive': 1.0.2(react-dom@18.2.0)(react@18.2.0)
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
@@ -17907,7 +17949,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.23.9
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-context': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -18059,7 +18101,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.23.9
       '@types/react': 18.0.21
       react: 18.2.0
     dev: false
@@ -18134,7 +18176,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.22.15
+      '@babel/runtime': 7.23.9
       '@radix-ui/primitive': 1.0.1
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -18146,7 +18188,7 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
-  /@radix-ui/react-dropdown-menu@2.0.5(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
+  /@radix-ui/react-dropdown-menu@2.0.5(patch_hash=e5isk7r7t3hyjd7xo7tbxnvrpm)(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-xdOrZzOTocqqkCkYo8yRPCib5OkTkqN7lqNCdxwPOdE466DOaNl4N8PkUIlsXthQvW5Wwkd+aEmWpfWlBoDPEw==}
     peerDependencies:
       '@types/react': '*'
@@ -18172,6 +18214,7 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
     dev: false
+    patched: true
 
   /@radix-ui/react-focus-guards@1.0.0(react@18.2.0):
     resolution: {integrity: sha512-UagjDk4ijOAnGu4WMUPj9ahi7/zJJqNZ9ZAiGPp7waUWJO0O1aWXi/udPphI0IUjvrhBsZJGSN66dR2dsueLWQ==}
@@ -18191,7 +18234,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.23.9
       '@types/react': 18.0.21
       react: 18.2.0
     dev: false
@@ -18260,7 +18303,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.22.15
+      '@babel/runtime': 7.23.9
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-use-callback-ref': 1.0.1(@types/react@18.0.21)(react@18.2.0)
@@ -18289,7 +18332,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.23.9
       '@radix-ui/react-use-layout-effect': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
       react: 18.2.0
@@ -18346,7 +18389,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.22.15
+      '@babel/runtime': 7.23.9
       '@radix-ui/primitive': 1.0.1
       '@radix-ui/react-collection': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
@@ -18523,7 +18566,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.22.15
+      '@babel/runtime': 7.23.9
       '@floating-ui/react-dom': 2.0.0(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-arrow': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
@@ -18598,7 +18641,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.22.15
+      '@babel/runtime': 7.23.9
       '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -18631,7 +18674,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.23.9
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-use-layout-effect': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
@@ -19075,7 +19118,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.22.15
+      '@babel/runtime': 7.23.9
       '@types/react': 18.0.21
       react: 18.2.0
     dev: false
@@ -19119,7 +19162,7 @@ packages:
     peerDependencies:
       react: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.22.15
+      '@babel/runtime': 7.23.9
       '@radix-ui/react-use-callback-ref': 1.0.0(react@18.2.0)
       react: 18.2.0
     dev: false
@@ -19133,7 +19176,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.23.9
       '@radix-ui/react-use-callback-ref': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
       react: 18.2.0
@@ -19188,7 +19231,7 @@ packages:
     peerDependencies:
       react: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.23.9
       '@radix-ui/rect': 1.0.0
       react: 18.2.0
     dev: false
@@ -19247,7 +19290,7 @@ packages:
   /@radix-ui/rect@1.0.0:
     resolution: {integrity: sha512-d0O68AYy/9oeEy1DdC07bz1/ZXX+DqCskRd3i4JzLSTXwefzaepQrKjXC7aNM8lTHjFLDO0pDgaEiQ7jEk+HVg==}
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.23.9
     dev: false
 
   /@radix-ui/rect@1.0.1:
@@ -19361,6 +19404,26 @@ packages:
     dependencies:
       '@codemirror/commands': 6.3.3
       '@codemirror/language': 6.10.1
+      '@codemirror/search': 6.5.5
+      '@codemirror/state': 6.4.0
+      '@codemirror/view': 6.25.1
+    dev: false
+
+  /@replit/codemirror-vscode-keymap@6.0.2(@codemirror/autocomplete@6.12.0)(@codemirror/commands@6.3.3)(@codemirror/language@6.10.1)(@codemirror/lint@6.4.2)(@codemirror/search@6.5.5)(@codemirror/state@6.4.0)(@codemirror/view@6.25.1):
+    resolution: {integrity: sha512-j45qTwGxzpsv82lMD/NreGDORFKSctMDVkGRopaP+OrzSzv+pXDQuU3LnFvKpasyjVT0lf+PKG1v2DSCn/vxxg==}
+    peerDependencies:
+      '@codemirror/autocomplete': ^6.0.0
+      '@codemirror/commands': ^6.0.0
+      '@codemirror/language': ^6.0.0
+      '@codemirror/lint': ^6.0.0
+      '@codemirror/search': ^6.0.0
+      '@codemirror/state': ^6.0.0
+      '@codemirror/view': ^6.0.0
+    dependencies:
+      '@codemirror/autocomplete': 6.12.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.0)(@codemirror/view@6.25.1)(@lezer/common@1.2.1)
+      '@codemirror/commands': 6.3.3
+      '@codemirror/language': 6.10.1
+      '@codemirror/lint': 6.4.2
       '@codemirror/search': 6.5.5
       '@codemirror/state': 6.4.0
       '@codemirror/view': 6.25.1
@@ -21651,7 +21714,7 @@ packages:
       '@radix-ui/react-alert-dialog': 1.0.3(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-context-menu': 2.1.5(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-dialog': 1.0.3(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-dropdown-menu': 2.0.5(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-dropdown-menu': 2.0.5(patch_hash=e5isk7r7t3hyjd7xo7tbxnvrpm)(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-popover': 1.0.6-rc.5(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-select': 1.2.1(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-slider': 1.1.2(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -24898,7 +24961,7 @@ packages:
     resolution: {integrity: sha512-Cg7TFGpIr01vOQNODXOOaGz2NpCU5gl8x1qJFbb6hbZxR7XrcE2vtbAsTAbJ7/xwJtUuJEw8K8Zr/AE0LHlesg==}
     engines: {node: '>=10', npm: '>=6'}
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.23.9
       cosmiconfig: 7.1.0
       resolve: 1.22.5
 
@@ -27803,7 +27866,7 @@ packages:
     resolution: {integrity: sha512-3sUqbMEc77XqpdNO7FRyRog+eW3ph+GYCbj+rK+uYyRMuwsVy0rMiVtPn+QJlKFvWP/1PYpapqYn0Me2knFn+A==}
     engines: {node: '>=0.10.0'}
 
-  /deepsignal@1.5.0(@preact/signals-core@1.5.1):
+  /deepsignal@1.5.0(@preact/signals-core@1.6.0):
     resolution: {integrity: sha512-bFywDpBUUWMs576H2dgLFLLFuQ/UWXbzHfKD98MZTfGsl7+twIzvz4ihCNrRrZ/Emz3kqJaNIAp5eBWUEWhnAw==}
     peerDependencies:
       '@preact/signals': ^1.1.4
@@ -27820,7 +27883,7 @@ packages:
       preact:
         optional: true
     dependencies:
-      '@preact/signals-core': 1.5.1
+      '@preact/signals-core': 1.6.0
     dev: false
 
   /default-browser-id@3.0.0:
@@ -28417,8 +28480,8 @@ packages:
   /ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  /effect@2.4.3:
-    resolution: {integrity: sha512-OmIgfNgQMZsQt5l7qLQqLOUxIXq7ku8/RK3Wv3LqxSE2zMyU1mHXof5QeyCt7m9sXv3Vui52Urk1vVsEd2szMQ==}
+  /effect@2.4.9:
+    resolution: {integrity: sha512-hRTy37jVylIYOC4k/VKfgmGkIMEOjR8MOurLzr1J0AD7ufagbcoO7voygZkT2B1STXfBXEsKNWj8yDAzUcPpAA==}
     dev: false
 
   /ejs@3.1.8:
@@ -38859,17 +38922,17 @@ packages:
     resolution: {integrity: sha512-fnWVljUchTro6RiCFvCXBbNhJc2NijN7oIQxbwsyL0buWJPG85v81ehlHI9fXrJsMNgTofEoWIQeClKpgxFLrg==}
     dev: false
 
-  /playwright-core@1.36.2:
-    resolution: {integrity: sha512-sQYZt31dwkqxOrP7xy2ggDfEzUxM1lodjhsQ3NMMv5uGTRDsLxU0e4xf4wwMkF2gplIxf17QMBCodSFgm6bFVQ==}
-    engines: {node: '>=16'}
-    hasBin: true
-    dev: true
-
   /playwright-core@1.40.0:
     resolution: {integrity: sha512-fvKewVJpGeca8t0ipM56jkVSU6Eo0RmFvQ/MaCQNDYm+sdvKkMBBWTE1FdeMqIdumRaXXjZChWHvIzCGM/tA/Q==}
     engines: {node: '>=16'}
     hasBin: true
     dev: false
+
+  /playwright-core@1.42.1:
+    resolution: {integrity: sha512-mxz6zclokgrke9p1vtdy/COWBH+eOZgYUVVU34C73M+4j4HLlQJHtfcqiqqxpP0o8HhMkflvfbquLX5dg6wlfA==}
+    engines: {node: '>=16'}
+    hasBin: true
+    dev: true
 
   /playwright@1.40.0:
     resolution: {integrity: sha512-gyHAgQjiDf1m34Xpwzaqb76KgfzYrhK7iih+2IzcOCoZWr/8ZqmdBw+t0RU85ZmfJMgtgAiNtBQ/KS2325INXw==}
@@ -38880,6 +38943,16 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
     dev: false
+
+  /playwright@1.42.1:
+    resolution: {integrity: sha512-PgwB03s2DZBcNRoW+1w9E+VkLBxweib6KTXM0M3tkiT4jVxKSi6PmVJ591J+0u10LUrgxB7dLRbiJqO5s2QPMg==}
+    engines: {node: '>=16'}
+    hasBin: true
+    dependencies:
+      playwright-core: 1.42.1
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: true
 
   /plotly.js-dist-min@2.27.1:
     resolution: {integrity: sha512-fFPFityhOkDtjoIVd/9IJQbEEuKEjfmNALBVLZyHwLIkry5ygE4ZC/XENRqLnWR3rNJdTtEaxhM5zflcWTRlDA==}
