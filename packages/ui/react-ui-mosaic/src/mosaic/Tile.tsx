@@ -45,6 +45,8 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
     onSelect?: () => void;
     onDelete?: (force?: boolean) => void;
     onNavigate?: () => void;
+    onAddBefore?: () => void;
+    onAddAfter?: () => void;
     onAction?: (action: MosaicTileAction) => void;
   };
 

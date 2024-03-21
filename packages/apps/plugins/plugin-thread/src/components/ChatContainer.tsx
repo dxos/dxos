@@ -98,7 +98,6 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
     setAutoFocus(true);
 
     scrollToEnd('smooth');
-
     return true;
   };
 

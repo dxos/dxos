@@ -76,8 +76,8 @@ const TextboxBlock = ({
   const { parentRef } = useTextEditor(
     () => ({
       doc: getTextContent(text),
+      // prettier-ignore
       extensions: [
-        //
         createBasicExtensions({ readonly }),
         createThemeExtensions({ themeMode }),
         command,
