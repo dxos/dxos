@@ -48,7 +48,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   _objectCore = new AutomergeObjectCore();
 
-  private _signal = compositeRuntime.createSignal();
+  private _signal = this._objectCore.signal;
 
   private _targetsMap = new ComplexMap<KeyPath, ProxyTarget>((key) => JSON.stringify(key));
 
