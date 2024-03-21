@@ -80,7 +80,6 @@ export class SpaceProxy implements Space {
 
   private readonly _db!: EchoDatabaseImpl;
   private readonly _internal!: SpaceInternal;
-  private readonly _dbBackend: DatabaseProxy;
   private readonly _itemManager: ItemManager;
   private readonly _invitationsProxy: InvitationsProxy;
 
@@ -89,6 +88,7 @@ export class SpaceProxy implements Space {
   private readonly _membersUpdate = new Event<SpaceMember[]>();
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
+  private _databaseOpen = false;
   private _error: Error | undefined = undefined;
   private _properties?: TypedObject = undefined;
 
@@ -113,11 +113,6 @@ export class SpaceProxy implements Space {
 
     invariant(this._clientServices.services.DataService, 'DataService not available');
     this._itemManager = new ItemManager(this._modelFactory);
-    this._dbBackend = new DatabaseProxy({
-      service: this._clientServices.services.DataService,
-      itemManager: this._itemManager,
-      spaceKey: this.key,
-    });
     this._db = new EchoDatabaseImpl({
       spaceKey: this.key,
       graph,
@@ -236,7 +231,7 @@ export class SpaceProxy implements Space {
     const emitMembersEvent = shouldMembersUpdate(this._data.members, space.members);
     const isFirstTimeInitializing = space.state === SpaceState.READY && !(this._initialized || this._initializing);
     const isReopening =
-      this._data.state !== SpaceState.READY && space.state === SpaceState.READY && this._dbBackend.isClosed;
+      this._data.state !== SpaceState.READY && space.state === SpaceState.READY && !this._databaseOpen;
     log('update', {
       key: space.spaceKey,
       prevState: SpaceState[this._data.state],
@@ -302,7 +297,7 @@ export class SpaceProxy implements Space {
   }
 
   private async _initializeDb() {
-    await this._dbBackend!.open(this._modelFactory);
+    this._databaseOpen = true;
 
     {
       let automergeRoot;
@@ -352,7 +347,7 @@ export class SpaceProxy implements Space {
     await this._ctx.dispose();
     await this._invitationsProxy.close();
     await this._db.automerge.close();
-    await this._dbBackend?.close();
+    this._databaseOpen = false;
     await this._itemManager?.destroy();
     log('destroyed');
   }

@@ -3,8 +3,7 @@
 //
 
 import { type MulticastObservable, type UnsubscribeCallback } from '@dxos/async';
-import { type DatabaseProxy } from '@dxos/echo-db';
-import { type TypedObject, type EchoDatabase } from '@dxos/echo-schema';
+import { type EchoDatabase, type TypedObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import {
   type Invitation,
