@@ -5,18 +5,18 @@
 import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, scheduleMicroTask, synchronized, Trigger } from '@dxos/async';
-import { type ClientServicesProvider, Properties, type Space, type SpaceInternal } from '@dxos/client-protocol';
+import { Properties, type ClientServicesProvider, type Space, type SpaceInternal } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
-import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
+import { ItemManager } from '@dxos/echo-db';
 import {
-  type EchoDatabase,
+  EchoDatabaseImpl,
   type AutomergeContext,
+  type EchoDatabase,
   type Hypergraph,
   type TypedObject,
-  EchoDatabaseImpl,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -25,10 +25,10 @@ import { type ModelFactory } from '@dxos/model-factory';
 import { decodeError } from '@dxos/protocols';
 import {
   Invitation,
-  type Space as SpaceData,
-  type SpaceMember,
   SpaceState,
   type CreateEpochRequest,
+  type Space as SpaceData,
+  type SpaceMember,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';

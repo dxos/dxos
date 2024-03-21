@@ -3,7 +3,7 @@
 //
 
 import { DocumentModel } from '@dxos/document-model';
-import { createMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '@dxos/echo-pipeline/testing';
+import { createMemoryDatabase } from '@dxos/echo-pipeline/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { TextModel } from '@dxos/text-model';
@@ -30,15 +30,14 @@ export const createDatabase = async (graph = new Hypergraph(), { useReactiveObje
 
   graph.addTypes(schemaBuiltin);
 
-  // TODO(dmaretskyi): Fix.
+  const spaceKey = PublicKey.random();
   const host = await createMemoryDatabase(modelFactory);
-  const proxy = await createRemoteDatabaseFromDataServiceHost(modelFactory, host.backend.createDataServiceHost());
   const automergeContext = new AutomergeContext();
-  const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey: proxy.backend.spaceKey, useReactiveObjectApi });
+  const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey: spaceKey, useReactiveObjectApi });
   await db.automerge.open({
     rootUrl: automergeContext.repo.create().url,
   });
-  graph._register(proxy.backend.spaceKey, db); // TODO(burdon): Database should have random id?
+  graph._register(spaceKey, db); // TODO(burdon): Database should have random id?
   return { db, host, graph };
 };
 

@@ -139,7 +139,7 @@ const SwarmIndicator: FC<IconProps> = (props) => {
  * Space saving indicator.
  */
 const SavingIndicator: FC<IconProps> = (props) => {
-  const [state, setState] = useState(0);
+  const [state, _setState] = useState(0);
   const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
   const graphPlugin = useResolvePlugin(parseGraphPlugin);
   const location = navigationPlugin?.provides.location;
@@ -149,18 +149,19 @@ const SavingIndicator: FC<IconProps> = (props) => {
     if (!space) {
       return;
     }
-    const { start, stop } = timer(() => setState(0), { min: 250 });
-    return space.db.pendingBatch.on(({ duration, error }) => {
-      if (error) {
-        setState(2);
-        stop();
-      } else if (duration === undefined) {
-        setState(1);
-        start();
-      } else {
-        stop();
-      }
-    });
+    // const { start, stop } = timer(() => setState(0), { min: 250 });
+    // TODO(dmaretskyi): Fix this when we have save status for automerge.
+    // return space.db.pendingBatch.on(({ duration, error }) => {
+    //   if (error) {
+    //     setState(2);
+    //     stop();
+    //   } else if (duration === undefined) {
+    //     setState(1);
+    //     start();
+    //   } else {
+    //     stop();
+    //   }
+    // });
   }, [space]);
 
   switch (state) {
