@@ -4,29 +4,20 @@
 
 import isEqualWith from 'lodash.isequalwith';
 
-import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
-import {
-  type ClientServicesProvider,
-  Properties,
-  type Space,
-  type SpaceInternal,
-  PropertiesSchema,
-} from '@dxos/client-protocol';
+import { Event, MulticastObservable, scheduleMicroTask, synchronized, Trigger } from '@dxos/async';
+import { type ClientServicesProvider, Properties, type Space, type SpaceInternal } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
-import { loadashEqualityFn, todo } from '@dxos/debug';
+import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
 import {
   type EchoDatabase,
-  forceUpdate,
-  setStateFromSnapshot,
   type AutomergeContext,
   type Hypergraph,
   type TypedObject,
   EchoDatabaseImpl,
 } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -99,7 +90,6 @@ export class SpaceProxy implements Space {
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
   private _error: Error | undefined = undefined;
-  private _cachedProperties: Properties;
   private _properties?: TypedObject = undefined;
 
   constructor(
@@ -156,15 +146,6 @@ export class SpaceProxy implements Space {
     this._stateUpdate.emit(this._currentState);
     this._pipelineUpdate.emit(_data.pipeline ?? {});
     this._membersUpdate.emit(_data.members ?? []);
-
-    if (options.useReactiveObjectApi) {
-      this._cachedProperties = E.object(PropertiesSchema, {}) as any;
-    } else {
-      this._cachedProperties = new Properties({}, { immutable: true });
-      if (this._data.cache?.properties) {
-        setStateFromSnapshot(this._cachedProperties, this._data.cache.properties);
-      }
-    }
   }
 
   @trace.info()
@@ -183,12 +164,11 @@ export class SpaceProxy implements Space {
 
   @trace.info({ depth: 2 })
   get properties(): TypedObject {
-    if (this._properties) {
-      return this._properties;
-    } else {
-      log('using cached properties');
-      return this._cachedProperties;
+    if (!this._initialized) {
+      throw new Error('Space is not initialized');
     }
+    invariant(this._properties, 'Properties not available');
+    return this._properties;
   }
 
   get state() {
@@ -252,10 +232,6 @@ export class SpaceProxy implements Space {
     const emitEvent = shouldUpdate(this._data, space);
     const emitPipelineEvent = shouldPipelineUpdate(this._data, space);
     const emitMembersEvent = shouldMembersUpdate(this._data.members, space.members);
-    const shouldPropertiesUpdate =
-      space.cache?.properties &&
-      !this._properties &&
-      !isEqualWith(this._data.cache?.properties, space.cache.properties, loadashEqualityFn);
     const isFirstTimeInitializing = space.state === SpaceState.READY && !(this._initialized || this._initializing);
     const isReopening =
       this._data.state !== SpaceState.READY && space.state === SpaceState.READY && this._dbBackend.isClosed;
@@ -266,7 +242,6 @@ export class SpaceProxy implements Space {
       emitEvent,
       emitPipelineEvent,
       emitMembersEvent,
-      shouldPropertiesUpdate,
       isFirstTimeInitializing,
       isReopening,
     });
@@ -300,10 +275,6 @@ export class SpaceProxy implements Space {
     }
     if (emitMembersEvent) {
       this._membersUpdate.emit(space.members!);
-    }
-    if (shouldPropertiesUpdate) {
-      setStateFromSnapshot(this._cachedProperties, space.cache!.properties!);
-      forceUpdate(this._cachedProperties);
     }
   }
 
@@ -344,27 +315,29 @@ export class SpaceProxy implements Space {
     }
 
     log('ready');
+
     this._databaseInitialized.wake();
 
+    const propertiesAvailable = new Trigger();
     // Set properties document when it's available.
     // NOTE: Emits state update event when properties are first available.
     //   This is needed to ensure reactivity for newly created spaces.
     // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
-      const query = this._db.query(Properties.filter());
-      if (query.objects.length > 0) {
-        this._properties = query.objects[0];
-        this._stateUpdate.emit(this._currentState);
-      } else {
-        const unsubscribe = query.subscribe((query) => {
-          if (query.objects.length === 1) {
-            this._properties = query.objects[0];
-            this._stateUpdate.emit(this._currentState);
+      const unsubscribe = this._db.query(Properties.filter()).subscribe((query) => {
+        if (query.objects.length === 1) {
+          this._properties = query.objects[0];
+          propertiesAvailable.wake();
+          this._stateUpdate.emit(this._currentState);
+          scheduleMicroTask(this._ctx, () => {
             unsubscribe();
-          }
-        });
-      }
+          });
+        }
+      }, true);
     }
+    await warnAfterTimeout(5_000, 'Finding properties for a space', () =>
+      cancelWithContext(this._ctx, propertiesAvailable.wait()),
+    );
   }
 
   /**
