@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "layer-indexer",
+  "sourceRoot": "packages/experimental/layer-indexer/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/experimental/layer-indexer/src/index.ts"
+        ]
+      }
+    },
+    "lint": {},
+    "vitest": {}
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

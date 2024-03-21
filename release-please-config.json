@@ -604,6 +604,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/layer-indexer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/metagraph/package.json",
           "jsonpath": "$.version"
         },
