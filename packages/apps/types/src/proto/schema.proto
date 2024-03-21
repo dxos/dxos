@@ -327,6 +327,15 @@ message Calendar {
 message Chain {
   option (object) = true;
 
+  message EchoTrigger {
+    option (object) = true;
+
+    string typename = 1;
+    string compare_by = 2;
+    int32 debounce_ms = 3;
+    bool enabled = 4;
+  }
+
   message Input {
     option (object) = true;
 
@@ -354,6 +363,7 @@ message Chain {
     string command = 1;
     dxos.schema.Text source = 2;
     repeated Input inputs = 3;
+    repeated EchoTrigger echo_triggers = 4;
   }
 
   string title = 1;

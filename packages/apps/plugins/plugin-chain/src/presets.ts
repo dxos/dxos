@@ -61,6 +61,14 @@ export const presets = [
             'Suggest the next move and very briefly explain your strategy in a couple of sentences.',
           ),
         ),
+        echoTriggers: [
+          new ChainType.EchoTrigger({
+            typename: 'dxos.experimental.chess.Game',
+            compareBy: 'pgn',
+            debounceMs: 1000,
+            enabled: false,
+          }),
+        ],
         inputs: [
           //
           new ChainType.Input({

@@ -118,7 +118,8 @@ describe('RequestProcessor', () => {
       });
 
       const processor = new RequestProcessor(resources);
-      const blocks = await processor.processThread(space, thread, message);
+      const input = processor.createInputFromMessage(thread, message);
+      const blocks = await processor.processThread(space, thread, input);
       expect(blocks).to.have.length(1);
     }
   });
@@ -192,7 +193,8 @@ describe('RequestProcessor', () => {
       });
 
       const processor = new RequestProcessor(resources);
-      const blocks = await processor.processThread(space, thread, message);
+      const input = processor.createInputFromMessage(thread, message);
+      const blocks = await processor.processThread(space, thread, input);
       expect(blocks).to.have.length(5);
     }
   });

@@ -898,9 +898,18 @@ importers:
       '@dxos/chain':
         specifier: workspace:*
         version: link:../../../core/chain
+      '@dxos/functions-signal':
+        specifier: workspace:*
+        version: link:../../../experimental/functions-signal
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -7184,6 +7193,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-signal':
+        specifier: workspace:*
+        version: link:../functions-signal
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant

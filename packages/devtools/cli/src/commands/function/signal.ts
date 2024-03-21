@@ -6,7 +6,7 @@ import * as S from '@effect/schema/Schema';
 import { Flags } from '@oclif/core';
 
 import { type Client, PublicKey } from '@dxos/client';
-import { type Signal as SignalType, Signal as SignalSchema, SignalBusInterconnect } from '@dxos/functions-signal';
+import { type Signal as SignalType, SignalSchema, SignalBusInterconnect } from '@dxos/functions-signal';
 
 import { BaseCommand } from '../../base-command';
 
@@ -69,7 +69,10 @@ export default class Signal extends BaseCommand<typeof Signal> {
       this.log('generating signal:', signal);
       for (const space of spacesToSignal) {
         this.log('signalled in', space.key.toHex());
-        SignalBusInterconnect.global.createConnected(space).emit(signal);
+        SignalBusInterconnect.global.createConnected(space).emit({
+          ...signal,
+          metadata: { ...signal.metadata, spaceKey: space.key.toHex() },
+        });
       }
     });
   }
