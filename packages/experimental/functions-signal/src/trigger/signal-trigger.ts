@@ -4,6 +4,7 @@
 
 import { type Space } from '@dxos/client/echo';
 import { type EchoObject, type Filter, filterMatch, getAutomergeObjectCore } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 
 import { type Signal, SignalBusInterconnect } from '../signal';
 
@@ -50,28 +51,32 @@ export class MutationsSignalTriggerBuilder<T extends EchoObject> {
       if (mutationSignal.kind !== 'echo-mutation') {
         return;
       }
-      const object = mutationSignal.data.value;
-      if (!(object && filterCheck(object))) {
-        return;
-      }
-      const previous = previousCheckedById.get(object.id);
-      if (previous && areEqual(previous, object)) {
-        return;
-      }
-      const timeout = timeoutById.get(object.id);
-      if (timeout) {
-        clearTimeout(timeout);
-      }
-      const signal = signalProvider(object);
-      if (signal == null) {
-        return;
-      }
-      previousCheckedById.set(object.id, { ...object });
-      if (debounceMs) {
-        const timer = setTimeout(() => bus.emit(signal), debounceMs);
-        timeoutById.set(object.id, timer);
-      } else {
-        bus.emit(signal);
+      try {
+        const object = mutationSignal.data.value;
+        if (!(object && filterCheck(object))) {
+          return;
+        }
+        const previous = previousCheckedById.get(object.id);
+        if (previous && areEqual(previous, object)) {
+          return;
+        }
+        const timeout = timeoutById.get(object.id);
+        if (timeout) {
+          clearTimeout(timeout);
+        }
+        const signal = signalProvider(object);
+        if (signal == null) {
+          return;
+        }
+        previousCheckedById.set(object.id, { ...object });
+        if (debounceMs) {
+          const timer = setTimeout(() => bus.emit(signal), debounceMs);
+          timeoutById.set(object.id, timer);
+        } else {
+          bus.emit(signal);
+        }
+      } catch (error) {
+        log.error('signal trigger exception', error);
       }
     });
   }

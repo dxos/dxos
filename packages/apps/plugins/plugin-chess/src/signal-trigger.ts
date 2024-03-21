@@ -21,7 +21,7 @@ export const MoveSuggestionOutputFormat = S.struct({
 
 export const createSignalTrigger = (space: Space) => {
   return SignalTrigger.fromMutations(space)
-    .withFilter(Game.filter())
+    .withFilter(Game.filter((g) => g.pgn != null))
     .debounceMs(2_000)
     .unique((prev, curr) => prev.pgn === curr.pgn)
     .create((game) => {
