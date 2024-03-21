@@ -26,7 +26,9 @@ import {
   type TriggerSubscription,
 } from '../manifest';
 
-type Callback = (data: FunctionSubscriptionEvent) => Promise<number>;
+type FunctionResponse = { status: number; json?: () => Promise<any> };
+
+type Callback = (data: FunctionSubscriptionEvent | Signal) => Promise<FunctionResponse>;
 
 type SchedulerOptions = {
   endpoint?: string;
@@ -244,23 +246,25 @@ export class Scheduler {
     try {
       log('request', { function: def.id });
       const { endpoint, callback } = this._options;
-      let status = 0;
-      let functionResult: FunctionResult | null = null;
+      if (!endpoint && !callback) {
+        return null;
+      }
+      let response: FunctionResponse;
       if (endpoint) {
         // TODO(burdon): Move out of scheduler (generalize as callback).
-        const response = await fetch(`${this._options.endpoint}/${def.name}`, {
+        response = await fetch(`${this._options.endpoint}/${def.name}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(data),
         });
-
-        functionResult = await this._parseFunctionResult(response);
-        status = response.status;
-      } else if (callback) {
-        status = await callback(data);
+      } else {
+        invariant(callback);
+        response = await callback(data);
       }
+      const functionResult = await this._parseFunctionResult(response);
+      const status = response.status;
 
       log('result', { function: def.id, result: status, body: functionResult });
       return functionResult;
@@ -270,7 +274,10 @@ export class Scheduler {
     }
   }
 
-  private async _parseFunctionResult(response: Response): Promise<FunctionResult | null> {
+  private async _parseFunctionResult(response: FunctionResponse): Promise<FunctionResult | null> {
+    if (response.json == null) {
+      return null;
+    }
     log.info('response', { headers: JSON.stringify(response) });
     // if (response.headers.get('Content-Type') !== 'application/json') {
     //   return null;
