@@ -16,7 +16,7 @@ import { afterTest, describe, test } from '@dxos/test';
 
 import { Client } from '../client';
 import { type SpaceProxy } from '../echo';
-import { syncItems, TestBuilder } from '../testing';
+import { syncItemsAutomerge, TestBuilder } from '../testing';
 
 // TODO(burdon): Use as set-up for test suite.
 // TODO(burdon): Timeouts and progress callback/events.
@@ -270,6 +270,6 @@ describe('Client services', () => {
       }, 20_000);
     }
 
-    await syncItems(hostSpace.internal.db, guestSpace.internal.db);
+    await syncItemsAutomerge(hostSpace.db, guestSpace.db);
   });
 });

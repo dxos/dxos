@@ -174,7 +174,6 @@ export const MessageTextbox = ({
 }: MessageTextboxProps) => {
   const extensions = useMemo<TextEditorProps['extensions']>(() => {
     return [
-      _extensions,
       keymap.of(keyBindings({ onSend, onClear })),
       listener({
         onFocus: (focusing) => {
@@ -183,6 +182,7 @@ export const MessageTextbox = ({
           }
         },
       }),
+      _extensions,
     ].filter(isNotFalsy);
   }, [_extensions]);
 

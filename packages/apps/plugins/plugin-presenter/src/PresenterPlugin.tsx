@@ -55,24 +55,18 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
 
                   batch(() => {
                     removedObjects.forEach((object) => {
-                      graph.removeNode(`${TOGGLE_PRESENTATION}/object.id`, true);
+                      graph.removeNode(`${TOGGLE_PRESENTATION}/${object.id}`, true);
                     });
                     query.objects.forEach((object) => {
                       graph.addNodes({
-                        id: `${TOGGLE_PRESENTATION}/object.id`,
+                        id: `${TOGGLE_PRESENTATION}/${object.id}`,
                         // TODO(burdon): Allow function so can generate state when activated.
                         //  So can set explicit fullscreen state coordinated with current presenter state.
                         data: () =>
-                          dispatch([
-                            {
-                              plugin: PRESENTER_PLUGIN,
-                              action: TOGGLE_PRESENTATION,
-                            },
-                            {
-                              action: LayoutAction.SET_LAYOUT,
-                              data: { element: 'fullscreen' },
-                            },
-                          ]),
+                          dispatch({
+                            plugin: PRESENTER_PLUGIN,
+                            action: TOGGLE_PRESENTATION,
+                          }),
                         properties: {
                           label: ['toggle presentation label', { ns: PRESENTER_PLUGIN }],
                           icon: (props: IconProps) => <Presentation {...props} />,
@@ -81,6 +75,7 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
                             windows: 'shift+alt+p',
                           },
                         },
+                        edges: [[object.id, 'inbound']],
                       });
                     });
                   });
@@ -127,7 +122,12 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
           switch (intent.action) {
             case TOGGLE_PRESENTATION: {
               state.presenting = intent.data?.state ?? !state.presenting;
-              break;
+              return {
+                data: state.presenting,
+                intents: [
+                  [{ action: LayoutAction.SET_LAYOUT, data: { element: 'fullscreen', state: state.presenting } }],
+                ],
+              };
             }
           }
         },
