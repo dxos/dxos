@@ -55,31 +55,18 @@ export class DataServiceSubscriptions {
  */
 // TODO(burdon): Move to client-services.
 export class DataServiceImpl implements DataService {
-  constructor(
-    private readonly _subscriptions: DataServiceSubscriptions,
-    private readonly _automergeHost: AutomergeHost,
-  ) {}
+  constructor(private readonly _automergeHost: AutomergeHost) {}
 
   subscribe(request: SubscribeRequest): Stream<EchoEvent> {
-    invariant(request.spaceKey);
-    const host =
-      this._subscriptions.getDataService(request.spaceKey) ?? raise(new Error(`space not found: ${request.spaceKey}`));
-    return host.subscribe();
+    throw new Error('Deprecated.');
   }
 
   write(request: WriteRequest): Promise<MutationReceipt> {
-    invariant(request.spaceKey);
-    invariant(request.batch);
-    const host =
-      this._subscriptions.getDataService(request.spaceKey) ?? raise(new Error(`space not found: ${request.spaceKey}`));
-    return host.write(request);
+    throw new Error('Deprecated.');
   }
 
-  flush(request: FlushRequest): Promise<void> {
-    invariant(request.spaceKey);
-    const host =
-      this._subscriptions.getDataService(request.spaceKey) ?? raise(new Error(`space not found: ${request.spaceKey}`));
-    return host.flush();
+  async flush(request: FlushRequest): Promise<void> {
+    // TODO(dmaretskyi): Implement with automerge.
   }
 
   // Automerge specific.

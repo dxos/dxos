@@ -23,10 +23,7 @@ describe('AutomergeHost', () => {
 
     const host = new AutomergeHost({ directory: storageDirectory });
     afterTest(() => host.close());
-    const dataService = new DataServiceImpl(
-      {} as DataServiceSubscriptions, // is not used in this test, just required argument
-      host,
-    );
+    const dataService = new DataServiceImpl(host);
     const client = new AutomergeContext(dataService);
     afterTest(() => client.close());
 

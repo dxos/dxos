@@ -275,10 +275,7 @@ export class ClientServicesHost {
         },
       ),
 
-      DataService: new DataServiceImpl(
-        this._serviceContext.dataServiceSubscriptions,
-        this._serviceContext.automergeHost,
-      ),
+      DataService: new DataServiceImpl(this._serviceContext.automergeHost),
 
       IndexService: new IndexServiceImpl({
         indexer: this._serviceContext.indexer,
