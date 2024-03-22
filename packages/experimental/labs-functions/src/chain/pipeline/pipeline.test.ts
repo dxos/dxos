@@ -11,6 +11,8 @@ import { describe, test } from '@dxos/test';
 
 import { type Context, logger, tryFunction } from './pipeline';
 import { processTemplate, type Resolver } from './prompt';
+import { transformer } from './transformer';
+import { createChainResources } from '../vendors';
 
 describe.only('Pipeline', () => {
   test('basic', async () => {
@@ -64,5 +66,26 @@ describe.only('Pipeline', () => {
     }
 
     expect(isSuccess(result)).to.be.true;
+  });
+
+  test.only('transformer', async () => {
+    const { model } = createChainResources('ollama');
+
+    const pipeline = pipe(
+      //
+      Effect.succeed<Context>({
+        request: {
+          prompt: {
+            template: 'hello',
+          },
+        },
+      }),
+      Effect.andThen(tryFunction(logger)),
+      Effect.andThen(transformer(model)),
+      Effect.mapError((err) => err),
+    );
+
+    const result = await Effect.runPromiseExit(pipeline);
+    console.log(JSON.stringify(result, undefined, 2));
   });
 });

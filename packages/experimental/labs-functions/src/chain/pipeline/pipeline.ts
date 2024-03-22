@@ -17,12 +17,14 @@ export type PromptTemplate = {
   inputs?: PromptInput[];
 };
 
+// TODO(burdon): Memory/history?
 export type Request = {
   prompt?: PromptTemplate;
 };
 
 export type Response = {
-  code: number;
+  code?: number;
+  text?: string;
 };
 
 export type Context = {

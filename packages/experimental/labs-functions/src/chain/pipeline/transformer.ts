@@ -8,15 +8,14 @@ import { RunnableSequence } from '@langchain/core/runnables';
 import { type BaseChatModel, type BaseChatModelCallOptions } from 'langchain/chat_models/base';
 
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 
 import { type Context, type PipelineFunction } from './pipeline';
 
 export const transformer = <CallOptions extends BaseChatModelCallOptions>(
   model: BaseChatModel<CallOptions>,
 ): PipelineFunction => {
-  return async (context: Context) => {
-    const inputs: Record<string, any> = {};
+  return async ({ request, response }: Context) => {
+    // const inputs: Record<string, any> = {};
     // const parseJson = true;
     // const modelArgs: any = parseJson
     //   ? {
@@ -30,18 +29,20 @@ export const transformer = <CallOptions extends BaseChatModelCallOptions>(
     //     }
     //   : {};
 
-    invariant(context.request.prompt?.template);
+    invariant(request.prompt?.template);
 
     const sequence = RunnableSequence.from([
-      PromptTemplate.fromTemplate(context.request.prompt.template),
+      PromptTemplate.fromTemplate(request.prompt.template),
       model,
       new StringOutputParser(),
     ]);
 
     const result = await sequence.invoke({}, {});
-    log.info('transformer', result);
-
-    // TODO(burdon): Output graph.
-    return context;
+    return {
+      request,
+      response: {
+        text: result,
+      },
+    };
   };
 };
