@@ -14,7 +14,7 @@ import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createStorage, StorageType, type Storage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
-import { ClientServicesHost, createDefaultModelFactory, ServiceContext } from '../services';
+import { ClientServicesHost, ServiceContext } from '../services';
 import { DataSpaceManager, type SigningContext } from '../spaces';
 
 //
@@ -42,8 +42,7 @@ export const createServiceContext = ({
     transportFactory: MemoryTransportFactory,
   });
 
-  const modelFactory = createDefaultModelFactory();
-  return new ServiceContext(storage, networkManager, signalManager, modelFactory);
+  return new ServiceContext(storage, networkManager, signalManager);
 };
 
 export const createPeers = async (numPeers: number) => {
@@ -152,7 +151,6 @@ export class TestPeer {
       feedStore: this.feedStore,
       networkManager: this.networkManager,
       metadataStore: this.metadataStore,
-      modelFactory: createDefaultModelFactory(),
       snapshotStore: this.snapshotStore,
       blobStore: this.blobStore,
     }));

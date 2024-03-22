@@ -48,4 +48,4 @@ export { TextModel } from '@dxos/text-model';
 
 export { SpaceList } from './space-list';
 export { SpaceProxy } from './space-proxy'; // TODO(burdon): Don't export as part of API.
-export { createDefaultModelFactory, getSpaceForObject } from './util';
+export { getSpaceForObject } from './util';

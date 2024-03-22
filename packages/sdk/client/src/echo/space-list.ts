@@ -20,17 +20,16 @@ import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import * as E from '@dxos/echo-schema';
 import {
+  AutomergeContext,
   type FilterSource,
   type Hypergraph,
   type Query,
   type TypeCollection,
   type TypedObject,
 } from '@dxos/echo-schema';
-import { AutomergeContext } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type ModelFactory } from '@dxos/model-factory';
 import { ApiError, trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
@@ -38,10 +37,10 @@ import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { trace } from '@dxos/tracing';
 
+import { InvitationsProxy } from '../invitations';
 import { AgentQuerySourceProvider } from './agent-query-source-provider';
 import { IndexQuerySourceProvider } from './index-query-source-provider';
 import { SpaceProxy } from './space-proxy';
-import { InvitationsProxy } from '../invitations';
 
 @trace.resource()
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {

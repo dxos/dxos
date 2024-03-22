@@ -7,12 +7,12 @@ import { inspect } from 'node:util';
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
 import {
   types as clientSchema,
-  type ClientServicesProvider,
-  STATUS_TIMEOUT,
-  type ClientServices,
   clientServiceBundle,
   DEFAULT_CLIENT_CHANNEL,
   PropertiesSchema,
+  STATUS_TIMEOUT,
+  type ClientServices,
+  type ClientServicesProvider,
 } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
@@ -22,24 +22,23 @@ import { Hypergraph, schemaBuiltin } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import type { ModelFactory } from '@dxos/model-factory';
 import { ApiError, trace as Trace } from '@dxos/protocols';
 import {
   GetDiagnosticsRequest,
-  type QueryStatusResponse,
   SystemStatus,
+  type QueryStatusResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 import { trace, TRACE_PROCESSOR } from '@dxos/tracing';
-import { type JsonKeyOptions, jsonKeyReplacer, type MaybePromise } from '@dxos/util';
+import { jsonKeyReplacer, type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
-import { ClientRuntime } from './client-runtime';
 import type { SpaceList, TypeCollection } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
+import { ClientRuntime } from './client-runtime';
 
 /**
  * This options object configures the DXOS Client.
@@ -50,8 +49,8 @@ export type ClientOptions = {
   config?: Config;
   /** Custom services provider. */
   services?: MaybePromise<ClientServicesProvider>;
-  /** Custom model factory. */
-  modelFactory?: ModelFactory;
+  /** Custom model factory. @deprecated */
+  modelFactory?: any;
   /** Types. */
   types?: TypeCollection;
   /** Shell path. */
@@ -333,7 +332,7 @@ export class Client {
   private async _open() {
     log('opening...');
     invariant(this._services);
-    const { SpaceList, createDefaultModelFactory } = await import('../echo');
+    const { SpaceList } = await import('../echo');
     const { HaloProxy } = await import('../halo');
     const { MeshProxy } = await import('../mesh');
     const { IFrameClientServicesHost, IFrameClientServicesProxy, Shell } = await import('../services');
