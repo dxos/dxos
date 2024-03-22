@@ -62,6 +62,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/echo/automerge"
+    },
+    {
       "path": "../../core/echo/document-model"
     },
     {
@@ -72,6 +75,9 @@
     },
     {
       "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/echo/indexing"
     },
     {
       "path": "../../core/echo/model-factory"

@@ -4,7 +4,6 @@
 
 import { File, FilePlus, Folder, FolderPlus, X, type IconProps, Plugs, FloppyDisk } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
-import { deepSignal } from 'deepsignal/react';
 import localforage from 'localforage';
 import React from 'react';
 
@@ -19,6 +18,7 @@ import {
   parseNavigationPlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, Trigger } from '@dxos/async';
+import * as E from '@dxos/echo-schema/schema';
 import { listener } from '@dxos/react-ui-editor';
 
 import { LocalFileMain } from './components';
@@ -40,7 +40,7 @@ import {
 
 export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, MarkdownExtensionProvides> => {
   let onFilesUpdate: ((node?: Node<LocalEntity>) => void) | undefined;
-  const state = deepSignal<{ files: LocalEntity[]; current: LocalFile | undefined }>({
+  const state = E.object<{ files: LocalEntity[]; current: LocalFile | undefined }>({
     files: [],
     current: undefined,
   });

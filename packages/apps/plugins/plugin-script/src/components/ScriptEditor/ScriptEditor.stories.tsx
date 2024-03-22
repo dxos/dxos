@@ -15,10 +15,11 @@
 
 import '@dxosTheme';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
-import { createDocAccessor, TextObject, type DocAccessor } from '@dxos/react-client/echo';
+import { TextObject } from '@dxos/react-client/echo';
+import { useDocAccessor } from '@dxos/react-ui-editor';
 
 import { ScriptEditor } from './ScriptEditor';
 
@@ -42,19 +43,11 @@ const examples: string[] = [
 ];
 
 const Story = () => {
-  const [source, setSource] = useState<DocAccessor>();
-  useEffect(() => {
-    setSource(createDocAccessor(new TextObject(examples[1], TextKind.PLAIN)));
-  }, []);
-
-  if (!source) {
-    return null;
-  }
-
+  const { accessor } = useDocAccessor(new TextObject(examples[1], TextKind.PLAIN));
   return (
     <div className='flex fixed inset-0 bg-neutral-50'>
       <div className='flex w-[700px] mx-auto'>
-        <ScriptEditor source={source} className='bg-white text-lg' />
+        <ScriptEditor source={accessor} className='bg-white text-lg' />
       </div>
     </div>
   );

@@ -3,7 +3,7 @@
 //
 
 import { type Any, type ProtoCodec } from '@dxos/codec-protobuf';
-import { type Item, type MutateResult, createModelMutation, encodeModelMutation } from '@dxos/echo-db';
+import { type Item, createModelMutation, encodeModelMutation } from '@dxos/echo-db';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -18,7 +18,6 @@ import {
 
 import { type EchoObject, base, debug, db, subscribe } from './types';
 import { type EchoDatabase } from '../database';
-import { type EchoLegacyDatabase } from '../legacy-database';
 
 /**
  * Base class for all echo objects.
@@ -33,7 +32,7 @@ export abstract class AbstractEchoObject<T extends Model = any> implements EchoO
    * Not present for freshly created objects.
    * @internal
    */
-  _database?: EchoLegacyDatabase;
+  _database?: any;
 
   /**
    * Present only on objects not persisted in the database.
@@ -181,7 +180,7 @@ export abstract class AbstractEchoObject<T extends Model = any> implements EchoO
    * @returns Mutation result for the database or undefined if the current object is not persisted.
    * @internal
    */
-  protected _mutate(mutation: MutationOf<T>): MutateResult | undefined {
+  protected _mutate(mutation: MutationOf<T>): unknown | undefined {
     if (this._stateMachine) {
       this._stateMachine.process(mutation);
     } else {

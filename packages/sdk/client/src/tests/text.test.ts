@@ -7,7 +7,7 @@ import { type ModelRunSetup } from 'fast-check';
 import waitForExpect from 'wait-for-expect';
 
 import { Context } from '@dxos/context';
-import { Expando, TextObject } from '@dxos/echo-schema';
+import { Expando, TextObject, type TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
@@ -42,7 +42,7 @@ const assertState = async (model: Model, real: Real) => {
           throw new Error(`Expected peer to not be in space: ${peerId.truncate()}`);
         }
 
-        const [document] = space.db.query((obj) => !!obj.content).objects;
+        const [document] = space.db.query((obj: TypedObject) => !!obj.content).objects;
         const text = (document.content.doc as Doc).getText('utf8');
         if (text.toString() !== model.text) {
           throw new Error(
@@ -121,7 +121,7 @@ class InsertTextCommand implements fc.AsyncCommand<Model, Real> {
 
     const peer = real.peers.get(this.peerId);
     const space = peer!.spaces.get(real.spaceKey)!;
-    const [document] = space.db.query((obj) => !!obj.content).objects;
+    const [document] = space.db.query((obj: TypedObject) => !!obj.content).objects;
     const text = (document.content.doc as Doc).getText('utf8');
     text.insert(this.index, this.text);
 
@@ -151,7 +151,7 @@ class RemoveTextCommand implements fc.AsyncCommand<Model, Real> {
 
     const peer = real.peers.get(this.peerId);
     const space = peer!.spaces.get(real.spaceKey)!;
-    const [document] = space.db.query((obj) => !!obj.content).objects;
+    const [document] = space.db.query((obj: TypedObject) => !!obj.content).objects;
     const text = (document.content.doc as Doc).getText('utf8');
     text.delete(this.index, this.length);
 

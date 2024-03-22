@@ -8,9 +8,10 @@ import { StateField, type Extension } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
 import { next as A } from '@dxos/automerge/automerge';
+import { type DocAccessor } from '@dxos/echo-schema';
 
 import { cursorConverter } from './cursor';
-import { updateHeadsEffect, isReconcile, type State, type DocAccessor } from './defs';
+import { updateHeadsEffect, isReconcile, type State } from './defs';
 import { Syncer } from './sync';
 import { Cursor } from '../cursor';
 
@@ -59,16 +60,16 @@ export const automerge = (accessor: DocAccessor): Extension => {
     ViewPlugin.fromClass(
       class {
         constructor(private readonly _view: EditorView) {
-          accessor.handle.addListener('change', this._handleChange.bind(this));
+          accessor.handle.addListener('change', this._handleChange);
         }
 
         destroy() {
-          accessor.handle.removeListener('change', this._handleChange.bind(this));
+          accessor.handle.removeListener('change', this._handleChange);
         }
 
-        _handleChange() {
+        readonly _handleChange = () => {
           syncer.reconcile(this._view, false);
-        }
+        };
       },
     ),
 

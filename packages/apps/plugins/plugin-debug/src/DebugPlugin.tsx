@@ -15,16 +15,16 @@ import {
   parseGraphPlugin,
   parseIntentPlugin,
   resolvePlugin,
+  type IntentPluginProvides,
   type Plugin,
   type PluginDefinition,
-  type IntentPluginProvides,
 } from '@dxos/app-framework';
 import { EventSubscriptions, Timer } from '@dxos/async';
 import { createStorageObjects } from '@dxos/client-services';
 import { changeStorageVersionInMetadata } from '@dxos/echo-pipeline/testing';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type Client } from '@dxos/react-client';
-import { SpaceProxy } from '@dxos/react-client/echo';
+import { SpaceProxy, SpaceState } from '@dxos/react-client/echo';
 
 import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsMain } from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
@@ -39,12 +39,13 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
 
   return {
     meta,
-    ready: async () => {
+    ready: async (plugins) => {
+      intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
       settings
-        .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool)
-        .prop(settings.values.$devtools!, 'devtools', LocalStorageStore.bool);
+        .prop({ key: 'debug', type: LocalStorageStore.bool({ allowUndefined: true }) })
+        .prop({ key: 'devtools', type: LocalStorageStore.bool({ allowUndefined: true }) });
 
-      // TODO(burdon): Remove hacky dependency on global variable?
+      // TODO(burdon): Remove hacky dependency on global variable.
       // Used to test how composer handles breaking protocol changes.
       (window as any).changeStorageVersionInMetadata = async (version: number) => {
         const client: Client = (window as any).dxos.client;
@@ -87,7 +88,9 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         builder: (plugins, graph) => {
           const subscriptions = new EventSubscriptions();
           const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-          intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
+
+          // TODO(burdon): Combine nodes into single subtree.
 
           // Debug node.
           subscriptions.add(
@@ -242,7 +245,8 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                       return;
                     }
 
-                    const folder = active.space.properties[Folder.schema.typename];
+                    const folder =
+                      active.space.state.get() === SpaceState.READY && active.space.properties[Folder.schema.typename];
                     if (!(folder instanceof Folder)) {
                       return;
                     }

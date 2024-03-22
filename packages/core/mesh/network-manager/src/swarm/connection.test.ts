@@ -9,7 +9,7 @@ import { describe, test } from '@dxos/test';
 
 import { Connection } from './connection';
 import { TestWireProtocol } from '../testing/test-wire-protocol';
-import { createSimplePeerTransportFactory } from '../transport';
+import { createLibDataChannelTransportFactory, createSimplePeerTransportFactory } from '../transport';
 
 describe('Connection', () => {
   test('initiator opens after responder', async () => {
@@ -37,8 +37,8 @@ describe('Connection', () => {
         remotePeerId: peerId2,
         topic,
       }),
-      // TODO(nf): configure?
-      createSimplePeerTransportFactory(),
+      // TODO(nf): configure better
+      process.env.MOCHA_ENV === 'nodejs' ? createLibDataChannelTransportFactory() : createSimplePeerTransportFactory(),
     );
 
     const protocol2 = new TestWireProtocol(peerId2);
@@ -59,8 +59,8 @@ describe('Connection', () => {
         },
       },
       protocol2.factory({ initiator: false, localPeerId: peerId2, remotePeerId: peerId1, topic }),
-      // TODO(nf): configure?
-      createSimplePeerTransportFactory(),
+      // TODO(nf): configure better
+      process.env.MOCHA_ENV === 'nodejs' ? createLibDataChannelTransportFactory() : createSimplePeerTransportFactory(),
     );
 
     connection2.initiate();

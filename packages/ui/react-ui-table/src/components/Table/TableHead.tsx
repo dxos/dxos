@@ -34,6 +34,8 @@ const TableHead = <TData extends RowData>(_props: TableHeadProps) => {
 
             {headerGroup.headers.map((header) => {
               const isResizing = header.column.getIsResizing();
+              const resizeHandler = header.getResizeHandler();
+
               return (
                 <th
                   key={header.id}
@@ -56,8 +58,8 @@ const TableHead = <TData extends RowData>(_props: TableHeadProps) => {
                       style={{
                         transform: `translateX(${isResizing ? state.columnSizingInfo.deltaOffset : 0}px)`,
                       }}
-                      onMouseDown={header.getResizeHandler()}
-                      onTouchStart={header.getResizeHandler()}
+                      onMouseDown={resizeHandler}
+                      onTouchStart={resizeHandler}
                     >
                       <div className={mx(theadResizeThumb(tableContext))} />
                     </div>

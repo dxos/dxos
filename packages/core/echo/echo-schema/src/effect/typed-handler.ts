@@ -5,9 +5,11 @@
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
+import { invariant } from '@dxos/invariant';
 
 import { type ReactiveHandler, createReactiveProxy, isValidProxyTarget } from './proxy';
-import { SchemaValidator } from './schema-validator';
+import { SchemaValidator, symbolSchema } from './schema-validator';
+import { data } from '../object';
 import { defineHiddenProperty } from '../util/property';
 
 export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T> {
@@ -15,12 +17,19 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
   _signal = compositeRuntime.createSignal();
 
   _init(target: any): void {
-    SchemaValidator.initTypedTarget(target);
-    defineHiddenProperty(target, inspect.custom, this._inspect.bind(target));
+    invariant(target[symbolSchema]);
+    if (inspect.custom) {
+      defineHiddenProperty(target, inspect.custom, this._inspect.bind(target));
+    }
   }
 
   get(target: any, prop: string | symbol, receiver: any): any {
     this._signal.notifyRead();
+
+    if (prop === data) {
+      return toJSON(target);
+    }
+
     const value = Reflect.get(target, prop, receiver);
     if (isValidProxyTarget(value)) {
       return createReactiveProxy(value, this);
@@ -62,3 +71,7 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
     })}`;
   }
 }
+
+const toJSON = (target: any): any => {
+  return { '@type': 'TypedReactiveObject', ...target };
+};

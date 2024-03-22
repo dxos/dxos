@@ -4,7 +4,7 @@
 
 import '@dxosTheme';
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation, Path } from '@dxos/react-ui-mosaic';
@@ -19,15 +19,18 @@ faker.seed(3);
 
 const SimpleContent = ({ data }: { data: StackSectionContent }) => <div className='p-4 text-center'>{data.title}</div>;
 
-const ComplexContent = ({ data }: { data: StackSectionContent & { body?: string; image?: string } }) => (
-  <div className='flex'>
-    <div className='grow p-4'>
-      <h1>{data.title ?? data.id}</h1>
-      {data.body && <p>{data.body}</p>}
+const ComplexContent = ({ data }: { data: StackSectionContent & { body?: string; image?: string } }) => {
+  useEffect(() => () => console.log('[ComplexContent]', 'unmount'), []);
+  return (
+    <div className='flex'>
+      <div className='grow p-4'>
+        <h1>{data.title ?? data.id}</h1>
+        {data.body && <p>{data.body}</p>}
+      </div>
+      {data.image && <img src={data.image} />}
     </div>
-    {data.image && <img src={data.image} />}
-  </div>
-);
+  );
+};
 
 export default {
   title: 'react-ui-stack/Stack',

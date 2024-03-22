@@ -55,7 +55,7 @@ export const defaultTheme: ThemeStyles = {
     // TODO(burdon): Reconcile with docs: https://codemirror.net/docs/guide
     //  Inside of that is the scroller element. If the editor has its own scrollbar, this one should be styled with overflow: auto. But it doesn't have to—the editor also supports growing to accomodate its content, or growing up to a certain max-height and then scrolling.
     overflowY: 'auto',
-    fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
+    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
     lineHeight: 1.5,
   },
 
@@ -236,55 +236,44 @@ export const defaultTheme: ThemeStyles = {
    *   </div>
    * </div
    */
-  '.cm-panels': {
-    border: `1px solid ${get(tokens, 'extend.colors.neutral.200')}`,
-  },
+  '.cm-panels': {},
   '.cm-panel': {
-    background: get(tokens, 'extend.colors.neutral.50'),
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+  },
+  '.cm-panel input[type=checkbox]': {
+    marginRight: '0.4rem !important',
+  },
+  '&light .cm-panel': {
+    background: get(tokens, 'extend.colors.neutral.50'),
+  },
+  '&dark .cm-panel': {
+    background: get(tokens, 'extend.colors.neutral.850'),
   },
   '.cm-button': {
     margin: '4px',
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
-    background: get(tokens, 'extend.colors.neutral.100'),
     backgroundImage: 'none',
     border: 'none',
+    '&:active': {
+      backgroundImage: 'none',
+    },
+  },
+  '&light .cm-button': {
+    background: get(tokens, 'extend.colors.neutral.100'),
     '&:hover': {
       background: get(tokens, 'extend.colors.neutral.200'),
     },
     '&:active': {
       background: get(tokens, 'extend.colors.neutral.300'),
-      backgroundImage: 'none',
     },
   },
-  '.cm-panel input[type=checkbox]': {
-    marginRight: '0.4rem !important',
-  },
-};
-
-export const textTheme: ThemeStyles = {
-  '.cm-scroller': {
-    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
-  },
-  '.cm-placeholder': {
-    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
-  },
-};
-
-export const markdownTheme: ThemeStyles = {
-  '.cm-scroller': {
-    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
-  },
-  '.cm-placeholder': {
-    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
-  },
-};
-
-export const codeTheme: ThemeStyles = {
-  '.cm-scroller': {
-    fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
-  },
-  '.cm-placeholder': {
-    fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
+  '&dark .cm-button': {
+    background: get(tokens, 'extend.colors.neutral.800'),
+    '&:hover': {
+      background: get(tokens, 'extend.colors.neutral.700'),
+    },
+    '&:active': {
+      background: get(tokens, 'extend.colors.neutral.600'),
+    },
   },
 };

@@ -4,6 +4,7 @@
 
 import { type Halo, type Space } from '@dxos/client-protocol';
 import type { ClientServicesHost, DataSpace } from '@dxos/client-services';
+import { importModule } from '@dxos/debug';
 import { DocumentModel, type DocumentModelState } from '@dxos/document-model';
 import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
@@ -36,6 +37,11 @@ export interface DevtoolsHook {
   downloadDiagnostics?: () => Promise<void>;
 
   reset: () => void;
+
+  /**
+   * Import modules exposed by `exposeModule` from @dxos/debug.
+   */
+  importModule: (module: string) => unknown;
 }
 
 export type MountOptions = {
@@ -81,6 +87,8 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     },
 
     reset,
+
+    importModule,
   };
 
   if (client) {

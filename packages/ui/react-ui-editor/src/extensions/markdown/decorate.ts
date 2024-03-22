@@ -48,7 +48,7 @@ class CheckboxWidget extends WidgetType {
 
   override toDOM(view: EditorView) {
     const input = document.createElement('input');
-    input.className = 'cm-task-checkbox';
+    input.className = 'cm-task-checkbox ch-checkbox ch-focus-ring -mbs-0.5';
     input.type = 'checkbox';
     input.checked = this._checked;
     if (view.state.readOnly) {
@@ -148,9 +148,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
                 marks[1].from,
                 node.to,
                 options.renderLinkButton
-                  ? Decoration.replace({
-                      widget: new LinkButton(url, options.renderLinkButton),
-                    })
+                  ? Decoration.replace({ widget: new LinkButton(url, options.renderLinkButton) })
                   : hide,
               );
             }

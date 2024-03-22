@@ -10,7 +10,7 @@ import {
   type SpecificCredential,
   checkCredentialType,
 } from '@dxos/credentials';
-import { getStateMachineFromItem, ItemManager, TYPE_PROPERTIES } from '@dxos/echo-db';
+import { ItemManager } from '@dxos/echo-db';
 import { type FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -19,8 +19,6 @@ import { type ModelFactory } from '@dxos/model-factory';
 import { CancelledError, type DataPipelineProcessed } from '@dxos/protocols';
 import { type CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { type DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type Credential, type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
@@ -49,16 +47,6 @@ export type DataPipelineParams = {
    */
   onPipelineCreated: (pipeline: Pipeline) => Promise<void>;
 };
-
-/**
- * Number of mutations since the last snapshot before we automatically create another snapshot.
- */
-const MESSAGES_PER_SNAPSHOT = 10;
-
-/**
- * Minimum time between automatic snapshots.
- */
-const AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL = 5_000;
 
 /**
  * Minimum time in MS between recording latest timeframe in metadata.
@@ -194,7 +182,6 @@ export class DataPipeline implements CredentialProcessor {
 
     // NOTE: Make sure the processing is stopped BEFORE we save the snapshot.
     try {
-      await this._saveCache();
       if (this._pipeline) {
         await this._saveTargetTimeframe(this._pipeline.state.timeframe);
       }
@@ -293,28 +280,6 @@ export class DataPipeline implements CredentialProcessor {
     this._targetTimeframe = newTimeframe;
   }
 
-  private async _saveCache() {
-    const cache: SpaceCache = {};
-
-    try {
-      // Add properties to cache.
-      const propertiesItem = this.itemManager.items.find(
-        (item) =>
-          item.modelMeta?.type === 'dxos.org/model/document' &&
-          // TODO(burdon): Document?
-          (getStateMachineFromItem(item)?.snapshot() as ObjectSnapshot).type === TYPE_PROPERTIES,
-      );
-      if (propertiesItem) {
-        cache.properties = getStateMachineFromItem(propertiesItem)?.snapshot() as ObjectSnapshot;
-      }
-    } catch (err) {
-      log.warn('Failed to cache properties', err);
-    }
-
-    // Save cache.
-    await this._params.metadataStore.setCache(this._params.spaceKey, cache);
-  }
-
   private async _noteTargetStateIfNeeded(timeframe: Timeframe) {
     if (!this._pipeline?.state.reachedTarget) {
       return;
@@ -326,13 +291,6 @@ export class DataPipeline implements CredentialProcessor {
       this._lastTimeframeSaveTime = Date.now();
 
       await this._saveTargetTimeframe(timeframe);
-    }
-
-    if (
-      Date.now() - this._lastSnapshotSaveTime > AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL &&
-      timeframe.totalMessages() - this._lastAutomaticSnapshotTimeframe.totalMessages() > MESSAGES_PER_SNAPSHOT
-    ) {
-      await this._saveCache();
     }
   }
 
@@ -419,7 +377,6 @@ export class DataPipeline implements CredentialProcessor {
 
   private async _flush() {
     try {
-      await this._saveCache();
       if (this._pipeline) {
         await this._saveTargetTimeframe(this._pipeline.state.timeframe);
       }

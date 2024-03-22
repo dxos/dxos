@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import get from 'lodash.get';
-
 import { Event } from '@dxos/async';
 import { next as A, type ChangeFn, type ChangeOptions, type Doc, type Heads } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
@@ -11,14 +9,16 @@ import { Reference } from '@dxos/document-model';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log'; // Keep type-only
+import { log } from '@dxos/log'; // Keep type-only.
 import { TextModel } from '@dxos/text-model';
 import { assignDeep, defer, getDeep } from '@dxos/util';
 
 import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
-import { AutomergeObject, getAutomergeObjectCore, getRawDoc } from './automerge-object';
+import { AutomergeObject, getAutomergeObjectCore } from './automerge-object';
+import { type DocAccessor } from './automerge-types';
 import { docChangeSemaphore } from './doc-semaphore';
+import { type KeyPath, isValidKeyPath } from './key-path';
 import {
   encodeReference,
   type ObjectStructure,
@@ -26,15 +26,11 @@ import {
   decodeReference,
   type DecodedAutomergeValue,
   type SpaceDoc,
+  type DecodedAutomergePrimaryValue,
 } from './types';
-import { isReactiveProxy } from '../effect/proxy';
-import {
-  type TypedObjectOptions,
-  type EchoObject,
-  TextObject,
-  type AutomergeTextCompat,
-  type OpaqueEchoObject,
-} from '../object';
+import { EchoReactiveHandler } from '../effect/echo-handler';
+import { getProxyHandlerSlot, isReactiveProxy } from '../effect/proxy';
+import { type TypedObjectOptions, type EchoObject, TextObject, type OpaqueEchoObject } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
 
@@ -80,7 +76,7 @@ export class AutomergeObjectCore {
    * Key path at where we are mounted in the `doc` or `docHandle`.
    * The value at path must be of type `ObjectStructure`.
    */
-  public mountPath: string[] = [];
+  public mountPath: KeyPath = [];
 
   /**
    * Handles link resolution as well as manual changes.
@@ -106,7 +102,7 @@ export class AutomergeObjectCore {
 
     initialProps ??= {};
 
-    // Init schema defaults
+    // Init schema defaults.
     if (opts?.schema) {
       for (const field of opts.schema.props) {
         if (field.repeated) {
@@ -135,7 +131,7 @@ export class AutomergeObjectCore {
 
     if (this.linkCache) {
       for (const obj of this.linkCache.values()) {
-        this.database!.add(obj);
+        this.database!._dbApi.add(obj);
       }
 
       this.linkCache = undefined;
@@ -215,10 +211,10 @@ export class AutomergeObjectCore {
     return result;
   }
 
-  getDocAccessor(path: string[] = []): DocAccessor {
+  getDocAccessor(path: KeyPath = []): DocAccessor {
+    invariant(isValidKeyPath(path));
     const self = this;
     return {
-      [isDocument]: true,
       handle: {
         docSync: () => this.getDoc(),
         change: (callback, options) => {
@@ -276,9 +272,15 @@ export class AutomergeObjectCore {
    * Store referenced object.
    */
   linkObject(obj: OpaqueEchoObject): Reference {
-    const core = getAutomergeObjectCore(obj);
-
     if (this.database) {
+      // TODO(dmaretskyi): Fix this.
+      if (isReactiveProxy(obj) && !(getProxyHandlerSlot(obj).handler instanceof EchoReactiveHandler)) {
+        invariant(this.database, 'BUG');
+        this.database._dbApi.add(obj);
+      }
+
+      const core = getAutomergeObjectCore(obj);
+
       if (!core.database) {
         this.database.add(obj);
         return new Reference(core.id);
@@ -312,7 +314,7 @@ export class AutomergeObjectCore {
   /**
    * Encode a value to be stored in the Automerge document.
    */
-  encode(value: DecodedAutomergeValue) {
+  encode(value: DecodedAutomergeValue, { allowLinks = true }: { allowLinks?: boolean } = {}) {
     if (value instanceof A.RawString) {
       return value;
     }
@@ -325,6 +327,10 @@ export class AutomergeObjectCore {
       value instanceof AutomergeObject ||
       (isReactiveProxy(value) as boolean)
     ) {
+      if (!allowLinks) {
+        throw new TypeError('Linking is not allowed');
+      }
+
       const reference = this.linkObject(value as OpaqueEchoObject);
       return encodeReference(reference);
     }
@@ -384,7 +390,10 @@ export class AutomergeObjectCore {
     return value;
   }
 
-  get(path: (string | number)[]) {
+  /**
+   * @deprecated Use getDecoded.
+   */
+  get(path: KeyPath) {
     const fullPath = [...this.mountPath, ...path];
 
     let value = this.getDoc();
@@ -395,7 +404,10 @@ export class AutomergeObjectCore {
     return value;
   }
 
-  set(path: (string | number)[], value: any) {
+  /**
+   * @deprecated Use setDecoded.
+   */
+  set(path: KeyPath, value: any) {
     const fullPath = [...this.mountPath, ...path];
 
     this.change((doc) => {
@@ -403,11 +415,21 @@ export class AutomergeObjectCore {
     });
   }
 
+  // TODO(dmaretskyi): Rename to `get`.
+  getDecoded(path: KeyPath): DecodedAutomergePrimaryValue {
+    return this.decode(this.get(path), { resolveLinks: false }) as DecodedAutomergePrimaryValue;
+  }
+
+  // TODO(dmaretskyi): Rename to `set`.
+  setDecoded(path: KeyPath, value: DecodedAutomergePrimaryValue) {
+    this.set(path, this.encode(value, { allowLinks: false }));
+  }
+
   setType(reference: Reference) {
     this.set([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
   }
 
-  delete(path: (string | number)[]) {
+  delete(path: KeyPath) {
     const fullPath = [...this.mountPath, ...path];
 
     this.change((doc) => {
@@ -436,50 +458,15 @@ export class AutomergeObjectCore {
   }
 }
 
-const isDocument = Symbol.for('isDocument');
-
-// TODO(burdon): Rename ValueAccessor.
-export interface DocAccessor<T = any> {
-  [isDocument]: true;
-  handle: IDocHandle<T>;
-  get path(): string[]; // TODO(burdon): Getter or prop?
-}
-
-export const DocAccessor = {
-  getValue: (accessor: DocAccessor) => get(accessor.handle.docSync(), accessor.path),
-};
-
-/**
- * @deprecated
- */
-// TODO(burdon): Temporary.
-export const createDocAccessor = <T = any>(text: TextObject): DocAccessor<T> => {
-  const obj = text as any as AutomergeTextCompat;
-  return getRawDoc(obj, [obj.field]);
-};
-
-export interface IDocHandle<T = any> {
-  docSync(): Doc<T> | undefined;
-  change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
-  changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): string[] | undefined;
-
-  addListener(event: 'change', listener: () => void): void;
-  removeListener(event: 'change', listener: () => void): void;
-}
-
 export type BindOptions = {
   db: AutomergeDb;
   docHandle: DocHandle<SpaceDoc>;
-  path: string[];
+  path: KeyPath;
 
   /**
    * Assign the state from the local doc into the shared structure for the database.
    */
   assignFromLocalState?: boolean;
-};
-
-export const isDocAccessor = (obj: any): obj is DocAccessor => {
-  return !!obj?.[isDocument];
 };
 
 export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<SpaceDoc>) => {

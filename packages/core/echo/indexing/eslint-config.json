@@ -1,0 +1,14 @@
+// TODO(wittjosiah): This is not currently being used because testing packlet breaks the packlet lint.
+{
+  // This eslint config intentionally uses a non-standard name so that IDEs ignore it.
+  // The parserOptions config specified here only works with the Nx linter and
+  //   not IDEs because the tsconfig path is relative to the root of the repo.
+  // This is only required in order to do packlet linting, otherwise rules will
+  //   automatically be applied from the root config.
+  "extends": [
+    "../../../../.eslintrc.packlets.js"
+  ],
+  "parserOptions": {
+    "project": "./packages/core/echo/indexing/tsconfig.json"
+  }
+}
