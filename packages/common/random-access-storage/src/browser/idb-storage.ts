@@ -6,7 +6,6 @@ import idb from 'random-access-idb';
 import { type RandomAccessStorage } from 'random-access-storage';
 
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 
 import { BrowserStorage } from './browser-storage';
 import { StorageType, getFullPath, wrapFile } from '../common';
