@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import isEqual from 'lodash.isequal';
+
 import { invariant } from '@dxos/invariant';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type File, type Directory } from '@dxos/random-access-storage';
@@ -81,18 +83,19 @@ export class IndexStore {
 
     // Delete all indexes that are colliding with the same kind.
     {
-      const seenKinds = new Set<IndexKind>();
+      const seenKinds: IndexKind[] = [];
       const allKinds = Array.from(headers.values());
       for (const kind of allKinds) {
-        if (!seenKinds.has(kind)) {
-          seenKinds.add(kind);
+        if (!seenKinds.some((seenKind) => isEqual(seenKind, kind))) {
+          seenKinds.push(kind);
           continue;
         }
 
-        for (const [identifier, indexKind] of Array.from(headers.entries())) {
-          if (indexKind === kind) {
-            headers.delete(identifier);
+        const entries = Array.from(headers.entries());
+        for (const [identifier, indexKind] of entries) {
+          if (isEqual(indexKind, kind)) {
             await this.remove(identifier);
+            headers.delete(identifier);
           }
         }
       }
