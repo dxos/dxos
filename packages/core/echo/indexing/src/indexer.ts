@@ -94,8 +94,6 @@ export class Indexer {
     this._getAllDocuments = getAllDocuments;
     this._saveAfterUpdates = saveAfterUpdates;
     this._saveAfterTime = saveAfterTime;
-
-    this._metadataStore.dirty.on(this._ctx, () => this._run.schedule());
   }
 
   @synchronized
@@ -151,13 +149,17 @@ export class Indexer {
       }
     }
 
-    this._run.schedule();
+    if (this._indexConfig?.enabled === true) {
+      this._metadataStore.dirty.on(this._ctx, () => this._run.schedule());
+      this._run.schedule();
+    }
+
     this._initialized = true;
   }
 
   // TODO(mykola): `Find` should use junctions and conjunctions of ID sets.
   async find(filter: Filter): Promise<{ id: string; rank: number }[]> {
-    if (!this._initialized) {
+    if (!this._initialized || this._indexConfig?.enabled !== true) {
       return [];
     }
     const arraysOfIds = await Promise.all(Array.from(this._indexes.values()).map((index) => index.find(filter)));
