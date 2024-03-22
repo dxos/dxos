@@ -19,6 +19,7 @@ import { log } from '@dxos/log';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
 
 import { type SpaceList } from './space-list';
+import { type SpaceProxy } from './space-proxy';
 
 export type IndexQueryProviderParams = {
   service: IndexService;
@@ -33,7 +34,7 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
     const start = Date.now();
     const response = await this._params.service.find({ filter: filter.toProto() });
 
-    if (!response.results) {
+    if (!response.results || response.results.length === 0) {
       return [];
     }
 
@@ -44,8 +45,8 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
           return;
         }
 
-        const object = await warnAfterTimeout(2000, 'takes to long to load object', async () => {
-          await space.waitUntilReady();
+        const object = await warnAfterTimeout(2000, 'Loading object', async () => {
+          await (space as SpaceProxy)._databaseInitialized.wait();
           return space.db.automerge.loadObjectById(result.id);
         });
 
