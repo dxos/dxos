@@ -3,7 +3,6 @@
 //
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
-import { type BatchUpdate } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
@@ -62,7 +61,7 @@ export interface EchoDatabase {
   /**
    * @deprecated
    */
-  readonly pendingBatch: ReadOnlyEvent<BatchUpdate>;
+  readonly pendingBatch: ReadOnlyEvent<unknown>;
 
   /**
    * @deprecated
@@ -166,7 +165,7 @@ export class EchoDatabaseImpl implements EchoDatabase {
   /**
    * @deprecated
    */
-  readonly pendingBatch = new Event<BatchUpdate>();
+  readonly pendingBatch = new Event<unknown>();
 
   /**
    * @deprecated

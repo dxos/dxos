@@ -1,6 +1,6 @@
 {
   "name": "@dxos/apidoc",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "Generate nice API documentation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

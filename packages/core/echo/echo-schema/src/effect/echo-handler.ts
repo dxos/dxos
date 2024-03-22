@@ -258,7 +258,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     this._objectCore.signal.notifyWrite();
-
     return true;
   }
 
@@ -330,7 +329,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     invariant(newLength !== -1);
 
     this._objectCore.signal.notifyWrite();
-
     return newLength;
   }
 
@@ -345,7 +343,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
 
     this._objectCore.signal.notifyWrite();
-
     return returnValue;
   }
 
@@ -360,7 +357,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
 
     this._objectCore.signal.notifyWrite();
-
     return returnValue;
   }
 
@@ -380,7 +376,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     invariant(newLength !== -1);
 
     this._objectCore.signal.notifyWrite();
-
     return newLength;
   }
 
@@ -404,7 +399,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     invariant(deletedElements);
 
     this._objectCore.signal.notifyWrite();
-
     return deletedElements;
   }
 
@@ -419,7 +413,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
 
     this._objectCore.signal.notifyWrite();
-
     return target;
   }
 
@@ -434,7 +427,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
 
     this._objectCore.signal.notifyWrite();
-
     return target;
   }
 

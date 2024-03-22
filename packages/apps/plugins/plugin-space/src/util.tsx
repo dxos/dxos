@@ -42,7 +42,7 @@ export const isSpace = (data: unknown): data is Space =>
     : false;
 
 export const getSpaceDisplayName = (space: Space): string | [string, { ns: string }] => {
-  return (space.properties.name?.length ?? 0) > 0
+  return space.state.get() === SpaceState.READY && (space.properties.name?.length ?? 0) > 0
     ? space.properties.name
     : space.state.get() === SpaceState.CLOSED || space.state.get() === SpaceState.INACTIVE
       ? ['closed space label', { ns: SPACE_PLUGIN }]
@@ -125,7 +125,7 @@ export const updateGraphWithSpace = ({
   const getId = (id: string) => `${id}/${space.key.toHex()}`;
 
   const unsubscribeSpace = effect(() => {
-    const folder = space.properties[FolderType.typename];
+    const folder = space.state.get() === SpaceState.READY && space.properties[FolderType.typename];
     const partials =
       space.state.get() === SpaceState.READY && isFolder(folder)
         ? getFolderGraphNodePartials({ graph, folder, space })
@@ -143,7 +143,7 @@ export const updateGraphWithSpace = ({
             properties: {
               ...partials,
               label: isPersonalSpace ? ['personal space label', { ns: SPACE_PLUGIN }] : getSpaceDisplayName(space),
-              description: space.properties.description,
+              description: space.state.get() === SpaceState.READY && space.properties.description,
               icon: (props: IconProps) => <Planet {...props} />,
               disabled: space.state.get() === SpaceState.INACTIVE,
               // TODO(burdon): Change to semantic classes that are customizable.
@@ -331,7 +331,7 @@ export const updateGraphWithSpace = ({
   });
   const previousObjects = new Map<string, E.AnyEchoObject[]>();
   const unsubscribeQuery = effect(() => {
-    const folder: FolderType = space.properties[FolderType.typename];
+    const folder: FolderType = space.state.get() === SpaceState.READY && space.properties[FolderType.typename];
     const folderObjects = folder?.objects ?? [];
     const removedObjects =
       previousObjects

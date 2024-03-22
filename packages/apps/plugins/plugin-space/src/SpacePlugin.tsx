@@ -491,8 +491,11 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 objects: [sharedSpacesFolder],
               } = defaultSpace.db.query({ key: SHARED });
               const space = await client.spaces.create(intent.data as PropertiesProps);
+
               const folder = E.object(FolderType, { objects: [] });
               space.properties[FolderType.typename] = folder;
+              await space.waitUntilReady();
+
               sharedSpacesFolder?.objects.push(folder);
               if (Migrations.versionProperty) {
                 space.properties[Migrations.versionProperty] = Migrations.targetVersion;

@@ -147,14 +147,21 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
           // Propagate space state updates to the space list observable.
           spaceProxy._stateUpdate.on(this._ctx, () => {
             this._spacesStream.next([...this.get()]);
-            if (
-              spaceProxy?.state.get() === SpaceState.READY &&
-              spaceProxy?.properties[defaultKey] === this._getIdentityKey()?.toHex()
-            ) {
-              this._defaultSpaceAvailable.next(true);
-              this._defaultSpaceAvailable.complete();
-            }
           });
+          void spaceProxy
+            .waitUntilReady()
+            .then(() => {
+              if (
+                spaceProxy &&
+                spaceProxy.state.get() === SpaceState.READY &&
+                this._getIdentityKey() &&
+                spaceProxy.properties[defaultKey] === this._getIdentityKey()!.toHex()
+              ) {
+                this._defaultSpaceAvailable.next(true);
+                this._defaultSpaceAvailable.complete();
+              }
+            })
+            .catch((err) => err.message === 'Context disposed.' || log.catch(err));
 
           newSpaces.push(spaceProxy);
           this._spaceCreated.emit(spaceProxy.key);
@@ -240,7 +247,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   get default(): Space {
     const identityKey = this._getIdentityKey();
     invariant(identityKey, 'Identity must be set.');
-    const space = this.get().find((space) => space.properties[defaultKey] === identityKey.toHex());
+    const space = this.get().find(
+      (space) => space.state.get() === SpaceState.READY && space.properties[defaultKey] === identityKey.toHex(),
+    );
     invariant(space, 'Default space is not yet available. Use `client.spaces.isReady` to wait for the default space.');
     return space;
   }
