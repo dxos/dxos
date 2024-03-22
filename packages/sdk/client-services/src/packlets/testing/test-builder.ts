@@ -7,20 +7,18 @@ import { Context } from '@dxos/context';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import {
-  SnapshotStore,
-  type DataPipeline,
+  AutomergeHost,
+  DataServiceSubscriptions,
   MetadataStore,
+  SnapshotStore,
   SpaceManager,
   valueEncoding,
-  DataServiceSubscriptions,
-  AutomergeHost,
 } from '@dxos/echo-pipeline';
-import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
-import { createStorage, type Storage, StorageType } from '@dxos/random-access-storage';
+import { createStorage, StorageType, type Storage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { ClientServicesHost, createDefaultModelFactory, ServiceContext } from '../services';

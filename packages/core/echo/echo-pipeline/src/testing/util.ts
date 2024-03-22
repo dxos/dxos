@@ -38,24 +38,3 @@ export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
     itemManager,
   };
 };
-
-export const testLocalDatabase = async (create: DataPipeline, check: DataPipeline = create) => {
-  const objectId = PublicKey.random().toHex();
-  await create.databaseHost!.getWriteStream()?.write({
-    batch: {
-      objects: [
-        {
-          objectId,
-          genesis: {
-            modelType: DocumentModel.meta.type,
-          },
-        },
-      ],
-    },
-  });
-
-  await asyncTimeout(
-    check.databaseHost!._itemDemuxer.mutation.waitForCondition(() => check.itemManager.entities.has(objectId)),
-    2000,
-  );
-};

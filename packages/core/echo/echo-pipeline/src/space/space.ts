@@ -250,6 +250,9 @@ export class Space {
     log('closed');
   }
 
+  /**
+   * @deprecated
+   */
   @synchronized
   async initializeDataPipeline() {
     log('initializeDataPipeline');

@@ -6,7 +6,6 @@ import { expect } from 'chai';
 
 import { asyncChain, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
-import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest, describe, test } from '@dxos/test';
@@ -38,14 +37,6 @@ describe('services/space-invitations-protocol', () => {
 
     await peer.dataSpaceManager?.waitUntilSpaceReady(space.key);
     await space.close();
-  });
-
-  test('genesis with database mutations', async () => {
-    const [peer] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
-    const space = await peer.dataSpaceManager!.createSpace();
-    afterTest(() => space.close());
-
-    await testLocalDatabase(space.dataPipeline);
   });
 
   test('invitation with no auth', async () => {
