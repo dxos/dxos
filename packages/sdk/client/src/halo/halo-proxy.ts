@@ -153,6 +153,7 @@ export class HaloProxy implements Halo {
     //   this._contactsChanged.emit();
     // });
     // this._subscriptions.add(() => contactsStream.close());
+    // TODO(nf): trigger automatically? feedback on how many were resumed?
 
     log.trace('dxos.sdk.halo-proxy.open', Trace.end({ id: this._instanceId }));
     await Promise.all([gotIdentity]);
@@ -276,7 +277,7 @@ export class HaloProxy implements Halo {
       throw new ApiError('Client not open.');
     }
 
-    log('create invitation', options);
+    log('create invitation', { options });
     const invitation = this._invitationProxy!.share(options);
     return invitation;
   }

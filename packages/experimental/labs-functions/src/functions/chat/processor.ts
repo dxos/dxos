@@ -16,10 +16,10 @@ import { log } from '@dxos/log';
 
 import { createContext, type RequestContext } from './context';
 import { parseMessage } from './parser';
-import type { ResolverMap } from './resolvers';
+import { type ResolverMap } from './resolvers';
 import { ResponseBuilder } from './response';
 import { createStatusNotifier } from './status';
-import type { ChainResources } from '../../chain';
+import { type ChainResources } from '../../chain';
 
 export type SequenceOptions = {
   prompt?: string;

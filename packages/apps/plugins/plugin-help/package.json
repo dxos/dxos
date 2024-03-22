@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-help",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "Help plugin.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -25,10 +25,10 @@
   "dependencies": {
     "@dxos/app-graph": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "deepsignal": "^1.5.0",
     "lodash.get": "^4.4.2",
     "react-joyride": "^2.7.2"
   },

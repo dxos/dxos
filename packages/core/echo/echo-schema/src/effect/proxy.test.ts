@@ -9,27 +9,35 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
 import * as R from './reactive';
-import { TestSchema } from './testing/schema';
+import { TEST_OBJECT, TestSchema, TestSchemaClass } from './testing/schema';
 import { updateCounter } from './testutils';
 import { Hypergraph } from '../hypergraph';
 import { createDatabase } from '../testing';
 
 registerSignalRuntime();
 
-for (const schema of [undefined, TestSchema]) {
+for (const schema of [undefined, TestSchema, TestSchemaClass]) {
   for (const useDatabase of [false, true]) {
+    if (!useDatabase && typeof schema === 'function') {
+      continue;
+    }
+
     const testSetup = useDatabase ? createDatabase(new Hypergraph(), { useReactiveObjectApi: true }) : undefined;
+
+    const objectsHaveId = useDatabase;
+
     const createObject = async (props: Partial<TestSchema> = {}): Promise<TestSchema> => {
-      const testSchema = useDatabase && schema ? schema.pipe(R.echoObject('TestSchema', '1.0.0')) : schema;
-      const obj = testSchema == null ? (R.object(props) as TestSchema) : R.object(testSchema, props);
+      const testSchema =
+        useDatabase && schema === TestSchema ? schema.pipe(R.echoObject('TestSchema', '1.0.0')) : schema;
+      const obj = testSchema == null ? (R.object(props) as TestSchema) : R.object(testSchema as any, props);
       if (!useDatabase) {
-        return obj;
+        return obj as any;
       }
       const { db, graph } = await testSetup!;
-      if (testSchema && !graph.types.isEffectSchemaRegistered(testSchema)) {
-        graph.types.registerEffectSchema(testSchema);
+      if (testSchema && !graph.types.isEffectSchemaRegistered(testSchema as any)) {
+        graph.types.registerEffectSchema(testSchema as any);
       }
-      return db.add(obj);
+      return db.add(obj) as any;
     };
 
     describe(`Proxy properties${schema == null ? '' : ' with schema'}`, () => {
@@ -78,11 +86,46 @@ for (const schema of [undefined, TestSchema]) {
       test('can assign array values', async () => {
         const obj = await createObject();
 
-        obj.numberArray = [1, 2, 3];
-        expect(obj.numberArray).to.deep.eq([1, 2, 3]);
+        obj.stringArray = ['1', '2', '3'];
+        expect(obj.stringArray).to.deep.eq(['1', '2', '3']);
 
-        obj.numberArray[0] = 4;
-        expect(obj.numberArray).to.deep.eq([4, 2, 3]);
+        obj.stringArray[0] = '4';
+        expect(obj.stringArray).to.deep.eq(['4', '2', '3']);
+      });
+
+      test('can work with complex types', async () => {
+        const circle: any = { type: 'circle', radius: 42 };
+        const obj = await createObject({ nullableShapeArray: [circle] });
+
+        expect(obj.nullableShapeArray![0]).to.deep.eq(circle);
+
+        obj.nullableShapeArray?.push(null);
+        expect(obj.nullableShapeArray).to.deep.eq([circle, null]);
+
+        const square: any = { type: 'square', side: 24 };
+        obj.nullableShapeArray?.push(square);
+        expect(obj.nullableShapeArray).to.deep.eq([circle, null, square]);
+
+        (obj.nullableShapeArray![2] as any).side = 33;
+        expect((obj.nullableShapeArray![2] as any).side).to.eq(33);
+      });
+
+      test('validation failures', async () => {
+        if (schema == null) {
+          return;
+        }
+        const obj = await createObject({ objectArray: [{ field: 'foo' }] });
+        expect(() => (obj.string = 1 as any)).to.throw();
+        expect(() => (obj.object = { field: 1 } as any)).to.throw();
+        obj.object = { field: 'bar' };
+        expect(() => (obj.object!.field = 1 as any)).to.throw();
+        expect(() => obj.objectArray?.push({ field: 1 } as any)).to.throw();
+        expect(() => obj.objectArray?.unshift({ field: 1 } as any)).to.throw();
+        expect(() => (obj.objectArray![0] = { field: 1 } as any)).to.throw();
+        expect(() => (obj.objectArray![0].field = 1 as any)).to.throw();
+        obj.objectArray?.push({ field: 'bar' });
+        expect(() => obj.objectArray?.splice(1, 0, { field: 1 } as any)).to.throw();
+        expect(() => (obj.objectArray![1].field = 1 as any)).to.throw();
       });
 
       test('can assign arrays with objects', async () => {
@@ -148,10 +191,10 @@ for (const schema of [undefined, TestSchema]) {
       test('keys enumeration', async () => {
         const obj = await createObject({ string: 'bar' });
 
-        expect(Object.keys(obj)).to.deep.eq(['string']);
+        expect(Object.keys(obj)).to.deep.eq(objectsHaveId ? ['string', 'id'] : ['string']);
 
         obj.number = 42;
-        expect(Object.keys(obj)).to.deep.eq(['string', 'number']);
+        expect(Object.keys(obj)).to.deep.eq(objectsHaveId ? ['string', 'number', 'id'] : ['string', 'number']);
       });
 
       test('has', async () => {
@@ -164,17 +207,17 @@ for (const schema of [undefined, TestSchema]) {
       });
 
       test('Array.isArray', async () => {
-        const obj = await createObject({ numberArray: [1, 2, 3] });
-        expect(Array.isArray(obj.numberArray)).to.be.true;
+        const obj = await createObject({ stringArray: ['1', '2', '3'] });
+        expect(Array.isArray(obj.stringArray)).to.be.true;
       });
 
       test('instanceof', async () => {
-        const obj = await createObject({ numberArray: [1, 2, 3], object: { field: 'foo' } });
+        const obj = await createObject({ stringArray: ['1', '2', '3'], object: { field: 'foo' } });
 
         expect(obj instanceof Object).to.be.true;
         expect(obj instanceof Array).to.be.false;
-        expect(obj.numberArray instanceof Object).to.be.true;
-        expect(obj.numberArray instanceof Array).to.be.true;
+        expect(obj.stringArray instanceof Object).to.be.true;
+        expect(obj.stringArray instanceof Array).to.be.true;
         expect(obj.object instanceof Object).to.be.true;
         expect(obj.object instanceof Array).to.be.false;
       });
@@ -186,28 +229,39 @@ for (const schema of [undefined, TestSchema]) {
 
       test('object spreading', async () => {
         const obj = await createObject({ ...TEST_OBJECT });
-        expect({ ...obj }).to.deep.eq({ ...TEST_OBJECT });
+        if (!objectsHaveId) {
+          expect({ ...obj }).to.deep.eq({ ...TEST_OBJECT });
+        } else {
+          expect({ ...obj }).to.deep.eq({ id: (obj as any).id, ...TEST_OBJECT });
+        }
       });
 
       test('toJSON', async () => {
         const obj = await createObject({ ...TEST_OBJECT });
         const expected = JSON.parse(JSON.stringify(TEST_OBJECT));
         const actual = JSON.parse(JSON.stringify(obj));
-        expect(actual).to.deep.eq(expected);
+
+        if (!objectsHaveId) {
+          expect(actual).to.deep.eq(expected);
+        } else {
+          expect(actual).to.deep.contain({ '@id': (obj as any).id, ...expected });
+        }
       });
 
       test('chai deep equal works', async () => {
         const obj = await createObject({ ...TEST_OBJECT });
 
-        expect(obj).to.deep.eq(TEST_OBJECT);
-        expect(obj).to.not.deep.eq({ ...TEST_OBJECT, number: 11 });
+        const expected = objectsHaveId ? { id: (obj as any).id, ...TEST_OBJECT } : TEST_OBJECT;
+        expect(obj).to.deep.eq(expected);
+        expect(obj).to.not.deep.eq({ ...expected, number: 11 });
       });
 
       test('jest deep equal works', async () => {
         const obj = await createObject({ ...TEST_OBJECT });
 
-        jestExpect(obj).toEqual(TEST_OBJECT);
-        jestExpect(obj).not.toEqual({ ...TEST_OBJECT, number: 11 });
+        const expected = objectsHaveId ? { id: (obj as any).id, ...TEST_OBJECT } : TEST_OBJECT;
+        jestExpect(obj).toEqual(expected);
+        jestExpect(obj).not.toEqual({ ...expected, number: 11 });
       });
 
       // Not a typical use case, but might come up when interacting with 3rd party libraries.
@@ -260,14 +314,14 @@ for (const schema of [undefined, TestSchema]) {
         });
 
         test('in nested arrays', async () => {
-          const obj = await createObject({ numberArray: [7] });
+          const obj = await createObject({ stringArray: ['7'] });
 
           using updates = updateCounter(() => {
-            obj.numberArray![0];
+            obj.stringArray![0];
           });
           expect(updates.count, 'update count').to.eq(0);
 
-          obj.numberArray![0] = 42;
+          obj.stringArray![0] = '42';
           expect(updates.count, 'update count').to.eq(1);
         });
 
@@ -297,36 +351,36 @@ for (const schema of [undefined, TestSchema]) {
       });
 
       describe('array operations', () => {
-        const createReactiveArray = async (numberArray: number[]): Promise<number[]> => {
-          const obj = await createObject({ numberArray });
-          return obj.numberArray!;
+        const createReactiveArray = async (stringArray: string[]): Promise<string[]> => {
+          const obj = await createObject({ stringArray });
+          return obj.stringArray!;
         };
 
         test('set by index', async () => {
-          const array = await createReactiveArray([1, 2, 3]);
+          const array = await createReactiveArray(['1', '2', '3']);
           using updates = updateCounter(() => {
             array[0];
           });
 
-          array[0] = 2;
-          expect(array[0]).to.eq(2);
+          array[0] = '2';
+          expect(array[0]).to.eq('2');
           expect(updates.count, 'update count').to.eq(1);
         });
 
         test('length', async () => {
-          const array = await createReactiveArray([1, 2, 3]);
+          const array = await createReactiveArray(['1', '2', '3']);
           using updates = updateCounter(() => {
             array[0];
           });
           expect(array.length).to.eq(3);
 
-          array.push(4);
+          array.push('4');
           expect(array.length).to.eq(4);
           expect(updates.count, 'update count').to.eq(1);
         });
 
         test('set length', async () => {
-          const array = await createReactiveArray([1, 2, 3]);
+          const array = await createReactiveArray(['1', '2', '3']);
           using updates = updateCounter(() => {
             array[0];
           });
@@ -337,117 +391,117 @@ for (const schema of [undefined, TestSchema]) {
         });
 
         test('push', async () => {
-          const array = await createReactiveArray([1, 2, 3]);
+          const array = await createReactiveArray(['1', '2', '3']);
           using updates = updateCounter(() => {
             array[0];
           });
 
-          array.push(4);
-          expect(array).to.deep.eq([1, 2, 3, 4]);
+          array.push('4');
+          expect(array).to.deep.eq(['1', '2', '3', '4']);
           expect(updates.count, 'update count').to.eq(1);
         });
 
         test('pop', async () => {
-          const array = await createReactiveArray([1, 2, 3]);
+          const array = await createReactiveArray(['1', '2', '3']);
           using updates = updateCounter(() => {
             array[0];
           });
 
           const value = array.pop();
-          expect(value).to.eq(3);
-          expect(array).to.deep.eq([1, 2]);
+          expect(value).to.eq('3');
+          expect(array).to.deep.eq(['1', '2']);
           expect(updates.count, 'update count').to.eq(1);
         });
 
         test('shift', async () => {
-          const array = await createReactiveArray([1, 2, 3]);
+          const array = await createReactiveArray(['1', '2', '3']);
           using updates = updateCounter(() => {
             array[0];
           });
 
           const value = array.shift();
-          expect(value).to.eq(1);
-          expect(array).to.deep.eq([2, 3]);
+          expect(value).to.eq('1');
+          expect(array).to.deep.eq(['2', '3']);
           expect(updates.count, 'update count').to.eq(1);
         });
 
         test('unshift', async () => {
-          const array = await createReactiveArray([1, 2, 3]);
+          const array = await createReactiveArray(['1', '2', '3']);
           using updates = updateCounter(() => {
             array[0];
           });
 
-          const newLength = array.unshift(0);
+          const newLength = array.unshift('0');
           expect(newLength).to.eq(4);
-          expect(array).to.deep.eq([0, 1, 2, 3]);
+          expect(array).to.deep.eq(['0', '1', '2', '3']);
           expect(updates.count, 'update count').to.eq(1);
         });
 
         test('splice', async () => {
-          const array = await createReactiveArray([1, 2, 3]);
+          const array = await createReactiveArray(['1', '2', '3']);
           using updates = updateCounter(() => {
             array[0];
           });
 
-          const removed = array.splice(1, 1, 4);
-          expect(removed).to.deep.eq([2]);
-          expect(array).to.deep.eq([1, 4, 3]);
+          const removed = array.splice(1, 1, '4');
+          expect(removed).to.deep.eq(['2']);
+          expect(array).to.deep.eq(['1', '4', '3']);
           expect(updates.count, 'update count').to.eq(1);
         });
 
         test('sort', async () => {
-          const array = await createReactiveArray([3, 2, 1]);
+          const array = await createReactiveArray(['3', '2', '1']);
           using updates = updateCounter(() => {
             array[0];
           });
 
           const returnValue = array.sort();
           expect(returnValue === array).to.be.true;
-          expect(array).to.deep.eq([1, 2, 3]);
+          expect(array).to.deep.eq(['1', '2', '3']);
           expect(updates.count, 'update count').to.eq(1);
         });
 
         test('filter', async () => {
-          const array = await createReactiveArray([1, 2, 3]);
-          const returnValue = array.filter((v) => v & 1);
-          expect(returnValue).to.deep.eq([1, 3]);
+          const array = await createReactiveArray(['1', '2', '3']);
+          const returnValue = array.filter((v) => Number(v) & 1);
+          expect(returnValue).to.deep.eq(['1', '3']);
         });
 
         test('reverse', async () => {
-          const array = await createReactiveArray([1, 2, 3]);
+          const array = await createReactiveArray(['1', '2', '3']);
           using updates = updateCounter(() => {
             array[0];
           });
 
           const returnValue = array.reverse();
           expect(returnValue === array).to.be.true;
-          expect(array).to.deep.eq([3, 2, 1]);
+          expect(array).to.deep.eq(['3', '2', '1']);
           expect(updates.count, 'update count').to.eq(1);
         });
 
         test('map', async () => {
-          const array = await createReactiveArray([1, 2, 3]);
+          const array = await createReactiveArray(['1', '2', '3']);
           using updates = updateCounter(() => {
             array[0];
           });
 
-          const result = array.map((value) => value * 2);
+          const result = array.map((value) => String(Number(value) * 2));
           expect(Array.isArray(result)).to.be.true;
           expect(Object.getPrototypeOf(result)).to.eq(Array.prototype);
-          expect(result).to.deep.eq([2, 4, 6]);
+          expect(result).to.deep.eq(['2', '4', '6']);
           expect(updates.count, 'update count').to.eq(0);
         });
 
         test('flatMap', async () => {
-          const array = await createReactiveArray([1, 2, 3]);
+          const array = await createReactiveArray(['1', '2', '3']);
           using updates = updateCounter(() => {
             array[0];
           });
 
-          const result = array.flatMap((value) => [value, value * 2]);
+          const result = array.flatMap((value) => [value, String(Number(value) * 2)]);
           expect(Array.isArray(result)).to.be.true;
           expect(Object.getPrototypeOf(result)).to.eq(Array.prototype);
-          expect(result).to.deep.eq([1, 2, 2, 4, 3, 6]);
+          expect(result).to.deep.eq(['1', '2', '2', '4', '3', '6']);
           expect(updates.count, 'update count').to.eq(0);
         });
 
@@ -466,21 +520,21 @@ for (const schema of [undefined, TestSchema]) {
         });
 
         test('forEach', async () => {
-          const array = await createReactiveArray([1, 2, 3]);
+          const array = await createReactiveArray(['1', '2', '3']);
           using updates = updateCounter(() => {
             array[0];
           });
 
           let sum = 0;
           array.forEach((value) => {
-            sum += value;
+            sum += Number(value);
           });
           expect(sum).to.eq(6);
           expect(updates.count, 'update count').to.eq(0);
         });
 
         test('spreading', async () => {
-          const array = await createReactiveArray([1, 2, 3]);
+          const array = await createReactiveArray(['1', '2', '3']);
           using updates = updateCounter(() => {
             array[0];
           });
@@ -488,33 +542,33 @@ for (const schema of [undefined, TestSchema]) {
           const result = [...array];
           expect(Array.isArray(result)).to.be.true;
           expect(Object.getPrototypeOf(result)).to.eq(Array.prototype);
-          expect(result).to.deep.eq([1, 2, 3]);
+          expect(result).to.deep.eq(['1', '2', '3']);
           expect(updates.count, 'update count').to.eq(0);
         });
 
         test('values', async () => {
-          const array = await createReactiveArray([1, 2, 3]);
+          const array = await createReactiveArray(['1', '2', '3']);
           using updates = updateCounter(() => {
             array[0];
           });
 
           const result = array.values();
-          expect(result.next().value).to.eq(1);
-          expect(result.next().value).to.eq(2);
-          expect(result.next().value).to.eq(3);
+          expect(result.next().value).to.eq('1');
+          expect(result.next().value).to.eq('2');
+          expect(result.next().value).to.eq('3');
           expect(result.next().done).to.be.true;
           expect(updates.count, 'update count').to.eq(0);
         });
 
         test('for loop', async () => {
-          const array = await createReactiveArray([1, 2, 3]);
+          const array = await createReactiveArray(['1', '2', '3']);
           using updates = updateCounter(() => {
             array[0];
           });
 
           let sum = 0;
           for (const value of array) {
-            sum += value;
+            sum += Number(value);
           }
           expect(sum).to.eq(6);
           expect(updates.count, 'update count').to.eq(0);
@@ -523,12 +577,3 @@ for (const schema of [undefined, TestSchema]) {
     });
   }
 }
-
-const TEST_OBJECT: TestSchema = {
-  string: 'foo',
-  number: 42,
-  boolean: true,
-  null: null,
-  numberArray: [1, 2, 3],
-  object: { field: 'bar' },
-};

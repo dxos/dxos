@@ -2,14 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, type HTMLAttributes } from 'react';
+import React, { type FC } from 'react';
 
 import { type Document as DocumentType } from '@braneframe/types';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useTranslation } from '@dxos/react-ui';
-import { type Extension, MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
-import { attentionSurface, focusRing, mx } from '@dxos/react-ui-theme';
+import { useThemeContext, useTranslation } from '@dxos/react-ui';
+import {
+  type Extension,
+  createBasicExtensions,
+  createDataExtensions,
+  createThemeExtensions,
+  useDocAccessor,
+  useTextEditor,
+  createMarkdownExtensions,
+} from '@dxos/react-ui-editor';
 
 import { MARKDOWN_PLUGIN } from '../meta';
 
@@ -20,27 +27,26 @@ const DocumentSection: FC<{
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const identity = useIdentity();
   const space = getSpaceForObject(document);
-  const model = useTextModel({ identity, space, text: document?.content });
-  if (!model) {
-    return null;
-  }
 
-  return (
-    <MarkdownEditor
-      model={model}
-      extensions={extensions}
-      placeholder={t('editor placeholder')}
-      slots={{
-        root: {
-          className: mx('flex flex-col grow m-0.5 min-bs-[8rem]', attentionSurface, focusRing),
-          'data-testid': 'composer.markdownRoot',
-        } as HTMLAttributes<HTMLDivElement>,
-        editor: {
-          className: 'h-full py-4',
-        },
-      }}
-    />
+  const { themeMode } = useThemeContext();
+  const { doc, accessor } = useDocAccessor(document.content);
+  const { parentRef } = useTextEditor(
+    () => ({
+      doc,
+      extensions: [
+        createBasicExtensions({ placeholder: t('editor placeholder') }),
+        createMarkdownExtensions({ themeMode }),
+        createThemeExtensions({
+          themeMode,
+        }),
+        createDataExtensions({ id: document.id, text: accessor, space, identity }),
+        ...extensions,
+      ],
+    }),
+    [document, extensions, themeMode],
   );
+
+  return <div ref={parentRef} className='min-bs-[8rem]' data-testid='composer.markdownRoot' />;
 };
 
 export default DocumentSection;

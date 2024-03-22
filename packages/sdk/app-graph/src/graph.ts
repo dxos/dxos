@@ -3,8 +3,8 @@
 //
 
 import { untracked } from '@preact/signals-core';
-import { type DeepSignal, deepSignal } from 'deepsignal/react';
 
+import * as E from '@dxos/echo-schema/schema';
 import { invariant } from '@dxos/invariant';
 import { nonNullable } from '@dxos/util';
 
@@ -45,7 +45,7 @@ export class Graph {
   /**
    * @internal
    */
-  readonly _nodes = deepSignal<Record<string, NodeBase>>({
+  readonly _nodes = E.object<Record<string, NodeBase>>({
     [ROOT_ID]: { id: ROOT_ID, properties: {}, data: null },
   });
 
@@ -54,7 +54,7 @@ export class Graph {
    */
   // Key is the `${node.id}-${direction}` and value is an ordered list of node ids.
   // Explicit type required because TS says this is not portable.
-  readonly _edges: DeepSignal<Record<string, string[]>> = deepSignal({});
+  readonly _edges = E.object<Record<string, string[]>>({});
 
   /**
    * Alias for `findNode('root')`.

@@ -228,10 +228,10 @@ export const NavTreeItemActionSearchList = ({
       </Tooltip.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay>
-          <Dialog.Content classNames={['z-[31] is-full max-is-[24rem] px-2 py-1']}>
+          <Dialog.Content classNames='z-[31] is-full max-is-[24rem] pli-2 plb-1'>
             <SearchList.Root label={t('tree item searchlist input placeholder')}>
-              <SearchList.Input placeholder={t('tree item searchlist input placeholder')} classNames={mx('px-3')} />
-              <SearchList.Content classNames={['min-bs-[12rem] bs-[50dvh] max-bs-[30rem] overflow-auto']}>
+              <SearchList.Input placeholder={t('tree item searchlist input placeholder')} classNames='pli-3' />
+              <SearchList.Content classNames='min-bs-[12rem] bs-[50dvh] max-bs-[30rem] overflow-auto'>
                 {sortedActions?.map((action) => {
                   const label = toLocalizedString(action.label, t);
                   const shortcut =

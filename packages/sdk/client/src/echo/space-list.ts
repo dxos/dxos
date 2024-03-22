@@ -8,6 +8,7 @@ import { Event, MulticastObservable, PushStream, Trigger, scheduleTask } from '@
 import {
   CREATE_SPACE_TIMEOUT,
   Properties,
+  PropertiesSchema,
   defaultKey,
   type ClientServicesProvider,
   type Echo,
@@ -17,6 +18,7 @@ import {
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
+import * as E from '@dxos/echo-schema';
 import {
   type FilterSource,
   type Hypergraph,
@@ -32,10 +34,12 @@ import { type ModelFactory } from '@dxos/model-factory';
 import { ApiError, trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { trace } from '@dxos/tracing';
 
 import { AgentQuerySourceProvider } from './agent-query-source-provider';
+import { IndexQuerySourceProvider } from './index-query-source-provider';
 import { SpaceProxy } from './space-proxy';
 import { InvitationsProxy } from '../invitations';
 
@@ -137,19 +141,27 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
             space,
             this._graph,
             this._automergeContext,
+            { useReactiveObjectApi: this._config?.values?.runtime?.client?.useReactiveObjectApi ?? false },
           );
 
           // Propagate space state updates to the space list observable.
           spaceProxy._stateUpdate.on(this._ctx, () => {
             this._spacesStream.next([...this.get()]);
-            if (
-              spaceProxy?.state.get() === SpaceState.READY &&
-              spaceProxy?.properties[defaultKey] === this._getIdentityKey()?.toHex()
-            ) {
-              this._defaultSpaceAvailable.next(true);
-              this._defaultSpaceAvailable.complete();
-            }
           });
+          void spaceProxy
+            .waitUntilReady()
+            .then(() => {
+              if (
+                spaceProxy &&
+                spaceProxy.state.get() === SpaceState.READY &&
+                this._getIdentityKey() &&
+                spaceProxy.properties[defaultKey] === this._getIdentityKey()!.toHex()
+              ) {
+                this._defaultSpaceAvailable.next(true);
+                this._defaultSpaceAvailable.complete();
+              }
+            })
+            .catch((err) => err.message === 'Context disposed.' || log.catch(err));
 
           newSpaces.push(spaceProxy);
           this._spaceCreated.emit(spaceProxy.key);
@@ -179,11 +191,22 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       await agentQuerySourceProvider.open();
       this._graph.registerQuerySourceProvider(agentQuerySourceProvider);
       this._ctx.onDispose(() => agentQuerySourceProvider.close());
+
+      this._graph.registerQuerySourceProvider(
+        new IndexQuerySourceProvider({ spaceList: this, service: this._serviceProvider.services.IndexService! }),
+      );
     });
     this._ctx.onDispose(() => subscription.unsubscribe());
 
+    // TODO(nf): implement/verify works
+    // TODO(nf): trigger automatically? feedback on how many were resumed?
+
     await gotInitialUpdate.wait();
     log.trace('dxos.sdk.echo-proxy.open', Trace.end({ id: this._instanceId }));
+  }
+
+  async setIndexConfig(config: IndexConfig) {
+    await this._serviceProvider.services.IndexService?.setConfig(config);
   }
 
   /**
@@ -224,7 +247,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   get default(): Space {
     const identityKey = this._getIdentityKey();
     invariant(identityKey, 'Identity must be set.');
-    const space = this.get().find((space) => space.properties[defaultKey] === identityKey.toHex());
+    const space = this.get().find(
+      (space) => space.state.get() === SpaceState.READY && space.properties[defaultKey] === identityKey.toHex(),
+    );
     invariant(space, 'Default space is not yet available. Use `client.spaces.isReady` to wait for the default space.');
     return space;
   }
@@ -241,7 +266,12 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spaceProxy = (this.get().find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy) ?? failUndefined();
 
     await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
-    spaceProxy.db.add(new Properties(meta));
+    if (this._config?.values?.runtime?.client?.useReactiveObjectApi ?? false) {
+      // TODO(wittjosiah): Remove cast.
+      spaceProxy.db.add(E.object(PropertiesSchema, (meta ?? {}) as any));
+    } else {
+      spaceProxy.db.add(new Properties(meta));
+    }
     await spaceProxy.db.flush();
     await spaceProxy._initializationComplete.wait();
 

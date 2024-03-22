@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/types",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "Protobuf definitions for Braneframe types.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -20,7 +20,9 @@
   },
   "dependencies": {
     "@dxos/echo-schema": "workspace:*",
-    "@dxos/node-std": "workspace:*"
+    "@dxos/node-std": "workspace:*",
+    "@effect/schema": "0.64.7",
+    "effect": "2.4.9"
   },
   "devDependencies": {
     "@dxos/echo-typegen": "workspace:*"

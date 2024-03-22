@@ -7,6 +7,7 @@ import { invariant } from '@dxos/invariant';
 
 import { createReactiveProxy, isValidProxyTarget, type ReactiveHandler } from './proxy';
 import { ReactiveArray } from './reactive-array';
+import { data } from '../object';
 import { defineHiddenProperty } from '../util/property';
 
 const symbolSignal = Symbol('signal');
@@ -68,6 +69,11 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     target[symbolSignal].notifyRead();
     target[symbolPropertySignal].notifyRead();
+
+    if (prop === data) {
+      return toJSON(target);
+    }
+
     const value = Reflect.get(target, prop);
 
     if (isValidProxyTarget(value)) {
@@ -81,7 +87,7 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
     // Convert arrays to reactive arrays on write.
     if (Array.isArray(value)) {
-      value = new ReactiveArray(...value);
+      value = ReactiveArray.from(value);
     }
 
     const result = Reflect.set(target, prop, value);
@@ -95,3 +101,7 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return result;
   }
 }
+
+const toJSON = (target: any): any => {
+  return { '@type': 'ReactiveObject', ...target };
+};

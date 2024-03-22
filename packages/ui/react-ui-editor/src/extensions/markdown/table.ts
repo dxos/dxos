@@ -3,7 +3,14 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { type EditorState, type RangeSet, RangeSetBuilder, StateField, type Transaction } from '@codemirror/state';
+import {
+  type EditorState,
+  type Extension,
+  type RangeSet,
+  RangeSetBuilder,
+  StateField,
+  type Transaction,
+} from '@codemirror/state';
 import { Decoration, EditorView, WidgetType } from '@codemirror/view';
 
 // TODO(burdon): Snippet to create basic table.
@@ -18,7 +25,7 @@ export type TableOptions = {};
  * GFM tables.
  * https://github.github.com/gfm/#tables-extension
  */
-export const table = (options: TableOptions = {}) => {
+export const table = (options: TableOptions = {}): Extension => {
   return StateField.define<RangeSet<any>>({
     create: (state) => update(state, options),
     update: (_: RangeSet<any>, tr: Transaction) => update(tr.state, options),
@@ -76,7 +83,7 @@ const update = (state: EditorState, options: TableOptions) => {
 
   tables.forEach((table) => {
     const hide = state.readOnly || cursor < table.from || cursor > table.to;
-    hide &&
+    if (hide) {
       builder.add(
         table.from,
         table.to,
@@ -84,6 +91,7 @@ const update = (state: EditorState, options: TableOptions) => {
           widget: new TableWidget(table),
         }),
       );
+    }
 
     // Add class for styling.
     builder.add(table.from, table.to, Decoration.mark({ class: 'cm-table' }));

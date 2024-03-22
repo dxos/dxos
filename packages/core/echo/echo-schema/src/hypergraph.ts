@@ -13,9 +13,9 @@ import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
 import { type AutomergeDb, type ItemsUpdatedEvent } from './automerge';
-import { type EchoDatabaseImpl, type EchoDatabase } from './database';
+import { type EchoDatabase, type EchoDatabaseImpl } from './database';
 import { prohibitSignalActions } from './guarded-scope';
-import { type EchoObject, type TypedObject } from './object';
+import { type OpaqueEchoObject, type EchoObject } from './object';
 import {
   Filter,
   Query,
@@ -88,7 +88,7 @@ export class Hypergraph {
   /**
    * Filter by type.
    */
-  query<T extends TypedObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
+  query<T extends OpaqueEchoObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
     const spaces = options?.spaces;
     invariant(!spaces || spaces.every((space) => space instanceof PublicKey), 'Invalid spaces filter');
     return new Query(this._createQueryContext(), Filter.from(filter, options));
@@ -217,23 +217,20 @@ class SpaceQuerySource implements QuerySource {
     }
 
     prohibitSignalActions(() => {
-      // TODO(dmaretskyi): Clean up getters in the internal signals so they don't use the Proxy API and don't hit the signals.
-      compositeRuntime.untracked(() => {
-        // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
-        const changed = updateEvent.itemsUpdated.some((object) => {
-          return (
-            !this._results ||
-            this._results.find((result) => result.id === object.id) ||
-            (this._database.automerge._objects.has(object.id) &&
-              filterMatch(this._filter!, this._database.automerge.getObjectById(object.id)!))
-          );
-        });
-
-        if (changed) {
-          this._results = undefined;
-          this.changed.emit();
-        }
+      // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
+      const changed = updateEvent.itemsUpdated.some((object) => {
+        return (
+          !this._results ||
+          this._results.find((result) => result.id === object.id) ||
+          (this._database.automerge._objects.has(object.id) &&
+            filterMatch(this._filter!, this._database.automerge.getObjectCoreById(object.id)!))
+        );
       });
+
+      if (changed) {
+        this._results = undefined;
+        this.changed.emit();
+      }
     });
   };
 
@@ -244,21 +241,19 @@ class SpaceQuerySource implements QuerySource {
 
     if (!this._results) {
       prohibitSignalActions(() => {
-        // TODO(dmaretskyi): Clean up getters in the internal signals so they don't use the Proxy API and don't hit the signals.
-        compositeRuntime.untracked(() => {
-          this._results = this._database.automerge
-            .allObjects()
-            .filter((object) => filterMatch(this._filter!, object))
-            .map((object) => ({
-              id: object.id,
-              spaceKey: this.spaceKey,
-              object,
-              resolution: {
-                source: 'local',
-                time: 0,
-              },
-            }));
-        });
+        this._results = this._database.automerge
+          .allObjectCores()
+          // TODO(dmaretskyi): Cleanup proxy <-> core.
+          .filter((core) => filterMatch(this._filter!, core))
+          .map((core) => ({
+            id: core.id,
+            spaceKey: this.spaceKey,
+            object: core.rootProxy as EchoObject,
+            resolution: {
+              source: 'local',
+              time: 0,
+            },
+          }));
       });
     }
 

@@ -4,10 +4,10 @@
 
 import '@dxosTheme';
 
-import { deepSignal, type RevertDeepSignal } from 'deepsignal/react';
 import React, { useState } from 'react';
 
 import { TextObject } from '@dxos/client/echo';
+import * as E from '@dxos/echo-schema/schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { DensityProvider } from '@dxos/react-ui';
@@ -25,8 +25,9 @@ const Story = ({
   data,
 }: Pick<OutlinerRootProps, 'isTasklist'> & { count?: number; data?: 'words' | 'sentences' }) => {
   const [root] = useState<Item>(
-    deepSignal<Item>({
+    E.object<Item>({
       id: 'root',
+      text: new TextObject(),
       items: faker.helpers.multiple(
         () => {
           let text = '';
@@ -51,7 +52,7 @@ const Story = ({
         },
         { count },
       ),
-    }) as RevertDeepSignal<Item>,
+    }),
   );
 
   const handleCreate = (text = '') => ({

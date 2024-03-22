@@ -14,8 +14,8 @@ import {
   SnapshotStore,
   AutomergeHost,
 } from '@dxos/echo-pipeline';
-import { IndexMetadataStore } from '@dxos/echo-schema';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
+import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -38,6 +38,7 @@ import {
   type IdentityManagerRuntimeParams,
   type JoinIdentityParams,
 } from '../identity';
+import { createGetAllDocuments, createLoadDocuments } from '../indexing';
 import {
   DeviceInvitationProtocol,
   InvitationsHandler,
@@ -70,6 +71,7 @@ export class ServiceContext {
   public readonly invitations: InvitationsHandler;
   public readonly automergeHost: AutomergeHost;
   public readonly indexMetadata: IndexMetadataStore;
+  public readonly indexer: Indexer;
 
   // Initialized after identity is initialized.
   public dataSpaceManager?: DataSpaceManager;
@@ -92,7 +94,6 @@ export class ServiceContext {
   ) {
     // TODO(burdon): Move strings to constants.
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
-    this.indexMetadata = new IndexMetadataStore({ directory: storage.createDirectory('index-metadata') });
     this.snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
     this.blobStore = new BlobStore(storage.createDirectory('blobs'));
 
@@ -125,9 +126,18 @@ export class ServiceContext {
       this._runtimeParams as IdentityManagerRuntimeParams,
     );
 
+    this.indexMetadata = new IndexMetadataStore({ directory: storage.createDirectory('index-metadata') });
+
     this.automergeHost = new AutomergeHost({
       directory: storage.createDirectory('automerge'),
       metadata: this.indexMetadata,
+    });
+
+    this.indexer = new Indexer({
+      indexStore: new IndexStore({ directory: storage.createDirectory('index-store') }),
+      metadataStore: this.indexMetadata,
+      loadDocuments: createLoadDocuments(this.automergeHost),
+      getAllDocuments: createGetAllDocuments(this.automergeHost),
     });
 
     this.invitations = new InvitationsHandler(this.networkManager);
@@ -178,6 +188,7 @@ export class ServiceContext {
     await this.signalManager.close();
     this.dataServiceSubscriptions.clear();
     await this.metadataStore.close();
+    await this.indexer.destroy();
     log('closed');
   }
 

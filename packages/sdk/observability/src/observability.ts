@@ -20,8 +20,7 @@ import { type InitOptions, type captureException as SentryCaptureException } fro
 import { SentryLogProcessor } from './sentry/sentry-log-processor';
 
 const SPACE_METRICS_MIN_INTERVAL = 1000 * 60;
-// const DATADOG_IDLE_INTERVAL = 1000 * 60 * 5;
-const DATADOG_IDLE_INTERVAL = 1000 * 60 * 1;
+const NETWORK_METRICS_MIN_INTERVAL = 1000 * 60 * 5;
 
 // Secrets? EnvironmentConfig?
 
@@ -82,6 +81,7 @@ export class Observability {
   // TODO(nf): accept upstream context?
   private _ctx = new Context();
   private _tags = new Map<string, { value: string; scope: TagScope }>();
+  private _lastNetworkStatus?: NetworkStatus;
 
   // TODO(nf): make platform a required extension?
   constructor({
@@ -150,6 +150,9 @@ export class Observability {
   }
 
   async close() {
+    if (this._telemetry) {
+      await this._telemetry.close();
+    }
     await this._ctx.dispose();
 
     // TODO(wittjosiah): Remove telemetry, etc. scripts.
@@ -244,7 +247,7 @@ export class Observability {
               })
               .map(([key, value]) => [key, value.value]),
           ),
-        // TODO(nf): move/refactor from telementryContext, needed to read CORS proxy
+        // TODO(nf): move/refactor from telemetryContext, needed to read CORS proxy
         config: this._config!,
       });
     } else {
@@ -264,12 +267,11 @@ export class Observability {
   // TODO(nf): Refactor into ObservabilityExtensions.
 
   startNetworkMetrics(client: Client) {
-    const updateSignalMetrics = new Event<NetworkStatus>();
-
-    // const lcsh = (csp as LocalClientServices).host;
-    updateSignalMetrics.on(this._ctx, async (networkStatus) => {
+    // TODO(nf): support type in debounce()
+    const updateSignalMetrics = new Event<NetworkStatus>().debounce(NETWORK_METRICS_MIN_INTERVAL);
+    updateSignalMetrics.on(this._ctx, async () => {
       log('send signal metrics');
-      (networkStatus.signaling as NetworkStatus.Signal[]).forEach(({ server, state }) => {
+      (this._lastNetworkStatus?.signaling as NetworkStatus.Signal[]).forEach(({ server, state }) => {
         this.gauge('dxos.client.network.signal.connectionState', state, { server });
       });
 
@@ -283,7 +285,7 @@ export class Observability {
       let totalWriteBufferSize = 0;
       let totalChannelBufferSize = 0;
 
-      networkStatus.connectionInfo?.forEach((connectionInfo) => {
+      this._lastNetworkStatus?.connectionInfo?.forEach((connectionInfo) => {
         swarmCount++;
 
         for (const conn of connectionInfo.connections ?? []) {
@@ -300,20 +302,22 @@ export class Observability {
         for (const state in ConnectionState) {
           this.gauge('dxos.client.network.connection.count', connectionStates.get(state) ?? 0, { state });
         }
-        this.gauge('dxox.client.network.totalReadBufferSize', totalReadBufferSize);
+        this.gauge('dxos.client.network.totalReadBufferSize', totalReadBufferSize);
         this.gauge('dxos.client.network.totalWriteBufferSize', totalWriteBufferSize);
         this.gauge('dxos.client.network.totalChannelBufferSize', totalChannelBufferSize);
       });
     });
 
     client.services.services.NetworkService?.queryStatus().subscribe((networkStatus) => {
-      updateSignalMetrics.emit(networkStatus);
+      this._lastNetworkStatus = networkStatus;
+      updateSignalMetrics.emit();
     });
 
-    // scheduleTaskInterval(ctx, async () => updateSignalMetrics.emit(), DATADOG_IDLE_INTERVAL);
+    scheduleTaskInterval(this._ctx, async () => updateSignalMetrics.emit(), NETWORK_METRICS_MIN_INTERVAL);
   }
 
   startSpacesMetrics(client: Client, namespace: string) {
+    // TODO(nf): update subscription on new spaces
     const spaces = client.spaces.get();
     const subscriptions = new Map<string, { unsubscribe: () => void }>();
     this._ctx.onDispose(() => subscriptions.forEach((subscription) => subscription.unsubscribe()));
@@ -358,10 +362,10 @@ export class Observability {
       },
     });
 
-    scheduleTaskInterval(this._ctx, async () => updateSpaceMetrics.emit(), DATADOG_IDLE_INTERVAL);
+    scheduleTaskInterval(this._ctx, async () => updateSpaceMetrics.emit(), NETWORK_METRICS_MIN_INTERVAL);
   }
 
-  async startRuntimeMetrics(client: Client, frequency: number = DATADOG_IDLE_INTERVAL) {
+  async startRuntimeMetrics(client: Client, frequency: number = NETWORK_METRICS_MIN_INTERVAL) {
     const platform = await client.services.services.SystemService?.getPlatform();
     invariant(platform, 'platform is required');
 

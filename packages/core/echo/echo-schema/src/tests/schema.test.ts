@@ -166,7 +166,6 @@ describe('static schema', () => {
 
     const peer = await builder.createPeer();
     const task = peer.db.add(new Task({ title: 'Task 1' }));
-    await peer.base.confirm();
     expect(task).to.be.instanceOf(Task);
 
     await peer.reload();
@@ -183,7 +182,6 @@ describe('static schema', () => {
 
     const peer = await builder.createPeer();
     const task = peer.db.add(new Task({ title: 'Task 1' }));
-    await peer.base.confirm();
     expect(task).to.be.instanceOf(Task);
 
     await peer.reload();
