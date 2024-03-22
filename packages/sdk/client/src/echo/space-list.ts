@@ -124,7 +124,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const gotInitialUpdate = new Trigger();
 
     const spacesStream = this._serviceProvider.services.SpacesService.querySpaces();
-    spacesStream.subscribe(async (data) => {
+    spacesStream.subscribe((data) => {
       let emitUpdate = false;
       const newSpaces = this.get() as SpaceProxy[];
 
