@@ -5,7 +5,6 @@
 export { type Echo, type Space, defaultKey, Properties, type PropertiesProps } from '@dxos/client-protocol';
 export { type ItemID, DocumentModel } from '@dxos/document-model';
 // TODO(burdon): Remove/Rename Item.
-export { Item } from '@dxos/echo-db';
 export {
   base,
   debug,

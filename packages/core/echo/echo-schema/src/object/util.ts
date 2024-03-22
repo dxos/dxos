@@ -16,8 +16,7 @@ import { getProxyHandlerSlot } from '../effect/proxy';
 import { isEchoReactiveObject } from '../effect/reactive';
 
 export const setStateFromSnapshot = (obj: AbstractEchoObject, snapshot: ObjectSnapshot | TextSnapshot) => {
-  invariant(obj[base]._stateMachine);
-  obj[base]._stateMachine.reset(snapshot);
+  throw new Error('Not implemented');
 };
 
 export const forceUpdate = (obj: AbstractEchoObject) => {
