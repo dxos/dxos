@@ -49,7 +49,6 @@ export class IDbStorage extends BrowserStorage {
           (file as any).destroyed = true;
           (file as any).unlinked = true;
           (file as any).closed = true;
-          log.info('file', { ...file });
           cb(null);
         };
         transaction.onerror = () => cb(transaction.error);
