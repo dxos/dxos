@@ -159,6 +159,8 @@ const MarkdownHeading = () => {
         }
       }}
     >
+      {/* TODO(thure): `Select` encounters a ref error if used here (repro: select a heading, then select another
+            heading). Determine the root cause and fix or report to Radix. */}
       <DropdownMenu.Root
         open={selectOpen}
         onOpenChange={(nextOpen: boolean) => {
