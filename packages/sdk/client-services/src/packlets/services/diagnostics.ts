@@ -6,11 +6,8 @@ import { type ClientServices } from '@dxos/client-protocol';
 import { getFirstStreamValue } from '@dxos/codec-protobuf';
 import { type Config, type ConfigProto } from '@dxos/config';
 import { credentialTypeFilter } from '@dxos/credentials';
-import { DocumentModel, type DocumentModelState } from '@dxos/document-model';
-import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import {
   type Device,

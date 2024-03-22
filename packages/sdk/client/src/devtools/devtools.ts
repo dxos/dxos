@@ -5,8 +5,6 @@
 import { type Halo, type Space } from '@dxos/client-protocol';
 import type { ClientServicesHost, DataSpace } from '@dxos/client-services';
 import { importModule } from '@dxos/debug';
-import { DocumentModel, type DocumentModelState } from '@dxos/document-model';
-import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createBundledRpcServer, type RpcPeer, type RpcPort } from '@dxos/rpc';

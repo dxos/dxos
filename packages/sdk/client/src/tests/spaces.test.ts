@@ -13,13 +13,9 @@ import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import * as E from '@dxos/echo-schema';
 import { Expando, getTextContent, subscribe } from '@dxos/echo-schema';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type EchoSnapshot, type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
-import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
@@ -215,7 +211,7 @@ describe('Spaces', () => {
     await Promise.all(performInvitation({ host: space1, guest: client2.spaces }));
 
     await waitForSpace(client2, space1.key, { ready: true });
-    const dataSpace2 = services2.host!.context.dataSpaceManager?.spaces.get(space1.key);
+    const _dataSpace2 = services2.host!.context.dataSpaceManager?.spaces.get(space1.key);
     const feed2 = services2.host!.context.feedStore.getFeed(feedKey!)!;
 
     // log.info('check instance', { feed: getPrototypeSpecificInstanceId(feed2), coreKey: Buffer.from(feed2.core.key).toString('hex') })

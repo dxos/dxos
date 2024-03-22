@@ -3,10 +3,9 @@
 //
 
 import expect from 'expect';
-import { promisify } from 'node:util';
 
 import { Context } from '@dxos/context';
-import { createCredential, CredentialGenerator } from '@dxos/credentials';
+import { CredentialGenerator } from '@dxos/credentials';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { TestAgentBuilder } from '../testing';

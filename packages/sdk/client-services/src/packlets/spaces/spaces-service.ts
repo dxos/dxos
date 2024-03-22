@@ -27,10 +27,9 @@ import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { type Provider } from '@dxos/util';
 
-import { type IdentityManager } from '../identity';
 import { type DataSpace } from './data-space';
 import { type DataSpaceManager } from './data-space-manager';
-import { Timeframe } from '@dxos/timeframe';
+import { type IdentityManager } from '../identity';
 
 export class SpacesServiceImpl implements SpacesService {
   constructor(

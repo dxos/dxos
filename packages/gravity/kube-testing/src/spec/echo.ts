@@ -188,14 +188,14 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         await env.syncBarrier(`iter ${iter}`);
 
         if (!config.ephemeral) {
-          const maximalTimeframe = await getMaximalTimeframe();
+          const _maximalTimeframe = await getMaximalTimeframe();
           // const lag = maximalTimeframe.newMessages(this.getSpaceBackend().dataPipeline.pipelineState!.timeframe);
           // const totalMutations = this.getSpaceBackend().dataPipeline.pipelineState!.timeframe.totalMessages();
 
           // Compute throughput.
           // const mutationsSinceLastIter =
           //   this.getSpaceBackend().dataPipeline.pipelineState!.timeframe.newMessages(lastTimeframe);
-          const timeSinceLastIter = Date.now() - lastTime;
+          const _timeSinceLastIter = Date.now() - lastTime;
           lastTime = Date.now();
           // const mutationsPerSec = Math.round(mutationsSinceLastIter / (timeSinceLastIter / 1000));
 
@@ -456,7 +456,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
   }
 }
 
-const serializeTimeframe = (timeframe: Timeframe) =>
+const _serializeTimeframe = (timeframe: Timeframe) =>
   JSON.stringify(Object.fromEntries(timeframe.frames().map(([k, v]) => [k.toHex(), v])));
 
 const deserializeTimeframe = (timeframe: string) =>

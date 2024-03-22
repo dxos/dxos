@@ -2,10 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DocumentModel } from '@dxos/document-model';
 import { PublicKey } from '@dxos/keys';
-import { ModelFactory } from '@dxos/model-factory';
-import { TextModel } from '@dxos/text-model';
 import { ComplexMap } from '@dxos/util';
 
 import { AutomergeContext, type AutomergeContextConfig } from '../automerge';
@@ -22,11 +19,6 @@ export type CreateDatabaseOpts = {
  */
 // TODO(burdon): Builder pattern.
 export const createDatabase = async (graph = new Hypergraph(), { useReactiveObjectApi }: CreateDatabaseOpts = {}) => {
-  // prettier-ignore
-  const modelFactory = new ModelFactory()
-    .registerModel(DocumentModel)
-    .registerModel(TextModel);
-
   graph.addTypes(schemaBuiltin);
 
   const spaceKey = PublicKey.random();
