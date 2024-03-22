@@ -23,19 +23,20 @@ export const PersistenceStatus = ({ db }: { db: EchoDatabase }) => {
   const [displayMessage, setDisplayMessage] = useState(false);
   const [status, naturalSetStatus] = useState<Status>(Status.PERSISTED_LOCALLY);
   const [prevStatus, setPrevStatus] = useState<Status>(Status.PERSISTED_LOCALLY);
-  const setStatus = debounce(naturalSetStatus, 500);
+  const _setStatus = debounce(naturalSetStatus, 500);
 
-  useEffect(() => {
-    return db.pendingBatch.on(({ duration, error }) => {
-      if (error) {
-        setStatus(Status.ERROR);
-      } else if (duration === undefined) {
-        setStatus(Status.PENDING);
-      } else {
-        setStatus(Status.PERSISTED_LOCALLY);
-      }
-    });
-  }, [db]);
+  // TODO(dmaretskyi): Fix this when we have save status for automerge.
+  // useEffect(() => {
+  //   return db.pendingBatch.on(({ duration, error }) => {
+  //     if (error) {
+  //       setStatus(Status.ERROR);
+  //     } else if (duration === undefined) {
+  //       setStatus(Status.PENDING);
+  //     } else {
+  //       setStatus(Status.PERSISTED_LOCALLY);
+  //     }
+  //   });
+  // }, [db]);
 
   useEffect(() => {
     // If this is changed outside the effect it's batched with setStatus and the following condition will never be true.

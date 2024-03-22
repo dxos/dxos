@@ -6,25 +6,25 @@ import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
 import { Document as DocumentType, types } from '@braneframe/types';
-import { asyncTimeout, Trigger } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { Expando, getTextContent, subscribe } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
+import { Expando, getTextContent, subscribe } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type EchoSnapshot, type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { describe, test, afterTest } from '@dxos/test';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
+import { afterTest, describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
-import { type SpaceProxy, SpaceState, getSpaceForObject } from '../echo';
-import { TestBuilder, testSpace, waitForSpace } from '../testing';
+import { SpaceState, getSpaceForObject, type SpaceProxy } from '../echo';
+import { TestBuilder, testSpaceAutomerge, waitForSpace } from '../testing';
 
 describe('Spaces', () => {
   test('creates a default space', async () => {
@@ -41,7 +41,7 @@ describe('Spaces', () => {
       expect(client.spaces.get()).not.to.be.undefined;
     });
     const space = client.spaces.default;
-    await testSpace(space.internal.db);
+    await testSpaceAutomerge(space.db);
 
     expect(space.members.get()).to.be.length(1);
   }).tag('flaky');
@@ -58,7 +58,7 @@ describe('Spaces', () => {
 
     // TODO(burdon): Extend basic queries.
     const space = await client.spaces.create();
-    await testSpace(space.internal.db);
+    await testSpaceAutomerge(space.db);
 
     expect(space.members.get()).to.be.length(1);
   });
@@ -81,7 +81,7 @@ describe('Spaces', () => {
 
     // TODO(burdon): Extend basic queries.
     const space = await client.spaces.create();
-    await testSpace(space.internal.db);
+    await testSpaceAutomerge(space.db);
 
     expect(space.members.get()).to.be.length(1);
   });
@@ -94,19 +94,16 @@ describe('Spaces', () => {
     await client.initialize();
     await client.halo.createIdentity({ displayName: 'test-user' });
 
-    let itemId: string;
+    let objectId: string;
     {
       await client.spaces.isReady.wait();
       const space = client.spaces.default;
-      const {
-        updateEvent: {
-          itemsUpdated: [item],
-        },
-      } = await testSpace(space.internal.db);
-      itemId = item.id;
+      ({ objectId } = await testSpaceAutomerge(space.db));
       expect(space.members.get()).to.be.length(1);
     }
-
+    // TODO(mykola): Clean as automerge team updates storage API.
+    // Need this `sleep` for automerge to finish storage write.
+    await sleep(200);
     await client.destroy();
 
     await client.initialize();
@@ -125,8 +122,8 @@ describe('Spaces', () => {
       const space = await spaceTrigger.wait({ timeout: 500 });
       await space.waitUntilReady();
 
-      const item = space.internal.db._itemManager.getItem(itemId)!;
-      expect(item).to.exist;
+      const obj = space.db.getObjectById(objectId)!;
+      expect(obj).to.exist;
     }
 
     await client.destroy();

@@ -1,5 +1,66 @@
 # Changelog
 
+## [0.4.8](https://github.com/dxos/dxos/compare/v0.4.7...v0.4.8) (2024-03-21)
+
+
+### Features
+
+* Add indexing of all documents on index creation ([#5924](https://github.com/dxos/dxos/issues/5924)) ([f998f66](https://github.com/dxos/dxos/commit/f998f66ff15cd64d8a755211c3de0716899c6b32))
+* allow localStorage.dxlog to override config ([#5935](https://github.com/dxos/dxos/issues/5935)) ([c9440e4](https://github.com/dxos/dxos/commit/c9440e454fce1053ce92ec5a2397833483ebcee1))
+* **cli:** show device presence ([#5920](https://github.com/dxos/dxos/issues/5920)) ([c67d72c](https://github.com/dxos/dxos/commit/c67d72c77e0c2e02cffa432a0f286722304cffe8))
+* **devtools:** show device presence in table ([#5913](https://github.com/dxos/dxos/issues/5913)) ([0602afb](https://github.com/dxos/dxos/commit/0602afbae90e8303b0b25cc13ea6a9d8ec863655))
+* Drag-and-drop images into editor. ([#6032](https://github.com/dxos/dxos/issues/6032)) ([4f17ba9](https://github.com/dxos/dxos/commit/4f17ba993242bcc42a784fd066908338b3eb0590))
+* ECHO Reactive API updates, better TS types, bugfixes ([#5929](https://github.com/dxos/dxos/issues/5929)) ([a3a559a](https://github.com/dxos/dxos/commit/a3a559aa356333e891456597d6cc574d0a528648))
+* **echo:** effect schema class dsl ([#6037](https://github.com/dxos/dxos/issues/6037)) ([b9e7d49](https://github.com/dxos/dxos/commit/b9e7d49ebd4c08e7aba759d79e8704aecedf9f6e))
+* **echo:** metaOf for reactive echo objects ([#5906](https://github.com/dxos/dxos/issues/5906)) ([a4c603b](https://github.com/dxos/dxos/commit/a4c603bad4e7af6a9c175e9bc42e21d54dfb8068))
+* **executors/test:** additional options ([#6009](https://github.com/dxos/dxos/issues/6009)) ([641621b](https://github.com/dxos/dxos/commit/641621b690bf0513ff9e97c854013e7d35597062))
+* Incremental improvements to the reactive ECHO API ([#6007](https://github.com/dxos/dxos/issues/6007)) ([1493a9d](https://github.com/dxos/dxos/commit/1493a9d6526db40c956b5be57b185fa9cd972360))
+* **indexing:** Add IndexingService ([#5866](https://github.com/dxos/dxos/issues/5866)) ([2d8e727](https://github.com/dxos/dxos/commit/2d8e727572dfac000b79bb7d443c3148475e421a))
+* Memo scroll position and selection for each document. ([#5922](https://github.com/dxos/dxos/issues/5922)) ([6919ef3](https://github.com/dxos/dxos/commit/6919ef379fbc5084c46e952b45cef68726690c19))
+* Menu annotation ([#5898](https://github.com/dxos/dxos/issues/5898)) ([27faba7](https://github.com/dxos/dxos/commit/27faba770f4f92fc87b430a2afe8e51807fcb738))
+* More options for adding new sections to Stack ([#6027](https://github.com/dxos/dxos/issues/6027)) ([8ec301e](https://github.com/dxos/dxos/commit/8ec301e5aea021596aa3480646a8a1ae0da9c932))
+* **react-ui-stack,plugin-stack:** Stack section design increment ([#5917](https://github.com/dxos/dxos/issues/5917)) ([c1580f6](https://github.com/dxos/dxos/commit/c1580f64f48e94a2e910898e219a3cb6e391f1bb))
+* set device label and type for managed agent ([#5925](https://github.com/dxos/dxos/issues/5925)) ([0457648](https://github.com/dxos/dxos/commit/04576488e84ada17ef758422b193d6efae260385))
+* **tables:** ↕️ Column sorting ([#5933](https://github.com/dxos/dxos/issues/5933)) ([4a229ac](https://github.com/dxos/dxos/commit/4a229ac0e48425f132ce5c4d72b5ea218499af12))
+* Upload image to document ([#5934](https://github.com/dxos/dxos/issues/5934)) ([0d78178](https://github.com/dxos/dxos/commit/0d781782d76d430c7ee1951b94117e5e65248f07))
+
+
+### Bug Fixes
+
+* agent graceful stop ([#6018](https://github.com/dxos/dxos/issues/6018)) ([4d33a73](https://github.com/dxos/dxos/commit/4d33a739703f3115cf068844117fe56236ece119))
+* allow localStorage.dxlog to override config ([#5931](https://github.com/dxos/dxos/issues/5931)) ([59ec3a0](https://github.com/dxos/dxos/commit/59ec3a0a92e3e6e2115c2db6e43aca65f09df787))
+* **app-framework:** stop app from flashing when plugins are toggled ([#5939](https://github.com/dxos/dxos/issues/5939)) ([0c411f0](https://github.com/dxos/dxos/commit/0c411f06428a8af685f5bb37ff0a08de88648879))
+* Basic keymap defaults ([#6042](https://github.com/dxos/dxos/issues/6042)) ([6dbc1f1](https://github.com/dxos/dxos/commit/6dbc1f1e52d2b5e111735e13ebc32dee1d51f3e3))
+* change dev to composer folder in plugin-template ([#5945](https://github.com/dxos/dxos/issues/5945)) ([fff1521](https://github.com/dxos/dxos/commit/fff15210d4381278baf8f4591c047549bed18184))
+* Checkbox styles ([#5914](https://github.com/dxos/dxos/issues/5914)) ([ec0899a](https://github.com/dxos/dxos/commit/ec0899a41956ac6a26b1a1946216114d03d024dd))
+* **composer:** fixed listener leak ([#5968](https://github.com/dxos/dxos/issues/5968)) ([837c3a2](https://github.com/dxos/dxos/commit/837c3a2d3da46dc016463b6fa3c790d57b825ee6))
+* **composer:** fixed prompt source not updating ([#5969](https://github.com/dxos/dxos/issues/5969)) ([e00e8f3](https://github.com/dxos/dxos/commit/e00e8f3bcda603085d7b915be1f1c035e2d82733))
+* Context dispose mutating callback list during dispose process ([#5971](https://github.com/dxos/dxos/issues/5971)) ([f253994](https://github.com/dxos/dxos/commit/f253994ad2b26d2f69463d819b69215bff60ef77))
+* Echo handler not using signals from AutomergeObjectCore ([#6045](https://github.com/dxos/dxos/issues/6045)) ([2e7285f](https://github.com/dxos/dxos/commit/2e7285f7015c45aac0629e1299b9b488ff310425))
+* **echo:** effect schema fixes and discriminated union support ([#5923](https://github.com/dxos/dxos/issues/5923)) ([a32da92](https://github.com/dxos/dxos/commit/a32da92f6a132380c0c8529c9eb1f637de84f295))
+* **echo:** fix for key.toHex is not a function ([#5908](https://github.com/dxos/dxos/issues/5908)) ([efb0880](https://github.com/dxos/dxos/commit/efb08809278322b17e4d16ac6d9ed85157f611e6))
+* **echo:** removed unnecessary cancelWithContext ([#5909](https://github.com/dxos/dxos/issues/5909)) ([eb5ae94](https://github.com/dxos/dxos/commit/eb5ae947a3bf93f0acc717ba8b3c39634a58f9b4))
+* **echo:** using Schema objects as References to resolve ([#5942](https://github.com/dxos/dxos/issues/5942)) ([932d824](https://github.com/dxos/dxos/commit/932d824e4a0597f0fef404fd3350cb10bbaa76c1))
+* Fix 'Space is not initialized' error in plugins ([#6046](https://github.com/dxos/dxos/issues/6046)) ([483207a](https://github.com/dxos/dxos/commit/483207a3e623f6404b3a973f96526c3f66f1f2d8))
+* Fix comments NPE bug ([#5915](https://github.com/dxos/dxos/issues/5915)) ([97e86fe](https://github.com/dxos/dxos/commit/97e86fe9b3e44a2b77b23898b78fca4044a8c2b7))
+* free resources on close ([#6008](https://github.com/dxos/dxos/issues/6008)) ([dcf422f](https://github.com/dxos/dxos/commit/dcf422fbd5c86b80ce18b0f7c1b80afeed4f346d))
+* observability metrics ([#5921](https://github.com/dxos/dxos/issues/5921)) ([8cb190e](https://github.com/dxos/dxos/commit/8cb190ea67a97426dee31ad9b8535b58f8a4f1a7))
+* Only call update when db is initialized ([#5903](https://github.com/dxos/dxos/issues/5903)) ([05fda5d](https://github.com/dxos/dxos/commit/05fda5d935beca5c626981142625da76252e9054))
+* **plugin-presenter:** give present actions unique ids ([#5938](https://github.com/dxos/dxos/issues/5938)) ([5cead28](https://github.com/dxos/dxos/commit/5cead28cd6349eb573b862cc62354358c38ac5cf))
+* **plugin-thread:** submit comments on enter ([#6031](https://github.com/dxos/dxos/issues/6031)) ([7ef1486](https://github.com/dxos/dxos/commit/7ef148663addc9072402f44dfc373e08da24cf4a))
+* Presence reactivity ([#5940](https://github.com/dxos/dxos/issues/5940)) ([beadd4b](https://github.com/dxos/dxos/commit/beadd4be444c6617383069184f3a157c467d56cb))
+* **presenter-plugin:** ensure action is visible and works ([#6052](https://github.com/dxos/dxos/issues/6052)) ([cd60bd2](https://github.com/dxos/dxos/commit/cd60bd2a32d6ea47e3d4850d49de781dba4ff6fa))
+* press enter to submit message/comment ([#6041](https://github.com/dxos/dxos/issues/6041)) ([4ad174a](https://github.com/dxos/dxos/commit/4ad174a457163a526ca4fef1073bc738769dbdc4))
+* **react-ui-stack:** e2e spec ([#6033](https://github.com/dxos/dxos/issues/6033)) ([c2effdb](https://github.com/dxos/dxos/commit/c2effdb2c36c1d242646663c63ada51520a95ad4))
+* **react-ui-stack:** Finish a prop rename ([#6028](https://github.com/dxos/dxos/issues/6028)) ([5d02988](https://github.com/dxos/dxos/commit/5d02988412bcbc2ca675383fb7e7740ede525e1b))
+* shutdown device presence on identity close ([#6025](https://github.com/dxos/dxos/issues/6025)) ([e23f3c5](https://github.com/dxos/dxos/commit/e23f3c5f1bdaf03cb10ffc4cbee7577661a61fe9))
+* **table:** Each table should get own component instance ([#6026](https://github.com/dxos/dxos/issues/6026)) ([852fab3](https://github.com/dxos/dxos/commit/852fab3b9a157e73072c83bc1111767f96f3f7b7))
+* **table:** Infinite re-render on column resize ([#5964](https://github.com/dxos/dxos/issues/5964)) ([4b952c8](https://github.com/dxos/dxos/commit/4b952c806f4a1f774cfa52b26b132ae35b8a3fc4))
+* **tables:** adding rows, deletions and cell edits should be durable ([#6029](https://github.com/dxos/dxos/issues/6029)) ([46f461d](https://github.com/dxos/dxos/commit/46f461d31902353dff583b4111c8a0ef7e2dbe1e))
+* **tables:** table edits should be durable ([#6030](https://github.com/dxos/dxos/issues/6030)) ([0316053](https://github.com/dxos/dxos/commit/031605355f431a2ef57e1186bdcbb292bfb40808))
+* **tables:** Table improvements ([#5900](https://github.com/dxos/dxos/issues/5900)) ([1473255](https://github.com/dxos/dxos/commit/147325559810e5e9857fb5a5554384add7a11b18))
+* use libdatachannel in nodejs tests ([#5911](https://github.com/dxos/dxos/issues/5911)) ([512e4c8](https://github.com/dxos/dxos/commit/512e4c89c307cf99b52ca1ca24bcdd3db3af3f2d))
+
 ## [0.4.7](https://github.com/dxos/dxos/compare/v0.4.6...v0.4.7) (2024-03-08)
 
 
