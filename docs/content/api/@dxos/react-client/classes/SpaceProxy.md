@@ -1,11 +1,11 @@
 # Class `SpaceProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/echo/space-proxy.d.ts:9]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/echo/space-proxy.d.ts:12]()</sub>
 
 
 
 
 ## Constructors
-### [constructor(_clientServices, _modelFactory, _data, graph, automergeContext)]()
+### [constructor(_clientServices, _modelFactory, _data, graph, automergeContext, \[options\])]()
 
 
 
@@ -23,6 +23,8 @@ Arguments:
 `graph`: <code>Hypergraph</code>
 
 `automergeContext`: <code>AutomergeContext</code>
+
+`options`: <code>SpaceProxyOptions</code>
 
 
 
