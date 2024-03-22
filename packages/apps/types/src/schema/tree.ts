@@ -12,8 +12,9 @@ interface Item extends E.Identifiable {
   done: boolean;
 }
 
+// TODO(wittjosiah): Migrate to EchoSchemaObject.
 const _TreeItemSchema: S.Schema<Item> = S.struct({
-  text: S.string,
+  text: S.string, // TextV0Type?
   items: S.array(S.suspend(() => _TreeItemSchema)),
   done: S.boolean,
 }).pipe(E.echoObject('braneframe.Tree.Item', '0.1.0'));
