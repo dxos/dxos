@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import path from 'node:path';
 
 import { asyncTimeout, latch } from '@dxos/async';
-import { type SpecificCredential, createAdmissionCredentials } from '@dxos/credentials';
+import { createAdmissionCredentials, type SpecificCredential } from '@dxos/credentials';
 import { AuthStatus } from '@dxos/echo-pipeline';
 import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
 import { writeMessages } from '@dxos/feed-store';
@@ -20,7 +20,7 @@ import { afterTest, describe, openAndClose, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
-import { TestBuilder, syncItemsLocal } from '../testing';
+import { TestBuilder } from '../testing';
 
 describe('DataSpaceManager', () => {
   test('create space', async () => {
@@ -102,8 +102,6 @@ describe('DataSpaceManager', () => {
       },
     });
     log.break();
-
-    await syncItemsLocal(space1.dataPipeline, space2.dataPipeline);
 
     expect(space1.inner.protocol.sessions.get(peer2.identity.deviceKey)).to.exist;
     expect(space1.inner.protocol.sessions.get(peer2.identity.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);

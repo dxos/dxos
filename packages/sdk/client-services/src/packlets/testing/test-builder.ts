@@ -72,16 +72,6 @@ export const createIdentity = async (peer: ServiceContext) => {
   return peer;
 };
 
-// TODO(burdon): Remove @dxos/client-testing.
-// TODO(burdon): Create builder and make configurable.
-/**
- * @deprecated
- */
-export const syncItemsLocal = async (db1: DataPipeline, db2: DataPipeline) => {
-  await testLocalDatabase(db1, db2);
-  await testLocalDatabase(db2, db1);
-};
-
 export class TestBuilder {
   public readonly signalContext = new MemorySignalManagerContext();
   private readonly _ctx = new Context();

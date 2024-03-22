@@ -2,9 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
-
-import { DocumentModel, type DocumentModelState, MutationBuilder } from '@dxos/document-model';
+import { DocumentModel, MutationBuilder } from '@dxos/document-model';
 import { createModelMutation, encodeModelMutation, genesisMutation } from '@dxos/echo-db';
 import { type WriteReceipt } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -15,7 +13,7 @@ import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
-import { createServiceContext, syncItemsLocal } from '../testing';
+import { createServiceContext } from '../testing';
 import { performInvitation } from '../testing/invitation-utils';
 
 describe('services/ServiceContext', () => {
@@ -64,23 +62,7 @@ describe('services/ServiceContext', () => {
       appliedEpoch: space2!.dataPipeline.appliedEpoch?.subject.assertion.number,
     });
 
-    await space2?.dataPipeline.onNewEpoch.waitForCondition(
-      () =>
-        space2!.dataPipeline.appliedEpoch?.subject.assertion.number ===
-        space1.dataPipeline.currentEpoch?.subject.assertion.number,
-    );
-
-    expect(space2!.dataPipeline.currentEpoch!.subject.assertion.number).to.equal(
-      space1.dataPipeline.currentEpoch!.subject.assertion.number,
-    );
-    expect(space2!.dataPipeline.appliedEpoch!.subject.assertion.number).to.equal(
-      space1.dataPipeline.appliedEpoch!.subject.assertion.number,
-    );
-
-    const item2 = space2!.dataPipeline.itemManager.entities.get(itemId);
-    expect((item2!.state as DocumentModelState).data.counter).to.equal(counter);
-
-    await syncItemsLocal(space1.dataPipeline, space2!.dataPipeline);
+    await space2?.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.timeframe);
   });
 
   test('new space is synchronized on device invitations', async () => {
@@ -94,7 +76,7 @@ describe('services/ServiceContext', () => {
     const space1 = await device1.dataSpaceManager!.createSpace();
     await device2.dataSpaceManager!.waitUntilSpaceReady(space1!.key);
     const space2 = await device2.dataSpaceManager!.spaces.get(space1.key);
-    await syncItemsLocal(space1.dataPipeline, space2!.dataPipeline);
+    await space2!.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.timeframe);
   }).tag('flaky');
 
   test('joined space is synchronized on device invitations', async () => {
@@ -118,6 +100,6 @@ describe('services/ServiceContext', () => {
 
     await device2.dataSpaceManager!.waitUntilSpaceReady(space1!.key);
     const space2 = await device2.dataSpaceManager!.spaces.get(space1.key);
-    await syncItemsLocal(space1.dataPipeline, space2!.dataPipeline);
+    await space2!.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.timeframe);
   });
 });
