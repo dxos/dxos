@@ -6,18 +6,18 @@ import { EventSubscriptions, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { type CredentialProcessor } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
-import { type DataServiceSubscriptions, type SpaceManager } from '@dxos/echo-pipeline';
+import { type SpaceManager } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ApiError, SpaceNotFoundError, encodeError } from '@dxos/protocols';
 import {
+  SpaceMember,
+  SpaceState,
   type CreateEpochRequest,
   type PostMessageRequest,
   type QueryCredentialsRequest,
   type QuerySpacesResponse,
   type Space,
-  SpaceMember,
-  SpaceState,
   type SpacesService,
   type SubscribeMessagesRequest,
   type UpdateSpaceRequest,
@@ -27,15 +27,14 @@ import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { type Provider } from '@dxos/util';
 
+import { type IdentityManager } from '../identity';
 import { type DataSpace } from './data-space';
 import { type DataSpaceManager } from './data-space-manager';
-import { type IdentityManager } from '../identity';
 
 export class SpacesServiceImpl implements SpacesService {
   constructor(
     private readonly _identityManager: IdentityManager,
     private readonly _spaceManager: SpaceManager,
-    private readonly _dataServiceSubscriptions: DataServiceSubscriptions,
     private readonly _getDataSpaceManager: Provider<Promise<DataSpaceManager>>,
   ) {}
 

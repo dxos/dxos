@@ -268,7 +268,6 @@ export class ClientServicesHost {
       SpacesService: new SpacesServiceImpl(
         this._serviceContext.identityManager,
         this._serviceContext.spaceManager,
-        this._serviceContext.dataServiceSubscriptions,
         async () => {
           await this._serviceContext.initialized.wait();
           return this._serviceContext.dataSpaceManager!;

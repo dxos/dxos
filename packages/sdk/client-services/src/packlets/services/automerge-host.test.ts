@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 
 import { asyncTimeout, sleep } from '@dxos/async';
-import { AutomergeHost, DataServiceImpl, type DataServiceSubscriptions } from '@dxos/echo-pipeline';
+import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
 import { AutomergeContext } from '@dxos/echo-schema';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';

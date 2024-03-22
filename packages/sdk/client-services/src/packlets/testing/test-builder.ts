@@ -6,14 +6,7 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import {
-  AutomergeHost,
-  DataServiceSubscriptions,
-  MetadataStore,
-  SnapshotStore,
-  SpaceManager,
-  valueEncoding,
-} from '@dxos/echo-pipeline';
+import { AutomergeHost, MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
@@ -177,7 +170,6 @@ export class TestPeer {
     return (this._props.dataSpaceManager ??= new DataSpaceManager(
       this.spaceManager,
       this.metadataStore,
-      new DataServiceSubscriptions(),
       this.keyring,
       this.identity,
       this.feedStore,

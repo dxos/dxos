@@ -3,55 +3,22 @@
 //
 
 import { type Stream } from '@dxos/codec-protobuf';
-import { raise } from '@dxos/debug';
-import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import {
   type DataService,
+  type EchoEvent,
+  type FlushRequest,
+  type HostInfo,
   type MutationReceipt,
   type SubscribeRequest,
-  type EchoEvent,
-  type WriteRequest,
-  type FlushRequest,
   type SyncRepoRequest,
   type SyncRepoResponse,
-  type HostInfo,
+  type WriteRequest,
 } from '@dxos/protocols/proto/dxos/echo/service';
-import { ComplexMap } from '@dxos/util';
 
-import { type DataServiceHost } from './data-service-host';
 import { type AutomergeHost } from '../automerge';
 
-// TODO(burdon): Clear on close.
-export class DataServiceSubscriptions {
-  private readonly _spaces = new ComplexMap<PublicKey, DataServiceHost>(PublicKey.hash);
-
-  clear() {
-    this._spaces.clear();
-  }
-
-  async registerSpace(spaceKey: PublicKey, host: DataServiceHost) {
-    log('Registering space', { spaceKey });
-    invariant(!this._spaces.has(spaceKey));
-    await host.open();
-    this._spaces.set(spaceKey, host);
-  }
-
-  async unregisterSpace(spaceKey: PublicKey) {
-    log('Unregistering space', { spaceKey });
-    const host = this._spaces.get(spaceKey);
-    await host?.close();
-    this._spaces.delete(spaceKey);
-  }
-
-  getDataService(spaceKey: PublicKey) {
-    return this._spaces.get(spaceKey);
-  }
-}
-
 /**
- * Routes DataService requests to different DataServiceHost instances based on space id.
+ * Data sync between client and services.
  */
 // TODO(burdon): Move to client-services.
 export class DataServiceImpl implements DataService {
