@@ -182,7 +182,7 @@ const MarkdownHeading = () => {
           </NaturalToolbar.Button>
         </Tooltip.Trigger>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content classNames='is-min md:is-min'>
+          <DropdownMenu.Content classNames='is-min md:is-min' onCloseAutoFocus={(e) => e.preventDefault()}>
             <DropdownMenu.Viewport>
               {Object.keys(HeadingIcons).map((level) => {
                 const Icon = HeadingIcons[level];
