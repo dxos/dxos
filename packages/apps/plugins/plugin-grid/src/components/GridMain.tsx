@@ -4,8 +4,9 @@
 
 import React, { forwardRef, type FC } from 'react';
 
-import { Document as DocumentType, Grid as GridType } from '@braneframe/types';
+import { DocumentType, GridItemType, type GridType } from '@braneframe/types';
 import { Surface, parseMetadataResolverPlugin, useResolvePlugin } from '@dxos/app-framework';
+import * as E from '@dxos/echo-schema';
 import { getSpaceForObject, isTypedObject, type TypedObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import type { MosaicDropEvent, MosaicOperation, MosaicTileAction, MosaicTileComponent } from '@dxos/react-ui-mosaic';
@@ -63,18 +64,18 @@ const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
   const handleOver = (): MosaicOperation => 'copy';
 
   const handleDrop = ({ active, over }: MosaicDropEvent<Position>) => {
-    const gridItem = active.item as GridType.Item;
+    const gridItem = active.item as GridItemType;
     if (grid.items.includes(gridItem) && over.position) {
       gridItem.position = over.position;
-    } else {
+    } else if (over.position) {
       const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
       const object = parseData ? parseData(active.item, 'object') : undefined;
-      isTypedObject(object) && grid.items.push(new GridType.Item({ object, position: over.position }));
+      isTypedObject(object) && grid.items.push(E.object(GridItemType, { object, position: over.position }));
     }
   };
 
   const handleCreate = (position: Position) => {
-    grid.items.push(new GridType.Item({ object: new DocumentType(), position }));
+    grid.items.push(E.object(GridItemType, { object: new DocumentType(), position }));
   };
 
   // TODO(burdon): Accessor to get card values.
@@ -84,7 +85,7 @@ const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
         id='grid' // TODO(burdon): Namespace.
         // TODO(wittjosiah): Cast is needed because subtypes are currently always optional.
         items={grid.items as GridDataItem[]}
-        type={GridType.Item.schema.typename}
+        type={GridItemType.typename}
         onAction={handleAction}
         onCreate={handleCreate}
         onDrop={handleDrop}
