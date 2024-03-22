@@ -13,6 +13,7 @@ import { type Space } from '@dxos/client-protocol';
 import { warnAfterTimeout } from '@dxos/debug';
 import { IndexServiceImpl, IndexStore, Indexer } from '@dxos/indexing';
 import { type PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
@@ -36,7 +37,6 @@ describe('Index queries', () => {
 
     await client.halo.createIdentity();
 
-    const indexingDone = services.host!.context.indexMetadata.clean.waitForCount(2);
     const indexer = new Indexer({
       indexStore: new IndexStore({ directory: builder.storage!.createDirectory('index-store') }),
       metadataStore: services.host!.context.indexMetadata,
@@ -52,6 +52,7 @@ describe('Index queries', () => {
       },
       getAllDocuments: async function* () {},
     });
+    const indexingDone = indexer.indexed.waitForCount(2);
 
     indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
     await indexer.initialize();
@@ -198,6 +199,13 @@ const queryIndexedContact = async (space: Space) => {
   const receivedIndexedContact = new Trigger<Contact>();
   const query = space.db.query(Contact.filter(), { dataLocation: QueryOptions.DataLocation.ALL });
   query.subscribe((query) => {
+    log('Query results', {
+      length: query.results.length,
+      objects: query.results.map(({ object, resolution }) => ({
+        object: (object as any).toJSON(),
+        resolution,
+      })),
+    });
     for (const result of query.results) {
       if (result.object instanceof Contact && result.resolution?.source === 'index') {
         receivedIndexedContact.wake(result.object);
