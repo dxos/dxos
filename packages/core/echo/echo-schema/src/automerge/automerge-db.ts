@@ -398,6 +398,8 @@ export interface ItemsUpdatedEvent {
 
 const shouldObjectGoIntoFragmentedSpace = (core: AutomergeObjectCore) => {
   if (isAutomergeObject(core.rootProxy)) {
+    // NOTE: We need to store properties in the root document because
+    //       space-list initialization expects it to be loaded as space become available.
     if ((core.rootProxy as AutomergeObject).__typename === TYPE_PROPERTIES) {
       return false;
     }
