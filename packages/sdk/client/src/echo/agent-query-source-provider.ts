@@ -4,16 +4,13 @@
 
 import { Event } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
-import { DocumentModel, Reference } from '@dxos/document-model';
+import { todo } from '@dxos/debug';
 import {
   type EchoObject,
   type Filter,
   type QueryResult,
   type QuerySource,
   type QuerySourceProvider,
-  TextObject,
-  TypedObject,
-  setStateFromSnapshot,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -21,10 +18,8 @@ import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
-import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
-import { TextModel } from '@dxos/text-model';
 
 export class AgentQuerySourceProvider implements QuerySourceProvider {
   private readonly _responsePromises = new Map<
@@ -155,18 +150,20 @@ const getEchoObjectFromSnapshot = (objSnapshot: EchoObjectProto): EchoObject | u
   invariant(objSnapshot.genesis, 'Genesis is undefined.');
   invariant(objSnapshot.snapshot, 'Genesis model type is undefined.');
 
-  if (objSnapshot.genesis.modelType === DocumentModel.meta.type) {
-    const modelSnapshot: ObjectSnapshot = DocumentModel.meta.snapshotCodec!.decode(objSnapshot.snapshot.model.value);
-    const obj = new TypedObject(undefined, {
-      type: modelSnapshot.typeRef && Reference.fromValue(modelSnapshot.typeRef),
-      immutable: true,
-    });
-    setStateFromSnapshot(obj, modelSnapshot);
-    return obj;
-  } else if (objSnapshot.genesis.modelType === TextModel.meta.type) {
-    return new TextObject();
-  } else {
-    log.warn('Unknown model type', { type: objSnapshot.genesis.modelType });
-    return undefined;
-  }
+  return todo();
+
+  // if (objSnapshot.genesis.modelType === DocumentModel.meta.type) {
+  //   const modelSnapshot: ObjectSnapshot = DocumentModel.meta.snapshotCodec!.decode(objSnapshot.snapshot.model.value);
+  //   const obj = new TypedObject(undefined, {
+  //     type: modelSnapshot.typeRef && Reference.fromValue(modelSnapshot.typeRef),
+  //     immutable: true,
+  //   });
+  //   setStateFromSnapshot(obj, modelSnapshot);
+  //   return obj;
+  // } else if (objSnapshot.genesis.modelType === TextModel.meta.type) {
+  //   return new TextObject();
+  // } else {
+  //   log.warn('Unknown model type', { type: objSnapshot.genesis.modelType });
+  //   return undefined;
+  // }
 };

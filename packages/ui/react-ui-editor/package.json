@@ -39,7 +39,6 @@
     "@dxos/react-async": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "^9.19.0",
     "@lezer/common": "^1.2.1",

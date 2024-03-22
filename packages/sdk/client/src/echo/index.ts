@@ -3,7 +3,6 @@
 //
 
 export { type Echo, type Space, defaultKey, Properties, type PropertiesProps } from '@dxos/client-protocol';
-export { type ItemID, DocumentModel } from '@dxos/document-model';
 // TODO(burdon): Remove/Rename Item.
 export {
   base,
@@ -44,7 +43,6 @@ export {
 export { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
-export { TextModel } from '@dxos/text-model';
 
 export { SpaceList } from './space-list';
 export { SpaceProxy } from './space-proxy'; // TODO(burdon): Don't export as part of API.
