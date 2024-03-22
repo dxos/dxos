@@ -17,12 +17,6 @@ export type LayoutProps = ThemedClassName<
   }>
 >;
 
-const thisShip = 'b a n a n a s';
-
-//
-
-console.log(thisShip);
-
 export const Layout = ({ children, classNames, topLeft, topRight, bottomLeft, bottomRight }: LayoutProps) => {
   return (
     <div className={mx('flex grow relative overflow-hidden surface-attention', classNames)}>
