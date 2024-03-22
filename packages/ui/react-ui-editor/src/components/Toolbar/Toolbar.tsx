@@ -190,6 +190,7 @@ const MarkdownHeading = () => {
                     checked={value === level}
                     onClick={() => onAction?.({ type: 'heading', data: level })}
                   >
+                    <span className='sr-only'>{t('heading level label', { count: parseInt(level) })}</span>
                     <Icon className={iconStyles} />
                     <DropdownMenu.ItemIndicator>
                       <Check />
