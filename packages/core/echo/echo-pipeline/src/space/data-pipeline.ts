@@ -5,10 +5,10 @@
 import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import {
+  checkCredentialType,
   type CredentialProcessor,
   type FeedInfo,
   type SpecificCredential,
-  checkCredentialType,
 } from '@dxos/credentials';
 import { ItemManager } from '@dxos/echo-db';
 import { type FeedWriter } from '@dxos/feed-store';
@@ -25,7 +25,7 @@ import { Timeframe } from '@dxos/timeframe';
 import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
 import { tracer } from '@dxos/util';
 
-import { DatabaseHost, type SnapshotManager } from '../db-host';
+import { type SnapshotManager } from '../db-host';
 import { type MetadataStore } from '../metadata';
 import { Pipeline } from '../pipeline';
 
@@ -82,8 +82,6 @@ export class DataPipeline implements CredentialProcessor {
 
   @trace.metricsCounter()
   private _mutations = new TimeSeriesCounter();
-
-  public databaseHost?: DatabaseHost;
 
   public itemManager!: ItemManager;
 
@@ -155,11 +153,7 @@ export class DataPipeline implements CredentialProcessor {
       },
     };
 
-    this.databaseHost = new DatabaseHost(feedWriter, () => this._flush());
-    this.itemManager = new ItemManager(this._params.modelFactory);
-
     // Connect pipeline to the database.
-    await this.databaseHost.open(this.itemManager, this._params.modelFactory);
 
     // Start message processing loop.
     scheduleTask(this._ctx, async () => {
@@ -189,7 +183,6 @@ export class DataPipeline implements CredentialProcessor {
       log.catch(err);
     }
 
-    await this.databaseHost?.close();
     await this.itemManager?.destroy();
 
     this._ctx = new Context();
@@ -230,15 +223,6 @@ export class DataPipeline implements CredentialProcessor {
           }
 
           const timer = tracer.mark('dxos.echo.pipeline.data'); // TODO(burdon): Add ID to params to filter.
-          this.databaseHost!.echoProcessor({
-            batch: data.payload.data.batch,
-            meta: {
-              feedKey,
-              seq,
-              timeframe: data.timeframe,
-              memberKey: feedInfo.assertion.identityKey,
-            },
-          });
 
           timer.end();
           // TODO(burdon): Reconcile different tracer approaches.
@@ -266,12 +250,7 @@ export class DataPipeline implements CredentialProcessor {
   }
 
   private _createSnapshot(): SpaceSnapshot {
-    invariant(this.databaseHost, 'Database backend is not initialized.');
-    return {
-      spaceKey: this._params.spaceKey.asUint8Array(),
-      timeframe: this._pipeline!.state.timeframe,
-      database: this.databaseHost!.createSnapshot(),
-    };
+    throw new Error('Method not implemented.');
   }
 
   private async _saveTargetTimeframe(timeframe: Timeframe) {
@@ -333,10 +312,6 @@ export class DataPipeline implements CredentialProcessor {
     this._lastProcessedEpoch = epoch.number;
 
     log('processing', { epoch: omit(epoch, 'proof') });
-    if (epoch.snapshotCid) {
-      const snapshot = await this._params.snapshotManager.load(ctx, epoch.snapshotCid);
-      this.databaseHost!._itemDemuxer.restoreFromSnapshot(snapshot.database);
-    }
 
     log('restarting pipeline from epoch');
     await this._pipeline.pause();
@@ -373,18 +348,6 @@ export class DataPipeline implements CredentialProcessor {
 
   async ensureEpochInitialized() {
     await this.onNewEpoch.waitForCondition(() => !!this.currentEpoch);
-  }
-
-  private async _flush() {
-    try {
-      if (this._pipeline) {
-        await this._saveTargetTimeframe(this._pipeline.state.timeframe);
-      }
-    } catch (err) {
-      log.catch(err);
-    }
-
-    await this._params.metadataStore.flush();
   }
 }
 
