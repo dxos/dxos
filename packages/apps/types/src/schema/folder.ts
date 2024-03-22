@@ -19,4 +19,5 @@ export class ViewType extends EchoObjectSchema({ typename: 'braneframe.View', ve
   type: S.string,
 }) {}
 
+// TODO(burdon): Standardize views?
 export const isView = (data: unknown): data is ViewType => !!data && data instanceof ViewType;
