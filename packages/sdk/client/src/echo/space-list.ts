@@ -66,7 +66,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   constructor(
     private readonly _config: Config | undefined,
     private readonly _serviceProvider: ClientServicesProvider,
-    private readonly _modelFactory: ModelFactory,
     private readonly _graph: Hypergraph,
     private readonly _getIdentityKey: () => PublicKey | undefined,
     /**
@@ -91,10 +90,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return {
       spaces: this._value?.length,
     };
-  }
-
-  get modelFactory(): ModelFactory {
-    return this._modelFactory;
   }
 
   /**
@@ -135,14 +130,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
         let spaceProxy = newSpaces.find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy | undefined;
         if (!spaceProxy) {
-          spaceProxy = new SpaceProxy(
-            this._serviceProvider,
-            this._modelFactory,
-            space,
-            this._graph,
-            this._automergeContext,
-            { useReactiveObjectApi: this._config?.values?.runtime?.client?.useReactiveObjectApi ?? false },
-          );
+          spaceProxy = new SpaceProxy(this._serviceProvider, space, this._graph, this._automergeContext, {
+            useReactiveObjectApi: this._config?.values?.runtime?.client?.useReactiveObjectApi ?? false,
+          });
 
           // Propagate space state updates to the space list observable.
           spaceProxy._stateUpdate.on(this._ctx, () => {
