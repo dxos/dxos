@@ -30,6 +30,7 @@ import { type Provider } from '@dxos/util';
 import { type IdentityManager } from '../identity';
 import { type DataSpace } from './data-space';
 import { type DataSpaceManager } from './data-space-manager';
+import { Timeframe } from '@dxos/timeframe';
 
 export class SpacesServiceImpl implements SpacesService {
   constructor(
@@ -95,13 +96,10 @@ export class SpacesServiceImpl implements SpacesService {
             subscriptions.add(space.stateUpdate.on(ctx, () => scheduler.forceTrigger()));
 
             subscriptions.add(space.presence.updated.on(ctx, () => scheduler.trigger()));
-            subscriptions.add(space.dataPipeline.onNewEpoch.on(ctx, () => scheduler.trigger()));
+            subscriptions.add(space.automergeSpaceState.onNewEpoch.on(ctx, () => scheduler.trigger()));
 
             // Pipeline progress.
             subscriptions.add(space.inner.controlPipeline.state.timeframeUpdate.on(ctx, () => scheduler.trigger()));
-            if (space.dataPipeline.pipelineState) {
-              subscriptions.add(space.dataPipeline.pipelineState.timeframeUpdate.on(ctx, () => scheduler.trigger()));
-            }
           }
         };
 
@@ -189,19 +187,19 @@ export class SpacesServiceImpl implements SpacesService {
       state: space.state,
       error: space.error ? encodeError(space.error) : undefined,
       pipeline: {
-        currentEpoch: space.dataPipeline.currentEpoch,
-        appliedEpoch: space.dataPipeline.appliedEpoch,
+        currentEpoch: space.automergeSpaceState.lastEpoch,
+        appliedEpoch: space.automergeSpaceState.lastEpoch,
 
         controlFeeds: space.inner.controlPipeline.state.feeds.map((feed) => feed.key),
         currentControlTimeframe: space.inner.controlPipeline.state.timeframe,
         targetControlTimeframe: space.inner.controlPipeline.state.targetTimeframe,
         totalControlTimeframe: space.inner.controlPipeline.state.endTimeframe,
 
-        dataFeeds: space.dataPipeline.pipelineState?.feeds.map((feed) => feed.key) ?? [],
-        startDataTimeframe: space.dataPipeline.pipelineState?.startTimeframe,
-        currentDataTimeframe: space.dataPipeline.pipelineState?.timeframe,
-        targetDataTimeframe: space.dataPipeline.pipelineState?.targetTimeframe,
-        totalDataTimeframe: space.dataPipeline.pipelineState?.endTimeframe,
+        dataFeeds: undefined,
+        startDataTimeframe: undefined,
+        currentDataTimeframe: undefined,
+        targetDataTimeframe: undefined,
+        totalDataTimeframe: undefined,
       },
       members: Array.from(space.inner.spaceState.members.values()).map((member) => {
         const peers = space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key));

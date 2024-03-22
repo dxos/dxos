@@ -285,9 +285,6 @@ export class DataSpaceManager {
     if (metadata.controlTimeframe) {
       dataSpace.inner.controlPipeline.state.setTargetTimeframe(metadata.controlTimeframe);
     }
-    if (metadata.dataTimeframe) {
-      dataSpace.dataPipeline.setTargetTimeframe(metadata.dataTimeframe);
-    }
 
     this._spaces.set(metadata.key, dataSpace);
     return dataSpace;

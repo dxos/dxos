@@ -141,7 +141,6 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
         new Map(
           Array.from(host.context.dataSpaceManager?.spaces.values() ?? []).flatMap((space) => [
             [space.key.toHex(), space],
-            [getSpaceName(space), space],
           ]),
         ),
     });
@@ -172,23 +171,6 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 export const unmountDevtoolsHooks = () => {
   delete (globalThis as any).__DXOS__;
   delete (globalThis as any).dxos;
-};
-
-const getSpaceName = (space: DataSpace): string => {
-  try {
-    // Add properties to cache.
-    const propertiesItem = space.dataPipeline.itemManager.items.find(
-      (item) =>
-        item.modelMeta?.type === DocumentModel.meta.type &&
-        (item.state as DocumentModelState)?.type?.itemId === TYPE_PROPERTIES,
-    );
-
-    const state = propertiesItem?.state as DocumentModelState;
-    const properties = state?.data;
-    return properties.name ?? '';
-  } catch {
-    return '';
-  }
 };
 
 type AccessorOptions<T> = {

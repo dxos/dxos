@@ -93,17 +93,6 @@ export class Space {
       // Enable sparse replication to not download mutations covered by prior epochs.
       const sparse = info.assertion.designation === AdmittedFeed.Designation.DATA;
 
-      if (info.assertion.designation === AdmittedFeed.Designation.DATA) {
-        // We will add all existing data feeds when the data pipeline is initialized.
-        queueMicrotask(async () => {
-          if (this._dataPipeline.pipeline) {
-            if (!this._dataPipeline.pipeline.hasFeed(info.key)) {
-              return this._dataPipeline.pipeline.addFeed(await this._feedProvider(info.key, { sparse }));
-            }
-          }
-        });
-      }
-
       if (!info.key.equals(params.genesisFeed.key)) {
         queueMicrotask(async () => {
           this.protocol.addFeed(await params.feedProvider(info.key, { sparse }));
@@ -197,8 +186,6 @@ export class Space {
   async setDataFeed(feed: FeedWrapper<FeedMessage>) {
     invariant(!this._dataFeed, 'Data feed already set.');
     this._dataFeed = feed;
-    await this._dataPipeline.pipeline?.addFeed(feed);
-    this._dataPipeline.pipeline?.setWriteFeed(feed);
     return this;
   }
 
