@@ -9,6 +9,7 @@ import { log } from '@dxos/log';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 import { getSchemaTypeRefOrThrow } from './effect/echo-handler';
+import * as E from './effect/reactive';
 import { TypedObject, dangerouslyMutateImmutableObject, LEGACY_TEXT_TYPE } from './object';
 import type { SchemaProps, Schema as SchemaProto } from './proto';
 
@@ -52,7 +53,7 @@ export class TypeCollection {
     });
   }
 
-  registerEffectSchema(...schemaList: S.Schema<any>[]) {
+  registerEffectSchema<T>(...schemaList: S.Schema<T>[]) {
     schemaList.forEach((schema) => {
       const typename = getTypenameOrThrow(schema);
       if (this._effectSchemaDefs.has(typename)) {
@@ -64,7 +65,7 @@ export class TypeCollection {
     return this;
   }
 
-  isEffectSchemaRegistered(schema: S.Schema<any>): boolean {
+  isEffectSchemaRegistered<T>(schema: S.Schema<T>): boolean {
     const typename = getTypenameOrThrow(schema);
     return this._effectSchemaDefs.has(typename);
   }
@@ -164,4 +165,4 @@ const TextCompatibilitySchema = S.partial(
     field: S.string,
     content: S.string,
   }),
-);
+).pipe(E.echoObject('dxos.Text.v0', '0.1.0'));

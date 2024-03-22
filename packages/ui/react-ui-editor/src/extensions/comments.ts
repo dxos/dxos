@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
 import { Cursor } from './cursor';
-import { type Comment, type Range } from '../hooks';
+import { type Comment, type Range } from './types';
 import { getToken } from '../styles';
 import { callbackWrapper } from '../util';
 
@@ -508,12 +508,16 @@ export const focusComment = (view: EditorView, id: string, center = true) => {
 /**
  * Update comments state field.
  */
-export const useComments = (view: EditorView | null, id: string, comments: Comment[] = []) => {
+export const useComments = (view: EditorView | null | undefined, id: string, comments?: Comment[]) => {
   useEffect(() => {
     if (view) {
-      view.dispatch({
-        effects: setComments.of({ id, comments }),
-      });
+      // Check same document.
+      // NOTE: Hook might be called before editor state is updated.
+      if (id === view.state.facet(documentId)) {
+        view.dispatch({
+          effects: setComments.of({ id, comments: comments ?? [] }),
+        });
+      }
     }
   }, [id, view, comments]);
 };

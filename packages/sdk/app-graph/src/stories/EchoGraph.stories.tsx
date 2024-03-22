@@ -9,6 +9,7 @@ import { effect } from '@preact/signals-core';
 import React, { useEffect, useState } from 'react';
 
 import { EventSubscriptions } from '@dxos/async';
+import { registerSignalRuntime } from '@dxos/echo-signals';
 import { faker } from '@dxos/random';
 import { Client } from '@dxos/react-client';
 import { Expando, type Space, SpaceState } from '@dxos/react-client/echo';
@@ -29,6 +30,7 @@ export default {
 
 const DEFAULT_PERIOD = 500;
 
+registerSignalRuntime();
 const testBuilder = new TestBuilder();
 const client = new Client({ services: testBuilder.createLocal() });
 await client.initialize();

@@ -3,11 +3,11 @@
 //
 
 import { type IconProps, Keyboard as KeyboardIcon } from '@phosphor-icons/react';
-import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 import { type Step } from 'react-joyride';
 
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import * as E from '@dxos/echo-schema/schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 
 import { HelpContextProvider, ShortcutsDialogContent, ShortcutsHints, ShortcutsList } from './components';
@@ -21,14 +21,18 @@ export type HelpPluginOptions = { steps?: Step[] };
 
 export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<HelpPluginProvides> => {
   const settings = new LocalStorageStore<HelpSettingsProps>(HELP_PLUGIN, { showHints: true, showWelcome: true });
-  const state = deepSignal<{ running: boolean }>({ running: false });
+  const state = E.object<{ running: boolean }>({ running: false });
 
   return {
     meta,
     ready: async () => {
       settings
-        .prop(settings.values.$showHints!, 'show-hints', LocalStorageStore.bool)
-        .prop(settings.values.$showWelcome!, 'show-welcome', LocalStorageStore.bool);
+        .prop({ key: 'showHints', storageKey: 'show-hints', type: LocalStorageStore.bool({ allowUndefined: true }) })
+        .prop({
+          key: 'showWelcome',
+          storageKey: 'show-welcome',
+          type: LocalStorageStore.bool({ allowUndefined: true }),
+        });
     },
     provides: {
       context: ({ children }) => {

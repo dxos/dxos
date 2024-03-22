@@ -143,7 +143,7 @@ export const createActionColumn = (
     // TODO(burdon): Translation.
     header: onColumnUpdate
       ? () => (
-          <Button variant='ghost' onClick={handleAddColumn} title='New column' classNames='p-1 mli-1.5'>
+          <Button variant='ghost' onClick={handleAddColumn} title='New column' classNames='m-0 p-0'>
             <Plus className={getSize(4)} />
           </Button>
         )
@@ -181,7 +181,7 @@ class QueryModel implements SearchListQueryModel<TypedObject> {
   }
 
   async query(text?: string) {
-    const { objects = [] } = this._db.query((object) => {
+    const { objects = [] } = this._db.query((object: TypedObject) => {
       if (!text?.length) {
         return null;
       }

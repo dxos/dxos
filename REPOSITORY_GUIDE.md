@@ -140,6 +140,15 @@ This is appropriate when `nx` caching is not suitable or necessary for the task,
 | `docs/docs/design`      | Design documents for future features in research and development                               |
 | `docs/docs/specs`       | Descriptions of features currently being built                                                 |
 
+## Logging
+Logging should use the `@dxos/log` package, which can be controlled using using `runtime.client.log` in `@dxos/config`.
+
+For local development, the log filter can be set using the [`LOG_FILTER` environment variable, e.g.](./packages/apps/composer-app/dx-env.yml).
+
+For hosted apps, it can be set in the browser using `localStorage.dxlog`, e.g. `localStorage.dxlog='{ "filter": "messaging:debug,info"}'`.
+
+The filter consists of a series of filename pattern/level tuples separated by commas. For example, `echo:debug,info` will set the log level to `debug` for any filename matching "echo", and `info` for everything else.
+
 ## Branches
 
 *   In general, features are developed on feature branches starting with the author's nickname e.g.: `alice/some-feature`.
@@ -158,7 +167,7 @@ This is appropriate when `nx` caching is not suitable or necessary for the task,
 
 ## Publishing
 
-*   All merges to `main` automatically publish apps to dev.kube.dxos.org.
+*   All merges to `main` automatically publish apps to dev.kube.dxos.org and publish npm packages under the `main` tag.
 *   All merges to `staging` automatically publish apps to staging.kube.dxos.org and publish npm packages under the `next` tag.
 *   All merges to `production` automatically publish apps to kube.dxos.org and publish npm packages under the `latest` tag.
 
@@ -239,12 +248,7 @@ Alternatively to autofix all lint errors on save add the following config:
 alias px="pnpm -w nx"
 ```
 
-More custom shell aliases can be included in your shell config via:
-
-```bash
-source $DXOS_ROOT/dxos/tools/zsh/tools-alias.zsh
-```
-
+More custom shell aliases can be included in your shell config by utilizing the [oh-my-zsh](https://ohmyz.sh) [plugin](./tools/zsh)/
 ## Mobile development
 
 Modern browsers treat `localhost` as a secure context, allowing secure apis such a `SubtleCrypto` to be used in an application served from `localhost`, however sometimes this is not enough. 

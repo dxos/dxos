@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Command, type Config as OclifConfig, Flags, type Interfaces } from '@oclif/core';
+import { Command, type Config as OclifConfig, Flags, type Interfaces, settings } from '@oclif/core';
 import chalk from 'chalk';
 import yaml from 'js-yaml';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
@@ -296,7 +296,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     this._failing = true;
 
-    if (this.flags.verbose) {
+    if (!this.flags || this.flags?.verbose) {
       // NOTE: Default method displays stack trace. And exits the process.
       super.error(err, options as any);
       return;
@@ -320,15 +320,32 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     // TODO(nf): move to observability
     const installationId = this._observability?.getTag('installationId');
     const userId = this._observability?.getTag('identityKey');
-    this._observability?.event({
-      installationId: installationId?.value,
-      identityId: userId?.value,
-      name: 'cli.command.run',
-      properties: {
-        status: this._failing ? 'failure' : 'success',
-        duration: endTime.getTime() - this._startTime.getTime(),
-      },
-    });
+    if (this._observability) {
+      this._observability?.event({
+        installationId: installationId?.value,
+        identityId: userId?.value,
+        name: 'cli.command.run',
+        properties: {
+          status: this._failing ? 'failure' : 'success',
+          duration: endTime.getTime() - this._startTime.getTime(),
+        },
+      });
+      await this._observability.close();
+    }
+    if (process.env.DX_TRACK_LEAKS) {
+      (global as any).dxDumpLeaks?.();
+      (globalThis as any).wtf.dump();
+    }
+
+    const stopFailsafe = setTimeout(() => {
+      // TODO: log filter not correctly applied for this
+      if (settings.debug) {
+        this.log('timeout waiting for all promises to resolve, forcing exit');
+      }
+      // This is not a condition worth exiting as a failure for.
+      process.exit(0);
+    }, 1_000);
+    stopFailsafe.unref();
   }
 
   async maybeStartDaemon() {

@@ -3,24 +3,26 @@
 //
 
 import * as S from '@effect/schema/Schema';
+import { type Mutable } from 'effect/Types';
 
 import { Reference } from '@dxos/document-model';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { getAutomergeObjectCore } from '../automerge';
+import { type AutomergeObjectCore } from '../automerge';
 import { getSchemaTypeRefOrThrow } from '../effect/echo-handler';
-import { isReactiveProxy } from '../effect/proxy';
+import { type EchoReactiveObject } from '../effect/reactive';
 import {
+  getReferenceWithSpaceKey,
+  immutable,
   isTypedObject,
   type EchoObject,
   type Expando,
-  type TypedObject,
-  immutable,
   type OpaqueEchoObject,
+  type TypedObject,
 } from '../object';
-import { getReferenceWithSpaceKey } from '../object';
 import { type Schema } from '../proto';
 
 export const hasType =
@@ -31,13 +33,17 @@ export const hasType =
 // TODO(burdon): Operators (EQ, NE, GT, LT, IN, etc.)
 export type PropertyFilter = Record<string, any>;
 
-export type OperatorFilter<T extends EchoObject> = (object: T) => boolean;
+export type OperatorFilter<T extends OpaqueEchoObject> = (object: T) => boolean;
 
-export type FilterSource<T extends EchoObject = EchoObject> = PropertyFilter | OperatorFilter<T> | Filter<T> | string;
+export type FilterSource<T extends OpaqueEchoObject = EchoObject> =
+  | PropertyFilter
+  | OperatorFilter<T>
+  | Filter<T>
+  | string;
 
 // TODO(burdon): Remove class.
 // TODO(burdon): Disambiguate if multiple are defined (i.e., AND/OR).
-export type FilterParams<T extends EchoObject> = {
+export type FilterParams<T extends OpaqueEchoObject> = {
   type?: Reference;
   properties?: Record<string, any>;
   text?: string;
@@ -47,7 +53,7 @@ export type FilterParams<T extends EchoObject> = {
   or?: Filter[];
 };
 
-export class Filter<T extends EchoObject = EchoObject> {
+export class Filter<T extends OpaqueEchoObject = EchoObject> {
   static from<T extends TypedObject>(source?: FilterSource<T>, options?: QueryOptions): Filter<T> {
     if (source === undefined || source === null) {
       return new Filter({}, options);
@@ -86,24 +92,27 @@ export class Filter<T extends EchoObject = EchoObject> {
     }
   }
 
-  static schema(schema: S.Schema<any> | Schema): Filter<Expando> {
-    if (S.isSchema(schema)) {
-      const ref = getSchemaTypeRefOrThrow(schema);
-      return new Filter({
-        type: ref,
-      });
-    } else {
-      const ref = getReferenceWithSpaceKey(schema);
-      invariant(ref, 'Invalid schema; check persisted in the database.');
-      return new Filter({
-        type: ref,
-      });
-    }
+  static schema<T>(
+    schema: S.Schema<T>,
+    filter?: Record<string, any> | OperatorFilter<any>,
+  ): Filter<EchoReactiveObject<Mutable<T>>>;
+
+  static schema(schema: Schema, filter?: Record<string, any> | OperatorFilter<any>): Filter<Expando>;
+  static schema(
+    schema: S.Schema<any> | Schema,
+    filter?: Record<string, any> | OperatorFilter<any>,
+  ): Filter<OpaqueEchoObject> {
+    const typeReference = S.isSchema(schema) ? getSchemaTypeRefOrThrow(schema) : getReferenceWithSpaceKey(schema);
+    invariant(typeReference, 'Invalid schema; check persisted in the database.');
+    return this._fromTypeWithPredicate(typeReference, filter);
   }
 
   static typename(typename: string, filter?: Record<string, any> | OperatorFilter<any>): Filter<any> {
     const type = Reference.fromLegacyTypename(typename);
+    return this._fromTypeWithPredicate(type, filter);
+  }
 
+  private static _fromTypeWithPredicate(type: Reference, filter?: Record<string, any> | OperatorFilter<any>) {
     switch (typeof filter) {
       case 'function':
         return new Filter({ type, predicate: filter as any });
@@ -141,7 +150,7 @@ export class Filter<T extends EchoObject = EchoObject> {
     };
     return new Filter(
       {
-        type: proto.type && Reference.fromValue(proto.type),
+        type: proto.type ? Reference.fromValue(proto.type) : undefined,
         properties: proto.properties,
         text: proto.text,
         not: proto.not,
@@ -195,18 +204,15 @@ export class Filter<T extends EchoObject = EchoObject> {
 }
 
 // TODO(burdon): Move logic into Filter.
-export const filterMatch = (filter: Filter, object: OpaqueEchoObject | undefined): boolean => {
-  if (!object) {
+export const filterMatch = (filter: Filter, core: AutomergeObjectCore | undefined): boolean => {
+  if (!core) {
     return false;
   }
-  const result = filterMatchInner(filter, object);
+  const result = filterMatchInner(filter, core);
   return filter.not ? !result : result;
 };
 
-const filterMatchInner = (filter: Filter, object: OpaqueEchoObject): boolean => {
-  invariant(isTypedObject(object) || isReactiveProxy(object));
-  const core = getAutomergeObjectCore(object);
-
+const filterMatchInner = (filter: Filter, core: AutomergeObjectCore): boolean => {
   const deleted = filter.options.deleted ?? QueryOptions.ShowDeletedOption.HIDE_DELETED;
   if (core.isDeleted()) {
     if (deleted === QueryOptions.ShowDeletedOption.HIDE_DELETED) {
@@ -220,7 +226,7 @@ const filterMatchInner = (filter: Filter, object: OpaqueEchoObject): boolean => 
 
   if (filter.or.length) {
     for (const orFilter of filter.or) {
-      if (filterMatch(orFilter, object)) {
+      if (filterMatch(orFilter, core)) {
         return true;
       }
     }
@@ -230,13 +236,12 @@ const filterMatchInner = (filter: Filter, object: OpaqueEchoObject): boolean => 
 
   if (filter.type) {
     const type = core.getType();
-
-    const dynamicSchema = isTypedObject(core.rootProxy) ? core.rootProxy.__schema : undefined;
+    const dynamicSchemaTypename = legacyGetDynamicSchemaTypename(core);
 
     // Separate branch for objects with dynamic schema and typename filters.
     // TODO(dmaretskyi): Better way to check if schema is dynamic.
-    if (filter.type.protocol === 'protobuf' && dynamicSchema && !dynamicSchema[immutable]) {
-      if (dynamicSchema.typename !== filter.type.itemId) {
+    if (filter.type.protocol === 'protobuf' && dynamicSchemaTypename) {
+      if (dynamicSchemaTypename !== filter.type.itemId) {
         return false;
       }
     } else {
@@ -255,29 +260,32 @@ const filterMatchInner = (filter: Filter, object: OpaqueEchoObject): boolean => 
     for (const key in filter.properties) {
       invariant(key !== '@type');
       const value = filter.properties[key];
-      if ((object as any)[key] !== value) {
+
+      // TODO(dmaretskyi): Should `id` be allowed in filter.properties?
+      const actualValue = key === 'id' ? core.id : core.getDecoded(['data', key]);
+
+      if (actualValue !== value) {
         return false;
       }
     }
   }
 
   if (filter.text !== undefined) {
-    if (!isTypedObject(object)) {
-      return false;
-    }
+    const objectText = legacyGetTextForMatch(core);
 
     const text = filter.text.toLowerCase();
-    if (!JSON.stringify(object.toJSON()).toLowerCase().includes(text)) {
+    if (!objectText.toLowerCase().includes(text)) {
       return false;
     }
   }
 
-  if (filter.predicate && !filter.predicate(object)) {
+  // Untracked will prevent signals in the callback from being subscribed to.
+  if (filter.predicate && !compositeRuntime.untracked(() => filter.predicate!(core.rootProxy))) {
     return false;
   }
 
   for (const andFilter of filter.and) {
-    if (!filterMatch(andFilter, object)) {
+    if (!filterMatch(andFilter, core)) {
       return false;
     }
   }
@@ -300,3 +308,35 @@ export const compareType = (expected: Reference, actual: Reference, spaceKey?: P
     return true;
   }
 };
+
+/**
+ * @deprecated
+ */
+// TODO(dmaretskyi): Cleanup.
+const legacyGetDynamicSchemaTypename = (core: AutomergeObjectCore): string | undefined =>
+  compositeRuntime.untracked(() => {
+    const object = core.rootProxy;
+    if (!isTypedObject(object)) {
+      return undefined;
+    }
+
+    const schema = object.__schema;
+    if (!schema || schema[immutable]) {
+      return undefined;
+    }
+
+    return schema.typename;
+  });
+
+/**
+ * @deprecated
+ */
+// TODO(dmaretskyi): Cleanup.
+const legacyGetTextForMatch = (core: AutomergeObjectCore): string =>
+  compositeRuntime.untracked(() => {
+    if (!isTypedObject(core.rootProxy)) {
+      return '';
+    }
+
+    return JSON.stringify(core.rootProxy.toJSON());
+  });

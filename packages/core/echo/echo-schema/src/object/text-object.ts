@@ -5,15 +5,17 @@
 import get from 'lodash.get';
 
 import { next as A } from '@dxos/automerge/automerge';
+import { todo } from '@dxos/debug';
 import { Reference } from '@dxos/document-model';
-import { log } from '@dxos/log';
-import { TextKind, type TextMutation } from '@dxos/protocols/proto/dxos/echo/model/text';
+import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { TextModel, type Doc, type YText, type YXmlFragment } from '@dxos/text-model';
 
 import { AbstractEchoObject } from './object';
 import { isAutomergeObject, type AutomergeOptions, type TypedObject } from './typed-object';
 import { base } from './types';
 import { AutomergeObject, getRawDoc } from '../automerge';
+import { isReactiveProxy } from '../effect/proxy';
+import { type EchoReactiveObject } from '../effect/reactive';
 
 export type TextObjectOptions = AutomergeOptions;
 
@@ -28,6 +30,7 @@ export type AutomergeTextCompat = TypedObject<{
 /**
  * @deprecated
  */
+// TODO(burdon): Remove TextObject and TextModel.
 export class TextObject extends AbstractEchoObject<TextModel> {
   static [Symbol.hasInstance](instance: any) {
     return !!instance?.[base] && (isActualTextObject(instance) || isAutomergeText(instance));
@@ -37,105 +40,52 @@ export class TextObject extends AbstractEchoObject<TextModel> {
   constructor(text?: string, kind = TextKind.PLAIN, field?: string, opts?: TextObjectOptions) {
     super(TextModel);
 
-    // Redirect to automerge by default.
-    if (opts?.automerge ?? true) {
-      const defaultedField = field ?? 'content'; // TODO(burdon): Factor out const.
-      return new AutomergeObject(
-        {
-          kind,
-          field: defaultedField,
-          [defaultedField]: text ?? '',
-        },
-        { type: Reference.fromLegacyTypename(LEGACY_TEXT_TYPE) },
-      ) as any;
+    if (opts?.automerge === false) {
+      throw new Error('Legacy hypercore-based ECHO objects are not supported');
     }
 
-    const mutation: TextMutation = {};
-    if (kind) {
-      mutation.kind = kind;
-    }
-
-    if (field) {
-      mutation.field = field;
-    }
-
-    if (Object.keys(mutation).length > 0) {
-      this._mutate(mutation);
-    }
-
-    if (text) {
-      this.model?.insert(text, 0);
-    }
+    const defaultedField = field ?? 'content'; // TODO(burdon): Factor out const.
+    return new AutomergeObject(
+      {
+        kind,
+        field: defaultedField,
+        [defaultedField]: text ?? '',
+      },
+      { type: Reference.fromLegacyTypename(LEGACY_TEXT_TYPE) },
+    ) as any;
   }
 
   override toString() {
-    return this.text;
+    return todo();
   }
 
   get kind(): TextKind | undefined {
-    return this._model?.kind;
+    return todo();
   }
 
   get model(): TextModel | undefined {
-    this._signal?.notifyRead();
-    return this._model;
+    return todo();
   }
 
   get doc(): Doc | undefined {
-    this._signal?.notifyRead();
-    return this._model?.doc;
+    return todo();
   }
 
   get content(): YText | YXmlFragment | undefined {
-    this._signal?.notifyRead();
-    return this._model?.content;
+    return todo();
   }
 
   get text(): string {
-    this._signal?.notifyRead();
-    return this._model.textContent;
+    return todo();
   }
 
   toJSON() {
-    const jsonRepresentation: Record<string, any> = {
-      // TODO(mykola): Delete backend (for debug).
-      '@backend': 'hypercore',
-      '@id': this.id,
-      '@model': TextModel.meta.type,
-      '@type': LEGACY_TEXT_TYPE,
-      kind: this.kind,
-      field: this.model?.field,
-    };
-
-    for (const [key, value] of this.model?.doc.share ?? []) {
-      if (!jsonRepresentation[key] && value._map.size > 0) {
-        try {
-          const map = this.model!.doc.getMap(key);
-          jsonRepresentation[key] = map.toJSON();
-        } catch {}
-      }
-    }
-
-    try {
-      if (this.model?.field) {
-        jsonRepresentation[this.model.field] = this.text;
-      }
-    } catch {}
-
-    return jsonRepresentation;
+    return todo();
   }
 
-  protected override _afterBind() {
-    log('_afterBind', { id: this.id });
-    this._model.initialize();
-  }
+  protected override _afterBind() {}
 
-  override _itemUpdate(): void {
-    log('_itemUpdate', { id: this.id });
-    super._itemUpdate();
-    this._model.initialize(); // TODO(burdon): Why initialized on each update?
-    this._signal?.notifyWrite();
-  }
+  override _itemUpdate(): void {}
 }
 
 /**
@@ -160,17 +110,19 @@ export const setTextContent = (object: TextObject, text: string) => {
  * @deprecated
  */
 export const getTextContent: {
-  (object: TextObject | undefined): string | undefined;
-  (object: TextObject | undefined, defaultValue: string): string;
-} = (object: TextObject | undefined, defaultValue?: string) => {
+  (object: TextObject | EchoReactiveObject<{ content: string }> | undefined): string | undefined;
+  (object: TextObject | EchoReactiveObject<{ content: string }> | undefined, defaultValue: string): string;
+} = (object: TextObject | EchoReactiveObject<{ content: string }> | undefined, defaultValue?: string) => {
   if (!object) {
     return defaultValue;
   }
 
   if (isAutomergeObject(object)) {
     return (object as any)?.content ?? defaultValue;
+  } else if (isReactiveProxy(object)) {
+    return (object as any)?.content ?? defaultValue;
   } else {
-    return object?.text ?? defaultValue;
+    return (object as any)?.text ?? defaultValue;
   }
 };
 

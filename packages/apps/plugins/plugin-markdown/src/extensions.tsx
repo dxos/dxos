@@ -14,12 +14,12 @@ import {
   type Extension,
   EditorModes,
   autocomplete,
-  image,
   decorateMarkdown,
   linkTooltip,
   table,
   typewriter,
-  formatting,
+  formattingKeymap,
+  image,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -27,17 +27,17 @@ import { nonNullable } from '@dxos/util';
 import type { MarkdownSettingsProps } from './types';
 
 export type ExtensionsOptions = {
+  dispatch?: IntentDispatcher;
   settings?: MarkdownSettingsProps;
   document?: DocumentType;
   debug?: boolean;
   experimental?: boolean;
-  dispatch?: IntentDispatcher;
 };
 
 /**
  * Create extension instances for editor.
  */
-export const getExtensions = ({ settings, document, dispatch }: ExtensionsOptions): Extension[] => {
+export const getExtensions = ({ dispatch, settings, document }: ExtensionsOptions): Extension[] => {
   const space = document ? getSpaceForObject(document) : undefined;
 
   const extensions: Extension[] = [
@@ -55,10 +55,10 @@ export const getExtensions = ({ settings, document, dispatch }: ExtensionsOption
           })
         : undefined,
     }),
-    linkTooltip(renderLinkTooltip),
-    formatting(),
+    formattingKeymap(),
     image(),
     table(),
+    linkTooltip(renderLinkTooltip),
   ];
 
   //

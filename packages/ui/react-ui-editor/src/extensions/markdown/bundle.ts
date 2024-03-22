@@ -2,51 +2,34 @@
 // Copyright 2023 DXOS.org
 //
 
-import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
-import { history, historyKeymap, indentWithTab, standardKeymap } from '@codemirror/commands';
+import { completionKeymap } from '@codemirror/autocomplete';
+import { defaultKeymap, indentWithTab } from '@codemirror/commands';
 import { markdownLanguage, markdown } from '@codemirror/lang-markdown';
-import { bracketMatching, defaultHighlightStyle, indentOnInput, syntaxHighlighting } from '@codemirror/language';
+import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
-import { searchKeymap } from '@codemirror/search';
-import { EditorState, type Extension } from '@codemirror/state';
+import { lintKeymap } from '@codemirror/lint';
+import { type Extension } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
-import { EditorView, drawSelection, dropCursor, keymap, placeholder } from '@codemirror/view';
+import { keymap } from '@codemirror/view';
 
 import { type ThemeMode } from '@dxos/react-ui';
-import { isNotFalsy } from '@dxos/util';
 
 import { markdownHighlightStyle, markdownTagsExtensions } from './highlight';
-import { type TextEditorProps } from '../../components';
 
 export type MarkdownBundleOptions = {
   themeMode?: ThemeMode;
-} & Pick<TextEditorProps, 'lineWrapping' | 'placeholder'>;
+};
 
 /**
- * Markdown bundle.
+ * Creates markdown extensions.
+ * To be used in conjunction with createBasicExtensions.
+ *
  * Refs:
  * https://codemirror.net/docs/community
  * https://codemirror.net/docs/ref/#codemirror.basicSetup
  */
-export const createMarkdownExtensions = ({
-  themeMode,
-  placeholder: _placeholder,
-  lineWrapping = true,
-}: MarkdownBundleOptions = {}): Extension[] => {
+export const createMarkdownExtensions = ({ themeMode }: MarkdownBundleOptions = {}): Extension[] => {
   return [
-    // TODO(burdon): Reconcile with createBasicExtensions.
-    lineWrapping && EditorView.lineWrapping,
-    EditorState.allowMultipleSelections.of(true),
-    EditorState.tabSize.of(2),
-
-    bracketMatching(),
-    closeBrackets(),
-    dropCursor(),
-    drawSelection(),
-    history(),
-    indentOnInput(),
-    _placeholder && placeholder(_placeholder),
-
     // Main extension.
     // https://github.com/codemirror/lang-markdown
     // https://codemirror.net/5/mode/markdown/index.html (demo).
@@ -77,14 +60,11 @@ export const createMarkdownExtensions = ({
     keymap.of([
       // https://codemirror.net/docs/ref/#commands.indentWithTab
       indentWithTab,
-      // https://codemirror.net/docs/ref/#autocomplete.closeBracketsKeymap
-      ...closeBracketsKeymap,
-      // https://codemirror.net/docs/ref/#commands.historyKeymap
-      ...historyKeymap,
-      // https://codemirror.net/docs/ref/#search.searchKeymap
-      ...searchKeymap,
-      // https://codemirror.net/docs/ref/#commands.standardKeymap
-      ...standardKeymap,
+
+      // https://codemirror.net/docs/ref/#commands.defaultKeymap
+      ...defaultKeymap,
+      ...completionKeymap,
+      ...lintKeymap,
     ]),
-  ].filter(isNotFalsy);
+  ];
 };

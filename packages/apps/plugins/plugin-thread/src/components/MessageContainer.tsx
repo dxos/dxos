@@ -3,7 +3,7 @@
 //
 
 import { X } from '@phosphor-icons/react';
-import React, { forwardRef, useMemo } from 'react';
+import React, { forwardRef } from 'react';
 
 import { type Message as MessageType } from '@braneframe/types';
 import { Surface } from '@dxos/app-framework';
@@ -11,8 +11,9 @@ import { type SpaceMember } from '@dxos/client/echo';
 import { PublicKey } from '@dxos/react-client';
 import { type Expando, getTextContent, type TextObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button, DensityProvider } from '@dxos/react-ui';
-import { TextEditor, useTextModel } from '@dxos/react-ui-editor';
+import { Button, DensityProvider, useThemeContext } from '@dxos/react-ui';
+import { createBasicExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
+import { useTextEditor } from '@dxos/react-ui-editor/src';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import { Message, type MessageBlockProps, type MessageProps } from '@dxos/react-ui-thread';
@@ -68,27 +69,29 @@ const TextboxBlock = ({
   authorId,
   onBlockDelete,
 }: { text: TextObject } & Pick<MessageBlockProps<MessageType.Block>, 'authorId' | 'onBlockDelete'>) => {
+  const { themeMode } = useThemeContext();
   const identity = useIdentity();
-  const model = useTextModel({ text });
-  const extensions = useMemo(() => [command], []);
-  const textboxWidth = onBlockDelete ? 'col-span-2' : 'col-span-3';
   const readonly = identity?.identityKey.toHex() !== authorId;
+  const textboxWidth = onBlockDelete ? 'col-span-2' : 'col-span-3';
+  const { parentRef } = useTextEditor(
+    () => ({
+      doc: getTextContent(text),
+      // prettier-ignore
+      extensions: [
+        createBasicExtensions({ readonly }),
+        createThemeExtensions({ themeMode }),
+        command,
+      ],
+    }),
+    [text, readonly, themeMode],
+  );
 
   return (
     <div
       role='none'
       className={mx('col-span-3 grid grid-cols-subgrid', hoverableControls, hoverableFocusedWithinControls)}
     >
-      {model ? (
-        <TextEditor
-          model={model}
-          readonly={readonly}
-          slots={{ root: { className: textboxWidth } }}
-          extensions={extensions}
-        />
-      ) : (
-        <span className={textboxWidth} />
-      )}
+      <div ref={parentRef} className={textboxWidth} />
       {onBlockDelete && (
         <Button
           variant='ghost'

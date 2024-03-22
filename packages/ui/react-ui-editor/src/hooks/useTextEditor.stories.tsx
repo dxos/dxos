@@ -4,33 +4,27 @@
 
 import '@dxosTheme';
 
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Toolbar as NaturalToolbar, Select, useThemeContext, Tooltip } from '@dxos/react-ui';
 import { attentionSurface, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { useActionHandler } from './useActionHandler';
-import { createBasicExtensions, createThemeExtensions, useTextEditor } from './useTextEditor';
+import { useTextEditor } from './useTextEditor';
 import { Toolbar } from '../components';
+import { createBasicExtensions, createThemeExtensions } from '../extensions';
 import {
   type EditorMode,
   EditorModes,
   decorateMarkdown,
   createMarkdownExtensions,
-  formatting,
-  image,
+  formattingKeymap,
   table,
   useFormattingState,
+  image,
 } from '../extensions';
-import { markdownTheme } from '../themes';
 import translations from '../translations';
-
-// TODO(burdon): Demo toolbar with hooks.
-// TODO(burdon): Build components from hooks and adapters for model/extensions, etc.
-// TODO(burdon): Remove BaseTextEditor.
-// TODO(burdon): Move scrolling container layout/logic into TextEditor/MarkdownEditor components.
-// TODO(burdon): Define keymap in composer framework format.
 
 type StoryProps = {
   autoFocus?: boolean;
@@ -43,29 +37,24 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
   const { themeMode } = useThemeContext();
   const [formattingState, trackFormatting] = useFormattingState();
   const [editorMode, setEditorMode] = useState<EditorMode>('default');
-  const extensions = useMemo(
-    () => [
-      editorMode ? EditorModes[editorMode] : [],
-      createBasicExtensions({ readonly }),
-      createThemeExtensions({
-        themeMode,
-        theme: markdownTheme,
-        slots: {
-          editor: { className: 'p-2' },
-        },
-      }),
-      // TODO(burdon): Move lineWrapping.
-      createMarkdownExtensions({ placeholder, lineWrapping: true }),
-      // TODO(burdon): Move into markdown bundle (with React callbacks).
-      decorateMarkdown(),
-      formatting(),
-      image(),
-      table(),
-      trackFormatting,
-    ],
-    [editorMode, themeMode, placeholder, trackFormatting, readonly],
+  const { parentRef, view } = useTextEditor(
+    () => ({
+      autoFocus,
+      doc,
+      extensions: [
+        editorMode ? EditorModes[editorMode] : [],
+        createBasicExtensions({ placeholder, lineWrapping: true, readonly }),
+        createMarkdownExtensions({ themeMode }),
+        createThemeExtensions({ themeMode }),
+        decorateMarkdown(),
+        formattingKeymap(),
+        image(),
+        table(),
+        trackFormatting,
+      ],
+    }),
+    [editorMode, themeMode, placeholder, readonly],
   );
-  const { parentRef, view } = useTextEditor({ autoFocus, doc, extensions });
 
   const handleAction = useActionHandler(view);
 
@@ -78,7 +67,7 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
         <EditorModeToolbar editorMode={editorMode} setEditorMode={setEditorMode} />
       </Toolbar.Root>
       <div role='none' className='grow overflow-hidden'>
-        <div role='textbox' className={mx(textBlockWidth, attentionSurface)} ref={parentRef} />
+        <div className={mx(textBlockWidth, attentionSurface)} ref={parentRef} />
       </div>
     </div>
   );
@@ -116,7 +105,6 @@ const EditorModeToolbar = ({
 
 export default {
   title: 'react-ui-editor/useTextEditor',
-  // component: TextEditor,
   decorators: [withTheme],
   render: (args: StoryProps) => (
     <Tooltip.Provider>
@@ -127,6 +115,23 @@ export default {
 };
 
 export const Default = {
+  render: () => {
+    const { parentRef } = useTextEditor();
+    return <div className={mx(textBlockWidth, attentionSurface)} ref={parentRef} />;
+  },
+};
+
+export const Basic = {
+  render: () => {
+    const { themeMode } = useThemeContext();
+    const { parentRef } = useTextEditor(() => ({
+      extensions: [createBasicExtensions({ placeholder: 'Enter text...' }), createThemeExtensions({ themeMode })],
+    }));
+    return <div className={mx(textBlockWidth, attentionSurface)} ref={parentRef} />;
+  },
+};
+
+export const Markdown = {
   args: {
     autoFocus: true,
     placeholder: 'Text...',

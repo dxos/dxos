@@ -19,6 +19,7 @@ type TableBodyProps<TData extends RowData> = {
 const TableBody = <TData extends RowData>({ rows }: TableBodyProps<TData>) => {
   const { table, keyAccessor, currentDatum, debug, expand, isGrid, onDatumClick } =
     useTableContext<TData>(TABLE_BODY_NAME);
+
   const rowSelection = table.getState().rowSelection;
   const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
   const canBeCurrent = !isGrid && !!onDatumClick;

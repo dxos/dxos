@@ -36,6 +36,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
       "path": "../app-graph"
     }
   ],

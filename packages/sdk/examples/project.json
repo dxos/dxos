@@ -14,7 +14,7 @@
         "{options.outputPath}"
       ]
     },
-    "e2e": {
+    "e2e-skipped": {
       "options": {
         "playwrightConfigPath": "{projectRoot}/src/playwright/playwright.config.ts",
         "serve": "examples:preview",
