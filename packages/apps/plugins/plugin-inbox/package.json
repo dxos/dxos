@@ -27,6 +27,7 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/display-name": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",

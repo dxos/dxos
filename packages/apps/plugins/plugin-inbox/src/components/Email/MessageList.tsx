@@ -5,7 +5,7 @@
 import { ArrowClockwise, Archive, Circle, Trash } from '@phosphor-icons/react';
 import React, { type MouseEvent } from 'react';
 
-import { type Message as MessageType } from '@braneframe/types';
+import { type MessageType } from '@braneframe/types';
 import { Button, DensityProvider, useTranslation } from '@dxos/react-ui';
 import { fixedBorder, getSize, ghostHover, attentionSurface, mx } from '@dxos/react-ui-theme';
 
@@ -59,9 +59,9 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
     onAction?.(action);
   };
 
-  const date = message.date;
+  const date = message.date ? new Date(message.date) : new Date();
   const from = message.from?.name ?? message.from?.email;
-  const subject = message.subject ?? message.blocks[0].content?.text;
+  const subject = message.subject ?? message.blocks[0].content?.content;
   return (
     <DensityProvider density='fine'>
       <div
@@ -97,7 +97,7 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
               </div>
             )}
             <div className={mx('shrink-0 whitespace-nowrap p-2', onAction && 'group-hover:hidden')}>
-              {formatDate(new Date(), new Date(date))}
+              {formatDate(new Date(), date)}
             </div>
           </div>
           <div className={mx('mb-1 mr-2 overflow-hidden line-clamp-3', message.read && 'text-neutral-500')}>

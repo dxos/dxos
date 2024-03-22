@@ -8,14 +8,16 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { Mailbox as MailboxType, AddressBook as AddressBookType, Calendar as CalendarType } from '@braneframe/types';
+import { MailboxType, AddressBookType, CalendarType, isMailbox, isAddressBook, isCalendar } from '@braneframe/types';
 import { type PluginDefinition, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
+import * as E from '@dxos/echo-schema';
+import { Filter } from '@dxos/react-client/echo';
 
 import { ContactsMain, EventsMain, Mailbox } from './components';
 import meta, { INBOX_PLUGIN } from './meta';
 import translations from './translations';
-import { InboxAction, type InboxPluginProvides, isAddressBook, isCalendar, isMailbox } from './types';
+import { InboxAction, type InboxPluginProvides } from './types';
 
 export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
   return {
@@ -23,15 +25,15 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
     provides: {
       metadata: {
         records: {
-          [MailboxType.schema.typename]: {
+          [MailboxType.typename]: {
             placeholder: ['mailbox title placeholder', { ns: INBOX_PLUGIN }],
             icon: (props: IconProps) => <Envelope {...props} />,
           },
-          [AddressBookType.schema.typename]: {
+          [AddressBookType.typename]: {
             placeholder: ['addressbook title placeholder', { ns: INBOX_PLUGIN }],
             icon: (props: IconProps) => <AddressBook {...props} />,
           },
-          [CalendarType.schema.typename]: {
+          [CalendarType.typename]: {
             placeholder: ['calendar title placeholder', { ns: INBOX_PLUGIN }],
             icon: (props: IconProps) => <Calendar {...props} />,
           },
@@ -92,9 +94,9 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
               );
 
               // Add all documents to the graph.
-              const mailboxQuery = space.db.query(MailboxType.filter());
-              const addressBookQuery = space.db.query(AddressBookType.filter());
-              const calendarQuery = space.db.query(CalendarType.filter());
+              const mailboxQuery = space.db.query(Filter.schema(MailboxType));
+              const addressBookQuery = space.db.query(Filter.schema(AddressBookType));
+              const calendarQuery = space.db.query(Filter.schema(CalendarType));
               let previousMailboxes: MailboxType[] = [];
               let previousAddressBooks: AddressBookType[] = [];
               let previousCalendars: CalendarType[] = [];
@@ -194,13 +196,13 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case InboxAction.CREATE_MAILBOX: {
-              return { data: new MailboxType() };
+              return { data: E.object(MailboxType, { messages: [] }) };
             }
             case InboxAction.CREATE_ADDRESSBOOK: {
-              return { data: new AddressBookType() };
+              return { data: E.object(AddressBookType, {}) };
             }
             case InboxAction.CREATE_CALENDAR: {
-              return { data: new CalendarType() };
+              return { data: E.object(CalendarType, {}) };
             }
           }
         },

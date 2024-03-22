@@ -1746,6 +1746,9 @@ importers:
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../../common/display-name
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
