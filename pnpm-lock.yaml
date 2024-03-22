@@ -898,6 +898,9 @@ importers:
       '@dxos/chain':
         specifier: workspace:*
         version: link:../../../core/chain
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant

@@ -23,4 +23,5 @@ export class KanbanType extends EchoObjectSchema({ typename: 'braneframe.Kanban'
   title: S.string,
   columns: S.array(E.ref(KanbanColumnType)),
 }) {}
+
 export const isKanban = (data: unknown): data is KanbanType => !!data && data instanceof KanbanType;

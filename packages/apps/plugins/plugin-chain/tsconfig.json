@@ -35,6 +35,9 @@
       "path": "../../../core/chain"
     },
     {
+      "path": "../../../core/echo/echo-schema"
+    },
+    {
       "path": "../../../core/echo/text-model"
     },
     {
