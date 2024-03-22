@@ -2,7 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import { asyncTimeout } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
 import { ItemManager } from '@dxos/echo-db';
 import { MockFeedWriter } from '@dxos/feed-store/testing';
@@ -12,7 +11,6 @@ import { type DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 
 import { DatabaseHost } from '../db-host';
-import { type DataPipeline } from '../space';
 
 export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
   const feed = new MockFeedWriter<DataMessage>();
