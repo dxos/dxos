@@ -6,14 +6,7 @@ import { Event, asyncTimeout, scheduleTask, sleep, synchronized, trackLeaks } fr
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context, ContextDisposedError } from '@dxos/context';
 import { timed, warnAfterTimeout } from '@dxos/debug';
-import {
-  type MetadataStore,
-  type Space,
-  createMappedFeedWriter,
-  type DataPipeline,
-  type CreateEpochOptions,
-  type AutomergeHost,
-} from '@dxos/echo-pipeline';
+import { type MetadataStore, type Space, createMappedFeedWriter, type AutomergeHost } from '@dxos/echo-pipeline';
 import { type FeedStore } from '@dxos/feed-store';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -69,6 +62,10 @@ export type DataSpaceParams = {
   callbacks?: DataSpaceCallbacks;
   cache?: SpaceCache;
   automergeHost: AutomergeHost;
+};
+
+export type CreateEpochOptions = {
+  migration?: CreateEpochRequest.Migration;
 };
 
 @trackLeaks('open', 'close')

@@ -199,7 +199,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
           lastTime = Date.now();
           // const mutationsPerSec = Math.round(mutationsSinceLastIter / (timeSinceLastIter / 1000));
 
-          const epoch = this.getSpaceBackend().dataPipeline.currentEpoch?.subject.assertion.number ?? -1;
+          // const epoch = this.getSpaceBackend().dataPipeline.currentEpoch?.subject.assertion.number ?? -1;
 
           // log.info('stats', { lag, mutationsPerSec, agentIdx, epoch, totalMutations });
           // log.trace('dxos.test.echo.stats', {

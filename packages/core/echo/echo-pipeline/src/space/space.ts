@@ -17,7 +17,6 @@ import { trace } from '@dxos/tracing';
 import { type AsyncCallback, Callback } from '@dxos/util';
 
 import { ControlPipeline } from './control-pipeline';
-import { DataPipeline } from './data-pipeline';
 import { type SpaceProtocol } from './space-protocol';
 import { type SnapshotManager } from '../db-host';
 import { type MetadataStore } from '../metadata';
@@ -65,9 +64,6 @@ export class Space {
   @trace.info()
   private readonly _controlPipeline: ControlPipeline;
 
-  @trace.info()
-  private readonly _dataPipeline: DataPipeline;
-
   private readonly _snapshotManager: SnapshotManager;
 
   private _isOpen = false;
@@ -109,30 +105,6 @@ export class Space {
     // Start replicating the genesis feed.
     this.protocol = params.protocol;
     this.protocol.addFeed(params.genesisFeed);
-
-    this._dataPipeline = new DataPipeline({
-      modelFactory: params.modelFactory,
-      metadataStore: params.metadataStore,
-      snapshotManager: params.snapshotManager,
-      memberKey: params.memberKey,
-      spaceKey: this._key,
-      feedInfoProvider: (feedKey) => this._controlPipeline.spaceState.feeds.get(feedKey),
-      snapshotId: params.snapshotId,
-      onPipelineCreated: async (pipeline) => {
-        if (this._dataFeed) {
-          pipeline.setWriteFeed(this._dataFeed);
-        }
-
-        // Add existing feeds.
-        await this._addFeedMutex.executeSynchronized(async () => {
-          for (const feed of this._controlPipeline.spaceState.feeds.values()) {
-            if (feed.assertion.designation === AdmittedFeed.Designation.DATA && !pipeline.hasFeed(feed.key)) {
-              await pipeline.addFeed(await this._feedProvider(feed.key, { sparse: true }));
-            }
-          }
-        });
-      },
-    });
   }
 
   @logInfo
@@ -166,10 +138,6 @@ export class Space {
    */
   get controlPipeline(): PipelineAccessor {
     return this._controlPipeline.pipeline;
-  }
-
-  get dataPipeline(): DataPipeline {
-    return this._dataPipeline;
   }
 
   get snapshotManager(): SnapshotManager {
@@ -213,7 +181,6 @@ export class Space {
     // Order is important.
     await this._controlPipeline.start();
     await this.protocol.start();
-    await this._controlPipeline.spaceState.addCredentialProcessor(this._dataPipeline);
 
     this._isOpen = true;
     log('opened');
@@ -225,9 +192,6 @@ export class Space {
     if (!this._isOpen) {
       return;
     }
-    await this._controlPipeline.spaceState.removeCredentialProcessor(this._dataPipeline);
-
-    await this._dataPipeline.close();
 
     // Closes in reverse order to open.
     await this.protocol.stop();
@@ -235,15 +199,5 @@ export class Space {
 
     this._isOpen = false;
     log('closed');
-  }
-
-  /**
-   * @deprecated
-   */
-  @synchronized
-  async initializeDataPipeline() {
-    log('initializeDataPipeline');
-    invariant(this._isOpen, 'Space must be open to initialize data pipeline.');
-    await this._dataPipeline.open();
   }
 }
