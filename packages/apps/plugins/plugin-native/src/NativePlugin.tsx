@@ -22,8 +22,13 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
   // SocketSupply implements the dynamic import.
   const module = 'socket:application';
   const app = await import(/* @vite-ignore */ module);
+  const appWindow = await app.getCurrentWindow();
+  const windowModule = 'socket:window';
+  const socketWindow = await import(/* @vite-ignore */ windowModule);
   const { meta_title: appName } = app.config;
   const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+
+  const binding = await socketWindow.hotkey.bind('cmd + k');
 
   //
   // Window size.
@@ -118,9 +123,19 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
   // applicationurl is a custom event fired by the Socket Supply Runtime:
   // https://github.com/socketsupply/socket/blob/ef7fb5559876e41062d5896aafb7b79989fc96e5/api/internal/events.js#L6
   window.addEventListener('applicationurl', ({ url }: any) => {
+    appWindow.restore();
     void intentPlugin?.provides.intent.dispatch({
       action: NavigationAction.ACTIVATE,
       data: { id: url.host },
+    });
+  });
+
+  // Global hotkey listener
+  binding.addEventListener('hotkey', () => {
+    appWindow.restore();
+    void intentPlugin?.provides.intent.dispatch({
+      action: LayoutAction.SET_LAYOUT,
+      data: { element: 'dialog', component: `${NAVTREE_PLUGIN}/Commands` },
     });
   });
 
