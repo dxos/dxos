@@ -61,6 +61,7 @@ import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
 import { steps } from './help';
 import translations from './translations';
+import { createWorker } from './worker';
 
 const main = async () => {
   registerSignalRuntime();
@@ -84,13 +85,7 @@ const main = async () => {
 
   const services = await createClientServices(
     config,
-    config.values.runtime?.app?.env?.DX_HOST
-      ? undefined
-      : () =>
-          new SharedWorker(new URL('@dxos/client/shared-worker', import.meta.url), {
-            type: 'module',
-            name: 'dxos-client-worker',
-          }),
+    config.values.runtime?.app?.env?.DX_HOST ? undefined : createWorker,
   );
   const isSocket = !!(globalThis as any).__args;
 
