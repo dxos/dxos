@@ -32,6 +32,9 @@
       "path": "../../../common/invariant"
     },
     {
+      "path": "../../../common/keys"
+    },
+    {
       "path": "../../../common/local-storage"
     },
     {
@@ -45,6 +48,9 @@
     },
     {
       "path": "../../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../../experimental/functions-signal"
     },
     {
       "path": "../../../sdk/app-framework"

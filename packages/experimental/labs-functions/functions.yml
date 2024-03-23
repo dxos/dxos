@@ -44,6 +44,11 @@ functions:
     handler: 'github'
     description: 'Github Sync.'
 
+  - id: 'dxos.org/function/suggest-chess-move'
+    name: 'suggest-chess-move'
+    handler: 'suggest-chess-move'
+    description: 'Listens to suggest next move signals, uses llm to generate response signals'
+
 triggers:
 #  - function: 'dxos.org/function/calendar'
 #    schedule: '*/30 * * * * *'
@@ -53,10 +58,9 @@ triggers:
   - function: 'dxos.org/function/chat'
     subscriptions:
       - type: 'braneframe.Message'
-
-  - function: 'dxos.org/function/chess'
-    subscriptions:
-      - type: 'dxos.experimental.chess.Game'
+    signals:
+      - kind: 'suggestion'
+        dataType: 'trigger-prompt'
 
   # - function: 'dxos.org/function/email'
   #   schedule: '*/30 * * * * *'
@@ -70,12 +74,21 @@ triggers:
 #        props:
 #          type: 'email'
 
+  - function: 'dxos.org/function/chess'
+    subscriptions:
+      - type: 'dxos.experimental.chess.Game'
+
   - function: 'dxos.org/function/embedding'
     subscriptions:
       - type: 'braneframe.Document'
         deep: true
         delay: 5
       - type: 'braneframe.File'
+
+#  - function: 'dxos.org/function/suggest-chess-move'
+#    signals:
+#      - kind: 'suggestion'
+#        dataType: 'suggest-next-chess-move'
 
 #  - function: 'dxos.org/function/github'
 #    subscriptions:

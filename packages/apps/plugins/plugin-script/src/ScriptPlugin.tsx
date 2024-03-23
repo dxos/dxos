@@ -11,13 +11,23 @@ import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { Script as ScriptType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { type Filter, type EchoObject, type Schema, TextObject, isTypedObject } from '@dxos/react-client/echo';
+import { SignalBus } from '@dxos/functions-signal';
+import {
+  type Space,
+  type Filter,
+  type EchoObject,
+  type Schema,
+  TextObject,
+  isTypedObject,
+} from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { useDocAccessor } from '@dxos/react-ui-editor';
 import { baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
+import { defaultMap } from '@dxos/util';
 
 import { ScriptBlock, type ScriptBlockProps } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
+import { SignalBusContext } from './signals';
 import translations from './translations';
 import { ScriptAction, type ScriptPluginProvides } from './types';
 
@@ -31,6 +41,8 @@ export type ScriptPluginProps = {
 };
 
 export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinition<ScriptPluginProvides> => {
+  const signalBuses = new Map<Space, SignalBus>();
+
   return {
     meta,
     provides: {
@@ -166,6 +178,11 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
             }
           }
         },
+      },
+      context: ({ children }) => {
+        const getBus = (space: Space) => defaultMap(signalBuses, space, () => new SignalBus(space));
+
+        return <SignalBusContext.Provider value={{ getBus }}>{children}</SignalBusContext.Provider>;
       },
     },
   };

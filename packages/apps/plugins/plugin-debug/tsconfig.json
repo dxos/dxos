@@ -26,6 +26,9 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/debug"
+    },
+    {
       "path": "../../../common/invariant"
     },
     {
@@ -65,6 +68,9 @@
       "path": "../../../devtools/devtools"
     },
     {
+      "path": "../../../experimental/functions-signal"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {
@@ -102,6 +108,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-script"
     },
     {
       "path": "../plugin-settings"

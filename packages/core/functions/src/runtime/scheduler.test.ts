@@ -13,7 +13,7 @@ import { Scheduler } from './scheduler';
 import { type FunctionManifest } from '../manifest';
 
 describe('scheduler', () => {
-  test.only('callback', async () => {
+  test('callback', async () => {
     const testBuilder = new TestBuilder();
     const client = new Client({ services: testBuilder.createLocal() });
     await client.initialize();
@@ -43,7 +43,7 @@ describe('scheduler', () => {
           done.wake();
         }
 
-        return 200;
+        return { status: 200 };
       },
     });
 

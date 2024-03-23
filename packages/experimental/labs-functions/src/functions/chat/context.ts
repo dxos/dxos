@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Document as DocumentType, type Message as MessageType, type Thread as ThreadType } from '@braneframe/types';
+import { Document as DocumentType, type Thread as ThreadType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import { getTextInRange, Schema, toJsonSchema, type TypedObject } from '@dxos/echo-schema';
 
@@ -12,15 +12,12 @@ export type RequestContext = {
   schema?: Map<string, Schema>;
 };
 
-export const createContext = (space: Space, message: MessageType, thread: ThreadType): RequestContext => {
-  let object: TypedObject | undefined;
-  if (message.context?.object) {
-    const { objects } = space.db.query({ id: message.context?.object });
-    object = objects[0];
-  } else if (thread.context?.object) {
-    const { objects } = space.db.query({ id: thread.context?.object });
-    object = objects[0];
-  }
+export const createContext = (
+  space: Space,
+  thread: ThreadType,
+  contextObjectId: string | undefined,
+): RequestContext => {
+  const object = contextObjectId ? space.db.query({ id: contextObjectId }).objects[0] : undefined;
 
   let text: string | undefined;
   if (object instanceof DocumentType) {

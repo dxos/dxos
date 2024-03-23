@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Gauge, Graph as GraphIcon, Gear, Toolbox, Warning } from '@phosphor-icons/react';
+import { Gauge, Graph as GraphIcon, Gear, Toolbox, Warning, Van } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useState } from 'react';
 
 import { type Graph } from '@braneframe/plugin-graph';
@@ -12,10 +12,11 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { DebugPanel } from './DebugPanel';
 import { Json, Tree } from './Tree';
+import { SignalBus } from './SignalBus';
 
 const DebugGlobal: FC<{ graph: Graph }> = ({ graph }) => {
   const { themeMode } = useThemeContext();
-  const [view, setView] = useState<'config' | 'diagnostics' | 'graph'>('diagnostics');
+  const [view, setView] = useState<'config' | 'diagnostics' | 'graph' | 'signal-bus'>('diagnostics');
   const [data, setData] = useState<any>({});
   const client = useClient();
   const config = useConfig();
@@ -58,6 +59,9 @@ const DebugGlobal: FC<{ graph: Graph }> = ({ graph }) => {
             <ToggleGroupItem value={'config'} onClick={() => setView('config')} title={'Config'}>
               <Gear className={getSize(5)} />
             </ToggleGroupItem>
+            <ToggleGroupItem value={'signal-bus'} onClick={() => setView('signal-bus')} title={'Signal Bus'}>
+              <Van className={getSize(5)} />
+            </ToggleGroupItem>
           </ToggleGroup>
 
           <div className='grow' />
@@ -73,6 +77,7 @@ const DebugGlobal: FC<{ graph: Graph }> = ({ graph }) => {
       {view === 'graph' && <Tree data={graph.toJSON()} />}
       {view === 'config' && <Json theme={themeMode} data={data.diagnostics?.config} />}
       {view === 'diagnostics' && <Json theme={themeMode} data={data} />}
+      {view === 'signal-bus' && <SignalBus />}
     </DebugPanel>
   );
 };

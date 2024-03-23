@@ -77,6 +77,9 @@
     },
     {
       "path": "../chess-app"
+    },
+    {
+      "path": "../functions-signal"
     }
   ]
 }

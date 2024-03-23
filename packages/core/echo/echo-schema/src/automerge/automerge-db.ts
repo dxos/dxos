@@ -111,7 +111,9 @@ export class AutomergeDb {
   // TODO(dmaretskyi): should it be synchronized and/or cancelable?
   @synchronized
   async update(spaceState: SpaceState) {
-    invariant(this._ctx, 'Must be open');
+    if (!this._ctx) {
+      return;
+    }
     if (spaceState.rootUrl === this._automergeDocLoader.getSpaceRootDocHandle().url) {
       return;
     }

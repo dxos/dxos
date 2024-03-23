@@ -41,6 +41,9 @@
       "path": "../../../common/random"
     },
     {
+      "path": "../../../common/util"
+    },
+    {
       "path": "../../../core/echo/echo-generator"
     },
     {
@@ -57,6 +60,9 @@
     },
     {
       "path": "../../../core/protocols"
+    },
+    {
+      "path": "../../../experimental/functions-signal"
     },
     {
       "path": "../../../sdk/app-framework"

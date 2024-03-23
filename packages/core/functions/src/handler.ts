@@ -2,15 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as S from '@effect/schema/Schema';
+import * as Either from 'effect/Either';
+
 import { type Client, PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { isTypedObject, type TypedObject } from '@dxos/echo-schema';
+import { type Signal, SignalSchema } from '@dxos/functions-signal';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
 // TODO(burdon): No response?
 export interface Response {
   status(code: number): Response;
+  body(value: any): Response;
 }
 
 // TODO(burdon): Limit access to individual space?
@@ -35,6 +40,7 @@ export type FunctionSubscriptionEvent = {
 export type FunctionSubscriptionEvent2 = {
   space?: Space;
   objects?: TypedObject[];
+  signal?: Signal | null;
 };
 
 /**
@@ -50,9 +56,12 @@ export type FunctionSubscriptionEvent2 = {
 export const subscriptionHandler = (
   handler: FunctionHandler<FunctionSubscriptionEvent2>,
 ): FunctionHandler<FunctionSubscriptionEvent> => {
+  const signalParser = S.validateEither<Signal, Signal, never>(SignalSchema);
   return ({ event, context, ...rest }) => {
+    const signal = Either.getOrNull(signalParser(event));
     const { client } = context;
-    const space = event.space ? client.spaces.get(PublicKey.from(event.space)) : undefined;
+    const spaceKey = event.space ?? signal?.metadata?.spaceKey;
+    const space = spaceKey ? client.spaces.get(PublicKey.from(spaceKey)) : undefined;
     const objects =
       space &&
       event.objects
@@ -60,12 +69,31 @@ export const subscriptionHandler = (
         .filter(nonNullable)
         .filter(isTypedObject);
 
-    if (!!event.space && !space) {
+    if (!!event.space && !space && !signal) {
       log.warn('invalid space', { event });
     } else {
-      log.info('handler', { space: space?.key.truncate(), objects: objects?.length });
+      log.info('handler', {
+        space: space?.key.truncate(),
+        objects: objects?.length,
+        signal,
+      });
     }
 
-    return handler({ event: { space, objects }, context, ...rest });
+    return handler({ event: { space, objects, signal }, context, ...rest });
+  };
+};
+
+export const signalHandler = <T extends object>(
+  inputSchema: S.Schema<T>,
+  handler: FunctionHandler<T>,
+): FunctionHandler<Signal> => {
+  const validator = S.validateEither(inputSchema);
+  return async ({ event, context, ...rest }) => {
+    const validated = validator(event.data.value);
+    if (Either.isLeft(validated)) {
+      log.warn('function was called with input not matching its schema', { event, error: validated.left });
+      return rest.response.status(400);
+    }
+    return handler({ event: validated.right, context, ...rest });
   };
 };

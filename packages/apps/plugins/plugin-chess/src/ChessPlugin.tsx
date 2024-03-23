@@ -14,6 +14,8 @@ import { Game } from '@dxos/chess-app';
 
 import { ChessMain } from './components';
 import meta, { CHESS_PLUGIN } from './meta';
+import { createExecuteMoveEffector, createMoveConfirmationEffector } from './signal-effector';
+import { createSignalTrigger } from './signal-trigger';
 import translations from './translations';
 import { ChessAction, type ChessPluginProvides, isObject } from './types';
 
@@ -54,6 +56,10 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
                   dispatch,
                 }),
               );
+
+              subscriptions.add(createSignalTrigger(space));
+              subscriptions.add(createMoveConfirmationEffector(space));
+              subscriptions.add(createExecuteMoveEffector(space));
 
               // Add all games to the graph.
               const query = space.db.query(Game.filter());

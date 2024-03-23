@@ -119,6 +119,7 @@ export class Gossip {
   }
 
   postMessage(channel: string, payload: any) {
+    // TODO(dmaretskyi): Remove since YJS is not a thing anymore.
     if (channel.startsWith(YJS_CHANNEL_PREFIX) && this._oldestYjsTimeoutInWindow()) {
       log(
         `skipping YJS gossip message due to timeouts (>${YJS_TIMEOUT_THRESHOLD} received in ${
@@ -127,14 +128,17 @@ export class Gossip {
       );
       return;
     }
+
+    const message: GossipMessage = {
+      peerId: this._params.localPeerId,
+      messageId: PublicKey.random(),
+      channelId: channel,
+      timestamp: new Date(),
+      payload,
+    };
+
     for (const extension of this._connections.values()) {
-      this._sendAnnounceWithTimeoutTracking(extension, {
-        peerId: this._params.localPeerId,
-        messageId: PublicKey.random(),
-        channelId: channel,
-        timestamp: new Date(),
-        payload,
-      }).catch(async (err) => {
+      this._sendAnnounceWithTimeoutTracking(extension, message).catch(async (err) => {
         if (err instanceof RpcClosedError) {
           log('sendAnnounce failed because of RpcClosedError', { err });
         } else if (
@@ -148,6 +152,8 @@ export class Gossip {
         }
       });
     }
+
+    this._callListeners(message);
   }
 
   listen(channel: string, callback: (message: GossipMessage) => void) {

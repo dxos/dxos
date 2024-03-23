@@ -2,21 +2,33 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as S from '@effect/schema/Schema';
 import { CronJob } from 'cron';
+import * as Either from 'effect/Either';
 
 import { debounce, DeferredTask } from '@dxos/async';
-import { type Client, type PublicKey } from '@dxos/client';
+import { type Client, PublicKey } from '@dxos/client';
 import { type Space, TextObject } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { Filter, createSubscription, type Query, subscribe } from '@dxos/echo-schema';
+import { type Signal, type SignalBus, MutationSignalEmitter, SignalBusInterconnect } from '@dxos/functions-signal';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
 import { type FunctionSubscriptionEvent } from '../handler';
-import { type FunctionDef, type FunctionManifest, type FunctionTrigger, type TriggerSubscription } from '../manifest';
+import {
+  type FunctionDef,
+  type FunctionManifest,
+  FunctionResult,
+  type FunctionTrigger,
+  type SignalSubscription,
+  type TriggerSubscription,
+} from '../manifest';
 
-type Callback = (data: FunctionSubscriptionEvent) => Promise<number>;
+type FunctionResponse = { status: number; json?: () => Promise<any> };
+
+type Callback = (data: FunctionSubscriptionEvent | Signal) => Promise<FunctionResponse>;
 
 type SchedulerOptions = {
   endpoint?: string;
@@ -34,11 +46,16 @@ export class Scheduler {
     { ctx: Context; trigger: FunctionTrigger }
   >(({ id, spaceKey }) => `${spaceKey.toHex()}:${id}`);
 
+  private readonly _signalEmitter: MutationSignalEmitter;
+
   constructor(
     private readonly _client: Client,
     private readonly _manifest: FunctionManifest,
     private readonly _options: SchedulerOptions = {},
-  ) {}
+    private readonly _busInterconnect = SignalBusInterconnect.global,
+  ) {
+    this._signalEmitter = new MutationSignalEmitter(_client, this._busInterconnect);
+  }
 
   async start() {
     this._client.spaces.subscribe(async (spaces) => {
@@ -49,9 +66,11 @@ export class Scheduler {
         }
       }
     });
+    this._signalEmitter.start();
   }
 
   async stop() {
+    this._signalEmitter.stop();
     for (const { id, spaceKey } of this._mounts.keys()) {
       await this.unmount(id, spaceKey);
     }
@@ -79,6 +98,11 @@ export class Scheduler {
       // Subscription.
       for (const triggerSubscription of trigger.subscriptions ?? []) {
         this._createSubscription(ctx, space, def, triggerSubscription);
+      }
+
+      const signalBus = this._busInterconnect.createConnected(space);
+      for (const signalSubscription of trigger.signals ?? []) {
+        this._createSignalProcessor(ctx, space, signalBus, def, signalSubscription);
       }
     }
   }
@@ -174,30 +198,101 @@ export class Scheduler {
     });
   }
 
-  private async _execFunction(def: FunctionDef, data: any) {
+  private _createSignalProcessor(
+    ctx: Context,
+    space: Space,
+    bus: SignalBus,
+    def: FunctionDef,
+    signalSubscription: SignalSubscription,
+  ) {
+    let signalToProcess: Signal | null = null;
+    const task = new DeferredTask(ctx, async () => {
+      if (signalToProcess == null) {
+        return;
+      }
+      const functionResult = await this._execFunction(def, signalToProcess);
+      if (functionResult != null) {
+        log.info('function result', { result: functionResult });
+        bus.emit({
+          id: PublicKey.random().toHex(),
+          kind: 'suggestion',
+          metadata: {
+            createdMs: Date.now(),
+            source: def.id,
+            spaceKey: space.key.toHex(),
+            triggerSignalId: signalToProcess.id,
+          },
+          data: functionResult,
+        });
+      }
+      signalToProcess = null;
+    });
+    const unsubscribeFromBus = bus.subscribe((signal: Signal) => {
+      if (signal.kind !== 'echo-mutation') {
+        log.info('received a signal', signal);
+      }
+      if (signalToProcess != null) {
+        return;
+      }
+      if (signal.kind === signalSubscription.kind && signal.data.type === signalSubscription.dataType) {
+        signalToProcess = signal;
+        task.schedule();
+      }
+    });
+    ctx.onDispose(unsubscribeFromBus);
+  }
+
+  private async _execFunction(def: FunctionDef, data: any): Promise<FunctionResult | null> {
     try {
       log('request', { function: def.id });
       const { endpoint, callback } = this._options;
-      let status = 0;
+      if (!endpoint && !callback) {
+        return null;
+      }
+      let response: FunctionResponse;
       if (endpoint) {
         // TODO(burdon): Move out of scheduler (generalize as callback).
-        const response = await fetch(`${this._options.endpoint}/${def.name}`, {
+        response = await fetch(`${this._options.endpoint}/${def.name}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(data),
         });
-
-        status = response.status;
-      } else if (callback) {
-        status = await callback(data);
+      } else {
+        invariant(callback);
+        response = await callback(data);
       }
+      const functionResult = await this._parseFunctionResult(response);
+      const status = response.status;
 
-      // const result = await response.json();
-      log('result', { function: def.id, result: status });
+      log('result', { function: def.id, result: status, body: functionResult });
+      return functionResult;
     } catch (err: any) {
       log.error('error', { function: def.id, error: err.message });
+      return null;
     }
+  }
+
+  private async _parseFunctionResult(response: FunctionResponse): Promise<FunctionResult | null> {
+    if (response.json == null) {
+      return null;
+    }
+    log.info('response', { headers: JSON.stringify(response) });
+    // if (response.headers.get('Content-Type') !== 'application/json') {
+    //   return null;
+    // }
+    let json;
+    try {
+      json = await response.json();
+    } catch (e) {
+      return null;
+    }
+    const result = S.validateEither(FunctionResult)(json);
+    if (Either.isLeft(result)) {
+      log.warn('incorrectly formatted function result', { json, error: result.left });
+      return null;
+    }
+    return result.right;
   }
 }
