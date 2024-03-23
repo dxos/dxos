@@ -50,13 +50,13 @@ export class ClientServicesProxy implements ClientServicesProvider {
       handlers: {},
       port: this._port,
       // TODO(wittjosiah): Specifying breaks the reset flows in Composer.
-      // timeout: this._timeout,
+      timeout: this._timeout,
     });
 
     await asyncTimeout(
       this._proxy.open(),
       this._timeout,
-      new RemoteServiceConnectionTimeout('Failed to establish dxrpc connection', { timeout: this._timeout }),
+      new RemoteServiceConnectionTimeout('Failed to establish dxrpc connection.', { timeout: this._timeout }),
     );
   }
 
