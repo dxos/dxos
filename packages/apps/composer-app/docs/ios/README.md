@@ -25,9 +25,9 @@ Lets step through each item on the list:
 - Download and install Xcode: https://apps.apple.com/us/app/xcode/id497799835?mt=12
 - Launch XCode to finish the installation
 - Log into your Apple Developer account in XCode with your Apple ID
-    ![](./img/login.png)
+  ![](./img/login.png)
 - Once installed, ensure that the "Command Line Tools" setting in the "Locations" tab in Xcode settings is set to XCode.
-    ![](./img/clt.png)
+  ![](./img/clt.png)
 
 ### Apple Developer Account
 
@@ -211,3 +211,68 @@ codesign_identity = C221D161B7CE9530F4E7284BBAF966BE06B07E15
 - Build a apk iOS build: `ssc build -o -c -p --platform ios`
 - Deploy the latest iOS apk to a connected device: `ssc install-app --platform=ios`
 - Build and run a code signed macOS build: `ssc build -o -c -p -r`
+
+## App Store / Test Flight Builds
+
+Test flight builds and final app store builds have similar requirements as development builds, but a different type of signing certificate, and a different provisioning profile.
+
+### Distribution Certificate
+
+Follow the same procedure above for a development signing certificate, except choose "Apple Distribution Certificate" or "iOS Distribution Certificate".
+
+![](./img/apple-dist.png)
+
+Download and install the certificate into your keychain as before.
+
+### Distribution Provisioning Profile
+
+Create a provisioning profile following the procedure above except select "App Store Connect" in the "Distribution" section when generating the profile.
+
+![](./img/dist-pp.png)
+
+Download the profile and place it in a location on your computer that you can reference in your `.ssrc` file.
+
+### Configure your .ssrc or socket.ini
+
+Configure your .sscrc file or socket.ini to point to the new distribution certificate, the new provisioning profile and also set the "distribution_method" to "app-store" in the ios section.
+
+```ini
+[settings.ios]
+distribution_method = "app-store"
+codesign_identity = 25401B36BB105456E85E222FB6895438CE537458
+provisioning_profile = /Users/bret/Developer/ssc/profiles/Bret_DXOS_Dist_PP.mobileprovision
+```
+
+### Build a production build
+
+Run a production iOS Build:
+
+```
+ssc build -c -p --platform ios --prod
+```
+
+### App Store Connect
+
+Create/configure your app on the App Store Connect platform:
+
+https://appstoreconnect.apple.com/apps/6478185526/distribution/ios/version/inflight
+
+Ensure you configure the Bundle ID to match the bundle ID you are using for your production build:
+
+![](./img/app-store-connect-settings.png)
+
+### Upload your production build
+
+See: https://developer.apple.com/help/app-store-connect/manage-builds/upload-builds/
+
+I recommend the transporter app:
+
+![](./img/transporter.png)
+
+Upload the `dxos/packages/apps/composer-app/build/ios/build/Composer.ipa/Composer.ipa` file to transporter by dragging it into the transporter app window.
+
+TODO: Wait for a fix in socket icon processing. Right now the bundle has issues.
+
+### Set up test flight
+
+TODO
