@@ -17,7 +17,7 @@
         "checkLeaks": false,
         "ciEnvironments": [
           "nodejs"
-        ],
+        ]
       }
     }
   }
