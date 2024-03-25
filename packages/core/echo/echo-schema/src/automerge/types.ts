@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Reference } from '@dxos/document-model';
+import { Reference } from '@dxos/echo-db';
 
 import { type ObjectMeta, type OpaqueEchoObject } from '../object';
 import { type Schema } from '../proto';

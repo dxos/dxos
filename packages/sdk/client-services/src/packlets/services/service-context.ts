@@ -14,7 +14,6 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
-import { type ModelFactory } from '@dxos/model-factory';
 import { type NetworkManager } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -81,7 +80,6 @@ export class ServiceContext {
     public readonly storage: Storage,
     public readonly networkManager: NetworkManager,
     public readonly signalManager: SignalManager,
-    public readonly modelFactory: ModelFactory,
     public readonly _runtimeParams?: IdentityManagerRuntimeParams & DataSpaceManagerRuntimeParams,
   ) {
     // TODO(burdon): Move strings to constants.
@@ -106,7 +104,6 @@ export class ServiceContext {
       networkManager: this.networkManager,
       blobStore: this.blobStore,
       metadataStore: this.metadataStore,
-      modelFactory: this.modelFactory,
       snapshotStore: this.snapshotStore,
     });
 
