@@ -69,12 +69,10 @@ const DeckColumn = forwardRef<HTMLDivElement, DeckColumnProps>(
       >
         {children}
         <Button
-          classNames='absolute inline-end-0 inset-block-2 is-2'
-          onPointerDown={({ isPrimary, pageX, currentTarget, pointerId }) => {
+          classNames='absolute inline-end-0 inset-block-2 is-2 touch-none'
+          onPointerDown={({ isPrimary, pageX }) => {
             if (isPrimary) {
-              // const percent = currentTarget.closest('main')?.clientWidth ?? window.innerWidth;
               const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
-              // TODO(thure): This isn’t working for touch (yet)… may have to do with `setPointerCapture`.
               setResizing({ pageX, size, rem, px: 1 });
             }
           }}
