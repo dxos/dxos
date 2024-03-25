@@ -86,8 +86,7 @@ export class IndexMetadataStore implements MetadataMethods {
   @synchronized
   private async _setMetadata(id: string, metadata: DocumentMetadata): Promise<boolean> {
     try {
-      const file = this._directory.getOrCreateFile(id);
-      await overrideFile(file, Buffer.from(JSON.stringify(metadata)));
+      await overrideFile({ path: id, directory: this._directory, content: Buffer.from(JSON.stringify(metadata)) });
       this._metadata.set(id, metadata);
       return true;
     } catch (err) {
