@@ -10,7 +10,6 @@ import { Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
-import { ItemManager } from '@dxos/echo-db';
 import {
   EchoDatabaseImpl,
   type AutomergeContext,
@@ -21,7 +20,6 @@ import {
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type ModelFactory } from '@dxos/model-factory';
 import { decodeError } from '@dxos/protocols';
 import {
   Invitation,
@@ -80,7 +78,6 @@ export class SpaceProxy implements Space {
 
   private readonly _db!: EchoDatabaseImpl;
   private readonly _internal!: SpaceInternal;
-  private readonly _itemManager: ItemManager;
   private readonly _invitationsProxy: InvitationsProxy;
 
   private readonly _state = MulticastObservable.from(this._stateUpdate, SpaceState.CLOSED);
@@ -94,7 +91,6 @@ export class SpaceProxy implements Space {
 
   constructor(
     private _clientServices: ClientServicesProvider,
-    private _modelFactory: ModelFactory,
     private _data: SpaceData,
     graph: Hypergraph,
     automergeContext: AutomergeContext,
@@ -112,7 +108,6 @@ export class SpaceProxy implements Space {
     );
 
     invariant(this._clientServices.services.DataService, 'DataService not available');
-    this._itemManager = new ItemManager(this._modelFactory);
     this._db = new EchoDatabaseImpl({
       spaceKey: this.key,
       graph,
@@ -348,7 +343,6 @@ export class SpaceProxy implements Space {
     await this._invitationsProxy.close();
     await this._db.automerge.close();
     this._databaseOpen = false;
-    await this._itemManager?.destroy();
     log('destroyed');
   }
 

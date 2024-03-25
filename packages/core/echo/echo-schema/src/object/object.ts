@@ -2,27 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Any, type ProtoCodec } from '@dxos/codec-protobuf';
-import { type Item, createModelMutation, encodeModelMutation } from '@dxos/echo-db';
+import { todo } from '@dxos/debug';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
-import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import {
-  type Model,
-  type ModelConstructor,
-  type MutationOf,
-  type MutationWriteReceipt,
-  type StateMachine,
-  type StateOf,
-} from '@dxos/model-factory';
 
-import { type EchoObject, base, debug, db, subscribe } from './types';
+import { base, db, debug, subscribe, type EchoObject } from './types';
 import { type EchoDatabase } from '../database';
 
 /**
  * Base class for all echo objects.
+ * @deprecated
  */
-export abstract class AbstractEchoObject<T extends Model = any> implements EchoObject {
+export abstract class AbstractEchoObject<T = any> implements EchoObject {
   /**
    * @internal
    */
@@ -38,48 +29,31 @@ export abstract class AbstractEchoObject<T extends Model = any> implements EchoO
    * Present only on objects not persisted in the database.
    * @internal
    */
-  _stateMachine: StateMachine<StateOf<T>, MutationOf<T>, any> | undefined;
+  _stateMachine: unknown;
 
   /**
    * Not present for freshly created objects.
    * @internal
    */
-  _item?: Item<T>;
+  _item?: unknown;
 
   /**
    * @internal
    */
-  _model: T;
+  _model: T = null as any;
 
   /**
    * @internal
    */
-  _modelConstructor: ModelConstructor<T>;
+  _modelConstructor: unknown;
 
   private readonly _callbacks = new Set<(value: any) => void>();
 
   protected readonly _signal = compositeRuntime.createSignal();
 
-  protected constructor(modelConstructor: ModelConstructor<T>) {
+  protected constructor(modelConstructor: unknown) {
     this._modelConstructor = modelConstructor;
     this._id = PublicKey.random().toHex();
-    this._stateMachine = this._modelConstructor.meta.stateMachine();
-
-    this._model = new this._modelConstructor(
-      this._modelConstructor.meta,
-      this._id,
-      () => this._getState(),
-      async (mutation): Promise<MutationWriteReceipt> => {
-        this._mutate(mutation);
-
-        // TODO(dmaretskyi): Check if we can remove the requirement to return this data.
-        return {
-          feedKey: PublicKey.from('00'),
-          seq: 0,
-          waitToBeProcessed: () => Promise.resolve(),
-        };
-      },
-    );
   }
 
   /** Proxied object. */
@@ -134,36 +108,21 @@ export abstract class AbstractEchoObject<T extends Model = any> implements EchoO
    * @internal
    * Called when the object is imported to the database. Assigns the backing item.
    */
-  _bind(item: Item<T>) {
-    // TODO(dmaretskyi): Snapshot and unbind local state machine.
-    this._stateMachine = undefined;
-    this._item = item;
-    this._afterBind();
-  }
+  _bind(item: unknown) {}
 
   /**
    * Snapshot current state.
    * @internal
    */
-  _createSnapshot(): Any {
-    if (this._stateMachine) {
-      invariant(this._modelConstructor.meta.snapshotCodec);
-      return (this._modelConstructor.meta.snapshotCodec as ProtoCodec).encodeAsAny(this._stateMachine.snapshot());
-    } else {
-      throw new Error('Only implemented on unpersisted objects.');
-    }
+  _createSnapshot(): any {
+    todo();
   }
 
   /**
    * @internal
    */
-  protected _getState(): StateOf<T> {
-    if (this._stateMachine) {
-      return this._stateMachine.getState();
-    } else {
-      invariant(this._item);
-      return this._item.state;
-    }
+  protected _getState(): any {
+    todo();
   }
 
   /**
@@ -180,14 +139,7 @@ export abstract class AbstractEchoObject<T extends Model = any> implements EchoO
    * @returns Mutation result for the database or undefined if the current object is not persisted.
    * @internal
    */
-  protected _mutate(mutation: MutationOf<T>): unknown | undefined {
-    if (this._stateMachine) {
-      this._stateMachine.process(mutation);
-    } else {
-      invariant(this._database);
-      return this._database._backend.mutate(
-        createModelMutation(this._id, encodeModelMutation(this._model!.modelMeta, mutation)),
-      );
-    }
+  protected _mutate(mutation: any): any {
+    todo();
   }
 }
