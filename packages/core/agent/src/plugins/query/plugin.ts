@@ -5,7 +5,7 @@
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { QueryOptions } from '@dxos/client/echo';
-import { type WithTypeUrl, type ProtoCodec, type Any } from '@dxos/codec-protobuf';
+import { type WithTypeUrl, type Any } from '@dxos/codec-protobuf';
 import { cancelWithContext } from '@dxos/context';
 import { getEchoObjectItem } from '@dxos/echo-schema';
 import { type EchoObject, Filter, base } from '@dxos/echo-schema';

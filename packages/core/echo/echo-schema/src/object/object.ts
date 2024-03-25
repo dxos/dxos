@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
+import { todo } from '@dxos/debug';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { PublicKey } from '@dxos/keys';
 
-import { todo } from '@dxos/debug';
-import { type EchoDatabase } from '../database';
 import { base, db, debug, subscribe, type EchoObject } from './types';
+import { type EchoDatabase } from '../database';
 
 /**
  * Base class for all echo objects.

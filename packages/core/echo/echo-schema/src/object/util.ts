@@ -3,7 +3,6 @@
 //
 
 import { Reference } from '@dxos/echo-db';
-import { invariant } from '@dxos/invariant';
 import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 import { type TextSnapshot } from '@dxos/protocols/proto/dxos/echo/model/text';
 

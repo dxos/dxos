@@ -21,6 +21,9 @@ import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
 import { assignDeep } from '@dxos/util';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
+import { createDiagnostics } from './diagnostics';
+import { ServiceContext, type ServiceContextRuntimeParams } from './service-context';
+import { ServiceRegistry } from './service-registry';
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools';
 import { IdentityServiceImpl, type CreateIdentityOptions } from '../identity';
@@ -31,9 +34,6 @@ import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
-import { createDiagnostics } from './diagnostics';
-import { ServiceContext, type ServiceContextRuntimeParams } from './service-context';
-import { ServiceRegistry } from './service-registry';
 
 export type ClientServicesHostParams = {
   /**

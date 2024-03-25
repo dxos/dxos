@@ -33,12 +33,12 @@ import { createIFramePort } from '@dxos/rpc-tunnel';
 import { trace, TRACE_PROCESSOR } from '@dxos/tracing';
 import { jsonKeyReplacer, type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
+import { ClientRuntime } from './client-runtime';
 import type { SpaceList, TypeCollection } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
-import { ClientRuntime } from './client-runtime';
 
 /**
  * This options object configures the DXOS Client.

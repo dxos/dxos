@@ -37,10 +37,10 @@ import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { trace } from '@dxos/tracing';
 
-import { InvitationsProxy } from '../invitations';
 import { AgentQuerySourceProvider } from './agent-query-source-provider';
 import { IndexQuerySourceProvider } from './index-query-source-provider';
 import { SpaceProxy } from './space-proxy';
+import { InvitationsProxy } from '../invitations';
 
 @trace.resource()
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
