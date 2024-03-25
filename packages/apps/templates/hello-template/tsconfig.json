@@ -13,7 +13,6 @@
     ]
   },
   "include": [
-    "package.json",
     "src",
     "test"
   ],
