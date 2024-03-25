@@ -17,6 +17,9 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/codec-protobuf"
+    },
+    {
       "path": "../../../common/context"
     },
     {
@@ -36,6 +39,9 @@
     },
     {
       "path": "../../../common/random-access-storage"
+    },
+    {
+      "path": "../../../common/tracing"
     },
     {
       "path": "../../../common/util"

@@ -13,6 +13,7 @@ import { createRoot } from 'react-dom/client';
 import { TextObject } from '@dxos/echo-schema';
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { Button, DensityProvider, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
 import { baseSurface, defaultTx, getSize, mx, textBlockWidth } from '@dxos/react-ui-theme';
@@ -32,7 +33,7 @@ import {
   createThemeExtensions,
   decorateMarkdown,
   defaultOptions,
-  dnd,
+  dropFile,
   formattingKeymap,
   image,
   linkTooltip,
@@ -501,7 +502,18 @@ export const Annotations = {
 };
 
 export const DND = {
-  render: () => <Story text={str('# DND', '')} extensions={[dnd()]} />,
+  render: () => (
+    <Story
+      text={str('# DND', '')}
+      extensions={[
+        dropFile({
+          onDrop: (view, event) => {
+            log.info('drop', event);
+          },
+        }),
+      ]}
+    />
+  ),
 };
 
 const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewriter')?.split(',');

@@ -2,33 +2,32 @@
 // Copyright 2020 DXOS.org
 //
 
-import { asyncTimeout, Trigger } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { type ClientServices } from '@dxos/client-protocol';
 import { ClientServicesHost } from '@dxos/client-services';
 import { type ServiceContextRuntimeParams } from '@dxos/client-services/src';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { DocumentModel } from '@dxos/document-model';
-import { type DatabaseProxy, genesisMutation } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import {
-  createSimplePeerTransportFactory,
-  createLibDataChannelTransportFactory,
   MemoryTransportFactory,
-  TransportKind,
-  type TransportFactory,
   TcpTransportFactory,
+  TransportKind,
+  createLibDataChannelTransportFactory,
+  createSimplePeerTransportFactory,
+  type TransportFactory,
 } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
 import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
+import { defer } from '@dxos/util';
 
 import { Client } from '../client';
-import { createDefaultModelFactory } from '../echo';
+import { Expando, type EchoDatabase } from '../echo';
 import { ClientServicesProxy, LocalClientServices } from '../services';
 
 export const testConfigWithLocalSignal = new Config({
@@ -59,7 +58,6 @@ export class TestBuilder {
   // prettier-ignore
   constructor (
     config?: Config,
-    private readonly _modelFactory = createDefaultModelFactory(),
     public signalManagerContext = new MemorySignalManagerContext(),
     // TODO(nf): configure better
     transport = process.env.MOCHA_ENV === 'nodejs' ? TransportKind.LIBDATACHANNEL : TransportKind.SIMPLE_PEER,
@@ -116,7 +114,6 @@ export class TestBuilder {
   createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams) {
     const services = new ClientServicesHost({
       config: this.config,
-      modelFactory: this._modelFactory,
       storage: this.storage,
       runtimeParams,
       ...this.networking,
@@ -131,7 +128,6 @@ export class TestBuilder {
   createLocal() {
     const services = new LocalClientServices({
       config: this.config,
-      modelFactory: this._modelFactory,
       storage: this.storage,
       ...this.networking,
     });
@@ -163,30 +159,29 @@ export class TestBuilder {
   }
 }
 
-export const testSpace = async (create: DatabaseProxy, check: DatabaseProxy = create) => {
-  const objectId = PublicKey.random().toHex();
+export const testSpaceAutomerge = async (create: EchoDatabase, check: EchoDatabase = create) => {
+  const object = new Expando();
 
-  const result = create.mutate(genesisMutation(objectId, DocumentModel.meta.type));
-  create.commitBatch();
+  create.add(object);
 
-  await result.batch.getReceipt();
-  // TODO(dmaretskiy): await result.waitToBeProcessed()
-  invariant(create._itemManager.entities.has(result.updateEvent.itemsUpdated[0].id));
-
-  await asyncTimeout(
-    check.itemUpdate.waitForCondition(() => check._itemManager.entities.has(objectId)),
-    1000,
+  const done = new Trigger<void>();
+  const query = check.query((o: Expando) => o.id === object.id);
+  using _ = defer(
+    query.subscribe(() => {
+      if (query.objects.length > 0) {
+        done.wake();
+      }
+    }, true),
   );
 
-  return result;
+  await done.wait({ timeout: 1000 });
+
+  return { objectId: object.id };
 };
 
-export const syncItems = async (db1: DatabaseProxy, db2: DatabaseProxy) => {
-  // Check item replicated from 1 => 2.
-  await testSpace(db1, db2);
-
-  // Check item replicated from 2 => 1.
-  await testSpace(db2, db1);
+export const syncItemsAutomerge = async (db1: EchoDatabase, db2: EchoDatabase) => {
+  await testSpaceAutomerge(db1, db2);
+  await testSpaceAutomerge(db2, db1);
 };
 
 /**

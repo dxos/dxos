@@ -5,7 +5,7 @@
 import * as S from '@effect/schema/Schema';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
-import { Reference } from '@dxos/document-model';
+import { Reference } from '@dxos/echo-db';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { assignDeep, ComplexMap, defaultMap, getDeep } from '@dxos/util';
@@ -47,8 +47,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   _proxyMap = new WeakMap<object, any>();
 
   _objectCore = new AutomergeObjectCore();
-
-  private _signal = compositeRuntime.createSignal();
 
   private _targetsMap = new ComplexMap<KeyPath, ProxyTarget>((key) => JSON.stringify(key));
 
@@ -116,7 +114,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
     invariant(Array.isArray(target[symbolPath]));
 
-    this._signal.notifyRead();
+    this._objectCore.signal.notifyRead();
 
     if (isRootDataObject(target)) {
       const handled = this._handleRootObjectProperty(target, prop);
@@ -259,8 +257,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       this._objectCore.set(fullPath, encoded);
     }
 
-    this._signal.notifyWrite();
-
     return true;
   }
 
@@ -331,8 +327,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
     invariant(newLength !== -1);
 
-    this._signal.notifyWrite();
-
     return newLength;
   }
 
@@ -346,8 +340,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       returnValue = array.pop();
     });
 
-    this._signal.notifyWrite();
-
     return returnValue;
   }
 
@@ -360,8 +352,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       invariant(Array.isArray(array));
       returnValue = array.shift();
     });
-
-    this._signal.notifyWrite();
 
     return returnValue;
   }
@@ -380,8 +370,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       newLength = array.unshift(...encodedItems);
     });
     invariant(newLength !== -1);
-
-    this._signal.notifyWrite();
 
     return newLength;
   }
@@ -405,8 +393,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
     invariant(deletedElements);
 
-    this._signal.notifyWrite();
-
     return deletedElements;
   }
 
@@ -420,8 +406,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       assignDeep(doc, fullPath, sortedArray);
     });
 
-    this._signal.notifyWrite();
-
     return target;
   }
 
@@ -434,8 +418,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const reversedArray = [...array].reverse();
       assignDeep(doc, fullPath, reversedArray);
     });
-
-    this._signal.notifyWrite();
 
     return target;
   }
@@ -458,8 +440,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       trimmedArray.length = newLength;
       assignDeep(doc, fullPath, trimmedArray);
     });
-
-    this._signal.notifyWrite();
   }
 
   private _validateForArray(target: any, path: KeyPath, items: any[], start: number) {

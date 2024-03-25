@@ -4,40 +4,29 @@
 
 import isEqualWith from 'lodash.isequalwith';
 
-import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
-import {
-  type ClientServicesProvider,
-  Properties,
-  type Space,
-  type SpaceInternal,
-  PropertiesSchema,
-} from '@dxos/client-protocol';
+import { Event, MulticastObservable, scheduleMicroTask, synchronized, Trigger } from '@dxos/async';
+import { Properties, type ClientServicesProvider, type Space, type SpaceInternal } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
-import { loadashEqualityFn, todo } from '@dxos/debug';
-import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
+import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
 import {
-  type EchoDatabase,
-  forceUpdate,
-  setStateFromSnapshot,
+  EchoDatabaseImpl,
   type AutomergeContext,
+  type EchoDatabase,
   type Hypergraph,
   type TypedObject,
-  EchoDatabaseImpl,
 } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type ModelFactory } from '@dxos/model-factory';
 import { decodeError } from '@dxos/protocols';
 import {
   Invitation,
-  type Space as SpaceData,
-  type SpaceMember,
   SpaceState,
   type CreateEpochRequest,
+  type Space as SpaceData,
+  type SpaceMember,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -89,8 +78,6 @@ export class SpaceProxy implements Space {
 
   private readonly _db!: EchoDatabaseImpl;
   private readonly _internal!: SpaceInternal;
-  private readonly _dbBackend: DatabaseProxy;
-  private readonly _itemManager: ItemManager;
   private readonly _invitationsProxy: InvitationsProxy;
 
   private readonly _state = MulticastObservable.from(this._stateUpdate, SpaceState.CLOSED);
@@ -98,13 +85,12 @@ export class SpaceProxy implements Space {
   private readonly _membersUpdate = new Event<SpaceMember[]>();
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
+  private _databaseOpen = false;
   private _error: Error | undefined = undefined;
-  private _cachedProperties: Properties;
   private _properties?: TypedObject = undefined;
 
   constructor(
     private _clientServices: ClientServicesProvider,
-    private _modelFactory: ModelFactory,
     private _data: SpaceData,
     graph: Hypergraph,
     automergeContext: AutomergeContext,
@@ -122,12 +108,6 @@ export class SpaceProxy implements Space {
     );
 
     invariant(this._clientServices.services.DataService, 'DataService not available');
-    this._itemManager = new ItemManager(this._modelFactory);
-    this._dbBackend = new DatabaseProxy({
-      service: this._clientServices.services.DataService,
-      itemManager: this._itemManager,
-      spaceKey: this.key,
-    });
     this._db = new EchoDatabaseImpl({
       spaceKey: this.key,
       graph,
@@ -138,7 +118,9 @@ export class SpaceProxy implements Space {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     this._internal = {
-      db: this._dbBackend,
+      get db(): never {
+        throw new Error('Use space.db instead');
+      },
       get data() {
         return self._data;
       },
@@ -156,15 +138,6 @@ export class SpaceProxy implements Space {
     this._stateUpdate.emit(this._currentState);
     this._pipelineUpdate.emit(_data.pipeline ?? {});
     this._membersUpdate.emit(_data.members ?? []);
-
-    if (options.useReactiveObjectApi) {
-      this._cachedProperties = E.object(PropertiesSchema, {}) as any;
-    } else {
-      this._cachedProperties = new Properties({}, { immutable: true });
-      if (this._data.cache?.properties) {
-        setStateFromSnapshot(this._cachedProperties, this._data.cache.properties);
-      }
-    }
   }
 
   @trace.info()
@@ -183,12 +156,11 @@ export class SpaceProxy implements Space {
 
   @trace.info({ depth: 2 })
   get properties(): TypedObject {
-    if (this._properties) {
-      return this._properties;
-    } else {
-      log('using cached properties');
-      return this._cachedProperties;
+    if (!this._initialized) {
+      throw new Error('Space is not initialized');
     }
+    invariant(this._properties, 'Properties not available');
+    return this._properties;
   }
 
   get state() {
@@ -252,13 +224,9 @@ export class SpaceProxy implements Space {
     const emitEvent = shouldUpdate(this._data, space);
     const emitPipelineEvent = shouldPipelineUpdate(this._data, space);
     const emitMembersEvent = shouldMembersUpdate(this._data.members, space.members);
-    const shouldPropertiesUpdate =
-      space.cache?.properties &&
-      !this._properties &&
-      !isEqualWith(this._data.cache?.properties, space.cache.properties, loadashEqualityFn);
     const isFirstTimeInitializing = space.state === SpaceState.READY && !(this._initialized || this._initializing);
     const isReopening =
-      this._data.state !== SpaceState.READY && space.state === SpaceState.READY && this._dbBackend.isClosed;
+      this._data.state !== SpaceState.READY && space.state === SpaceState.READY && !this._databaseOpen;
     log('update', {
       key: space.spaceKey,
       prevState: SpaceState[this._data.state],
@@ -266,7 +234,6 @@ export class SpaceProxy implements Space {
       emitEvent,
       emitPipelineEvent,
       emitMembersEvent,
-      shouldPropertiesUpdate,
       isFirstTimeInitializing,
       isReopening,
     });
@@ -301,10 +268,6 @@ export class SpaceProxy implements Space {
     if (emitMembersEvent) {
       this._membersUpdate.emit(space.members!);
     }
-    if (shouldPropertiesUpdate) {
-      setStateFromSnapshot(this._cachedProperties, space.cache!.properties!);
-      forceUpdate(this._cachedProperties);
-    }
   }
 
   private async _initialize() {
@@ -329,7 +292,7 @@ export class SpaceProxy implements Space {
   }
 
   private async _initializeDb() {
-    await this._dbBackend!.open(this._modelFactory);
+    this._databaseOpen = true;
 
     {
       let automergeRoot;
@@ -344,27 +307,29 @@ export class SpaceProxy implements Space {
     }
 
     log('ready');
+
     this._databaseInitialized.wake();
 
+    const propertiesAvailable = new Trigger();
     // Set properties document when it's available.
     // NOTE: Emits state update event when properties are first available.
     //   This is needed to ensure reactivity for newly created spaces.
     // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
-      const query = this._db.query(Properties.filter());
-      if (query.objects.length > 0) {
-        this._properties = query.objects[0];
-        this._stateUpdate.emit(this._currentState);
-      } else {
-        const unsubscribe = query.subscribe((query) => {
-          if (query.objects.length === 1) {
-            this._properties = query.objects[0];
-            this._stateUpdate.emit(this._currentState);
+      const unsubscribe = this._db.query(Properties.filter()).subscribe((query) => {
+        if (query.objects.length === 1) {
+          this._properties = query.objects[0];
+          propertiesAvailable.wake();
+          this._stateUpdate.emit(this._currentState);
+          scheduleMicroTask(this._ctx, () => {
             unsubscribe();
-          }
-        });
-      }
+          });
+        }
+      }, true);
     }
+    await warnAfterTimeout(5_000, 'Finding properties for a space', () =>
+      cancelWithContext(this._ctx, propertiesAvailable.wait()),
+    );
   }
 
   /**
@@ -377,8 +342,7 @@ export class SpaceProxy implements Space {
     await this._ctx.dispose();
     await this._invitationsProxy.close();
     await this._db.automerge.close();
-    await this._dbBackend?.close();
-    await this._itemManager?.destroy();
+    this._databaseOpen = false;
     log('destroyed');
   }
 

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "React client API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -93,7 +93,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/react-async": "workspace:*",
-    "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
@@ -116,7 +115,6 @@
   },
   "optionalDependencies": {
     "@dxos/random": "workspace:*",
-    "@dxos/text-model": "workspace:*",
     "yjs": "^13.6.10"
   },
   "publishConfig": {

@@ -3,15 +3,9 @@
 //
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
-import { cancelWithContext, Context } from '@dxos/context';
-import { type CredentialSigner, getCredentialAssertion } from '@dxos/credentials';
-import {
-  type AutomergeHost,
-  type DataServiceSubscriptions,
-  type MetadataStore,
-  type Space,
-  type SpaceManager,
-} from '@dxos/echo-pipeline';
+import { Context, cancelWithContext } from '@dxos/context';
+import { getCredentialAssertion, type CredentialSigner } from '@dxos/credentials';
+import { type AutomergeHost, type MetadataStore, type Space, type SpaceManager } from '@dxos/echo-pipeline';
 import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -80,7 +74,6 @@ export class DataSpaceManager {
   constructor(
     private readonly _spaceManager: SpaceManager,
     private readonly _metadataStore: MetadataStore,
-    private readonly _dataServiceSubscriptions: DataServiceSubscriptions,
     private readonly _keyring: Keyring,
     private readonly _signingContext: SigningContext,
     private readonly _feedStore: FeedStore<FeedMessage>,
@@ -270,10 +263,6 @@ export class DataSpaceManager {
       callbacks: {
         beforeReady: async () => {
           log('before space ready', { space: space.key });
-          await this._dataServiceSubscriptions.registerSpace(
-            space.key,
-            dataSpace.dataPipeline.databaseHost!.createDataServiceHost(),
-          );
         },
         afterReady: async () => {
           log('after space ready', { space: space.key, open: this._isOpen });
@@ -283,7 +272,6 @@ export class DataSpaceManager {
         },
         beforeClose: async () => {
           log('before space close', { space: space.key });
-          await this._dataServiceSubscriptions.unregisterSpace(space.key);
         },
       },
       cache: metadata.cache,
@@ -296,9 +284,6 @@ export class DataSpaceManager {
 
     if (metadata.controlTimeframe) {
       dataSpace.inner.controlPipeline.state.setTargetTimeframe(metadata.controlTimeframe);
-    }
-    if (metadata.dataTimeframe) {
-      dataSpace.dataPipeline.setTargetTimeframe(metadata.dataTimeframe);
     }
 
     this._spaces.set(metadata.key, dataSpace);

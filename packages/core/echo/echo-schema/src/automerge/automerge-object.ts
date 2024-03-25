@@ -5,7 +5,7 @@
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { type ChangeFn, type Doc } from '@dxos/automerge/automerge';
-import { Reference } from '@dxos/document-model';
+import { Reference } from '@dxos/echo-db';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

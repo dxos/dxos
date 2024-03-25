@@ -5,7 +5,6 @@
 import * as AST from '@effect/schema/AST';
 import { isTypeLiteral } from '@effect/schema/AST';
 import * as S from '@effect/schema/Schema';
-import * as Option from 'effect/Option';
 
 import { invariant } from '@dxos/invariant';
 
@@ -40,9 +39,9 @@ export class SchemaValidator {
         getTypeDiscriminators(typeAstList);
       }
       visitAll(typeAstList);
-    } else if (AST.isTuple(schema.ast)) {
+    } else if (AST.isTupleType(schema.ast)) {
       const positionalTypes = schema.ast.elements.map((e) => e.type);
-      const allTypes = positionalTypes.concat(Option.getOrElse(schema.ast.rest, () => []));
+      const allTypes = positionalTypes.concat(schema.ast.rest);
       visitAll(allTypes);
     } else if (AST.isTypeLiteral(schema.ast)) {
       visitAll(AST.getPropertySignatures(schema.ast).map((p) => p.type));
@@ -80,8 +79,8 @@ export class SchemaValidator {
     let schema: S.Schema<any> = rootObjectSchema;
     for (let i = 0; i < propertyPath.length; i++) {
       const propertyName = propertyPath[i];
-      const tupleAst = AST.isUnion(schema.ast) ? schema.ast.types.find((ast) => AST.isTuple(ast)) : null;
-      if (AST.isTuple(tupleAst ?? schema.ast)) {
+      const tupleAst = AST.isUnion(schema.ast) ? schema.ast.types.find((ast) => AST.isTupleType(ast)) : null;
+      if (AST.isTupleType(tupleAst ?? schema.ast)) {
         schema = getArrayElementSchema(schema, propertyName);
       } else {
         const allProperties = getProperties(schema.ast, (propertyName) =>
@@ -107,24 +106,26 @@ const getArrayElementSchema = (arraySchema: S.Schema<any>, property: string | sy
     invariant(property === 'length', `invalid array property: ${String(property)}`);
     return S.number;
   }
-  let arrayAst = AST.isTuple(arraySchema.ast) ? arraySchema.ast : null;
+  let arrayAst = AST.isTupleType(arraySchema.ast) ? arraySchema.ast : null;
   if (AST.isUnion(arraySchema.ast)) {
-    arrayAst = arraySchema.ast.types.find((ast) => AST.isTuple(ast)) as AST.Tuple;
+    arrayAst = arraySchema.ast.types.find((ast) => AST.isTupleType(ast)) as AST.TupleType;
   }
   invariant(arrayAst, 'not an array');
   if (elementIndex < arrayAst.elements.length) {
     return S.make(arrayAst.elements[elementIndex].type);
   }
-  const restType = Option.getOrNull(arrayAst.rest);
-  invariant(restType, 'element index out of bounds');
+  const restType = arrayAst.rest;
   return S.make(restType[0]);
 };
+
+const flattenUnion = (typeAst: AST.AST): AST.AST[] =>
+  AST.isUnion(typeAst) ? typeAst.types.flatMap(flattenUnion) : [typeAst];
 
 const getProperties = (
   typeAst: AST.AST,
   getTargetPropertyFn: (propertyName: string) => any,
 ): AST.PropertySignature[] => {
-  const astCandidates = AST.isUnion(typeAst) ? typeAst.types : [typeAst];
+  const astCandidates = flattenUnion(typeAst);
   const typeAstList = astCandidates.filter((type) => AST.isTypeLiteral(type)) as AST.TypeLiteral[];
   invariant(typeAstList.length > 0, `target can't have properties since it's not a type: ${typeAst._tag}`);
   if (typeAstList.length === 1) {

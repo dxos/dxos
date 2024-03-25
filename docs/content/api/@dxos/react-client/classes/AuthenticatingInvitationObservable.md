@@ -1,5 +1,5 @@
 # Class `AuthenticatingInvitationObservable`
-<sub>Declared in [packages/sdk/client-protocol/dist/types/src/invitations/invitations.d.ts:26]()</sub>
+<sub>Declared in [packages/sdk/client-protocol/dist/types/src/invitations/invitations.d.ts:28]()</sub>
 
 
 Cancelable observer that relays authentication requests.
@@ -21,6 +21,16 @@ Arguments:
 ## Properties
 ### [_value]()
 Type: <code>[Invitation](/api/@dxos/react-client/interfaces/Invitation)</code>
+
+
+
+### [expired]()
+Type: <code>undefined | boolean | "0"</code>
+
+
+
+### [expiry]()
+Type: <code>undefined | Date</code>
 
 
 

@@ -78,7 +78,9 @@ export class ControlPipeline {
         queueMicrotask(async () => {
           try {
             const feed = await feedProvider(info.key);
-            await this._pipeline.addFeed(feed);
+            if (!this._pipeline.hasFeed(feed.key)) {
+              await this._pipeline.addFeed(feed);
+            }
           } catch (err: any) {
             log.catch(err);
           }

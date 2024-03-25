@@ -155,13 +155,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                   onOpenChange: setOptionsMenuOpen,
                 }}
               >
-                <DropDownMenuDragHandleTrigger
-                  active={!!active}
-                  variant='ghost'
-                  classNames='m-0'
-                  data-testid='section.drag-handle'
-                  {...draggableProps}
-                >
+                <DropDownMenuDragHandleTrigger active={!!active} variant='ghost' classNames='m-0' {...draggableProps}>
                   <Icon className={mx(getSize(5), 'transition-opacity')} />
                 </DropDownMenuDragHandleTrigger>
                 <DropdownMenu.Portal>
@@ -258,11 +252,13 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
     const itemObject = transformedItem.object ?? (transformedItem as unknown as { data: StackSectionContent }).data;
 
     const title =
-      itemObject?.title ?? typeof transformedItem.placeholder === 'string'
-        ? (transformedItem.placeholder as string)
+      itemObject?.title ??
+      // TODO(wittjosiah): `t` function is thinks it might not always return a string here for some reason.
+      ((typeof transformedItem.placeholder === 'string'
+        ? transformedItem.placeholder
         : transformedItem.placeholder
           ? t(...transformedItem.placeholder)
-          : t('untitled section title');
+          : t('untitled section title')) as string);
 
     const section = (
       <Section

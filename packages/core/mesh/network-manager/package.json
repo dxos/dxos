@@ -1,6 +1,6 @@
 {
   "name": "@dxos/network-manager",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "Network Manager",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -39,7 +39,7 @@
     "@koush/wrtc": "^0.5.3",
     "isomorphic-ws": "^4.0.1",
     "nanomessage-rpc": "^3.0.0",
-    "node-datachannel": "^0.5.4",
+    "node-datachannel": "^0.5.5",
     "p-defer": "^3.0.0",
     "simple-peer": "9.11.1",
     "stream": "^0.0.2",
