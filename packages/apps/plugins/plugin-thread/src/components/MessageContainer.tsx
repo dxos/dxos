@@ -75,7 +75,7 @@ const TextboxBlock = ({
   const textboxWidth = onBlockDelete ? 'col-span-2' : 'col-span-3';
   const { parentRef } = useTextEditor(
     () => ({
-      doc: getTextContent(text),
+      doc: text.content,
       // prettier-ignore
       extensions: [
         createBasicExtensions({ readonly }),

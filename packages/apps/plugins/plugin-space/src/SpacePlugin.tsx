@@ -47,6 +47,7 @@ import {
   PopoverRenameSpace,
   ShareSpaceButton,
   SmallPresence,
+  SmallPresenceLive,
   SpaceMain,
   SpacePresence,
   SpaceSettings,
@@ -299,15 +300,10 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 return null;
               }
             case 'presence--glyph': {
-              return (
-                <SmallPresence
-                  count={E.isReactiveProxy(data.object) ? state.viewersByObject[data.object.id]?.size ?? 0 : 0}
-                />
-                // return isTypedObject(data.object) ? (
-                //   <SmallPresenceLive viewers={state.viewersByObject[data.object.id]} />
-                // ) : (
-                //   <SmallPresence count={0} />
-                // );
+              return E.isReactiveProxy(data.object) ? (
+                <SmallPresenceLive viewers={state.viewersByObject[data.object.id]} />
+              ) : (
+                <SmallPresence count={0} />
               );
             }
             case 'navbar-start': {

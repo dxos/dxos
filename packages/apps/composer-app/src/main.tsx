@@ -43,7 +43,6 @@ import TableMeta from '@braneframe/plugin-table/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
-import { types } from '@braneframe/types';
 import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
 import { createStorageObjects } from '@dxos/client-services';
 import { defs, SaveConfig } from '@dxos/config';
@@ -165,7 +164,6 @@ const main = async () => {
         appKey,
         config,
         services,
-        types,
         shell: './shell.html',
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),

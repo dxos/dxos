@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { useState } from 'react';
 
-import { SketchType, TextV0Type } from '@braneframe/types';
+import { SketchType } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
 import { FullscreenDecorator } from '@dxos/react-client/testing';
 import { Button, Toolbar } from '@dxos/react-ui';
@@ -14,9 +14,7 @@ import { Button, Toolbar } from '@dxos/react-ui';
 import SketchComponent from './Sketch';
 
 const Story = () => {
-  const [sketch, setSketch] = useState<SketchType>(
-    E.object(SketchType, { data: E.object(TextV0Type, { content: '' }) }),
-  );
+  const [sketch, setSketch] = useState<SketchType>(E.object(SketchType, { data: E.object(E.ExpandoType, {}) }));
 
   return (
     <div className='flex flex-col grow overflow-hidden divide-y'>

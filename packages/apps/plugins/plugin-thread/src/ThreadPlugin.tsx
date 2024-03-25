@@ -80,8 +80,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             : getSpaceForObject(activeNode.data)
           : undefined;
         untracked(() => {
-          // const [thread] = space?.db.query(ThreadType.filter((thread) => !thread.context)).objects ?? [];
-          const [thread] = space?.db.query(Filter.schema(ThreadType)).objects.filter((thread) => !thread.context) ?? [];
+          const [thread] = space?.db.query(Filter.schema(ThreadType, (thread) => !thread.context)).objects ?? [];
           if (activeNode && isDocument(activeNode?.data) && (activeNode.data.comments?.length ?? 0) > 0) {
             void intentPlugin?.provides.intent.dispatch({
               action: LayoutAction.SET_LAYOUT,
