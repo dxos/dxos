@@ -42,6 +42,7 @@ export {
   TypeCollection,
 } from '@dxos/echo-schema';
 
+export { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 export { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';

@@ -10,7 +10,7 @@ import { AbstractStorage, getFullPath } from '../common';
  * Base class for random access files based on IDB.
  */
 export abstract class BrowserStorage extends AbstractStorage {
-  private readonly _fileStorage: (filename: string, opts?: {}) => RandomAccessStorage;
+  protected readonly _fileStorage: (filename: string, opts?: {}) => RandomAccessStorage;
 
   constructor(path: string) {
     super(path);
