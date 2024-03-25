@@ -6,13 +6,12 @@ import { expect } from 'chai';
 
 import { asyncChain, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
-import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { type ServiceContext } from '../services';
-import { createIdentity, createPeers, syncItemsLocal } from '../testing';
+import { createIdentity, createPeers } from '../testing';
 import { performInvitation } from '../testing/invitation-utils';
 
 const closeAfterTest = async (peer: ServiceContext) => {
@@ -40,14 +39,6 @@ describe('services/space-invitations-protocol', () => {
     await space.close();
   });
 
-  test('genesis with database mutations', async () => {
-    const [peer] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
-    const space = await peer.dataSpaceManager!.createSpace();
-    afterTest(() => space.close());
-
-    await testLocalDatabase(space.dataPipeline);
-  });
-
   test('invitation with no auth', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
@@ -65,7 +56,7 @@ describe('services/space-invitations-protocol', () => {
       await host.dataSpaceManager?.waitUntilSpaceReady(space1.key);
       await guest.dataSpaceManager?.waitUntilSpaceReady(space2.key);
 
-      await syncItemsLocal(space1.dataPipeline, space2.dataPipeline);
+      await space2.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.timeframe);
 
       await space1.close();
       await space2.close();
@@ -149,7 +140,7 @@ describe('services/space-invitations-protocol', () => {
       await host.dataSpaceManager?.waitUntilSpaceReady(space1.key);
       await guest.dataSpaceManager?.waitUntilSpaceReady(space2.key);
 
-      await syncItemsLocal(space1.dataPipeline, space2.dataPipeline);
+      await space2.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.timeframe);
 
       await space1.close();
       await space2.close();

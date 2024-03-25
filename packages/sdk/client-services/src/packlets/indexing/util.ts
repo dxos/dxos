@@ -24,8 +24,8 @@ export const createLoadDocuments = (automergeHost: AutomergeHost) =>
       const handle = automergeHost.repo.find(documentId as any);
       await warnAfterTimeout(5000, 'to long to load doc', () => handle.whenReady());
       const doc = handle.docSync();
-      const heads = getHeads(doc);
-      yield [{ id, object: doc.objects[objectId], currentHash: heads.at(-1)! }];
+      const hash = getHeads(doc).join('');
+      yield [{ id, object: doc.objects[objectId], currentHash: hash }];
     }
   };
 
