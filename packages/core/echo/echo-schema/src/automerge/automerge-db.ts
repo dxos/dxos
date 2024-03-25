@@ -11,11 +11,6 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type EchoDatabase } from '../database';
-import { isReactiveProxy } from '../effect/proxy';
-import { type Hypergraph } from '../hypergraph';
-import { isAutomergeObject, type EchoObject, type OpaqueEchoObject } from '../object';
-import { type Schema } from '../proto';
 import { type AutomergeContext } from './automerge-context';
 import {
   AutomergeDocumentLoaderImpl,
@@ -27,6 +22,11 @@ import { getAutomergeObjectCore, type AutomergeObject } from './automerge-object
 import { AutomergeObjectCore } from './automerge-object-core';
 import { type SpaceDoc } from './types';
 import { getInlineAndLinkChanges } from './utils';
+import { type EchoDatabase } from '../database';
+import { isReactiveProxy } from '../effect/proxy';
+import { type Hypergraph } from '../hypergraph';
+import { isAutomergeObject, type EchoObject, type OpaqueEchoObject } from '../object';
+import { type Schema } from '../proto';
 
 export type SpaceState = {
   // Url of the root automerge document.
