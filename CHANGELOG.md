@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.4.9](https://github.com/dxos/dxos/compare/v0.4.8...v0.4.9) (2024-03-25)
+
+
+### Features
+
+* **echo:** json-effect schema codec ([#6065](https://github.com/dxos/dxos/issues/6065)) ([a108ade](https://github.com/dxos/dxos/commit/a108ade6950ca2719f6e25c28905a91b3f9e1e7c))
+* Run composer with indexing and full space fragmentation ([#5928](https://github.com/dxos/dxos/issues/5928)) ([7750cb2](https://github.com/dxos/dxos/commit/7750cb2277ff9058285f8bb758470c6c8e8adc02))
+* **tables:** Mobile support ([#6040](https://github.com/dxos/dxos/issues/6040)) ([d4fb12a](https://github.com/dxos/dxos/commit/d4fb12ae82d528cfaaec78dcfdc996974c34bfb5))
+* Use traces in indexing ([#6071](https://github.com/dxos/dxos/issues/6071)) ([1057b49](https://github.com/dxos/dxos/commit/1057b494da3f5e60eec6be3889a100ab396db9ef))
+
+
+### Bug Fixes
+
+* Increase replication timeouts ([#6070](https://github.com/dxos/dxos/issues/6070)) ([8437471](https://github.com/dxos/dxos/commit/84374716cde4d418881ab6cf3ff3aa3da0f3f145))
+* **plugin-navtree:** don't duplicate items when dragging into a stack ([#6068](https://github.com/dxos/dxos/issues/6068)) ([f3fe18b](https://github.com/dxos/dxos/commit/f3fe18b44fa92cfe18cba0f9aff92aa7f79a2884))
+* **plugin-presenter:** Presenter theme ([#6062](https://github.com/dxos/dxos/issues/6062)) ([76223f7](https://github.com/dxos/dxos/commit/76223f7ebe4aae8eda0a98e97303223b374c2bc5))
+* **presenter-plugin:** hook up close button ([#6060](https://github.com/dxos/dxos/issues/6060)) ([80b4fd7](https://github.com/dxos/dxos/commit/80b4fd7cd6cc773d348714bde63ed7ed8fd0137c))
+* **react-ui-editor:** Mitigate ref error crashing Editor’s toolbar ([#6064](https://github.com/dxos/dxos/issues/6064)) ([2d20855](https://github.com/dxos/dxos/commit/2d208557448dc645d393d76e0666be4c1f26fe58))
+* **react-ui-stack:** stop crashing on uploaded files ([#6061](https://github.com/dxos/dxos/issues/6061)) ([2f03cf8](https://github.com/dxos/dxos/commit/2f03cf851522ed515f67f39667db74a5e11a9c54))
+* **react-ui-theme:** Adjust `baseGlass` token ([#6034](https://github.com/dxos/dxos/issues/6034)) ([f80fe62](https://github.com/dxos/dxos/commit/f80fe62ce8f505ffee9470e416b858204e86e8d9))
+* **tables:** don't use memoizing context in table ([#6057](https://github.com/dxos/dxos/issues/6057)) ([a3cfaa7](https://github.com/dxos/dxos/commit/a3cfaa7c425681bab43a12713ed1a7aa4a2ec9e6))
+
 ## [0.4.8](https://github.com/dxos/dxos/compare/v0.4.7...v0.4.8) (2024-03-21)
 
 

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-typegen",
-  "version": "0.4.8",
+  "version": "0.4.9",
   "description": "ECHO type generator.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
