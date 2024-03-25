@@ -4,7 +4,7 @@
 
 import React, { Children, type ComponentPropsWithRef, forwardRef, useCallback, useEffect, useState } from 'react';
 
-import { Button, Main, type MainProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Main, type MainProps, type ThemedClassName, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../../translations';
@@ -36,6 +36,7 @@ type DeckColumnResizing = Pick<MouseEvent, 'pageX'> & { size: number } & { [Unit
 const DeckColumn = forwardRef<HTMLDivElement, DeckColumnProps>(
   ({ unit = 'rem', classNames, style, children, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
+    const [isSm] = useMediaQuery('sm', { ssr: false });
 
     const [size, setSize] = useState<number>(20);
     const [resizing, setResizing] = useState<null | DeckColumnResizing>(null);
@@ -63,17 +64,28 @@ const DeckColumn = forwardRef<HTMLDivElement, DeckColumnProps>(
     return (
       <article
         {...props}
-        style={{ inlineSize: `${size}${unit}`, ...style }}
+        style={{ inlineSize: isSm ? `${size}${unit}` : '100dvw', ...style }}
         className={mx('relative', classNames)}
         ref={forwardedRef}
       >
         {children}
         <Button
-          classNames='absolute inline-end-0 inset-block-2 is-2 touch-none'
+          variant='ghost'
+          classNames='hidden sm:block absolute inline-end-0 inset-block-2 is-4 pointer-fine:is-2 p-0 !rounded-full touch-none'
           onPointerDown={({ isPrimary, pageX }) => {
             if (isPrimary) {
               const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
               setResizing({ pageX, size, rem, px: 1 });
+            }
+          }}
+          onKeyDown={(event) => {
+            switch (event.key) {
+              case 'ArrowLeft':
+                event.preventDefault();
+                return setSize(size - (unit === 'px' ? 10 : 1));
+              case 'ArrowRight':
+                event.preventDefault();
+                return setSize(size + (unit === 'px' ? 10 : 1));
             }
           }}
         >
