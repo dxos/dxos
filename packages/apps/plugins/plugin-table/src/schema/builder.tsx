@@ -132,7 +132,7 @@ export const createActionColumn = (
     // TODO(burdon): Translation.
     header: onColumnUpdate
       ? () => (
-          <div className='flex justify-center items-center'>
+          <div className='grid place-items-center'>
             <Button variant='ghost' onClick={handleAddColumn} title='New column'>
               <Plus className={getSize(4)} />
             </Button>
@@ -142,14 +142,16 @@ export const createActionColumn = (
     cell: onRowDelete
       ? (cell) =>
           cell.row.original.id ? (
-            <Button
-              variant='ghost'
-              onClick={() => onRowDelete(cell.row.original)}
-              title='Delete row'
-              classNames='rounded-none'
-            >
-              <X className={getSize(4)} />
-            </Button>
+            <div className='grid place-items-center'>
+              <Button
+                variant='ghost'
+                onClick={() => onRowDelete(cell.row.original)}
+                title='Delete row'
+                classNames='rounded-none'
+              >
+                <X className={getSize(4)} />
+              </Button>
+            </div>
           ) : null
       : undefined,
   }) as TableColumnDef<TypedObject>;
