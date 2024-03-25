@@ -10,6 +10,7 @@ import { type Filter } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { IndexKind, type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { trace } from '@dxos/tracing';
 import { ComplexMap } from '@dxos/util';
 
 import { IndexConstructors } from './index-constructors';
@@ -45,6 +46,7 @@ export type IndexerParams = {
   saveAfterTime?: number;
 };
 
+@trace.resource()
 export class Indexer {
   private readonly _ctx = new Context();
   private _indexConfig?: IndexConfig;
@@ -110,6 +112,7 @@ export class Indexer {
     }
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   @synchronized
   async initialize() {
     if (this._initialized) {
@@ -166,6 +169,7 @@ export class Indexer {
     return arraysOfIds.reduce((acc, ids) => acc.concat(ids), []);
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   private async _promoteNewIndexes() {
     for await (const documents of this._getAllDocuments()) {
       if (this._ctx.disposed) {
@@ -196,6 +200,7 @@ export class Indexer {
     }
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   private async _updateIndexes(indexes: Index[], documents: ObjectSnapshot[]) {
     for (const index of indexes) {
       if (this._ctx.disposed) {
@@ -223,6 +228,7 @@ export class Indexer {
     }
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   @synchronized
   private async _saveIndexes() {
     for (const index of this._indexes.values()) {
