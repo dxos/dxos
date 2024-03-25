@@ -10,7 +10,7 @@ import React, { useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import * as topojson from 'topojson-client';
 
-import { types } from '@braneframe/types';
+import { types } from '@braneframe/types/proto';
 import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
 
 import { Globe } from './Globe';

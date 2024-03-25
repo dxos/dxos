@@ -3,7 +3,7 @@
 //
 
 import type { StackProvides } from '@braneframe/plugin-stack';
-import { Tree as TreeType } from '@braneframe/types';
+import { Tree as TreeType } from '@braneframe/types/proto';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type Table as TableType } from '@braneframe/types';
+import { type Table as TableType } from '@braneframe/types/proto';
 import { type Schema } from '@dxos/client/echo';
 import { type DialogRootProps, Input, Select, useTranslation } from '@dxos/react-ui';
 

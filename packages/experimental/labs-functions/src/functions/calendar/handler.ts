@@ -7,7 +7,7 @@ import { google } from 'googleapis';
 import path from 'node:path';
 import process from 'node:process';
 
-import { Event as EventType, type Message as MessageType } from '@braneframe/types';
+import { Event as EventType, type Message as MessageType } from '@braneframe/types/proto';
 import { subscriptionHandler } from '@dxos/functions';
 import { log } from '@dxos/log';
 

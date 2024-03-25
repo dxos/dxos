@@ -4,7 +4,7 @@
 
 import React, { type FC } from 'react';
 
-import { Tree as TreeType } from '@braneframe/types';
+import { Tree as TreeType } from '@braneframe/types/proto';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 
 import { Outliner } from './Outliner';

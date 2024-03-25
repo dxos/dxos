@@ -4,7 +4,7 @@
 
 import React, { type FC } from 'react';
 
-import { Tree as TreeType } from '@braneframe/types';
+import { Tree as TreeType } from '@braneframe/types/proto';
 import { TextObject, getSpaceForObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {

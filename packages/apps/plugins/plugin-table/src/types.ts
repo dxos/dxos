@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Table as TableType } from '@braneframe/types';
+import { Table as TableType } from '@braneframe/types/proto';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,

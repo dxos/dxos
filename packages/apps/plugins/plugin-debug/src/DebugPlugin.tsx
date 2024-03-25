@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { parseClientPlugin, type ClientPluginProvides } from '@braneframe/plugin-client';
 import { Graph, manageNodes } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { Folder } from '@braneframe/types';
+import { FolderType, isFolder } from '@braneframe/types';
 import {
   getPlugin,
   parseGraphPlugin,
@@ -246,8 +246,8 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                     }
 
                     const folder =
-                      active.space.state.get() === SpaceState.READY && active.space.properties[Folder.schema.typename];
-                    if (!(folder instanceof Folder)) {
+                      active.space.state.get() === SpaceState.READY && active.space.properties[FolderType.typename];
+                    if (!isFolder(folder)) {
                       return;
                     }
 
