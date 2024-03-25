@@ -207,7 +207,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   async setIndexConfig(config: IndexConfig) {
-    await this._serviceProvider.services.IndexService?.setConfig(config);
+    await this._serviceProvider.services.IndexService?.setConfig(config, { timeout: 20_000 }); // TODO(dmaretskyi): Set global timeout instead.
   }
 
   /**
