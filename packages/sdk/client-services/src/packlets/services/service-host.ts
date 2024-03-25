@@ -268,17 +268,13 @@ export class ClientServicesHost {
       SpacesService: new SpacesServiceImpl(
         this._serviceContext.identityManager,
         this._serviceContext.spaceManager,
-        this._serviceContext.dataServiceSubscriptions,
         async () => {
           await this._serviceContext.initialized.wait();
           return this._serviceContext.dataSpaceManager!;
         },
       ),
 
-      DataService: new DataServiceImpl(
-        this._serviceContext.dataServiceSubscriptions,
-        this._serviceContext.automergeHost,
-      ),
+      DataService: new DataServiceImpl(this._serviceContext.automergeHost),
 
       IndexService: new IndexServiceImpl({
         indexer: this._serviceContext.indexer,
