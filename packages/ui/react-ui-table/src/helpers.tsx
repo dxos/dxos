@@ -436,8 +436,9 @@ export class ColumnBuilder<TData extends RowData> {
       enableResizing: false,
       meta: { onUpdate, cell: { classNames } },
       header: ({ table }) => {
-        const { rowsSelectable } = useTableContext('HELPER_SELECT_ROW_HEADER_CELL');
+        const { rowsSelectable } = useTableContext();
         const checked = table.getIsSomeRowsSelected() ? 'indeterminate' : table.getIsAllRowsSelected();
+
         return rowsSelectable === 'multi' ? (
           <div className='flex justify-center w-full h-full' role='presentation'>
             <Input.Root>
