@@ -6,21 +6,18 @@ import { type ClientServices } from '@dxos/client-protocol';
 import { getFirstStreamValue } from '@dxos/codec-protobuf';
 import { type Config, type ConfigProto } from '@dxos/config';
 import { credentialTypeFilter } from '@dxos/credentials';
-import { DocumentModel, type DocumentModelState } from '@dxos/document-model';
-import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import {
+  SpaceMember,
   type Device,
   type Identity,
+  type LogEntry,
   type Metrics,
   type NetworkStatus,
-  type Space as SpaceProto,
   type Platform,
-  SpaceMember,
-  type LogEntry,
+  type Space as SpaceProto,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
@@ -180,25 +177,6 @@ export const createDiagnostics = async (
   return diagnostics;
 };
 
-const getProperties = (space: DataSpace) => {
-  let properties: any = {};
-  try {
-    // Add properties to cache.
-    const propertiesItem = space.dataPipeline.itemManager.items.find(
-      (item) =>
-        item.modelMeta?.type === DocumentModel.meta.type &&
-        (item.state as DocumentModelState)?.type?.itemId === TYPE_PROPERTIES,
-    );
-
-    const state = propertiesItem?.state as DocumentModelState;
-    properties = state?.data;
-  } catch (err: any) {
-    log.warn(err.message);
-  }
-
-  return properties;
-};
-
 const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
   const stats: SpaceStats = {
     key: space.key,
@@ -226,32 +204,15 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
 
     pipeline: {
       // TODO(burdon): Pick properties from credentials if needed.
-      // currentEpoch: space.dataPipeline.currentEpoch,
-      // appliedEpoch: space.dataPipeline.appliedEpoch,
+      currentEpoch: space.automergeSpaceState.lastEpoch,
+      appliedEpoch: space.automergeSpaceState.lastEpoch,
 
       controlFeeds: space.inner.controlPipeline.state.feeds.map((feed) => feed.key),
       currentControlTimeframe: space.inner.controlPipeline.state.timeframe,
       targetControlTimeframe: space.inner.controlPipeline.state.targetTimeframe,
       totalControlTimeframe: space.inner.controlPipeline.state.endTimeframe,
-
-      // TODO(burdon): Empty?
-      dataFeeds: space.dataPipeline.pipelineState?.feeds.map((feed) => feed.key) ?? [],
-      startDataTimeframe: space.dataPipeline.pipelineState?.startTimeframe,
-      currentDataTimeframe: space.dataPipeline.pipelineState?.timeframe,
-      targetDataTimeframe: space.dataPipeline.pipelineState?.targetTimeframe,
-      totalDataTimeframe: space.dataPipeline.pipelineState?.endTimeframe,
     },
   };
-
-  // TODO(burdon): May not be open?
-  if (space.dataPipeline.itemManager) {
-    Object.assign(stats, {
-      properties: getProperties(space),
-      db: {
-        objects: space.dataPipeline.itemManager.entities.size,
-      },
-    } as SpaceStats);
-  }
 
   // TODO(burdon): Factor out.
   if (stats.metrics) {

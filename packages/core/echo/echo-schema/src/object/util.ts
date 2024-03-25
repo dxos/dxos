@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Reference } from '@dxos/document-model';
-import { invariant } from '@dxos/invariant';
+import { Reference } from '@dxos/echo-db';
 import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 import { type TextSnapshot } from '@dxos/protocols/proto/dxos/echo/model/text';
 
@@ -16,8 +15,7 @@ import { getProxyHandlerSlot } from '../effect/proxy';
 import { isEchoReactiveObject } from '../effect/reactive';
 
 export const setStateFromSnapshot = (obj: AbstractEchoObject, snapshot: ObjectSnapshot | TextSnapshot) => {
-  invariant(obj[base]._stateMachine);
-  obj[base]._stateMachine.reset(snapshot);
+  throw new Error('Not implemented');
 };
 
 export const forceUpdate = (obj: AbstractEchoObject) => {

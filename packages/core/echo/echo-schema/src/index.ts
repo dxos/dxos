@@ -5,6 +5,7 @@
 import { linkDeferred } from './type-collection';
 
 export * from './database';
+export * from './guarded-scope';
 export * from './hypergraph';
 export * from './object';
 export * from './proto';

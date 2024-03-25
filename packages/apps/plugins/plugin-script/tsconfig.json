@@ -47,9 +47,6 @@
       "path": "../../../core/echo/echo-schema"
     },
     {
-      "path": "../../../core/echo/text-model"
-    },
-    {
       "path": "../../../core/mesh/rpc"
     },
     {

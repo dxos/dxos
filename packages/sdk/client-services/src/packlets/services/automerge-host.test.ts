@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 
 import { asyncTimeout, sleep } from '@dxos/async';
-import { AutomergeHost, DataServiceImpl, type DataServiceSubscriptions } from '@dxos/echo-pipeline';
+import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
 import { AutomergeContext } from '@dxos/echo-schema';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
@@ -23,10 +23,7 @@ describe('AutomergeHost', () => {
 
     const host = new AutomergeHost({ directory: storageDirectory });
     afterTest(() => host.close());
-    const dataService = new DataServiceImpl(
-      {} as DataServiceSubscriptions, // is not used in this test, just required argument
-      host,
-    );
+    const dataService = new DataServiceImpl(host);
     const client = new AutomergeContext(dataService);
     afterTest(() => client.close());
 

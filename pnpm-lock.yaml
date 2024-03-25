@@ -17,6 +17,9 @@ patchedDependencies:
   memdown@5.1.0:
     hash: tjbpekhnedejisbcwvc5eec3ii
     path: patches/memdown@5.1.0.patch
+  random-access-idb@1.2.2:
+    hash: mqfhtwnltd5kq5s4kb4gk7k2k4
+    path: patches/random-access-idb@1.2.2.patch
   ts-node@10.9.1:
     hash: rke3py7up3u364r7wwqfla7cdm
     path: patches/ts-node@10.9.1.patch
@@ -907,9 +910,6 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../../core/echo/text-model
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -1120,9 +1120,6 @@ importers:
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../../ui/react-ui-table
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../../core/echo/text-model
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -1892,9 +1889,6 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../../core/echo/text-model
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -2120,9 +2114,6 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../../core/echo/text-model
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -2221,9 +2212,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../../core/echo/text-model
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -2474,9 +2462,6 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../../core/echo/text-model
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -2784,9 +2769,6 @@ importers:
       '@dxos/rpc-tunnel':
         specifier: workspace:*
         version: link:../../../core/mesh/rpc-tunnel
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../../core/echo/text-model
       '@lezer/common':
         specifier: ^1.2.1
         version: 1.2.1
@@ -3085,9 +3067,6 @@ importers:
       '@dxos/shell':
         specifier: workspace:*
         version: link:../../../sdk/shell
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../../core/echo/text-model
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -4625,7 +4604,7 @@ importers:
         version: 2.2.1
       random-access-idb:
         specifier: ^1.2.2
-        version: 1.2.2
+        version: 1.2.2(patch_hash=mqfhtwnltd5kq5s4kb4gk7k2k4)
       random-access-memory:
         specifier: ^4.1.0
         version: 4.1.0
@@ -4916,58 +4895,6 @@ importers:
         specifier: ^4.37.0
         version: 4.37.1
 
-  packages/core/echo/document-model:
-    dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/model-factory':
-        specifier: workspace:*
-        version: link:../model-factory
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../../common/node-std
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../protocols
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-      lodash.clonedeep:
-        specifier: ^4.5.0
-        version: 4.5.0
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-      lodash.set:
-        specifier: ^4.3.2
-        version: 4.3.2
-      minisearch:
-        specifier: ^3.0.2
-        version: 3.3.0
-      yjs:
-        specifier: ^13.6.10
-        version: 13.6.10
-    devDependencies:
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../../common/random
-      '@types/lodash.clonedeep':
-        specifier: ^4.5.6
-        version: 4.5.7
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
-      '@types/lodash.set':
-        specifier: ^4.3.7
-        version: 4.3.7
-
   packages/core/echo/echo-db:
     dependencies:
       '@dxos/async':
@@ -4982,9 +4909,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
-      '@dxos/document-model':
-        specifier: workspace:*
-        version: link:../document-model
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -4994,9 +4918,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
-      '@dxos/model-factory':
-        specifier: workspace:*
-        version: link:../model-factory
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
@@ -5019,9 +4940,6 @@ importers:
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../../common/feed-store
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../text-model
       '@dxos/typings':
         specifier: workspace:*
         version: link:../../../common/typings
@@ -5064,9 +4982,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
-      '@dxos/document-model':
-        specifier: workspace:*
-        version: link:../document-model
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo-db
@@ -5091,9 +5006,6 @@ importers:
       '@dxos/messaging':
         specifier: workspace:*
         version: link:../../mesh/messaging
-      '@dxos/model-factory':
-        specifier: workspace:*
-        version: link:../model-factory
       '@dxos/network-manager':
         specifier: workspace:*
         version: link:../../mesh/network-manager
@@ -5124,9 +5036,6 @@ importers:
       '@dxos/teleport-extension-replicator':
         specifier: workspace:*
         version: link:../../mesh/teleport-extension-replicator
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../text-model
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../../common/timeframe
@@ -5195,9 +5104,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
-      '@dxos/document-model':
-        specifier: workspace:*
-        version: link:../document-model
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo-db
@@ -5216,9 +5122,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
-      '@dxos/model-factory':
-        specifier: workspace:*
-        version: link:../model-factory
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
@@ -5228,9 +5131,6 @@ importers:
       '@dxos/random-access-storage':
         specifier: workspace:*
         version: link:../../../common/random-access-storage
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../text-model
       '@dxos/tracing':
         specifier: workspace:*
         version: link:../../../common/tracing
@@ -5315,15 +5215,9 @@ importers:
         specifier: ^7.2.2
         version: 7.2.2
     devDependencies:
-      '@dxos/document-model':
-        specifier: workspace:*
-        version: link:../document-model
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo-db
-      '@dxos/model-factory':
-        specifier: workspace:*
-        version: link:../model-factory
       '@swc-node/register':
         specifier: 1.6.8
         version: 1.6.8(@swc/core@1.4.0)(typescript@5.2.2)
@@ -5351,6 +5245,9 @@ importers:
       '@dxos/automerge':
         specifier: workspace:*
         version: link:../automerge
+      '@dxos/codec-protobuf':
+        specifier: workspace:*
+        version: link:../../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -5381,6 +5278,9 @@ importers:
       '@dxos/random-access-storage':
         specifier: workspace:*
         version: link:../../../common/random-access-storage
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../../../common/tracing
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -5406,97 +5306,6 @@ importers:
       wait-for-expect:
         specifier: ^3.0.2
         version: 3.0.2
-
-  packages/core/echo/messenger-model:
-    dependencies:
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
-      '@dxos/model-factory':
-        specifier: workspace:*
-        version: link:../model-factory
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../protocols
-
-  packages/core/echo/model-factory:
-    dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../../common/context
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../../common/debug
-      '@dxos/feed-store':
-        specifier: workspace:*
-        version: link:../../../common/feed-store
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../../common/keys
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../../common/log
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../../common/node-std
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../protocols
-      '@dxos/timeframe':
-        specifier: workspace:*
-        version: link:../../../common/timeframe
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-
-  packages/core/echo/text-model:
-    dependencies:
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../../common/keys
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../../common/log
-      '@dxos/model-factory':
-        specifier: workspace:*
-        version: link:../model-factory
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../../common/node-std
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../protocols
-      '@types/node':
-        specifier: ^18.11.9
-        version: 18.11.9
-      yjs:
-        specifier: ^13.6.10
-        version: 13.6.10
-    devDependencies:
-      '@dxos/document-model':
-        specifier: workspace:*
-        version: link:../document-model
-      '@dxos/feed-store':
-        specifier: workspace:*
-        version: link:../../../common/feed-store
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../../common/random
 
   packages/core/functions:
     dependencies:
@@ -5805,7 +5614,7 @@ importers:
         specifier: ^3.0.0
         version: 3.2.0
       node-datachannel:
-        specifier: ^0.5.4
+        specifier: ^0.5.5
         version: 0.5.5
       p-defer:
         specifier: ^3.0.0
@@ -7075,9 +6884,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/document-model':
-        specifier: workspace:*
-        version: link:../../core/echo/document-model
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../core/echo/echo-generator
@@ -7869,9 +7675,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/document-model':
-        specifier: workspace:*
-        version: link:../../core/echo/document-model
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -7893,9 +7696,6 @@ importers:
       '@dxos/messaging':
         specifier: workspace:*
         version: link:../../core/mesh/messaging
-      '@dxos/model-factory':
-        specifier: workspace:*
-        version: link:../../core/echo/model-factory
       '@dxos/network-manager':
         specifier: workspace:*
         version: link:../../core/mesh/network-manager
@@ -7911,9 +7711,6 @@ importers:
       '@dxos/rpc-tunnel':
         specifier: workspace:*
         version: link:../../core/mesh/rpc-tunnel
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../core/echo/text-model
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../common/timeframe
@@ -7975,9 +7772,6 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
-      '@dxos/document-model':
-        specifier: workspace:*
-        version: link:../../core/echo/document-model
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -7990,9 +7784,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/model-factory':
-        specifier: workspace:*
-        version: link:../../core/echo/model-factory
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
@@ -8002,9 +7793,6 @@ importers:
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../../core/mesh/rpc
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../core/echo/text-model
       '@effect/schema':
         specifier: 0.64.7
         version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
@@ -8048,9 +7836,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/document-model':
-        specifier: workspace:*
-        version: link:../../core/echo/document-model
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -8084,9 +7869,6 @@ importers:
       '@dxos/messaging':
         specifier: workspace:*
         version: link:../../core/mesh/messaging
-      '@dxos/model-factory':
-        specifier: workspace:*
-        version: link:../../core/echo/model-factory
       '@dxos/network-manager':
         specifier: workspace:*
         version: link:../../core/mesh/network-manager
@@ -8111,9 +7893,6 @@ importers:
       '@dxos/teleport-extension-object-sync':
         specifier: workspace:*
         version: link:../../core/mesh/teleport-extension-object-sync
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../core/echo/text-model
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../common/timeframe
@@ -8406,9 +8185,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../core/echo/text-model
       yjs:
         specifier: ^13.6.10
         version: 13.6.10
@@ -9026,9 +8802,6 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../core/echo/text-model
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -22293,12 +22066,6 @@ packages:
 
   /@types/linkify-it@3.0.2:
     resolution: {integrity: sha512-HZQYqbiFVWufzCwexrvh694SOim8z2d+xJl5UNamcvQFejLY/2YUtzXHYi3cHdI7PMlS8ejH2slRAOJQ32aNbA==}
-    dev: true
-
-  /@types/lodash.clonedeep@4.5.7:
-    resolution: {integrity: sha512-ccNqkPptFIXrpVqUECi60/DFxjNKsfoQxSQsgcBJCX/fuX1wgyQieojkcWH/KpE3xzLoWN/2k+ZeGqIN3paSvw==}
-    dependencies:
-      '@types/lodash': 4.14.191
     dev: true
 
   /@types/lodash.defaultsdeep@4.6.7:
@@ -36893,10 +36660,6 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /minisearch@3.3.0:
-    resolution: {integrity: sha512-DlOEfLtiRKcEuShEaaufoDpWKv94lWDSRK7Bkcd0htqHEFZ1vqTi3IIW8cYcPIlomQjaCdiZXk4pyzBNc79I2Q==}
-    dev: false
-
   /minizlib@1.3.3:
     resolution: {integrity: sha512-6ZYMOEnmVsdCeTJVE0W9ZD+pVnE8h9Hma/iOwwRDsdQoePpoX56/8B6z3P9VNwppJuBKNRuFDRNRqRWexT9G9Q==}
     dependencies:
@@ -39557,7 +39320,7 @@ packages:
       random-access-storage: 1.3.0
     dev: false
 
-  /random-access-idb@1.2.2:
+  /random-access-idb@1.2.2(patch_hash=mqfhtwnltd5kq5s4kb4gk7k2k4):
     resolution: {integrity: sha512-NroFuBNVh5wVIHKN/jEYrgkkffppkfxNWFX9OEwC2VP7dYc3sa+Qxv7tMa1Gi9Jp/ObVfLeCZBt/8Sbn1WU1Xg==}
     dependencies:
       buffer-alloc: 1.2.0
@@ -39567,6 +39330,7 @@ packages:
       once: 1.4.0
       random-access-storage: 1.4.3
     dev: false
+    patched: true
 
   /random-access-memory@3.1.4:
     resolution: {integrity: sha512-rqgqd/8ec65gbpKaYHnDOW391OR39d+eXn8NI87G+f3sUKrtGib9jC+/5/9MBFBwwHAZIS8RLJ8yyB4etzbYTA==}
@@ -39609,7 +39373,7 @@ packages:
     dependencies:
       '@sammacbeth/random-access-idb-mutable-file': 0.1.1
       random-access-chrome-file: 1.2.0
-      random-access-idb: 1.2.2
+      random-access-idb: 1.2.2(patch_hash=mqfhtwnltd5kq5s4kb4gk7k2k4)
       random-access-idb-mutable-file: 0.3.0
       random-access-memory: 3.1.4
       random-access-storage: 1.4.3

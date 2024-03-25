@@ -31,7 +31,6 @@
     "@dxos/async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
-    "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "lodash.get": "^4.4.2"

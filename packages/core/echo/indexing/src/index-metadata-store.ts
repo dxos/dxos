@@ -6,6 +6,7 @@ import { synchronized, Event } from '@dxos/async';
 import { type MetadataMethods } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import { type Directory } from '@dxos/random-access-storage';
+import { trace } from '@dxos/tracing';
 
 import { overrideFile } from './util';
 
@@ -19,6 +20,7 @@ export type DocumentMetadata = {
   lastAvailableHash?: string;
 };
 
+@trace.resource()
 // TODO(mykola): Use snapshot and append only log, not separate file for each document.
 export class IndexMetadataStore implements MetadataMethods {
   public readonly dirty = new Event<void>();
@@ -32,6 +34,7 @@ export class IndexMetadataStore implements MetadataMethods {
     this._directory = directory;
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   async markDirty(idToLastHash: Map<string, string>) {
     const tasks = [...idToLastHash.entries()].map(async ([id, lastAvailableHash]) => {
       const metadata = await this._getMetadata(id);
@@ -42,6 +45,7 @@ export class IndexMetadataStore implements MetadataMethods {
     await Promise.all(tasks);
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   async getDirtyDocuments(): Promise<string[]> {
     const ids = await this._directory.list();
     const dirty: string[] = [];
@@ -86,8 +90,7 @@ export class IndexMetadataStore implements MetadataMethods {
   @synchronized
   private async _setMetadata(id: string, metadata: DocumentMetadata): Promise<boolean> {
     try {
-      const file = this._directory.getOrCreateFile(id);
-      await overrideFile(file, Buffer.from(JSON.stringify(metadata)));
+      await overrideFile({ path: id, directory: this._directory, content: Buffer.from(JSON.stringify(metadata)) });
       this._metadata.set(id, metadata);
       return true;
     } catch (err) {
