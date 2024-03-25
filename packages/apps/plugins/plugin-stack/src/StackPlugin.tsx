@@ -43,9 +43,6 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           stackState.creators.push(...((plugin as Plugin<StackProvides>).provides.stack.creators ?? []));
         }
       }
-
-      const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      clientPlugin?.provides.client.addSchema(StackType, SectionType);
     },
     provides: {
       settings: settings.values,
@@ -71,6 +68,9 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         },
       },
       translations,
+      echo: {
+        schema: [StackType, SectionType],
+      },
       graph: {
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;

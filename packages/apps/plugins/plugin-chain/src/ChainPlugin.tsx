@@ -31,6 +31,9 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
         },
       },
       translations,
+      echo: {
+        schema: [ChainType],
+      },
       graph: {
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;

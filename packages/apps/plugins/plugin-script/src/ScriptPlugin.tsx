@@ -39,6 +39,9 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
         },
       },
       translations,
+      echo: {
+        schema: [ScriptType],
+      },
       graph: {
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;

@@ -40,6 +40,9 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
         },
       },
       translations,
+      echo: {
+        schema: [MailboxType, AddressBookType, CalendarType],
+      },
       graph: {
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;

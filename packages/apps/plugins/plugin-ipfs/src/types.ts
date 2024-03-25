@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type SchemaProvides } from '@braneframe/plugin-client';
 import {
   type FileManagerProvides,
   type MetadataRecordsProvides,
@@ -17,4 +18,8 @@ export enum IpfsAction {
   CREATE = `${IPFS_ACTION}/create`,
 }
 
-export type IpfsPluginProvides = FileManagerProvides & SurfaceProvides & MetadataRecordsProvides & TranslationsProvides;
+export type IpfsPluginProvides = FileManagerProvides &
+  SurfaceProvides &
+  MetadataRecordsProvides &
+  TranslationsProvides &
+  SchemaProvides;

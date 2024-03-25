@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { MapType } from '@braneframe/types';
+import { MapType, isMap } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
@@ -16,7 +16,7 @@ import * as E from '@dxos/echo-schema';
 import { MapMain, MapSection } from './components';
 import meta, { MAP_PLUGIN } from './meta';
 import translations from './translations';
-import { MapAction, type MapPluginProvides, isMap } from './types';
+import { MapAction, type MapPluginProvides } from './types';
 
 export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
   return {
@@ -31,6 +31,9 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
         },
       },
       translations,
+      echo: {
+        schema: [MapType],
+      },
       graph: {
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;

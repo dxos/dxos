@@ -31,6 +31,9 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
         },
       },
       translations,
+      echo: {
+        schema: [ViewType],
+      },
       graph: {
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;

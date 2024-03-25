@@ -120,8 +120,6 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
       const location = navigationPlugin.provides.location;
       const dispatch = intentPlugin.provides.intent.dispatch;
 
-      client.addSchema(FolderType);
-
       // Create root folder structure.
       if (clientPlugin.provides.firstRun) {
         const defaultSpace = client.spaces.default;
@@ -241,6 +239,9 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             icon: (props: IconProps) => <FolderIcon {...props} />,
           },
         },
+      },
+      echo: {
+        schema: [FolderType],
       },
       surface: {
         component: ({ data, role }) => {

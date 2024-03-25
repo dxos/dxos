@@ -4,6 +4,7 @@
 
 import { type TLStore } from '@tldraw/tlschema';
 
+import { type SchemaProvides } from '@braneframe/plugin-client';
 import type { StackProvides } from '@braneframe/plugin-stack';
 import type {
   GraphBuilderProvides,
@@ -26,6 +27,7 @@ export type SketchPluginProvides = SurfaceProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
+  SchemaProvides &
   StackProvides;
 
 export interface SketchModel {

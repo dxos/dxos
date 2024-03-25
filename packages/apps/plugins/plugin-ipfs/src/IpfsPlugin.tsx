@@ -38,6 +38,9 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
           },
         },
       },
+      echo: {
+        schema: [FileType],
+      },
       // TODO(burdon): Add intent to upload file.
       file: {
         upload: async (file) => {

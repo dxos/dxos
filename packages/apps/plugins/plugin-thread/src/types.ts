@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type SchemaProvides } from '@braneframe/plugin-client';
 import { type MarkdownExtensionProvides } from '@braneframe/plugin-markdown';
 import { type ThreadType } from '@braneframe/types';
 import type {
@@ -28,6 +29,7 @@ export type ThreadPluginProvides = SurfaceProvides &
   MetadataRecordsProvides &
   SettingsProvides &
   TranslationsProvides &
+  SchemaProvides &
   MarkdownExtensionProvides;
 
 export type ThreadSettingsProps = { standalone?: boolean };

@@ -13,6 +13,7 @@ import {
   type Plugin,
   type PluginDefinition,
   type TranslationsProvides,
+  filterPlugins,
 } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
@@ -45,6 +46,15 @@ export type ClientPluginProvides = IntentResolverProvides &
 
 export const parseClientPlugin = (plugin?: Plugin) =>
   (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
+
+export type SchemaProvides = {
+  echo: {
+    schema: Parameters<Client['addSchema']>;
+  };
+};
+
+export const parseSchemaPlugin = (plugin?: Plugin) =>
+  Array.isArray((plugin?.provides as any).echo?.schema) ? (plugin as Plugin<SchemaProvides>) : undefined;
 
 export const ClientPlugin = ({
   types,
@@ -129,10 +139,15 @@ export const ClientPlugin = ({
         },
       };
     },
-    ready: async () => {
+    ready: async (plugins) => {
       if (error) {
         throw error;
       }
+
+      filterPlugins(plugins, parseSchemaPlugin).forEach((plugin) => {
+        console.log(plugin.meta.id, plugin.provides.echo.schema);
+        client.addSchema(...plugin.provides.echo.schema);
+      });
     },
     unload: async () => {
       await client.destroy();
