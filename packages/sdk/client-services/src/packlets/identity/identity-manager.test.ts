@@ -16,7 +16,6 @@ import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { IdentityManager } from './identity-manager';
-import { createDefaultModelFactory } from '../services';
 
 describe('identity/identity-manager', () => {
   const setupPeer = async ({
@@ -50,7 +49,6 @@ describe('identity/identity-manager', () => {
       feedStore,
       networkManager,
       blobStore,
-      modelFactory: createDefaultModelFactory(),
       metadataStore,
       snapshotStore: new SnapshotStore(storage.createDirectory('snapshots')),
     });
