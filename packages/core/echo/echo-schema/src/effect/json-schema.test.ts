@@ -131,7 +131,8 @@ describe('effect-to-json', () => {
   });
 
   const expectReferenceAnnotation = (object: any) => {
-    expect(object[ECHO_KEY].reference).to.deep.eq(testSchema);
+    expect(object[ECHO_KEY].type).to.deep.eq(testSchema);
+    expect(object[ECHO_KEY].reference).to.deep.eq({});
   };
 });
 
