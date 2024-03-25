@@ -17,7 +17,6 @@ import { trace } from '@dxos/tracing';
 import { type AsyncCallback, Callback } from '@dxos/util';
 
 import { ControlPipeline } from './control-pipeline';
-import { DataPipeline } from './data-pipeline';
 import { type SpaceProtocol } from './space-protocol';
 import { type SnapshotManager } from '../db-host';
 import { type MetadataStore } from '../metadata';
@@ -65,9 +64,6 @@ export class Space {
   @trace.info()
   private readonly _controlPipeline: ControlPipeline;
 
-  @trace.info()
-  private readonly _dataPipeline: DataPipeline;
-
   private readonly _snapshotManager: SnapshotManager;
 
   private _isOpen = false;
@@ -93,17 +89,6 @@ export class Space {
       // Enable sparse replication to not download mutations covered by prior epochs.
       const sparse = info.assertion.designation === AdmittedFeed.Designation.DATA;
 
-      if (info.assertion.designation === AdmittedFeed.Designation.DATA) {
-        // We will add all existing data feeds when the data pipeline is initialized.
-        queueMicrotask(async () => {
-          if (this._dataPipeline.pipeline) {
-            if (!this._dataPipeline.pipeline.hasFeed(info.key)) {
-              return this._dataPipeline.pipeline.addFeed(await this._feedProvider(info.key, { sparse }));
-            }
-          }
-        });
-      }
-
       if (!info.key.equals(params.genesisFeed.key)) {
         queueMicrotask(async () => {
           this.protocol.addFeed(await params.feedProvider(info.key, { sparse }));
@@ -120,30 +105,6 @@ export class Space {
     // Start replicating the genesis feed.
     this.protocol = params.protocol;
     this.protocol.addFeed(params.genesisFeed);
-
-    this._dataPipeline = new DataPipeline({
-      modelFactory: params.modelFactory,
-      metadataStore: params.metadataStore,
-      snapshotManager: params.snapshotManager,
-      memberKey: params.memberKey,
-      spaceKey: this._key,
-      feedInfoProvider: (feedKey) => this._controlPipeline.spaceState.feeds.get(feedKey),
-      snapshotId: params.snapshotId,
-      onPipelineCreated: async (pipeline) => {
-        if (this._dataFeed) {
-          pipeline.setWriteFeed(this._dataFeed);
-        }
-
-        // Add existing feeds.
-        await this._addFeedMutex.executeSynchronized(async () => {
-          for (const feed of this._controlPipeline.spaceState.feeds.values()) {
-            if (feed.assertion.designation === AdmittedFeed.Designation.DATA && !pipeline.hasFeed(feed.key)) {
-              await pipeline.addFeed(await this._feedProvider(feed.key, { sparse: true }));
-            }
-          }
-        });
-      },
-    });
   }
 
   @logInfo
@@ -179,10 +140,6 @@ export class Space {
     return this._controlPipeline.pipeline;
   }
 
-  get dataPipeline(): DataPipeline {
-    return this._dataPipeline;
-  }
-
   get snapshotManager(): SnapshotManager {
     return this._snapshotManager;
   }
@@ -197,8 +154,6 @@ export class Space {
   async setDataFeed(feed: FeedWrapper<FeedMessage>) {
     invariant(!this._dataFeed, 'Data feed already set.');
     this._dataFeed = feed;
-    await this._dataPipeline.pipeline?.addFeed(feed);
-    this._dataPipeline.pipeline?.setWriteFeed(feed);
     return this;
   }
 
@@ -226,7 +181,6 @@ export class Space {
     // Order is important.
     await this._controlPipeline.start();
     await this.protocol.start();
-    await this._controlPipeline.spaceState.addCredentialProcessor(this._dataPipeline);
 
     this._isOpen = true;
     log('opened');
@@ -238,9 +192,6 @@ export class Space {
     if (!this._isOpen) {
       return;
     }
-    await this._controlPipeline.spaceState.removeCredentialProcessor(this._dataPipeline);
-
-    await this._dataPipeline.close();
 
     // Closes in reverse order to open.
     await this.protocol.stop();
@@ -248,12 +199,5 @@ export class Space {
 
     this._isOpen = false;
     log('closed');
-  }
-
-  @synchronized
-  async initializeDataPipeline() {
-    log('initializeDataPipeline');
-    invariant(this._isOpen, 'Space must be open to initialize data pipeline.');
-    await this._dataPipeline.open();
   }
 }
