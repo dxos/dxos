@@ -4,16 +4,9 @@
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
+import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import {
-  valueEncoding,
-  MetadataStore,
-  SpaceManager,
-  DataServiceSubscriptions,
-  SnapshotStore,
-  AutomergeHost,
-} from '@dxos/echo-pipeline';
+import { AutomergeHost, MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
@@ -26,15 +19,15 @@ import { type NetworkManager } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type ProfileDocument, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Storage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { trace as Trace } from '@dxos/tracing';
 import { safeInstanceof } from '@dxos/util';
 
 import {
-  type CreateIdentityOptions,
   IdentityManager,
+  type CreateIdentityOptions,
   type IdentityManagerRuntimeParams,
   type JoinIdentityParams,
 } from '../identity';
@@ -42,8 +35,8 @@ import { createGetAllDocuments, createLoadDocuments } from '../indexing';
 import {
   DeviceInvitationProtocol,
   InvitationsHandler,
-  type InvitationProtocol,
   SpaceInvitationProtocol,
+  type InvitationProtocol,
 } from '../invitations';
 import { DataSpaceManager, type DataSpaceManagerRuntimeParams, type SigningContext } from '../spaces';
 
@@ -57,7 +50,6 @@ export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams & DataSpa
 @Trace.resource()
 export class ServiceContext {
   public readonly initialized = new Trigger();
-  public readonly dataServiceSubscriptions = new DataServiceSubscriptions();
   public readonly metadataStore: MetadataStore;
   /**
    * @deprecated
@@ -186,7 +178,6 @@ export class ServiceContext {
     await this.feedStore.close();
     await this.networkManager.close();
     await this.signalManager.close();
-    this.dataServiceSubscriptions.clear();
     await this.metadataStore.close();
     await this.indexer.destroy();
     log('closed');
@@ -246,7 +237,6 @@ export class ServiceContext {
     this.dataSpaceManager = new DataSpaceManager(
       this.spaceManager,
       this.metadataStore,
-      this.dataServiceSubscriptions,
       this.keyring,
       signingContext,
       this.feedStore,
