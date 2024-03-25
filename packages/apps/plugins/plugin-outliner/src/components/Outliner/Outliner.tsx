@@ -402,11 +402,13 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     } else {
       // Insert after.
       item = onCreate!(state?.after?.trim());
-      if (state?.after) {
-        // Split line.
-        const text = current.text!.content;
-        text.delete(state.from, text.length);
-      }
+
+      // TODO(dmaretskyi): Line splitting.
+      // if (state?.after) {
+      //   // Split line.
+      //   const text = current.text!.content;
+      //   text.delete(state.from, text.length);
+      // }
 
       if (current.items?.length) {
         current.items.splice(0, 0, item);
@@ -444,18 +446,20 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     if (idx - 1 >= 0) {
       const active = getLastDescendent(items[idx - 1]);
       if (active) {
-        const text = active.text!.content;
+        const text = active.text.content!;
         const from = text.length;
-        if (state?.after?.length) {
-          text.insert(from, state.after.trim());
-        }
+
+        // TODO(dmaretskyi): Line joining.
+        // if (state?.after?.length) {
+        //   text.insert(from, state.after.trim());
+        // }
 
         setActive({ itemId: active.id, anchor: from });
         const items = getItems(active);
         items.splice(items.length, 0, ...(children ?? []));
       }
     } else {
-      const text = parent.text!.content;
+      const text = parent.text.content!;
       const from = text.length;
       setActive({ itemId: parent.id, anchor: from });
     }
