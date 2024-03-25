@@ -1,28 +1,33 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import { type RowData } from '@tanstack/react-table';
-import { type ReactNode } from 'react';
+import React, { useContext, createContext, type ReactNode } from 'react';
 
 import { type TableContextValue } from './props';
 
 export const TABLE_NAME = 'Table';
 
-type CreateContextResult<TData extends RowData> = Readonly<
-  [TypedTableProvider<unknown>, (consumerName: string) => TableContextValue<TData>]
->;
+// Create the context without a default value.
+// The expectation is that the provider will always supply a value, so no need to define a default here.
+const TableContext = createContext<TableContextValue<RowData>>({} as TableContextValue<RowData>);
 
 export type TypedTableProvider<TData extends RowData> = {
   (props: TableContextValue<TData> & { children: ReactNode }): JSX.Element;
   displayName: string;
 };
 
-const [TableProvider, useUntypedTableContext]: CreateContextResult<unknown> =
-  createContext<TableContextValue<unknown>>(TABLE_NAME);
+export const TableProvider: React.FC<TableContextValue<RowData> & { children: ReactNode }> = ({
+  children,
+  ...value
+}) => {
+  return <TableContext.Provider value={value}>{children}</TableContext.Provider>;
+};
 
-export const useTableContext = <TData extends RowData>(consumerName: string) =>
-  useUntypedTableContext(consumerName) as TableContextValue<TData>;
+// Create a custom hook to consume the context
+export const useTableContext = <TData extends RowData>(): TableContextValue<TData> => {
+  const context = useContext(TableContext as React.Context<TableContextValue<TData>>);
 
-export { TableProvider };
+  return context;
+};

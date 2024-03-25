@@ -58,7 +58,7 @@ export type TableProps<
 
 export type { RowSelectionState, VisibilityState, TableColumnDef, KeyValue };
 
-export type TableContextValue<TData extends RowData> = TableFlags &
+export type TableContextValue<TData> = TableFlags &
   TableCurrent<TData> &
   Pick<TableProps<TData>, 'keyAccessor'> & {
     table: Table<TData>;
