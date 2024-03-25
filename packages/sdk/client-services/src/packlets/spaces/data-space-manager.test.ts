@@ -3,24 +3,16 @@
 //
 
 import { expect } from 'chai';
-import path from 'node:path';
 
 import { asyncTimeout, latch } from '@dxos/async';
-import { type SpecificCredential, createAdmissionCredentials } from '@dxos/credentials';
+import { createAdmissionCredentials } from '@dxos/credentials';
 import { AuthStatus } from '@dxos/echo-pipeline';
-import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
 import { writeMessages } from '@dxos/feed-store';
-import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { StorageType } from '@dxos/random-access-storage';
-import { afterTest, describe, openAndClose, test } from '@dxos/test';
-import { Timeframe } from '@dxos/timeframe';
-import { range } from '@dxos/util';
+import { describe, openAndClose, test } from '@dxos/test';
 
-import { TestBuilder, syncItemsLocal } from '../testing';
+import { TestBuilder } from '../testing';
 
 describe('DataSpaceManager', () => {
   test('create space', async () => {
@@ -103,8 +95,6 @@ describe('DataSpaceManager', () => {
     });
     log.break();
 
-    await syncItemsLocal(space1.dataPipeline, space2.dataPipeline);
-
     expect(space1.inner.protocol.sessions.get(peer2.identity.deviceKey)).to.exist;
     expect(space1.inner.protocol.sessions.get(peer2.identity.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
     expect(space2.inner.protocol.sessions.get(peer1.identity.deviceKey)).to.exist;
@@ -157,137 +147,6 @@ describe('DataSpaceManager', () => {
     await receivedMessage();
   });
 
-  describe('Epochs', () => {
-    test
-      .skip('Epoch truncates feeds', async () => {
-        const builder = new TestBuilder();
-        afterTest(async () => builder.destroy());
-
-        const peer = builder.createPeer({
-          dataStore: typeof window === 'undefined' ? StorageType.NODE : StorageType.WEBFS,
-        });
-        await peer.createIdentity();
-        await openAndClose(peer.dataSpaceManager);
-        const space = await peer.dataSpaceManager.createSpace();
-        await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
-
-        const feedDataPath = path.join(space.inner.dataPipeline.pipelineState!.feeds[0].key.toHex(), 'data');
-        const directory = peer.storage.createDirectory('feeds');
-        const file = directory.getOrCreateFile(feedDataPath);
-        afterTest(() => file.close());
-
-        expect((await file.stat()).size === 0).to.be.true;
-
-        for (const _ in range(10)) {
-          await testLocalDatabase(space.dataPipeline);
-        }
-
-        expect((await file.stat()).size !== 0).to.be.true;
-        await space.createEpoch();
-        expect((await file.stat()).size === 0).to.be.true;
-      })
-      .onlyEnvironments('nodejs', 'chromium', 'firefox')
-      .tag('flaky');
-
-    test('Loads only last epoch', async () => {
-      const builder = new TestBuilder();
-      afterTest(async () => builder.destroy());
-
-      const peer = builder.createPeer();
-      await peer.createIdentity();
-      const epochsNumber = 10;
-      let spaceKey: PublicKey;
-      {
-        // Create space and create epochs in it.s
-        await openAndClose(peer.dataSpaceManager);
-
-        const space = await peer.dataSpaceManager.createSpace();
-        spaceKey = space.key;
-        await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
-
-        for (const _ of range(epochsNumber)) {
-          await testLocalDatabase(space.dataPipeline);
-          await space.createEpoch();
-        }
-        await space.close();
-        await peer.dataSpaceManager.close();
-        peer.props.dataSpaceManager = undefined;
-      }
-      {
-        // Load same space and check if it loads only last epoch.s
-        await openAndClose(peer.dataSpaceManager);
-
-        const space = peer.dataSpaceManager.spaces.get(spaceKey)!;
-
-        const epochs: number[] = [];
-        space.dataPipeline.onNewEpoch.on((epoch: SpecificCredential<Epoch>) => {
-          epochs.push(epoch.subject.assertion.number);
-        });
-        const processedFirstEpoch = space.dataPipeline.onNewEpoch.waitFor(() => true);
-
-        await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
-
-        await processedFirstEpoch;
-        expect(epochs).to.deep.equal([epochsNumber]);
-      }
-    });
-
-    test('Items are cleared before epoch applied', async () => {
-      const builder = new TestBuilder();
-      afterTest(async () => builder.destroy());
-      const peer = builder.createPeer();
-      await peer.createIdentity();
-      await openAndClose(peer.dataSpaceManager);
-
-      // Create space and fill it with Items.
-      const space = await peer.dataSpaceManager.createSpace();
-      await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
-      const itemsNumber = 2;
-      for (const _ of range(itemsNumber)) {
-        await testLocalDatabase(space.dataPipeline);
-      }
-
-      // Create empty Epoch and check if it clears items.
-      {
-        const processedFirstEpoch = space.dataPipeline.onNewEpoch.waitFor(
-          (epoch) => epoch.subject.assertion.number === 1,
-        );
-
-        // Empty snapshot.
-        const snapshot: SpaceSnapshot = {
-          spaceKey: space.key.asUint8Array(),
-          timeframe: space.inner.dataPipeline.pipelineState!.timeframe,
-          database: {},
-        };
-
-        const snapshotCid = await peer.snapshotStore.saveSnapshot(snapshot);
-
-        const epoch: Epoch = {
-          previousId: space.dataPipeline.currentEpoch?.id,
-          timeframe: space.inner.dataPipeline.pipelineState!.timeframe,
-          number: (space.dataPipeline.currentEpoch?.subject.assertion as Epoch).number + 1,
-          snapshotCid,
-        };
-
-        const receipt = await space.inner.controlPipeline.writer.write({
-          credential: {
-            credential: await peer.props.signingContext!.credentialSigner.createCredential({
-              subject: space.key,
-              assertion: {
-                '@type': 'dxos.halo.credentials.Epoch',
-                ...epoch,
-              },
-            }),
-          },
-        });
-        await space.inner.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
-        await processedFirstEpoch;
-      }
-
-      expect(Array.from(space.dataPipeline.itemManager.entities.keys()).length).to.equal(0);
-    });
-  });
-
   describe('activation', () => {
     test('can activate and deactivate a space', async () => {
       const builder = new TestBuilder();
@@ -308,7 +167,6 @@ describe('DataSpaceManager', () => {
         space.stateUpdate.waitForCondition(() => space.state === SpaceState.READY),
         500,
       );
-      await testLocalDatabase(space.dataPipeline);
     });
   });
 });

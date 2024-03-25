@@ -53,9 +53,6 @@
       "path": "../automerge"
     },
     {
-      "path": "../document-model"
-    },
-    {
       "path": "../echo-db"
     },
     {
@@ -66,12 +63,6 @@
     },
     {
       "path": "../echo-typegen"
-    },
-    {
-      "path": "../model-factory"
-    },
-    {
-      "path": "../text-model"
     }
   ]
 }
