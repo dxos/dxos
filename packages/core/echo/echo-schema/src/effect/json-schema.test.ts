@@ -99,6 +99,13 @@ describe('effect-to-json', () => {
     expect(jsonSchema[ECHO_KEY].type).to.deep.eq(testSchema);
   });
 
+  test('field meta annotation', () => {
+    const fieldMeta = { maxLength: 0 };
+    class Schema extends EchoObjectSchema(testSchema)({ field: S.string.pipe(E.fieldMeta(fieldMeta)) }) {}
+    const jsonSchema = effectToJsonSchema(Schema);
+    expect(jsonSchema.properties.field[ECHO_KEY].fieldMeta).to.deep.eq(fieldMeta);
+  });
+
   test('reference annotation', () => {
     class DeepNested extends EchoObjectSchema(testSchema)({ field: S.string }) {}
     class Nested extends EchoObjectSchema(testSchema)({ field: E.ref(DeepNested) }) {}
@@ -145,7 +152,7 @@ describe('json-to-effect', () => {
       class Schema extends EchoObjectSchema(testSchema)(
         {
           string: S.string.pipe(S.identifier('String')),
-          number: S.number,
+          number: S.number.pipe(E.fieldMeta({ is_date: true })),
           boolean: S.boolean,
           array: S.array(S.string),
           twoDArray: S.array(S.array(S.string)),

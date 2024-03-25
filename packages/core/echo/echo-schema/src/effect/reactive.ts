@@ -169,16 +169,33 @@ export const object: {
 };
 
 export const ReferenceAnnotation = Symbol.for('@dxos/schema/annotation/Reference');
-export type ReferenceAnnotationValue = {};
+export type ReferenceAnnotationValue = EchoObjectAnnotation;
 
 // TODO(dmaretskyi): Assert that schema has `id`.
 export const ref = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<T> => {
-  if (!getEchoObjectAnnotation(schema)) {
+  const annotation = getEchoObjectAnnotation(schema);
+  if (annotation == null) {
     throw new Error('Reference target must be an ECHO object.');
   }
 
-  return S.make(AST.annotations(schema.ast, { [ReferenceAnnotation]: {} }));
+  return schema.annotations({ [ReferenceAnnotation]: annotation });
 };
+
+export const EchoObjectFieldMetaAnnotationId = Symbol.for('@dxos/echo-schema/annotation/FieldMeta');
+export type EchoObjectFieldMetaAnnotation = Record<string, string | number | boolean>;
+
+export const fieldMeta =
+  (meta: EchoObjectFieldMetaAnnotation) =>
+  <A, I, R>(self: S.Schema<A, I, R>): S.Schema<A, I, R> => {
+    const existingMeta = getFieldMetaAnnotation(self) ?? {};
+    return S.make(AST.annotations(self.ast, { [EchoObjectFieldMetaAnnotationId]: { ...existingMeta, ...meta } }));
+  };
+
+export const getFieldMetaAnnotation = <A, I, R>(schema: S.Schema<A, I, R>) =>
+  pipe(
+    AST.getAnnotation<EchoObjectFieldMetaAnnotation>(EchoObjectFieldMetaAnnotationId)(schema.ast),
+    Option.getOrElse(() => undefined),
+  );
 
 export const getRefAnnotation = (schema: S.Schema<any>) =>
   pipe(
