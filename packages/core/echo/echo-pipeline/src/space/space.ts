@@ -2,19 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, synchronized, trackLeaks, Mutex } from '@dxos/async';
+import { Event, Mutex, synchronized, trackLeaks } from '@dxos/async';
 import { type Context } from '@dxos/context';
 import { type FeedInfo } from '@dxos/credentials';
 import { type FeedOptions, type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { type ModelFactory } from '@dxos/model-factory';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
-import { type AsyncCallback, Callback } from '@dxos/util';
+import { Callback, type AsyncCallback } from '@dxos/util';
 
 import { ControlPipeline } from './control-pipeline';
 import { type SpaceProtocol } from './space-protocol';
@@ -30,7 +29,6 @@ export type SpaceParams = {
   protocol: SpaceProtocol;
   genesisFeed: FeedWrapper<FeedMessage>;
   feedProvider: FeedProvider;
-  modelFactory: ModelFactory;
   metadataStore: MetadataStore;
   snapshotManager: SnapshotManager;
   memberKey: PublicKey;

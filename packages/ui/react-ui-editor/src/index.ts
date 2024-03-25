@@ -9,7 +9,6 @@ export { type EditorView, keymap } from '@codemirror/view';
 export { tags } from '@lezer/highlight';
 
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
-export { Doc, YText, YXmlFragment } from '@dxos/text-model'; // TODO(burdon): Remove.
 
 export * from './components';
 export * from './extensions';
