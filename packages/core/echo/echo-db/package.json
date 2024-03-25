@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -39,11 +39,9 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/document-model": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/model-factory": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/timeframe": "workspace:*",
@@ -53,7 +51,6 @@
     "@automerge/automerge": "^2.1.10",
     "@automerge/automerge-repo": "^1.1.1",
     "@dxos/feed-store": "workspace:*",
-    "@dxos/text-model": "workspace:*",
     "@dxos/typings": "workspace:*",
     "yjs": "^13.6.10"
   },

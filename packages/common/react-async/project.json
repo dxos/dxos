@@ -15,8 +15,7 @@
     "lint": {},
     "test": {
       "options": {
-        "domRequired": true,
-        "forceExit": true
+        "domRequired": true
       }
     }
   },

@@ -1,5 +1,5 @@
 # Type `MountOptions`
-<sub>Declared in [packages/sdk/client/dist/types/src/devtools/devtools.d.ts:22]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/devtools/devtools.d.ts:26]()</sub>
 
 
 

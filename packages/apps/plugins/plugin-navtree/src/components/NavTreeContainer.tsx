@@ -137,7 +137,8 @@ export const NavTreeContainer = ({
       const overPath = trimPlaceholder(over.path);
       const activeNode = getTreeNode(root, paths.get(Path.last(active.path)));
       const overNode = getTreeNode(root, paths.get(Path.last(overPath)));
-      if (activeNode && overNode) {
+      // TODO(wittjosiah): Support dragging things into the tree.
+      if (activeNode && overNode && overPath.startsWith(root.id)) {
         const activeClass = activeNode.properties.persistenceClass;
         const activeParent = activeNode.parent;
         if (activeParent && operation === 'rearrange') {
