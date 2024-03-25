@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { Reference } from '@dxos/document-model';
+import { Reference } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 

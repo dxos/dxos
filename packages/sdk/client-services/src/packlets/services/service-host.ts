@@ -3,23 +3,20 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
-import { clientServiceBundle, type ClientServices, defaultKey, Properties } from '@dxos/client-protocol';
+import { Properties, clientServiceBundle, defaultKey, type ClientServices } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { DocumentModel } from '@dxos/document-model';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
-import { type TypedObject, getRawDoc, type SpaceDoc, getAutomergeObjectCore } from '@dxos/echo-schema';
+import { getAutomergeObjectCore, getRawDoc, type SpaceDoc, type TypedObject } from '@dxos/echo-schema';
 import { IndexServiceImpl } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type SignalManager, WebsocketSignalManager } from '@dxos/messaging';
-import { ModelFactory } from '@dxos/model-factory';
-import { createSimplePeerTransportFactory, NetworkManager, type TransportFactory } from '@dxos/network-manager';
+import { WebsocketSignalManager, type SignalManager } from '@dxos/messaging';
+import { NetworkManager, createSimplePeerTransportFactory, type TransportFactory } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
-import { TextModel } from '@dxos/text-model';
 import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
 import { assignDeep } from '@dxos/util';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
@@ -28,7 +25,7 @@ import { createDiagnostics } from './diagnostics';
 import { ServiceContext, type ServiceContextRuntimeParams } from './service-context';
 import { ServiceRegistry } from './service-registry';
 import { DevicesServiceImpl } from '../devices';
-import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
+import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools';
 import { IdentityServiceImpl, type CreateIdentityOptions } from '../identity';
 import { InvitationsServiceImpl } from '../invitations';
 import { Lock, type ResourceLock } from '../locks';
@@ -38,17 +35,11 @@ import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
 
-// TODO(burdon): Factor out to spaces.
-export const createDefaultModelFactory = () => {
-  return new ModelFactory().registerModel(DocumentModel).registerModel(TextModel);
-};
-
 export type ClientServicesHostParams = {
   /**
    * Can be omitted if `initialize` is later called.
    */
   config?: Config;
-  modelFactory?: ModelFactory;
   transportFactory?: TransportFactory;
   signalManager?: SignalManager;
   connectionLog?: boolean;
@@ -82,7 +73,6 @@ export class ClientServicesHost {
 
   private _config?: Config;
   private readonly _statusUpdate = new Event<void>();
-  private readonly _modelFactory: ModelFactory;
   private _signalManager?: SignalManager;
   private _networkManager?: NetworkManager;
   private _storage?: Storage;
@@ -100,7 +90,6 @@ export class ClientServicesHost {
 
   constructor({
     config,
-    modelFactory = createDefaultModelFactory(),
     transportFactory,
     signalManager,
     storage,
@@ -110,7 +99,6 @@ export class ClientServicesHost {
     runtimeParams,
   }: ClientServicesHostParams = {}) {
     this._storage = storage;
-    this._modelFactory = modelFactory;
     this._callbacks = callbacks;
     this._runtimeParams = runtimeParams;
 
@@ -243,7 +231,6 @@ export class ClientServicesHost {
       this._storage,
       this._networkManager,
       this._signalManager,
-      this._modelFactory,
       this._runtimeParams,
     );
 
@@ -268,17 +255,13 @@ export class ClientServicesHost {
       SpacesService: new SpacesServiceImpl(
         this._serviceContext.identityManager,
         this._serviceContext.spaceManager,
-        this._serviceContext.dataServiceSubscriptions,
         async () => {
           await this._serviceContext.initialized.wait();
           return this._serviceContext.dataSpaceManager!;
         },
       ),
 
-      DataService: new DataServiceImpl(
-        this._serviceContext.dataServiceSubscriptions,
-        this._serviceContext.automergeHost,
-      ),
+      DataService: new DataServiceImpl(this._serviceContext.automergeHost),
 
       IndexService: new IndexServiceImpl({
         indexer: this._serviceContext.indexer,

@@ -20,7 +20,6 @@
         "envVariables": {
           "SIGNAL_PORT": 12000
         },
-        "forceExit": true,
         "setup": "packages/core/mesh/signal/testing/setup.js",
         "setupOptions": {
           "port": 12000
