@@ -64,10 +64,11 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
     let cancelRequest: () => void;
     return {
       response: new Promise<QueryResponse>((resolve, reject) => {
+        invariant(request.queryId, 'QueryId is undefined.');
         this._responsePromises.set(request.queryId, { resolve, reject });
         cancelRequest = () => {
           reject(new Error('Request cancelled.'));
-          this._responsePromises.delete(request.queryId);
+          this._responsePromises.delete(request.queryId!);
         };
       }),
       cancelRequest: () => {
@@ -82,6 +83,7 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
     }
 
     const response = message.payload as QueryResponse;
+    invariant(response.queryId, 'QueryId is undefined.');
     const responsePromise = this._responsePromises.get(response.queryId);
     if (!responsePromise) {
       log('Request for this response was canceled.', { response });

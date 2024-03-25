@@ -19,4 +19,10 @@ message IndexKind {
 
 message IndexConfig {
   repeated IndexKind indexes = 1;
+  /**
+    * Is indexing enabled (FEATURE FLAG).
+    * If not set, the default is false.
+    * TODO(mykola): Delete once we promote it as a production feature.
+    */
+  optional bool enabled = 2;
 }
