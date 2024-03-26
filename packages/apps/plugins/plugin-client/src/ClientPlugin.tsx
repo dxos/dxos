@@ -145,7 +145,6 @@ export const ClientPlugin = ({
       }
 
       filterPlugins(plugins, parseSchemaPlugin).forEach((plugin) => {
-        console.log(plugin.meta.id, plugin.provides.echo.schema);
         client.addSchema(...plugin.provides.echo.schema);
       });
     },
