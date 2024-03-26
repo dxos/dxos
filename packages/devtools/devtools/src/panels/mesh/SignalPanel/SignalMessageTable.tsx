@@ -100,7 +100,7 @@ const views: View<SignalResponse>[] = [
         id: 'author',
         ...builder.key({ tooltip: true }),
       }),
-      helper.accessor((response) => PublicKey.from(response.message!.recipient) {
+      helper.accessor((response) => PublicKey.from(response.message!.recipient), {
         id: 'recipient',
         ...builder.key({ tooltip: true }),
       }),
