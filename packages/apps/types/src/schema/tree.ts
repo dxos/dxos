@@ -5,28 +5,27 @@
 import * as S from '@effect/schema/Schema';
 
 import * as E from '@dxos/echo-schema';
+import { TextV0Type } from './document';
 
-interface Item extends E.Identifiable {
-  text: string;
-  items: Item[];
+interface _TreeItemType extends E.Identifiable {
+  text: TextV0Type;
+  items: _TreeItemType[];
   done: boolean;
 }
 
 // TODO(wittjosiah): Migrate to EchoSchemaObject.
-const _TreeItemSchema: S.Schema<Item> = S.struct({
-  text: S.string, // TextV0Type?
-  items: S.array(S.suspend(() => _TreeItemSchema)),
+const _TreeItemType: S.Schema<_TreeItemType> = S.struct({
+  text: E.ref(TextV0Type),
+  items: S.array(S.suspend(() => _TreeItemType)),
   done: S.boolean,
 }).pipe(E.echoObject('braneframe.Tree.Item', '0.1.0'));
-export interface TreeItemType extends E.ObjectType<typeof _TreeItemSchema> {}
-export const TreeItemSchema: S.Schema<TreeItemType> = _TreeItemSchema;
+export interface TreeItemType extends E.ObjectType<typeof _TreeItemType> {}
+export const TreeItemType: S.Schema<TreeItemType> = _TreeItemType;
 
-const _TreeSchema = S.struct({
+export class TreeType extends E.EchoObjectSchema({ typename: 'braneframe.Tree', version: '0.1.0' })({
   title: S.string,
-  root: E.ref(TreeItemSchema),
+  root: E.ref(TreeItemType),
   checkbox: S.boolean,
-}).pipe(E.echoObject('braneframe.Tree', '0.1.0'));
-export interface TreeType extends E.ObjectType<typeof _TreeSchema> {}
-export const TreeSchema: S.Schema<TreeType> = _TreeSchema;
+}) {}
 
-export const isTree = (data: unknown): data is TreeType => !!data && E.getSchema(data) === TreeSchema;
+export const isTree = (data: unknown): data is TreeType => data instanceof TreeType;
