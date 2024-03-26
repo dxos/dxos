@@ -8,18 +8,18 @@ import React from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
 
-import { DeckRoot, DeckColumn } from './Deck';
+import { Deck } from './Deck';
 import translations from '../../translations';
 
 type StorybookDeckProps = {};
 
 const StorybookDeck = (_: StorybookDeckProps) => {
   return (
-    <DeckRoot>
-      <DeckColumn classNames='bg-cyan-500'>1</DeckColumn>
-      <DeckColumn classNames='bg-teal-500'>2</DeckColumn>
-      <DeckColumn classNames='bg-emerald-500'>3</DeckColumn>
-    </DeckRoot>
+    <Deck.Root>
+      <Deck.Plank classNames='bg-cyan-500'>1</Deck.Plank>
+      <Deck.Plank classNames='bg-teal-500'>2</Deck.Plank>
+      <Deck.Plank classNames='bg-emerald-500'>3</Deck.Plank>
+    </Deck.Root>
   );
 };
 

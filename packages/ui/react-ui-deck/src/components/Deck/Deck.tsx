@@ -27,19 +27,20 @@ const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
     );
   },
 );
-type DeckColumnUnit = 'rem' | 'px';
 
-type DeckColumnProps = ThemedClassName<ComponentPropsWithRef<'article'>> & { unit?: DeckColumnUnit };
+type DeckPlankUnit = 'rem' | 'px';
 
-type DeckColumnResizing = Pick<MouseEvent, 'pageX'> & { size: number } & { [Unit in DeckColumnUnit]: number };
+type DeckPlankProps = ThemedClassName<ComponentPropsWithRef<'article'>> & { unit?: DeckPlankUnit };
 
-const DeckColumn = forwardRef<HTMLDivElement, DeckColumnProps>(
+type DeckPlankResizing = Pick<MouseEvent, 'pageX'> & { size: number } & { [Unit in DeckPlankUnit]: number };
+
+const DeckPlank = forwardRef<HTMLDivElement, DeckPlankProps>(
   ({ unit = 'rem', classNames, style, children, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const [isSm] = useMediaQuery('sm', { ssr: false });
 
     const [size, setSize] = useState<number>(40);
-    const [resizing, setResizing] = useState<null | DeckColumnResizing>(null);
+    const [resizing, setResizing] = useState<null | DeckPlankResizing>(null);
 
     const handlePointerUp = useCallback(({ isPrimary }: PointerEvent) => isPrimary && setResizing(null), []);
     const handlePointerMove = useCallback(
@@ -96,4 +97,11 @@ const DeckColumn = forwardRef<HTMLDivElement, DeckColumnProps>(
   },
 );
 
-export { DeckRoot, DeckColumn };
+export { DeckRoot, DeckPlank };
+
+export const Deck = {
+  Root: DeckRoot,
+  Plank: DeckPlank,
+};
+
+export type { DeckPlankProps, DeckPlankUnit, DeckRootProps };
