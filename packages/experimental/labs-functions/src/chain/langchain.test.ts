@@ -54,7 +54,8 @@ import { getConfig, getKey } from '../util';
 // TODO(burdon): Document chains: https://js.langchain.com/docs/modules/chains/document
 // TODO(burdon): Summarize: https://js.langchain.com/docs/modules/chains/popular/summarize
 // TODO(burdon): Plugins: https://platform.openai.com/docs/plugins/examples
-// TODO(burdon): FakeEmbeddings for tests
+
+// TODO(burdon): Test which work with Ollama vs. OpenAI.
 
 describe.skip('LangChain', () => {
   const createModel = (modelName = 'gpt-4') => {
@@ -232,7 +233,7 @@ describe.skip('LangChain', () => {
   // TODO(burdon): How to make prompt satisfy all fields?
   // TODO(burdon): Metadata for zod: https://github.com/colinhacks/zod/issues/273
   //
-  test.only('functions', async () => {
+  test('functions', async () => {
     const defs = S.struct({
       company: S.array(
         S.struct({
@@ -288,36 +289,41 @@ describe.skip('LangChain', () => {
   // Plan and execute.
   // https://js.langchain.com/docs/modules/agents/agent_types/plan_and_execute
   //
-  test('plan and execute', async () => {
-    const config = getConfig()!;
-    const model = createModel();
+  test
+    .only('plan and execute', async () => {
+      const config = getConfig()!;
+      const model = createModel();
 
-    // Tools.
-    // https://api.js.langchain.com/classes/tools.Tool.html
-    // TODO(burdon): BraveSearch
-    // TODO(burdon): SearxngSearch (metasearch tool for current events: https://github.com/searxng/searxng)
-    // TODO(burdon): VectorStoreQATool
-    // TODO(burdon): WebBrowser (extract info from web page).
-    // TODO(burdon): WolframAlphaTool
-    const tools = [
-      // https://serpapi.com/dashboard
-      new SerpAPI(process.env.SERPAPI_API_KEY ?? getKey(config, 'serpapi.com/api_key')),
-      new Calculator(),
-    ];
+      console.log(model);
 
-    const executor = await PlanAndExecuteAgentExecutor.fromLLMAndTools({
-      llm: model,
-      tools,
-    });
+      // Tools.
+      // https://api.js.langchain.com/classes/tools.Tool.html
+      // TODO(burdon): BraveSearch
+      // TODO(burdon): SearxngSearch (metasearch tool for current events: https://github.com/searxng/searxng)
+      // TODO(burdon): VectorStoreQATool
+      // TODO(burdon): WebBrowser (extract info from web page).
+      // TODO(burdon): WolframAlphaTool
+      const tools = [
+        // https://serpapi.com/dashboard
+        new SerpAPI(process.env.SERPAPI_API_KEY ?? getKey(config, 'serpapi.com/api_key')),
+        new Calculator(),
+      ];
 
-    const result = await executor.invoke({
-      input: ['Who is the current president of France?', 'What is their current age raised to the second power?'].join(
-        '\n',
-      ),
-    });
+      const executor = await PlanAndExecuteAgentExecutor.fromLLMAndTools({
+        llm: model,
+        tools,
+      });
 
-    console.log({ result });
-  }).timeout(60_000);
+      const result = await executor.invoke({
+        input: [
+          'Who is the current president of France?',
+          'What is their current age raised to the second power?',
+        ].join('\n'),
+      });
+
+      console.log({ result });
+    })
+    .timeout(60_000);
 
   //
   // Agents, ReAct prompts, and Tools.

@@ -64,6 +64,7 @@
     "lodash.get": "^4.4.2",
     "lodash.startcase": "^4.4.0",
     "mailparser": "^3.6.4",
+    "modelfusion": "^0.137.0",
     "node-fetch": "^2.6.0",
     "open": "^9.1.0",
     "server-destroy": "^1.0.1",

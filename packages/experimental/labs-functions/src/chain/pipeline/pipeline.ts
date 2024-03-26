@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type BaseMessageLike } from '@langchain/core/messages';
 import { Effect } from 'effect';
 
 import { log } from '@dxos/log';
@@ -17,9 +18,9 @@ export type PromptTemplate = {
   inputs?: PromptInput[];
 };
 
-// TODO(burdon): Memory/history?
 export type Request = {
   prompt?: PromptTemplate;
+  messages?: BaseMessageLike[];
 };
 
 export type Response = {
@@ -51,3 +52,5 @@ export const tryFunction = (f: PipelineFunction) => (context: Context) => {
     },
   });
 };
+
+export const text = (...parts: string[]): string => parts.filter(Boolean).join('\n');

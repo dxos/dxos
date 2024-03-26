@@ -7186,6 +7186,9 @@ importers:
       mailparser:
         specifier: ^3.6.4
         version: 3.6.5
+      modelfusion:
+        specifier: ^0.137.0
+        version: 0.137.0
       node-fetch:
         specifier: ^2.6.0
         version: 2.6.7
@@ -29483,6 +29486,11 @@ packages:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
     engines: {node: '>=0.8.x'}
 
+  /eventsource-parser@1.1.1:
+    resolution: {integrity: sha512-3Ej2iLj6ZnX+5CMxqyUb8syl9yVZwcwm8IIMrOJlF7I51zxOOrRlU3zxSb/6hFbl03ts1ZxHAGJdWLZOLyKG7w==}
+    engines: {node: '>=14.18'}
+    dev: false
+
   /evp_bytestokey@1.0.3:
     resolution: {integrity: sha512-/f2Go4TognH/KvCISP7OUsHn85hT9nUkxxA9BEWxFn+Oj9o8ZNLm/40hdlgSLyuOimsrTKLUMEorQexp/aPQeA==}
     dependencies:
@@ -36950,6 +36958,23 @@ packages:
     resolution: {integrity: sha512-tukRdb9Beu27t6dN+XztSRHq9J0B/CoAOySGzHfn8UTfmqipA5yNT/sDUEyYdAV3Hpka6Wx6kOMxuObdOex60Q==}
     dev: true
 
+  /modelfusion@0.137.0:
+    resolution: {integrity: sha512-f1/D9gH1cesJeWRMTBHYCT9/s+N56x6Olgdk1LvNPs7jqu38V0ns2Xp/jJC8WnpFKcb95EKdVKDM1JOTCq5MvQ==}
+    engines: {node: '>=18'}
+    dependencies:
+      eventsource-parser: 1.1.1
+      js-tiktoken: 1.0.7
+      nanoid: 3.3.6
+      secure-json-parse: 2.7.0
+      type-fest: 4.9.0
+      ws: 8.14.2
+      zod: 3.22.4
+      zod-to-json-schema: 3.22.3(zod@3.22.4)
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+    dev: false
+
   /moment@2.29.4:
     resolution: {integrity: sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==}
     requiresBuild: true
@@ -41193,6 +41218,10 @@ packages:
     resolution: {integrity: sha512-AckIIV90rPDcBcglUwXPF3kg0P0qmPsPXAj6BBEENQE1p5yA1xfmDJzfi1Tappj37Pv2mVbKpL3Z1T+Nn7k1Qw==}
     dev: true
 
+  /secure-json-parse@2.7.0:
+    resolution: {integrity: sha512-6aU+Rwsezw7VR8/nyvKTx8QpWH9FrcYiXXlqC4z5d5XQBDRqtbfsRjnwGyqbi3gddNtWHuEk9OANUotL26qKUw==}
+    dev: false
+
   /seedrandom@3.0.5:
     resolution: {integrity: sha512-8OwmbklUNzwezjGInmZ+2clQmExQPvomqjL7LFqOYqtmuxRgQYqOD3mHaU+MvZn5FLUeVxVfQjwLZW/n/JFuqg==}
     dev: false
@@ -43432,6 +43461,11 @@ packages:
 
   /type-fest@4.10.1:
     resolution: {integrity: sha512-7ZnJYTp6uc04uYRISWtiX3DSKB/fxNQT0B5o1OUeCqiQiwF+JC9+rJiZIDrPrNCLLuTqyQmh4VdQqh/ZOkv9MQ==}
+    engines: {node: '>=16'}
+    dev: false
+
+  /type-fest@4.9.0:
+    resolution: {integrity: sha512-KS/6lh/ynPGiHD/LnAobrEFq3Ad4pBzOlJ1wAnJx9N4EYoqFhMfLIBjUT2UEx4wg5ZE+cC1ob6DCSpppVo+rtg==}
     engines: {node: '>=16'}
     dev: false
 
@@ -46689,6 +46723,14 @@ packages:
 
   /zod-to-json-schema@3.22.0(zod@3.22.4):
     resolution: {integrity: sha512-XQr8EwxPMzJGhoR+d/nRFWdi15VaZ+R5Uhssm+Xx5yS30xCpuutfKRm4rerE0SK9j2dWB5Z3FvDD0w8WMVGzkA==}
+    peerDependencies:
+      zod: ^3.22.4
+    dependencies:
+      zod: 3.22.4
+    dev: false
+
+  /zod-to-json-schema@3.22.3(zod@3.22.4):
+    resolution: {integrity: sha512-9isG8SqRe07p+Aio2ruBZmLm2Q6Sq4EqmXOiNpDxp+7f0LV6Q/LX65fs5Nn+FV/CzfF3NLBoksXbS2jNYIfpKw==}
     peerDependencies:
       zod: ^3.22.4
     dependencies:
