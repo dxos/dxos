@@ -12,7 +12,6 @@ interface _TreeItemType extends E.Identifiable {
   items: _TreeItemType[];
   done: boolean;
 }
-
 const _TreeItemType: S.Schema<_TreeItemType> = S.struct({
   text: E.ref(TextV0Type),
   items: S.array(S.suspend(() => _TreeItemType)),
