@@ -23,8 +23,8 @@ import { createUniqueProp } from './types';
 type TableColumnBuilderOptions = {
   onColumnUpdate?: (id: string, column: ColumnProps) => void;
   onColumnDelete?: (id: string) => void;
-  onRowUpdate?: (object: TypedObject, key: string, value: any) => void;
-  onRowDelete?: (object: TypedObject) => void;
+  onRowUpdate?: (object: any, key: string, value: any) => void;
+  onRowDelete?: (object: any) => void;
 };
 
 /**
@@ -43,7 +43,7 @@ export class TableColumnBuilder {
     this._tableDef = this._tableDefs.find((def) => def.id === tableId);
   }
 
-  createColumns(): TableColumnDef<TypedObject>[] {
+  createColumns(): TableColumnDef<any>[] {
     if (!this._tableDef) {
       return [];
     }
@@ -63,7 +63,7 @@ export const createColumns = (
   tableDef: TableDef,
   space: Space,
   { onRowUpdate, onColumnUpdate, onColumnDelete }: TableColumnBuilderOptions = {},
-): TableColumnDef<TypedObject>[] => {
+): TableColumnDef<any>[] => {
   const { helper, builder } = createColumnBuilder<any>();
   return tableDef.columns.map((column) => {
     const { type, id, label, fixed, resizable, ...props } = column;
@@ -75,7 +75,7 @@ export const createColumns = (
       header: fixed
         ? undefined
         : (context) => (
-            <ColumnMenu<TypedObject, any>
+            <ColumnMenu<any, any>
               context={context}
               tableDefs={tableDefs}
               tableDef={tableDef}
