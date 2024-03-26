@@ -14,6 +14,7 @@ import {
   type AutomergeObjectCore,
   type InitRootProxyFn,
 } from './automerge';
+import { DynamicSchemaRegistry } from './effect/dynamic/schema-registry';
 import { createEchoReactiveObject, initEchoReactiveObjectRootProxy } from './effect/echo-handler';
 import { type EchoReactiveObject, getSchema } from './effect/reactive';
 import { type Hypergraph } from './hypergraph';
@@ -58,6 +59,8 @@ export interface EchoDatabase {
    */
   get objects(): EchoObject[];
 
+  get schemaRegistry(): DynamicSchemaRegistry;
+
   /**
    * @deprecated
    */
@@ -89,6 +92,8 @@ export class EchoDatabaseImpl implements EchoDatabase {
 
   private _useReactiveObjectApi: boolean;
 
+  public readonly schemaRegistry: DynamicSchemaRegistry;
+
   constructor(params: EchoDatabaseParams) {
     const initRootProxyFn: InitRootProxyFn = (core: AutomergeObjectCore) => {
       if (this._useReactiveObjectApi) {
@@ -102,6 +107,7 @@ export class EchoDatabaseImpl implements EchoDatabase {
 
     this._automerge = new AutomergeDb(params.graph, params.automergeContext, params.spaceKey, initRootProxyFn, this);
     this._useReactiveObjectApi = params.useReactiveObjectApi ?? false;
+    this.schemaRegistry = new DynamicSchemaRegistry(this);
   }
 
   get graph(): Hypergraph {
@@ -124,8 +130,10 @@ export class EchoDatabaseImpl implements EchoDatabase {
     } else {
       invariant(!isAutomergeObject(obj));
       const schema = getSchema(obj);
-      if (schema != null && !this.graph.types.isEffectSchemaRegistered(schema)) {
-        throw createSchemaNotRegisteredError();
+      if (schema != null) {
+        if (!this.schemaRegistry.isRegistered(schema) && !this.graph.types.isEffectSchemaRegistered(schema)) {
+          throw createSchemaNotRegisteredError();
+        }
       }
       const echoObj = createEchoReactiveObject(obj);
       this._automerge.add(echoObj);

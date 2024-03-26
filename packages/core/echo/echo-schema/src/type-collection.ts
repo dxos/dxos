@@ -8,6 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
+import { StoredEchoSchema } from './effect/dynamic/stored-schema';
 import { getSchemaTypeRefOrThrow } from './effect/echo-handler';
 import * as E from './effect/reactive';
 import { TypedObject, dangerouslyMutateImmutableObject, LEGACY_TEXT_TYPE } from './object';
@@ -31,6 +32,7 @@ export class TypeCollection {
 
   constructor() {
     this._effectSchemaDefs.set(LEGACY_TEXT_TYPE, TextCompatibilitySchema);
+    this._effectSchemaDefs.set(StoredEchoSchema.typename, StoredEchoSchema);
   }
 
   get schemas(): SchemaProto[] {
