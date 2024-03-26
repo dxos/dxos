@@ -61,6 +61,9 @@ export class SchemaValidator {
 
   public static validateValue(target: any, prop: string | symbol, value: any) {
     const schema = getTargetPropertySchema(target, prop);
+    if (schema == null) {
+      return value;
+    }
     const _ = S.asserts(schema)(value);
     if (Array.isArray(value)) {
       value = new ReactiveArray(...value);
@@ -150,9 +153,12 @@ const getTypeDiscriminators = (typeAstList: AST.TypeLiteral[]): AST.PropertySign
   return discriminatorPropCandidates;
 };
 
-const getTargetPropertySchema = (target: any, prop: string | symbol): S.Schema<any> => {
+const getTargetPropertySchema = (target: any, prop: string | symbol): S.Schema<any> | undefined => {
   const schema = (target as any)[symbolSchema];
   invariant(schema, 'target has no schema');
+  if (AST.isAnyKeyword(schema.ast)) {
+    return undefined;
+  }
   if (target instanceof ReactiveArray) {
     return getArrayElementSchema(schema, prop);
   }
@@ -173,7 +179,9 @@ export const setSchemaProperties = (obj: any, schema: S.Schema<any>) => {
   for (const key in obj) {
     if (isValidProxyTarget(obj[key])) {
       const elementSchema = getTargetPropertySchema(obj, key);
-      setSchemaProperties(obj[key], elementSchema);
+      if (elementSchema != null) {
+        setSchemaProperties(obj[key], elementSchema);
+      }
     }
   }
 };
