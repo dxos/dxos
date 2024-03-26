@@ -47,6 +47,7 @@ import {
   PopoverRenameSpace,
   ShareSpaceButton,
   SmallPresence,
+  SmallPresenceLive,
   SpaceMain,
   SpacePresence,
   SpaceSettings,
@@ -118,8 +119,6 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
       const graph = graphPlugin.provides.graph;
       const location = navigationPlugin.provides.location;
       const dispatch = intentPlugin.provides.intent.dispatch;
-
-      client.addSchema(FolderType);
 
       // Create root folder structure.
       if (clientPlugin.provides.firstRun) {
@@ -241,6 +240,9 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
           },
         },
       },
+      echo: {
+        schema: [FolderType],
+      },
       surface: {
         component: ({ data, role }) => {
           switch (role) {
@@ -299,15 +301,10 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 return null;
               }
             case 'presence--glyph': {
-              return (
-                <SmallPresence
-                  count={E.isReactiveProxy(data.object) ? state.viewersByObject[data.object.id]?.size ?? 0 : 0}
-                />
-                // return isTypedObject(data.object) ? (
-                //   <SmallPresenceLive viewers={state.viewersByObject[data.object.id]} />
-                // ) : (
-                //   <SmallPresence count={0} />
-                // );
+              return E.isReactiveProxy(data.object) ? (
+                <SmallPresenceLive viewers={state.viewersByObject[data.object.id]} />
+              ) : (
+                <SmallPresence count={0} />
               );
             }
             case 'navbar-start': {

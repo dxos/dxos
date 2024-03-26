@@ -97,9 +97,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         const { extensions } = plugin.provides.markdown;
         state.extensions.push(extensions);
       });
-
-      const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      clientPlugin?.provides.client.addSchema(DocumentType);
     },
     provides: {
       settings: settings.values,
@@ -112,6 +109,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         },
       },
       translations: [...translations, ...editorTranslations],
+      echo: {
+        schema: [DocumentType],
+      },
       graph: {
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;

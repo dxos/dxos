@@ -4,13 +4,13 @@
 
 import React, { type FC } from 'react';
 
-import { type TypedObject } from '@dxos/client/echo';
+import { type FileType } from '@braneframe/types';
 import { useConfig } from '@dxos/react-client';
 
 import { FilePreview } from './FilePreview';
 import { getIpfsUrl } from '../get-ipfs-url';
 
-const FileSection: FC<{ file: TypedObject; height?: number }> = ({ file, height = 400 }) => {
+const FileSection: FC<{ file: FileType; height?: number }> = ({ file, height = 400 }) => {
   const config = useConfig();
   if (!file.cid) {
     return null;

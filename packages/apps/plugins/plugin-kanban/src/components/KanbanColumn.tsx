@@ -8,7 +8,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, X, Plus } from '@phosphor-icons/react';
 import React, { type FC } from 'react';
 
-import { type Kanban as KanbanType } from '@braneframe/types';
+import { type KanbanColumnType, type KanbanItemType } from '@braneframe/types';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
 import { modalSurface, getSize, groupSurface, mx } from '@dxos/react-ui-theme';
 
@@ -16,7 +16,7 @@ import { KanbanCardComponent } from './KanbanCard';
 import { useSubscription } from './util';
 import { KANBAN_PLUGIN } from '../meta';
 
-export type ItemsMapper = (column: string, items: KanbanType.Item[]) => KanbanType.Item[];
+export type ItemsMapper = (column: string, items: KanbanItemType[]) => KanbanItemType[];
 
 const DeleteColumn = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation(KANBAN_PLUGIN);
@@ -52,10 +52,10 @@ export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ on
 };
 
 export const KanbanColumnComponent: FC<{
-  column: KanbanType.Column;
+  column: KanbanColumnType;
   itemMapper?: ItemsMapper;
   debug?: boolean; // TODO(burdon): Context.
-  onCreate?: (column: KanbanType.Column) => KanbanType.Item;
+  onCreate?: (column: KanbanColumnType) => KanbanItemType;
   onDelete?: () => void;
 }> = ({ column, itemMapper, debug = false, onCreate, onDelete }) => {
   const { t } = useTranslation(KANBAN_PLUGIN);

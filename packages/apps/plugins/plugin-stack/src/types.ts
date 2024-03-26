@@ -5,6 +5,7 @@
 import type { IconProps } from '@phosphor-icons/react';
 import type { FC } from 'react';
 
+import { type SchemaProvides } from '@braneframe/plugin-client';
 import type {
   GraphBuilderProvides,
   Intent,
@@ -52,4 +53,5 @@ export type StackPluginProvides = SurfaceProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
   SettingsProvides<StackSettingsProps> &
-  TranslationsProvides & { stack: StackState };
+  TranslationsProvides &
+  SchemaProvides & { stack: StackState };

@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type SchemaProvides } from '@braneframe/plugin-client';
 import { type DocumentType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
@@ -61,4 +62,5 @@ export type MarkdownPluginProvides = SurfaceProvides &
   MetadataRecordsProvides &
   SettingsProvides<MarkdownSettingsProps> &
   TranslationsProvides &
+  SchemaProvides &
   StackProvides;

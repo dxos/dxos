@@ -7,9 +7,10 @@ import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { Stack, isDocument, isStack } from '@braneframe/types';
+import { StackType, isDocument, isStack } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
+import { Filter } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema/schema';
 
 import { PresenterMain, MarkdownSlideMain } from './components';
@@ -44,8 +45,8 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
             spaces.forEach((space) => {
               // Add all documents to the graph.
-              const query = space.db.query(Stack.filter());
-              let previousObjects: Stack[] = [];
+              const query = space.db.query(Filter.schema(StackType));
+              let previousObjects: StackType[] = [];
               subscriptions.add(
                 effect(() => {
                   const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));

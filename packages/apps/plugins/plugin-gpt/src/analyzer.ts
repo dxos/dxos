@@ -5,7 +5,7 @@
 import OpenAI from 'openai';
 import { type Chat } from 'openai/resources';
 
-import { type Document as DocumentType } from '@braneframe/types';
+import { type DocumentType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import { getTextContent, toJsonSchema, Schema, Expando, TextObject, getTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';

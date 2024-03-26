@@ -66,8 +66,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-      const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      clientPlugin?.provides.client.addSchema(ThreadType, MessageType);
 
       // TODO(wittjosiah): This is a hack to make standalone threads work in the c11y sidebar.
       //  This should have a better solution when deck is introduced.
@@ -80,8 +78,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             : getSpaceForObject(activeNode.data)
           : undefined;
         untracked(() => {
-          // const [thread] = space?.db.query(ThreadType.filter((thread) => !thread.context)).objects ?? [];
-          const [thread] = space?.db.query(Filter.schema(ThreadType)).objects.filter((thread) => !thread.context) ?? [];
+          const [thread] = space?.db.query(Filter.schema(ThreadType, (thread) => !thread.context)).objects ?? [];
           if (activeNode && isDocument(activeNode?.data) && (activeNode.data.comments?.length ?? 0) > 0) {
             void intentPlugin?.provides.intent.dispatch({
               action: LayoutAction.SET_LAYOUT,
@@ -135,6 +132,9 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         },
       },
       translations: [...translations, ...threadTranslations],
+      echo: {
+        schema: [ThreadType, MessageType],
+      },
       graph: {
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;

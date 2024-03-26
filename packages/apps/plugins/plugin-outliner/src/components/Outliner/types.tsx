@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type TextObject } from '@dxos/client/echo';
+import { type TextV0Type } from '@braneframe/types';
 
 export type Item = {
   id: string;
-  text: TextObject;
+  text: TextV0Type;
   done?: boolean;
   items?: Item[];
 };

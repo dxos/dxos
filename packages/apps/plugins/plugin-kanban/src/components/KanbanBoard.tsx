@@ -16,7 +16,7 @@ import {
 import { horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortable';
 import React, { type FC, useEffect, useState } from 'react';
 
-import type { Kanban as KanbanType } from '@braneframe/types';
+import type { KanbanColumnType, KanbanItemType } from '@braneframe/types';
 import { createSubscription } from '@dxos/react-client/echo';
 import { arrayMove } from '@dxos/util';
 
@@ -50,12 +50,12 @@ export const KanbanBoard: FC<{ model: KanbanModel }> = ({ model }) => {
 
   // Dragging column.
   // TODO(burdon): Dragging column causes flickering when dragging left to first column.
-  const [draggingColumn, setDraggingColumn] = useState<KanbanType.Column | undefined>();
+  const [draggingColumn, setDraggingColumn] = useState<KanbanColumnType | undefined>();
 
   // Dragging item.
   const [draggingItem, setDraggingItem] = useState<{ source: Location; target?: Location }>();
   // While dragging, temporarily remap which items should be visible inside each column.
-  const itemMapper: ItemsMapper = (column: string, items: KanbanType.Item[]) => {
+  const itemMapper: ItemsMapper = (column: string, items: KanbanItemType[]) => {
     const { source, target } = draggingItem ?? {};
     if (source && target) {
       if (source?.column.id !== target?.column.id && (column === source?.column.id || column === target?.column.id)) {
@@ -172,7 +172,7 @@ export const KanbanBoard: FC<{ model: KanbanModel }> = ({ model }) => {
                 key={column.id}
                 column={column}
                 itemMapper={itemMapper}
-                onCreate={(column: KanbanType.Column) => model.createItem(column)}
+                onCreate={(column: KanbanColumnType) => model.createItem(column)}
                 onDelete={() => handleDeleteColumn(column.id!)}
               />
             ))}

@@ -4,8 +4,8 @@
 
 import React, { useState } from 'react';
 
-import { type Calendar as CalendarType, Event as EventType } from '@braneframe/types';
-import { getSpaceForObject, useQuery } from '@dxos/react-client/echo';
+import { type CalendarType, EventType } from '@braneframe/types';
+import { Filter, getSpaceForObject, useQuery } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
@@ -30,7 +30,7 @@ export type EventsMainProps = {
 const EventsMain = ({ calendar }: EventsMainProps) => {
   const [selected, setSelected] = useState<EventType>();
   const space = getSpaceForObject(calendar);
-  const objects = useQuery(space, EventType.filter());
+  const objects = useQuery(space, Filter.schema(EventType));
   objects.sort(byDate());
 
   return (

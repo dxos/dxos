@@ -14,4 +14,4 @@ export * from './sketch';
 export * from './stack';
 export * from './table';
 export * from './thread';
-// export * from './tree';
+export * from './tree';

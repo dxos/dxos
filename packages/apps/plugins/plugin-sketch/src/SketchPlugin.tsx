@@ -21,10 +21,6 @@ import { SketchAction, type SketchPluginProvides } from './types';
 export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
   return {
     meta,
-    ready: async (plugins) => {
-      const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      clientPlugin?.provides.client.addSchema(SketchType, E.ExpandoType);
-    },
     provides: {
       metadata: {
         records: {
@@ -35,6 +31,10 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         },
       },
       translations,
+      echo: {
+        // TODO(wittjosiah): Expando shouldn't need to be registered.
+        schema: [SketchType, E.ExpandoType],
+      },
       graph: {
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;

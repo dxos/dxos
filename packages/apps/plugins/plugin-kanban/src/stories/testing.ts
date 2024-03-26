@@ -2,22 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Kanban as KanbanType } from '@braneframe/types';
+import { KanbanColumnType, KanbanItemType, KanbanType, TextV0Type } from '@braneframe/types';
+import * as E from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { TextObject } from '@dxos/react-client/echo';
 
 // TODO(burdon): Types.
 export const createKanban = () => {
-  return new KanbanType({
+  return E.object(KanbanType, {
     title: faker.lorem.words(3),
     columns: faker.helpers.multiple(
       () =>
-        new KanbanType.Column({
+        E.object(KanbanColumnType, {
           title: faker.lorem.words(3),
           items: faker.helpers.multiple(
             () =>
-              new KanbanType.Item({
-                title: new TextObject(faker.lorem.words(faker.number.int({ min: 3, max: 24 })) + '.'),
+              E.object(KanbanItemType, {
+                title: E.object(TextV0Type, {
+                  content: faker.lorem.words(faker.number.int({ min: 3, max: 24 })) + '.',
+                }),
               }),
             { count: faker.number.int(8) },
           ),

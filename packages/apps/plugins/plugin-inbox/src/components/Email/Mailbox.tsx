@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { type Mailbox as MailboxType, Message as MessageType } from '@braneframe/types';
+import { type MailboxType, MessageState, type MessageType } from '@braneframe/types';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, fixedBorder, fixedInsetFlexLayout, topbarBlockPaddingStart, mx } from '@dxos/react-ui-theme';
 
@@ -15,7 +15,7 @@ const DEFAULT_READ_TIMEOUT = 3_000;
 
 const byDate =
   (direction = -1) =>
-  ({ date: a }: MessageType, { date: b }: MessageType) =>
+  ({ date: a = '' }: MessageType, { date: b = '' }: MessageType) =>
     a < b ? -direction : a > b ? direction : 0;
 
 export type MailboxOptions = {
@@ -49,17 +49,17 @@ const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
   }, [selected]);
 
   const messages = [...mailbox.messages]
-    .filter((message) => message.state !== MessageType.State.ARCHIVED && message.state !== MessageType.State.DELETED)
+    .filter((message) => message.state !== MessageState.ARCHIVED && message.state !== MessageState.DELETED)
     .sort(byDate());
 
   const handleAction = (message: MessageType, action: ActionType) => {
     switch (action) {
       case 'archive':
-        message.state = MessageType.State.ARCHIVED;
+        message.state = MessageState.ARCHIVED;
         setSelected(undefined);
         break;
       case 'delete':
-        message.state = MessageType.State.DELETED;
+        message.state = MessageState.DELETED;
         setSelected(undefined);
         break;
       case 'unread':
@@ -71,7 +71,7 @@ const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
       <div className={mx('flex grow overflow-hidden border-t', fixedBorder)}>
-        <MasterDetail detail={selected && <pre className='text-sm'>{selected.blocks[0].content?.text}</pre>}>
+        <MasterDetail detail={selected && <pre className='text-sm'>{selected.blocks[0].content?.content}</pre>}>
           <MessageList messages={messages} selected={selected?.id} onSelect={setSelected} onAction={handleAction} />
         </MasterDetail>
       </div>

@@ -5,7 +5,7 @@
 import React, { type FC, useEffect, useMemo, useState, useCallback } from 'react';
 
 import { useFilteredObjects } from '@braneframe/plugin-search';
-import { Table as TableType } from '@braneframe/types';
+import { Table as TableType } from '@braneframe/types/proto';
 import { PublicKey } from '@dxos/keys';
 import { Expando, type TypedObject, Schema, getSpaceForObject, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider } from '@dxos/react-ui';

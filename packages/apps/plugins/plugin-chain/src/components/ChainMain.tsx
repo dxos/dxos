@@ -4,7 +4,7 @@
 
 import React, { type FC } from 'react';
 
-import { type Chain as ChainType } from '@braneframe/types';
+import { type ChainType } from '@braneframe/types';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { DensityProvider, Main, Select, useTranslation } from '@dxos/react-ui';
 import { baseSurface, mx, textBlockWidth, topbarBlockPaddingStart } from '@dxos/react-ui-theme';

@@ -72,28 +72,34 @@ export const isThread = (data: unknown): data is E.EchoReactiveObject<ThreadType
 
 // TODO(burdon): Reconcile with Thread?
 export class MailboxType extends EchoObjectSchema({ typename: 'braneframe.Mailbox', version: '0.1.0' })({
-  title: S.string,
-  messages: S.array(E.ref(MessageType)),
+  title: S.optional(S.string),
+  messages: S.mutable(S.array(E.ref(MessageType))),
 }) {}
 
 export class ContactType extends EchoObjectSchema({ typename: 'braneframe.Contact', version: '0.1.0' })({
-  name: S.string,
-  identifiers: S.array(
-    S.struct({
-      type: S.string,
-      value: S.string,
-    }),
+  name: S.optional(S.string),
+  identifiers: S.mutable(
+    S.array(
+      S.struct({
+        type: S.string,
+        value: S.string,
+      }),
+    ),
   ),
 }) {}
 
 export class EventType extends EchoObjectSchema({ typename: 'braneframe.Event', version: '0.1.0' })({
-  title: S.string,
+  title: S.optional(S.string),
   owner: _RecipientSchema,
-  attendees: S.array(_RecipientSchema),
+  attendees: S.mutable(S.array(_RecipientSchema)),
   startDate: S.string,
-  links: S.array(E.ref(E.AnyEchoObject)),
+  links: S.mutable(S.array(E.ref(E.AnyEchoObject))),
 }) {}
 
 export class AddressBookType extends EchoObjectSchema({ typename: 'braneframe.AddressBook', version: '0.1.0' })({}) {}
 
 export class CalendarType extends EchoObjectSchema({ typename: 'braneframe.Calendar', version: '0.1.0' })({}) {}
+
+export const isMailbox = (data: unknown): data is MailboxType => !!data && data instanceof MailboxType;
+export const isAddressBook = (data: unknown): data is AddressBookType => !!data && data instanceof AddressBookType;
+export const isCalendar = (data: unknown): data is CalendarType => !!data && data instanceof CalendarType;

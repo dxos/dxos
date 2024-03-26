@@ -4,7 +4,7 @@
 
 import React, { forwardRef } from 'react';
 
-import type { File as FileType } from '@braneframe/types';
+import { type FileType } from '@braneframe/types';
 import { useConfig } from '@dxos/react-client';
 import { DropdownMenu } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-card';

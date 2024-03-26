@@ -5,7 +5,7 @@
 import { type DocumentType } from '@braneframe/types';
 import { type Plugin } from '@dxos/app-framework';
 import { isEchoReactiveObject } from '@dxos/echo-schema';
-import { getTextContent, isTypedObject } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
+import { isTypedObject } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
 
 import { type MarkdownProperties, type MarkdownExtensionProvides } from './types';
 
@@ -25,6 +25,6 @@ export const markdownExtensionPlugins = (plugins: Plugin[]): MarkdownExtensionPl
 const nonTitleChars = /[^\w ]/g;
 
 export const getFallbackTitle = (document: DocumentType) => {
-  const content = getTextContent(document.content as any);
+  const content = document.content.content;
   return content?.substring(0, 31).split('\n')[0].replaceAll(nonTitleChars, '').trim();
 };

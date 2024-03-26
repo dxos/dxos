@@ -22,17 +22,19 @@ export enum ChainInputType {
 
 export class ChainInput extends EchoObjectSchema({ typename: 'braneframe.Chain.Input', version: '0.1.0' })({
   name: S.string,
-  type: S.enums(ChainInputType),
-  value: S.string,
+  type: S.optional(S.enums(ChainInputType)),
+  value: S.optional(S.string),
 }) {}
 
 export class ChainPromptType extends EchoObjectSchema({ typename: 'braneframe.Chain.Prompt', version: '0.1.0' })({
   command: S.string,
   source: E.ref(TextV0Type),
-  inputs: S.array(E.ref(ChainInput)),
+  inputs: S.mutable(S.array(E.ref(ChainInput))),
 }) {}
 
 export class ChainType extends EchoObjectSchema({ typename: 'braneframe.Chain', version: '0.1.0' })({
-  title: S.string,
-  prompts: S.array(E.ref(ChainPromptType)),
+  title: S.optional(S.string),
+  prompts: S.mutable(S.array(E.ref(ChainPromptType))),
 }) {}
+
+export const isChain = (data: unknown): data is ChainType => !!data && data instanceof ChainType;

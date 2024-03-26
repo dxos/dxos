@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { type Kanban as KanbanType } from '@braneframe/types';
+import { type KanbanColumnType } from '@braneframe/types';
 import { createSubscription } from '@dxos/react-client/echo';
 
 import { type Location } from '../types';
@@ -23,7 +23,7 @@ export const useSubscription = (data: any) => {
  * Find the column or item within the model.
  */
 // TODO(burdon): Move to model.
-export const findLocation = (columns: KanbanType.Column[], id: string): Location | undefined => {
+export const findLocation = (columns: KanbanColumnType[], id: string): Location | undefined => {
   for (const column of columns) {
     // TODO(burdon): Need transient ID for UX.
     if (column.id === id) {

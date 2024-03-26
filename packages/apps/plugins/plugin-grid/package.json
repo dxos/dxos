@@ -24,8 +24,10 @@
   ],
   "dependencies": {
     "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/types": "workspace:*",
     "@dnd-kit/core": "^6.0.5",
     "@dxos/async": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "lodash.defaultsdeep": "^4.6.1",
@@ -34,7 +36,6 @@
   },
   "devDependencies": {
     "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
     "@dxos/random": "workspace:*",

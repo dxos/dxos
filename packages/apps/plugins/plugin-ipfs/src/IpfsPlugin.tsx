@@ -8,7 +8,7 @@ import React, { type Ref } from 'react';
 import urljoin from 'url-join';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
-import { File } from '@braneframe/types';
+import { FileType, isFile } from '@braneframe/types';
 import { type Plugin, type PluginDefinition, isObject, resolvePlugin } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
@@ -16,7 +16,7 @@ import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 import { FileCard, FileMain, FileSection, FileSlide } from './components';
 import meta, { IPFS_PLUGIN } from './meta';
 import translations from './translations';
-import { type IpfsPluginProvides, isFile } from './types';
+import { type IpfsPluginProvides } from './types';
 
 const DEFAULT_TIMEOUT = 30_000;
 
@@ -32,11 +32,14 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
       translations,
       metadata: {
         records: {
-          [File.schema.typename]: {
+          [FileType.typename]: {
             placeholder: ['file title placeholder', { ns: IPFS_PLUGIN }],
             icon: (props: IconProps) => <FileCloud {...props} />,
           },
         },
+      },
+      echo: {
+        schema: [FileType],
       },
       // TODO(burdon): Add intent to upload file.
       file: {
