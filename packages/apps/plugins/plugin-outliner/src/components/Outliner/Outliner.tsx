@@ -10,8 +10,7 @@ import { createRoot } from 'react-dom/client';
 
 import { Button, DensityProvider, DropdownMenu, Input, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  type CursorInfo,
-  type YText, // TODO(burdon): Remove.
+  type CursorInfo, // TODO(burdon): Remove.
   useTextEditor,
   automerge,
   createBasicExtensions,
@@ -405,8 +404,9 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
       item = onCreate!(state?.after?.trim());
       if (state?.after) {
         // Split line.
-        const text = current.text!.content as YText;
-        text.delete(state.from, text.length);
+        // TODO(wittjosiah): Hook up.
+        // const text = current.text!.content;
+        // text.delete(state.from, text.length);
       }
 
       if (current.items?.length) {
@@ -445,10 +445,11 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     if (idx - 1 >= 0) {
       const active = getLastDescendent(items[idx - 1]);
       if (active) {
-        const text = active.text!.content as YText;
+        const text = active.text!.content;
         const from = text.length;
         if (state?.after?.length) {
-          text.insert(from, state.after.trim());
+          // TODO(wittjosiah): Hook up.
+          // text.insert(from, state.after.trim());
         }
 
         setActive({ itemId: active.id, anchor: from });
@@ -456,7 +457,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
         items.splice(items.length, 0, ...(children ?? []));
       }
     } else {
-      const text = parent.text!.content as YText;
+      const text = parent.text!.content;
       const from = text.length;
       setActive({ itemId: parent.id, anchor: from });
     }
