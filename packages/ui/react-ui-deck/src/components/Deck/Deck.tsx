@@ -38,7 +38,7 @@ const DeckColumn = forwardRef<HTMLDivElement, DeckColumnProps>(
     const { t } = useTranslation(translationKey);
     const [isSm] = useMediaQuery('sm', { ssr: false });
 
-    const [size, setSize] = useState<number>(20);
+    const [size, setSize] = useState<number>(40);
     const [resizing, setResizing] = useState<null | DeckColumnResizing>(null);
 
     const handlePointerUp = useCallback(({ isPrimary }: PointerEvent) => isPrimary && setResizing(null), []);
@@ -65,7 +65,7 @@ const DeckColumn = forwardRef<HTMLDivElement, DeckColumnProps>(
       <article
         {...props}
         style={{ inlineSize: isSm ? `${size}${unit}` : '100dvw', ...style }}
-        className={mx('relative', classNames)}
+        className={mx('relative snap-always snap-start', classNames)}
         ref={forwardedRef}
       >
         {children}
