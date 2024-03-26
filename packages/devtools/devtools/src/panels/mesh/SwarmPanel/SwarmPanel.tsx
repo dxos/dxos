@@ -133,7 +133,7 @@ export const SwarmPanel = () => {
 
   return (
     <PanelContainer classNames='divide-y'>
-      <div className='h-1/2 overflow-hidden'>
+      <div className='h-1/2 overflow-auto'>
         <Table<SwarmConnection>
           columns={columns}
           data={items}

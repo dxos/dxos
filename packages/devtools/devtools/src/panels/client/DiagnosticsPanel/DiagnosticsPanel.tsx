@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowClockwise, ClipboardText, Download } from '@phosphor-icons/react';
-import React, { useEffect, useMemo, useState } from 'react';
+import { ClipboardText, Download } from '@phosphor-icons/react';
+import React, { useMemo, useState } from 'react';
 
 import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
@@ -15,9 +15,6 @@ import { JsonView, PanelContainer, Tree } from '../../../components';
 export const DiagnosticsPanel = () => {
   const client = useClient();
   const [data, setData] = useState({});
-  useEffect(() => {
-    void handleRefresh();
-  }, []);
   const handleRefresh = async () => {
     try {
       setData({ status: 'Pending...' });
@@ -70,9 +67,7 @@ export const DiagnosticsPanel = () => {
             <Input.Label>Record metrics</Input.Label>
           </Input.Root>
           <div className='grow' />
-          <Toolbar.Button onClick={handleRefresh}>
-            <ArrowClockwise className={getSize(5)} />
-          </Toolbar.Button>
+          <Toolbar.Button onClick={handleRefresh}>Run Diagnostics</Toolbar.Button>
           <Toolbar.Button onClick={handleDownload}>
             <Download className={getSize(5)} />
           </Toolbar.Button>

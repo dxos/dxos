@@ -93,7 +93,11 @@ export const FeedsPanel = () => {
     >
       <div className='flex flex-col overflow-hidden'>
         <Bitbar value={feed?.downloaded ?? new Uint8Array()} length={feed?.length ?? 0} className='m-4' />
-        <MasterDetailTable<SubscribeToFeedBlocksResponse.Block> columns={columns} data={messages} />
+        <MasterDetailTable<SubscribeToFeedBlocksResponse.Block>
+          columns={columns}
+          data={messages}
+          widths={['is-1/4 shrink-0', '']}
+        />
       </div>
     </PanelContainer>
   );
