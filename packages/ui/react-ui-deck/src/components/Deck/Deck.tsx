@@ -66,7 +66,7 @@ const DeckPlank = forwardRef<HTMLDivElement, DeckPlankProps>(
       <article
         {...props}
         style={{ inlineSize: isSm ? `${size}${unit}` : '100dvw', ...style }}
-        className={mx('relative snap-always snap-start', classNames)}
+        className={mx('relative snap-always snap-start overflow-y-auto', classNames)}
         ref={forwardedRef}
       >
         {children}

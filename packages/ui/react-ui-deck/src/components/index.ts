@@ -3,4 +3,5 @@
 //
 
 export * from './Attention';
+export * from './Deck';
 export * from './PlankHeading';

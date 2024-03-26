@@ -25,6 +25,7 @@ import React, {
 } from 'react';
 
 import { Button, DropdownMenu, List, ListItem, useTranslation, type TFunction } from '@dxos/react-ui';
+import { DropDownMenuDragHandleTrigger } from '@dxos/react-ui-deck';
 import {
   type MosaicActiveType,
   type MosaicDataItem,
@@ -35,7 +36,6 @@ import {
 import { focusRing, getSize, mx } from '@dxos/react-ui-theme';
 
 import { CaretDownUp } from './CaretDownUp';
-import { DropDownMenuDragHandleTrigger } from './DropDownMenuDragHandleTrigger';
 import { stackColumns } from './style-fragments';
 import { translationKey } from '../translations';
 
