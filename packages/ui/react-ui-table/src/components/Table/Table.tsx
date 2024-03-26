@@ -22,7 +22,7 @@ import { log } from '@dxos/log';
 import { useDefaultValue, useOnTransition } from '@dxos/react-ui';
 
 import { TableBody } from './TableBody';
-import { TableProvider as UntypedTableProvider, type TypedTableProvider, useTableContext } from './TableContext';
+import { type TypedTableProvider, TableProvider as UntypedTableProvider, useTableContext } from './TableContext';
 import { TableFooter } from './TableFooter';
 import { TableHead } from './TableHead';
 import { type TableProps } from './props';
@@ -186,7 +186,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
  */
 const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
   const { debug, classNames, getScrollElement, role, footer, grouping, fullWidth } = props;
-  const { table } = useTableContext<TData>('TableImpl');
+  const { table } = useTableContext();
 
   const centerRows = table.getCenterRows();
   const bottomRows = table.getBottomRows();
@@ -201,6 +201,7 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
     );
   }
 
+  const virtualisable = getScrollElement !== undefined;
   const isResizingColumn = table.getState().columnSizingInfo.isResizingColumn;
 
   return (
@@ -212,7 +213,7 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
       <TableHead />
 
       {grouping?.length !== 0 ? (
-        getScrollElement ? (
+        virtualisable ? (
           isResizingColumn ? (
             <MemoizedVirtualisedTableContent getScrollElement={getScrollElement} />
           ) : (
@@ -233,7 +234,7 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
 const VirtualizedTableContent = ({
   getScrollElement,
 }: Pick<VirtualizerOptions<Element, Element>, 'getScrollElement'>) => {
-  const { table } = useTableContext('VirtualizedTableContent');
+  const { table } = useTableContext();
 
   const centerRows = table.getCenterRows();
   const pinnedRows = table.getBottomRows();
@@ -243,8 +244,8 @@ const VirtualizedTableContent = ({
   const { getTotalSize, getVirtualItems } = useVirtualizer({
     getScrollElement,
     count: rows.length,
-    overscan: 4,
-    estimateSize: () => 33,
+    overscan: 8,
+    estimateSize: () => 40,
   });
 
   const virtualRows = getVirtualItems();
@@ -274,13 +275,14 @@ const VirtualizedTableContent = ({
   );
 };
 
-export const MemoizedVirtualisedTableContent = React.memo(VirtualizedTableContent) as typeof VirtualizedTableContent;
+export const MemoizedVirtualisedTableContent = React.memo(VirtualizedTableContent);
 
 const GroupedTableContent = () => {
   const {
     table: { getGroupedRowModel, getHeaderGroups, getState },
     debug,
-  } = useTableContext('GroupedTableContent');
+  } = useTableContext();
+
   return (
     <>
       {getGroupedRowModel().rows.map((row, i) => {

@@ -10,6 +10,7 @@ import { type Filter } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { IndexKind, type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { trace } from '@dxos/tracing';
 import { ComplexMap } from '@dxos/util';
 
 import { IndexConstructors } from './index-constructors';
@@ -45,6 +46,7 @@ export type IndexerParams = {
   saveAfterTime?: number;
 };
 
+@trace.resource()
 export class Indexer {
   private readonly _ctx = new Context();
   private _indexConfig?: IndexConfig;
@@ -61,17 +63,15 @@ export class Indexer {
   public readonly indexed = new Event<void>();
 
   private readonly _run = new DeferredTask(this._ctx, async () => {
-    if (!this._initialized) {
+    if (!this._initialized || this._indexConfig?.enabled !== true) {
       return;
     }
 
     if (this._newIndexes.length > 0) {
       await this._promoteNewIndexes();
-      await this._saveIndexes();
     }
 
     await this._indexUpdatedObjects();
-    await this._maybeSaveIndexes();
     this.indexed.emit();
   });
 
@@ -96,8 +96,6 @@ export class Indexer {
     this._getAllDocuments = getAllDocuments;
     this._saveAfterUpdates = saveAfterUpdates;
     this._saveAfterTime = saveAfterTime;
-
-    this._metadataStore.dirty.on(this._ctx, () => this._run.schedule());
   }
 
   @synchronized
@@ -114,6 +112,7 @@ export class Indexer {
     }
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   @synchronized
   async initialize() {
     if (this._initialized) {
@@ -126,7 +125,7 @@ export class Indexer {
     }
 
     // Load indexes from disk.
-    const kinds = await this._indexStore.loadIndexKinds();
+    const kinds = await this._indexStore.loadIndexKindsFromDisk();
     for (const [identifier, kind] of kinds.entries()) {
       if (!this._indexConfig || this._indexConfig.indexes?.some((configKind) => isEqual(configKind, kind))) {
         await this._indexStore
@@ -153,28 +152,34 @@ export class Indexer {
       }
     }
 
-    this._run.schedule();
+    if (this._indexConfig?.enabled === true) {
+      this._metadataStore.dirty.on(this._ctx, () => this._run.schedule());
+      this._run.schedule();
+    }
+
     this._initialized = true;
   }
 
   // TODO(mykola): `Find` should use junctions and conjunctions of ID sets.
   async find(filter: Filter): Promise<{ id: string; rank: number }[]> {
-    if (!this._initialized) {
+    if (!this._initialized || this._indexConfig?.enabled !== true) {
       return [];
     }
     const arraysOfIds = await Promise.all(Array.from(this._indexes.values()).map((index) => index.find(filter)));
     return arraysOfIds.reduce((acc, ids) => acc.concat(ids), []);
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   private async _promoteNewIndexes() {
     for await (const documents of this._getAllDocuments()) {
       if (this._ctx.disposed) {
         return;
       }
-      await this._updateIndexes(Array.from(this._newIndexes), documents);
+      await this._updateIndexes(this._newIndexes, documents);
     }
     this._newIndexes.forEach((index) => this._indexes.set(index.kind, index));
     this._newIndexes.length = 0; // Clear new indexes.
+    await this._saveIndexes();
   }
 
   private async _indexUpdatedObjects() {
@@ -188,12 +193,14 @@ export class Indexer {
         return;
       }
       await this._updateIndexes(Array.from(this._indexes.values()), documents);
+      await this._saveIndexes();
       await Promise.all(
         documents.map(async (document) => this._metadataStore.markClean(document.id, document.currentHash)),
       );
     }
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   private async _updateIndexes(indexes: Index[], documents: ObjectSnapshot[]) {
     for (const index of indexes) {
       if (this._ctx.disposed) {
@@ -221,6 +228,7 @@ export class Indexer {
     }
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   @synchronized
   private async _saveIndexes() {
     for (const index of this._indexes.values()) {

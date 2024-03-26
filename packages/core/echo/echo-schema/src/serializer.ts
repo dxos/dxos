@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Reference } from '@dxos/document-model';
-import { TYPE_PROPERTIES } from '@dxos/echo-db';
+import { Reference, TYPE_PROPERTIES } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { type ItemID } from '@dxos/protocols';
 import { stripUndefinedValues } from '@dxos/util';
