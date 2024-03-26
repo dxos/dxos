@@ -116,7 +116,7 @@ describe('indexing', () => {
       }
     }, true);
 
-    type Contact = S.Schema.To<typeof Contact>;
+    type Contact = S.Schema.Type<typeof Contact>;
 
     const person: Contact = R.object(Contact, {
       name: 'Satoshi',

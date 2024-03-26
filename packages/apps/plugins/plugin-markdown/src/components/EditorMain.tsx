@@ -9,18 +9,21 @@ import { LayoutAction, parseFileManagerPlugin, useResolvePlugin, useIntentResolv
 import { useThemeContext, useTranslation, useRefCallback } from '@dxos/react-ui';
 import {
   type Comment,
+  type DNDOptions,
   type TextEditorProps,
   TextEditor,
   Toolbar,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
+  dropFile,
   editorFillLayoutRoot,
   editorFillLayoutEditor,
   focusComment,
   useComments,
   useActionHandler,
   useFormattingState,
+  processAction,
 } from '@dxos/react-ui-editor';
 import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -55,9 +58,6 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   useComments(editorView, id, comments);
   useTest(editorView);
 
-  // Toolbar actions.
-  const handleAction = useActionHandler(editorView);
-
   // Focus comment.
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
     switch (action) {
@@ -72,10 +72,21 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
     }
   });
 
+  // Toolbar actions.
+  const handleAction = useActionHandler(editorView);
   const [formattingState, formattingObserver] = useFormattingState();
+
+  const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
+    const info = await fileManagerPlugin?.provides.file.upload?.(files[0]);
+    if (info) {
+      processAction(view, { type: 'image', data: info.url });
+    }
+  };
+
   const extensions = useMemo(() => {
     return [
       _extensions,
+      fileManagerPlugin && dropFile({ onDrop: handleDrop }),
       formattingObserver,
       createBasicExtensions({ readonly, placeholder: t('editor placeholder'), scrollPastEnd: true }),
       createMarkdownExtensions({ themeMode }),

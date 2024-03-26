@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-template",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "Template for new plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -27,7 +27,7 @@
     "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@preact/signals-core": "^1.5.1"
+    "@preact/signals-core": "^1.6.0"
   },
   "devDependencies": {
     "@braneframe/plugin-client": "workspace:*",

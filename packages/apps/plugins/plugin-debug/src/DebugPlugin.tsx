@@ -24,7 +24,7 @@ import { createStorageObjects } from '@dxos/client-services';
 import { changeStorageVersionInMetadata } from '@dxos/echo-pipeline/testing';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type Client } from '@dxos/react-client';
-import { SpaceProxy } from '@dxos/react-client/echo';
+import { SpaceProxy, SpaceState } from '@dxos/react-client/echo';
 
 import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsMain } from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
@@ -88,7 +88,6 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         builder: (plugins, graph) => {
           const subscriptions = new EventSubscriptions();
           const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
 
           // TODO(burdon): Combine nodes into single subtree.
 
@@ -128,27 +127,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                       label: ['devtools label', { ns: DEBUG_PLUGIN }],
                     },
                     edges: [['root', 'inbound']],
-                    nodes: [
-                      {
-                        id: 'open-devtools',
-                        data: () =>
-                          intentPlugin?.provides.intent.dispatch({
-                            plugin: DEBUG_PLUGIN,
-                            action: DebugAction.OPEN_DEVTOOLS,
-                          }),
-                        properties: {
-                          label: ['open devtools label', { ns: DEBUG_PLUGIN }],
-                          icon: (props: IconProps) => <Bug {...props} />,
-                          keyBinding: {
-                            macos: 'shift+meta+\\',
-                            // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
-                            windows: 'shift+alt+\\',
-                            linux: 'shift+alt+|',
-                          },
-                          testId: 'spacePlugin.openDevtools',
-                        },
-                      },
-                    ],
+                    nodes: [],
                   },
                 ],
               });
@@ -245,7 +224,8 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                       return;
                     }
 
-                    const folder = active.space.properties[Folder.schema.typename];
+                    const folder =
+                      active.space.state.get() === SpaceState.READY && active.space.properties[Folder.schema.typename];
                     if (!(folder instanceof Folder)) {
                       return;
                     }

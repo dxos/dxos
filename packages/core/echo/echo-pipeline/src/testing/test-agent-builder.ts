@@ -4,17 +4,15 @@
 
 import { Context } from '@dxos/context';
 import { CredentialGenerator } from '@dxos/credentials';
-import { DocumentModel } from '@dxos/document-model';
 import { type FeedStore } from '@dxos/feed-store';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { ModelFactory } from '@dxos/model-factory';
-import { createSimplePeerTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { MemoryTransportFactory, NetworkManager, createSimplePeerTransportFactory } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { createStorage, type Storage, StorageType } from '@dxos/random-access-storage';
+import { StorageType, createStorage, type Storage } from '@dxos/random-access-storage';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
@@ -22,7 +20,7 @@ import { ComplexMap } from '@dxos/util';
 import { TestFeedBuilder } from './test-feed-builder';
 import { SnapshotStore } from '../db-host';
 import { MetadataStore } from '../metadata';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, type Space, SpaceManager, SpaceProtocol } from '../space';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceManager, SpaceProtocol, type Space } from '../space';
 
 export type NetworkManagerProvider = () => NetworkManager;
 
@@ -112,8 +110,6 @@ export class TestAgent {
     return (this._blobStore ??= new BlobStore(this.storage.createDirectory('blobs')));
   }
 
-  public modelFactory = new ModelFactory().registerModel(DocumentModel);
-
   constructor(
     private readonly _networkManagerProvider: NetworkManagerProvider,
     private readonly _feedBuilder: TestFeedBuilder,
@@ -142,7 +138,6 @@ export class TestAgent {
     return (this._spaceManager ??= new SpaceManager({
       feedStore: this.feedStore,
       networkManager: this._networkManagerProvider(),
-      modelFactory: this.modelFactory,
       metadataStore: this.metadataStore,
       snapshotStore: this.snapshotStore,
       blobStore: this.blobStore,

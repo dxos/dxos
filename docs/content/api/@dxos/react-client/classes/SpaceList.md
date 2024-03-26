@@ -1,5 +1,5 @@
 # Class `SpaceList`
-<sub>Declared in [packages/sdk/client/dist/types/src/echo/space-list.d.ts:11]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/echo/space-list.d.ts:12]()</sub>
 
 
 TODO(burdon): Public API (move comments here).
@@ -221,6 +221,18 @@ Arguments:
 `callback`: <code>function</code>
 
 `initialValue`: <code>R</code>
+
+
+### [setIndexConfig(config)]()
+
+
+
+
+Returns: <code>Promise&lt;void&gt;</code>
+
+Arguments: 
+
+`config`: <code>IndexConfig</code>
 
 
 ### [subscribe(onNext, \[onError\], \[onComplete\])]()

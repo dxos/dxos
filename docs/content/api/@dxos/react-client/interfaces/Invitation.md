@@ -19,6 +19,12 @@ Type: <code>[AuthMethod](/api/@dxos/react-client/enums#AuthMethod)</code>
 
 How the invitation is authenticated.
 
+### [created]()
+Type: <code>Date</code>
+
+Options:
+  - proto3_optional = true
+
 ### [identityKey]()
 Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 
@@ -36,6 +42,20 @@ Local identifier (random).
 Type: <code>[Kind](/api/@dxos/react-client/enums#Kind)</code>
 
 Kind of access the invitation will grant.
+
+### [lifetime]()
+Type: <code>number</code>
+
+Options:
+  - proto3_optional = true
+
+### [persistent]()
+Type: <code>boolean</code>
+
+Host should resume invitation on startup until timeout.
+
+Options:
+  - proto3_optional = true
 
 ### [spaceKey]()
 Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
@@ -66,7 +86,7 @@ Options:
 ### [timeout]()
 Type: <code>number</code>
 
-Timeout (ms).
+Timeout for guest to complete invitation once connected (ms).
 
 Options:
   - proto3_optional = true

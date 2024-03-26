@@ -24,15 +24,10 @@ describe('SpacesService', () => {
   beforeEach(async () => {
     serviceContext = createServiceContext();
     await serviceContext.open(new Context());
-    spacesService = new SpacesServiceImpl(
-      serviceContext.identityManager,
-      serviceContext.spaceManager,
-      serviceContext.dataServiceSubscriptions,
-      async () => {
-        await serviceContext.initialized.wait();
-        return serviceContext.dataSpaceManager!;
-      },
-    );
+    spacesService = new SpacesServiceImpl(serviceContext.identityManager, serviceContext.spaceManager, async () => {
+      await serviceContext.initialized.wait();
+      return serviceContext.dataSpaceManager!;
+    });
   });
 
   afterEach(async () => {

@@ -6,24 +6,15 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import {
-  SnapshotStore,
-  type DataPipeline,
-  MetadataStore,
-  SpaceManager,
-  valueEncoding,
-  DataServiceSubscriptions,
-  AutomergeHost,
-} from '@dxos/echo-pipeline';
-import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
+import { AutomergeHost, MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
-import { createStorage, type Storage, StorageType } from '@dxos/random-access-storage';
+import { createStorage, StorageType, type Storage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
-import { ClientServicesHost, createDefaultModelFactory, ServiceContext } from '../services';
+import { ClientServicesHost, ServiceContext } from '../services';
 import { DataSpaceManager, type SigningContext } from '../spaces';
 
 //
@@ -51,8 +42,7 @@ export const createServiceContext = ({
     transportFactory: MemoryTransportFactory,
   });
 
-  const modelFactory = createDefaultModelFactory();
-  return new ServiceContext(storage, networkManager, signalManager, modelFactory);
+  return new ServiceContext(storage, networkManager, signalManager);
 };
 
 export const createPeers = async (numPeers: number) => {
@@ -70,13 +60,6 @@ export const createPeers = async (numPeers: number) => {
 export const createIdentity = async (peer: ServiceContext) => {
   await peer.createIdentity();
   return peer;
-};
-
-// TODO(burdon): Remove @dxos/client-testing.
-// TODO(burdon): Create builder and make configurable.
-export const syncItemsLocal = async (db1: DataPipeline, db2: DataPipeline) => {
-  await testLocalDatabase(db1, db2);
-  await testLocalDatabase(db2, db1);
 };
 
 export class TestBuilder {
@@ -168,7 +151,6 @@ export class TestPeer {
       feedStore: this.feedStore,
       networkManager: this.networkManager,
       metadataStore: this.metadataStore,
-      modelFactory: createDefaultModelFactory(),
       snapshotStore: this.snapshotStore,
       blobStore: this.blobStore,
     }));
@@ -186,7 +168,6 @@ export class TestPeer {
     return (this._props.dataSpaceManager ??= new DataSpaceManager(
       this.spaceManager,
       this.metadataStore,
-      new DataServiceSubscriptions(),
       this.keyring,
       this.identity,
       this.feedStore,

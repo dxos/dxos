@@ -5,7 +5,7 @@
 import * as S from '@effect/schema/Schema';
 import { type Mutable } from 'effect/Types';
 
-import { Reference } from '@dxos/document-model';
+import { Reference } from '@dxos/echo-db';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';

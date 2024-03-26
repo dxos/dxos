@@ -38,6 +38,11 @@ Type: <code>boolean</code>
 
 
 
+### [saved]()
+Type: <code>MulticastObservable&lt;[Invitation](/api/@dxos/react-client/interfaces/Invitation)[]&gt;</code>
+
+@test-only
+
 
 ## Methods
 ### [close()]()

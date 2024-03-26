@@ -2,16 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DocumentModel } from '@dxos/document-model';
-import {
-  DatabaseTestBuilder,
-  createMemoryDatabase,
-  createRemoteDatabaseFromDataServiceHost,
-  type DatabaseTestPeer as BasePeer,
-} from '@dxos/echo-pipeline/testing';
 import { PublicKey } from '@dxos/keys';
-import { ModelFactory } from '@dxos/model-factory';
-import { TextModel } from '@dxos/text-model';
 import { ComplexMap } from '@dxos/util';
 
 import { AutomergeContext, type AutomergeContextConfig } from '../automerge';
@@ -28,29 +19,21 @@ export type CreateDatabaseOpts = {
  */
 // TODO(burdon): Builder pattern.
 export const createDatabase = async (graph = new Hypergraph(), { useReactiveObjectApi }: CreateDatabaseOpts = {}) => {
-  // prettier-ignore
-  const modelFactory = new ModelFactory()
-    .registerModel(DocumentModel)
-    .registerModel(TextModel);
-
   graph.addTypes(schemaBuiltin);
 
-  // TODO(dmaretskyi): Fix.
-  const host = await createMemoryDatabase(modelFactory);
-  const proxy = await createRemoteDatabaseFromDataServiceHost(modelFactory, host.backend.createDataServiceHost());
+  const spaceKey = PublicKey.random();
   const automergeContext = new AutomergeContext();
-  const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey: proxy.backend.spaceKey, useReactiveObjectApi });
+  const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey, useReactiveObjectApi });
   await db.automerge.open({
     rootUrl: automergeContext.repo.create().url,
   });
-  graph._register(proxy.backend.spaceKey, db); // TODO(burdon): Database should have random id?
-  return { db, host, graph };
+  graph._register(spaceKey, db); // TODO(burdon): Database should have random id?
+  return { db, graph };
 };
 
 export class TestBuilder {
   public readonly defaultSpaceKey = PublicKey.random();
   public readonly graph = new Hypergraph();
-  public readonly base = new DatabaseTestBuilder();
 
   public readonly automergeContext;
 
@@ -64,9 +47,8 @@ export class TestBuilder {
     spaceKey = this.defaultSpaceKey,
     automergeDocUrl: string = this.automergeContext.repo.create().url,
   ): Promise<TestPeer> {
-    const base = await this.base.createPeer(spaceKey);
-    const peer = new TestPeer(this, base, spaceKey, automergeDocUrl);
-    this.peers.set(peer.base.key, peer);
+    const peer = new TestPeer(this, PublicKey.random(), spaceKey, automergeDocUrl);
+    this.peers.set(peer.key, peer);
     await peer.db.automerge.open({
       rootUrl: peer.automergeDocId,
     });
@@ -83,22 +65,21 @@ export class TestBuilder {
 
 export class TestPeer {
   public db = new EchoDatabaseImpl({
-    spaceKey: this.base.proxy.spaceKey,
+    spaceKey: this.spaceKey,
     graph: this.builder.graph,
     automergeContext: this.builder.automergeContext,
   });
 
   constructor(
     public readonly builder: TestBuilder,
-    public readonly base: BasePeer,
+    public readonly key: PublicKey,
     public readonly spaceKey: PublicKey,
     public readonly automergeDocId: string,
   ) {}
 
   async reload() {
-    await this.base.reload();
     this.db = new EchoDatabaseImpl({
-      spaceKey: this.base.proxy.spaceKey,
+      spaceKey: this.spaceKey,
       graph: this.builder.graph,
       automergeContext: this.builder.automergeContext,
     });
@@ -113,7 +94,6 @@ export class TestPeer {
   }
 
   async flush() {
-    await this.base.confirm();
     await this.db.flush();
   }
 }

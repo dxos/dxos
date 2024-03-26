@@ -240,6 +240,8 @@ Values:
 
 - `ERROR` 
 
+- `EXPIRED` 
+
 - `INIT` 
 
 - `READY_FOR_AUTHENTICATION` 

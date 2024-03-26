@@ -95,7 +95,7 @@ export const publish = async (
   } catch (err: any) {
     // Avoid leaving user's terminal in a bad state.
     bar.stop();
-    throw new Error(`Publish failed. ${err.message}`);
+    throw new Error(`Publish failed. ${err.message}` + (err.cause ? ` (${err.cause})` : ''));
   }
 
   verbose && bar.update(total);

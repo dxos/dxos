@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-explorer",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "Braneframe data visualization plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -32,7 +32,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@observablehq/plot": "^0.6.11",
-    "@preact/signals-core": "^1.5.1",
+    "@preact/signals-core": "^1.6.0",
     "d3": "^7.8.5",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",

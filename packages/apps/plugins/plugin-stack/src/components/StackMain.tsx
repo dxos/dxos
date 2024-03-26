@@ -2,24 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus, Placeholder } from '@phosphor-icons/react';
+import { Plus } from '@phosphor-icons/react';
 import React, { useCallback, type FC, useState } from 'react';
 
 import { File as FileType, Stack as StackType, Folder } from '@braneframe/types';
 import {
+  LayoutAction,
   NavigationAction,
   Surface,
   defaultFileTypes,
   parseMetadataResolverPlugin,
   parseFileManagerPlugin,
   useIntent,
-  usePlugin,
   useResolvePlugin,
 } from '@dxos/app-framework';
 import { getSpaceForObject, isTypedObject, useQuery } from '@dxos/react-client/echo';
-import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/react-ui';
+import { Main, Button, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
-import { Stack, type StackProps, type CollapsedSections } from '@dxos/react-ui-stack';
+import { Stack, type StackProps, type CollapsedSections, type AddSectionPosition } from '@dxos/react-ui-stack';
 import {
   baseSurface,
   topbarBlockPaddingStart,
@@ -30,7 +30,7 @@ import {
 
 import { FileUpload } from './FileUpload';
 import { STACK_PLUGIN } from '../meta';
-import { type StackPluginProvides, isStack } from '../types';
+import { isStack } from '../types';
 
 const SectionContent: StackProps['SectionContent'] = ({ data }) => {
   // TODO(wittjosiah): Better section placeholder.
@@ -38,9 +38,7 @@ const SectionContent: StackProps['SectionContent'] = ({ data }) => {
 };
 
 const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, separation }) => {
-  const { t } = useTranslation(STACK_PLUGIN);
   const { dispatch } = useIntent();
-  const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
 
@@ -132,6 +130,17 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
     return parseData ? parseData(item, 'view-object') : item;
   };
 
+  const handleAddSection = (path: string, position: AddSectionPosition) => {
+    void dispatch?.({
+      action: LayoutAction.SET_LAYOUT,
+      data: {
+        element: 'dialog',
+        component: `${STACK_PLUGIN}/AddSectionDialog`,
+        subject: { path, position, stack },
+      },
+    });
+  };
+
   return (
     <Main.Content classNames={[baseSurface, topbarBlockPaddingStart]}>
       <Stack
@@ -146,41 +155,29 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
         onOver={handleOver}
         onDeleteSection={handleDelete}
         onNavigateToSection={handleNavigate}
+        onAddSection={handleAddSection}
         collapsedSections={collapsedSections}
         onChangeCollapsedSections={onChangeCollapsedSections}
       />
 
-      <div role='none' className='flex justify-center mlb-4'>
+      <div role='none' className='flex justify-center mbs-4 pbe-4'>
         <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), staticDefaultButtonColors]}>
-          <DropdownMenu.Root modal={false}>
-            <DropdownMenu.Trigger asChild>
-              <Button variant='ghost' data-testid='stack.createSection'>
-                <Plus className={getSize(6)} />
-              </Button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content>
-              <DropdownMenu.Arrow />
-              <DropdownMenu.Viewport>
-                {stackPlugin?.provides?.stack.creators?.map(({ id, testId, intent, icon, label }) => {
-                  const Icon = icon ?? Placeholder;
-                  return (
-                    <DropdownMenu.Item
-                      key={id}
-                      id={id}
-                      data-testid={testId}
-                      onClick={async () => {
-                        const { data: nextSection } = (await dispatch(intent)) ?? {};
-                        handleAdd(nextSection);
-                      }}
-                    >
-                      <Icon className={getSize(6)} />
-                      <span>{typeof label === 'string' ? label : t(...(label as [string, { ns: string }]))}</span>
-                    </DropdownMenu.Item>
-                  );
-                })}
-              </DropdownMenu.Viewport>
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
+          <Button
+            variant='ghost'
+            data-testid='stack.createSection'
+            onClick={() =>
+              dispatch?.({
+                action: LayoutAction.SET_LAYOUT,
+                data: {
+                  element: 'dialog',
+                  component: 'dxos.org/plugin/stack/AddSectionDialog',
+                  subject: { position: 'afterAll', stack },
+                },
+              })
+            }
+          >
+            <Plus className={getSize(6)} />
+          </Button>
           {handleFileUpload && (
             <FileUpload
               fileTypes={[...defaultFileTypes.images, ...defaultFileTypes.media, ...defaultFileTypes.text]}

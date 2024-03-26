@@ -11,7 +11,7 @@ import { afterTest, describe, test } from '@dxos/test';
 
 import { Client } from '../client';
 import { type SpaceProxy } from '../echo';
-import { TestBuilder, testSpace, waitForSpace } from '../testing';
+import { TestBuilder, testSpaceAutomerge, waitForSpace } from '../testing';
 
 describe('Spaces/invitations', () => {
   test('creates a space and invites a peer', async () => {
@@ -43,7 +43,7 @@ describe('Spaces/invitations', () => {
 
     {
       const space = await waitForSpace(client2, guestInvitation!.spaceKey!, { ready: true });
-      await testSpace(space.internal.db);
+      await testSpaceAutomerge(space.db);
     }
   });
 });

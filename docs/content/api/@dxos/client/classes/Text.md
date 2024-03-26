@@ -1,5 +1,5 @@
 # Class `Text`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/object/text-object.d.ts:32]()</sub>
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/object/text-object.d.ts:33]()</sub>
 
 
 
@@ -130,7 +130,7 @@ Arguments: none
 
 
 
-Returns: <code>Record&lt;string, any&gt;</code>
+Returns: <code>never</code>
 
 Arguments: none
 
@@ -142,7 +142,7 @@ Arguments: none
 
 
 
-Returns: <code>string</code>
+Returns: <code>never</code>
 
 Arguments: none
 

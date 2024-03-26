@@ -28,6 +28,11 @@ Type: <code>ClientServicesHost</code>
 
 
 
+### [importModule]()
+Type: <code>function</code>
+
+Import modules exposed by  `exposeModule`  from @dxos/debug.
+
 ### [openClientRpcServer]()
 Type: <code>function</code>
 

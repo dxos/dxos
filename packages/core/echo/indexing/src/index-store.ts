@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import isEqual from 'lodash.isequal';
+
 import { invariant } from '@dxos/invariant';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type File, type Directory } from '@dxos/random-access-storage';
@@ -29,8 +31,6 @@ export class IndexStore {
   }
 
   async save(index: Index) {
-    const file = this._directory.getOrCreateFile(index.identifier);
-
     const serialized = Buffer.from(await index.serialize());
     const header = Buffer.from(JSON.stringify(headerCodec.encode(index.kind)));
 
@@ -38,7 +38,7 @@ export class IndexStore {
     metadata.writeInt32LE(header.length, 0);
     const data = Buffer.concat([metadata, header, serialized]);
 
-    await overrideFile(file, data);
+    await overrideFile({ path: index.identifier, directory: this._directory, content: data });
   }
 
   async load(identifier: string): Promise<Index> {
@@ -67,7 +67,7 @@ export class IndexStore {
    *
    * @returns Map of index identifiers vs their kinds.
    */
-  async loadIndexKinds(): Promise<Map<string, IndexKind>> {
+  async loadIndexKindsFromDisk(): Promise<Map<string, IndexKind>> {
     const identifiers = await this._directory.list();
     const headers = new Map<string, IndexKind>();
 
@@ -80,6 +80,26 @@ export class IndexStore {
         }
       }),
     );
+
+    // Delete all indexes that are colliding with the same kind.
+    {
+      const seenKinds: IndexKind[] = [];
+      const allKinds = Array.from(headers.values());
+      for (const kind of allKinds) {
+        if (!seenKinds.some((seenKind) => isEqual(seenKind, kind))) {
+          seenKinds.push(kind);
+          continue;
+        }
+
+        const entries = Array.from(headers.entries());
+        for (const [identifier, indexKind] of entries) {
+          if (isEqual(indexKind, kind)) {
+            await this.remove(identifier);
+            headers.delete(identifier);
+          }
+        }
+      }
+    }
 
     return headers;
   }

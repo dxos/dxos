@@ -1,11 +1,11 @@
 # Class `IFrameClientServicesProxy`
-<sub>Declared in [packages/sdk/client/src/services/iframe-service-proxy.ts:43](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/iframe-service-proxy.ts#L43)</sub>
+<sub>Declared in [packages/sdk/client/src/services/iframe-service-proxy.ts:43](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/services/iframe-service-proxy.ts#L43)</sub>
 
 
 Proxy to host client service via iframe.
 
 ## Constructors
-### [constructor(options)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/iframe-service-proxy.ts#L64)
+### [constructor(options)](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/services/iframe-service-proxy.ts#L64)
 
 
 
@@ -19,31 +19,31 @@ Arguments:
 
 
 ## Properties
-### [closed](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/iframe-service-proxy.ts#L44)
+### [closed](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/services/iframe-service-proxy.ts#L44)
 Type: <code>Event&lt;undefined | Error&gt;</code>
 
 The connection to the services provider was termintaed.
 
 This should fire if the services disconnect unexpectedly or during a client reset.
 
-### [descriptors](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/iframe-service-proxy.ts#L128)
+### [descriptors](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/services/iframe-service-proxy.ts#L128)
 Type: <code>ServiceBundle&lt;[ClientServices](/api/@dxos/client/types/ClientServices)&gt;</code>
 
 
 
-### [proxy](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/iframe-service-proxy.ts#L124)
+### [proxy](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/services/iframe-service-proxy.ts#L124)
 Type: <code>ProtoRpcPeer&lt;[ClientServices](/api/@dxos/client/types/ClientServices)&gt;</code>
 
 
 
-### [services](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/iframe-service-proxy.ts#L132)
+### [services](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/services/iframe-service-proxy.ts#L132)
 Type: <code>Partial&lt;[ClientServices](/api/@dxos/client/types/ClientServices)&gt;</code>
 
 
 
 
 ## Methods
-### [close()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/iframe-service-proxy.ts#L170)
+### [close()](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/services/iframe-service-proxy.ts#L170)
 
 
 
@@ -55,7 +55,7 @@ Arguments: none
 
 
 
-### [open()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/iframe-service-proxy.ts#L136)
+### [open()](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/services/iframe-service-proxy.ts#L136)
 
 
 

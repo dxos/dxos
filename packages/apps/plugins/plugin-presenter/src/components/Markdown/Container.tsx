@@ -5,17 +5,15 @@
 import React, { type PropsWithChildren, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-export type ContainerProps = PropsWithChildren<{
-  className?: string;
-  classes?: { [selector: string]: string };
-}>;
+export type ContainerProps = ThemedClassName<PropsWithChildren<{}>>;
 
 /**
  * Scaled markdown container.
  */
-export const Container = ({ children, className }: ContainerProps) => {
+export const Container = ({ children, classNames }: ContainerProps) => {
   const [props, setProps] = useState({});
   const {
     ref: containerRef,
@@ -37,7 +35,7 @@ export const Container = ({ children, className }: ContainerProps) => {
   // TODO(burdon): Reconcile highlight colors with markdown editor.
   // https://www.npmjs.com/package/react-markdown
   return (
-    <div ref={containerRef} className={mx('flex grow relative overflow-hidden', className ?? 'bg-white')}>
+    <div ref={containerRef} className={mx('flex grow relative overflow-hidden bg-attention', classNames)}>
       <div className={mx('flex w-full h-full overflow-hidden absolute')} style={props}>
         {width && height && children}
       </div>

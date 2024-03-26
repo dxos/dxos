@@ -34,7 +34,6 @@ import translations from '../../translations';
 faker.seed(101);
 
 const Story: FC<{ content: string }> = ({ content }) => {
-  console.log('STORY');
   const { themeMode } = useThemeContext();
   const [item] = useState({ text: new TextObject(content) });
   const { id, doc, accessor } = useDocAccessor(item.text);

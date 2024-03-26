@@ -17,6 +17,9 @@ patchedDependencies:
   memdown@5.1.0:
     hash: tjbpekhnedejisbcwvc5eec3ii
     path: patches/memdown@5.1.0.patch
+  random-access-idb@1.2.2:
+    hash: mqfhtwnltd5kq5s4kb4gk7k2k4
+    path: patches/random-access-idb@1.2.2.patch
   ts-node@10.9.1:
     hash: rke3py7up3u364r7wwqfla7cdm
     path: patches/ts-node@10.9.1.patch
@@ -126,8 +129,8 @@ importers:
         specifier: 17.3.2
         version: 17.3.2(@swc-node/register@1.6.8)(@swc/core@1.4.0)
       '@playwright/test':
-        specifier: ^1.36.2
-        version: 1.36.2
+        specifier: ^1.42.1
+        version: 1.42.1
       '@rollup/plugin-inject':
         specifier: ^5.0.5
         version: 5.0.5(rollup@3.23.0)
@@ -907,12 +910,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../../core/echo/text-model
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -978,8 +978,8 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/react-client
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       chess.js:
         specifier: 1.0.0-alpha.0
         version: 1.0.0-alpha.0
@@ -1120,15 +1120,12 @@ importers:
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../../ui/react-ui-table
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../../core/echo/text-model
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       date-fns:
         specifier: ^3.3.1
         version: 3.3.1
@@ -1230,8 +1227,8 @@ importers:
         specifier: ^0.6.11
         version: 0.6.11
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       d3:
         specifier: ^7.8.5
         version: 7.8.5
@@ -1318,8 +1315,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -1394,8 +1391,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       dompurify:
         specifier: ^3.0.3
         version: 3.0.3
@@ -1494,8 +1491,8 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/react-client
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -1592,8 +1589,8 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/react-client
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -1747,8 +1744,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       date-fns:
         specifier: ^3.3.1
         version: 3.3.1
@@ -1892,15 +1889,12 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../../core/echo/text-model
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
     devDependencies:
       '@braneframe/plugin-client':
         specifier: workspace:*
@@ -1969,8 +1963,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
     devDependencies:
       '@braneframe/plugin-graph':
         specifier: workspace:*
@@ -2027,8 +2021,8 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/react-client
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       leaflet:
         specifier: ^1.9.3
         version: 1.9.3
@@ -2120,15 +2114,18 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../../core/echo/text-model
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
     devDependencies:
       '@braneframe/plugin-client':
         specifier: workspace:*
@@ -2215,9 +2212,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../../core/echo/text-model
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -2332,8 +2326,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       date-fns:
         specifier: ^3.3.1
         version: 3.3.1
@@ -2408,8 +2402,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -2468,15 +2462,12 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../../core/echo/text-model
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -2536,8 +2527,8 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/react-client
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       hastscript:
         specifier: ^7.1.0
         version: 7.1.0
@@ -2778,15 +2769,12 @@ importers:
       '@dxos/rpc-tunnel':
         specifier: workspace:*
         version: link:../../../core/mesh/rpc-tunnel
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../../core/echo/text-model
       '@lezer/common':
         specifier: ^1.2.1
         version: 1.2.1
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       codemirror:
         specifier: ^6.0.1
         version: 6.0.1(@lezer/common@1.2.1)
@@ -2956,8 +2944,8 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/react-client
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       '@tldraw/assets':
         specifier: 2.0.0-alpha.14
         version: 2.0.0-alpha.14
@@ -3079,15 +3067,18 @@ importers:
       '@dxos/shell':
         specifier: workspace:*
         version: link:../../../sdk/shell
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../../core/echo/text-model
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
@@ -3182,6 +3173,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
+      '@dxos/react-ui-searchlist':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-searchlist
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../../ui/react-ui-stack
@@ -3189,8 +3183,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       node-fetch:
         specifier: ^2.6.0
         version: 2.6.7
@@ -3268,8 +3262,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
     devDependencies:
       '@braneframe/plugin-client':
         specifier: workspace:*
@@ -3329,8 +3323,8 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/react-client
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
     devDependencies:
       '@braneframe/plugin-client':
         specifier: workspace:*
@@ -3456,12 +3450,18 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       date-fns:
         specifier: ^3.3.1
         version: 3.3.1
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -3848,6 +3848,12 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
     devDependencies:
       '@dxos/echo-typegen':
         specifier: workspace:*
@@ -4232,8 +4238,8 @@ importers:
         specifier: workspace:*
         version: link:../node-std
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
     devDependencies:
       '@dxos/async':
         specifier: workspace:*
@@ -4598,7 +4604,7 @@ importers:
         version: 2.2.1
       random-access-idb:
         specifier: ^1.2.2
-        version: 1.2.2
+        version: 1.2.2(patch_hash=mqfhtwnltd5kq5s4kb4gk7k2k4)
       random-access-memory:
         specifier: ^4.1.0
         version: 4.1.0
@@ -4889,58 +4895,6 @@ importers:
         specifier: ^4.37.0
         version: 4.37.1
 
-  packages/core/echo/document-model:
-    dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/model-factory':
-        specifier: workspace:*
-        version: link:../model-factory
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../../common/node-std
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../protocols
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-      lodash.clonedeep:
-        specifier: ^4.5.0
-        version: 4.5.0
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-      lodash.set:
-        specifier: ^4.3.2
-        version: 4.3.2
-      minisearch:
-        specifier: ^3.0.2
-        version: 3.3.0
-      yjs:
-        specifier: ^13.6.10
-        version: 13.6.10
-    devDependencies:
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../../common/random
-      '@types/lodash.clonedeep':
-        specifier: ^4.5.6
-        version: 4.5.7
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
-      '@types/lodash.set':
-        specifier: ^4.3.7
-        version: 4.3.7
-
   packages/core/echo/echo-db:
     dependencies:
       '@dxos/async':
@@ -4955,9 +4909,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
-      '@dxos/document-model':
-        specifier: workspace:*
-        version: link:../document-model
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -4967,9 +4918,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
-      '@dxos/model-factory':
-        specifier: workspace:*
-        version: link:../model-factory
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
@@ -4992,9 +4940,6 @@ importers:
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../../common/feed-store
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../text-model
       '@dxos/typings':
         specifier: workspace:*
         version: link:../../../common/typings
@@ -5037,9 +4982,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
-      '@dxos/document-model':
-        specifier: workspace:*
-        version: link:../document-model
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo-db
@@ -5064,9 +5006,6 @@ importers:
       '@dxos/messaging':
         specifier: workspace:*
         version: link:../../mesh/messaging
-      '@dxos/model-factory':
-        specifier: workspace:*
-        version: link:../model-factory
       '@dxos/network-manager':
         specifier: workspace:*
         version: link:../../mesh/network-manager
@@ -5097,9 +5036,6 @@ importers:
       '@dxos/teleport-extension-replicator':
         specifier: workspace:*
         version: link:../../mesh/teleport-extension-replicator
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../text-model
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../../common/timeframe
@@ -5168,9 +5104,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
-      '@dxos/document-model':
-        specifier: workspace:*
-        version: link:../document-model
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo-db
@@ -5189,9 +5122,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
-      '@dxos/model-factory':
-        specifier: workspace:*
-        version: link:../model-factory
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
@@ -5201,9 +5131,6 @@ importers:
       '@dxos/random-access-storage':
         specifier: workspace:*
         version: link:../../../common/random-access-storage
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../text-model
       '@dxos/tracing':
         specifier: workspace:*
         version: link:../../../common/tracing
@@ -5211,14 +5138,14 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@effect/schema':
-        specifier: 0.63.4
-        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@orama/orama':
         specifier: ^2.0.8
         version: 2.0.8
       effect:
-        specifier: 2.4.3
-        version: 2.4.3
+        specifier: 2.4.9
+        version: 2.4.9
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -5233,8 +5160,8 @@ importers:
         specifier: workspace:*
         version: link:../echo-typegen
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -5257,8 +5184,8 @@ importers:
         specifier: ^1.2.1
         version: 1.2.1(preact@10.19.2)
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       '@preact/signals-react':
         specifier: ^1.3.8
         version: 1.3.8(react@18.2.0)
@@ -5288,15 +5215,9 @@ importers:
         specifier: ^7.2.2
         version: 7.2.2
     devDependencies:
-      '@dxos/document-model':
-        specifier: workspace:*
-        version: link:../document-model
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo-db
-      '@dxos/model-factory':
-        specifier: workspace:*
-        version: link:../model-factory
       '@swc-node/register':
         specifier: 1.6.8
         version: 1.6.8(@swc/core@1.4.0)(typescript@5.2.2)
@@ -5324,6 +5245,9 @@ importers:
       '@dxos/automerge':
         specifier: workspace:*
         version: link:../automerge
+      '@dxos/codec-protobuf':
+        specifier: workspace:*
+        version: link:../../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -5354,18 +5278,21 @@ importers:
       '@dxos/random-access-storage':
         specifier: workspace:*
         version: link:../../../common/random-access-storage
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../../../common/tracing
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
       '@effect/schema':
-        specifier: 0.63.4
-        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@orama/orama':
         specifier: ^2.0.8
         version: 2.0.8
       effect:
-        specifier: 2.4.3
-        version: 2.4.3
+        specifier: 2.4.9
+        version: 2.4.9
       lodash.isequal:
         specifier: ^4.5.0
         version: 4.5.0
@@ -5379,97 +5306,6 @@ importers:
       wait-for-expect:
         specifier: ^3.0.2
         version: 3.0.2
-
-  packages/core/echo/messenger-model:
-    dependencies:
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
-      '@dxos/model-factory':
-        specifier: workspace:*
-        version: link:../model-factory
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../protocols
-
-  packages/core/echo/model-factory:
-    dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../../common/context
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../../common/debug
-      '@dxos/feed-store':
-        specifier: workspace:*
-        version: link:../../../common/feed-store
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../../common/keys
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../../common/log
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../../common/node-std
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../protocols
-      '@dxos/timeframe':
-        specifier: workspace:*
-        version: link:../../../common/timeframe
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-
-  packages/core/echo/text-model:
-    dependencies:
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../../common/keys
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../../common/log
-      '@dxos/model-factory':
-        specifier: workspace:*
-        version: link:../model-factory
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../../common/node-std
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../protocols
-      '@types/node':
-        specifier: ^18.11.9
-        version: 18.11.9
-      yjs:
-        specifier: ^13.6.10
-        version: 13.6.10
-    devDependencies:
-      '@dxos/document-model':
-        specifier: workspace:*
-        version: link:../document-model
-      '@dxos/feed-store':
-        specifier: workspace:*
-        version: link:../../../common/feed-store
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../../common/random
 
   packages/core/functions:
     dependencies:
@@ -5498,8 +5334,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       cron:
         specifier: ^3.1.6
         version: 3.1.6
@@ -5778,7 +5614,7 @@ importers:
         specifier: ^3.0.0
         version: 3.2.0
       node-datachannel:
-        specifier: ^0.5.4
+        specifier: ^0.5.5
         version: 0.5.5
       p-defer:
         specifier: ^3.0.0
@@ -7048,9 +6884,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/document-model':
-        specifier: workspace:*
-        version: link:../../core/echo/document-model
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../core/echo/echo-generator
@@ -7079,8 +6912,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/schema':
-        specifier: 0.63.4
-        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@langchain/community':
         specifier: ^0.0.26
         version: 0.0.26(discord.js@14.14.1)(faiss-node@0.5.1)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@20.0.1)
@@ -7115,8 +6948,8 @@ importers:
         specifier: ^14.14.1
         version: 14.14.1
       effect:
-        specifier: 2.4.3
-        version: 2.4.3
+        specifier: 2.4.9
+        version: 2.4.9
       email-addresses:
         specifier: ^5.0.0
         version: 5.0.0
@@ -7742,8 +7575,8 @@ importers:
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       zod:
         specifier: ^3.22.4
         version: 3.22.4
@@ -7776,8 +7609,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -7842,9 +7675,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/document-model':
-        specifier: workspace:*
-        version: link:../../core/echo/document-model
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -7866,9 +7696,6 @@ importers:
       '@dxos/messaging':
         specifier: workspace:*
         version: link:../../core/mesh/messaging
-      '@dxos/model-factory':
-        specifier: workspace:*
-        version: link:../../core/echo/model-factory
       '@dxos/network-manager':
         specifier: workspace:*
         version: link:../../core/mesh/network-manager
@@ -7884,9 +7711,6 @@ importers:
       '@dxos/rpc-tunnel':
         specifier: workspace:*
         version: link:../../core/mesh/rpc-tunnel
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../core/echo/text-model
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../common/timeframe
@@ -7948,9 +7772,6 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
-      '@dxos/document-model':
-        specifier: workspace:*
-        version: link:../../core/echo/document-model
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -7963,9 +7784,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/model-factory':
-        specifier: workspace:*
-        version: link:../../core/echo/model-factory
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
@@ -7975,18 +7793,15 @@ importers:
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../../core/mesh/rpc
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../core/echo/text-model
       '@effect/schema':
-        specifier: 0.63.4
-        version: 0.63.4(effect@2.4.3)(fast-check@3.15.1)
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       base-x:
         specifier: ~3.0.9
         version: 3.0.9
       effect:
-        specifier: 2.4.3
-        version: 2.4.3
+        specifier: 2.4.9
+        version: 2.4.9
     devDependencies:
       '@dxos/echo-typegen':
         specifier: workspace:*
@@ -8021,9 +7836,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/document-model':
-        specifier: workspace:*
-        version: link:../../core/echo/document-model
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -8057,9 +7869,6 @@ importers:
       '@dxos/messaging':
         specifier: workspace:*
         version: link:../../core/mesh/messaging
-      '@dxos/model-factory':
-        specifier: workspace:*
-        version: link:../../core/echo/model-factory
       '@dxos/network-manager':
         specifier: workspace:*
         version: link:../../core/mesh/network-manager
@@ -8084,9 +7893,6 @@ importers:
       '@dxos/teleport-extension-object-sync':
         specifier: workspace:*
         version: link:../../core/mesh/teleport-extension-object-sync
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../core/echo/text-model
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../common/timeframe
@@ -8379,9 +8185,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../core/echo/text-model
       yjs:
         specifier: ^13.6.10
         version: 13.6.10
@@ -8999,9 +8802,6 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../core/echo/text-model
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -9187,8 +8987,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
       '@radix-ui/react-compose-refs':
         specifier: ^1.0.0
         version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
@@ -9281,8 +9081,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@preact/signals-core':
-        specifier: ^1.5.1
-        version: 1.5.1
+        specifier: ^1.6.0
+        version: 1.6.0
     devDependencies:
       '@dnd-kit/core':
         specifier: ^6.0.5
@@ -13701,13 +13501,13 @@ packages:
       - supports-color
     dev: true
 
-  /@effect/schema@0.63.4(effect@2.4.3)(fast-check@3.15.1):
-    resolution: {integrity: sha512-59b7N0XntkfivwhTSutyP13t1utlbJ9wDWDwEdAivNPpXBfpUlAWnZw7MAi86qI8J1LVz3ZDlz5p0pkDSu7p9g==}
+  /@effect/schema@0.64.7(effect@2.4.9)(fast-check@3.15.1):
+    resolution: {integrity: sha512-iTfA7M+sjeoApwJfaalybbR25w/TW2GCerqdftxlwwNco3uOCOzB6nalmRaN4NinjSpcgg15nkDtugvAOQqrOA==}
     peerDependencies:
-      effect: ^2.4.3
+      effect: ^2.4.9
       fast-check: ^3.13.2
     dependencies:
-      effect: 2.4.3
+      effect: 2.4.9
       fast-check: 3.15.1
     dev: false
 
@@ -17516,15 +17316,12 @@ packages:
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
     dev: false
 
-  /@playwright/test@1.36.2:
-    resolution: {integrity: sha512-2rVZeyPRjxfPH6J0oGJqE8YxiM1IBRyM8hyrXYK7eSiAqmbNhxwcLa7dZ7fy9Kj26V7FYia5fh9XJRq4Dqme+g==}
+  /@playwright/test@1.42.1:
+    resolution: {integrity: sha512-Gq9rmS54mjBL/7/MvBaNOBwbfnh7beHvS6oS4srqXFcQHpQCV1+c8JXWE8VLPyRDhgS3H8x8A7hztqI9VnwrAQ==}
     engines: {node: '>=16'}
     hasBin: true
     dependencies:
-      '@types/node': 18.18.9
-      playwright-core: 1.36.2
-    optionalDependencies:
-      fsevents: 2.3.2
+      playwright: 1.42.1
     dev: true
 
   /@pnpm/config.env-replace@1.1.0:
@@ -17552,15 +17349,15 @@ packages:
     resolution: {integrity: sha512-2LuNTFBIO0m7kKIQvvPHN6UE63VjpmL9rnEEaOOaiSPbZK+zUOYIzBAWcED+3XYzhYsd/0mD57VdxAEqqV52CQ==}
     dev: true
 
-  /@preact/signals-core@1.5.1:
-    resolution: {integrity: sha512-dE6f+WCX5ZUDwXzUIWNMhhglmuLpqJhuy3X3xHrhZYI0Hm2LyQwOu0l9mdPiWrVNsE+Q7txOnJPgtIqHCYoBVA==}
+  /@preact/signals-core@1.6.0:
+    resolution: {integrity: sha512-O/XGxwP85h1F7+ouqTMOIZ3+V1whfaV9ToIVcuyGriD4JkSD00cQo54BKdqjvBJxbenvp7ynfqRHEwI6e+NIhw==}
 
   /@preact/signals-react@1.3.8(react@18.2.0):
     resolution: {integrity: sha512-i7mVZ/ZiD9WqNH79r+klpQsp8X+/dOd/5AtvDI0HNpgWuHyzyF9WXDViKl+1vXgB767n9VnH1W2azg+w1oyFMQ==}
     peerDependencies:
       react: ^16.14.0 || 17.x || 18.x
     dependencies:
-      '@preact/signals-core': 1.5.1
+      '@preact/signals-core': 1.6.0
       react: 18.2.0
       use-sync-external-store: 1.2.0(react@18.2.0)
 
@@ -17569,7 +17366,7 @@ packages:
     peerDependencies:
       preact: 10.x
     dependencies:
-      '@preact/signals-core': 1.5.1
+      '@preact/signals-core': 1.6.0
       preact: 10.19.2
     dev: false
 
@@ -22269,12 +22066,6 @@ packages:
 
   /@types/linkify-it@3.0.2:
     resolution: {integrity: sha512-HZQYqbiFVWufzCwexrvh694SOim8z2d+xJl5UNamcvQFejLY/2YUtzXHYi3cHdI7PMlS8ejH2slRAOJQ32aNbA==}
-    dev: true
-
-  /@types/lodash.clonedeep@4.5.7:
-    resolution: {integrity: sha512-ccNqkPptFIXrpVqUECi60/DFxjNKsfoQxSQsgcBJCX/fuX1wgyQieojkcWH/KpE3xzLoWN/2k+ZeGqIN3paSvw==}
-    dependencies:
-      '@types/lodash': 4.14.191
     dev: true
 
   /@types/lodash.defaultsdeep@4.6.7:
@@ -28328,8 +28119,8 @@ packages:
   /ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  /effect@2.4.3:
-    resolution: {integrity: sha512-OmIgfNgQMZsQt5l7qLQqLOUxIXq7ku8/RK3Wv3LqxSE2zMyU1mHXof5QeyCt7m9sXv3Vui52Urk1vVsEd2szMQ==}
+  /effect@2.4.9:
+    resolution: {integrity: sha512-hRTy37jVylIYOC4k/VKfgmGkIMEOjR8MOurLzr1J0AD7ufagbcoO7voygZkT2B1STXfBXEsKNWj8yDAzUcPpAA==}
     dev: false
 
   /ejs@3.1.8:
@@ -36869,10 +36660,6 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /minisearch@3.3.0:
-    resolution: {integrity: sha512-DlOEfLtiRKcEuShEaaufoDpWKv94lWDSRK7Bkcd0htqHEFZ1vqTi3IIW8cYcPIlomQjaCdiZXk4pyzBNc79I2Q==}
-    dev: false
-
   /minizlib@1.3.3:
     resolution: {integrity: sha512-6ZYMOEnmVsdCeTJVE0W9ZD+pVnE8h9Hma/iOwwRDsdQoePpoX56/8B6z3P9VNwppJuBKNRuFDRNRqRWexT9G9Q==}
     dependencies:
@@ -38751,17 +38538,17 @@ packages:
     resolution: {integrity: sha512-fnWVljUchTro6RiCFvCXBbNhJc2NijN7oIQxbwsyL0buWJPG85v81ehlHI9fXrJsMNgTofEoWIQeClKpgxFLrg==}
     dev: false
 
-  /playwright-core@1.36.2:
-    resolution: {integrity: sha512-sQYZt31dwkqxOrP7xy2ggDfEzUxM1lodjhsQ3NMMv5uGTRDsLxU0e4xf4wwMkF2gplIxf17QMBCodSFgm6bFVQ==}
-    engines: {node: '>=16'}
-    hasBin: true
-    dev: true
-
   /playwright-core@1.40.0:
     resolution: {integrity: sha512-fvKewVJpGeca8t0ipM56jkVSU6Eo0RmFvQ/MaCQNDYm+sdvKkMBBWTE1FdeMqIdumRaXXjZChWHvIzCGM/tA/Q==}
     engines: {node: '>=16'}
     hasBin: true
     dev: false
+
+  /playwright-core@1.42.1:
+    resolution: {integrity: sha512-mxz6zclokgrke9p1vtdy/COWBH+eOZgYUVVU34C73M+4j4HLlQJHtfcqiqqxpP0o8HhMkflvfbquLX5dg6wlfA==}
+    engines: {node: '>=16'}
+    hasBin: true
+    dev: true
 
   /playwright@1.40.0:
     resolution: {integrity: sha512-gyHAgQjiDf1m34Xpwzaqb76KgfzYrhK7iih+2IzcOCoZWr/8ZqmdBw+t0RU85ZmfJMgtgAiNtBQ/KS2325INXw==}
@@ -38772,6 +38559,16 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
     dev: false
+
+  /playwright@1.42.1:
+    resolution: {integrity: sha512-PgwB03s2DZBcNRoW+1w9E+VkLBxweib6KTXM0M3tkiT4jVxKSi6PmVJ591J+0u10LUrgxB7dLRbiJqO5s2QPMg==}
+    engines: {node: '>=16'}
+    hasBin: true
+    dependencies:
+      playwright-core: 1.42.1
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: true
 
   /plotly.js-dist-min@2.27.1:
     resolution: {integrity: sha512-fFPFityhOkDtjoIVd/9IJQbEEuKEjfmNALBVLZyHwLIkry5ygE4ZC/XENRqLnWR3rNJdTtEaxhM5zflcWTRlDA==}
@@ -39523,7 +39320,7 @@ packages:
       random-access-storage: 1.3.0
     dev: false
 
-  /random-access-idb@1.2.2:
+  /random-access-idb@1.2.2(patch_hash=mqfhtwnltd5kq5s4kb4gk7k2k4):
     resolution: {integrity: sha512-NroFuBNVh5wVIHKN/jEYrgkkffppkfxNWFX9OEwC2VP7dYc3sa+Qxv7tMa1Gi9Jp/ObVfLeCZBt/8Sbn1WU1Xg==}
     dependencies:
       buffer-alloc: 1.2.0
@@ -39533,6 +39330,7 @@ packages:
       once: 1.4.0
       random-access-storage: 1.4.3
     dev: false
+    patched: true
 
   /random-access-memory@3.1.4:
     resolution: {integrity: sha512-rqgqd/8ec65gbpKaYHnDOW391OR39d+eXn8NI87G+f3sUKrtGib9jC+/5/9MBFBwwHAZIS8RLJ8yyB4etzbYTA==}
@@ -39575,7 +39373,7 @@ packages:
     dependencies:
       '@sammacbeth/random-access-idb-mutable-file': 0.1.1
       random-access-chrome-file: 1.2.0
-      random-access-idb: 1.2.2
+      random-access-idb: 1.2.2(patch_hash=mqfhtwnltd5kq5s4kb4gk7k2k4)
       random-access-idb-mutable-file: 0.3.0
       random-access-memory: 3.1.4
       random-access-storage: 1.4.3

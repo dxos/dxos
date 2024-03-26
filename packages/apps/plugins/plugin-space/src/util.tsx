@@ -41,7 +41,7 @@ export const isSpace = (data: unknown): data is Space =>
     : false;
 
 export const getSpaceDisplayName = (space: Space): string | [string, { ns: string }] => {
-  return (space.properties.name?.length ?? 0) > 0
+  return space.state.get() === SpaceState.READY && (space.properties.name?.length ?? 0) > 0
     ? space.properties.name
     : space.state.get() === SpaceState.CLOSED || space.state.get() === SpaceState.INACTIVE
       ? ['closed space label', { ns: SPACE_PLUGIN }]
@@ -124,7 +124,7 @@ export const updateGraphWithSpace = ({
   const getId = (id: string) => `${id}/${space.key.toHex()}`;
 
   const unsubscribeSpace = effect(() => {
-    const folder = space.properties[Folder.schema.typename];
+    const folder = space.state.get() === SpaceState.READY && space.properties[Folder.schema.typename];
     const partials =
       space.state.get() === SpaceState.READY && folder instanceof Folder
         ? getFolderGraphNodePartials({ graph, folder, space })
@@ -142,7 +142,7 @@ export const updateGraphWithSpace = ({
             properties: {
               ...partials,
               label: isPersonalSpace ? ['personal space label', { ns: SPACE_PLUGIN }] : getSpaceDisplayName(space),
-              description: space.properties.description,
+              description: space.state.get() === SpaceState.READY && space.properties.description,
               icon: (props: IconProps) => <Planet {...props} />,
               disabled: space.state.get() === SpaceState.INACTIVE,
               // TODO(burdon): Change to semantic classes that are customizable.
@@ -322,7 +322,7 @@ export const updateGraphWithSpace = ({
   const query = space.db.query((obj: TypedObject) => obj.__typename !== LEGACY_TEXT_TYPE);
   const previousObjects = new Map<string, TypedObject[]>();
   const unsubscribeQuery = effect(() => {
-    const folder: Folder = space.properties[Folder.schema.typename];
+    const folder: Folder = space.state.get() === SpaceState.READY && space.properties[Folder.schema.typename];
     const folderObjects = folder?.objects ?? [];
     const removedObjects =
       previousObjects.get(space.key.toHex())?.filter((object) => !query.objects.includes(object)) ?? [];

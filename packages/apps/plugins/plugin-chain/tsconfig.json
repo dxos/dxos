@@ -35,9 +35,6 @@
       "path": "../../../core/chain"
     },
     {
-      "path": "../../../core/echo/text-model"
-    },
-    {
       "path": "../../../sdk/app-framework"
     },
     {

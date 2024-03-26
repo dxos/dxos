@@ -3,17 +3,16 @@
 //
 
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
-import { history, historyKeymap, indentWithTab, standardKeymap } from '@codemirror/commands';
+import { defaultKeymap, history, historyKeymap, indentWithTab, standardKeymap } from '@codemirror/commands';
 import { bracketMatching } from '@codemirror/language';
 import { searchKeymap } from '@codemirror/search';
 import { EditorState, type Extension } from '@codemirror/state';
 import {
   EditorView,
-  crosshairCursor,
+  type KeyBinding,
   drawSelection,
   dropCursor,
   highlightActiveLine,
-  highlightSpecialChars,
   keymap,
   lineNumbers,
   placeholder,
@@ -48,37 +47,46 @@ export type BasicExtensionsOptions = {
   allowMultipleSelections?: boolean;
   bracketMatching?: boolean;
   closeBrackets?: boolean;
-  crosshairCursor?: boolean;
   dropCursor?: boolean;
   drawSelection?: boolean;
   editable?: boolean;
   highlightActiveLine?: boolean;
   history?: boolean;
   indentWithTab?: boolean;
+  keymap?: null | 'default' | 'standard';
   lineNumbers?: boolean;
   lineWrapping?: boolean;
   placeholder?: string;
   readonly?: boolean;
   search?: boolean;
   scrollPastEnd?: boolean;
+  standardKeymap?: boolean;
   tabSize?: number;
 };
 
-const defaults: BasicExtensionsOptions = {
+const defaultBasicOptions: BasicExtensionsOptions = {
   allowMultipleSelections: true,
   bracketMatching: true,
   closeBrackets: true,
   drawSelection: true,
   editable: true,
   history: true,
+  keymap: 'standard',
   lineWrapping: true,
   search: true,
 };
 
+const keymaps: { [key: string]: readonly KeyBinding[] } = {
+  // https://codemirror.net/docs/ref/#commands.standardKeymap
+  standard: standardKeymap,
+  // https://codemirror.net/docs/ref/#commands.defaultKeymap
+  default: defaultKeymap,
+};
+
 export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extension => {
-  const props: BasicExtensionsOptions = defaultsDeep({}, _props, defaults);
+  const props: BasicExtensionsOptions = defaultsDeep({}, _props, defaultBasicOptions);
   return [
-    // TODO(burdon): Doesn't catch errors in keymap functions.
+    // NOTE: Doesn't catch errors in keymap functions.
     EditorView.exceptionSink.of((err) => {
       log.catch(err);
     }),
@@ -86,11 +94,9 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     props.allowMultipleSelections && EditorState.allowMultipleSelections.of(true),
     props.bracketMatching && bracketMatching(),
     props.closeBrackets && closeBrackets(),
-    props.crosshairCursor && crosshairCursor(),
     props.dropCursor && dropCursor(),
     props.drawSelection && drawSelection(),
     props.highlightActiveLine && highlightActiveLine(),
-    highlightSpecialChars(),
     props.history && history(),
     props.lineNumbers && lineNumbers(),
     props.lineWrapping && EditorView.lineWrapping,
@@ -102,12 +108,9 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     // https://codemirror.net/docs/ref/#view.KeyBinding
     keymap.of(
       [
-        // https://codemirror.net/docs/ref/#commands.standardKeymap
-        ...standardKeymap,
-
+        ...((props.keymap && keymaps[props.keymap]) ?? []),
         // https://codemirror.net/docs/ref/#commands.indentWithTab
-        props.indentWithTab && indentWithTab,
-
+        ...(props.indentWithTab ? [indentWithTab] : []),
         // https://codemirror.net/docs/ref/#autocomplete.closeBracketsKeymap
         ...(props.closeBrackets ? closeBracketsKeymap : []),
         // https://codemirror.net/docs/ref/#commands.historyKeymap
@@ -136,14 +139,14 @@ export type ThemeExtensionsOptions = {
   };
 };
 
-const defaultSlots = {
+const defaultThemeSlots = {
   editor: {
     className: 'w-full bs-full',
   },
 };
 
 export const createThemeExtensions = ({ theme, themeMode, slots: _slots }: ThemeExtensionsOptions = {}): Extension => {
-  const slots = defaultsDeep({}, _slots, defaultSlots);
+  const slots = defaultsDeep({}, _slots, defaultThemeSlots);
   return [
     EditorView.baseTheme(defaultTheme),
     EditorView.darkTheme.of(themeMode === 'dark'),

@@ -13,7 +13,7 @@ import { describe, test } from '@dxos/test';
 import { createEchoReactiveObject } from './echo-handler';
 import * as E from './reactive';
 import { getTypeReference } from './reactive';
-import { TEST_OBJECT, TestClass, TestSchema, type TestSchemaWithClass } from './testing/schema';
+import { TEST_OBJECT, TestClass, TestSchema, TestSchemaClass, type TestSchemaWithClass } from './testing/schema';
 import { AutomergeContext, type SpaceDoc } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
@@ -31,9 +31,9 @@ test('id property name is reserved', () => {
   expect(() => createEchoReactiveObject(E.object(invalidSchema, { id: 42 }))).to.throw();
 });
 
-for (const schema of [undefined, EchoObjectSchema]) {
+for (const schema of [undefined, EchoObjectSchema, TestSchemaClass]) {
   const createObject = (props: Partial<TestSchemaWithClass> = {}): E.EchoReactiveObject<TestSchemaWithClass> => {
-    return createEchoReactiveObject(schema ? E.object(schema, props) : E.object(props));
+    return createEchoReactiveObject(schema ? E.object(schema as any, props) : E.object(props));
   };
 
   describe(`Echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
@@ -159,7 +159,7 @@ describe('Reactive Object with ECHO database', () => {
     // Create a new DB instance to simulate a restart
     {
       const TaskSchema = S.mutable(S.struct({ title: S.string })).pipe(E.echoObject('example.test.Task', '1.0.0'));
-      type TaskSchema = S.Schema.To<typeof TaskSchema>;
+      type TaskSchema = S.Schema.Type<typeof TaskSchema>;
       const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey, useReactiveObjectApi: true });
       await db._automerge.open({ rootUrl: doc.url });
 
@@ -199,20 +199,30 @@ describe('Reactive Object with ECHO database', () => {
         const query = db.query(Filter.schema(EchoObjectSchema));
         expect(query.objects.length).to.eq(1);
       }
+
+      {
+        const query = db.query(Filter.schema(TestSchemaClass));
+        expect(query.objects.length).to.eq(1);
+      }
     });
   });
 
   test('data symbol', async () => {
     const { db, graph } = await createDatabase(undefined, { useReactiveObjectApi: true });
     graph.types.registerEffectSchema(EchoObjectSchema);
-    const obj = db.add(E.object(EchoObjectSchema, { ...TEST_OBJECT }));
-    const objData: any = (obj as any)[data];
-    expect(objData).to.deep.contain({
-      '@id': obj.id,
-      '@meta': { keys: [] },
-      '@type': { '@type': 'dxos.echo.model.document.Reference', ...getTypeReference(EchoObjectSchema) },
-      ...TEST_OBJECT,
-    });
+    const objects = [
+      db.add(E.object(EchoObjectSchema, { ...TEST_OBJECT })),
+      db.add(E.object(TestSchemaClass, { ...TEST_OBJECT })),
+    ];
+    for (const obj of objects) {
+      const objData: any = (obj as any)[data];
+      expect(objData).to.deep.contain({
+        '@id': obj.id,
+        '@meta': { keys: [] },
+        '@type': { '@type': 'dxos.echo.model.document.Reference', ...getTypeReference(EchoObjectSchema) },
+        ...TEST_OBJECT,
+      });
+    }
   });
 
   describe('references', () => {

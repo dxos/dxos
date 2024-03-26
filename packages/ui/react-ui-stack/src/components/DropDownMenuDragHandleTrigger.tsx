@@ -58,6 +58,7 @@ export const DropDownMenuDragHandleTrigger = forwardRef<HTMLButtonElement, DropD
             data-state={context.open ? 'open' : 'closed'}
             data-disabled={disabled ? '' : undefined}
             disabled={disabled}
+            data-testid='section.drag-handle-menu-trigger'
             {...triggerProps}
             ref={composeRefs(forwardedRef, context.triggerRef)}
             onPointerUp={composeEventHandlers(props.onPointerUp, (event) => {
