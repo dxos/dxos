@@ -5,7 +5,7 @@
 import { Plus } from '@phosphor-icons/react';
 import React, { useCallback, type FC, useState } from 'react';
 
-import { FileType, type StackType, SectionType, FolderType, isStack } from '@braneframe/types';
+import { FileType, StackType, SectionType, FolderType } from '@braneframe/types';
 import {
   LayoutAction,
   NavigationAction,
@@ -62,7 +62,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
 
     // TODO(wittjosiah): Prevent dropping items which don't have a section renderer?
     //  Perhaps stack plugin should just provide a fallback section renderer.
-    if (!(isTypedObject(data) || E.isReactiveProxy(data)) || isStack(data)) {
+    if (!(isTypedObject(data) || E.isReactiveProxy(data)) || data instanceof StackType) {
       return 'reject';
     }
 

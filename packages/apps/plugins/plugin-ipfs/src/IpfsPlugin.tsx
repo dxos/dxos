@@ -8,7 +8,7 @@ import React, { type Ref } from 'react';
 import urljoin from 'url-join';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
-import { FileType, isFile } from '@braneframe/types';
+import { FileType } from '@braneframe/types';
 import { type Plugin, type PluginDefinition, isObject, resolvePlugin } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
@@ -94,13 +94,17 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
         component: ({ data, role, ...props }, forwardedRef) => {
           switch (role) {
             case 'main':
-              return isFile(data.active) ? <FileMain file={data.active} /> : null;
+              return data.active instanceof FileType ? <FileMain file={data.active} /> : null;
             case 'slide':
-              return isFile(data.slide) ? <FileSlide file={data.slide} cover={false} /> : null;
+              return data.slide instanceof FileType ? <FileSlide file={data.slide} cover={false} /> : null;
             case 'section':
-              return isFile(data.object) ? <FileSection file={data.object} /> : null;
+              return data.object instanceof FileType ? <FileSection file={data.object} /> : null;
             case 'card': {
-              if (isObject(data.content) && typeof data.content.id === 'string' && isFile(data.content.object)) {
+              if (
+                isObject(data.content) &&
+                typeof data.content.id === 'string' &&
+                data.content.object instanceof FileType
+              ) {
                 const cardProps = { ...props, item: { id: data.content.id, object: data.content.object } };
                 return isTileComponentProps(cardProps) ? (
                   <FileCard {...cardProps} ref={forwardedRef as Ref<HTMLDivElement>} />

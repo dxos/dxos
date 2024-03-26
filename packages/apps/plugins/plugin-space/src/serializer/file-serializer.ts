@@ -4,7 +4,7 @@
 
 import md5 from 'md5';
 
-import { isFolder, FolderType } from '@braneframe/types';
+import { FolderType } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
@@ -79,7 +79,7 @@ export class FileSerializer {
     const files: SerializedObject[] = [];
 
     for (const child of folder.objects) {
-      if (isFolder(child)) {
+      if (child instanceof FolderType) {
         files.push(await this._serializeFolder(child));
         continue;
       }

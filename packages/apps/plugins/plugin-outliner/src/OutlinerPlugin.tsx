@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { TextV0Type, TreeItemType, TreeType, isTree } from '@braneframe/types';
+import { TextV0Type, TreeItemType, TreeType } from '@braneframe/types';
 import { resolvePlugin, parseIntentPlugin, type PluginDefinition } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
@@ -126,9 +126,9 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isTree(data.active) ? <OutlinerMain tree={data.active} /> : null;
+              return data.active instanceof TreeType ? <OutlinerMain tree={data.active} /> : null;
             case 'section':
-              return isTree(data.object) ? <TreeSection tree={data.object} /> : null;
+              return data.object instanceof TreeType ? <TreeSection tree={data.object} /> : null;
           }
 
           return null;

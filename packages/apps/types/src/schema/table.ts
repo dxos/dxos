@@ -19,5 +19,3 @@ export class TableType extends EchoObjectSchema({ typename: 'braneframe.Table', 
     }),
   ),
 }) {}
-
-export const isTable = (data: unknown): data is TableType => !!data && data instanceof TableType;

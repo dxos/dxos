@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { SectionType, StackType, isStack } from '@braneframe/types';
+import { SectionType, StackType } from '@braneframe/types';
 import { resolvePlugin, type Plugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
@@ -140,7 +140,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           }
           switch (role) {
             case 'main':
-              return isStack(data.active) ? (
+              return data.active instanceof StackType ? (
                 <StackMain stack={data.active} separation={settings.values.separation} />
               ) : null;
             case 'settings': {

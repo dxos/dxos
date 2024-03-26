@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef } from 'react';
 
-import { FolderType, isFolder } from '@braneframe/types';
+import { FolderType } from '@braneframe/types';
 import { NavigationAction, parseIntentPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { type AnyEchoObject, isEchoReactiveObject } from '@dxos/echo-schema';
 import { getSpaceForObject } from '@dxos/react-client/echo';
@@ -48,7 +48,7 @@ export const PopoverRemoveObject = ({
     }
 
     // If the object is a folder, move the objects inside of it to the folder above it.
-    if (isFolder(object) && folder) {
+    if (object instanceof FolderType && folder) {
       object.objects.forEach((obj) => {
         folder.objects.push(obj);
       });

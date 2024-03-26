@@ -27,6 +27,3 @@ export class DocumentType extends EchoObjectSchema({ typename: 'braneframe.Docum
     ),
   ),
 }) {}
-
-// TODO(wittjosiah): Just use `instanceof`?
-export const isDocument = (data: unknown): data is DocumentType => !!data && data instanceof DocumentType;

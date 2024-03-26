@@ -8,7 +8,7 @@ import React, { useMemo, type Ref } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { DocumentType, isDocument, TextV0Type } from '@braneframe/types';
+import { DocumentType, TextV0Type } from '@braneframe/types';
 import {
   isObject,
   parseIntentPlugin,
@@ -220,9 +220,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           //   We probably want a better pattern for splitting this surface resolver up.
           const extensions = useMemo(
             () =>
-              isDocument(data.active)
+              data.active instanceof DocumentType
                 ? getCustomExtensions(data.active)
-                : isDocument(data.object)
+                : data.object instanceof DocumentType
                   ? getCustomExtensions(data.object)
                   : getCustomExtensions(),
             [data.active, data.object, settings.values.editorMode],
@@ -231,7 +231,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           switch (role) {
             // TODO(burdon): Normalize layout (reduce variants).
             case 'main': {
-              if (isDocument(data.active)) {
+              if (data.active instanceof DocumentType) {
                 const { readonly } = settings.values.state[data.active.id] ?? {};
                 return (
                   <MainLayout toolbar={settings.values.toolbar}>
@@ -262,14 +262,18 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             }
 
             case 'section': {
-              if (isDocument(data.object)) {
+              if (data.object instanceof DocumentType) {
                 return <DocumentSection document={data.object} extensions={extensions} />;
               }
               break;
             }
 
             case 'card': {
-              if (isObject(data.content) && typeof data.content.id === 'string' && isDocument(data.content.object)) {
+              if (
+                isObject(data.content) &&
+                typeof data.content.id === 'string' &&
+                data.content.object instanceof DocumentType
+              ) {
                 // isTileComponentProps is a type guard for these props.
                 // `props` will not pass this guard without transforming `data` into `item`.
                 const cardProps = {

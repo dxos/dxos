@@ -12,12 +12,8 @@ export class FolderType extends EchoObjectSchema({ typename: 'braneframe.Folder'
   objects: S.mutable(S.array(E.ref(E.AnyEchoObject))),
 }) {}
 
-export const isFolder = (data: unknown): data is FolderType => !!data && data instanceof FolderType;
-
+// TODO(burdon): Standardize views?
 export class ViewType extends EchoObjectSchema({ typename: 'braneframe.View', version: '0.1.0' })({
   title: S.string,
   type: S.string,
 }) {}
-
-// TODO(burdon): Standardize views?
-export const isView = (data: unknown): data is ViewType => !!data && data instanceof ViewType;

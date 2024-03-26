@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { isFolder } from '@braneframe/types';
+import { FolderType } from '@braneframe/types';
 import { type AnyEchoObject } from '@dxos/echo-schema';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
@@ -19,7 +19,7 @@ export const PopoverRenameObject = ({ object: obj }: { object: AnyEchoObject }) 
   const [name, setName] = useState(object.title || object.name || '');
 
   const handleDone = useCallback(() => {
-    if (isFolder(object)) {
+    if (object instanceof FolderType) {
       object.name = name;
     } else {
       object.title = name;

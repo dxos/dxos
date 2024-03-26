@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { MapType, isMap } from '@braneframe/types';
+import { MapType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
@@ -116,10 +116,10 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main': {
-              return isMap(data.active) ? <MapMain map={data.active} /> : null;
+              return data.active instanceof MapType ? <MapMain map={data.active} /> : null;
             }
             case 'section': {
-              return isMap(data.object) ? <MapSection map={data.object} /> : null;
+              return data.object instanceof MapType ? <MapSection map={data.object} /> : null;
             }
           }
 

@@ -13,5 +13,3 @@ export class ScriptType extends EchoObjectSchema({ typename: 'braneframe.Script'
   title: S.optional(S.string),
   source: E.ref(TextV0Type),
 }) {}
-
-export const isScript = (data: unknown): data is ScriptType => !!data && data instanceof ScriptType;

@@ -15,5 +15,3 @@ export class StackType extends EchoObjectSchema({ typename: 'braneframe.Stack', 
   title: S.optional(S.string),
   sections: S.mutable(S.array(E.ref(SectionType))),
 }) {}
-
-export const isStack = (data: unknown): data is StackType => !!data && data instanceof StackType;

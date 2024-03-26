@@ -67,9 +67,6 @@ export class ThreadType extends EchoObjectSchema({ typename: 'braneframe.Thread'
   ),
 }) {}
 
-export const isThread = (data: unknown): data is E.EchoReactiveObject<ThreadType> =>
-  !!data && data instanceof ThreadType;
-
 // TODO(burdon): Reconcile with Thread?
 export class MailboxType extends EchoObjectSchema({ typename: 'braneframe.Mailbox', version: '0.1.0' })({
   title: S.optional(S.string),
@@ -99,7 +96,3 @@ export class EventType extends EchoObjectSchema({ typename: 'braneframe.Event', 
 export class AddressBookType extends EchoObjectSchema({ typename: 'braneframe.AddressBook', version: '0.1.0' })({}) {}
 
 export class CalendarType extends EchoObjectSchema({ typename: 'braneframe.Calendar', version: '0.1.0' })({}) {}
-
-export const isMailbox = (data: unknown): data is MailboxType => !!data && data instanceof MailboxType;
-export const isAddressBook = (data: unknown): data is AddressBookType => !!data && data instanceof AddressBookType;
-export const isCalendar = (data: unknown): data is CalendarType => !!data && data instanceof CalendarType;

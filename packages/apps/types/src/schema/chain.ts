@@ -36,5 +36,3 @@ export class ChainType extends EchoObjectSchema({ typename: 'braneframe.Chain', 
   title: S.optional(S.string),
   prompts: S.mutable(S.array(E.ref(ChainPromptType))),
 }) {}
-
-export const isChain = (data: unknown): data is ChainType => !!data && data instanceof ChainType;

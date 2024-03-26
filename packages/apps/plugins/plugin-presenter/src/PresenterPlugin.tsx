@@ -7,7 +7,7 @@ import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { StackType, isDocument, isStack } from '@braneframe/types';
+import { StackType, DocumentType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { Filter } from '@dxos/echo-schema';
@@ -106,11 +106,11 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isStack(data.active) && state.presenting
+              return data.active instanceof StackType && state.presenting
                 ? { node: <PresenterMain stack={data.active} />, disposition: 'hoist' }
                 : null;
             case 'slide':
-              return isDocument(data.slide) ? <MarkdownSlideMain document={data.slide} /> : null;
+              return data.slide instanceof DocumentType ? <MarkdownSlideMain document={data.slide} /> : null;
           }
 
           return null;

@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { isThread, ThreadType, isDocument, DocumentType, MessageType } from '@braneframe/types';
+import { ThreadType, DocumentType, MessageType } from '@braneframe/types';
 import {
   type IntentPluginProvides,
   LayoutAction,
@@ -79,7 +79,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           : undefined;
         untracked(() => {
           const [thread] = space?.db.query(Filter.schema(ThreadType, (thread) => !thread.context)).objects ?? [];
-          if (activeNode && isDocument(activeNode?.data) && (activeNode.data.comments?.length ?? 0) > 0) {
+          if (activeNode && activeNode?.data instanceof DocumentType && (activeNode.data.comments?.length ?? 0) > 0) {
             void intentPlugin?.provides.intent.dispatch({
               action: LayoutAction.SET_LAYOUT,
               data: {
@@ -88,7 +88,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 state: isMinSm(),
               },
             });
-          } else if (settings.values.standalone && thread && !isThread(activeNode?.data)) {
+          } else if (settings.values.standalone && thread && !(activeNode?.data instanceof ThreadType)) {
             void intentPlugin?.provides.intent.dispatch({
               action: LayoutAction.SET_LAYOUT,
               data: {
@@ -209,7 +209,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main': {
-              return isThread(data.active) ? <ThreadMain thread={data.active} /> : null;
+              return data.active instanceof ThreadType ? <ThreadMain thread={data.active} /> : null;
             }
 
             case 'settings': {
@@ -221,13 +221,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const location = navigationPlugin?.provides.location;
 
               // TODO(burdon): Hack to detect comments.
-              if (isDocument(data.subject)) {
+              if (data.subject instanceof DocumentType) {
                 const comments = data.subject.comments;
                 // Sort threads by y-position.
                 // TODO(burdon): Should just use document position?
                 const threads = comments
                   ?.map(({ thread }) => thread)
-                  .filter(isThread)
+                  .filter((thread): thread is ThreadType => thread instanceof ThreadType)
                   .toSorted((a, b) => state.threads[a.id] - state.threads[b.id]);
 
                 const detached = comments
@@ -273,7 +273,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     </ScrollArea.Root>
                   </>
                 );
-              } else if (isThread(data.subject)) {
+              } else if (data.subject instanceof ThreadType) {
                 return (
                   <>
                     <ChatHeading attendableId={data.subject.id} />
@@ -303,7 +303,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
             case ThreadAction.DELETE: {
               const { document: doc, thread, cursor } = intent.data ?? {};
-              if (!isDocument(doc) || !doc.comments || !isThread(thread)) {
+              if (!(doc instanceof DocumentType) || !doc.comments || !(thread instanceof ThreadType)) {
                 return;
               }
 
@@ -340,7 +340,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             listener({
               onChange: () => {
                 doc.comments?.forEach(({ thread, cursor }) => {
-                  if (isThread(thread) && cursor) {
+                  if (thread instanceof ThreadType && cursor) {
                     const [start, end] = cursor.split(':');
                     // TODO(wittjosiah): Don't cast.
                     const title = getTextInRange(doc.content as unknown as E.TextObject, start, end);

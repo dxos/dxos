@@ -9,7 +9,7 @@ import React from 'react';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
-import { FolderType, isFolder } from '@braneframe/types';
+import { FolderType } from '@braneframe/types';
 import {
   type IntentDispatcher,
   type PluginDefinition,
@@ -250,7 +250,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               // TODO(wittjosiah): ItemID length constant.
               return isSpace(data.active) ? (
                 <SpaceMain space={data.active} />
-              ) : isFolder(data.active) ? (
+              ) : data.active instanceof FolderType ? (
                 <FolderMain folder={data.active} />
               ) : typeof data.active === 'string' && data.active.length === 64 ? (
                 <MissingObject id={data.active} />
@@ -621,7 +621,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 return;
               }
 
-              if (isFolder(intent.data?.target)) {
+              if (intent.data?.target instanceof FolderType) {
                 intent.data?.target.objects.push(object as Identifiable);
                 return { data: object };
               }
@@ -629,7 +629,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               if (intent.data?.target instanceof SpaceProxy) {
                 const space = intent.data.target;
                 const folder = space.properties[FolderType.typename];
-                if (isFolder(folder)) {
+                if (folder instanceof FolderType) {
                   folder.objects.push(object as Identifiable);
                   return { data: object };
                 } else {

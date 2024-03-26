@@ -19,5 +19,3 @@ export class TreeType extends E.EchoObjectSchema({ typename: 'braneframe.Tree', 
   root: E.ref(TreeItemType),
   checkbox: S.optional(S.boolean),
 }) {}
-
-export const isTree = (data: unknown): data is TreeType => data instanceof TreeType;

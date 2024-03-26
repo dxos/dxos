@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { ViewType, isView } from '@braneframe/types';
+import { ViewType } from '@braneframe/types';
 import { parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { Filter } from '@dxos/react-client/echo';
@@ -100,7 +100,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isView(data.active) ? <ExplorerMain view={data.active} /> : null;
+              return data.active instanceof ViewType ? <ExplorerMain view={data.active} /> : null;
             default:
               return null;
           }
