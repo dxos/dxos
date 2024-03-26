@@ -12,7 +12,6 @@ import { Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
-import { EchoReactiveHandler } from './echo-handler';
 import {
   type ReactiveHandler,
   createReactiveProxy,
@@ -24,6 +23,12 @@ import { SchemaValidator, symbolSchema, validateIdNotPresentOnSchema } from './s
 import { TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 import { type ObjectMeta } from '../object';
+
+// TODO: remove during refactoring. was introduced to help with recursive imports
+export abstract class EchoReactiveHandler {
+  abstract getSchema(): S.Schema<any> | undefined;
+  abstract getMeta(): ObjectMeta;
+}
 
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
