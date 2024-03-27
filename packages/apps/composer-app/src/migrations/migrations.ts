@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FolderType, isFolder } from '@braneframe/types';
+import { FolderType } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
 import { type Migration } from '@dxos/migrations';
 import { Filter } from '@dxos/react-client/echo';
@@ -12,7 +12,7 @@ export const migrations: Migration[] = [
     version: 1,
     up: ({ space }) => {
       const rootFolder = space.properties[FolderType.typename];
-      if (isFolder(rootFolder)) {
+      if (rootFolder instanceof FolderType) {
         return;
       }
 

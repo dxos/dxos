@@ -7,7 +7,7 @@ import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { DocumentType, isDocument } from '@braneframe/types';
+import { DocumentType } from '@braneframe/types';
 import {
   resolvePlugin,
   parseGraphPlugin,
@@ -119,7 +119,7 @@ export const GptPlugin = (): PluginDefinition<GptPluginProvides> => {
               const activeNode = location?.active ? graph?.findNode(location.active) : undefined;
               const active = activeNode?.data;
               const space = isEchoReactiveObject(active) && getSpaceForObject(active);
-              if (space && isDocument(active) && settings.values.apiKey) {
+              if (space && active instanceof DocumentType && settings.values.apiKey) {
                 // TODO(burdon): Toast on success.
                 void new GptAnalyzer({ apiKey: settings.values.apiKey }).exec(space, active);
               }

@@ -72,7 +72,6 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       space: {
         credential: spaceMemberCredential,
         controlTimeframe: space.inner.controlPipeline.state.timeframe,
-        dataTimeframe: space.dataPipeline.pipelineState?.timeframe,
       },
     };
   }

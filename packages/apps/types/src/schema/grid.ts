@@ -22,5 +22,3 @@ export class GridType extends EchoObjectSchema({ typename: 'braneframe.Grid', ve
   title: S.string,
   items: S.mutable(S.array(E.ref(GridItemType))),
 }) {}
-
-export const isGrid = (data: unknown): data is GridType => !!data && data instanceof GridType;

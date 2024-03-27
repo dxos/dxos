@@ -20,7 +20,7 @@ import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { actionGroupSymbol, type InvokeParams, type Graph, type Node, manageNodes } from '@braneframe/plugin-graph';
-import { FolderType, isFolder } from '@braneframe/types';
+import { FolderType } from '@braneframe/types';
 import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
@@ -127,7 +127,7 @@ export const updateGraphWithSpace = ({
   const unsubscribeSpace = effect(() => {
     const folder = space.state.get() === SpaceState.READY && space.properties[FolderType.typename];
     const partials =
-      space.state.get() === SpaceState.READY && isFolder(folder)
+      space.state.get() === SpaceState.READY && folder instanceof FolderType
         ? getFolderGraphNodePartials({ graph, folder, space })
         : {};
 
@@ -157,7 +157,7 @@ export const updateGraphWithSpace = ({
 
       manageNodes({
         graph,
-        condition: isFolder(folder) && (hidden ? true : space.state.get() === SpaceState.READY),
+        condition: folder instanceof FolderType && (hidden ? true : space.state.get() === SpaceState.READY),
         removeEdges: true,
         nodes: [
           {
@@ -179,7 +179,7 @@ export const updateGraphWithSpace = ({
 
       manageNodes({
         graph,
-        condition: isFolder(folder) && (hidden ? true : space.state.get() === SpaceState.READY),
+        condition: folder instanceof FolderType && (hidden ? true : space.state.get() === SpaceState.READY),
         removeEdges: true,
         nodes: [
           {
@@ -345,7 +345,7 @@ export const updateGraphWithSpace = ({
       // Cleanup when objects removed from space.
       removedObjects.forEach((object) => {
         const getId = (id: string) => `${id}/${object.id}`;
-        if (isFolder(object)) {
+        if (object instanceof FolderType) {
           graph.removeNode(object.id);
           graph.removeNode(getId(SpaceAction.ADD_OBJECT));
           graph.removeNode(getId(SpaceAction.ADD_OBJECT.replace('object', 'folder')));
@@ -362,7 +362,7 @@ export const updateGraphWithSpace = ({
         // When object is a folder but not the root folder.
         // TODO(wittjosiah): Not adding nodes for any folders until the root folder is available.
         //  Not clear why it it's not immediately available.
-        if (isFolder(object) && folder && object !== folder) {
+        if (object instanceof FolderType && folder && object !== folder) {
           const partials = getFolderGraphNodePartials({ graph, folder: object, space });
 
           graph.addNodes({
@@ -444,7 +444,10 @@ export const updateGraphWithSpace = ({
                 data: { object, ...params },
               }),
             properties: {
-              label: [isFolder(object) ? 'rename folder label' : 'rename object label', { ns: SPACE_PLUGIN }],
+              label: [
+                object instanceof FolderType ? 'rename folder label' : 'rename object label',
+                { ns: SPACE_PLUGIN },
+              ],
               icon: (props: IconProps) => <PencilSimpleLine {...props} />,
               // TODO(wittjosiah): Doesn't work.
               // keyBinding: 'shift+F6',
@@ -455,7 +458,7 @@ export const updateGraphWithSpace = ({
           {
             id: getId(SpaceAction.REMOVE_OBJECT),
             data: ({ node, caller }) => {
-              const folder = node.nodes({ direction: 'inbound' }).find(({ data }) => isFolder(data));
+              const folder = node.nodes({ direction: 'inbound' }).find(({ data }) => data instanceof FolderType);
               return dispatch([
                 {
                   action: SpaceAction.REMOVE_OBJECT,
@@ -464,9 +467,12 @@ export const updateGraphWithSpace = ({
               ]);
             },
             properties: {
-              label: [isFolder(object) ? 'delete folder label' : 'delete object label', { ns: SPACE_PLUGIN }],
+              label: [
+                object instanceof FolderType ? 'delete folder label' : 'delete object label',
+                { ns: SPACE_PLUGIN },
+              ],
               icon: (props) => <Trash {...props} />,
-              keyBinding: isFolder(object) ? undefined : 'shift+meta+Backspace',
+              keyBinding: object instanceof FolderType ? undefined : 'shift+meta+Backspace',
               testId: 'spacePlugin.deleteObject',
             },
             edges: [[object.id, 'inbound']],

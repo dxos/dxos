@@ -164,7 +164,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     }
 
     let iter = 0;
-    const lastTimeframe = this.getSpaceBackend().dataPipeline.pipelineState?.timeframe ?? new Timeframe();
+    // const lastTimeframe = this.getSpaceBackend().dataPipeline.pipelineState?.timeframe ?? new Timeframe();
     let lastTime = Date.now();
     const ctx = new Context();
     scheduleTaskInterval(
@@ -179,36 +179,36 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         }
 
         if (!config.ephemeral) {
-          await env.redis.set(
-            `${env.params.testId}:timeframe:${env.params.agentId}`,
-            serializeTimeframe(this.getSpaceBackend().dataPipeline.pipelineState!.timeframe),
-          );
+          // await env.redis.set(
+          //   `${env.params.testId}:timeframe:${env.params.agentId}`,
+          //   serializeTimeframe(this.getSpaceBackend().dataPipeline.pipelineState!.timeframe),
+          // );
         }
 
         await env.syncBarrier(`iter ${iter}`);
 
         if (!config.ephemeral) {
-          const maximalTimeframe = await getMaximalTimeframe();
-          const lag = maximalTimeframe.newMessages(this.getSpaceBackend().dataPipeline.pipelineState!.timeframe);
-          const totalMutations = this.getSpaceBackend().dataPipeline.pipelineState!.timeframe.totalMessages();
+          const _maximalTimeframe = await getMaximalTimeframe();
+          // const lag = maximalTimeframe.newMessages(this.getSpaceBackend().dataPipeline.pipelineState!.timeframe);
+          // const totalMutations = this.getSpaceBackend().dataPipeline.pipelineState!.timeframe.totalMessages();
 
           // Compute throughput.
-          const mutationsSinceLastIter =
-            this.getSpaceBackend().dataPipeline.pipelineState!.timeframe.newMessages(lastTimeframe);
-          const timeSinceLastIter = Date.now() - lastTime;
+          // const mutationsSinceLastIter =
+          //   this.getSpaceBackend().dataPipeline.pipelineState!.timeframe.newMessages(lastTimeframe);
+          const _timeSinceLastIter = Date.now() - lastTime;
           lastTime = Date.now();
-          const mutationsPerSec = Math.round(mutationsSinceLastIter / (timeSinceLastIter / 1000));
+          // const mutationsPerSec = Math.round(mutationsSinceLastIter / (timeSinceLastIter / 1000));
 
-          const epoch = this.getSpaceBackend().dataPipeline.currentEpoch?.subject.assertion.number ?? -1;
+          // const epoch = this.getSpaceBackend().dataPipeline.currentEpoch?.subject.assertion.number ?? -1;
 
-          log.info('stats', { lag, mutationsPerSec, agentIdx, epoch, totalMutations });
-          log.trace('dxos.test.echo.stats', {
-            lag,
-            mutationsPerSec,
-            agentIdx,
-            epoch,
-            totalMutations,
-          } satisfies StatsLog);
+          // log.info('stats', { lag, mutationsPerSec, agentIdx, epoch, totalMutations });
+          // log.trace('dxos.test.echo.stats', {
+          //   lag,
+          //   mutationsPerSec,
+          //   agentIdx,
+          //   epoch,
+          //   totalMutations,
+          // } satisfies StatsLog);
 
           // Disconnect some of the agents for one iteration.
           const skipIterration =
@@ -246,8 +246,8 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
           this.builder.storage = createStorage({ type: StorageType.RAM });
           await this._init(env);
 
-          const maximalTimeframe = await getMaximalTimeframe();
-          await this.getSpaceBackend().dataPipeline.pipelineState!.waitUntilTimeframe(maximalTimeframe);
+          // const maximalTimeframe = await getMaximalTimeframe();
+          // await this.getSpaceBackend().dataPipeline.pipelineState!.waitUntilTimeframe(maximalTimeframe);
 
           log.info('sync time', { time: performance.now() - begin, agentIdx, iter });
           log.trace('dxos.test.echo.sync', { time: performance.now() - begin, agentIdx, iter } satisfies SyncTimeLog);
@@ -456,7 +456,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
   }
 }
 
-const serializeTimeframe = (timeframe: Timeframe) =>
+const _serializeTimeframe = (timeframe: Timeframe) =>
   JSON.stringify(Object.fromEntries(timeframe.frames().map(([k, v]) => [k.toHex(), v])));
 
 const deserializeTimeframe = (timeframe: string) =>

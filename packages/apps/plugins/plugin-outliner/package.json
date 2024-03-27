@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-outliner",
-  "version": "0.4.8",
+  "version": "0.4.9",
   "description": "Tree plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -32,7 +32,6 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
-    "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "lodash.get": "^4.4.2"

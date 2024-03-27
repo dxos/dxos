@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { KanbanType, isKanban } from '@braneframe/types';
+import { KanbanType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
@@ -98,7 +98,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isKanban(data.active) ? <KanbanMain kanban={data.active} /> : null;
+              return data.active instanceof KanbanType ? <KanbanMain kanban={data.active} /> : null;
             default:
               return null;
           }

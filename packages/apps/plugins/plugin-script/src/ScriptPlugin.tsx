@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { ScriptType, TextV0Type, isScript } from '@braneframe/types';
+import { ScriptType, TextV0Type } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
@@ -122,7 +122,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isScript(data.active) ? (
+              return data.active instanceof ScriptType ? (
                 <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
                   <ScriptBlockWrapper
                     // prettier-ignore
@@ -133,7 +133,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
                 </Main.Content>
               ) : null;
             case 'slide':
-              return isScript(data.slide) ? (
+              return data.slide instanceof ScriptType ? (
                 <ScriptBlockWrapper
                   // prettier-ignore
                   script={data.slide}
@@ -144,7 +144,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
                 />
               ) : null;
             case 'section':
-              return isScript(data.object) ? (
+              return data.object instanceof ScriptType ? (
                 <ScriptBlockWrapper
                   // prettier-ignore
                   script={data.object}

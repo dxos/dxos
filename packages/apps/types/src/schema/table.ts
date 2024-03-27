@@ -26,5 +26,3 @@ export class TableType extends EchoObjectSchema({ typename: 'braneframe.Table', 
   schema: S.optional(E.ref(DynamicEchoSchema)),
   props: S.mutable(S.array(TableTypePropSchema)),
 }) {}
-
-export const isTable = (data: unknown): data is TableType => !!data && data instanceof TableType;

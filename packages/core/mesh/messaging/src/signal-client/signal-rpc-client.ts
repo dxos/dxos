@@ -30,6 +30,7 @@ export type SignalCallbacks = {
   onDisconnected?: () => void;
 
   onError?: (error: Error) => void;
+  getMetadata?: () => any;
 };
 
 export type SignalRPCClientParams = {
@@ -164,6 +165,7 @@ export class SignalRPCClient {
     const swarmStream = this._rpc.rpc.Signal.join({
       swarm: topic.asUint8Array(),
       peer: peerId.asUint8Array(),
+      metadata: this._callbacks?.getMetadata?.(),
     });
     await swarmStream.waitUntilReady();
     return swarmStream;
@@ -190,6 +192,7 @@ export class SignalRPCClient {
       author: author.asUint8Array(),
       recipient: recipient.asUint8Array(),
       payload,
+      metadata: this._callbacks?.getMetadata?.(),
     });
   }
 }

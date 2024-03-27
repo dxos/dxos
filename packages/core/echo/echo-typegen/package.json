@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-typegen",
-  "version": "0.4.8",
+  "version": "0.4.9",
   "description": "ECHO type generator.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -21,9 +21,7 @@
     "protobufjs": "^7.2.2"
   },
   "devDependencies": {
-    "@dxos/document-model": "workspace:*",
     "@dxos/echo-db": "workspace:*",
-    "@dxos/model-factory": "workspace:*",
     "@swc-node/register": "1.6.8",
     "@types/mocha": "^8.2.2",
     "@types/node": "^18.11.9",

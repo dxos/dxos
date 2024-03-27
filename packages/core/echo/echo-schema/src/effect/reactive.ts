@@ -8,7 +8,7 @@ import { pipe } from 'effect';
 import * as Option from 'effect/Option';
 import { type Simplify } from 'effect/Types';
 
-import { Reference } from '@dxos/document-model';
+import { Reference } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 

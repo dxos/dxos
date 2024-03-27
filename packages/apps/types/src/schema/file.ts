@@ -13,5 +13,3 @@ export class FileType extends EchoObjectSchema({ typename: 'braneframe.File', ve
   title: S.optional(S.string),
   cid: S.optional(S.string),
 }) {}
-
-export const isFile = (data: unknown): data is FileType => !!data && data instanceof FileType;

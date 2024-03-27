@@ -48,7 +48,7 @@ import { createStorageObjects } from '@dxos/client-services';
 import { defs, SaveConfig } from '@dxos/config';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
-import { initializeAppObservability } from '@dxos/observability';
+import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
 import { createClientServices } from '@dxos/react-client';
 import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
@@ -80,6 +80,10 @@ const main = async () => {
   // Intentionally do not await, don't block app startup for telemetry.
   const observability = initializeAppObservability({ namespace: appKey, config });
 
+  // TODO(nf): refactor.
+  const observabilityDisabled = await isObservabilityDisabled(appKey);
+  const observabilityGroup = await getObservabilityGroup(appKey);
+
   const services = await createClientServices(
     config,
     config.values.runtime?.app?.env?.DX_HOST
@@ -89,6 +93,8 @@ const main = async () => {
             type: 'module',
             name: 'dxos-client-worker',
           }),
+    observabilityGroup,
+    !observabilityDisabled,
   );
   const isSocket = !!(globalThis as any).__args;
 

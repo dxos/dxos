@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { MailboxType, AddressBookType, CalendarType, isMailbox, isAddressBook, isCalendar } from '@braneframe/types';
+import { MailboxType, AddressBookType, CalendarType } from '@braneframe/types';
 import { type PluginDefinition, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
@@ -180,13 +180,13 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              if (isMailbox(data.active)) {
+              if (data.active instanceof MailboxType) {
                 return <Mailbox mailbox={data.active} />;
               }
-              if (isAddressBook(data.active)) {
+              if (data.active instanceof AddressBookType) {
                 return <ContactsMain contacts={data.active} />;
               }
-              if (isCalendar(data.active)) {
+              if (data.active instanceof CalendarType) {
                 return <EventsMain calendar={data.active} />;
               }
               return null;

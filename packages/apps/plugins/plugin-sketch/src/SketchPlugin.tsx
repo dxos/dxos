@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { SketchType, isSketch } from '@braneframe/types';
+import { SketchType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
@@ -121,13 +121,13 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isSketch(data.active) ? <SketchMain sketch={data.active} /> : null;
+              return data.active instanceof SketchType ? <SketchMain sketch={data.active} /> : null;
             case 'slide':
-              return isSketch(data.slide) ? (
+              return data.slide instanceof SketchType ? (
                 <SketchComponent sketch={data.slide} readonly={true} autoZoom={true} maxZoom={1.5} className={'p-16'} />
               ) : null;
             case 'section':
-              return isSketch(data.object) ? (
+              return data.object instanceof SketchType ? (
                 <SketchComponent sketch={data.object} readonly={true} autoZoom={true} className={'h-[400px]'} />
               ) : null;
             default:

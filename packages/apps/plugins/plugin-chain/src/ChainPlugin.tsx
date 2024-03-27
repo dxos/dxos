@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { ChainType, isChain } from '@braneframe/types';
+import { ChainType } from '@braneframe/types';
 import { resolvePlugin, parseIntentPlugin, type PluginDefinition } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { Filter } from '@dxos/react-client/echo';
@@ -114,7 +114,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isChain(data.active) ? <ChainMain chain={data.active} /> : null;
+              return data.active instanceof ChainType ? <ChainMain chain={data.active} /> : null;
           }
 
           return null;

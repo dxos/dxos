@@ -6,13 +6,13 @@ import React, { type FC, useContext, useState } from 'react';
 
 import { useLayout } from '@braneframe/plugin-layout';
 import { type StackType } from '@braneframe/types';
-import { LayoutAction, Surface, useIntent } from '@dxos/app-framework';
+import { Surface, useIntent } from '@dxos/app-framework';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 import { Layout, PageNumber, Pager, StartButton } from './Presenter';
 import { PRESENTER_PLUGIN } from '../meta';
-import { PresenterContext } from '../types';
+import { PresenterContext, TOGGLE_PRESENTATION } from '../types';
 
 const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
   const [slide, setSlide] = useState(0);
@@ -28,12 +28,8 @@ const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
     void dispatch([
       {
         plugin: PRESENTER_PLUGIN,
-        action: 'toggle-presentation', // TODO(burdon): Create const.
+        action: TOGGLE_PRESENTATION,
         data: { state: running },
-      },
-      {
-        action: LayoutAction.SET_LAYOUT,
-        data: { element: 'fullscreen', state: running },
       },
     ]);
   };

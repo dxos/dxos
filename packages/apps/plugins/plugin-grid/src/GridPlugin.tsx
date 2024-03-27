@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { GridItemType, GridType, isGrid } from '@braneframe/types';
+import { GridItemType, GridType } from '@braneframe/types';
 import { parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { Filter } from '@dxos/react-client/echo';
@@ -112,7 +112,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isGrid(data.active) ? <GridMain grid={data.active} /> : null;
+              return data.active instanceof GridType ? <GridMain grid={data.active} /> : null;
           }
 
           return null;

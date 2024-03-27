@@ -50,15 +50,6 @@
     },
     {
       "path": "../../protocols"
-    },
-    {
-      "path": "../document-model"
-    },
-    {
-      "path": "../model-factory"
-    },
-    {
-      "path": "../text-model"
     }
   ]
 }

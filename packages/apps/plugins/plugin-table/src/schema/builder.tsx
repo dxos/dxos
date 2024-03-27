@@ -128,37 +128,30 @@ export const createActionColumn = (
 
   return helper.display({
     id: '__new',
-    size: 36,
-    meta: {
-      header: {
-        classNames: 'p-0',
-      },
-      footer: {
-        classNames: 'p-0',
-      },
-      cell: {
-        classNames: 'p-0',
-      },
-    },
+    size: 48,
     // TODO(burdon): Translation.
     header: onColumnUpdate
       ? () => (
-          <Button variant='ghost' onClick={handleAddColumn} title='New column' classNames='m-0 p-0'>
-            <Plus className={getSize(4)} />
-          </Button>
+          <div className='grid place-items-center'>
+            <Button variant='ghost' onClick={handleAddColumn} title='New column'>
+              <Plus className={getSize(4)} />
+            </Button>
+          </div>
         )
       : undefined,
     cell: onRowDelete
       ? (cell) =>
           cell.row.original.id ? (
-            <Button
-              variant='ghost'
-              onClick={() => onRowDelete(cell.row.original)}
-              title='Delete row'
-              classNames='rounded-none'
-            >
-              <X className={getSize(4)} />
-            </Button>
+            <div className='grid place-items-center'>
+              <Button
+                variant='ghost'
+                onClick={() => onRowDelete(cell.row.original)}
+                title='Delete row'
+                classNames='rounded-none'
+              >
+                <X className={getSize(4)} />
+              </Button>
+            </div>
           ) : null
       : undefined,
   }) as TableColumnDef<TypedObject>;

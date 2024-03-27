@@ -5,7 +5,7 @@
 import { Event, asyncTimeout, synchronized } from '@dxos/async';
 import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
-import { type Reference } from '@dxos/document-model';
+import { TYPE_PROPERTIES, type Reference } from '@dxos/echo-db';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -18,14 +18,14 @@ import {
   type DocumentChanges,
   type ObjectDocumentLoaded,
 } from './automerge-doc-loader';
-import { getAutomergeObjectCore } from './automerge-object';
+import { getAutomergeObjectCore, type AutomergeObject } from './automerge-object';
 import { AutomergeObjectCore } from './automerge-object-core';
 import { type SpaceDoc } from './types';
 import { getInlineAndLinkChanges } from './utils';
 import { type EchoDatabase } from '../database';
 import { isReactiveProxy } from '../effect/proxy';
 import { type Hypergraph } from '../hypergraph';
-import { LEGACY_TEXT_TYPE, isAutomergeObject, type EchoObject, type OpaqueEchoObject } from '../object';
+import { isAutomergeObject, type EchoObject, type OpaqueEchoObject } from '../object';
 import { type Schema } from '../proto';
 
 export type SpaceState = {
@@ -170,10 +170,10 @@ export class AutomergeDb {
   }
 
   // TODO(Mykola): Reconcile with `getObjectById`.
-  async loadObjectById(objectId: string, { timeout = 1000 }: { timeout?: number } = {}): Promise<EchoObject> {
+  async loadObjectById(objectId: string, { timeout = 5000 }: { timeout?: number } = {}): Promise<EchoObject> {
     const obj = this.getObjectById(objectId);
     if (obj) {
-      return obj;
+      return Promise.resolve(obj);
     }
     return asyncTimeout(
       this._updateEvent
@@ -395,7 +395,12 @@ export interface ItemsUpdatedEvent {
 
 const shouldObjectGoIntoFragmentedSpace = (core: AutomergeObjectCore) => {
   if (isAutomergeObject(core.rootProxy)) {
-    return core.rootProxy.__typename === LEGACY_TEXT_TYPE;
+    // NOTE: We need to store properties in the root document because
+    //       space-list initialization expects it to be loaded as space become available.
+    if ((core.rootProxy as AutomergeObject).__typename === TYPE_PROPERTIES) {
+      return false;
+    }
+    return true;
   } else {
     return false;
   }

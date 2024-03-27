@@ -5,10 +5,10 @@
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { QueryOptions } from '@dxos/client/echo';
-import { type WithTypeUrl, type ProtoCodec, type Any } from '@dxos/codec-protobuf';
+import { type WithTypeUrl, type Any } from '@dxos/codec-protobuf';
 import { cancelWithContext } from '@dxos/context';
-import { getStateMachineFromItem } from '@dxos/echo-db';
-import { type EchoObject, getEchoObjectItem, Filter, base } from '@dxos/echo-schema';
+import { getEchoObjectItem } from '@dxos/echo-schema';
+import { type EchoObject, Filter, base } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
@@ -75,11 +75,11 @@ export class QueryPlugin extends Plugin {
 const createSnapshot = (object: EchoObject): EchoObjectProto => {
   const item = getEchoObjectItem(object[base] as any)!;
   let model: WithTypeUrl<Any> | undefined;
-  if (!item?.modelMeta?.snapshotCodec) {
-    log.warn('No snapshot codec for model.');
-  } else {
-    model = (item.modelMeta.snapshotCodec as ProtoCodec).encodeAsAny(getStateMachineFromItem(item)?.snapshot());
-  }
+  // if (!item?.modelMeta?.snapshotCodec) {
+  //   log.warn('No snapshot codec for model.');
+  // } else {
+  //   model = (item.modelMeta.snapshotCodec as ProtoCodec).encodeAsAny(getStateMachineFromItem(item)?.snapshot());
+  // }
 
   return {
     objectId: object.id,

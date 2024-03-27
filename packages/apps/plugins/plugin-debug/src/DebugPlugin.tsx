@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { parseClientPlugin, type ClientPluginProvides } from '@braneframe/plugin-client';
 import { Graph, manageNodes } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { FolderType, isFolder } from '@braneframe/types';
+import { FolderType } from '@braneframe/types';
 import {
   getPlugin,
   parseGraphPlugin,
@@ -88,7 +88,6 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         builder: (plugins, graph) => {
           const subscriptions = new EventSubscriptions();
           const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
 
           // TODO(burdon): Combine nodes into single subtree.
 
@@ -128,27 +127,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                       label: ['devtools label', { ns: DEBUG_PLUGIN }],
                     },
                     edges: [['root', 'inbound']],
-                    nodes: [
-                      {
-                        id: 'open-devtools',
-                        data: () =>
-                          intentPlugin?.provides.intent.dispatch({
-                            plugin: DEBUG_PLUGIN,
-                            action: DebugAction.OPEN_DEVTOOLS,
-                          }),
-                        properties: {
-                          label: ['open devtools label', { ns: DEBUG_PLUGIN }],
-                          icon: (props: IconProps) => <Bug {...props} />,
-                          keyBinding: {
-                            macos: 'shift+meta+\\',
-                            // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
-                            windows: 'shift+alt+\\',
-                            linux: 'shift+alt+|',
-                          },
-                          testId: 'spacePlugin.openDevtools',
-                        },
-                      },
-                    ],
+                    nodes: [],
                   },
                 ],
               });
@@ -247,7 +226,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
 
                     const folder =
                       active.space.state.get() === SpaceState.READY && active.space.properties[FolderType.typename];
-                    if (!isFolder(folder)) {
+                    if (!(folder instanceof FolderType)) {
                       return;
                     }
 

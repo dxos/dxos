@@ -12,7 +12,6 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import type { PublicKey } from '@dxos/react-client';
-import type { ItemID } from '@dxos/react-client/echo';
 import { type ComplexMap } from '@dxos/util';
 
 import { SPACE_PLUGIN } from './meta';
@@ -59,7 +58,7 @@ export type PluginState = {
   /**
    * Object that was linked to directly but not found and is being awaited.
    */
-  awaiting: ItemID | undefined;
+  awaiting: string | undefined;
 };
 
 export type SpaceSettingsProps = { showHidden?: boolean };

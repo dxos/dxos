@@ -31,9 +31,6 @@
       "path": "../../common/node-std"
     },
     {
-      "path": "../../core/echo/document-model"
-    },
-    {
       "path": "../../core/echo/echo-db"
     },
     {
@@ -41,12 +38,6 @@
     },
     {
       "path": "../../core/echo/echo-typegen"
-    },
-    {
-      "path": "../../core/echo/model-factory"
-    },
-    {
-      "path": "../../core/echo/text-model"
     },
     {
       "path": "../../core/mesh/rpc"
