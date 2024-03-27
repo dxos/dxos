@@ -2,100 +2,86 @@
 // Copyright 2024 DXOS.org
 //
 
-import { synchronized, Event } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import { type MetadataMethods } from '@dxos/echo-pipeline';
-import { log } from '@dxos/log';
-import { type Directory } from '@dxos/random-access-storage';
 import { trace } from '@dxos/tracing';
 
-import { overrideFile } from './util';
+import { ConcatenatedHeadHashes } from './types';
+import { MySublevel } from './level';
+import { log } from '@dxos/log';
 
 export type IndexMetadataStoreParams = {
-  directory: Directory;
+  db: MySublevel;
 };
 
 export type DocumentMetadata = {
+  /**
+   * Encoded object pointer: `${documentId}|${objectId}`.
+   */
   id: string;
-  lastIndexedHash?: string;
-  lastAvailableHash?: string;
+  lastIndexedHash?: ConcatenatedHeadHashes;
+  lastAvailableHash?: ConcatenatedHeadHashes;
 };
 
 @trace.resource()
-// TODO(mykola): Use snapshot and append only log, not separate file for each document.
 export class IndexMetadataStore implements MetadataMethods {
   public readonly dirty = new Event<void>();
   public readonly clean = new Event<void>();
 
-  private readonly _directory: Directory;
-  /** map objectId -> index metadata */
-  private readonly _metadata: Map<string, DocumentMetadata> = new Map();
+  private readonly _db: MySublevel;
 
-  constructor({ directory }: IndexMetadataStoreParams) {
-    this._directory = directory;
+  constructor({ db }: IndexMetadataStoreParams) {
+    this._db = db;
   }
 
   @trace.span({ showInBrowserTimeline: true })
+  @log.method()
+  async getDirtyDocuments(): Promise<string[]> {
+    let res: string[] = [];
+
+    for await (const [id, metadata] of this._db.iterator<string, DocumentMetadata>({ valueEncoding: 'json' })) {
+      if (metadata.lastIndexedHash !== metadata.lastAvailableHash) {
+        res.push(id);
+      }
+    }
+
+    return res;
+  }
+
+  @trace.span({ showInBrowserTimeline: true })
+  @synchronized
+  @log.method()
   async markDirty(idToLastHash: Map<string, string>) {
-    const tasks = [...idToLastHash.entries()].map(async ([id, lastAvailableHash]) => {
+    const batch = this._db.batch();
+
+    for (const [id, lastAvailableHash] of idToLastHash.entries()) {
+      // TODO(dmaretskyi): Splitting metadata into separate keys would allow us set hashes without reading data.
       const metadata = await this._getMetadata(id);
       metadata.lastAvailableHash = lastAvailableHash;
-      await this._setMetadata(id, metadata);
-      this.dirty.emit();
-    });
-    await Promise.all(tasks);
+      batch.put<string, DocumentMetadata>(id, metadata, { valueEncoding: 'json' });
+    }
+
+    await batch.write();
   }
 
-  @trace.span({ showInBrowserTimeline: true })
-  async getDirtyDocuments(): Promise<string[]> {
-    const ids = await this._directory.list();
-    const dirty: string[] = [];
-    await Promise.all(
-      ids.map(async (id) => {
-        const metadata = await this._getMetadata(id);
-        if (metadata.lastIndexedHash !== metadata.lastAvailableHash) {
-          dirty.push(metadata.id);
-        }
-      }),
-    );
-    return dirty;
-  }
-
+  @log.method()
   async markClean(id: string, lastIndexedHash: string) {
     const metadata = await this._getMetadata(id);
     metadata.lastIndexedHash = lastIndexedHash;
-    await this._setMetadata(id, metadata);
+    await this._db.put<string, DocumentMetadata>(id, metadata, { valueEncoding: 'json' });
     this.clean.emit();
   }
 
-  @synchronized
   private async _getMetadata(id: string): Promise<DocumentMetadata> {
-    if (this._metadata.has(id)) {
-      return this._metadata.get(id)!;
-    } else {
-      try {
-        const file = this._directory.getOrCreateFile(id);
-        const { size } = await file.stat();
-        const serializedData = (await file.read(0, size)).toString();
-        const metadata: DocumentMetadata = serializedData.length !== 0 ? JSON.parse(serializedData) : { id };
-        this._metadata.set(id, metadata);
-        return metadata;
-      } catch (err) {
-        log.warn('failed to read metadata', err);
-        this._metadata.set(id, { id });
-        return { id };
-      }
-    }
-  }
-
-  @synchronized
-  private async _setMetadata(id: string, metadata: DocumentMetadata): Promise<boolean> {
+    // TODO(dmaretskyi): Research performance implications of going using try-catch for missing keys.
     try {
-      await overrideFile({ path: id, directory: this._directory, content: Buffer.from(JSON.stringify(metadata)) });
-      this._metadata.set(id, metadata);
-      return true;
-    } catch (err) {
-      log.warn('failed to write metadata', err);
-      return false;
+      return await this._db.get<string, DocumentMetadata>(id, { valueEncoding: 'json' });
+    } catch (err: any) {
+      if (err.notFound) {
+        return { id };
+      } else {
+        throw err;
+      }
     }
   }
 }
