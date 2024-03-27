@@ -3,9 +3,7 @@
 //
 
 import { isValidAutomergeUrl, type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
-
-import { type DocumentChanges } from './automerge-doc-loader';
-import { type SpaceDoc } from './types';
+import { type SpaceDoc, type DocumentChanges } from '@dxos/echo-pipeline';
 
 export const getInlineAndLinkChanges = (event: DocHandleChangePayload<SpaceDoc>) => {
   const inlineChangedObjectIds = new Set<string>();
