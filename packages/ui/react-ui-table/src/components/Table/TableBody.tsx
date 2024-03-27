@@ -28,10 +28,15 @@ const TableBody = ({ rows }: TableBodyProps) => {
       {rows.map((row) => {
         const isCurrent = currentDatum === row.original;
         const isSelected = rowSelection?.[row.id];
+
+        const isPinned = row.getIsPinned();
+
+        const classNames = tbodyTr({ canBeCurrent, isPinned: isPinned !== false });
+
         return (
           <tr
             key={keyAccessor ? keyAccessor(row.original) : row.id}
-            className={tbodyTr({ canBeCurrent })}
+            className={classNames}
             {...(isCurrent && { 'aria-current': 'location' })}
             {...(isSelected && { 'aria-selected': 'true' })}
             {...(canBeCurrent && {
