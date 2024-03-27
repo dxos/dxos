@@ -225,6 +225,21 @@ describe('Reactive Object with ECHO database', () => {
     }
   });
 
+  test('undefined field handling', async () => {
+    const { db } = await createDatabase(undefined, { useReactiveObjectApi: true });
+    const object = db.add(
+      E.object({
+        field: undefined,
+        nested: { deep: { field: undefined } },
+        array: [{ field: undefined }],
+      }),
+    );
+    object.array.push({ field: undefined });
+    for (const value of [object.field, object.nested.deep.field, ...object.array.map((o) => o.field)]) {
+      expect(value).to.be.undefined;
+    }
+  });
+
   describe('references', () => {
     const Org = S.struct({
       name: S.string,
