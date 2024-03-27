@@ -313,7 +313,7 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     if (staticSchema != null) {
       return staticSchema;
     }
-    return this._objectCore.database._dbApi.schemaRegistry.getByTypename(typeReference.itemId);
+    return this._objectCore.database._dbApi.schemaRegistry.getById(typeReference.itemId);
   }
 
   arrayPush(target: any, path: KeyPath, ...items: any[]): number {
