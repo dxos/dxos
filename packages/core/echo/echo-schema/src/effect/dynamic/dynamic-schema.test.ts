@@ -12,7 +12,7 @@ import { DynamicEchoSchema } from './dynamic-schema';
 import { createDatabase } from '../../testing';
 import { EchoObjectSchema } from '../echo-object-class';
 import * as E from '../reactive';
-import { EchoObjectAnnotationId, getTypeReference } from '../reactive';
+import { EchoObjectAnnotationId, getEchoObjectAnnotation, getFieldMetaAnnotation, getTypeReference } from '../reactive';
 
 const generatedType = { typename: 'generated', version: '1.0.0' };
 
@@ -116,6 +116,22 @@ describe('dynamic schema', () => {
       ['field1', AST.stringKeyword],
       ['field3', AST.numberKeyword],
     ]);
+  });
+
+  test('schema manipulations preserve annotations', async () => {
+    const { db } = await setupTest();
+    const meteNamespace = 'dxos.test';
+    const metaInfo = { maxLength: 10 };
+    const registered = db.schemaRegistry.add(GeneratedEmptySchema);
+    registered.addColumns({
+      field1: S.string.pipe(E.fieldMeta(meteNamespace, metaInfo)),
+      field2: S.string,
+    });
+    registered.addColumns({ field3: S.string });
+    registered.updateColumns({ field3: S.boolean });
+    registered.removeColumns(['field2']);
+    expect(getEchoObjectAnnotation(registered)).to.deep.contain(generatedType);
+    expect(getFieldMetaAnnotation(registered.getProperties()[0], meteNamespace)).to.deep.eq(metaInfo);
   });
 
   const setupTest = async () => {
