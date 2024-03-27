@@ -7,7 +7,7 @@ import { expect } from 'chai';
 
 import { test, describe } from '@dxos/test';
 
-import { SchemaValidator } from './schema-validator';
+import { SchemaValidator, setSchemaProperties } from './schema-validator';
 
 describe('reactive', () => {
   test('throws on ambiguous discriminated type union', () => {
@@ -15,5 +15,10 @@ describe('reactive', () => {
       union: S.union(S.struct({ a: S.number }), S.struct({ b: S.string })),
     });
     expect(() => SchemaValidator.validateSchema(schema)).to.throw();
+  });
+
+  test('handles any-schema correctly', () => {
+    const schema = S.struct({ field: S.any });
+    expect(() => setSchemaProperties({ field: { nested: {} } }, schema)).not.to.throw();
   });
 });

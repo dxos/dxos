@@ -5,10 +5,9 @@
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
-import { invariant } from '@dxos/invariant';
 
 import { type ReactiveHandler, createReactiveProxy, isValidProxyTarget } from './proxy';
-import { SchemaValidator, symbolSchema } from './schema-validator';
+import { SchemaValidator } from './schema-validator';
 import { data } from '../object';
 import { defineHiddenProperty } from '../util/property';
 
@@ -17,7 +16,6 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
   _signal = compositeRuntime.createSignal();
 
   _init(target: any): void {
-    invariant(target[symbolSchema]);
     if (inspect.custom) {
       defineHiddenProperty(target, inspect.custom, this._inspect.bind(target));
     }

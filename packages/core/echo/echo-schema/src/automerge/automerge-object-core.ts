@@ -27,8 +27,8 @@ import {
   type SpaceDoc,
   type DecodedAutomergePrimaryValue,
 } from './types';
-import { EchoReactiveHandler } from '../effect/echo-handler';
-import { getProxyHandlerSlot, isReactiveProxy } from '../effect/proxy';
+import { isReactiveProxy } from '../effect/proxy';
+import { isEchoReactiveObject } from '../effect/reactive';
 import { type TypedObjectOptions, type EchoObject, TextObject, type OpaqueEchoObject } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
@@ -278,7 +278,7 @@ export class AutomergeObjectCore {
   linkObject(obj: OpaqueEchoObject): Reference {
     if (this.database) {
       // TODO(dmaretskyi): Fix this.
-      if (isReactiveProxy(obj) && !(getProxyHandlerSlot(obj).handler instanceof EchoReactiveHandler)) {
+      if (isReactiveProxy(obj) && !isEchoReactiveObject(obj)) {
         invariant(this.database, 'BUG');
         this.database._dbApi.add(obj);
       }
