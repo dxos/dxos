@@ -46,12 +46,12 @@ Type: <code>string</code>
 
 
 ### [content]()
-Type: <code>undefined | YText | YXmlFragment</code>
+Type: <code>undefined | string</code>
 
 
 
 ### [doc]()
-Type: <code>undefined | Doc</code>
+Type: <code>any</code>
 
 
 
@@ -66,7 +66,7 @@ Type: <code>undefined | [TextKind](/api/@dxos/react-client/enums#TextKind)</code
 
 
 ### [model]()
-Type: <code>undefined | [TextModel](/api/@dxos/react-client/classes/TextModel)</code>
+Type: <code>any</code>
 
 
 
@@ -130,7 +130,7 @@ Arguments: none
 
 
 
-Returns: <code>Record&lt;string, any&gt;</code>
+Returns: <code>never</code>
 
 Arguments: none
 
@@ -142,7 +142,7 @@ Arguments: none
 
 
 
-Returns: <code>string</code>
+Returns: <code>never</code>
 
 Arguments: none
 

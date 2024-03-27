@@ -11,7 +11,13 @@ const TableSlide: FC<ObjectTableProps> = ({ table }) => {
   return (
     <div role='none' className='flex-1 min-bs-0 pli-16 plb-24'>
       <div role='none' className='bs-full overflow-auto grid place-items-center' ref={containerRef}>
-        <ObjectTable table={table} stickyHeader role='table' getScrollElement={() => containerRef.current} />
+        <ObjectTable
+          key={table.id} // New component instance per table.
+          table={table}
+          stickyHeader
+          role='table'
+          getScrollElement={() => containerRef.current}
+        />
       </div>
     </div>
   );

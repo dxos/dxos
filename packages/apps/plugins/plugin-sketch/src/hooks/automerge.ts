@@ -200,7 +200,7 @@ export class AutomergeStoreAdapter {
 }
 
 // TODO(burdon): Replace with lodash.get.
-const getDeep = (obj: any, path: string[]) => {
+const getDeep = (obj: any, path: readonly (string | number)[]) => {
   let value = obj;
   for (const key of path) {
     value = value?.[key];
@@ -208,7 +208,7 @@ const getDeep = (obj: any, path: string[]) => {
   return value;
 };
 
-const getAndInit = (obj: any, path: string[], value: any) => {
+const getAndInit = (obj: any, path: readonly (string | number)[], value: any) => {
   let parent = obj;
   for (const key of path) {
     parent[key] ??= {};
@@ -217,7 +217,7 @@ const getAndInit = (obj: any, path: string[], value: any) => {
   return parent;
 };
 
-const rebasePath = (path: A.Prop[], base: string[]): A.Prop[] | undefined => {
+const rebasePath = (path: A.Prop[], base: readonly (string | number)[]): A.Prop[] | undefined => {
   if (path.length < base.length) {
     return undefined;
   }

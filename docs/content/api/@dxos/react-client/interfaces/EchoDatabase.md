@@ -9,7 +9,7 @@ Type: <code>AutomergeDb</code>
 
 
 ### [pendingBatch]()
-Type: <code>ReadOnlyEvent&lt;BatchUpdate&gt;</code>
+Type: <code>ReadOnlyEvent&lt;unknown&gt;</code>
 
 
 

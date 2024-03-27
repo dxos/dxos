@@ -9,27 +9,35 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
 import * as R from './reactive';
-import { TestSchema } from './testing/schema';
+import { TEST_OBJECT, TestSchema, TestSchemaClass } from './testing/schema';
 import { updateCounter } from './testutils';
 import { Hypergraph } from '../hypergraph';
 import { createDatabase } from '../testing';
 
 registerSignalRuntime();
 
-for (const schema of [undefined, TestSchema]) {
+for (const schema of [undefined, TestSchema, TestSchemaClass]) {
   for (const useDatabase of [false, true]) {
+    if (!useDatabase && typeof schema === 'function') {
+      continue;
+    }
+
     const testSetup = useDatabase ? createDatabase(new Hypergraph(), { useReactiveObjectApi: true }) : undefined;
+
+    const objectsHaveId = useDatabase;
+
     const createObject = async (props: Partial<TestSchema> = {}): Promise<TestSchema> => {
-      const testSchema = useDatabase && schema ? schema.pipe(R.echoObject('TestSchema', '1.0.0')) : schema;
-      const obj = testSchema == null ? (R.object(props) as TestSchema) : R.object(testSchema, props);
+      const testSchema =
+        useDatabase && schema === TestSchema ? schema.pipe(R.echoObject('TestSchema', '1.0.0')) : schema;
+      const obj = testSchema == null ? (R.object(props) as TestSchema) : R.object(testSchema as any, props);
       if (!useDatabase) {
-        return obj;
+        return obj as any;
       }
       const { db, graph } = await testSetup!;
-      if (testSchema && !graph.types.isEffectSchemaRegistered(testSchema)) {
-        graph.types.registerEffectSchema(testSchema);
+      if (testSchema && !graph.types.isEffectSchemaRegistered(testSchema as any)) {
+        graph.types.registerEffectSchema(testSchema as any);
       }
-      return db.add(obj);
+      return db.add(obj) as any;
     };
 
     describe(`Proxy properties${schema == null ? '' : ' with schema'}`, () => {
@@ -183,10 +191,10 @@ for (const schema of [undefined, TestSchema]) {
       test('keys enumeration', async () => {
         const obj = await createObject({ string: 'bar' });
 
-        expect(Object.keys(obj)).to.deep.eq(['string']);
+        expect(Object.keys(obj)).to.deep.eq(objectsHaveId ? ['string', 'id'] : ['string']);
 
         obj.number = 42;
-        expect(Object.keys(obj)).to.deep.eq(['string', 'number']);
+        expect(Object.keys(obj)).to.deep.eq(objectsHaveId ? ['string', 'number', 'id'] : ['string', 'number']);
       });
 
       test('has', async () => {
@@ -221,28 +229,39 @@ for (const schema of [undefined, TestSchema]) {
 
       test('object spreading', async () => {
         const obj = await createObject({ ...TEST_OBJECT });
-        expect({ ...obj }).to.deep.eq({ ...TEST_OBJECT });
+        if (!objectsHaveId) {
+          expect({ ...obj }).to.deep.eq({ ...TEST_OBJECT });
+        } else {
+          expect({ ...obj }).to.deep.eq({ id: (obj as any).id, ...TEST_OBJECT });
+        }
       });
 
       test('toJSON', async () => {
         const obj = await createObject({ ...TEST_OBJECT });
         const expected = JSON.parse(JSON.stringify(TEST_OBJECT));
         const actual = JSON.parse(JSON.stringify(obj));
-        expect(actual).to.deep.eq(expected);
+
+        if (!objectsHaveId) {
+          expect(actual).to.deep.eq(expected);
+        } else {
+          expect(actual).to.deep.contain({ '@id': (obj as any).id, ...expected });
+        }
       });
 
       test('chai deep equal works', async () => {
         const obj = await createObject({ ...TEST_OBJECT });
 
-        expect(obj).to.deep.eq(TEST_OBJECT);
-        expect(obj).to.not.deep.eq({ ...TEST_OBJECT, number: 11 });
+        const expected = objectsHaveId ? { id: (obj as any).id, ...TEST_OBJECT } : TEST_OBJECT;
+        expect(obj).to.deep.eq(expected);
+        expect(obj).to.not.deep.eq({ ...expected, number: 11 });
       });
 
       test('jest deep equal works', async () => {
         const obj = await createObject({ ...TEST_OBJECT });
 
-        jestExpect(obj).toEqual(TEST_OBJECT);
-        jestExpect(obj).not.toEqual({ ...TEST_OBJECT, number: 11 });
+        const expected = objectsHaveId ? { id: (obj as any).id, ...TEST_OBJECT } : TEST_OBJECT;
+        jestExpect(obj).toEqual(expected);
+        jestExpect(obj).not.toEqual({ ...expected, number: 11 });
       });
 
       // Not a typical use case, but might come up when interacting with 3rd party libraries.
@@ -558,12 +577,3 @@ for (const schema of [undefined, TestSchema]) {
     });
   }
 }
-
-const TEST_OBJECT: TestSchema = {
-  string: 'foo',
-  number: 42,
-  boolean: true,
-  null: null,
-  stringArray: ['1', '2', '3'],
-  object: { field: 'bar' },
-};

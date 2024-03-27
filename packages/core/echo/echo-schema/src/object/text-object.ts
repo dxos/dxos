@@ -6,14 +6,15 @@ import get from 'lodash.get';
 
 import { next as A } from '@dxos/automerge/automerge';
 import { todo } from '@dxos/debug';
-import { Reference } from '@dxos/document-model';
+import { Reference } from '@dxos/echo-db';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
-import { TextModel, type Doc, type YText, type YXmlFragment } from '@dxos/text-model';
 
 import { AbstractEchoObject } from './object';
 import { isAutomergeObject, type AutomergeOptions, type TypedObject } from './typed-object';
 import { base } from './types';
 import { AutomergeObject, getRawDoc } from '../automerge';
+import { isReactiveProxy } from '../effect/proxy';
+import { type EchoReactiveObject } from '../effect/reactive';
 
 export type TextObjectOptions = AutomergeOptions;
 
@@ -29,14 +30,14 @@ export type AutomergeTextCompat = TypedObject<{
  * @deprecated
  */
 // TODO(burdon): Remove TextObject and TextModel.
-export class TextObject extends AbstractEchoObject<TextModel> {
+export class TextObject extends AbstractEchoObject<any> {
   static [Symbol.hasInstance](instance: any) {
     return !!instance?.[base] && (isActualTextObject(instance) || isAutomergeText(instance));
   }
 
   // TODO(mykola): Add immutable option.
   constructor(text?: string, kind = TextKind.PLAIN, field?: string, opts?: TextObjectOptions) {
-    super(TextModel);
+    super({});
 
     if (opts?.automerge === false) {
       throw new Error('Legacy hypercore-based ECHO objects are not supported');
@@ -61,15 +62,15 @@ export class TextObject extends AbstractEchoObject<TextModel> {
     return todo();
   }
 
-  get model(): TextModel | undefined {
+  get model(): any | undefined {
     return todo();
   }
 
-  get doc(): Doc | undefined {
+  get doc(): any | undefined {
     return todo();
   }
 
-  get content(): YText | YXmlFragment | undefined {
+  get content(): string | undefined {
     return todo();
   }
 
@@ -99,8 +100,8 @@ export const setTextContent = (object: TextObject, text: string) => {
   if (isAutomergeObject(object)) {
     (object as any).content = text;
   } else {
-    object.content?.delete(0, object.text.length);
-    object.content?.insert(0, text as any);
+    // object.content?.delete(0, object.text.length);
+    // object.content?.insert(0, text as any);
   }
 };
 
@@ -108,17 +109,19 @@ export const setTextContent = (object: TextObject, text: string) => {
  * @deprecated
  */
 export const getTextContent: {
-  (object: TextObject | undefined): string | undefined;
-  (object: TextObject | undefined, defaultValue: string): string;
-} = (object: TextObject | undefined, defaultValue?: string) => {
+  (object: TextObject | EchoReactiveObject<{ content: string }> | undefined): string | undefined;
+  (object: TextObject | EchoReactiveObject<{ content: string }> | undefined, defaultValue: string): string;
+} = (object: TextObject | EchoReactiveObject<{ content: string }> | undefined, defaultValue?: string) => {
   if (!object) {
     return defaultValue;
   }
 
   if (isAutomergeObject(object)) {
     return (object as any)?.content ?? defaultValue;
+  } else if (isReactiveProxy(object)) {
+    return (object as any)?.content ?? defaultValue;
   } else {
-    return object?.text ?? defaultValue;
+    return (object as any)?.text ?? defaultValue;
   }
 };
 

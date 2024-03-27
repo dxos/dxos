@@ -8,6 +8,7 @@ import { Event, MulticastObservable, PushStream, Trigger, scheduleTask } from '@
 import {
   CREATE_SPACE_TIMEOUT,
   Properties,
+  PropertiesSchema,
   defaultKey,
   type ClientServicesProvider,
   type Echo,
@@ -17,18 +18,18 @@ import {
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
+import * as E from '@dxos/echo-schema';
 import {
+  AutomergeContext,
   type FilterSource,
   type Hypergraph,
   type Query,
   type TypeCollection,
   type TypedObject,
 } from '@dxos/echo-schema';
-import { AutomergeContext } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type ModelFactory } from '@dxos/model-factory';
 import { ApiError, trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
@@ -64,7 +65,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   constructor(
     private readonly _config: Config | undefined,
     private readonly _serviceProvider: ClientServicesProvider,
-    private readonly _modelFactory: ModelFactory,
     private readonly _graph: Hypergraph,
     private readonly _getIdentityKey: () => PublicKey | undefined,
     /**
@@ -89,10 +89,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return {
       spaces: this._value?.length,
     };
-  }
-
-  get modelFactory(): ModelFactory {
-    return this._modelFactory;
   }
 
   /**
@@ -122,7 +118,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const gotInitialUpdate = new Trigger();
 
     const spacesStream = this._serviceProvider.services.SpacesService.querySpaces();
-    spacesStream.subscribe(async (data) => {
+    spacesStream.subscribe((data) => {
       let emitUpdate = false;
       const newSpaces = this.get() as SpaceProxy[];
 
@@ -133,25 +129,28 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
         let spaceProxy = newSpaces.find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy | undefined;
         if (!spaceProxy) {
-          spaceProxy = new SpaceProxy(
-            this._serviceProvider,
-            this._modelFactory,
-            space,
-            this._graph,
-            this._automergeContext,
-          );
+          spaceProxy = new SpaceProxy(this._serviceProvider, space, this._graph, this._automergeContext, {
+            useReactiveObjectApi: this._config?.values?.runtime?.client?.useReactiveObjectApi ?? false,
+          });
 
           // Propagate space state updates to the space list observable.
           spaceProxy._stateUpdate.on(this._ctx, () => {
             this._spacesStream.next([...this.get()]);
-            if (
-              spaceProxy?.state.get() === SpaceState.READY &&
-              spaceProxy?.properties[defaultKey] === this._getIdentityKey()?.toHex()
-            ) {
-              this._defaultSpaceAvailable.next(true);
-              this._defaultSpaceAvailable.complete();
-            }
           });
+          void spaceProxy
+            .waitUntilReady()
+            .then(() => {
+              if (
+                spaceProxy &&
+                spaceProxy.state.get() === SpaceState.READY &&
+                this._getIdentityKey() &&
+                spaceProxy.properties[defaultKey] === this._getIdentityKey()!.toHex()
+              ) {
+                this._defaultSpaceAvailable.next(true);
+                this._defaultSpaceAvailable.complete();
+              }
+            })
+            .catch((err) => err.message === 'Context disposed.' || log.catch(err));
 
           newSpaces.push(spaceProxy);
           this._spaceCreated.emit(spaceProxy.key);
@@ -185,6 +184,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       this._graph.registerQuerySourceProvider(
         new IndexQuerySourceProvider({ spaceList: this, service: this._serviceProvider.services.IndexService! }),
       );
+      subscription.unsubscribe();
     });
     this._ctx.onDispose(() => subscription.unsubscribe());
 
@@ -196,7 +196,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   async setIndexConfig(config: IndexConfig) {
-    await this._serviceProvider.services.IndexService?.setConfig(config);
+    await this._serviceProvider.services.IndexService?.setConfig(config, { timeout: 20_000 }); // TODO(dmaretskyi): Set global timeout instead.
   }
 
   /**
@@ -237,7 +237,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   get default(): Space {
     const identityKey = this._getIdentityKey();
     invariant(identityKey, 'Identity must be set.');
-    const space = this.get().find((space) => space.properties[defaultKey] === identityKey.toHex());
+    const space = this.get().find(
+      (space) => space.state.get() === SpaceState.READY && space.properties[defaultKey] === identityKey.toHex(),
+    );
     invariant(space, 'Default space is not yet available. Use `client.spaces.isReady` to wait for the default space.');
     return space;
   }
@@ -254,7 +256,12 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spaceProxy = (this.get().find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy) ?? failUndefined();
 
     await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
-    spaceProxy.db.add(new Properties(meta));
+    if (this._config?.values?.runtime?.client?.useReactiveObjectApi ?? false) {
+      // TODO(wittjosiah): Remove cast.
+      spaceProxy.db.add(E.object(PropertiesSchema, (meta ?? {}) as any));
+    } else {
+      spaceProxy.db.add(new Properties(meta));
+    }
     await spaceProxy.db.flush();
     await spaceProxy._initializationComplete.wait();
 

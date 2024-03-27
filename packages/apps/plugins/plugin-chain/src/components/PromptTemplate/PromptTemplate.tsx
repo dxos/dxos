@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Extension } from '@codemirror/state';
-import React, { type PropsWithChildren, useEffect, useMemo } from 'react';
+import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { Chain as ChainType } from '@braneframe/types';
 import { getTextContent } from '@dxos/react-client/echo';
@@ -106,26 +105,28 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
   const { themeMode } = useThemeContext();
 
   const { doc, accessor } = useDocAccessor(prompt.source);
-  const extensions = useMemo<Extension[]>(
-    () => [
-      createDataExtensions({ id: prompt.id, text: accessor }),
-      createBasicExtensions({
-        bracketMatching: false,
-        lineWrapping: true,
-        placeholder: t('template placeholder'),
-      }),
-      createThemeExtensions({
-        themeMode,
-        slots: {
-          content: { className: '!p-3' },
-        },
-      }),
-      promptExtension,
-    ],
-    [themeMode, accessor],
-  );
 
-  const { parentRef } = useTextEditor(() => ({ doc, extensions }));
+  const { parentRef } = useTextEditor(
+    () => ({
+      doc,
+      extensions: [
+        createDataExtensions({ id: prompt.id, text: accessor }),
+        createBasicExtensions({
+          bracketMatching: false,
+          lineWrapping: true,
+          placeholder: t('template placeholder'),
+        }),
+        createThemeExtensions({
+          themeMode,
+          slots: {
+            content: { className: '!p-3' },
+          },
+        }),
+        promptExtension,
+      ],
+    }),
+    [themeMode, accessor, prompt.id],
+  );
   usePromptInputs(prompt);
 
   return (

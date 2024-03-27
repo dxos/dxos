@@ -64,7 +64,7 @@ Tasks includes the sharing panels for inviting other collaborators into the task
 Invoking the template with `--interactive` like below will ask about enabling each feature one at a time.
 
 ```bash
-npm init @dxos --interactive # or
+npm init @dxos@latest --interactive # or
 dx app create <appname> --interactive
 ```
 

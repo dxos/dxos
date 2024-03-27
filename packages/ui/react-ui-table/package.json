@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-table",
-  "version": "0.4.7",
+  "version": "0.4.9",
   "description": "A table component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -28,7 +28,7 @@
     "@fluentui/react-tabster": "^9.19.0",
     "@radix-ui/react-context": "^1.0.0",
     "@radix-ui/react-use-controllable-state": "^1.0.0",
-    "@tanstack/react-table": "^8.9.3",
+    "@tanstack/react-table": "^8.13.2",
     "@tanstack/react-virtual": "^3.0.1",
     "date-fns": "^3.3.1"
   },

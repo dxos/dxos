@@ -28,6 +28,7 @@ const MAX_MESSAGE_SIZE = 64 * 1024;
  * Transport
  */
 export class LibDataChannelTransport implements Transport {
+  private static _instanceCount = 0;
   private _closed = false;
   readonly closed = new Event();
   private _connected = false;
@@ -56,6 +57,7 @@ export class LibDataChannelTransport implements Transport {
         params.webrtcConfig = { iceServers: [] };
       }
       const peer = new RTCPeerConnection(params.webrtcConfig);
+      LibDataChannelTransport._instanceCount++;
 
       peer.onicecandidateerror = (event) => {
         log.error('peer.onicecandidateerror', { event });
@@ -312,9 +314,11 @@ export class LibDataChannelTransport implements Transport {
     };
   }
 
-  // TODO(nf): add classmethod to call node-datachannel.cleanup() when all instances have been destroyed?
   async destroy(): Promise<void> {
     await this._close();
+    if (--LibDataChannelTransport._instanceCount === 0) {
+      (await importESM('node-datachannel')).cleanup();
+    }
   }
 
   private async _disconnectStreams() {

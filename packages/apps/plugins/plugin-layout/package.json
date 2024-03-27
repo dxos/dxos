@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-layout",
-  "version": "0.4.7",
+  "version": "0.4.9",
   "description": "DXOS Surface plugin for the main application layout.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -31,7 +31,7 @@
     "@dxos/local-storage": "workspace:*",
     "@dxos/react-ui-deck": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "@preact/signals-core": "^1.5.1"
+    "@preact/signals-core": "^1.6.0"
   },
   "devDependencies": {
     "@braneframe/plugin-graph": "workspace:*",

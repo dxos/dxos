@@ -22,7 +22,7 @@ describe('Schema indexing through orama', () => {
     });
     expect(Contact).to.exist;
 
-    type Contact = S.Schema.To<typeof Contact>;
+    type Contact = S.Schema.Type<typeof Contact>;
 
     const db = await create({
       schema: {

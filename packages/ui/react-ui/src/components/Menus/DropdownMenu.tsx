@@ -1,7 +1,9 @@
 //
 // Copyright 2023 DXOS.org
 //
+import { type Scope, type ScopeHook } from '@radix-ui/react-context';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
+import { type DropdownMenuContextValue } from '@radix-ui/react-dropdown-menu';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
@@ -25,6 +27,14 @@ const DropdownMenuPortal = DropdownMenuPrimitive.Portal;
 type DropdownMenuContentProps = ThemedClassName<DropdownMenuPrimitive.DropdownMenuContentProps> & {
   constrainBlockSize?: boolean;
 };
+
+// @ts-ignore
+const useDropdownMenuContext: (
+  consumerName: string,
+  scope: Scope<DropdownMenuContextValue | undefined>,
+) => DropdownMenuContextValue = DropdownMenuPrimitive.useDropdownMenuContext;
+// @ts-ignore
+const useDropdownMenuMenuScope: ScopeHook = DropdownMenuPrimitive.useDropdownMenuMenuScope;
 
 const DropdownMenuContent = forwardRef<HTMLDivElement, DropdownMenuContentProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
@@ -156,6 +166,8 @@ export const DropdownMenu = {
   Separator: DropdownMenuSeparator,
   GroupLabel: DropdownMenuGroupLabel,
 };
+
+export { useDropdownMenuContext, useDropdownMenuMenuScope };
 
 export type {
   DropdownMenuRootProps,

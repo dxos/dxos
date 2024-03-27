@@ -76,7 +76,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                   });
 
                   const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-                  previousObjects = query.objects;
+                  previousObjects = query.objects as Document[];
 
                   batch(() => {
                     removedObjects.forEach((object) => graph.removeEdge({ source: id, target: object.id }));

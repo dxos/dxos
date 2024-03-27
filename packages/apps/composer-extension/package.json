@@ -1,6 +1,6 @@
 {
   "name": "@dxos/composer-extension",
-  "version": "0.4.7",
+  "version": "0.4.9",
   "private": true,
   "description": "DXOS Composer Web Extension",
   "homepage": "https://dxos.org",

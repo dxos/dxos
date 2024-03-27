@@ -1,11 +1,11 @@
 # Class `EldonAgentHostingProviderClient`
-<sub>Declared in [packages/sdk/client/src/services/agent-hosting-provider.ts:36](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/agent-hosting-provider.ts#L36)</sub>
+<sub>Declared in [packages/sdk/client/src/services/agent-hosting-provider.ts:36](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/agent-hosting-provider.ts#L36)</sub>
 
 
 
 
 ## Constructors
-### [constructor(_clientConfig)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/agent-hosting-provider.ts#L38)
+### [constructor(_clientConfig)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/agent-hosting-provider.ts#L38)
 
 
 
@@ -22,7 +22,7 @@ Arguments:
 
 
 ## Methods
-### [createAgent(invitationCode, identityKey)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/agent-hosting-provider.ts#L60)
+### [createAgent(invitationCode, identityKey)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/agent-hosting-provider.ts#L60)
 
 
 
@@ -36,7 +36,7 @@ Arguments:
 `identityKey`: <code>string</code>
 
 
-### [destroyAgent(agentID)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/agent-hosting-provider.ts#L119)
+### [destroyAgent(agentID)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/agent-hosting-provider.ts#L119)
 
 
 
@@ -48,7 +48,7 @@ Arguments:
 `agentID`: <code>string</code>
 
 
-### [getAgent(agentID)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/agent-hosting-provider.ts#L88)
+### [getAgent(agentID)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/agent-hosting-provider.ts#L88)
 
 
 
@@ -60,7 +60,7 @@ Arguments:
 `agentID`: <code>string</code>
 
 
-### [requestInitWithCredentials(req)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/agent-hosting-provider.ts#L50)
+### [requestInitWithCredentials(req)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/agent-hosting-provider.ts#L50)
 
 
 

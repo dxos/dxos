@@ -1,5 +1,5 @@
 # Class `Client`
-<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:34]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:33]()</sub>
 
 
 The Client class encapsulates the core client-side API of DXOS.
@@ -25,7 +25,7 @@ Type: <code>Event&lt;void&gt;</code>
 Emitted after the client is reset and the services have finished restarting.
 
 ### [version]()
-Type: <code>"0.4.7"</code>
+Type: <code>"0.4.9"</code>
 
 The version of this client API.
 

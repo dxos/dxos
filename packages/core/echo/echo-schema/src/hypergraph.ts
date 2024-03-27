@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Reference } from '@dxos/document-model';
+import { type Reference } from '@dxos/echo-db';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -13,9 +13,9 @@ import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
 import { type AutomergeDb, type ItemsUpdatedEvent } from './automerge';
-import { type EchoDatabaseImpl, type EchoDatabase } from './database';
+import { type EchoDatabase, type EchoDatabaseImpl } from './database';
 import { prohibitSignalActions } from './guarded-scope';
-import { type EchoObject, type TypedObject } from './object';
+import { type OpaqueEchoObject, type EchoObject } from './object';
 import {
   Filter,
   Query,
@@ -88,7 +88,7 @@ export class Hypergraph {
   /**
    * Filter by type.
    */
-  query<T extends TypedObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
+  query<T extends OpaqueEchoObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
     const spaces = options?.spaces;
     invariant(!spaces || spaces.every((space) => space instanceof PublicKey), 'Invalid spaces filter');
     return new Query(this._createQueryContext(), Filter.from(filter, options));

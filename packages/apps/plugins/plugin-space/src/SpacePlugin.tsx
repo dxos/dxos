@@ -47,6 +47,7 @@ import {
   PopoverRenameSpace,
   ShareSpaceButton,
   SmallPresence,
+  SmallPresenceLive,
   SpaceMain,
   SpacePresence,
   SpaceSettings,
@@ -301,10 +302,10 @@ export const SpacePlugin = ({
                 return null;
               }
             case 'presence--glyph': {
-              return (
-                <SmallPresence
-                  count={isTypedObject(data.object) ? state.viewersByObject[data.object.id]?.size ?? 0 : 0}
-                />
+              return isTypedObject(data.object) ? (
+                <SmallPresenceLive viewers={state.viewersByObject[data.object.id]} />
+              ) : (
+                <SmallPresence count={0} />
               );
             }
             case 'navbar-start': {
@@ -487,6 +488,7 @@ export const SpacePlugin = ({
                 objects: [sharedSpacesFolder],
               } = defaultSpace.db.query({ key: SHARED });
               const space = await client.spaces.create(intent.data as PropertiesProps);
+              await space.waitUntilReady();
               const folder = new Folder();
               space.properties[Folder.schema.typename] = folder;
               sharedSpacesFolder?.objects.push(folder);

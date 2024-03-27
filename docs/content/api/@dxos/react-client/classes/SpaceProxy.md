@@ -1,11 +1,11 @@
 # Class `SpaceProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/echo/space-proxy.d.ts:9]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/echo/space-proxy.d.ts:11]()</sub>
 
 
 
 
 ## Constructors
-### [constructor(_clientServices, _modelFactory, _data, graph, automergeContext)]()
+### [constructor(_clientServices, _data, graph, automergeContext, \[options\])]()
 
 
 
@@ -16,13 +16,13 @@ Arguments:
 
 `_clientServices`: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)</code>
 
-`_modelFactory`: <code>ModelFactory</code>
-
 `_data`: <code>Space</code>
 
 `graph`: <code>Hypergraph</code>
 
 `automergeContext`: <code>AutomergeContext</code>
+
+`options`: <code>SpaceProxyOptions</code>
 
 
 

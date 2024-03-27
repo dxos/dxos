@@ -5,6 +5,7 @@
 import { linkDeferred } from './type-collection';
 
 export * from './database';
+export * from './guarded-scope';
 export * from './hypergraph';
 export * from './object';
 export * from './proto';
@@ -13,8 +14,12 @@ export * from './serializer';
 export { TypeCollection } from './type-collection';
 export * from './util';
 export * from './automerge';
+export * from './automerge/key-path';
 
 // TODO(dmaretskyi): Until we resolve the circular dependencies lets avoid using "barrel" index.ts files in subdirectories.
 export * from './effect/json-schema';
+export * from './effect/reactive';
+export * from './effect/echo-object-class';
+export { isReactiveProxy } from './effect/proxy';
 
 linkDeferred();

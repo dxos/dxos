@@ -150,6 +150,9 @@ export class Observability {
   }
 
   async close() {
+    if (this._telemetry) {
+      await this._telemetry.close();
+    }
     await this._ctx.dispose();
 
     // TODO(wittjosiah): Remove telemetry, etc. scripts.

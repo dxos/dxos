@@ -3,8 +3,9 @@
 //
 
 import * as S from '@effect/schema/Schema';
+import { type Mutable } from 'effect/Types';
 
-import { Reference } from '@dxos/document-model';
+import { Reference } from '@dxos/echo-db';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -12,12 +13,14 @@ import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/
 
 import { type AutomergeObjectCore } from '../automerge';
 import { getSchemaTypeRefOrThrow } from '../effect/echo-handler';
+import { type EchoReactiveObject } from '../effect/reactive';
 import {
   getReferenceWithSpaceKey,
   immutable,
   isTypedObject,
   type EchoObject,
   type Expando,
+  type OpaqueEchoObject,
   type TypedObject,
 } from '../object';
 import { type Schema } from '../proto';
@@ -30,13 +33,17 @@ export const hasType =
 // TODO(burdon): Operators (EQ, NE, GT, LT, IN, etc.)
 export type PropertyFilter = Record<string, any>;
 
-export type OperatorFilter<T extends EchoObject> = (object: T) => boolean;
+export type OperatorFilter<T extends OpaqueEchoObject> = (object: T) => boolean;
 
-export type FilterSource<T extends EchoObject = EchoObject> = PropertyFilter | OperatorFilter<T> | Filter<T> | string;
+export type FilterSource<T extends OpaqueEchoObject = EchoObject> =
+  | PropertyFilter
+  | OperatorFilter<T>
+  | Filter<T>
+  | string;
 
 // TODO(burdon): Remove class.
 // TODO(burdon): Disambiguate if multiple are defined (i.e., AND/OR).
-export type FilterParams<T extends EchoObject> = {
+export type FilterParams<T extends OpaqueEchoObject> = {
   type?: Reference;
   properties?: Record<string, any>;
   text?: string;
@@ -46,7 +53,7 @@ export type FilterParams<T extends EchoObject> = {
   or?: Filter[];
 };
 
-export class Filter<T extends EchoObject = EchoObject> {
+export class Filter<T extends OpaqueEchoObject = EchoObject> {
   static from<T extends TypedObject>(source?: FilterSource<T>, options?: QueryOptions): Filter<T> {
     if (source === undefined || source === null) {
       return new Filter({}, options);
@@ -85,24 +92,27 @@ export class Filter<T extends EchoObject = EchoObject> {
     }
   }
 
-  static schema(schema: S.Schema<any> | Schema): Filter<Expando> {
-    if (S.isSchema(schema)) {
-      const ref = getSchemaTypeRefOrThrow(schema);
-      return new Filter({
-        type: ref,
-      });
-    } else {
-      const ref = getReferenceWithSpaceKey(schema);
-      invariant(ref, 'Invalid schema; check persisted in the database.');
-      return new Filter({
-        type: ref,
-      });
-    }
+  static schema<T>(
+    schema: S.Schema<T>,
+    filter?: Record<string, any> | OperatorFilter<any>,
+  ): Filter<EchoReactiveObject<Mutable<T>>>;
+
+  static schema(schema: Schema, filter?: Record<string, any> | OperatorFilter<any>): Filter<Expando>;
+  static schema(
+    schema: S.Schema<any> | Schema,
+    filter?: Record<string, any> | OperatorFilter<any>,
+  ): Filter<OpaqueEchoObject> {
+    const typeReference = S.isSchema(schema) ? getSchemaTypeRefOrThrow(schema) : getReferenceWithSpaceKey(schema);
+    invariant(typeReference, 'Invalid schema; check persisted in the database.');
+    return this._fromTypeWithPredicate(typeReference, filter);
   }
 
   static typename(typename: string, filter?: Record<string, any> | OperatorFilter<any>): Filter<any> {
     const type = Reference.fromLegacyTypename(typename);
+    return this._fromTypeWithPredicate(type, filter);
+  }
 
+  private static _fromTypeWithPredicate(type: Reference, filter?: Record<string, any> | OperatorFilter<any>) {
     switch (typeof filter) {
       case 'function':
         return new Filter({ type, predicate: filter as any });

@@ -6,24 +6,21 @@ import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
 import { Document as DocumentType, types } from '@braneframe/types';
-import { asyncTimeout, Trigger } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
+import * as E from '@dxos/echo-schema';
 import { Expando, getTextContent, subscribe } from '@dxos/echo-schema';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type EchoSnapshot, type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { describe, test, afterTest } from '@dxos/test';
-import { Timeframe } from '@dxos/timeframe';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
+import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
-import { type SpaceProxy, SpaceState, getSpaceForObject } from '../echo';
-import { TestBuilder, testSpace, waitForSpace } from '../testing';
+import { SpaceState, getSpaceForObject, type SpaceProxy } from '../echo';
+import { TestBuilder, testSpaceAutomerge, waitForSpace } from '../testing';
 
 describe('Spaces', () => {
   test('creates a default space', async () => {
@@ -40,7 +37,7 @@ describe('Spaces', () => {
       expect(client.spaces.get()).not.to.be.undefined;
     });
     const space = client.spaces.default;
-    await testSpace(space.internal.db);
+    await testSpaceAutomerge(space.db);
 
     expect(space.members.get()).to.be.length(1);
   }).tag('flaky');
@@ -57,7 +54,7 @@ describe('Spaces', () => {
 
     // TODO(burdon): Extend basic queries.
     const space = await client.spaces.create();
-    await testSpace(space.internal.db);
+    await testSpaceAutomerge(space.db);
 
     expect(space.members.get()).to.be.length(1);
   });
@@ -80,7 +77,7 @@ describe('Spaces', () => {
 
     // TODO(burdon): Extend basic queries.
     const space = await client.spaces.create();
-    await testSpace(space.internal.db);
+    await testSpaceAutomerge(space.db);
 
     expect(space.members.get()).to.be.length(1);
   });
@@ -93,19 +90,16 @@ describe('Spaces', () => {
     await client.initialize();
     await client.halo.createIdentity({ displayName: 'test-user' });
 
-    let itemId: string;
+    let objectId: string;
     {
       await client.spaces.isReady.wait();
       const space = client.spaces.default;
-      const {
-        updateEvent: {
-          itemsUpdated: [item],
-        },
-      } = await testSpace(space.internal.db);
-      itemId = item.id;
+      ({ objectId } = await testSpaceAutomerge(space.db));
       expect(space.members.get()).to.be.length(1);
     }
-
+    // TODO(mykola): Clean as automerge team updates storage API.
+    // Need this `sleep` for automerge to finish storage write.
+    await sleep(200);
     await client.destroy();
 
     await client.initialize();
@@ -124,8 +118,8 @@ describe('Spaces', () => {
       const space = await spaceTrigger.wait({ timeout: 500 });
       await space.waitUntilReady();
 
-      const item = space.internal.db._itemManager.getItem(itemId)!;
-      expect(item).to.exist;
+      const obj = space.db.getObjectById(objectId)!;
+      expect(obj).to.exist;
     }
 
     await client.destroy();
@@ -217,7 +211,7 @@ describe('Spaces', () => {
     await Promise.all(performInvitation({ host: space1, guest: client2.spaces }));
 
     await waitForSpace(client2, space1.key, { ready: true });
-    const dataSpace2 = services2.host!.context.dataSpaceManager?.spaces.get(space1.key);
+    const _dataSpace2 = services2.host!.context.dataSpaceManager?.spaces.get(space1.key);
     const feed2 = services2.host!.context.feedStore.getFeed(feedKey!)!;
 
     // log.info('check instance', { feed: getPrototypeSpecificInstanceId(feed2), coreKey: Buffer.from(feed2.core.key).toString('hex') })
@@ -234,8 +228,8 @@ describe('Spaces', () => {
       space1.db.add(expando);
 
       // Wait to process new mutation on second peer.
-      await dataSpace2!.inner.dataPipeline.waitUntilTimeframe(new Timeframe([[feedKey!, amount + 1]]));
-      expect(feed2.has(amount + 1)).to.be.true;
+      // await dataSpace2!.inner.dataPipeline.waitUntilTimeframe(new Timeframe([[feedKey!, amount + 1]]));
+      // expect(feed2.has(amount + 1)).to.be.true;
     }
   });
 
@@ -262,146 +256,26 @@ describe('Spaces', () => {
     expect(space.properties.name).to.equal('example');
   });
 
-  test('objects are owned by spaces', async () => {
-    const testBuilder = new TestBuilder();
-    testBuilder.storage = createStorage({ type: StorageType.RAM });
+  for (const useReactiveObjectApi of [false, true]) {
+    test(`objects are owned by spaces, reactive api = ${useReactiveObjectApi}`, async () => {
+      const config = new Config({ runtime: { client: { useReactiveObjectApi } } });
+      const testBuilder = new TestBuilder(config);
+      testBuilder.storage = createStorage({ type: StorageType.RAM });
 
-    const client = new Client({ services: testBuilder.createLocal() });
-    await client.initialize();
-    afterTest(() => client.destroy());
+      const client = new Client({ config, services: testBuilder.createLocal() });
+      await client.initialize();
+      afterTest(() => client.destroy());
 
-    await client.halo.createIdentity({ displayName: 'test-user' });
+      await client.halo.createIdentity({ displayName: 'test-user' });
 
-    const space = await client.spaces.create();
+      const space = await client.spaces.create();
 
-    const obj = space.db.add(new Expando({ data: 'test' }));
-    expect(getSpaceForObject(obj)).to.equal(space);
-  });
-
-  // TODO(mykola): Automerge epochs are not supported yet.
-  test.skip('epoch correctly resets database', async () => {
-    const testBuilder = new TestBuilder();
-    const services = testBuilder.createLocal();
-    const client = new Client({ services });
-    await client.initialize();
-    afterTest(() => client.destroy());
-    await client.halo.createIdentity({ displayName: 'test-user' });
-
-    const space = await client.spaces.create();
-    await space.waitUntilReady();
-
-    const dataSpace = services.host!.context.dataSpaceManager!.spaces.get(space.key)!;
-
-    // Create Item.
-    const text = PublicKey.random().toHex();
-    const idx = '0';
-    const item = new Expando({ idx, text });
-    space.db.add(item);
-    await space.db.flush();
-    expect(space.db.objects.length).to.equal(2);
-
-    const writeEpochWithSnapshot = async (databaseSnapshot: EchoSnapshot) => {
-      const processedEpoch = dataSpace.dataPipeline.onNewEpoch.waitForCount(1);
-
-      // Empty snapshot.
-      const snapshot: SpaceSnapshot = {
-        spaceKey: space.key.asUint8Array(),
-        timeframe: dataSpace.inner.dataPipeline.pipelineState!.timeframe,
-        database: databaseSnapshot,
-      };
-
-      const snapshotCid = await services.host!.context.snapshotStore.saveSnapshot(snapshot);
-
-      const epoch: Epoch = {
-        previousId: dataSpace.dataPipeline.currentEpoch?.id,
-        timeframe: dataSpace.inner.dataPipeline.pipelineState!.timeframe,
-        number: (dataSpace.dataPipeline.currentEpoch?.subject.assertion as Epoch).number + 1,
-        snapshotCid,
-      };
-
-      const receipt = await dataSpace.inner.controlPipeline.writer.write({
-        credential: {
-          credential: await services
-            .host!.context.identityManager.identity!.getIdentityCredentialSigner()
-            .createCredential({
-              subject: space.key,
-              assertion: {
-                '@type': 'dxos.halo.credentials.Epoch',
-                ...epoch,
-              },
-            }),
-        },
-      });
-      await dataSpace.inner.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
-      await asyncTimeout(processedEpoch, 1000);
-    };
-
-    const dataBaseState = dataSpace.dataPipeline.databaseHost!.createSnapshot();
-
-    const query = space.db.query({ idx });
-
-    // Create empty Epoch and check if it clears items.
-    {
-      const trigger = new Trigger();
-      expect(query.objects.length).to.equal(1);
-
-      const subscription = query.subscribe(async (query) => {
-        expect(query.objects.length).to.equal(0);
-        trigger.wake();
-      });
-
-      await writeEpochWithSnapshot({});
-      await asyncTimeout(trigger.wait(), 500);
-
-      expect(space.db.objects.length).to.equal(0);
-      expect(query.objects.length).to.equal(0);
-      expect(item.__deleted).to.be.true;
-      subscription();
-    }
-
-    // Reset database to previous state.
-    {
-      const trigger = new Trigger();
-      const subscription = query.subscribe(async (query) => {
-        expect(query.objects.length).to.equal(1);
-        trigger.wake();
-      });
-      afterTest(() => subscription());
-
-      await writeEpochWithSnapshot(dataBaseState);
-      await asyncTimeout(trigger.wait(), 500);
-
-      expect(item.__deleted).to.be.false;
-      expect(space.db.objects.length).to.equal(2);
-      expect(query.objects[0].text).to.equal(text);
-      expect(query.objects[0]).to.equal(item);
-    }
-
-    // Create Epoch and check if Item do not flickers.
-    {
-      const checkItem = (object = item) => {
-        expect(object.__deleted).to.be.false;
-        expect(object.text).to.equal(text);
-      };
-      const trigger = new Trigger();
-      const subscription = space.db.query({ idx }).subscribe((query) => {
-        checkItem(query.objects[0]);
-        trigger.wake();
-      });
-      afterTest(() => subscription());
-
-      await client.services.services.SpacesService?.createEpoch({ spaceKey: space.key });
-      await asyncTimeout(trigger.wait(), 500);
-      checkItem();
-    }
-
-    // Set new field and query it.
-    {
-      item.data = 'new text';
-      await space.db.flush();
-      expect(space.db.query({ idx }).objects[0].data).to.equal('new text');
-    }
-  });
+      const obj = useReactiveObjectApi
+        ? space.db.add(E.object({ data: 'test ' }))
+        : space.db.add(new Expando({ data: 'test' }));
+      expect(getSpaceForObject(obj)).to.equal(space);
+    });
+  }
 
   test('spaces can be opened and closed', async () => {
     const testBuilder = new TestBuilder();

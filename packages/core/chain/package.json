@@ -1,6 +1,6 @@
 {
   "name": "@dxos/chain",
-  "version": "0.4.7",
+  "version": "0.4.9",
   "private": false,
   "description": "AI chain.",
   "homepage": "https://github.com/dxos/dxos/tree/master/packages/protocols",

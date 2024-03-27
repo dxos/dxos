@@ -35,6 +35,12 @@ Type: <code>IdentityService</code>
 
 
 
+### [IndexService]()
+Type: <code>IndexService</code>
+
+
+
+
 ### [InvitationsService]()
 Type: <code>InvitationsService</code>
 

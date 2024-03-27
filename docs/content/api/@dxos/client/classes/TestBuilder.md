@@ -1,11 +1,11 @@
 # Class `TestBuilder`
-<sub>Declared in [packages/sdk/client/src/testing/test-builder.ts:51](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/testing/test-builder.ts#L51)</sub>
+<sub>Declared in [packages/sdk/client/src/testing/test-builder.ts:50](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/testing/test-builder.ts#L50)</sub>
 
 
 Client builder supports different configurations, incl. signaling, transports, storage.
 
 ## Constructors
-### [constructor(\[config\], _modelFactory, signalManagerContext, transport)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/testing/test-builder.ts#L60)
+### [constructor(\[config\], signalManagerContext, transport)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/testing/test-builder.ts#L59)
 
 
 
@@ -16,8 +16,6 @@ Arguments:
 
 `config`: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
 
-`_modelFactory`: <code>ModelFactory</code>
-
 `signalManagerContext`: <code>MemorySignalManagerContext</code>
 
 `transport`: <code>TransportKind</code>
@@ -25,29 +23,29 @@ Arguments:
 
 
 ## Properties
-### [_transport](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/testing/test-builder.ts#L57)
+### [_transport](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/testing/test-builder.ts#L56)
 Type: <code>TransportKind</code>
 
 
 
-### [config](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/testing/test-builder.ts#L54)
+### [config](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/testing/test-builder.ts#L53)
 Type: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
 
 
 
-### [signalManagerContext](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/testing/test-builder.ts#L63)
+### [signalManagerContext](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/testing/test-builder.ts#L61)
 Type: <code>MemorySignalManagerContext</code>
 
 
 
-### [storage](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/testing/test-builder.ts#L56)
+### [storage](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/testing/test-builder.ts#L55)
 Type: <code>Storage</code>
 
 
 
 
 ## Methods
-### [createClientServer(host)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/testing/test-builder.ts#L145)
+### [createClientServer(host)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/testing/test-builder.ts#L141)
 
 
 Create client/server.
@@ -59,7 +57,7 @@ Arguments:
 `host`: <code>ClientServicesHost</code>
 
 
-### [createClientServicesHost(\[runtimeParams\])](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/testing/test-builder.ts#L116)
+### [createClientServicesHost(\[runtimeParams\])](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/testing/test-builder.ts#L114)
 
 
 Create backend service handlers.
@@ -71,7 +69,7 @@ Arguments:
 `runtimeParams`: <code>ServiceContextRuntimeParams</code>
 
 
-### [createLocal()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/testing/test-builder.ts#L131)
+### [createLocal()](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/testing/test-builder.ts#L128)
 
 
 Create local services host.
@@ -83,7 +81,7 @@ Arguments: none
 
 
 
-### [destroy()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/testing/test-builder.ts#L161)
+### [destroy()](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/testing/test-builder.ts#L157)
 
 
 

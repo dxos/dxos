@@ -1,0 +1,40 @@
+diff --git a/index.js b/index.js
+index 53e1aedaa124ce680bc3f804213c87fb6f291697..b8a0b9e01fafe26882a96b57b4eef79c4f6db1fb 100644
+--- a/index.js
++++ b/index.js
+@@ -32,21 +32,24 @@ module.exports = function (dbname, xopts) {
+   } else {
+     db = idb
+   }
+-  return function (name, opts) {
+-    if (typeof name === 'object') {
+-      opts = name
+-      name = opts.name
+-    }
+-
+-    if (!opts) opts = {}
+-    opts.name = name
+-
+-    return new Store(Object.assign({ db: getdb }, xopts, opts))
+-  }
+   function getdb (cb) {
+     if (db) nextTick(function () { cb(db) })
+     else dbqueue.push(cb)
+   }
++  return {
++    create: function (name, opts) {
++      if (typeof name === 'object') {
++        opts = name
++        name = opts.name
++      }
++
++      if (!opts) opts = {}
++      opts.name = name
++
++      return new Store(Object.assign({ db: getdb }, xopts, opts))
++    },
++    getdb
++  }
+ }
+ 
+ function Store (opts) {

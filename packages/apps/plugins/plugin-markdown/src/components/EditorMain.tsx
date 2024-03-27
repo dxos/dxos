@@ -6,22 +6,24 @@ import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect } from 'react';
 
 import { LayoutAction, parseFileManagerPlugin, useResolvePlugin, useIntentResolver } from '@dxos/app-framework';
-import { useRefCallback } from '@dxos/react-async';
-import { useThemeContext, useTranslation } from '@dxos/react-ui';
+import { useThemeContext, useTranslation, useRefCallback } from '@dxos/react-ui';
 import {
   type Comment,
+  type DNDOptions,
   type TextEditorProps,
   TextEditor,
   Toolbar,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
+  dropFile,
   editorFillLayoutRoot,
   editorFillLayoutEditor,
   focusComment,
   useComments,
   useActionHandler,
   useFormattingState,
+  processAction,
 } from '@dxos/react-ui-editor';
 import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -51,20 +53,18 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   const { themeMode } = useThemeContext();
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
 
-  const { ref: editorRef, value: view } = useRefCallback<EditorView>();
-  useComments(view, id, comments);
-  useTest(view);
+  const { refCallback: editorRefCallback, value: editorView } = useRefCallback<EditorView>();
 
-  // Toolbar actions.
-  const handleAction = useActionHandler(view);
+  useComments(editorView, id, comments);
+  useTest(editorView);
 
   // Focus comment.
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
     switch (action) {
       case LayoutAction.FOCUS: {
         const object = data?.object;
-        if (view) {
-          focusComment(view, object);
+        if (editorView) {
+          focusComment(editorView, object);
           return { data: true };
         }
         break;
@@ -72,10 +72,21 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
     }
   });
 
+  // Toolbar actions.
+  const handleAction = useActionHandler(editorView);
   const [formattingState, formattingObserver] = useFormattingState();
+
+  const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
+    const info = await fileManagerPlugin?.provides.file.upload?.(files[0]);
+    if (info) {
+      processAction(view, { type: 'image', data: info.url });
+    }
+  };
+
   const extensions = useMemo(() => {
     return [
       _extensions,
+      fileManagerPlugin && dropFile({ onDrop: handleDrop }),
       formattingObserver,
       createBasicExtensions({ readonly, placeholder: t('editor placeholder'), scrollPastEnd: true }),
       createMarkdownExtensions({ themeMode }),
@@ -90,7 +101,7 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
         },
       }),
     ].filter(nonNullable);
-  }, [_extensions, formattingObserver, themeMode]);
+  }, [_extensions, formattingObserver, readonly, themeMode]);
 
   return (
     <>
@@ -133,7 +144,7 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
             !toolbar && 'border-bs separator-separator',
           )}
           dataTestId='composer.markdownRoot'
-          ref={editorRef}
+          ref={editorRefCallback}
         />
       </div>
     </>

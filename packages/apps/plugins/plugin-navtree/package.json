@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-navtree",
-  "version": "0.4.7",
+  "version": "0.4.9",
   "description": "DXOS Surface plugin for a tree view visualization of the graph.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -38,7 +38,7 @@
     "@dxos/react-ui-navtree": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.5.1",
+    "@preact/signals-core": "^1.6.0",
     "date-fns": "^3.3.1"
   },
   "devDependencies": {

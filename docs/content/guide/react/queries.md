@@ -40,7 +40,7 @@ root.render(
 The API definition of `useQuery` is below. It returns a generic `TypedObject` type which supports the ability to set and read arbitrary keys and values. See [below](#typed-queries) for how to add type safety.
 
 :::apidoc[@dxos/react-client.useQuery]
-### [useQuery(\[space\], \[filter\], \[options\], \[deps\])](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/echo/useQuery.ts#L17)
+### [useQuery(\[space\], \[filter\], \[options\], \[deps\])](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/react-client/src/echo/useQuery.ts#L17)
 
 Create subscription.
 

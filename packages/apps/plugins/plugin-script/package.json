@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-script",
-  "version": "0.4.7",
+  "version": "0.4.9",
   "description": "Braneframe notebook plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -45,9 +45,8 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
-    "@dxos/text-model": "workspace:*",
     "@lezer/common": "^1.2.1",
-    "@preact/signals-core": "^1.5.1",
+    "@preact/signals-core": "^1.6.0",
     "codemirror": "^6.0.1",
     "esbuild-wasm": "^0.16.14",
     "lodash.get": "^4.4.2"

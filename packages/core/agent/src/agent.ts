@@ -7,6 +7,7 @@ import { mkdirSync, rmSync } from 'node:fs';
 import * as http from 'node:http';
 import { dirname } from 'node:path';
 
+import { Trigger } from '@dxos/async';
 import { type Config, Client, PublicKey } from '@dxos/client';
 import { type ClientServices, type ClientServicesProvider, fromHost } from '@dxos/client/services';
 import { Context } from '@dxos/context';
@@ -48,6 +49,7 @@ export class Agent {
   private _client?: Client;
   private _clientServices?: ClientServicesProvider;
   private _services: Service[] = [];
+  private _httpServer?: http.Server;
 
   constructor(private readonly _options: AgentOptions) {
     invariant(this._options);
@@ -104,9 +106,9 @@ export class Agent {
       const { path } = parseAddress(this._options.protocol.socket);
       mkdirSync(dirname(path), { recursive: true });
       rmSync(path, { force: true });
-      const httpServer = http.createServer();
-      httpServer.listen(path);
-      const socketServer = createServer(this._clientServices, { server: httpServer });
+      this._httpServer = http.createServer();
+      this._httpServer.listen(path);
+      const socketServer = createServer(this._clientServices, { server: this._httpServer });
       await socketServer.open();
       this._services.push(socketServer);
       log.info('listening', { path });
@@ -159,6 +161,11 @@ export class Agent {
     await this._clientServices?.close(new Context());
     this._client = undefined;
     this._clientServices = undefined;
+    if (this._httpServer) {
+      const httpServerClosed = new Trigger();
+      this._httpServer.close(() => httpServerClosed.wake());
+      await httpServerClosed.wait({ timeout: 5_000 });
+    }
 
     log('stopped');
   }

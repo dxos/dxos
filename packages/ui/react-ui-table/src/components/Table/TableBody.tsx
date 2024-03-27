@@ -12,13 +12,13 @@ import { Cell } from '../Cell/Cell';
 
 const TABLE_BODY_NAME = 'TableBody';
 
-type TableBodyProps<TData extends RowData> = {
-  rows: Row<TData>[];
+type TableBodyProps = {
+  rows: Row<RowData>[];
 };
 
-const TableBody = <TData extends RowData>({ rows }: TableBodyProps<TData>) => {
-  const { table, keyAccessor, currentDatum, debug, expand, isGrid, onDatumClick } =
-    useTableContext<TData>(TABLE_BODY_NAME);
+const TableBody = ({ rows }: TableBodyProps) => {
+  const { table, keyAccessor, currentDatum, debug, expand, isGrid, onDatumClick } = useTableContext();
+
   const rowSelection = table.getState().rowSelection;
   const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
   const canBeCurrent = !isGrid && !!onDatumClick;

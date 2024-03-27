@@ -21,6 +21,7 @@ const ChainMain: FC<{ chain: ChainType }> = ({ chain }) => {
 
   const handleSelectPreset = (preset: Preset) => {
     chain.title = preset.title;
+    chain.prompts.forEach((p) => space.db.remove(p));
     chain.prompts = [preset.prompt()];
   };
 

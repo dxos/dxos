@@ -78,7 +78,7 @@ describe('Queries', () => {
     }
 
     {
-      const { objects } = db.query((object) => object.label === 'red' || object.label === 'green');
+      const { objects } = db.query((object: TypedObject) => object.label === 'red' || object.label === 'green');
       expect(objects).to.have.length(5);
     }
   });

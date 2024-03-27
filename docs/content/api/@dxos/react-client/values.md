@@ -38,7 +38,7 @@ Type: unique symbol
 
 
 
-### [`ClientContext`](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/client/ClientContext.tsx#L37)
+### [`ClientContext`](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/react-client/src/client/ClientContext.tsx#L37)
 Type: Context&lt;[ClientContextProps](/api/@dxos/react-client/types/ClientContextProps) | undefined&gt;
 
 
@@ -54,7 +54,7 @@ Type: string
 
 
 ### [`DXOS_VERSION`]()
-Type: "0.4.7"
+Type: "0.4.9"
 
 
 

@@ -4,6 +4,7 @@
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import {
   getCoreRowModel,
+  getSortedRowModel,
   useReactTable,
   type ColumnSizingInfoState,
   type GroupingState,
@@ -12,16 +13,16 @@ import {
   type OnChangeFn,
   type RowSelectionState,
   getGroupedRowModel,
+  getExpandedRowModel,
 } from '@tanstack/react-table';
 import { useVirtualizer, type VirtualizerOptions } from '@tanstack/react-virtual';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 
-import { debounce } from '@dxos/async';
 import { log } from '@dxos/log';
-import { useDefaultValue } from '@dxos/react-ui';
+import { useDefaultValue, useOnTransition } from '@dxos/react-ui';
 
 import { TableBody } from './TableBody';
-import { TableProvider as UntypedTableProvider, type TypedTableProvider, useTableContext } from './TableContext';
+import { type TypedTableProvider, TableProvider as UntypedTableProvider, useTableContext } from './TableContext';
 import { TableFooter } from './TableFooter';
 import { TableHead } from './TableHead';
 import { type TableProps } from './props';
@@ -37,6 +38,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     debug,
     onDataSelectionChange,
     getScrollElement,
+    pinLastRow,
   } = props;
 
   const columns = useDefaultValue(props.columns, []);
@@ -44,9 +46,14 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
 
   const TableProvider = UntypedTableProvider as TypedTableProvider<TData>;
 
+  const [columnsInitialised, setColumnsInitialised] = useState(false);
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
 
   useEffect(() => {
+    if (columnsInitialised) {
+      return;
+    }
+
     setColumnSizing(
       columns
         .filter((column) => !!column.size && (column as any).prop !== undefined)
@@ -55,9 +62,15 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
           return state;
         }, {}),
     );
+
+    setColumnsInitialised(true);
   }, [columns, setColumnSizing]);
 
   const [columnSizingInfo, setColumnSizingInfo] = useState<ColumnSizingInfoState>({} as ColumnSizingInfoState);
+
+  // Notify on column resize.
+  const notifyColumnResize = useCallback(() => onColumnResize?.(columnSizing), [onColumnResize, columnSizing]);
+  useOnTransition(columnSizingInfo.isResizingColumn, (v) => typeof v === 'string', false, notifyColumnResize);
 
   const [rowSelection = {}, setRowSelection] = useControllableState({
     prop: props.rowSelection,
@@ -113,6 +126,8 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
 
     // Rows
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
 
     // Grouping
     getGroupedRowModel: grouping.length > 1 ? getGroupedRowModel() : undefined,
@@ -123,23 +138,28 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
 
     onRowSelectionChange: handleRowSelectionChange,
 
+    enableSorting: true,
+    enableColumnPinning: true,
+
     // Debug
     debugTable: debug,
   });
-
-  const onColumnResizeDebounced = onColumnResize && debounce(onColumnResize, 1_000);
 
   useEffect(() => {
     onDataSelectionChange?.(Object.keys(rowSelection).map((id) => table.getRowModel().rowsById[id].original));
   }, [onDataSelectionChange, rowSelection, table]);
 
   useEffect(() => {
-    const shouldTriggerResize = columnSizingInfo.columnSizingStart?.length === 0;
-
-    if (shouldTriggerResize) {
-      onColumnResizeDebounced?.(table.getState().columnSizing);
+    if (!pinLastRow) {
+      return;
     }
-  }, [columnSizingInfo, onColumnResizeDebounced, table]);
+
+    // Clear row pinning
+    table.resetRowPinning();
+
+    const rows = table.getRowModel().rows;
+    rows[rows.length - 1].pin('bottom');
+  }, [pinLastRow, table, data]);
 
   // Create additional expansion column if all columns have fixed width.
   const expand = false; // columns.map((column) => column.size).filter(Boolean).length === columns?.length;
@@ -166,8 +186,12 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
  */
 const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
   const { debug, classNames, getScrollElement, role, footer, grouping, fullWidth } = props;
-  const { table } = useTableContext<TData>('TableImpl');
-  const { rows } = table.getRowModel();
+  const { table } = useTableContext();
+
+  const centerRows = table.getCenterRows();
+  const bottomRows = table.getBottomRows();
+
+  const rows = [...centerRows, ...bottomRows];
 
   if (debug) {
     return (
@@ -177,6 +201,7 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
     );
   }
 
+  const virtualisable = getScrollElement !== undefined;
   const isResizingColumn = table.getState().columnSizingInfo.isResizingColumn;
 
   return (
@@ -188,7 +213,7 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
       <TableHead />
 
       {grouping?.length !== 0 ? (
-        getScrollElement ? (
+        virtualisable ? (
           isResizingColumn ? (
             <MemoizedVirtualisedTableContent getScrollElement={getScrollElement} />
           ) : (
@@ -209,17 +234,18 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
 const VirtualizedTableContent = ({
   getScrollElement,
 }: Pick<VirtualizerOptions<Element, Element>, 'getScrollElement'>) => {
-  const {
-    table: { getRowModel },
-  } = useTableContext('VirtualizedTableContent');
+  const { table } = useTableContext();
 
-  const rows = getRowModel().rows;
+  const centerRows = table.getCenterRows();
+  const pinnedRows = table.getBottomRows();
+
+  const rows = [...centerRows, ...pinnedRows];
 
   const { getTotalSize, getVirtualItems } = useVirtualizer({
     getScrollElement,
     count: rows.length,
-    overscan: 4,
-    estimateSize: () => 33,
+    overscan: 8,
+    estimateSize: () => 40,
   });
 
   const virtualRows = getVirtualItems();
@@ -249,13 +275,14 @@ const VirtualizedTableContent = ({
   );
 };
 
-export const MemoizedVirtualisedTableContent = React.memo(VirtualizedTableContent) as typeof VirtualizedTableContent;
+export const MemoizedVirtualisedTableContent = React.memo(VirtualizedTableContent);
 
 const GroupedTableContent = () => {
   const {
     table: { getGroupedRowModel, getHeaderGroups, getState },
     debug,
-  } = useTableContext('GroupedTableContent');
+  } = useTableContext();
+
   return (
     <>
       {getGroupedRowModel().rows.map((row, i) => {

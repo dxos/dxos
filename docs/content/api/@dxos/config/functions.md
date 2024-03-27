@@ -2,7 +2,7 @@
 title: Functions
 ---
 # Functions
-### [Defaults(basePath)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/config/src/loaders/index.ts#L60)
+### [Defaults(basePath)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/config/src/loaders/index.ts#L60)
 
 
 JSON config.
@@ -14,7 +14,7 @@ Arguments:
 `basePath`: <code>string</code>
 
 
-### [Dynamics()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/config/src/loaders/index.ts#L47)
+### [Dynamics()](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/config/src/loaders/index.ts#L47)
 
 
 Provided dynamically by server.
@@ -26,7 +26,7 @@ Arguments: none
 
 
 
-### [Envs(basePath)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/config/src/loaders/index.ts#L52)
+### [Envs(basePath)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/config/src/loaders/index.ts#L52)
 
 
 ENV variable (key/value) map.
@@ -38,7 +38,7 @@ Arguments:
 `basePath`: <code>string</code>
 
 
-### [Local()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/config/src/loaders/index.ts#L42)
+### [Local()](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/config/src/loaders/index.ts#L42)
 
 
 Development config.
@@ -50,7 +50,7 @@ Arguments: none
 
 
 
-### [Profile(profile)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/config/src/loaders/index.ts#L33)
+### [Profile(profile)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/config/src/loaders/index.ts#L33)
 
 
 Profile
@@ -62,7 +62,7 @@ Arguments:
 `profile`: <code>string</code>
 
 
-### [SaveConfig(_)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/config/src/savers/index.ts#L7)
+### [SaveConfig(_)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/config/src/savers/index.ts#L7)
 
 
 
@@ -74,7 +74,7 @@ Arguments:
 `_`: <code>[Config](/api/@dxos/config/interfaces/Config)</code>
 
 
-### [Storage()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/config/src/loaders/index.ts#L66)
+### [Storage()](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/config/src/loaders/index.ts#L66)
 
 
 Load config from storage.
@@ -86,7 +86,7 @@ Arguments: none
 
 
 
-### [definitions(options)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/config/src/plugin/definitions.ts#L19)
+### [definitions(options)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/config/src/plugin/definitions.ts#L19)
 
 
 
@@ -98,7 +98,7 @@ Arguments:
 `options`: <code>[ConfigPluginOpts](/api/@dxos/config/interfaces/ConfigPluginOpts)</code>
 
 
-### [mapFromKeyValues(spec, values)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/config/src/config.ts#L33)
+### [mapFromKeyValues(spec, values)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/config/src/config.ts#L33)
 
 
 Maps the given objects onto a flattened set of (key x values).
@@ -119,7 +119,7 @@ Arguments:
 `values`: <code>Record&lt;string, any&gt;</code>
 
 
-### [mapToKeyValues(spec, values)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/config/src/config.ts#L79)
+### [mapToKeyValues(spec, values)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/config/src/config.ts#L79)
 
 
 Maps the given flattend set of (key x values) onto a JSON object.
@@ -133,7 +133,7 @@ Arguments:
 `values`: <code>any</code>
 
 
-### [validateConfig(config)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/config/src/config.ts#L101)
+### [validateConfig(config)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/config/src/config.ts#L101)
 
 
 Validate config object.

@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-table",
-  "version": "0.4.7",
+  "version": "0.4.9",
   "description": "Table surface plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -30,7 +30,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.5.1"
+    "@preact/signals-core": "^1.6.0"
   },
   "devDependencies": {
     "@braneframe/plugin-client": "workspace:*",

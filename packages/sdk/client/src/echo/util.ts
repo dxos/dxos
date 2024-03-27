@@ -4,22 +4,15 @@
 //
 
 import { type Space } from '@dxos/client-protocol';
-import { DocumentModel } from '@dxos/document-model';
-import { type EchoObject, getDatabaseFromObject } from '@dxos/echo-schema';
-import { ModelFactory } from '@dxos/model-factory';
-import { TextModel } from '@dxos/text-model';
+import { getDatabaseFromObject, type OpaqueEchoObject } from '@dxos/echo-schema';
 
 import { SpaceProxy } from './space-proxy';
-
-export const createDefaultModelFactory = () => {
-  return new ModelFactory().registerModel(DocumentModel).registerModel(TextModel);
-};
 
 /**
  * @deprecated
  */
 // TODO(burdon): Normalize API getters.
-export const getSpaceForObject = (object: EchoObject): Space | undefined => {
+export const getSpaceForObject = (object: OpaqueEchoObject): Space | undefined => {
   const db = getDatabaseFromObject(object);
   const key = db?.spaceKey;
   if (key) {

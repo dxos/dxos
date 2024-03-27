@@ -87,7 +87,7 @@ Type: <code>boolean</code>
 
 
 ### [__info]()
-Type: <code>string</code>
+Type: <code>never</code>
 
 
 
@@ -118,7 +118,7 @@ ID accessor.
 
 
 
-Returns: <code>string</code>
+Returns: <code>void</code>
 
 Arguments: 
 

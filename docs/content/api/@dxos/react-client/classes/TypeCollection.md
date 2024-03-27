@@ -71,7 +71,7 @@ Returns: <code>boolean</code>
 
 Arguments: 
 
-`schema`: <code>Schema&lt;any, any, never&gt;</code>
+`schema`: <code>Schema&lt;T, T, never&gt;</code>
 
 
 ### [link()]()
@@ -107,7 +107,7 @@ Returns: <code>this</code>
 
 Arguments: 
 
-`schemaList`: <code>Schema&lt;any, any, never&gt;[]</code>
+`schemaList`: <code>Schema&lt;T, T, never&gt;[]</code>
 
 
 ### [registerPrototype(proto, schema)]()

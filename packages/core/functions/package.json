@@ -1,6 +1,6 @@
 {
   "name": "@dxos/functions",
-  "version": "0.4.7",
+  "version": "0.4.9",
   "description": "Functions SDK and runtime.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -27,7 +27,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.5.1",
+    "@preact/signals-core": "^1.6.0",
     "cron": "^3.1.6",
     "express": "^4.17.1",
     "get-port-please": "^3.1.1"

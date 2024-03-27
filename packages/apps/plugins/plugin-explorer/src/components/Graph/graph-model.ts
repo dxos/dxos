@@ -37,7 +37,7 @@ export class SpaceGraphModel extends GraphModel<TypedObject> {
   open(space: Space, objectId?: string) {
     if (!this._subscription) {
       // TODO(burdon): Filter.
-      const query = space.db.query((object) => object.__typename !== 'braneframe.Folder');
+      const query = space.db.query((object: TypedObject) => object.__typename !== 'braneframe.Folder');
 
       this._subscription = query.subscribe(({ objects }) => {
         this._objects = objects;

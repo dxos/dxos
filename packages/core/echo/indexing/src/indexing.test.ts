@@ -7,7 +7,7 @@ import { expect } from 'chai';
 
 import { Event, Trigger } from '@dxos/async';
 import { GraphQueryContext, Query, type Filter, type QuerySource } from '@dxos/echo-schema';
-import * as R from '@dxos/echo-schema/schema';
+import * as R from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { describe, test } from '@dxos/test';
 
@@ -94,7 +94,6 @@ const createQuery = (indexes: Index<ObjectType>[], filter: Filter): Query => {
 describe('indexing', () => {
   test('basic', async () => {
     const Contact = S.struct({
-      id: S.string,
       name: S.string,
       age: S.optional(S.number),
       address: S.optional(
@@ -103,7 +102,7 @@ describe('indexing', () => {
           city: S.string,
         }),
       ),
-    });
+    }).pipe(R.echoObject('Contact', '0.1.0'));
     const typenameIndex = createTypenameIndex();
     // TODO(mykola): Fix Filter to accept Schema.
     const query = createQuery([typenameIndex], { type: Contact } as any as Filter);
@@ -117,10 +116,9 @@ describe('indexing', () => {
       }
     }, true);
 
-    type Contact = S.Schema.To<typeof Contact>;
+    type Contact = S.Schema.Type<typeof Contact>;
 
     const person: Contact = R.object(Contact, {
-      id: '1',
       name: 'Satoshi',
       age: 42,
       address: {

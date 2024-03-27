@@ -8,12 +8,12 @@ import React from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
 
-import { ColumnPanel } from './ColumnMenu';
+import { ColumnMenu } from './ColumnMenu';
 import { type ColumnProps } from '../schema';
 
 export default {
-  title: 'react-ui-table/ColumnPanel',
-  component: ColumnPanel,
+  title: 'react-ui-table/ColumnMenu',
+  component: ColumnMenu,
   decorators: [withTheme],
 };
 
@@ -23,13 +23,20 @@ export const Default = {
       id: 'test',
       label: 'test',
     } as ColumnProps,
+    context: {
+      header: {
+        column: {
+          getCanSort: () => true,
+          getToggleSortingHandler: () => () => console.log('toggleSort'),
+          getIsSorted: () => false,
+        },
+      },
+    },
   },
   decorators: [
     (Story: any) => (
       <div className='flex flex-col items-center h-screen w-full overflow-hidden'>
-        <div className='flex w-[250px] m-8 bg-white'>
-          <Story />
-        </div>
+        <Story />
       </div>
     ),
   ],

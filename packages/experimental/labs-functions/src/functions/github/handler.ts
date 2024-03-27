@@ -5,7 +5,7 @@
 import { Octokit, type RestEndpointMethodTypes } from '@octokit/rest';
 
 import { TestSchemaType } from '@dxos/echo-generator';
-import { type Schema, Expando, type ForeignKey } from '@dxos/echo-schema';
+import { type Schema, Expando, type ForeignKey, TypedObject } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -35,7 +35,7 @@ export const handler = subscriptionHandler(async ({ event, context }) => {
       // Try to query organization.
       if (!project.org && repoData.organization?.id) {
         const foreignKey: ForeignKey = { source: 'github.com', id: String(repoData.organization.id) };
-        project.org = space.db.query((object) =>
+        project.org = space.db.query((object: TypedObject) =>
           object.__meta.keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
         ).objects[0];
       }
@@ -80,7 +80,7 @@ export const handler = subscriptionHandler(async ({ event, context }) => {
         }
 
         const foreignKey: ForeignKey = { source: 'github.com', id: String(user.id) };
-        const { objects: existing } = space.db.query((object) =>
+        const { objects: existing } = space.db.query((object: TypedObject) =>
           object.__meta.keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
         );
         if (existing.length !== 0) {

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-stack",
-  "version": "0.4.7",
+  "version": "0.4.9",
   "description": "A stack component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -24,9 +24,16 @@
   ],
   "dependencies": {
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-deck": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@fluentui/react-tabster": "^9.19.0",
+    "@radix-ui/primitive": "^1.0.0",
+    "@radix-ui/react-collapsible": "^1.0.2",
+    "@radix-ui/react-compose-refs": "^1.0.0",
+    "@radix-ui/react-context": "^1.0.0",
+    "@radix-ui/react-menu": "^2.0.6",
+    "@radix-ui/react-use-controllable-state": "^1.0.0",
     "react-resize-detector": "^7.1.2"
   },
   "devDependencies": {

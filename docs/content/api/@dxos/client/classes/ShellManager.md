@@ -1,11 +1,11 @@
 # Class `ShellManager`
-<sub>Declared in [packages/sdk/client/src/services/shell-manager.ts:33](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/shell-manager.ts#L33)</sub>
+<sub>Declared in [packages/sdk/client/src/services/shell-manager.ts:33](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/shell-manager.ts#L33)</sub>
 
 
 Provide access to the shell via RPC connection.
 
 ## Constructors
-### [constructor(_iframeManager, _channel)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/shell-manager.ts#L40)
+### [constructor(_iframeManager, _channel)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/shell-manager.ts#L40)
 
 
 
@@ -21,19 +21,19 @@ Arguments:
 
 
 ## Properties
-### [contextUpdate](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/shell-manager.ts#L34)
+### [contextUpdate](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/shell-manager.ts#L34)
 Type: <code>Event&lt;[AppContextRequest](/api/@dxos/client/interfaces/AppContextRequest)&gt;</code>
 
 
 
-### [display](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/shell-manager.ts#L45)
+### [display](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/shell-manager.ts#L45)
 Type: <code>[ShellDisplay](/api/@dxos/client/enums#ShellDisplay)</code>
 
 
 
 
 ## Methods
-### [close()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/shell-manager.ts#L111)
+### [close()](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/shell-manager.ts#L111)
 
 
 
@@ -45,7 +45,7 @@ Arguments: none
 
 
 
-### [open()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/shell-manager.ts#L56)
+### [open()](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/shell-manager.ts#L56)
 
 
 
@@ -57,7 +57,7 @@ Arguments: none
 
 
 
-### [setLayout(request)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/shell-manager.ts#L49)
+### [setLayout(request)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/shell-manager.ts#L49)
 
 
 

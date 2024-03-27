@@ -15,7 +15,7 @@ import {
 } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { type SyntaxNodeRef, type SyntaxNode } from '@lezer/common';
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 // Markdown refs:
 // https://github.github.com/gfm
@@ -56,7 +56,7 @@ export type Formatting = {
   listStyle: null | 'ordered' | 'bullet' | 'task';
 };
 
-export const compareFormatting = (a: Formatting, b: Formatting) =>
+export const formattingEquals = (a: Formatting, b: Formatting) =>
   a.blockType === b.blockType &&
   a.strong === b.strong &&
   a.emphasis === b.emphasis &&
@@ -1061,7 +1061,7 @@ export const getFormatting = (state: EditorState): Formatting => {
   const inline: (boolean | null)[] = [null, null, null, null];
   let link: boolean = false;
   let blockQuote: boolean | null = null;
-  // False indicates mixed list styles
+  // False indicates mixed list styles.
   let listStyle: Formatting['listStyle'] | null | false = null;
 
   // Track block context for list/blockquote handling.
@@ -1220,21 +1220,25 @@ export const getFormatting = (state: EditorState): Formatting => {
 };
 
 /**
- * Hook computes the current formatting state.
+ * Hook provides an extension to compute the current formatting state.
  */
-export const useFormattingState = (): [Formatting | null, Extension] => {
-  const [state, setState] = useState<Formatting | null>(null);
+export const useFormattingState = (): [Formatting | undefined, Extension] => {
+  const [state, setState] = useState<Formatting>();
+
   const observer = useMemo(
     () =>
       EditorView.updateListener.of((update) => {
         if (update.docChanged || update.selectionSet) {
-          const newState = getFormatting(update.state);
-          if (!state || !compareFormatting(state, newState)) {
-            setState(newState);
-          }
+          setState((prevState) => {
+            const newState = getFormatting(update.state);
+            if (!prevState || !formattingEquals(prevState, newState)) {
+              return newState;
+            }
+            return prevState;
+          });
         }
       }),
-    [],
+    [setState],
   );
 
   return [state, observer];

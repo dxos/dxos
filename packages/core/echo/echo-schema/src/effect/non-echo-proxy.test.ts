@@ -10,13 +10,15 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
 import * as R from './reactive';
-import { TestClass, TestSchemaWithClass } from './testing/schema';
+import { type ReactiveObject } from './reactive';
+import { TEST_OBJECT, TestClass, TestSchemaWithClass } from './testing/schema';
 import { updateCounter } from './testutils';
+import { data } from '../object';
 
 registerSignalRuntime();
 
 for (const schema of [undefined, TestSchemaWithClass]) {
-  const createObject = (props: Partial<TestSchemaWithClass> = {}): TestSchemaWithClass => {
+  const createObject = (props: Partial<TestSchemaWithClass> = {}): ReactiveObject<TestSchemaWithClass> => {
     return schema == null ? (R.object(props) as TestSchemaWithClass) : R.object(schema, props);
   };
 
@@ -26,6 +28,15 @@ for (const schema of [undefined, TestSchemaWithClass]) {
 
       const str = inspect(obj, { colors: false });
       expect(str).to.eq(`${schema == null ? '' : 'Typed '}{ string: 'bar' }`);
+    });
+
+    test('data symbol', async () => {
+      const obj = createObject({ ...TEST_OBJECT });
+      const objData: any = (obj as any)[data];
+      expect(objData).to.deep.contain({
+        '@type': `${schema ? 'Typed' : ''}ReactiveObject`,
+        ...TEST_OBJECT,
+      });
     });
 
     test('can assign class instances', () => {

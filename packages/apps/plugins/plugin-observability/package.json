@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-observability",
-  "version": "0.4.7",
+  "version": "0.4.9",
   "description": "DXOS app framework plugin for hooking up app observability",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -33,7 +33,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.5.1",
+    "@preact/signals-core": "^1.6.0",
     "localforage": "^1.10.0"
   },
   "devDependencies": {

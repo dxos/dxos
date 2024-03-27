@@ -112,7 +112,7 @@ describe('reactive', () => {
       ),
     });
 
-    type Contact = S.Schema.To<typeof Contact>;
+    type Contact = S.Schema.Type<typeof Contact>;
 
     const person: Contact = R.object(Contact, {
       name: 'Satoshi',
@@ -163,7 +163,7 @@ describe('reactive', () => {
       (s, _, ast) => {
         return ParseResult.try({
           try: () => PublicKey.fromHex(s),
-          catch: () => ParseResult.type(ast, s),
+          catch: () => new ParseResult.Type(ast, s),
         });
       },
       (value) => {
@@ -180,7 +180,7 @@ describe('reactive', () => {
       email: S.optional(S.string.pipe(Email)),
     });
 
-    type Contact = S.Schema.To<typeof Contact>;
+    type Contact = S.Schema.Type<typeof Contact>;
     const ContactPretty = Pretty.make(Contact);
 
     const person: Mutable<Contact> = R.object(Contact, {

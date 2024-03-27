@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-inbox",
-  "version": "0.4.7",
+  "version": "0.4.9",
   "description": "DXOS Email inbox plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -29,7 +29,7 @@
     "@dxos/display-name": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.5.1",
+    "@preact/signals-core": "^1.6.0",
     "date-fns": "^3.3.1",
     "lodash.get": "^4.4.2"
   },

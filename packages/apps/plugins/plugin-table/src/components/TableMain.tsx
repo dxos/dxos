@@ -11,12 +11,19 @@ import { ObjectTable, type ObjectTableProps } from './ObjectTable';
 
 const TableMain: FC<ObjectTableProps> = ({ table }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+
   return (
     <Main.Content
       classNames={[baseSurface, 'fixed inset-inline-0 block-start-[--topbar-size] block-end-0 overflow-auto']}
       ref={containerRef}
     >
-      <ObjectTable table={table} stickyHeader role='grid' getScrollElement={() => containerRef.current} />
+      <ObjectTable
+        table={table}
+        key={table.id} // New component instance per table.
+        stickyHeader
+        role='grid'
+        getScrollElement={() => containerRef.current}
+      />
     </Main.Content>
   );
 };

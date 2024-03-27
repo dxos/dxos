@@ -13,6 +13,7 @@ import {
   ListChecks,
   ListNumbers,
   Paragraph,
+  Quotes,
   TextStrikethrough,
   Table,
   TextB,
@@ -23,7 +24,8 @@ import {
   TextHFive,
   TextHSix,
   TextItalic,
-  Quotes,
+  CaretDown,
+  Check,
 } from '@phosphor-icons/react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
@@ -32,17 +34,18 @@ import { useDropzone } from 'react-dropzone';
 import {
   DensityProvider,
   ElevationProvider,
-  Select,
-  type ThemedClassName,
   Toolbar as NaturalToolbar,
   Tooltip,
+  type ThemedClassName,
   type ToolbarToggleGroupItemProps as NaturalToolbarToggleGroupItemProps,
   type ToolbarButtonProps as NaturalToolbarButtonProps,
   useTranslation,
+  DropdownMenu,
+  Button,
 } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
-import { type Formatting } from '../../extensions';
+import { type Action, type ActionType, type Formatting } from '../../extensions';
 import { translationKey } from '../../translations';
 
 const tooltipProps = { side: 'top' as const, classNames: 'z-10' };
@@ -57,33 +60,9 @@ const HeadingIcons: { [key: string]: Icon } = {
   '6': TextHSix,
 };
 
-// TODO(burdon): Revert to string to make extensible?
-export type ActionType =
-  | 'blockquote'
-  | 'strong'
-  | 'codeblock'
-  | 'comment'
-  | 'heading'
-  | 'image'
-  | 'emphasis'
-  | 'code'
-  | 'link'
-  | 'list-bullet'
-  | 'list-ordered'
-  | 'list-task'
-  | 'mention'
-  | 'prompt'
-  | 'strikethrough'
-  | 'table';
-
-export type Action = {
-  type: ActionType;
-  data?: any;
-};
-
 export type ToolbarProps = ThemedClassName<
   PropsWithChildren<{
-    state: Formatting | null;
+    state: Formatting | undefined;
     onAction?: (action: Action) => void;
   }>
 >;
@@ -180,9 +159,9 @@ const MarkdownHeading = () => {
         }
       }}
     >
-      <Select.Root
-        disabled={value === null}
-        value={value ?? '0'}
+      {/* TODO(thure): `Select` encounters a ref error if used here (repro: select a heading, then select another
+            heading). Determine the root cause and fix or report to Radix. */}
+      <DropdownMenu.Root
         open={selectOpen}
         onOpenChange={(nextOpen: boolean) => {
           if (!nextOpen) {
@@ -190,39 +169,42 @@ const MarkdownHeading = () => {
           }
           return setSelectOpen(nextOpen);
         }}
-        onValueChange={(value) => onAction?.({ type: 'heading', data: parseInt(value) })}
       >
         <Tooltip.Trigger asChild>
           <NaturalToolbar.Button asChild>
-            <Select.TriggerButton variant='ghost' classNames={buttonStyles}>
-              <span className='sr-only'>{t('heading label')}</span>
-              <HeadingIcon className={iconStyles} />
-            </Select.TriggerButton>
+            <DropdownMenu.Trigger asChild>
+              <Button variant='ghost' classNames={buttonStyles} disabled={value === null}>
+                <span className='sr-only'>{t('heading label')}</span>
+                <HeadingIcon className={iconStyles} />
+                <CaretDown />
+              </Button>
+            </DropdownMenu.Trigger>
           </NaturalToolbar.Button>
         </Tooltip.Trigger>
-        <Select.Portal>
-          <Select.Content>
-            <Select.ScrollUpButton />
-            <Select.Viewport>
-              <Select.Option value='0'>
-                <Paragraph className={iconStyles} />
-              </Select.Option>
-              {[1, 2, 3, 4, 5, 6].map((level) => (
-                <Select.Option key={level} value={String(level)}>
-                  {level === 1 && <TextHOne className={iconStyles} />}
-                  {level === 2 && <TextHTwo className={iconStyles} />}
-                  {level === 3 && <TextHThree className={iconStyles} />}
-                  {level === 4 && <TextHFour className={iconStyles} />}
-                  {level === 5 && <TextHFive className={iconStyles} />}
-                  {level === 6 && <TextHSix className={iconStyles} />}
-                </Select.Option>
-              ))}
-            </Select.Viewport>
-            <Select.ScrollDownButton />
-            <Select.Arrow />
-          </Select.Content>
-        </Select.Portal>
-      </Select.Root>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content classNames='is-min md:is-min' onCloseAutoFocus={(e) => e.preventDefault()}>
+            <DropdownMenu.Viewport>
+              {Object.keys(HeadingIcons).map((level) => {
+                const Icon = HeadingIcons[level];
+                return (
+                  <DropdownMenu.CheckboxItem
+                    key={level}
+                    checked={value === level}
+                    onClick={() => onAction?.({ type: 'heading', data: level })}
+                  >
+                    <span className='sr-only'>{t('heading level label', { count: parseInt(level) })}</span>
+                    <Icon className={iconStyles} />
+                    <DropdownMenu.ItemIndicator>
+                      <Check />
+                    </DropdownMenu.ItemIndicator>
+                  </DropdownMenu.CheckboxItem>
+                );
+              })}
+            </DropdownMenu.Viewport>
+            <DropdownMenu.Arrow />
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
       <Tooltip.Portal>
         <Tooltip.Content {...tooltipProps}>
           {t('heading label')}
@@ -355,9 +337,10 @@ const MarkdownCustom = ({ onUpload }: MarkdownCustomOptions = {}) => {
       'image/*': ['.jpg', '.jpeg', '.png', '.gif'],
     },
   });
+
   useEffect(() => {
     if (onUpload && acceptedFiles.length) {
-      setTimeout(async () => {
+      requestAnimationFrame(async () => {
         // NOTE: Clone file since react-dropzone patches in a non-standard `path` property, which confuses IPFS.
         const f = acceptedFiles[0];
         const file = new File([f], f.name, {
@@ -388,9 +371,20 @@ const MarkdownActions = () => {
   const { onAction } = useToolbarContext('MarkdownStyles');
   const { t } = useTranslation(translationKey);
   return (
-    <ToolbarButton value='comment' Icon={ChatText} onClick={() => onAction?.({ type: 'comment' })}>
-      {t('comment label')}
-    </ToolbarButton>
+    <>
+      {/* TODO(burdon): Toggle readonly state. */}
+      {/* <ToolbarButton value='comment' Icon={BookOpenText} onClick={() => onAction?.({ type: 'comment' })}> */}
+      {/*  {t('comment label')} */}
+      {/* </ToolbarButton> */}
+      <ToolbarButton
+        value='comment'
+        Icon={ChatText}
+        data-testid='editor.toolbar.comment'
+        onClick={() => onAction?.({ type: 'comment' })}
+      >
+        {t('comment label')}
+      </ToolbarButton>
+    </>
   );
 };
 

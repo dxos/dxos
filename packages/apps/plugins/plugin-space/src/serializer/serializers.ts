@@ -96,7 +96,7 @@ export const serializers: Record<string, TypedObjectSerializer> = {
         return text;
       }
       const doc = getRawDoc(content, [(content as any).field]);
-      const convertor = cursorConverter(doc.handle, doc.path);
+      const convertor = cursorConverter(doc.handle, doc.path as Prop[]);
 
       const insertions: Record<number, string> = {};
       let footnote = '---\n';

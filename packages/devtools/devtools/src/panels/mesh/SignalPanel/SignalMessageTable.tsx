@@ -73,11 +73,11 @@ const views: View<SignalResponse>[] = [
     },
     columns: [
       helper.accessor('receivedAt', builder.date({ header: 'received' })),
-      helper.accessor((response) => response.message!.author as unknown as PublicKey, {
+      helper.accessor((response) => PublicKey.from(response.message!.author), {
         id: 'author',
         ...builder.key({ tooltip: true }),
       }),
-      helper.accessor((response) => response.message!.recipient as unknown as PublicKey, {
+      helper.accessor((response) => PublicKey.from(response.message!.recipient), {
         id: 'recipient',
         ...builder.key({ tooltip: true }),
       }),
@@ -96,11 +96,11 @@ const views: View<SignalResponse>[] = [
     },
     columns: [
       helper.accessor('receivedAt', builder.date({ header: 'received' })),
-      helper.accessor((response) => response.message!.author as unknown as PublicKey, {
+      helper.accessor((response) => PublicKey.from(response.message!.author), {
         id: 'author',
         ...builder.key({ tooltip: true }),
       }),
-      helper.accessor((response) => response.message!.recipient as unknown as PublicKey, {
+      helper.accessor((response) => PublicKey.from(response.message!.recipient), {
         id: 'recipient',
         ...builder.key({ tooltip: true }),
       }),

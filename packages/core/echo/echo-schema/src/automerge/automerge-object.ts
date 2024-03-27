@@ -5,7 +5,7 @@
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { type ChangeFn, type Doc } from '@dxos/automerge/automerge';
-import { Reference } from '@dxos/document-model';
+import { Reference } from '@dxos/echo-db';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -14,10 +14,11 @@ import { assignDeep } from '@dxos/util';
 import { AutomergeArray } from './automerge-array';
 import { AutomergeObjectCore, type BindOptions } from './automerge-object-core';
 import { type DocAccessor } from './automerge-types';
+import { isValidKeyPath, type KeyPath } from './key-path';
 import { REFERENCE_TYPE_TAG, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
 import { EchoReactiveHandler } from '../effect/echo-handler';
-import { getProxyHandlerSlot } from '../effect/proxy';
+import { getProxyHandlerSlot, isReactiveProxy } from '../effect/proxy';
 import {
   base,
   data,
@@ -29,14 +30,13 @@ import {
   proxy,
   subscribe,
   TextObject,
-  type EchoObject,
   type ObjectMeta,
+  type OpaqueEchoObject,
   type TypedObjectOptions,
   type TypedObjectProperties,
-  type OpaqueEchoObject,
 } from '../object';
 import { AbstractEchoObject } from '../object/object'; // TODO(burdon): Import
-import { type Schema } from '../proto';
+import { type Schema } from '../proto'; // Keep as type-only import.
 
 // TODO(dmaretskyi): Rename to `AutomergeObjectApi`?
 export class AutomergeObject implements TypedObjectProperties {
@@ -343,8 +343,10 @@ export class AutomergeObject implements TypedObjectProperties {
     invariant(!this[proxy]);
     if (!this._schema && this._core.database) {
       const type = this.__system.type;
-      if (type) {
+      if (type instanceof Reference) {
         this._schema = this._core.database._resolveSchema(type);
+      } else if ((type as any) instanceof requireSchema()) {
+        this._schema = type;
       }
     }
     return this._schema;
@@ -353,13 +355,13 @@ export class AutomergeObject implements TypedObjectProperties {
   /**
    * @internal
    */
-  _getRawDoc(path?: string[]): DocAccessor {
+  _getRawDoc(path?: KeyPath): DocAccessor {
     invariant(!this[proxy]);
     return this._core.getDocAccessor(path);
   }
 }
 
-const isRootDataObjectKey = (relativePath: string[], key: string | symbol) => {
+const isRootDataObjectKey = (relativePath: KeyPath, key: string | symbol) => {
   if (relativePath.length !== 1 || relativePath[0] !== 'data') {
     return false;
   }
@@ -379,9 +381,17 @@ const isRootDataObjectKey = (relativePath: string[], key: string | symbol) => {
   );
 };
 
-export const getRawDoc = (obj: EchoObject, path?: string[]): DocAccessor => {
-  invariant(isAutomergeObject(obj));
-  return obj[base]._getRawDoc(path);
+export const getRawDoc = (obj: OpaqueEchoObject, path?: KeyPath): DocAccessor => {
+  invariant(isAutomergeObject(obj) || isReactiveProxy(obj));
+  invariant(path === undefined || isValidKeyPath(path));
+
+  if (isAutomergeObject(obj)) {
+    return obj[base]._getRawDoc(path);
+  } else {
+    const handler = getProxyHandlerSlot(obj).handler;
+    invariant(handler instanceof EchoReactiveHandler);
+    return handler._objectCore.getDocAccessor(path);
+  }
 };
 
 export const getAutomergeObjectCore = (obj: OpaqueEchoObject): AutomergeObjectCore => {
@@ -393,3 +403,7 @@ export const getAutomergeObjectCore = (obj: OpaqueEchoObject): AutomergeObjectCo
     return handler._objectCore;
   }
 };
+
+// Circular deps.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const requireSchema = (): typeof Schema => require('../proto').Schema;

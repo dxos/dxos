@@ -20,8 +20,8 @@ export default template.define.script({
         server: {
           host: true,
         },
-        root: 'dev',
-        build: { outDir: "dev/out", target: "esnext" },
+        root: 'composer',
+        build: { outDir: "composer/out", target: "esnext" },
         optimizeDeps: { esbuildOptions: { target: "esnext" } },
         define: {
           process: {
@@ -33,11 +33,11 @@ export default template.define.script({
         plugins: [
           react(),
           ThemePlugin({
-            root: __dirname + '/dev',
+            root: __dirname + '/composer',
             content: [
-              resolve(__dirname, "./dev/index.html"),
+              resolve(__dirname, "./composer/index.html"),
               resolve(__dirname, "./src/**/*.{js,ts,jsx,tsx}"),
-              resolve(__dirname, "./dev/**/*.{js,ts,jsx,tsx}"),
+              resolve(__dirname, "./composer/**/*.{js,ts,jsx,tsx}"),
               ${defaultPlugins && plate/* javascript */`
               resolve(__dirname, "node_modules/@dxos/react-ui/dist/**/*.mjs"),
               resolve(__dirname, "node_modules/@dxos/react-ui-theme/dist/**/*.mjs"),

@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-gpt",
-  "version": "0.4.7",
+  "version": "0.4.9",
   "description": "Demo plugin for GPT",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -32,7 +32,7 @@
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@preact/signals-core": "^1.5.1",
+    "@preact/signals-core": "^1.6.0",
     "lodash.get": "^4.4.2",
     "openai": "^4.26.1"
   },

@@ -62,7 +62,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     generators: TestGeneratorMap<T>,
   ) {
     super(schemaMap, generators, (type: T) => {
-      const { objects } = this._space.db.query((object) => {
+      const { objects } = this._space.db.query((object: TypedObject) => {
         return object.__schema?.id === this.getSchema(type)?.id;
       });
 

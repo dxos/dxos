@@ -2,7 +2,7 @@
 title: Functions
 ---
 # Functions
-### [mountDevtoolsHooks(options)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/devtools/devtools.ts#L46)
+### [mountDevtoolsHooks(options)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/devtools/devtools.ts#L50)
 
 
 
@@ -14,24 +14,12 @@ Arguments:
 `options`: <code>[MountOptions](/api/@dxos/client/types/MountOptions)</code>
 
 
-### [unmountDevtoolsHooks()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/devtools/devtools.ts#L164)
+### [unmountDevtoolsHooks()](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/devtools/devtools.ts#L169)
 
 
 
 
 Returns: <code>void</code>
-
-Arguments: none
-
-
-
-
-### [createDefaultModelFactory()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/echo/util.ts#L14)
-
-
-
-
-Returns: <code>ModelFactory</code>
 
 Arguments: none
 
@@ -47,7 +35,7 @@ Returns: <code>[DocAccessor](/api/@dxos/client/interfaces/DocAccessor)&lt;T&gt;<
 
 Arguments: 
 
-`text`: <code>[TextObject](/api/@dxos/client/classes/TextObject)</code>
+`text`: <code>[TextObject](/api/@dxos/client/classes/TextObject) | EchoReactiveObject&lt;object&gt;</code>
 
 
 ### [createSubscription(onUpdate)]()
@@ -88,12 +76,12 @@ Returns: <code>[DocAccessor](/api/@dxos/client/interfaces/DocAccessor)&lt;any&gt
 
 Arguments: 
 
-`obj`: <code>[EchoObject](/api/@dxos/client/interfaces/EchoObject)</code>
+`obj`: <code>OpaqueEchoObject</code>
 
-`path`: <code>string[]</code>
+`path`: <code>KeyPath</code>
 
 
-### [getSpaceForObject(object)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/echo/util.ts#L22)
+### [getSpaceForObject(object)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/util.ts#L15)
 
 
 
@@ -102,7 +90,7 @@ Returns: <code>undefined | [Space](/api/@dxos/client/interfaces/Space)</code>
 
 Arguments: 
 
-`object`: <code>[EchoObject](/api/@dxos/client/interfaces/EchoObject)</code>
+`object`: <code>OpaqueEchoObject</code>
 
 
 ### [getTextContent(object, defaultValue)]()
@@ -114,7 +102,7 @@ Returns: <code>string</code>
 
 Arguments: 
 
-`object`: <code>undefined | [TextObject](/api/@dxos/client/classes/TextObject)</code>
+`object`: <code>undefined | [TextObject](/api/@dxos/client/classes/TextObject) | EchoReactiveObject&lt;object&gt;</code>
 
 `defaultValue`: <code>string</code>
 
@@ -159,18 +147,6 @@ Arguments:
 `object`: <code>unknown</code>
 
 
-### [isDocAccessor(obj)]()
-
-
-
-
-Returns: <code>obj is [DocAccessor](/api/@dxos/client/interfaces/DocAccessor)&lt;any&gt;</code>
-
-Arguments: 
-
-`obj`: <code>any</code>
-
-
 ### [isTypedObject(object)]()
 
 
@@ -211,7 +187,7 @@ Arguments:
 `pos`: <code>number</code>
 
 
-### [Remote(target)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/client-services-factory.tsx#L15)
+### [Remote(target)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/client-services-factory.tsx#L15)
 
 
 
@@ -223,7 +199,7 @@ Arguments:
 `target`: <code>undefined | string</code>
 
 
-### [createClientServices(config, \[createWorker\])](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/client-services-factory.tsx#L41)
+### [createClientServices(config, \[createWorker\])](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/client-services-factory.tsx#L41)
 
 
 Create services from config.
@@ -237,7 +213,7 @@ Arguments:
 `createWorker`: <code>function</code>
 
 
-### [fromAgent(options)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/agent.ts#L29)
+### [fromAgent(options)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/agent.ts#L29)
 
 
 Connects to locally running CLI daemon.
@@ -249,7 +225,7 @@ Arguments:
 `options`: <code>[FromAgentOptions](/api/@dxos/client/types/FromAgentOptions)</code>
 
 
-### [fromHost(config, \[params\])](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/local-client-services.ts#L19)
+### [fromHost(config, \[params\])](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/local-client-services.ts#L19)
 
 
 Creates stand-alone services without rpc.
@@ -263,7 +239,7 @@ Arguments:
 `params`: <code>ClientServicesHostParams</code>
 
 
-### [fromIFrame(config, options)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/utils.ts#L21)
+### [fromIFrame(config, options)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/utils.ts#L21)
 
 
 Create services provider proxy connected via iFrame to host.
@@ -277,7 +253,7 @@ Arguments:
 `options`: <code>Omit&lt;Partial&lt;[IFrameClientServicesProxyOptions](/api/@dxos/client/types/IFrameClientServicesProxyOptions)&gt;, "source"&gt;</code>
 
 
-### [fromSocket(url)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/socket.ts#L12)
+### [fromSocket(url)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/socket.ts#L12)
 
 
 Access to remote client via a socket.
@@ -289,7 +265,7 @@ Arguments:
 `url`: <code>string</code>
 
 
-### [fromWorker(config, options)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/worker-client-services.ts#L23)
+### [fromWorker(config, options)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/worker-client-services.ts#L23)
 
 
 Creates services provider connected via worker.
@@ -303,7 +279,7 @@ Arguments:
 `options`: <code>Omit&lt;WorkerClientServicesParams, "config"&gt;</code>
 
 
-### [getUnixSocket(profile, protocol)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/services/agent.ts#L19)
+### [getUnixSocket(profile, protocol)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/agent.ts#L19)
 
 
 
@@ -317,7 +293,7 @@ Arguments:
 `protocol`: <code>string</code>
 
 
-### [joinCommonSpace(options, \[spaceKey\])](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/testing/test-builder.ts#L195)
+### [joinCommonSpace(options, \[spaceKey\])](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/testing/test-builder.ts#L190)
 
 
 
@@ -343,7 +319,7 @@ Arguments:
 `options`: <code>PerformInvitationParams</code>
 
 
-### [syncItems(db1, db2)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/testing/test-builder.ts#L184)
+### [syncItemsAutomerge(db1, db2)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/testing/test-builder.ts#L182)
 
 
 
@@ -352,26 +328,26 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: 
 
-`db1`: <code>DatabaseProxy</code>
+`db1`: <code>[EchoDatabase](/api/@dxos/client/interfaces/EchoDatabase)</code>
 
-`db2`: <code>DatabaseProxy</code>
-
-
-### [testSpace(create, check)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/testing/test-builder.ts#L166)
+`db2`: <code>[EchoDatabase](/api/@dxos/client/interfaces/EchoDatabase)</code>
 
 
+### [testSpaceAutomerge(create, check)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/testing/test-builder.ts#L162)
 
 
-Returns: <code>Promise&lt;MutateResult&gt;</code>
+
+
+Returns: <code>Promise&lt;object&gt;</code>
 
 Arguments: 
 
-`create`: <code>DatabaseProxy</code>
+`create`: <code>[EchoDatabase](/api/@dxos/client/interfaces/EchoDatabase)</code>
 
-`check`: <code>DatabaseProxy</code>
+`check`: <code>[EchoDatabase](/api/@dxos/client/interfaces/EchoDatabase)</code>
 
 
-### [waitForSpace(client, spaceKey, options)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/testing/utils.ts#L16)
+### [waitForSpace(client, spaceKey, options)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/testing/utils.ts#L16)
 
 
 

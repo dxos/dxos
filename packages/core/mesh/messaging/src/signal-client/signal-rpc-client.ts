@@ -47,6 +47,7 @@ export class SignalRPCClient {
 
   private readonly _url: string;
   private readonly _callbacks: SignalCallbacks;
+  private readonly _closeComplete = new Trigger();
 
   constructor({ url, callbacks = {} }: SignalRPCClientParams) {
     const traceId = PublicKey.random().toHex();
@@ -113,6 +114,7 @@ export class SignalRPCClient {
     this._socket.onclose = async () => {
       log(`Disconnected ${this._url}`);
       this._callbacks.onDisconnected?.();
+      this._closeComplete.wake();
       await this.close();
     };
 
@@ -143,7 +145,12 @@ export class SignalRPCClient {
     this._closed = true;
     try {
       await this._rpc?.close();
-      this._socket?.close();
+
+      if (this._socket?.readyState === WebSocket.OPEN || this._socket?.readyState === WebSocket.CONNECTING) {
+        // close() only starts the closing handshake.
+        this._socket.close();
+      }
+      await this._closeComplete.wait({ timeout: 1_000 });
     } catch (err) {
       log.warn('close error', err);
     }

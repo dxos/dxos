@@ -27,7 +27,7 @@ const styles = {
  * Ensure light doesn't flicker immediately after start.
  */
 // TODO(burdon): Move to @dxos/async (debounce?)
-const timer = (cb: (err?: Error) => void, options?: { min?: number; max?: number }) => {
+const _timer = (cb: (err?: Error) => void, options?: { min?: number; max?: number }) => {
   const min = options?.min ?? 500;
   let start: number;
   let pending: NodeJS.Timeout;
@@ -139,29 +139,30 @@ const SwarmIndicator: FC<IconProps> = (props) => {
  * Space saving indicator.
  */
 const SavingIndicator: FC<IconProps> = (props) => {
-  const [state, setState] = useState(0);
+  const [state, _setState] = useState(0);
   const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
   const graphPlugin = useResolvePlugin(parseGraphPlugin);
   const location = navigationPlugin?.provides.location;
   const graph = graphPlugin?.provides.graph;
-  const space = location && graph ? getActiveSpace(graph, location.active) : undefined;
-  useEffect(() => {
-    if (!space) {
-      return;
-    }
-    const { start, stop } = timer(() => setState(0), { min: 250 });
-    return space.db.pendingBatch.on(({ duration, error }) => {
-      if (error) {
-        setState(2);
-        stop();
-      } else if (duration === undefined) {
-        setState(1);
-        start();
-      } else {
-        stop();
-      }
-    });
-  }, [space]);
+  const _space = location && graph ? getActiveSpace(graph, location.active) : undefined;
+  // TODO(dmaretskyi): Fix this when we have save status for automerge.
+  // useEffect(() => {
+  //   if (!space) {
+  //     return;
+  //   }
+  // const { start, stop } = timer(() => setState(0), { min: 250 });
+  // return space.db.pendingBatch.on(({ duration, error }) => {
+  //   if (error) {
+  //     setState(2);
+  //     stop();
+  //   } else if (duration === undefined) {
+  //     setState(1);
+  //     start();
+  //   } else {
+  //     stop();
+  //   }
+  // });
+  // }, [space]);
 
   switch (state) {
     case 2:

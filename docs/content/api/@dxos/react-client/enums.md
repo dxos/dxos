@@ -21,6 +21,19 @@ Values:
 - `UNKNOWN` 
 
 
+### [`Kind`]()
+
+Defined in:
+   file://./../../../dxos/echo/indexing.proto
+
+Values:
+- `FIELD_MATCH` 
+
+- `FULL_TEXT` 
+
+- `SCHEMA_MATCH` 
+
+
 ### [`DataLocation`]()
 
 Defined in:
@@ -239,6 +252,8 @@ Values:
 - `CONNECTING` 
 
 - `ERROR` 
+
+- `EXPIRED` 
 
 - `INIT` 
 

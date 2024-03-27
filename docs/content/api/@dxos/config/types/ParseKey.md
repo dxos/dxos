@@ -1,5 +1,5 @@
 # Type `ParseKey`
-<sub>Declared in [sdk/config/src/types.ts:33](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/config/src/types.ts#L33)</sub>
+<sub>Declared in [sdk/config/src/types.ts:33](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/config/src/types.ts#L33)</sub>
 
 
 Parse a dot separated nested key into an array of keys.

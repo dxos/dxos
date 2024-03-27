@@ -29,6 +29,9 @@
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-deck"
+    },
+    {
       "path": "../react-ui-mosaic"
     },
     {

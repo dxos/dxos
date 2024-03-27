@@ -85,7 +85,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
     // Create editor state and view.
     // The view is recreated if the model or extensions are changed.
     useEffect(() => {
-      log('updating', { id, instanceId });
+      log('create', { id, instanceId });
 
       //
       // EditorState
@@ -147,8 +147,8 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
       setView(view);
 
       return () => {
+        log('destroy', { id, instanceId });
         view?.destroy();
-        setView(null);
       };
     }, [doc, selection, extensions]);
 

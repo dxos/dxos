@@ -1,11 +1,11 @@
 # Class `InvitationsProxy`
-<sub>Declared in [packages/sdk/client/src/invitations/invitations-proxy.ts:48](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/invitations/invitations-proxy.ts#L48)</sub>
+<sub>Declared in [packages/sdk/client/src/invitations/invitations-proxy.ts:48](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/invitations/invitations-proxy.ts#L48)</sub>
 
 
 
 
 ## Constructors
-### [constructor(_invitationsService, _identityService, _getInvitationContext)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/invitations/invitations-proxy.ts#L59)
+### [constructor(_invitationsService, _identityService, _getInvitationContext)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/invitations/invitations-proxy.ts#L62)
 
 
 
@@ -23,24 +23,29 @@ Arguments:
 
 
 ## Properties
-### [accepted](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/invitations/invitations-proxy.ts#L69)
+### [accepted](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/invitations/invitations-proxy.ts#L72)
 Type: <code>MulticastObservable&lt;[AuthenticatingInvitation](/api/@dxos/client/classes/AuthenticatingInvitationObservable)[]&gt;</code>
 
 
 
-### [created](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/invitations/invitations-proxy.ts#L65)
+### [created](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/invitations/invitations-proxy.ts#L68)
 Type: <code>MulticastObservable&lt;[CancellableInvitation](/api/@dxos/client/classes/CancellableInvitationObservable)[]&gt;</code>
 
 
 
-### [isOpen](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/invitations/invitations-proxy.ts#L73)
+### [isOpen](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/invitations/invitations-proxy.ts#L83)
 Type: <code>boolean</code>
 
 
 
+### [saved](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/invitations/invitations-proxy.ts#L79)
+Type: <code>MulticastObservable&lt;[Invitation](/api/@dxos/client/interfaces/Invitation)[]&gt;</code>
+
+@test-only
+
 
 ## Methods
-### [close()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/invitations/invitations-proxy.ts#L116)
+### [close()](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/invitations/invitations-proxy.ts#L155)
 
 
 
@@ -52,7 +57,7 @@ Arguments: none
 
 
 
-### [getInvitationOptions()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/invitations/invitations-proxy.ts#L128)
+### [getInvitationOptions()](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/invitations/invitations-proxy.ts#L167)
 
 
 
@@ -64,7 +69,7 @@ Arguments: none
 
 
 
-### [join(invitation, \[deviceProfile\])](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/invitations/invitations-proxy.ts#L162)
+### [join(invitation, \[deviceProfile\])](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/invitations/invitations-proxy.ts#L202)
 
 
 
@@ -78,7 +83,7 @@ Arguments:
 `deviceProfile`: <code>DeviceProfileDocument</code>
 
 
-### [open()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/invitations/invitations-proxy.ts#L77)
+### [open()](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/invitations/invitations-proxy.ts#L87)
 
 
 
@@ -90,7 +95,7 @@ Arguments: none
 
 
 
-### [share(\[options\])](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/client/src/invitations/invitations-proxy.ts#L139)
+### [share(\[options\])](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/invitations/invitations-proxy.ts#L179)
 
 
 

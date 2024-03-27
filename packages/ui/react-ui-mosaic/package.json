@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-mosaic",
-  "version": "0.4.7",
+  "version": "0.4.9",
   "description": "An intermediate interface for drag-and-drop interactions.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -28,7 +28,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.5.1",
+    "@preact/signals-core": "^1.6.0",
     "@radix-ui/react-compose-refs": "^1.0.0",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.pick": "^4.4.0",

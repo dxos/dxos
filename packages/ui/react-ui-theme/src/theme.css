@@ -16,6 +16,8 @@
   font-variation-settings:
     'wght' 400,
     'slnt' 0;
+  scroll-padding-block-start: theme(spacing.14);
+  scroll-padding-block-end: theme(spacing.2);
   --surface-bg: theme(colors.neutral.25);
   --input-bg: theme(colors.neutral.50);
   --input-bg-hover: theme(colors.neutral.75);
