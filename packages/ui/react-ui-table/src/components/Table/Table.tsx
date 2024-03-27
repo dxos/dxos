@@ -159,6 +159,13 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
 
     const rows = table.getRowModel().rows;
     rows[rows.length - 1].pin('bottom');
+    // Scroll to the bottom
+
+    const scrollElement = getScrollElement?.();
+
+    if (scrollElement) {
+      scrollElement.scrollTo({ top: scrollElement.scrollHeight });
+    }
   }, [pinLastRow, table, data]);
 
   // Create additional expansion column if all columns have fixed width.
@@ -239,11 +246,9 @@ const VirtualizedTableContent = ({
   const centerRows = table.getCenterRows();
   const pinnedRows = table.getBottomRows();
 
-  const rows = [...centerRows, ...pinnedRows];
-
   const { getTotalSize, getVirtualItems } = useVirtualizer({
     getScrollElement,
-    count: rows.length,
+    count: centerRows.length,
     overscan: 8,
     estimateSize: () => 40,
   });
@@ -254,6 +259,8 @@ const VirtualizedTableContent = ({
   const paddingTop = virtualRows.length > 0 ? virtualRows?.[0]?.start || 0 : 0;
   const paddingBottom = virtualRows.length > 0 ? totalSize - (virtualRows?.[virtualRows.length - 1]?.end || 0) : 0;
 
+  const rowsToRender = [...virtualRows.map((virtualRow) => centerRows[virtualRow.index]), ...pinnedRows];
+
   return (
     <>
       {paddingTop > 0 && (
@@ -263,7 +270,7 @@ const VirtualizedTableContent = ({
           </tr>
         </tbody>
       )}
-      <TableBody rows={virtualRows.map((virtualRow) => rows[virtualRow.index])} />
+      <TableBody rows={rowsToRender} />
       {paddingBottom > 0 && (
         <tbody role='none'>
           <tr role='none'>
