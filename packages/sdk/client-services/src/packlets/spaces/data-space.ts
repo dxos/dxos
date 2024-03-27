@@ -6,7 +6,15 @@ import { Event, asyncTimeout, scheduleTask, sleep, synchronized, trackLeaks } fr
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context, ContextDisposedError } from '@dxos/context';
 import { timed, warnAfterTimeout } from '@dxos/debug';
-import { type MetadataStore, type Space, createMappedFeedWriter, type AutomergeHost } from '@dxos/echo-pipeline';
+import { TYPE_PROPERTIES } from '@dxos/echo-db';
+import {
+  type MetadataStore,
+  type Space,
+  createMappedFeedWriter,
+  type AutomergeHost,
+  type SpaceDoc,
+} from '@dxos/echo-pipeline';
+import { AutomergeDocumentLoaderImpl } from '@dxos/echo-pipeline';
 import { type FeedStore } from '@dxos/feed-store';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -26,7 +34,7 @@ import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gos
 import { type Gossip, type Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
-import { ComplexSet } from '@dxos/util';
+import { ComplexSet, assignDeep } from '@dxos/util';
 
 import { AutomergeSpaceState } from './automerge-space-state';
 import { type SigningContext } from './data-space-manager';
@@ -428,6 +436,47 @@ export class DataSpace {
           await cancelWithContext(this._ctx, asyncTimeout(rootHandle.whenReady(), 10_000));
           const newRoot = this._automergeHost.repo.create(rootHandle.docSync());
           invariant(typeof newRoot.url === 'string' && newRoot.url.length > 0);
+          // TODO(dmaretskyi): Unify epoch construction.
+          epoch = {
+            previousId: this._automergeSpaceState.lastEpoch?.id,
+            number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
+            timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
+            automergeRoot: newRoot.url,
+          };
+        }
+        break;
+      case CreateEpochRequest.Migration.FRAGMENT_AUTOMERGE_ROOT:
+        {
+          log.info('Fragmenting');
+
+          const currentRootUrl = this._automergeSpaceState.rootUrl;
+          const rootHandle = this._automergeHost.repo.find<SpaceDoc>(currentRootUrl as any);
+          await cancelWithContext(this._ctx, asyncTimeout(rootHandle.whenReady(), 10_000));
+
+          // Find properties object.
+          const objects = Object.entries((rootHandle.docSync() as SpaceDoc).objects!);
+          const properties = objects.find(([_, value]) => value.system.type?.itemId === TYPE_PROPERTIES);
+          const otherObjects = objects.filter(([key]) => key !== properties?.[0]);
+          invariant(properties, 'Properties not found');
+
+          // Create a new space doc with the properties object.
+          const newSpaceDoc: SpaceDoc = { ...rootHandle.docSync(), objects: Object.fromEntries([properties]) };
+          const newRoot = this._automergeHost.repo.create(newSpaceDoc);
+          invariant(typeof newRoot.url === 'string' && newRoot.url.length > 0);
+
+          // Create new automerge documents for all objects.
+          const docLoader = new AutomergeDocumentLoaderImpl(this.key, this._automergeHost.repo);
+          await docLoader.loadSpaceRootDocHandle(this._ctx, { rootUrl: newRoot.url });
+
+          otherObjects.forEach(([key, value]) => {
+            const handle = docLoader.createDocumentForObject(key);
+            handle.change((doc: any) => {
+              assignDeep(doc, ['objects', key], value);
+            });
+          });
+
+          // TODO(mykola): Delete old root.
+
           // TODO(dmaretskyi): Unify epoch construction.
           epoch = {
             previousId: this._automergeSpaceState.lastEpoch?.id,

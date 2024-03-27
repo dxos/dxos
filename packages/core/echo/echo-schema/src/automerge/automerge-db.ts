@@ -6,19 +6,20 @@ import { Event, asyncTimeout, synchronized } from '@dxos/async';
 import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { TYPE_PROPERTIES, type Reference } from '@dxos/echo-db';
-import { type SpaceState, type SpaceDoc } from '@dxos/echo-pipeline';
+import {
+  type SpaceState,
+  type SpaceDoc,
+  AutomergeDocumentLoaderImpl,
+  type AutomergeDocumentLoader,
+  type DocumentChanges,
+  type ObjectDocumentLoaded,
+} from '@dxos/echo-pipeline';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type AutomergeContext } from './automerge-context';
-import {
-  AutomergeDocumentLoaderImpl,
-  type AutomergeDocumentLoader,
-  type DocumentChanges,
-  type ObjectDocumentLoaded,
-} from './automerge-doc-loader';
 import { getAutomergeObjectCore, type AutomergeObject } from './automerge-object';
 import { AutomergeObjectCore } from './automerge-object-core';
 import { getInlineAndLinkChanges } from './utils';

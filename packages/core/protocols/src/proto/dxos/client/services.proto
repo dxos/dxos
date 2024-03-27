@@ -356,6 +356,9 @@ message CreateEpochRequest {
 
     /// Init new automerge root by clonning the current space root. History is pruned.
     PRUNE_AUTOMERGE_ROOT_HISTORY = 2;
+
+    /// Create a new space root and move objects from the current space root to separate automerge documents and.
+    FRAGMENT_AUTOMERGE_ROOT = 3;
   }
 
   dxos.keys.PublicKey space_key = 1;
