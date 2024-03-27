@@ -32,8 +32,7 @@ export const usePinLastRow = (
     const scrollElement = getScrollElement?.();
     const isFirstRender = pinnedRowKey === undefined;
     if (scrollElement && !isFirstRender) {
-      // We need the element to be added to the DOM before we can scroll to it.
-      requestIdleCallback(() => {
+      requestAnimationFrame(() => {
         scrollElement.scrollTo({ top: scrollElement.scrollHeight });
       });
     }
