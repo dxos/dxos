@@ -40,7 +40,7 @@ for (const schema of [undefined, TestSchema, TestSchemaClass]) {
       return db.add(obj) as any;
     };
 
-    describe(`Proxy properties${schema == null ? '' : ' with schema'}`, () => {
+    describe(`Proxy properties(schema=${Boolean(schema == null)}, db=${useDatabase})`, () => {
       test('object initializer', async () => {
         const obj = await createObject({ string: 'bar' });
         expect(obj.string).to.eq('bar');

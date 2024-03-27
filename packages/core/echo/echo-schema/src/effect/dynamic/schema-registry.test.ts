@@ -17,7 +17,7 @@ import * as E from '../reactive';
 import { type EchoObjectAnnotation } from '../reactive';
 
 const testType: EchoObjectAnnotation = { typename: 'TestType', version: '1.0.0' };
-const testSchemas = [
+const createTestSchemas = () => [
   E.object(StoredEchoSchema, {
     ...testType,
     createdMs: 1,
@@ -49,7 +49,7 @@ describe('schema registry', () => {
 
   test('typename collision resolved using schema creation time', async () => {
     const { db, registry } = await setupTest();
-    const schemaSavedFirst = db.add(testSchemas[0]);
+    const schemaSavedFirst = db.add(createTestSchemas()[0]);
     const schemaSavedSecond = db.add(
       E.object(StoredEchoSchema, {
         typename: schemaSavedFirst.typename,
@@ -64,7 +64,7 @@ describe('schema registry', () => {
 
   test('get all dynamic schemas', async () => {
     const { db, registry } = await setupTest();
-    const schemas = testSchemas.map((s) => db.add(s));
+    const schemas = createTestSchemas().map((s) => db.add(s));
     const retrieved = registry.getAll();
     expect(retrieved.length).to.eq(schemas.length);
     for (const schema of retrieved) {
@@ -74,7 +74,7 @@ describe('schema registry', () => {
 
   test('get all raw stored schemas', async () => {
     const { db } = await setupTest();
-    const schemas = testSchemas.map((s) => db.add(s));
+    const schemas = createTestSchemas().map((s) => db.add(s));
     const retrieved = db.query(Filter.schema(StoredEchoSchema)).objects;
     expect(retrieved.length).to.eq(schemas.length);
     for (const schema of retrieved) {
@@ -96,7 +96,7 @@ describe('schema registry', () => {
 
   test('schema is invalidated on update', async () => {
     const { db, registry } = await setupTest();
-    const storedSchema = db.add(testSchemas[0]);
+    const storedSchema = db.add(createTestSchemas()[0]);
     const dynamicSchema = registry.getByTypename(storedSchema.typename)!;
     expect(dynamicSchema.getProperties().length).to.eq(1);
     dynamicSchema.addColumns({ newField: S.number });

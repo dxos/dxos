@@ -292,7 +292,7 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
       if (typeReference) {
         throw new Error(`Schema not found in schema registry: ${typeReference.itemId}`);
       }
-      return;
+      return value;
     }
     const unwrappedValue = value instanceof DynamicEchoSchema ? value.serializedSchema : value;
     const propertySchema: S.Schema<any> = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) =>
