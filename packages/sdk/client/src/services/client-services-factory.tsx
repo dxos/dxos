@@ -37,10 +37,16 @@ export const Remote = (target: string | undefined): Partial<ConfigProto> => {
 
 /**
  * Create services from config.
+ * @param config
+ * @param createWorker
+ * @param observabilityGroup - Optional observability group that will be sent with Signaling metadata.
+ * @param signalTelemetryEnabled - Optional flag to enable telemetry metadata sent with Signaling requests.
  */
 export const createClientServices = (
   config: Config,
   createWorker?: WorkerClientServicesParams['createWorker'],
+  observabilityGroup?: string,
+  signalTelemetryEnabled?: boolean,
 ): Promise<ClientServicesProvider> => {
   const remote = config.values.runtime?.client?.remoteSource;
 
@@ -61,5 +67,7 @@ export const createClientServices = (
     }
   }
 
-  return createWorker && typeof SharedWorker !== 'undefined' ? fromWorker(config, { createWorker }) : fromHost(config);
+  return createWorker && typeof SharedWorker !== 'undefined'
+    ? fromWorker(config, { createWorker, observabilityGroup, signalTelemetryEnabled })
+    : fromHost(config, {}, observabilityGroup, signalTelemetryEnabled);
 };
