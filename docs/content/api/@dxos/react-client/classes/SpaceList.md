@@ -1,11 +1,11 @@
 # Class `SpaceList`
-<sub>Declared in [packages/sdk/client/dist/types/src/echo/space-list.d.ts:12]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/echo/space-list.d.ts:11]()</sub>
 
 
 TODO(burdon): Public API (move comments here).
 
 ## Constructors
-### [constructor(_config, _serviceProvider, _modelFactory, _graph, _getIdentityKey)]()
+### [constructor(_config, _serviceProvider, _graph, _getIdentityKey)]()
 
 
 
@@ -17,8 +17,6 @@ Arguments:
 `_config`: <code>undefined | [Config](/api/@dxos/react-client/classes/Config)</code>
 
 `_serviceProvider`: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)</code>
-
-`_modelFactory`: <code>ModelFactory</code>
 
 `_graph`: <code>Hypergraph</code>
 
@@ -41,11 +39,6 @@ Returns the default space.
 Type: <code>MulticastObservable&lt;boolean&gt;</code>
 
 Resolves when the default space is available.
-
-### [modelFactory]()
-Type: <code>ModelFactory</code>
-
-
 
 
 ## Methods
