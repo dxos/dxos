@@ -6,14 +6,7 @@ import { Event, asyncTimeout, scheduleTask, sleep, synchronized, trackLeaks } fr
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context, ContextDisposedError } from '@dxos/context';
 import { timed, warnAfterTimeout } from '@dxos/debug';
-import {
-  type MetadataStore,
-  type Space,
-  createMappedFeedWriter,
-  type DataPipeline,
-  type CreateEpochOptions,
-  type AutomergeHost,
-} from '@dxos/echo-pipeline';
+import { type MetadataStore, type Space, createMappedFeedWriter, type AutomergeHost } from '@dxos/echo-pipeline';
 import { type FeedStore } from '@dxos/feed-store';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -71,11 +64,9 @@ export type DataSpaceParams = {
   automergeHost: AutomergeHost;
 };
 
-/**
- * Delete feed blocks after an epoch is created.
- */
-// TODO(dmaretskyi): Disabled till better times https://github.com/dxos/dxos/issues/3949.
-const ENABLE_FEED_PURGE = false;
+export type CreateEpochOptions = {
+  migration?: CreateEpochRequest.Migration;
+};
 
 @trackLeaks('open', 'close')
 @trace.resource()
@@ -158,10 +149,6 @@ export class DataSpace {
   // TODO(burdon): Can we mark this for debugging only?
   get inner() {
     return this._inner;
-  }
-
-  get dataPipeline(): DataPipeline {
-    return this._inner.dataPipeline;
   }
 
   get presence() {
@@ -278,20 +265,8 @@ export class DataSpace {
 
     this._automergeSpaceState.startProcessingRootDocs();
 
-    await this._inner.initializeDataPipeline();
-
-    this.metrics.dataPipelineOpen = new Date();
-
     // Wait for the first epoch.
-    await cancelWithContext(this._ctx, this._inner.dataPipeline.ensureEpochInitialized());
-
-    log('waiting for data pipeline to reach target timeframe');
-    // Wait for the data pipeline to catch up to its desired timeframe.
-    await this._inner.dataPipeline.pipelineState!.waitUntilReachedTargetTimeframe({
-      ctx: this._ctx,
-      breakOnStall: false,
-    });
-    this.metrics.dataPipelineReady = new Date();
+    await cancelWithContext(this._ctx, this.automergeSpaceState.ensureEpochInitialized());
 
     log('data pipeline ready');
     await this._callbacks.beforeReady?.();
@@ -426,7 +401,12 @@ export class DataSpace {
       case CreateEpochRequest.Migration.NONE:
         {
           // TODO(dmaretskyi): Unify epoch construction.
-          epoch = await this.dataPipeline.createEpoch();
+          epoch = {
+            previousId: this._automergeSpaceState.lastEpoch?.id,
+            number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
+            timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
+            automergeRoot: this._automergeSpaceState.lastEpoch?.subject.assertion?.automergeRoot,
+          };
         }
         break;
       case CreateEpochRequest.Migration.INIT_AUTOMERGE:
@@ -476,18 +456,6 @@ export class DataSpace {
     });
 
     await this.inner.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
-
-    // Clear feed blocks before epoch.
-    if (ENABLE_FEED_PURGE) {
-      for (const feed of this.inner.dataPipeline.pipelineState?.feeds ?? []) {
-        const indexBeforeEpoch = epoch.timeframe.get(feed.key);
-        if (indexBeforeEpoch === undefined) {
-          continue;
-        }
-
-        await feed.safeClear(0, indexBeforeEpoch + 1);
-      }
-    }
   }
 
   @synchronized

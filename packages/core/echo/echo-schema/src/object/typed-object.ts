@@ -5,7 +5,7 @@
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { devtoolsFormatter, todo, type DevtoolsFormatter } from '@dxos/debug';
-import { DocumentModel, type Reference } from '@dxos/document-model';
+import { type Reference } from '@dxos/echo-db';
 
 import { AbstractEchoObject } from './object';
 import {
@@ -76,13 +76,13 @@ export type AutomergeOptions = {
  * We define the exported `TypedObject` type separately to have fine-grained control over the typescript type.
  * The runtime semantics should be exactly the same since this compiled down to `export const TypedObject = TypedObjectImpl`.
  */
-class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements TypedObjectProperties {
+class TypedObjectImpl<T> extends AbstractEchoObject<any> implements TypedObjectProperties {
   static [Symbol.hasInstance](instance: any) {
     return !!instance?.[base] && (isActualTypedObject(instance) || isAutomergeObject(instance));
   }
 
   constructor(initialProps?: T, opts?: TypedObjectOptions) {
-    super(DocumentModel);
+    super({});
 
     if (opts?.automerge === false) {
       throw new Error('Legacy hypercore-based ECHO objects are not supported');

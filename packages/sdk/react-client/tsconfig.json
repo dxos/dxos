@@ -45,9 +45,6 @@
       "path": "../../core/echo/echo-signals"
     },
     {
-      "path": "../../core/echo/text-model"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {

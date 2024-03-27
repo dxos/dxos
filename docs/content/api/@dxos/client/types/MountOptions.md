@@ -1,17 +1,17 @@
 # Type `MountOptions`
-<sub>Declared in [packages/sdk/client/src/devtools/devtools.ts:47](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/devtools/devtools.ts#L47)</sub>
+<sub>Declared in [packages/sdk/client/src/devtools/devtools.ts:45](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/devtools/devtools.ts#L45)</sub>
 
 
 
 
 ## Properties
-### [client](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/devtools/devtools.ts#L48)
+### [client](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/devtools/devtools.ts#L46)
 Type: <code>[Client](/api/@dxos/react-client/classes/Client)</code>
 
 
 
 
-### [host](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/devtools/devtools.ts#L49)
+### [host](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/devtools/devtools.ts#L47)
 Type: <code>ClientServicesHost</code>
 
 

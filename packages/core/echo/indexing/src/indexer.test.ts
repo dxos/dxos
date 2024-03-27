@@ -40,7 +40,7 @@ describe('Indexer', () => {
     objects.forEach((object) => documents.push({ id: object.id, object, currentHash: 'hash' }));
 
     {
-      indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] });
+      indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
       await indexer.initialize();
     }
 
@@ -86,7 +86,7 @@ describe('Indexer', () => {
     const doneIndexing = indexer.indexed.waitForCount(1);
 
     {
-      indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] });
+      indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
       await indexer.initialize();
     }
 
