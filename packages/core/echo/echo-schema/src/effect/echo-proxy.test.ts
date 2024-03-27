@@ -6,6 +6,7 @@ import * as S from '@effect/schema/Schema';
 import { expect } from 'chai';
 import { inspect } from 'util';
 
+import { type SpaceDoc } from '@dxos/echo-pipeline';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
@@ -14,7 +15,7 @@ import { createEchoReactiveObject } from './echo-handler';
 import * as E from './reactive';
 import { getTypeReference } from './reactive';
 import { TEST_OBJECT, TestClass, TestSchema, TestSchemaClass, type TestSchemaWithClass } from './testing/schema';
-import { AutomergeContext, type SpaceDoc } from '../automerge';
+import { AutomergeContext } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 import { data } from '../object';
