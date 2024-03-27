@@ -18,7 +18,7 @@ const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
     return (
       <Main.Content
         {...props}
-        style={{ gridTemplateColumns: `repeat(${Children.count(children)},min-content)`, ...style }}
+        style={{ gridTemplateColumns: `repeat(${Children.count(children) * 2},min-content)`, ...style }}
         classNames={[deckLayout, classNames]}
         ref={forwardedRef}
       >
@@ -63,16 +63,18 @@ const DeckPlank = forwardRef<HTMLDivElement, DeckPlankProps>(
     }, [handlePointerUp, handlePointerMove]);
 
     return (
-      <article
-        {...props}
-        style={{ inlineSize: isSm ? `${size}${unit}` : '100dvw', ...style }}
-        className={mx('relative snap-always snap-start overflow-y-auto', classNames)}
-        ref={forwardedRef}
-      >
-        {children}
+      <>
+        <article
+          {...props}
+          style={{ inlineSize: isSm ? `${size}${unit}` : '100dvw', ...style }}
+          className={mx('snap-always snap-start overflow-y-auto', classNames)}
+          ref={forwardedRef}
+        >
+          {children}
+        </article>
         <Button
-          variant='ghost'
-          classNames='hidden sm:block absolute inline-end-0 inset-block-2 is-4 pointer-fine:is-2 p-0 !rounded-full touch-none'
+          variant='default'
+          classNames='hidden sm:block is-4 pointer-fine:is-2 m-1 p-0 !rounded-full touch-none snap-normal snap-end'
           onPointerDown={({ isPrimary, pageX }) => {
             if (isPrimary) {
               const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
@@ -92,7 +94,7 @@ const DeckPlank = forwardRef<HTMLDivElement, DeckPlankProps>(
         >
           <span className='sr-only'>{t('resize handle label')}</span>
         </Button>
-      </article>
+      </>
     );
   },
 );

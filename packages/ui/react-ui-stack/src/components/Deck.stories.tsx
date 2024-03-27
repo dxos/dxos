@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import '@dxosTheme';
+
 import { BookBookmark, StackSimple } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
@@ -38,13 +40,13 @@ const DemoStackPlank = () => {
   const [items] = useState(rollItems(12));
   return (
     <>
-      <PlankHeading.Root>
+      <PlankHeading.Root classNames='pli-px'>
         <PlankHeading.Button>
           <StackSimple {...plankHeadingIconProps} />
         </PlankHeading.Button>
         <PlankHeading.Label>{faker.lorem.words(3)}</PlankHeading.Label>
       </PlankHeading.Root>
-      <Stack items={items} SectionContent={SimpleContent} id={faker.string.uuid()} />
+      <Stack items={items} SectionContent={SimpleContent} id={faker.string.uuid()} classNames='pli-px' />
     </>
   );
 };
@@ -61,10 +63,22 @@ export const Simple = {
   render: () => {
     const [attended] = useState(new Set());
     return (
-      <Mosaic.Root debug>
+      <Mosaic.Root>
         <AttentionProvider attended={attended}>
-          <Mosaic.DragOverlay debug />
+          <Mosaic.DragOverlay />
           <Deck.Root>
+            <Deck.Plank>
+              <DemoStackPlank />
+            </Deck.Plank>
+            <Deck.Plank>
+              <DemoStackPlank />
+            </Deck.Plank>
+            <Deck.Plank>
+              <DemoStackPlank />
+            </Deck.Plank>
+            <Deck.Plank>
+              <DemoStackPlank />
+            </Deck.Plank>
             <Deck.Plank>
               <DemoStackPlank />
             </Deck.Plank>
