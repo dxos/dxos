@@ -6,10 +6,11 @@ import { log } from '@dxos/log';
 import { safeInstanceof } from '@dxos/util';
 
 import { ContextDisposedError } from './context-disposed-error';
+import { inspect } from 'node:util';
 
 export type ContextErrorHandler = (error: Error) => void;
 
-export type DisposeCallback = () => void | Promise<void>;
+export type DisposeCallback = () => any | Promise<any>;
 
 export type CreateContextParams = {
   onError?: ContextErrorHandler;
@@ -192,5 +193,13 @@ export class Context {
       return this._parent.getAttribute(key);
     }
     return undefined;
+  }
+
+  [Symbol.toStringTag] = 'Context';
+
+  [inspect.custom] = () => this.toString();
+
+  toString() {
+    return `Context(${this._isDisposed ? 'disposed' : 'active'})`;
   }
 }
