@@ -118,10 +118,18 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
   // applicationurl is a custom event fired by the Socket Supply Runtime:
   // https://github.com/socketsupply/socket/blob/ef7fb5559876e41062d5896aafb7b79989fc96e5/api/internal/events.js#L6
   window.addEventListener('applicationurl', ({ url }: any) => {
-    void intentPlugin?.provides.intent.dispatch({
-      action: NavigationAction.ACTIVATE,
-      data: { id: url.host },
-    });
+    const location = url.toString().replace('composer://', '');
+
+    if (location.includes('InvitationCode')) {
+      // TODO(mjamesderocher): Integrate this with app routing.
+      // Currently, the dialogs are controlled by Client Plugin and not the Layout Plugin.
+      window.location.href = location;
+    } else {
+      void intentPlugin?.provides.intent.dispatch({
+        action: NavigationAction.ACTIVATE,
+        data: { id: location },
+      });
+    }
   });
 
   // TODO(burdon): Initial url has index.html, which must be caught/redirected.
