@@ -4,11 +4,11 @@
 
 import { Event, synchronized } from '@dxos/async';
 import { type MetadataMethods } from '@dxos/echo-pipeline';
+import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
-import { ConcatenatedHeadHashes } from './types';
-import { MySublevel } from './level';
-import { log } from '@dxos/log';
+import { type MySublevel } from './level';
+import { type ConcatenatedHeadHashes } from './types';
 
 export type IndexMetadataStoreParams = {
   db: MySublevel;
@@ -37,7 +37,7 @@ export class IndexMetadataStore implements MetadataMethods {
   @trace.span({ showInBrowserTimeline: true })
   @log.method()
   async getDirtyDocuments(): Promise<string[]> {
-    let res: string[] = [];
+    const res: string[] = [];
 
     for await (const [id, metadata] of this._db.iterator<string, DocumentMetadata>({ valueEncoding: 'json' })) {
       if (metadata.lastIndexedHash !== metadata.lastAvailableHash) {
