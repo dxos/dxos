@@ -51,8 +51,8 @@ export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Sc
   public addColumns(columns: S.Struct.Fields) {
     const oldSchema = this._getSchema();
     const schemaExtension = S.partial(S.struct(columns));
-    const extended = S.extend(oldSchema, schemaExtension) as S.Schema<any>;
-    this.serializedSchema.jsonSchema = effectToJsonSchema(extended);
+    const extended = S.extend(oldSchema, schemaExtension).annotations(oldSchema.ast.annotations);
+    this.serializedSchema.jsonSchema = effectToJsonSchema(extended as S.Schema<any>);
   }
 
   public updateColumns(columns: S.Struct.Fields) {
@@ -74,9 +74,9 @@ export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Sc
   }
 
   public removeColumns(columnsNames: string[]) {
-    const oldAst = this._getSchema().ast;
-    const modifiedSchema = S.make(AST.omit(oldAst, columnsNames));
-    this.serializedSchema.jsonSchema = effectToJsonSchema(modifiedSchema);
+    const oldSchema = this._getSchema();
+    const newSchema = S.make(AST.omit(oldSchema.ast, columnsNames)).annotations(oldSchema.ast.annotations);
+    this.serializedSchema.jsonSchema = effectToJsonSchema(newSchema);
   }
 
   public getProperties(): AST.PropertySignature[] {
