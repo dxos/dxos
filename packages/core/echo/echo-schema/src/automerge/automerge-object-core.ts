@@ -317,7 +317,9 @@ export class AutomergeObjectCore {
   /**
    * Encode a value to be stored in the Automerge document.
    */
-  encode(value: DecodedAutomergeValue, { allowLinks = true }: { allowLinks?: boolean } = {}) {
+  encode(value: DecodedAutomergeValue, options: { allowLinks?: boolean; removeUndefined?: boolean } = {}) {
+    const allowLinks = options.allowLinks ?? true;
+    const removeUndefined = options.removeUndefined ?? false;
     if (value instanceof A.RawString) {
       return value;
     }
@@ -342,11 +344,14 @@ export class AutomergeObjectCore {
       return encodeReference(value);
     }
     if (value instanceof AutomergeArray || Array.isArray(value)) {
-      const values: any = value.map((val) => this.encode(val));
+      const values: any = value.map((val) => this.encode(val, options));
       return values;
     }
     if (typeof value === 'object' && value !== null) {
-      return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this.encode(value)]));
+      const entries = removeUndefined
+        ? Object.entries(value).filter(([_, value]) => value !== undefined)
+        : Object.entries(value);
+      return Object.fromEntries(entries.map(([key, value]): [string, any] => [key, this.encode(value, options)]));
     }
 
     if (typeof value === 'string' && value.length > STRING_CRDT_LIMIT) {

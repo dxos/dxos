@@ -255,7 +255,7 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
       const link = this._linkReactiveHandler(validatedValue, validatedValue[symbolHandler]);
       this._objectCore.set(fullPath, encodeReference(link));
     } else {
-      const encoded = this._objectCore.encode(validatedValue);
+      const encoded = this._objectCore.encode(validatedValue, { removeUndefined: true });
       this._objectCore.set(fullPath, encoded);
     }
 
@@ -321,7 +321,7 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
 
     const fullPath = this._getPropertyMountPath(target, path);
 
-    const encodedItems = items.map((value) => this._objectCore.encode(value));
+    const encodedItems = this._encodeForArray(items);
 
     let newLength: number = -1;
     this._objectCore.change((doc) => {
@@ -365,7 +365,7 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
 
     const fullPath = this._getPropertyMountPath(target, path);
 
-    const encodedItems = items?.map((value) => this._objectCore.encode(value)) ?? [];
+    const encodedItems = this._encodeForArray(items);
 
     let newLength: number = -1;
     this._objectCore.change((doc) => {
@@ -383,7 +383,7 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
 
     const fullPath = this._getPropertyMountPath(target, path);
 
-    const encodedItems = items?.map((value) => this._objectCore.encode(value)) ?? [];
+    const encodedItems = this._encodeForArray(items);
 
     let deletedElements: any[] | undefined;
     this._objectCore.change((doc) => {
@@ -451,6 +451,10 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     for (const item of items) {
       this.validateValue(target, [...path, String(index++)], item);
     }
+  }
+
+  private _encodeForArray(items: any[] | undefined): any[] {
+    return items?.map((value) => this._objectCore.encode(value, { removeUndefined: true })) ?? [];
   }
 
   private _getPropertyMountPath(target: any, path: KeyPath): KeyPath {
