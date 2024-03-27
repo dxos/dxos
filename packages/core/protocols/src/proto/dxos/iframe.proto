@@ -15,6 +15,9 @@ message StartRequest {
   string origin = 1;
   /// Key for the iframe resource lock used to determine when the service is closing.
   optional string lock_key = 2;
+  // TODO(nf): extract or remove?
+  optional string observabilityGroup = 3;
+  optional bool signalTelemetryEnabled = 4;
 }
 
 /// Iframe-to-worker RPCs.
