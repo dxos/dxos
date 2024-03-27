@@ -5,17 +5,17 @@
 import { expect } from 'chai';
 
 import { sleep } from '@dxos/async';
+import { Repo } from '@dxos/automerge/automerge-repo';
 import { Context } from '@dxos/context';
-import { type SpaceDoc } from '@dxos/echo-pipeline';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
-import { AutomergeContext } from './automerge-context';
 import {
   type AutomergeDocumentLoader,
   AutomergeDocumentLoaderImpl,
   type ObjectDocumentLoaded,
 } from './automerge-doc-loader';
+import { type SpaceDoc } from './types';
 
 const ctx = new Context();
 const SPACE_KEY = PublicKey.random();
@@ -38,8 +38,8 @@ describe('AutomergeDocumentLoader', () => {
 
   test('listener is invoked after a document is loaded', async () => {
     const objectId = randomId();
-    const { loader, automerge } = await setupTest();
-    const handle = automerge.repo.create<SpaceDoc>();
+    const { loader, repo } = await setupTest();
+    const handle = repo.create<SpaceDoc>();
     const docLoadInfo = waitForDocumentLoad(loader, { objectId, handle });
     loadLinkedObjects(loader, { [objectId]: handle.url });
     await sleep(10);
@@ -48,9 +48,9 @@ describe('AutomergeDocumentLoader', () => {
 
   test('listener is not invoked if an object was rebound during document loading', async () => {
     const objectId = randomId();
-    const { loader, automerge } = await setupTest();
-    const oldDocHandle = automerge.repo.create<SpaceDoc>();
-    const newDocHandle = automerge.repo.create<SpaceDoc>();
+    const { loader, repo } = await setupTest();
+    const oldDocHandle = repo.create<SpaceDoc>();
+    const newDocHandle = repo.create<SpaceDoc>();
     const docLoadInfo = waitForDocumentLoad(loader, { objectId, handle: oldDocHandle });
     loadLinkedObjects(loader, { [objectId]: oldDocHandle.url });
     loader.onObjectBoundToDocument(newDocHandle, objectId);
@@ -60,10 +60,10 @@ describe('AutomergeDocumentLoader', () => {
 
   test('document link is not loaded if object exists as inline object', async () => {
     const objectId = randomId();
-    const { loader, automerge } = await setupTest();
-    const existingHandle = automerge.repo.create<SpaceDoc>();
+    const { loader, repo } = await setupTest();
+    const existingHandle = repo.create<SpaceDoc>();
     loader.onObjectBoundToDocument(existingHandle, objectId);
-    const newDocHandle = automerge.repo.create<SpaceDoc>();
+    const newDocHandle = repo.create<SpaceDoc>();
     const docLoadInfo = waitForDocumentLoad(loader, { objectId, handle: newDocHandle });
     loadLinkedObjects(loader, { [objectId]: existingHandle.url });
     await sleep(10);
@@ -71,13 +71,13 @@ describe('AutomergeDocumentLoader', () => {
   });
 
   const setupTest = async () => {
-    const automerge = new AutomergeContext();
-    const loader = new AutomergeDocumentLoaderImpl(SPACE_KEY, automerge);
-    const spaceRootDocHandle = automerge.repo.create<SpaceDoc>();
+    const repo = new Repo({ network: [] });
+    const loader = new AutomergeDocumentLoaderImpl(SPACE_KEY, repo);
+    const spaceRootDocHandle = repo.create<SpaceDoc>();
     await loader.loadSpaceRootDocHandle(ctx, {
       rootUrl: spaceRootDocHandle.url,
     });
-    return { loader, spaceRootDocHandle, automerge };
+    return { loader, spaceRootDocHandle, repo };
   };
 
   const loadLinkedObjects = (loader: AutomergeDocumentLoader, links: SpaceDoc['links']) => {
