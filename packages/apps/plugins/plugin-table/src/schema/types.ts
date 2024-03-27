@@ -12,9 +12,16 @@ import { PublicKey } from '@dxos/react-client';
 import { type ColumnProps, type TableDef } from '@dxos/react-ui-table';
 
 const FIELD_META_NAMESPACE = 'plugin-table';
+const typeToSchema: Partial<{ [key in ColumnProps['type']]: S.Schema<any> }> = {
+  boolean: S.boolean,
+  number: S.number,
+  date: S.number,
+  string: S.string,
+};
 
 interface ColumnAnnotation {
-  digits: number;
+  digits?: number;
+  refProp?: string;
 }
 
 export const getPropType = (type?: AST.AST): ColumnProps['type'] => {
@@ -33,20 +40,23 @@ export const getPropType = (type?: AST.AST): ColumnProps['type'] => {
 };
 
 export const getSchema = (
-  type: Omit<ColumnProps['type'], 'ref'> | undefined,
-  options: { digits?: number },
+  tables: TableType[],
+  type: ColumnProps['type'] | undefined,
+  options: { digits?: number; refProp?: string; refTable?: string },
 ): S.Schema<any> => {
-  switch (type) {
-    case 'boolean':
-      return S.boolean;
-    case 'number':
-      return options?.digits ? S.number.pipe(E.fieldMeta(FIELD_META_NAMESPACE, { digits: options.digits })) : S.number;
-    case 'date':
-      return S.number;
-    case 'string':
-    default:
-      return S.string;
+  let schema: S.Schema<any>;
+  if (type === 'ref') {
+    const referencedSchema = tables.find((table) => table.schema?.id === options.refTable)?.schema;
+    schema = referencedSchema ? E.ref(referencedSchema) : S.string;
+  } else {
+    schema = (type && typeToSchema[type]) ?? S.string;
   }
+  return schema.pipe(
+    E.fieldMeta(FIELD_META_NAMESPACE, {
+      refProp: options.refProp,
+      digits: options.digits,
+    }),
+  );
 };
 
 export const schemaPropMapper =
@@ -60,7 +70,7 @@ export const schemaPropMapper =
       id: String(id)!,
       prop: String(id)!,
       type: getPropType(type),
-      refTable: refAnnotation?.typename,
+      refTable: refAnnotation?.storedSchemaId,
       refProp: refProp ?? undefined,
       label: label ?? undefined,
       digits,

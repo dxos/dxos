@@ -76,10 +76,8 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
       onColumnUpdate: (id, column) => {
         const { type, refTable, refProp, digits, label } = column;
         updateTableProp({ id, refProp, label });
-        const referencedSchema =
-          type === 'ref' ? tables.find((table) => table.schema?.id === refTable)?.schema : undefined;
         updateSchemaProp({
-          [id]: referencedSchema ? E.ref(referencedSchema) : getSchema(type, { digits }),
+          [id]: getSchema(tables, type, { digits, refTable, refProp }),
         });
       },
       onColumnDelete: (id) => table.schema?.removeColumns([id]),

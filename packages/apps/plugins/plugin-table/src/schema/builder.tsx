@@ -5,6 +5,7 @@
 import { Plus, X } from '@phosphor-icons/react';
 import React from 'react';
 
+import * as E from '@dxos/echo-schema';
 import { type EchoDatabase, type Space, type TypedObject } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import {
@@ -161,7 +162,7 @@ export const createActionColumn = (
 class QueryModel implements SearchListQueryModel<TypedObject> {
   constructor(
     private readonly _db: EchoDatabase,
-    private readonly _schema: string,
+    private readonly _schemaId: string,
     private readonly _prop: string,
   ) {}
 
@@ -179,7 +180,7 @@ class QueryModel implements SearchListQueryModel<TypedObject> {
         return null;
       }
 
-      if (object.__schema?.id !== this._schema) {
+      if (E.typeOf(object)?.itemId !== this._schemaId) {
         return false;
       }
 
