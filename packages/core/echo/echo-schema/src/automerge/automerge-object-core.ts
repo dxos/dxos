@@ -5,12 +5,11 @@
 import { Event } from '@dxos/async';
 import { next as A, type ChangeFn, type ChangeOptions, type Doc, type Heads } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
-import { Reference } from '@dxos/document-model';
+import { Reference } from '@dxos/echo-db';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log'; // Keep type-only.
-import { TextModel } from '@dxos/text-model';
 import { assignDeep, defer, getDeep } from '@dxos/util';
 
 import { AutomergeArray } from './automerge-array';
@@ -28,8 +27,8 @@ import {
   type SpaceDoc,
   type DecodedAutomergePrimaryValue,
 } from './types';
-import { EchoReactiveHandler } from '../effect/echo-handler';
-import { getProxyHandlerSlot, isReactiveProxy } from '../effect/proxy';
+import { isReactiveProxy } from '../effect/proxy';
+import { isEchoReactiveObject } from '../effect/reactive';
 import { type TypedObjectOptions, type EchoObject, TextObject, type OpaqueEchoObject } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
@@ -38,6 +37,11 @@ import { type Schema } from '../proto';
 const STRING_CRDT_LIMIT = 300_000;
 
 const SYSTEM_NAMESPACE = 'system';
+
+/**
+ * @deprecated
+ */
+const TEXT_MODEL_TYPE = 'dxos.org/model/text';
 
 // TODO(dmaretskyi): Rename to `AutomergeObject`.
 export class AutomergeObjectCore {
@@ -107,7 +111,7 @@ export class AutomergeObjectCore {
       for (const field of opts.schema.props) {
         if (field.repeated) {
           (initialProps as Record<string, any>)[field.id!] ??= [];
-        } else if (field.type === getSchemaProto().PropType.REF && field.refModelType === TextModel.meta.type) {
+        } else if (field.type === getSchemaProto().PropType.REF && field.refModelType === TEXT_MODEL_TYPE) {
           // TODO(dmaretskyi): Is this right? Should we init with empty string or an actual reference to a Text object?
           (initialProps as Record<string, any>)[field.id!] ??= new TextObject();
         }
@@ -274,7 +278,7 @@ export class AutomergeObjectCore {
   linkObject(obj: OpaqueEchoObject): Reference {
     if (this.database) {
       // TODO(dmaretskyi): Fix this.
-      if (isReactiveProxy(obj) && !(getProxyHandlerSlot(obj).handler instanceof EchoReactiveHandler)) {
+      if (isReactiveProxy(obj) && !isEchoReactiveObject(obj)) {
         invariant(this.database, 'BUG');
         this.database._dbApi.add(obj);
       }

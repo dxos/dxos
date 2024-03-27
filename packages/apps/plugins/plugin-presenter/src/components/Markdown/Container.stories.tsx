@@ -25,7 +25,7 @@ const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRendere
 
 const Story: FC<{ content: string }> = ({ content }) => {
   return (
-    <Container className='bg-neutral-200'>
+    <Container classNames='bg-neutral-200'>
       <Slide content={content} />
     </Container>
   );

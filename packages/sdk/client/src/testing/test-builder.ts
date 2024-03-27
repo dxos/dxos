@@ -14,11 +14,11 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import {
-  createLibDataChannelTransportFactory,
-  createSimplePeerTransportFactory,
   MemoryTransportFactory,
   TcpTransportFactory,
   TransportKind,
+  createLibDataChannelTransportFactory,
+  createSimplePeerTransportFactory,
   type TransportFactory,
 } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -27,7 +27,7 @@ import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/
 import { defer } from '@dxos/util';
 
 import { Client } from '../client';
-import { createDefaultModelFactory, type EchoDatabase, Expando } from '../echo';
+import { Expando, type EchoDatabase } from '../echo';
 import { ClientServicesProxy, LocalClientServices } from '../services';
 
 export const testConfigWithLocalSignal = new Config({
@@ -58,7 +58,6 @@ export class TestBuilder {
   // prettier-ignore
   constructor (
     config?: Config,
-    private readonly _modelFactory = createDefaultModelFactory(),
     public signalManagerContext = new MemorySignalManagerContext(),
     // TODO(nf): configure better
     transport = process.env.MOCHA_ENV === 'nodejs' ? TransportKind.LIBDATACHANNEL : TransportKind.SIMPLE_PEER,
@@ -115,7 +114,6 @@ export class TestBuilder {
   createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams) {
     const services = new ClientServicesHost({
       config: this.config,
-      modelFactory: this._modelFactory,
       storage: this.storage,
       runtimeParams,
       ...this.networking,
@@ -130,7 +128,6 @@ export class TestBuilder {
   createLocal() {
     const services = new LocalClientServices({
       config: this.config,
-      modelFactory: this._modelFactory,
       storage: this.storage,
       ...this.networking,
     });

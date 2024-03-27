@@ -8,11 +8,10 @@ import { pipe } from 'effect';
 import * as Option from 'effect/Option';
 import { type Simplify } from 'effect/Types';
 
-import { Reference } from '@dxos/document-model';
+import { Reference } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
-import { EchoReactiveHandler } from './echo-handler';
 import {
   type ReactiveHandler,
   createReactiveProxy,
@@ -25,11 +24,18 @@ import { TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 import { type ObjectMeta } from '../object';
 
+// TODO: remove during refactoring. was introduced to help with recursive imports
+export abstract class EchoReactiveHandler {
+  abstract getSchema(): S.Schema<any> | undefined;
+  abstract getMeta(): ObjectMeta;
+}
+
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
 
 export const EchoObjectAnnotationId = Symbol.for('@dxos/echo-schema/annotation/NamedSchema');
 export type EchoObjectAnnotation = {
+  storedSchemaId?: string;
   typename: string;
   version: string;
 };
@@ -169,16 +175,42 @@ export const object: {
 };
 
 export const ReferenceAnnotation = Symbol.for('@dxos/schema/annotation/Reference');
-export type ReferenceAnnotationValue = {};
+export type ReferenceAnnotationValue = EchoObjectAnnotation;
 
 // TODO(dmaretskyi): Assert that schema has `id`.
 export const ref = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<T> => {
-  if (!getEchoObjectAnnotation(schema)) {
+  const annotation = getEchoObjectAnnotation(schema);
+  if (annotation == null) {
     throw new Error('Reference target must be an ECHO object.');
   }
 
-  return S.make(AST.annotations(schema.ast, { [ReferenceAnnotation]: {} }));
+  return schema.annotations({ [ReferenceAnnotation]: annotation });
 };
+
+export const EchoObjectFieldMetaAnnotationId = Symbol.for('@dxos/echo-schema/annotation/FieldMeta');
+type FieldMetaValue = Record<string, string | number | boolean>;
+export type EchoObjectFieldMetaAnnotation = {
+  [namespace: string]: FieldMetaValue;
+};
+
+export const fieldMeta =
+  (namespace: string, meta: FieldMetaValue) =>
+  <A, I, R>(self: S.Schema<A, I, R>): S.Schema<A, I, R> => {
+    const existingMeta = self.ast.annotations[EchoObjectFieldMetaAnnotationId] as EchoObjectFieldMetaAnnotation;
+    return self.annotations({
+      [EchoObjectFieldMetaAnnotationId]: {
+        ...existingMeta,
+        [namespace]: { ...(existingMeta ?? {})[namespace], ...meta },
+      },
+    });
+  };
+
+export const getFieldMetaAnnotation = (field: AST.PropertySignature, namespace: string) =>
+  pipe(
+    AST.getAnnotation<EchoObjectFieldMetaAnnotation>(EchoObjectFieldMetaAnnotationId)(field.type),
+    Option.map((meta) => meta[namespace]),
+    Option.getOrElse(() => undefined),
+  );
 
 export const getRefAnnotation = (schema: S.Schema<any>) =>
   pipe(
@@ -214,7 +246,7 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
   if (annotation == null) {
     return undefined;
   }
-  return Reference.fromLegacyTypename(annotation.typename);
+  return Reference.fromLegacyTypename(annotation.storedSchemaId ?? annotation.typename);
 };
 
 export const metaOf = <T extends {}>(obj: T): ObjectMeta => {

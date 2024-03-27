@@ -172,7 +172,7 @@ export class AutomergeHost {
     }
 
     const heads = getHeads(event.doc);
-    const lastAvailableHash = heads.at(-1);
+    const lastAvailableHash = heads.join('');
     if (!lastAvailableHash) {
       return;
     }

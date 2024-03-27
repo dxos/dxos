@@ -87,6 +87,8 @@ export class Agent {
     }
 
     // Create client services.
+    // TODO(nf): set observability group.
+    // TODO(nf): honor kill switch.
     this._clientServices = await fromHost(this._options.config, {
       lockKey: lockFilePath(this._options.profile),
       transportFactory,

@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Reference } from '@dxos/document-model';
-import { invariant } from '@dxos/invariant';
+import { Reference } from '@dxos/echo-db';
 import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 import { type TextSnapshot } from '@dxos/protocols/proto/dxos/echo/model/text';
 
@@ -11,13 +10,12 @@ import { type AbstractEchoObject } from './object';
 import { isAutomergeObject } from './typed-object';
 import { base, type OpaqueEchoObject, type EchoObject, type ForeignKey } from './types';
 import type { EchoDatabase } from '../database';
-import { type EchoReactiveHandler } from '../effect/echo-handler';
+import { type EchoReactiveHandlerImpl } from '../effect/echo-handler';
 import { getProxyHandlerSlot } from '../effect/proxy';
 import { isEchoReactiveObject } from '../effect/reactive';
 
 export const setStateFromSnapshot = (obj: AbstractEchoObject, snapshot: ObjectSnapshot | TextSnapshot) => {
-  invariant(obj[base]._stateMachine);
-  obj[base]._stateMachine.reset(snapshot);
+  throw new Error('Not implemented');
 };
 
 export const forceUpdate = (obj: AbstractEchoObject) => {
@@ -29,7 +27,7 @@ export const getDatabaseFromObject = (obj: OpaqueEchoObject): EchoDatabase | und
     return obj[base]._core.database?._dbApi;
   }
   if (isEchoReactiveObject(obj)) {
-    const handler = getProxyHandlerSlot(obj).handler as EchoReactiveHandler;
+    const handler = getProxyHandlerSlot(obj).handler as EchoReactiveHandlerImpl;
     return handler._objectCore.database?._dbApi;
   }
   return undefined;

@@ -10,7 +10,7 @@ import { createRoot } from 'react-dom/client';
 
 import { Button, DensityProvider, DropdownMenu, Input, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  type CursorInfo, // TODO(burdon): Remove.
+  type CursorInfo,
   useTextEditor,
   automerge,
   createBasicExtensions,
@@ -402,12 +402,13 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     } else {
       // Insert after.
       item = onCreate!(state?.after?.trim());
-      if (state?.after) {
-        // Split line.
-        // TODO(wittjosiah): Hook up.
-        // const text = current.text!.content;
-        // text.delete(state.from, text.length);
-      }
+
+      // TODO(dmaretskyi): Line splitting.
+      // if (state?.after) {
+      //   // Split line.
+      //   const text = current.text!.content;
+      //   text.delete(state.from, text.length);
+      // }
 
       if (current.items?.length) {
         current.items.splice(0, 0, item);
@@ -445,12 +446,13 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     if (idx - 1 >= 0) {
       const active = getLastDescendent(items[idx - 1]);
       if (active) {
-        const text = active.text!.content;
+        const text = active.text.content!;
         const from = text.length;
-        if (state?.after?.length) {
-          // TODO(wittjosiah): Hook up.
-          // text.insert(from, state.after.trim());
-        }
+
+        // TODO(dmaretskyi): Line joining.
+        // if (state?.after?.length) {
+        //   text.insert(from, state.after.trim());
+        // }
 
         setActive({ itemId: active.id, anchor: from });
         const items = getItems(active);

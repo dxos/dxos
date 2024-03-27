@@ -29,11 +29,7 @@
         "{projectRoot}/src/tests/proto/gen"
       ]
     },
-    "test": {
-      "options": {
-        "forceExit": true
-      }
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",
