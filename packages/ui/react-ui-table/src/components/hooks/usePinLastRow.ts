@@ -31,6 +31,7 @@ export const usePinLastRow = (
 
     const scrollElement = getScrollElement?.();
     const isFirstRender = pinnedRowKey === undefined;
+
     if (scrollElement && !isFirstRender) {
       requestAnimationFrame(() => {
         scrollElement.scrollTo({ top: scrollElement.scrollHeight });
