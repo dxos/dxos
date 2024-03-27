@@ -99,6 +99,16 @@ describe('effect-to-json', () => {
     expect(jsonSchema[ECHO_KEY].type).to.deep.eq(testSchema);
   });
 
+  test('field meta annotation', () => {
+    const fieldMeta = { maxLength: 0 };
+    const metaNamespace = 'dxos.test';
+    class Schema extends EchoObjectSchema(testSchema)({
+      field: S.string.pipe(E.fieldMeta(metaNamespace, fieldMeta)),
+    }) {}
+    const jsonSchema = effectToJsonSchema(Schema);
+    expect(jsonSchema.properties.field[ECHO_KEY].fieldMeta[metaNamespace]).to.deep.eq(fieldMeta);
+  });
+
   test('reference annotation', () => {
     class DeepNested extends EchoObjectSchema(testSchema)({ field: S.string }) {}
     class Nested extends EchoObjectSchema(testSchema)({ field: E.ref(DeepNested) }) {}
@@ -132,7 +142,7 @@ describe('effect-to-json', () => {
 
   const expectReferenceAnnotation = (object: any) => {
     expect(object[ECHO_KEY].type).to.deep.eq(testSchema);
-    expect(object[ECHO_KEY].reference).to.deep.eq({});
+    expect(object[ECHO_KEY].reference).to.deep.eq(testSchema);
   };
 });
 
@@ -146,7 +156,7 @@ describe('json-to-effect', () => {
       class Schema extends EchoObjectSchema(testSchema)(
         {
           string: S.string.pipe(S.identifier('String')),
-          number: S.number,
+          number: S.number.pipe(E.fieldMeta('dxos.test', { is_date: true })),
           boolean: S.boolean,
           array: S.array(S.string),
           twoDArray: S.array(S.array(S.string)),

@@ -2,17 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as AST from '@effect/schema/AST';
-import * as S from '@effect/schema/Schema';
 import type { SimplifyMutable, Struct } from '@effect/schema/Schema';
+import * as S from '@effect/schema/Schema';
 
-import {
-  type EchoObjectAnnotation,
-  EchoObjectAnnotationId,
-  getEchoObjectAnnotation,
-  getSchema,
-  getTypeReference,
-} from './reactive';
+import { getSchema, getTypeReference, type EchoObjectAnnotation, EchoObjectAnnotationId } from './reactive';
+import { schemaVariance } from './utils';
 
 type EchoClassOptions = {
   partial?: true;
@@ -38,38 +32,23 @@ export const EchoObjectSchema = <Klass>(args: EchoObjectAnnotation) => {
   ): EchoSchemaClass<Fields> => {
     const fieldsSchema = S.mutable(options?.partial ? S.partial(S.struct(fields)) : S.struct(fields));
     const typeSchema = S.extend(fieldsSchema, S.struct({ id: S.string }));
-    const annotatedSchema = S.make(
-      AST.annotations(typeSchema.ast, {
-        [EchoObjectAnnotationId]: {
-          typename: args.typename,
-          version: args.version,
-        },
-      }),
-    );
-    const klass: any = class {
+    const annotatedSchema = typeSchema.annotations({
+      [EchoObjectAnnotationId]: { typename: args.typename, version: args.version },
+    });
+    return class {
       static readonly typename = args.typename;
       static [Symbol.hasInstance](obj: unknown): obj is Klass {
         return obj != null && getTypeReference(getSchema(obj))?.itemId === args.typename;
       }
 
+      static readonly ast = annotatedSchema.ast;
+      static readonly [S.TypeId] = schemaVariance;
+      static readonly annotations = annotatedSchema.annotations.bind(annotatedSchema);
+      static readonly pipe = annotatedSchema.pipe.bind(annotatedSchema);
+
       constructor() {
         throw new Error('use E.object(MyClass, fields) to instantiate an object');
       }
-    };
-    klass.ast = annotatedSchema.ast;
-    klass[S.TypeId] = {
-      _A: (_: any) => _,
-      _I: (_: any) => _,
-      _R: (_: never) => _,
-    };
-    return klass;
+    } as any;
   };
-};
-
-export const getEchoObjectSubclassTypename = (klass: any): string | undefined => {
-  const ast = (klass as any).ast;
-  if (!AST.isTransform(ast)) {
-    return undefined;
-  }
-  return getEchoObjectAnnotation(S.make(ast.to))?.typename;
 };
