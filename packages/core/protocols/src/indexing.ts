@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+// TODO(dmaretskyi): Rename ObjectPointer{Decoded/Encoded}.
 export type IdDecoded = {
   documentId: string;
   objectId: string;
