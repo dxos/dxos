@@ -15,12 +15,11 @@ import {
   base,
   getAutomergeObjectCore,
 } from '@dxos/echo-schema';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
-import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { type SpaceList } from './space-list';
+import { type SpaceProxy } from './space-proxy';
 
 export type IndexQueryProviderParams = {
   service: IndexService;
@@ -33,20 +32,21 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
 
   private async find(filter: Filter): Promise<QueryResult<EchoObject>[]> {
     const start = Date.now();
-    const response = await this._params.service.find({ queryId: PublicKey.random().toHex(), filter: filter.toProto() });
-    if (!response.results) {
+    const response = await this._params.service.find({ filter: filter.toProto() });
+
+    if (!response.results || response.results.length === 0) {
       return [];
     }
 
     const results: (QueryResult<EchoObject> | undefined)[] = await Promise.all(
-      response.results.map(async (result) => {
+      response.results!.map(async (result) => {
         const space = this._params.spaceList.get(result.spaceKey);
         if (!space) {
           return;
         }
 
-        const object = await warnAfterTimeout(2000, 'takes to long to load object', async () => {
-          await space.waitUntilReady();
+        const object = await warnAfterTimeout(2000, 'Loading object', async () => {
+          await (space as SpaceProxy)._databaseInitialized.wait();
           return space.db.automerge.loadObjectById(result.id);
         });
 
@@ -91,16 +91,15 @@ export class IndexQuerySource implements QuerySource {
   }
 
   update(filter: Filter<EchoObject>): void {
-    if (filter.options.dataLocation === undefined || filter.options.dataLocation === QueryOptions.DataLocation.LOCAL) {
-      // Disabled by dataLocation filter.
-      return;
-    }
-    this._results = undefined;
+    this._results = [];
     this.changed.emit();
 
     this._params
       .find(filter)
       .then((results) => {
+        if (results.length === 0) {
+          return;
+        }
         this._results = results;
         this.changed.emit();
       })

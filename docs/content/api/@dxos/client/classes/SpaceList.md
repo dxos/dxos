@@ -1,11 +1,11 @@
 # Class `SpaceList`
-<sub>Declared in [packages/sdk/client/src/echo/space-list.ts:47](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-list.ts#L47)</sub>
+<sub>Declared in [packages/sdk/client/src/echo/space-list.ts:46](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-list.ts#L46)</sub>
 
 
 TODO(burdon): Public API (move comments here).
 
 ## Constructors
-### [constructor(_config, _serviceProvider, _modelFactory, _graph, _getIdentityKey)](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-list.ts#L66)
+### [constructor(_config, _serviceProvider, _graph, _getIdentityKey)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-list.ts#L65)
 
 
 
@@ -17,8 +17,6 @@ Arguments:
 `_config`: <code>undefined | [Config](/api/@dxos/react-client/classes/Config)</code>
 
 `_serviceProvider`: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
-
-`_modelFactory`: <code>ModelFactory</code>
 
 `_graph`: <code>Hypergraph</code>
 
@@ -32,24 +30,19 @@ Type: <code>[Space](/api/@dxos/client/interfaces/Space)[]</code>
 
 
 
-### [default](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-list.ts#L247)
+### [default](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-list.ts#L237)
 Type: <code>[Space](/api/@dxos/client/interfaces/Space)</code>
 
 Returns the default space.
 
-### [isReady](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-list.ts#L227)
+### [isReady](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-list.ts#L217)
 Type: <code>MulticastObservable&lt;boolean&gt;</code>
 
 Resolves when the default space is available.
 
-### [modelFactory](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-list.ts#L96)
-Type: <code>ModelFactory</code>
-
-
-
 
 ## Methods
-### [\[custom\]()](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-list.ts#L85)
+### [\[custom\]()](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-list.ts#L83)
 
 
 
@@ -73,7 +66,7 @@ Arguments: none
 
 
 
-### [addSchema(schema)](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-list.ts#L315)
+### [addSchema(schema)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-list.ts#L305)
 
 
 
@@ -97,7 +90,7 @@ Arguments:
 `observables`: <code>Observable&lt;R&gt;[]</code>
 
 
-### [create(\[meta\])](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-list.ts#L257)
+### [create(\[meta\])](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-list.ts#L247)
 
 
 Creates a new space.
@@ -145,7 +138,7 @@ Arguments:
 `callback`: <code>function</code>
 
 
-### [get(spaceKey)](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-list.ts#L231)
+### [get(spaceKey)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-list.ts#L221)
 
 
 Returns the space with the given key.
@@ -157,7 +150,7 @@ Arguments:
 `spaceKey`: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 
 
-### [join(invitation)](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-list.ts#L303)
+### [join(invitation)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-list.ts#L293)
 
 
 Joins an existing space using the given invitation.
@@ -195,7 +188,7 @@ Arguments:
 `callback`: <code>function</code>
 
 
-### [query(\[filter\], \[options\])](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-list.ts#L324)
+### [query(\[filter\], \[options\])](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-list.ts#L314)
 
 
 Query all spaces.
@@ -223,7 +216,7 @@ Arguments:
 `initialValue`: <code>R</code>
 
 
-### [setIndexConfig(config)](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-list.ts#L208)
+### [setIndexConfig(config)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-list.ts#L198)
 
 
 
@@ -251,7 +244,7 @@ Arguments:
 `onComplete`: <code>function</code>
 
 
-### [toJSON()](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-list.ts#L90)
+### [toJSON()](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-list.ts#L88)
 
 
 

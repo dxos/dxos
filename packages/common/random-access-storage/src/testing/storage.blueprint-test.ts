@@ -115,9 +115,6 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
     });
 
     test('destroy clears all data', async () => {
-      if (new Set([StorageType.IDB, StorageType.CHROME, StorageType.FIREFOX]).has(testGroupName)) {
-        return;
-      }
       const storage = createStorage();
       const directory = storage.createDirectory();
       const fileName = randomText();
@@ -390,7 +387,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
     });
 
     test('list all files after reopen', async (t) => {
-      if (testGroupName !== StorageType.WEBFS && testGroupName !== StorageType.NODE) {
+      if (testGroupName === StorageType.RAM) {
         t.skip();
       }
 

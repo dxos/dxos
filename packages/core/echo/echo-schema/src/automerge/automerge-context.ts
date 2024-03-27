@@ -122,9 +122,12 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
     invariant(!this._stream);
 
     this.peerId = peerId;
-    this._stream = this._dataService.syncRepo({
-      id: peerId,
-    });
+    this._stream = this._dataService.syncRepo(
+      {
+        id: peerId,
+      },
+      { timeout: 20_000 },
+    ); // TODO(dmaretskyi): Set global timeout instead.
     this._stream.subscribe(
       (msg) => {
         this.emit('message', cbor.decode(msg.syncMessage!));
@@ -144,7 +147,7 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
     );
 
     this._dataService
-      .getHostInfo()
+      .getHostInfo(undefined, { timeout: 20_000 }) // TODO(dmaretskyi): Set global timeout instead.
       .then((hostInfo) => {
         this._hostInfo = hostInfo;
         this.emit('peer-candidate', {
@@ -165,7 +168,7 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
           id: this.peerId,
           syncMessage: cbor.encode(message),
         },
-        { timeout: 5_000 },
+        { timeout: 20_000 }, // TODO(dmaretskyi): Set global timeout instead.
       )
       .catch((err) => {
         log.catch(err);
