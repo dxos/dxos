@@ -101,9 +101,12 @@ describe('effect-to-json', () => {
 
   test('field meta annotation', () => {
     const fieldMeta = { maxLength: 0 };
-    class Schema extends EchoObjectSchema(testSchema)({ field: S.string.pipe(E.fieldMeta(fieldMeta)) }) {}
+    const metaNamespace = 'dxos.test';
+    class Schema extends EchoObjectSchema(testSchema)({
+      field: S.string.pipe(E.fieldMeta(metaNamespace, fieldMeta)),
+    }) {}
     const jsonSchema = effectToJsonSchema(Schema);
-    expect(jsonSchema.properties.field[ECHO_KEY].fieldMeta).to.deep.eq(fieldMeta);
+    expect(jsonSchema.properties.field[ECHO_KEY].fieldMeta[metaNamespace]).to.deep.eq(fieldMeta);
   });
 
   test('reference annotation', () => {
@@ -153,7 +156,7 @@ describe('json-to-effect', () => {
       class Schema extends EchoObjectSchema(testSchema)(
         {
           string: S.string.pipe(S.identifier('String')),
-          number: S.number.pipe(E.fieldMeta({ is_date: true })),
+          number: S.number.pipe(E.fieldMeta('dxos.test', { is_date: true })),
           boolean: S.boolean,
           array: S.array(S.string),
           twoDArray: S.array(S.array(S.string)),

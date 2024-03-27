@@ -188,18 +188,27 @@ export const ref = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<T> =>
 };
 
 export const EchoObjectFieldMetaAnnotationId = Symbol.for('@dxos/echo-schema/annotation/FieldMeta');
-export type EchoObjectFieldMetaAnnotation = Record<string, string | number | boolean>;
+type FieldMetaValue = Record<string, string | number | boolean>;
+export type EchoObjectFieldMetaAnnotation = {
+  [namespace: string]: FieldMetaValue;
+};
 
 export const fieldMeta =
-  (meta: EchoObjectFieldMetaAnnotation) =>
+  (namespace: string, meta: FieldMetaValue) =>
   <A, I, R>(self: S.Schema<A, I, R>): S.Schema<A, I, R> => {
-    const existingMeta = getFieldMetaAnnotation(self) ?? {};
-    return S.make(AST.annotations(self.ast, { [EchoObjectFieldMetaAnnotationId]: { ...existingMeta, ...meta } }));
+    const existingMeta = self.ast.annotations[EchoObjectFieldMetaAnnotationId] as EchoObjectFieldMetaAnnotation;
+    return self.annotations({
+      [EchoObjectFieldMetaAnnotationId]: {
+        ...existingMeta,
+        [namespace]: { ...(existingMeta ?? {})[namespace], ...meta },
+      },
+    });
   };
 
-export const getFieldMetaAnnotation = <A, I, R>(schema: S.Schema<A, I, R>) =>
+export const getFieldMetaAnnotation = (field: AST.PropertySignature, namespace: string) =>
   pipe(
-    AST.getAnnotation<EchoObjectFieldMetaAnnotation>(EchoObjectFieldMetaAnnotationId)(schema.ast),
+    AST.getAnnotation<EchoObjectFieldMetaAnnotation>(EchoObjectFieldMetaAnnotationId)(field.type),
+    Option.map((meta) => meta[namespace]),
     Option.getOrElse(() => undefined),
   );
 
