@@ -1,11 +1,11 @@
 # Class `SpaceProxy`
-<sub>Declared in [packages/sdk/client/src/echo/space-proxy.ts:45](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-proxy.ts#L45)</sub>
+<sub>Declared in [packages/sdk/client/src/echo/space-proxy.ts:43](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-proxy.ts#L43)</sub>
 
 
 
 
 ## Constructors
-### [constructor(_clientServices, _modelFactory, _data, graph, automergeContext, options)](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-proxy.ts#L95)
+### [constructor(_clientServices, _data, graph, automergeContext, options)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-proxy.ts#L92)
 
 
 
@@ -15,8 +15,6 @@ Returns: <code>[SpaceProxy](/api/@dxos/client/classes/SpaceProxy)</code>
 Arguments: 
 
 `_clientServices`: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
-
-`_modelFactory`: <code>ModelFactory</code>
 
 `_data`: <code>Space</code>
 
@@ -29,52 +27,52 @@ Arguments:
 
 
 ## Properties
-### [db](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-proxy.ts#L153)
+### [db](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-proxy.ts#L148)
 Type: <code>[EchoDatabase](/api/@dxos/client/interfaces/EchoDatabase)</code>
 
 Echo database.
 
-### [error](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-proxy.ts#L204)
+### [error](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-proxy.ts#L199)
 Type: <code>undefined | Error</code>
 
 
 
-### [internal](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-proxy.ts#L200)
+### [internal](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-proxy.ts#L195)
 Type: <code>SpaceInternal</code>
 
 
 
-### [invitations](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-proxy.ts#L185)
+### [invitations](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-proxy.ts#L180)
 Type: <code>MulticastObservable&lt;[CancellableInvitation](/api/@dxos/client/classes/CancellableInvitationObservable)[]&gt;</code>
 
 
 
-### [isOpen](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-proxy.ts#L158)
+### [isOpen](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-proxy.ts#L153)
 Type: <code>boolean</code>
 
 
 
-### [key](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-proxy.ts#L149)
+### [key](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-proxy.ts#L144)
 Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 
 
 
-### [members](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-proxy.ts#L192)
+### [members](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-proxy.ts#L187)
 Type: <code>MulticastObservable&lt;[SpaceMember](/api/@dxos/client/interfaces/SpaceMember)[]&gt;</code>
 
 
 
-### [pipeline](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-proxy.ts#L178)
+### [pipeline](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-proxy.ts#L173)
 Type: <code>MulticastObservable&lt;PipelineState&gt;</code>
 
 Current state of space pipeline.
 
-### [properties](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-proxy.ts#L163)
+### [properties](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-proxy.ts#L158)
 Type: <code>[TypedObject](/api/@dxos/client/types/TypedObject)</code>
 
 Properties object.
 
-### [state](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-proxy.ts#L171)
+### [state](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-proxy.ts#L166)
 Type: <code>MulticastObservable&lt;[SpaceState](/api/@dxos/client/enums#SpaceState)&gt;</code>
 
 Current state of the space.
@@ -83,7 +81,7 @@ Presence is available in  `SpaceState.CONTROL_ONLY`  state.
 
 
 ## Methods
-### [_setOpen(open)](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-proxy.ts#L415)
+### [_setOpen(open)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-proxy.ts#L409)
 
 
 
@@ -95,7 +93,7 @@ Arguments:
 `open`: <code>boolean</code>
 
 
-### [close()](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-proxy.ts#L365)
+### [close()](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-proxy.ts#L359)
 
 
 TODO
@@ -107,7 +105,7 @@ Arguments: none
 
 
 
-### [createSnapshot()](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-proxy.ts#L410)
+### [createSnapshot()](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-proxy.ts#L404)
 
 
 Implementation method.
@@ -119,7 +117,7 @@ Arguments: none
 
 
 
-### [listen(channel, callback)](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-proxy.ts#L392)
+### [listen(channel, callback)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-proxy.ts#L386)
 
 
 Listen for messages posted to the space.
@@ -133,7 +131,7 @@ Arguments:
 `callback`: <code>function</code>
 
 
-### [open()](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-proxy.ts#L358)
+### [open()](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-proxy.ts#L352)
 
 
 TODO
@@ -145,7 +143,7 @@ Arguments: none
 
 
 
-### [postMessage(channel, message)](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-proxy.ts#L380)
+### [postMessage(channel, message)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-proxy.ts#L374)
 
 
 Post a message to the space.
@@ -159,7 +157,7 @@ Arguments:
 `message`: <code>any</code>
 
 
-### [share(\[options\])](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-proxy.ts#L402)
+### [share(\[options\])](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-proxy.ts#L396)
 
 
 Creates an interactive invitation.
@@ -171,7 +169,7 @@ Arguments:
 `options`: <code>Partial&lt;[Invitation](/api/@dxos/client/interfaces/Invitation)&gt;</code>
 
 
-### [waitUntilReady()](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/echo/space-proxy.ts#L372)
+### [waitUntilReady()](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/space-proxy.ts#L366)
 
 
 Waits until the space is in the ready state, with database initialized.
