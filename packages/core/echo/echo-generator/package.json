@@ -17,8 +17,11 @@
   ],
   "dependencies": {
     "@dxos/client": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/random": "workspace:*"
+    "@dxos/random": "workspace:*",
+    "@effect/schema": "0.64.7",
+    "effect": "2.4.9"
   },
   "devDependencies": {},
   "publishConfig": {
