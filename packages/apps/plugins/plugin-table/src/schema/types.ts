@@ -7,9 +7,11 @@ import * as S from '@effect/schema/Schema';
 
 import { type TableType } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
-import { type EchoObjectAnnotation, EchoObjectFieldMetaAnnotationId, ReferenceAnnotation } from '@dxos/echo-schema';
+import { type EchoObjectAnnotation, getFieldMetaAnnotation, ReferenceAnnotation } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
 import { type ColumnProps, type TableDef } from '@dxos/react-ui-table';
+
+const FIELD_META_NAMESPACE = 'plugin-table';
 
 interface ColumnAnnotation {
   digits: number;
@@ -38,7 +40,7 @@ export const getSchema = (
     case 'boolean':
       return S.boolean;
     case 'number':
-      return options?.digits ? S.number.pipe(E.fieldMeta({ digits: options.digits })) : S.number;
+      return options?.digits ? S.number.pipe(E.fieldMeta(FIELD_META_NAMESPACE, { digits: options.digits })) : S.number;
     case 'date':
       return S.number;
     case 'string':
@@ -53,7 +55,7 @@ export const schemaPropMapper =
     const { name: id, type } = property;
     const { label, refProp, size } = table.props?.find((prop) => prop.id === id) ?? {};
     const refAnnotation = property.type.annotations[ReferenceAnnotation] as EchoObjectAnnotation;
-    const digits = (property.type.annotations[EchoObjectFieldMetaAnnotationId] as ColumnAnnotation)?.digits;
+    const digits = getFieldMetaAnnotation<ColumnAnnotation>(property, FIELD_META_NAMESPACE)?.digits;
     return {
       id: String(id)!,
       prop: String(id)!,

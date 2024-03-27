@@ -205,10 +205,10 @@ export const fieldMeta =
     });
   };
 
-export const getFieldMetaAnnotation = (field: AST.PropertySignature, namespace: string) =>
+export const getFieldMetaAnnotation = <T>(field: AST.PropertySignature, namespace: string) =>
   pipe(
     AST.getAnnotation<EchoObjectFieldMetaAnnotation>(EchoObjectFieldMetaAnnotationId)(field.type),
-    Option.map((meta) => meta[namespace]),
+    Option.map((meta) => meta[namespace] as T),
     Option.getOrElse(() => undefined),
   );
 
