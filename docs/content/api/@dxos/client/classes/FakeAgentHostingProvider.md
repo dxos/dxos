@@ -1,11 +1,11 @@
 # Class `FakeAgentHostingProvider`
-<sub>Declared in [packages/sdk/client/src/services/fake-agent-hosting-provider.ts:9](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/services/fake-agent-hosting-provider.ts#L9)</sub>
+<sub>Declared in [packages/sdk/client/src/services/fake-agent-hosting-provider.ts:9](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/fake-agent-hosting-provider.ts#L9)</sub>
 
 
 
 
 ## Constructors
-### [constructor(_clientConfig)](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/services/fake-agent-hosting-provider.ts#L11)
+### [constructor(_clientConfig)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/fake-agent-hosting-provider.ts#L11)
 
 
 
@@ -22,7 +22,7 @@ Arguments:
 
 
 ## Methods
-### [createAgent(invitationCode, identityKey)](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/services/fake-agent-hosting-provider.ts#L13)
+### [createAgent(invitationCode, identityKey)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/fake-agent-hosting-provider.ts#L13)
 
 
 
@@ -36,7 +36,7 @@ Arguments:
 `identityKey`: <code>string</code>
 
 
-### [destroyAgent(agentID)](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/services/fake-agent-hosting-provider.ts#L23)
+### [destroyAgent(agentID)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/fake-agent-hosting-provider.ts#L23)
 
 
 
@@ -48,7 +48,7 @@ Arguments:
 `agentID`: <code>string</code>
 
 
-### [getAgent(agentID)](https://github.com/dxos/dxos/blob/235256b25/packages/sdk/client/src/services/fake-agent-hosting-provider.ts#L19)
+### [getAgent(agentID)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/fake-agent-hosting-provider.ts#L19)
 
 
 

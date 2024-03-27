@@ -5,7 +5,6 @@ import * as orama from '@orama/orama';
 
 import { Event } from '@dxos/async';
 import { type Filter } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
@@ -54,7 +53,9 @@ export class IndexSchema implements Index {
 
   // TODO(mykola): Fix Filter type with new Reactive API.
   async find(filter: Filter) {
-    invariant(filter.type, 'Filter type is required.');
+    if (!filter.type) {
+      return [];
+    }
     // TODO(mykola): Use Schema URI.
     const results = await orama.search<OramaSchemaType, ObjectType>(await this._orama, {
       term: filter.type.itemId,

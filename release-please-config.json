@@ -404,11 +404,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/echo/document-model/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/echo/echo-db/package.json",
           "jsonpath": "$.version"
         },
@@ -445,21 +440,6 @@
         {
           "type": "json",
           "path": "packages/core/echo/indexing/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/echo/messenger-model/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/echo/model-factory/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/echo/text-model/package.json",
           "jsonpath": "$.version"
         },
         {

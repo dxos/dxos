@@ -11,7 +11,7 @@ import "dxos/echo/object.proto";
 package dxos.agent.query;
 
 message QueryRequest {
-  string queryId = 1;
+  optional string queryId = 1;
   filter.Filter filter = 2;
 }
 
@@ -22,7 +22,7 @@ message QueryResult {
 }
 
 message QueryResponse {
-  string queryId = 1;
+  optional string queryId = 1;
   repeated QueryResult results = 2;
   repeated object.EchoObject objects = 3;
 }

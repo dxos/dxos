@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-debug",
-  "version": "0.4.8",
+  "version": "0.4.9",
   "description": "DXOS Surface plugin for testing.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -40,7 +40,6 @@
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
-    "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "date-fns": "^3.3.1",

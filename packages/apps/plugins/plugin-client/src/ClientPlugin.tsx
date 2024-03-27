@@ -17,7 +17,7 @@ import {
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
-import { type TypeCollection } from '@dxos/react-client/echo';
+import { IndexKind, type TypeCollection } from '@dxos/react-client/echo';
 
 import meta, { CLIENT_PLUGIN } from './meta';
 import translations from './translations';
@@ -65,10 +65,17 @@ export const ClientPlugin = ({
     initialize: async () => {
       let firstRun = false;
 
-      client = new Client({ config: new Config(await Storage(), Envs(), Local(), Defaults()), ...options });
+      const config = new Config(await Storage(), Envs(), Local(), Defaults());
+      client = new Client({ config, ...options });
 
       try {
         await client.initialize();
+
+        await client.spaces.setIndexConfig(
+          config.values.runtime?.client?.storage?.spaceFragmentation
+            ? { indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true }
+            : {},
+        );
 
         // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
         client.reloaded.on(() => {
