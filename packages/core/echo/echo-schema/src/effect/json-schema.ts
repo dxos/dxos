@@ -13,7 +13,6 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { stripUndefinedValues } from '@dxos/util';
 
-import * as E from './reactive';
 import {
   type EchoObjectAnnotation,
   EchoObjectAnnotationId,
@@ -282,5 +281,7 @@ export const jsonToEffectSchema = (root: JsonSchema7Root, definitions?: JsonSche
     result = S.unknown;
   }
   const refinement: EchoRefinement | undefined = (root as any)[ECHO_REFINEMENT_KEY];
-  return refinement?.fieldMeta ? result.pipe(E.fieldMeta(refinement.fieldMeta)) : result;
+  return refinement?.fieldMeta
+    ? result.annotations({ [EchoObjectFieldMetaAnnotationId]: refinement.fieldMeta })
+    : result;
 };
