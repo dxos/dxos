@@ -12,7 +12,7 @@ import { DynamicEchoSchema } from './dynamic-schema';
 import { createDatabase } from '../../testing';
 import { EchoObjectSchema } from '../echo-object-class';
 import * as E from '../reactive';
-import { getTypeReference } from '../reactive';
+import { EchoObjectAnnotationId, getTypeReference } from '../reactive';
 
 const generatedType = { typename: 'generated', version: '1.0.0' };
 
@@ -31,7 +31,11 @@ describe('dynamic schema', () => {
     }) {}
 
     instanceWithSchemaRef.schema = db.schemaRegistry.add(GeneratedSchema);
-    expect(instanceWithSchemaRef.schema.ast).to.deep.eq(GeneratedSchema.ast);
+    const schemaWithId = GeneratedSchema.annotations({
+      [EchoObjectAnnotationId]: { ...generatedType, storedSchemaId: instanceWithSchemaRef.schema.id },
+    });
+    expect(instanceWithSchemaRef.schema.ast).to.deep.eq(schemaWithId.ast);
+
     const validator = S.validateSync(instanceWithSchemaRef.schema!);
     expect(() => validator({ id: instanceWithSchemaRef.id, field: '1' })).not.to.throw();
     expect(() => validator({ id: instanceWithSchemaRef.id, field: 1 })).to.throw();
@@ -55,7 +59,7 @@ describe('dynamic schema', () => {
   test('getTypeReference', async () => {
     const { db } = await setupTest();
     const schema = db.schemaRegistry.add(GeneratedEmptySchema);
-    expect(getTypeReference(schema)?.itemId).to.eq(GeneratedEmptySchema.typename);
+    expect(getTypeReference(schema)?.itemId).to.eq(schema.id);
   });
 
   test('getProperties filters out id and unwraps optionality', async () => {

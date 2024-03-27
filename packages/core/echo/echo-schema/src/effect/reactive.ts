@@ -35,6 +35,7 @@ export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
 
 export const EchoObjectAnnotationId = Symbol.for('@dxos/echo-schema/annotation/NamedSchema');
 export type EchoObjectAnnotation = {
+  storedSchemaId?: string;
   typename: string;
   version: string;
 };
@@ -236,7 +237,7 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
   if (annotation == null) {
     return undefined;
   }
-  return Reference.fromLegacyTypename(annotation.typename);
+  return Reference.fromLegacyTypename(annotation.storedSchemaId ?? annotation.typename);
 };
 
 export const metaOf = <T extends {}>(obj: T): ObjectMeta => {
