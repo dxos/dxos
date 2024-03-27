@@ -1,5 +1,5 @@
 # Type `ClientOptions`
-<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:17]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:16]()</sub>
 
 
 This options object configures the DXOS Client.
@@ -18,7 +18,7 @@ Create client worker.
 
 
 ### [modelFactory]()
-Type: <code>ModelFactory</code>
+Type: <code>any</code>
 
 Custom model factory.
 
