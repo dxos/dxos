@@ -60,7 +60,7 @@ export class AutomergeDb {
     private readonly _initRootProxyFn: InitRootProxyFn,
     dbApi: EchoDatabase, // TODO(dmaretskyi): Remove.
   ) {
-    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this.spaceKey, automerge);
+    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this.spaceKey, automerge.repo);
     this._dbApi = dbApi;
   }
 
