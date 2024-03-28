@@ -20,7 +20,7 @@ type DocumentMainProps = { document: DocumentType } & Omit<EditorMainProps, 'id'
 const DocumentMain = ({ document, extensions: _extensions = [], ...props }: DocumentMainProps) => {
   const identity = useIdentity();
   const space = getSpaceForObject(document);
-  const { id, doc, accessor } = useDocAccessor(document.content);
+  const { id, doc, accessor } = useDocAccessor(document.content!);
   const extensions = useMemo(
     () => [
       _extensions,

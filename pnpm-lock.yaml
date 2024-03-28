@@ -913,6 +913,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -1600,6 +1603,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0

@@ -12,6 +12,7 @@ import { Path } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { type AddSectionPosition } from '@dxos/react-ui-stack';
 import { getSize, mx } from '@dxos/react-ui-theme';
+import { nonNullable } from '@dxos/util';
 
 import { STACK_PLUGIN } from '../meta';
 import { type StackPluginProvides } from '../types';
@@ -44,7 +45,7 @@ export const AddSectionDialog = ({ path, position, stack }: AddSectionDialogProp
           ? 0
           : position === 'afterAll'
             ? stack.sections.length
-            : stack.sections.findIndex((section) => section.id === Path.last(path!));
+            : stack.sections.filter(nonNullable).findIndex((section) => section.id === Path.last(path!));
 
       stack.sections.splice(
         index + (position === 'after' ? 1 : 0),

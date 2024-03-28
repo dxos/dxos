@@ -10,6 +10,7 @@ import { type AnyEchoObject, base, getTypeRef, type IDocHandle, AutomergeObject,
 import * as E from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { TypedObject } from '@dxos/react-client/echo';
+import { nonNullable } from '@dxos/util';
 
 export interface CursorConverter {
   toCursor(position: number, assoc?: -1 | 1 | undefined): string;
@@ -94,7 +95,7 @@ export const serializers: Record<string, TypedObjectSerializer> = {
       // Insert comments.
       const comments = object.comments;
       const threadSerializer = serializers[ThreadType.typename];
-      if (!threadSerializer || !comments || comments.length === 0 || content instanceof TextV0Type) {
+      if (!content || !threadSerializer || !comments || comments.length === 0 || content instanceof TextV0Type) {
         return text;
       }
       const doc = getRawDoc(content, [(content as any).field]);
@@ -143,6 +144,7 @@ export const serializers: Record<string, TypedObjectSerializer> = {
     serialize: async (object: ThreadType): Promise<string> => {
       return (
         object.messages
+          .filter(nonNullable)
           .map((message) => message.blocks.map((block) => `${(block.content as any)?.text}`).join(' - '))
           .join(' | ') ?? ''
       );

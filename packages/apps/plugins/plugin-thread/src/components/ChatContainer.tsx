@@ -14,6 +14,7 @@ import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
 import { automerge, createBasicExtensions, createThemeExtensions, useDocAccessor } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadLayout } from '@dxos/react-ui-thread';
+import { nonNullable } from '@dxos/util';
 
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
@@ -102,11 +103,11 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
   };
 
   const handleDelete = (id: string, index: number) => {
-    const messageIndex = thread.messages.findIndex((message) => message.id === id);
+    const messageIndex = thread.messages.filter(nonNullable).findIndex((message) => message.id === id);
     if (messageIndex !== -1) {
       const message = thread.messages[messageIndex];
-      message.blocks.splice(index, 1);
-      if (message.blocks.length === 0) {
+      message?.blocks.splice(index, 1);
+      if (message?.blocks.length === 0) {
         thread.messages.splice(messageIndex, 1);
       }
     }
@@ -121,7 +122,7 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
       <ScrollArea.Root classNames='col-span-2'>
         <ScrollArea.Viewport classNames='overflow-anchored after:overflow-anchor after:block after:bs-px after:-mbs-px [&>div]:min-bs-full [&>div]:!grid [&>div]:grid-rows-[1fr_0]'>
           <div role='none' className={mx(threadLayout, 'place-self-end')}>
-            {thread.messages.map((message) => (
+            {thread.messages.filter(nonNullable).map((message) => (
               <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
             ))}
           </div>

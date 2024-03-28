@@ -29,7 +29,7 @@ const DocumentSection: FC<{
   const space = getSpaceForObject(document);
 
   const { themeMode } = useThemeContext();
-  const { doc, accessor } = useDocAccessor(document.content);
+  const { doc, accessor } = useDocAccessor(document.content!);
   const { parentRef } = useTextEditor(
     () => ({
       doc,

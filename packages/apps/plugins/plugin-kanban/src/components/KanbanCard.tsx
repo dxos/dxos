@@ -44,7 +44,7 @@ export const KanbanCardComponent: FC<{
   });
   const tx = transform ? Object.assign(transform, { scaleY: 1 }) : null;
 
-  const { id, doc, accessor } = useDocAccessor(item.title);
+  const { id, doc, accessor } = useDocAccessor(item.title!);
   const { parentRef } = useTextEditor(
     () => ({
       doc,

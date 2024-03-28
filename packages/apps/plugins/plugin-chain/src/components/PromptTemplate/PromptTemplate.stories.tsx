@@ -36,7 +36,7 @@ const Story = () => {
   return (
     <div className='flex justify-center'>
       <div className='flex w-full max-w-[800px] overflow-hidden overflow-y-scroll py-4'>
-        <PromptTemplate prompt={chain.prompts[0]} />
+        <PromptTemplate prompt={chain.prompts[0]!} />
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ import { type ChainType } from '@braneframe/types';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { DensityProvider, Main, Select, useTranslation } from '@dxos/react-ui';
 import { baseSurface, mx, textBlockWidth, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
+import { nonNullable } from '@dxos/util';
 
 import { PromptTemplate, Section } from './PromptTemplate';
 import { CHAIN_PLUGIN } from '../meta';
@@ -21,7 +22,7 @@ const ChainMain: FC<{ chain: ChainType }> = ({ chain }) => {
 
   const handleSelectPreset = (preset: Preset) => {
     chain.title = preset.title;
-    chain.prompts.forEach((p) => space.db.remove(p));
+    chain.prompts.filter(nonNullable).forEach((p) => space.db.remove(p));
     chain.prompts = [preset.prompt()];
   };
 
@@ -29,7 +30,7 @@ const ChainMain: FC<{ chain: ChainType }> = ({ chain }) => {
     <Main.Content classNames={[baseSurface, topbarBlockPaddingStart]}>
       <div role='none' className={mx(textBlockWidth, 'pli-2')}>
         <div className='flex flex-col my-2'>
-          {chain.prompts.map((prompt, i) => (
+          {chain.prompts.filter(nonNullable).map((prompt, i) => (
             <PromptTemplate key={i} prompt={prompt} />
           ))}
         </div>

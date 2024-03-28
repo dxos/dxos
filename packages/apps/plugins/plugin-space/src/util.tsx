@@ -28,6 +28,7 @@ import { EchoDatabaseImpl, Filter, LEGACY_TEXT_TYPE, isTypedObject, type OpaqueE
 import { PublicKey } from '@dxos/keys';
 import { Migrations } from '@dxos/migrations';
 import { SpaceState, getSpaceForObject, type Space, type TypedObject } from '@dxos/react-client/echo';
+import { nonNullable } from '@dxos/util';
 
 import { SPACE_PLUGIN } from './meta';
 import { clone } from './serializer';
@@ -329,21 +330,21 @@ export const updateGraphWithSpace = ({
     }
     return true;
   });
-  const previousObjects = new Map<string, E.AnyEchoObject[]>();
+  const previousObjects = new Map<string, E.Ref<E.AnyEchoObject>[]>();
   const unsubscribeQuery = effect(() => {
     const folder: FolderType = space.state.get() === SpaceState.READY && space.properties[FolderType.typename];
     const folderObjects = folder?.objects ?? [];
     const removedObjects =
       previousObjects
         .get(space.key.toHex())
-        ?.filter((object) => !(query.objects as E.AnyEchoObject[]).includes(object)) ?? [];
+        ?.filter((object) => !(query.objects as E.Ref<E.AnyEchoObject>[]).includes(object)) ?? [];
     previousObjects.set(space.key.toHex(), [...query.objects]);
     const unsortedObjects = query.objects.filter((object) => !folderObjects.includes(object));
     const objects = [...folderObjects, ...unsortedObjects].filter((object) => object !== folder);
 
     batch(() => {
       // Cleanup when objects removed from space.
-      removedObjects.forEach((object) => {
+      removedObjects.filter(nonNullable).forEach((object) => {
         const getId = (id: string) => `${id}/${object.id}`;
         if (object instanceof FolderType) {
           graph.removeNode(object.id);
@@ -356,7 +357,7 @@ export const updateGraphWithSpace = ({
         });
       });
 
-      objects.forEach((object) => {
+      objects.filter(nonNullable).forEach((object) => {
         const getId = (id: string) => `${id}/${object.id}`;
 
         // When object is a folder but not the root folder.
@@ -385,16 +386,18 @@ export const updateGraphWithSpace = ({
           previousObjects.set(object.id, [...object.objects]);
 
           // Remove objects no longer in folder.
-          removedObjects.forEach((child) => graph.removeEdge({ source: object.id, target: child.id }));
+          removedObjects
+            .filter(nonNullable)
+            .forEach((child) => graph.removeEdge({ source: object.id, target: child.id }));
 
           // Add new objects to folder.
-          object.objects.forEach((child) => graph.addEdge({ source: object.id, target: child.id }));
+          object.objects.filter(nonNullable).forEach((child) => graph.addEdge({ source: object.id, target: child.id }));
 
           // Set order of objects in folder.
           graph.sortEdges(
             object.id,
             'outbound',
-            object.objects.map((o) => o.id),
+            object.objects.filter(nonNullable).map((o) => o.id),
           );
 
           graph.addNodes({
@@ -484,7 +487,7 @@ export const updateGraphWithSpace = ({
       graph.sortEdges(
         space.key.toHex(),
         'outbound',
-        folderObjects.map((o) => o.id),
+        folderObjects.filter(nonNullable).map((o) => o.id),
       );
     });
   });

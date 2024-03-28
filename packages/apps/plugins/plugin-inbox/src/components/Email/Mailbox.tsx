@@ -7,6 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { type MailboxType, MessageState, type MessageType } from '@braneframe/types';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, fixedBorder, fixedInsetFlexLayout, topbarBlockPaddingStart, mx } from '@dxos/react-ui-theme';
+import { nonNullable } from '@dxos/util';
 
 import { type ActionType, MessageList } from './MessageList';
 import { MasterDetail } from '../MasterDetail';
@@ -49,6 +50,7 @@ const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
   }, [selected]);
 
   const messages = [...mailbox.messages]
+    .filter(nonNullable)
     .filter((message) => message.state !== MessageState.ARCHIVED && message.state !== MessageState.DELETED)
     .sort(byDate());
 

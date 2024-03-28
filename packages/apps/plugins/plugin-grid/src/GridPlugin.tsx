@@ -32,7 +32,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
             parse: (item: GridItemType, type: string) => {
               switch (type) {
                 case 'node':
-                  return { id: item.object.id, label: (item.object as any).title, data: item.object };
+                  return { id: item.object?.id, label: (item.object as any).title, data: item.object };
                 case 'object':
                   return item.object;
                 case 'view-object':

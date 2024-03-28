@@ -28,6 +28,7 @@ import {
   surfaceElevation,
   staticDefaultButtonColors,
 } from '@dxos/react-ui-theme';
+import { nonNullable } from '@dxos/util';
 
 import { FileUpload } from './FileUpload';
 import { STACK_PLUGIN } from '../meta';
@@ -44,12 +45,13 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
 
   const id = `stack-${stack.id}`;
   const items = stack.sections
+    .filter(nonNullable)
     // TODO(wittjosiah): Should the database handle this differently?
     // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
-    .filter(({ object }) => Boolean(object))
+    .filter(({ object }) => object)
     .map(({ id, object }) => {
-      const rest = metadataPlugin?.provides.metadata.resolver(E.typeOf(object)?.itemId ?? 'never');
-      return { id, object, ...rest };
+      const rest = metadataPlugin?.provides.metadata.resolver(E.typeOf(object!)?.itemId ?? 'never');
+      return { id, object: object as SectionType, ...rest };
     });
   const space = getSpaceForObject(stack);
   const [folder] = useQuery(space, E.Filter.schema(FolderType));
@@ -93,7 +95,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
   };
 
   const handleDelete = (path: string) => {
-    const index = stack.sections.findIndex((section) => section.id === Path.last(path));
+    const index = stack.sections.filter(nonNullable).findIndex((section) => section.id === Path.last(path));
     if (index >= 0) {
       stack.sections.splice(index, 1);
     }
