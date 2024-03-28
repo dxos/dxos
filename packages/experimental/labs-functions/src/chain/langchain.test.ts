@@ -6,6 +6,8 @@ import * as JSONSchema from '@effect/schema/JSONSchema';
 import * as S from '@effect/schema/Schema';
 import { SerpAPI } from '@langchain/community/tools/serpapi';
 import { HNSWLib } from '@langchain/community/vectorstores/hnswlib';
+import { type BaseFunctionCallOptions } from '@langchain/core/language_models/base';
+import { type BaseMessage, HumanMessage } from '@langchain/core/messages';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import {
   ChatPromptTemplate,
@@ -18,17 +20,17 @@ import { RunnableSequence, RunnablePassthrough } from '@langchain/core/runnables
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { ChatOpenAI, formatToOpenAITool, OpenAIEmbeddings } from '@langchain/openai';
 import { expect } from 'chai';
-import { AgentExecutor } from 'langchain/agents';
+import { AgentExecutor, type AgentStep } from 'langchain/agents';
 import { formatLogToString } from 'langchain/agents/format_scratchpad/log';
 import { formatToOpenAIToolMessages } from 'langchain/agents/format_scratchpad/openai_tools';
 import { OpenAIToolsAgentOutputParser, type ToolsAgentStep } from 'langchain/agents/openai/output_parser';
 import { ReActSingleInputOutputParser } from 'langchain/agents/react/output_parser';
 import { type Document } from 'langchain/document';
+import { OllamaFunctions } from 'langchain/experimental/chat_models/ollama_functions';
 import { PlanAndExecuteAgentExecutor } from 'langchain/experimental/plan_and_execute';
 import { pull } from 'langchain/hub';
 import { BufferMemory } from 'langchain/memory';
 import { JsonOutputFunctionsParser } from 'langchain/output_parsers';
-import { type AgentStep, type BaseMessage } from 'langchain/schema';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { Calculator } from 'langchain/tools/calculator';
 import { renderTextDescription } from 'langchain/tools/render';
@@ -54,9 +56,10 @@ import { getConfig, getKey } from '../util';
 // TODO(burdon): Document chains: https://js.langchain.com/docs/modules/chains/document
 // TODO(burdon): Summarize: https://js.langchain.com/docs/modules/chains/popular/summarize
 // TODO(burdon): Plugins: https://platform.openai.com/docs/plugins/examples
-// TODO(burdon): FakeEmbeddings for tests
 
-describe.skip('LangChain', () => {
+// TODO(burdon): Test which work with Ollama vs. OpenAI.
+
+describe('LangChain', () => {
   const createModel = (modelName = 'gpt-4') => {
     const config = getConfig()!;
 
@@ -232,7 +235,7 @@ describe.skip('LangChain', () => {
   // TODO(burdon): How to make prompt satisfy all fields?
   // TODO(burdon): Metadata for zod: https://github.com/colinhacks/zod/issues/273
   //
-  test.only('functions', async () => {
+  test('functions', async () => {
     const defs = S.struct({
       company: S.array(
         S.struct({
@@ -252,7 +255,6 @@ describe.skip('LangChain', () => {
 
     const jsonSchema: Record<string, unknown> = JSONSchema.make(defs) as any;
     const model = createModel().bind({
-      function_call: { name: 'output_formatter' },
       functions: [
         {
           name: 'output_formatter',
@@ -260,6 +262,9 @@ describe.skip('LangChain', () => {
           parameters: jsonSchema,
         },
       ],
+      function_call: {
+        name: 'output_formatter',
+      },
     });
 
     const outputParser = new JsonOutputFunctionsParser();
@@ -285,12 +290,104 @@ describe.skip('LangChain', () => {
   });
 
   //
+  // Ollama functions.
+  // https://js.langchain.com/docs/integrations/chat/ollama_functions
+  //
+  test('ollama functions', async () => {
+    // const calculatorSchema = z.object({
+    //   operation: z.enum(['add', 'subtract', 'multiply', 'divide']).describe('The type of operation to execute.'),
+    //   number1: z.number().describe('The first number to operate on.'),
+    //   number2: z.number().describe('The second number to operate on.'),
+    // });
+
+    // class CalculatorTool extends StructuredTool {
+    //   name = 'calculator';
+    //   description = 'A simple calculator tool';
+    //   schema = calculatorSchema;
+    //   async _call(input: z.infer<typeof calculatorSchema>) {
+    //     return JSON.stringify(input);
+    //   }
+    // }
+
+    // const model = new ChatMistralAI({
+    //   apiKey: process.env.MISTRAL_API_KEY,
+    //   modelName: 'mistral-large',
+    // });
+
+    // const model2 = model.bind({ tools: [new CalculatorTool()] });
+
+    // const tools = [
+    //   new DynamicStructuredTool({
+    //     name: 'get_current_weather',
+    //     description: 'Get the current weather in a given location',
+    //     schema: z.object({
+    //       location: z.string().describe('The city and state, e.g. San Francisco, CA'),
+    //       unit: z.enum(['celsius', 'fahrenheit']),
+    //     }),
+    //     func: async ({ location }) => {
+    //       const data = new Map<string, number>([
+    //         ['new york', 20],
+    //         ['san francisco', 25],
+    //         ['tokyo', 31],
+    //       ]);
+    //
+    //       const temperature = data.get(location.toLowerCase());
+    //       if (temperature !== undefined) {
+    //         return JSON.stringify({ location, temperature, unit: 'celsius' });
+    //       } else {
+    //         return JSON.stringify({}); // TODO(burdon): Say I don't know.
+    //       }
+    //     },
+    //   }),
+    // ];
+
+    // const model2 = model.bind({ tools: tools.map(formatToOpenAITool) });
+
+    const options: BaseFunctionCallOptions = {
+      functions: [
+        {
+          name: 'get_current_weather',
+          description: 'Get the weather in a given location.',
+          parameters: {
+            type: 'object',
+            properties: {
+              location: {
+                type: 'string',
+                description: 'The city and state, e.g. San Francisco, CA',
+              },
+              unit: {
+                type: 'string',
+                enum: ['celsius', 'fahrenheit'],
+                description: 'The unit of temperature',
+              },
+            },
+            required: ['location'],
+          },
+        },
+      ],
+      function_call: {
+        name: 'get_current_weather',
+      },
+    };
+
+    const model = new OllamaFunctions({
+      temperature: 0.1,
+      model: 'mistral',
+    }).bind(options);
+
+    const response = await model.invoke([new HumanMessage('what is the weather in Tokyo?')]);
+    console.log(response);
+  });
+
+  //
   // Plan and execute.
   // https://js.langchain.com/docs/modules/agents/agent_types/plan_and_execute
   //
   test('plan and execute', async () => {
     const config = getConfig()!;
     const model = createModel();
+
+    console.log(model);
 
     // Tools.
     // https://api.js.langchain.com/classes/tools.Tool.html
