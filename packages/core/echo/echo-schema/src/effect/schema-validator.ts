@@ -61,9 +61,6 @@ export class SchemaValidator {
 
   public static validateValue(target: any, prop: string | symbol, value: any) {
     const schema = getTargetPropertySchema(target, prop);
-    if (schema == null) {
-      return value;
-    }
     const _ = S.asserts(schema)(value);
     if (Array.isArray(value)) {
       value = new ReactiveArray(...value);
@@ -85,6 +82,8 @@ export class SchemaValidator {
       const tupleAst = AST.isUnion(schema.ast) ? schema.ast.types.find((ast) => AST.isTupleType(ast)) : null;
       if (AST.isTupleType(tupleAst ?? schema.ast)) {
         schema = getArrayElementSchema(schema, propertyName);
+      } else if (AST.isAnyKeyword(schema.ast)) {
+        return S.any;
       } else {
         const allProperties = getProperties(schema.ast, (propertyName) =>
           getPropertyFn([...propertyPath.slice(0, i), propertyName]),
@@ -153,11 +152,11 @@ const getTypeDiscriminators = (typeAstList: AST.TypeLiteral[]): AST.PropertySign
   return discriminatorPropCandidates;
 };
 
-const getTargetPropertySchema = (target: any, prop: string | symbol): S.Schema<any> | undefined => {
+const getTargetPropertySchema = (target: any, prop: string | symbol): S.Schema<any> => {
   const schema = (target as any)[symbolSchema];
   invariant(schema, 'target has no schema');
   if (AST.isAnyKeyword(schema.ast)) {
-    return undefined;
+    return S.any;
   }
   if (target instanceof ReactiveArray) {
     return getArrayElementSchema(schema, prop);

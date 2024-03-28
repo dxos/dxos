@@ -4,6 +4,7 @@
 
 import * as S from '@effect/schema/Schema';
 import { expect } from 'chai';
+import get from 'lodash.get';
 
 import { test, describe } from '@dxos/test';
 
@@ -19,6 +20,11 @@ describe('reactive', () => {
 
   test('handles any-schema correctly', () => {
     const schema = S.struct({ field: S.any });
-    expect(() => setSchemaProperties({ field: { nested: {} } }, schema)).not.to.throw();
+    const object: any = { field: { nested: { value: S.number } } };
+    expect(() => setSchemaProperties(object, schema)).not.to.throw();
+    const nestedSchema = SchemaValidator.getPropertySchema(S.any, ['field', 'nested'], (path) => {
+      return get(object, path);
+    });
+    S.validateSync(nestedSchema)({ any: 'value' });
   });
 });
