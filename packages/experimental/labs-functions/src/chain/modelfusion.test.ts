@@ -4,17 +4,17 @@
 
 import { expect } from 'chai';
 import {
-  ollama,
-  zodSchema,
-  jsonObjectPrompt,
-  generateObject,
   createInstructionPrompt,
-  Tool,
+  generateObject,
+  jsonObjectPrompt,
+  ollama,
+  parseJSON,
   runTools,
+  zodSchema,
+  Tool,
   type ToolCallsPromptTemplate,
   type InstructionPrompt,
   type ToolDefinition,
-  parseJSON,
 } from 'modelfusion';
 
 import { PublicKey } from '@dxos/keys';
@@ -95,84 +95,7 @@ const calculator = new Tool({
   },
 });
 
-const getSchema = new Tool({
-  name: 'schema',
-  description: 'Get the list of schema objects.',
-  parameters: zodSchema(z.string()),
-  execute: async () => {
-    return [
-      {
-        type: 'dxos.org/type/schema',
-        name: 'Organization',
-        schema: 'dxos.org/type/organization',
-      },
-      {
-        type: 'dxos.org/type/schema',
-        name: 'Contact',
-        schema: 'dxos.org/type/contact',
-      },
-    ];
-  },
-});
-
-const matchObject = new Tool({
-  name: 'query',
-  description: 'Query object database.',
-  parameters: zodSchema(
-    z.object({
-      schema: z.string(),
-    }),
-  ),
-  execute: async ({ schema }) => {
-    console.log('##', schema);
-    const objects = [
-      {
-        schema: 'dxos.org/type/organization',
-        name: 'DXOS',
-      },
-      {
-        schema: 'dxos.org/type/organization',
-        name: 'Microsoft',
-      },
-      {
-        schema: 'dxos.org/type/contact',
-        name: 'Chad',
-      },
-    ];
-
-    return objects.filter((object) => object.schema === schema);
-  },
-});
-
-describe.only('ModelFusion', () => {
-  // TODO(burdon): Multi-step.
-  test.only('query', async () => {
-    const result = await runTools({
-      model: ollama
-        .CompletionTextGenerator({
-          model: 'mistral',
-          promptTemplate: ollama.prompt.Mistral,
-          raw: true, // Required when using custom prompt template.
-          stopSequences: ['\n\n'], // Prevent infinite generation.
-          temperature: 0,
-        })
-        .withInstructionPrompt()
-        .asToolCallsOrTextGenerationModel(multiToolCallPromptTemplate),
-      tools: [calculator, getSchema, matchObject],
-      prompt: text(
-        'answer the question below in multiple steps:',
-        'first get all schema objects;',
-        'next, find the schema that most closely matches the given type;',
-        'next, query and return all objects of the associated schema',
-        '',
-        'Question:',
-        'list all contacts',
-      ),
-    });
-    console.log(result);
-    // expect(toolResults).to.have.length(1);
-  });
-
+describe('ModelFusion', () => {
   test('calculator', async () => {
     const { toolResults } = await runTools({
       model: ollama
@@ -245,7 +168,7 @@ describe.only('ModelFusion', () => {
       schema,
       prompt: prompt({ company: 'Microsoft' }),
     });
-    console.log(JSON.stringify(result, undefined, 2));
+    // console.log(JSON.stringify(result, undefined, 2));
     expect(result).to.exist;
   });
 });
