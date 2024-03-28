@@ -7,12 +7,12 @@ import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
 import { type DocHandle } from '@dxos/automerge/automerge-repo';
+import { type SpaceDoc } from '@dxos/echo-pipeline';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { getAutomergeObjectCore } from './automerge-object';
-import { type SpaceDoc } from './types';
 import { type EchoObject, Expando, TextObject, TypedObject } from '../object';
 import { TestBuilder, type TestPeer } from '../testing';
 
