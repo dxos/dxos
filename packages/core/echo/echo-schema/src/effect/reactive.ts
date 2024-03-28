@@ -177,14 +177,20 @@ export const object: {
 export const ReferenceAnnotation = Symbol.for('@dxos/schema/annotation/Reference');
 export type ReferenceAnnotationValue = EchoObjectAnnotation;
 
+/**
+ * Reference to another ECHO object.
+ */
+export type Ref<T extends Identifiable> = T | undefined;
+
 // TODO(dmaretskyi): Assert that schema has `id`.
-export const ref = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<T> => {
+export const ref = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<Ref<T>> => {
   const annotation = getEchoObjectAnnotation(schema);
   if (annotation == null) {
     throw new Error('Reference target must be an ECHO object.');
   }
 
-  return schema.annotations({ [ReferenceAnnotation]: annotation });
+  // TODO(dmaretskyi): Casting here doesn't seem valid. Maybe there's a way to express optionality in the schema?
+  return schema.annotations({ [ReferenceAnnotation]: annotation }) as S.Schema<Ref<T>>;
 };
 
 export const EchoObjectFieldMetaAnnotationId = Symbol.for('@dxos/echo-schema/annotation/FieldMeta');

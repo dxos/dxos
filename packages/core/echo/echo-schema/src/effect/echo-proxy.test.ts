@@ -245,7 +245,7 @@ describe('Reactive Object with ECHO database', () => {
       const person = db.add(E.object(Person, { name: 'John', worksAt: org }));
 
       expect(person.worksAt).to.deep.eq(org);
-      expect(person.worksAt.name).to.eq(orgName);
+      expect(person.worksAt?.name).to.eq(orgName);
     });
 
     test('adding nested structures to DB', async () => {
@@ -255,8 +255,8 @@ describe('Reactive Object with ECHO database', () => {
 
       const person = db.add(E.object(Person, { name: 'John', worksAt: E.object(Org, { name: 'DXOS' }) }));
 
-      expect(person.worksAt.name).to.eq('DXOS');
-      expect(person.worksAt.id).to.be.a('string');
+      expect(person.worksAt?.name).to.eq('DXOS');
+      expect(person.worksAt?.id).to.be.a('string');
     });
   });
 
