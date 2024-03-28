@@ -15,7 +15,7 @@ const deckLayout =
   'fixed inset-0 z-0 overflow-x-auto overflow-y-hidden snap-inline snap-proximity grid grid-rows-[var(--rail-size)_[toolbar-start]_var(--rail-action)_[content-start]_1fr_[content-end]] grid-cols-[repeat(99,min-content)]';
 
 const resizeButtonStyles =
-  'hidden sm:grid is-6 row-span-3 p-0 touch-none justify-items-center items-stretch plb-2 before:rounded-full before:is-1 before:surface-input hover:before:surface-inputHover before:transition-colors hover:before:surface-accentFocusIndicator focus-visible:before:surface-accentFocusIndicator data-[resizing=true]:before:surface-accentFocusIndicator focus:outline-none';
+  'hidden sm:grid is-6 row-span-3 p-0 cursor-col-resize touch-none justify-items-center items-stretch plb-2 before:rounded-full before:is-1 before:surface-input hover:before:surface-inputHover before:transition-colors hover:before:surface-accentFocusIndicator focus-visible:before:surface-accentFocusIndicator data-[resizing=true]:before:surface-accentFocusIndicator focus:outline-none';
 
 const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(({ classNames, children, ...props }, forwardedRef) => {
   return (
@@ -53,11 +53,15 @@ const DeckPlank = forwardRef<HTMLDivElement, DeckPlankProps>(
     useEffect(() => {
       window.addEventListener('pointerup', handlePointerUp);
       window.addEventListener('pointermove', handlePointerMove);
+      // NOTE(thure): This sets the column resize cursor on body temporarily for when the cursor leaves the button
+      //   momentarily between layout repaints.
+      document.body.classList[resizing ? 'add' : 'remove']('cursor-col-resize');
       return () => {
         window.removeEventListener('pointerup', handlePointerUp);
         window.removeEventListener('pointermove', handlePointerMove);
+        document.body.classList.remove('cursor-col-resize');
       };
-    }, [handlePointerUp, handlePointerMove]);
+    }, [handlePointerUp, handlePointerMove, resizing]);
 
     return (
       <>
