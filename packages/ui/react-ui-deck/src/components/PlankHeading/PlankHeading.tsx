@@ -18,6 +18,7 @@ import {
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
+import { plankHeadingLayout } from '../../fragments';
 import { translationKey } from '../../translations';
 import { type PlankHeadingAction } from '../../types';
 import { useHasAttention } from '../Attention';
@@ -30,6 +31,16 @@ const plankHeadingIconProps: IconProps = {
   className: getSize(5),
   weight: 'duotone',
 };
+
+type PlankRootProps = ThemedClassName<ComponentPropsWithRef<'div'>>;
+
+const PlankRoot = forwardRef<HTMLDivElement, PlankRootProps>(({ children, classNames, ...props }, forwardedRef) => {
+  return (
+    <div role='none' className={mx(plankHeadingLayout, classNames)} {...props} ref={forwardedRef}>
+      {children}
+    </div>
+  );
+});
 
 const MenuSignifierHorizontal = () => (
   <svg
@@ -178,6 +189,7 @@ const PlankHeadingLabel = forwardRef<HTMLHeadingElement, PlankHeadingLabelProps>
 );
 
 export const PlankHeading = {
+  Root: PlankRoot,
   Button: PlankHeadingButton,
   Label: PlankHeadingLabel,
   ActionsMenu: PlankHeadingActionsMenu,

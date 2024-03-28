@@ -15,9 +15,9 @@ import {
   useDropdownMenuMenuScope,
   useTranslation,
 } from '@dxos/react-ui';
-import { PlankHeading } from '@dxos/react-ui-deck';
 
-import { translationKey } from '../translations';
+import { PlankHeading } from './PlankHeading';
+import { translationKey } from '../../translations';
 
 const TRIGGER_NAME = 'DropDownMenuDragHandleTrigger';
 
