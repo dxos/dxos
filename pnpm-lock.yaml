@@ -1078,6 +1078,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/automerge':
+        specifier: workspace:*
+        version: link:../../../core/echo/automerge
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../../sdk/client-services
