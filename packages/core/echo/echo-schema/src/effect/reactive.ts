@@ -180,7 +180,8 @@ export type ReferenceAnnotationValue = EchoObjectAnnotation;
 /**
  * Reference to another ECHO object.
  */
-export type Ref<T extends Identifiable> = T | undefined;
+// TODO(dmaretskyi): I wanted to add `T extends Identifiable` but it seems to break definitions with self-references.
+export type Ref<T> = T | undefined;
 
 // TODO(dmaretskyi): Assert that schema has `id`.
 export const ref = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<Ref<T>> => {
