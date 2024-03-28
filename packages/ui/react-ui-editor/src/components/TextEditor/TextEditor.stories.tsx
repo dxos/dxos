@@ -65,11 +65,11 @@ const text = {
     //
     '## Tasks',
     '',
-    '- [x] decorator',
-    '- [ ] checkbox',
-    '  - [ ] state',
-    '    - [ ] indent',
-    '    - [x] style',
+    `- [x] ${faker.lorem.sentences()}`,
+    `- [ ] ${faker.lorem.sentences()}`,
+    `  - [ ] ${faker.lorem.sentences()}`,
+    `    - [ ] ${faker.lorem.sentences()}`,
+    `    - [x] ${faker.lorem.sentences()}`,
     '',
   ),
 
@@ -77,9 +77,9 @@ const text = {
     //
     '## List',
     '',
-    '- new york',
-    '- london',
-    '- tokyo',
+    `- ${faker.lorem.sentences()}`,
+    `- ${faker.lorem.sentences()}`,
+    `- ${faker.lorem.sentences()}`,
     '',
   ),
 
@@ -87,9 +87,9 @@ const text = {
     //
     '## Numbered',
     '',
-    '1. one',
-    '2. two',
-    '3. three',
+    `1. ${faker.lorem.sentences()}`,
+    `2. ${faker.lorem.sentences()}`,
+    `3. ${faker.lorem.sentences()}`,
     '',
   ),
 
