@@ -28,7 +28,6 @@ const Story = () => {
     generator.addSchemas();
     generator.createObjects({ [TestSchemaType.project]: 6 });
 
-    const schema = generator.getSchema(TestSchemaType.project);
     const table = space.db.add(E.object(TableType, { title: '', props: [] }));
     setTable(table);
   }, []);
