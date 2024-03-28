@@ -2,26 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Check, Trash, X, GearSix, CaretDown, ArrowDown, ArrowUp } from '@phosphor-icons/react';
-import { type HeaderContext, type RowData } from '@tanstack/react-table';
-import React, { type FC, type PropsWithChildren, useRef, useState, useEffect } from 'react';
+import { X, GearSix, CaretDown, ArrowDown, ArrowUp } from '@phosphor-icons/react';
+import { type SortDirection, type HeaderContext, type RowData } from '@tanstack/react-table';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 
-import {
-  Button,
-  DensityProvider,
-  Input,
-  Popover,
-  Select,
-  Separator,
-  useTranslation,
-  DropdownMenu,
-} from '@dxos/react-ui';
+import { Button, DensityProvider, Popover, DropdownMenu } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
-import { safeParseInt } from '@dxos/util';
 
-import { type TableDef, type ColumnProps, type ColumnType } from '../schema';
-import { translationKey } from '../translations';
+import { ColumnSettingsForm } from './ColumnSettingsForm';
+import { type TableDef, type ColumnProps } from '../schema';
 
 export type ColumnMenuProps<TData extends RowData, TValue> = {
   context: HeaderContext<TData, TValue>;
@@ -34,12 +24,13 @@ export type ColumnMenuProps<TData extends RowData, TValue> = {
 
 export const ColumnMenu = <TData extends RowData, TValue>({ column, ...props }: ColumnMenuProps<TData, TValue>) => {
   const title = column.label?.length ? column.label : column.id;
-
   const header = props.context.header;
 
   const canSort = header.column.getCanSort();
-  // const sortDirection = header.column.getIsSorted();
-  const toggleSort = header.column.getToggleSortingHandler();
+  const sortDirection = header.column.getIsSorted();
+  const toggleSortingHandler = header.column.getToggleSortingHandler();
+  const toggleSort = header.column.toggleSorting;
+  const clearSort = header.column.clearSorting;
 
   const columnSettingsAnchorRef = useRef<any>(null);
   const [isMounted, setIsMounted] = useState(false);
@@ -51,67 +42,114 @@ export const ColumnMenu = <TData extends RowData, TValue>({ column, ...props }: 
 
   const [isColumnSettingsOpen, setIsColumnSettingsOpen] = useState(false);
 
+  const shouldPreventFocusOnClose = useRef(false);
+
+  const onOpenColumnSettings = useCallback(() => {
+    shouldPreventFocusOnClose.current = true;
+    setIsColumnSettingsOpen(true);
+  }, [shouldPreventFocusOnClose, setIsColumnSettingsOpen]); // setIsColumnSettingsOpen is a dependency
+
+  const onDropdownCloseAutoFocus = useCallback(
+    (event: Event) => {
+      if (shouldPreventFocusOnClose.current) {
+        event.preventDefault();
+        shouldPreventFocusOnClose.current = false;
+      }
+    },
+    [shouldPreventFocusOnClose],
+  );
+
   return (
-    <div className='flex items-center gap-2'>
-      <div className='flex-1 min-is-0 truncate' title={title}>
-        {title}
+    <div className='flex items-center justify-center justify-between'>
+      <div className='flex items-center gap-1 truncate' title={title}>
+        {toggleSortingHandler && <SortIndicator direction={sortDirection} onClick={toggleSortingHandler} />}
+        <div className='truncate'>{title}</div>
       </div>
-      <div className='flex gap-0'>
-        {isMounted && (
-          <ColumnSettingsPanel
-            {...props}
-            column={column}
-            anchorNode={columnSettingsAnchorRef.current}
-            open={isColumnSettingsOpen}
-            setOpen={setIsColumnSettingsOpen}
-          />
-        )}
+      {isMounted && (
+        <ColumnSettingsPanel
+          {...props}
+          column={column}
+          anchorNode={columnSettingsAnchorRef.current}
+          open={isColumnSettingsOpen}
+          setOpen={setIsColumnSettingsOpen}
+        />
+      )}
 
-        <DropdownMenu.Root defaultOpen>
-          <DropdownMenu.Trigger ref={columnSettingsAnchorRef}>
-            <Button variant='ghost'>
-              <CaretDown className={getSize(4)} />
-            </Button>
-          </DropdownMenu.Trigger>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger ref={columnSettingsAnchorRef}>
+          <Button variant='ghost'>
+            <CaretDown className={getSize(4)} />
+          </Button>
+        </DropdownMenu.Trigger>
 
-          <DropdownMenu.Content sideOffset={4} collisionPadding={8}>
-            <DropdownMenu.Viewport>
-              {canSort && toggleSort && (
-                <>
-                  <DropdownMenu.Item onClick={toggleSort}>
-                    <span className='grow'>Sort ascending</span>
+        <DropdownMenu.Content onCloseAutoFocus={onDropdownCloseAutoFocus} sideOffset={4} collisionPadding={8}>
+          <DropdownMenu.Viewport>
+            {canSort && toggleSort && (
+              <>
+                <DropdownMenu.Item onClick={() => toggleSort(false)}>
+                  <span className='grow'>Sort ascending</span>
+                  <span className='opacity-50'>
+                    <ArrowUp className={getSize(4)} />
+                  </span>
+                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={() => toggleSort(true)}>
+                  <span className='grow'>Sort descending</span>
+                  <span className='opacity-50'>
+                    <ArrowDown className={getSize(4)} />
+                  </span>
+                </DropdownMenu.Item>
+                {sortDirection !== false && (
+                  <DropdownMenu.Item onClick={clearSort}>
+                    <span className='grow'>Clear sort</span>
                     <span className='opacity-50'>
-                      <ArrowUp className={getSize(4)} />
+                      <X className={getSize(4)} />
                     </span>
                   </DropdownMenu.Item>
-                  <DropdownMenu.Item onClick={toggleSort}>
-                    <span className='grow'>Sort descending</span>
-                    <span className='opacity-50'>
-                      <ArrowDown className={getSize(4)} />
-                    </span>
-                  </DropdownMenu.Item>
-                </>
-              )}
-              <DropdownMenu.Item onClick={() => setTimeout(() => setIsColumnSettingsOpen(true), 15)}>
-                <span className='grow'>Column settings</span>
-                <span className='opacity-50'>
-                  <GearSix className={mx(getSize(4), 'rotate-90')} />
-                </span>
-              </DropdownMenu.Item>
-            </DropdownMenu.Viewport>
-            <DropdownMenu.Arrow />
-          </DropdownMenu.Content>
-        </DropdownMenu.Root>
-      </div>
+                )}
+              </>
+            )}
+            <DropdownMenu.Item onClick={onOpenColumnSettings}>
+              <span className='grow'>Column settings</span>
+              <span className='opacity-50'>
+                <GearSix className={mx(getSize(4), 'rotate-90')} />
+              </span>
+            </DropdownMenu.Item>
+          </DropdownMenu.Viewport>
+          <DropdownMenu.Arrow />
+        </DropdownMenu.Content>
+      </DropdownMenu.Root>
     </div>
   );
 };
 
-const Section: FC<PropsWithChildren & { className?: string }> = ({ children, className }) => (
-  <div role='none' className={mx('p-2', className)}>
-    {children}
-  </div>
-);
+export const SortIndicator = ({
+  direction,
+  onClick,
+}: {
+  direction: SortDirection | false;
+  onClick: (e: any) => void;
+}) => {
+  if (direction === false) {
+    return null;
+  }
+
+  let icon;
+
+  switch (direction) {
+    case 'asc':
+      icon = <ArrowUp className={getSize(3)} />;
+      break;
+    case 'desc':
+      icon = <ArrowDown className={getSize(3)} />;
+      break;
+  }
+
+  return (
+    <div onClick={onClick} className='flex items-center cursor-pointer'>
+      {icon}
+    </div>
+  );
+};
 
 export const ColumnSettingsPanel = <TData extends RowData, TValue>({
   tableDefs,
@@ -144,192 +182,5 @@ export const ColumnSettingsPanel = <TData extends RowData, TValue>({
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>
-  );
-};
-
-export const ColumnSettingsForm = ({
-  column,
-  tableDef,
-  tableDefs,
-  onUpdate,
-  onDelete,
-  onClose,
-}: {
-  column: ColumnProps;
-  tableDef: TableDef;
-  tableDefs: TableDef[];
-  onUpdate?: ((id: string, column: ColumnProps) => void) | undefined;
-  onDelete?: ((id: string) => void) | undefined;
-  onClose: () => void;
-}) => {
-  const [prop, setProp] = useState(column.id);
-  const [refTable, setRefTable] = useState(column.refTable);
-  const [refProp, setRefProp] = useState(column.refProp);
-  const [type, setType] = useState(String(column.type));
-  const [label, setLabel] = useState(column.label);
-  const [digits, setDigits] = useState(String(column.digits ?? '0'));
-  const propRef = useRef<HTMLInputElement>(null);
-  const { t } = useTranslation(translationKey);
-
-  const handleCancel = () => {
-    setProp(column.id);
-    onClose;
-  };
-
-  const handleSave = () => {
-    // Check valid.
-    if (!prop.length || !prop.match(/^[a-zA-Z_].+/i)) {
-      propRef.current?.focus();
-      return;
-    }
-
-    // If already exists then check same type.
-    const current = tableDef.columns.find((c) => c.id !== column.id && c.id === prop);
-
-    if (current) {
-      // TODO(burdon): Allow multiple columns with different refProps. Ensure correct table prop is updated.
-      if (current.type !== 'ref' /* || current.ref !== refTable */) {
-        // TODO(burdon): Show error.
-        propRef.current?.focus();
-        return;
-      }
-    }
-
-    onUpdate?.(prop, {
-      id: prop, // TODO(burdon): Make unique.
-      prop,
-      label,
-      type: type as ColumnProps['type'],
-      refTable,
-      refProp,
-      digits: safeParseInt(digits),
-    });
-
-    onClose();
-  };
-
-  return (
-    <div className='flex flex-col gap-1'>
-      <Section>
-        <Input.Root>
-          <Input.Label classNames='mbe-1'>{t('column label label')}</Input.Label>
-          <Input.TextInput
-            placeholder='Column label'
-            value={label ?? ''}
-            onChange={(event) => setLabel(event.target.value)}
-            autoFocus
-          />
-        </Input.Root>
-        <Input.Root>
-          <Input.Label classNames='mbe-1 mbs-3'>{t('property key label')}</Input.Label>
-          <Input.TextInput
-            ref={propRef}
-            placeholder='Property key'
-            // TODO(burdon): Provide hooks for value normalization, ENTER, ESC, etc.
-            value={prop ?? ''}
-            onChange={(event) => setProp(event.target.value.replace(/[^\w_]/g, ''))}
-          />
-        </Input.Root>
-        <Input.Root>
-          <Input.Label classNames='mbe-1 mbs-3'>{t('column type label')}</Input.Label>
-          <Select.Root value={type} onValueChange={setType}>
-            <Select.TriggerButton placeholder='Type' classNames='is-full' />
-            <Select.Portal>
-              <Select.Content>
-                <Select.Viewport>
-                  {(['number', 'boolean', 'string', 'ref'] as ColumnType[]).map((type) => (
-                    <Select.Option key={type} value={type}>
-                      {t(`${type} column type label`)}
-                    </Select.Option>
-                  ))}
-                </Select.Viewport>
-              </Select.Content>
-            </Select.Portal>
-          </Select.Root>
-        </Input.Root>
-      </Section>
-
-      {type === 'number' && (
-        <>
-          <Section>
-            <Input.Root>
-              <Input.Label classNames='mbe-1 mbs-3'>{t('digits label')}</Input.Label>
-              {/* TODO(burdon): Constrain input to numbers. */}
-              <Input.TextInput value={digits ?? ''} onChange={(event) => setDigits(event.target.value)} />
-            </Input.Root>
-          </Section>
-        </>
-      )}
-
-      {/* TODO(burdon): Selectors on same line. */}
-      {type === 'ref' && (
-        <>
-          <Section>
-            <Input.Root>
-              <Input.Label classNames='mbe-1 mbs-3'>Table</Input.Label>
-              <Select.Root value={refTable} onValueChange={setRefTable}>
-                <Select.TriggerButton placeholder='Table' classNames='is-full' />
-                <Select.Portal>
-                  <Select.Content>
-                    <Select.Viewport>
-                      {tableDefs
-                        .filter((t) => t.id !== tableDef.id)
-                        .map(({ id, name }) => (
-                          <Select.Option key={id} value={id}>
-                            {name ?? id}
-                          </Select.Option>
-                        ))}
-                    </Select.Viewport>
-                  </Select.Content>
-                </Select.Portal>
-              </Select.Root>
-            </Input.Root>
-
-            {refTable && (
-              <Input.Root>
-                <Input.Label classNames='mbe-1 mbs-3'>Table property</Input.Label>
-                <Select.Root value={refProp} onValueChange={setRefProp}>
-                  <Select.TriggerButton placeholder='Property' classNames='is-full' />
-                  <Select.Portal>
-                    <Select.Content>
-                      <Select.Viewport>
-                        {tableDefs
-                          .find((tableDef) => tableDef.id === refTable)
-                          ?.columns.map(({ id, label }) => (
-                            <Select.Option key={id} value={id}>
-                              {label ?? id}
-                            </Select.Option>
-                          ))}
-                      </Select.Viewport>
-                    </Select.Content>
-                  </Select.Portal>
-                </Select.Root>
-              </Input.Root>
-            )}
-          </Section>
-        </>
-      )}
-
-      <Separator classNames='mli-2' />
-
-      <Section className='space-b-1.5'>
-        {/* TODO(burdon): Style as DropdownMenuItem. */}
-        <Button variant='primary' classNames='is-full flex gap-2' onClick={handleSave}>
-          <span>{t('save label')}</span>
-          <div className='grow' />
-          <Check className={getSize(5)} />
-        </Button>
-        <Button classNames='is-full flex gap-2' onClick={handleCancel}>
-          <span>{t('cancel label', { ns: 'os' })}</span>
-          <div className='grow' />
-          <X className={getSize(5)} />
-        </Button>
-        <Button classNames='is-full flex gap-2' onClick={() => onDelete?.(column.id)}>
-          <span>{t('delete label')}</span>
-          <div className='grow' />
-          <Trash className={getSize(5)} />
-        </Button>
-      </Section>
-    </div>
   );
 };

@@ -4,6 +4,7 @@
 
 import '@dxosTheme';
 
+import { type SortDirection } from '@tanstack/react-table';
 import React from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
@@ -27,7 +28,12 @@ export const Default = {
       header: {
         column: {
           getCanSort: () => true,
-          getToggleSortingHandler: () => () => console.log('toggleSort'),
+          toggleSorting: (desc?: boolean) => {
+            console.log('toggleSorting', { desc });
+          },
+          getToggleSortingHandler: () => () => {
+            console.log('Sorting handler invoked');
+          },
           getIsSorted: () => false,
         },
       },
@@ -42,5 +48,48 @@ export const Default = {
   ],
   parameters: {
     layout: 'fullscreen',
+  },
+};
+
+export const ReactiveSort = {
+  render: () => {
+    const [sort, setSort] = React.useState<SortDirection | false>(false);
+    const props = {
+      column: {
+        id: 'test',
+        label: 'test',
+      } as ColumnProps,
+      context: {
+        header: {
+          column: {
+            getCanSort: () => true,
+            toggleSorting: (desc?: boolean) => {
+              if (desc === undefined) {
+                setSort(false);
+              } else if (desc) {
+                setSort('desc');
+              } else {
+                setSort('asc');
+              }
+            },
+            getIsSorted: () => sort,
+            clearSorting: () => setSort(false),
+            getToggleSortingHandler: () => () => {
+              if (sort === 'asc') {
+                setSort('desc');
+              } else {
+                setSort(false);
+              }
+            },
+          },
+        },
+      },
+    } as any;
+
+    return (
+      <div className='fixed inset-0 overflow-auto'>
+        <ColumnMenu {...props} />
+      </div>
+    );
   },
 };
