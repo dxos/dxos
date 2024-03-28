@@ -4,14 +4,18 @@
 
 import React, { Children, type ComponentPropsWithRef, forwardRef, useCallback, useEffect, useState } from 'react';
 
-import { Button, Main, type MainProps, type ThemedClassName, useMediaQuery, useTranslation } from '@dxos/react-ui';
+import { Main, type MainProps, type ThemedClassName, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../../translations';
 
 type DeckRootProps = MainProps;
 
-const deckLayout = 'fixed inset-0 z-0 overflow-x-auto overflow-y-hidden snap-proximity snap-inline grid grid-rows-1';
+const deckLayout =
+  'fixed inset-0 z-0 overflow-x-auto overflow-y-hidden snap-proximity snap-inline grid grid-rows-[var(--rail-size)_min-content_1fr]';
+
+const resizeButtonStyles =
+  'hidden sm:grid is-4 row-span-3 p-0 touch-none snap-none justify-items-center items-stretch plb-2 before:rounded-full before:is-1 before:surface-input hover:before:surface-inputHover before:transition-colors hover:before:surface-accentFocusIndicator focus:before:surface-accentFocusIndicator data-[resizing=true]:before:surface-accentFocusIndicator focus:outline-none';
 
 const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
   ({ classNames, style, children, ...props }, forwardedRef) => {
@@ -67,14 +71,14 @@ const DeckPlank = forwardRef<HTMLDivElement, DeckPlankProps>(
         <article
           {...props}
           style={{ inlineSize: isSm ? `${size}${unit}` : '100dvw', ...style }}
-          className={mx('snap-always snap-start overflow-y-auto', classNames)}
+          className={mx('snap-always snap-start grid row-span-3 grid-rows-subgrid group', classNames)}
           ref={forwardedRef}
         >
           {children}
         </article>
-        <Button
-          variant='default'
-          classNames='hidden sm:block is-4 pointer-fine:is-2 m-1 p-0 !rounded-full touch-none snap-normal snap-end'
+        <button
+          data-resizing={`${!!resizing}`}
+          className={resizeButtonStyles}
           onPointerDown={({ isPrimary, pageX }) => {
             if (isPrimary) {
               const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
@@ -93,7 +97,7 @@ const DeckPlank = forwardRef<HTMLDivElement, DeckPlankProps>(
           }}
         >
           <span className='sr-only'>{t('resize handle label')}</span>
-        </Button>
+        </button>
       </>
     );
   },

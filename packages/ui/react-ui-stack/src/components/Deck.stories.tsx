@@ -17,6 +17,16 @@ import { Stack } from './Stack';
 
 faker.seed(3);
 
+const Toolbar = () => {
+  return (
+    <div role='toolbar' className='flex gap-2 pis-[--rail-size]'>
+      <p>File</p>
+      <p>Edit</p>
+      <p>View</p>
+    </div>
+  );
+};
+
 const SimpleContent = ({ data }: { data: { title?: string; body?: string } }) => (
   <>
     <div className='text-xl mlb-2'>{data.title}</div>
@@ -36,7 +46,7 @@ const rollItems = (n: number): StackSectionItem[] => {
   }));
 };
 
-const DemoStackPlank = () => {
+const DemoStackPlank = ({ toolbar }: { toolbar?: boolean }) => {
   const [items] = useState(rollItems(12));
   return (
     <>
@@ -46,7 +56,13 @@ const DemoStackPlank = () => {
         </PlankHeading.Button>
         <PlankHeading.Label>{faker.lorem.words(3)}</PlankHeading.Label>
       </PlankHeading.Root>
-      <Stack items={items} SectionContent={SimpleContent} id={faker.string.uuid()} classNames='pli-px' />
+      {toolbar && <Toolbar />}
+      <Stack
+        items={items}
+        SectionContent={SimpleContent}
+        id={faker.string.uuid()}
+        classNames={['p-px overflow-y-auto', !toolbar && 'row-span-2']}
+      />
     </>
   );
 };
@@ -68,25 +84,25 @@ export const Simple = {
           <Mosaic.DragOverlay />
           <Deck.Root>
             <Deck.Plank>
-              <DemoStackPlank />
+              <DemoStackPlank toolbar />
             </Deck.Plank>
             <Deck.Plank>
               <DemoStackPlank />
             </Deck.Plank>
             <Deck.Plank>
-              <DemoStackPlank />
+              <DemoStackPlank toolbar />
             </Deck.Plank>
             <Deck.Plank>
               <DemoStackPlank />
             </Deck.Plank>
             <Deck.Plank>
-              <DemoStackPlank />
+              <DemoStackPlank toolbar />
             </Deck.Plank>
             <Deck.Plank>
               <DemoStackPlank />
             </Deck.Plank>
             <Deck.Plank>
-              <DemoStackPlank />
+              <DemoStackPlank toolbar />
             </Deck.Plank>
           </Deck.Root>
         </AttentionProvider>
