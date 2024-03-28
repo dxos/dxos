@@ -87,8 +87,10 @@ export const ReactiveSort = {
     } as any;
 
     return (
-      <div className='fixed inset-0 overflow-auto'>
-        <ColumnMenu {...props} />
+      <div className='flex justify-around w-full overflow-hidden'>
+        <div className='grid w-48'>
+          <ColumnMenu {...props} />
+        </div>
       </div>
     );
   },
