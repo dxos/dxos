@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type SchemaProvides } from '@braneframe/plugin-client';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -67,6 +68,7 @@ export type SpacePluginProvides = SurfaceProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
   SettingsProvides<SpaceSettingsProps> &
-  TranslationsProvides & {
+  TranslationsProvides &
+  SchemaProvides & {
     space: Readonly<PluginState>;
   };

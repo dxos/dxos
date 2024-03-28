@@ -7,11 +7,10 @@ import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { isDocument } from '@braneframe/plugin-markdown';
-import { isStack } from '@braneframe/plugin-stack';
-import { Stack } from '@braneframe/types';
+import { StackType, DocumentType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
+import { Filter } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema/schema';
 
 import { PresenterMain, MarkdownSlideMain } from './components';
@@ -46,8 +45,8 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
             spaces.forEach((space) => {
               // Add all documents to the graph.
-              const query = space.db.query(Stack.filter());
-              let previousObjects: Stack[] = [];
+              const query = space.db.query(Filter.schema(StackType));
+              let previousObjects: StackType[] = [];
               subscriptions.add(
                 effect(() => {
                   const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
@@ -107,11 +106,11 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isStack(data.active) && state.presenting
+              return data.active instanceof StackType && state.presenting
                 ? { node: <PresenterMain stack={data.active} />, disposition: 'hoist' }
                 : null;
             case 'slide':
-              return isDocument(data.slide) ? <MarkdownSlideMain document={data.slide} /> : null;
+              return data.slide instanceof DocumentType ? <MarkdownSlideMain document={data.slide} /> : null;
           }
 
           return null;

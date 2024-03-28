@@ -8,14 +8,15 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { Chain as ChainType } from '@braneframe/types';
+import { ChainType } from '@braneframe/types';
 import { resolvePlugin, parseIntentPlugin, type PluginDefinition } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
+import { Filter } from '@dxos/react-client/echo';
 
 import { ChainMain } from './components';
 import meta, { CHAIN_PLUGIN } from './meta';
 import translations from './translations';
-import { ChainAction, type ChainPluginProvides, isObject } from './types';
+import { ChainAction, type ChainPluginProvides } from './types';
 
 export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
   return {
@@ -23,13 +24,16 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
     provides: {
       metadata: {
         records: {
-          [ChainType.schema.typename]: {
+          [ChainType.typename]: {
             placeholder: ['object placeholder', { ns: CHAIN_PLUGIN }],
             icon: (props: IconProps) => <Brain {...props} />,
           },
         },
       },
       translations,
+      echo: {
+        schema: [ChainType],
+      },
       graph: {
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
@@ -57,7 +61,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
               );
 
               // Add all chains to the graph.
-              const query = space.db.query(ChainType.filter());
+              const query = space.db.query(Filter.schema(ChainType));
               let previousObjects: ChainType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -110,7 +114,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isObject(data.active) ? <ChainMain chain={data.active as ChainType} /> : null;
+              return data.active instanceof ChainType ? <ChainMain chain={data.active} /> : null;
           }
 
           return null;

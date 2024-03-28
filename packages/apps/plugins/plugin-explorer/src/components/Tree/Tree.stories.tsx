@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { type FC, useEffect, useState } from 'react';
 
-import { types, Tree as TreeType } from '@braneframe/types';
+import { types, Tree as TreeType } from '@braneframe/types/proto';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';

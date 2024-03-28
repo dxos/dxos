@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import textract from 'textract';
 
-import { Document as DocumentType, File as FileType } from '@braneframe/types';
+import { Document as DocumentType, File as FileType } from '@braneframe/types/proto';
 import { getTextContent, hasType, type TypedObject } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';

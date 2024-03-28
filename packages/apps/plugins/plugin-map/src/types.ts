@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type SchemaProvides } from '@braneframe/plugin-client';
 import type { StackProvides } from '@braneframe/plugin-stack';
-import { Map as MapType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -11,7 +11,6 @@ import type {
   SurfaceProvides,
   MetadataRecordsProvides,
 } from '@dxos/app-framework';
-import { isTypedObject } from '@dxos/react-client/echo';
 
 import { MAP_PLUGIN } from './meta';
 
@@ -28,8 +27,5 @@ export type MapPluginProvides = SurfaceProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
+  SchemaProvides &
   StackProvides;
-
-export const isMap = (data: unknown): data is MapType => {
-  return isTypedObject(data) && MapType.schema.typename === data.__typename;
-};

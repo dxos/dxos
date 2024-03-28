@@ -5,7 +5,7 @@
 import { DotsThreeVertical } from '@phosphor-icons/react';
 import React, { type PropsWithChildren, type FC } from 'react';
 
-import { type Document as DocumentType } from '@braneframe/types';
+import { type DocumentType } from '@braneframe/types';
 import { Surface } from '@dxos/app-framework';
 import { getTextContent } from '@dxos/echo-schema';
 import { Button, DropdownMenu } from '@dxos/react-ui';

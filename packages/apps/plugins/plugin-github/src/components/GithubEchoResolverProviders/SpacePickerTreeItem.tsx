@@ -6,9 +6,9 @@ import { CaretDown, CaretRight } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
 import { getSpaceDisplayName } from '@braneframe/plugin-space';
-import { Document } from '@braneframe/types';
+import { DocumentType } from '@braneframe/types';
 import { useMulticastObservable } from '@dxos/react-client';
-import { type Space, SpaceState, useQuery } from '@dxos/react-client/echo';
+import { type Space, SpaceState, useQuery, Filter } from '@dxos/react-client/echo';
 import { Button, Tag, Tooltip, Tree, TreeItem, useTranslation } from '@dxos/react-ui';
 import { staticDisabled } from '@dxos/react-ui-theme';
 
@@ -35,7 +35,7 @@ export const SpacePickerTreeItem = ({
   const spaceSate = useMulticastObservable(space.state);
   const disabled = spaceSate !== SpaceState.READY;
   const spaceDisplayName = getSpaceDisplayName(space);
-  const documents = useQuery(space, Document.filter());
+  const documents = useQuery(space, Filter.schema(DocumentType));
   const hasDocuments = documents.length > 0;
 
   const [open, setOpen] = useState(false);

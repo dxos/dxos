@@ -4,7 +4,7 @@
 
 import { join } from 'node:path';
 
-import { Thread as ThreadType, Message as MessageType } from '@braneframe/types';
+import { Thread as ThreadType, Message as MessageType } from '@braneframe/types/proto';
 import { sleep } from '@dxos/async';
 import { subscriptionHandler } from '@dxos/functions';
 

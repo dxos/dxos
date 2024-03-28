@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Contact as ContactType, Message as MessageType } from '@braneframe/types';
+import { Contact as ContactType, Message as MessageType } from '@braneframe/types/proto';
 import { hasType } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';

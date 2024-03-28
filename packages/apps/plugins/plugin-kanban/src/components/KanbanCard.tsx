@@ -7,7 +7,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, X } from '@phosphor-icons/react';
 import React, { type FC } from 'react';
 
-import type { Kanban as KanbanType } from '@braneframe/types';
+import { type KanbanColumnType, type KanbanItemType } from '@braneframe/types';
 import { Button, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   createBasicExtensions,
@@ -31,8 +31,8 @@ const DeleteItem = ({ onClick }: { onClick: () => void }) => {
 };
 
 export const KanbanCardComponent: FC<{
-  column?: KanbanType.Column;
-  item: KanbanType.Item;
+  column?: KanbanColumnType;
+  item: KanbanItemType;
   debug?: boolean;
   onDelete?: () => void;
 }> = ({ column, item, debug = false, onDelete }) => {
@@ -44,7 +44,7 @@ export const KanbanCardComponent: FC<{
   });
   const tx = transform ? Object.assign(transform, { scaleY: 1 }) : null;
 
-  const { id, doc, accessor } = useDocAccessor(item.title);
+  const { id, doc, accessor } = useDocAccessor(item.title!);
   const { parentRef } = useTextEditor(
     () => ({
       doc,

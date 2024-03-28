@@ -4,7 +4,7 @@
 
 import type { Config as ImapConfig } from 'imap';
 
-import { Message as MessageType, Mailbox as MailboxType } from '@braneframe/types';
+import { Message as MessageType, Mailbox as MailboxType } from '@braneframe/types/proto';
 import { getSpaceForObject } from '@dxos/client/echo';
 import { type Space } from '@dxos/client/echo';
 import { hasType, matchKeys } from '@dxos/echo-schema';

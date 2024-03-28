@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Table as TableType } from '@braneframe/types';
+import { type Table as TableType } from '@braneframe/types/proto';
 import { PublicKey } from '@dxos/react-client';
 import { Schema } from '@dxos/react-client/echo';
 import { type ColumnProps, type TableDef } from '@dxos/react-ui-table';

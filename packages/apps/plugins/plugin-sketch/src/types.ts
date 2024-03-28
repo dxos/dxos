@@ -4,8 +4,8 @@
 
 import { type TLStore } from '@tldraw/tlschema';
 
+import { type SchemaProvides } from '@braneframe/plugin-client';
 import type { StackProvides } from '@braneframe/plugin-stack';
-import { Sketch as SketchType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -13,7 +13,6 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { isTypedObject } from '@dxos/react-client/echo';
 
 import { SKETCH_PLUGIN } from './meta';
 
@@ -28,15 +27,12 @@ export type SketchPluginProvides = SurfaceProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
+  SchemaProvides &
   StackProvides;
 
 export interface SketchModel {
   store: TLStore;
 }
-
-export const isSketch = (data: unknown): data is SketchType => {
-  return isTypedObject(data) && SketchType.schema.typename === data.__typename;
-};
 
 // TODO(burdon): Factor out.
 export type Unsubscribe = () => void;

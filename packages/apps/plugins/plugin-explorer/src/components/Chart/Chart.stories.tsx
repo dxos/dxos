@@ -7,7 +7,7 @@ import '@dxosTheme';
 import * as Plot from '@observablehq/plot';
 import React, { useEffect, useState } from 'react';
 
-import { types } from '@braneframe/types';
+import { types } from '@braneframe/types/proto';
 import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
 
 import { Chart } from './Chart';

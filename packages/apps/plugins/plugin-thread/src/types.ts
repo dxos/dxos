@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type SchemaProvides } from '@braneframe/plugin-client';
 import { type MarkdownExtensionProvides } from '@braneframe/plugin-markdown';
-import { Thread as ThreadType } from '@braneframe/types';
+import { type ThreadType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -12,7 +13,6 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { isTypedObject } from '@dxos/react-client/echo';
 
 import { THREAD_PLUGIN } from './meta';
 
@@ -29,6 +29,7 @@ export type ThreadPluginProvides = SurfaceProvides &
   MetadataRecordsProvides &
   SettingsProvides &
   TranslationsProvides &
+  SchemaProvides &
   MarkdownExtensionProvides;
 
 export type ThreadSettingsProps = { standalone?: boolean };
@@ -36,7 +37,3 @@ export type ThreadSettingsProps = { standalone?: boolean };
 export interface ThreadModel {
   root: ThreadType;
 }
-
-export const isThread = (data: unknown): data is ThreadType => {
-  return isTypedObject(data) && ThreadType.schema.typename === data.__typename;
-};

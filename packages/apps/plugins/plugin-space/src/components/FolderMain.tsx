@@ -4,13 +4,13 @@
 
 import React from 'react';
 
-import type { Folder } from '@braneframe/types';
+import type { FolderType } from '@braneframe/types';
 import { useTranslation } from '@dxos/react-ui';
 import { baseSurface, descriptionText, mx } from '@dxos/react-ui-theme';
 
 import { SPACE_PLUGIN } from '../meta';
 
-export const FolderMain = ({ folder }: { folder: Folder }) => {
+export const FolderMain = ({ folder }: { folder: FolderType }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
 
   return (

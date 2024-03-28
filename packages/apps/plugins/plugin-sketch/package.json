@@ -24,8 +24,10 @@
   ],
   "dependencies": {
     "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@preact/signals-core": "^1.6.0",
@@ -42,7 +44,6 @@
   "devDependencies": {
     "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
-    "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",

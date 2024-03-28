@@ -4,7 +4,7 @@
 
 import { type Dispatch, type SetStateAction } from 'react';
 
-import { type Document } from '@braneframe/types';
+import { type DocumentType } from '@braneframe/types';
 import {
   type GraphBuilderProvides,
   type TranslationsProvides,
@@ -17,7 +17,7 @@ export type EditorViewState = 'editor' | 'preview';
 
 export type MarkdownDocumentProps = {
   space: Space;
-  document: Document;
+  document: DocumentType;
   layout: 'standalone' | 'embedded';
   editorViewState: EditorViewState;
   setEditorViewState: Dispatch<SetStateAction<EditorViewState>>;

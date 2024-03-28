@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Document as DocumentType, Table as TableType } from '@braneframe/types';
+import { Document as DocumentType, Table as TableType } from '@braneframe/types/proto';
 import { createSpaceObjectGenerator, type SpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { getTextContent } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';

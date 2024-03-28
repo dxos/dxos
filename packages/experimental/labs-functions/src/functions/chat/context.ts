@@ -2,7 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Document as DocumentType, type Message as MessageType, type Thread as ThreadType } from '@braneframe/types';
+import {
+  Document as DocumentType,
+  type Message as MessageType,
+  type Thread as ThreadType,
+} from '@braneframe/types/proto';
 import { type Space } from '@dxos/client/echo';
 import { getTextInRange, Schema, toJsonSchema, type TypedObject } from '@dxos/echo-schema';
 

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Message as MessageType, Document as DocumentType, Stack as StackType } from '@braneframe/types';
+import { type Message as MessageType, Document as DocumentType, Stack as StackType } from '@braneframe/types/proto';
 import { type Space } from '@dxos/client/echo';
 import { Expando, Schema, TextObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';

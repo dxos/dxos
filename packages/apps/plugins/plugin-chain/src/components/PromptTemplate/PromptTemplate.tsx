@@ -4,7 +4,8 @@
 
 import React, { type PropsWithChildren, useEffect } from 'react';
 
-import { Chain as ChainType } from '@braneframe/types';
+import { ChainInput, ChainInputType, type ChainPromptType } from '@braneframe/types';
+import * as E from '@dxos/echo-schema';
 import { getTextContent } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
@@ -15,48 +16,49 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
+import { nonNullable } from '@dxos/util';
 
 import { nameRegex, promptExtension } from './prompt-extension';
 import { CHAIN_PLUGIN } from '../../meta';
 
 const inputTypes = [
   {
-    value: ChainType.Input.Type.VALUE,
+    value: ChainInputType.VALUE,
     label: 'Value',
   },
   {
-    value: ChainType.Input.Type.PASS_THROUGH,
+    value: ChainInputType.PASS_THROUGH,
     label: 'Pass through',
   },
   {
-    value: ChainType.Input.Type.RETRIEVER,
+    value: ChainInputType.RETRIEVER,
     label: 'Retriever',
   },
   // {
-  //   value: ChainType.Input.Type.FUNCTION,
+  //   value: ChainInputType.FUNCTION,
   //   label: 'Function',
   // },
   // {
-  //   value: ChainType.Input.Type.QUERY,
+  //   value: ChainInputType.QUERY,
   //   label: 'Query',
   // },
   {
-    value: ChainType.Input.Type.RESOLVER,
+    value: ChainInputType.RESOLVER,
     label: 'Resolver',
   },
   {
-    value: ChainType.Input.Type.CONTEXT,
+    value: ChainInputType.CONTEXT,
     label: 'Context',
   },
   {
-    value: ChainType.Input.Type.SCHEMA,
+    value: ChainInputType.SCHEMA,
     label: 'Schema',
   },
 ];
 
 const getInputType = (type: string) => inputTypes.find(({ value }) => String(value) === type)?.value;
 
-const usePromptInputs = (prompt: ChainType.Prompt) => {
+const usePromptInputs = (prompt: ChainPromptType) => {
   const text = getTextContent(prompt.source) ?? '';
   useEffect(() => {
     if (!prompt.inputs) {
@@ -67,7 +69,9 @@ const usePromptInputs = (prompt: ChainType.Prompt) => {
     const variables = new Set<string>([...text.matchAll(regex)].map((m) => m[1]));
 
     // Create map of unclaimed inputs.
-    const unclaimed = new Map<string, ChainType.Input>(prompt.inputs?.map((input) => [input.name, input]));
+    const unclaimed = new Map<string, ChainInput>(
+      prompt.inputs?.filter(nonNullable).map((input) => [input.name, input]),
+    );
     const missing: string[] = [];
     Array.from(variables.values()).forEach((name) => {
       if (unclaimed.has(name)) {
@@ -84,7 +88,7 @@ const usePromptInputs = (prompt: ChainType.Prompt) => {
       if (next) {
         next.name = name;
       } else {
-        prompt.inputs.push(new ChainType.Input({ name }));
+        prompt.inputs.push(E.object(ChainInput, { name }));
       }
     });
 
@@ -97,14 +101,14 @@ const usePromptInputs = (prompt: ChainType.Prompt) => {
 };
 
 type PromptTemplateProps = {
-  prompt: ChainType.Prompt;
+  prompt: ChainPromptType;
 };
 
 export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
   const { t } = useTranslation(CHAIN_PLUGIN);
   const { themeMode } = useThemeContext();
 
-  const { doc, accessor } = useDocAccessor(prompt.source);
+  const { doc, accessor } = useDocAccessor(prompt.source!);
 
   const { parentRef } = useTextEditor(
     () => ({
@@ -157,7 +161,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
             <div className='flex flex-col divide-y'>
               <table className='table-fixed border-collapse'>
                 <tbody>
-                  {prompt.inputs.map((input) => (
+                  {prompt.inputs.filter(nonNullable).map((input) => (
                     <tr key={input.name}>
                       <td className='px-3 py-1.5 w-[200px] font-mono text-sm'>{input.name}</td>
                       <td className='px-3 py-1.5 w-[160px]'>
@@ -165,7 +169,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
                           <Select.Root
                             value={String(input.type)}
                             onValueChange={(type) => {
-                              input.type = getInputType(type) ?? ChainType.Input.Type.VALUE;
+                              input.type = getInputType(type) ?? ChainInputType.VALUE;
                             }}
                           >
                             <Select.TriggerButton placeholder='Type' classNames='is-full' />
@@ -184,23 +188,24 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
                         </Input.Root>
                       </td>
                       <td className='px-3'>
-                        {[
-                          ChainType.Input.Type.VALUE,
-                          ChainType.Input.Type.CONTEXT,
-                          ChainType.Input.Type.RESOLVER,
-                          ChainType.Input.Type.SCHEMA,
-                        ].includes(input.type) && (
-                          <Input.Root>
-                            <Input.TextInput
-                              placeholder={t('command placeholder')}
-                              classNames={mx('is-full bg-transparent m-2')}
-                              value={input.value ?? ''}
-                              onChange={(event) => {
-                                input.value = event.target.value;
-                              }}
-                            />
-                          </Input.Root>
-                        )}
+                        {input.type &&
+                          [
+                            ChainInputType.VALUE,
+                            ChainInputType.CONTEXT,
+                            ChainInputType.RESOLVER,
+                            ChainInputType.SCHEMA,
+                          ].includes(input.type) && (
+                            <Input.Root>
+                              <Input.TextInput
+                                placeholder={t('command placeholder')}
+                                classNames={mx('is-full bg-transparent m-2')}
+                                value={input.value ?? ''}
+                                onChange={(event) => {
+                                  input.value = event.target.value;
+                                }}
+                              />
+                            </Input.Root>
+                          )}
                       </td>
                     </tr>
                   ))}

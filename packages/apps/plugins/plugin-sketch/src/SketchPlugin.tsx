@@ -8,15 +8,15 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { Sketch as SketchType } from '@braneframe/types';
+import { SketchType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { Expando } from '@dxos/react-client/echo';
+import * as E from '@dxos/echo-schema';
 
 import { SketchMain, SketchComponent } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
 import translations from './translations';
-import { SketchAction, type SketchPluginProvides, isSketch } from './types';
+import { SketchAction, type SketchPluginProvides } from './types';
 
 export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
   return {
@@ -24,13 +24,17 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
     provides: {
       metadata: {
         records: {
-          [SketchType.schema.typename]: {
+          [SketchType.typename]: {
             placeholder: ['object title placeholder', { ns: SKETCH_PLUGIN }],
             icon: (props: IconProps) => <CompassTool {...props} />,
           },
         },
       },
       translations,
+      echo: {
+        // TODO(wittjosiah): Expando shouldn't need to be registered.
+        schema: [SketchType, E.ExpandoType],
+      },
       graph: {
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
@@ -58,7 +62,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
               );
 
               // Add all sketches to the graph.
-              const query = space.db.query(SketchType.filter());
+              const query = space.db.query(E.Filter.schema(SketchType));
               let previousObjects: SketchType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -117,13 +121,13 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isSketch(data.active) ? <SketchMain sketch={data.active} /> : null;
+              return data.active instanceof SketchType ? <SketchMain sketch={data.active} /> : null;
             case 'slide':
-              return isSketch(data.slide) ? (
+              return data.slide instanceof SketchType ? (
                 <SketchComponent sketch={data.slide} readonly={true} autoZoom={true} maxZoom={1.5} className={'p-16'} />
               ) : null;
             case 'section':
-              return isSketch(data.object) ? (
+              return data.object instanceof SketchType ? (
                 <SketchComponent sketch={data.object} readonly={true} autoZoom={true} className={'h-[400px]'} />
               ) : null;
             default:
@@ -136,8 +140,8 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
           switch (intent.action) {
             case SketchAction.CREATE: {
               return {
-                data: new SketchType({
-                  data: new Expando() as any,
+                data: E.object(SketchType, {
+                  data: E.object(E.ExpandoType, {}),
                 }),
               };
             }

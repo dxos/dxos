@@ -8,7 +8,7 @@ import React, { useMemo, type Ref } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { Document as DocumentType } from '@braneframe/types';
+import { DocumentType, TextV0Type } from '@braneframe/types';
 import {
   isObject,
   parseIntentPlugin,
@@ -18,9 +18,9 @@ import {
   type PluginDefinition,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import * as E from '@dxos/echo-schema/schema';
+import { Filter } from '@dxos/echo-schema';
+import * as E from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { isTypedObject } from '@dxos/react-client/echo';
 import { type EditorMode, translations as editorTranslations } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
@@ -42,9 +42,6 @@ import {
   MarkdownAction,
 } from './types';
 import { getFallbackTitle, isMarkdownProperties, markdownExtensionPlugins } from './util';
-
-export const isDocument = (data: unknown): data is DocumentType =>
-  isTypedObject(data) && DocumentType.schema.typename === data.__typename;
 
 export type MarkdownPluginState = {
   // Codemirror extensions provided by other plugins.
@@ -105,13 +102,16 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       settings: settings.values,
       metadata: {
         records: {
-          [DocumentType.schema.typename]: {
+          [DocumentType.typename]: {
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: (props: IconProps) => <TextAa {...props} />,
           },
         },
       },
       translations: [...translations, ...editorTranslations],
+      echo: {
+        schema: [DocumentType],
+      },
       graph: {
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
@@ -139,7 +139,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               );
 
               // Add all documents to the graph.
-              const query = space.db.query(DocumentType.filter());
+              const query = space.db.query(Filter.schema(DocumentType));
               let previousObjects: DocumentType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -220,9 +220,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           //   We probably want a better pattern for splitting this surface resolver up.
           const extensions = useMemo(
             () =>
-              isDocument(data.active)
+              data.active instanceof DocumentType
                 ? getCustomExtensions(data.active)
-                : isDocument(data.object)
+                : data.object instanceof DocumentType
                   ? getCustomExtensions(data.object)
                   : getCustomExtensions(),
             [data.active, data.object, settings.values.editorMode],
@@ -231,7 +231,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           switch (role) {
             // TODO(burdon): Normalize layout (reduce variants).
             case 'main': {
-              if (isDocument(data.active)) {
+              if (data.active instanceof DocumentType) {
                 const { readonly } = settings.values.state[data.active.id] ?? {};
                 return (
                   <MainLayout toolbar={settings.values.toolbar}>
@@ -262,14 +262,18 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             }
 
             case 'section': {
-              if (isDocument(data.object)) {
+              if (data.object instanceof DocumentType) {
                 return <DocumentSection document={data.object} extensions={extensions} />;
               }
               break;
             }
 
             case 'card': {
-              if (isObject(data.content) && typeof data.content.id === 'string' && isDocument(data.content.object)) {
+              if (
+                isObject(data.content) &&
+                typeof data.content.id === 'string' &&
+                data.content.object instanceof DocumentType
+              ) {
                 // isTileComponentProps is a type guard for these props.
                 // `props` will not pass this guard without transforming `data` into `item`.
                 const cardProps = {
@@ -300,7 +304,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         resolver: ({ action, data }) => {
           switch (action) {
             case MarkdownAction.CREATE: {
-              return { data: new DocumentType() };
+              return {
+                data: E.object(DocumentType, {
+                  content: E.object(TextV0Type, { content: '' }),
+                  comments: [],
+                }) satisfies E.ReactiveObject<DocumentType>,
+              };
             }
 
             // TODO(burdon): Generalize for every object.

@@ -4,7 +4,7 @@
 import { Quotes } from '@phosphor-icons/react';
 import React, { useEffect } from 'react';
 
-import { type Thread as ThreadType } from '@braneframe/types';
+import { type ThreadType } from '@braneframe/types';
 import { useTranslation } from '@dxos/react-ui';
 import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
 

@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
-import { Document as DocumentType, types } from '@braneframe/types';
+import { Document as DocumentType, types } from '@braneframe/types/proto';
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';

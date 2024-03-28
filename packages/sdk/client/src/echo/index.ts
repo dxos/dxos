@@ -21,11 +21,13 @@ export {
   fromCursor,
   toCursor,
   DocAccessor,
+  metaOf,
   type AutomergeTextCompat,
   type EchoDatabase,
   type EchoObject, // TODO(burdon): Remove from API.
   type FilterSource,
   type ObjectMeta,
+  type OpaqueEchoObject,
   type Selection,
   type Subscription,
   type SubscriptionHandle,

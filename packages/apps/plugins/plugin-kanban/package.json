@@ -29,6 +29,7 @@
     "@dnd-kit/sortable": "^7.0.1",
     "@dnd-kit/utilities": "^3.2.0",
     "@dxos/async": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",

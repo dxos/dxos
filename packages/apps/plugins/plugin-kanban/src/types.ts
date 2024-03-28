@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Kanban as KanbanType } from '@braneframe/types';
+import { type KanbanColumnType, type KanbanItemType, type KanbanType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -10,7 +10,6 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { isTypedObject } from '@dxos/react-client/echo';
 
 import { KANBAN_PLUGIN } from './meta';
 
@@ -45,16 +44,12 @@ export type KanbanPluginProvides = SurfaceProvides &
 // TODO(burdon): Extend model for moving items (in and across columns).
 export interface KanbanModel {
   root: KanbanType;
-  createColumn(): KanbanType.Column;
-  createItem(column: KanbanType.Column): KanbanType.Item;
+  createColumn(): KanbanColumnType;
+  createItem(column: KanbanColumnType): KanbanItemType;
 }
 
-export const isKanban = (data: unknown): data is KanbanType => {
-  return isTypedObject(data) && KanbanType.schema.typename === data.__typename;
-};
-
 export type Location = {
-  column: KanbanType.Column;
-  item?: KanbanType.Item;
+  column: KanbanColumnType;
+  item?: KanbanItemType;
   idx?: number;
 };

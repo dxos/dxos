@@ -8,7 +8,7 @@ import { Airplane, Stack } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { types, Document } from '@braneframe/types';
+import { types, Document } from '@braneframe/types/proto';
 import { registerSignalFactory } from '@dxos/echo-signals';
 import { faker } from '@dxos/random';
 import { Client, ClientContext } from '@dxos/react-client';

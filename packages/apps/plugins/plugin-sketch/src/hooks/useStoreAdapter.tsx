@@ -5,7 +5,7 @@
 import { type TLStore } from '@tldraw/tlschema';
 import { useEffect, useState } from 'react';
 
-import { getRawDoc, type Expando, type TextObject } from '@dxos/react-client/echo';
+import { type Expando, type TextObject, getRawDoc } from '@dxos/react-client/echo';
 
 import { AutomergeStoreAdapter } from './automerge';
 

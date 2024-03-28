@@ -4,13 +4,13 @@
 
 import React, { type FC } from 'react';
 
-import { type TypedObject } from '@dxos/client/echo';
+import { type FileType } from '@braneframe/types';
 import { useConfig } from '@dxos/react-client';
 
 import { FilePreview } from './FilePreview';
 import { getIpfsUrl } from '../get-ipfs-url';
 
-const FileSlide: FC<{ file: TypedObject; cover?: boolean }> = ({ file, cover }) => {
+const FileSlide: FC<{ file: FileType; cover?: boolean }> = ({ file, cover }) => {
   const config = useConfig();
   if (!file.cid) {
     return null;

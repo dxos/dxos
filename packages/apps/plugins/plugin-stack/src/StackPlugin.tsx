@@ -8,10 +8,10 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { Stack as StackType } from '@braneframe/types';
+import { SectionType, StackType } from '@braneframe/types';
 import { resolvePlugin, type Plugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import * as E from '@dxos/echo-schema/schema';
+import * as E from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 
 import { StackMain, StackSettings, AddSectionDialog, dataHasAddSectionDialogProps } from './components';
@@ -19,7 +19,6 @@ import meta, { STACK_PLUGIN } from './meta';
 import translations from './translations';
 import {
   StackAction,
-  isStack,
   type StackPluginProvides,
   type StackProvides,
   type StackState,
@@ -49,15 +48,16 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       settings: settings.values,
       metadata: {
         records: {
-          [StackType.schema.typename]: {
+          [StackType.typename]: {
             placeholder: ['stack title placeholder', { ns: STACK_PLUGIN }],
             icon: (props: IconProps) => <StackSimple {...props} />,
           },
-          [StackType.Section.schema.typename]: {
-            parse: (section: StackType.Section, type: string) => {
+          [SectionType.typename]: {
+            parse: (section: SectionType, type: string) => {
               switch (type) {
                 case 'node':
-                  return { id: section.object.id, label: section.object.title, data: section.object };
+                  // TODO(wittjosiah): Remove cast.
+                  return { id: section.object?.id, label: (section.object as any).title, data: section.object };
                 case 'object':
                   return section.object;
                 case 'view-object':
@@ -68,6 +68,9 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         },
       },
       translations,
+      echo: {
+        schema: [StackType, SectionType],
+      },
       graph: {
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
@@ -95,7 +98,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
               );
 
               // Add all stacks to the graph.
-              const query = space.db.query(StackType.filter());
+              const query = space.db.query(E.Filter.schema(StackType));
               let previousObjects: StackType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -137,7 +140,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           }
           switch (role) {
             case 'main':
-              return isStack(data.active) ? (
+              return data.active instanceof StackType ? (
                 <StackMain stack={data.active} separation={settings.values.separation} />
               ) : null;
             case 'settings': {
@@ -152,7 +155,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case StackAction.CREATE: {
-              return { data: new StackType() };
+              return { data: E.object(StackType, { sections: [] }) };
             }
           }
         },

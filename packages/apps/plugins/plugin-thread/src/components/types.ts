@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { Thread as ThreadType } from '@braneframe/types';
+import { type ThreadType } from '@braneframe/types';
 import type { ThreadProps } from '@dxos/react-ui-thread';
 
 /**

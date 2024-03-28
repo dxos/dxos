@@ -83,8 +83,8 @@ describe('EchoObject class dsl', () => {
       const { db, graph } = await setupDatabase();
       graph.types.registerEffectSchema(Person);
       const person = db.add(E.object(Person, { name: 'John', worksAt: E.object(Organization, { ...DEFAULT_ORG }) }));
-      expect(person.worksAt.name).to.eq(DEFAULT_ORG.name);
-      expect(person.worksAt.id).to.be.a('string');
+      expect(person.worksAt?.name).to.eq(DEFAULT_ORG.name);
+      expect(person.worksAt?.id).to.be.a('string');
     });
   });
 

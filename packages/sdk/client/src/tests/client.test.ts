@@ -7,7 +7,7 @@ import chaiAsPromised from 'chai-as-promised';
 import { rmSync } from 'node:fs';
 import waitForExpect from 'wait-for-expect';
 
-import { Message, Thread } from '@braneframe/types';
+import { Message, Thread } from '@braneframe/types/proto';
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { TextObject } from '@dxos/echo-schema';

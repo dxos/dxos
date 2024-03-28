@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type SchemaProvides } from '@braneframe/plugin-client';
 import type { StackProvides } from '@braneframe/plugin-stack';
 import type {
   GraphBuilderProvides,
@@ -22,4 +23,5 @@ export type ScriptPluginProvides = SurfaceProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
+  SchemaProvides &
   StackProvides;

@@ -18,6 +18,7 @@ import React, { useCallback, useContext, useRef, useState } from 'react';
 import { SPACE_PLUGIN, SpaceAction, getSpaceDisplayName } from '@braneframe/plugin-space';
 import { Surface, useIntent } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
+import { metaOf } from '@dxos/react-client/echo';
 import {
   Avatar,
   Button,
@@ -60,7 +61,8 @@ const EmbeddedLayoutImpl = () => {
   }, []);
 
   const handleSaveAndCloseEmbed = useCallback(() => {
-    document && window.parent.postMessage({ type: 'save-data', content: document.content.text }, 'https://github.com');
+    document &&
+      window.parent.postMessage({ type: 'save-data', content: document.content?.content }, 'https://github.com');
   }, [document]);
 
   const handleCreateSpace = () => dispatch({ action: SpaceAction.CREATE });
@@ -84,7 +86,7 @@ const EmbeddedLayoutImpl = () => {
 
   const spaceFallbackValue = hexToFallback(space?.key.toHex() ?? '0');
 
-  const docGhId = useDocGhId(document?.__meta?.keys ?? []);
+  const docGhId = useDocGhId((document ? metaOf(document)?.keys : []) ?? []);
   const name = space && getSpaceDisplayName(space);
 
   return (

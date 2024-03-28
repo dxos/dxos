@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { Contact } from '@braneframe/types';
+import { Contact } from '@braneframe/types/proto';
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { type Space } from '@dxos/client-protocol';

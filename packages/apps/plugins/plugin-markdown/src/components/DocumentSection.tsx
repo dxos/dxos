@@ -4,7 +4,7 @@
 
 import React, { type FC } from 'react';
 
-import { type Document as DocumentType } from '@braneframe/types';
+import { type DocumentType } from '@braneframe/types';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -29,7 +29,7 @@ const DocumentSection: FC<{
   const space = getSpaceForObject(document);
 
   const { themeMode } = useThemeContext();
-  const { doc, accessor } = useDocAccessor(document.content);
+  const { doc, accessor } = useDocAccessor(document.content!);
   const { parentRef } = useTextEditor(
     () => ({
       doc,

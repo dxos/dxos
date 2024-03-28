@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { Table as TableType } from '@braneframe/types';
+import { Table as TableType } from '@braneframe/types/proto';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 
