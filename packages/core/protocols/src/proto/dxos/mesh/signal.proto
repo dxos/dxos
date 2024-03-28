@@ -6,7 +6,9 @@ syntax = "proto3";
 
 import "google/protobuf/any.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
+
 
 package dxos.mesh.signal;
 
@@ -15,6 +17,7 @@ option go_package = "github.com/dxos/kube/proto/def/dxos/mesh/signal";
 message JoinRequest {
   bytes swarm = 1;
   bytes peer = 2;
+  optional google.protobuf.Struct metadata = 3;
 }
 
 message Message {
@@ -22,6 +25,7 @@ message Message {
   bytes author = 1;
   bytes recipient = 2;
   google.protobuf.Any payload = 3;
+  optional google.protobuf.Struct metadata = 4;
 }
 
 message ReceptionRequest {

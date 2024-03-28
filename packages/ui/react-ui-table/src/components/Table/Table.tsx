@@ -27,6 +27,7 @@ import { TableFooter } from './TableFooter';
 import { TableHead } from './TableHead';
 import { type TableProps } from './props';
 import { groupTh, tableRoot } from '../../theme';
+import { usePinLastRow } from '../hooks/usePinLastRow';
 
 export const Table = <TData extends RowData>(props: TableProps<TData>) => {
   const {
@@ -149,17 +150,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     onDataSelectionChange?.(Object.keys(rowSelection).map((id) => table.getRowModel().rowsById[id].original));
   }, [onDataSelectionChange, rowSelection, table]);
 
-  useEffect(() => {
-    if (!pinLastRow) {
-      return;
-    }
-
-    // Clear row pinning
-    table.resetRowPinning();
-
-    const rows = table.getRowModel().rows;
-    rows[rows.length - 1].pin('bottom');
-  }, [pinLastRow, table, data]);
+  usePinLastRow(pinLastRow, table, data, getScrollElement);
 
   // Create additional expansion column if all columns have fixed width.
   const expand = false; // columns.map((column) => column.size).filter(Boolean).length === columns?.length;
@@ -239,11 +230,9 @@ const VirtualizedTableContent = ({
   const centerRows = table.getCenterRows();
   const pinnedRows = table.getBottomRows();
 
-  const rows = [...centerRows, ...pinnedRows];
-
   const { getTotalSize, getVirtualItems } = useVirtualizer({
     getScrollElement,
-    count: rows.length,
+    count: centerRows.length,
     overscan: 8,
     estimateSize: () => 40,
   });
@@ -254,6 +243,8 @@ const VirtualizedTableContent = ({
   const paddingTop = virtualRows.length > 0 ? virtualRows?.[0]?.start || 0 : 0;
   const paddingBottom = virtualRows.length > 0 ? totalSize - (virtualRows?.[virtualRows.length - 1]?.end || 0) : 0;
 
+  const rowsToRender = [...virtualRows.map((virtualRow) => centerRows[virtualRow.index]), ...pinnedRows];
+
   return (
     <>
       {paddingTop > 0 && (
@@ -263,7 +254,7 @@ const VirtualizedTableContent = ({
           </tr>
         </tbody>
       )}
-      <TableBody rows={virtualRows.map((virtualRow) => rows[virtualRow.index])} />
+      <TableBody rows={rowsToRender} />
       {paddingBottom > 0 && (
         <tbody role='none'>
           <tr role='none'>

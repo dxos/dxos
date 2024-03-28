@@ -6,6 +6,7 @@ import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { type ChangeFn, type Doc } from '@dxos/automerge/automerge';
 import { Reference } from '@dxos/echo-db';
+import { type ObjectSystem } from '@dxos/echo-pipeline';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -15,9 +16,9 @@ import { AutomergeArray } from './automerge-array';
 import { AutomergeObjectCore, type BindOptions } from './automerge-object-core';
 import { type DocAccessor } from './automerge-types';
 import { isValidKeyPath, type KeyPath } from './key-path';
-import { REFERENCE_TYPE_TAG, type ObjectSystem } from './types';
+import { REFERENCE_TYPE_TAG } from './types';
 import { type EchoDatabase } from '../database';
-import { EchoReactiveHandler } from '../effect/echo-handler';
+import { type EchoReactiveHandlerImpl } from '../effect/echo-handler'; // Keep as type-only import.
 import { getProxyHandlerSlot, isReactiveProxy } from '../effect/proxy';
 import {
   base,
@@ -36,7 +37,7 @@ import {
   type TypedObjectProperties,
 } from '../object';
 import { AbstractEchoObject } from '../object/object'; // TODO(burdon): Import
-import { type Schema } from '../proto'; // Keep as type-only import.
+import { type Schema } from '../proto';
 
 // TODO(dmaretskyi): Rename to `AutomergeObjectApi`?
 export class AutomergeObject implements TypedObjectProperties {
@@ -388,8 +389,7 @@ export const getRawDoc = (obj: OpaqueEchoObject, path?: KeyPath): DocAccessor =>
   if (isAutomergeObject(obj)) {
     return obj[base]._getRawDoc(path);
   } else {
-    const handler = getProxyHandlerSlot(obj).handler;
-    invariant(handler instanceof EchoReactiveHandler);
+    const handler = getProxyHandlerSlot(obj).handler as EchoReactiveHandlerImpl;
     return handler._objectCore.getDocAccessor(path);
   }
 };
@@ -398,8 +398,7 @@ export const getAutomergeObjectCore = (obj: OpaqueEchoObject): AutomergeObjectCo
   if (isAutomergeObject(obj)) {
     return obj[base]._core;
   } else {
-    const handler = getProxyHandlerSlot(obj).handler;
-    invariant(handler instanceof EchoReactiveHandler);
+    const handler = getProxyHandlerSlot(obj).handler as EchoReactiveHandlerImpl;
     return handler._objectCore;
   }
 };

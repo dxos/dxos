@@ -475,6 +475,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
       return await callback(rpc);
     } catch (err: any) {
+      this.log('Publisher failed: ', err);
       this.catch(new PublisherConnectionError());
     } finally {
       if (rpc) {

@@ -82,6 +82,8 @@ export class SchemaValidator {
       const tupleAst = AST.isUnion(schema.ast) ? schema.ast.types.find((ast) => AST.isTupleType(ast)) : null;
       if (AST.isTupleType(tupleAst ?? schema.ast)) {
         schema = getArrayElementSchema(schema, propertyName);
+      } else if (AST.isAnyKeyword(schema.ast)) {
+        return S.any;
       } else {
         const allProperties = getProperties(schema.ast, (propertyName) =>
           getPropertyFn([...propertyPath.slice(0, i), propertyName]),
@@ -153,6 +155,9 @@ const getTypeDiscriminators = (typeAstList: AST.TypeLiteral[]): AST.PropertySign
 const getTargetPropertySchema = (target: any, prop: string | symbol): S.Schema<any> => {
   const schema = (target as any)[symbolSchema];
   invariant(schema, 'target has no schema');
+  if (AST.isAnyKeyword(schema.ast)) {
+    return S.any;
+  }
   if (target instanceof ReactiveArray) {
     return getArrayElementSchema(schema, prop);
   }
@@ -173,7 +178,9 @@ export const setSchemaProperties = (obj: any, schema: S.Schema<any>) => {
   for (const key in obj) {
     if (isValidProxyTarget(obj[key])) {
       const elementSchema = getTargetPropertySchema(obj, key);
-      setSchemaProperties(obj[key], elementSchema);
+      if (elementSchema != null) {
+        setSchemaProperties(obj[key], elementSchema);
+      }
     }
   }
 };

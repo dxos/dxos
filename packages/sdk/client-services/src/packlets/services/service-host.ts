@@ -6,8 +6,8 @@ import { Event, synchronized } from '@dxos/async';
 import { Properties, clientServiceBundle, defaultKey, type ClientServices } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { DataServiceImpl } from '@dxos/echo-pipeline';
-import { getAutomergeObjectCore, getRawDoc, type SpaceDoc, type TypedObject } from '@dxos/echo-schema';
+import { DataServiceImpl, type SpaceDoc } from '@dxos/echo-pipeline';
+import { getAutomergeObjectCore, getRawDoc, type TypedObject } from '@dxos/echo-schema';
 import { IndexServiceImpl } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -187,6 +187,9 @@ export class ClientServicesHost {
       }
     }
 
+    if (!options.signalManager) {
+      log.warn('running signaling without telemetry metadata.');
+    }
     const {
       connectionLog = true,
       transportFactory = createSimplePeerTransportFactory({
