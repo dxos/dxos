@@ -259,7 +259,6 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
       this._objectCore.set(fullPath, encoded);
     }
 
-    this._objectCore.signal.notifyWrite();
     return true;
   }
 
@@ -332,7 +331,6 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     });
     invariant(newLength !== -1);
 
-    this._objectCore.signal.notifyWrite();
     return newLength;
   }
 
@@ -346,7 +344,6 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
       returnValue = array.pop();
     });
 
-    this._objectCore.signal.notifyWrite();
     return returnValue;
   }
 
@@ -360,7 +357,6 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
       returnValue = array.shift();
     });
 
-    this._objectCore.signal.notifyWrite();
     return returnValue;
   }
 
@@ -379,7 +375,6 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     });
     invariant(newLength !== -1);
 
-    this._objectCore.signal.notifyWrite();
     return newLength;
   }
 
@@ -402,7 +397,6 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     });
     invariant(deletedElements);
 
-    this._objectCore.signal.notifyWrite();
     return deletedElements;
   }
 
@@ -416,7 +410,6 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
       assignDeep(doc, fullPath, sortedArray);
     });
 
-    this._objectCore.signal.notifyWrite();
     return target;
   }
 
@@ -430,7 +423,6 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
       assignDeep(doc, fullPath, reversedArray);
     });
 
-    this._objectCore.signal.notifyWrite();
     return target;
   }
 
@@ -452,8 +444,6 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
       trimmedArray.length = newLength;
       assignDeep(doc, fullPath, trimmedArray);
     });
-
-    this._objectCore.signal.notifyWrite();
   }
 
   private _validateForArray(target: any, path: KeyPath, items: any[], start: number) {
