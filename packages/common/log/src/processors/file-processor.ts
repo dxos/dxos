@@ -7,21 +7,47 @@ import { dirname } from 'node:path';
 
 import { jsonify } from '@dxos/util';
 
-import { LogLevel } from '../config';
-import { type LogProcessor, getContextFromEntry } from '../context';
+import { type LogFilter, LogLevel } from '../config';
+import { type LogProcessor, getContextFromEntry, shouldLog } from '../context';
 
-export const createFileProcessor = ({ path, levels }: { path: string; levels: LogLevel[] }): LogProcessor => {
+/**
+ * Create a file processor.
+ * @param path - Path to the log file or 'stdout' or 'stderr'.
+ * @param levels - Log levels to process. Takes preference over Filters.
+ * @param filters - Filters to apply.
+ */
+export const createFileProcessor = ({
+  path,
+  levels,
+  filters,
+}: {
+  path: string;
+  levels: LogLevel[];
+  filters?: LogFilter[];
+}): LogProcessor => {
   let fd: number | undefined;
 
   return (config, entry) => {
-    if (!levels.includes(entry.level)) {
+    if (levels.length > 0 && !levels.includes(entry.level)) {
+      return;
+    }
+    if (!shouldLog(entry, filters)) {
       return;
     }
     if (!fd) {
-      try {
-        mkdirSync(dirname(path));
-      } catch {}
-      fd = openSync(path, 'w');
+      switch (path) {
+        case 'stdout':
+          fd = 1;
+          break;
+        case 'stderr':
+          fd = 2;
+          break;
+        default:
+          try {
+            mkdirSync(dirname(path));
+          } catch {}
+          fd = openSync(path, 'w');
+      }
     }
 
     const record = {
