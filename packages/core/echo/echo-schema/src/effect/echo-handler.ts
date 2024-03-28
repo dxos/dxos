@@ -298,6 +298,7 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
       }
       return value;
     }
+    // DynamicEchoSchema is a utility-wrapper around the object we actually store in automerge, unwrap it
     const unwrappedValue = value instanceof DynamicEchoSchema ? value.serializedSchema : value;
     const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) =>
       this._objectCore.getDecoded([getNamespace(target), ...path]),
