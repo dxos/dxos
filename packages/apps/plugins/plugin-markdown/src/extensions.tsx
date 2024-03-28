@@ -45,7 +45,7 @@ export const getExtensions = ({ dispatch, settings, document }: ExtensionsOption
     // Common.
     //
     decorateMarkdown({
-      selectionChangeDelay: 400,
+      selectionChangeDelay: 100,
       renderLinkButton: dispatch
         ? onRenderLink((id: string) => {
             void dispatch({
