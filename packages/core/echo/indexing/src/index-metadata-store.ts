@@ -62,6 +62,8 @@ export class IndexMetadataStore implements MetadataMethods {
     }
 
     await batch.write();
+
+    this.dirty.emit();
   }
 
   @log.method()
