@@ -4,7 +4,6 @@
 
 import { Event, synchronized } from '@dxos/async';
 import { type MetadataMethods } from '@dxos/echo-pipeline';
-import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
 import { type MySublevel } from './level';
@@ -35,7 +34,6 @@ export class IndexMetadataStore implements MetadataMethods {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  @log.method()
   async getDirtyDocuments(): Promise<string[]> {
     const res: string[] = [];
 
@@ -50,7 +48,6 @@ export class IndexMetadataStore implements MetadataMethods {
 
   @trace.span({ showInBrowserTimeline: true })
   @synchronized
-  @log.method()
   async markDirty(idToLastHash: Map<string, string>) {
     const batch = this._db.batch();
 
@@ -66,7 +63,6 @@ export class IndexMetadataStore implements MetadataMethods {
     this.dirty.emit();
   }
 
-  @log.method()
   async markClean(id: string, lastIndexedHash: string) {
     const metadata = await this._getMetadata(id);
     metadata.lastIndexedHash = lastIndexedHash;
