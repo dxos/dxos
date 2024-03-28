@@ -163,7 +163,7 @@ export const ColumnSettingsPanel = <TData extends RowData, TValue>({
 }: ColumnMenuProps<TData, TValue> & { anchorNode: any; open: boolean; setOpen: (b: boolean) => void }) => {
   return (
     <Popover.Root open={open} onOpenChange={(o) => setOpen(o)}>
-      {createPortal(<Popover.Anchor></Popover.Anchor>, anchorNode)}
+      {createPortal(<Popover.Anchor />, anchorNode)}
       <Popover.Portal>
         <Popover.Content>
           <Popover.Viewport classNames='w-60'>
