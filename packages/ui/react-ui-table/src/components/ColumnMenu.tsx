@@ -75,7 +75,7 @@ export const ColumnMenu = <TData extends RowData, TValue>({ column, ...props }: 
         />
       )}
 
-      <DropdownMenu.Root>
+      <DropdownMenu.Root modal={false}>
         <DropdownMenu.Trigger ref={columnSettingsAnchorRef}>
           <Button variant='ghost'>
             <CaretDown className={getSize(4)} />
@@ -122,6 +122,36 @@ export const ColumnMenu = <TData extends RowData, TValue>({ column, ...props }: 
   );
 };
 
+export const ColumnSettingsPanel = <TData extends RowData, TValue>({
+  tableDefs,
+  tableDef,
+  column,
+  onUpdate,
+  onDelete,
+  anchorNode,
+  open,
+  setOpen,
+}: ColumnMenuProps<TData, TValue> & { anchorNode: any; open: boolean; setOpen: (b: boolean) => void }) => (
+  <Popover.Root open={open} onOpenChange={setOpen}>
+    {createPortal(<Popover.Anchor />, anchorNode)}
+    <Popover.Content>
+      <Popover.Viewport classNames='w-60'>
+        <DensityProvider density='fine'>
+          <ColumnSettingsForm
+            column={column}
+            tableDefs={tableDefs}
+            tableDef={tableDef}
+            onUpdate={onUpdate}
+            onDelete={onDelete}
+            onClose={() => setOpen(false)}
+          />
+        </DensityProvider>
+      </Popover.Viewport>
+      <Popover.Arrow />
+    </Popover.Content>
+  </Popover.Root>
+);
+
 export const SortIndicator = ({
   direction,
   onClick,
@@ -148,39 +178,5 @@ export const SortIndicator = ({
     <div onClick={onClick} className='flex items-center cursor-pointer'>
       {icon}
     </div>
-  );
-};
-
-export const ColumnSettingsPanel = <TData extends RowData, TValue>({
-  tableDefs,
-  tableDef,
-  column,
-  onUpdate,
-  onDelete,
-  anchorNode,
-  open,
-  setOpen,
-}: ColumnMenuProps<TData, TValue> & { anchorNode: any; open: boolean; setOpen: (b: boolean) => void }) => {
-  return (
-    <Popover.Root open={open} onOpenChange={(o) => setOpen(o)}>
-      {createPortal(<Popover.Anchor />, anchorNode)}
-      <Popover.Portal>
-        <Popover.Content>
-          <Popover.Viewport classNames='w-60'>
-            <DensityProvider density='fine'>
-              <ColumnSettingsForm
-                column={column}
-                tableDefs={tableDefs}
-                tableDef={tableDef}
-                onUpdate={onUpdate}
-                onDelete={onDelete}
-                onClose={() => setOpen(false)}
-              />
-            </DensityProvider>
-          </Popover.Viewport>
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
   );
 };
