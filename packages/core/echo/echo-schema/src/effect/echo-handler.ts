@@ -89,9 +89,13 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
       const value = target[key];
       if (value === undefined) {
         delete target[key];
-      } else if (typeof target[key] === 'object') {
-        throwIfCustomClass(key, value);
-        this.validateInitialProps(target[key]);
+      } else if (typeof value === 'object') {
+        if (value instanceof DynamicEchoSchema) {
+          target[key] = value.serializedSchema;
+        } else {
+          throwIfCustomClass(key, value);
+        }
+        this.validateInitialProps(value);
       }
     }
   }
@@ -295,9 +299,12 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
       return value;
     }
     const unwrappedValue = value instanceof DynamicEchoSchema ? value.serializedSchema : value;
-    const propertySchema: S.Schema<any> = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) =>
+    const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) =>
       this._objectCore.getDecoded([getNamespace(target), ...path]),
     );
+    if (propertySchema == null) {
+      return unwrappedValue;
+    }
     const _ = S.asserts(propertySchema)(unwrappedValue);
     return unwrappedValue;
   }

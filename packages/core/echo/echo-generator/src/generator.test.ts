@@ -4,10 +4,11 @@
 
 import { expect } from 'chai';
 
-import { Client } from '@dxos/client';
+import { Client, Config } from '@dxos/client';
 import { debug } from '@dxos/client/echo';
+import * as E from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { describe, test } from '@dxos/test';
+import { afterTest, describe, test } from '@dxos/test';
 
 import { createSpaceObjectGenerator, createTestObjectGenerator, TestSchemaType } from './data';
 
@@ -23,30 +24,22 @@ describe('TestObjectGenerator', () => {
   });
 
   test('with space', async () => {
-    const client = new Client();
-    await client.initialize();
-    await client.halo.createIdentity();
-    const space = await client.spaces.create();
+    const { space } = await setupTest();
 
     const generator = createSpaceObjectGenerator(space);
     generator.addSchemas();
 
     // Create org object.
     const organization = generator.createObject({ types: [TestSchemaType.organization] });
-    expect(organization.__schema).to.exist;
+    expect(E.typeOf(organization)).to.exist;
 
     // Expect at least one person object with a linked org reference.
     const objects = generator.createObjects({ [TestSchemaType.contact]: 10 });
     expect(objects.some((object) => object.org === organization)).to.be.true;
-
-    await client.destroy();
   });
 
-  test.only('idempotence', async () => {
-    const client = new Client();
-    await client.initialize();
-    await client.halo.createIdentity();
-    const space = await client.spaces.create();
+  test('idempotence', async () => {
+    const { space } = await setupTest();
 
     const schemaId: string[] = [];
 
@@ -54,22 +47,30 @@ describe('TestObjectGenerator', () => {
       const generator = createSpaceObjectGenerator(space);
       generator.addSchemas();
       const organization = generator.createObject({ types: [TestSchemaType.organization] });
-      schemaId.push(organization.__schema!.id);
+      schemaId.push(E.typeOf(organization)!.itemId);
     }
 
     {
       const generator = createSpaceObjectGenerator(space);
       generator.addSchemas();
       const organization = generator.createObject({ types: [TestSchemaType.organization] });
-      schemaId.push(organization.__schema!.id);
+      schemaId.push(E.typeOf(organization)!.itemId);
     }
 
+    expect(schemaId[0]).not.to.be.undefined;
     expect(schemaId[0]).to.eq(schemaId[1]);
 
     {
       console.log(space.db.objects.map((object) => object[debug]));
     }
-
-    await client.destroy();
   });
+
+  const setupTest = async () => {
+    const client = new Client({ config: new Config({ runtime: { client: { useReactiveObjectApi: true } } }) });
+    await client.initialize();
+    afterTest(async () => await client.destroy());
+    await client.halo.createIdentity();
+    const space = await client.spaces.create();
+    return { client, space };
+  };
 });

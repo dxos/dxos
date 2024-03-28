@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Document as DocumentType, Table as TableType } from '@braneframe/types/proto';
+import { DocumentType, TextV0Type, TableType } from '@braneframe/types';
+import { next as A } from '@dxos/automerge/automerge';
 import { createSpaceObjectGenerator, type SpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { getTextContent } from '@dxos/echo-schema';
+import { Filter, getRawDoc } from '@dxos/echo-schema';
+import * as E from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
-import { type Space, TextObject } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { range } from '@dxos/util';
 
 const tableDefs: { type: TestSchemaType; title: string; props?: TableType['props'] }[] = [
@@ -49,7 +51,7 @@ export class Generator {
   createTables() {
     return tableDefs.map(({ type, title, props }) => {
       const schema = this._generator.getSchema(type);
-      return this._space.db.add(new TableType({ title, schema, props }));
+      return this._space.db.add(E.object(TableType, { title, schema, props: props ?? [] }));
     });
   }
 
@@ -63,20 +65,20 @@ export class Generator {
       .map(() => faker.lorem.sentences(faker.number.int({ min: 2, max: 16 })))
       .join('\n\n');
 
-    return this._space.db.add(new DocumentType({ title, content: new TextObject(content) }));
+    return this._space.db.add(E.object(DocumentType, { title, content: E.object(TextV0Type, { content }) }));
   }
 
   updateDocument() {
-    const { objects } = this._space.db.query(DocumentType.filter());
+    const { objects } = this._space.db.query(Filter.schema(DocumentType));
     if (objects.length) {
       const object = faker.helpers.arrayElement(objects);
-      const text = getTextContent(object.content, '');
+      const text = object.content.content ?? '';
       const idx = text.lastIndexOf(' ', faker.number.int({ min: 0, max: text.length }));
-      if (idx !== -1) {
-        object.content.model?.insert(' ' + faker.lorem.word(), idx);
-      } else {
-        object.content.model?.insert(faker.lorem.sentence(), 0);
-      }
+      const docAccessor = getRawDoc(object, ['content']);
+      docAccessor.handle.change((doc) => {
+        const insertText = idx >= 0 ? ' ' + faker.lorem.word() : faker.lorem.sentence();
+        A.splice(doc, docAccessor.path.slice(), Math.max(idx, 0), 0, insertText.toString());
+      });
     }
   }
 }

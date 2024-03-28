@@ -195,7 +195,7 @@ export const ref = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<Ref<T
 };
 
 export const EchoObjectFieldMetaAnnotationId = Symbol.for('@dxos/echo-schema/annotation/FieldMeta');
-type FieldMetaValue = Record<string, string | number | boolean>;
+type FieldMetaValue = Record<string, string | number | boolean | undefined>;
 export type EchoObjectFieldMetaAnnotation = {
   [namespace: string]: FieldMetaValue;
 };
@@ -212,10 +212,10 @@ export const fieldMeta =
     });
   };
 
-export const getFieldMetaAnnotation = (field: AST.PropertySignature, namespace: string) =>
+export const getFieldMetaAnnotation = <T>(field: AST.PropertySignature, namespace: string) =>
   pipe(
     AST.getAnnotation<EchoObjectFieldMetaAnnotation>(EchoObjectFieldMetaAnnotationId)(field.type),
-    Option.map((meta) => meta[namespace]),
+    Option.map((meta) => meta[namespace] as T),
     Option.getOrElse(() => undefined),
   );
 

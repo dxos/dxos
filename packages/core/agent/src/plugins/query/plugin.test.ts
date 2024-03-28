@@ -9,7 +9,7 @@ import { Client, Config } from '@dxos/client';
 import { QueryOptions } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { Filter, type TypedObject, type Query } from '@dxos/echo-schema';
+import { Filter, type TypedObject, type ReactiveObject, type Query } from '@dxos/echo-schema';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type QueryRequest } from '@dxos/protocols/proto/dxos/agent/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -41,14 +41,17 @@ describe('QueryPlugin', () => {
     const client1 = new Client({
       services: services1,
       config: new Config({
-        runtime: { agent: { plugins: [{ id: 'dxos.org/agent/plugin/query' }] } },
+        runtime: {
+          client: { useReactiveObjectApi: true },
+          agent: { plugins: [{ id: 'dxos.org/agent/plugin/query' }] },
+        },
       }),
     });
     await client1.initialize();
     afterTest(() => client1.destroy());
     await client1.halo.createIdentity({ displayName: 'user-with-index-plugin' });
 
-    let org: TypedObject;
+    let org: ReactiveObject<any>;
     {
       const space = await client1.spaces.create({ name: 'first space' });
       await space.waitUntilReady();

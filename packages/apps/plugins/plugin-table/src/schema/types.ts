@@ -2,56 +2,78 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Table as TableType } from '@braneframe/types/proto';
+import * as AST from '@effect/schema/AST';
+import * as S from '@effect/schema/Schema';
+
+import { type TableType } from '@braneframe/types';
+import * as E from '@dxos/echo-schema';
+import { type EchoObjectAnnotation, getFieldMetaAnnotation, ReferenceAnnotation } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
-import { Schema } from '@dxos/react-client/echo';
 import { type ColumnProps, type TableDef } from '@dxos/react-ui-table';
 
-export const getPropType = (type?: Schema.PropType): ColumnProps['type'] => {
-  switch (type) {
-    case Schema.PropType.REF:
-      return 'ref';
-    case Schema.PropType.BOOLEAN:
-      return 'boolean';
-    case Schema.PropType.NUMBER:
-      return 'number';
-    case Schema.PropType.DATE:
-      return 'date';
-    case Schema.PropType.STRING:
-    default:
-      return 'string';
+const FIELD_META_NAMESPACE = 'plugin-table';
+const typeToSchema: Partial<{ [key in ColumnProps['type']]: S.Schema<any> }> = {
+  boolean: S.boolean,
+  number: S.number,
+  date: S.number,
+  string: S.string,
+};
+
+interface ColumnAnnotation {
+  digits?: number;
+  refProp?: string;
+}
+
+export const getPropType = (type?: AST.AST): ColumnProps['type'] => {
+  if (type == null) {
+    return 'string';
+  }
+  if (AST.isTypeLiteral(type)) {
+    return 'ref';
+  } else if (AST.isBooleanKeyword(type)) {
+    return 'boolean';
+  } else if (AST.isNumberKeyword(type)) {
+    return 'number';
+  } else {
+    return 'string';
   }
 };
 
-export const getSchema = (type?: ColumnProps['type']): Schema.PropType => {
-  switch (type) {
-    case 'ref':
-      return Schema.PropType.REF;
-    case 'boolean':
-      return Schema.PropType.BOOLEAN;
-    case 'number':
-      return Schema.PropType.NUMBER;
-    case 'date':
-      return Schema.PropType.DATE;
-    case 'string':
-    default:
-      return Schema.PropType.STRING;
+export const getSchema = (
+  tables: TableType[],
+  type: ColumnProps['type'] | undefined,
+  options: { digits?: number; refProp?: string; refTable?: string },
+): S.Schema<any> => {
+  let schema: S.Schema<any>;
+  if (type === 'ref') {
+    const referencedSchema = tables.find((table) => table.schema?.id === options.refTable)?.schema;
+    schema = referencedSchema ? E.ref(referencedSchema) : S.string;
+  } else {
+    schema = (type && typeToSchema[type]) ?? S.string;
   }
+  return schema.pipe(
+    E.fieldMeta(FIELD_META_NAMESPACE, {
+      refProp: options.refProp,
+      digits: options.digits,
+    }),
+  );
 };
 
 export const schemaPropMapper =
   (table: TableType) =>
-  ({ id, type, digits, ref }: Schema.Prop): ColumnProps => {
+  (property: AST.PropertySignature): ColumnProps => {
+    const { name: id, type } = property;
     const { label, refProp, size } = table.props?.find((prop) => prop.id === id) ?? {};
+    const refAnnotation = property.type.annotations[ReferenceAnnotation] as EchoObjectAnnotation;
+    const digits = getFieldMetaAnnotation<ColumnAnnotation>(property, FIELD_META_NAMESPACE)?.digits;
     return {
-      id: id!,
-      prop: id!,
+      id: String(id)!,
+      prop: String(id)!,
       type: getPropType(type),
-      refTable: ref?.id,
-      refProp,
+      refTable: refAnnotation?.storedSchemaId,
+      refProp: refProp ?? undefined,
+      label: label ?? undefined,
       digits,
-
-      label,
       size,
 
       editable: true,

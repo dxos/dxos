@@ -19,7 +19,7 @@ import {
 } from '@phosphor-icons/react';
 import React, { type FC, useContext, useEffect, useMemo, useState } from 'react';
 
-import { type Schema, type TypedObject } from '@dxos/echo-schema';
+import { type Schema, type ReactiveObject } from '@dxos/echo-schema';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { type Space, useSpaceInvitation } from '@dxos/react-client/echo';
@@ -38,7 +38,10 @@ const DEFAULT_COUNT = 100;
 const DEFAULT_PERIOD = 500;
 const DEFAULT_JITTER = 50;
 
-const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject[]) => void }> = ({ space, onAddObjects }) => {
+const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: ReactiveObject<any>[]) => void }> = ({
+  space,
+  onAddObjects,
+}) => {
   const { themeMode } = useThemeContext();
   const { connect } = useSpaceInvitation(space?.key);
   const client = useClient();
