@@ -106,7 +106,12 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
         <Action
           variant='primary'
           disabled={disabled}
-          onClick={() => onUpdateProfile?.({ displayName, data: { emoji, hue } })}
+          onClick={() =>
+            onUpdateProfile?.({
+              ...(displayName && { displayName }),
+              ...((emoji || hue) && { data: { ...(emoji && { emoji }), ...(hue && { hue }) } }),
+            })
+          }
           data-testid='update-profile-form-continue'
         >
           {t('done label')}
