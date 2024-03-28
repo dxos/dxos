@@ -61,7 +61,10 @@ const DemoStackPlank = ({ toolbar }: { toolbar?: boolean }) => {
         items={items}
         SectionContent={SimpleContent}
         id={faker.string.uuid()}
-        classNames={['p-px overflow-y-auto', !toolbar && 'row-span-2']}
+        classNames={[
+          'p-px overflow-y-auto row-end-[content-end]',
+          toolbar ? 'row-start-[content-start]' : 'row-start-[toolbar-start]',
+        ]}
       />
     </>
   );
