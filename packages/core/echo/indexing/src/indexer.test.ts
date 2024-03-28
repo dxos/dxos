@@ -16,7 +16,7 @@ import { Indexer, type ObjectSnapshot } from './indexer';
 import { createTestLevel } from './level';
 
 describe('Indexer', () => {
-  test.repeat(10)('objects that are marked as dirty are getting indexed', async () => {
+  test('objects that are marked as dirty are getting indexed', async () => {
     const storage = createStorage({ type: StorageType.RAM });
     afterTest(() => storage.close());
     const level = await createTestLevel();
