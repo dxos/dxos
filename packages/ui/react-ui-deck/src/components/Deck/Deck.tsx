@@ -12,7 +12,7 @@ import { translationKey } from '../../translations';
 type DeckRootProps = MainProps;
 
 const deckLayout =
-  'fixed inset-0 z-0 overflow-x-auto overflow-y-hidden snap-inline snap-proximity grid grid-rows-[var(--rail-size)_[toolbar-start]_min-content_[content-start]_1fr_[content-end]] grid-cols-[repeat(99,min-content)]';
+  'fixed inset-0 z-0 overflow-x-auto overflow-y-hidden snap-inline snap-proximity grid grid-rows-[var(--rail-size)_[toolbar-start]_var(--rail-action)_[content-start]_1fr_[content-end]] grid-cols-[repeat(99,min-content)]';
 
 const resizeButtonStyles =
   'hidden sm:grid is-6 row-span-3 p-0 touch-none justify-items-center items-stretch plb-2 before:rounded-full before:is-1 before:surface-input hover:before:surface-inputHover before:transition-colors hover:before:surface-accentFocusIndicator focus-visible:before:surface-accentFocusIndicator data-[resizing=true]:before:surface-accentFocusIndicator focus:outline-none';
