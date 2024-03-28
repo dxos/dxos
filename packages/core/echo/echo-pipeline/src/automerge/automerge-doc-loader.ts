@@ -3,16 +3,14 @@
 //
 
 import { Event } from '@dxos/async';
-import { type DocHandle, type AutomergeUrl, type DocumentId } from '@dxos/automerge/automerge-repo';
+import { type DocHandle, type AutomergeUrl, type DocumentId, type Repo } from '@dxos/automerge/automerge-repo';
 import { cancelWithContext, type Context } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import type { AutomergeContext } from './automerge-context';
-import { type SpaceState } from './automerge-db';
-import { type SpaceDoc } from './types';
+import { type SpaceState, type SpaceDoc } from './types';
 
 type SpaceDocumentLinks = SpaceDoc['links'];
 
@@ -51,7 +49,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
 
   constructor(
     private readonly _spaceKey: PublicKey,
-    private readonly _automerge: AutomergeContext,
+    private readonly _repo: Repo,
   ) {}
 
   public async loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void> {
@@ -106,7 +104,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
 
   public createDocumentForObject(objectId: string): DocHandle<SpaceDoc> {
     invariant(this._spaceRootDocHandle);
-    const spaceDocHandle = this._automerge.repo.create<SpaceDoc>();
+    const spaceDocHandle = this._repo.create<SpaceDoc>();
     this._initDocAccess(spaceDocHandle);
     this.onObjectBoundToDocument(spaceDocHandle, objectId);
     this._spaceRootDocHandle.change((newDoc: SpaceDoc) => {
@@ -145,7 +143,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
         log.warn('object document was already loaded', logMeta);
         continue;
       }
-      const handle = this._automerge.repo.find<SpaceDoc>(automergeUrl as DocumentId);
+      const handle = this._repo.find<SpaceDoc>(automergeUrl as DocumentId);
       log.debug('document loading triggered', logMeta);
       this._objectDocumentHandles.set(objectId, handle);
       void this._createObjectOnDocumentLoad(handle, objectId);
@@ -153,7 +151,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   }
 
   private async _initDocHandle(ctx: Context, url: string) {
-    const docHandle = this._automerge.repo.find<SpaceDoc>(url as DocumentId);
+    const docHandle = this._repo.find<SpaceDoc>(url as DocumentId);
     while (true) {
       try {
         await warnAfterTimeout(5_000, 'Automerge root doc load timeout (AutomergeDb)', async () => {
@@ -178,7 +176,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   }
 
   private _createContextBoundSpaceRootDocument(ctx: Context) {
-    const docHandle = this._automerge.repo.create<SpaceDoc>();
+    const docHandle = this._repo.create<SpaceDoc>();
     this._spaceRootDocHandle = docHandle;
     ctx.onDispose(() => {
       docHandle.delete();

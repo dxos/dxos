@@ -251,6 +251,37 @@ export const Editable = {
   },
 };
 
+export const PinnedLastRow = {
+  render: () => {
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const [items, setItems] = useState<Item[]>(createItems(200));
+
+    const onUpdate: ValueUpdater<Item, any> = useCallback(
+      (item, prop, value) => setItems((items) => updateItems(items, item.publicKey, prop, value)),
+      [setItems],
+    );
+
+    const columns = useMemo(() => makeColumns(onUpdate), [onUpdate]);
+
+    return (
+      <div ref={containerRef} className='fixed inset-0 overflow-auto'>
+        <Table<Item>
+          role='grid'
+          rowsSelectable='multi'
+          keyAccessor={(row) => row.publicKey.toHex()}
+          columns={columns}
+          data={items}
+          fullWidth
+          stickyHeader
+          border
+          getScrollElement={() => containerRef.current}
+          pinLastRow
+        />
+      </div>
+    );
+  },
+};
+
 export const Resizable = {
   render: () => {
     const containerRef = useRef<HTMLDivElement | null>(null);
