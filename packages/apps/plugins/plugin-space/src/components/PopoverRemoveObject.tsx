@@ -4,6 +4,7 @@
 
 import React, { useCallback, useRef } from 'react';
 
+import { getSpaceProperty } from '@braneframe/plugin-client';
 import { FolderType } from '@braneframe/types';
 import { NavigationAction, parseIntentPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { type AnyEchoObject, isEchoReactiveObject } from '@dxos/echo-schema';
@@ -41,7 +42,7 @@ export const PopoverRemoveObject = ({
     const space = getSpaceForObject(object);
 
     // Remove object from folder it's in.
-    const folder: FolderType = propsFolder ?? space?.properties[FolderType.typename];
+    const folder = propsFolder ?? getSpaceProperty<FolderType>(space, FolderType.typename);
     if (folder) {
       const index = folder.objects.indexOf(object);
       index !== -1 && folder.objects.splice(index, 1);

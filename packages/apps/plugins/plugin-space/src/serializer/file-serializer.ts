@@ -4,6 +4,7 @@
 
 import md5 from 'md5';
 
+import { getSpaceProperty } from '@braneframe/plugin-client';
 import { FolderType } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -51,7 +52,7 @@ export class FileSerializer {
       data: [],
     };
 
-    const spaceRoot = space.properties[FolderType.typename];
+    const spaceRoot = getSpaceProperty<FolderType>(space, FolderType.typename);
     if (!spaceRoot) {
       throw new Error('No root folder.');
     }
@@ -65,7 +66,7 @@ export class FileSerializer {
   async deserializeSpace(space: Space, serializedSpace: SerializedSpace): Promise<Space> {
     await space.waitUntilReady();
 
-    const spaceRoot = space.properties[FolderType.typename];
+    const spaceRoot = getSpaceProperty<FolderType>(space, FolderType.typename);
     if (!spaceRoot) {
       throw new Error('No root folder.');
     }

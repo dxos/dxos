@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { getSpaceProperty, setSpaceProperty } from '@braneframe/plugin-client';
 import { FolderType } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
 import { type Migration } from '@dxos/migrations';
@@ -11,16 +12,16 @@ export const migrations: Migration[] = [
   {
     version: 1,
     up: ({ space }) => {
-      const rootFolder = space.properties[FolderType.typename];
+      const rootFolder = getSpaceProperty(space, FolderType.typename);
       if (rootFolder instanceof FolderType) {
         return;
       }
 
       const { objects } = space.db.query(Filter.schema(FolderType, { name: space.key.toHex() }));
       if (objects.length > 0) {
-        space.properties[FolderType.typename] = objects[0];
+        setSpaceProperty(space, FolderType.typename, objects[0]);
       } else {
-        space.properties[FolderType.typename] = E.object(FolderType, { name: space.key.toHex(), objects: [] });
+        setSpaceProperty(space, FolderType.typename, E.object(FolderType, { name: space.key.toHex(), objects: [] }));
       }
     },
     down: () => {},
@@ -28,7 +29,7 @@ export const migrations: Migration[] = [
   {
     version: 2,
     up: ({ space }) => {
-      const rootFolder = space.properties[FolderType.typename] as FolderType;
+      const rootFolder = getSpaceProperty<FolderType>(space, FolderType.typename)!;
       const { objects } = space.db.query(Filter.schema(FolderType, { name: space.key.toHex() }));
       if (objects.length <= 1) {
         return;

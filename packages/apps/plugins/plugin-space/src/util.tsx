@@ -19,6 +19,7 @@ import {
 import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
+import { getSpaceProperty } from '@braneframe/plugin-client';
 import { actionGroupSymbol, type InvokeParams, type Graph, type Node, manageNodes } from '@braneframe/plugin-graph';
 import { FolderType } from '@braneframe/types';
 import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
@@ -126,7 +127,7 @@ export const updateGraphWithSpace = ({
   const getId = (id: string) => `${id}/${space.key.toHex()}`;
 
   const unsubscribeSpace = effect(() => {
-    const folder = space.state.get() === SpaceState.READY && space.properties[FolderType.typename];
+    const folder = space.state.get() === SpaceState.READY && getSpaceProperty(space, FolderType.typename);
     const partials =
       space.state.get() === SpaceState.READY && folder instanceof FolderType
         ? getFolderGraphNodePartials({ graph, folder, space })
@@ -206,7 +207,7 @@ export const updateGraphWithSpace = ({
         condition:
           space.state.get() === SpaceState.READY &&
           typeof Migrations.versionProperty === 'string' &&
-          space.properties[Migrations.versionProperty] !== Migrations.targetVersion,
+          getSpaceProperty(space, Migrations.versionProperty) !== Migrations.targetVersion,
         removeEdges: true,
         nodes: [
           {
@@ -332,7 +333,8 @@ export const updateGraphWithSpace = ({
   });
   const previousObjects = new Map<string, E.Ref<E.AnyEchoObject>[]>();
   const unsubscribeQuery = effect(() => {
-    const folder: FolderType = space.state.get() === SpaceState.READY && space.properties[FolderType.typename];
+    const folder =
+      space.state.get() === SpaceState.READY ? getSpaceProperty<FolderType>(space, FolderType.typename) : null;
     const folderObjects = folder?.objects ?? [];
     const removedObjects =
       previousObjects
@@ -600,4 +602,12 @@ export const getActiveSpace = (graph: Graph, active?: string) => {
   }
 
   return getSpaceForObject(node.data);
+};
+
+export const prepareSpaceForMigration = (space: Space) => {
+  // migrations class doesn't know about key splitting using (get|set)SpaceProperty functions
+  // ensure the version set using keySplitting is accessible without key splitting
+  if (Migrations.namespace && !space.properties[Migrations.namespace]) {
+    space.properties[Migrations.namespace] = getSpaceProperty(space, Migrations.namespace);
+  }
 };

@@ -26,6 +26,7 @@
     "@braneframe/types": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",

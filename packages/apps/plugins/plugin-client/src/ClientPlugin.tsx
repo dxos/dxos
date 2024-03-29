@@ -21,6 +21,7 @@ import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@d
 import { IndexKind, type TypeCollection } from '@dxos/react-client/echo';
 
 import meta, { CLIENT_PLUGIN } from './meta';
+import { getSpaceProperty, setSpaceProperty } from './space-properties';
 import translations from './translations';
 
 const WAIT_FOR_DEFAULT_SPACE_TIMEOUT = 30_000;
@@ -115,14 +116,14 @@ export const ClientPlugin = ({
         if (client.halo.identity.get()) {
           await client.spaces.isReady.wait({ timeout: WAIT_FOR_DEFAULT_SPACE_TIMEOUT });
           // TODO(wittjosiah): Remove. This is a cleanup for the old way of tracking first run.
-          if (typeof client.spaces.default.properties[appKey] === 'boolean') {
-            client.spaces.default.properties[appKey] = {};
+          if (typeof getSpaceProperty(client.spaces.default, appKey) === 'boolean') {
+            setSpaceProperty(client.spaces.default, appKey, {});
           }
           const key = `${appKey}.opened`;
           // TODO(wittjosiah): This doesn't work currently.
           //   There's no guaruntee that the default space will be fully synced by the time this is called.
-          // firstRun = !client.spaces.default.properties[key];
-          client.spaces.default.properties[key] = Date.now();
+          // firstRun = !getSpaceProperty(client.spaces.default, key);
+          setSpaceProperty(client.spaces.default, key, Date.now());
         }
       } catch (err) {
         error = err;

@@ -1035,6 +1035,9 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../../core/echo/echo-signals
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage

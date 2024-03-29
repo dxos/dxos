@@ -8,6 +8,7 @@ import localforage from 'localforage';
 import React from 'react';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
+import { getSpaceProperty, setSpaceProperty } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { FolderType } from '@braneframe/types';
 import {
@@ -62,7 +63,7 @@ import {
   type PluginState,
   SPACE_DIRECTORY_HANDLE,
 } from './types';
-import { SHARED, getActiveSpace, isSpace, updateGraphWithSpace } from './util';
+import { SHARED, getActiveSpace, isSpace, updateGraphWithSpace, prepareSpaceForMigration } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 
@@ -124,9 +125,9 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
       if (clientPlugin.provides.firstRun) {
         const defaultSpace = client.spaces.default;
         const personalSpaceFolder = E.object(FolderType, { objects: [] });
-        defaultSpace.properties[FolderType.typename] = personalSpaceFolder;
+        setSpaceProperty(defaultSpace, FolderType.typename, personalSpaceFolder);
         if (Migrations.versionProperty) {
-          defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
+          setSpaceProperty(defaultSpace, Migrations.versionProperty, Migrations.targetVersion);
         }
         await onFirstRun?.({
           client,
@@ -490,12 +491,12 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               const space = await client.spaces.create(intent.data as PropertiesProps);
 
               const folder = E.object(FolderType, { objects: [] });
-              space.properties[FolderType.typename] = folder;
+              setSpaceProperty(space, FolderType.typename, folder);
               await space.waitUntilReady();
 
               sharedSpacesFolder?.objects.push(folder);
               if (Migrations.versionProperty) {
-                space.properties[Migrations.versionProperty] = Migrations.targetVersion;
+                setSpaceProperty(space, Migrations.versionProperty, Migrations.targetVersion);
               }
               return { data: { space, id: space.key.toHex() } };
             }
@@ -564,6 +565,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             case SpaceAction.MIGRATE: {
               const space = intent.data?.space;
               if (space instanceof SpaceProxy) {
+                prepareSpaceForMigration(space);
                 const result = Migrations.migrate(space, intent.data?.version);
                 return { data: result };
               }
@@ -628,7 +630,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
 
               if (intent.data?.target instanceof SpaceProxy) {
                 const space = intent.data.target;
-                const folder = space.properties[FolderType.typename];
+                const folder = getSpaceProperty(space, FolderType.typename);
                 if (folder instanceof FolderType) {
                   folder.objects.push(object as Identifiable);
                   return { data: object };
