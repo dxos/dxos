@@ -19,16 +19,23 @@ export interface DynamicSchemaConstructor extends S.Schema<DynamicEchoSchema> {
 export const DynamicObjectSchemaBase = (): DynamicSchemaConstructor => {
   return class {
     static get ast() {
-      return StoredEchoSchema.ast;
+      return this._schema.ast;
     }
 
     static readonly [S.TypeId] = schemaVariance;
     static get annotations() {
-      return StoredEchoSchema.annotations.bind(StoredEchoSchema);
+      const schema = this._schema;
+      return schema.annotations.bind(schema);
     }
 
     static get pipe() {
-      return StoredEchoSchema.pipe.bind(StoredEchoSchema);
+      const schema = this._schema;
+      return schema.pipe.bind(schema);
+    }
+
+    private static get _schema() {
+      // the field is DynamicEchoSchema in runtime, but is serialized as StoredEchoSchema in automerge
+      return S.union(StoredEchoSchema, S.instanceOf(DynamicEchoSchema)).annotations(StoredEchoSchema.ast.annotations);
     }
   } as any;
 };

@@ -81,6 +81,7 @@ const horizontalRule = Decoration.replace({ widget: new HorizontalRuleWidget() }
 const checkedTask = Decoration.replace({ widget: new CheckboxWidget(true) });
 const uncheckedTask = Decoration.replace({ widget: new CheckboxWidget(false) });
 
+// Check if cursor is inside text.
 const editingRange = (state: EditorState, range: { from: number; to: number }, focus: boolean) => {
   const {
     readOnly,
@@ -103,76 +104,103 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       from,
       to,
       enter: (node) => {
-        if (node.name === 'FencedCode') {
-          const editing = editingRange(state, node, focus);
+        switch (node.name) {
           // FencedCode > CodeMark > [CodeInfo] > CodeText > CodeMark
-          for (const block of view.viewportLineBlocks) {
-            if (block.to < node.from) {
-              continue;
-            }
-            if (block.from > node.to) {
-              break;
-            }
-            const first = block.from <= node.from;
-            const last = block.to >= node.to && /^(\s>)*```$/.test(state.doc.sliceString(block.from, block.to));
-            deco.add(block.from, block.from, first ? fencedCodeLineFirst : last ? fencedCodeLineLast : fencedCodeLine);
-            if (!editing && (first || last)) {
-              atomicDeco.add(block.from, block.to, hide);
-            }
-          }
-          return false;
-        } else if (node.name === 'Link') {
-          const marks = node.node.getChildren('LinkMark');
-          const urlNode = node.node.getChild('URL');
-          const editing = editingRange(state, node, focus);
-          if (urlNode && marks.length >= 2) {
-            const url = state.sliceDoc(urlNode.from, urlNode.to);
-            if (!editing) {
-              atomicDeco.add(node.from, marks[0].to, hide);
-            }
-            deco.add(
-              marks[0].to,
-              marks[1].from,
-              Decoration.mark({
-                tagName: 'a',
-                attributes: {
-                  class: 'cm-link',
-                  href: url,
-                  rel: 'noreferrer',
-                  target: '_blank',
-                },
-              }),
-            );
-            if (!editing) {
-              atomicDeco.add(
-                marks[1].from,
-                node.to,
-                options.renderLinkButton
-                  ? Decoration.replace({ widget: new LinkButton(url, options.renderLinkButton) })
-                  : hide,
+          case 'FencedCode': {
+            const editing = editingRange(state, node, focus);
+            for (const block of view.viewportLineBlocks) {
+              if (block.to < node.from) {
+                continue;
+              }
+              if (block.from > node.to) {
+                break;
+              }
+              const first = block.from <= node.from;
+              const last = block.to >= node.to && /^(\s>)*```$/.test(state.doc.sliceString(block.from, block.to));
+              deco.add(
+                block.from,
+                block.from,
+                first ? fencedCodeLineFirst : last ? fencedCodeLineLast : fencedCodeLine,
               );
+              if (!editing && (first || last)) {
+                atomicDeco.add(block.from, block.to, hide);
+              }
             }
+            return false;
           }
-        } else if (node.name === 'HeaderMark') {
-          const parent = node.node.parent!;
-          if (/^ATX/.test(parent.name) && !editingRange(state, state.doc.lineAt(node.from), focus)) {
-            const next = state.doc.sliceString(node.to, node.to + 1);
-            atomicDeco.add(node.from, node.to + (next === ' ' ? 1 : 0), hide);
+
+          case 'Link': {
+            const marks = node.node.getChildren('LinkMark');
+            const urlNode = node.node.getChild('URL');
+            const editing = editingRange(state, node, focus);
+            if (urlNode && marks.length >= 2) {
+              const url = state.sliceDoc(urlNode.from, urlNode.to);
+              if (!editing) {
+                atomicDeco.add(node.from, marks[0].to, hide);
+              }
+              deco.add(
+                marks[0].to,
+                marks[1].from,
+                Decoration.mark({
+                  tagName: 'a',
+                  attributes: {
+                    class: 'cm-link',
+                    href: url,
+                    rel: 'noreferrer',
+                    target: '_blank',
+                  },
+                }),
+              );
+              if (!editing) {
+                atomicDeco.add(
+                  marks[1].from,
+                  node.to,
+                  options.renderLinkButton
+                    ? Decoration.replace({ widget: new LinkButton(url, options.renderLinkButton) })
+                    : hide,
+                );
+              }
+            }
+            break;
           }
-        } else if (node.name === 'HorizontalRule') {
-          if (!editingRange(state, node, focus)) {
-            deco.add(node.from, node.to, horizontalRule);
+
+          case 'HeaderMark': {
+            const parent = node.node.parent!;
+            if (/^ATX/.test(parent.name) && !editingRange(state, state.doc.lineAt(node.from), focus)) {
+              const next = state.doc.sliceString(node.to, node.to + 1);
+              atomicDeco.add(node.from, node.to + (next === ' ' ? 1 : 0), hide);
+            }
+            break;
           }
-        } else if (node.name === 'TaskMarker') {
-          // Check if cursor is inside text.
-          if (!editingRange(state, node, focus)) {
-            const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
-            atomicDeco.add(node.from - 2, node.from - 1, Decoration.mark({ class: 'cm-task' }));
-            atomicDeco.add(node.from, node.to, checked ? checkedTask : uncheckedTask);
+
+          case 'HorizontalRule': {
+            if (!editingRange(state, node, focus)) {
+              deco.add(node.from, node.to, horizontalRule);
+            }
+            break;
           }
-        } else if (MarksByParent.has(node.name)) {
-          if (!editingRange(state, node.node.parent!, focus)) {
-            atomicDeco.add(node.from, node.to, hide);
+
+          case 'TaskMarker': {
+            if (!editingRange(state, node, focus)) {
+              const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
+              atomicDeco.add(node.from - 2, node.from - 1, Decoration.mark({ class: 'cm-task' }));
+              atomicDeco.add(node.from, node.to, checked ? checkedTask : uncheckedTask);
+            }
+            break;
+          }
+
+          case 'ListItem': {
+            const start = state.doc.lineAt(node.from);
+            deco.add(start.from, start.from, Decoration.line({ class: 'cm-list-item' }));
+            break;
+          }
+
+          default: {
+            if (MarksByParent.has(node.name)) {
+              if (!editingRange(state, node.node.parent!, focus)) {
+                atomicDeco.add(node.from, node.to, hide);
+              }
+            }
           }
         }
       },
@@ -224,8 +252,6 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
           }
         }
 
-        // TODO(burdon): BUG: If the cursor is at the end of a link at the end of a line,
-        //  the cursor will float in space or be in the wrong position after the decoration is applied.
         scheduleUpdate(view: EditorView) {
           this.clearUpdate();
           this.pendingUpdate = setTimeout(() => {
@@ -304,4 +330,6 @@ const formattingStyles = EditorView.baseTheme({
     marginLeft: '4px',
     marginRight: '4px',
   },
+
+  // '& .cm-list-item > span:nth-child(2)': {},
 });
