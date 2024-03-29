@@ -82,7 +82,7 @@ export const tbodyTr: ComponentFunction<TbodyTrStyleProps> = ({ canBeCurrent, is
     canBeCurrent ? ghostSelectedCurrent : ghostSelected,
     canBeCurrent && focusRing,
     canBeCurrent && 'cursor-pointer rounded',
-    isPinned && 'sticky z-[20] bottom-[-1px] base-surface shadow-sm',
+    isPinned && 'sticky z-1 bottom-[-1px] base-surface',
     ...etc,
   );
 
