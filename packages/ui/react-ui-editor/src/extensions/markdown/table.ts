@@ -15,7 +15,6 @@ import { Decoration, EditorView, WidgetType } from '@codemirror/view';
 
 // TODO(burdon): Snippet to create basic table.
 //  https://codemirror.net/docs/ref/#autocomplete.snippet
-
 // TODO(burdon): Advanced formatting (left/right/center).
 // TODO(burdon): Editor to auto balance columns.
 
@@ -82,19 +81,21 @@ const update = (state: EditorState, options: TableOptions) => {
   });
 
   tables.forEach((table) => {
-    const hide = state.readOnly || cursor < table.from || cursor > table.to;
-    if (hide) {
+    const replace = state.readOnly || cursor < table.from || cursor > table.to;
+    if (replace) {
       builder.add(
         table.from,
         table.to,
         Decoration.replace({
+          block: true,
           widget: new TableWidget(table),
         }),
       );
+    } else {
+      // Add class for styling.
+      // TODO(burdon): Apply to each line?
+      builder.add(table.from, table.to, Decoration.mark({ class: 'cm-table' }));
     }
-
-    // Add class for styling.
-    builder.add(table.from, table.to, Decoration.mark({ class: 'cm-table' }));
   });
 
   return builder.finish();
