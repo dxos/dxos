@@ -11,6 +11,7 @@ import { Button, DensityProvider, Popover, DropdownMenu } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { ColumnSettingsForm } from './ColumnSettingsForm';
+import { useColumnSorting } from './hooks/useColumnSorting';
 import { type TableDef, type ColumnProps } from '../schema';
 
 export type ColumnMenuProps<TData extends RowData, TValue> = {
@@ -26,11 +27,7 @@ export const ColumnMenu = <TData extends RowData, TValue>({ column, ...props }: 
   const title = column.label?.length ? column.label : column.id;
   const header = props.context.header;
 
-  const canSort = header.column.getCanSort();
-  const sortDirection = header.column.getIsSorted();
-  const toggleSortingHandler = header.column.getToggleSortingHandler();
-  const toggleSort = header.column.toggleSorting;
-  const clearSort = header.column.clearSorting;
+  const { canSort, sortDirection, onSelectSort, onToggleSort, onClearSort } = useColumnSorting(header.column);
 
   const columnSettingsAnchorRef = useRef<any>(null);
   const [isMounted, setIsMounted] = useState(false);
@@ -62,7 +59,7 @@ export const ColumnMenu = <TData extends RowData, TValue>({ column, ...props }: 
   return (
     <div className='flex items-center justify-center justify-between'>
       <div className='flex items-center gap-1 truncate' title={title}>
-        {toggleSortingHandler && <SortIndicator direction={sortDirection} onClick={toggleSortingHandler} />}
+        <SortIndicator direction={sortDirection} onClick={onToggleSort} />
         <div className='truncate'>{title}</div>
       </div>
       {isMounted && (
@@ -84,22 +81,22 @@ export const ColumnMenu = <TData extends RowData, TValue>({ column, ...props }: 
 
         <DropdownMenu.Content onCloseAutoFocus={onDropdownCloseAutoFocus} sideOffset={4} collisionPadding={8}>
           <DropdownMenu.Viewport>
-            {canSort && toggleSort && (
+            {canSort && (
               <>
-                <DropdownMenu.Item onClick={() => toggleSort(false)}>
+                <DropdownMenu.Item onClick={() => onSelectSort('asc')}>
                   <span className='grow'>Sort ascending</span>
                   <span className='opacity-50'>
                     <ArrowUp className={getSize(4)} />
                   </span>
                 </DropdownMenu.Item>
-                <DropdownMenu.Item onClick={() => toggleSort(true)}>
+                <DropdownMenu.Item onClick={() => onSelectSort('desc')}>
                   <span className='grow'>Sort descending</span>
                   <span className='opacity-50'>
                     <ArrowDown className={getSize(4)} />
                   </span>
                 </DropdownMenu.Item>
                 {sortDirection !== false && (
-                  <DropdownMenu.Item onClick={clearSort}>
+                  <DropdownMenu.Item onClick={onClearSort}>
                     <span className='grow'>Clear sort</span>
                     <span className='opacity-50'>
                       <X className={getSize(4)} />
