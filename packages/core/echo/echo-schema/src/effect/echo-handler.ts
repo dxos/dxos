@@ -98,6 +98,28 @@ class EchoArrayTwoPointO<T> extends Array<T> {
   }
 }
 
+/**
+ * For tracking proxy targets in the `targetsMap`.
+ */
+type TargetKey = {
+  path: KeyPath;
+  namespace: string;
+  type: 'record' | 'array';
+} & Brand.Brand<'TargetKey'>;
+
+const TargetKey = {
+  /**
+   * Constructor function forces the order of the fields.
+   */
+  new: (path: KeyPath, namespace: string, type: 'record' | 'array'): TargetKey =>
+    ({
+      path,
+      namespace,
+      type,
+    }) as TargetKey,
+  hash: (key: TargetKey): string => JSON.stringify(key),
+};
+
 type ObjectInternals = {
   core: AutomergeObjectCore;
 
