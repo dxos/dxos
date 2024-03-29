@@ -4,7 +4,7 @@
 
 import md5 from 'md5';
 
-import { getSpaceProperty } from '@braneframe/plugin-client';
+import { getSpaceProperty } from '@braneframe/plugin-client/space-properties';
 import { FolderType } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
 import { log } from '@dxos/log';
