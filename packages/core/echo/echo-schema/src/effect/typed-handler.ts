@@ -4,29 +4,84 @@
 
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
+import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 
 import { type ReactiveHandler, createReactiveProxy, isValidProxyTarget } from './proxy';
-import { SchemaValidator } from './schema-validator';
+import { SchemaValidator, setSchemaProperties, symbolSchema } from './schema-validator';
 import { data } from '../object';
 import { defineHiddenProperty } from '../util/property';
+import { invariant } from '@dxos/invariant';
+import { ReactiveArray } from './reactive-array';
+import * as S from '@effect/schema/Schema';
 
-export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T> {
+const symbolSignal = Symbol('signal');
+const symbolPropertySignal = Symbol('property-signal');
+
+type ProxyTarget = {
+  /**
+   * For get and set operations on value properties.
+   */
+  // TODO(dmaretskyi): Turn into a map of signals per-field.
+  [symbolSignal]: GenericSignal;
+
+  /**
+   * For modifying the structure of the object.
+   */
+  [symbolPropertySignal]: GenericSignal;
+
+  /**
+   * Schema for the root.
+   */
+  [symbolSchema]: S.Schema<any>;
+} & ({ [key: keyof any]: any } | any[]);
+
+export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
+  public static instance = new TypedReactiveHandler();
+
+  private constructor() {}
+
   _proxyMap = new WeakMap<object, any>();
-  _signal = compositeRuntime.createSignal();
 
-  _init(target: any): void {
+  _init(target: ProxyTarget): void {
+    invariant(typeof target === 'object' && target !== null);
+    invariant(symbolSchema in target, 'Schema is not defined for the target');
+
+    if (!(symbolSignal in target)) {
+      defineHiddenProperty(target, symbolSignal, compositeRuntime.createSignal());
+      defineHiddenProperty(target, symbolPropertySignal, compositeRuntime.createSignal());
+    }
+
+    for (const key of Object.getOwnPropertyNames(target)) {
+      const descriptor = Object.getOwnPropertyDescriptor(target, key)!;
+      if (descriptor.get) {
+        // Ignore getters.
+        continue;
+      }
+
+      // Array reactivity is already handled by the schema validator.
+    }
+
     if (inspect.custom) {
       defineHiddenProperty(target, inspect.custom, this._inspect.bind(target));
     }
   }
 
-  get(target: any, prop: string | symbol, receiver: any): any {
-    this._signal.notifyRead();
-
+  get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
     if (prop === data) {
+      target[symbolSignal].notifyRead();
       return toJSON(target);
     }
+
+    // Handle getter properties. Will not subscribe the value signal.
+    if (Object.getOwnPropertyDescriptor(target, prop)?.get) {
+      target[symbolPropertySignal].notifyRead();
+
+      // TODO(dmaretskyi): Turn getters into computed fields.
+      return Reflect.get(target, prop, receiver);
+    }
+
+    target[symbolSignal].notifyRead();
+    target[symbolPropertySignal].notifyRead();
 
     const value = Reflect.get(target, prop, receiver);
     if (isValidProxyTarget(value)) {
@@ -36,23 +91,28 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
     return value;
   }
 
-  set(target: any, prop: string | symbol, value: any, receiver: any): boolean {
+  set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
+    // Convert arrays to reactive arrays on write.
+    if (Array.isArray(value)) {
+      value = ReactiveArray.from(value);
+    }
+
     let result: boolean = false;
     compositeRuntime.batch(() => {
       const validatedValue = SchemaValidator.validateValue(target, prop, value);
       result = Reflect.set(target, prop, validatedValue, receiver);
-      this._signal.notifyWrite();
+      target[symbolSignal].notifyWrite();
     });
     return result;
   }
 
-  defineProperty(target: any, property: string | symbol, attributes: PropertyDescriptor): boolean {
+  defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
     const validatedValue = SchemaValidator.validateValue(target, property, attributes.value);
     const result = Reflect.defineProperty(target, property, {
       ...attributes,
       value: validatedValue,
     });
-    this._signal.notifyWrite();
+    target[symbolPropertySignal].notifyWrite();
     return result;
   }
 
@@ -70,6 +130,6 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
   }
 }
 
-const toJSON = (target: any): any => {
+const toJSON = (target: ProxyTarget): any => {
   return { '@type': 'TypedReactiveObject', ...target };
 };

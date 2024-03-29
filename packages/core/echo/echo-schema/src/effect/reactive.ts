@@ -26,8 +26,8 @@ import { type ObjectMeta } from '../object';
 
 // TODO: remove during refactoring. was introduced to help with recursive imports
 export abstract class EchoReactiveHandler {
-  abstract getSchema(): S.Schema<any> | undefined;
-  abstract getMeta(): ObjectMeta;
+  abstract getSchema(target: any /* ProxyTarget */): S.Schema<any> | undefined;
+  abstract getMeta(target: any /* ProxyTarget */): ObjectMeta;
 }
 
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
@@ -145,7 +145,7 @@ export const object: {
     }
 
     SchemaValidator.prepareTarget(obj as T, schema);
-    return createReactiveProxy(obj, new TypedReactiveHandler()) as ReactiveObject<T>;
+    return createReactiveProxy(obj, TypedReactiveHandler.instance as ReactiveHandler<any>) as ReactiveObject<T>;
   } else if (obj && (schemaOrObj as any) === ExpandoType) {
     if (!isValidProxyTarget(obj)) {
       throw new Error('Value cannot be made into a reactive object.');
@@ -232,7 +232,7 @@ export const getSchema = <T extends {} = any>(obj: T): S.Schema<any> | undefined
   if (isReactiveProxy(obj)) {
     const proxyHandlerSlot = getProxyHandlerSlot(obj);
     if (proxyHandlerSlot.handler instanceof EchoReactiveHandler) {
-      return proxyHandlerSlot.handler.getSchema();
+      return proxyHandlerSlot.handler.getSchema(proxyHandlerSlot.target);
     }
   }
 
@@ -257,9 +257,9 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
 };
 
 export const metaOf = <T extends {}>(obj: T): ObjectMeta => {
-  const proxy = getProxyHandlerSlot(obj);
-  invariant(proxy.handler instanceof EchoReactiveHandler, 'Not a reactive ECHO object');
-  return proxy.handler.getMeta();
+  const proxyHandlerSlot = getProxyHandlerSlot(obj);
+  invariant(proxyHandlerSlot.handler instanceof EchoReactiveHandler, 'Not a reactive ECHO object');
+  return proxyHandlerSlot.handler.getMeta(proxyHandlerSlot.target);
 };
 
 export const typeOf = <T extends {}>(obj: T): Reference | undefined => getTypeReference(getSchema(obj));
