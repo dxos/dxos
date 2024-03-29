@@ -12,16 +12,16 @@ import { type LogProcessor, getContextFromEntry, shouldLog } from '../context';
 
 /**
  * Create a file processor.
- * @param path - Path to the log file or 'stdout' or 'stderr'.
+ * @param path - Path to log file to create or append to, or existing open file descriptor e.g. stdout.
  * @param levels - Log levels to process. Takes preference over Filters.
  * @param filters - Filters to apply.
  */
 export const createFileProcessor = ({
-  path,
+  pathOrFd,
   levels,
   filters,
 }: {
-  path: string;
+  pathOrFd: string | number;
   levels: LogLevel[];
   filters?: LogFilter[];
 }): LogProcessor => {
@@ -34,20 +34,13 @@ export const createFileProcessor = ({
     if (!shouldLog(entry, filters)) {
       return;
     }
-    if (!fd) {
-      switch (path) {
-        case 'stdout':
-          fd = 1;
-          break;
-        case 'stderr':
-          fd = 2;
-          break;
-        default:
-          try {
-            mkdirSync(dirname(path));
-          } catch {}
-          fd = openSync(path, 'w');
-      }
+    if (typeof pathOrFd === 'number') {
+      fd = pathOrFd;
+    } else {
+      try {
+        mkdirSync(dirname(pathOrFd));
+      } catch {}
+      fd = openSync(pathOrFd, 'w');
     }
 
     const record = {
@@ -73,6 +66,6 @@ const getLogFilePath = () => {
 };
 
 export const FILE_PROCESSOR: LogProcessor = createFileProcessor({
-  path: getLogFilePath(),
+  pathOrFd: getLogFilePath(),
   levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE],
 });

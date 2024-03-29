@@ -178,9 +178,21 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     this.args = args as Args<T>;
 
     if (this.flags['json-log']) {
+      let pathOrFd: number | string;
+      switch (this.flags['json-logfile']) {
+        case '-':
+        case 'stdout':
+          pathOrFd = process.stdout.fd;
+          break;
+        case 'stderr':
+          pathOrFd = process.stderr.fd;
+          break;
+        default:
+          pathOrFd = this.flags['json-logfile'];
+      }
       log.addProcessor(
         createFileProcessor({
-          path: this.flags['json-logfile'],
+          pathOrFd,
           // avoid collision with log's getConfig usage of LOG_FILTER for CONSOLE_LOGGER
           levels: process.env.JSON_LOG_FILTER ? [] : [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO],
           filters: process.env.JSON_LOG_FILTER ? parseFilter(process.env.JSON_LOG_FILTER) : [],
