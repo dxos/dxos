@@ -340,7 +340,7 @@ export class ColumnBuilder<TData extends RowData> {
         ...props.meta,
         onUpdate,
         digits,
-        header: { classNames: 'text-end', ...props.meta?.header },
+        header: { ...props.meta?.header },
         cell: { ...props.meta?.cell, classNames },
       },
     };
