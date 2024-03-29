@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { getSpaceProperty, setSpaceProperty } from '@braneframe/plugin-client';
+import { getSpaceProperty, setSpaceProperty } from '@braneframe/plugin-client/space-properties';
 import { FolderType } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
 import { type Migration } from '@dxos/migrations';

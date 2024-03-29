@@ -4,6 +4,7 @@
 
 import { expect } from 'chai';
 
+import { getSpaceProperty, setSpaceProperty } from '@braneframe/plugin-client/space-properties';
 import { FolderType } from '@braneframe/types';
 import { Client, Config, PublicKey } from '@dxos/client';
 import { type Space, Filter } from '@dxos/client/echo';
@@ -42,14 +43,14 @@ describe('Composer migrations', () => {
     await migrations[0].up({ space });
     expect(query.objects).to.have.lengthOf(1);
     expect(query.objects[0].name).to.equal(space.key.toHex());
-    expect(space.properties[FolderType.typename]).to.equal(query.objects[0]);
+    expect(getSpaceProperty(space, FolderType.typename)).to.equal(query.objects[0]);
   });
 
   test(migrations[1].version.toString(), async () => {
     const folder1 = space.db.add(E.object(FolderType, { name: space.key.toHex(), objects: [] }));
     const folder2 = space.db.add(E.object(FolderType, { name: space.key.toHex(), objects: [] }));
     const folder3 = space.db.add(E.object(FolderType, { name: space.key.toHex(), objects: [] }));
-    space.properties[FolderType.typename] = folder3;
+    setSpaceProperty(space, FolderType.typename, folder3);
 
     const keys = [...Array(9)].map(() => PublicKey.random().toHex());
     folder1.objects = keys.slice(0, 3).map((key) => E.object(E.ExpandoType, { key }));
@@ -65,6 +66,6 @@ describe('Composer migrations', () => {
     expect(query.objects).to.have.lengthOf(1);
     expect(query.objects[0].name).to.equal('');
     expect(query.objects[0].objects).to.have.lengthOf(9);
-    expect(space.properties[FolderType.typename]).to.equal(query.objects[0]);
+    expect(getSpaceProperty(space, FolderType.typename)).to.equal(query.objects[0]);
   });
 });
