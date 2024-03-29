@@ -7,7 +7,7 @@ import { ArrowCounterClockwise, CaretDown } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type Dispatch, type SetStateAction, useState } from 'react';
 
-import { Button, Popover, useTranslation, Tooltip, type ButtonProps } from '@dxos/react-ui';
+import { Button, Popover, useTranslation, Tooltip, type ButtonProps, useMediaQuery } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
 export type EmojiPickerProps = {
@@ -20,6 +20,7 @@ export type EmojiPickerProps = {
 
 export const EmojiPicker = ({ disabled, defaultEmoji, emoji, onChangeEmoji, onClickClear }: EmojiPickerProps) => {
   const { t } = useTranslation('os');
+  const [isMd] = useMediaQuery('md', { ssr: false });
 
   const [emojiValue, setEmojiValue] = useControllableState<string>({
     prop: emoji,
@@ -41,6 +42,7 @@ export const EmojiPicker = ({ disabled, defaultEmoji, emoji, onChangeEmoji, onCl
         </Popover.Trigger>
         <Popover.Content
           side='right'
+          sideOffset={isMd ? 0 : -310}
           onKeyDownCapture={(event) => {
             if (event.key === 'Escape') {
               event.stopPropagation();
