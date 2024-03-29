@@ -18,13 +18,13 @@ const generatedType = { typename: 'generated', version: '1.0.0' };
 
 class GeneratedEmptySchema extends EchoObjectSchema(generatedType)({}) {}
 
+class ClassWithSchemaField extends EchoObjectSchema({ typename: 'SchemaHolder', version: '1.0.0' })({
+  schema: S.optional(E.ref(DynamicEchoSchema)),
+}) {}
+
 describe('dynamic schema', () => {
-  test('can be echo object field', async () => {
-    const { db, graph } = await setupTest();
-    class ClassWithSchemaField extends EchoObjectSchema({ typename: 'SchemaHolder', version: '1.0.0' })({
-      schema: S.optional(E.ref(DynamicEchoSchema)),
-    }) {}
-    graph.types.registerEffectSchema(ClassWithSchemaField);
+  test('set DynamicSchema as echo object field', async () => {
+    const { db } = await setupTest();
     const instanceWithSchemaRef = db.add(E.object(ClassWithSchemaField, {}));
     class GeneratedSchema extends EchoObjectSchema(generatedType)({
       field: S.string,
@@ -32,13 +32,25 @@ describe('dynamic schema', () => {
 
     instanceWithSchemaRef.schema = db.schemaRegistry.add(GeneratedSchema);
     const schemaWithId = GeneratedSchema.annotations({
-      [EchoObjectAnnotationId]: { ...generatedType, storedSchemaId: instanceWithSchemaRef.schema.id },
+      [EchoObjectAnnotationId]: { ...generatedType, storedSchemaId: instanceWithSchemaRef.schema?.id },
     });
-    expect(instanceWithSchemaRef.schema.ast).to.deep.eq(schemaWithId.ast);
+    expect(instanceWithSchemaRef.schema?.ast).to.deep.eq(schemaWithId.ast);
 
     const validator = S.validateSync(instanceWithSchemaRef.schema!);
     expect(() => validator({ id: instanceWithSchemaRef.id, field: '1' })).not.to.throw();
     expect(() => validator({ id: instanceWithSchemaRef.id, field: 1 })).to.throw();
+  });
+
+  test('create echo object with DynamicSchema', async () => {
+    const { db } = await setupTest();
+    class GeneratedSchema extends EchoObjectSchema(generatedType)({ field: S.string }) {}
+    const schema = db.schemaRegistry.add(GeneratedSchema);
+    const instanceWithSchemaRef = db.add(E.object(ClassWithSchemaField, { schema }));
+
+    const schemaWithId = GeneratedSchema.annotations({
+      [EchoObjectAnnotationId]: { ...generatedType, storedSchemaId: instanceWithSchemaRef.schema?.id },
+    });
+    expect(instanceWithSchemaRef.schema?.ast).to.deep.eq(schemaWithId.ast);
   });
 
   test('can be used to create objects', async () => {
@@ -135,6 +147,8 @@ describe('dynamic schema', () => {
   });
 
   const setupTest = async () => {
-    return await createDatabase(undefined, { useReactiveObjectApi: true });
+    const { db, graph } = await createDatabase(undefined, { useReactiveObjectApi: true });
+    graph.types.registerEffectSchema(ClassWithSchemaField);
+    return { db };
   };
 });

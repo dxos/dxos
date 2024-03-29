@@ -134,11 +134,11 @@ This is appropriate when `nx` caching is not suitable or necessary for the task,
 | `scripts`               | shell scripts for automation                                                                   |
 | `patches`               | pnpm applied patches via `npm-patch`                                                           |
 | `docs`                  | a `vuepress` docs site behind `docs.dxos.org`                                                  |
-| `docs/docs`             | markdown documentation content                                                                 |
-| `docs/docs/guide`       | developer guide as found on `docs.dxos.org/guide`                                              |
-| `docs/docs/api`         | API documentation generated from JSDoc comments in source                                      |
-| `docs/docs/design`      | Design documents for future features in research and development                               |
-| `docs/docs/specs`       | Descriptions of features currently being built                                                 |
+| `docs/content`             | markdown documentation content                                                                 |
+| `docs/content/guide`       | developer guide as found on `docs.dxos.org/guide`                                              |
+| `docs/content/api`         | API documentation generated from JSDoc comments in source                                      |
+| `docs/content/design`      | Design documents for future features in research and development                               |
+| `docs/content/specs`       | Descriptions of features currently being built                                                 |
 
 ## Logging
 Logging should use the `@dxos/log` package, which can be controlled using using `runtime.client.log` in `@dxos/config`.
@@ -201,7 +201,7 @@ circleci local execute check
 
 ## Branch Diagram
 
-![release flow diagram](./docs/docs/design/diagrams/release-flow.drawio.svg)
+![release flow diagram](./docs/content/design/diagrams/release-flow.drawio.svg)
 
 Based on [this post from nvie.com](https://nvie.com/posts/a-successful-git-branching-model/).
 
