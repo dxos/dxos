@@ -2,17 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
+import type * as S from '@effect/schema/Schema';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
+import { invariant } from '@dxos/invariant';
 
 import { type ReactiveHandler, createReactiveProxy, isValidProxyTarget } from './proxy';
-import { SchemaValidator, setSchemaProperties, symbolSchema } from './schema-validator';
+import { ReactiveArray } from './reactive-array';
+import { SchemaValidator, symbolSchema } from './schema-validator';
 import { data } from '../object';
 import { defineHiddenProperty } from '../util/property';
-import { invariant } from '@dxos/invariant';
-import { ReactiveArray } from './reactive-array';
-import * as S from '@effect/schema/Schema';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');

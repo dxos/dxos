@@ -18,7 +18,7 @@ import { type DocAccessor } from './automerge-types';
 import { isValidKeyPath, type KeyPath } from './key-path';
 import { REFERENCE_TYPE_TAG } from './types';
 import { type EchoDatabase } from '../database';
-import { getObjectCoreFromEchoTarget, type EchoReactiveHandlerImpl } from '../effect/echo-handler'; // Keep as type-only import.
+import { getObjectCoreFromEchoTarget } from '../effect/echo-handler'; // Keep as type-only import.
 import { getProxyHandlerSlot, isReactiveProxy } from '../effect/proxy';
 import {
   base,

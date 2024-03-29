@@ -10,7 +10,7 @@ import { type AbstractEchoObject } from './object';
 import { isAutomergeObject } from './typed-object';
 import { base, type OpaqueEchoObject, type EchoObject, type ForeignKey } from './types';
 import type { EchoDatabase } from '../database';
-import { getObjectCoreFromEchoTarget, type EchoReactiveHandlerImpl } from '../effect/echo-handler';
+import { getObjectCoreFromEchoTarget } from '../effect/echo-handler';
 import { getProxyHandlerSlot } from '../effect/proxy';
 import { isEchoReactiveObject } from '../effect/reactive';
 

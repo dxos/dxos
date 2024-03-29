@@ -8,12 +8,12 @@ import jestExpect from 'expect';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
+import { getProxyHandlerSlot } from './proxy';
 import * as R from './reactive';
 import { TEST_OBJECT, TestSchema, TestSchemaClass } from './testing/schema';
 import { updateCounter } from './testutils';
 import { Hypergraph } from '../hypergraph';
 import { createDatabase } from '../testing';
-import { getProxyHandlerSlot } from './proxy';
 
 registerSignalRuntime();
 
