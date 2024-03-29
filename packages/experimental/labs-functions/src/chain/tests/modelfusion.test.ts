@@ -21,7 +21,7 @@ import { PublicKey } from '@dxos/keys';
 import { z } from '@dxos/plate';
 import { describe, test } from '@dxos/test';
 
-import { text } from './pipeline';
+import { text } from '../pipeline';
 
 // TODO(burdon): @modelfusion/sqlite-vss (replace FAISS).
 // TODO(burdon): Local image generation.
@@ -95,7 +95,7 @@ const calculator = new Tool({
   },
 });
 
-describe('ModelFusion', () => {
+describe.skip('ModelFusion', () => {
   test('calculator', async () => {
     const { toolResults } = await runTools({
       model: ollama

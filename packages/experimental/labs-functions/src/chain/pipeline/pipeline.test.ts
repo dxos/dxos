@@ -15,9 +15,14 @@ import { type Context, logger, text, tryFunction } from './pipeline';
 import { processTemplate, type Resolver } from './prompt';
 import { createChainResources } from '../vendors';
 
+// TODO(burdon): Port chat/processor
+//  - agent executor.
+//  - Adapt pipeline to langchain (RunnableSequence).
+//  - Resolvers (processor.getTemplateInput)
+//  - parseMessage (create blocks)
+
 describe('Pipeline', () => {
   test('basic', async () => {
-    // TODO(burdon): Port existing function stack.
     const resolver: Resolver = (input) => {
       switch (input.type) {
         case 'const': {

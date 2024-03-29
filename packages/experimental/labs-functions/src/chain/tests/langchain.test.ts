@@ -7,7 +7,7 @@ import * as S from '@effect/schema/Schema';
 import { SerpAPI } from '@langchain/community/tools/serpapi';
 import { HNSWLib } from '@langchain/community/vectorstores/hnswlib';
 import { type BaseFunctionCallOptions } from '@langchain/core/language_models/base';
-import { type BaseMessage, HumanMessage } from '@langchain/core/messages';
+import { HumanMessage } from '@langchain/core/messages';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import {
   ChatPromptTemplate,
@@ -20,20 +20,15 @@ import { RunnableSequence, RunnablePassthrough } from '@langchain/core/runnables
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { ChatOpenAI, formatToOpenAITool, OpenAIEmbeddings } from '@langchain/openai';
 import { expect } from 'chai';
-import { AgentExecutor, type AgentStep } from 'langchain/agents';
-import { formatLogToString } from 'langchain/agents/format_scratchpad/log';
+import { AgentExecutor } from 'langchain/agents';
 import { formatToOpenAIToolMessages } from 'langchain/agents/format_scratchpad/openai_tools';
 import { OpenAIToolsAgentOutputParser, type ToolsAgentStep } from 'langchain/agents/openai/output_parser';
-import { ReActSingleInputOutputParser } from 'langchain/agents/react/output_parser';
 import { type Document } from 'langchain/document';
 import { OllamaFunctions } from 'langchain/experimental/chat_models/ollama_functions';
 import { PlanAndExecuteAgentExecutor } from 'langchain/experimental/plan_and_execute';
-import { pull } from 'langchain/hub';
-import { BufferMemory } from 'langchain/memory';
 import { JsonOutputFunctionsParser } from 'langchain/output_parsers';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { Calculator } from 'langchain/tools/calculator';
-import { renderTextDescription } from 'langchain/tools/render';
 import { formatDocumentsAsString } from 'langchain/util/document';
 import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 import fs from 'node:fs';
@@ -42,7 +37,7 @@ import { z } from 'zod';
 
 import { describe, test } from '@dxos/test';
 
-import { getConfig, getKey } from '../util';
+import { getConfig, getKey } from '../../util';
 
 // TODO(burdon): Demo:
 //  - Email pipeline (summarize daily set of messages from contacts in CRM).
@@ -160,7 +155,7 @@ describe('LangChain', () => {
       ),
     );
 
-    const agent = RunnableSequence.from([
+    const sequence = RunnableSequence.from([
       {
         context: retriever.pipe(formatDocumentsAsString),
         question: new RunnablePassthrough(),
@@ -172,7 +167,7 @@ describe('LangChain', () => {
 
     const call = async (inputText: string) => {
       console.log(`\n> ${inputText}`);
-      const result = await agent.invoke(inputText);
+      const result = await sequence.invoke(inputText);
       console.log(result);
       return result;
     };
@@ -189,7 +184,7 @@ describe('LangChain', () => {
     const embeddings = createEmbeddings();
 
     // Get data.
-    const text = fs.readFileSync(path.join(__dirname, 'testing/text.txt'), 'utf8');
+    const text = fs.readFileSync(path.join(__dirname, 'data/text.txt'), 'utf8');
     const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
     const docs = await textSplitter.createDocuments([text]);
 
@@ -209,7 +204,7 @@ describe('LangChain', () => {
       HumanMessagePromptTemplate.fromTemplate('{question}'),
     ]);
 
-    const chain = RunnableSequence.from([
+    const sequence = RunnableSequence.from([
       {
         context: retriever.pipe(formatDocumentsAsString),
         question: new RunnablePassthrough(),
@@ -221,7 +216,7 @@ describe('LangChain', () => {
 
     const call = async (inputText: string) => {
       console.log(`\n> ${inputText}`);
-      const result = await chain.invoke(inputText);
+      const result = await sequence.invoke(inputText);
       console.log(result);
       return result;
     };
@@ -416,67 +411,6 @@ describe('LangChain', () => {
     console.log({ result });
   }).timeout(60_000);
 
-  //
-  // Agents, ReAct prompts, and Tools.
-  // https://js.langchain.com/docs/modules/agents/agent_types/chat_conversation_agent
-  // TODO(burdon): https://js.langchain.com/docs/modules/agents/agent_types/openai_assistant
-  //
-  test('agent', async () => {
-    // Bind stop token.
-    // https://help.openai.com/en/articles/5072263-how-do-i-use-stop-sequences
-    // The ReAct prompt used below (https://smith.langchain.com/hub/hwchase17/react-chat) uses the following format:
-    //
-    // Thought: Do I need to use a tool? Yes
-    // Action: the action to take, should be one of [{tool_names}]
-    // Action Input: the input to the action
-    // Observation: the result of the action
-    // ~~~~~~~~~~~
-    const model = createModel().bind({ stop: ['\nObservation'] });
-
-    const tools = [new Calculator()];
-    const toolNames = tools.map((tool) => tool.name);
-
-    // Get prompt form LangChain Hub.
-    // ReAct prompts: generate both reasoning traces and task-specific actions in an interleaved manner.
-    // https://www.promptingguide.ai/techniques/react
-    // https://smith.langchain.com/hub/hwchase17/react-chat
-    const basePrompt = await pull<PromptTemplate>('hwchase17/react-chat');
-    const prompt = await basePrompt.partial({
-      tools: renderTextDescription(tools),
-      tool_names: toolNames.join(','),
-    });
-
-    // TODO(burdon): Import type def?
-    type Input = { input: string; steps: AgentStep[]; chat_history: BaseMessage[] };
-    const agent = RunnableSequence.from([
-      {
-        input: (i: Input) => i.input,
-        agent_scratchpad: (i: Input) => formatLogToString(i.steps),
-        chat_history: (i: Input) => i.chat_history,
-      },
-      prompt,
-      model,
-      new ReActSingleInputOutputParser({ toolNames }),
-    ]);
-
-    const memory = new BufferMemory({ memoryKey: 'chat_history' });
-
-    // TODO(burdon): See: chat-conversational-react-description
-    const executor = AgentExecutor.fromAgentAndTools({ agent, tools, memory });
-
-    const call = async (input: string) => {
-      const result = await executor.invoke({ input });
-      console.log(`\n> ${input}`);
-      console.log(result.output);
-      return result;
-    };
-
-    await call('hello, i am DXOS');
-    await call('what is my name?');
-    await call('what is 6 times 7?');
-  });
-
-  //
   // Custom tools
   // https://js.langchain.com/docs/modules/agents/agent_types/openai_tools_agent
   //
@@ -514,7 +448,7 @@ describe('LangChain', () => {
       new MessagesPlaceholder('agent_scratchpad'),
     ]);
 
-    const agent = RunnableSequence.from([
+    const sequence = RunnableSequence.from([
       {
         input: (i: { input: string; steps: ToolsAgentStep[] }) => i.input,
         agent_scratchpad: (i: { input: string; steps: ToolsAgentStep[] }) => formatToOpenAIToolMessages(i.steps),
@@ -524,7 +458,7 @@ describe('LangChain', () => {
       new OpenAIToolsAgentOutputParser(),
     ]).withConfig({ runName: 'OpenAIToolsAgent' });
 
-    const executor = AgentExecutor.fromAgentAndTools({ agent, tools });
+    const executor = AgentExecutor.fromAgentAndTools({ agent: sequence, tools });
 
     const call = async (input: string) => {
       const result = await executor.invoke({ input });

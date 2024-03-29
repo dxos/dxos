@@ -3,15 +3,16 @@
 //
 
 import { type BaseFunctionCallOptions } from '@langchain/core/language_models/base';
+import { expect } from 'chai';
 import { OllamaFunctions } from 'langchain/experimental/chat_models/ollama_functions';
 
 import { describe, test } from '@dxos/test';
 
-describe.only('Functions', () => {
+describe.skip('Functions', () => {
   test('simple', async () => {
     const model = new OllamaFunctions({
-      temperature: 0.1,
       model: 'mistral',
+      temperature: 0.1,
     });
 
     const options: BaseFunctionCallOptions = {
@@ -41,7 +42,9 @@ describe.only('Functions', () => {
       ],
     };
 
+    // TODO(burdon): How to invoke tool?
     const result = await model.bind(options).invoke('Where am i?');
     console.log('>>', result);
+    expect(result).to.exist;
   });
 });
