@@ -1,5 +1,5 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 import { X, GearSix, CaretDown, ArrowDown, ArrowUp } from '@phosphor-icons/react';
@@ -132,23 +132,25 @@ export const ColumnSettingsPanel = <TData extends RowData, TValue>({
   open,
   setOpen,
 }: ColumnMenuProps<TData, TValue> & { anchorNode: any; open: boolean; setOpen: (b: boolean) => void }) => (
-  <Popover.Root open={open} onOpenChange={setOpen}>
+  <Popover.Root open={open} onOpenChange={setOpen} modal={false}>
     {createPortal(<Popover.Anchor />, anchorNode)}
-    <Popover.Content>
-      <Popover.Viewport classNames='w-60'>
-        <DensityProvider density='fine'>
-          <ColumnSettingsForm
-            column={column}
-            tableDefs={tableDefs}
-            tableDef={tableDef}
-            onUpdate={onUpdate}
-            onDelete={onDelete}
-            onClose={() => setOpen(false)}
-          />
-        </DensityProvider>
-      </Popover.Viewport>
-      <Popover.Arrow />
-    </Popover.Content>
+    <Popover.Portal>
+      <Popover.Content>
+        <Popover.Viewport classNames='w-60'>
+          <DensityProvider density='fine'>
+            <ColumnSettingsForm
+              column={column}
+              tableDefs={tableDefs}
+              tableDef={tableDef}
+              onUpdate={onUpdate}
+              onDelete={onDelete}
+              onClose={() => setOpen(false)}
+            />
+          </DensityProvider>
+        </Popover.Viewport>
+        <Popover.Arrow />
+      </Popover.Content>
+    </Popover.Portal>
   </Popover.Root>
 );
 
