@@ -164,7 +164,7 @@ export class Space extends Resource {
 
 
   @trace.span()
-  override async _open(ctx: Context) {
+  protected override async _open(ctx: Context) {
     log('opening...');
 
     // Order is important.
@@ -175,7 +175,7 @@ export class Space extends Resource {
   }
 
   @synchronized
-  override async _close() {
+  protected override async _close() {
     log('closing...', { key: this._key });
 
     // Closes in reverse order to open.
