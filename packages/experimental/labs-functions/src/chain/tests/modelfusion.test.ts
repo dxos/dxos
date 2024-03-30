@@ -101,6 +101,7 @@ const calculator = new Tool({
 });
 
 describe.only('ModelFusion', () => {
+  //
   test('tools', async () => {
     const { toolResults } = await runTools({
       model: ollama
@@ -121,6 +122,7 @@ describe.only('ModelFusion', () => {
     expect(toolResults![0].result).to.eq(42);
   });
 
+  //
   test('objects', async () => {
     const model = ollama
       .ChatTextGenerator({
@@ -160,7 +162,7 @@ describe.only('ModelFusion', () => {
     // TODO(burdon): Multiple steps to create a graph.
     const prompt = createInstructionPrompt(async ({ company }: { company: string }) => ({
       system: text(
-        'You are an machine that can find out information about people and organizations where they work.',
+        'You are a machine that can find out information about people and organizations where they work.',
         'Always response by construct a directed graph representing people and organizations as separate objects.',
         'For each person and organization object that you generate assign a unique "id" property.',
         'Use this "id" to reference people and organizations.',
@@ -184,7 +186,12 @@ describe.only('ModelFusion', () => {
       model: 'nomic-embed-text',
     });
 
-    const texts = ['Paris is the capital of France.', 'The Eiffel Tower is in Paris.'];
+    const texts = [
+      'Paris is the capital of France.',
+      'The Eiffel Tower is in Paris.',
+      'Tokyo is the capital of Japan.',
+    ];
+
     await upsertIntoVectorIndex({
       vectorIndex,
       embeddingModel,
@@ -202,6 +209,8 @@ describe.only('ModelFusion', () => {
       }),
       question,
     );
+
+    console.log(JSON.stringify(chunks, undefined, 2));
 
     const answer = await generateText({
       model: ollama.ChatTextGenerator({
@@ -232,5 +241,6 @@ describe.only('ModelFusion', () => {
     expect(answer).to.contain('Paris');
   });
 
-  test('agent', async () => {});
+  // https://modelfusion.dev/guide/tools/agent-loop
+  test.only('agent', async () => {});
 });
