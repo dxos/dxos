@@ -25,6 +25,10 @@ const MAX_SAFE_DISPOSE_CALLBACKS = 300;
 
 @safeInstanceof('Context')
 export class Context {
+  static default() {
+    return new Context();
+  }
+
   private readonly _onError: ContextErrorHandler;
   private readonly _disposeCallbacks: DisposeCallback[] = [];
   private _isDisposed = false;
