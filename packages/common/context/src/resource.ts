@@ -2,7 +2,7 @@ import '@dxos/util';
 import { Context } from './context';
 
 export interface Lifecycle {
-  open?(): Promise<any> | any;
+  open?(ctx?: Context): Promise<any> | any;
   close?(): Promise<any> | any;
 }
 
@@ -93,9 +93,9 @@ export class Resource implements Lifecycle {
   }
 }
 
-export async function openInContext<T extends Resource>(ctx: Context, resource: T): Promise<T> {
-  await resource.open(ctx);
-  ctx.onDispose(() => resource.close());
+export async function openInContext<T extends Lifecycle>(ctx: Context, resource: T): Promise<T> {
+  await resource.open?.(ctx);
+  ctx.onDispose(() => resource.close?.());
 
   return resource;
 }
