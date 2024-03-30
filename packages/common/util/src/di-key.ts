@@ -1,8 +1,29 @@
+import { inspect } from 'node:util';
 import { defaultMap } from './map';
+
+const symbolSingleton = Symbol('singleton');
+
+export class SymbolDiKey<T> {
+  symbol: symbol;
+
+  constructor(name: string) {
+    this.symbol = Symbol(name);
+  }
+
+  public [symbolSingleton]?: () => T = undefined;
+
+  toString() {
+    return String(this.symbol).slice(7, -1);
+  }
+
+  [inspect.custom]() {
+    return this.toString();
+  }
+}
 
 // TODO(dmaretskyi): Default values.
 // TODO(dmaretskyi): Collections.
-export type DiKey<T> = { new (...args: any[]): T } | { __DiKey: T };
+export type DiKey<T> = { new (...args: any[]): T } | SymbolDiKey<T>;
 
 export const DiKey = new (class DiKeyConstructor {
   // TODO(dmaretskyi): Disable private members lowering for dev env.
@@ -11,6 +32,12 @@ export const DiKey = new (class DiKeyConstructor {
 
   define<T>(name: string): DiKey<T> {
     return Symbol(name) as any;
+  }
+
+  singleton<T>(name: string, factory: () => T): DiKey<T> {
+    const id = new SymbolDiKey(name);
+    id[symbolSingleton] = factory;
+    return id as any;
   }
 
   stringify(id: DiKey<any>): string {
@@ -27,6 +54,10 @@ export const DiKey = new (class DiKeyConstructor {
   combine(...ids: DiKey<any>[]) {
     const map = this.#lookupCombined(this.#combinedRegistry, ids);
     return defaultMap(this.#combinedRegistry, map, () => this.#combinedDescription(ids));
+  }
+
+  getSingletonFactory<T>(id: DiKey<T>): (() => T) | undefined {
+    return (id as any)[symbolSingleton];
   }
 
   #lookupCombined(map: Map<any, any>, [first, ...rest]: DiKey<any>[]): Map<any, any> {

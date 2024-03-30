@@ -10,6 +10,8 @@ test('DiContainer', ({ expect }) => {
   type Generic<T> = { foo: T };
   const Generic = <T>(param: DiKey<T>): DiKey<Generic<T>> => DiKey.combine(generic, param);
 
+  const Singleton = DiKey.singleton('Singleton', () => 'singleton');
+
   const b = new B();
   const container = new DiContainer()
     .provide(B, b)
@@ -21,4 +23,5 @@ test('DiContainer', ({ expect }) => {
   expect(container.get(B)).toBe(b);
   expect(container.get(Generic(A)).foo).toBe('Generic A');
   expect(container.get(Generic(B)).foo).toBe(b);
+  expect(container.get(Singleton)).toBe('singleton');
 });
