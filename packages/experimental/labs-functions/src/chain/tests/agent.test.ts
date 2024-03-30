@@ -18,6 +18,7 @@ import { PlanAndExecuteAgentExecutor } from 'langchain/experimental/plan_and_exe
 import { pull } from 'langchain/hub';
 import { BufferMemory } from 'langchain/memory';
 import { Calculator } from 'langchain/tools/calculator';
+import defaultsDeep from 'lodash.defaultsdeep';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 import { describe, test } from '@dxos/test';
@@ -50,27 +51,48 @@ const createInvoker = (executor: BaseChain, memory?: BufferMemory) => async (inp
   return result;
 };
 
+type ModelOptions = {
+  model?: string;
+  temperature?: number;
+  verbose?: boolean;
+};
+
+const defaultModelOptions: ModelOptions = {
+  temperature: 0.1,
+  verbose: true,
+};
+
 const createModel = (
   type: 'openai' | 'ollama',
-  options = { temperature: 0.1, verbose: true },
+  { model, ...rest }: ModelOptions = {},
 ): BaseChatModel<BaseFunctionCallOptions> => {
   const config = getConfig()!;
   switch (type) {
     case 'openai': {
-      return new ChatOpenAI({
-        openAIApiKey: process.env.COM_OPENAI_API_KEY ?? getKey(config, 'openai.com/api_key'),
-        modelName: 'gpt-4',
-        ...options,
-      });
+      return new ChatOpenAI(
+        defaultsDeep(
+          {
+            openAIApiKey: process.env.COM_OPENAI_API_KEY ?? getKey(config, 'openai.com/api_key'),
+            modelName: model ?? 'gpt-3.5-turbo-0125',
+          },
+          rest,
+          defaultModelOptions,
+        ),
+      );
     }
 
     // https://js.langchain.com/docs/modules/agents/agent_types
     // If you are using an OpenAI model, or an open-source model that has been fine-tuned for function calling and exposes the same functions parameters as OpenAI.
     case 'ollama': {
-      return new OllamaFunctions({
-        model: 'mistral',
-        ...options,
-      });
+      return new OllamaFunctions(
+        defaultsDeep(
+          {
+            model: model ?? 'mistral',
+          },
+          rest,
+          defaultModelOptions,
+        ),
+      );
     }
   }
 };
@@ -134,6 +156,7 @@ describe.only('Agent', () => {
   });
 
   // TODO(burdon): Mistral doesn't use the prompt to select a tool.
+  // https://platform.openai.com/docs/guides/function-calling
   // https://js.langchain.com/docs/integrations/chat/mistral#tool-calling
   test('PlanAndExecuteAgentExecutor with tools', async () => {
     const llm = createModel('ollama');
@@ -144,9 +167,8 @@ describe.only('Agent', () => {
     await invoker('what is 6x7?');
   });
 
-  // TODO(burdon): This doesn't work.
   // https://js.langchain.com/docs/integrations/chat/mistral#tool-calling
-  test.only('tools', async () => {
+  test('tools', async () => {
     const tools: Tool[] = [new Calculator()];
     const result = await tools[0].call('1+1');
     expect(result).to.eq('2');
@@ -167,8 +189,7 @@ describe.only('Agent', () => {
       },
     };
 
-    const llm = createModel('ollama').bind(options);
-
+    const llm = createModel('ollama', { model: 'mixtral' }).bind(options);
     const prompt = PromptTemplate.fromTemplate('you are a useful assistant');
     const chain = prompt.pipe(llm).pipe(new StringOutputParser());
     const response = await chain.invoke({ input: 'what is 6x7?' });
@@ -178,7 +199,7 @@ describe.only('Agent', () => {
   // https://js.langchain.com/docs/modules/agents/agent_types/react#create-agent
   // https://github.com/langchain-ai/langchainjs/blob/main/examples/src/models/chat/ollama_functions/function_calling.ts
   test('createReactAgent with tools', async () => {
-    const llm = createModel('ollama');
+    const llm = createModel('ollama', { model: 'mixtral' });
     const tools: Tool[] = [new Calculator()];
     const prompt = await pull<ChatPromptTemplate>('hwchase17/react');
     const agent = await createReactAgent({ llm, tools, prompt });
@@ -189,32 +210,39 @@ describe.only('Agent', () => {
   });
 
   // https://api.js.langchain.com/functions/langchain_agents.createOpenAIFunctionsAgent.html
-  test('createOpenAIFunctionsAgent', async () => {
+  test.only('createOpenAIFunctionsAgent', async () => {
     const llm = createModel('openai');
     const tools: Tool[] = [new Calculator()];
     const prompt = await pull<ChatPromptTemplate>('hwchase17/openai-functions-agent');
     const agent = await createOpenAIFunctionsAgent({ llm, tools, prompt });
-    const executor = new AgentExecutor({ ...options, agent, tools });
+    const memory = new BufferMemory({ humanPrefix: 'User', aiPrefix: 'AI' });
+    const executor = new AgentExecutor({ ...options, agent, tools, memory });
     const invoker = createInvoker(executor);
 
     await invoker('what is 6x7?');
+    await invoker('what is my name?');
+    await invoker('what is 6x7?');
   });
 
+  // TODO(burdon): Doesn't work with tools and openai.
   // https://js.langchain.com/docs/modules/agents/how_to/custom_agent#create-the-agent
   // https://github.com/langchain-ai/langchainjs/blob/main/examples/src/agents/react.ts
   test('fromAgentAndTools', async () => {
     const llm = createModel('openai');
     const tools: Tool[] = [new Calculator()];
     const prompt = await pull<PromptTemplate>('hwchase17/react-chat');
-    const agent = await createReactAgent({ llm, tools: [], prompt });
+    const agent = await createReactAgent({ llm, tools, prompt });
 
     // NOTE: Doesn't work to pass in memory; chat_history required by executor invoke method.
-    const executor = AgentExecutor.fromAgentAndTools({ ...options, agent, tools });
+    const executor = new AgentExecutor({ ...options, agent, tools });
     const memory = new BufferMemory({ humanPrefix: 'User', aiPrefix: 'AI' });
     const invoker = createInvoker(executor, memory);
 
     await invoker('hello, my name is DXOS');
     await invoker('what is my name?');
-    await invoker('what is 6 times 7?');
+    await invoker('what is 6x7?');
   });
+
+  // TODO(burdon): Write custom BaseChain based on AgentExecutor (langchain/src/agents).
+  // TODO(burdon): Figure out how to invoke tool from basics.
 });
