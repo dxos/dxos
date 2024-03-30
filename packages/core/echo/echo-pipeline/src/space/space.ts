@@ -162,31 +162,26 @@ export class Space extends Resource {
     return Array.from(this._controlPipeline.spaceState.feeds.values());
   }
 
-  /**
-   * Use for diagnostics.
-   */
-  // getDataFeeds(): FeedInfo[] {
-  //   return this._dataPipeline?.getFeeds();
-  // }
+
   @trace.span()
   override async _open(ctx: Context) {
-    log.info('opening...');
+    log('opening...');
 
     // Order is important.
     await this._controlPipeline.start();
     await this.protocol.start();
 
-    log.info('opened');
+    log('opened');
   }
 
   @synchronized
   override async _close() {
-    log.info('closing...', { key: this._key });
+    log('closing...', { key: this._key });
 
     // Closes in reverse order to open.
     await this.protocol.stop();
     await this._controlPipeline.stop();
 
-    log.info('closed');
+    log('closed');
   }
 }

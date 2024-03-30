@@ -132,7 +132,7 @@ describe('space/space', () => {
     await space2.controlPipeline.state!.waitUntilTimeframe(space2.controlPipeline.state!.endTimeframe);
   });
 
-  test.only('re-open', async () => {
+  test('re-open', async () => {
     const builder = new TestAgentBuilder();
     afterTest(async () => await builder.close());
     const agent = await builder.createPeer();
@@ -154,7 +154,6 @@ describe('space/space', () => {
     // Re-open.
     {
       await space.open(new Context());
-      console.log(space._lifecycleState);
       expect(space.isOpen).toBeTruthy();
 
       await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
