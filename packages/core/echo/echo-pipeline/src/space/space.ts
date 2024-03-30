@@ -3,7 +3,7 @@
 //
 
 import { Event, Mutex, synchronized, trackLeaks } from '@dxos/async';
-import { type Context } from '@dxos/context';
+import { Resource, type Context, LifecycleState } from '@dxos/context';
 import { type FeedInfo } from '@dxos/credentials';
 import { type FeedOptions, type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -48,7 +48,7 @@ export type CreatePipelineParams = {
 // TODO(dmaretskyi): Extract database stuff.
 @trackLeaks('open', 'close')
 @trace.resource()
-export class Space {
+export class Space extends Resource {
   private readonly _addFeedMutex = new Mutex();
 
   public readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
@@ -64,11 +64,11 @@ export class Space {
 
   private readonly _snapshotManager: SnapshotManager;
 
-  private _isOpen = false;
   private _controlFeed?: FeedWrapper<FeedMessage>;
   private _dataFeed?: FeedWrapper<FeedMessage>;
 
   constructor(params: SpaceParams) {
+    super();
     invariant(params.spaceKey && params.feedProvider);
     this._key = params.spaceKey;
     this._genesisFeedKey = params.genesisFeed.key;
@@ -112,7 +112,7 @@ export class Space {
   }
 
   get isOpen() {
-    return this._isOpen;
+    return this._lifecycleState === LifecycleState.OPEN;
   }
 
   get genesisFeedKey(): PublicKey {
@@ -168,34 +168,25 @@ export class Space {
   // getDataFeeds(): FeedInfo[] {
   //   return this._dataPipeline?.getFeeds();
   // }
-  @synchronized
   @trace.span()
-  async open(ctx: Context) {
-    log('opening...');
-    if (this._isOpen) {
-      return;
-    }
+  override async _open(ctx: Context) {
+    log.info('opening...');
 
     // Order is important.
     await this._controlPipeline.start();
     await this.protocol.start();
 
-    this._isOpen = true;
-    log('opened');
+    log.info('opened');
   }
 
   @synchronized
-  async close() {
-    log('closing...', { key: this._key });
-    if (!this._isOpen) {
-      return;
-    }
+  override async _close() {
+    log.info('closing...', { key: this._key });
 
     // Closes in reverse order to open.
     await this.protocol.stop();
     await this._controlPipeline.stop();
 
-    this._isOpen = false;
-    log('closed');
+    log.info('closed');
   }
 }

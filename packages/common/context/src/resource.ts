@@ -1,52 +1,59 @@
 import '@dxos/util';
 import { Context } from './context';
+import { log } from '@dxos/log';
 
 export interface Lifecycle {
   open?(): Promise<void> | void;
   close?(): Promise<void> | void;
 }
 
-export enum ResourceState {
+export enum LifecycleState {
   CLOSED = 'CLOSED',
   OPEN = 'OPEN',
   ERROR = 'ERROR',
 }
 
 export class Resource implements Lifecycle {
-  #resourceState = ResourceState.CLOSED;
+  #lifecycleState = LifecycleState.CLOSED;
   #openPromise: Promise<void> | null = null;
   #closePromise: Promise<void> | null = null;
   #ctx: Context = this.#createContext();
   #parentCtx: Context = new Context();
 
-  protected get _resourceState() {
-    return this.#resourceState;
+  protected get _lifecycleState() {
+    return this.#lifecycleState;
   }
 
   protected get _ctx() {
     return this.#ctx;
   }
 
-  protected async _open(): Promise<void> {}
-  protected async _close(): Promise<void> {}
+  protected async _open(ctx: Context): Promise<void> {}
+  protected async _close(ctx: Context): Promise<void> {}
   protected async _catch(err: Error): Promise<void> {
     throw err;
   }
 
+  @log.method()
   async open(ctx?: Context): Promise<void> {
-    if (this.#resourceState === ResourceState.OPEN) {
-      return;
-    } else if (this.#resourceState === ResourceState.ERROR) {
-      throw new Error(`Invalid state: ${this.#resourceState}`);
+    switch (this.#lifecycleState) {
+      case LifecycleState.OPEN:
+        return;
+      case LifecycleState.ERROR:
+        throw new Error(`Invalid state: ${this.#lifecycleState}`);
+      default:
     }
+    await this.#closePromise;
     await (this.#openPromise ??= this.#open(ctx));
   }
 
-  async close(): Promise<void> {
-    if (this.#resourceState === ResourceState.CLOSED) {
+  @log.method()
+  async close(ctx?: Context): Promise<void> {
+    if (this.#lifecycleState === LifecycleState.CLOSED) {
       return;
     }
-    await (this.#closePromise ??= this.#close());
+    await this.#openPromise;
+    await (this.#closePromise ??= this.#close(ctx));
   }
 
   async [Symbol.asyncDispose]() {
@@ -57,15 +64,15 @@ export class Resource implements Lifecycle {
     if (ctx) {
       this.#parentCtx = ctx;
     }
-    await this._open();
-    this.#resourceState = ResourceState.OPEN;
+    await this._open(this.#parentCtx);
+    this.#lifecycleState = LifecycleState.OPEN;
   }
 
-  async #close() {
+  async #close(ctx = new Context()) {
     await this.#ctx.dispose();
-    await this._close();
+    await this._close(ctx);
     this.#ctx = this.#createContext();
-    this.#resourceState = ResourceState.CLOSED;
+    this.#lifecycleState = LifecycleState.CLOSED;
   }
 
   #createContext() {
@@ -75,7 +82,7 @@ export class Resource implements Lifecycle {
           try {
             await this._catch(error);
           } catch (err: any) {
-            this.#resourceState = ResourceState.ERROR;
+            this.#lifecycleState = LifecycleState.ERROR;
             this.#parentCtx.raise(err);
           }
         }),
