@@ -5,7 +5,7 @@
 import { log } from '@dxos/log';
 import { safeInstanceof } from '@dxos/util';
 
-import { ContextDisposedError } from './context-disposed';
+import { ContextDisposedError } from './context-disposed-error';
 
 export type ContextErrorHandler = (error: Error) => void;
 

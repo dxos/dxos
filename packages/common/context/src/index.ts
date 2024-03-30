@@ -4,4 +4,4 @@
 
 export * from './context';
 export * from './promise-utils';
-export * from './context-disposed';
+export * from './context-disposed-error';
