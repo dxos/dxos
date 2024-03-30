@@ -25,7 +25,10 @@ import { describe, test } from '@dxos/test';
 
 import { getConfig, getKey } from '../../util';
 
+// TODO(burdon): Bug requires conversion.
 const toChatHistory = async (memory: BufferMemory): Promise<string[]> => {
+  const messages = await memory.chatHistory.getMessages();
+
   const getName = (message: BaseMessage) => {
     if (message instanceof HumanMessage) {
       return memory.humanPrefix ?? 'Human';
@@ -36,12 +39,12 @@ const toChatHistory = async (memory: BufferMemory): Promise<string[]> => {
     }
   };
 
-  const messages = await memory.chatHistory.getMessages();
   return messages.map((message) => `${getName(message)}: ${message.content}`);
 };
 
 const createInvoker = (executor: BaseChain, memory?: BufferMemory) => async (input: string) => {
-  const result = await executor.invoke({ input, chat_history: memory ? await toChatHistory(memory) : undefined });
+  const messages = await memory?.chatHistory.getMessages();
+  const result = await executor.invoke({ input, chat_history: messages });
 
   await memory?.chatHistory.addUserMessage(input);
   await memory?.chatHistory.addAIChatMessage(result.output);
@@ -209,22 +212,7 @@ describe.only('Agent', () => {
     await invoker('what is 6x7?');
   });
 
-  // https://api.js.langchain.com/functions/langchain_agents.createOpenAIFunctionsAgent.html
-  test.only('createOpenAIFunctionsAgent', async () => {
-    const llm = createModel('openai');
-    const tools: Tool[] = [new Calculator()];
-    const prompt = await pull<ChatPromptTemplate>('hwchase17/openai-functions-agent');
-    const agent = await createOpenAIFunctionsAgent({ llm, tools, prompt });
-    const memory = new BufferMemory({ humanPrefix: 'User', aiPrefix: 'AI' });
-    const executor = new AgentExecutor({ ...options, agent, tools, memory });
-    const invoker = createInvoker(executor);
-
-    await invoker('what is 6x7?');
-    await invoker('what is my name?');
-    await invoker('what is 6x7?');
-  });
-
-  // TODO(burdon): Doesn't work with tools and openai.
+  // TODO(burdon): Doesn't work with tools with openai or ollama.
   // https://js.langchain.com/docs/modules/agents/how_to/custom_agent#create-the-agent
   // https://github.com/langchain-ai/langchainjs/blob/main/examples/src/agents/react.ts
   test('fromAgentAndTools', async () => {
@@ -245,4 +233,22 @@ describe.only('Agent', () => {
 
   // TODO(burdon): Write custom BaseChain based on AgentExecutor (langchain/src/agents).
   // TODO(burdon): Figure out how to invoke tool from basics.
+  // TODO(burdon): Create custom tool and check is invoked.
+  // TODO(burdon): Error.
+  //  InputFormatError: Error: Field "chat_history" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: [
+
+  // https://api.js.langchain.com/functions/langchain_agents.createOpenAIFunctionsAgent.html
+  test.only('createOpenAIFunctionsAgent', async () => {
+    const llm = createModel('openai');
+    const tools: Tool[] = [new Calculator()];
+    const prompt = await pull<ChatPromptTemplate>('hwchase17/openai-functions-agent');
+    const agent = await createOpenAIFunctionsAgent({ llm, tools, prompt });
+    const executor = new AgentExecutor({ ...options, agent, tools });
+    const memory = new BufferMemory({ humanPrefix: 'User', aiPrefix: 'AI' });
+    const invoker = createInvoker(executor, memory);
+
+    await invoker('hello, my name is DXOS');
+    await invoker('what is my name?');
+    await invoker('what is 6x7?');
+  });
 });
