@@ -105,7 +105,7 @@ const createModel = (
 // https://js.langchain.com/docs/modules/agents/agent_types/chat_conversation_agent
 // TODO(burdon): https://js.langchain.com/docs/modules/agents/agent_types/openai_assistant
 //
-describe.only('Agent', () => {
+describe('Agent', () => {
   // type Input = { input: string; steps: AgentStep[]; chat_history: BaseMessage[] };
   // const agent = RunnableSequence.from([
   //   {
@@ -238,7 +238,7 @@ describe.only('Agent', () => {
   //  InputFormatError: Error: Field "chat_history" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: [
 
   // https://api.js.langchain.com/functions/langchain_agents.createOpenAIFunctionsAgent.html
-  test.only('createOpenAIFunctionsAgent', async () => {
+  test('createOpenAIFunctionsAgent', async () => {
     const llm = createModel('openai');
     const tools: Tool[] = [new Calculator()];
     const prompt = await pull<ChatPromptTemplate>('hwchase17/openai-functions-agent');

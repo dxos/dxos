@@ -9,12 +9,17 @@ import {
   jsonObjectPrompt,
   ollama,
   parseJSON,
+  retrieve,
   runTools,
   zodSchema,
   Tool,
   type ToolCallsPromptTemplate,
   type InstructionPrompt,
   type ToolDefinition,
+  VectorIndexRetriever,
+  MemoryVectorIndex,
+  upsertIntoVectorIndex,
+  generateText,
 } from 'modelfusion';
 
 import { PublicKey } from '@dxos/keys';
@@ -95,8 +100,8 @@ const calculator = new Tool({
   },
 });
 
-describe.skip('ModelFusion', () => {
-  test('calculator', async () => {
+describe.only('ModelFusion', () => {
+  test('tools', async () => {
     const { toolResults } = await runTools({
       model: ollama
         .CompletionTextGenerator({
@@ -171,4 +176,61 @@ describe.skip('ModelFusion', () => {
     // console.log(JSON.stringify(result, undefined, 2));
     expect(result).to.exist;
   });
+
+  // https://modelfusion.dev/tutorial/retrieval-augmented-generation
+  test.only('rag', async () => {
+    const vectorIndex = new MemoryVectorIndex<string>();
+    const embeddingModel = ollama.TextEmbedder({
+      model: 'nomic-embed-text',
+    });
+
+    const texts = ['Paris is the capital of France.', 'The Eiffel Tower is in Paris.'];
+    await upsertIntoVectorIndex({
+      vectorIndex,
+      embeddingModel,
+      objects: texts,
+      getValueToEmbed: (text) => text,
+    });
+
+    const question = 'What is the capital of France?';
+    const chunks = await retrieve(
+      new VectorIndexRetriever({
+        vectorIndex,
+        embeddingModel,
+        maxResults: 3,
+        similarityThreshold: 0.8,
+      }),
+      question,
+    );
+
+    const answer = await generateText({
+      model: ollama.ChatTextGenerator({
+        model: 'mistral',
+        temperature: 0,
+        maxGenerationTokens: 500,
+      }),
+
+      prompt: [
+        {
+          role: 'system',
+          content: text(
+            "Answer the user's question using only the provided information.",
+            'If the user\'s question cannot be answered using the provided information, respond with "I don\'t know".',
+          ),
+        },
+        {
+          role: 'user',
+          content: text('## QUESTION', question),
+        },
+        {
+          role: 'user',
+          content: text('## INFORMATION', JSON.stringify(chunks)),
+        },
+      ],
+    });
+
+    expect(answer).to.contain('Paris');
+  });
+
+  test('agent', async () => {});
 });
