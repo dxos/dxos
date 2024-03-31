@@ -32,10 +32,10 @@ export const mistralMultiToolCallPromptTemplate: ToolCallsPromptTemplate<string,
     log.info('createPrompt', { instruction, tools: tools.length });
     return {
       system: multiline(
-        'Select the most suitable function from the list of available functions below based on the input.',
+        'Select the most suitable function from the list of available function below based on the input.',
         'Provide parameters using information from the current context.',
-        'Make sure the parameters match the provided schema.',
         'Provide your response in JSON format.',
+        'Check that the parameters you provide match the schema provided by the function you select.',
         '',
         'Available functions:',
         ...tools.flatMap((tool) => [

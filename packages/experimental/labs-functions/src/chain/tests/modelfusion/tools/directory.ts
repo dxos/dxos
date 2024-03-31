@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 import { z } from '@dxos/plate';
 
 // TODO(burdon): Convert to effect schema.
-export type Contact = { name: string; role?: string };
+export type Contact = { name: string; team?: string };
 
 export class Directory {
   contacts = new Map<string, Contact>();
@@ -31,21 +31,32 @@ export class Directory {
 
   async upsert(contacts: Contact[]) {
     contacts.forEach((contact) => this.contacts.set(contact.name, contact));
+    const values = Array.from(
+      contacts
+        .reduce((acc, contact) => {
+          if (contact.team) {
+            acc.add(contact.team);
+          }
+          return acc;
+        }, new Set<string>())
+        .values(),
+    );
+
     await upsertIntoVectorIndex({
       vectorIndex: this.vectorIndex,
       embeddingModel: this.embeddingModel,
-      objects: contacts.map((contact) => contact.role),
+      objects: values,
       getValueToEmbed: (text) => text,
     });
   }
 
-  async getByRole(role: string) {
-    const roles = await retrieve(this.retriever, role);
-    if (!roles.length) {
+  async getByTeam(team: string) {
+    const teams = await retrieve(this.retriever, team);
+    if (!teams.length) {
       return [];
     }
 
-    return Array.from(this.contacts.values()).filter((contact) => contact.role === roles[0]);
+    return Array.from(this.contacts.values()).filter((contact) => contact.team === teams[0]);
   }
 }
 
@@ -55,21 +66,23 @@ export const directory = (directory: Directory) =>
     description: 'Find people.',
     // TODO(burdon): Schema for query (e.g., role A or B).
     parameters: zodSchema(
-      z.object({
-        name: z.string().optional().nullable().describe('Name of person.'),
-        role: z.string().optional().nullable().describe('Role of person.'),
-      }),
+      z
+        .object({
+          name: z.string().optional().nullable().describe('Name of person.'),
+          team: z.string().optional().nullable().describe('Team name.'),
+        })
+        .describe('Values to filter list of people.'),
     ),
     returnType: zodSchema(
       z.object({
         people: z.array(z.string()).describe('List of usernames.'),
       }),
     ),
-    execute: async ({ name, role, ...rest }) => {
-      log.info('directory', { name, role, rest });
+    execute: async ({ name, team }) => {
+      log.info('directory', { name, team });
       let contacts: Contact[] = [];
-      if (role) {
-        contacts = await directory.getByRole(role);
+      if (team) {
+        contacts = await directory.getByTeam(team);
       }
 
       return {
