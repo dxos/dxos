@@ -19,11 +19,11 @@ import { type Contact, createPlan, Directory, directory, execPlan, scheduler } f
 const contacts: Contact[] = [
   {
     name: 'alice',
-    team: 'engineer',
+    team: 'engineering',
   },
   {
     name: 'bob',
-    team: 'engineer',
+    team: 'engineering',
   },
   {
     name: 'charlie',
@@ -42,10 +42,11 @@ const contacts: Contact[] = [
 // https://github.com/vercel/modelfusion/tree/main/examples/middle-school-math-agent
 describe.only('agent', () => {
   test('simple loop', async () => {
-    const dir = new Directory();
-    await dir.upsert(contacts);
-
-    const tools: Tool<any, any, any>[] = [directory(dir), scheduler()];
+    const tools: Tool<any, any, any>[] = [
+      //
+      directory(await new Directory().upsert(contacts)),
+      scheduler(),
+    ];
 
     const objective = 'schedule a meeting with the eng team for monday';
     const plan = await createPlan({ tools, objective });

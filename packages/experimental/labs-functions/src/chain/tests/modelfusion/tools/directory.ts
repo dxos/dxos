@@ -48,6 +48,8 @@ export class Directory {
       objects: values,
       getValueToEmbed: (text) => text,
     });
+
+    return this;
   }
 
   async getByTeam(team: string) {
