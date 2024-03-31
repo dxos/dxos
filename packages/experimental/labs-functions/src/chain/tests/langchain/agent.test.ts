@@ -23,7 +23,7 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 
 import { describe, test } from '@dxos/test';
 
-import { getConfig, getKey } from '../../util';
+import { getConfig, getKey } from '../../../util';
 
 // TODO(burdon): Bug requires conversion.
 const toChatHistory = async (memory: BufferMemory): Promise<string[]> => {
