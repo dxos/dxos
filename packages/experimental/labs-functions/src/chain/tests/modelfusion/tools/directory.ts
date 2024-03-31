@@ -53,6 +53,7 @@ export const directory = (directory: Directory) =>
   new Tool({
     name: 'directory',
     description: 'Find people.',
+    // TODO(burdon): Schema for query (e.g., role A or B).
     parameters: zodSchema(
       z.object({
         name: z.string().optional().nullable().describe('Name of person.'),

@@ -49,8 +49,6 @@ describe.only('agent', () => {
 
     const tools: Tool<any, any, any>[] = [directory(dir), scheduler()];
 
-    const objective = 'schedule a meeting with the eng team';
-
     // Planner.
     // TODO(burdon): Factor out as separate planner tool.
     const createPlan = async (objective: string) => {
@@ -80,40 +78,49 @@ describe.only('agent', () => {
         },
       });
 
-      return response.split('\n').filter(Boolean);
+      // TODO(burdon): Strip numbers.
+      const steps = response.split('\n').filter(Boolean);
+      return {
+        steps,
+      };
     };
 
-    const steps = await createPlan(objective);
-    log.info('steps', { steps });
+    const execPlan = async (steps: string[]) => {
+      log.info('steps', { steps });
+      const model = ollama
+        .CompletionTextGenerator(mistralMultiToolCallOptions)
+        .withInstructionPrompt()
+        .asToolCallsOrTextGenerationModel(mistralMultiToolCallPromptTemplate);
 
-    const model = ollama
-      .CompletionTextGenerator(mistralMultiToolCallOptions)
-      .withInstructionPrompt()
-      .asToolCallsOrTextGenerationModel(mistralMultiToolCallPromptTemplate);
+      const context: string[] = ['## Context'];
 
-    const context: string[] = ['## Context'];
+      for (const step of steps) {
+        const match = step.match(/[\d\W.]*(.+)/);
+        if (match) {
+          const [_, objective] = match;
+          const prompt = [objective, ...context].join('\n');
+          log.info('step', { prompt });
 
-    for (const step of steps) {
-      const match = step.match(/[\d\W.]*(.+)/);
-      if (match) {
-        const [_, objective] = match;
-        const prompt = [objective, ...context].join('\n');
-        log.info('step', { prompt });
+          const { text, toolResults } = await runTools({
+            // ...functionOptions('agent'),
+            model,
+            tools,
+            prompt,
+            run: { abortSignal: abortController.signal },
+          });
 
-        const { text, toolResults } = await runTools({
-          // ...functionOptions('agent'),
-          model,
-          tools,
-          prompt,
-          run: { abortSignal: abortController.signal },
-        });
-
-        log.info('result', { text, toolResults });
-        if (toolResults?.length) {
-          context.push(`Objective: ${objective}`);
-          context.push(`Result: ${JSON.stringify(toolResults[0].result)}`);
+          log.info('result', { text, toolResults });
+          if (toolResults?.length) {
+            context.push(`Objective: ${objective}`);
+            context.push(`Result: ${JSON.stringify(toolResults[0].result)}`);
+          }
         }
       }
-    }
+    };
+
+    // TODO(burdon): Retry if params don't match.
+    const objective = 'schedule a meeting with the sales team for monday';
+    const { steps } = await createPlan(objective);
+    await execPlan(steps);
   }).timeout(30_000);
 });
