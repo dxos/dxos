@@ -47,7 +47,7 @@ describe.only('agent', () => {
 
     const tools: Tool<any, any, any>[] = [directory(dir), scheduler()];
 
-    const objective = 'schedule a meeting with the sales team for monday';
+    const objective = 'schedule a meeting with the eng team for monday';
     const plan = await createPlan({ tools, objective });
     await execPlan({ tools, plan });
   }).timeout(30_000);
