@@ -2,29 +2,42 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  generateText,
-  MemoryVectorIndex,
-  ollama,
-  retrieve,
-  runTools,
-  Tool,
-  upsertIntoVectorIndex,
-  VectorIndexRetriever,
-  zodSchema,
-} from 'modelfusion';
+import { generateText, ollama, runTools, type Tool } from 'modelfusion';
 
 import { log } from '@dxos/log';
-import { z } from '@dxos/plate';
 import { describe, test } from '@dxos/test';
 
 import { mistralMultiToolCallOptions, mistralMultiToolCallPromptTemplate } from './mistral';
+import { type Contact, Directory, directory, scheduler } from './tools';
 import { functionOptions } from './util';
 import { multiline } from '../../../util';
 
 // Restart ollama if times out (server can hang): `ollama serve`.
 // TODO(burdon): Long running tasks: https://modelfusion.dev/guide/experimental/server
 // TODO(burdon): Local voice transcription https://github.com/ggerganov/whisper.cpp
+
+// TODO(burdon): RAG tool.
+// TODO(burdon): Discord fetcher tool.
+// TODO(burdon): Chess analysis tool.
+
+const contacts: Contact[] = [
+  {
+    name: 'alice',
+    role: 'engineer',
+  },
+  {
+    name: 'bob',
+    role: 'engineer',
+  },
+  {
+    name: 'charlie',
+    role: 'sales',
+  },
+  {
+    name: 'davie',
+    role: 'sales',
+  },
+];
 
 // https://github.com/vercel/modelfusion/tree/main/examples/middle-school-math-agent
 describe.only('agent', () => {
@@ -34,7 +47,7 @@ describe.only('agent', () => {
     const dir = new Directory();
     await dir.upsert(contacts);
 
-    const tools: Tool<any, any, any>[] = [directory(dir), scheduler];
+    const tools: Tool<any, any, any>[] = [directory(dir), scheduler()];
 
     const objective = 'schedule a meeting with the eng team';
 
@@ -103,110 +116,4 @@ describe.only('agent', () => {
       }
     }
   }).timeout(30_000);
-});
-
-// TODO(burdon): RAG tool.
-// TODO(burdon): Discord fetcher tool.
-// TODO(burdon): Chess analysis tool.
-
-type Contact = { name: string; role?: string };
-
-class Directory {
-  contacts = new Map<string, Contact>();
-  vectorIndex = new MemoryVectorIndex<string>();
-  embeddingModel = ollama.TextEmbedder({ model: 'nomic-embed-text' });
-  retriever = new VectorIndexRetriever({
-    vectorIndex: this.vectorIndex,
-    embeddingModel: this.embeddingModel,
-    maxResults: 1,
-    similarityThreshold: 0.5,
-  });
-
-  async upsert(contacts: Contact[]) {
-    contacts.forEach((contact) => this.contacts.set(contact.name, contact));
-    await upsertIntoVectorIndex({
-      vectorIndex: this.vectorIndex,
-      embeddingModel: this.embeddingModel,
-      objects: contacts.map((contact) => contact.role),
-      getValueToEmbed: (text) => text,
-    });
-  }
-
-  async getByRole(role: string) {
-    const roles = await retrieve(this.retriever, role);
-    if (!roles.length) {
-      return [];
-    }
-
-    return Array.from(this.contacts.values()).filter((contact) => contact.role === roles[0]);
-  }
-}
-
-const contacts: Contact[] = [
-  {
-    name: 'alice',
-    role: 'engineer',
-  },
-  {
-    name: 'bob',
-    role: 'engineer',
-  },
-  {
-    name: 'charlie',
-    role: 'sales',
-  },
-  {
-    name: 'davie',
-    role: 'sales',
-  },
-];
-
-const directory = (directory: Directory) =>
-  new Tool({
-    name: 'directory',
-    description: 'Find people.',
-    parameters: zodSchema(
-      z.object({
-        name: z.string().optional().nullable().describe('Name of person.'),
-        role: z.string().optional().nullable().describe('Role of person.'),
-      }),
-    ),
-    returnType: zodSchema(
-      z.object({
-        people: z.array(z.string()).describe('List of usernames.'),
-      }),
-    ),
-    execute: async ({ name, role, ...rest }) => {
-      log.info('directory', { name, role, rest });
-      let contacts: Contact[] = [];
-      if (role) {
-        contacts = await directory.getByRole(role);
-      }
-
-      return {
-        people: contacts.map((contact) => contact.name),
-      };
-    },
-  });
-
-const scheduler = new Tool({
-  name: 'scheduler',
-  description: 'Schedule meetings with people.',
-  parameters: zodSchema(
-    z.object({
-      subject: z.string().describe('Subject of meeting.'),
-      attendees: z.array(z.string()).min(1).describe('Valid usernames of attendees.'),
-    }),
-  ),
-  returnType: zodSchema(
-    z.object({
-      invitation: z.string().describe('Meeting url.'),
-    }),
-  ),
-  execute: async ({ subject, attendees }) => {
-    log.info('scheduler', { subject, attendees });
-    return {
-      invitation: 'https://meet.com/123',
-    };
-  },
 });
