@@ -37,6 +37,10 @@ export class DynamicSchemaRegistry {
     if (typeObject == null) {
       return undefined;
     }
+    if (E.typeOf(typeObject)?.itemId === 'dxos.schema.Schema') {
+      // TODO: compatibility with old dynamic schema
+      return undefined;
+    }
     if (!(typeObject instanceof StoredEchoSchema)) {
       log.warn('type object is not a stored schema', { id: typeObject?.id });
       return undefined;
