@@ -30,6 +30,9 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
           },
         },
       },
+      echo: {
+        schema: [TreeItemType, TreeType],
+      },
       translations,
       graph: {
         builder: (plugins, graph) => {
