@@ -48,17 +48,6 @@ export class SchemaValidator {
     }
   }
 
-  private static makeArraysReactive(target: any) {
-    for (const key in target) {
-      if (Array.isArray(target[key])) {
-        target[key] = ReactiveArray.from(target[key]);
-      }
-      if (typeof target[key] === 'object') {
-        this.makeArraysReactive(target[key]);
-      }
-    }
-  }
-
   public static validateValue(target: any, prop: string | symbol, value: any) {
     const schema = getTargetPropertySchema(target, prop);
     const _ = S.asserts(schema)(value);
@@ -79,9 +68,9 @@ export class SchemaValidator {
     let schema: S.Schema<any> = rootObjectSchema;
     for (let i = 0; i < propertyPath.length; i++) {
       const propertyName = propertyPath[i];
-      const tupleAst = AST.isUnion(schema.ast) ? schema.ast.types.find((ast) => AST.isTupleType(ast)) : null;
-      if (AST.isTupleType(tupleAst ?? schema.ast)) {
-        schema = getArrayElementSchema(schema, propertyName);
+      const tupleAst = unwrapArray(schema.ast);
+      if (tupleAst != null) {
+        schema = getArrayElementSchema(tupleAst, propertyName);
       } else {
         const propertyType = getPropertyType(schema.ast, propertyName.toString(), (propertyName) =>
           getPropertyFn([...propertyPath.slice(0, i), propertyName]),
@@ -92,6 +81,17 @@ export class SchemaValidator {
     }
     return schema;
   }
+
+  private static makeArraysReactive(target: any) {
+    for (const key in target) {
+      if (Array.isArray(target[key])) {
+        target[key] = ReactiveArray.from(target[key]);
+      }
+      if (typeof target[key] === 'object') {
+        this.makeArraysReactive(target[key]);
+      }
+    }
+  }
 }
 
 /**
@@ -99,21 +99,16 @@ export class SchemaValidator {
  * fixed-length tuples ([string, number]) in which case AST will be { elements: [S.string, S.number] }
  * variable-length arrays (Array<string | number>) in which case AST will be { rest: [S.union(S.string, S.number)] }
  */
-const getArrayElementSchema = (arraySchema: S.Schema<any>, property: string | symbol | number): S.Schema<any> => {
+const getArrayElementSchema = (tupleAst: AST.TupleType, property: string | symbol | number): S.Schema<any> => {
   const elementIndex = typeof property === 'string' ? parseInt(property, 10) : Number.NaN;
   if (Number.isNaN(elementIndex)) {
     invariant(property === 'length', `invalid array property: ${String(property)}`);
     return S.number;
   }
-  let arrayAst = AST.isTupleType(arraySchema.ast) ? arraySchema.ast : null;
-  if (AST.isUnion(arraySchema.ast)) {
-    arrayAst = arraySchema.ast.types.find((ast) => AST.isTupleType(ast)) as AST.TupleType;
+  if (elementIndex < tupleAst.elements.length) {
+    return S.make(tupleAst.elements[elementIndex].type);
   }
-  invariant(arrayAst, 'not an array');
-  if (elementIndex < arrayAst.elements.length) {
-    return S.make(arrayAst.elements[elementIndex].type);
-  }
-  const restType = arrayAst.rest;
+  const restType = tupleAst.rest;
   return S.make(restType[0]);
 };
 
@@ -140,12 +135,18 @@ const getProperties = (
 };
 
 const getPropertyType = (
-  typeAst: AST.AST,
+  ast: AST.AST,
   propertyName: string,
   getTargetPropertyFn: (propertyName: string) => any,
 ): AST.AST | null => {
-  if (AST.isAnyKeyword(typeAst)) {
-    return typeAst;
+  if (AST.isAnyKeyword(ast)) {
+    return ast;
+  }
+  const typeAst = unwrapAst(ast, (t) => {
+    return AST.isTypeLiteral(t) || (AST.isUnion(t) && t.types.some((t) => AST.isTypeLiteral(t)));
+  });
+  if (typeAst == null) {
+    return null;
   }
   const targetProperty = getProperties(typeAst, getTargetPropertyFn).find((p) => p.name === propertyName);
   if (targetProperty != null) {
@@ -170,15 +171,35 @@ const getTypeDiscriminators = (typeAstList: AST.TypeLiteral[]): AST.PropertySign
 };
 
 const getTargetPropertySchema = (target: any, prop: string | symbol): S.Schema<any> => {
-  const schema = (target as any)[symbolSchema];
+  const schema: S.Schema<any> | undefined = (target as any)[symbolSchema];
   invariant(schema, 'target has no schema');
-  if (target instanceof ReactiveArray) {
-    return getArrayElementSchema(schema, prop);
+  const arrayAst = unwrapArray(schema.ast);
+  if (arrayAst != null) {
+    return getArrayElementSchema(arrayAst, prop);
   }
   const propertyType = getPropertyType(schema.ast as AST.AST, prop.toString(), (prop) => target[prop]);
   invariant(propertyType, `invalid property: ${prop.toString()}`);
   return S.make(propertyType);
 };
+
+const unwrapAst = (rootAst: AST.AST, predicate: (ast: AST.AST) => boolean): AST.AST | null => {
+  let ast: AST.AST | undefined = rootAst;
+  while (ast != null) {
+    if (predicate(ast)) {
+      return ast;
+    }
+    if (AST.isUnion(ast)) {
+      ast = ast.types.find((t) => predicate(t) || AST.isSuspend(t));
+    } else if (AST.isSuspend(ast)) {
+      ast = ast.f();
+    } else {
+      return null;
+    }
+  }
+  return null;
+};
+
+const unwrapArray = (ast: AST.AST) => unwrapAst(ast, AST.isTupleType) as AST.TupleType | null;
 
 /**
  * Recursively set AST on all potential proxy targets.
