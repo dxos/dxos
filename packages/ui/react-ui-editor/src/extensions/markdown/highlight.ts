@@ -183,7 +183,9 @@ export const markdownHighlightStyle = (readonly?: boolean) => {
     ],
     {
       scope: markdownLanguage,
-      all: { fontFamily: getToken('fontFamily.body', []).join(',') },
+      all: {
+        fontFamily: getToken('fontFamily.body', []).join(','),
+      },
     },
   );
 };

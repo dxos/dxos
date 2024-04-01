@@ -4,7 +4,7 @@
 
 import React, { type FC } from 'react';
 
-import { type Document as DocumentType } from '@braneframe/types';
+import { type DocumentType } from '@braneframe/types';
 import { getTextContent } from '@dxos/react-client/echo';
 
 import { Container, Slide } from './Markdown';

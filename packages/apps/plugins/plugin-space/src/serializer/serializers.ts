@@ -4,11 +4,13 @@
 
 import get from 'lodash.get';
 
-import { Document, Thread } from '@braneframe/types';
+import { DocumentType, ThreadType, TextV0Type } from '@braneframe/types';
 import { next as A, type Prop } from '@dxos/automerge/automerge';
-import { AutomergeObject, base, getTypeRef, type IDocHandle } from '@dxos/echo-schema';
+import { type AnyEchoObject, base, getTypeRef, type IDocHandle, AutomergeObject, getRawDoc } from '@dxos/echo-schema';
+import * as E from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { TypedObject, TextObject, getRawDoc } from '@dxos/react-client/echo';
+import { TypedObject } from '@dxos/react-client/echo';
+import { nonNullable } from '@dxos/util';
 
 export interface CursorConverter {
   toCursor(position: number, assoc?: -1 | 1 | undefined): string;
@@ -16,7 +18,7 @@ export interface CursorConverter {
 }
 
 // TODO(burdon): Reconcile with cursorConverter.
-const cursorConverter = (handle: IDocHandle, path: Prop[]) => ({
+const cursorConverter = (handle: IDocHandle, path: readonly Prop[]) => ({
   toCursor: (pos: number): string => {
     const doc = handle.docSync();
     if (!doc) {
@@ -59,25 +61,25 @@ const cursorConverter = (handle: IDocHandle, path: Prop[]) => ({
 export type FileName = { name: string; extension: string };
 
 export interface TypedObjectSerializer {
-  filename(object: TypedObject): FileName;
+  filename(object: AnyEchoObject): FileName;
 
-  serialize(object: TypedObject): Promise<string>;
+  serialize(object: AnyEchoObject): Promise<string>;
 
   /**
    * @param object Deserializing into an existing object. If not provided, a new object is created.
    */
-  deserialize(text: string, object?: TypedObject): Promise<TypedObject>;
+  deserialize(text: string, object?: AnyEchoObject): Promise<AnyEchoObject>;
 }
 
 // TODO(mykola): Factor out to respective plugins as providers.
 export const serializers: Record<string, TypedObjectSerializer> = {
-  [Document.schema.typename]: {
-    filename: (object: Document) => ({
-      name: object.title?.replace(/[/\\?%*:|"<>]/g, '-'),
+  [DocumentType.typename]: {
+    filename: (object: DocumentType) => ({
+      name: object.title?.replace(/[/\\?%*:|"<>]/g, '-') ?? '',
       extension: 'md',
     }),
 
-    serialize: async (object: Document): Promise<string> => {
+    serialize: async (object: DocumentType): Promise<string> => {
       // TODO(mykola): Factor out.
       const getRangeFromCursor = (cursorConverter: CursorConverter, cursor: string) => {
         const parts = cursor.split(':');
@@ -87,16 +89,17 @@ export const serializers: Record<string, TypedObjectSerializer> = {
       };
 
       const content = object.content;
-      let text: string = content instanceof AutomergeObject ? (content as any)[(content as any).field] : content.text;
+      let text: string =
+        content instanceof AutomergeObject ? (content as any)[(content as any).field] : E.getTextContent(content);
 
       // Insert comments.
       const comments = object.comments;
-      const threadSerializer = serializers[Thread.schema.typename];
-      if (!threadSerializer || !comments || comments.length === 0 || content instanceof TextObject) {
+      const threadSerializer = serializers[ThreadType.typename];
+      if (!content || !threadSerializer || !comments || comments.length === 0 || content instanceof TextV0Type) {
         return text;
       }
       const doc = getRawDoc(content, [(content as any).field]);
-      const convertor = cursorConverter(doc.handle, doc.path as Prop[]);
+      const convertor = cursorConverter(doc.handle, doc.path);
 
       const insertions: Record<number, string> = {};
       let footnote = '---\n';
@@ -127,21 +130,22 @@ export const serializers: Record<string, TypedObjectSerializer> = {
         (existingDoc.content as any)[(existingDoc.content as any).field] = text;
         return existingDoc;
       } else {
-        return new Document({ content: new TextObject(text) });
+        return E.object(DocumentType, { content: E.object(TextV0Type, { content: text }), comments: [] });
       }
     },
-  },
+  } satisfies TypedObjectSerializer,
 
-  [Thread.schema.typename]: {
-    filename: (object: Thread) => ({
-      name: object.title?.replace(/[/\\?%*:|"<>]/g, '-'),
+  [ThreadType.typename]: {
+    filename: (object: ThreadType) => ({
+      name: object.title?.replace(/[/\\?%*:|"<>]/g, '-') ?? '',
       extension: 'md',
     }),
 
-    serialize: async (object: Thread): Promise<string> => {
+    serialize: async (object: ThreadType): Promise<string> => {
       return (
         object.messages
-          .map((message) => message.blocks.map((block) => `${block.content?.text}`).join(' - '))
+          .filter(nonNullable)
+          .map((message) => message.blocks.map((block) => `${(block.content as any)?.text}`).join(' - '))
           .join(' | ') ?? ''
       );
     },
@@ -149,7 +153,7 @@ export const serializers: Record<string, TypedObjectSerializer> = {
     deserialize: async (text: string) => {
       throw new Error('Not implemented.');
     },
-  },
+  } satisfies TypedObjectSerializer,
 
   default: {
     filename: () => ({ name: 'Untitled', extension: 'json' }),

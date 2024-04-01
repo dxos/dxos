@@ -9,7 +9,7 @@ export type InvariantFn = (condition: unknown, message?: string, meta?: CallMeta
 /**
  * Asserts that the condition is true.
  *
- * @param message Optional message.
+ * @param message Optional message. If it starts with "BUG" then the program will break if this invariant fails if the debugger is attached.
  */
 export const invariant: InvariantFn = (
   condition: unknown,
@@ -18,6 +18,12 @@ export const invariant: InvariantFn = (
 ): asserts condition => {
   if (condition) {
     return;
+  }
+
+  if (message?.startsWith('BUG')) {
+    // This invariant is a debug bug-check: break if the debugger is attached.
+    // eslint-disable-next-line no-debugger
+    debugger;
   }
 
   let errorMessage = 'invariant violation';

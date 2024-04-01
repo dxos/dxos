@@ -4,7 +4,7 @@
 
 import React, { forwardRef } from 'react';
 
-import type { Document as DocumentType } from '@braneframe/types';
+import { type DocumentType } from '@braneframe/types';
 import { DropdownMenu, Input, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-card';
 import {
@@ -48,7 +48,7 @@ export const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement
   ) => {
     const { t } = useTranslation(MARKDOWN_PLUGIN);
     const { themeMode } = useThemeContext();
-    const { doc, accessor } = useDocAccessor(object.content);
+    const { doc, accessor } = useDocAccessor(object.content!);
     const { parentRef } = useTextEditor(
       () => ({
         doc,

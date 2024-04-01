@@ -4,7 +4,7 @@
 
 import React, { type FC } from 'react';
 
-import { type Thread as ThreadType } from '@braneframe/types';
+import { type ThreadType } from '@braneframe/types';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 

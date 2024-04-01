@@ -32,9 +32,11 @@
     "@codemirror/view": "^6.25.0",
     "@dxos/async": "workspace:*",
     "@dxos/chain": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "lodash.get": "^4.4.2"
   },

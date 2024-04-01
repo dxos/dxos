@@ -2,18 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Document as DocumentType, type Message as MessageType, type Thread as ThreadType } from '@braneframe/types';
+import { type DocumentCommentType, DocumentType, type MessageType, type ThreadType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { getTextInRange, Schema, toJsonSchema, type TypedObject } from '@dxos/echo-schema';
+import { type DynamicEchoSchema, type EchoReactiveObject, effectToJsonSchema, getTextInRange } from '@dxos/echo-schema';
 
 export type RequestContext = {
-  object?: TypedObject;
+  object?: EchoReactiveObject<any>;
   text?: string;
-  schema?: Map<string, Schema>;
+  schema?: Map<string, DynamicEchoSchema>;
 };
 
 export const createContext = (space: Space, message: MessageType, thread: ThreadType): RequestContext => {
-  let object: TypedObject | undefined;
+  let object: EchoReactiveObject<any> | undefined;
   if (message.context?.object) {
     const { objects } = space.db.query({ id: message.context?.object });
     object = objects[0];
@@ -32,9 +32,9 @@ export const createContext = (space: Space, message: MessageType, thread: Thread
 
   // Create schema registry.
   // TODO(burdon): Filter?
-  const { objects } = space.db.query(Schema.filter());
-  const schema = objects.reduce<Map<string, Schema>>((map, schema) => {
-    const jsonSchema = toJsonSchema(schema);
+  const schemaList = space.db.schemaRegistry.getAll();
+  const schema = schemaList.reduce<Map<string, DynamicEchoSchema>>((map, schema) => {
+    const jsonSchema = effectToJsonSchema(schema);
     if (jsonSchema.title) {
       map.set(jsonSchema.title, schema);
     }
@@ -49,11 +49,11 @@ export const createContext = (space: Space, message: MessageType, thread: Thread
  * @deprecated Clean this up.
  * Text cursors should be a part of core ECHO API.
  */
-const getReferencedText = (document: DocumentType, comment: DocumentType.Comment): string => {
+const getReferencedText = (document: DocumentType, comment: DocumentCommentType): string => {
   if (!comment.cursor) {
     return '';
   }
 
   const [begin, end] = comment.cursor.split(':');
-  return getTextInRange(document.content, begin, end);
+  return document.content ? getTextInRange(document.content, begin, end) : '';
 };

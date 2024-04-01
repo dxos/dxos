@@ -303,6 +303,9 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) =>
       this._objectCore.getDecoded([getNamespace(target), ...path]),
     );
+    if (propertySchema == null) {
+      return unwrappedValue;
+    }
     const _ = S.asserts(propertySchema)(unwrappedValue);
     return unwrappedValue;
   }

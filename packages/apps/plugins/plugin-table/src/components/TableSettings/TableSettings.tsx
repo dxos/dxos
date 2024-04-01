@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { type Table as TableType } from '@braneframe/types';
-import { type Schema } from '@dxos/client/echo';
+import { type TableType } from '@braneframe/types';
+import { type DynamicEchoSchema } from '@dxos/echo-schema';
 import { type DialogRootProps, Input, Select, useTranslation } from '@dxos/react-ui';
 
 import { TABLE_PLUGIN } from '../../meta';
@@ -15,7 +15,7 @@ const NEW_ID = '__new';
 
 export type TableSettingsProps = {
   table: TableType;
-  schemas?: Schema[];
+  schemas?: DynamicEchoSchema[];
   onClose?: (success: boolean) => void;
 } & Pick<DialogRootProps, 'open'>;
 

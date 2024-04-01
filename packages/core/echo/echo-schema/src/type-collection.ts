@@ -19,6 +19,8 @@ type Prototype = {
   schema: SchemaProto;
 };
 
+const LEGACY_SCHEMA_TYPE = 'dxos.schema.Schema';
+
 /**
  * Constructed via generated protobuf class.
  * @deprecated
@@ -33,6 +35,7 @@ export class TypeCollection {
   constructor() {
     this._effectSchemaDefs.set(LEGACY_TEXT_TYPE, TextCompatibilitySchema);
     this._effectSchemaDefs.set(StoredEchoSchema.typename, StoredEchoSchema);
+    this._effectSchemaDefs.set(LEGACY_SCHEMA_TYPE, LegacySchemaTypeSchema);
   }
 
   get schemas(): SchemaProto[] {
@@ -55,7 +58,7 @@ export class TypeCollection {
     });
   }
 
-  registerEffectSchema<T>(...schemaList: S.Schema<T>[]) {
+  registerEffectSchema(...schemaList: S.Schema<any>[]) {
     schemaList.forEach((schema) => {
       const typename = getTypenameOrThrow(schema);
       if (this._effectSchemaDefs.has(typename)) {
@@ -167,4 +170,40 @@ const TextCompatibilitySchema = S.partial(
     field: S.string,
     content: S.string,
   }),
-).pipe(E.echoObject('dxos.Text.v0', '0.1.0'));
+).pipe(E.echoObject(LEGACY_TEXT_TYPE, '0.1.0'));
+
+enum LegacySchemaPropType {
+  NONE = 0,
+  STRING = 1,
+  NUMBER = 2,
+  BOOLEAN = 3,
+  DATE = 4,
+  REF = 5,
+  RECORD = 6,
+  ENUM = 7,
+}
+
+const LegacySchemaPropSchema: S.Schema<any> = S.mutable(
+  S.partial(
+    S.struct({
+      id: S.string,
+      type: S.enums(LegacySchemaPropType),
+      typename: S.string,
+      refName: S.string,
+      ref: S.suspend(() => E.ref(LegacySchemaTypeSchema)),
+      refModelType: S.string,
+      repeated: S.boolean,
+      props: S.suspend(() => S.mutable(S.array(LegacySchemaPropSchema))),
+      variants: S.partial(S.struct({ tag: S.string, name: S.string })),
+      digits: S.number,
+      description: S.string,
+    }),
+  ),
+);
+
+const LegacySchemaTypeSchema = S.partial(
+  S.struct({
+    typename: S.string,
+    props: S.mutable(S.array(LegacySchemaPropSchema)),
+  }),
+).pipe(E.echoObject(LEGACY_SCHEMA_TYPE, '0.1.0'));

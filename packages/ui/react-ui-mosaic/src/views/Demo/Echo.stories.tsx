@@ -12,7 +12,7 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { Mosaic } from '../../mosaic';
 import { FullscreenDecorator, TestObjectGenerator, range, Status, Priority } from '../../testing';
-import { EchoKanban } from '../Kanban/testing';
+// import { EchoKanban } from '../Kanban/testing';
 // import { GraphTree } from '../Tree/testing';
 
 faker.seed(3);
@@ -32,7 +32,7 @@ const Story: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
       <div className='flex grow overflow-hidden'>
         <div className='flex shrink-0 w-[280px] overflow-hidden'>{/* <GraphTree id='graph' debug={debug} /> */}</div>
         <div className='flex grow overflow-hidden'>
-          <EchoKanban id='projects' spaceKey={spaceKey} generator={generator} debug={debug} />
+          {/* <EchoKanban id='projects' spaceKey={spaceKey} generator={generator} debug={debug} /> */}
         </div>
       </div>
     </Mosaic.Root>

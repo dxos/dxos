@@ -14,6 +14,9 @@ patchedDependencies:
   '@radix-ui/react-dropdown-menu@2.0.5':
     hash: e5isk7r7t3hyjd7xo7tbxnvrpm
     path: patches/@radix-ui__react-dropdown-menu@2.0.5.patch
+  '@radix-ui/react-dropdown-menu@2.0.7-rc.10':
+    hash: fdgem6zvkijjenhhx3en7zyzdy
+    path: patches/@radix-ui__react-dropdown-menu@2.0.7-rc.10.patch
   memdown@5.1.0:
     hash: tjbpekhnedejisbcwvc5eec3ii
     path: patches/memdown@5.1.0.patch
@@ -202,7 +205,7 @@ importers:
         version: 3.6.0(vite@5.1.5)
       '@vitest/browser':
         specifier: ^1.3.1
-        version: 1.3.1(vitest@1.3.1)(webdriverio@8.33.0)
+        version: 1.3.1(vitest@1.3.1)(webdriverio@8.33.1)
       '@vitest/utils':
         specifier: ^1.3.1
         version: 1.3.1
@@ -361,7 +364,7 @@ importers:
         version: 3.0.2
       webdriverio:
         specifier: ^8.32.4
-        version: 8.33.0(typescript@5.2.2)
+        version: 8.33.1(typescript@5.2.2)
 
   docs:
     devDependencies:
@@ -901,6 +904,9 @@ importers:
       '@dxos/chain':
         specifier: workspace:*
         version: link:../../../core/chain
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -910,6 +916,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -971,6 +980,9 @@ importers:
       '@dxos/chess-app':
         specifier: workspace:*
         version: link:../../../experimental/chess-app
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -1029,6 +1041,9 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../../core/echo/echo-signals
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
@@ -1075,6 +1090,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/automerge':
+        specifier: workspace:*
+        version: link:../../../core/echo/automerge
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../../sdk/client-services
@@ -1375,6 +1393,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
@@ -1579,15 +1600,24 @@ importers:
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
       '@dnd-kit/core':
         specifier: ^6.0.5
         version: 6.0.5(react-dom@18.2.0)(react@18.2.0)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -1604,9 +1634,6 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -1737,6 +1764,9 @@ importers:
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../../common/display-name
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -1883,6 +1913,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -2017,6 +2050,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -2456,6 +2492,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -2478,9 +2517,6 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../../core/echo/echo-schema
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
@@ -2931,12 +2967,18 @@ importers:
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
       '@dxos/automerge':
         specifier: workspace:*
         version: link:../../../core/echo/automerge
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -2980,9 +3022,6 @@ importers:
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -3249,6 +3288,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
@@ -3261,9 +3303,15 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
     devDependencies:
       '@braneframe/plugin-client':
         specifier: workspace:*
@@ -3405,6 +3453,9 @@ importers:
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
       '@codemirror/language':
         specifier: ^6.10.1
         version: 6.10.1
@@ -3472,9 +3523,6 @@ importers:
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -4008,7 +4056,7 @@ importers:
         version: 3.12.0
       debug:
         specifier: ^4.3.4
-        version: 4.3.4(supports-color@5.5.0)
+        version: 4.3.4(supports-color@8.1.1)
       domain-browser:
         specifier: ^4.22.0
         version: 4.22.0
@@ -4884,7 +4932,7 @@ importers:
         version: 1.5.4
       debug:
         specifier: ^4.3.4
-        version: 4.3.4(supports-color@5.5.0)
+        version: 4.3.4(supports-color@8.1.1)
       eventemitter3:
         specifier: ^5.0.1
         version: 5.0.1
@@ -4952,12 +5000,21 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../echo-schema
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
 
   packages/core/echo/echo-pipeline:
     dependencies:
@@ -6675,12 +6732,18 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
       chess.js:
         specifier: 1.0.0-alpha.0
         version: 1.0.0-alpha.0
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -7448,7 +7511,7 @@ importers:
         version: 1.1.2(seedrandom@3.0.5)
       debug:
         specifier: ^4.3.4
-        version: 4.3.4(supports-color@5.5.0)
+        version: 4.3.4(supports-color@8.1.1)
       esbuild:
         specifier: ^0.19.6
         version: 0.19.6
@@ -8122,7 +8185,7 @@ importers:
         version: 0.11.1
       debug:
         specifier: ^4.3.4
-        version: 4.3.4(supports-color@5.5.0)
+        version: 4.3.4(supports-color@8.1.1)
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -8521,11 +8584,11 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-dropdown-menu':
-        specifier: ^2.0.5
-        version: 2.0.5(patch_hash=e5isk7r7t3hyjd7xo7tbxnvrpm)(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.0.7-rc.10
+        version: 2.0.7-rc.10(patch_hash=fdgem6zvkijjenhhx3en7zyzdy)(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-popover':
-        specifier: ^1.0.6
-        version: 1.0.6(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^1.0.8-rc.8
+        version: 1.0.8-rc.8(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-popper':
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -8684,24 +8747,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@radix-ui/primitive':
-        specifier: ^1.0.0
-        version: 1.0.1
-      '@radix-ui/react-compose-refs':
-        specifier: ^1.0.0
-        version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-context':
         specifier: ^1.0.0
         version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
-      '@radix-ui/react-menu':
-        specifier: ^2.0.6
-        version: 2.0.6(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-primitive':
         specifier: ^1.0.2
         version: 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-slot':
-        specifier: ^1.0.1
-        version: 1.0.2(@types/react@18.0.21)(react@18.2.0)
     devDependencies:
       '@dnd-kit/core':
         specifier: ^6.0.5
@@ -8925,7 +8976,7 @@ importers:
         version: 17.0.9
       '@vitest/browser':
         specifier: ^1.3.1
-        version: 1.3.1(vitest@1.3.1)(webdriverio@8.33.0)
+        version: 1.3.1(vitest@1.3.1)(webdriverio@8.33.1)
       '@vitest/ui':
         specifier: ^1.3.1
         version: 1.3.1(vitest@1.3.1)
@@ -10142,7 +10193,7 @@ packages:
     dependencies:
       '@automerge/automerge-repo': 1.1.1(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       cbor-x: 1.5.4
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       eventemitter3: 5.0.1
       isomorphic-ws: 5.0.0(ws@8.14.2)
       ws: 8.14.2
@@ -10174,7 +10225,7 @@ packages:
       '@automerge/automerge': 2.1.10
       bs58check: 3.0.1
       cbor-x: 1.5.4
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       eventemitter3: 5.0.1
       fast-sha256: 1.3.0
       tiny-typed-emitter: 2.1.0
@@ -10245,7 +10296,7 @@ packages:
       '@babel/traverse': 7.23.9
       '@babel/types': 7.23.9
       convert-source-map: 1.9.0
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -10265,10 +10316,10 @@ packages:
       '@babel/helpers': 7.21.0
       '@babel/parser': 7.21.3
       '@babel/template': 7.20.7
-      '@babel/traverse': 7.21.3(supports-color@5.5.0)
+      '@babel/traverse': 7.21.3
       '@babel/types': 7.21.3
       convert-source-map: 1.9.0
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.0
@@ -10290,7 +10341,7 @@ packages:
       '@babel/traverse': 7.23.6
       '@babel/types': 7.23.6
       convert-source-map: 1.9.0
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -10313,7 +10364,7 @@ packages:
       '@babel/traverse': 7.23.9
       '@babel/types': 7.23.9
       convert-source-map: 2.0.0
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -10478,7 +10529,7 @@ packages:
       '@babel/core': 7.21.3
       '@babel/helper-compilation-targets': 7.23.6
       '@babel/helper-plugin-utils': 7.22.5
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       lodash.debounce: 4.0.8
       resolve: 1.22.5
       semver: 6.3.1
@@ -10493,7 +10544,7 @@ packages:
       '@babel/core': 7.23.9
       '@babel/helper-compilation-targets': 7.23.6
       '@babel/helper-plugin-utils': 7.22.5
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       lodash.debounce: 4.0.8
       resolve: 1.22.5
     transitivePeerDependencies:
@@ -10574,7 +10625,7 @@ packages:
       '@babel/helper-split-export-declaration': 7.18.6
       '@babel/helper-validator-identifier': 7.19.1
       '@babel/template': 7.20.7
-      '@babel/traverse': 7.21.3(supports-color@5.5.0)
+      '@babel/traverse': 7.21.3
       '@babel/types': 7.21.3
     transitivePeerDependencies:
       - supports-color
@@ -10816,7 +10867,7 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/template': 7.20.7
-      '@babel/traverse': 7.21.3(supports-color@5.5.0)
+      '@babel/traverse': 7.21.3
       '@babel/types': 7.21.3
     transitivePeerDependencies:
       - supports-color
@@ -12765,13 +12816,13 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       regenerator-runtime: 0.14.0
-    dev: false
 
   /@babel/runtime@7.23.4:
     resolution: {integrity: sha512-2Yv65nlWnWlSpe3fXEyX5i7fx5kIKo4Qbcj+hMO0odwaneFjfXw5fdum+4yL20O0QiaHpia0cYQ9xpNMqrBwHg==}
     engines: {node: '>=6.9.0'}
     dependencies:
       regenerator-runtime: 0.14.0
+    dev: true
 
   /@babel/runtime@7.23.9:
     resolution: {integrity: sha512-0CX6F+BI2s9dkUqr08KFrAIZgNFj75rdBU/DjCyYLIaV/quFjkk6T+EJ2LkZHyZTbEV4L5p97mNkUsHl2wLFAw==}
@@ -12804,6 +12855,23 @@ packages:
       '@babel/parser': 7.23.9
       '@babel/types': 7.23.9
 
+  /@babel/traverse@7.21.3:
+    resolution: {integrity: sha512-XLyopNeaTancVitYZe2MlUEvgKb6YVVPXzofHgqHijCImG33b/uTurMS488ht/Hbsb2XK3U2BnSTxKVNGV3nGQ==}
+    engines: {node: '>=6.9.0'}
+    dependencies:
+      '@babel/code-frame': 7.18.6
+      '@babel/generator': 7.21.3
+      '@babel/helper-environment-visitor': 7.18.9
+      '@babel/helper-function-name': 7.21.0
+      '@babel/helper-hoist-variables': 7.18.6
+      '@babel/helper-split-export-declaration': 7.18.6
+      '@babel/parser': 7.21.3
+      '@babel/types': 7.21.3
+      debug: 4.3.4(supports-color@8.1.1)
+      globals: 11.12.0
+    transitivePeerDependencies:
+      - supports-color
+
   /@babel/traverse@7.21.3(supports-color@5.5.0):
     resolution: {integrity: sha512-XLyopNeaTancVitYZe2MlUEvgKb6YVVPXzofHgqHijCImG33b/uTurMS488ht/Hbsb2XK3U2BnSTxKVNGV3nGQ==}
     engines: {node: '>=6.9.0'}
@@ -12833,7 +12901,7 @@ packages:
       '@babel/helper-split-export-declaration': 7.22.6
       '@babel/parser': 7.23.6
       '@babel/types': 7.23.6
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -12851,7 +12919,7 @@ packages:
       '@babel/helper-split-export-declaration': 7.22.6
       '@babel/parser': 7.23.9
       '@babel/types': 7.23.9
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -13259,7 +13327,7 @@ packages:
       cheerio: 1.0.0-rc.12
       connect-injector: 0.4.4
       convert-source-map: 1.9.0
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       es-module-lexer: 0.10.5
       fast-glob: 3.3.2
       fs-extra: 10.1.0
@@ -13317,7 +13385,7 @@ packages:
       '@devicefarmer/adbkit-monkey': 1.2.1
       bluebird: 3.7.2
       commander: 9.3.0
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       node-forge: 1.3.1
       split: 1.0.1
     transitivePeerDependencies:
@@ -14125,7 +14193,7 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dependencies:
       ajv: 6.12.6
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       espree: 9.6.1
       globals: 13.20.0
       ignore: 5.2.4
@@ -14328,7 +14396,7 @@ packages:
     engines: {node: '>=10.10.0'}
     dependencies:
       '@humanwhocodes/object-schema': 1.2.1
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       minimatch: 3.1.2
     transitivePeerDependencies:
       - supports-color
@@ -15384,7 +15452,7 @@ packages:
     dependencies:
       '@libp2p/interface-peer-id': 2.0.2
       '@multiformats/multiaddr': 12.1.14
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       interface-datastore: 8.2.10
       multiformats: 11.0.2
     transitivePeerDependencies:
@@ -15436,7 +15504,7 @@ packages:
       detect-libc: 2.0.1
       https-proxy-agent: 5.0.1
       make-dir: 3.1.0
-      node-fetch: 2.6.7
+      node-fetch: 2.7.0
       nopt: 5.0.0
       npmlog: 5.0.1
       rimraf: 3.0.2
@@ -15813,7 +15881,7 @@ packages:
     dependencies:
       '@mdx-js/mdx': 2.1.5
       esbuild: 0.14.54
-      node-fetch: 3.3.1
+      node-fetch: 3.3.2
       vfile: 5.3.6
     transitivePeerDependencies:
       - supports-color
@@ -16827,7 +16895,7 @@ packages:
     dependencies:
       '@oclif/core': 2.9.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       chalk: 4.1.2
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       fs-extra: 9.1.0
       http-call: 5.3.0
       lodash: 4.17.21
@@ -17200,7 +17268,7 @@ packages:
       '@octokit/request-error': 3.0.3
       '@octokit/types': 9.0.0
       is-plain-object: 5.0.0
-      node-fetch: 2.6.7
+      node-fetch: 2.7.0
       universal-user-agent: 6.0.0
     transitivePeerDependencies:
       - encoding
@@ -17418,7 +17486,7 @@ packages:
       typescript:
         optional: true
     dependencies:
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       extract-zip: 2.0.1
       progress: 2.0.3
       proxy-agent: 6.3.0
@@ -17435,7 +17503,7 @@ packages:
     engines: {node: '>=16.3.0'}
     hasBin: true
     dependencies:
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       extract-zip: 2.0.1
       progress: 2.0.3
       proxy-agent: 6.3.1
@@ -17580,7 +17648,7 @@ packages:
       react: ^16.8 || ^17.0 || ^18.0
       react-dom: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.21.0
       '@radix-ui/primitive': 1.0.0
       '@radix-ui/react-compose-refs': 1.0.0(react@18.2.0)
       '@radix-ui/react-context': 1.0.0(react@18.2.0)
@@ -17649,7 +17717,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.22.15
       '@types/react': 18.0.21
       react: 18.2.0
 
@@ -17860,6 +17928,31 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
+  /@radix-ui/react-dismissable-layer@1.0.6-rc.5(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-yWusLjjJQzzeIIxYbzu2FSHzKBXQGlAjiD191Of/pCxswCd1arwvrF/TDIDdmIXHFp0YV0esKr49ss7xW5utmA==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.23.9
+      '@radix-ui/primitive': 1.0.1
+      '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-use-callback-ref': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-use-escape-keydown': 1.0.4-rc.5(@types/react@18.0.21)(react@18.2.0)
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+    dev: false
+
   /@radix-ui/react-dropdown-menu@2.0.5(patch_hash=e5isk7r7t3hyjd7xo7tbxnvrpm)(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-xdOrZzOTocqqkCkYo8yRPCib5OkTkqN7lqNCdxwPOdE466DOaNl4N8PkUIlsXthQvW5Wwkd+aEmWpfWlBoDPEw==}
     peerDependencies:
@@ -17873,12 +17966,40 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.22.15
+      '@babel/runtime': 7.23.9
       '@radix-ui/primitive': 1.0.1
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-context': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-id': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-menu': 2.0.5(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-use-controllable-state': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+    dev: false
+    patched: true
+
+  /@radix-ui/react-dropdown-menu@2.0.7-rc.10(patch_hash=fdgem6zvkijjenhhx3en7zyzdy)(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-6InaPWetwok6kAg2XrBKalvozkXb/ZMeIXmFlTkRh1FmuiGjTYNCpDGBmKiBMcxzVHXlu9maca07zxlMrWuCKQ==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.23.9
+      '@radix-ui/primitive': 1.0.1
+      '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-context': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-id': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-menu': 2.0.7-rc.10(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-use-controllable-state': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
@@ -18086,8 +18207,8 @@ packages:
       react-remove-scroll: 2.5.5(@types/react@18.0.21)(react@18.2.0)
     dev: false
 
-  /@radix-ui/react-popover@1.0.6(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-cZ4defGpkZ0qTRtlIBzJLSzL6ht7ofhhW4i1+pkemjV1IKXm0wgCRnee154qlV6r9Ttunmh2TNZhMfV2bavUyA==}
+  /@radix-ui/react-menu@2.0.7-rc.10(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-hTJezvrqmnYwnx0bze75b8SdvKYd1A0+QfXgejKjCNlI9zywY3qtQciioqwzAeCztPbp8OSiLJTxB8Ho1lbZAA==}
     peerDependencies:
       '@types/react': '*'
       '@types/react-dom': '*'
@@ -18099,26 +18220,29 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.23.9
       '@radix-ui/primitive': 1.0.1
+      '@radix-ui/react-collection': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-context': 1.0.1(@types/react@18.0.21)(react@18.2.0)
-      '@radix-ui/react-dismissable-layer': 1.0.4(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-direction': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-dismissable-layer': 1.0.6-rc.5(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-focus-guards': 1.0.1(@types/react@18.0.21)(react@18.2.0)
-      '@radix-ui/react-focus-scope': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-focus-scope': 1.0.4(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-id': 1.0.1(@types/react@18.0.21)(react@18.2.0)
-      '@radix-ui/react-popper': 1.1.2(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-portal': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-popper': 1.1.4-rc.8(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-portal': 1.0.4(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-presence': 1.0.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-roving-focus': 1.0.5-rc.10(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-slot': 1.0.2(@types/react@18.0.21)(react@18.2.0)
-      '@radix-ui/react-use-controllable-state': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-use-callback-ref': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       aria-hidden: 1.2.3
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-      react-remove-scroll: 2.5.5(@types/react@18.0.21)(react@18.2.0)
+      react-remove-scroll: 2.5.7(@types/react@18.0.21)(react@18.2.0)
     dev: false
 
   /@radix-ui/react-popover@1.0.6-rc.5(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
@@ -18147,6 +18271,41 @@ packages:
       react-remove-scroll: 2.5.5(@types/react@18.0.21)(react@18.2.0)
     transitivePeerDependencies:
       - '@types/react'
+    dev: false
+
+  /@radix-ui/react-popover@1.0.8-rc.8(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-o5PS+DIqWKn3MS6UKB0YWBwJzMS4pCRchFDVF2KDnJwwTAfhAGzFDzB68WSRIxbDe6qU6fga+pad2uVnOGjIbQ==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.23.9
+      '@radix-ui/primitive': 1.0.1
+      '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-context': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-dismissable-layer': 1.0.6-rc.5(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-focus-guards': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-focus-scope': 1.0.4(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-id': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-popper': 1.1.4-rc.8(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-portal': 1.0.4(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-presence': 1.0.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-slot': 1.0.2(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-use-controllable-state': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      aria-hidden: 1.2.3
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+      react-remove-scroll: 2.5.7(@types/react@18.0.21)(react@18.2.0)
     dev: false
 
   /@radix-ui/react-popper@1.1.1(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
@@ -18227,6 +18386,36 @@ packages:
 
   /@radix-ui/react-popper@1.1.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-cKpopj/5RHZWjrbF2846jBNacjQVwkP068DfmgrNJXpvVWrOvlAmE9xSiy5OqeE+Gi8D9fP+oDhUnPqNMY8/5w==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.23.9
+      '@floating-ui/react-dom': 2.0.0(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-arrow': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-context': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-use-callback-ref': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-use-layout-effect': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-use-rect': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-use-size': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/rect': 1.0.1
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+    dev: false
+
+  /@radix-ui/react-popper@1.1.4-rc.8(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-f0xes9iMJT9sGSXbADmD1h+Pc1X75poNBM8EC3EBEmBedk70z95vcXEC/mO9NfZLeFVwJzQyrojNK1fQhy9fbA==}
     peerDependencies:
       '@types/react': '*'
       '@types/react-dom': '*'
@@ -18391,7 +18580,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.4
+      '@babel/runtime': 7.23.9
       '@radix-ui/react-slot': 1.0.2(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -18442,6 +18631,35 @@ packages:
 
   /@radix-ui/react-roving-focus@1.0.4(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-2mUg5Mgcu001VkGy+FfzZyzbmuUWzgWkj3rvv4yu+mLw03+mTzbxZHvfcGyFp2b8EkQeMkpRQ5FiA2Vr2O6TeQ==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.23.9
+      '@radix-ui/primitive': 1.0.1
+      '@radix-ui/react-collection': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-context': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-direction': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-id': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-use-callback-ref': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-use-controllable-state': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+    dev: false
+
+  /@radix-ui/react-roving-focus@1.0.5-rc.10(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-qtB7GBAx19oHr52u19+v/OEcXCkjFpaEdGdrZu7dXHOrocCHxBxm/p+FFDQ1yf5Rs7mGaa/wcxrnTA+aHBQUeQ==}
     peerDependencies:
       '@types/react': '*'
       '@types/react-dom': '*'
@@ -18615,7 +18833,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.21.0
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
       react: 18.2.0
@@ -18813,7 +19031,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.22.15
       '@radix-ui/react-use-callback-ref': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
       react: 18.2.0
@@ -18841,6 +19059,21 @@ packages:
 
   /@radix-ui/react-use-escape-keydown@1.0.3(@types/react@18.0.21)(react@18.2.0):
     resolution: {integrity: sha512-vyL82j40hcFicA+M4Ex7hVkB9vHgSse1ZWomAqV2Je3RleKGO5iM8KMOEtfoSB0PnIelMd2lATjTGMYqN5ylTg==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8 || ^17.0 || ^18.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.23.9
+      '@radix-ui/react-use-callback-ref': 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@types/react': 18.0.21
+      react: 18.2.0
+    dev: false
+
+  /@radix-ui/react-use-escape-keydown@1.0.4-rc.5(@types/react@18.0.21)(react@18.2.0):
+    resolution: {integrity: sha512-VleGPcJKPvP9MsNettpFK/IhOhzdBIg9RgN7ug2qCJyPKwQNOS54Okr2J2gRcmm7uG53tI+PAouulyaMbkzxhg==}
     peerDependencies:
       '@types/react': '*'
       react: ^16.8 || ^17.0 || ^18.0
@@ -20735,7 +20968,7 @@ packages:
       '@swc-node/sourcemap-support': 0.3.0
       '@swc/core': 1.4.0
       colorette: 2.0.19
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       pirates: 4.0.5
       tslib: 2.6.0
       typescript: 5.2.2
@@ -22705,7 +22938,7 @@ packages:
       '@typescript-eslint/type-utils': 6.20.0(eslint@8.49.0)(typescript@5.2.2)
       '@typescript-eslint/utils': 6.20.0(eslint@8.49.0)(typescript@5.2.2)
       '@typescript-eslint/visitor-keys': 6.20.0
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       eslint: 8.49.0
       graphemer: 1.4.0
       ignore: 5.2.4
@@ -22743,7 +22976,7 @@ packages:
       '@typescript-eslint/types': 6.20.0
       '@typescript-eslint/typescript-estree': 6.20.0(typescript@5.2.2)
       '@typescript-eslint/visitor-keys': 6.20.0
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       eslint: 8.49.0
       typescript: 5.2.2
     transitivePeerDependencies:
@@ -22776,7 +23009,7 @@ packages:
     dependencies:
       '@typescript-eslint/typescript-estree': 6.20.0(typescript@5.2.2)
       '@typescript-eslint/utils': 6.20.0(eslint@8.49.0)(typescript@5.2.2)
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       eslint: 8.49.0
       ts-api-utils: 1.0.2(typescript@5.2.2)
       typescript: 5.2.2
@@ -22803,7 +23036,7 @@ packages:
     dependencies:
       '@typescript-eslint/types': 5.59.11
       '@typescript-eslint/visitor-keys': 5.59.11
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       globby: 11.1.0
       is-glob: 4.0.3
       semver: 7.5.4
@@ -22824,7 +23057,7 @@ packages:
     dependencies:
       '@typescript-eslint/types': 6.20.0
       '@typescript-eslint/visitor-keys': 6.20.0
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       globby: 11.1.0
       is-glob: 4.0.3
       minimatch: 9.0.3
@@ -22937,7 +23170,7 @@ packages:
       vue: 3.4.15(typescript@5.2.2)
     dev: true
 
-  /@vitest/browser@1.3.1(vitest@1.3.1)(webdriverio@8.33.0):
+  /@vitest/browser@1.3.1(vitest@1.3.1)(webdriverio@8.33.1):
     resolution: {integrity: sha512-pRof8G8nqRWwg3ouyIctyhfIVk5jXgF056uF//sqdi37+pVtDz9kBI/RMu0xlc8tgCyJ2aEMfbgJZPUydlEVaQ==}
     peerDependencies:
       playwright: '*'
@@ -22956,7 +23189,7 @@ packages:
       magic-string: 0.30.5
       sirv: 2.0.4
       vitest: 1.3.1(@types/node@18.11.9)(@vitest/browser@1.3.1)(@vitest/ui@1.3.1)(happy-dom@13.3.4)(jsdom@20.0.1)
-      webdriverio: 8.33.0(typescript@5.2.2)
+      webdriverio: 8.33.1(typescript@5.2.2)
     dev: true
 
   /@vitest/expect@1.3.1:
@@ -23408,7 +23641,7 @@ packages:
       '@types/fs-extra': 11.0.4
       '@types/hash-sum': 1.0.2
       '@vuepress/shared': 2.0.0-rc.0
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       fs-extra: 11.1.1
       globby: 14.0.0
       hash-sum: 2.0.0
@@ -23444,13 +23677,13 @@ packages:
       - vue
     dev: true
 
-  /@wdio/config@8.33.0:
-    resolution: {integrity: sha512-L2C8QK0cG645mviTGhjl1uSmnnIEs+kmUGDNNijLu1PqxK0YP5RGL3SSr3zTNRyp0CTib7P31ekriWYqURfCsw==}
+  /@wdio/config@8.33.1:
+    resolution: {integrity: sha512-JB7+tRkEsDJ4QAgJIZ3AaZvlp8pfBH6A5cKcGsaOuLVYMnsRPVkEGQc6n2akN9EPlDA2UjyrPOX6KZHbsSty7w==}
     engines: {node: ^16.13 || >=18}
     dependencies:
       '@wdio/logger': 8.28.0
       '@wdio/types': 8.32.4
-      '@wdio/utils': 8.33.0
+      '@wdio/utils': 8.33.1
       decamelize: 6.0.0
       deepmerge-ts: 5.1.0
       glob: 10.3.10
@@ -23487,8 +23720,8 @@ packages:
       '@types/node': 20.11.16
     dev: true
 
-  /@wdio/utils@8.33.0:
-    resolution: {integrity: sha512-XdNIZXTPF6Y89C/80GVexvz5p5a1NCaN/i2bw58PeDOlPYnvD5w3VIQZg0bi4n8lsPwJGseO0/y9qAGYkr8WwQ==}
+  /@wdio/utils@8.33.1:
+    resolution: {integrity: sha512-W0ArrZbs4M23POv8+FPsgHDFxg+wwklfZgLSsjVq2kpCmBCfIPxKSAOgTo/XrcH4We/OnshgBzxLcI+BHDgi4w==}
     engines: {node: ^16.13 || >=18}
     dependencies:
       '@puppeteer/browsers': 1.9.1
@@ -23786,10 +24019,6 @@ packages:
     resolution: {integrity: sha512-OPdCF6GsMIP+Az+aWfAAOEt2/+iVDKE7oy6lJ098aoe59oAmK76qV6Gw60SbZ8jHuG2wH058GF4pLFbYamYrVA==}
     engines: {node: '>=0.4.0'}
 
-  /acorn-walk@8.2.0:
-    resolution: {integrity: sha512-k+iyHEuPgSw6SbuDpGQM+06HQUa04DZ3o+F6CSzXMvvI5KMvnaEqXe+YVe555R9nn6GPt404fos4wcgpw12SDA==}
-    engines: {node: '>=0.4.0'}
-
   /acorn-walk@8.3.2:
     resolution: {integrity: sha512-cjkyv4OtNCIeqhHrfS81QWXoCBPExR/J62oyEqepVw8WaQeSqpW2uhuLPh1m9eWhDuOo/jUXVTlifvesOWp/4A==}
     engines: {node: '>=0.4.0'}
@@ -23857,7 +24086,7 @@ packages:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
     engines: {node: '>= 6.0.0'}
     dependencies:
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -23865,7 +24094,7 @@ packages:
     resolution: {integrity: sha512-o/zjMZRhJxny7OyEF+Op8X+efiELC7k7yOjMzgfzVqOzXqkBkWI79YoTdOtsuWd5BWhAGAuOY/Xa6xpiaWXiNg==}
     engines: {node: '>= 14'}
     dependencies:
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -23873,7 +24102,7 @@ packages:
     resolution: {integrity: sha512-Zn4cw2NEqd+9fiSVWMscnjyQ1a8Yfoc5oBajLeo5w+YBHgDUcEBY2hS4YpTz6iN5f/2zQiktcuM6tS8x1p9dpA==}
     engines: {node: '>= 8.0.0'}
     dependencies:
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       depd: 1.1.2
       humanize-ms: 1.2.1
     transitivePeerDependencies:
@@ -24079,16 +24308,17 @@ packages:
       readable-stream: 2.3.7
     dev: true
 
-  /archiver-utils@5.0.1:
-    resolution: {integrity: sha512-MMAoLdMvT/nckofX1tCLrf7uJce4jTNkiT6smA2u57AOImc1nce7mR3EDujxL5yv6/MnILuQH4sAsPtDS8kTvg==}
+  /archiver-utils@5.0.2:
+    resolution: {integrity: sha512-wuLJMmIBQYCsGZgYLTy5FIB2pF6Lfb6cXMSF8Qywwk3t20zWnAi7zLcQFdKQmIB8wyZpY5ER38x08GbwtR2cLA==}
     engines: {node: '>= 14'}
     dependencies:
       glob: 10.3.10
       graceful-fs: 4.2.10
+      is-stream: 2.0.1
       lazystream: 1.0.1
       lodash: 4.17.21
       normalize-path: 3.0.0
-      readable-stream: 3.6.0
+      readable-stream: 4.5.2
     dev: true
 
   /archiver@3.1.1:
@@ -24104,17 +24334,17 @@ packages:
       zip-stream: 2.1.3
     dev: true
 
-  /archiver@7.0.0:
-    resolution: {integrity: sha512-R9HM9egs8FfktSqUqyjlKmvF4U+CWNqm/2tlROV+lOFg79MLdT67ae1l3hU47pGy8twSXxHoiefMCh43w0BriQ==}
+  /archiver@7.0.1:
+    resolution: {integrity: sha512-ZcbTaIqJOfCc03QwD468Unz/5Ir8ATtvAHsK+FdXbDIbGfihqh9mrvdcYunQzqn4HrvWWaFyaxJhGZagaJJpPQ==}
     engines: {node: '>= 14'}
     dependencies:
-      archiver-utils: 5.0.1
+      archiver-utils: 5.0.2
       async: 3.2.4
       buffer-crc32: 1.0.0
       readable-stream: 4.5.2
       readdir-glob: 1.1.3
       tar-stream: 3.1.7
-      zip-stream: 6.0.0
+      zip-stream: 6.0.1
     dev: true
 
   /archy@1.0.0:
@@ -26343,12 +26573,13 @@ packages:
       readable-stream: 2.3.7
     dev: true
 
-  /compress-commons@6.0.1:
-    resolution: {integrity: sha512-l7occIJn8YwlCEbWUCrG6gPms9qnJTCZSaznCa5HaV+yJMH4kM8BDc7q9NyoQuoiB2O6jKgTcTeY462qw6MyHw==}
+  /compress-commons@6.0.2:
+    resolution: {integrity: sha512-6FqVXeETqWPoGcfzrXb37E50NP0LXT8kAMu5ooZayhWWdgEY4lBEEcbQNXtkuKQsGduxiIcI4gOTsxTmuq/bSg==}
     engines: {node: '>= 14'}
     dependencies:
       crc-32: 1.2.2
       crc32-stream: 6.0.0
+      is-stream: 2.0.1
       normalize-path: 3.0.0
       readable-stream: 4.5.2
     dev: true
@@ -27334,7 +27565,7 @@ packages:
     engines: {node: '>=12.0.0'}
     dependencies:
       '@datadog/datadog-api-client': 1.20.0
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -27727,7 +27958,7 @@ packages:
     hasBin: true
     dependencies:
       address: 1.2.1
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -27864,7 +28095,7 @@ packages:
   /dns-over-http-resolver@2.1.3:
     resolution: {integrity: sha512-zjRYFhq+CsxPAouQWzOsxNMvEN+SHisjzhX8EMxd2Y0EG3thvn6wXQgMJLnTDImkhe4jhLbOQpXtL10nALBOSA==}
     dependencies:
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       native-fetch: 4.0.2(undici@5.27.2)
       receptacle: 1.3.2
       undici: 5.27.2
@@ -27875,7 +28106,7 @@ packages:
   /dns-over-http-resolver@3.0.2:
     resolution: {integrity: sha512-5batkHOjCkuAfrFa+IPmt3jyeZqLtSMfAo1HQp3hfwtzgUwHooecTFplnYC093u5oRNL4CQHCXh3OfER7+vWrA==}
     dependencies:
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       receptacle: 1.3.2
     transitivePeerDependencies:
       - supports-color
@@ -28055,7 +28286,7 @@ packages:
   /earljs@0.1.12(typescript@5.2.2):
     resolution: {integrity: sha512-qTuYVJgbGdb1syLeQ/mD/SIm914TGI9kxzVrXQ3a03lzFQsKP202tqsdBFqU9d+J8k7fM41eglmLvzKGt0FJhw==}
     dependencies:
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       jest-snapshot: 26.6.2
       lodash: 4.17.21
       pretty-format: 26.6.2
@@ -28654,7 +28885,7 @@ packages:
     peerDependencies:
       esbuild: '>=0.12 <1'
     dependencies:
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       esbuild: 0.18.20
     transitivePeerDependencies:
       - supports-color
@@ -29162,7 +29393,7 @@ packages:
       ajv: 6.12.6
       chalk: 4.1.2
       cross-spawn: 7.0.3
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       doctrine: 3.0.0
       escape-string-regexp: 4.0.0
       eslint-scope: 7.2.2
@@ -29536,7 +29767,7 @@ packages:
     engines: {node: '>= 10.17.0'}
     hasBin: true
     dependencies:
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       get-stream: 5.2.0
       yauzl: 2.10.0
     optionalDependencies:
@@ -30489,7 +30720,7 @@ packages:
     dependencies:
       basic-ftp: 5.0.4
       data-uri-to-buffer: 6.0.1
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       fs-extra: 8.1.0
     transitivePeerDependencies:
       - supports-color
@@ -30866,6 +31097,23 @@ packages:
       lowercase-keys: 2.0.0
       p-cancelable: 2.1.1
       responselike: 2.0.1
+
+  /got@12.6.0:
+    resolution: {integrity: sha512-WTcaQ963xV97MN3x0/CbAriXFZcXCfgxVp91I+Ze6pawQOa7SgzwSx2zIJJsX+kTajMnVs0xcFD1TxZKFqhdnQ==}
+    engines: {node: '>=14.16'}
+    dependencies:
+      '@sindresorhus/is': 5.3.0
+      '@szmarczak/http-timer': 5.0.1
+      cacheable-lookup: 7.0.0
+      cacheable-request: 10.2.10
+      decompress-response: 6.0.0
+      form-data-encoder: 2.1.4
+      get-stream: 6.0.1
+      http2-wrapper: 2.2.0
+      lowercase-keys: 3.0.0
+      p-cancelable: 3.0.0
+      responselike: 3.0.0
+    dev: true
 
   /got@12.6.1:
     resolution: {integrity: sha512-mThBblvlAF1d4O5oqyvN+ZxLAYwIJK7bpMxgYqPD9okW0C3qm5FFn7k811QrcuEBwaogR3ngOFoCfs6mRv7teQ==}
@@ -31418,7 +31666,7 @@ packages:
     engines: {node: '>=8.0.0'}
     dependencies:
       content-type: 1.0.4
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       is-retry-allowed: 1.2.0
       is-stream: 2.0.1
       parse-json: 4.0.0
@@ -31454,7 +31702,7 @@ packages:
     dependencies:
       '@tootallnate/once': 1.1.2
       agent-base: 6.0.2
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -31464,7 +31712,7 @@ packages:
     dependencies:
       '@tootallnate/once': 2.0.0
       agent-base: 6.0.2
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -31473,7 +31721,7 @@ packages:
     engines: {node: '>= 14'}
     dependencies:
       agent-base: 7.1.0
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -31551,7 +31799,7 @@ packages:
     engines: {node: '>= 6'}
     dependencies:
       agent-base: 6.0.2
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -31560,7 +31808,7 @@ packages:
     engines: {node: '>= 14'}
     dependencies:
       agent-base: 7.1.0
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -31611,7 +31859,7 @@ packages:
     resolution: {integrity: sha512-b5TXhqXUZ+Z7M/5/PlCTgElfufDRa3EzACd7y7BA7owLkxQreaUQ58wUO7nzJppDP1bnC2Hz6Hg7nlRPc75bKw==}
     dependencies:
       abstract-extension: 3.1.1
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       hypercore-crypto: 2.3.2
       inspect-custom-symbol: 1.1.1
       nanoguard: 1.3.0
@@ -32011,7 +32259,7 @@ packages:
     dependencies:
       '@ioredis/commands': 1.2.0
       cluster-key-slot: 1.1.2
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       denque: 2.1.0
       lodash.defaults: 4.2.0
       lodash.isarguments: 3.1.0
@@ -32821,7 +33069,7 @@ packages:
     resolution: {integrity: sha512-n3s8EwkdFIJCG3BPKBYvskgXGoy88ARzvegkitk60NxRdwltLOTaH7CUiMRXvwYorl0Q712iEjcWB+fK/MrWVw==}
     engines: {node: '>=10'}
     dependencies:
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       istanbul-lib-coverage: 3.2.0
       source-map: 0.6.1
     transitivePeerDependencies:
@@ -36382,7 +36630,7 @@ packages:
     resolution: {integrity: sha512-6Mj0yHLdUZjHnOPgr5xfWIMqMWS12zDN6iws9SLuSz76W8jTtAv24MN4/CL7gJrl5vtxGInkkqDv/JIoRsQOvA==}
     dependencies:
       '@types/debug': 4.1.12
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       decode-named-character-reference: 1.0.2
       micromark-core-commonmark: 1.0.6
       micromark-factory-space: 1.0.0
@@ -36405,7 +36653,7 @@ packages:
     resolution: {integrity: sha512-o/sd0nMof8kYff+TqcDx3VSrgBTcZpSvYcAHIfHhv5VAuNmisCxjhx6YmxS8PFEpb9z5WKWKPdzf0jM23ro3RQ==}
     dependencies:
       '@types/debug': 4.1.12
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       decode-named-character-reference: 1.0.2
       devlop: 1.1.0
       micromark-core-commonmark: 2.0.0
@@ -36767,7 +37015,7 @@ packages:
     peerDependencies:
       mocha: '>=3.1.2'
     dependencies:
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       lodash: 4.17.21
       mocha: 10.2.0
     transitivePeerDependencies:
@@ -37049,7 +37297,7 @@ packages:
     resolution: {integrity: sha512-CwbljitiWJhF1gL83NbanhoKs1l23TDlRioNraPTZrzZIEooPemrHRj5m0FZCPkB1ecdYCSWWGcHysJgX/ngnQ==}
     engines: {node: '>= 10.13'}
     dependencies:
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       json-stringify-safe: 5.0.1
       lodash: 4.17.21
       propagate: 2.0.1
@@ -37133,15 +37381,6 @@ packages:
         optional: true
     dependencies:
       whatwg-url: 5.0.0
-
-  /node-fetch@3.3.1:
-    resolution: {integrity: sha512-cRVc/kyto/7E5shrWca1Wsea4y6tL9iYJE5FBCius3JQfb/4P4I295PfhgbJQBLTx6lATE4z+wK0rPM4VS2uow==}
-    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
-    dependencies:
-      data-uri-to-buffer: 4.0.0
-      fetch-blob: 3.2.0
-      formdata-polyfill: 4.0.10
-    dev: true
 
   /node-fetch@3.3.2:
     resolution: {integrity: sha512-dRB78srN/l6gqWulah9SrxeYnxeddIG30+GOqK/9OlLVyLg3HPnr6SqOWTWOXKRwC2eGYCkZ59NNuSgvSrpgOA==}
@@ -37726,7 +37965,7 @@ packages:
       '@oclif/plugin-warn-if-update-available': 2.0.32(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       aws-sdk: 2.1233.0
       concurrently: 7.6.0
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       find-yarn-workspace-root: 2.0.0
       fs-extra: 8.1.0
       github-slugger: 1.5.0
@@ -38054,7 +38293,7 @@ packages:
     resolution: {integrity: sha512-UJKdSzgd3KOnXXAtqN5+/eeHcvTn1hBkesEmElVgvO/NAYcxAvmjzIGmnNd3Tb/gRAvMBdNRFD4qAWdHxY6QXg==}
     engines: {node: '>=12.10.0'}
     dependencies:
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       p-queue: 6.6.2
     transitivePeerDependencies:
       - supports-color
@@ -38070,7 +38309,7 @@ packages:
     dependencies:
       '@tootallnate/quickjs-emscripten': 0.23.0
       agent-base: 7.1.0
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       get-uri: 6.0.2
       http-proxy-agent: 7.0.0
       https-proxy-agent: 7.0.2
@@ -38103,7 +38342,7 @@ packages:
     resolution: {integrity: sha512-hySwcV8RAWeAfPsXb9/HGSPn8lwDnv6fabH+obUZKX169QknRkRhPxd1yMubpKDskLFATkl3jHpNtVtDPFA0Wg==}
     engines: {node: '>=14.16'}
     dependencies:
-      got: 12.6.1
+      got: 12.6.0
       registry-auth-token: 5.0.2
       registry-url: 6.0.1
       semver: 7.5.4
@@ -39099,7 +39338,7 @@ packages:
     engines: {node: '>= 14'}
     dependencies:
       agent-base: 7.1.0
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       http-proxy-agent: 7.0.0
       https-proxy-agent: 7.0.2
       lru-cache: 7.18.3
@@ -39115,7 +39354,7 @@ packages:
     engines: {node: '>= 14'}
     dependencies:
       agent-base: 7.1.0
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       http-proxy-agent: 7.0.0
       https-proxy-agent: 7.0.2
       lru-cache: 7.18.3
@@ -39189,7 +39428,7 @@ packages:
       '@puppeteer/browsers': 1.4.6(typescript@5.2.2)
       chromium-bidi: 0.4.16(devtools-protocol@0.0.1147663)
       cross-fetch: 4.0.0
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       devtools-protocol: 0.0.1147663
       typescript: 5.2.2
       ws: 8.13.0
@@ -39437,7 +39676,7 @@ packages:
   /react-base16-styling@0.9.1:
     resolution: {integrity: sha512-1s0CY1zRBOQ5M3T61wetEpvQmsYSNtWEcdYzyZNxKa8t7oDvaOn9d21xrGezGAHFWLM7SHcktPuPTrvoqxSfKw==}
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.22.15
       '@types/base16': 1.0.2
       '@types/lodash': 4.14.191
       base16: 1.0.0
@@ -39841,6 +40080,25 @@ packages:
 
   /react-remove-scroll@2.5.5(@types/react@18.0.21)(react@18.2.0):
     resolution: {integrity: sha512-ImKhrzJJsyXJfBZ4bzu8Bwpka14c/fQt0k+cyFp/PBhTfyDnU5hjOtM4AG/0AMyy8oKzOTR0lDgJIM7pYXI0kw==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      '@types/react': ^16.8.0 || ^17.0.0 || ^18.0.0
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+    dependencies:
+      '@types/react': 18.0.21
+      react: 18.2.0
+      react-remove-scroll-bar: 2.3.4(@types/react@18.0.21)(react@18.2.0)
+      react-style-singleton: 2.2.1(@types/react@18.0.21)(react@18.2.0)
+      tslib: 2.6.2
+      use-callback-ref: 1.3.0(@types/react@18.0.21)(react@18.2.0)
+      use-sidecar: 1.1.2(@types/react@18.0.21)(react@18.2.0)
+    dev: false
+
+  /react-remove-scroll@2.5.7(@types/react@18.0.21)(react@18.2.0):
+    resolution: {integrity: sha512-FnrTWO4L7/Bhhf3CYBNArEG/yROV0tKmTv7/3h9QCFvH6sndeFf1wPqOcbFVu5VAulS5dV1wGT3GZZ/1GawqiA==}
     engines: {node: '>=10'}
     peerDependencies:
       '@types/react': ^16.8.0 || ^17.0.0 || ^18.0.0
@@ -41468,7 +41726,7 @@ packages:
     resolution: {integrity: sha512-D1SaWpOW8afq1CZGWB8xTfrT3FekjQmPValrqncJMX7QFl8YwhrPTZvMCANLtgBwwdS+7zURyqxDDEmY558tTw==}
     dependencies:
       buffer: 6.0.3
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       err-code: 3.0.1
       get-browser-rtc: 1.1.0
       queue-microtask: 1.2.3
@@ -41595,7 +41853,7 @@ packages:
     engines: {node: '>= 10'}
     dependencies:
       agent-base: 6.0.2
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       socks: 2.7.1
     transitivePeerDependencies:
       - supports-color
@@ -41606,7 +41864,7 @@ packages:
     engines: {node: '>= 10'}
     dependencies:
       agent-base: 6.0.2
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       socks: 2.7.1
     transitivePeerDependencies:
       - supports-color
@@ -41617,7 +41875,7 @@ packages:
     engines: {node: '>= 14'}
     dependencies:
       agent-base: 7.1.0
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       socks: 2.7.1
     transitivePeerDependencies:
       - supports-color
@@ -41928,7 +42186,7 @@ packages:
     resolution: {integrity: sha512-Xnt9/HHHYfjZ7NeQLvuQDyL1LnbsbddgMFKCuaQKwGCdJm8LnstZIXop+uOY36UR1UXXoHXfMbC1KlVdVd2JLA==}
     engines: {node: '>=8.0.0'}
     dependencies:
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       strip-ansi: 6.0.1
     transitivePeerDependencies:
       - supports-color
@@ -43121,8 +43379,8 @@ packages:
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.3
       '@types/node': 18.11.9
-      acorn: 8.11.2
-      acorn-walk: 8.2.0
+      acorn: 8.11.3
+      acorn-walk: 8.3.2
       arg: 4.1.3
       create-require: 1.1.1
       diff: 4.0.2
@@ -43153,8 +43411,8 @@ packages:
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.3
       '@types/node': 18.11.9
-      acorn: 8.11.2
-      acorn-walk: 8.2.0
+      acorn: 8.11.3
+      acorn-walk: 8.3.2
       arg: 4.1.3
       create-require: 1.1.1
       diff: 4.0.2
@@ -43813,7 +44071,7 @@ packages:
   /unplugin@1.0.1:
     resolution: {integrity: sha512-aqrHaVBWW1JVKBHmGo33T5TxeL0qWzfvjWokObHA9bYmN7eNDkwOxmLjhioHl9878qDFMAaT51XNroRyuz7WxA==}
     dependencies:
-      acorn: 8.11.2
+      acorn: 8.11.3
       chokidar: 3.5.3
       webpack-sources: 3.2.3
       webpack-virtual-modules: 0.5.0
@@ -44304,7 +44562,7 @@ packages:
     hasBin: true
     dependencies:
       cac: 6.7.14
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       pathe: 1.1.1
       picocolors: 1.0.0
       vite: 5.1.5(@types/node@18.11.9)
@@ -44341,7 +44599,7 @@ packages:
     dependencies:
       '@antfu/utils': 0.7.7
       '@rollup/pluginutils': 5.1.0(rollup@3.23.0)
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       error-stack-parser-es: 0.1.1
       fs-extra: 11.2.0
       open: 10.0.3
@@ -44361,7 +44619,7 @@ packages:
       vite: ^3.1.0 || ^4.0.0 || ^5.0.0
       workbox-window: ^7.0.0
     dependencies:
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       fast-glob: 3.3.2
       pretty-bytes: 6.1.1
       vite: 5.1.5(@types/node@18.11.9)
@@ -44432,7 +44690,7 @@ packages:
       vite:
         optional: true
     dependencies:
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       globrex: 0.1.2
       tsconfck: 3.0.2(typescript@5.2.2)
       vite: 5.1.5(@types/node@18.11.9)
@@ -44538,7 +44796,7 @@ packages:
         optional: true
     dependencies:
       '@types/node': 18.11.9
-      '@vitest/browser': 1.3.1(vitest@1.3.1)(webdriverio@8.33.0)
+      '@vitest/browser': 1.3.1(vitest@1.3.1)(webdriverio@8.33.1)
       '@vitest/expect': 1.3.1
       '@vitest/runner': 1.3.1
       '@vitest/snapshot': 1.3.1
@@ -44547,7 +44805,7 @@ packages:
       '@vitest/utils': 1.3.1
       acorn-walk: 8.3.2
       chai: 4.4.1
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       execa: 8.0.1
       happy-dom: 13.3.4
       jsdom: 20.0.1
@@ -45393,7 +45651,7 @@ packages:
     dependencies:
       chalk: 4.1.2
       commander: 9.3.0
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -45467,17 +45725,17 @@ packages:
     resolution: {integrity: sha512-PgF341avzqyx60neE9DD+XS26MMNMoUQRz9NOZwW32nPQrF6p77f1htcnjBSEV8BGMKZ16choqUG4hyI0Hx7mA==}
     dev: false
 
-  /webdriver@8.33.0:
-    resolution: {integrity: sha512-00iTlsKYM1zWhkabQKqI3U0NpiZ8H81SCmRDoReP4Z13aHAesWVMW3qJu2tZgEHlj5DVCxt2aV/eTE1nUUEZRQ==}
+  /webdriver@8.33.1:
+    resolution: {integrity: sha512-QREF4c08omN9BPh3QDmz5h+OEvjdzDliuEcrDuXoDnHSMxIj1rsonzsgRaM2PXhFZuPeMIiKZYqc7Qg9BGbh6A==}
     engines: {node: ^16.13 || >=18}
     dependencies:
       '@types/node': 20.11.16
       '@types/ws': 8.5.9
-      '@wdio/config': 8.33.0
+      '@wdio/config': 8.33.1
       '@wdio/logger': 8.28.0
       '@wdio/protocols': 8.32.0
       '@wdio/types': 8.32.4
-      '@wdio/utils': 8.33.0
+      '@wdio/utils': 8.33.1
       deepmerge-ts: 5.1.0
       got: 12.6.1
       ky: 0.33.3
@@ -45488,8 +45746,8 @@ packages:
       - utf-8-validate
     dev: true
 
-  /webdriverio@8.33.0(typescript@5.2.2):
-    resolution: {integrity: sha512-i7Ey+pvQOOlwLgLOI/5Kohoys1V3o8QZwM2/UtOW8q9MFcq4trUlgHrnEcRk79diWKmMjc/DO55PdZ9LitykcA==}
+  /webdriverio@8.33.1(typescript@5.2.2):
+    resolution: {integrity: sha512-1DsF8sx1a46AoVYCUpEwJYU74iBAW/U2H5r6p+60ct7dIiFmxmc4uCbOqtf7NLOTgrIzAOaRnT0EsrRICpg5Qw==}
     engines: {node: ^16.13 || >=18}
     peerDependencies:
       devtools: ^8.14.0
@@ -45498,13 +45756,13 @@ packages:
         optional: true
     dependencies:
       '@types/node': 20.11.16
-      '@wdio/config': 8.33.0
+      '@wdio/config': 8.33.1
       '@wdio/logger': 8.28.0
       '@wdio/protocols': 8.32.0
       '@wdio/repl': 8.24.12
       '@wdio/types': 8.32.4
-      '@wdio/utils': 8.33.0
-      archiver: 7.0.0
+      '@wdio/utils': 8.33.1
+      archiver: 7.0.1
       aria-query: 5.0.2
       css-shorthand-properties: 1.1.1
       css-value: 0.0.1
@@ -45520,7 +45778,7 @@ packages:
       resq: 1.11.0
       rgb2hex: 0.2.5
       serialize-error: 11.0.3
-      webdriver: 8.33.0
+      webdriver: 8.33.1
     transitivePeerDependencies:
       - bufferutil
       - encoding
@@ -46424,7 +46682,7 @@ packages:
       cli-table: 0.3.11
       commander: 7.1.0
       dateformat: 4.6.3
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       diff: 5.1.0
       error: 10.4.0
       escape-string-regexp: 4.0.0
@@ -46468,7 +46726,7 @@ packages:
     dependencies:
       chalk: 4.1.2
       dargs: 7.0.0
-      debug: 4.3.4(supports-color@5.5.0)
+      debug: 4.3.4(supports-color@8.1.1)
       execa: 5.1.1
       github-username: 6.0.0
       lodash: 4.17.21
@@ -46566,12 +46824,12 @@ packages:
       readable-stream: 3.6.0
     dev: true
 
-  /zip-stream@6.0.0:
-    resolution: {integrity: sha512-X0WFquRRDtL9HR9hc1OrabOP/VKJEX7gAr2geayt3b7dLgXgSXI6ucC4CphLQP/aQt2GyHIYgmXxtC+dVdghAQ==}
+  /zip-stream@6.0.1:
+    resolution: {integrity: sha512-zK7YHHz4ZXpW89AHXUPbQVGKI7uvkd3hzusTdotCg1UxyaVtg0zFJSTfW/Dq5f7OBBVnq6cZIaC8Ti4hb6dtCA==}
     engines: {node: '>= 14'}
     dependencies:
-      archiver-utils: 5.0.1
-      compress-commons: 6.0.1
+      archiver-utils: 5.0.2
+      compress-commons: 6.0.2
       readable-stream: 4.5.2
     dev: true
 

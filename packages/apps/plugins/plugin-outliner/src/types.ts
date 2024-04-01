@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import type { SchemaProvides } from '@braneframe/plugin-client';
 import type { StackProvides } from '@braneframe/plugin-stack';
-import { Tree as TreeType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -11,7 +11,6 @@ import type {
   SurfaceProvides,
   MetadataRecordsProvides,
 } from '@dxos/app-framework';
-import { isTypedObject, type TypedObject } from '@dxos/react-client/echo';
 
 import { OUTLINER_PLUGIN } from './meta';
 
@@ -27,8 +26,5 @@ export type OutlinerPluginProvides = SurfaceProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
-  StackProvides;
-
-export const isObject = (object: unknown): object is TypedObject => {
-  return isTypedObject(object) && TreeType.schema.typename === object.__typename;
-};
+  StackProvides &
+  SchemaProvides;

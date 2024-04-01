@@ -7,7 +7,7 @@ import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { Document as DocumentType } from '@braneframe/types';
+import { DocumentType } from '@braneframe/types';
 import {
   resolvePlugin,
   parseGraphPlugin,
@@ -19,8 +19,9 @@ import {
   type PluginDefinition,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
+import { isEchoReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { SpaceState, getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
+import { Filter, SpaceState, getSpaceForObject } from '@dxos/react-client/echo';
 
 import { GptAnalyzer } from './analyzer';
 import { GptSettings } from './components';
@@ -61,7 +62,7 @@ export const GptPlugin = (): PluginDefinition<GptPluginProvides> => {
                 return;
               }
 
-              const query = space.db.query(DocumentType.filter());
+              const query = space.db.query(Filter.schema(DocumentType));
               let previousObjects: DocumentType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -117,10 +118,10 @@ export const GptPlugin = (): PluginDefinition<GptPluginProvides> => {
               const graph = graphPlugin?.provides.graph;
               const activeNode = location?.active ? graph?.findNode(location.active) : undefined;
               const active = activeNode?.data;
-              const space = isTypedObject(active) && getSpaceForObject(active);
-              if (space && settings.values.apiKey) {
+              const space = isEchoReactiveObject(active) && getSpaceForObject(active);
+              if (space && active instanceof DocumentType && settings.values.apiKey) {
                 // TODO(burdon): Toast on success.
-                void new GptAnalyzer({ apiKey: settings.values.apiKey }).exec(space, active as DocumentType);
+                void new GptAnalyzer({ apiKey: settings.values.apiKey }).exec(space, active);
               }
             }
           }

@@ -5,14 +5,14 @@
 import React from 'react';
 
 import { useSearch } from '@braneframe/plugin-search';
-import { type View } from '@braneframe/types';
+import { type ViewType } from '@braneframe/types';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 import { Graph } from './Graph';
 
-const ExplorerMain = ({ view }: { view: View }) => {
+const ExplorerMain = ({ view }: { view: ViewType }) => {
   const space = getSpaceForObject(view);
   const { match } = useSearch();
   if (!space) {
