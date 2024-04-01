@@ -2,8 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
+import { type Level } from 'level';
+
 import { Event, synchronized } from '@dxos/async';
-import { Properties, clientServiceBundle, defaultKey, type ClientServices } from '@dxos/client-protocol';
+import { clientServiceBundle, defaultKey, type ClientServices, PropertiesSchema } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { DataServiceImpl, type ObjectStructure, encodeReference, type SpaceDoc } from '@dxos/echo-pipeline';
@@ -32,7 +34,7 @@ import { Lock, type ResourceLock } from '../locks';
 import { LoggingServiceImpl } from '../logging';
 import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
-import { createStorageObjects } from '../storage';
+import { createLevel, createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
 
 export type ClientServicesHostParams = {
@@ -76,6 +78,7 @@ export class ClientServicesHost {
   private _signalManager?: SignalManager;
   private _networkManager?: NetworkManager;
   private _storage?: Storage;
+  private _level?: Level<string, string>;
   private _callbacks?: ClientServicesHostCallbacks;
   private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
 
@@ -226,12 +229,18 @@ export class ClientServicesHost {
 
     this._opening = true;
     log('opening...', { lockKey: this._resourceLock?.lockKey });
+
+    if (!this._level) {
+      this._level = await createLevel(this._config.get('runtime.client.storage', {})!);
+      log.info('level db opened');
+    }
     await this._resourceLock?.acquire();
 
     await this._loggingService.open();
 
     this._serviceContext = new ServiceContext(
       this._storage,
+      this._level,
       this._networkManager,
       this._signalManager,
       this._runtimeParams,
@@ -323,6 +332,7 @@ export class ClientServicesHost {
     this._serviceRegistry.setServices({ SystemService: this._systemService });
     await this._loggingService.close();
     await this._serviceContext.close();
+    await this._level?.close();
     this._open = false;
     this._statusUpdate.emit();
     log('closed', { deviceKey });

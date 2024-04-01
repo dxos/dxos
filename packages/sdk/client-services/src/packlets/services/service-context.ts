@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { type Level } from 'level';
+
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credentials';
@@ -78,6 +80,7 @@ export class ServiceContext {
 
   constructor(
     public readonly storage: Storage,
+    public readonly level: Level<string, string>,
     public readonly networkManager: NetworkManager,
     public readonly signalManager: SignalManager,
     public readonly _runtimeParams?: IdentityManagerRuntimeParams & DataSpaceManagerRuntimeParams,
@@ -115,7 +118,7 @@ export class ServiceContext {
       this._runtimeParams as IdentityManagerRuntimeParams,
     );
 
-    this.indexMetadata = new IndexMetadataStore({ directory: storage.createDirectory('index-metadata') });
+    this.indexMetadata = new IndexMetadataStore({ db: level.sublevel('index-metadata') });
 
     this.automergeHost = new AutomergeHost({
       directory: storage.createDirectory('automerge'),
