@@ -4,7 +4,7 @@
 
 import React, { type FC } from 'react';
 
-import { type TypedObject } from '@dxos/client/echo';
+import { type FileType } from '@braneframe/types';
 import { useConfig } from '@dxos/react-client';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
@@ -12,7 +12,7 @@ import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxo
 import { FilePreview } from './FilePreview';
 import { getIpfsUrl } from '../get-ipfs-url';
 
-const FileMain: FC<{ file: TypedObject }> = ({ file }) => {
+const FileMain: FC<{ file: FileType }> = ({ file }) => {
   const config = useConfig();
   if (!file.cid) {
     return null;

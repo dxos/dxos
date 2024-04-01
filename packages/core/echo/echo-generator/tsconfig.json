@@ -20,6 +20,9 @@
     },
     {
       "path": "../../../sdk/client"
+    },
+    {
+      "path": "../echo-schema"
     }
   ]
 }

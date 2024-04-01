@@ -9,9 +9,19 @@ import { JsonOutputFunctionsParser } from 'langchain/output_parsers';
 import { formatDocumentsAsString } from 'langchain/util/document';
 import get from 'lodash.get';
 
-import { Chain as ChainType, type Message as MessageType, type Thread as ThreadType } from '@braneframe/types';
+import {
+  type BlockType,
+  type ChainInput,
+  ChainInputType,
+  type ChainPromptType,
+  ChainType,
+  type MessageType,
+  TextV0Type,
+  type ThreadType,
+} from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { getTextContent, type JsonSchema, Schema, TextObject, toJsonSchema } from '@dxos/echo-schema';
+import * as E from '@dxos/echo-schema';
+import { Filter, getTextContent, type JsonSchema, Schema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { createContext, type RequestContext } from './context';
@@ -33,12 +43,8 @@ export class RequestProcessor {
     private readonly _resolvers?: ResolverMap,
   ) {}
 
-  async processThread(
-    space: Space,
-    thread: ThreadType,
-    message: MessageType,
-  ): Promise<MessageType.Block[] | undefined> {
-    let blocks: MessageType.Block[] | undefined;
+  async processThread(space: Space, thread: ThreadType, message: MessageType): Promise<BlockType[] | undefined> {
+    let blocks: BlockType[] | undefined;
     const { start, stop } = createStatusNotifier(space, thread.id);
     try {
       const text = message.blocks
@@ -68,7 +74,12 @@ export class RequestProcessor {
       }
     } catch (err) {
       log.error('processing message', err);
-      blocks = [{ content: new TextObject('Error generating response.') }];
+      blocks = [
+        {
+          timestamp: new Date().toISOString(),
+          content: E.object(TextV0Type, { content: 'Error generating response.' }),
+        },
+      ];
     } finally {
       stop();
     }
@@ -89,7 +100,7 @@ export class RequestProcessor {
     });
 
     // Find suitable prompt.
-    const { objects: chains = [] } = space.db.query(ChainType.filter());
+    const { objects: chains = [] } = space.db.query(Filter.schema(ChainType));
     for (const chain of chains) {
       for (const prompt of chain.prompts) {
         if (prompt.command === options.prompt) {
@@ -106,7 +117,7 @@ export class RequestProcessor {
    */
   async createSequenceFromPrompt(
     space: Space,
-    prompt: ChainType.Prompt,
+    prompt: ChainPromptType,
     context: RequestContext,
   ): Promise<RunnableSequence> {
     const inputs: Record<string, any> = {};
@@ -125,15 +136,11 @@ export class RequestProcessor {
           description: 'Should always be used to properly format output.',
           parameters: Array.from(context.schema?.values() ?? []).reduce<{ [name: string]: JsonSchema }>(
             (map, schema) => {
-              const jsonSchema = toJsonSchema(schema);
-              if (jsonSchema.title) {
-                map[jsonSchema.title] = {
-                  type: 'array',
-                  items: jsonSchema,
-                  description: `An array of ${jsonSchema.title} entities.`,
-                };
-              }
-
+              map[schema.typename] = {
+                type: 'array',
+                items: schema.serializedSchema.jsonSchema,
+                description: `An array of ${schema.typename} entities.`,
+              };
               return map;
             },
             {},
@@ -159,28 +166,28 @@ export class RequestProcessor {
 
   private async getTemplateInput(
     space: Space,
-    { type, value }: ChainType.Input,
+    { type, value }: ChainInput,
     context: RequestContext,
   ): Promise<Runnable | null | (() => string | null | undefined)> {
     switch (type) {
       //
       // Predefined value.
       //
-      case ChainType.Input.Type.VALUE: {
+      case ChainInputType.VALUE: {
         return () => value;
       }
 
       //
       // User message.
       //
-      case ChainType.Input.Type.PASS_THROUGH: {
+      case ChainInputType.PASS_THROUGH: {
         return new RunnablePassthrough();
       }
 
       //
       // Embeddings vector store.
       //
-      case ChainType.Input.Type.RETRIEVER: {
+      case ChainInputType.RETRIEVER: {
         const retriever = this._resources.store.vectorStore.asRetriever({});
         return retriever.pipe(formatDocumentsAsString); // TODO(burdon): ???
       }
@@ -188,7 +195,7 @@ export class RequestProcessor {
       //
       // Retrieve external data.
       //
-      case ChainType.Input.Type.RESOLVER: {
+      case ChainInputType.RESOLVER: {
         const type = value;
         if (!type) {
           return null;
@@ -202,7 +209,7 @@ export class RequestProcessor {
       //
       // Schema
       //
-      case ChainType.Input.Type.SCHEMA: {
+      case ChainInputType.SCHEMA: {
         const type = value;
         if (!type) {
           return null;
@@ -223,7 +230,7 @@ export class RequestProcessor {
       //
       // Current app context/state.
       //
-      case ChainType.Input.Type.CONTEXT: {
+      case ChainInputType.CONTEXT: {
         return () => {
           if (value) {
             return value ? get(context, value) : undefined;

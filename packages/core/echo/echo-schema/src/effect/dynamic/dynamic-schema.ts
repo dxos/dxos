@@ -40,7 +40,7 @@ export const DynamicObjectSchemaBase = (): DynamicSchemaConstructor => {
   } as any;
 };
 
-export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Schema<any> {
+export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Schema<Identifiable> {
   private _schema: S.Schema<any> | undefined;
   private _isDirty = true;
   constructor(public readonly serializedSchema: StoredEchoSchema) {
@@ -92,7 +92,7 @@ export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Sc
     return [...ast.propertySignatures].filter((p) => p.name !== 'id').map(unwrapOptionality);
   }
 
-  public get schema(): S.Schema<any> {
+  public get schema(): S.Schema<Identifiable> {
     return this._getSchema();
   }
 

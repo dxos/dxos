@@ -2,12 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as S from '@effect/schema/Schema';
 import React, { type FC, useEffect, useMemo, useState, useCallback } from 'react';
 
 import { useFilteredObjects } from '@braneframe/plugin-search';
-import { Table as TableType } from '@braneframe/types';
+import { TableType, type TableTypeProp } from '@braneframe/types';
+import * as E from '@dxos/echo-schema';
+import { EchoObjectSchema, type EchoReactiveObject, Filter } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { Expando, type TypedObject, Schema, getSpaceForObject, useQuery } from '@dxos/react-client/echo';
+import { getSpaceForObject, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider } from '@dxos/react-ui';
 import { Table, type TableDef, type TableProps } from '@dxos/react-ui-table';
 
@@ -22,10 +25,9 @@ export type ObjectTableProps = Pick<TableProps<any>, 'stickyHeader' | 'role' | '
 export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
   const space = getSpaceForObject(table);
 
-  const objects = useQuery<TypedObject>(
+  const objects = useQuery<EchoReactiveObject<any>>(
     space,
-    // TODO(dmaretskyi): Reference comparison broken by deepsignal wrapping.
-    (object) => table.schema && (object.__schema as any)?.id === table.schema.id,
+    table.schema ? Filter.schema(table.schema) : () => false,
     // TODO(burdon): Toggle deleted.
     {},
     [table.schema],
@@ -33,27 +35,19 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
 
   const filteredObjects = useFilteredObjects(objects);
 
-  const [newObject, setNewObject] = useState(new Expando({}, { schema: table.schema }));
+  const [newObject, setNewObject] = useState({});
 
   const rows = useMemo(() => [...filteredObjects, newObject], [filteredObjects, newObject]);
 
-  const tables = useQuery<TableType>(space, TableType.filter());
+  const tables = useQuery<TableType>(space, Filter.schema(TableType));
 
   const updateSchemaProp = useCallback(
-    (update: Schema.Prop) => {
-      const idx = table.schema?.props.findIndex((prop) => prop.id === update.id);
-      if (idx !== -1) {
-        const current = table.schema?.props[idx];
-        table.schema?.props.splice(idx, 1, { ...current, ...update });
-      } else {
-        table.schema?.props.push(update);
-      }
-    },
+    (update: S.Struct.Fields) => table.schema?.updateColumns(update),
     [table.schema],
   );
 
   const updateTableProp = useCallback(
-    (update: TableType.Prop) => {
+    (update: TableTypeProp) => {
       const idx = table.props?.findIndex((prop) => prop.id === update.id);
       if (idx !== -1) {
         const current = table.props![idx];
@@ -73,9 +67,9 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
     const tableDefs: TableDef[] = tables
       .filter((table) => table.schema)
       .map((table) => ({
-        id: table.schema.id,
-        name: table.schema.typename ?? table.title,
-        columns: table.schema.props.map(schemaPropMapper(table)),
+        id: table.schema!.id,
+        name: table.schema?.typename ?? table.title,
+        columns: table.schema!.getProperties().map(schemaPropMapper(table)),
       }));
 
     const builder = new TableColumnBuilder(tableDefs, table.schema?.id, space!, {
@@ -83,24 +77,16 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
         const { type, refTable, refProp, digits, label } = column;
         updateTableProp({ id, refProp, label });
         updateSchemaProp({
-          id,
-          type: getSchema(type),
-          ref: type === 'ref' ? tables.find((table) => table.schema.id === refTable)?.schema : undefined,
-          digits,
+          [id]: getSchema(tables, type, { digits, refTable, refProp }),
         });
       },
-      onColumnDelete: (id) => {
-        const idx = table.schema?.props.findIndex((prop) => prop.id === id);
-        if (idx !== -1) {
-          table.schema?.props.splice(idx, 1);
-        }
-      },
+      onColumnDelete: (id) => table.schema?.removeColumns([id]),
       onRowUpdate: (object, prop, value) => {
         object[prop] = value;
         if (object === newObject) {
           // TODO(burdon): Silent exception if try to add plain object directly.
-          space!.db.add(newObject);
-          setNewObject(new Expando({}, { schema: table.schema }));
+          space!.db.add(E.object(table.schema!, { ...newObject }));
+          setNewObject({});
         }
       },
       onRowDelete: (object) => {
@@ -138,16 +124,9 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
     }
 
     if (!table.schema) {
-      table.schema = space.db.add(
-        new Schema({
-          // TODO(burdon): How should user update schema?
-          typename: `example.com/schema/${PublicKey.random().truncate()}`,
-          props: [
-            {
-              id: 'title',
-              type: Schema.PropType.STRING,
-            },
-          ],
+      table.schema = space.db.schemaRegistry.add(
+        EchoObjectSchema({ typename: `example.com/schema/${PublicKey.random().truncate()}`, version: '0.1.0' })({
+          title: S.string,
         }),
       );
     }
@@ -156,13 +135,13 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
   };
 
   if (showSettings) {
-    const { objects: schemas } = space.db.query(Schema.filter());
+    const schemas = space.db.schemaRegistry.getAll();
     return <TableSettings open={showSettings} table={table} schemas={schemas} onClose={handleClose} />;
   }
 
   return (
     <DensityProvider density='fine'>
-      <Table<TypedObject>
+      <Table<any>
         keyAccessor={(row) => row.id ?? '__new'}
         columns={columns}
         data={rows}

@@ -21,6 +21,7 @@ export * from './effect/reactive';
 export * from './effect/json-schema';
 export * from './effect/echo-object-class';
 export * from './effect/dynamic/dynamic-schema';
+export * from './effect/dynamic/stored-schema';
 export { isReactiveProxy } from './effect/proxy';
 
 linkDeferred();

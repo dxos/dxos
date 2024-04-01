@@ -8,10 +8,11 @@ import { type DecoratorFunction } from '@storybook/csf';
 import { type ReactRenderer } from '@storybook/react';
 import React, { type Ref, forwardRef, useState } from 'react';
 
+import { GridItemType } from '@braneframe/types';
 import { Surface, SurfaceProvider } from '@dxos/app-framework';
 import { type TestObjectGenerator, TestSchemaType, createTestObjectGenerator } from '@dxos/echo-generator';
+import * as E from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { TypedObject } from '@dxos/react-client/echo';
 import { Card } from '@dxos/react-ui-card';
 import {
   Mosaic,
@@ -52,8 +53,8 @@ const DemoGrid = ({
       (() => {
         const objects = generator.createObjects(types);
         // TODO(wittjosiah): Use generator to create positions.
-        return objects.map((object) => {
-          return new TypedObject<{ object: TypedObject; position: Position }>({
+        return objects.map((object: any) => {
+          return E.object(GridItemType, {
             object,
             position: {
               x: faker.number.int({ min: 0, max: (options.size?.x ?? 1) - 1 }),
@@ -87,8 +88,8 @@ const DemoGrid = ({
 
   const handleCreate = (position: Position) => {
     setItems((items) => {
-      const object = generator.createObject({ types: [TestSchemaType.document] });
-      const item = new TypedObject<{ object: TypedObject; position: Position }>({
+      const object: any = generator.createObject({ types: [TestSchemaType.document] });
+      const item = E.object(GridItemType, {
         object,
         position,
       });
