@@ -68,10 +68,10 @@ export const getNext = (root: TreeItemType, item: TreeItemType, descend = true):
   }
 };
 
-export const getItems = (item: TreeItemType): TreeItemType[] => {
+export const getItems = (item: TreeItemType): Array<TreeItemType | undefined> => {
   if (!item.items) {
     item.items = [];
   }
 
-  return item.items.filter(nonNullable);
+  return item.items;
 };
