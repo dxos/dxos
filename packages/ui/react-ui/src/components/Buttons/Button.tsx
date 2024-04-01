@@ -13,7 +13,7 @@ import { useDensityContext, useElevationContext, useThemeContext } from '../../h
 import { type ThemedClassName } from '../../util';
 
 interface ButtonProps extends ThemedClassName<ComponentPropsWithRef<typeof Primitive.button>> {
-  variant?: 'default' | 'primary' | 'outline' | 'ghost';
+  variant?: 'default' | 'primary' | 'outline' | 'ghost' | 'destructive';
   density?: Density;
   elevation?: Elevation;
   asChild?: boolean;
