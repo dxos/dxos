@@ -31,6 +31,11 @@ import { type Schema } from '../proto';
 
 export type InitRootProxyFn = (core: AutomergeObjectCore) => void;
 
+/**
+ * Maximum number of remote update notifications per second.
+ */
+const THROTTLED_UPDATE_FREQUENCY = 60;
+
 export class AutomergeDb {
   /**
    * @internal
@@ -401,7 +406,7 @@ export class AutomergeDb {
       this._emitUpdateEvent(ids);
     },
     {
-      maxFrequency: 10,
+      maxFrequency: THROTTLED_UPDATE_FREQUENCY,
     },
   );
 
