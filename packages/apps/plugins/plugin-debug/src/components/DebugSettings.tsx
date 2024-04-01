@@ -3,11 +3,11 @@
 //
 
 import { Gift, DownloadSimple, FirstAidKit } from '@phosphor-icons/react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { SettingsValue } from '@braneframe/plugin-settings';
 import { parseFileManagerPlugin, useResolvePlugin } from '@dxos/app-framework';
-import { type ConfigProto, defs, SaveConfig } from '@dxos/config';
+import { type ConfigProto, defs, SaveConfig, Storage } from '@dxos/config';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useTranslation, Button, Toast, Input, useFileDownload, Select } from '@dxos/react-ui';
@@ -33,8 +33,12 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
   const client = useClient();
   const download = useFileDownload();
   // TODO(mykola): Get updates from other places that change Config.
-  const [storageConfig, setStorageConfig] = React.useState<ConfigProto>(client.config.values);
+  const [storageConfig, setStorageConfig] = React.useState<ConfigProto>({});
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
+
+  useEffect(() => {
+    void Storage().then((config) => setStorageConfig(config));
+  }, []);
 
   const handleToast = (toast: Toast) => {
     setToast(toast);
@@ -67,6 +71,8 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
   const handleRepair = async () => {
     try {
       const info = await client.repair();
+      const config = await Storage();
+      setStorageConfig({ runtime: { client: { storage: { dataStore: config.runtime?.client?.storage?.dataStore } } } });
       handleToast({ title: t('settings repair success'), description: JSON.stringify(info, undefined, 2) });
     } catch (err: any) {
       handleToast({ title: t('settings repair failed'), description: err.message });
