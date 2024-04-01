@@ -4,7 +4,7 @@
 
 import { type Client, PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { isTypedObject, type TypedObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, isEchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
@@ -34,7 +34,7 @@ export type FunctionSubscriptionEvent = {
 
 export type FunctionSubscriptionEvent2 = {
   space?: Space;
-  objects?: TypedObject[];
+  objects?: EchoReactiveObject<any>[];
 };
 
 /**
@@ -56,9 +56,9 @@ export const subscriptionHandler = (
     const objects =
       space &&
       event.objects
-        ?.map<TypedObject | undefined>((id) => space!.db.getObjectById(id))
+        ?.map<EchoReactiveObject<any> | undefined>((id) => space!.db.getObjectById(id))
         .filter(nonNullable)
-        .filter(isTypedObject);
+        .filter(isEchoReactiveObject);
 
     if (!!event.space && !space) {
       log.warn('invalid space', { event });
