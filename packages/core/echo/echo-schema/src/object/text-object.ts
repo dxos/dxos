@@ -11,7 +11,7 @@ import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 import { AbstractEchoObject } from './object';
 import { isAutomergeObject, type AutomergeOptions, type TypedObject } from './typed-object';
-import { base } from './types';
+import { base, type OpaqueEchoObject } from './types';
 import { AutomergeObject, getRawDoc } from '../automerge';
 import { isReactiveProxy } from '../effect/proxy';
 import { type EchoReactiveObject } from '../effect/reactive';
@@ -145,7 +145,7 @@ export const toCursor = (object: TextObject, pos: number) => {
   return A.getCursor(doc, accessor.path.slice(), pos);
 };
 
-export const fromCursor = (object: TextObject, cursor: string) => {
+export const fromCursor = (object: OpaqueEchoObject, cursor: string) => {
   if (cursor === '') {
     return 0;
   }
@@ -172,10 +172,17 @@ export const fromCursor = (object: TextObject, cursor: string) => {
 /**
  * TODO(dima?): This API will change.
  */
-export const getTextInRange = (object: TextObject, begin: string, end: string) => {
+export const getTextInRange = (
+  object: (OpaqueEchoObject & { content: string }) | undefined,
+  begin: string,
+  end: string,
+) => {
+  if (object == null) {
+    return '';
+  }
   const beginIdx = fromCursor(object, begin);
   const endIdx = fromCursor(object, end);
-  return (object.content as any as string).slice(beginIdx, endIdx);
+  return (object.content as string).slice(beginIdx, endIdx);
 };
 
 /**

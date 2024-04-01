@@ -29,10 +29,10 @@ export class ChainInput extends EchoObjectSchema({ typename: 'braneframe.Chain.I
 export class ChainPromptType extends EchoObjectSchema({ typename: 'braneframe.Chain.Prompt', version: '0.1.0' })({
   command: S.string,
   source: E.ref(TextV0Type),
-  inputs: S.mutable(S.array(E.ref(ChainInput))),
+  inputs: S.mutable(E.refArray(ChainInput)),
 }) {}
 
 export class ChainType extends EchoObjectSchema({ typename: 'braneframe.Chain', version: '0.1.0' })({
   title: S.optional(S.string),
-  prompts: S.mutable(S.array(E.ref(ChainPromptType))),
+  prompts: S.mutable(E.refArray(ChainPromptType)),
 }) {}
