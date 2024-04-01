@@ -4,10 +4,11 @@
 
 import type { Config as ImapConfig } from 'imap';
 
-import { Message as MessageType, Mailbox as MailboxType } from '@braneframe/types/proto';
+import { MessageType, MailboxType } from '@braneframe/types';
 import { getSpaceForObject } from '@dxos/client/echo';
 import { type Space } from '@dxos/client/echo';
-import { hasType, matchKeys } from '@dxos/echo-schema';
+import { Filter, hasType, matchKeys } from '@dxos/echo-schema';
+import * as E from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -37,9 +38,9 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
 
   let code = 200;
   try {
-    const mailboxes: MailboxType[] = objects?.filter(hasType<MailboxType>(MailboxType.schema)) ?? [];
+    const mailboxes: MailboxType[] = objects?.filter(hasType(MailboxType)) ?? [];
     if (!space) {
-      const { objects } = client.experimental.graph.query(MailboxType.filter());
+      const { objects } = client.experimental.graph.query(Filter.schema(MailboxType));
       mailboxes.push(...objects);
     }
 
@@ -67,13 +68,13 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
 
 // TODO(burdon): Util.
 const processMailbox = async (space: Space, mailbox: MailboxType, messages: MessageType[]) => {
-  const { objects: current = [] } = space.db.query(MessageType.filter()) ?? {};
+  const { objects: current = [] } = space.db.query(Filter.schema(MessageType)) ?? {};
 
   // Merge messages.
   // console.log(messages.map((message) => message[debug]));
   let added = 0;
   for (const message of messages) {
-    const exists = current.find((m) => matchKeys(m.__meta.keys, message.__meta.keys));
+    const exists = current.find((m) => matchKeys(E.metaOf(m).keys, E.metaOf(message).keys));
     if (!exists) {
       mailbox.messages.push(message);
       added++;

@@ -8,9 +8,10 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { ChainType } from '@braneframe/types';
+import { ChainInput, ChainPromptType, ChainType } from '@braneframe/types';
 import { resolvePlugin, parseIntentPlugin, type PluginDefinition } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
+import * as E from '@dxos/echo-schema';
 import { Filter } from '@dxos/react-client/echo';
 
 import { ChainMain } from './components';
@@ -32,7 +33,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
       },
       translations,
       echo: {
-        schema: [ChainType],
+        schema: [ChainType, ChainInput, ChainPromptType],
       },
       graph: {
         builder: (plugins, graph) => {
@@ -125,7 +126,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
           switch (intent.action) {
             case ChainAction.CREATE: {
               return {
-                data: new ChainType(),
+                data: E.object(ChainType, { prompts: [] }),
               };
             }
           }

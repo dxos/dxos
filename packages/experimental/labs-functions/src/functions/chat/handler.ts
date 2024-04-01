@@ -4,8 +4,10 @@
 
 import { join } from 'node:path';
 
-import { Thread as ThreadType, Message as MessageType } from '@braneframe/types/proto';
+import { ThreadType, MessageType } from '@braneframe/types';
 import { sleep } from '@dxos/async';
+import * as E from '@dxos/echo-schema';
+import { Filter } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 
 import { RequestProcessor } from './processor';
@@ -25,9 +27,9 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
 
   // Get active threads.
   // TODO(burdon): Handle batches with multiple block mutations per thread?
-  const { objects: threads } = space.db.query(ThreadType.filter());
+  const { objects: threads } = space.db.query(Filter.schema(ThreadType));
   const activeThreads = objects.reduce((activeThreads, message) => {
-    const thread = threads.find((thread) => thread.messages.some((m) => m.id === message.id));
+    const thread = threads.find((thread) => thread.messages.some((m) => m?.id === message.id));
     if (thread) {
       activeThreads.add(thread);
     }
@@ -50,24 +52,15 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
     await Promise.all(
       Array.from(activeThreads).map(async (thread) => {
         const message = thread.messages[thread.messages.length - 1];
-        if (message.__meta.keys.length === 0) {
+        if (message && E.metaOf(message).keys.length === 0) {
           const blocks = await processor.processThread(space, thread, message);
           if (blocks?.length) {
-            thread.messages.push(
-              new MessageType(
-                {
-                  from: {
-                    identityKey: resources.identityKey,
-                  },
-                  blocks,
-                },
-                {
-                  meta: {
-                    keys: [{ source: 'openai.com' }], // TODO(burdon): Get from chain resources.
-                  },
-                },
-              ),
-            );
+            const newMessage = E.object(MessageType, {
+              from: { identityKey: resources.identityKey },
+              blocks,
+            });
+            E.metaOf(newMessage).keys.push({ source: 'openai.com' }); // TODO(burdon): Get from chain resources.
+            thread.messages.push(newMessage);
           }
         }
       }),

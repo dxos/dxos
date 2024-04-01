@@ -29,6 +29,9 @@
       "path": "../../../common/invariant"
     },
     {
+      "path": "../../../core/echo/echo-schema"
+    },
+    {
       "path": "../../../experimental/chess-app"
     },
     {

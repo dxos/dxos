@@ -9,8 +9,8 @@ import { simpleParser, type EmailAddress } from 'mailparser';
 import { promisify } from 'node:util';
 import textract from 'textract';
 
-import { Message as MessageType } from '@braneframe/types/proto';
-import { TextObject } from '@dxos/echo-schema';
+import { MessageType, type RecipientType, TextV0Type } from '@braneframe/types';
+import * as E from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -91,19 +91,16 @@ export class ImapProcessor {
       return;
     }
 
-    const message = new MessageType(
-      {
-        type: 'email',
-        date: date.toISOString(),
-        from: toRecipient(from.value[0]),
-        to: toArray(to)?.map((to) => toRecipient(to.value[0])),
-        cc: toArray(cc)?.map((cc) => toRecipient(cc.value[0])),
-        subject,
-      },
-      {
-        meta: { keys: [{ source: this._id, id: messageId }] },
-      },
-    );
+    const message = E.object(MessageType, {
+      type: 'email',
+      date: date.toISOString(),
+      from: toRecipient(from.value[0]),
+      to: toArray(to)?.map((to) => toRecipient(to.value[0])),
+      cc: toArray(cc)?.map((cc) => toRecipient(cc.value[0])),
+      subject,
+      blocks: [],
+    });
+    E.metaOf(message).keys.push({ source: this._id, id: messageId });
 
     // Skip bulk mail.
     const ignoreMatchingEmail = [/noreply/, /no-reply/, /notifications/, /billing/, /support/];
@@ -118,14 +115,19 @@ export class ImapProcessor {
       body = (await promisify(textract.fromBufferWithMime)('text/html', Buffer.from(textAsHtml))) as string;
     }
 
-    message.blocks = [{ content: new TextObject(body) }];
+    message.blocks = [
+      {
+        timestamp: new Date().toISOString(),
+        content: E.object(TextV0Type, { content: body }),
+      },
+    ];
     return message;
   }
 }
 
 // TODO(burdon): Move to utils.
 
-const toRecipient = ({ address: email, name }: EmailAddress): MessageType.Recipient => ({
+const toRecipient = ({ address: email, name }: EmailAddress): RecipientType => ({
   email,
   name: name?.length ? name : undefined,
 });

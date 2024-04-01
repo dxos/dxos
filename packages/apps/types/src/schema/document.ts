@@ -11,19 +11,17 @@ export class TextV0Type extends EchoObjectSchema({ typename: 'dxos.Text.v0', ver
   content: S.string,
 }) {}
 
+const CommentSchema = S.mutable(
+  S.struct({
+    thread: S.optional(E.ref(E.AnyEchoObject)),
+    cursor: S.optional(S.string),
+  }),
+);
+
+export interface DocumentCommentType extends S.Schema.Type<typeof CommentSchema> {}
+
 export class DocumentType extends EchoObjectSchema({ typename: 'braneframe.Document', version: '0.1.0' })({
   title: S.optional(S.string),
   content: E.ref(TextV0Type),
-  comments: S.optional(
-    S.mutable(
-      S.array(
-        S.mutable(
-          S.struct({
-            thread: S.optional(E.ref(E.AnyEchoObject)),
-            cursor: S.optional(S.string),
-          }),
-        ),
-      ),
-    ),
-  ),
+  comments: S.optional(S.mutable(S.array(CommentSchema))),
 }) {}
