@@ -9,7 +9,7 @@ import { JsonOutputFunctionsParser } from 'langchain/output_parsers';
 import { formatDocumentsAsString } from 'langchain/util/document';
 import get from 'lodash.get';
 
-import { Chain as ChainType, type Message as MessageType, type Thread as ThreadType } from '@braneframe/types';
+import { Chain as ChainType, type Message as MessageType, type Thread as ThreadType } from '@braneframe/types/proto';
 import { type Space } from '@dxos/client/echo';
 import { getTextContent, type JsonSchema, Schema, TextObject, toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';

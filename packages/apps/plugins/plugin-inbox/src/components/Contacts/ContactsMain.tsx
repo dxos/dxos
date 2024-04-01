@@ -4,8 +4,8 @@
 
 import React, { useState } from 'react';
 
-import { type AddressBook as AddressBookType, Contact as ContactType } from '@braneframe/types';
-import { getSpaceForObject, useQuery } from '@dxos/react-client/echo';
+import { type AddressBookType, ContactType } from '@braneframe/types';
+import { Filter, getSpaceForObject, useQuery } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
@@ -27,7 +27,7 @@ const byName =
   ({ name: _a }: ContactType, { name: _b }: ContactType) => {
     const a = _a?.toLowerCase().replace(/\W/g, '');
     const b = _b?.toLowerCase().replace(/\W/g, '');
-    return a === undefined || a < b ? -direction : b === undefined || a > b ? direction : 0;
+    return a === undefined || b === undefined || a < b ? -direction : b === undefined || a > b ? direction : 0;
   };
 
 export type ContactsMainProps = {
@@ -37,7 +37,7 @@ export type ContactsMainProps = {
 const ContactsMain = ({ contacts }: ContactsMainProps) => {
   const [selected, setSelected] = useState<ContactType>();
   const space = getSpaceForObject(contacts);
-  const objects = useQuery(space, ContactType.filter());
+  const objects = useQuery(space, Filter.schema(ContactType));
   objects.sort(byName());
 
   return (

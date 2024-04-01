@@ -184,6 +184,7 @@ export const MessageTextbox = ({
       }),
       _extensions,
     ].filter(isNotFalsy);
+    // TODO(wittjosiah): Should probably include callbacks in the dependency array.
   }, [_extensions]);
 
   return (

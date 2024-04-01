@@ -4,9 +4,11 @@
 
 import md5 from 'md5';
 
-import { Folder } from '@braneframe/types';
+import { getSpaceProperty } from '@braneframe/plugin-client/space-properties';
+import { FolderType } from '@braneframe/types';
+import * as E from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { type Space, base } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 
 import { serializers } from './serializers';
 
@@ -50,7 +52,7 @@ export class FileSerializer {
       data: [],
     };
 
-    const spaceRoot = space.properties[Folder.schema.typename];
+    const spaceRoot = getSpaceProperty<FolderType>(space, FolderType.typename);
     if (!spaceRoot) {
       throw new Error('No root folder.');
     }
@@ -64,7 +66,7 @@ export class FileSerializer {
   async deserializeSpace(space: Space, serializedSpace: SerializedSpace): Promise<Space> {
     await space.waitUntilReady();
 
-    const spaceRoot = space.properties[Folder.schema.typename];
+    const spaceRoot = getSpaceProperty<FolderType>(space, FolderType.typename);
     if (!spaceRoot) {
       throw new Error('No root folder.');
     }
@@ -74,21 +76,27 @@ export class FileSerializer {
     return space;
   }
 
-  private async _serializeFolder(folder: Folder): Promise<SerializedObject & { type: 'folder' }> {
+  private async _serializeFolder(folder: FolderType): Promise<SerializedObject & { type: 'folder' }> {
     const files: SerializedObject[] = [];
 
     for (const child of folder.objects) {
-      if (child instanceof Folder) {
+      if (!child) {
+        continue;
+      }
+
+      if (child instanceof FolderType) {
         files.push(await this._serializeFolder(child));
         continue;
       }
 
-      if (!child.__typename) {
+      const schema = E.getSchema(child);
+
+      if (!schema) {
         continue;
       }
 
-      const serializer = serializers[child.__typename] ?? serializers.default;
-      const typename = child.__typename ?? TypeOfExpando;
+      const typename = E.getEchoObjectAnnotation(schema)?.typename ?? TypeOfExpando;
+      const serializer = serializers[typename] ?? serializers.default;
 
       const filename = serializer.filename(child);
       const content = await serializer.serialize(child);
@@ -112,28 +120,31 @@ export class FileSerializer {
     };
   }
 
-  private async _deserializeFolder(folder: Folder, data: SerializedObject[]): Promise<void> {
+  private async _deserializeFolder(folder: FolderType, data: SerializedObject[]): Promise<void> {
     for (const object of data) {
       try {
-        let child = folder.objects.find((item) => item.id === object.id);
+        let child = folder.objects.find((item) => item?.id === object.id);
         switch (object.type) {
           case 'folder': {
             if (!child) {
-              child = new Folder({ name: object.name });
-              child[base]._id = object.id;
+              child = E.object(FolderType, { name: object.name, objects: [] });
+
+              // TODO(dmaretskyi): This won't work.
+              // child[base]._id = object.id;
               folder.objects.push(child);
             }
 
-            await this._deserializeFolder(child as Folder, object.children);
+            await this._deserializeFolder(child as FolderType, object.children);
             break;
           }
           case 'file': {
-            const child = folder.objects.find((item) => item.id === object.id);
+            const child = folder.objects.find((item) => item?.id === object.id);
             const serializer = serializers[object.typename] ?? serializers.default;
             const deserialized = await serializer.deserialize(object.content!, child);
 
             if (!child) {
-              deserialized[base]._id = object.id;
+              // TODO(dmaretskyi): This won't work.
+              // deserialized[base]._id = object.id;
               folder.objects.push(deserialized);
             }
             break;

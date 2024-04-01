@@ -5,14 +5,16 @@
 import { Chat } from '@phosphor-icons/react';
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { Message as MessageType } from '@braneframe/types';
-import { TextObject, getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
+import { MessageType, TextV0Type } from '@braneframe/types';
+import * as E from '@dxos/echo-schema';
+import { getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ScrollArea, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
 import { automerge, createBasicExtensions, createThemeExtensions, useDocAccessor } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadLayout } from '@dxos/react-ui-thread';
+import { nonNullable } from '@dxos/util';
 
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
@@ -47,7 +49,7 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
   const { themeMode } = useThemeContext();
 
   const textboxMetadata = getMessageMetadata(thread.id, identity);
-  const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
+  const [nextMessage, setNextMessage] = useState({ text: E.object(TextV0Type, { content: '' }) });
   const { doc, accessor } = useDocAccessor(nextMessage.text);
   const extensions = useMemo(
     () => [
@@ -77,21 +79,21 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
       return false;
     }
 
-    const block = {
-      timestamp: new Date().toISOString(),
-      content,
-    };
-
     thread.messages.push(
-      new MessageType({
+      E.object(MessageType, {
         from: { identityKey: identity.identityKey.toHex() },
         context,
-        blocks: [block],
+        blocks: [
+          {
+            timestamp: new Date().toISOString(),
+            content,
+          },
+        ],
       }),
     );
 
     setNextMessage(() => {
-      return { text: new TextObject() };
+      return { text: E.object(TextV0Type, { content: '' }) };
     });
 
     setAutoFocus(true);
@@ -101,11 +103,11 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
   };
 
   const handleDelete = (id: string, index: number) => {
-    const messageIndex = thread.messages.findIndex((message) => message.id === id);
+    const messageIndex = thread.messages.filter(nonNullable).findIndex((message) => message.id === id);
     if (messageIndex !== -1) {
       const message = thread.messages[messageIndex];
-      message.blocks.splice(index, 1);
-      if (message.blocks.length === 0) {
+      message?.blocks.splice(index, 1);
+      if (message?.blocks.length === 0) {
         thread.messages.splice(messageIndex, 1);
       }
     }
@@ -120,7 +122,7 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
       <ScrollArea.Root classNames='col-span-2'>
         <ScrollArea.Viewport classNames='overflow-anchored after:overflow-anchor after:block after:bs-px after:-mbs-px [&>div]:min-bs-full [&>div]:!grid [&>div]:grid-rows-[1fr_0]'>
           <div role='none' className={mx(threadLayout, 'place-self-end')}>
-            {thread.messages.map((message) => (
+            {thread.messages.filter(nonNullable).map((message) => (
               <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
             ))}
           </div>

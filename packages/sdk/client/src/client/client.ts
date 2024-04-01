@@ -228,18 +228,19 @@ export class Client {
     };
   }
 
-  // TODO(dmaretskyi): Expose `graph` directly?
-  // TODO(burdon): Make idempotent.
+  /**
+   * @deprecated Replaced by addSchema.
+   */
   addTypes(types: TypeCollection) {
     this._graph.addTypes(types);
     return this;
   }
 
-  /**
-   * @deprecated Replaced by addTypes.
-   */
-  addSchema(types: TypeCollection) {
-    return this.addTypes(types);
+  // TODO(dmaretskyi): Expose `graph` directly?
+  // TODO(burdon): Make idempotent.
+  addSchema(...schemaList: Parameters<TypeCollection['registerEffectSchema']>) {
+    this._graph.types.registerEffectSchema(...schemaList);
+    return this;
   }
 
   /**

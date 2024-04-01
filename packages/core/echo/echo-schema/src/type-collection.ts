@@ -55,7 +55,7 @@ export class TypeCollection {
     });
   }
 
-  registerEffectSchema<T>(...schemaList: S.Schema<T>[]) {
+  registerEffectSchema(...schemaList: S.Schema<any>[]) {
     schemaList.forEach((schema) => {
       const typename = getTypenameOrThrow(schema);
       if (this._effectSchemaDefs.has(typename)) {

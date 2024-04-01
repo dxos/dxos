@@ -82,15 +82,12 @@ export class SchemaValidator {
       const tupleAst = AST.isUnion(schema.ast) ? schema.ast.types.find((ast) => AST.isTupleType(ast)) : null;
       if (AST.isTupleType(tupleAst ?? schema.ast)) {
         schema = getArrayElementSchema(schema, propertyName);
-      } else if (AST.isAnyKeyword(schema.ast)) {
-        return S.any;
       } else {
-        const allProperties = getProperties(schema.ast, (propertyName) =>
+        const propertyType = getPropertyType(schema.ast, propertyName.toString(), (propertyName) =>
           getPropertyFn([...propertyPath.slice(0, i), propertyName]),
         );
-        const property = allProperties.find((p) => p.name === propertyName);
-        invariant(property, `unknown property: ${String(propertyName)}, path: ${propertyPath}`);
-        schema = S.make(property.type);
+        invariant(propertyType, `unknown property: ${String(propertyName)}, path: ${propertyPath}`);
+        schema = S.make(propertyType);
       }
     }
     return schema;
@@ -129,7 +126,9 @@ const getProperties = (
 ): AST.PropertySignature[] => {
   const astCandidates = flattenUnion(typeAst);
   const typeAstList = astCandidates.filter((type) => AST.isTypeLiteral(type)) as AST.TypeLiteral[];
-  invariant(typeAstList.length > 0, `target can't have properties since it's not a type: ${typeAst._tag}`);
+  if (typeAstList.length === 0) {
+    return [];
+  }
   if (typeAstList.length === 1) {
     return AST.getPropertySignatures(typeAstList[0]);
   }
@@ -138,6 +137,24 @@ const getProperties = (
   const typeIndex = typeDiscriminators.findIndex((p) => targetPropertyValue === (p.type as AST.Literal).literal);
   invariant(typeIndex !== -1, 'discriminator field not set on target');
   return AST.getPropertySignatures(typeAstList[typeIndex]);
+};
+
+const getPropertyType = (
+  typeAst: AST.AST,
+  propertyName: string,
+  getTargetPropertyFn: (propertyName: string) => any,
+): AST.AST | null => {
+  if (AST.isAnyKeyword(typeAst)) {
+    return typeAst;
+  }
+  const targetProperty = getProperties(typeAst, getTargetPropertyFn).find((p) => p.name === propertyName);
+  if (targetProperty != null) {
+    return targetProperty.type;
+  }
+  if (AST.isTypeLiteral(typeAst) && typeAst.indexSignatures.length > 0) {
+    return typeAst.indexSignatures[0].type;
+  }
+  return null;
 };
 
 const getTypeDiscriminators = (typeAstList: AST.TypeLiteral[]): AST.PropertySignature[] => {
@@ -155,19 +172,12 @@ const getTypeDiscriminators = (typeAstList: AST.TypeLiteral[]): AST.PropertySign
 const getTargetPropertySchema = (target: any, prop: string | symbol): S.Schema<any> => {
   const schema = (target as any)[symbolSchema];
   invariant(schema, 'target has no schema');
-  if (AST.isAnyKeyword(schema.ast)) {
-    return S.any;
-  }
   if (target instanceof ReactiveArray) {
     return getArrayElementSchema(schema, prop);
   }
-  const properties = getProperties(schema.ast as AST.AST, (prop) => target[prop]).find(
-    (property) => property.name === prop,
-  );
-  if (!properties) {
-    throw new Error(`Invalid property: ${prop.toString()}`);
-  }
-  return S.make(properties.type);
+  const propertyType = getPropertyType(schema.ast as AST.AST, prop.toString(), (prop) => target[prop]);
+  invariant(propertyType, `invalid property: ${prop.toString()}`);
+  return S.make(propertyType);
 };
 
 /**
