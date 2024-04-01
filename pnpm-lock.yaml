@@ -1087,6 +1087,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/automerge':
+        specifier: workspace:*
+        version: link:../../../core/echo/automerge
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../../sdk/client-services
@@ -3282,6 +3285,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
@@ -3294,9 +3300,15 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
     devDependencies:
       '@braneframe/plugin-client':
         specifier: workspace:*
@@ -4985,12 +4997,21 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../echo-schema
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
 
   packages/core/echo/echo-pipeline:
     dependencies:

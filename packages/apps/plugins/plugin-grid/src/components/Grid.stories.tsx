@@ -53,7 +53,7 @@ const DemoGrid = ({
       (() => {
         const objects = generator.createObjects(types);
         // TODO(wittjosiah): Use generator to create positions.
-        return objects.map((object) => {
+        return objects.map((object: any) => {
           return E.object(GridItemType, {
             object,
             position: {
@@ -88,7 +88,7 @@ const DemoGrid = ({
 
   const handleCreate = (position: Position) => {
     setItems((items) => {
-      const object = generator.createObject({ types: [TestSchemaType.document] });
+      const object: any = generator.createObject({ types: [TestSchemaType.document] });
       const item = E.object(GridItemType, {
         object,
         position,
