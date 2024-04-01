@@ -28,6 +28,7 @@ export interface JoinPanelProps {
   onExit?: () => void;
   onDone?: (result: InvitationResult | null) => void;
   parseInvitationCodeInput?: (invitationCodeInput: string) => string;
+  onCancelResetIdentity?: () => void;
 }
 
 export type JoinPanelImplProps = Pick<
@@ -61,6 +62,7 @@ export type JoinPanelImplProps = Pick<
   onSpaceInvitationCancel?: () => Promise<void> | undefined;
   onHaloInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
   onSpaceInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
+  onCancelResetIdentity?: () => void;
   IdentityInput?: React.FC<IdentityInputProps>;
   ResetIdentity?: React.FC<ResetIdentityProps>;
 };
