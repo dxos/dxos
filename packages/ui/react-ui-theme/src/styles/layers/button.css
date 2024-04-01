@@ -43,8 +43,16 @@
         @apply fg-inverse surface-accent;
         &:hover,
         &[aria-pressed='true'],
-        &[aria-checked='true'] &[dara-state='open'] {
+        &[aria-checked='true'] &[data-state='open'] {
           @apply surface-accentHover;
+        }
+      }
+      &[data-variant='destructive'] {
+        @apply fg-inverse bg-error-550;
+        &:hover,
+        &[aria-pressed='true'],
+        &[aria-checked='true'] &[data-state='open'] {
+          @apply bg-error-500;
         }
       }
     }
