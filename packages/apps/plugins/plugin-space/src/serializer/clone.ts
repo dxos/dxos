@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { getSchema, type AnyEchoObject, getEchoObjectAnnotation } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type TypedObject } from '@dxos/react-client/echo';
 
 import { TypeOfExpando } from './file-serializer';
 import { serializers } from './serializers';
@@ -11,8 +11,9 @@ import { serializers } from './serializers';
 /**
  * @deprecated Workaround for ECHO not supporting clone.
  */
-export const clone = async (object: TypedObject) => {
-  const typename = object.__typename ?? TypeOfExpando;
+export const clone = async (object: AnyEchoObject) => {
+  const schema = getSchema(object);
+  const typename = schema ? getEchoObjectAnnotation(schema)?.typename ?? TypeOfExpando : TypeOfExpando;
   const serializer = serializers[typename] ?? serializers.default;
   invariant(serializer, `No serializer for type: ${typename}`);
   const data = await serializer.serialize(object);
