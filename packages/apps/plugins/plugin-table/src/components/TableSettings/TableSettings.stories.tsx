@@ -6,9 +6,9 @@ import '@dxosTheme';
 
 import React, { useEffect, useState } from 'react';
 
-import { Table as TableType } from '@braneframe/types/proto';
+import { TableType } from '@braneframe/types';
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
-import { Schema, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
@@ -19,7 +19,7 @@ const Story = () => {
   const [space] = useSpaces();
   const [open, setOpen] = useState(true);
   const [table, setTable] = useState<TableType>();
-  const { objects: schemas } = space.db.query(Schema.filter());
+  const schemas = space.db.schemaRegistry.getAll();
   useEffect(() => {
     const generator = createSpaceObjectGenerator(space);
     generator.addSchemas();
