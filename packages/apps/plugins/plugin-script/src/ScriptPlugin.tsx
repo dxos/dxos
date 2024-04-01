@@ -171,7 +171,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
 };
 
 const ScriptBlockWrapper = ({ script, ...props }: { script: ScriptType } & Omit<ScriptBlockProps, 'id' | 'source'>) => {
-  const { accessor } = useDocAccessor(script.source);
+  const { accessor } = useDocAccessor(script.source!);
   return <ScriptBlock id={script.id} source={accessor} {...props} />;
 };
 

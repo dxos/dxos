@@ -57,7 +57,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
               switch (type) {
                 case 'node':
                   // TODO(wittjosiah): Remove cast.
-                  return { id: section.object.id, label: (section.object as any).title, data: section.object };
+                  return { id: section.object?.id, label: (section.object as any).title, data: section.object };
                 case 'object':
                   return section.object;
                 case 'view-object':

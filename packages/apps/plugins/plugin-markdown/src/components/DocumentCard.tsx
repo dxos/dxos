@@ -48,7 +48,7 @@ export const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement
   ) => {
     const { t } = useTranslation(MARKDOWN_PLUGIN);
     const { themeMode } = useThemeContext();
-    const { doc, accessor } = useDocAccessor(object.content);
+    const { doc, accessor } = useDocAccessor(object.content!);
     const { parentRef } = useTextEditor(
       () => ({
         doc,

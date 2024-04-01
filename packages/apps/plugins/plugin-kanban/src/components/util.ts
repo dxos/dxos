@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 
 import { type KanbanColumnType } from '@braneframe/types';
 import { createSubscription } from '@dxos/react-client/echo';
+import { nonNullable } from '@dxos/util';
 
 import { type Location } from '../types';
 
@@ -29,7 +30,7 @@ export const findLocation = (columns: KanbanColumnType[], id: string): Location 
     if (column.id === id) {
       return { column };
     } else {
-      const idx = column.items!.findIndex((item) => item.id === id);
+      const idx = column.items.filter(nonNullable).findIndex((item) => item.id === id);
       if (idx !== -1) {
         return { column, item: column.items![idx], idx };
       }

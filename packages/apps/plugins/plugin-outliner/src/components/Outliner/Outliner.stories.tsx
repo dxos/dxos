@@ -14,7 +14,6 @@ import { attentionSurface } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Outliner, type OutlinerRootProps } from './Outliner';
-import { type Item } from './types';
 
 faker.seed(100);
 
@@ -23,8 +22,8 @@ const Story = ({
   count = 1,
   data,
 }: Pick<OutlinerRootProps, 'isTasklist'> & { count?: number; data?: 'words' | 'sentences' }) => {
-  const [root] = useState<Item>(
-    E.object<Item>({
+  const [root] = useState<TreeItemType>(
+    E.object<TreeItemType>({
       id: 'root',
       text: E.object(TextV0Type, { content: '' }),
       items: faker.helpers.multiple(

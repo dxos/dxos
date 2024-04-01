@@ -16,6 +16,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
+import { nonNullable } from '@dxos/util';
 
 import { nameRegex, promptExtension } from './prompt-extension';
 import { CHAIN_PLUGIN } from '../../meta';
@@ -68,7 +69,9 @@ const usePromptInputs = (prompt: ChainPromptType) => {
     const variables = new Set<string>([...text.matchAll(regex)].map((m) => m[1]));
 
     // Create map of unclaimed inputs.
-    const unclaimed = new Map<string, ChainInput>(prompt.inputs?.map((input) => [input.name, input]));
+    const unclaimed = new Map<string, ChainInput>(
+      prompt.inputs?.filter(nonNullable).map((input) => [input.name, input]),
+    );
     const missing: string[] = [];
     Array.from(variables.values()).forEach((name) => {
       if (unclaimed.has(name)) {
@@ -105,7 +108,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
   const { t } = useTranslation(CHAIN_PLUGIN);
   const { themeMode } = useThemeContext();
 
-  const { doc, accessor } = useDocAccessor(prompt.source);
+  const { doc, accessor } = useDocAccessor(prompt.source!);
 
   const { parentRef } = useTextEditor(
     () => ({
@@ -158,7 +161,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
             <div className='flex flex-col divide-y'>
               <table className='table-fixed border-collapse'>
                 <tbody>
-                  {prompt.inputs.map((input) => (
+                  {prompt.inputs.filter(nonNullable).map((input) => (
                     <tr key={input.name}>
                       <td className='px-3 py-1.5 w-[200px] font-mono text-sm'>{input.name}</td>
                       <td className='px-3 py-1.5 w-[160px]'>

@@ -50,7 +50,7 @@ const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
         }
       >
         {/* TODO(wittjosiah): Better slide placeholder. */}
-        <Surface role='slide' data={{ slide: stack.sections[slide].object }} placeholder={<></>} />
+        <Surface role='slide' data={{ slide: stack.sections[slide]?.object }} placeholder={<></>} />
       </Layout>
     </Main.Content>
   );

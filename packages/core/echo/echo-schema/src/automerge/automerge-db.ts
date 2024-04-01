@@ -6,32 +6,28 @@ import { Event, asyncTimeout, synchronized } from '@dxos/async';
 import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { TYPE_PROPERTIES, type Reference } from '@dxos/echo-db';
+import {
+  type SpaceState,
+  type SpaceDoc,
+  AutomergeDocumentLoaderImpl,
+  type AutomergeDocumentLoader,
+  type DocumentChanges,
+  type ObjectDocumentLoaded,
+} from '@dxos/echo-pipeline';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type AutomergeContext } from './automerge-context';
-import {
-  AutomergeDocumentLoaderImpl,
-  type AutomergeDocumentLoader,
-  type DocumentChanges,
-  type ObjectDocumentLoaded,
-} from './automerge-doc-loader';
 import { getAutomergeObjectCore, type AutomergeObject } from './automerge-object';
 import { AutomergeObjectCore } from './automerge-object-core';
-import { type SpaceDoc } from './types';
 import { getInlineAndLinkChanges } from './utils';
 import { type EchoDatabase } from '../database';
 import { isReactiveProxy } from '../effect/proxy';
 import { type Hypergraph } from '../hypergraph';
 import { isAutomergeObject, type EchoObject, type OpaqueEchoObject } from '../object';
 import { type Schema } from '../proto';
-
-export type SpaceState = {
-  // Url of the root automerge document.
-  rootUrl?: string;
-};
 
 export type InitRootProxyFn = (core: AutomergeObjectCore) => void;
 
@@ -45,7 +41,12 @@ export class AutomergeDb {
 
   private _ctx?: Context = undefined;
 
-  private readonly _automergeDocLoader: AutomergeDocumentLoader;
+  /**
+   * @internal
+   */
+  readonly _automergeDocLoader: AutomergeDocumentLoader;
+
+  readonly rootChanged = new Event<void>();
 
   /**
    * @deprecated Remove
@@ -59,7 +60,7 @@ export class AutomergeDb {
     private readonly _initRootProxyFn: InitRootProxyFn,
     dbApi: EchoDatabase, // TODO(dmaretskyi): Remove.
   ) {
-    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this.spaceKey, automerge);
+    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this.spaceKey, automerge.repo);
     this._dbApi = dbApi;
   }
 
@@ -267,6 +268,7 @@ export class AutomergeDb {
       }
     }
     this._automergeDocLoader.onObjectLinksUpdated(spaceRootDoc.links);
+    this.rootChanged.emit();
   }
 
   private _emitUpdateEvent(itemsUpdated: string[]) {
@@ -393,7 +395,7 @@ export interface ItemsUpdatedEvent {
   itemsUpdated: Array<{ id: string }>;
 }
 
-const shouldObjectGoIntoFragmentedSpace = (core: AutomergeObjectCore) => {
+export const shouldObjectGoIntoFragmentedSpace = (core: AutomergeObjectCore) => {
   if (isAutomergeObject(core.rootProxy)) {
     // NOTE: We need to store properties in the root document because
     //       space-list initialization expects it to be loaded as space become available.

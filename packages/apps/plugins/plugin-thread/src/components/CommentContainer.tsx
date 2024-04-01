@@ -13,6 +13,7 @@ import { Button, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, ThreadHeading } from '@dxos/react-ui-thread';
+import { nonNullable } from '@dxos/util';
 
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
@@ -93,11 +94,11 @@ export const CommentContainer = ({
   }, [thread, identity]);
 
   const handleDelete = (id: string, index: number) => {
-    const messageIndex = thread.messages.findIndex((message) => message.id === id);
+    const messageIndex = thread.messages.filter(nonNullable).findIndex((message) => message.id === id);
     if (messageIndex !== -1) {
       const message = thread.messages[messageIndex];
-      message.blocks.splice(index, 1);
-      if (message.blocks.length === 0) {
+      message?.blocks.splice(index, 1);
+      if (message?.blocks.length === 0) {
         thread.messages.splice(messageIndex, 1);
       }
       if (thread.messages.length === 0) {
@@ -142,7 +143,7 @@ export const CommentContainer = ({
           </Button>
         )}
       </div>
-      {thread.messages.map((message) => (
+      {thread.messages.filter(nonNullable).map((message) => (
         <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
       ))}
       <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleCreate} {...textboxMetadata} />

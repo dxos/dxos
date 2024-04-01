@@ -12,7 +12,7 @@ import { Outliner } from './Outliner';
 
 const TreeSection: FC<{ tree: TreeType }> = ({ tree }) => {
   const space = getSpaceForObject(tree);
-  if (!space) {
+  if (!space || !tree.root) {
     return null;
   }
 

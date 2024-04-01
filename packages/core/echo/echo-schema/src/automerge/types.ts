@@ -4,57 +4,7 @@
 
 import { Reference } from '@dxos/echo-db';
 
-import { type ObjectMeta, type OpaqueEchoObject } from '../object';
-import { type Schema } from '../proto';
-
-export interface SpaceDoc {
-  access?: {
-    spaceKey: string;
-  };
-  /**
-   * Objects inlined in the current document.
-   */
-  objects?: {
-    [key: string]: ObjectStructure;
-  };
-  /**
-   * Object id points to an automerge doc url where the object is embedded.
-   */
-  links?: {
-    [echoId: string]: string;
-  };
-}
-
-/**
- * Representation of an ECHO object in an AM document.
- */
-export type ObjectStructure = {
-  data: Record<string, any>;
-  meta: ObjectMeta;
-  system: ObjectSystem;
-};
-
-/**
- * Automerge object system properties.
- * (Is automerge specific.)
- */
-export type ObjectSystem = {
-  /**
-   * Deletion marker.
-   */
-  deleted?: boolean;
-
-  /**
-   * Object type. Reference to the schema.
-   */
-  // TODO(mykola): It is not used right now.
-  schema?: Schema;
-
-  /**
-   * Object reference ('protobuf' protocol) type.
-   */
-  type?: Reference;
-};
+import { type OpaqueEchoObject } from '../object';
 
 export const REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
 

@@ -7,21 +7,40 @@ import { dirname } from 'node:path';
 
 import { jsonify } from '@dxos/util';
 
-import { LogLevel } from '../config';
-import { type LogProcessor, getContextFromEntry } from '../context';
+import { type LogFilter, LogLevel } from '../config';
+import { type LogProcessor, getContextFromEntry, shouldLog } from '../context';
 
-export const createFileProcessor = ({ path, levels }: { path: string; levels: LogLevel[] }): LogProcessor => {
+/**
+ * Create a file processor.
+ * @param path - Path to log file to create or append to, or existing open file descriptor e.g. stdout.
+ * @param levels - Log levels to process. Takes preference over Filters.
+ * @param filters - Filters to apply.
+ */
+export const createFileProcessor = ({
+  pathOrFd,
+  levels,
+  filters,
+}: {
+  pathOrFd: string | number;
+  levels: LogLevel[];
+  filters?: LogFilter[];
+}): LogProcessor => {
   let fd: number | undefined;
 
   return (config, entry) => {
-    if (!levels.includes(entry.level)) {
+    if (levels.length > 0 && !levels.includes(entry.level)) {
       return;
     }
-    if (!fd) {
+    if (!shouldLog(entry, filters)) {
+      return;
+    }
+    if (typeof pathOrFd === 'number') {
+      fd = pathOrFd;
+    } else {
       try {
-        mkdirSync(dirname(path));
+        mkdirSync(dirname(pathOrFd));
       } catch {}
-      fd = openSync(path, 'w');
+      fd = openSync(pathOrFd, 'w');
     }
 
     const record = {
@@ -47,6 +66,6 @@ const getLogFilePath = () => {
 };
 
 export const FILE_PROCESSOR: LogProcessor = createFileProcessor({
-  path: getLogFilePath(),
+  pathOrFd: getLogFilePath(),
   levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE],
 });

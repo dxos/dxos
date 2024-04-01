@@ -21,7 +21,7 @@ import { Outliner } from './Outliner';
 
 const OutlinerMain: FC<{ tree: TreeType }> = ({ tree }) => {
   const space = getSpaceForObject(tree);
-  if (!space) {
+  if (!space || !tree.root) {
     return null;
   }
 

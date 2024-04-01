@@ -72,7 +72,7 @@ export class Generator {
     const { objects } = this._space.db.query(Filter.schema(DocumentType));
     if (objects.length) {
       const object = faker.helpers.arrayElement(objects);
-      const text = object.content.content ?? '';
+      const text = object.content?.content ?? '';
       const idx = text.lastIndexOf(' ', faker.number.int({ min: 0, max: text.length }));
       const docAccessor = getRawDoc(object, ['content']);
       docAccessor.handle.change((doc) => {

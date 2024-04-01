@@ -4,6 +4,7 @@
 
 import md5 from 'md5';
 
+import { getSpaceProperty } from '@braneframe/plugin-client/space-properties';
 import { FolderType } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -51,7 +52,7 @@ export class FileSerializer {
       data: [],
     };
 
-    const spaceRoot = space.properties[FolderType.typename];
+    const spaceRoot = getSpaceProperty<FolderType>(space, FolderType.typename);
     if (!spaceRoot) {
       throw new Error('No root folder.');
     }
@@ -65,7 +66,7 @@ export class FileSerializer {
   async deserializeSpace(space: Space, serializedSpace: SerializedSpace): Promise<Space> {
     await space.waitUntilReady();
 
-    const spaceRoot = space.properties[FolderType.typename];
+    const spaceRoot = getSpaceProperty<FolderType>(space, FolderType.typename);
     if (!spaceRoot) {
       throw new Error('No root folder.');
     }
@@ -79,6 +80,10 @@ export class FileSerializer {
     const files: SerializedObject[] = [];
 
     for (const child of folder.objects) {
+      if (!child) {
+        continue;
+      }
+
       if (child instanceof FolderType) {
         files.push(await this._serializeFolder(child));
         continue;
@@ -118,7 +123,7 @@ export class FileSerializer {
   private async _deserializeFolder(folder: FolderType, data: SerializedObject[]): Promise<void> {
     for (const object of data) {
       try {
-        let child = folder.objects.find((item) => item.id === object.id);
+        let child = folder.objects.find((item) => item?.id === object.id);
         switch (object.type) {
           case 'folder': {
             if (!child) {
@@ -133,7 +138,7 @@ export class FileSerializer {
             break;
           }
           case 'file': {
-            const child = folder.objects.find((item) => item.id === object.id);
+            const child = folder.objects.find((item) => item?.id === object.id);
             const serializer = serializers[object.typename] ?? serializers.default;
             const deserialized = await serializer.deserialize(object.content!, child);
 

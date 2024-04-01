@@ -25,6 +25,6 @@ export const markdownExtensionPlugins = (plugins: Plugin[]): MarkdownExtensionPl
 const nonTitleChars = /[^\w ]/g;
 
 export const getFallbackTitle = (document: DocumentType) => {
-  const content = document.content.content;
+  const content = document.content?.content;
   return content?.substring(0, 31).split('\n')[0].replaceAll(nonTitleChars, '').trim();
 };

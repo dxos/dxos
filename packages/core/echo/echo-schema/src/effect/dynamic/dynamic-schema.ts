@@ -34,6 +34,7 @@ export const DynamicObjectSchemaBase = (): DynamicSchemaConstructor => {
     }
 
     private static get _schema() {
+      // the field is DynamicEchoSchema in runtime, but is serialized as StoredEchoSchema in automerge
       return S.union(StoredEchoSchema, S.instanceOf(DynamicEchoSchema)).annotations(StoredEchoSchema.ast.annotations);
     }
   } as any;

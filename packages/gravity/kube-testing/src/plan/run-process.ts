@@ -130,7 +130,7 @@ export const runBrowser = <S, C>(
     });
 
     const fileProcessor = createFileProcessor({
-      path: join(agentParams.outDir, AGENT_LOG_FILE),
+      pathOrFd: join(agentParams.outDir, AGENT_LOG_FILE),
       levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE],
     });
 

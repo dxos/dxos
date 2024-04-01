@@ -11,6 +11,7 @@ import { getSpaceForObject, isTypedObject, type TypedObject } from '@dxos/react-
 import { Main } from '@dxos/react-ui';
 import type { MosaicDropEvent, MosaicOperation, MosaicTileAction, MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
+import { nonNullable } from '@dxos/util';
 
 import { Grid, type GridDataItem } from './Grid';
 import type { Position } from './layout';
@@ -45,15 +46,15 @@ const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
   const handleAction = ({ id, action }: MosaicTileAction) => {
     switch (action) {
       case 'delete': {
-        const idx = grid.items.findIndex((item) => item.id === id);
+        const idx = grid.items.filter(nonNullable).findIndex((item) => item.id === id);
         if (idx !== -1) {
-          const [item] = grid.items.splice(idx, 1);
+          const [item] = grid.items.filter(nonNullable).splice(idx, 1);
           space.db.remove(item);
         }
         break;
       }
       case 'set-color': {
-        const item = grid.items.find((item) => item.id === id);
+        const item = grid.items.filter(nonNullable).find((item) => item.id === id);
         if (item) {
           item.color = Object.keys(colors)[Math.floor(Math.random() * Object.keys(colors).length)];
         }

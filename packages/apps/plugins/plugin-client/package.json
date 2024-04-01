@@ -7,14 +7,33 @@
   "license": "MIT",
   "author": "DXOS.org",
   "exports": {
-    ".": "./dist/lib/browser/index.mjs",
-    "./meta": "./dist/lib/browser/meta.mjs"
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "import": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "node": "./dist/lib/node/index.cjs"
+    },
+    "./meta": {
+      "browser": "./dist/lib/browser/meta.mjs",
+      "import": "./dist/lib/browser/meta.mjs",
+      "require": "./dist/lib/node/meta.cjs",
+      "node": "./dist/lib/node/meta.cjs"
+    },
+    "./space-properties": {
+      "browser": "./dist/lib/browser/space-properties.mjs",
+      "import": "./dist/lib/browser/space-properties.mjs",
+      "require": "./dist/lib/node/space-properties.cjs",
+      "node": "./dist/lib/node/space-properties.cjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
       "meta": [
         "dist/types/src/meta.d.ts"
+      ],
+      "space-properties": [
+        "dist/types/src/space-properties.d.ts"
       ]
     }
   },
@@ -26,6 +45,7 @@
     "@braneframe/types": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",

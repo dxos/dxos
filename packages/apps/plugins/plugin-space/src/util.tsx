@@ -19,6 +19,7 @@ import {
 import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
+import { getSpaceProperty } from '@braneframe/plugin-client';
 import { actionGroupSymbol, type InvokeParams, type Graph, type Node, manageNodes } from '@braneframe/plugin-graph';
 import { FolderType } from '@braneframe/types';
 import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
@@ -28,6 +29,7 @@ import { EchoDatabaseImpl, Filter, LEGACY_TEXT_TYPE, isTypedObject, type OpaqueE
 import { PublicKey } from '@dxos/keys';
 import { Migrations } from '@dxos/migrations';
 import { SpaceState, getSpaceForObject, type Space, type TypedObject } from '@dxos/react-client/echo';
+import { nonNullable } from '@dxos/util';
 
 import { SPACE_PLUGIN } from './meta';
 import { clone } from './serializer';
@@ -125,7 +127,7 @@ export const updateGraphWithSpace = ({
   const getId = (id: string) => `${id}/${space.key.toHex()}`;
 
   const unsubscribeSpace = effect(() => {
-    const folder = space.state.get() === SpaceState.READY && space.properties[FolderType.typename];
+    const folder = space.state.get() === SpaceState.READY && getSpaceProperty(space, FolderType.typename);
     const partials =
       space.state.get() === SpaceState.READY && folder instanceof FolderType
         ? getFolderGraphNodePartials({ graph, folder, space })
@@ -205,7 +207,7 @@ export const updateGraphWithSpace = ({
         condition:
           space.state.get() === SpaceState.READY &&
           typeof Migrations.versionProperty === 'string' &&
-          space.properties[Migrations.versionProperty] !== Migrations.targetVersion,
+          getSpaceProperty(space, Migrations.versionProperty) !== Migrations.targetVersion,
         removeEdges: true,
         nodes: [
           {
@@ -329,21 +331,22 @@ export const updateGraphWithSpace = ({
     }
     return true;
   });
-  const previousObjects = new Map<string, E.AnyEchoObject[]>();
+  const previousObjects = new Map<string, E.Ref<E.AnyEchoObject>[]>();
   const unsubscribeQuery = effect(() => {
-    const folder: FolderType = space.state.get() === SpaceState.READY && space.properties[FolderType.typename];
+    const folder =
+      space.state.get() === SpaceState.READY ? getSpaceProperty<FolderType>(space, FolderType.typename) : null;
     const folderObjects = folder?.objects ?? [];
     const removedObjects =
       previousObjects
         .get(space.key.toHex())
-        ?.filter((object) => !(query.objects as E.AnyEchoObject[]).includes(object)) ?? [];
+        ?.filter((object) => !(query.objects as E.Ref<E.AnyEchoObject>[]).includes(object)) ?? [];
     previousObjects.set(space.key.toHex(), [...query.objects]);
     const unsortedObjects = query.objects.filter((object) => !folderObjects.includes(object));
     const objects = [...folderObjects, ...unsortedObjects].filter((object) => object !== folder);
 
     batch(() => {
       // Cleanup when objects removed from space.
-      removedObjects.forEach((object) => {
+      removedObjects.filter(nonNullable).forEach((object) => {
         const getId = (id: string) => `${id}/${object.id}`;
         if (object instanceof FolderType) {
           graph.removeNode(object.id);
@@ -356,7 +359,7 @@ export const updateGraphWithSpace = ({
         });
       });
 
-      objects.forEach((object) => {
+      objects.filter(nonNullable).forEach((object) => {
         const getId = (id: string) => `${id}/${object.id}`;
 
         // When object is a folder but not the root folder.
@@ -385,16 +388,18 @@ export const updateGraphWithSpace = ({
           previousObjects.set(object.id, [...object.objects]);
 
           // Remove objects no longer in folder.
-          removedObjects.forEach((child) => graph.removeEdge({ source: object.id, target: child.id }));
+          removedObjects
+            .filter(nonNullable)
+            .forEach((child) => graph.removeEdge({ source: object.id, target: child.id }));
 
           // Add new objects to folder.
-          object.objects.forEach((child) => graph.addEdge({ source: object.id, target: child.id }));
+          object.objects.filter(nonNullable).forEach((child) => graph.addEdge({ source: object.id, target: child.id }));
 
           // Set order of objects in folder.
           graph.sortEdges(
             object.id,
             'outbound',
-            object.objects.map((o) => o.id),
+            object.objects.filter(nonNullable).map((o) => o.id),
           );
 
           graph.addNodes({
@@ -484,7 +489,7 @@ export const updateGraphWithSpace = ({
       graph.sortEdges(
         space.key.toHex(),
         'outbound',
-        folderObjects.map((o) => o.id),
+        folderObjects.filter(nonNullable).map((o) => o.id),
       );
     });
   });
@@ -597,4 +602,12 @@ export const getActiveSpace = (graph: Graph, active?: string) => {
   }
 
   return getSpaceForObject(node.data);
+};
+
+export const prepareSpaceForMigration = (space: Space) => {
+  // migrations class doesn't know about key splitting using (get|set)SpaceProperty functions
+  // ensure the version set using keySplitting is accessible without key splitting
+  if (Migrations.namespace && !space.properties[Migrations.namespace]) {
+    space.properties[Migrations.namespace] = getSpaceProperty(space, Migrations.namespace);
+  }
 };
