@@ -2,48 +2,49 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Message as MessageType, Thread as ThreadType } from '@braneframe/types';
+import { MessageType, ThreadType, TextV0Type, type BlockType } from '@braneframe/types';
+import * as E from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
-import { TextObject, Expando } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 
 export const createChatThread = (identity: Identity) => {
-  return new ThreadType({
-    messages: Array.from({ length: 8 }).map(
-      () =>
-        new MessageType({
-          from: {
-            identityKey: faker.datatype.boolean() ? identity.identityKey.toHex() : PublicKey.random().toHex(),
-          },
-          blocks: faker.helpers.multiple(
-            () =>
-              faker.datatype.boolean({ probability: 0.8 })
-                ? {
-                    content: new TextObject(faker.lorem.sentences(3)),
-                  }
-                : {
-                    object: new Expando({ title: faker.lorem.sentence() }),
-                  },
-            { count: { min: 1, max: 3 } },
-          ),
-        }),
+  return E.object(ThreadType, {
+    messages: Array.from({ length: 8 }).map(() =>
+      E.object(MessageType, {
+        from: {
+          identityKey: faker.datatype.boolean() ? identity.identityKey.toHex() : PublicKey.random().toHex(),
+        },
+        blocks: faker.helpers.multiple(
+          () =>
+            faker.datatype.boolean({ probability: 0.8 })
+              ? ({
+                  timestamp: new Date().toISOString(),
+                  content: E.object(TextV0Type, { content: faker.lorem.sentences(3) }),
+                } satisfies BlockType)
+              : ({
+                  timestamp: new Date().toISOString(),
+                  object: E.object(E.ExpandoType, { title: faker.lorem.sentence() }),
+                } satisfies BlockType),
+          { count: { min: 1, max: 3 } },
+        ),
+      }),
     ),
   });
 };
 
 export const createCommentThread = (identity: Identity) => {
-  return new ThreadType({
+  return E.object(ThreadType, {
     messages: faker.helpers.multiple(
       () =>
-        new MessageType({
+        E.object(MessageType, {
           from: {
             identityKey: faker.datatype.boolean() ? identity.identityKey.toHex() : PublicKey.random().toHex(),
           },
           blocks: faker.helpers.multiple(
             () => ({
               timestamp: new Date().toISOString(),
-              content: new TextObject(faker.lorem.sentences(3)),
+              content: E.object(TextV0Type, { content: faker.lorem.sentences(3) }),
             }),
             { count: { min: 1, max: 2 } },
           ),

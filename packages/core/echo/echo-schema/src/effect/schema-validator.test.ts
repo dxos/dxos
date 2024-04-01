@@ -27,4 +27,12 @@ describe('reactive', () => {
     });
     S.validateSync(nestedSchema)({ any: 'value' });
   });
+
+  test('handles index signatures', () => {
+    const schema = S.struct({ field: S.string }, { key: S.string, value: S.number });
+    const object: any = { field: 'test', unknownField: 1 };
+    setSchemaProperties(object, schema);
+    expect(() => SchemaValidator.validateValue(object, 'field', '42')).not.to.throw();
+    expect(() => SchemaValidator.validateValue(object, 'unknownField', 42)).not.to.throw();
+  });
 });

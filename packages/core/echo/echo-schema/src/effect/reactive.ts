@@ -62,6 +62,22 @@ const _AnyEchoObject = S.struct({}).pipe(echoObject('Any', '0.1.0'));
 export interface AnyEchoObject extends S.Schema.Type<typeof _AnyEchoObject> {}
 export const AnyEchoObject: S.Schema<AnyEchoObject> = _AnyEchoObject;
 
+export const ExpandoMarker = Symbol.for('@dxos/echo-schema/Expando');
+
+const _Expando = S.struct({}).pipe(echoObject('Expando', '0.1.0'));
+/**
+ * @deprecated Need API review.
+ */
+export interface ExpandoType extends S.Schema.Type<typeof _Expando> {
+  [ExpandoMarker]: true;
+}
+/**
+ * Marker value to be passed to `object` constructor to create an ECHO object with a generated ID.
+ *
+ * @deprecated Need API review.
+ */
+export const ExpandoType: S.Schema<ExpandoType> = _Expando as any;
+
 /**
  * Has `id`.
  */
@@ -109,6 +125,7 @@ export const isEchoReactiveObject = (value: unknown): value is EchoReactiveObjec
 // TODO(dmaretskyi): Deep mutability.
 export const object: {
   <T extends {}>(obj: T): ReactiveObject<T>;
+  <T extends {}>(schema: typeof ExpandoType, obj: T): ReactiveObject<Identifiable & T>;
   <T extends {}>(schema: S.Schema<T>, obj: ExcludeId<T>): ReactiveObject<T>;
 } = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: ExcludeId<T>): ReactiveObject<T> => {
   if (obj) {
@@ -129,6 +146,21 @@ export const object: {
 
     SchemaValidator.prepareTarget(obj as T, schema);
     return createReactiveProxy(obj, new TypedReactiveHandler()) as ReactiveObject<T>;
+  } else if (obj && (schemaOrObj as any) === ExpandoType) {
+    if (!isValidProxyTarget(obj)) {
+      throw new Error('Value cannot be made into a reactive object.');
+    }
+
+    if ('id' in (obj as any)) {
+      throw new Error(
+        'Provided object already has an `id` field. `id` field is reserved and will be automatically generated.',
+      );
+    }
+
+    (obj as any).id = generateId();
+
+    // Untyped.
+    return createReactiveProxy(obj as T, UntypedReactiveHandler.instance as ReactiveHandler<any>) as ReactiveObject<T>;
   } else {
     if (!isValidProxyTarget(schemaOrObj)) {
       throw new Error('Value cannot be made into a reactive object.');
@@ -145,14 +177,21 @@ export const object: {
 export const ReferenceAnnotation = Symbol.for('@dxos/schema/annotation/Reference');
 export type ReferenceAnnotationValue = EchoObjectAnnotation;
 
+/**
+ * Reference to another ECHO object.
+ */
+// TODO(dmaretskyi): I wanted to add `T extends Identifiable` but it seems to break definitions with self-references.
+export type Ref<T> = T | undefined;
+
 // TODO(dmaretskyi): Assert that schema has `id`.
-export const ref = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<T> => {
+export const ref = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<Ref<T>> => {
   const annotation = getEchoObjectAnnotation(schema);
   if (annotation == null) {
     throw new Error('Reference target must be an ECHO object.');
   }
 
-  return schema.annotations({ [ReferenceAnnotation]: annotation });
+  // TODO(dmaretskyi): Casting here doesn't seem valid. Maybe there's a way to express optionality in the schema?
+  return schema.annotations({ [ReferenceAnnotation]: annotation }) as S.Schema<Ref<T>>;
 };
 
 export const EchoObjectFieldMetaAnnotationId = Symbol.for('@dxos/echo-schema/annotation/FieldMeta');

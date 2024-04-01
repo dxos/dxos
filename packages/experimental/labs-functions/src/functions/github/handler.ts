@@ -5,7 +5,7 @@
 import { Octokit, type RestEndpointMethodTypes } from '@octokit/rest';
 
 import { TestSchemaType } from '@dxos/echo-generator';
-import { type Schema, Expando, type ForeignKey, TypedObject } from '@dxos/echo-schema';
+import { Expando, type ForeignKey, type Schema, type TypedObject } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

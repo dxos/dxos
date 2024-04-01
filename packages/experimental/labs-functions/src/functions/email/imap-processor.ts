@@ -9,7 +9,7 @@ import { simpleParser, type EmailAddress } from 'mailparser';
 import { promisify } from 'node:util';
 import textract from 'textract';
 
-import { Message as MessageType } from '@braneframe/types';
+import { Message as MessageType } from '@braneframe/types/proto';
 import { TextObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

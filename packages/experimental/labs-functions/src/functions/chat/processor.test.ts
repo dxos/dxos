@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { Chain as ChainType, Message as MessageType, Thread as ThreadType } from '@braneframe/types';
+import { Chain as ChainType, Message as MessageType, Thread as ThreadType } from '@braneframe/types/proto';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
