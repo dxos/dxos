@@ -4,3 +4,4 @@
 
 export * from './InvitationManager';
 export * from './StepProps';
+export * from './ResetIdentity';

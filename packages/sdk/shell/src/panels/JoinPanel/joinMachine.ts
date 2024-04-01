@@ -74,7 +74,8 @@ type EmptyInvitationEvent = {
     | 'authenticateHaloVerificationCode'
     | 'authenticateSpaceVerificationCode'
     | 'resetHaloInvitation'
-    | 'resetSpaceInvitation';
+    | 'resetSpaceInvitation'
+    | 'deselectInvitation';
 };
 
 type InvitationEvent = FailInvitationEvent | SetInvitationCodeEvent | SetInvitationEvent | EmptyInvitationEvent;

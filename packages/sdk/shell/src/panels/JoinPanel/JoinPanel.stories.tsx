@@ -10,8 +10,9 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { JoinPanelImpl } from './JoinPanel';
 import { type JoinPanelImplProps } from './JoinPanelProps';
-import { IdentityInputImpl, ResetIdentityImpl } from './steps';
+import { IdentityInputImpl } from './steps';
 import { StorybookDialog } from '../../components/StorybookDialog';
+import { ResetIdentityImpl } from '../../steps';
 
 const noOpProps: JoinPanelImplProps = {
   titleId: 'storybookJoinPanel__title',

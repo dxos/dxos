@@ -19,9 +19,9 @@ import {
   InvitationRescuer,
   InvitationInput,
   InvitationAccepted,
-  ResetIdentity,
 } from './steps';
 import { Viewport } from '../../components';
+import { ResetIdentity } from '../../steps';
 import { stepStyles } from '../../styles';
 
 export const JoinPanelImpl = (props: JoinPanelImplProps) => {

@@ -19,7 +19,13 @@ type IdentityMachineContext = {
 };
 
 type IdentityChooseActionEvent = {
-  type: 'chooseDevices' | 'chooseAgent' | 'chooseProfile' | 'chooseSignOut' | 'sigingOut' | 'unchooseAction';
+  type:
+    | 'chooseDevices'
+    | 'chooseAgent'
+    | 'chooseProfile'
+    | 'chooseResetStorage'
+    | 'chooseJoinDevice'
+    | 'unchooseAction';
 };
 
 type IdentitySelectDeviceInvitationEvent = {
@@ -77,7 +83,8 @@ const identityMachine = createMachine<IdentityMachineContext, IdentityEvent>(
           updateProfile: { target: '.pending', actions: 'log' },
         },
       },
-      signingOut: {},
+      confirmingResetStorage: {},
+      confirmingJoinDevice: {},
     },
     on: {
       unchooseAction: { target: '.choosingAction', actions: ['unsetInvitation', 'log'] },
@@ -85,7 +92,8 @@ const identityMachine = createMachine<IdentityMachineContext, IdentityEvent>(
       selectInvitation: { target: '.managingDeviceInvitation', actions: ['setInvitation', 'log'] },
       chooseDevices: { target: '.managingDevices', actions: 'log' },
       chooseProfile: { target: '.managingProfile', actions: 'log' },
-      chooseSignOut: { target: '.signingOut', actions: 'log' },
+      chooseJoinDevice: { target: '.confirmingJoinDevice', actions: 'log' },
+      chooseResetStorage: { target: '.confirmingResetStorage', actions: 'log' },
       chooseAgent: { target: '.managingAgent', actions: 'log' },
     },
   },

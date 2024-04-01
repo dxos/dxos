@@ -8,10 +8,10 @@ import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useTranslation } from '@dxos/react-ui';
 
-import { Action, Actions, StepHeading, Input } from '../../../components';
-import { type JoinStepProps } from '../JoinPanelProps';
+import { type StepProps } from './StepProps';
+import { Action, Actions, StepHeading, Input } from '../components';
 
-export type ResetIdentityProps = JoinStepProps & {
+export type ResetIdentityProps = StepProps & {
   method: 'reset identity';
   onCancelResetIdentity?: () => void;
 };
@@ -78,13 +78,12 @@ export const ResetIdentityImpl = ({
           {t('cancel label')}
         </Action>
         <Action
-          // TODO(wittjosiah): Probably make this red?
           variant='destructive'
           disabled={disabled || pending || inputValue !== confirmationValue}
           onClick={() => onConfirm?.()}
           data-testid='reset-identity-input-confirm'
         >
-          {pending ? t('reset in progress label') : t('confirm label')}
+          {pending ? t('reset in progress label') : t('reset device label')}
         </Action>
       </Actions>
     </>
