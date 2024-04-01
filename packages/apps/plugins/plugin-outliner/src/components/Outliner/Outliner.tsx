@@ -342,35 +342,37 @@ const OutlinerBranch = ({
 }: OutlinerBranchProps) => {
   return (
     <div className={className}>
-      {root.items?.filter(nonNullable).map((item) => (
-        <div key={item.id}>
-          <OutlinerItem
-            item={item}
-            active={active?.itemId === item.id ? active : undefined}
-            onCursor={(...args) => onItemCursor?.(root, item, ...args)}
-            onSelect={() => onItemSelect?.(root, item)}
-            onEnter={(...args) => onItemCreate?.(root, item, ...args)}
-            onDelete={(...args) => onItemDelete?.(root, item, ...args)}
-            onIndent={(...args) => onItemIndent?.(root, item, ...args)}
-            onShift={(...args) => onItemShift?.(root, item, ...args)}
-            {...props}
-          />
-          {(item.items?.length ?? 0) > 0 && (
-            <OutlinerBranch
-              className='pl-4'
-              root={item}
-              active={active}
-              onItemCursor={onItemCursor}
-              onItemSelect={onItemSelect}
-              onItemCreate={onItemCreate}
-              onItemDelete={onItemDelete}
-              onItemIndent={onItemIndent}
-              onItemShift={onItemShift}
+      {root.items
+        ?.filter((item): item is TreeItemType => item?.text != null)
+        .map((item) => (
+          <div key={item.id}>
+            <OutlinerItem
+              item={item}
+              active={active?.itemId === item.id ? active : undefined}
+              onCursor={(...args) => onItemCursor?.(root, item, ...args)}
+              onSelect={() => onItemSelect?.(root, item)}
+              onEnter={(...args) => onItemCreate?.(root, item, ...args)}
+              onDelete={(...args) => onItemDelete?.(root, item, ...args)}
+              onIndent={(...args) => onItemIndent?.(root, item, ...args)}
+              onShift={(...args) => onItemShift?.(root, item, ...args)}
               {...props}
             />
-          )}
-        </div>
-      ))}
+            {(item.items?.length ?? 0) > 0 && (
+              <OutlinerBranch
+                className='pl-4'
+                root={item}
+                active={active}
+                onItemCursor={onItemCursor}
+                onItemSelect={onItemSelect}
+                onItemCreate={onItemCreate}
+                onItemDelete={onItemDelete}
+                onItemIndent={onItemIndent}
+                onItemShift={onItemShift}
+                {...props}
+              />
+            )}
+          </div>
+        ))}
     </div>
   );
 };
@@ -394,7 +396,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
   //
   const handleCreate: OutlinerBranchProps['onItemCreate'] = (parent, current, state) => {
     const items = getItems(parent);
-    const idx = items.findIndex(({ id }) => current.id === id);
+    const idx = items.findIndex((v) => current.id === v?.id);
 
     let item: TreeItemType;
     if (state?.from === 0 && state?.after?.length) {
@@ -432,7 +434,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     }
 
     const items = getItems(parent);
-    const idx = items.findIndex(({ id }) => id === item.id);
+    const idx = items.findIndex((v) => v?.id === item.id);
 
     // Don't delete if not empty and first in list.
     if (idx === 0 && state?.after?.length) {
@@ -446,7 +448,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
 
     // Join to previous line.
     if (idx - 1 >= 0) {
-      const active = getLastDescendent(items[idx - 1]);
+      const active = getLastDescendent(items[idx - 1]!);
       if (active.text) {
         const text = active.text.content!;
         const from = text.length;
@@ -472,7 +474,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
   //
   const handleIndent: OutlinerBranchProps['onItemIndent'] = (parent, item, direction) => {
     const items = getItems(parent);
-    const idx = items.findIndex(({ id }) => id === item.id) ?? -1;
+    const idx = items.findIndex((v) => v?.id === item.id) ?? -1;
     switch (direction) {
       case 'left': {
         if (parent) {
@@ -482,7 +484,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
             // Move all siblings.
             const move = items.splice(idx, items.length - idx);
             const ancestorItems = getItems(ancestor);
-            const parentIdx = ancestorItems.findIndex(({ id }) => id === parent.id);
+            const parentIdx = ancestorItems.findIndex((v) => v?.id === parent.id);
             ancestorItems.splice(parentIdx + 1, 0, ...move);
           }
         }
@@ -492,7 +494,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
       case 'right': {
         // Can't indent first child.
         if (idx > 0) {
-          const siblingItems = getItems(items[idx - 1]);
+          const siblingItems = getItems(items[idx - 1]!);
           siblingItems.splice(siblingItems.length, 0, item);
           items.splice(idx, 1);
         }
