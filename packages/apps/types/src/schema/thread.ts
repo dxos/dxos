@@ -16,11 +16,27 @@ export enum MessageState {
   SPAM = 3,
 }
 
-const _RecipientSchema = S.struct({
-  identityKey: S.optional(S.string),
-  email: S.optional(S.string),
+export class ContactType extends EchoObjectSchema({ typename: 'braneframe.Contact', version: '0.1.0' })({
   name: S.optional(S.string),
-});
+  identifiers: S.mutable(
+    S.array(
+      S.struct({
+        type: S.string,
+        value: S.string,
+      }),
+    ),
+  ),
+}) {}
+
+const _RecipientSchema = S.mutable(
+  S.struct({
+    identityKey: S.optional(S.string),
+    email: S.optional(S.string),
+    name: S.optional(S.string),
+    contact: S.optional(E.ref(ContactType)),
+  }),
+);
+export interface RecipientType extends S.Schema.Type<typeof _RecipientSchema> {}
 
 const _BlockSchema = S.struct({
   timestamp: S.string,
@@ -71,18 +87,6 @@ export class ThreadType extends EchoObjectSchema({ typename: 'braneframe.Thread'
 export class MailboxType extends EchoObjectSchema({ typename: 'braneframe.Mailbox', version: '0.1.0' })({
   title: S.optional(S.string),
   messages: S.mutable(S.array(E.ref(MessageType))),
-}) {}
-
-export class ContactType extends EchoObjectSchema({ typename: 'braneframe.Contact', version: '0.1.0' })({
-  name: S.optional(S.string),
-  identifiers: S.mutable(
-    S.array(
-      S.struct({
-        type: S.string,
-        value: S.string,
-      }),
-    ),
-  ),
 }) {}
 
 export class EventType extends EchoObjectSchema({ typename: 'braneframe.Event', version: '0.1.0' })({
