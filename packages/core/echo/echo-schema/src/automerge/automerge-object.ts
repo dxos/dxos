@@ -389,6 +389,7 @@ export const getRawDoc = (obj: OpaqueEchoObject, path?: KeyPath): DocAccessor =>
   if (isAutomergeObject(obj)) {
     return obj[base]._getRawDoc(path);
   } else {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { getObjectCoreFromEchoTarget }: typeof echoHandlerModule = require('../effect/echo-handler');
     const core = getObjectCoreFromEchoTarget(getProxyHandlerSlot(obj).target as any);
     return core.getDocAccessor(path);
@@ -399,6 +400,7 @@ export const getAutomergeObjectCore = (obj: OpaqueEchoObject): AutomergeObjectCo
   if (isAutomergeObject(obj)) {
     return obj[base]._core;
   } else {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { getObjectCoreFromEchoTarget }: typeof echoHandlerModule = require('../effect/echo-handler');
     return getObjectCoreFromEchoTarget(getProxyHandlerSlot(obj).target as any);
   }
