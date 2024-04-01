@@ -13,6 +13,7 @@ import { type JoinStepProps } from '../JoinPanelProps';
 
 export type ResetIdentityProps = JoinStepProps & {
   method: 'reset identity';
+  onCancelResetIdentity?: () => void;
 };
 
 export type ResetIdentityImplProps = {
@@ -20,9 +21,10 @@ export type ResetIdentityImplProps = {
   pending?: boolean;
   validationMessage?: string;
   onConfirm?: () => void;
+  onCancelResetIdentity?: () => void;
 };
 
-export const ResetIdentity = ({ send, active }: ResetIdentityProps) => {
+export const ResetIdentity = ({ send, active, onCancelResetIdentity }: ResetIdentityProps) => {
   const client = useClient();
   const { t } = useTranslation('os');
   const [validationMessage, setValidationMessage] = useState('');
@@ -44,11 +46,18 @@ export const ResetIdentity = ({ send, active }: ResetIdentityProps) => {
       pending={pending}
       validationMessage={validationMessage}
       onConfirm={() => resetIdentity()}
+      onCancelResetIdentity={onCancelResetIdentity}
     />
   );
 };
 
-export const ResetIdentityImpl = ({ disabled, pending, validationMessage, onConfirm }: ResetIdentityImplProps) => {
+export const ResetIdentityImpl = ({
+  disabled,
+  pending,
+  validationMessage,
+  onConfirm,
+  onCancelResetIdentity,
+}: ResetIdentityImplProps) => {
   const { t } = useTranslation('os');
   const confirmationValue = t('confirmation value');
   const [inputValue, setInputValue] = useState('');
@@ -65,9 +74,12 @@ export const ResetIdentityImpl = ({ disabled, pending, validationMessage, onConf
         />
       </div>
       <Actions>
+        <Action disabled={disabled} onClick={() => onCancelResetIdentity?.()} data-testid='reset-identity-input-cancel'>
+          {t('cancel label')}
+        </Action>
         <Action
           // TODO(wittjosiah): Probably make this red?
-          variant='primary'
+          variant='destructive'
           disabled={disabled || pending || inputValue !== confirmationValue}
           onClick={() => onConfirm?.()}
           data-testid='reset-identity-input-confirm'
