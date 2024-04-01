@@ -3,6 +3,7 @@
 //
 
 import * as S from '@effect/schema/Schema';
+import { type Brand } from 'effect';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { Reference } from '@dxos/echo-db';
