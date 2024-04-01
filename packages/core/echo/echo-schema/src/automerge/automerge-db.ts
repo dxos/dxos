@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event, asyncTimeout, synchronized } from '@dxos/async';
+import { Event, UpdateScheduler, asyncTimeout, synchronized } from '@dxos/async';
 import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { TYPE_PROPERTIES, type Reference } from '@dxos/echo-db';
@@ -39,7 +39,9 @@ export class AutomergeDb {
 
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
 
-  private _ctx?: Context = undefined;
+  private _isOpen = false;
+
+  private _ctx = new Context();
 
   /**
    * @internal
@@ -75,11 +77,11 @@ export class AutomergeDb {
   @synchronized
   async open(spaceState: SpaceState) {
     const start = performance.now();
-    if (this._ctx) {
+    if (this._isOpen) {
       log.info('Already open');
       return;
     }
-    this._ctx = new Context();
+    this._isOpen = true;
     this._ctx.onDispose(this._unsubscribeFromHandles.bind(this));
     this._automergeDocLoader.onObjectDocumentLoaded.on(this._ctx, this._onObjectDocumentLoaded.bind(this));
 
@@ -136,12 +138,13 @@ export class AutomergeDb {
   // TODO(dmaretskyi): Cant close while opening.
   @synchronized
   async close() {
-    if (!this._ctx) {
+    if (!this._isOpen) {
       return;
     }
+    this._isOpen = false;
 
     void this._ctx.dispose();
-    this._ctx = undefined;
+    this._ctx = new Context();
   }
 
   getObjectCoreById(id: string): AutomergeObjectCore | undefined {
@@ -346,7 +349,7 @@ export class AutomergeDb {
   private _onObjectDocumentLoaded({ handle, objectId }: ObjectDocumentLoaded) {
     handle.on('change', this._onDocumentUpdate);
     this._createObjectInDocument(handle, objectId);
-    this._emitUpdateEvent([objectId]);
+    this._scheduleThrottledUpdate([objectId]);
   }
 
   /**
@@ -387,6 +390,27 @@ export class AutomergeDb {
       });
       this._automergeDocLoader.onObjectBoundToDocument(docHandle, objectId);
     }
+  }
+
+  private _objectsForNextUpdate = new Set<string>();
+  private readonly _updateScheduler = new UpdateScheduler(
+    this._ctx,
+    async () => {
+      const ids = [...this._objectsForNextUpdate];
+      this._objectsForNextUpdate.clear();
+      this._emitUpdateEvent(ids);
+    },
+    {
+      maxFrequency: 10,
+    },
+  );
+
+  // TODO(dmaretskyi): Pass all remote updates through this.
+  private _scheduleThrottledUpdate(itemIds: string[]) {
+    for (const id of itemIds) {
+      this._objectsForNextUpdate.add(id);
+    }
+    this._updateScheduler.trigger();
   }
 }
 
