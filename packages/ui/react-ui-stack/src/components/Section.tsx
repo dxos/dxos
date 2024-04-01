@@ -25,6 +25,7 @@ import React, {
 } from 'react';
 
 import { Button, DropdownMenu, List, ListItem, useTranslation, type TFunction } from '@dxos/react-ui';
+import { DropDownMenuDragHandleTrigger } from '@dxos/react-ui-deck';
 import {
   type MosaicActiveType,
   type MosaicDataItem,
@@ -35,7 +36,6 @@ import {
 import { focusRing, getSize, mx } from '@dxos/react-ui-theme';
 
 import { CaretDownUp } from './CaretDownUp';
-import { DropDownMenuDragHandleTrigger } from './DropDownMenuDragHandleTrigger';
 import { stackColumns } from './style-fragments';
 import { translationKey } from '../translations';
 
@@ -131,14 +131,14 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
         <ListItem.Root
           ref={forwardedRef}
           id={id}
-          classNames={['grid col-span-2 group', active === 'overlay' ? stackColumns : 'grid-cols-subgrid']}
+          classNames={['grid col-span-2 group', active === 'overlay' ? stackColumns : 'grid-cols-subgrid snap-start']}
           style={draggableStyle}
         >
           <div
             role='none'
             className={mx(
               'grid col-span-2 grid-cols-subgrid outline outline-1 outline-transparent focus-within:s-outline-separator focus-within:surface-attention',
-              active && 'surface-attention after:separator-separator',
+              active && 'surface-attention after:separator-separator s-outline-separator',
               (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
             )}
           >

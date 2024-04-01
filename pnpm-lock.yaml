@@ -8747,12 +8747,24 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@radix-ui/primitive':
+        specifier: ^1.0.0
+        version: 1.0.1
+      '@radix-ui/react-compose-refs':
+        specifier: ^1.0.0
+        version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-context':
         specifier: ^1.0.0
         version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-menu':
+        specifier: ^2.0.6
+        version: 2.0.6(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-primitive':
         specifier: ^1.0.2
         version: 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-slot':
+        specifier: ^1.0.1
+        version: 1.0.2(@types/react@18.0.21)(react@18.2.0)
     devDependencies:
       '@dnd-kit/core':
         specifier: ^6.0.5
@@ -12816,6 +12828,7 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       regenerator-runtime: 0.14.0
+    dev: false
 
   /@babel/runtime@7.23.4:
     resolution: {integrity: sha512-2Yv65nlWnWlSpe3fXEyX5i7fx5kIKo4Qbcj+hMO0odwaneFjfXw5fdum+4yL20O0QiaHpia0cYQ9xpNMqrBwHg==}
@@ -17717,7 +17730,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.22.15
+      '@babel/runtime': 7.23.9
       '@types/react': 18.0.21
       react: 18.2.0
 
@@ -18833,7 +18846,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.23.9
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
       react: 18.2.0
@@ -39676,7 +39689,7 @@ packages:
   /react-base16-styling@0.9.1:
     resolution: {integrity: sha512-1s0CY1zRBOQ5M3T61wetEpvQmsYSNtWEcdYzyZNxKa8t7oDvaOn9d21xrGezGAHFWLM7SHcktPuPTrvoqxSfKw==}
     dependencies:
-      '@babel/runtime': 7.22.15
+      '@babel/runtime': 7.23.9
       '@types/base16': 1.0.2
       '@types/lodash': 4.14.191
       base16: 1.0.0

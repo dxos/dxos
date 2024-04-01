@@ -10,7 +10,6 @@ import React from 'react';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { PlankHeading, plankHeadingIconProps } from './PlankHeading';
-import { plankHeadingLayout } from '../../fragments/layout';
 import translations from '../../translations';
 import { AttentionProvider } from '../Attention';
 
@@ -27,30 +26,30 @@ const StorybookPlankHeading = ({
 }: StorybookPlankHeadingProps) => {
   return (
     <AttentionProvider attended={storybookAttended}>
-      <div role='none' className={plankHeadingLayout}>
+      <PlankHeading.Root>
         <PlankHeading.Button attendableId={attendableId}>
           <Chat {...plankHeadingIconProps} />
         </PlankHeading.Button>
         <PlankHeading.Label attendableId={attendableId}>{label}</PlankHeading.Label>
-      </div>
-      <div role='none' className={plankHeadingLayout}>
+      </PlankHeading.Root>
+      <PlankHeading.Root>
         <PlankHeading.Button attendableId={attendableId}>
           <StackSimple {...plankHeadingIconProps} />
         </PlankHeading.Button>
         <PlankHeading.Label attendableId={attendableId}>{label}</PlankHeading.Label>
-      </div>
-      <div role='none' className={plankHeadingLayout}>
+      </PlankHeading.Root>
+      <PlankHeading.Root>
         <PlankHeading.Button attendableId={attendableId}>
           <TextAa {...plankHeadingIconProps} />
         </PlankHeading.Button>
         <PlankHeading.Label attendableId={attendableId}>{label}</PlankHeading.Label>
-      </div>
-      <div role='none' className={plankHeadingLayout}>
+      </PlankHeading.Root>
+      <PlankHeading.Root>
         <PlankHeading.Button attendableId={attendableId}>
           <ImageSquare {...plankHeadingIconProps} />
         </PlankHeading.Button>
         <PlankHeading.Label attendableId={attendableId}>{label}</PlankHeading.Label>
-      </div>
+      </PlankHeading.Root>
     </AttentionProvider>
   );
 };
