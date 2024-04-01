@@ -342,35 +342,37 @@ const OutlinerBranch = ({
 }: OutlinerBranchProps) => {
   return (
     <div className={className}>
-      {root.items?.filter(nonNullable).map((item) => (
-        <div key={item.id}>
-          <OutlinerItem
-            item={item}
-            active={active?.itemId === item.id ? active : undefined}
-            onCursor={(...args) => onItemCursor?.(root, item, ...args)}
-            onSelect={() => onItemSelect?.(root, item)}
-            onEnter={(...args) => onItemCreate?.(root, item, ...args)}
-            onDelete={(...args) => onItemDelete?.(root, item, ...args)}
-            onIndent={(...args) => onItemIndent?.(root, item, ...args)}
-            onShift={(...args) => onItemShift?.(root, item, ...args)}
-            {...props}
-          />
-          {(item.items?.length ?? 0) > 0 && (
-            <OutlinerBranch
-              className='pl-4'
-              root={item}
-              active={active}
-              onItemCursor={onItemCursor}
-              onItemSelect={onItemSelect}
-              onItemCreate={onItemCreate}
-              onItemDelete={onItemDelete}
-              onItemIndent={onItemIndent}
-              onItemShift={onItemShift}
+      {root.items
+        ?.filter((item): item is TreeItemType => item?.text != null)
+        .map((item) => (
+          <div key={item.id}>
+            <OutlinerItem
+              item={item}
+              active={active?.itemId === item.id ? active : undefined}
+              onCursor={(...args) => onItemCursor?.(root, item, ...args)}
+              onSelect={() => onItemSelect?.(root, item)}
+              onEnter={(...args) => onItemCreate?.(root, item, ...args)}
+              onDelete={(...args) => onItemDelete?.(root, item, ...args)}
+              onIndent={(...args) => onItemIndent?.(root, item, ...args)}
+              onShift={(...args) => onItemShift?.(root, item, ...args)}
               {...props}
             />
-          )}
-        </div>
-      ))}
+            {(item.items?.length ?? 0) > 0 && (
+              <OutlinerBranch
+                className='pl-4'
+                root={item}
+                active={active}
+                onItemCursor={onItemCursor}
+                onItemSelect={onItemSelect}
+                onItemCreate={onItemCreate}
+                onItemDelete={onItemDelete}
+                onItemIndent={onItemIndent}
+                onItemShift={onItemShift}
+                {...props}
+              />
+            )}
+          </div>
+        ))}
     </div>
   );
 };
