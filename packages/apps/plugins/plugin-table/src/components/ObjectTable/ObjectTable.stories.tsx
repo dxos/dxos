@@ -6,8 +6,9 @@ import '@dxosTheme';
 
 import React, { useEffect, useState } from 'react';
 
-import { Table as TableType } from '@braneframe/types/proto';
+import { TableType } from '@braneframe/types';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
+import * as E from '@dxos/echo-schema/schema';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
@@ -27,8 +28,7 @@ const Story = () => {
     generator.addSchemas();
     generator.createObjects({ [TestSchemaType.project]: 6 });
 
-    const schema = generator.getSchema(TestSchemaType.project);
-    const table = space.db.add(new TableType({ schema }));
+    const table = space.db.add(E.object(TableType, { title: '', props: [] }));
     setTable(table);
   }, []);
 
