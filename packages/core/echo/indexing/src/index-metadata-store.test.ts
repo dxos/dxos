@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { IndexMetadataStore } from './index-metadata-store';
-import { createTestLevel } from './level';
+import { createTestLevel } from './testing';
 
 describe('IndexMetadataStore', () => {
   test('basic', async () => {

@@ -4,9 +4,10 @@
 
 import { Event, synchronized } from '@dxos/async';
 import { type MetadataMethods } from '@dxos/echo-pipeline';
+import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
-import { type MySublevel } from './level';
+import { type MySublevel } from './testing';
 import { type ConcatenatedHeadHashes } from './types';
 
 export type IndexMetadataStoreParams = {
@@ -49,6 +50,7 @@ export class IndexMetadataStore implements MetadataMethods {
   @trace.span({ showInBrowserTimeline: true })
   @synchronized
   async markDirty(idToLastHash: Map<string, string>) {
+    log.info('Marking dirty documents.');
     const batch = this._db.batch();
 
     for (const [id, lastAvailableHash] of idToLastHash.entries()) {
