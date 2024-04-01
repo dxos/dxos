@@ -52,5 +52,3 @@ export const tryFunction = (f: PipelineFunction) => (context: Context) => {
     },
   });
 };
-
-export const text = (...parts: string[]): string => parts.filter(Boolean).join('\n');

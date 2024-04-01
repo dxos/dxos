@@ -4,3 +4,4 @@
 
 export * from './chain';
 export * from './functions';
+export { multiline } from './util';

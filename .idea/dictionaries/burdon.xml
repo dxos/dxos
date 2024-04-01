@@ -26,6 +26,7 @@
       <w>dxos's</w>
       <w>dxrpc</w>
       <w>echofs</w>
+      <w>embedder</w>
       <w>endcap</w>
       <w>faas</w>
       <w>faasd</w>
@@ -52,6 +53,7 @@
       <w>micromark</w>
       <w>mins</w>
       <w>minsize</w>
+      <w>mixtral</w>
       <w>mkcert</w>
       <w>multipass</w>
       <w>nadella</w>
@@ -59,6 +61,7 @@
       <w>nanomessage</w>
       <w>nanoresource</w>
       <w>navtree</w>
+      <w>nomic</w>
       <w>noreferrer</w>
       <w>observablehq</w>
       <w>oclif</w>

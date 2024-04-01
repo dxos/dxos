@@ -37,7 +37,7 @@ import { z } from 'zod';
 
 import { describe, test } from '@dxos/test';
 
-import { getConfig, getKey } from '../../util';
+import { getConfig, getKey } from '../../../util';
 
 // TODO(burdon): Demo:
 //  - Email pipeline (summarize daily set of messages from contacts in CRM).

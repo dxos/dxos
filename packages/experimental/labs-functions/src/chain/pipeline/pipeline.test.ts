@@ -11,8 +11,9 @@ import { isFailure, isSuccess } from 'effect/Exit';
 import { describe, test } from '@dxos/test';
 
 import { jsonChat } from './chat';
-import { type Context, logger, text, tryFunction } from './pipeline';
+import { type Context, logger, tryFunction } from './pipeline';
 import { processTemplate, type Resolver } from './prompt';
+import { multiline } from '../../util';
 import { createChainResources } from '../vendors';
 
 // TODO(burdon): Port chat/processor
@@ -90,7 +91,7 @@ describe('Pipeline', () => {
       Effect.succeed<Context>({
         request: {
           messages: [
-            text(
+            multiline(
               'You are a machine that only replies with valid, iterable RFC8259 compliant JSON in your responses.',
               'Your entire response should be a single array of JSON objects.',
               '',
