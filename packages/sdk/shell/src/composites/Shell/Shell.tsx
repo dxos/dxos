@@ -46,6 +46,7 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
         <JoinDialog
           mode='halo-only'
           initialInvitationCode={invitationCode}
+          onCancelResetIdentity={() => runtime.setLayout({ layout: ShellLayout.IDENTITY })}
           onDone={() => {
             void runtime.setAppContext({ display: ShellDisplay.NONE });
             runtime.setLayout({ layout: ShellLayout.DEFAULT });
