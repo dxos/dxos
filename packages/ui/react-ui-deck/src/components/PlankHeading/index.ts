@@ -3,3 +3,4 @@
 //
 
 export * from './PlankHeading';
+export * from './DropDownMenuDragHandleTrigger';
