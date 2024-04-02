@@ -11,10 +11,12 @@ import { AST, ParseResult } from '@effect/schema';
 import * as JSONSchema from '@effect/schema/JSONSchema';
 import * as Pretty from '@effect/schema/Pretty';
 import * as S from '@effect/schema/Schema';
+import { type ColumnDef } from '@tanstack/react-table';
 import { expect } from 'chai';
 
 import { test, describe } from '@dxos/test';
 
+import { createColumnBuilder } from './helpers';
 import { type ColumnProps, type ColumnType } from './schema';
 
 export type PropertyVisitor<T> = (property: AST.PropertySignature, path: PropertyKey[]) => T;
@@ -84,13 +86,66 @@ const propertyToColumn = (property: AST.PropertySignature): ColumnType | 'displa
   return typeToColumn(type);
 };
 
-// Iterate through the AST, collecting all column definitions.
-// - Let's just try and handle top level properties for now.
-const schemaToColumns = (schema: S.Schema<any, any>) => {
+const classifySchemaProperties = (schema: S.Schema<any, any>) => {
   const properties = AST.getPropertySignatures(schema.ast);
-
-  return properties.map((p) => [p.name, propertyToColumn(p)]);
+  return properties.map((p) => [p.name, propertyToColumn(p)] as const);
 };
+
+const schemaToColumnDefs = (schema: S.Schema<any, any>) => {
+  const classified = classifySchemaProperties(schema);
+
+  const { helper, builder } = createColumnBuilder<any>();
+
+  return classified.map(([name, type]) => {
+    const propertyKey = name.toString();
+
+    let column: Partial<ColumnDef<any, any>> | undefined;
+
+    switch (type) {
+      case 'string': {
+        column = builder.string({ label: propertyKey });
+        break;
+      }
+      case 'number': {
+        column = builder.number({ label: propertyKey });
+        break;
+      }
+      case 'boolean': {
+        column = builder.switch({ label: propertyKey });
+        break;
+      }
+      case 'date': {
+        column = builder.date({ label: propertyKey });
+        break;
+      }
+      case 'display': {
+        column = builder.string({ label: propertyKey });
+        break;
+      }
+    }
+
+    if (column === undefined) {
+      throw new Error(`Unhandled column type: ${type}`);
+    }
+
+    // TODO(zan): Make this more robust by defining a cell type
+    const accessor = type === 'display' ? (s: any) => `${JSON.stringify(s[propertyKey])}` : propertyKey;
+
+    return helper.accessor(accessor, column);
+  });
+};
+
+describe('schema->column-defs', () => {
+  test('basic', () => {
+    const simpleSchema = S.struct({
+      field1: S.string,
+      field2: S.number,
+    });
+    const columnDefs = schemaToColumnDefs(simpleSchema);
+
+    failwith(columnDefs);
+  });
+});
 
 describe('schema->column-type', () => {
   test('basic', () => {
@@ -99,7 +154,7 @@ describe('schema->column-type', () => {
       field2: S.number,
     });
 
-    const columns = schemaToColumns(simpleSchema);
+    const columns = classifySchemaProperties(simpleSchema);
 
     expect(columns).to.deep.equal([
       ['field1', 'string'],
@@ -113,7 +168,7 @@ describe('schema->column-type', () => {
       field2: S.optional(S.number),
     });
 
-    const columns = schemaToColumns(simpleSchema);
+    const columns = classifySchemaProperties(simpleSchema);
 
     expect(columns).to.deep.equal([
       ['field1', 'string'],
@@ -127,7 +182,7 @@ describe('schema->column-type', () => {
       field2: S.optional(S.Date),
     });
 
-    const columns = schemaToColumns(simpleSchema);
+    const columns = classifySchemaProperties(simpleSchema);
 
     expect(columns).to.deep.equal([
       ['field1', 'date'],
@@ -141,7 +196,7 @@ describe('schema->column-type', () => {
       age: S.number.pipe(S.negative()),
     });
 
-    const columns = schemaToColumns(simpleSchema);
+    const columns = classifySchemaProperties(simpleSchema);
 
     expect(columns).to.deep.equal([
       ['name', 'string'],

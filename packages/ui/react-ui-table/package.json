@@ -7,9 +7,6 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/lib/node/index.cjs",
-  "scripts": {
-    "test": "nx run-many --target=test"
-  },
   "browser": {
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
@@ -18,6 +15,9 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "test": "nx run-many --target=test"
+  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/invariant": "workspace:*",
