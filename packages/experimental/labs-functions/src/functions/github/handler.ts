@@ -10,6 +10,8 @@ import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import { registerTypes } from '../../util';
+
 type GithubContributors = RestEndpointMethodTypes['repos']['listContributors']['response']['data'];
 
 export const handler = subscriptionHandler(async ({ event, context }) => {
@@ -18,6 +20,7 @@ export const handler = subscriptionHandler(async ({ event, context }) => {
   if (!space || !objects?.length) {
     return;
   }
+  registerTypes(space);
 
   for (const project of objects) {
     if (!project.repo || !project.repo.includes('github.com') || project.__meta.keys.length !== 0) {

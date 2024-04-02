@@ -13,7 +13,7 @@ import { subscriptionHandler } from '@dxos/functions';
 import { RequestProcessor } from './processor';
 import { createResolvers } from './resolvers';
 import { type ChainVariant, createChainResources } from '../../chain';
-import { getKey } from '../../util';
+import { getKey, registerTypes } from '../../util';
 
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
   const { client, dataDir } = context;
@@ -21,6 +21,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   if (!space || !objects?.length) {
     return response.status(400);
   }
+  registerTypes(space);
 
   // TODO(burdon): The handler is called before the mutation is processed!
   await sleep(500);

@@ -2,11 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
+import type * as S from '@effect/schema/Schema';
 import yaml from 'js-yaml';
 import fs from 'node:fs';
 import path from 'node:path';
 import * as process from 'node:process';
 
+import {
+  EventType,
+  FileType,
+  MailboxType,
+  MessageType,
+  StackType,
+  ThreadType,
+  DocumentType,
+  SectionType,
+  ContactType,
+} from '@braneframe/types';
+import { GameType } from '@dxos/chess-app/types';
+import { type Space } from '@dxos/client/echo';
 import { Config } from '@dxos/config';
 import { invariant } from '@dxos/invariant';
 
@@ -45,4 +59,28 @@ export const getKey = (config: Config, name: string) => {
   const keys = config.values?.runtime?.keys;
   const key = keys?.find((key) => key.name === name);
   return key?.value;
+};
+
+export const registerTypes = (space: Space | undefined) => {
+  if (!space) {
+    return;
+  }
+  const types = space.db.graph.types;
+  const schemaList: S.Schema<any>[] = [
+    MessageType,
+    MailboxType,
+    GameType,
+    SectionType,
+    StackType,
+    DocumentType,
+    ThreadType,
+    EventType,
+    FileType,
+    ContactType,
+  ];
+  for (const type of schemaList) {
+    if (!types.isEffectSchemaRegistered(type)) {
+      types.registerEffectSchema(type);
+    }
+  }
 };
