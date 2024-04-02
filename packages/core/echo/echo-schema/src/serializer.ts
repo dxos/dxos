@@ -6,9 +6,9 @@ import { Reference, TYPE_PROPERTIES } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { stripUndefinedValues } from '@dxos/util';
 
-import { AutomergeObjectCore, EncodedReferenceObject, encodeReference, getAutomergeObjectCore } from './automerge';
+import { AutomergeObjectCore, type EncodedReferenceObject, encodeReference, getAutomergeObjectCore } from './automerge';
 import { type EchoDatabase } from './database';
-import { OpaqueEchoObject, type EchoObject } from './object';
+import { type OpaqueEchoObject, type EchoObject } from './object';
 import { Filter } from './query';
 
 /**
@@ -159,7 +159,7 @@ export class Serializer {
     core.id = id;
     // TODO(dmaretskyi): Can't pass type in opts.
     core.initNewObject(dataProperties, {
-      meta: meta,
+      meta,
     });
     core.setType(getTypeRef(type)!);
     if (deleted) {
@@ -178,13 +178,4 @@ export const getTypeRef = (type?: EncodedReferenceObject | string): Reference | 
     // TODO(mykola): Never reached?
     return Reference.fromLegacyTypename(type);
   }
-};
-
-/**
- * Works with both automerge and legacy objects.
- */
-const setObjectId = (obj: EchoObject, id: string) => {
-  const core = getAutomergeObjectCore(obj);
-  invariant(core);
-  core.id = id;
 };

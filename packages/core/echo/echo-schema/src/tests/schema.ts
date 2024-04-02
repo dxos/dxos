@@ -1,6 +1,11 @@
-import { EchoObjectSchema } from '../effect/echo-object-class';
+//
+// Copyright 2024 DXOS.org
+//
+
 import * as S from '@effect/schema/Schema';
-import { Ref, ref } from '../effect/reactive';
+
+import { EchoObjectSchema } from '../effect/echo-object-class';
+import { type Ref, ref } from '../effect/reactive';
 
 export class Contact extends EchoObjectSchema({
   typename: 'example.test.Contact',

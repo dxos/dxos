@@ -6,12 +6,12 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
+import { ExpandoType } from './effect/reactive';
 import { Filter } from './query';
 import { getSchema, object } from './schema';
 import { Serializer, type SerializedSpace } from './serializer';
 import { createDatabase } from './testing';
 import { Contact } from './tests/schema';
-import { ExpandoType } from './effect/reactive';
 
 describe('Serializer', () => {
   // TODO(dmaretskyi): Test with unloaded objects.

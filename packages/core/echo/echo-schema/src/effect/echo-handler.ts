@@ -23,10 +23,9 @@ import { getSchema, getTypeReference, type EchoReactiveObject, EchoReactiveHandl
 import { SchemaValidator } from './schema-validator';
 import { AutomergeObjectCore } from '../automerge/automerge-object-core';
 import { type KeyPath } from '../automerge/key-path';
-import { encodeReference, REFERENCE_TYPE_TAG } from '../automerge/types';
+import { encodeReference } from '../automerge/types';
 import { data, type ObjectMeta } from '../object';
 import { defineHiddenProperty } from '../util/property';
-import { log } from '@dxos/log';
 
 const symbolPath = Symbol('path');
 const symbolNamespace = Symbol('namespace');
