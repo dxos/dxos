@@ -44,6 +44,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
     onSpaceInvitationCancel,
     onHaloInvitationAuthenticate,
     onSpaceInvitationAuthenticate,
+    onCancelResetIdentity,
     IdentityInput: IdentityInputComponent = IdentityInput,
     ResetIdentity: ResetIdentityComponent = ResetIdentity,
   } = props;
@@ -60,6 +61,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
               send={send}
               method='reset identity'
               active={activeView === 'reset identity confirmation'}
+              onCancelResetIdentity={onCancelResetIdentity}
             />
           </Viewport.View>
           <Viewport.View classNames={stepStyles} id='create identity input'>
@@ -177,6 +179,7 @@ export const JoinPanel = ({
   onExit,
   doneActionParent,
   onDone: propsOnDone,
+  onCancelResetIdentity,
 }: JoinPanelProps) => {
   const client = useClient();
   const identity = useIdentity();
@@ -409,6 +412,7 @@ export const JoinPanel = ({
           joinSend({ type: 'authenticateSpaceVerificationCode' });
           return joinState.context.space.invitationObservable?.authenticate(authCode);
         },
+        onCancelResetIdentity,
       }}
     />
   );

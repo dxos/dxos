@@ -35,6 +35,9 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../core/echo/echo-schema"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {

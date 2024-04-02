@@ -84,6 +84,8 @@ export const Default = {
 
 export const Primary = { ...Default, args: { variant: 'primary', children: 'Hello' } };
 
+export const Destructive = { ...Default, args: { variant: 'destructive', children: 'Delete' } };
+
 export const Outline = { ...Default, args: { variant: 'outline', children: 'Hello' } };
 
 export const Ghost = { ...Default, args: { variant: 'ghost', children: 'Hello' } };

@@ -5,11 +5,11 @@
 import { X } from '@phosphor-icons/react';
 import React, { forwardRef } from 'react';
 
-import { type Message as MessageType } from '@braneframe/types';
+import { type TextV0Type, type BlockType, type MessageType } from '@braneframe/types';
 import { Surface } from '@dxos/app-framework';
 import { type SpaceMember } from '@dxos/client/echo';
 import { PublicKey } from '@dxos/react-client';
-import { type Expando, getTextContent, type TextObject } from '@dxos/react-client/echo';
+import { type Expando, getTextContent } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, DensityProvider, useThemeContext } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
@@ -31,7 +31,7 @@ export const MessageContainer = ({
 }: {
   message: MessageType;
   members: SpaceMember[];
-  onDelete: MessageProps<MessageType.Block>['onDelete'];
+  onDelete: MessageProps<BlockType>['onDelete'];
 }) => {
   const identity = members.find(
     (member) => message.from.identityKey && PublicKey.equals(member.identity.identityKey, message.from.identityKey),
@@ -39,7 +39,7 @@ export const MessageContainer = ({
   const messageMetadata = getMessageMetadata(message.id, identity);
 
   return (
-    <Message<MessageType.Block>
+    <Message<BlockType>
       {...messageMetadata}
       blocks={message.blocks ?? []}
       MessageBlockComponent={MessageBlock}
@@ -48,7 +48,7 @@ export const MessageContainer = ({
   );
 };
 
-const MessageBlock = ({ block, authorId, onBlockDelete }: MessageBlockProps<MessageType.Block>) => {
+const MessageBlock = ({ block, authorId, onBlockDelete }: MessageBlockProps<BlockType>) => {
   return block.object ? (
     <Mosaic.Container id={block.object.id}>
       <Mosaic.DraggableTile
@@ -68,14 +68,14 @@ const TextboxBlock = ({
   text,
   authorId,
   onBlockDelete,
-}: { text: TextObject } & Pick<MessageBlockProps<MessageType.Block>, 'authorId' | 'onBlockDelete'>) => {
+}: { text: TextV0Type } & Pick<MessageBlockProps<BlockType>, 'authorId' | 'onBlockDelete'>) => {
   const { themeMode } = useThemeContext();
   const identity = useIdentity();
   const readonly = identity?.identityKey.toHex() !== authorId;
   const textboxWidth = onBlockDelete ? 'col-span-2' : 'col-span-3';
   const { parentRef } = useTextEditor(
     () => ({
-      doc: getTextContent(text),
+      doc: text.content,
       // prettier-ignore
       extensions: [
         createBasicExtensions({ readonly }),

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Table as TableType } from '@braneframe/types';
+import { TableType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -10,7 +10,6 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { isTypedObject } from '@dxos/react-client/echo';
 
 import { TABLE_PLUGIN } from './meta';
 
@@ -29,5 +28,5 @@ export type TablePluginProvides = SurfaceProvides &
   TranslationsProvides;
 
 export const isTable = (object: unknown): object is TableType => {
-  return isTypedObject(object) && TableType.schema.typename === object.__typename;
+  return object != null && object instanceof TableType;
 };

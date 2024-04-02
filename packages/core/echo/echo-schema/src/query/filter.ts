@@ -26,9 +26,9 @@ import {
 import { type Schema } from '../proto';
 
 export const hasType =
-  <T extends TypedObject>(schema: Schema) =>
-  (object: TypedObject | undefined): object is T =>
-    object?.__typename === schema.typename;
+  <T extends EchoReactiveObject<T>>(type: { new (): T }) =>
+  (object: EchoReactiveObject<any> | undefined): object is T =>
+    object instanceof type;
 
 // TODO(burdon): Operators (EQ, NE, GT, LT, IN, etc.)
 export type PropertyFilter = Record<string, any>;

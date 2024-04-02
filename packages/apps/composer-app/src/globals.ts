@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Document, Folder, File, Grid, Kanban, Table, Sketch, Stack } from '@braneframe/types';
+import { Document, Folder, File, Grid, Kanban, Table, Sketch, Stack } from '@braneframe/types/proto';
 import { CreateEpochRequest } from '@dxos/client/halo';
 import { Migrations } from '@dxos/migrations';
 import type { Client } from '@dxos/react-client';

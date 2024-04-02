@@ -7,7 +7,9 @@ import { google } from 'googleapis';
 import path from 'node:path';
 import process from 'node:process';
 
-import { Event as EventType, type Message as MessageType } from '@braneframe/types';
+import { EventType, type RecipientType } from '@braneframe/types';
+import * as E from '@dxos/echo-schema';
+import { type EchoReactiveObject, Filter } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { log } from '@dxos/log';
 
@@ -55,8 +57,8 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   });
 
   const sourceId = 'google.com/calendar';
-  const syncer = new ObjectSyncer<EventType>(EventType.filter(), (object) => {
-    for (const { id, source } of object.__meta?.keys ?? []) {
+  const syncer = new ObjectSyncer<EchoReactiveObject<EventType>>(Filter.schema(EventType), (object) => {
+    for (const { id, source } of E.metaOf(object).keys ?? []) {
       if (source === sourceId) {
         return id;
       }
@@ -72,23 +74,22 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   const { kind, etag, summary, updated, nextPageToken } = events.data;
   log.info('calendarHandler', { kind, etag, summary, updated, nextPageToken });
   for (const event of events.data.items ?? []) {
-    const { kind, id, created, updated, summary, creator, start, end, recurrence, attendees } = event;
+    const { id, summary, creator, start, attendees } = event;
     if (id) {
       const existing = syncer.getObject(id);
       log.info('event data', { summary, attendees });
       // TODO(burdon): Upsert.
       if (!existing) {
-        space.db.add(
-          new EventType(
-            {
-              title: summary || '',
-              attendees: attendees?.map(
-                ({ email, displayName }) => ({ email: email!, name: displayName }) as MessageType.Recipient,
-              ),
-            },
-            { meta: { keys: [{ source: sourceId, id }] } },
-          ),
-        );
+        const newEvent = E.object(EventType, {
+          title: summary || '',
+          owner: { name: creator?.displayName, email: creator?.email },
+          startDate: start?.date?.toString() ?? '',
+          links: [],
+          attendees:
+            attendees?.map(({ email, displayName }) => ({ email: email!, name: displayName }) as RecipientType) ?? [],
+        });
+        E.metaOf(newEvent).keys = [{ source: sourceId, id }];
+        space.db.add(newEvent);
       }
     }
   }
