@@ -36,7 +36,7 @@ export const schemaToColumnDefs = <T>(schema: S.Schema<T, any>): ColumnDef<T, an
         break;
       }
       case 'display': {
-        column = builder.string({ label: propertyKey, id: propertyKey });
+        column = builder.display({ label: propertyKey, id: propertyKey });
         break;
       }
     }
@@ -45,9 +45,6 @@ export const schemaToColumnDefs = <T>(schema: S.Schema<T, any>): ColumnDef<T, an
       throw new Error(`Unhandled column type: ${type}`);
     }
 
-    // TODO(zan): Make this more robust by defining a cell type
-    const accessor: any = type === 'display' ? (s: T) => `${JSON.stringify(s[propertyKey as keyof T])}` : propertyKey;
-
-    return helper.accessor(accessor, column);
+    return helper.accessor(propertyKey as any, column);
   });
 };
