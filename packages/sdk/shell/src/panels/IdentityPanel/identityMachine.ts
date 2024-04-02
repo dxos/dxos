@@ -10,9 +10,11 @@ import { type Client } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
+import { type IdentityPanelInitialDisposition } from './IdentityPanelProps';
 import { type StepEvent } from '../../steps';
 
 type IdentityMachineContext = {
+  initialDisposition?: IdentityPanelInitialDisposition;
   invitation?: CancellableInvitationObservable;
   identity: Identity | null;
   identitySubscribable: Subscribable<SetIdentityEvent> | null;
@@ -62,6 +64,13 @@ const identityMachine = createMachine<IdentityMachineContext, IdentityEvent>(
       src: (context) => context.identitySubscribable!,
     },
     states: {
+      unknown: {
+        always: [
+          { cond: 'initiallyManagingDeviceInvitation', target: 'managingDeviceInvitation', actions: 'log' },
+          { cond: 'initiallyManagingProfile', target: 'managingProfile', actions: 'log' },
+          { target: 'choosingAction', actions: 'log' },
+        ],
+      },
       choosingAction: {},
       managingDeviceInvitation: {},
       managingAgent: {
@@ -98,6 +107,11 @@ const identityMachine = createMachine<IdentityMachineContext, IdentityEvent>(
     },
   },
   {
+    guards: {
+      initiallyManagingDeviceInvitation: ({ initialDisposition }, _event) =>
+        initialDisposition === 'manage-device-invitation',
+      initiallyManagingProfile: ({ initialDisposition }, _event) => initialDisposition === 'manage-profile',
+    },
     actions: {
       setIdentity: assign<IdentityMachineContext, IdentityEvent>({
         identity: (context, event) => (event as SetIdentityEvent)?.identity ?? null,

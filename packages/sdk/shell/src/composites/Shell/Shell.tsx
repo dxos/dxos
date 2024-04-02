@@ -58,7 +58,6 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
         />
       );
 
-    // TODO(wittjosiah): Jump straight to specific step if SHARE or EDIT are specified.
     case ShellLayout.IDENTITY:
     case ShellLayout.SHARE_IDENTITY:
     case ShellLayout.EDIT_PROFILE:
@@ -77,6 +76,13 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
             await runtime.setAppContext({ display: ShellDisplay.NONE });
             runtime.setLayout({ layout: ShellLayout.DEFAULT });
           }}
+          initialDisposition={
+            layout === ShellLayout.SHARE_IDENTITY
+              ? 'manage-device-invitation'
+              : layout === ShellLayout.EDIT_PROFILE
+                ? 'manage-profile'
+                : 'default'
+          }
         />
       );
 

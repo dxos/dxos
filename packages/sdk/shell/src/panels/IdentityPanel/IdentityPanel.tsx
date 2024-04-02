@@ -132,6 +132,7 @@ const IdentityPanelWithInvitationImpl = ({
 export const IdentityPanel = ({
   titleId: propsTitleId,
   createInvitationUrl = (code) => code,
+  initialDisposition = 'default',
   ...props
 }: IdentityPanelProps) => {
   const titleId = useId('identityPanel__heading', propsTitleId);
@@ -144,7 +145,9 @@ export const IdentityPanel = ({
     log.error('IdentityPanel rendered with no active identity.');
     return null;
   }
-  const [identityState, identitySend, identityService] = useIdentityMachine(client);
+  const [identityState, identitySend, identityService] = useIdentityMachine(client, {
+    context: { initialDisposition },
+  });
 
   useEffect(() => {
     const subscription = identityService.subscribe((state) => {
