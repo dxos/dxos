@@ -6,7 +6,9 @@ import { inspect } from 'node:util';
 
 import { defaultMap } from './map';
 
-const symbolSingleton = Symbol('singleton');
+export const symbolSingleton = Symbol('singleton');
+
+export type SingletonFactory<T> = () => T;
 
 export class SymbolDiKey<T> {
   symbol: symbol;
@@ -15,7 +17,7 @@ export class SymbolDiKey<T> {
     this.symbol = Symbol(name);
   }
 
-  public [symbolSingleton]?: () => T = undefined;
+  public [symbolSingleton]?: SingletonFactory<T> = undefined;
 
   toString() {
     return String(this.symbol).slice(7, -1);
@@ -26,17 +28,35 @@ export class SymbolDiKey<T> {
   }
 }
 
-// TODO(dmaretskyi): Default values.
-// TODO(dmaretskyi): Collections.
-export type DiKey<T> = { new (...args: any[]): T } | SymbolDiKey<T>;
+export type ConstructorDiKey<T> = {
+  new (...args: any[]): T;
+
+  [symbolSingleton]?: SingletonFactory<T>;
+};
+
+/**
+ * Represents a key for an entry in a DI container.
+ * Class constructors can be used as is.
+ * Multiple keys can be combined into a single key to represent parameterized types.
+ * Composite keys maintain referential equality.
+ * Keys can optionally have a singleton factory attached to them.
+ */
+export type DiKey<T> =
+  | {
+      new (...args: any[]): T;
+    }
+  | SymbolDiKey<T>;
 
 export const DiKey = new (class DiKeyConstructor {
+  /**
+   * Needed to ensure referential equality of combined keys.
+   */
   // TODO(dmaretskyi): Disable private members lowering for dev env.
   // TODO(dmaretskyi): Could be a weak map after a NodeJS upgrade.
   #combinedRegistry = new Map();
 
   define<T>(name: string): DiKey<T> {
-    return Symbol(name) as any;
+    return new SymbolDiKey(name);
   }
 
   singleton<T>(name: string, factory: () => T): DiKey<T> {
@@ -56,12 +76,19 @@ export const DiKey = new (class DiKeyConstructor {
     }
   }
 
+  /**
+   * Create composite keys to represent parameterized types.
+   *
+   * @example DiKey.combine(A, B, C) => "A<B, C>"
+   *
+   * Maintains referential equality: `DiKey.combine(A, B) === DiKey.combine(A, B)`
+   */
   combine(...ids: DiKey<any>[]) {
     const map = this.#lookupCombined(this.#combinedRegistry, ids);
     return defaultMap(this.#combinedRegistry, map, () => this.#combinedDescription(ids));
   }
 
-  getSingletonFactory<T>(id: DiKey<T>): (() => T) | undefined {
+  getSingletonFactory<T>(id: DiKey<T>): SingletonFactory<T> | undefined {
     return (id as any)[symbolSingleton];
   }
 
@@ -78,21 +105,3 @@ export const DiKey = new (class DiKeyConstructor {
     return `${this.stringify(first)}<${rest.map(this.stringify).join(', ')}>`;
   }
 })();
-
-// class Di {
-//   #definitions = new Map<DiKey<any>, any>()
-
-//   set<T>(id: DiKey<T>, value: T | ((di: this) => T)): this {
-//     if(this.#definitions.has(id)) {
-//       throw new Error()
-//     }
-
-//     this.#definitions.set(id, value);
-
-//     return this;
-//   }
-
-//   get<T>(id: DiKey<T>): T {
-
-//   }
-// }
