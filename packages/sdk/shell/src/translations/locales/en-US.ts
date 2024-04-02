@@ -74,6 +74,7 @@ export const os = {
   'choose devices label': 'Manage devices',
   'choose profile label': 'Edit profile',
   'choose sign out label': 'Reset storage',
+  'choose join new identity label': 'Join existing device',
   'empty space members message': 'There is nobody in this space yet.',
   'back to all invitations label': 'Back to all invitations',
   'invitation heading': 'Invitation',
@@ -97,8 +98,10 @@ export const os = {
   'invite options label': 'Change the active invite option.',
   'reset in progress label': 'Resetting...',
   'confirm label': 'Confirm',
-  'reset identity input label':
+  'reset storage input label':
     'This will clear this device and all associated data. Type {{confirmationValue}} and confirm to continue.',
+  'join new identity input label':
+    'In order to join an existing device, storage on this device must be cleared first. Type {{confirmationValue}} and confirm to continue.',
   'failed to reset identity message': 'Failed to reset identity.',
   'confirmation value': 'CONFIRM',
   'sign out chooser title': 'DANGER ZONE',

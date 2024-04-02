@@ -12,7 +12,7 @@ import { JoinPanelImpl } from './JoinPanel';
 import { type JoinPanelImplProps } from './JoinPanelProps';
 import { IdentityInputImpl } from './steps';
 import { StorybookDialog } from '../../components/StorybookDialog';
-import { ResetIdentityImpl } from '../../steps';
+import { ConfirmResetImpl } from '../../steps';
 
 const noOpProps: JoinPanelImplProps = {
   titleId: 'storybookJoinPanel__title',
@@ -35,7 +35,7 @@ export default {
   parameters: { chromatic: { disableSnapshot: false } },
   args: {
     IdentityInput: IdentityInputImpl,
-    ResetIdentity: ResetIdentityImpl,
+    ResetIdentity: ConfirmResetImpl,
   },
 };
 

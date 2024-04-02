@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretRight, Devices, Plus, Power, UserGear, HardDrive } from '@phosphor-icons/react';
+import { CaretRight, Devices, Plus, Power, UserGear, HardDrive, Intersect } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
 import { log } from '@dxos/log';
@@ -101,8 +101,17 @@ export const IdentityActionChooserImpl = ({
             <CaretRight weight='bold' className={getSize(4)} />
           </Action>
           <Action
+            data-testid='devices-panel.join-new-identity'
+            onClick={() => send?.({ type: 'chooseJoinNewIdentity' })}
+            classNames='plb-4'
+          >
+            <Intersect className={getSize(6)} />
+            <span className='grow mli-3'>{t('choose join new identity label')}</span>
+            <CaretRight weight='bold' className={getSize(4)} />
+          </Action>
+          <Action
             data-testid='devices-panel.sign-out'
-            onClick={() => send?.({ type: 'chooseSignOut' })}
+            onClick={() => send?.({ type: 'chooseResetStorage' })}
             classNames='plb-4'
           >
             <Power className={getSize(6)} />

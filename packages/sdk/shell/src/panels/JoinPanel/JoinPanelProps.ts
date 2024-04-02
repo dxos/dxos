@@ -9,7 +9,7 @@ import type { Invitation, AuthenticatingInvitationObservable, InvitationResult }
 
 import { type JoinSend } from './joinMachine';
 import { type IdentityInputProps } from './steps';
-import { type ResetIdentityProps, type StepProps } from '../../steps';
+import { type ConfirmResetProps, type StepProps } from '../../steps';
 import { type FailReason } from '../../types';
 
 export type JoinPanelMode = 'default' | 'halo-only';
@@ -28,7 +28,7 @@ export interface JoinPanelProps {
   onExit?: () => void;
   onDone?: (result: InvitationResult | null) => void;
   parseInvitationCodeInput?: (invitationCodeInput: string) => string;
-  onCancelResetIdentity?: () => void;
+  onCancelResetStorage?: () => void;
 }
 
 export type JoinPanelImplProps = Pick<
@@ -62,9 +62,10 @@ export type JoinPanelImplProps = Pick<
   onSpaceInvitationCancel?: () => Promise<void> | undefined;
   onHaloInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
   onSpaceInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
-  onCancelResetIdentity?: () => void;
+  onConfirmResetStorage?: () => Promise<void>;
+  onCancelResetStorage?: () => void;
   IdentityInput?: React.FC<IdentityInputProps>;
-  ResetIdentity?: React.FC<ResetIdentityProps>;
+  ConfirmReset?: React.FC<ConfirmResetProps>;
 };
 
 export interface IdentityAction {

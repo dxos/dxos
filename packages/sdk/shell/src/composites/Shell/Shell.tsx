@@ -46,7 +46,7 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
         <JoinDialog
           mode='halo-only'
           initialInvitationCode={invitationCode}
-          onCancelResetIdentity={() => runtime.setLayout({ layout: ShellLayout.IDENTITY })}
+          onCancelResetStorage={() => runtime.setLayout({ layout: ShellLayout.IDENTITY })}
           onDone={() => {
             void runtime.setAppContext({ display: ShellDisplay.NONE });
             runtime.setLayout({ layout: ShellLayout.DEFAULT });
@@ -61,11 +61,16 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
       return (
         <IdentityDialog
           createInvitationUrl={(invitationCode) => `${origin}?deviceInvitationCode=${invitationCode}`}
-          onResetDevice={async () => {
+          onResetStorage={async () => {
             await client.reset();
-            await runtime.setAppContext({ display: ShellDisplay.NONE, reload: true });
+            console.log('[client reset]', 'onResetStorage');
+            return runtime.setAppContext({ display: ShellDisplay.NONE, reload: true });
           }}
-          onJoinNewIdentity={() => runtime.setLayout({ layout: ShellLayout.INITIALIZE_IDENTITY })}
+          onJoinNewIdentity={async () => {
+            await client.reset();
+            console.log('[client reset]', 'onJoinNewIdentity');
+            return runtime.setLayout({ layout: ShellLayout.INITIALIZE_IDENTITY });
+          }}
           onDone={async () => {
             await runtime.setAppContext({ display: ShellDisplay.NONE });
             runtime.setLayout({ layout: ShellLayout.DEFAULT });

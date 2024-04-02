@@ -28,12 +28,13 @@ export type IdentityPanelImplProps = {
     | 'update profile form'
     | 'device invitation manager'
     | 'identity action chooser'
-    | 'signing out';
+    | 'confirm join new identity'
+    | 'confirm reset storage';
   identity: Identity;
   devices: Device[];
   onUpdateProfile?: (profile: NonNullable<Identity['profile']>) => Promise<void>;
-  onResetDevice?: () => Promise<void>;
-  onJoinNewIdentity?: () => void;
+  onResetStorage?: () => Promise<void>;
+  onJoinNewIdentity?: () => Promise<void>;
   createInvitationUrl: (invitationCode: string) => string;
   send?: (event: SingleOrArray<Event<IdentityEvent>>) => void;
   onDone?: () => void;
