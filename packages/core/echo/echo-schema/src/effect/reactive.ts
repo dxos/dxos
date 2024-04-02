@@ -19,6 +19,7 @@ import {
   isReactiveProxy,
   getProxyHandlerSlot,
 } from './proxy';
+import { getTargetMeta, initMeta } from './reactive-meta-handler';
 import { SchemaValidator, symbolSchema, validateIdNotPresentOnSchema } from './schema-validator';
 import { TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
@@ -144,6 +145,7 @@ export const object: {
       (obj as any).id = generateId();
     }
 
+    initMeta(obj);
     SchemaValidator.prepareTarget(obj as T, schema);
     return createReactiveProxy(obj, new TypedReactiveHandler()) as ReactiveObject<T>;
   } else if (obj && (schemaOrObj as any) === ExpandoType) {
@@ -158,14 +160,14 @@ export const object: {
     }
 
     (obj as any).id = generateId();
-
+    initMeta(obj);
     // Untyped.
     return createReactiveProxy(obj as T, UntypedReactiveHandler.instance as ReactiveHandler<any>) as ReactiveObject<T>;
   } else {
     if (!isValidProxyTarget(schemaOrObj)) {
       throw new Error('Value cannot be made into a reactive object.');
     }
-
+    initMeta(schemaOrObj);
     // Untyped.
     return createReactiveProxy(
       schemaOrObj as T,
@@ -268,8 +270,11 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
 
 export const metaOf = <T extends {}>(obj: T): ObjectMeta => {
   const proxy = getProxyHandlerSlot(obj);
-  invariant(proxy.handler instanceof EchoReactiveHandler, 'Not a reactive ECHO object');
-  return proxy.handler.getMeta();
+  if (proxy.handler instanceof EchoReactiveHandler) {
+    return proxy.handler.getMeta();
+  } else {
+    return getTargetMeta(obj);
+  }
 };
 
 export const typeOf = <T extends {}>(obj: T): Reference | undefined => getTypeReference(getSchema(obj));
