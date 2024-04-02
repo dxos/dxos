@@ -3,7 +3,7 @@
 //
 
 import { transact } from '@tldraw/state';
-import { createTLStore, defaultShapes, type TLRecord } from '@tldraw/tldraw';
+import { createTLStore, defaultShapeUtils, type TLRecord } from '@tldraw/tldraw';
 import { type TLStore } from '@tldraw/tlschema';
 
 import { next as A } from '@dxos/automerge/automerge';
@@ -22,7 +22,7 @@ export class AutomergeStoreAdapter {
   private _lastHeads: A.Heads | undefined = undefined;
 
   constructor(private readonly _options = { timeout: 250 }) {
-    this._store = createTLStore({ shapes: defaultShapes });
+    this._store = createTLStore({ shapeUtils: defaultShapeUtils });
   }
 
   get store() {
@@ -36,7 +36,7 @@ export class AutomergeStoreAdapter {
 
     const path = accessor.path ?? [];
 
-    // Initial sync
+    // Initial sync.
     {
       const contentRecords: Record<string, TLRecord> | undefined = getDeep(accessor.handle.docSync()!, path);
 

@@ -2,20 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Editor, Tldraw } from '@tldraw/tldraw';
+import '@tldraw/tldraw/tldraw.css';
+
+import { DefaultGrid, type Editor, Tldraw } from '@tldraw/tldraw';
 import React, { type FC, useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type SketchType } from '@braneframe/types';
-import { debounce } from '@dxos/async';
 import { type TextObject } from '@dxos/echo-schema';
 import { useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Vite config: https://github.com/tldraw/examples/tree/main/tldraw-vite-example
 // TODO(burdon): Self-hosted: https://docs.tldraw.dev/usage#Self-hosting-static-assets
-
-import '@tldraw/tldraw/tldraw.css';
 
 import { useStoreAdapter } from '../hooks';
 
@@ -37,16 +36,21 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {
     if (editor) {
-      editor.setDarkMode(themeMode === 'dark');
-      editor.setReadOnly(!!readonly);
-      editor.setSnapMode(!readonly);
-      editor.setGridMode(!readonly);
+      editor.user.updateUserPreferences({
+        isDarkMode: themeMode === 'dark',
+        isSnapMode: !readonly,
+      });
+      editor.updateInstanceState({
+        isGridMode: true,
+        isReadonly: !!readonly,
+      });
     }
   }, [editor, themeMode]);
 
   const store = useStoreAdapter(sketch.data as unknown as TextObject);
 
   // Zoom to fit.
+  // TODO(burdon): !!!
   const { ref: containerRef, width = 0, height } = useResizeDetector();
   const [ready, setReady] = useState(!autoZoom);
   useEffect(() => {
@@ -54,6 +58,8 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
       return;
     }
 
+    setReady(true);
+    /*
     const zoomToContent = (animate = true) => {
       const commonBounds = editor?.allShapesCommonBounds;
       if (editor && width && height && commonBounds?.width && commonBounds?.height) {
@@ -80,6 +86,7 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
     const onUpdate = debounce(zoomToContent, 200);
     const subscription = store.listen(() => onUpdate(true), { scope: 'document' });
     return () => subscription();
+    */
   }, [editor, width, height]);
 
   // https://github.com/tldraw/tldraw/blob/main/packages/ui/src/lib/TldrawUi.tsx
@@ -90,22 +97,26 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
       style={{ visibility: ready ? 'visible' : 'hidden' }}
       className={mx(
         'w-full h-full',
-        // 14Override z-index.
-        '[&>div>span>div]:z-0',
-        // 14Hide .tlui-menu-zone
-        '[&>div>main>div:nth-child(1)>div:nth-child(1)]:hidden',
-        // 14Hide .tlui-navigation-zone
-        '[&>div>main>div:nth-child(2)>div:nth-child(1)>div:nth-child(1)]:hidden',
-        // 14Hide .tlui-help-menu
-        '[&>div>main>div:nth-child(2)>div:nth-child(1)>div:nth-child(3)]:hidden',
-        // 14Hide .tlui-debug-panel
-        '[&>div>main>div:nth-child(2)>div:nth-child(2)]:hidden',
-        styles.background,
+        // styles.background, // TODO(burdon): ???
         className,
       )}
     >
       {/* NOTE: Key forces unmount; otherwise throws error. */}
-      <Tldraw key={sketch.id} store={store} hideUi={readonly} onMount={setEditor} />
+      <Tldraw
+        key={sketch.id}
+        store={store}
+        components={{
+          DebugMenu: null,
+          Grid: DefaultGrid,
+          HelpMenu: null,
+          MenuPanel: null,
+          NavigationPanel: null,
+          TopPanel: null,
+          ZoomMenu: null,
+        }}
+        hideUi={readonly}
+        onMount={setEditor}
+      />
     </div>
   );
 };
