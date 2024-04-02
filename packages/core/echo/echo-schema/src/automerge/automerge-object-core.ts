@@ -296,6 +296,11 @@ export class AutomergeObjectCore {
       }
     } else {
       invariant(this.linkCache);
+
+      // Can be caused not using `object(Expando, { ... })` constructor.
+      // TODO(dmaretskyi): Add better validation.
+      invariant(obj.id != null);
+
       this.linkCache.set(obj.id, obj as EchoObject);
       return new Reference(obj.id);
     }
