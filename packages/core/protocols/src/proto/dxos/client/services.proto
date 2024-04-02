@@ -390,7 +390,8 @@ service SpacesService {
 
 service IndexService {
   rpc SetConfig(dxos.echo.indexing.IndexConfig) returns (google.protobuf.Empty);
-  rpc Find(dxos.agent.query.QueryRequest) returns (dxos.agent.query.QueryResponse);
+  rpc Find(dxos.agent.query.QueryRequest) returns (stream dxos.agent.query.QueryResponse);
+  
 }
 
 //
