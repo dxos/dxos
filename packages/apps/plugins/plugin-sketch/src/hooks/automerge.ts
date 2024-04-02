@@ -69,7 +69,10 @@ export class AutomergeStoreAdapter {
           [...Object.values(contentRecords ?? {})].forEach((record) => {
             try {
               console.log('111');
-              this._store.put(decode(record));
+              const r = decode(record);
+              // this._store.schema.validateRecord(this._store, r);
+              console.log('222', r);
+              this._store.put(r);
             } catch (err) {
               // TODO(burdon): !!!
               console.warn(String(err));
