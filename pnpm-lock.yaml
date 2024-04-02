@@ -2986,19 +2986,22 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       '@tldraw/assets':
-        specifier: 2.0.2
+        specifier: ^2.0.2
         version: 2.0.2
       '@tldraw/editor':
-        specifier: 2.0.2
+        specifier: ^2.0.2
         version: 2.0.2(react-dom@18.2.0)(react@18.2.0)
       '@tldraw/state':
-        specifier: 2.0.2
+        specifier: ^2.0.2
+        version: 2.0.2(react@18.2.0)
+      '@tldraw/store':
+        specifier: ^2.0.2
         version: 2.0.2(react@18.2.0)
       '@tldraw/tldraw':
-        specifier: 2.0.2
+        specifier: ^2.0.2
         version: 2.0.2(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@tldraw/tlschema':
-        specifier: 2.0.2
+        specifier: ^2.0.2
         version: 2.0.2(react@18.2.0)
       react-resize-detector:
         specifier: ^7.1.2
@@ -21312,7 +21315,7 @@ packages:
       '@tensorflow/tfjs-layers': 3.21.0(@tensorflow/tfjs-core@3.21.0)
       argparse: 1.0.10
       chalk: 4.1.2
-      core-js: 3.29.0
+      core-js: 3.36.1
       regenerator-runtime: 0.13.11
       yargs: 16.2.0
     transitivePeerDependencies:
@@ -26660,11 +26663,6 @@ packages:
     dependencies:
       browserslist: 4.22.2
     dev: true
-
-  /core-js@3.29.0:
-    resolution: {integrity: sha512-VG23vuEisJNkGl6XQmFJd3rEG/so/CNatqeE+7uZAwTSwFeB/qaO0be8xZYUNWprJ/GIwL8aMt9cj1kvbpTZhg==}
-    requiresBuild: true
-    dev: false
 
   /core-js@3.36.1:
     resolution: {integrity: sha512-BTvUrwxVBezj5SZ3f10ImnX2oRByMxql3EimVqMysepbC9EeMUOpLwdy6Eoili2x6E4kf+ZUB5k/+Jv55alPfA==}

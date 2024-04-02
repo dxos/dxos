@@ -29,7 +29,16 @@ export class AutomergeStoreAdapter {
     return this._store;
   }
 
+  // TODO(burdon): Generalize migration across types.
+  //  migrateRecord(record, migrations, from, to);
+  saveSnapshot() {
+    const s1 = this._store.getSnapshot();
+    const s2 = this._store.migrateSnapshot(s1);
+    this._store.loadSnapshot(s2);
+  }
+
   open(accessor: DocAccessor<{ content: Record<string, any> }>) {
+    console.log(this._store.schema.currentStoreVersion); // 2.0.2 is version 4.
     if (this._subscriptions.length) {
       this.close();
     }
@@ -57,7 +66,15 @@ export class AutomergeStoreAdapter {
         transact(() => {
           log('load initial records', { contentRecords });
           this._store.clear();
-          this._store.put([...Object.values(contentRecords ?? {})].map((record) => decode(record)));
+          [...Object.values(contentRecords ?? {})].forEach((record) => {
+            try {
+              console.log('111');
+              this._store.put(decode(record));
+            } catch (err) {
+              // TODO(burdon): !!!
+              console.warn(String(err));
+            }
+          });
         });
       }
     }
