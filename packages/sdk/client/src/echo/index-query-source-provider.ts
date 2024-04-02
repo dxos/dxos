@@ -60,15 +60,11 @@ export class IndexQuerySource implements QuerySource {
     this.changed.emit();
 
     const start = Date.now();
-    this._stream = this._params.service.find({ filter: filter.toProto() });
-    let currentCtx: Context;
-    this._stream.subscribe(async (response) => {
-      await currentCtx?.dispose();
-      const ctx = new Context();
-      currentCtx = ctx;
-      if (!response.results || response.results.length === 0) {
-        return [];
-      }
+    const response = await this._params.service.find({ filter: filter.toProto() });
+
+    if (!response.results || response.results.length === 0) {
+      return [];
+    }
 
       const results: (QueryResult<EchoObject> | undefined)[] = await Promise.all(
         response.results!.map(async (result) => {
