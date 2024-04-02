@@ -42,9 +42,13 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
 
   switch (layout) {
     case ShellLayout.INITIALIZE_IDENTITY:
+    case ShellLayout.INITIALIZE_IDENTITY_FROM_INVITATION:
       return (
         <JoinDialog
           mode='halo-only'
+          initialDisposition={
+            layout === ShellLayout.INITIALIZE_IDENTITY_FROM_INVITATION ? 'accept-halo-invitation' : 'default'
+          }
           initialInvitationCode={invitationCode}
           onCancelResetStorage={() => runtime.setLayout({ layout: ShellLayout.IDENTITY })}
           onDone={() => {
@@ -63,13 +67,11 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
           createInvitationUrl={(invitationCode) => `${origin}?deviceInvitationCode=${invitationCode}`}
           onResetStorage={async () => {
             await client.reset();
-            console.log('[client reset]', 'onResetStorage');
             return runtime.setAppContext({ display: ShellDisplay.NONE, reload: true });
           }}
           onJoinNewIdentity={async () => {
             await client.reset();
-            console.log('[client reset]', 'onJoinNewIdentity');
-            return runtime.setLayout({ layout: ShellLayout.INITIALIZE_IDENTITY });
+            return runtime.setLayout({ layout: ShellLayout.INITIALIZE_IDENTITY_FROM_INVITATION });
           }}
           onDone={async () => {
             await runtime.setAppContext({ display: ShellDisplay.NONE });

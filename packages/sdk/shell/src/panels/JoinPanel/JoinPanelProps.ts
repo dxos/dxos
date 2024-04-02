@@ -14,6 +14,8 @@ import { type FailReason } from '../../types';
 
 export type JoinPanelMode = 'default' | 'halo-only';
 
+export type JoinPanelInitialDisposition = 'default' | 'accept-halo-invitation';
+
 export type JoinStepProps = Omit<StepProps, 'send' | 'onDone'> & {
   send: JoinSend;
   onDone?: (result: InvitationResult | null) => void;
@@ -21,6 +23,7 @@ export type JoinStepProps = Omit<StepProps, 'send' | 'onDone'> & {
 
 export interface JoinPanelProps {
   mode?: JoinPanelMode;
+  initialDisposition?: JoinPanelInitialDisposition;
   initialInvitationCode?: string;
   titleId?: string;
   exitActionParent?: Parameters<typeof cloneElement>[0];

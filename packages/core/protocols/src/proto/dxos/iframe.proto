@@ -55,11 +55,12 @@ service AppService {
 enum ShellLayout {
   DEFAULT = 0;
   INITIALIZE_IDENTITY = 1;
-  IDENTITY = 2;
-  SHARE_IDENTITY = 3;
-  EDIT_PROFILE = 4;
-  SPACE = 5;
-  JOIN_SPACE = 6;
+  INITIALIZE_IDENTITY_FROM_INVITATION = 2;
+  IDENTITY = 3;
+  SHARE_IDENTITY = 4;
+  EDIT_PROFILE = 5;
+  SPACE = 6;
+  JOIN_SPACE = 7;
 }
 
 message LayoutRequest {

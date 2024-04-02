@@ -19,7 +19,7 @@ import { type Client, AlreadyJoinedError } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 import { type AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
-import { type JoinPanelMode } from './JoinPanelProps';
+import { type JoinPanelInitialDisposition, type JoinPanelMode } from './JoinPanelProps';
 import { type FailReason } from '../../types';
 
 type InvitationKindContext = Partial<{
@@ -33,6 +33,7 @@ type InvitationKindContext = Partial<{
 
 type JoinMachineContext = {
   mode: JoinPanelMode;
+  initialDisposition: JoinPanelInitialDisposition;
   identity: Identity | null;
   halo: InvitationKindContext;
   space: InvitationKindContext;
@@ -295,6 +296,7 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
     id: 'join',
     predictableActionArguments: true,
     context: {
+      initialDisposition: 'default',
       mode: 'default',
       identity: null,
       halo: {},
@@ -305,6 +307,11 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
       unknown: {
         always: [
           { cond: 'existingIdentity', target: 'resettingIdentity', actions: 'log' },
+          {
+            cond: 'initiallyAcceptingHaloInvitation',
+            target: '#join.choosingIdentity.acceptingHaloInvitation',
+            actions: 'log',
+          },
           { cond: 'noSelectedIdentity', target: 'choosingIdentity', actions: 'log' },
           { target: 'acceptingSpaceInvitation', actions: 'log' },
         ],
@@ -353,6 +360,8 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
     guards: {
       existingIdentity: ({ identity, mode }, _event) => mode === 'halo-only' && !!identity,
       noSelectedIdentity: ({ identity }, _event) => !identity,
+      initiallyAcceptingHaloInvitation: ({ identity, initialDisposition }, _event) =>
+        !identity && initialDisposition === 'accept-halo-invitation',
       hasHaloUnredeemedCode: ({ halo }, _event) => !!halo.unredeemedCode,
       noSpaceInvitation: ({ space }, _event) => !space.invitation && !space.unredeemedCode,
     },

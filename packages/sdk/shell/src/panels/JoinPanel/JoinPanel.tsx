@@ -175,6 +175,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
 export const JoinPanel = ({
   titleId: propsTitleId,
   mode = 'default',
+  initialDisposition = 'default',
   initialInvitationCode,
   exitActionParent,
   onExit,
@@ -190,6 +191,7 @@ export const JoinPanel = ({
   const [joinState, joinSend, joinService] = useJoinMachine(client, {
     context: {
       mode,
+      initialDisposition,
       identity,
       ...(initialInvitationCode && {
         [mode === 'halo-only' ? 'halo' : 'space']: { unredeemedCode: initialInvitationCode },
