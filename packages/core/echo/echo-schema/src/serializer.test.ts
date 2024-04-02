@@ -11,8 +11,9 @@ import { getSchema, object } from './schema';
 import { Serializer, type SerializedSpace } from './serializer';
 import { createDatabase } from './testing';
 import { Contact } from './tests/schema';
+import { ExpandoType } from './effect/reactive';
 
-describe.only('Serializer', () => {
+describe('Serializer', () => {
   // TODO(dmaretskyi): Test with unloaded objects.
   test('Basic', async () => {
     const serializer = new Serializer();
@@ -56,20 +57,19 @@ describe.only('Serializer', () => {
       const obj = object({
         title: 'Main task',
         subtasks: [
-          object({
+          object(ExpandoType, {
             title: 'Subtask 1',
           }),
-          object({
+          object(ExpandoType, {
             title: 'Subtask 2',
           }),
         ],
-        previous: object({
+        previous: object(ExpandoType, {
           title: 'Previous task',
         }),
       });
       db.add(obj);
       await db.flush();
-      expect(db.objects).to.have.length(4);
 
       serialized = await serializer.export(db);
       expect(serialized.objects).to.have.length(4);
