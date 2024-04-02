@@ -9,6 +9,7 @@ import React, { type FC, useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type SketchType } from '@braneframe/types';
+import { debounce } from '@dxos/async';
 import { type TextObject } from '@dxos/echo-schema';
 import { useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -33,15 +34,17 @@ export type SketchComponentProps = {
 const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom = 1, readonly, className }) => {
   const { themeMode } = useThemeContext();
 
+  // TODO(burdon): Custom fonts.
+
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {
     if (editor) {
       editor.user.updateUserPreferences({
         isDarkMode: themeMode === 'dark',
-        isSnapMode: !readonly,
+        isSnapMode: true,
       });
       editor.updateInstanceState({
-        isGridMode: true,
+        isGridMode: !readonly,
         isReadonly: !!readonly,
       });
     }
@@ -50,43 +53,47 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
   const store = useStoreAdapter(sketch.data as unknown as TextObject);
 
   // Zoom to fit.
-  // TODO(burdon): !!!
   const { ref: containerRef, width = 0, height } = useResizeDetector();
   const [ready, setReady] = useState(!autoZoom);
   useEffect(() => {
+    editor?.zoomToFit({ duration: 0 });
+    editor?.resetZoom();
     if (!autoZoom) {
       return;
     }
 
-    setReady(true);
-    /*
     const zoomToContent = (animate = true) => {
-      const commonBounds = editor?.allShapesCommonBounds;
-      if (editor && width && height && commonBounds?.width && commonBounds?.height) {
-        const padding = 40;
-        // NOTE: Objects culled (unstyled) if outside of bounds.
+      if (!editor) {
+        return;
+      }
+
+      // Custom zoom to fit.
+      const commonBounds = editor.getCurrentPageBounds();
+      if (width && height && commonBounds?.width && commonBounds?.height) {
+        const padding = 60;
+        // NOTE: Objects are culled (un-styled) if outside of bounds.
         const zoom = Math.min(
           maxZoom,
           (width - padding) / commonBounds.width,
           (height - padding) / commonBounds.height,
         );
+
         const center = {
           x: (width - commonBounds.width * zoom) / 2 / zoom - commonBounds.minX,
           y: (height - commonBounds.height * zoom) / 2 / zoom - commonBounds.minY,
+          z: zoom,
         };
 
-        editor.animateCamera(center.x, center.y, zoom, animate ? { duration: 250 } : undefined);
-        setReady(true);
+        editor.setCamera(center, animate ? { duration: 250 } : undefined);
       }
+
+      setReady(true);
     };
 
-    editor?.updateViewportScreenBounds();
     zoomToContent(false);
-
     const onUpdate = debounce(zoomToContent, 200);
     const subscription = store.listen(() => onUpdate(true), { scope: 'document' });
     return () => subscription();
-    */
   }, [editor, width, height]);
 
   // https://github.com/tldraw/tldraw/blob/main/packages/ui/src/lib/TldrawUi.tsx
