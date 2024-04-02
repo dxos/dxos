@@ -249,6 +249,7 @@ describe('Reactive Object with ECHO database', () => {
     const Person = S.struct({
       name: S.string,
       worksAt: E.ref(Org),
+      previousEmployment: S.optional(S.array(E.ref(Org))),
     }).pipe(E.echoObject('example.Person', '1.0.0'));
 
     test('references', async () => {
@@ -264,7 +265,7 @@ describe('Reactive Object with ECHO database', () => {
       expect(person.worksAt?.name).to.eq(orgName);
     });
 
-    test('adding nested structures to DB', async () => {
+    test('adding object with nested objects to DB', async () => {
       const graph = new Hypergraph();
       graph.types.registerEffectSchema(Org).registerEffectSchema(Person);
       const { db } = await createDatabase(graph, { useReactiveObjectApi: true });
@@ -274,6 +275,39 @@ describe('Reactive Object with ECHO database', () => {
       expect(person.worksAt?.name).to.eq('DXOS');
       expect(person.worksAt?.id).to.be.a('string');
     });
+
+    test('adding objects with nested arrays to DB', async () => {
+      const graph = new Hypergraph();
+      graph.types.registerEffectSchema(Org).registerEffectSchema(Person);
+      const { db } = await createDatabase(graph, { useReactiveObjectApi: true });
+
+      const dxos = E.object(Org, { name: 'DXOS' });
+      const braneframe = E.object(Org, { name: 'Braneframe' });
+      const person = db.add(E.object(Person, { name: 'John', worksAt: dxos, previousEmployment: [dxos, braneframe] }));
+
+      expect(person.previousEmployment![0]!.name).to.eq('DXOS');
+      expect(person.previousEmployment![1]!.name).to.eq('Braneframe');
+    });
+
+    test('adding untyped objects with nested arrays to DB', async () => {
+      const graph = new Hypergraph();
+      const { db } = await createDatabase(graph, { useReactiveObjectApi: true });
+
+      const person = db.add(
+        E.object({
+          name: 'John',
+          previousEmployment: [
+            E.object(E.ExpandoType, { name: 'DXOS' }),
+            E.object(E.ExpandoType, { name: 'Braneframe' }),
+          ],
+        }),
+      );
+
+      expect(person.previousEmployment![0]!.name).to.eq('DXOS');
+      expect(person.previousEmployment![1]!.name).to.eq('Braneframe');
+    });
+
+    test('adding recursive structures to DB');
   });
 
   describe('meta', () => {
