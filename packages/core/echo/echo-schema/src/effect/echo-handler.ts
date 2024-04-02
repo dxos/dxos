@@ -24,7 +24,7 @@ import { getTargetMeta } from './reactive-meta-handler';
 import { SchemaValidator } from './schema-validator';
 import { AutomergeObjectCore, META_NAMESPACE } from '../automerge/automerge-object-core';
 import { type KeyPath } from '../automerge/key-path';
-import { encodeReference, REFERENCE_TYPE_TAG } from '../automerge/types';
+import { encodeReference } from '../automerge/types';
 import { data, type ObjectMeta } from '../object';
 import { defineHiddenProperty } from '../util/property';
 
@@ -494,9 +494,7 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     const reified = this.getReified(target);
     delete reified.id;
     return {
-      '@type': typeRef
-        ? { '@type': REFERENCE_TYPE_TAG, itemId: typeRef.itemId, protocol: typeRef.protocol, host: typeRef.host }
-        : undefined,
+      '@type': typeRef ? encodeReference(typeRef) : undefined,
       ...(this._objectCore.isDeleted() ? { '@deleted': true } : {}),
       '@meta': { ...this.getMeta() },
       '@id': this._objectCore.id,

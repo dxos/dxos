@@ -61,21 +61,14 @@ const SignOutChooserImpl = ({ disabled, onResetDevice, onJoinNewIdentity, onBack
           {t('back label')}
         </Action>
         <Action
-          variant='primary'
+          variant='destructive'
           data-testid='sign-out.join-new-identity'
-          classNames='!bg-error-500 hover:!bg-error-550'
           disabled={disabled}
           onClick={onJoinNewIdentity}
         >
           {t('join new identity label')}
         </Action>
-        <Action
-          variant='primary'
-          data-testid='sign-out.reset-device'
-          classNames='!bg-error-500 hover:!bg-error-550'
-          disabled={disabled}
-          onClick={onResetDevice}
-        >
+        <Action variant='destructive' data-testid='sign-out.reset-device' disabled={disabled} onClick={onResetDevice}>
           {t('reset device label')}
         </Action>
       </Actions>
