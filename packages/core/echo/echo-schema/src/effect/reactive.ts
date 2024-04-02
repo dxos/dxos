@@ -60,6 +60,11 @@ export const echoObject =
 
 const _AnyEchoObject = S.struct({}).pipe(echoObject('Any', '0.1.0'));
 export interface AnyEchoObject extends S.Schema.Type<typeof _AnyEchoObject> {}
+
+/**
+ * @deprecated
+ */
+// TODO(burdon): Rename.
 export const AnyEchoObject: S.Schema<AnyEchoObject> = _AnyEchoObject;
 
 export const ExpandoMarker = Symbol.for('@dxos/echo-schema/Expando');
