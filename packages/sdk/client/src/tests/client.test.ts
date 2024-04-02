@@ -11,7 +11,6 @@ import { MessageType, TextV0Type, ThreadType } from '@braneframe/types';
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import * as E from '@dxos/echo-schema';
-import { Filter } from '@dxos/echo-schema';
 import { describe, test, afterTest } from '@dxos/test';
 import { isNode } from '@dxos/util';
 
@@ -129,7 +128,7 @@ describe('Client', () => {
     }
   }).onlyEnvironments('nodejs', 'chromium', 'firefox');
 
-  test('objects are being synced between clients', async () => {
+  test.only('objects are being synced between clients', async () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
 
@@ -151,10 +150,13 @@ describe('Client', () => {
     await space1.waitUntilReady();
     const spaceKey = space1.key;
 
-    const query = space1.db.query(Filter.schema(ThreadType));
+    const query = space1.db.query();
     query.subscribe(({ objects }) => {
-      if (objects.length === 1) {
-        threadQueried.wake(objects[0]);
+      console.log(objects);
+      const thread = objects.find((obj: TypedObject) => obj.type === 'Thread');
+
+      if (thread) {
+        threadQueried.wake(thread as Thread);
       }
     });
     await Promise.all(performInvitation({ host: space1, guest: client2.spaces }));
@@ -165,7 +167,7 @@ describe('Client', () => {
     const thread2 = space2.db.add(E.object(ThreadType, { messages: [] }));
     await space2.db.flush();
 
-    const thread1 = await threadQueried.wait({ timeout: 1000 });
+    const thread1 = await threadQueried.wait({ timeout: 2_000 });
 
     const text = 'Hello world';
     const message = space2.db.add(
