@@ -15,9 +15,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "test": "nx run-many --target=test"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/invariant": "workspace:*",
