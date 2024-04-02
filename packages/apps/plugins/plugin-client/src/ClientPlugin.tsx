@@ -82,11 +82,7 @@ export const ClientPlugin = ({
       try {
         await client.initialize();
 
-        await client.spaces.setIndexConfig(
-          config.values.runtime?.client?.storage?.spaceFragmentation
-            ? { indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true }
-            : {},
-        );
+        await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
 
         // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
         client.reloaded.on(() => {

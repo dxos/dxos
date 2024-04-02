@@ -76,7 +76,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     super(spacesStream.observable, []);
     this._spacesStream = spacesStream;
     this._automergeContext = new AutomergeContext(_serviceProvider.services.DataService, {
-      spaceFragmentationEnabled: this._config?.values?.runtime?.client?.storage?.spaceFragmentation ?? false,
+      spaceFragmentationEnabled: true,
     });
   }
 
