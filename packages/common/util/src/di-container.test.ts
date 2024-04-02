@@ -1,6 +1,11 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { test } from 'vitest';
-import { DiKey } from './di-key';
+
 import { DiContainer } from './di-container';
+import { DiKey } from './di-key';
 
 test('DiContainer', ({ expect }) => {
   const A = DiKey.define<string>('A');

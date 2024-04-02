@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { DiKey } from './di-key';
 
 export class DiContainer {

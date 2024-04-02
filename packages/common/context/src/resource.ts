@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import '@dxos/util';
 import { Context } from './context';
 
@@ -93,9 +97,9 @@ export class Resource implements Lifecycle {
   }
 }
 
-export async function openInContext<T extends Lifecycle>(ctx: Context, resource: T): Promise<T> {
+export const openInContext = async <T extends Lifecycle>(ctx: Context, resource: T): Promise<T> => {
   await resource.open?.(ctx);
   ctx.onDispose(() => resource.close?.());
 
   return resource;
-}
+};

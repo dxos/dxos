@@ -1,4 +1,9 @@
-import { describe, test } from 'vitest';
+//
+// Copyright 2024 DXOS.org
+//
+
+import { test } from 'vitest';
+
 import { DiKey } from './di-key';
 
 test('DiKey', ({ expect }) => {

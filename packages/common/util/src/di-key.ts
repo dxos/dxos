@@ -1,4 +1,9 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { inspect } from 'node:util';
+
 import { defaultMap } from './map';
 
 const symbolSingleton = Symbol('singleton');

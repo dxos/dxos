@@ -2,11 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
+import { inspect } from 'node:util';
+
 import { log } from '@dxos/log';
 import { safeInstanceof } from '@dxos/util';
 
 import { ContextDisposedError } from './context-disposed-error';
-import { inspect } from 'node:util';
 
 export type ContextErrorHandler = (error: Error) => void;
 
