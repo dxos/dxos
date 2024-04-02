@@ -11,6 +11,7 @@ import { useSpace } from '@dxos/react-client/echo';
 import { IdentityDialog } from '../IdentityDialog';
 import { JoinDialog } from '../JoinDialog';
 import { SpaceDialog } from '../SpaceDialog';
+import { StatusDialog } from '../StatusDialog';
 
 export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: string }) => {
   const [{ layout, invitationCode, spaceKey, target }, setLayout] = useState<LayoutRequest>({
@@ -41,6 +42,8 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
   }, [runtime, layout, space]);
 
   switch (layout) {
+    case ShellLayout.STATUS:
+      return <StatusDialog />;
     case ShellLayout.INITIALIZE_IDENTITY:
     case ShellLayout.INITIALIZE_IDENTITY_FROM_INVITATION:
       return (
@@ -65,10 +68,12 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
         <IdentityDialog
           createInvitationUrl={(invitationCode) => `${origin}?deviceInvitationCode=${invitationCode}`}
           onResetStorage={async () => {
+            runtime.setLayout({ layout: ShellLayout.STATUS });
             await client.reset();
             return runtime.setAppContext({ display: ShellDisplay.NONE, reload: true });
           }}
           onJoinNewIdentity={async () => {
+            runtime.setLayout({ layout: ShellLayout.STATUS });
             await client.reset();
             return runtime.setLayout({ layout: ShellLayout.INITIALIZE_IDENTITY_FROM_INVITATION });
           }}

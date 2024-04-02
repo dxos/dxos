@@ -61,6 +61,7 @@ enum ShellLayout {
   EDIT_PROFILE = 5;
   SPACE = 6;
   JOIN_SPACE = 7;
+  STATUS = 8;
 }
 
 message LayoutRequest {
