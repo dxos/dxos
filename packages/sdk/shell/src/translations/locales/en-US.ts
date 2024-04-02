@@ -113,6 +113,7 @@ export const os = {
   'clear label': 'Use default',
   'select emoji label': 'Choose an emoji to use in your avatar',
   'select hue label': 'Choose a hue to use in your avatar',
+  'resetting message': 'One moment while things are reset…',
   'red label': 'Red',
   'orange label': 'Orange',
   'amber label': 'Amber',
