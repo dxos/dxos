@@ -33,6 +33,7 @@ import {
   type Slot,
 } from './util/template';
 import { type InquirableZodType } from './util/zodInquire';
+import { error } from './util/logger';
 
 export type Group<I = any> = (context: Options<I, any>) => Template<I, any>[];
 
@@ -56,63 +57,68 @@ export class Plate<I = null, TSlots extends Slots<I> = {}> {
     extraContext?: (rendered: Partial<SlotValues<FileSlots<I, TSlots, TContext>>>) => Partial<TContext>,
   ) {
     const template = async (options: Options<I, SlotsWithContext<I, TSlots, TContext>>) => {
-      const { outputDirectory, relativeTo, input } = {
-        outputDirectory: process.cwd(),
-        ...options,
-      };
-      const absoluteTemplateRelativeTo = path.resolve(relativeTo ?? path.dirname(templateFile));
-      const cleanTemplateFile = templateFile.replace(/^file:\/\//g, '');
-      const relativeOutputPath = getOutputNameFromTemplateName(cleanTemplateFile).slice(
-        absoluteTemplateRelativeTo.length + 1,
-      );
-      const { slots: _slots, ...restOpts } = options;
-      const {
-        content,
-        path: renderedPath,
-        copyOf,
-      } = await renderSlots(slots, async (rendered) => {
-        const ctx = extraContext?.(rendered);
-        return {
-          input,
-          slots: lazy(
-            await renderSlots({ ...this.parentSlots, ...options.slots }, () => ({
-              input,
-              overwrite: false,
-              slots: lazy({
-                ...this.parentSlots,
-                ...options.slots,
-              }),
-              ...restOpts,
-              outputFile: relativeOutputPath,
-              outputDirectory,
-              inherited: undefined,
-              relativeTo: relativeTo ? absoluteTemplateRelativeTo : path.dirname(templateFile),
-              ...ctx,
-            })),
-          ),
-          overwrite: false,
-          ...restOpts,
-          outputDirectory,
-          outputFile: relativeOutputPath,
-          inherited: undefined,
-          relativeTo: relativeTo ? absoluteTemplateRelativeTo : path.dirname(templateFile),
-          ...ctx,
+      try {
+        const { outputDirectory, relativeTo, input } = {
+          outputDirectory: process.cwd(),
+          ...options,
         };
-      });
-      const hasContent = (typeof content === 'string' && content.length > 0) || copyOf;
-      return results(
-        hasContent
-          ? [
-              new FileEffect({
-                path: renderedPath
-                  ? path.resolve(outputDirectory, renderedPath)
-                  : path.resolve(outputDirectory, relativeOutputPath),
-                content: typeof content === 'string' ? await pretty(content, relativeOutputPath) : content,
-                copyOf: copyOf ? path.resolve(relativeTo ?? '', copyOf) : undefined,
-              }),
-            ]
-          : [],
-      );
+        const absoluteTemplateRelativeTo = path.resolve(relativeTo ?? path.dirname(templateFile));
+        const cleanTemplateFile = templateFile.replace(/^file:\/\//g, '');
+        const relativeOutputPath = getOutputNameFromTemplateName(cleanTemplateFile).slice(
+          absoluteTemplateRelativeTo.length + 1,
+        );
+        const { slots: _slots, ...restOpts } = options;
+        const {
+          content,
+          path: renderedPath,
+          copyOf,
+        } = await renderSlots(slots, async (rendered) => {
+          const ctx = extraContext?.(rendered);
+          return {
+            input,
+            slots: lazy(
+              await renderSlots({ ...this.parentSlots, ...options.slots }, () => ({
+                input,
+                overwrite: false,
+                slots: lazy({
+                  ...this.parentSlots,
+                  ...options.slots,
+                }),
+                ...restOpts,
+                outputFile: relativeOutputPath,
+                outputDirectory,
+                inherited: undefined,
+                relativeTo: relativeTo ? absoluteTemplateRelativeTo : path.dirname(templateFile),
+                ...ctx,
+              })),
+            ),
+            overwrite: false,
+            ...restOpts,
+            outputDirectory,
+            outputFile: relativeOutputPath,
+            inherited: undefined,
+            relativeTo: relativeTo ? absoluteTemplateRelativeTo : path.dirname(templateFile),
+            ...ctx,
+          };
+        });
+        const hasContent = (typeof content === 'string' && content.length > 0) || copyOf;
+        return results(
+          hasContent
+            ? [
+                new FileEffect({
+                  path: renderedPath
+                    ? path.resolve(outputDirectory, renderedPath)
+                    : path.resolve(outputDirectory, relativeOutputPath),
+                  content: typeof content === 'string' ? await pretty(content, relativeOutputPath) : content,
+                  copyOf: copyOf ? path.resolve(relativeTo ?? '', copyOf) : undefined,
+                }),
+              ]
+            : [],
+        );
+      } catch (err) {
+        error('executing template', templateFile);
+        throw err;
+      }
     };
     template.slots = this.parentSlots!;
     return template;

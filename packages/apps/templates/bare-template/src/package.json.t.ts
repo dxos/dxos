@@ -132,7 +132,7 @@ export default template.define
       // TODO(wittjosiah): Importing directly causes package.json to be included in the output.
       //   Including package.json in the output causes syncpack to fail sometimes.
       //   Upgrading syncpack will likely fix this but this is simpler for now.
-      const ownPackageJson = await loadJson('../package.json'); // relative to dist/src
+      const ownPackageJson = await loadJson('../package.json'); // relative to .ts files in src by the rules of plate execution
       const { version: packageVersion } = monorepo ? await getDxosRepoInfo() : ownPackageJson;
       const version = monorepo ? packageVersion : '0.1.0';
       const depVersion = monorepo ? `workspace:*` : packageVersion;

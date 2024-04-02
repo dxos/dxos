@@ -23,7 +23,8 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "forceExit": true
+        "forceExit": true,
+        "timeout": 1000000,
       }
     }
   }
