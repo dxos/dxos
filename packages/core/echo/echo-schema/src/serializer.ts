@@ -8,7 +8,7 @@ import { stripUndefinedValues } from '@dxos/util';
 
 import { AutomergeObjectCore, type EncodedReferenceObject, encodeReference, getAutomergeObjectCore } from './automerge';
 import { type EchoDatabase } from './database';
-import { type OpaqueEchoObject, type EchoObject } from './object';
+import { type OpaqueEchoObject } from './object';
 import { Filter } from './query';
 
 /**
