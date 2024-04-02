@@ -73,6 +73,11 @@ export const IdentityActionChooserImpl = ({
     <div role='none' className='grow flex flex-col gap-1'>
       <DensityProvider density='coarse'>
         <div className='grow justify-center flex flex-col gap-1'>
+          <Action data-testid='manage-profile' onClick={() => send?.({ type: 'chooseProfile' })} classNames='plb-4'>
+            <UserGear className={getSize(6)} />
+            <span className='grow mli-3'>{t('choose profile label')}</span>
+            <CaretRight weight='bold' className={getSize(4)} />
+          </Action>
           {agentHostingEnabled && (
             <Action data-testid='manage-agent' onClick={() => send?.({ type: 'chooseAgent' })} classNames='plb-4'>
               <HardDrive className={getSize(6)} />
@@ -90,16 +95,6 @@ export const IdentityActionChooserImpl = ({
             <span className='grow mli-3'>{t('choose add device label')}</span>
             <CaretRight weight='bold' className={getSize(4)} />
           </Action>
-          <Action data-testid='manage-devices' onClick={() => send?.({ type: 'chooseDevices' })} classNames='plb-4'>
-            <Devices className={getSize(6)} />
-            <span className='grow mli-3'>{t('choose devices label')}</span>
-            <CaretRight weight='bold' className={getSize(4)} />
-          </Action>
-          <Action data-testid='manage-profile' onClick={() => send?.({ type: 'chooseProfile' })} classNames='plb-4'>
-            <UserGear className={getSize(6)} />
-            <span className='grow mli-3'>{t('choose profile label')}</span>
-            <CaretRight weight='bold' className={getSize(4)} />
-          </Action>
           <Action
             data-testid='devices-panel.join-new-identity'
             onClick={() => send?.({ type: 'chooseJoinNewIdentity' })}
@@ -107,6 +102,11 @@ export const IdentityActionChooserImpl = ({
           >
             <Intersect className={getSize(6)} />
             <span className='grow mli-3'>{t('choose join new identity label')}</span>
+            <CaretRight weight='bold' className={getSize(4)} />
+          </Action>
+          <Action data-testid='manage-devices' onClick={() => send?.({ type: 'chooseDevices' })} classNames='plb-4'>
+            <Devices className={getSize(6)} />
+            <span className='grow mli-3'>{t('choose devices label')}</span>
             <CaretRight weight='bold' className={getSize(4)} />
           </Action>
           <Action
