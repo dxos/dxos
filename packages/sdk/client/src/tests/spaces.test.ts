@@ -12,7 +12,7 @@ import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import * as E from '@dxos/echo-schema';
-import { Expando, getTextContent, subscribe } from '@dxos/echo-schema';
+import { Expando, getAutomergeObjectCore, getTextContent, subscribe } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
@@ -246,7 +246,7 @@ describe('Spaces', () => {
     const space = await client.spaces.create();
     await space.waitUntilReady();
     const trigger = new Trigger();
-    space.properties[subscribe](() => {
+    getAutomergeObjectCore(space.properties).updates.on(() => {
       trigger.wake();
     });
 
