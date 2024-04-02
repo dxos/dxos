@@ -4,12 +4,11 @@
 
 import { Reference, TYPE_PROPERTIES } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { type ItemID } from '@dxos/protocols';
 import { stripUndefinedValues } from '@dxos/util';
 
-import { getAutomergeObjectCore } from './automerge';
+import { AutomergeObjectCore, EncodedReferenceObject, encodeReference, getAutomergeObjectCore } from './automerge';
 import { type EchoDatabase } from './database';
-import { TypedObject, base, type EchoObject } from './object';
+import { OpaqueEchoObject, type EchoObject } from './object';
 import { Filter } from './query';
 
 /**
@@ -46,13 +45,6 @@ export type SerializedSpace = {
   objects: SerializedObject[];
 };
 
-export type SerializedReference = {
-  '@type': 'dxos.echo.model.document.Reference';
-  itemId: ItemID;
-  protocol: string;
-  host: string;
-};
-
 export type SerializedObject = {
   /**
    * Format version number.
@@ -74,7 +66,7 @@ export type SerializedObject = {
   /**
    * Reference to a type.
    */
-  '@type'?: SerializedReference | string;
+  '@type'?: EncodedReferenceObject | string;
 
   /**
    * Flag to indicate soft-deleted objects.
@@ -96,7 +88,9 @@ export class Serializer {
   static version = 1;
 
   async export(database: EchoDatabase): Promise<SerializedSpace> {
-    const { objects } = database.query(undefined, { models: ['*'] });
+    const ids = database.automerge.getAllObjectIds();
+    const objects = await Promise.all(ids.map(async (id) => database.automerge.loadObjectById(id)));
+
     const data = {
       objects: objects.map((object) => {
         return this.exportObject(object as any);
@@ -138,36 +132,48 @@ export class Serializer {
     }
   }
 
-  exportObject(object: TypedObject): SerializedObject {
+  exportObject(object: OpaqueEchoObject): SerializedObject {
+    const core = getAutomergeObjectCore(object);
+
+    // TODO(dmaretskyi): Unify JSONinfication with echo-handler.
+    const typeRef = core.getType();
+
+    const data = core.getDecoded(['data']) as Record<string, any>;
+    const meta = core.getDecoded(['meta']) as Record<string, any>;
+
     return stripUndefinedValues({
-      ...(object[base] ? object[base].toJSON() : object.toJSON()), // TODO(burdon): Not working unless schema.
+      '@id': core.id,
+      '@type': typeRef ? encodeReference(typeRef) : undefined,
+      ...data,
       '@version': Serializer.version,
+      '@meta': meta,
       '@timestamp': new Date().toUTCString(),
     });
   }
 
   async importObject(database: EchoDatabase, object: SerializedObject) {
     const { '@id': id, '@type': type, '@deleted': deleted, '@meta': meta, ...data } = object;
+    const dataProperties = Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@')));
 
-    const obj = new TypedObject(Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@'))), {
-      meta,
-      type: getTypeRef(type),
+    const core = new AutomergeObjectCore();
+    core.id = id;
+    // TODO(dmaretskyi): Can't pass type in opts.
+    core.initNewObject(dataProperties, {
+      meta: meta,
     });
-
-    setObjectId(obj, id);
-    database.add(obj);
+    core.setType(getTypeRef(type)!);
     if (deleted) {
-      // Note: We support "soft" deletion. This is why adding and removing the object is not equal to no-op.
-      database.remove(obj);
+      core.setDeleted(deleted);
     }
+
+    database.automerge.addCore(core);
     await database.flush();
-    return obj;
   }
 }
 
-export const getTypeRef = (type?: SerializedReference | string): Reference | undefined => {
+export const getTypeRef = (type?: EncodedReferenceObject | string): Reference | undefined => {
   if (typeof type === 'object' && type !== null) {
-    return new Reference(type.itemId, type.protocol, type.host);
+    return new Reference(type.itemId!, type.protocol!, type.host!);
   } else if (typeof type === 'string') {
     // TODO(mykola): Never reached?
     return Reference.fromLegacyTypename(type);
