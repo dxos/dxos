@@ -50,16 +50,20 @@ export type DiKey<T> =
 export const DiKey = new (class DiKeyConstructor {
   /**
    * Needed to ensure referential equality of combined keys.
+   *
+   * This is a multilevel map of maps, where the maps are also used as keys.
+   *
+   * Good luck :)
    */
   // TODO(dmaretskyi): Disable private members lowering for dev env.
   // TODO(dmaretskyi): Could be a weak map after a NodeJS upgrade.
-  #combinedRegistry = new Map();
+  #combinedRegistry = new WeakMap();
 
   define<T>(name: string): DiKey<T> {
     return new SymbolDiKey(name);
   }
 
-  singleton<T>(name: string, factory: () => T): DiKey<T> {
+  singleton<T>(name: string, factory: SingletonFactory<T>): DiKey<T> {
     const id = new SymbolDiKey(name);
     id[symbolSingleton] = factory;
     return id as any;
@@ -92,7 +96,7 @@ export const DiKey = new (class DiKeyConstructor {
     return (id as any)[symbolSingleton];
   }
 
-  #lookupCombined(map: Map<any, any>, [first, ...rest]: DiKey<any>[]): Map<any, any> {
+  #lookupCombined(map: WeakMap<any, any>, [first, ...rest]: DiKey<any>[]): WeakMap<any, any> {
     const value = defaultMap(map, first, () => new Map());
     if (rest.length > 0) {
       return this.#lookupCombined(value, rest);
