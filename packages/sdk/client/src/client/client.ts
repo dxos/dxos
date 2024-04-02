@@ -311,7 +311,7 @@ export class Client {
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
 
     this._ctx = new Context();
-    this._config = this._options.config ?? new Config();
+    this._config = this._options.config ?? new Config({ runtime: { client: { useReactiveObjectApi: true } } });
     // NOTE: Must currently match the host.
     this._services = await (this._options.services ?? createClientServices(this._config, this._options.createWorker));
     this._iframeManager = this._options.shell
