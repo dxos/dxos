@@ -16,6 +16,9 @@ export enum LifecycleState {
   ERROR = 'ERROR',
 }
 
+/**
+ * Base class for resources that need to be opened and closed.
+ */
 export class Resource implements Lifecycle {
   #lifecycleState = LifecycleState.CLOSED;
   #openPromise: Promise<void> | null = null;
@@ -31,12 +34,31 @@ export class Resource implements Lifecycle {
     return this.#ctx;
   }
 
+  /**
+   * To be overridden by subclasses.
+   */
   protected async _open(ctx: Context): Promise<void> {}
+
+  /**
+   * To be overridden by subclasses.
+   */
   protected async _close(ctx: Context): Promise<void> {}
+
+  /**
+   * Error handler for errors that are caught by the context.
+   * By default errors are bubbled up to the parent context which is passed to the open method.
+   */
   protected async _catch(err: Error): Promise<void> {
     throw err;
   }
 
+  /**
+   * Opens the resource.
+   * If the resource is already open, it does nothing.
+   * If the resource is in an error state, it throws an error.
+   * If the resource is closed, it waits for it to close and then opens it.
+   * @param ctx - Context to use for opening the resource. This context will receive errors that are not handled in `_catch`.
+   */
   async open(ctx?: Context): Promise<this> {
     switch (this.#lifecycleState) {
       case LifecycleState.OPEN:
@@ -51,6 +73,10 @@ export class Resource implements Lifecycle {
     return this;
   }
 
+  /**
+   * Closes the resource.
+   * If the resource is already closed, it does nothing.
+   */
   async close(ctx?: Context): Promise<this> {
     if (this.#lifecycleState === LifecycleState.CLOSED) {
       return this;
