@@ -7,6 +7,9 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/lib/node/index.cjs",
+  "scripts": {
+    "test": "nx run-many --target=test"
+  },
   "browser": {
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
@@ -25,6 +28,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/schema": "0.64.7",
     "@fluentui/react-tabster": "^9.19.0",
     "@radix-ui/react-context": "^1.0.0",
     "@radix-ui/react-use-controllable-state": "^1.0.0",
