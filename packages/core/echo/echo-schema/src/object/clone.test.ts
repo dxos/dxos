@@ -11,7 +11,7 @@ import * as E from '../effect/reactive';
 import { createDatabase } from '../testing';
 import { TextCompatibilitySchema } from '../type-collection';
 
-describe.only('clone', () => {
+describe('clone', () => {
   test('clone to a different database', async () => {
     const { db: db1 } = await createDatabase();
     const { db: db2 } = await createDatabase();

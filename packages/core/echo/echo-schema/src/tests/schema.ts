@@ -45,7 +45,7 @@ export class Task extends EchoObjectSchema({
   completed: S.optional(S.boolean),
   assignee: S.optional(Contact),
   previous: S.optional(S.suspend((): S.Schema<Ref<Task>> => ref(Task))),
-  subTasks: S.optional(S.array(S.suspend((): S.Schema<Ref<Task>> => ref(Task)))),
+  subTasks: S.optional(S.mutable(S.array(S.suspend((): S.Schema<Ref<Task>> => ref(Task))))),
   description: S.optional(S.string),
   todos: S.optional(S.array(ref(Todo))),
 }) {}
