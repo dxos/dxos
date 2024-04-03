@@ -4,7 +4,7 @@
 
 import * as S from '@effect/schema/Schema';
 
-import { createReactiveProxy } from './proxy';
+import { ReactiveHandler, createReactiveProxy } from './proxy';
 import { SchemaValidator } from './schema-validator';
 import { TypedReactiveHandler } from './typed-handler';
 import { type ObjectMeta } from '../object';
@@ -29,8 +29,7 @@ type ObjectMetaType = S.Schema.Type<typeof ObjectMetaSchema>;
 export const initMeta = (obj: any) => {
   const metaObject: ObjectMeta = { keys: [] };
   SchemaValidator.prepareTarget(metaObject, ObjectMetaSchema);
-  const typedHandler = new TypedReactiveHandler();
-  defineHiddenProperty(obj, symbolTargetMeta, createReactiveProxy(metaObject, typedHandler));
+  defineHiddenProperty(obj, symbolTargetMeta, createReactiveProxy(metaObject, TypedReactiveHandler.instance as any));
 };
 
 export const getTargetMeta = (target: any): ObjectMetaType => {
