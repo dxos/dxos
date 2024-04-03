@@ -21,7 +21,7 @@ export {
   fromCursor,
   toCursor,
   DocAccessor,
-  metaOf,
+  getMeta,
   type AutomergeTextCompat,
   type EchoDatabase,
   type EchoObject, // TODO(burdon): Remove from API.

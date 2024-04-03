@@ -268,7 +268,7 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
   return Reference.fromLegacyTypename(annotation.storedSchemaId ?? annotation.typename);
 };
 
-export const metaOf = <T extends {}>(obj: T): ObjectMeta => {
+export const getMeta = <T extends {}>(obj: T): ObjectMeta => {
   const proxy = getProxyHandlerSlot(obj);
   if (proxy.handler instanceof EchoReactiveHandler) {
     return proxy.handler.getMeta();

@@ -100,7 +100,7 @@ export class ImapProcessor {
       subject,
       blocks: [],
     });
-    E.metaOf(message).keys.push({ source: this._id, id: messageId });
+    E.getMeta(message).keys.push({ source: this._id, id: messageId });
 
     // Skip bulk mail.
     const ignoreMatchingEmail = [/noreply/, /no-reply/, /notifications/, /billing/, /support/];
