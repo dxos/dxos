@@ -23,7 +23,7 @@ import {
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { type TypedObject, getSpaceForObject, getTextInRange, SpaceProxy, Filter } from '@dxos/react-client/echo';
+import { type TypedObject, getSpace, getTextInRange, SpaceProxy, Filter } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
 import { comments, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
@@ -75,7 +75,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         const space = activeNode
           ? activeNode.data instanceof SpaceProxy
             ? activeNode.data
-            : getSpaceForObject(activeNode.data)
+            : getSpace(activeNode.data)
           : undefined;
         untracked(() => {
           const [thread] = space?.db.query(Filter.schema(ThreadType, (thread) => !thread.context)).objects ?? [];
@@ -331,7 +331,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       markdown: {
         // TODO(burdon): Factor out extension factory into separate file (for simplicity).
         extensions: ({ document: doc }) => {
-          const space = doc && getSpaceForObject(doc);
+          const space = doc && getSpace(doc);
           if (!doc || !space) {
             return [];
           }

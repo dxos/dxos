@@ -5,7 +5,7 @@
 import React, { type FC } from 'react';
 
 import { type ChainType } from '@braneframe/types';
-import { getSpaceForObject } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { DensityProvider, Main, Select, useTranslation } from '@dxos/react-ui';
 import { baseSurface, mx, textBlockWidth, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -15,7 +15,7 @@ import { CHAIN_PLUGIN } from '../meta';
 import { type Preset, presets } from '../presets';
 
 const ChainMain: FC<{ chain: ChainType }> = ({ chain }) => {
-  const space = getSpaceForObject(chain);
+  const space = getSpace(chain);
   if (!space) {
     return null;
   }

@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 
 import { type AddressBookType, ContactType } from '@braneframe/types';
-import { Filter, getSpaceForObject, useQuery } from '@dxos/react-client/echo';
+import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
@@ -36,7 +36,7 @@ export type ContactsMainProps = {
 
 const ContactsMain = ({ contacts }: ContactsMainProps) => {
   const [selected, setSelected] = useState<ContactType>();
-  const space = getSpaceForObject(contacts);
+  const space = getSpace(contacts);
   const objects = useQuery(space, Filter.schema(ContactType));
   objects.sort(byName());
 

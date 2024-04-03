@@ -365,36 +365,36 @@ describe('Reactive Object with ECHO database', () => {
 
   describe('meta', () => {
     test('throws when accessing meta of a non-reactive-proxy', async () => {
-      expect(() => E.metaOf({})).to.throw();
+      expect(() => E.getMeta({})).to.throw();
     });
 
     test('cat set meta on a non-ECHO object', async () => {
       const obj = E.object({ string: 'foo' });
-      expect(E.metaOf(obj)).to.deep.eq({ keys: [] });
+      expect(E.getMeta(obj)).to.deep.eq({ keys: [] });
       const testKey = { key: 'hello', source: 'test' };
-      E.metaOf(obj).keys.push(testKey);
-      expect(E.metaOf(obj)).to.deep.eq({ keys: [testKey] });
-      expect(() => E.metaOf(obj).keys.push(1 as any)).to.throw();
+      E.getMeta(obj).keys.push(testKey);
+      expect(E.getMeta(obj)).to.deep.eq({ keys: [testKey] });
+      expect(() => E.getMeta(obj).keys.push(1 as any)).to.throw();
     });
 
     test('meta taken from reactive object when saving to echo', async () => {
       const testKey = { key: 'hello', source: 'test' };
       const reactiveObject = E.object({});
-      E.metaOf(reactiveObject).keys.push(testKey);
+      E.getMeta(reactiveObject).keys.push(testKey);
 
       const { db } = await createDatabase(undefined, { useReactiveObjectApi: true });
       const obj = db.add(reactiveObject);
-      expect(E.metaOf(obj).keys).to.deep.eq([testKey]);
+      expect(E.getMeta(obj).keys).to.deep.eq([testKey]);
     });
 
     test('meta updates', async () => {
       const { db } = await createDatabase(undefined, { useReactiveObjectApi: true });
       const obj = db.add({ string: 'foo' });
 
-      expect(E.metaOf(obj).keys).to.deep.eq([]);
+      expect(E.getMeta(obj).keys).to.deep.eq([]);
       const key = { source: 'github.com', id: '123' };
-      E.metaOf(obj).keys.push(key);
-      expect(E.metaOf(obj).keys).to.deep.eq([key]);
+      E.getMeta(obj).keys.push(key);
+      expect(E.getMeta(obj).keys).to.deep.eq([key]);
     });
 
     test('meta persistence', async () => {
@@ -410,14 +410,14 @@ describe('Reactive Object with ECHO database', () => {
         await db._automerge.open({ rootUrl: doc.url });
         const obj = db.add({ string: 'foo' });
         id = obj.id;
-        E.metaOf(obj).keys.push(metaKey);
+        E.getMeta(obj).keys.push(metaKey);
       }
 
       {
         const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey, useReactiveObjectApi: true });
         await db._automerge.open({ rootUrl: doc.url });
         const obj = db.getObjectById(id) as E.EchoReactiveObject<TestSchema>;
-        expect(E.metaOf(obj).keys).to.deep.eq([metaKey]);
+        expect(E.getMeta(obj).keys).to.deep.eq([metaKey]);
       }
     });
   });

@@ -61,7 +61,11 @@
         "configDir": "packages/apps/composer-app/.storybook"
       }
     },
-    "test": {}
+    "test": {
+      "options": {
+        "forceExit": true
+      }
+    }
   },
   "implicitDependencies": [
     "test"

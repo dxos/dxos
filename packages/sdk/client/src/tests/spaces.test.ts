@@ -19,7 +19,7 @@ import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
-import { SpaceState, getSpaceForObject, type SpaceProxy } from '../echo';
+import { SpaceState, getSpace, type SpaceProxy } from '../echo';
 import { TestBuilder, testSpaceAutomerge, waitForSpace } from '../testing';
 
 describe('Spaces', () => {
@@ -269,7 +269,7 @@ describe('Spaces', () => {
     const space = await client.spaces.create();
 
     const obj = space.db.add(createEchoObject({ data: 'test' }));
-    expect(getSpaceForObject(obj)).to.equal(space);
+    expect(getSpace(obj)).to.equal(space);
   });
 
   test('spaces can be opened and closed', async () => {

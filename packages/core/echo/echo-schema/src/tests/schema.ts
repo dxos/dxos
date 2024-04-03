@@ -61,8 +61,7 @@ export class Container extends EchoObjectSchema({
   version: '0.1.0',
 })(
   {
-    expandos: S.mutable(S.array(E.ref(ExpandoType))),
-    objects: S.mutable(S.array(E.AnyEchoObject)),
+    objects: S.mutable(S.array(E.ref(ExpandoType))),
     records: S.mutable(
       S.array(
         S.partial(

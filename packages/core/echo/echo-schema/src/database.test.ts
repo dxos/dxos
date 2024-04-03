@@ -63,14 +63,14 @@ describe('Database', () => {
     const { db } = await createDatabase();
 
     const obj = E.object(E.ExpandoType, {});
-    expectObjects(E.metaOf(obj).keys, []);
-    E.metaOf(obj).keys = [{ id: 'test-key', source: 'test' }];
-    expectObjects(E.metaOf(obj).keys, [{ id: 'test-key', source: 'test' }]);
+    expectObjects(E.getMeta(obj).keys, []);
+    E.getMeta(obj).keys = [{ id: 'test-key', source: 'test' }];
+    expectObjects(E.getMeta(obj).keys, [{ id: 'test-key', source: 'test' }]);
 
     db.add(obj);
     await db.flush();
 
-    expectObjects(E.metaOf(obj).keys, [{ id: 'test-key', source: 'test' }]);
+    expectObjects(E.getMeta(obj).keys, [{ id: 'test-key', source: 'test' }]);
     // TODO(mykola): Implement in automerge.
     // expect(obj[data]).toEqual({
     //   '@id': obj.id,

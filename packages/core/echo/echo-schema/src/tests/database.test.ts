@@ -23,7 +23,7 @@ describe('database', () => {
     const task = E.object(Task, { title: 'test' });
     expect(task.title).to.eq('test');
     expect(task.id).to.exist;
-    expect(getAutomergeObjectCore(task)).to.be.undefined;
+    expect(() => getAutomergeObjectCore(task)).to.throw();
     expect(E.getSchema(task)?.ast).to.eq(Task.ast);
     expect(E.typeOf(task)?.itemId).to.eq('example.test.Task');
 
@@ -72,20 +72,20 @@ describe('database', () => {
     const { db: database } = await createDbWithTypes();
 
     {
-      const container = E.object(Container, { expandos: [] });
+      const container = E.object(Container, { objects: [] });
       database.add(container);
       await database.flush();
 
-      container.expandos!.push(E.object(E.ExpandoType, { foo: 100 }));
-      container.expandos!.push(E.object(E.ExpandoType, { bar: 200 }));
+      container.objects!.push(E.object(E.ExpandoType, { foo: 100 }));
+      container.objects!.push(E.object(E.ExpandoType, { bar: 200 }));
     }
 
     {
       const { objects } = database.query(Filter.schema(Container));
       const [container] = objects;
-      expect(container.expandos).to.have.length(2);
-      expect(container.expandos![0]!.foo).to.equal(100);
-      expect(container.expandos![1]!.bar).to.equal(200);
+      expect(container.objects).to.have.length(2);
+      expect(container.objects![0]!.foo).to.equal(100);
+      expect(container.objects![1]!.bar).to.equal(200);
     }
   });
 
@@ -115,10 +115,10 @@ describe('database', () => {
 
     task.title = 'test';
     expect(task.title).to.eq('test');
-    expect(E.metaOf(task).keys).to.have.length(0);
+    expect(E.getMeta(task).keys).to.have.length(0);
 
-    E.metaOf(task).keys.push({ source: 'example', id: 'test' });
-    expect(E.metaOf(task).keys).to.have.length(1);
+    E.getMeta(task).keys.push({ source: 'example', id: 'test' });
+    expect(E.getMeta(task).keys).to.have.length(1);
   });
 
   test('clone', async () => {
