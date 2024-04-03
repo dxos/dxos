@@ -15,7 +15,7 @@ export const useHaloInvitations = () => {
         const subscription = client.halo.invitations.subscribe(() => listener());
         return () => subscription.unsubscribe();
       },
-      () => client.halo.invitations.get(),
+      () => (client.halo.opened ? client.halo.invitations.get() : []),
     ) ?? [];
 
   return invitations;
