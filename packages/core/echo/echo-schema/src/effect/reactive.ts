@@ -61,7 +61,15 @@ export const echoObject =
 
 export const ExpandoMarker = Symbol.for('@dxos/echo-schema/Expando');
 
-const _Expando = S.struct({}).pipe(echoObject('Expando', '0.1.0'));
+const _Expando = S.struct({}, { key: S.string, value: S.any }).pipe(echoObject('Expando', '0.1.0'));
+/**
+ * @deprecated Need API review.
+ */
+export interface ExpandoType extends S.Schema.Type<typeof _Expando> {
+  id: string;
+  [key: string]: any;
+  [ExpandoMarker]?: true;
+}
 
 export interface ExpandoType extends S.Schema.Type<typeof _Expando> {}
 
@@ -118,7 +126,7 @@ export const isEchoReactiveObject = (value: unknown): value is EchoReactiveObjec
 // TODO(dmaretskyi): Deep mutability.
 export const object: {
   <T extends {}>(obj: T): ReactiveObject<T>;
-  <T extends {}>(schema: typeof ExpandoType, obj: T): ReactiveObject<Identifiable & T>;
+  <T extends {}>(schema: typeof ExpandoType, obj: T): ReactiveObject<ExpandoType>;
   <T extends {}>(schema: S.Schema<T>, obj: ExcludeId<T>): ReactiveObject<T>;
 } = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: ExcludeId<T>): ReactiveObject<T> => {
   if (obj && (schemaOrObj as any) !== ExpandoType) {
@@ -232,7 +240,10 @@ export const getRefAnnotation = (schema: S.Schema<any>) =>
 /**
  * Returns the schema for the given object if one is defined.
  */
-export const getSchema = <T extends {} = any>(obj: T): S.Schema<any> | undefined => {
+export const getSchema = <T extends {} = any>(obj: T | undefined): S.Schema<any> | undefined => {
+  if (obj == null) {
+    return undefined;
+  }
   if (isReactiveProxy(obj)) {
     const proxyHandlerSlot = getProxyHandlerSlot(obj);
     if (proxyHandlerSlot.handler instanceof EchoReactiveHandler) {
@@ -269,7 +280,7 @@ export const getMeta = <T extends {}>(obj: T): ObjectMeta => {
   }
 };
 
-export const typeOf = <T extends {}>(obj: T): Reference | undefined => getTypeReference(getSchema(obj));
+export const typeOf = <T extends {}>(obj: T | undefined): Reference | undefined => getTypeReference(getSchema(obj));
 
 export type PropertyVisitor<T> = (property: AST.PropertySignature, path: PropertyKey[]) => T;
 

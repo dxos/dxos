@@ -12,7 +12,6 @@ import { EchoObjectSchema } from './echo-object-class';
 import { effectToJsonSchema, getTypename, jsonToEffectSchema, toEffectSchema, toJsonSchema } from './json-schema';
 import * as E from './reactive';
 import { type EchoObjectAnnotation, getSchema, object } from './reactive';
-import { Expando } from '../object';
 import { Schema } from '../proto';
 
 describe('JSON Schema', () => {
@@ -34,14 +33,7 @@ describe('JSON Schema', () => {
     }
 
     {
-      const person = new Expando(
-        {
-          name: 'Satoshi',
-        },
-        { schema: contact },
-      );
-
-      const jsonSchema = toJsonSchema(person.__schema!);
+      const jsonSchema = toJsonSchema(contact);
       expect(jsonSchema.$id).to.eq('example.com/schema/contact');
     }
   });

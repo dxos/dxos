@@ -5,17 +5,19 @@
 import * as S from '@effect/schema/Schema';
 
 import { EchoObjectSchema } from '../effect/echo-object-class';
-import { type Ref, ref } from '../effect/reactive';
+import * as E from '../effect/reactive';
+import { ExpandoType, type Ref, ref } from '../effect/reactive';
 
 export class Contact extends EchoObjectSchema({
   typename: 'example.test.Contact',
   version: '0.1.0',
-})({
-  name: S.optional(S.string),
-  username: S.optional(S.string),
-  email: S.optional(S.string),
-  address: S.optional(
-    S.struct({
+})(
+  {
+    name: S.string,
+    username: S.string,
+    email: S.string,
+    tasks: S.suspend((): S.Schema<Ref<Task>[]> => S.mutable(S.array(E.ref(Task)))),
+    address: S.struct({
       city: S.optional(S.string),
       state: S.optional(S.string),
       zip: S.optional(S.string),
@@ -24,8 +26,9 @@ export class Contact extends EchoObjectSchema({
         lng: S.optional(S.number),
       }),
     }),
-  ),
-}) {}
+  },
+  { partial: true },
+) {}
 
 export class Todo extends EchoObjectSchema({
   typename: 'example.test.Task.Todo',
@@ -42,7 +45,35 @@ export class Task extends EchoObjectSchema({
   completed: S.optional(S.boolean),
   assignee: S.optional(Contact),
   previous: S.optional(S.suspend((): S.Schema<Ref<Task>> => ref(Task))),
-  subTasks: S.optional(S.array(S.suspend((): S.Schema<Ref<Task>> => ref(Task)))),
+  subTasks: S.optional(S.mutable(S.array(S.suspend((): S.Schema<Ref<Task>> => ref(Task))))),
   description: S.optional(S.string),
   todos: S.optional(S.array(ref(Todo))),
 }) {}
+
+export enum RecordType {
+  UNDEFINED = 0,
+  PERSONAL = 1,
+  WORK = 2,
+}
+
+export class Container extends EchoObjectSchema({
+  typename: 'example.test.Container',
+  version: '0.1.0',
+})(
+  {
+    objects: S.mutable(S.array(E.ref(ExpandoType))),
+    records: S.mutable(
+      S.array(
+        S.partial(
+          S.struct({
+            title: S.string,
+            description: S.string,
+            contacts: S.mutable(S.array(E.ref(Contact))),
+            type: S.enums(RecordType),
+          }),
+        ),
+      ),
+    ),
+  },
+  { partial: true },
+) {}

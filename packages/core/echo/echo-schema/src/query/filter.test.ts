@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as S from '@effect/schema/Schema';
 import { expect } from 'chai';
 
 import { Reference } from '@dxos/echo-db';
@@ -9,14 +10,14 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
 import { compareType, Filter, filterMatch } from './filter';
-import { getAutomergeObjectCore } from '../automerge';
-import { Expando } from '../object';
-import { Schema } from '../proto';
+import { AutomergeObjectCore } from '../automerge';
+import { EchoObjectSchema } from '../effect/echo-object-class';
+import * as E from '../effect/reactive';
+import { createDatabase } from '../testing';
 
 describe('Filter', () => {
   test('properties', () => {
-    const object = new Expando({ title: 'test', value: 100, complete: true });
-    const core = getAutomergeObjectCore(object);
+    const core = createAutomergeObjectCore({ title: 'test', value: 100, complete: true });
 
     expect(filterMatch(Filter.from({ title: 'test' }), core)).to.be.true;
     expect(filterMatch(Filter.from({ value: 100 }), core)).to.be.true;
@@ -25,8 +26,7 @@ describe('Filter', () => {
   });
 
   test('and', () => {
-    const object = new Expando({ title: 'test', value: 100, complete: true });
-    const core = getAutomergeObjectCore(object);
+    const core = createAutomergeObjectCore({ title: 'test', value: 100, complete: true });
 
     const filter1 = Filter.from({ title: 'test' });
     const filter2 = Filter.from({ value: 100 });
@@ -37,8 +37,7 @@ describe('Filter', () => {
   });
 
   test('or', () => {
-    const object = new Expando({ title: 'test', value: 100, complete: true });
-    const core = getAutomergeObjectCore(object);
+    const core = createAutomergeObjectCore({ title: 'test', value: 100, complete: true });
 
     const filter1 = Filter.from({ value: 200 });
     const filter2 = Filter.from({ title: 'test' });
@@ -48,8 +47,7 @@ describe('Filter', () => {
   });
 
   test('not', () => {
-    const object = new Expando({ title: 'test' });
-    const core = getAutomergeObjectCore(object);
+    const core = createAutomergeObjectCore({ title: 'test' });
 
     const filter1 = Filter.from({ title: 'test' });
     const filter2 = Filter.not(filter1);
@@ -59,8 +57,7 @@ describe('Filter', () => {
   });
 
   test('complex', () => {
-    const object = new Expando({ title: 'test', value: 100, complete: true });
-    const core = getAutomergeObjectCore(object);
+    const core = createAutomergeObjectCore({ title: 'test', value: 100, complete: true });
 
     const filter1 = Filter.from({ title: 'bad' });
     const filter2 = Filter.from({ value: 0 });
@@ -102,21 +99,24 @@ describe('Filter', () => {
     ).to.be.true;
   });
 
-  test('dynamic schema', () => {
-    const schema = new Schema({
-      typename: 'example.TestSchema',
-    });
+  test('dynamic schema', async () => {
+    class GeneratedSchema extends EchoObjectSchema({ typename: 'dynamic', version: '0.1.0' })({ title: S.string }) {}
 
-    const object = new Expando(
-      {
-        title: 'test',
-      },
-      { schema },
-    );
-    const core = getAutomergeObjectCore(object);
-    expect(object.__schema).to.eq(schema);
+    const { db } = await createDatabase();
+    const schema = db.schemaRegistry.add(GeneratedSchema);
 
-    const filter = Filter.typename('example.TestSchema');
+    const core = createAutomergeObjectCore({ title: 'test' }, E.getTypeReference(schema));
+
+    const filter = Filter.typename(schema.id);
     expect(filterMatch(filter, core)).to.be.true;
   });
 });
+
+const createAutomergeObjectCore = (props: any = {}, type?: Reference): AutomergeObjectCore => {
+  const core = new AutomergeObjectCore();
+  core.initNewObject(props);
+  if (type) {
+    core.setType(type);
+  }
+  return core;
+};
