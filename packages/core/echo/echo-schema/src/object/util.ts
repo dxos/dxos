@@ -30,7 +30,7 @@ export const getDatabaseFromObject = (obj: OpaqueEchoObject): EchoDatabase | und
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { getObjectCoreFromEchoTarget }: typeof echoHandlerModule = require('../effect/echo-handler');
     const core = getObjectCoreFromEchoTarget(getProxyHandlerSlot(obj).target as any);
-    return core.database?._dbApi;
+    return core?.database?._dbApi;
   }
   return undefined;
 };

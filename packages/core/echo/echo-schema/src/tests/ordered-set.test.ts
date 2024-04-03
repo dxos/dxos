@@ -5,10 +5,13 @@
 import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
+import { range } from '@dxos/util';
 
-import { Contact, Container, Task, types } from './proto';
+import { Contact, Container, Task } from './schema';
+import * as E from '../effect/reactive';
+import { type ReactiveObject } from '../effect/reactive';
 import { Hypergraph } from '../hypergraph';
-import { EchoArray } from '../object';
+import { Filter } from '../query';
 import { createDatabase } from '../testing';
 
 // TODO(burdon): Test with/without saving to database.
@@ -16,61 +19,53 @@ import { createDatabase } from '../testing';
 describe('ordered-set', () => {
   // TODO(burdon): Test clear/reset (set length = 0).
   test('assignment', async () => {
-    const root = new Task();
+    const root = newTask();
     expect(root.subTasks).to.have.length(0);
 
-    root.subTasks.push(new Task());
-    root.subTasks.push(new Task());
-    root.subTasks.push(new Task());
-    root.subTasks.push(new Task(), new Task());
+    range(3).forEach(() => root.subTasks!.push(newTask()));
+    root.subTasks!.push(newTask(), newTask());
+
     expect(root.subTasks).to.have.length(5);
-    expect(root.subTasks.length).to.eq(5);
+    expect(root.subTasks!.length).to.eq(5);
     expect(JSON.parse(JSON.stringify(root, undefined, 2)).subTasks).to.have.length(5);
 
     // Iterators.
-    const ids = root.subTasks.map((task) => task.id);
-    root.subTasks.forEach((task, i) => expect(task.id).to.eq(ids[i]));
-    expect(Array.from(root.subTasks.values())).to.have.length(5);
+    const ids = root.subTasks!.map((task) => task!.id);
+    root.subTasks!.forEach((task, i) => expect(task!.id).to.eq(ids[i]));
+    expect(Array.from(root.subTasks!.values())).to.have.length(5);
 
-    root.subTasks = [new Task(), new Task(), new Task()];
+    root.subTasks = [E.object(Task, {}), E.object(Task, {}), E.object(Task, {})];
     expect(root.subTasks.length).to.eq(3);
 
-    const { db } = await createDatabase(new Hypergraph().addTypes(types));
-    db.add(root);
-    await db.flush();
+    await addToDatabase(root);
   });
 
   test('splice', async () => {
-    const root = new Task();
-    root.subTasks = new EchoArray([new Task(), new Task(), new Task()]);
-    root.subTasks.splice(0, 2, new Task());
+    const root = newTask();
+    root.subTasks = range(3).map(newTask);
+    root.subTasks.splice(0, 2, newTask());
     expect(root.subTasks).to.have.length(2);
-
-    const { db } = await createDatabase(new Hypergraph().addTypes(types));
-    db.add(root);
-    await db.flush();
+    await addToDatabase(root);
   });
 
   test('array of plain objects', async () => {
-    const root = new Container();
-    const plain: Container.Record = { title: 'test', contacts: [new Contact({ name: 'tester' })] };
-    root.records.push(plain);
-    const { db } = await createDatabase(new Hypergraph().addTypes(types));
-    db.add(root);
-    await db.flush();
+    const root = E.object(Container, { records: [] });
+    root.records!.push({
+      title: 'test',
+      contacts: [E.object(Contact, { name: 'tester' })],
+    });
+    const { db } = await addToDatabase(root);
 
     expect(root.records).to.have.length(1);
-    const queriedContainer = db.query(Container.filter()).objects[0];
-    expect(queriedContainer.records.length).to.equal(1);
-    expect(queriedContainer.records[0].contacts?.[0].name).to.equal('tester');
+    const queriedContainer = db.query(Filter.schema(Container)).objects[0]!;
+    expect(queriedContainer.records!.length).to.equal(1);
+    expect(queriedContainer.records![0]!.contacts![0]!.name).to.equal('tester');
   });
 
   test('reset array', async () => {
-    const { db } = await createDatabase(new Hypergraph().addTypes(types));
-    const root = db.add(new Container());
-    await db.flush();
+    const { db, obj: root } = await addToDatabase(E.object(Container, { records: [] }));
 
-    root.records.push({ title: 'one' });
+    root.records!.push({ title: 'one' });
     expect(root.records).to.have.length(1);
 
     root.records = [];
@@ -84,3 +79,14 @@ describe('ordered-set', () => {
     expect(root.records).to.have.length(1);
   });
 });
+
+const newTask = () => E.object(Task, { subTasks: [] });
+
+const addToDatabase = async <T>(obj: ReactiveObject<T>) => {
+  const graph = new Hypergraph();
+  graph.types.registerEffectSchema(Task, Container, Contact);
+  const { db } = await createDatabase(graph);
+  db.add(obj);
+  await db.flush();
+  return { db, obj };
+};

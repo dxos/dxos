@@ -8,7 +8,9 @@
       "options": {
         "main": "packages/apps/composer-app/src/index.ts",
         "outputPath": "packages/apps/composer-app/dist",
-        "transformers": ["@dxos/log-hook/transformer"],
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
         "tsConfig": "packages/apps/composer-app/tsconfig.json"
       }
     },
@@ -18,14 +20,20 @@
         "generatePackageJson": false,
         "outputPath": "packages/apps/composer-app/out/composer"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "e2e": {
       "options": {
         "playwrightConfigPath": "packages/apps/composer-app/src/playwright/playwright.config.ts",
         "serve": "composer-app:preview",
-        "testPatterns": ["packages/apps/composer-app/src/playwright/**/*.spec.{ts,js}"],
-        "watchPatterns": ["packages/apps/composer-app/src/**/*"]
+        "testPatterns": [
+          "packages/apps/composer-app/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/apps/composer-app/src/**/*"
+        ]
       }
     },
     "lint": {},
@@ -59,5 +67,7 @@
       }
     }
   },
-  "implicitDependencies": ["test"]
+  "implicitDependencies": [
+    "test"
+  ]
 }

@@ -22,10 +22,6 @@ import {
 } from './reactive';
 import { type Schema } from '../proto';
 
-// Circular deps.
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const requireSchema = (): typeof Schema => require('../proto').Schema;
-
 const ECHO_REFINEMENT_KEY = '$echo';
 interface EchoRefinement {
   type?: EchoObjectAnnotation;
@@ -37,6 +33,10 @@ const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } 
   [ReferenceAnnotation]: 'reference',
   [EchoObjectFieldMetaAnnotationId]: 'fieldMeta',
 };
+
+// Circular deps.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const requireSchema = (): typeof Schema => require('../proto').Schema;
 
 // TODO(burdon): Reconcile with plugin-table.
 export const getPropType = (type?: Schema.PropType): string => {

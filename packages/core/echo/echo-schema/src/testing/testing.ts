@@ -8,7 +8,6 @@ import { ComplexMap } from '@dxos/util';
 import { AutomergeContext, type AutomergeContextConfig } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
-import { schemaBuiltin } from '../proto';
 
 export type CreateDatabaseOpts = {
   useReactiveObjectApi?: boolean;
@@ -18,9 +17,10 @@ export type CreateDatabaseOpts = {
  * @deprecated Use TestBuilder.
  */
 // TODO(burdon): Builder pattern.
-export const createDatabase = async (graph = new Hypergraph(), { useReactiveObjectApi }: CreateDatabaseOpts = {}) => {
-  graph.addTypes(schemaBuiltin);
-
+export const createDatabase = async (
+  graph = new Hypergraph(),
+  { useReactiveObjectApi }: CreateDatabaseOpts = { useReactiveObjectApi: true },
+) => {
   const spaceKey = PublicKey.random();
   const automergeContext = new AutomergeContext();
   const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey, useReactiveObjectApi });
@@ -68,6 +68,7 @@ export class TestPeer {
     spaceKey: this.spaceKey,
     graph: this.builder.graph,
     automergeContext: this.builder.automergeContext,
+    useReactiveObjectApi: true,
   });
 
   constructor(
@@ -82,6 +83,7 @@ export class TestPeer {
       spaceKey: this.spaceKey,
       graph: this.builder.graph,
       automergeContext: this.builder.automergeContext,
+      useReactiveObjectApi: true,
     });
     await this.db.automerge.open({
       rootUrl: this.automergeDocId,

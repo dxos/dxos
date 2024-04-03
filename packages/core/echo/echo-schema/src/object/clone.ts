@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
-import { TypedObject } from './typed-object';
-import { base, type EchoObject } from './types';
-import { type AutomergeObject } from '../automerge';
+import { type EchoObject, type OpaqueEchoObject } from './types';
+import { AutomergeObjectCore, getAutomergeObjectCore } from '../automerge';
+import { type EchoReactiveObject, isEchoReactiveObject } from '../effect/reactive';
 
 export type CloneOptions = {
   /**
@@ -20,37 +21,40 @@ export type CloneOptions = {
   additional?: (EchoObject | undefined)[];
 };
 
+const requireAutomergeCore = (obj: OpaqueEchoObject) => {
+  const core = getAutomergeObjectCore(obj);
+  invariant(core, 'object is not an EchoObject');
+  return core;
+};
+
 /**
  * Returns new unbound clone of the object.
  * @deprecated
  */
-export const clone = <T extends EchoObject>(obj: T, { retainId = true, additional = [] }: CloneOptions = {}): T => {
+export const clone = <T extends {}>(
+  obj: EchoReactiveObject<T>,
+  { retainId = true, additional = [] }: CloneOptions = {},
+): T => {
   if (retainId === false && additional.length > 0) {
     throw new Error('Updating ids is not supported when cloning with nested objects.');
   }
 
-  if (!obj[base]) {
-    throw new TypeError('Object is not an EchoObject.');
-  }
+  const core = requireAutomergeCore(obj);
 
-  const clone = cloneInner(obj[base], retainId ? obj.id : PublicKey.random().toHex()) as T;
+  const clone = cloneInner(core, retainId ? obj.id : PublicKey.random().toHex()) as T;
 
-  const clones: EchoObject[] = [clone];
-  for (const obj of additional) {
-    if (!obj) {
-      continue;
+  const clones: OpaqueEchoObject[] = [clone];
+  for (const innerObj of additional) {
+    if (innerObj) {
+      const innerCore = requireAutomergeCore(innerObj);
+      clones.push(cloneInner(innerCore, retainId ? innerCore.id : PublicKey.random().toHex()));
     }
-    if (!obj[base]) {
-      throw new TypeError('Object is not an EchoObject.');
-    }
-
-    clones.push(cloneInner(obj[base], retainId ? obj.id : PublicKey.random().toHex()));
   }
 
   // Update links.
   // Ensures references work before the object is bound.
   for (const clone of clones) {
-    if (!(clone instanceof TypedObject)) {
+    if (!isEchoReactiveObject(clone)) {
       continue;
     }
 
@@ -59,44 +63,35 @@ export const clone = <T extends EchoObject>(obj: T, { retainId = true, additiona
         continue;
       }
 
-      (clone as AutomergeObject)[base]._core.linkCache!.set(ref.id, ref);
+      getAutomergeObjectCore(clone).linkCache!.set(ref.id, ref);
     }
   }
 
   return clone;
 };
 
-const cloneInner = (obj: any, id: string): EchoObject => {
-  const prototype = Object.getPrototypeOf(obj);
-  const automergeSnapshot = getObjectDoc(obj);
-
-  const clone: AutomergeObject = new prototype.constructor();
-  clone[base]._core.id = id;
-  if (automergeSnapshot) {
-    clone[base]._change((doc: any) => {
-      const path = clone[base]._core.mountPath;
-      if (path?.length > 0) {
-        let parent = doc;
-        for (const key of path.slice(0, -1)) {
-          parent[key] ??= {};
-          parent = parent[key];
-        }
-        parent[path.at(-1)!] = automergeSnapshot;
-      } else {
-        for (const key of Object.keys(automergeSnapshot)) {
-          doc[key] = automergeSnapshot[key];
-        }
-      }
-    });
-  }
-
-  return clone;
+const cloneInner = (core: AutomergeObjectCore, id: string): OpaqueEchoObject => {
+  const coreClone = new AutomergeObjectCore();
+  coreClone.id = id;
+  const initEchoHandler = requireEchoHandlerInitializer();
+  initEchoHandler(coreClone);
+  const automergeSnapshot = getObjectDoc(core);
+  coreClone.change((doc: any) => {
+    for (const key of Object.keys(automergeSnapshot)) {
+      doc[key] = automergeSnapshot[key];
+    }
+  });
+  return coreClone.rootProxy as any;
 };
 
-const getObjectDoc = (obj: AutomergeObject): any => {
-  let value = obj._getDoc();
-  for (const key of obj[base]._core.mountPath) {
+const getObjectDoc = (core: AutomergeObjectCore): any => {
+  let value = core.doc ?? core.docHandle!.docSync();
+  for (const key of core.mountPath) {
     value = value?.[key];
   }
   return value;
 };
+
+// Circular deps.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const requireEchoHandlerInitializer = () => require('../effect/echo-handler').initEchoReactiveObjectRootProxy;
