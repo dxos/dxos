@@ -71,14 +71,6 @@ export class AutomergeDb {
     this._dbApi = dbApi;
   }
 
-  allObjectCores() {
-    return Array.from(this._objects.values());
-  }
-
-  allObjects(): EchoObject[] {
-    return this.allObjectCores().map((core) => core.rootProxy as EchoObject);
-  }
-
   @synchronized
   async open(spaceState: SpaceState) {
     const start = performance.now();
@@ -112,6 +104,46 @@ export class AutomergeDb {
     }
   }
 
+  // TODO(dmaretskyi): Cant close while opening.
+  @synchronized
+  async close() {
+    if (!this._isOpen) {
+      return;
+    }
+    this._isOpen = false;
+
+    void this._ctx.dispose();
+    this._ctx = new Context();
+  }
+
+  /**
+   * @deprecated
+   * Return only loaded objects.
+   */
+  allObjectCores() {
+    return Array.from(this._objects.values());
+  }
+
+  /**
+   * @deprecated
+   * Return only loaded objects.
+   */
+  allObjects(): EchoObject[] {
+    return this.allObjectCores().map((core) => core.rootProxy as EchoObject);
+  }
+
+  /**
+   * Returns ids for loaded and not loaded objects.
+   */
+  getAllObjectIds(): string[] {
+    const rootDoc = this._automergeDocLoader.getSpaceRootDocHandle().docSync();
+    if (!rootDoc) {
+      return [];
+    }
+
+    return [...new Set([...Object.keys(rootDoc.objects ?? {}), ...Object.keys(rootDoc.links ?? {})])];
+  }
+
   /**
    * Update DB in response to space state change.
    * Can be used to change the root AM document.
@@ -138,18 +170,6 @@ export class AutomergeDb {
       log.catch(err);
       throw err;
     }
-  }
-
-  // TODO(dmaretskyi): Cant close while opening.
-  @synchronized
-  async close() {
-    if (!this._isOpen) {
-      return;
-    }
-    this._isOpen = false;
-
-    void this._ctx.dispose();
-    this._ctx = new Context();
   }
 
   getObjectCoreById(id: string): AutomergeObjectCore | undefined {
@@ -192,9 +212,7 @@ export class AutomergeDb {
     );
   }
 
-  add(obj: OpaqueEchoObject) {
-    const core = getAutomergeObjectCore(obj);
-
+  addCore(core: AutomergeObjectCore) {
     if (core.database) {
       return; // Already in the database.
     }
@@ -221,6 +239,17 @@ export class AutomergeDb {
       path: ['objects', core.id],
       assignFromLocalState: true,
     });
+
+    // TODO(dmaretskyi): This should be handled in the API layer.
+    if (!core.rootProxy) {
+      this._initRootProxyFn(core);
+    }
+  }
+
+  add(obj: OpaqueEchoObject) {
+    const core = getAutomergeObjectCore(obj);
+
+    this.addCore(core);
     return obj;
   }
 

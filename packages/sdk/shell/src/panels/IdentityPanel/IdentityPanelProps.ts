@@ -11,6 +11,8 @@ import type { InvitationStatus } from '@dxos/react-client/invitations';
 import type { IdentityEvent } from './identityMachine';
 import type { InvitationManagerProps } from '../../steps';
 
+export type IdentityPanelInitialDisposition = 'default' | 'manage-device-invitation' | 'manage-profile';
+
 export type AgentFormProps = {
   onAgentCreate?: () => Promise<void>;
   onAgentDestroy?: () => Promise<void>;
@@ -28,12 +30,14 @@ export type IdentityPanelImplProps = {
     | 'update profile form'
     | 'device invitation manager'
     | 'identity action chooser'
-    | 'signing out';
+    | 'confirm join new identity'
+    | 'confirm reset storage';
+  initialDisposition?: IdentityPanelInitialDisposition;
   identity: Identity;
   devices: Device[];
   onUpdateProfile?: (profile: NonNullable<Identity['profile']>) => Promise<void>;
-  onResetDevice?: () => Promise<void>;
-  onJoinNewIdentity?: () => void;
+  onResetStorage?: () => Promise<void>;
+  onJoinNewIdentity?: () => Promise<void>;
   createInvitationUrl: (invitationCode: string) => string;
   send?: (event: SingleOrArray<Event<IdentityEvent>>) => void;
   onDone?: () => void;

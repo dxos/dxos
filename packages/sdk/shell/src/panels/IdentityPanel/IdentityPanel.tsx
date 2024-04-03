@@ -18,10 +18,10 @@ import {
   type IdentityPanelProps,
 } from './IdentityPanelProps';
 import { useIdentityMachine } from './identityMachine';
-import { AgentForm, DeviceManager, IdentityActionChooser, ProfileForm, SignOutChooser } from './steps';
+import { AgentForm, DeviceManager, IdentityActionChooser, ProfileForm } from './steps';
 import { useAgentHandlers } from './useAgentHandlers';
 import { Viewport, Heading, CloseButton } from '../../components';
-import { InvitationManager } from '../../steps';
+import { ConfirmReset, InvitationManager } from '../../steps';
 
 const viewStyles = 'pbs-1 pbe-3 pli-3';
 
@@ -47,7 +47,7 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
     titleId,
     activeView,
     onUpdateProfile,
-    onResetDevice,
+    onResetStorage,
     onJoinNewIdentity,
     IdentityActionChooser: IdentityActionChooserComponent = IdentityActionChooser,
     InvitationManager: InvitationManagerComponent = InvitationManager,
@@ -65,6 +65,8 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
         return t('identity heading');
     }
   }, [activeView, t]);
+
+  const onCancelReset = () => rest.send?.('unchooseAction');
 
   return (
     <DensityProvider density='fine'>
@@ -92,16 +94,26 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
               onUpdateProfile={onUpdateProfile}
             />
           </Viewport.View>
-          <Viewport.View classNames={viewStyles} id='signing out'>
-            <SignOutChooser
-              send={rest.send}
-              active={activeView === 'signing out'}
-              onResetDevice={onResetDevice}
-              onJoinNewIdentity={onJoinNewIdentity}
-            />
-          </Viewport.View>
           <Viewport.View classNames={viewStyles} id='agent manager'>
             <AgentForm send={rest.send} active={activeView === 'agent manager'} {...rest} />
+          </Viewport.View>
+          <Viewport.View classNames={viewStyles} id='confirm join new identity'>
+            <ConfirmReset
+              active={activeView === 'confirm join new identity'}
+              {...rest}
+              mode='join new identity'
+              onConfirm={onJoinNewIdentity}
+              onCancel={onCancelReset}
+            />
+          </Viewport.View>
+          <Viewport.View classNames={viewStyles} id='confirm reset storage'>
+            <ConfirmReset
+              active={activeView === 'confirm reset storage'}
+              {...rest}
+              mode='reset storage'
+              onConfirm={onResetStorage}
+              onCancel={onCancelReset}
+            />
           </Viewport.View>
         </Viewport.Views>
       </Viewport.Root>
@@ -120,6 +132,7 @@ const IdentityPanelWithInvitationImpl = ({
 export const IdentityPanel = ({
   titleId: propsTitleId,
   createInvitationUrl = (code) => code,
+  initialDisposition = 'default',
   ...props
 }: IdentityPanelProps) => {
   const titleId = useId('identityPanel__heading', propsTitleId);
@@ -132,7 +145,9 @@ export const IdentityPanel = ({
     log.error('IdentityPanel rendered with no active identity.');
     return null;
   }
-  const [identityState, identitySend, identityService] = useIdentityMachine(client);
+  const [identityState, identitySend, identityService] = useIdentityMachine(client, {
+    context: { initialDisposition },
+  });
 
   useEffect(() => {
     const subscription = identityService.subscribe((state) => {
@@ -152,8 +167,10 @@ export const IdentityPanel = ({
         return 'device manager';
       case [{ managingProfile: 'idle' }, { managingProfile: 'pending' }].some(identityState.matches):
         return 'update profile form';
-      case identityState.matches('signingOut'):
-        return 'signing out';
+      case identityState.matches('confirmingResetStorage'):
+        return 'confirm reset storage';
+      case identityState.matches('confirmingJoinNewIdentity'):
+        return 'confirm join new identity';
       case [{ managingAgent: 'idle' }, { managingAgent: 'pending' }].some(identityState.matches):
         return 'agent manager';
       default:
