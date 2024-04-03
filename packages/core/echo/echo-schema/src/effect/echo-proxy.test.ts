@@ -311,14 +311,27 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   describe('meta', () => {
-    test('throws if accessing meta on a non-ECHO object', async () => {
-      const obj = E.object({ string: 'foo' });
-      expect(() => E.metaOf(obj)).to.throw();
+    test('throws when accessing meta of a non-reactive-proxy', async () => {
       expect(() => E.metaOf({})).to.throw();
+    });
+
+    test('cat set meta on a non-ECHO object', async () => {
+      const obj = E.object({ string: 'foo' });
+      expect(E.metaOf(obj)).to.deep.eq({ keys: [] });
+      const testKey = { key: 'hello', source: 'test' };
+      E.metaOf(obj).keys.push(testKey);
+      expect(E.metaOf(obj)).to.deep.eq({ keys: [testKey] });
+      expect(() => E.metaOf(obj).keys.push(1 as any)).to.throw();
+    });
+
+    test('meta taken from reactive object when saving to echo', async () => {
+      const testKey = { key: 'hello', source: 'test' };
+      const reactiveObject = E.object({});
+      E.metaOf(reactiveObject).keys.push(testKey);
 
       const { db } = await createDatabase(undefined, { useReactiveObjectApi: true });
-      db.add(obj);
-      expect(() => E.metaOf(obj)).not.to.throw();
+      const obj = db.add(reactiveObject);
+      expect(E.metaOf(obj).keys).to.deep.eq([testKey]);
     });
 
     test('meta updates', async () => {

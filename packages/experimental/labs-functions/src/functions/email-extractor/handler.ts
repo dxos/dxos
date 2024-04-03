@@ -9,11 +9,14 @@ import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import { registerTypes } from '../../util';
+
 export const handler = subscriptionHandler(async ({ event: { space, objects } }) => {
   let i = 0;
   invariant(space);
   const { objects: contacts } = space.db.query(Filter.schema(ContactType));
   const objectsByEmail = new Map<string, ContactType>();
+  registerTypes(space);
 
   const getOrCreateContact = (recipient: RecipientType): ContactType | undefined => {
     invariant(recipient.email);

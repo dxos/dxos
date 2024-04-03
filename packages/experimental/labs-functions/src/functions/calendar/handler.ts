@@ -14,13 +14,14 @@ import { subscriptionHandler } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 import { ObjectSyncer } from '../../sync';
-import { getYaml } from '../../util';
+import { getYaml, registerTypes } from '../../util';
 
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
   const { space } = event;
   if (!space) {
     return;
   }
+  registerTypes(space);
 
   // TODO(burdon): Prevent multiple calls from scheduler.
 

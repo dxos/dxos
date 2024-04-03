@@ -10,16 +10,24 @@ import { type Client } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
+import { type IdentityPanelInitialDisposition } from './IdentityPanelProps';
 import { type StepEvent } from '../../steps';
 
 type IdentityMachineContext = {
+  initialDisposition?: IdentityPanelInitialDisposition;
   invitation?: CancellableInvitationObservable;
   identity: Identity | null;
   identitySubscribable: Subscribable<SetIdentityEvent> | null;
 };
 
 type IdentityChooseActionEvent = {
-  type: 'chooseDevices' | 'chooseAgent' | 'chooseProfile' | 'chooseSignOut' | 'sigingOut' | 'unchooseAction';
+  type:
+    | 'chooseDevices'
+    | 'chooseAgent'
+    | 'chooseProfile'
+    | 'chooseResetStorage'
+    | 'chooseJoinNewIdentity'
+    | 'unchooseAction';
 };
 
 type IdentitySelectDeviceInvitationEvent = {
@@ -56,6 +64,13 @@ const identityMachine = createMachine<IdentityMachineContext, IdentityEvent>(
       src: (context) => context.identitySubscribable!,
     },
     states: {
+      unknown: {
+        always: [
+          { cond: 'initiallyManagingDeviceInvitation', target: 'managingDeviceInvitation', actions: 'log' },
+          { cond: 'initiallyManagingProfile', target: 'managingProfile', actions: 'log' },
+          { target: 'choosingAction', actions: 'log' },
+        ],
+      },
       choosingAction: {},
       managingDeviceInvitation: {},
       managingAgent: {
@@ -77,7 +92,8 @@ const identityMachine = createMachine<IdentityMachineContext, IdentityEvent>(
           updateProfile: { target: '.pending', actions: 'log' },
         },
       },
-      signingOut: {},
+      confirmingResetStorage: {},
+      confirmingJoinNewIdentity: {},
     },
     on: {
       unchooseAction: { target: '.choosingAction', actions: ['unsetInvitation', 'log'] },
@@ -85,11 +101,17 @@ const identityMachine = createMachine<IdentityMachineContext, IdentityEvent>(
       selectInvitation: { target: '.managingDeviceInvitation', actions: ['setInvitation', 'log'] },
       chooseDevices: { target: '.managingDevices', actions: 'log' },
       chooseProfile: { target: '.managingProfile', actions: 'log' },
-      chooseSignOut: { target: '.signingOut', actions: 'log' },
+      chooseJoinNewIdentity: { target: '.confirmingJoinNewIdentity', actions: 'log' },
+      chooseResetStorage: { target: '.confirmingResetStorage', actions: 'log' },
       chooseAgent: { target: '.managingAgent', actions: 'log' },
     },
   },
   {
+    guards: {
+      initiallyManagingDeviceInvitation: ({ initialDisposition }, _event) =>
+        initialDisposition === 'manage-device-invitation',
+      initiallyManagingProfile: ({ initialDisposition }, _event) => initialDisposition === 'manage-profile',
+    },
     actions: {
       setIdentity: assign<IdentityMachineContext, IdentityEvent>({
         identity: (context, event) => (event as SetIdentityEvent)?.identity ?? null,
