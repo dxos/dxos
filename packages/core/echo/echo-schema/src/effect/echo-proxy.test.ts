@@ -3,6 +3,7 @@
 //
 
 import * as S from '@effect/schema/Schema';
+import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
 import { inspect } from 'util';
 
@@ -10,18 +11,20 @@ import { type SpaceDoc } from '@dxos/echo-pipeline';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
+import { defer } from '@dxos/util';
 
 import { createEchoReactiveObject } from './echo-handler';
 import * as E from './reactive';
 import { getTypeReference } from './reactive';
 import { TEST_OBJECT, TestClass, TestSchema, TestSchemaClass, type TestSchemaWithClass } from './testing/schema';
-import { AutomergeContext } from '../automerge';
+import { AutomergeContext, getAutomergeObjectCore } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 import { data } from '../object';
 import { Filter } from '../query';
-import { createDatabase } from '../testing';
-import { Task } from '../tests/proto';
+import { createDatabase, TestBuilder } from '../testing';
+import { Task as TaskProto } from '../tests/proto';
+import { Contact, Task } from '../tests/schema';
 
 registerSignalRuntime();
 
@@ -147,7 +150,7 @@ describe('Reactive Object with ECHO database', () => {
     const automergeContext = new AutomergeContext();
     const doc = automergeContext.repo.create<SpaceDoc>();
     const spaceKey = PublicKey.random();
-    const task = new Task({ title: 'Hello' });
+    const task = new TaskProto({ title: 'Hello' });
 
     let id: string;
     {
@@ -307,7 +310,25 @@ describe('Reactive Object with ECHO database', () => {
       expect(person.previousEmployment![1]!.name).to.eq('Braneframe');
     });
 
-    test('adding recursive structures to DB');
+    test('cross reference', async () => {
+      const testBuilder = new TestBuilder();
+      const { db } = await testBuilder.createPeer();
+      db.graph.types.registerEffectSchema(Contact, Task);
+
+      const contact = E.object(Contact, { name: 'Contact', tasks: [] });
+      db.add(contact);
+      const task1 = E.object(Task, { title: 'Task1' });
+      const task2 = E.object(Task, { title: 'Task2' });
+
+      contact.tasks!.push(task1);
+      contact.tasks!.push(task2);
+
+      task2.previous = task1;
+
+      expect(contact.tasks![0]).to.eq(task1);
+      expect(contact.tasks![1]).to.eq(task2);
+      expect(task2.previous).to.eq(task1);
+    });
   });
 
   describe('meta', () => {
@@ -367,5 +388,36 @@ describe('Reactive Object with ECHO database', () => {
         expect(E.metaOf(obj).keys).to.deep.eq([metaKey]);
       }
     });
+  });
+
+  test('rebind', async () => {
+    registerSignalRuntime();
+
+    const { db } = await createDatabase();
+
+    const obj1 = db.add(E.object(E.ExpandoType, { title: 'Object 1' }));
+    const obj2 = db.add(E.object(E.ExpandoType, { title: 'Object 2' }));
+
+    let updateCount = 0;
+    using _ = defer(
+      effect(() => {
+        obj1.title;
+        obj2.title;
+        updateCount++;
+      }),
+    );
+
+    expect(updateCount).to.eq(1);
+
+    // Rebind obj2 to obj1
+    getAutomergeObjectCore(obj2).bind({
+      db: getAutomergeObjectCore(obj1).database!,
+      docHandle: getAutomergeObjectCore(obj1).docHandle!,
+      path: getAutomergeObjectCore(obj1).mountPath,
+      assignFromLocalState: false,
+    });
+
+    expect(updateCount).to.eq(2);
+    expect(obj2.title).to.eq('Object 1');
   });
 });
