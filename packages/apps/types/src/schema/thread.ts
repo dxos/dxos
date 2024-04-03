@@ -41,7 +41,7 @@ export interface RecipientType extends S.Schema.Type<typeof _RecipientSchema> {}
 const _BlockSchema = S.struct({
   timestamp: S.string,
   content: S.optional(E.ref(TextV0Type)),
-  object: S.optional(E.ref(E.AnyEchoObject)),
+  object: S.optional(E.ref(E.ExpandoType)),
 });
 export interface BlockType extends S.Schema.Type<typeof _BlockSchema> {}
 
@@ -53,7 +53,7 @@ export class MessageType extends EchoObjectSchema({ typename: 'braneframe.Messag
   cc: S.optional(S.array(_RecipientSchema)),
   subject: S.optional(S.string),
   blocks: S.mutable(S.array(_BlockSchema)),
-  links: S.optional(S.array(E.ref(E.AnyEchoObject))),
+  links: S.optional(S.array(E.ref(E.ExpandoType))),
   state: S.optional(S.enums(MessageState)),
   read: S.optional(S.boolean),
   context: S.optional(
@@ -94,7 +94,7 @@ export class EventType extends EchoObjectSchema({ typename: 'braneframe.Event', 
   owner: _RecipientSchema,
   attendees: S.mutable(S.array(_RecipientSchema)),
   startDate: S.string,
-  links: S.mutable(S.array(E.ref(E.AnyEchoObject))),
+  links: S.mutable(S.array(E.ref(E.ExpandoType))),
 }) {}
 
 export class AddressBookType extends EchoObjectSchema({ typename: 'braneframe.AddressBook', version: '0.1.0' })({}) {}
