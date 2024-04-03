@@ -24,7 +24,10 @@
   ],
   "dependencies": {
     "@dxos/debug": "workspace:*",
-    "@dxos/react-client": "workspace:*"
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@effect/schema": "0.64.7",
+    "effect": "2.4.9"
   },
   "devDependencies": {
     "@braneframe/plugin-space": "workspace:*",

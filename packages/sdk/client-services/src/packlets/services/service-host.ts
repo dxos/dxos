@@ -2,12 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Event, synchronized } from '@dxos/async';
-import { Properties, clientServiceBundle, defaultKey, type ClientServices } from '@dxos/client-protocol';
+import { Event, sleep, synchronized } from '@dxos/async';
+import { clientServiceBundle, defaultKey, type ClientServices, PropertiesSchema } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { DataServiceImpl, type SpaceDoc } from '@dxos/echo-pipeline';
-import { getAutomergeObjectCore, getRawDoc, type TypedObject } from '@dxos/echo-schema';
+import * as E from '@dxos/echo-schema';
+import { createRawObjectDoc } from '@dxos/echo-schema';
 import { IndexServiceImpl } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -347,17 +348,20 @@ export class ClientServicesHost {
     await this._serviceContext.initialized.wait();
     const space = await this._serviceContext.dataSpaceManager!.createSpace();
 
-    const obj: TypedObject = new Properties(undefined);
-    obj[defaultKey] = identity.identityKey.toHex();
-
     const automergeIndex = space.automergeSpaceState.rootUrl;
     invariant(automergeIndex);
     const document = await this._serviceContext.automergeHost.repo.find<SpaceDoc>(automergeIndex as any);
     await document.whenReady();
 
+    const objectDocument = createRawObjectDoc(
+      { [defaultKey]: identity.identityKey.toHex() },
+      { type: E.getTypeReference(PropertiesSchema) },
+    );
     document.change((doc: SpaceDoc) => {
-      assignDeep(doc, ['objects', getAutomergeObjectCore(obj).id], getRawDoc(obj).handle.docSync());
+      assignDeep(doc, ['objects', objectDocument.id], objectDocument.handle.docSync());
     });
+    // TODO: replace with flush when supported by automerge-repo
+    await sleep(200);
 
     return identity;
   }

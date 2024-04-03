@@ -8,13 +8,11 @@ import { Context } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
 import {
   type QuerySourceProvider,
-  db,
   type EchoObject,
   type Filter,
   type QueryResult,
   type QuerySource,
   filterMatch,
-  base,
   getAutomergeObjectCore,
 } from '@dxos/echo-schema';
 import { type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
@@ -91,13 +89,14 @@ export class IndexQuerySource implements QuerySource {
             return;
           }
 
-          if (!filterMatch(filter, getAutomergeObjectCore(object[base]))) {
+          const core = getAutomergeObjectCore(object);
+          if (!filterMatch(filter, core)) {
             return;
           }
 
           return {
             id: object.id,
-            spaceKey: object[db]!.spaceKey,
+            spaceKey: core.database!.spaceKey,
             object,
             match: { rank: result.rank },
             resolution: { source: 'index', time: Date.now() - start },

@@ -9,7 +9,8 @@
       "options": {
         "entryPoints": [
           "packages/experimental/chess-app/src/index.ts",
-          "packages/experimental/chess-app/src/proto/index.ts"
+          "packages/experimental/chess-app/src/proto/index.ts",
+          "packages/experimental/chess-app/src/types.ts"
         ]
       }
     },

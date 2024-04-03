@@ -8,7 +8,7 @@ import { debounce, DeferredTask } from '@dxos/async';
 import { type Client, type PublicKey } from '@dxos/client';
 import { type Space, TextObject } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { Filter, createSubscription, type Query, subscribe } from '@dxos/echo-schema';
+import { Filter, createSubscription, type Query, getAutomergeObjectCore } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
@@ -158,7 +158,9 @@ export class Scheduler {
         for (const object of objects) {
           const content = object.content;
           if (content instanceof TextObject) {
-            subscriptions.push(content[subscribe](debounce(() => subscription.update([object]), 1_000)));
+            subscriptions.push(
+              getAutomergeObjectCore(content).updates.on(debounce(() => subscription.update([object]), 1_000)),
+            );
           }
         }
       }

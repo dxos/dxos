@@ -394,6 +394,11 @@ export const getRawDoc = (obj: OpaqueEchoObject, path?: KeyPath): DocAccessor =>
   }
 };
 
+export const createRawObjectDoc = (initialProps?: unknown, opts?: TypedObjectOptions): { id: string } & DocAccessor => {
+  const object = new AutomergeObject(initialProps, opts);
+  return { ...object[base]._getRawDoc(), id: object.id };
+};
+
 export const getAutomergeObjectCore = (obj: OpaqueEchoObject): AutomergeObjectCore => {
   if (isAutomergeObject(obj)) {
     return obj[base]._core;
