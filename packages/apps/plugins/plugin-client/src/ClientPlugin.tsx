@@ -18,7 +18,7 @@ import {
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
-import { IndexKind, type TypeCollection } from '@dxos/react-client/echo';
+import { type TypeCollection } from '@dxos/react-client/echo';
 
 import meta, { CLIENT_PLUGIN } from './meta';
 import { getSpaceProperty, setSpaceProperty } from './space-properties';
