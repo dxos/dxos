@@ -78,7 +78,6 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
             client: {
               storage: {
                 dataStore: client.config.values.runtime?.client?.storage?.dataStore,
-                spaceFragmentation: client.config.values.runtime?.client?.storage?.spaceFragmentation,
               },
             },
           },
@@ -157,20 +156,6 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
             </Select.Content>
           </Select.Portal>
         </Select.Root>
-      </SettingsValue>
-
-      <SettingsValue label={t('settings space fragmentation')}>
-        <Input.Switch
-          checked={storageConfig?.runtime?.client?.storage?.spaceFragmentation}
-          onCheckedChange={(checked) => {
-            updateConfig(
-              storageConfig,
-              setStorageConfig,
-              ['runtime', 'client', 'storage', 'spaceFragmentation'],
-              !!checked,
-            );
-          }}
-        />
       </SettingsValue>
     </>
   );
