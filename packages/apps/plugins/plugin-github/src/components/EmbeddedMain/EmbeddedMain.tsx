@@ -18,7 +18,7 @@ import React, { useCallback, useContext, useRef, useState } from 'react';
 import { SPACE_PLUGIN, SpaceAction, getSpaceDisplayName } from '@braneframe/plugin-space';
 import { Surface, useIntent } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
-import { metaOf } from '@dxos/react-client/echo';
+import { getMeta } from '@dxos/react-client/echo';
 import {
   Avatar,
   Button,
@@ -86,7 +86,7 @@ const EmbeddedLayoutImpl = () => {
 
   const spaceFallbackValue = hexToFallback(space?.key.toHex() ?? '0');
 
-  const docGhId = useDocGhId((document ? metaOf(document)?.keys : []) ?? []);
+  const docGhId = useDocGhId((document ? getMeta(document)?.keys : []) ?? []);
   const name = space && getSpaceDisplayName(space);
 
   return (

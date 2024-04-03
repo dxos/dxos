@@ -6,7 +6,7 @@ import get from 'lodash.get';
 
 import { DocumentType, ThreadType, TextV0Type } from '@braneframe/types';
 import { next as A, type Prop } from '@dxos/automerge/automerge';
-import { type AnyEchoObject, base, getTypeRef, type IDocHandle, AutomergeObject, getRawDoc } from '@dxos/echo-schema';
+import { type ExpandoType, base, getTypeRef, type IDocHandle, AutomergeObject, getRawDoc } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { TypedObject } from '@dxos/react-client/echo';
@@ -61,14 +61,14 @@ const cursorConverter = (handle: IDocHandle, path: readonly Prop[]) => ({
 export type FileName = { name: string; extension: string };
 
 export interface TypedObjectSerializer {
-  filename(object: AnyEchoObject): FileName;
+  filename(object: ExpandoType): FileName;
 
-  serialize(object: AnyEchoObject): Promise<string>;
+  serialize(object: ExpandoType): Promise<string>;
 
   /**
    * @param object Deserializing into an existing object. If not provided, a new object is created.
    */
-  deserialize(text: string, object?: AnyEchoObject): Promise<AnyEchoObject>;
+  deserialize(text: string, object?: ExpandoType): Promise<ExpandoType>;
 }
 
 // TODO(mykola): Factor out to respective plugins as providers.

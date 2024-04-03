@@ -16,7 +16,7 @@ import { DocumentType, TextV0Type } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { useMulticastObservable } from '@dxos/react-client';
-import { type Space, SpaceState, useQuery, useSpaces, metaOf } from '@dxos/react-client/echo';
+import { type Space, SpaceState, useQuery, useSpaces, getMeta } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
 import { type DocumentResolverProps, type SpaceResolverProps } from './ResolverProps';
@@ -81,7 +81,7 @@ const DocumentResolverProviderImpl = ({
   const defaultDisplayName = displayName(source, id);
 
   const documents = useQuery(space, (obj) => {
-    const keys = metaOf(obj)?.keys;
+    const keys = getMeta(obj)?.keys;
     return keys?.find((key: any) => key.source === source && key.id === id);
   });
 
@@ -96,7 +96,7 @@ const DocumentResolverProviderImpl = ({
           content: E.object(TextV0Type, { content: event.data.content }),
           title: defaultDisplayName,
         });
-        metaOf(nextDocument).keys = [{ source, id }];
+        getMeta(nextDocument).keys = [{ source, id }];
         space.db.add(nextDocument);
         setDocument(nextDocument);
       }

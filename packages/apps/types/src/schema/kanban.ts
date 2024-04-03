@@ -10,7 +10,7 @@ import { EchoObjectSchema } from '@dxos/echo-schema';
 import { TextV0Type } from './document';
 
 export class KanbanItemType extends EchoObjectSchema({ typename: 'braneframe.Kanban.Item', version: '0.1.0' })({
-  object: S.optional(E.ref(E.AnyEchoObject)),
+  object: S.optional(E.ref(E.ExpandoType)),
   title: E.ref(TextV0Type),
   index: S.optional(S.string),
 }) {}
