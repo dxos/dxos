@@ -22,7 +22,6 @@ import {
   parseGraphPlugin,
   parseMetadataResolverPlugin,
   LayoutAction,
-  useResolvePlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
