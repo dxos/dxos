@@ -15,7 +15,6 @@ import {
   filterMatch,
   getAutomergeObjectCore,
 } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
 import { type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
 

@@ -10,8 +10,8 @@ import waitForExpect from 'wait-for-expect';
 import { MessageType, TextV0Type, ThreadType } from '@braneframe/types';
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { type TypedObject } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
+import { Filter } from '@dxos/echo-schema';
 import { describe, test, afterTest } from '@dxos/test';
 import { isNode } from '@dxos/util';
 
@@ -153,12 +153,10 @@ describe('Client', () => {
     await space1.waitUntilReady();
     const spaceKey = space1.key;
 
-    const query = space1.db.query();
+    const query = space1.db.query(Filter.schema(ThreadType));
     query.subscribe(({ objects }) => {
-      const thread = objects.find((obj: TypedObject) => obj.__typename === 'braneframe.Thread');
-
-      if (thread) {
-        threadQueried.wake(thread as Thread);
+      if (objects.length === 1) {
+        threadQueried.wake(objects[0]);
       }
     }, true);
     await Promise.all(performInvitation({ host: space1, guest: client2.spaces }));
