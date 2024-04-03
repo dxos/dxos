@@ -26,7 +26,6 @@ import {
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
 import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
-import { defer } from '@dxos/util';
 
 import { Client } from '../client';
 import { type Expando, type EchoDatabase } from '../echo';
@@ -166,17 +165,7 @@ export const testSpaceAutomerge = async (create: EchoDatabase, check: EchoDataba
 
   create.add(object);
 
-  const done = new Trigger<void>();
-  const query = check.query((o: Expando) => o.id === object.id);
-  using _ = defer(
-    query.subscribe(() => {
-      if (query.objects.length > 0) {
-        done.wake();
-      }
-    }, true),
-  );
-
-  await done.wait({ timeout: 1000 });
+  await check.automerge.loadObjectById(object.id, { timeout: 1000 });
 
   return { objectId: object.id };
 };
