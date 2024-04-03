@@ -342,7 +342,6 @@ export class AutomergeDb {
    * Keep as field to have a reference to pass for unsubscribing from handle changes.
    */
   private readonly _onDocumentUpdate = (event: DocHandleChangePayload<SpaceDoc>) => {
-    log.info('document update', { docUrl: event.handle.url, patches: event.patches });
     const documentChanges = this._processDocumentUpdate(event);
     this._rebindObjects(event.handle, documentChanges.objectsToRebind);
     this._automergeDocLoader.onObjectLinksUpdated(documentChanges.linkedDocuments);
