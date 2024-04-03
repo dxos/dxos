@@ -29,8 +29,7 @@ type ObjectMetaType = S.Schema.Type<typeof ObjectMetaSchema>;
 export const initMeta = (obj: any) => {
   const metaObject: ObjectMeta = { keys: [] };
   SchemaValidator.prepareTarget(metaObject, ObjectMetaSchema);
-  const typedHandler = new TypedReactiveHandler();
-  defineHiddenProperty(obj, symbolTargetMeta, createReactiveProxy(metaObject, typedHandler));
+  defineHiddenProperty(obj, symbolTargetMeta, createReactiveProxy(metaObject, TypedReactiveHandler.instance as any));
 };
 
 export const getTargetMeta = (target: any): ObjectMetaType => {
