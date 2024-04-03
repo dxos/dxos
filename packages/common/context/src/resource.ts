@@ -23,7 +23,16 @@ export class Resource implements Lifecycle {
   #lifecycleState = LifecycleState.CLOSED;
   #openPromise: Promise<void> | null = null;
   #closePromise: Promise<void> | null = null;
+
+  /**
+   * Context for the resource.
+   * Recreated on close.
+   */
   #ctx: Context = this.#createContext();
+
+  /**
+   * Context that is used to bubble up errors that are not handled by the resource.
+   */
   #parentCtx: Context = new Context();
 
   protected get _lifecycleState() {
