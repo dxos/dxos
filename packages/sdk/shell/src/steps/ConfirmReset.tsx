@@ -77,7 +77,7 @@ export const ConfirmResetImpl = ({
         <Input
           {...{ validationMessage }}
           label={
-            <StepHeading>
+            <StepHeading className='text-start mlb-2'>
               {t(mode === 'join new identity' ? 'join new identity input label' : 'reset storage input label', {
                 confirmationValue,
               })}

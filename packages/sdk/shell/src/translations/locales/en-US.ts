@@ -101,11 +101,11 @@ export const os = {
   'reset storage input label':
     'This will clear this device and all associated data. Type {{confirmationValue}} and confirm to continue.',
   'join new identity input label':
-    'In order to join an existing device, storage on this device must be cleared first. Type {{confirmationValue}} and confirm to continue.',
+    'In order to join an existing device, storage on this device must be cleared first. Type {{confirmationValue}} to continue.',
   'failed to reset identity message': 'Failed to reset identity.',
   'confirmation value': 'CONFIRM',
-  'sign out chooser title': 'DANGER ZONE',
-  'sign out chooser message': 'Proceeding with either action below will erase all data on this device.',
+  'sign out chooser title': 'Danger zone',
+  'sign out chooser message': 'Proceeding with the action below will erase all data on this device.',
   'join new identity label': 'Join a new identity',
   'reset device label': 'Reset storage',
   'reset device confirm message': 'Are you sure you want to reset your device? All data will be lost.',
