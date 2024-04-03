@@ -5,7 +5,7 @@ runtime:
     mode: local
     storage:
       persistent: true
-
+    useReactiveObjectApi: true
   services:
     signaling:
       - server: wss://kube.dxos.org/.well-known/dx/signal
