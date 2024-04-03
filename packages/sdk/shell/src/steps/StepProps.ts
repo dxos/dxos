@@ -6,8 +6,9 @@ import { type cloneElement } from 'react';
 import { type Event, type SingleOrArray } from 'xstate';
 
 type StepDeselectInvitationEvent = { type: 'deselectInvitation' };
+type StepResetIdentityEvent = { type: 'resetIdentity' };
 
-export type StepEvent = StepDeselectInvitationEvent;
+export type StepEvent = StepDeselectInvitationEvent | StepResetIdentityEvent;
 
 export type StepProps = {
   active?: boolean;
