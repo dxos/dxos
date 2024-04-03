@@ -6,13 +6,11 @@ import { Event } from '@dxos/async';
 import { warnAfterTimeout } from '@dxos/debug';
 import {
   type QuerySourceProvider,
-  db,
   type EchoObject,
   type Filter,
   type QueryResult,
   type QuerySource,
   filterMatch,
-  base,
   getAutomergeObjectCore,
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -54,13 +52,14 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
           return;
         }
 
-        if (!filterMatch(filter, getAutomergeObjectCore(object[base]))) {
+        const core = getAutomergeObjectCore(object);
+        if (!filterMatch(filter, core)) {
           return;
         }
 
         return {
           id: object.id,
-          spaceKey: object[db]!.spaceKey,
+          spaceKey: core.database!.spaceKey,
           object,
           match: { rank: result.rank },
           resolution: { source: 'index', time: Date.now() - start },
