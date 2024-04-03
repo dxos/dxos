@@ -124,7 +124,7 @@ describe('Spaces', () => {
       const space = await spaceTrigger.wait({ timeout: 500 });
       await space.waitUntilReady();
 
-      const obj = space.db.getObjectById(objectId)!;
+      const obj = await space.db.automerge.loadObjectById(objectId)!;
       expect(obj).to.exist;
     }
 

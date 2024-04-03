@@ -118,6 +118,7 @@ describe('Index queries', () => {
       const indexedContact = await queryIndexedContact(space);
       expect(indexedContact.name).to.equal('John Doe');
 
+    // TODO(mykola): Clean as automerge team updates storage API.
       await sleep(200); // Sleep to get services storage to finish writing.
       await client.destroy();
       await builder.storage!.close();

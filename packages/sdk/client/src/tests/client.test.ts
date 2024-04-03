@@ -103,6 +103,7 @@ describe('Client', () => {
       expect(client.halo.identity.get()).not.to.exist;
       const identity = await client.halo.createIdentity({ displayName });
       expect(client.halo.identity.get()).to.deep.eq(identity);
+      // TODO(mykola): Clean as automerge team updates storage API.
       await sleep(200);
       await client.destroy();
     }
@@ -114,6 +115,7 @@ describe('Client', () => {
       // TODO(burdon): Error type.
       await expect(client.halo.createIdentity({ displayName })).to.be.rejected;
     }
+    // TODO(mykola): Clean as automerge team updates storage API.
     await sleep(200);
     {
       // Reset storage.
