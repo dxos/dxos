@@ -36,7 +36,7 @@ export class Hypergraph {
   private readonly _owningObjects = new ComplexMap<PublicKey, unknown>(PublicKey.hash);
   private readonly _types = new TypeCollection();
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
-  private readonly _resolveEvents = new ComplexMap<PublicKey, Map<string, Event<EchoObject>>>(PublicKey.hash);
+  private readonly _resolveEvents = new ComplexMap<PublicKey, Map<string, Event<OpaqueEchoObject>>>(PublicKey.hash);
   private readonly _queryContexts = new WeakDictionary<{}, GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
@@ -101,8 +101,8 @@ export class Hypergraph {
   _lookupLink(
     ref: Reference,
     from: EchoDatabase | AutomergeDb,
-    onResolve: (obj: EchoObject) => void,
-  ): EchoObject | undefined {
+    onResolve: (obj: OpaqueEchoObject) => void,
+  ): OpaqueEchoObject | undefined {
     if (ref.host === undefined) {
       const local = from.getObjectById(ref.itemId);
       if (local) {

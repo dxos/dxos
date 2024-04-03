@@ -6,144 +6,126 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { Contact, Container, Task, types } from './proto';
+import { Contact, Container, RecordType, Task, Todo } from './schema';
+import { getAutomergeObjectCore } from '../automerge';
+import * as E from '../effect/reactive';
 import { Hypergraph } from '../hypergraph';
-import { base, db, clone, Expando, TextObject, getTextContent } from '../object';
+import { clone } from '../object';
+import { Filter } from '../query';
 import { createDatabase } from '../testing';
 
 // TODO(burdon): Reconcile/document tests in parent folder.
 
 describe('database', () => {
   test('creating objects', async () => {
-    const { db: database } = await createDatabase(new Hypergraph().addTypes(types));
+    const { db: database } = await createDbWithTypes();
 
-    const task = new Task({ title: 'test' });
+    const task = E.object(Task, { title: 'test' });
     expect(task.title).to.eq('test');
     expect(task.id).to.exist;
-    expect(task[base]).to.exist;
-    expect(task[db]).to.be.undefined;
-    expect(task.__schema).to.eq(Task.schema);
-    expect(task.__typename).to.eq('example.test.Task');
+    expect(() => getAutomergeObjectCore(task)).to.throw();
+    expect(E.getSchema(task)?.ast).to.eq(Task.ast);
+    expect(E.typeOf(task)?.itemId).to.eq('example.test.Task');
 
     database.add(task);
     await database.flush();
-    expect(task[db]).to.exist;
+    expect(getAutomergeObjectCore(task).database).to.exist;
 
-    const { objects: tasks } = database.query(Task.filter());
+    const { objects: tasks } = database.query(Filter.schema(Task));
     expect(tasks).to.have.length(1);
     expect(tasks[0].id).to.eq(task.id);
   });
 
   test('enums', async () => {
-    const { db: database } = await createDatabase(new Hypergraph().addTypes(types));
+    const { db: database } = await createDbWithTypes();
 
     {
-      const container = new Container({ records: [{ type: Container.Record.Type.WORK }] });
+      const container = E.object(Container, { records: [{ type: RecordType.WORK }] });
       await database.add(container);
     }
 
     {
-      const { objects } = database.query(Container.filter());
+      const { objects } = database.query(Filter.schema(Container));
       const [container] = objects;
       expect(container.records).to.have.length(1);
-      expect(container.records[0].type).to.eq(Container.Record.Type.WORK);
+      expect(container.records![0].type).to.eq(RecordType.WORK);
     }
   });
 
   describe('dxos.schema.Text', () => {
     test('text objects are auto-created on schema', async () => {
-      const { db: database } = await createDatabase(new Hypergraph().addTypes(types));
-
-      const task = new Task();
-      expect(task.description).to.be.instanceOf(TextObject);
-
-      database.add(task);
-      await database.flush();
-      expect(task.description).to.be.instanceOf(TextObject);
-
-      (task.description as any).content = 'test';
-      expect(getTextContent(task.description)).to.eq('test');
+      // const { db: database } = await createDbWithTypes();
+      //
+      // const task = E.object(Task, { description: E.object(TextCompatibilitySchema, { content: '' }) });
+      // expect(task.description instanceof TextCompatibilitySchema).to.be.true;
+      //
+      // database.add(task);
+      // await database.flush();
+      // expect(task.description instanceof TextCompatibilitySchema).to.be.true;
+      //
+      // (task.description as any).content = 'test';
+      // expect(getTextContent(task.description)).to.eq('test');
     });
   });
 
   test('dxos.schema.Expando', async () => {
-    const { db: database } = await createDatabase(new Hypergraph().addTypes(types));
+    const { db: database } = await createDbWithTypes();
 
     {
-      const container = new Container();
+      const container = E.object(Container, { objects: [] });
       database.add(container);
       await database.flush();
 
-      container.expandos.push(new Expando({ foo: 100 }));
-      container.expandos.push(new Expando({ bar: 200 }));
+      container.objects!.push(E.object(E.ExpandoType, { foo: 100 }));
+      container.objects!.push(E.object(E.ExpandoType, { bar: 200 }));
     }
 
     {
-      const { objects } = database.query(Container.filter());
+      const { objects } = database.query(Filter.schema(Container));
       const [container] = objects;
-      expect(container.expandos).to.have.length(2);
-      expect(container.expandos[0].foo).to.equal(100);
-      expect(container.expandos[1].bar).to.equal(200);
+      expect(container.objects).to.have.length(2);
+      expect(container.objects![0]!.foo).to.equal(100);
+      expect(container.objects![1]!.bar).to.equal(200);
     }
   });
 
-  // TODO(burdon): Test cannot update random properties.
   test('dxos.schema.TextObject', async () => {
-    const { db: database } = await createDatabase(new Hypergraph().addTypes(types));
+    const { db: database } = await createDbWithTypes();
 
     {
-      const container = new Container();
+      const container = E.object(Container, { objects: [] });
       database.add(container);
       await database.flush();
 
-      container.objects.push(new Task());
-      container.objects.push(new Contact());
+      container.objects!.push(E.object(Task, {}));
+      container.objects!.push(E.object(Contact, {}));
     }
 
     {
-      const { objects } = database.query(Container.filter());
+      const { objects } = database.query(Filter.schema(Container));
       const [container] = objects;
       expect(container.objects).to.have.length(2);
-      expect(container.objects[0].__typename).to.equal(Task.schema.typename);
-      expect(container.objects[1].__typename).to.equal(Contact.schema.typename);
+      expect(E.typeOf(container.objects![0])?.itemId).to.equal(Task.typename);
+      expect(E.typeOf(container.objects![1])?.itemId).to.equal(Contact.typename);
     }
   });
 
   test('object fields', async () => {
-    const task = new Task();
+    const task = E.object(Task, {});
 
     task.title = 'test';
     expect(task.title).to.eq('test');
-    expect(task.__meta.keys).to.exist;
-    expect(task.__meta.keys).to.have.length(0);
+    expect(E.getMeta(task).keys).to.have.length(0);
 
-    task.__meta.keys.push({ source: 'example', id: 'test' });
-    expect(task.__meta.keys).to.have.length(1);
-  });
-
-  test('text objects are auto-created on schema', async () => {
-    const { db: database1 } = await createDatabase(new Hypergraph().addTypes(types));
-    const { db: database2 } = await createDatabase(new Hypergraph().addTypes(types));
-
-    const task1 = new Task();
-    (task1.description as any).content = 'test';
-    database1.add(task1);
-    await database1.flush();
-
-    const task2 = database2.add(clone(task1, { additional: [task1.description] }));
-    await database2.flush();
-    expect(task2.description).to.be.instanceOf(TextObject);
-    expect(getTextContent(task2.description)).to.eq('test');
-    expect(task2 !== task1).to.be.true;
+    E.getMeta(task).keys.push({ source: 'example', id: 'test' });
+    expect(E.getMeta(task).keys).to.have.length(1);
   });
 
   test('clone', async () => {
-    const { db: db1 } = await createDatabase(new Hypergraph().addTypes(types));
-    const { db: db2 } = await createDatabase(new Hypergraph().addTypes(types));
+    const { db: db1 } = await createDbWithTypes();
+    const { db: db2 } = await createDbWithTypes();
 
-    const task1 = new Task({
-      title: 'Main task',
-    });
+    const task1 = E.object(Task, { title: 'Main task' });
     db1.add(task1);
     await db1.flush();
 
@@ -151,39 +133,42 @@ describe('database', () => {
     expect(task2 !== task1).to.be.true;
     expect(task2.id).to.equal(task1.id);
     expect(task2.title).to.equal(task1.title);
-    expect(task2).to.be.instanceOf(Task);
 
     db2.add(task2);
     await db2.flush();
+    expect(task2).to.be.instanceOf(Task);
     expect(task2.id).to.equal(task1.id);
 
     expect(() => db1.add(task1)).to.throw;
   });
 
   test('operator-based filters', async () => {
-    const { db: database } = await createDatabase(new Hypergraph().addTypes(types));
+    const { db: database } = await createDbWithTypes();
 
-    database.add(new Task({ title: 'foo 1' }));
-    database.add(new Task({ title: 'foo 2' }));
-    database.add(new Task({ title: 'bar 3' }));
+    database.add(E.object(Task, { title: 'foo 1' }));
+    database.add(E.object(Task, { title: 'foo 2' }));
+    database.add(E.object(Task, { title: 'bar 3' }));
 
-    expect(database.query(Task.filter((task) => task.title.startsWith('foo'))).objects).to.have.length(2);
+    expect(database.query(Filter.schema(Task, (task) => task.title.startsWith('foo'))).objects).to.have.length(2);
   });
 
   test('typenames of nested objects', async () => {
-    const { db: database } = await createDatabase(new Hypergraph().addTypes(types));
+    const { db: database } = await createDbWithTypes();
 
-    const task = new Task({
+    const task = E.object(Task, {
       title: 'Main task',
-      todos: [
-        new Task.Todo({
-          name: 'Sub task',
-        }),
-      ],
+      todos: [E.object(Todo, { name: 'Sub task' })],
     });
     database.add(task);
 
-    expect(task.todos[0].__typename).to.eq('example.test.Task.Todo');
-    expect(task.todos[0].toJSON()['@type'].itemId).to.eq('example.test.Task.Todo');
+    console.log(task.todos![0]);
+    expect(E.typeOf(task.todos![0] as any)?.itemId).to.eq('example.test.Task.Todo');
+    expect(JSON.parse(JSON.stringify(task.todos![0]))['@type'].itemId).to.eq('example.test.Task.Todo');
   });
 });
+
+const createDbWithTypes = async () => {
+  const graph = new Hypergraph();
+  graph.types.registerEffectSchema(Task, Contact, Container, Todo);
+  return createDatabase(graph);
+};

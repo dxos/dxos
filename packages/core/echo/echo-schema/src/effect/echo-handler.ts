@@ -296,8 +296,10 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
   }
 
   private _handleStoredSchema(target: ProxyTarget, object: any): any {
-    if (object != null && object instanceof StoredEchoSchema) {
-      return target[symbolInternals].core.database?._dbApi.schemaRegistry.register(object);
+    // object instanceof StoredEchoSchema requires database to lookup schema
+    const database = target[symbolInternals].core.database;
+    if (object != null && database && object instanceof StoredEchoSchema) {
+      return database._dbApi.schemaRegistry.register(object);
     }
     return object;
   }
