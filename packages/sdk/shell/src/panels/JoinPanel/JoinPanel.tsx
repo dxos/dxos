@@ -19,9 +19,9 @@ import {
   InvitationRescuer,
   InvitationInput,
   InvitationAccepted,
-  ResetIdentity,
 } from './steps';
 import { Viewport } from '../../components';
+import { ConfirmReset } from '../../steps';
 import { stepStyles } from '../../styles';
 
 export const JoinPanelImpl = (props: JoinPanelImplProps) => {
@@ -44,9 +44,10 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
     onSpaceInvitationCancel,
     onHaloInvitationAuthenticate,
     onSpaceInvitationAuthenticate,
-    onCancelResetIdentity,
+    onCancelResetStorage,
+    onConfirmResetStorage,
     IdentityInput: IdentityInputComponent = IdentityInput,
-    ResetIdentity: ResetIdentityComponent = ResetIdentity,
+    ConfirmReset: ConfirmResetComponent = ConfirmReset,
   } = props;
   return (
     <DensityProvider density='fine'>
@@ -56,12 +57,12 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
           <Viewport.View classNames={stepStyles} id='addition method chooser'>
             <AdditionMethodChooser send={send} active={activeView === 'addition method chooser'} />
           </Viewport.View>
-          <Viewport.View classNames={stepStyles} id='reset identity confirmation'>
-            <ResetIdentityComponent
+          <Viewport.View classNames={stepStyles} id='reset storage confirmation'>
+            <ConfirmResetComponent
               send={send}
-              method='reset identity'
               active={activeView === 'reset identity confirmation'}
-              onCancelResetIdentity={onCancelResetIdentity}
+              onCancel={onCancelResetStorage}
+              onConfirm={onConfirmResetStorage}
             />
           </Viewport.View>
           <Viewport.View classNames={stepStyles} id='create identity input'>
@@ -174,12 +175,13 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
 export const JoinPanel = ({
   titleId: propsTitleId,
   mode = 'default',
+  initialDisposition = 'default',
   initialInvitationCode,
   exitActionParent,
   onExit,
   doneActionParent,
   onDone: propsOnDone,
-  onCancelResetIdentity,
+  onCancelResetStorage,
 }: JoinPanelProps) => {
   const client = useClient();
   const identity = useIdentity();
@@ -189,6 +191,7 @@ export const JoinPanel = ({
   const [joinState, joinSend, joinService] = useJoinMachine(client, {
     context: {
       mode,
+      initialDisposition,
       identity,
       ...(initialInvitationCode && {
         [mode === 'halo-only' ? 'halo' : 'space']: { unredeemedCode: initialInvitationCode },
@@ -382,6 +385,14 @@ export const JoinPanel = ({
     });
   }, [joinState, propsOnDone]);
 
+  const onConfirmResetStorage = useCallback(
+    () =>
+      client.reset().then(() => {
+        joinSend({ type: 'resetIdentity' });
+      }),
+    [client, joinSend],
+  );
+
   return (
     <JoinPanelImpl
       {...{
@@ -412,7 +423,8 @@ export const JoinPanel = ({
           joinSend({ type: 'authenticateSpaceVerificationCode' });
           return joinState.context.space.invitationObservable?.authenticate(authCode);
         },
-        onCancelResetIdentity,
+        onConfirmResetStorage,
+        onCancelResetStorage,
       }}
     />
   );
