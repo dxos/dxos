@@ -13,17 +13,19 @@ import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { getAutomergeObjectCore } from './automerge-object';
-import { type EchoObject, Expando, TextObject, TypedObject } from '../object';
+import * as E from '../effect/reactive';
+import { type EchoReactiveObject, type ExpandoType } from '../effect/reactive';
 import { TestBuilder, type TestPeer } from '../testing';
+import { TextCompatibilitySchema } from '../type-collection';
 
-describe('AutomergeDb', () => {
+describe.only('AutomergeDb', () => {
   describe('space fragmentation', () => {
     const createSpaceFragmentationTestBuilder = () => new TestBuilder({ spaceFragmentationEnabled: true });
 
     test('objects are created inline if space fragmentation is disabled', async () => {
       const testBuilder = new TestBuilder();
       const testPeer = await testBuilder.createPeer();
-      const object = new TextObject();
+      const object = createTextObject();
       testPeer.db.add(object);
       const docHandles = getDocHandles(testPeer);
       expect(docHandles.linkedDocHandles.length).to.eq(0);
@@ -34,7 +36,7 @@ describe('AutomergeDb', () => {
     test('objects are created in separate docs', async () => {
       const testBuilder = createSpaceFragmentationTestBuilder();
       const testPeer = await testBuilder.createPeer();
-      const object = new TypedObject();
+      const object = createExpando();
       testPeer.db.add(object);
       const docHandles = getDocHandles(testPeer);
       expect(docHandles.linkedDocHandles.length).to.eq(1);
@@ -46,7 +48,7 @@ describe('AutomergeDb', () => {
     test('text objects are created in a separate doc and link from the root doc is added', async () => {
       const testBuilder = createSpaceFragmentationTestBuilder();
       const testPeer = await testBuilder.createPeer();
-      const object = new TextObject();
+      const object = createTextObject();
       testPeer.db.add(object);
       const docHandles = getDocHandles(testPeer);
       expect(docHandles.linkedDocHandles.length).to.eq(1);
@@ -56,9 +58,9 @@ describe('AutomergeDb', () => {
     test('effect nested reference access triggers document loading', async () => {
       registerSignalRuntime();
 
-      const document = new Expando({ text: new TextObject('Hello, world!') });
+      const document = createExpando({ text: createTextObject('Hello, world!') });
       const peer = await createPeerInSpaceWithObject(document);
-      const peerDocument = (await peer.db.automerge.loadObjectById(document.id)!) as Expando;
+      const peerDocument = (await peer.db.automerge.loadObjectById(document.id)!) as ExpandoType;
       expect(peerDocument).not.to.be.undefined;
 
       let isFirstInvocation = true;
@@ -77,13 +79,13 @@ describe('AutomergeDb', () => {
     });
 
     test('reference access triggers document loading', async () => {
-      const textObject = new TextObject('Hello, world!');
+      const textObject = createTextObject('Hello, world!');
       const peer = await createPeerInSpaceWithObject(textObject);
       await waitObjectLoaded(peer, textObject, { triggerLoading: true });
     });
 
     test("separate-doc object is treated as inline if it's both linked and inline", async () => {
-      const object = new TextObject();
+      const object = createTextObject();
       // The second peer treats text as inline right after opening the document
       const peer = await createPeerInSpaceWithObject(object, (handles) => {
         const textHandle = handles.linkedDocHandles[0]!;
@@ -103,7 +105,7 @@ describe('AutomergeDb', () => {
 
   describe('space root document change', () => {
     test('new inline objects are loaded', async () => {
-      const peer = await createPeerInSpaceWithObject(new TextObject());
+      const peer = await createPeerInSpaceWithObject(createTextObject());
       const newRootDocHandle = peer.db._automerge.automerge.repo.create<SpaceDoc>();
       const newObject = addObjectToDoc(newRootDocHandle, { id: '123', title: 'title ' });
       await peer.db._automerge.update({ rootUrl: newRootDocHandle.url });
@@ -112,7 +114,7 @@ describe('AutomergeDb', () => {
     });
 
     test('objects are removed if not present in the new document', async () => {
-      const oldObject = new Expando({ title: 'Hello' });
+      const oldObject = createExpando({ title: 'Hello' });
       const peer = await createPeerInSpaceWithObject(oldObject);
       const newRootDocHandle = peer.db._automerge.automerge.repo.create<SpaceDoc>();
       const beforeUpdate = await peer.db._automerge.loadObjectById(oldObject.id);
@@ -123,7 +125,7 @@ describe('AutomergeDb', () => {
     });
 
     test('preserved objects are rebound to the new root', async () => {
-      const originalObj = new Expando({ title: 'Hello' });
+      const originalObj = createExpando({ title: 'Hello' });
       const peer = await createPeerInSpaceWithObject(originalObj);
       const newRootDocHandle = peer.db._automerge.automerge.repo.create<SpaceDoc>();
       newRootDocHandle.change((newDoc: any) => {
@@ -138,10 +140,10 @@ describe('AutomergeDb', () => {
     });
 
     test('linked objects are loaded on update only if they were loaded before', async () => {
-      const stack = new Expando({
-        notLoadedDocument: new TextObject('text1'),
-        loadedDocument: new TextObject('text2'),
-        partiallyLoadedDocument: new TextObject('text3'),
+      const stack = createExpando({
+        notLoadedDocument: createTextObject('text1'),
+        loadedDocument: createTextObject('text2'),
+        partiallyLoadedDocument: createTextObject('text3'),
       });
       const peer = await createPeerInSpaceWithObject(stack);
       const newRootDocHandle = peer.db._automerge.automerge.repo.create<SpaceDoc>();
@@ -161,10 +163,10 @@ describe('AutomergeDb', () => {
     });
 
     test('linked objects can be remapped', async () => {
-      const stack = new Expando({
-        text1: new TextObject('text1'),
-        text2: new TextObject('text2'),
-        text3: new TextObject('text3'),
+      const stack = createExpando({
+        text1: createTextObject('text1'),
+        text2: createTextObject('text2'),
+        text3: createTextObject('text3'),
       });
       const peer = await createPeerInSpaceWithObject(stack);
       const newRootDocHandle = peer.db._automerge.automerge.repo.create<SpaceDoc>();
@@ -191,7 +193,7 @@ describe('AutomergeDb', () => {
     });
 
     test('updates are not received on old handles', async () => {
-      const obj = new Expando({});
+      const obj = createExpando({});
       const peer = await createPeerInSpaceWithObject(obj);
       const oldRootDocHandle = getDocHandles(peer).spaceRootHandle;
       const beforeUpdate = addObjectToDoc(oldRootDocHandle, { id: '1', title: 'test' });
@@ -208,7 +210,7 @@ describe('AutomergeDb', () => {
     });
 
     test('pending links are loaded', async () => {
-      const obj = new TextObject('Hello, world');
+      const obj = createTextObject('Hello, world');
       const peer = await createPeerInSpaceWithObject(obj);
       const oldRootDocHandle = getDocHandles(peer).spaceRootHandle;
       const newRootDocHandle = peer.db._automerge.automerge.repo.create<SpaceDoc>();
@@ -229,17 +231,17 @@ describe('AutomergeDb', () => {
     });
 
     test('multiple object update', async () => {
-      const objectsToRebind = range(6).map(() => new Expando({}));
-      const objectsToRemove = range(5).map(() => new Expando({}));
-      const loadedLinks = range(4).map(() => new TextObject('test'));
-      const partiallyLoadedLinks = range(3).map(() => new TextObject('test2'));
-      const objectsToAdd = range(2).map(() => new Expando({}));
+      const objectsToRebind = range(6).map(() => createExpando());
+      const objectsToRemove = range(5).map(() => createExpando());
+      const loadedLinks = range(4).map(() => createTextObject('test'));
+      const partiallyLoadedLinks = range(3).map(() => createTextObject('test2'));
+      const objectsToAdd = range(2).map(() => createExpando());
       const rootObject = [objectsToRebind, objectsToRemove, loadedLinks, partiallyLoadedLinks]
         .flatMap((v: any[]) => v)
-        .reduce((acc: Expando, obj: any) => {
+        .reduce((acc: ExpandoType, obj: any) => {
           acc[obj.id] = obj;
           return acc;
-        }, new Expando({}));
+        }, createExpando());
 
       const peer = await createPeerInSpaceWithObject(rootObject);
 
@@ -282,7 +284,7 @@ describe('AutomergeDb', () => {
     test('reload objects', async () => {
       const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
       const testPeer = await testBuilder.createPeer();
-      const object = new TypedObject({ title: 'first object' });
+      const object = createExpando({ title: 'first object' });
       testPeer.db.add(object);
 
       const spaceKey = testPeer.spaceKey;
@@ -298,7 +300,7 @@ describe('AutomergeDb', () => {
     });
 
     test('load object', async () => {
-      const object = new Expando({ title: 'Hello' });
+      const object = createExpando({ title: 'Hello' });
       const peer = await createPeerInSpaceWithObject(object);
       await peer.db.automerge.loadObjectById(object.id);
       const loadedObject = peer.db.getObjectById(object.id);
@@ -317,7 +319,7 @@ const getDocHandles = (peer: TestPeer): DocumentHandles => {
 const getObjectDocHandle = (obj: any) => getAutomergeObjectCore(obj).docHandle!;
 
 const createPeerInSpaceWithObject = async (
-  object: EchoObject,
+  object: EchoReactiveObject<any>,
   onDocumentSavedInSpace?: (handles: DocumentHandles) => void,
 ): Promise<TestPeer> => {
   const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
@@ -326,6 +328,14 @@ const createPeerInSpaceWithObject = async (
   await firstPeer.db.flush();
   onDocumentSavedInSpace?.(getDocHandles(firstPeer));
   return testBuilder.createPeer(firstPeer.spaceKey, firstPeer.automergeDocId);
+};
+
+const createExpando = <T extends {}>(props: T = {} as T): EchoReactiveObject<T> => {
+  return E.object(E.ExpandoType, props);
+};
+
+const createTextObject = (content: string = ''): EchoReactiveObject<TextCompatibilitySchema> => {
+  return E.object(TextCompatibilitySchema, { content });
 };
 
 interface DocumentHandles {

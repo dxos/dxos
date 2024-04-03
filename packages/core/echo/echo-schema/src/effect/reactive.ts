@@ -65,12 +65,13 @@ export const AnyEchoObject: S.Schema<AnyEchoObject> = _AnyEchoObject;
 
 export const ExpandoMarker = Symbol.for('@dxos/echo-schema/Expando');
 
-const _Expando = S.struct({}).pipe(echoObject('Expando', '0.1.0'));
+const _Expando = S.struct({}, { key: S.string, value: S.any }).pipe(echoObject('Expando', '0.1.0'));
 /**
  * @deprecated Need API review.
  */
 export interface ExpandoType extends S.Schema.Type<typeof _Expando> {
-  [ExpandoMarker]: true;
+  id: string;
+  [ExpandoMarker]?: true;
 }
 /**
  * Marker value to be passed to `object` constructor to create an ECHO object with a generated ID.

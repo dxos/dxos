@@ -18,7 +18,10 @@ export type CreateDatabaseOpts = {
  * @deprecated Use TestBuilder.
  */
 // TODO(burdon): Builder pattern.
-export const createDatabase = async (graph = new Hypergraph(), { useReactiveObjectApi }: CreateDatabaseOpts = {}) => {
+export const createDatabase = async (
+  graph = new Hypergraph(),
+  { useReactiveObjectApi }: CreateDatabaseOpts = { useReactiveObjectApi: true },
+) => {
   graph.addTypes(schemaBuiltin);
 
   const spaceKey = PublicKey.random();
@@ -68,6 +71,7 @@ export class TestPeer {
     spaceKey: this.spaceKey,
     graph: this.builder.graph,
     automergeContext: this.builder.automergeContext,
+    useReactiveObjectApi: true,
   });
 
   constructor(
