@@ -5,7 +5,7 @@
 import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, scheduleMicroTask, synchronized, Trigger } from '@dxos/async';
-import { Properties, type ClientServicesProvider, type Space, type SpaceInternal } from '@dxos/client-protocol';
+import { type ClientServicesProvider, type Space, type SpaceInternal, PropertiesSchema } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
@@ -15,7 +15,8 @@ import {
   type AutomergeContext,
   type EchoDatabase,
   type Hypergraph,
-  type TypedObject,
+  Filter,
+  type EchoReactiveObject,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -87,7 +88,7 @@ export class SpaceProxy implements Space {
 
   private _databaseOpen = false;
   private _error: Error | undefined = undefined;
-  private _properties?: TypedObject = undefined;
+  private _properties?: EchoReactiveObject<any> = undefined;
 
   constructor(
     private _clientServices: ClientServicesProvider,
@@ -155,7 +156,7 @@ export class SpaceProxy implements Space {
   }
 
   @trace.info({ depth: 2 })
-  get properties(): TypedObject {
+  get properties(): EchoReactiveObject<any> {
     if (!this._initialized) {
       throw new Error('Space is not initialized');
     }
@@ -316,7 +317,7 @@ export class SpaceProxy implements Space {
     //   This is needed to ensure reactivity for newly created spaces.
     // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
-      const unsubscribe = this._db.query(Properties.filter()).subscribe((query) => {
+      const unsubscribe = this._db.query(Filter.schema(PropertiesSchema)).subscribe((query) => {
         if (query.objects.length === 1) {
           this._properties = query.objects[0];
           propertiesAvailable.wake();

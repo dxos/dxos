@@ -19,6 +19,7 @@ import {
   isReactiveProxy,
   getProxyHandlerSlot,
 } from './proxy';
+import { getTargetMeta, initMeta } from './reactive-meta-handler';
 import { SchemaValidator, symbolSchema, validateIdNotPresentOnSchema } from './schema-validator';
 import { TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
@@ -58,25 +59,17 @@ export const echoObject =
     >;
   };
 
-const _AnyEchoObject = S.struct({}).pipe(echoObject('Any', '0.1.0'));
-export interface AnyEchoObject extends S.Schema.Type<typeof _AnyEchoObject> {}
-export const AnyEchoObject: S.Schema<AnyEchoObject> = _AnyEchoObject;
-
 export const ExpandoMarker = Symbol.for('@dxos/echo-schema/Expando');
 
 const _Expando = S.struct({}).pipe(echoObject('Expando', '0.1.0'));
-/**
- * @deprecated Need API review.
- */
-export interface ExpandoType extends S.Schema.Type<typeof _Expando> {
-  [ExpandoMarker]: true;
-}
+
+export interface ExpandoType extends S.Schema.Type<typeof _Expando> {}
+
 /**
  * Marker value to be passed to `object` constructor to create an ECHO object with a generated ID.
- *
- * @deprecated Need API review.
  */
-export const ExpandoType: S.Schema<ExpandoType> = _Expando as any;
+// TODO(dmaretskyi): Rename to `Expando` once old code has been deleted.
+export const ExpandoType: S.Schema<ExpandoType> & { [ExpandoMarker]: true } = _Expando as any;
 
 /**
  * Has `id`.
@@ -128,7 +121,7 @@ export const object: {
   <T extends {}>(schema: typeof ExpandoType, obj: T): ReactiveObject<Identifiable & T>;
   <T extends {}>(schema: S.Schema<T>, obj: ExcludeId<T>): ReactiveObject<T>;
 } = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: ExcludeId<T>): ReactiveObject<T> => {
-  if (obj) {
+  if (obj && (schemaOrObj as any) !== ExpandoType) {
     if (!isValidProxyTarget(obj)) {
       throw new Error('Value cannot be made into a reactive object.');
     }
@@ -144,6 +137,7 @@ export const object: {
       (obj as any).id = generateId();
     }
 
+    initMeta(obj);
     SchemaValidator.prepareTarget(obj as T, schema);
     return createReactiveProxy(obj, TypedReactiveHandler.instance as ReactiveHandler<any>) as ReactiveObject<T>;
   } else if (obj && (schemaOrObj as any) === ExpandoType) {
@@ -158,14 +152,14 @@ export const object: {
     }
 
     (obj as any).id = generateId();
-
+    initMeta(obj);
     // Untyped.
     return createReactiveProxy(obj as T, UntypedReactiveHandler.instance as ReactiveHandler<any>) as ReactiveObject<T>;
   } else {
     if (!isValidProxyTarget(schemaOrObj)) {
       throw new Error('Value cannot be made into a reactive object.');
     }
-
+    initMeta(schemaOrObj);
     // Untyped.
     return createReactiveProxy(
       schemaOrObj as T,
@@ -192,6 +186,16 @@ export const ref = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<Ref<T
 
   // TODO(dmaretskyi): Casting here doesn't seem valid. Maybe there's a way to express optionality in the schema?
   return schema.annotations({ [ReferenceAnnotation]: annotation }) as S.Schema<Ref<T>>;
+};
+
+export const refArray = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<T[]> => {
+  const annotation = getEchoObjectAnnotation(schema);
+  if (annotation == null) {
+    throw new Error('Reference target must be an ECHO object.');
+  }
+
+  // TODO(dmaretskyi): Casting here doesn't seem valid. Maybe there's a way to express optionality in the schema?
+  return S.array(schema.annotations({ [ReferenceAnnotation]: annotation })) as any as S.Schema<T[]>;
 };
 
 export const EchoObjectFieldMetaAnnotationId = Symbol.for('@dxos/echo-schema/annotation/FieldMeta');
@@ -256,10 +260,13 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
   return Reference.fromLegacyTypename(annotation.storedSchemaId ?? annotation.typename);
 };
 
-export const metaOf = <T extends {}>(obj: T): ObjectMeta => {
+export const getMeta = <T extends {}>(obj: T): ObjectMeta => {
   const proxyHandlerSlot = getProxyHandlerSlot(obj);
-  invariant(proxyHandlerSlot.handler instanceof EchoReactiveHandler, 'Not a reactive ECHO object');
-  return proxyHandlerSlot.handler.getMeta(proxyHandlerSlot.target);
+  if (proxyHandlerSlot.handler instanceof EchoReactiveHandler) {
+    return proxyHandlerSlot.handler.getMeta(proxyHandlerSlot.target);
+  } else {
+    return getTargetMeta(obj);
+  }
 };
 
 export const typeOf = <T extends {}>(obj: T): Reference | undefined => getTypeReference(getSchema(obj));

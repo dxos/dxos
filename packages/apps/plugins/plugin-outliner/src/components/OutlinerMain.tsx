@@ -6,7 +6,7 @@ import React, { type FC } from 'react';
 
 import { TextV0Type, TreeItemType, type TreeType } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
-import { getSpaceForObject } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
   baseSurface,
@@ -20,7 +20,7 @@ import {
 import { Outliner } from './Outliner';
 
 const OutlinerMain: FC<{ tree: TreeType }> = ({ tree }) => {
-  const space = getSpaceForObject(tree);
+  const space = getSpace(tree);
   if (!space || !tree.root) {
     return null;
   }

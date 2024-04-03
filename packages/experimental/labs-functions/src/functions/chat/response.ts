@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Message as MessageType, Document as DocumentType, Stack as StackType } from '@braneframe/types/proto';
+import * as AST from '@effect/schema/AST';
+
+import { DocumentType, StackType, type BlockType, TextV0Type, SectionType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { Expando, Schema, TextObject } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
+import * as E from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { type RequestContext } from './context';
@@ -19,13 +20,13 @@ export class ResponseBuilder {
     private _context: RequestContext,
   ) {}
 
-  build(result: ParseResult): MessageType.Block[] | undefined {
-    const blocks: MessageType.Block[] = [];
+  build(result: ParseResult): BlockType[] | undefined {
+    const blocks: BlockType[] = [];
     const { timestamp, pre, post } = result;
     log('build', { result });
 
     if (pre) {
-      blocks.push({ timestamp, content: new TextObject(pre) });
+      blocks.push({ timestamp, content: E.object(TextV0Type, { content: pre }) });
     }
 
     const processed = this.processResult(result);
@@ -34,20 +35,20 @@ export class ResponseBuilder {
     }
 
     if (post) {
-      blocks.push({ timestamp, content: new TextObject(post) });
+      blocks.push({ timestamp, content: E.object(TextV0Type, { content: post }) });
     }
 
     return blocks;
   }
 
-  processResult(result: ParseResult): MessageType.Block[] | undefined {
+  processResult(result: ParseResult): BlockType[] | undefined {
     const timestamp = new Date().toISOString();
     const { data, content, type, kind } = result;
 
     //
     // Add to stack.
     //
-    if (this._context.object?.__typename === StackType.schema.typename) {
+    if (this._context.object?.__typename === StackType.typename) {
       // TODO(burdon): Insert based on prompt config.
       log.info('adding section to stack', { stack: this._context.object.id });
 
@@ -62,8 +63,10 @@ export class ResponseBuilder {
           : content;
 
       this._context.object.sections.push(
-        new StackType.Section({
-          object: new DocumentType({ content: new TextObject(formattedContent) }),
+        E.object(SectionType, {
+          object: E.object(DocumentType, {
+            content: E.object(TextV0Type, { content: formattedContent }),
+          }),
         }),
       );
 
@@ -74,30 +77,21 @@ export class ResponseBuilder {
     // Convert JSON data to objects.
     //
     if (result.type === 'json') {
-      const blocks: MessageType.Block[] = [];
+      const blocks: BlockType[] = [];
       Object.entries(data).forEach(([type, array]) => {
         const schema = this._context.schema?.get(type);
         if (schema) {
           for (const obj of array as any[]) {
-            const data: Record<string, any> = {
-              '@type': schema.typename,
-            };
+            const data: Record<string, any> = {};
 
-            for (const { id, type } of schema.props) {
-              invariant(id);
-              const value = obj[id];
-              if (value !== undefined && value !== null) {
-                switch (type) {
-                  // TODO(burdon): Currently only handles string properties.
-                  case Schema.PropType.STRING: {
-                    data[id] = new TextObject(value);
-                    break;
-                  }
-                }
+            for (const { name, type } of schema.getProperties()) {
+              const value = obj[name];
+              if (value !== undefined && value !== null && AST.isStringKeyword(type)) {
+                data[name.toString()] = E.object(TextV0Type, { content: value });
               }
             }
 
-            const object = new Expando(data, { schema });
+            const object = E.object(schema.schema, data);
             blocks.push({ timestamp, object });
           }
         }
@@ -114,7 +108,7 @@ export class ResponseBuilder {
     return [
       {
         timestamp,
-        content: new TextObject(content),
+        content: E.object(TextV0Type, { content }),
       },
     ];
   }

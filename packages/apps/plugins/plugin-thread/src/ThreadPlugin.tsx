@@ -23,7 +23,7 @@ import {
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { type TypedObject, getSpaceForObject, getTextInRange, SpaceProxy, Filter } from '@dxos/react-client/echo';
+import { type TypedObject, getSpace, getTextInRange, SpaceProxy, Filter } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
 import { comments, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
@@ -75,7 +75,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         const space = activeNode
           ? activeNode.data instanceof SpaceProxy
             ? activeNode.data
-            : getSpaceForObject(activeNode.data)
+            : getSpace(activeNode.data)
           : undefined;
         untracked(() => {
           const [thread] = space?.db.query(Filter.schema(ThreadType, (thread) => !thread.context)).objects ?? [];
@@ -331,7 +331,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       markdown: {
         // TODO(burdon): Factor out extension factory into separate file (for simplicity).
         extensions: ({ document: doc }) => {
-          const space = doc && getSpaceForObject(doc);
+          const space = doc && getSpace(doc);
           if (!doc || !space) {
             return [];
           }
@@ -343,7 +343,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   if (thread instanceof ThreadType && cursor) {
                     const [start, end] = cursor.split(':');
                     // TODO(wittjosiah): Don't cast.
-                    const title = getTextInRange(doc.content as unknown as E.TextObject, start, end);
+                    const title = getTextInRange(doc.content, start, end);
                     // TODO(burdon): This seems unsafe; review.
                     // Only update if the title has changed, otherwise this will cause an infinite loop.
                     // Skip if the title is empty - this means comment text was deleted, but thread title should remain.
@@ -360,7 +360,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 // Create comment thread.
                 const [start, end] = cursor.split(':');
                 // TODO(wittjosiah): Don't cast.
-                const title = getTextInRange(doc.content as unknown as E.TextObject, start, end);
+                const title = getTextInRange(doc.content, start, end);
                 const thread = space.db.add(E.object(ThreadType, { title, messages: [], context: { object: doc.id } }));
                 if (doc.comments) {
                   doc.comments.push({ thread, cursor });
@@ -394,11 +394,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 const comment = doc.comments?.find(({ thread }) => thread?.id === id);
                 if (comment && comment.thread) {
                   const [start, end] = cursor.split(':');
-                  (comment.thread as ThreadType).title = getTextInRange(
-                    doc.content as unknown as E.TextObject,
-                    start,
-                    end,
-                  );
+                  (comment.thread as ThreadType).title = getTextInRange(doc.content, start, end);
                   comment.cursor = cursor;
                 }
               },

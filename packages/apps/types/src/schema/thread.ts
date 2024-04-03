@@ -16,16 +16,32 @@ export enum MessageState {
   SPAM = 3,
 }
 
-const _RecipientSchema = S.struct({
-  identityKey: S.optional(S.string),
-  email: S.optional(S.string),
+export class ContactType extends EchoObjectSchema({ typename: 'braneframe.Contact', version: '0.1.0' })({
   name: S.optional(S.string),
-});
+  identifiers: S.mutable(
+    S.array(
+      S.struct({
+        type: S.string,
+        value: S.string,
+      }),
+    ),
+  ),
+}) {}
+
+const _RecipientSchema = S.mutable(
+  S.struct({
+    identityKey: S.optional(S.string),
+    email: S.optional(S.string),
+    name: S.optional(S.string),
+    contact: S.optional(E.ref(ContactType)),
+  }),
+);
+export interface RecipientType extends S.Schema.Type<typeof _RecipientSchema> {}
 
 const _BlockSchema = S.struct({
   timestamp: S.string,
   content: S.optional(E.ref(TextV0Type)),
-  object: S.optional(E.ref(E.AnyEchoObject)),
+  object: S.optional(E.ref(E.ExpandoType)),
 });
 export interface BlockType extends S.Schema.Type<typeof _BlockSchema> {}
 
@@ -37,7 +53,7 @@ export class MessageType extends EchoObjectSchema({ typename: 'braneframe.Messag
   cc: S.optional(S.array(_RecipientSchema)),
   subject: S.optional(S.string),
   blocks: S.mutable(S.array(_BlockSchema)),
-  links: S.optional(S.array(E.ref(E.AnyEchoObject))),
+  links: S.optional(S.array(E.ref(E.ExpandoType))),
   state: S.optional(S.enums(MessageState)),
   read: S.optional(S.boolean),
   context: S.optional(
@@ -73,24 +89,12 @@ export class MailboxType extends EchoObjectSchema({ typename: 'braneframe.Mailbo
   messages: S.mutable(S.array(E.ref(MessageType))),
 }) {}
 
-export class ContactType extends EchoObjectSchema({ typename: 'braneframe.Contact', version: '0.1.0' })({
-  name: S.optional(S.string),
-  identifiers: S.mutable(
-    S.array(
-      S.struct({
-        type: S.string,
-        value: S.string,
-      }),
-    ),
-  ),
-}) {}
-
 export class EventType extends EchoObjectSchema({ typename: 'braneframe.Event', version: '0.1.0' })({
   title: S.optional(S.string),
   owner: _RecipientSchema,
   attendees: S.mutable(S.array(_RecipientSchema)),
   startDate: S.string,
-  links: S.mutable(S.array(E.ref(E.AnyEchoObject))),
+  links: S.mutable(S.array(E.ref(E.ExpandoType))),
 }) {}
 
 export class AddressBookType extends EchoObjectSchema({ typename: 'braneframe.AddressBook', version: '0.1.0' })({}) {}

@@ -41,12 +41,17 @@ describe.skip('IMAP processor', () => {
     const mapped = messages
       .map((message) => ({
         date: message.date,
-        to: message.to[0]?.email,
+        to: message.to?.[0]?.email,
         from: message.from?.email,
         subject: message.subject,
-        body: message.blocks[0].content?.text.length,
+        body: message.blocks[0].content?.content?.length,
       }))
-      .sort(({ date: a }, { date: b }) => (a < b ? 1 : a > b ? -1 : 0));
+      .sort(({ date: a }, { date: b }) => {
+        if (a == null || b == null) {
+          return a === b ? 0 : b == null ? -1 : 1;
+        }
+        return new Date(a).getTime() - new Date(b).getTime();
+      });
 
     console.log('messages', JSON.stringify(mapped, undefined, 2));
     expect(mapped).to.have.length.greaterThan(0);

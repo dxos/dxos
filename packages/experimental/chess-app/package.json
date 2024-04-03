@@ -15,6 +15,10 @@
     "./proto": {
       "browser": "./dist/lib/browser/proto/index.mjs",
       "node": "./dist/lib/node/proto/index.cjs"
+    },
+    "./types": {
+      "browser": "./dist/lib/browser/types.mjs",
+      "node": "./dist/lib/node/types.cjs"
     }
   },
   "types": "./dist/types/src/index.d.ts",
@@ -22,6 +26,9 @@
     "*": {
       "proto": [
         "dist/types/src/proto"
+      ],
+      "types": [
+        "dist/types/src/types"
       ]
     }
   },
@@ -35,8 +42,10 @@
   "dependencies": {
     "@dxos/echo-schema": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@effect/schema": "0.64.7",
     "@phosphor-icons/react": "^2.0.5",
     "chess.js": "1.0.0-alpha.0",
+    "effect": "2.4.9",
     "react": "^18.2.0",
     "react-chessboard": "^2.0.7",
     "react-dom": "^18.2.0",

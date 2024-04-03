@@ -6,6 +6,8 @@
 
 /* global __DXOS_CONFIG__ __CONFIG_ENVS__ __CONFIG_DEFAULTS__ __CONFIG_LOCAL__ */
 
+import localforage from 'localforage';
+
 import { log } from '@dxos/log';
 
 const CONFIG_ENDPOINT = '/.well-known/dx/config';
@@ -38,21 +40,17 @@ export const Defaults = () => {
   return __CONFIG_DEFAULTS__;
 };
 
-let localforage = null;
 /**
  * Settings config from browser storage.
  */
 export const Storage = async () => {
   try {
-    if (!localforage) {
-      localforage = await import('localforage');
-    }
     const config = await localforage.getItem('dxos.org/settings/config');
     if (config) {
       return config;
     }
   } catch (err) {
-    log('Failed to load config', { err });
+    log.warn('Failed to load config', { err });
   }
   return {};
 };
