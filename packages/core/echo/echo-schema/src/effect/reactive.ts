@@ -128,7 +128,7 @@ export const object: {
   <T extends {}>(schema: typeof ExpandoType, obj: T): ReactiveObject<Identifiable & T>;
   <T extends {}>(schema: S.Schema<T>, obj: ExcludeId<T>): ReactiveObject<T>;
 } = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: ExcludeId<T>): ReactiveObject<T> => {
-  if (obj) {
+  if (obj && (schemaOrObj as any) !== ExpandoType) {
     if (!isValidProxyTarget(obj)) {
       throw new Error('Value cannot be made into a reactive object.');
     }

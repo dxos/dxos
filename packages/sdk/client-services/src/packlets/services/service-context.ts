@@ -30,7 +30,7 @@ import {
   type IdentityManagerRuntimeParams,
   type JoinIdentityParams,
 } from '../identity';
-import { createGetAllDocuments, createLoadDocuments } from '../indexing';
+import { createDocumentsIterator, createSelectedDocumentsIterator } from '../indexing';
 import {
   DeviceInvitationProtocol,
   InvitationsHandler,
@@ -125,8 +125,8 @@ export class ServiceContext {
     this.indexer = new Indexer({
       indexStore: new IndexStore({ directory: storage.createDirectory('index-store') }),
       metadataStore: this.indexMetadata,
-      loadDocuments: createLoadDocuments(this.automergeHost),
-      getAllDocuments: createGetAllDocuments(this.automergeHost),
+      loadDocuments: createSelectedDocumentsIterator(this.automergeHost),
+      getAllDocuments: createDocumentsIterator(this.automergeHost),
     });
 
     this.invitations = new InvitationsHandler(this.networkManager);
