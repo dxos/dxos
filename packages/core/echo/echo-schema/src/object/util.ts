@@ -10,7 +10,7 @@ import { type AbstractEchoObject } from './object';
 import { isAutomergeObject } from './typed-object';
 import { base, type OpaqueEchoObject, type EchoObject, type ForeignKey } from './types';
 import type { EchoDatabase } from '../database';
-import { type EchoReactiveHandlerImpl } from '../effect/echo-handler';
+import type * as echoHandlerModule from '../effect/echo-handler';
 import { getProxyHandlerSlot } from '../effect/proxy';
 import { isEchoReactiveObject } from '../effect/reactive';
 
@@ -27,8 +27,10 @@ export const getDatabaseFromObject = (obj: OpaqueEchoObject): EchoDatabase | und
     return obj[base]._core.database?._dbApi;
   }
   if (isEchoReactiveObject(obj)) {
-    const handler = getProxyHandlerSlot(obj).handler as EchoReactiveHandlerImpl;
-    return handler._objectCore.database?._dbApi;
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { getObjectCoreFromEchoTarget }: typeof echoHandlerModule = require('../effect/echo-handler');
+    const core = getObjectCoreFromEchoTarget(getProxyHandlerSlot(obj).target as any);
+    return core.database?._dbApi;
   }
   return undefined;
 };

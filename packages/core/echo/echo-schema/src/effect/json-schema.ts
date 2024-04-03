@@ -20,7 +20,11 @@ import {
   EchoObjectFieldMetaAnnotationId,
   ReferenceAnnotation,
 } from './reactive';
-import { Schema } from '../proto';
+import { type Schema } from '../proto';
+
+// Circular deps.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const requireSchema = (): typeof Schema => require('../proto').Schema;
 
 const ECHO_REFINEMENT_KEY = '$echo';
 interface EchoRefinement {
@@ -37,17 +41,17 @@ const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } 
 // TODO(burdon): Reconcile with plugin-table.
 export const getPropType = (type?: Schema.PropType): string => {
   switch (type) {
-    case Schema.PropType.REF:
+    case requireSchema().PropType.REF:
       return 'ref';
-    case Schema.PropType.BOOLEAN:
+    case requireSchema().PropType.BOOLEAN:
       return 'boolean';
-    case Schema.PropType.NUMBER:
+    case requireSchema().PropType.NUMBER:
       return 'number';
-    case Schema.PropType.DATE:
+    case requireSchema().PropType.DATE:
       return 'date';
-    case Schema.PropType.STRING:
+    case requireSchema().PropType.STRING:
       return 'string';
-    case Schema.PropType.RECORD:
+    case requireSchema().PropType.RECORD:
       return 'object';
     default:
       throw new Error(`Invalid type: ${type}`);
@@ -115,19 +119,19 @@ export const toEffectSchema = (schema: Schema): S.Schema<any> => {
   const fields = schema.props.reduce<Record<string, S.Schema<any>>>((fields, { id, type, description }) => {
     let field: S.Schema<any>;
     switch (type) {
-      case Schema.PropType.STRING:
+      case requireSchema().PropType.STRING:
         field = S.string;
         break;
-      case Schema.PropType.BOOLEAN:
+      case requireSchema().PropType.BOOLEAN:
         field = S.boolean;
         break;
-      case Schema.PropType.NUMBER:
+      case requireSchema().PropType.NUMBER:
         field = S.number;
         break;
 
-      case Schema.PropType.REF:
-      case Schema.PropType.DATE:
-      case Schema.PropType.RECORD:
+      case requireSchema().PropType.REF:
+      case requireSchema().PropType.DATE:
+      case requireSchema().PropType.RECORD:
       default:
         log.error(`Invalid type: ${type}`);
         return fields;
