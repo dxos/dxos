@@ -12,13 +12,7 @@ import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import * as E from '@dxos/echo-schema';
-import {
-  type EchoReactiveObject,
-  type Expando,
-  getAutomergeObjectCore,
-  getTextContent,
-  type ReactiveObject,
-} from '@dxos/echo-schema';
+import { type ExpandoType, getAutomergeObjectCore, getTextContent, type ReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
@@ -304,7 +298,7 @@ describe('Spaces', () => {
     }, 1000);
     expect(space.db.getObjectById(id)).to.exist;
 
-    space.db.getObjectById<Expando>(id)!.data = 'test2';
+    space.db.getObjectById<ReactiveObject<any>>(id)!.data = 'test2';
     await space.db.flush();
   });
 
@@ -351,7 +345,7 @@ describe('Spaces', () => {
     }, 1000);
     expect(space2.db.getObjectById(id)).to.exist;
 
-    space2.db.getObjectById<Expando>(id)!.data = 'test2';
+    space2.db.getObjectById<ReactiveObject<any>>(id)!.data = 'test2';
     await space2.db.flush();
   });
 
@@ -475,7 +469,7 @@ describe('Spaces', () => {
       await waitForExpect(() => {
         expect(guestSpace.db.getObjectById(hostRoot.id)).not.to.be.undefined;
       });
-      const guestRoot: Expando = guestSpace.db.getObjectById(hostRoot.id)!;
+      const guestRoot: ExpandoType = guestSpace.db.getObjectById(hostRoot.id)!;
 
       const unsub = getAutomergeObjectCore(guestRoot).updates.on(() => {
         expect([...guestRoot.entries].length).to.equal(2);
@@ -503,7 +497,7 @@ describe('Spaces', () => {
     });
   };
 
-  const createEchoObject = <T extends {}>(props: T): EchoReactiveObject<T> => {
+  const createEchoObject = <T extends {}>(props: T): ReactiveObject<ExpandoType> => {
     return E.object(E.ExpandoType, props);
   };
 });

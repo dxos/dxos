@@ -199,7 +199,7 @@ describe('Reactive Object with ECHO database', () => {
       const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey, useReactiveObjectApi: true });
       await db._automerge.open({ rootUrl: doc.url });
 
-      const obj = db.getObjectById(id) as any as E.EchoReactiveObject<TaskSchema>;
+      const obj = db.getObjectById(id) as E.EchoReactiveObject<TaskSchema>;
       expect(E.isEchoReactiveObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
 
