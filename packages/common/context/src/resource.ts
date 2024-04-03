@@ -32,6 +32,7 @@ export class Resource implements Lifecycle {
 
   /**
    * Context that is used to bubble up errors that are not handled by the resource.
+   * Provided in the open method.
    */
   #parentCtx: Context = new Context();
 
