@@ -144,6 +144,38 @@ describe('Reactive Object with ECHO database', () => {
     }
   });
 
+  test('restart with static schema and schema is registered later', async () => {
+    const automergeContext = new AutomergeContext();
+    const doc = automergeContext.repo.create<SpaceDoc>();
+    const spaceKey = PublicKey.random();
+
+    let id: string;
+    {
+      const graph = new Hypergraph();
+      graph.types.registerEffectSchema(EchoObjectSchema);
+      const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey, useReactiveObjectApi: true });
+      await db._automerge.open({ rootUrl: doc.url });
+
+      const obj = db.add(E.object(EchoObjectSchema, { string: 'foo' }));
+      id = obj.id;
+    }
+
+    // Create a new DB instance to simulate a restart
+    {
+      const graph = new Hypergraph();
+      const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey, useReactiveObjectApi: true });
+      await db._automerge.open({ rootUrl: doc.url });
+
+      const obj = db.getObjectById(id) as E.EchoReactiveObject<TestSchema>;
+      expect(E.isEchoReactiveObject(obj)).to.be.true;
+      expect(obj.id).to.eq(id);
+      expect(obj.string).to.eq('foo');
+
+      graph.types.registerEffectSchema(EchoObjectSchema);
+      expect(E.getSchema(obj)).to.eq(EchoObjectSchema);
+    }
+  });
+
   test('effect-protobuf schema interop', async () => {
     const graph = new Hypergraph();
 
