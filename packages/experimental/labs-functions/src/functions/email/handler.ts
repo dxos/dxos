@@ -5,7 +5,7 @@
 import type { Config as ImapConfig } from 'imap';
 
 import { MessageType, MailboxType } from '@braneframe/types';
-import { getSpaceForObject } from '@dxos/client/echo';
+import { getSpace } from '@dxos/client/echo';
 import { type Space } from '@dxos/client/echo';
 import { Filter, hasType, matchKeys } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
@@ -49,7 +49,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
       await processor.connect();
 
       for (const mailbox of mailboxes) {
-        const space = getSpaceForObject(mailbox);
+        const space = getSpace(mailbox);
         invariant(space);
         // TODO(burdon): Debounce requests (i.e., store seq).
         log('requesting messages...');

@@ -6,7 +6,7 @@ import React, { useCallback, useState } from 'react';
 import { FolderType, type StackType, SectionType } from '@braneframe/types';
 import { usePlugin, useIntent, LayoutAction } from '@dxos/app-framework';
 import * as E from '@dxos/echo-schema';
-import { Filter, getSpaceForObject, useQuery } from '@dxos/react-client/echo';
+import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Path } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
@@ -34,7 +34,7 @@ export const AddSectionDialog = ({ path, position, stack }: AddSectionDialogProp
   const { t } = useTranslation(STACK_PLUGIN);
   const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
   const { dispatch } = useIntent();
-  const space = getSpaceForObject(stack);
+  const space = getSpace(stack);
   const [folder] = useQuery(space, Filter.schema(FolderType));
   const [pending, setPending] = useState<boolean>(false);
 

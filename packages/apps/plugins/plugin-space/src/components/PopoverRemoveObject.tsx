@@ -8,7 +8,7 @@ import { getSpaceProperty } from '@braneframe/plugin-client';
 import { FolderType } from '@braneframe/types';
 import { NavigationAction, parseIntentPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { type AnyEchoObject, isEchoReactiveObject } from '@dxos/echo-schema';
-import { getSpaceForObject } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { Button, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
@@ -39,7 +39,7 @@ export const PopoverRemoveObject = ({
       });
     }
 
-    const space = getSpaceForObject(object);
+    const space = getSpace(object);
 
     // Remove object from folder it's in.
     const folder = propsFolder ?? getSpaceProperty<FolderType>(space, FolderType.typename);

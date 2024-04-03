@@ -9,7 +9,7 @@ import { generateName } from '@dxos/display-name';
 import { type AnyEchoObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { PublicKey, useClient } from '@dxos/react-client';
-import { getSpaceForObject, useSpace, useMembers, type SpaceMember } from '@dxos/react-client/echo';
+import { getSpace, useSpace, useMembers, type SpaceMember } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import {
   Avatar,
@@ -47,7 +47,7 @@ export const SpacePresence = ({ object, spaceKey }: { object: AnyEchoObject; spa
   const client = useClient();
   const identity = useIdentity();
   const defaultSpace = useSpace();
-  const space = spaceKey ? client.spaces.get(spaceKey) : getSpaceForObject(object);
+  const space = spaceKey ? client.spaces.get(spaceKey) : getSpace(object);
   const spaceMembers = useMembers(space?.key);
 
   const [moment, setMoment] = useState(Date.now());

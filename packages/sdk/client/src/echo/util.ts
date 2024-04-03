@@ -12,7 +12,7 @@ import { SpaceProxy } from './space-proxy';
  * @deprecated
  */
 // TODO(burdon): Normalize API getters.
-export const getSpaceForObject = (object: OpaqueEchoObject): Space | undefined => {
+export const getSpace = (object: OpaqueEchoObject): Space | undefined => {
   const db = getDatabaseFromObject(object);
   const key = db?.spaceKey;
   if (key) {
