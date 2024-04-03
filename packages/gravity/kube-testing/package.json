@@ -17,7 +17,7 @@
     "run-tests": "pnpm -w nx compile kube-testing && SWC_PLUGINS=$(cat swc-plugins.json) node -r ts-node/register ./src/main.ts"
   },
   "dependencies": {
-    "@automerge/automerge-repo-network-websocket": "^1.1.1",
+    "@automerge/automerge-repo-network-websocket": "^1.1.4",
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
     "@dxos/client": "workspace:*",
