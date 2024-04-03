@@ -10,7 +10,7 @@ import { Contact, Container, RecordType, Task, Todo } from './schema';
 import { getAutomergeObjectCore } from '../automerge';
 import * as E from '../effect/reactive';
 import { Hypergraph } from '../hypergraph';
-// import { clone, getTextContent } from '../object';
+import { clone } from '../object';
 import { Filter } from '../query';
 import { createDatabase } from '../testing';
 
@@ -129,15 +129,15 @@ describe('database', () => {
     db1.add(task1);
     await db1.flush();
 
-    // const task2 = clone(task1);
-    // expect(task2 !== task1).to.be.true;
-    // expect(task2.id).to.equal(task1.id);
-    // expect(task2.title).to.equal(task1.title);
-    // expect(task2).to.be.instanceOf(Task);
-    //
-    // db2.add(task2);
-    // await db2.flush();
-    // expect(task2.id).to.equal(task1.id);
+    const task2 = clone(task1);
+    expect(task2 !== task1).to.be.true;
+    expect(task2.id).to.equal(task1.id);
+    expect(task2.title).to.equal(task1.title);
+
+    db2.add(task2);
+    await db2.flush();
+    expect(task2).to.be.instanceOf(Task);
+    expect(task2.id).to.equal(task1.id);
 
     expect(() => db1.add(task1)).to.throw;
   });
