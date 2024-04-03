@@ -18,7 +18,7 @@ import { type EchoReactiveObject, type ExpandoType } from '../effect/reactive';
 import { TestBuilder, type TestPeer } from '../testing';
 import { TextCompatibilitySchema } from '../type-collection';
 
-describe.only('AutomergeDb', () => {
+describe('AutomergeDb', () => {
   describe('space fragmentation', () => {
     const createSpaceFragmentationTestBuilder = () => new TestBuilder({ spaceFragmentationEnabled: true });
 

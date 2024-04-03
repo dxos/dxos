@@ -71,6 +71,7 @@ const _Expando = S.struct({}, { key: S.string, value: S.any }).pipe(echoObject('
  */
 export interface ExpandoType extends S.Schema.Type<typeof _Expando> {
   id: string;
+  [key: string]: any;
   [ExpandoMarker]?: true;
 }
 /**
