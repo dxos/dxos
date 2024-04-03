@@ -5,7 +5,6 @@
 import { Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
-import { warnAfterTimeout } from '@dxos/debug';
 import {
   type QuerySourceProvider,
   type EchoObject,
@@ -76,10 +75,8 @@ export class IndexQuerySource implements QuerySource {
             return;
           }
 
-          const object = await warnAfterTimeout(2000, 'Loading object', async () => {
-            await (space as SpaceProxy)._databaseInitialized.wait();
-            return space.db.automerge.loadObjectById(result.id);
-          });
+          await (space as SpaceProxy)._databaseInitialized.wait();
+          const object = await space.db.automerge.loadObjectById(result.id);
           if (ctx.disposed) {
             return;
           }
