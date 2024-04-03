@@ -8,8 +8,9 @@ import { rmSync } from 'node:fs';
 import waitForExpect from 'wait-for-expect';
 
 import { MessageType, TextV0Type, ThreadType } from '@braneframe/types';
-import { Trigger, asyncTimeout } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { type TypedObject } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
 import { describe, test, afterTest } from '@dxos/test';
 import { isNode } from '@dxos/util';
@@ -21,11 +22,10 @@ chai.use(chaiAsPromised);
 
 describe('Client', () => {
   const dataRoot = '/tmp/dxos/client/storage';
+  const cleanUp = () => isNode() && rmSync(dataRoot, { recursive: true, force: true });
 
-  afterEach(async () => {
-    // Clean up.
-    isNode() && rmSync(dataRoot, { recursive: true, force: true });
-  });
+  beforeEach(cleanUp);
+  afterEach(cleanUp);
 
   test('creates client with embedded services', async () => {
     const testBuilder = new TestBuilder();
@@ -103,6 +103,7 @@ describe('Client', () => {
       expect(client.halo.identity.get()).not.to.exist;
       const identity = await client.halo.createIdentity({ displayName });
       expect(client.halo.identity.get()).to.deep.eq(identity);
+      await sleep(200);
       await client.destroy();
     }
 
@@ -113,7 +114,7 @@ describe('Client', () => {
       // TODO(burdon): Error type.
       await expect(client.halo.createIdentity({ displayName })).to.be.rejected;
     }
-
+    await sleep(200);
     {
       // Reset storage.
       await client.reset();
@@ -152,13 +153,12 @@ describe('Client', () => {
 
     const query = space1.db.query();
     query.subscribe(({ objects }) => {
-      console.log(objects);
-      const thread = objects.find((obj: TypedObject) => obj.type === 'Thread');
+      const thread = objects.find((obj: TypedObject) => obj.__typename === 'braneframe.Thread');
 
       if (thread) {
         threadQueried.wake(thread as Thread);
       }
-    });
+    }, true);
     await Promise.all(performInvitation({ host: space1, guest: client2.spaces }));
 
     // Create Thread on second client.
