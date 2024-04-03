@@ -103,6 +103,10 @@ message Runtime {
       optional StorageDriver key_store = 2;
       optional StorageDriver data_store = 3;
       optional string data_root = 4;
+      
+      /**
+       * @deprecated
+       */
       optional bool space_fragmentation = 5;
     }
     

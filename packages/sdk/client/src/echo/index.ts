@@ -21,7 +21,7 @@ export {
   fromCursor,
   toCursor,
   DocAccessor,
-  metaOf,
+  getMeta,
   type AutomergeTextCompat,
   type EchoDatabase,
   type EchoObject, // TODO(burdon): Remove from API.
@@ -49,4 +49,4 @@ export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 export { SpaceList } from './space-list';
 export { SpaceProxy } from './space-proxy'; // TODO(burdon): Don't export as part of API.
-export { getSpaceForObject } from './util';
+export { getSpace } from './util';

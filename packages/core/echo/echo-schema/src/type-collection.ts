@@ -10,6 +10,7 @@ import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 import { StoredEchoSchema } from './effect/dynamic/stored-schema';
 import { getSchemaTypeRefOrThrow } from './effect/echo-handler';
+import { EchoObjectSchema } from './effect/echo-object-class';
 import * as E from './effect/reactive';
 import { TypedObject, dangerouslyMutateImmutableObject, LEGACY_TEXT_TYPE } from './object';
 import type { SchemaProps, Schema as SchemaProto } from './proto';
@@ -164,13 +165,14 @@ export const linkDeferred = () => {
 
 const getTypenameOrThrow = (schema: S.Schema<any>): string => getSchemaTypeRefOrThrow(schema).itemId;
 
-const TextCompatibilitySchema = S.partial(
-  S.struct({
+export class TextCompatibilitySchema extends EchoObjectSchema({ typename: LEGACY_TEXT_TYPE, version: '0.1.0' })(
+  {
     kind: S.enums(TextKind),
     field: S.string,
     content: S.string,
-  }),
-).pipe(E.echoObject(LEGACY_TEXT_TYPE, '0.1.0'));
+  },
+  { partial: true },
+) {}
 
 enum LegacySchemaPropType {
   NONE = 0,

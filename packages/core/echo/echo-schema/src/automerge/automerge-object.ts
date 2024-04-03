@@ -18,7 +18,7 @@ import { type DocAccessor } from './automerge-types';
 import { isValidKeyPath, type KeyPath } from './key-path';
 import { REFERENCE_TYPE_TAG } from './types';
 import { type EchoDatabase } from '../database';
-import { type EchoReactiveHandlerImpl } from '../effect/echo-handler'; // Keep as type-only import.
+import type * as echoHandlerModule from '../effect/echo-handler'; // Keep as type-only import.
 import { getProxyHandlerSlot, isReactiveProxy } from '../effect/proxy';
 import {
   base,
@@ -389,8 +389,10 @@ export const getRawDoc = (obj: OpaqueEchoObject, path?: KeyPath): DocAccessor =>
   if (isAutomergeObject(obj)) {
     return obj[base]._getRawDoc(path);
   } else {
-    const handler = getProxyHandlerSlot(obj).handler as EchoReactiveHandlerImpl;
-    return handler._objectCore.getDocAccessor(path);
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { getObjectCoreFromEchoTarget }: typeof echoHandlerModule = require('../effect/echo-handler');
+    const core = getObjectCoreFromEchoTarget(getProxyHandlerSlot(obj).target as any);
+    return core.getDocAccessor(path);
   }
 };
 
@@ -403,8 +405,9 @@ export const getAutomergeObjectCore = (obj: OpaqueEchoObject): AutomergeObjectCo
   if (isAutomergeObject(obj)) {
     return obj[base]._core;
   } else {
-    const handler = getProxyHandlerSlot(obj).handler as EchoReactiveHandlerImpl;
-    return handler._objectCore;
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { getObjectCoreFromEchoTarget }: typeof echoHandlerModule = require('../effect/echo-handler');
+    return getObjectCoreFromEchoTarget(getProxyHandlerSlot(obj).target as any);
   }
 };
 

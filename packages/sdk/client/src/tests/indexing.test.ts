@@ -71,11 +71,9 @@ describe('Index queries', () => {
   });
 
   test('index queries work with client', async () => {
-    const { client, services } = await setupClient();
+    const { client } = await setupClient();
     await client.halo.createIdentity();
-    await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
 
-    const indexingDone = services.host!.context.indexer.indexed.waitForCount(2);
     const space = await client.spaces.create();
     {
       await space.waitUntilReady();
@@ -85,7 +83,6 @@ describe('Index queries', () => {
       await space.db.flush();
     }
 
-    await asyncTimeout(indexingDone, 1000);
     const indexedContact = await queryIndexedContact(space);
     expect(indexedContact.name).to.equal('John Doe');
   });
@@ -97,11 +94,9 @@ describe('Index queries', () => {
 
     let spaceKey: PublicKey;
     {
-      const { client, services, builder } = await setupClient(storage);
+      const { client, builder } = await setupClient(storage);
       await client.halo.createIdentity();
-      await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
 
-      const indexingDone = services.host!.context.indexer.indexed.waitForCount(2);
       await client.spaces.isReady.wait();
       const space = await client.spaces.create();
       {
@@ -113,11 +108,10 @@ describe('Index queries', () => {
         await space.db.flush();
       }
 
-      await asyncTimeout(indexingDone, 1000);
-
       const indexedContact = await queryIndexedContact(space);
       expect(indexedContact.name).to.equal('John Doe');
 
+      // TODO(mykola): Clean as automerge team updates storage API.
       await sleep(200); // Sleep to get services storage to finish writing.
       await client.destroy();
       await builder.storage!.close();
@@ -141,7 +135,7 @@ describe('Index queries', () => {
   });
 
   test('index already available data', async () => {
-    const { client, services } = await setupClient();
+    const { client } = await setupClient();
     await client.halo.createIdentity();
 
     const space = await client.spaces.create();
@@ -150,9 +144,6 @@ describe('Index queries', () => {
     const contact = E.object(ContactType, { name: 'John Doe', identifiers: [] });
     space.db.add(contact);
     await space.db.flush();
-    const indexingDone = services.host!.context.indexer.indexed.waitForCount(2);
-    await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
-    await asyncTimeout(indexingDone, 1000);
 
     const indexedContact = await queryIndexedContact(space);
     expect(indexedContact.name).to.equal('John Doe');

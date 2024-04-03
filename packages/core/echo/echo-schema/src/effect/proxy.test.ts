@@ -8,6 +8,7 @@ import jestExpect from 'expect';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
+import { getProxyHandlerSlot } from './proxy';
 import * as R from './reactive';
 import { TEST_OBJECT, TestSchema, TestSchemaClass } from './testing/schema';
 import { updateCounter } from './testutils';
@@ -40,7 +41,13 @@ for (const schema of [undefined, TestSchema, TestSchemaClass]) {
       return db.add(obj) as any;
     };
 
-    describe(`Proxy properties(schema=${Boolean(schema == null)}, db=${useDatabase})`, () => {
+    describe(`Proxy properties(schema=${schema != null}, db=${useDatabase})`, () => {
+      test('handler type', async () => {
+        const obj = await createObject();
+        const slot = getProxyHandlerSlot(obj);
+        console.log('handler =', Object.getPrototypeOf(slot.handler).constructor.name);
+      });
+
       test('object initializer', async () => {
         const obj = await createObject({ string: 'bar' });
         expect(obj.string).to.eq('bar');

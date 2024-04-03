@@ -5,7 +5,7 @@
 import React, { type FC } from 'react';
 
 import { type DocumentType } from '@braneframe/types';
-import { getSpaceForObject } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
@@ -26,7 +26,7 @@ const DocumentSection: FC<{
 }> = ({ document, extensions }) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const identity = useIdentity();
-  const space = getSpaceForObject(document);
+  const space = getSpace(document);
 
   const { themeMode } = useThemeContext();
   const { doc, accessor } = useDocAccessor(document.content!);

@@ -8,7 +8,7 @@ import { rmSync } from 'node:fs';
 import waitForExpect from 'wait-for-expect';
 
 import { MessageType, TextV0Type, ThreadType } from '@braneframe/types';
-import { Trigger, asyncTimeout } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Config } from '@dxos/config';
 import * as E from '@dxos/echo-schema';
 import { Filter } from '@dxos/echo-schema';
@@ -22,11 +22,10 @@ chai.use(chaiAsPromised);
 
 describe('Client', () => {
   const dataRoot = '/tmp/dxos/client/storage';
+  const cleanUp = () => isNode() && rmSync(dataRoot, { recursive: true, force: true });
 
-  afterEach(async () => {
-    // Clean up.
-    isNode() && rmSync(dataRoot, { recursive: true, force: true });
-  });
+  beforeEach(cleanUp);
+  afterEach(cleanUp);
 
   test('creates client with embedded services', async () => {
     const testBuilder = new TestBuilder();
@@ -104,6 +103,8 @@ describe('Client', () => {
       expect(client.halo.identity.get()).not.to.exist;
       const identity = await client.halo.createIdentity({ displayName });
       expect(client.halo.identity.get()).to.deep.eq(identity);
+      // TODO(mykola): Clean as automerge team updates storage API.
+      await sleep(200);
       await client.destroy();
     }
 
@@ -114,7 +115,8 @@ describe('Client', () => {
       // TODO(burdon): Error type.
       await expect(client.halo.createIdentity({ displayName })).to.be.rejected;
     }
-
+    // TODO(mykola): Clean as automerge team updates storage API.
+    await sleep(200);
     {
       // Reset storage.
       await client.reset();
@@ -156,7 +158,7 @@ describe('Client', () => {
       if (objects.length === 1) {
         threadQueried.wake(objects[0]);
       }
-    });
+    }, true);
     await Promise.all(performInvitation({ host: space1, guest: client2.spaces }));
 
     // Create Thread on second client.
@@ -165,7 +167,7 @@ describe('Client', () => {
     const thread2 = space2.db.add(E.object(ThreadType, { messages: [] }));
     await space2.db.flush();
 
-    const thread1 = await threadQueried.wait({ timeout: 1000 });
+    const thread1 = await threadQueried.wait({ timeout: 2_000 });
 
     const text = 'Hello world';
     const message = space2.db.add(

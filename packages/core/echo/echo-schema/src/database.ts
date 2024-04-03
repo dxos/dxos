@@ -26,7 +26,7 @@ export interface EchoDatabase {
 
   get spaceKey(): PublicKey;
 
-  getObjectById<T extends EchoObject>(id: string): T | undefined;
+  getObjectById<T extends OpaqueEchoObject>(id: string): T | undefined;
 
   /**
    * Adds object to the database.
@@ -118,13 +118,16 @@ export class EchoDatabaseImpl implements EchoDatabase {
     return this._automerge.spaceKey;
   }
 
-  getObjectById<T extends EchoObject>(id: string): T | undefined {
+  getObjectById<T extends OpaqueEchoObject>(id: string): T | undefined {
     return this._automerge.getObjectById(id) as T | undefined;
   }
 
   add<T extends OpaqueEchoObject>(obj: T): T extends EchoObject ? T : EchoReactiveObject<{ [K in keyof T]: T[K] }> {
     if (!this._useReactiveObjectApi) {
       invariant(isAutomergeObject(obj));
+      this._automerge.add(obj);
+      return obj as any;
+    } else if (isEchoReactiveObject(obj)) {
       this._automerge.add(obj);
       return obj as any;
     } else {
