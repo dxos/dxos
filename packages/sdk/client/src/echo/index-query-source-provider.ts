@@ -5,7 +5,6 @@
 import { Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
-import { warnAfterTimeout } from '@dxos/debug';
 import {
   type QuerySourceProvider,
   type EchoObject,
@@ -26,7 +25,6 @@ export type IndexQueryProviderParams = {
   spaceList: SpaceList;
 };
 
-// TODO(mykola): Separate by client-services barrier.
 export class IndexQuerySourceProvider implements QuerySourceProvider {
   constructor(private readonly _params: IndexQueryProviderParams) {}
 
@@ -60,7 +58,7 @@ export class IndexQuerySource implements QuerySource {
     this.changed.emit();
 
     const start = Date.now();
-    this._stream = this._params.service.find({ filter: filter.toProto() });
+    this._stream = this._params.service.find({ filter: filter.toProto() }, { timeout: 20_000 });
     let currentCtx: Context;
     this._stream.subscribe(async (response) => {
       await currentCtx?.dispose();
@@ -77,10 +75,8 @@ export class IndexQuerySource implements QuerySource {
             return;
           }
 
-          const object = await warnAfterTimeout(2000, 'Loading object', async () => {
-            await (space as SpaceProxy)._databaseInitialized.wait();
-            return space.db.automerge.loadObjectById(result.id);
-          });
+          await (space as SpaceProxy)._databaseInitialized.wait();
+          const object = await space.db.automerge.loadObjectById(result.id);
           if (ctx.disposed) {
             return;
           }

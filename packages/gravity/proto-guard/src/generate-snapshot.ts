@@ -63,7 +63,7 @@ const main = async () => {
 
   log.break();
 
-  // TODO(dmaretskyi): Automerge throttles saving to 100ms.
+  // TODO(mykola): Clean as automerge team updates storage API.
   await sleep(200);
 
   {
