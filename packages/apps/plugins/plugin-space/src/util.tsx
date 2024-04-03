@@ -28,7 +28,7 @@ import * as E from '@dxos/echo-schema';
 import { EchoDatabaseImpl, Filter, LEGACY_TEXT_TYPE, isTypedObject, type OpaqueEchoObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { Migrations } from '@dxos/migrations';
-import { SpaceState, getSpaceForObject, type Space, type TypedObject } from '@dxos/react-client/echo';
+import { SpaceState, getSpace, type Space, type TypedObject } from '@dxos/react-client/echo';
 import { nonNullable } from '@dxos/util';
 
 import { SPACE_PLUGIN } from './meta';
@@ -64,7 +64,7 @@ const getFolderGraphNodePartials = ({ graph, folder, space }: { graph: Graph; fo
     },
     onTransferStart: (child: Node<TypedObject>) => {
       // TODO(wittjosiah): Support transfer between spaces.
-      // const childSpace = getSpaceForObject(child.data);
+      // const childSpace = getSpace(child.data);
       // if (space && childSpace && !childSpace.key.equals(space.key)) {
       //   // Create clone of child and add to destination space.
       //   const newObject = clone(child.data, {
@@ -92,9 +92,9 @@ const getFolderGraphNodePartials = ({ graph, folder, space }: { graph: Graph; fo
       }
 
       // TODO(wittjosiah): Support transfer between spaces.
-      // const childSpace = getSpaceForObject(child.data);
+      // const childSpace = getSpace(child.data);
       // const destinationSpace =
-      //   destination.data instanceof SpaceProxy ? destination.data : getSpaceForObject(destination.data);
+      //   destination.data instanceof SpaceProxy ? destination.data : getSpace(destination.data);
       // if (destinationSpace && childSpace && !childSpace.key.equals(destinationSpace.key)) {
       //   // Mark child as deleted in origin space.
       //   childSpace.db.remove(child.data);
@@ -331,7 +331,7 @@ export const updateGraphWithSpace = ({
     }
     return true;
   });
-  const previousObjects = new Map<string, E.Ref<E.AnyEchoObject>[]>();
+  const previousObjects = new Map<string, E.Ref<E.ExpandoType>[]>();
   const unsubscribeQuery = effect(() => {
     const folder =
       space.state.get() === SpaceState.READY ? getSpaceProperty<FolderType>(space, FolderType.typename) : null;
@@ -339,7 +339,7 @@ export const updateGraphWithSpace = ({
     const removedObjects =
       previousObjects
         .get(space.key.toHex())
-        ?.filter((object) => !(query.objects as E.Ref<E.AnyEchoObject>[]).includes(object)) ?? [];
+        ?.filter((object) => !(query.objects as E.Ref<E.ExpandoType>[]).includes(object)) ?? [];
     previousObjects.set(space.key.toHex(), [...query.objects]);
     const unsortedObjects = query.objects.filter((object) => !folderObjects.includes(object));
     const objects = [...folderObjects, ...unsortedObjects].filter((object) => object !== folder);
@@ -601,7 +601,7 @@ export const getActiveSpace = (graph: Graph, active?: string) => {
     return;
   }
 
-  return getSpaceForObject(node.data);
+  return getSpace(node.data);
 };
 
 export const prepareSpaceForMigration = (space: Space) => {

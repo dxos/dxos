@@ -27,8 +27,8 @@ import { type ObjectMeta } from '../object';
 
 // TODO: remove during refactoring. was introduced to help with recursive imports
 export abstract class EchoReactiveHandler {
-  abstract getSchema(): S.Schema<any> | undefined;
-  abstract getMeta(): ObjectMeta;
+  abstract getSchema(target: any /* ProxyTarget */): S.Schema<any> | undefined;
+  abstract getMeta(target: any /* ProxyTarget */): ObjectMeta;
 }
 
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
@@ -59,25 +59,17 @@ export const echoObject =
     >;
   };
 
-const _AnyEchoObject = S.struct({}).pipe(echoObject('Any', '0.1.0'));
-export interface AnyEchoObject extends S.Schema.Type<typeof _AnyEchoObject> {}
-export const AnyEchoObject: S.Schema<AnyEchoObject> = _AnyEchoObject;
-
 export const ExpandoMarker = Symbol.for('@dxos/echo-schema/Expando');
 
 const _Expando = S.struct({}).pipe(echoObject('Expando', '0.1.0'));
-/**
- * @deprecated Need API review.
- */
-export interface ExpandoType extends S.Schema.Type<typeof _Expando> {
-  [ExpandoMarker]: true;
-}
+
+export interface ExpandoType extends S.Schema.Type<typeof _Expando> {}
+
 /**
  * Marker value to be passed to `object` constructor to create an ECHO object with a generated ID.
- *
- * @deprecated Need API review.
  */
-export const ExpandoType: S.Schema<ExpandoType> = _Expando as any;
+// TODO(dmaretskyi): Rename to `Expando` once old code has been deleted.
+export const ExpandoType: S.Schema<ExpandoType> & { [ExpandoMarker]: true } = _Expando as any;
 
 /**
  * Has `id`.
@@ -147,7 +139,7 @@ export const object: {
 
     initMeta(obj);
     SchemaValidator.prepareTarget(obj as T, schema);
-    return createReactiveProxy(obj, new TypedReactiveHandler()) as ReactiveObject<T>;
+    return createReactiveProxy(obj, TypedReactiveHandler.instance as ReactiveHandler<any>) as ReactiveObject<T>;
   } else if (obj && (schemaOrObj as any) === ExpandoType) {
     if (!isValidProxyTarget(obj)) {
       throw new Error('Value cannot be made into a reactive object.');
@@ -244,7 +236,7 @@ export const getSchema = <T extends {} = any>(obj: T): S.Schema<any> | undefined
   if (isReactiveProxy(obj)) {
     const proxyHandlerSlot = getProxyHandlerSlot(obj);
     if (proxyHandlerSlot.handler instanceof EchoReactiveHandler) {
-      return proxyHandlerSlot.handler.getSchema();
+      return proxyHandlerSlot.handler.getSchema(proxyHandlerSlot.target);
     }
   }
 
@@ -268,10 +260,10 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
   return Reference.fromLegacyTypename(annotation.storedSchemaId ?? annotation.typename);
 };
 
-export const metaOf = <T extends {}>(obj: T): ObjectMeta => {
-  const proxy = getProxyHandlerSlot(obj);
-  if (proxy.handler instanceof EchoReactiveHandler) {
-    return proxy.handler.getMeta();
+export const getMeta = <T extends {}>(obj: T): ObjectMeta => {
+  const proxyHandlerSlot = getProxyHandlerSlot(obj);
+  if (proxyHandlerSlot.handler instanceof EchoReactiveHandler) {
+    return proxyHandlerSlot.handler.getMeta(proxyHandlerSlot.target);
   } else {
     return getTargetMeta(obj);
   }

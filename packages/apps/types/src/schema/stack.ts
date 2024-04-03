@@ -8,7 +8,7 @@ import * as E from '@dxos/echo-schema';
 import { EchoObjectSchema } from '@dxos/echo-schema';
 
 export class SectionType extends EchoObjectSchema({ typename: 'braneframe.Stack.Section', version: '0.1.0' })({
-  object: E.ref(E.AnyEchoObject),
+  object: E.ref(E.ExpandoType),
 }) {}
 
 export class StackType extends EchoObjectSchema({ typename: 'braneframe.Stack', version: '0.1.0' })({
