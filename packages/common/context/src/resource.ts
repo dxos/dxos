@@ -25,10 +25,11 @@ export class Resource implements Lifecycle {
   #closePromise: Promise<void> | null = null;
 
   /**
-   * Context for the resource.
+   * Managed internally by the resource.
    * Recreated on close.
+   * Errors are propagated to the `_catch` method and the parent context.
    */
-  #ctx: Context = this.#createContext();
+  #internalCtx: Context = this.#createContext();
 
   /**
    * Context that is used to bubble up errors that are not handled by the resource.
@@ -41,7 +42,7 @@ export class Resource implements Lifecycle {
   }
 
   protected get _ctx() {
-    return this.#ctx;
+    return this.#internalCtx;
   }
 
   /**
@@ -112,9 +113,9 @@ export class Resource implements Lifecycle {
 
   async #close(ctx = new Context()) {
     this.#openPromise = null;
-    await this.#ctx.dispose();
+    await this.#internalCtx.dispose();
     await this._close(ctx);
-    this.#ctx = this.#createContext();
+    this.#internalCtx = this.#createContext();
     this.#lifecycleState = LifecycleState.CLOSED;
   }
 
