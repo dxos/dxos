@@ -24,6 +24,7 @@ import { arrayToBuffer } from '@dxos/util';
 
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from './transport';
 
+const RPC_TIMEOUT = 10_000;
 const RESP_MIN_THRESHOLD = 500;
 const TIMEOUT_THRESHOLD = 10;
 
@@ -48,10 +49,13 @@ export class SimplePeerTransportProxy implements Transport {
   private _serviceStream!: Stream<BridgeEvent>;
 
   constructor(private readonly _params: SimplePeerTransportProxyParams) {
-    this._serviceStream = this._params.bridgeService.open({
-      proxyId: this._proxyId,
-      initiator: this._params.initiator,
-    });
+    this._serviceStream = this._params.bridgeService.open(
+      {
+        proxyId: this._proxyId,
+        initiator: this._params.initiator,
+      },
+      { timeout: RPC_TIMEOUT },
+    );
 
     this._serviceStream.waitUntilReady().then(
       () => {
@@ -75,7 +79,7 @@ export class SimplePeerTransportProxy implements Transport {
                   proxyId: this._proxyId,
                   payload: chunk,
                 },
-                { timeout: 10_000 },
+                { timeout: RPC_TIMEOUT },
               )
               .then(
                 () => {
@@ -90,7 +94,7 @@ export class SimplePeerTransportProxy implements Transport {
                 (err: any) => {
                   if (err instanceof TimeoutError || err.constructor.name === 'TimeoutError') {
                     if (this._timeoutCount++ > TIMEOUT_THRESHOLD) {
-                      throw new TimeoutError(`too many timeoutes (${this._timeoutCount} > ${TIMEOUT_THRESHOLD}`);
+                      throw new TimeoutError(`too many timeouts (${this._timeoutCount} > ${TIMEOUT_THRESHOLD}`);
                     } else {
                       log('timeout error, but still invoking callback');
                       callback();
@@ -141,19 +145,23 @@ export class SimplePeerTransportProxy implements Transport {
 
   signal(signal: Signal): void {
     this._params.bridgeService
-      .sendSignal({
-        proxyId: this._proxyId,
-        signal,
-      })
+      .sendSignal(
+        {
+          proxyId: this._proxyId,
+          signal,
+        },
+        { timeout: RPC_TIMEOUT },
+      )
       .catch((err) => this.errors.raise(decodeError(err)));
   }
 
   async getDetails(): Promise<string> {
-    return (await this._params.bridgeService.getDetails({ proxyId: this._proxyId })).details;
+    return (await this._params.bridgeService.getDetails({ proxyId: this._proxyId }, { timeout: RPC_TIMEOUT })).details;
   }
 
   async getStats(): Promise<TransportStats> {
-    return (await this._params.bridgeService.getStats({ proxyId: this._proxyId })).stats as TransportStats;
+    return (await this._params.bridgeService.getStats({ proxyId: this._proxyId }, { timeout: RPC_TIMEOUT }))
+      .stats as TransportStats;
   }
 
   // TODO(burdon): Move open from constructor.
@@ -166,7 +174,7 @@ export class SimplePeerTransportProxy implements Transport {
     await this._serviceStream.close();
 
     try {
-      await this._params.bridgeService.close({ proxyId: this._proxyId });
+      await this._params.bridgeService.close({ proxyId: this._proxyId }, { timeout: RPC_TIMEOUT });
     } catch (err: any) {
       log.catch(err);
     }
