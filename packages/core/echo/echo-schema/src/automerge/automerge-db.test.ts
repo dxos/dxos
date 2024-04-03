@@ -330,7 +330,7 @@ const createPeerInSpaceWithObject = async (
   return testBuilder.createPeer(firstPeer.spaceKey, firstPeer.automergeDocId);
 };
 
-const createExpando = <T extends {}>(props: T = {} as T): EchoReactiveObject<T> => {
+const createExpando = (props: any = {}): EchoReactiveObject<ExpandoType> => {
   return E.object(E.ExpandoType, props);
 };
 
