@@ -4,7 +4,7 @@
 
 import * as S from '@effect/schema/Schema';
 
-import { ReactiveHandler, createReactiveProxy } from './proxy';
+import { createReactiveProxy } from './proxy';
 import { SchemaValidator } from './schema-validator';
 import { TypedReactiveHandler } from './typed-handler';
 import { type ObjectMeta } from '../object';
