@@ -128,7 +128,7 @@ export const isEchoReactiveObject = (value: unknown): value is EchoReactiveObjec
 // TODO(dmaretskyi): Deep mutability.
 export const object: {
   <T extends {}>(obj: T): ReactiveObject<T>;
-  <T extends {}>(schema: typeof ExpandoType, obj: T): ReactiveObject<Identifiable & T>;
+  <T extends {}>(schema: typeof ExpandoType, obj: T): ReactiveObject<ExpandoType>;
   <T extends {}>(schema: S.Schema<T>, obj: ExcludeId<T>): ReactiveObject<T>;
 } = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: ExcludeId<T>): ReactiveObject<T> => {
   if (obj && (schemaOrObj as any) !== ExpandoType) {

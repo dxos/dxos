@@ -83,6 +83,7 @@ export class TestPeer {
       spaceKey: this.spaceKey,
       graph: this.builder.graph,
       automergeContext: this.builder.automergeContext,
+      useReactiveObjectApi: true,
     });
     await this.db.automerge.open({
       rootUrl: this.automergeDocId,

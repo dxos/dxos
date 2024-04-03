@@ -16,7 +16,7 @@ import { createDatabase } from '../testing';
 
 // TODO(burdon): Reconcile/document tests in parent folder.
 
-describe.only('database', () => {
+describe('database', () => {
   test('creating objects', async () => {
     const { db: database } = await createDbWithTypes();
 
