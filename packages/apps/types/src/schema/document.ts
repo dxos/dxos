@@ -13,7 +13,7 @@ export class TextV0Type extends EchoObjectSchema({ typename: 'dxos.Text.v0', ver
 
 const CommentSchema = S.mutable(
   S.struct({
-    thread: S.optional(E.ref(E.AnyEchoObject)),
+    thread: S.optional(E.ref(E.ExpandoType)),
     cursor: S.optional(S.string),
   }),
 );

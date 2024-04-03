@@ -9,5 +9,5 @@ import { EchoObjectSchema } from '@dxos/echo-schema';
 
 export class SketchType extends EchoObjectSchema({ typename: 'braneframe.Sketch', version: '0.1.0' })({
   title: S.optional(S.string),
-  data: E.ref(E.AnyEchoObject),
+  data: E.ref(E.ExpandoType),
 }) {}

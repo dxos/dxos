@@ -21,7 +21,7 @@ import {
 import { EventSubscriptions } from '@dxos/async';
 import { isEchoReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { Filter, SpaceState, getSpaceForObject } from '@dxos/react-client/echo';
+import { Filter, SpaceState, getSpace } from '@dxos/react-client/echo';
 
 import { GptAnalyzer } from './analyzer';
 import { GptSettings } from './components';
@@ -118,7 +118,7 @@ export const GptPlugin = (): PluginDefinition<GptPluginProvides> => {
               const graph = graphPlugin?.provides.graph;
               const activeNode = location?.active ? graph?.findNode(location.active) : undefined;
               const active = activeNode?.data;
-              const space = isEchoReactiveObject(active) && getSpaceForObject(active);
+              const space = isEchoReactiveObject(active) && getSpace(active);
               if (space && active instanceof DocumentType && settings.values.apiKey) {
                 // TODO(burdon): Toast on success.
                 void new GptAnalyzer({ apiKey: settings.values.apiKey }).exec(space, active);
