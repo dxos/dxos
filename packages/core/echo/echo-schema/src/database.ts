@@ -127,6 +127,9 @@ export class EchoDatabaseImpl implements EchoDatabase {
       invariant(isAutomergeObject(obj));
       this._automerge.add(obj);
       return obj as any;
+    } else if (isEchoReactiveObject(obj)) {
+      this._automerge.add(obj);
+      return obj as any;
     } else {
       invariant(!isAutomergeObject(obj));
       const schema = getSchema(obj);

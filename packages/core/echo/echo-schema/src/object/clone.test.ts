@@ -7,16 +7,16 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { clone } from './clone';
-import { TextObject } from './text-object';
-import { Expando } from './typed-object';
+import * as E from '../effect/reactive';
 import { createDatabase } from '../testing';
+import { TextCompatibilitySchema } from '../type-collection';
 
-describe('clone', () => {
+describe.only('clone', () => {
   test('clone to a different database', async () => {
     const { db: db1 } = await createDatabase();
     const { db: db2 } = await createDatabase();
 
-    const task1 = new Expando({
+    const task1 = E.object(E.ExpandoType, {
       title: 'Main task',
       tags: ['red', 'green'],
     });
@@ -39,7 +39,7 @@ describe('clone', () => {
   test('clone to the same database by changing the id', async () => {
     const { db } = await createDatabase();
 
-    const task1 = new Expando({
+    const task1 = E.object(E.ExpandoType, {
       title: 'Main task',
       tags: ['red', 'green'],
     });
@@ -59,10 +59,10 @@ describe('clone', () => {
     const { db: db1 } = await createDatabase();
     const { db: db2 } = await createDatabase();
 
-    const task1 = new Expando({
+    const task1 = E.object(E.ExpandoType, {
       title: 'Main task',
       tags: ['red', 'green'],
-      assignee: new Expando({
+      assignee: E.object(E.ExpandoType, {
         type: 'Person',
         name: 'John Doe',
       }),
@@ -92,10 +92,10 @@ describe('clone', () => {
     const { db: db1 } = await createDatabase();
     const { db: db2 } = await createDatabase();
 
-    const task1 = new Expando({
+    const task1 = E.object(E.ExpandoType, {
       title: 'Main task',
       tags: ['red', 'green'],
-      details: new TextObject('Some details'),
+      details: E.object(TextCompatibilitySchema, { content: 'Some details' }),
     });
     db1.add(task1);
     await db1.flush();

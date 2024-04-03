@@ -188,7 +188,7 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
   }
 
   private _handleStoredSchema(object: any): any {
-    if (object != null && object instanceof StoredEchoSchema) {
+    if (object != null && this._objectCore.database && object instanceof StoredEchoSchema) {
       return this._objectCore.database?._dbApi.schemaRegistry.register(object);
     }
     return object;

@@ -74,23 +74,13 @@ export const clone = <T extends {}>(
 const cloneInner = (core: AutomergeObjectCore, id: string): OpaqueEchoObject => {
   const coreClone = new AutomergeObjectCore();
   coreClone.id = id;
+  initEchoReactiveObjectRootProxy(coreClone);
   const automergeSnapshot = getObjectDoc(core);
   coreClone.change((doc: any) => {
-    const path = core.mountPath;
-    if (path.length > 0) {
-      let parent = doc;
-      for (const key of path.slice(0, -1)) {
-        parent[key] ??= {};
-        parent = parent[key];
-      }
-      parent[path.at(-1)!] = automergeSnapshot;
-    } else {
-      for (const key of Object.keys(automergeSnapshot)) {
-        doc[key] = automergeSnapshot[key];
-      }
+    for (const key of Object.keys(automergeSnapshot)) {
+      doc[key] = automergeSnapshot[key];
     }
   });
-  initEchoReactiveObjectRootProxy(coreClone);
   return coreClone.rootProxy as any;
 };
 
