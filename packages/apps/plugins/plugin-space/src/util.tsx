@@ -331,7 +331,7 @@ export const updateGraphWithSpace = ({
     }
     return true;
   });
-  const previousObjects = new Map<string, E.Ref<E.AnyEchoObject>[]>();
+  const previousObjects = new Map<string, E.Ref<E.ExpandoType>[]>();
   const unsubscribeQuery = effect(() => {
     const folder =
       space.state.get() === SpaceState.READY ? getSpaceProperty<FolderType>(space, FolderType.typename) : null;
@@ -339,7 +339,7 @@ export const updateGraphWithSpace = ({
     const removedObjects =
       previousObjects
         .get(space.key.toHex())
-        ?.filter((object) => !(query.objects as E.Ref<E.AnyEchoObject>[]).includes(object)) ?? [];
+        ?.filter((object) => !(query.objects as E.Ref<E.ExpandoType>[]).includes(object)) ?? [];
     previousObjects.set(space.key.toHex(), [...query.objects]);
     const unsortedObjects = query.objects.filter((object) => !folderObjects.includes(object));
     const objects = [...folderObjects, ...unsortedObjects].filter((object) => object !== folder);

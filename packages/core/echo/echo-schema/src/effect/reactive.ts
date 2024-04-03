@@ -59,25 +59,17 @@ export const echoObject =
     >;
   };
 
-const _AnyEchoObject = S.struct({}).pipe(echoObject('Any', '0.1.0'));
-export interface AnyEchoObject extends S.Schema.Type<typeof _AnyEchoObject> {}
-export const AnyEchoObject: S.Schema<AnyEchoObject> = _AnyEchoObject;
-
 export const ExpandoMarker = Symbol.for('@dxos/echo-schema/Expando');
 
 const _Expando = S.struct({}).pipe(echoObject('Expando', '0.1.0'));
-/**
- * @deprecated Need API review.
- */
-export interface ExpandoType extends S.Schema.Type<typeof _Expando> {
-  [ExpandoMarker]: true;
-}
+
+export interface ExpandoType extends S.Schema.Type<typeof _Expando> {}
+
 /**
  * Marker value to be passed to `object` constructor to create an ECHO object with a generated ID.
- *
- * @deprecated Need API review.
  */
-export const ExpandoType: S.Schema<ExpandoType> = _Expando as any;
+// TODO(dmaretskyi): Rename to `Expando` once old code has been deleted.
+export const ExpandoType: S.Schema<ExpandoType> & { [ExpandoMarker]: true } = _Expando as any;
 
 /**
  * Has `id`.
