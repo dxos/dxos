@@ -20,7 +20,7 @@ import {
   EchoObjectFieldMetaAnnotationId,
   ReferenceAnnotation,
 } from './reactive';
-import { Schema } from '../proto';
+import { type Schema } from '../proto';
 
 const ECHO_REFINEMENT_KEY = '$echo';
 interface EchoRefinement {
@@ -34,8 +34,13 @@ const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } 
   [EchoObjectFieldMetaAnnotationId]: 'fieldMeta',
 };
 
+// Circular deps.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const requireSchema = (): typeof Schema => require('../proto').Schema;
+
 // TODO(burdon): Reconcile with plugin-table.
 export const getPropType = (type?: Schema.PropType): string => {
+  const Schema = requireSchema();
   switch (type) {
     case Schema.PropType.REF:
       return 'ref';
@@ -111,6 +116,7 @@ export const toJsonSchema = (schema: Schema): JsonSchema => {
  * @deprecated Next version will support ts-effect directly.
  */
 export const toEffectSchema = (schema: Schema): S.Schema<any> => {
+  const Schema = requireSchema();
   // TODO(burdon): Recursive?
   const fields = schema.props.reduce<Record<string, S.Schema<any>>>((fields, { id, type, description }) => {
     let field: S.Schema<any>;

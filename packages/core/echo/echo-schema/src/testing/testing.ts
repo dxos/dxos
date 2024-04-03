@@ -8,7 +8,6 @@ import { ComplexMap } from '@dxos/util';
 import { AutomergeContext, type AutomergeContextConfig } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
-import { schemaBuiltin } from '../proto';
 
 export type CreateDatabaseOpts = {
   useReactiveObjectApi?: boolean;
@@ -22,8 +21,6 @@ export const createDatabase = async (
   graph = new Hypergraph(),
   { useReactiveObjectApi }: CreateDatabaseOpts = { useReactiveObjectApi: true },
 ) => {
-  graph.addTypes(schemaBuiltin);
-
   const spaceKey = PublicKey.random();
   const automergeContext = new AutomergeContext();
   const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey, useReactiveObjectApi });

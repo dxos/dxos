@@ -5,7 +5,8 @@
 import * as S from '@effect/schema/Schema';
 
 import { EchoObjectSchema } from '../effect/echo-object-class';
-import { type Ref, ref } from '../effect/reactive';
+import * as E from '../effect/reactive';
+import { ExpandoType, type Ref, ref } from '../effect/reactive';
 
 export class Contact extends EchoObjectSchema({
   typename: 'example.test.Contact',
@@ -46,3 +47,32 @@ export class Task extends EchoObjectSchema({
   description: S.optional(S.string),
   todos: S.optional(S.array(ref(Todo))),
 }) {}
+
+export enum RecordType {
+  UNDEFINED = 0,
+  PERSONAL = 1,
+  WORK = 2,
+}
+
+export class Container extends EchoObjectSchema({
+  typename: 'example.test.Container',
+  version: '0.1.0',
+})(
+  {
+    expandos: S.mutable(S.array(E.ref(ExpandoType))),
+    objects: S.mutable(S.array(E.AnyEchoObject)),
+    records: S.mutable(
+      S.array(
+        S.partial(
+          S.struct({
+            title: S.string,
+            description: S.string,
+            contacts: S.mutable(S.array(E.ref(Contact))),
+            type: S.enums(RecordType),
+          }),
+        ),
+      ),
+    ),
+  },
+  { partial: true },
+) {}
