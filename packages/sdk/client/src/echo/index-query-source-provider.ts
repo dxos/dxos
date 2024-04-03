@@ -59,7 +59,7 @@ export class IndexQuerySource implements QuerySource {
     this.changed.emit();
 
     const start = Date.now();
-    this._stream = this._params.service.find({ filter: filter.toProto() });
+    this._stream = this._params.service.find({ filter: filter.toProto() }, { timeout: 20_000 });
     let currentCtx: Context;
     this._stream.subscribe(async (response) => {
       await currentCtx?.dispose();
