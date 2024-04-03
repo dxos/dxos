@@ -21,6 +21,7 @@
   ],
   "dependencies": {
     "@dxos/client": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/util": "workspace:*"
   },

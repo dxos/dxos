@@ -20,8 +20,9 @@ import {
   type ReactiveHandler,
 } from './proxy';
 import { getSchema, getTypeReference, type EchoReactiveObject, EchoReactiveHandler } from './reactive';
+import { getTargetMeta } from './reactive-meta-handler';
 import { SchemaValidator } from './schema-validator';
-import { AutomergeObjectCore } from '../automerge/automerge-object-core';
+import { AutomergeObjectCore, META_NAMESPACE } from '../automerge/automerge-object-core';
 import { type KeyPath } from '../automerge/key-path';
 import { encodeReference } from '../automerge/types';
 import { data, type ObjectMeta } from '../object';
@@ -40,7 +41,6 @@ type ProxyTarget = {
 const PROPERTY_ID = 'id';
 
 const DATA_NAMESPACE = 'data';
-const META_NAMESPACE = 'meta';
 
 /**
  * Shared for all targets within one ECHO object.
@@ -573,6 +573,7 @@ export const createEchoReactiveObject = <T extends {}>(init: T): EchoReactiveObj
     const proxy = init as any;
 
     const slot = getProxyHandlerSlot(proxy);
+    const meta = getProxyHandlerSlot<ObjectMeta>(getTargetMeta(slot.target)).target!;
 
     const echoHandler = new EchoReactiveHandlerImpl();
     echoHandler._objectCore.rootProxy = proxy;
@@ -584,6 +585,9 @@ export const createEchoReactiveObject = <T extends {}>(init: T): EchoReactiveObj
     slot.handler._proxyMap.set(target, proxy);
     slot.handler._init(target);
     saveTypeInAutomerge(echoHandler, schema);
+    if (meta.keys.length > 0) {
+      echoHandler._objectCore.setMeta(meta);
+    }
     return proxy;
   } else {
     const target = { [symbolPath]: [], [symbolNamespace]: DATA_NAMESPACE, ...(init as any) };

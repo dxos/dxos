@@ -5,7 +5,7 @@ runtime:
     storage:
       persistent: true
       dataRoot: '/tmp/dxos/cli/user-1'
-
+    useReactiveObjectApi: true
   services:
     ipfs:
       server: 'https://ipfs-pub1.kube.dxos.network'

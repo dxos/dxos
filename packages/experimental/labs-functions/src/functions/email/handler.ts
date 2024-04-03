@@ -14,11 +14,12 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { ImapProcessor } from './imap-processor';
-import { getKey } from '../../util';
+import { getKey, registerTypes } from '../../util';
 
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
   const { space, objects } = event;
   const { client } = context;
+  registerTypes(space);
 
   // TODO(burdon): Generalize util for getting properties from config/env.
   const config = client.config;

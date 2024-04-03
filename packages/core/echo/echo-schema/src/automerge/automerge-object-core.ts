@@ -28,13 +28,20 @@ import {
 } from './types';
 import { isReactiveProxy } from '../effect/proxy';
 import { isEchoReactiveObject } from '../effect/reactive';
-import { type TypedObjectOptions, type EchoObject, TextObject, type OpaqueEchoObject } from '../object';
+import {
+  type TypedObjectOptions,
+  type EchoObject,
+  TextObject,
+  type OpaqueEchoObject,
+  type ObjectMeta,
+} from '../object';
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
 
+export const META_NAMESPACE = 'meta';
 const SYSTEM_NAMESPACE = 'system';
 
 /**
@@ -440,6 +447,10 @@ export class AutomergeObjectCore {
 
   setType(reference: Reference) {
     this.set([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
+  }
+
+  setMeta(meta: ObjectMeta) {
+    this.set([META_NAMESPACE], this.encode(meta));
   }
 
   delete(path: KeyPath) {
