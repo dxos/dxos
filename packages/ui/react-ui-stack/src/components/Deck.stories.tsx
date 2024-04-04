@@ -12,23 +12,24 @@ import { AttentionProvider, PlankHeading, plankHeadingIconProps, Deck } from '@d
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { type StackSectionItem } from './Section';
+import { SectionToolbar, type StackSectionItem } from './Section';
 import { Stack } from './Stack';
 
 faker.seed(3);
 
 const Toolbar = () => {
   return (
-    <div role='toolbar' className='flex gap-2 pis-[--rail-size]'>
+    <SectionToolbar classNames='flex items-center gap-2'>
       <p>File</p>
       <p>Edit</p>
       <p>View</p>
-    </div>
+    </SectionToolbar>
   );
 };
 
 const SimpleContent = ({ data }: { data: { title?: string; body?: string } }) => (
   <>
+    <Toolbar />
     <div className='text-xl mlb-2'>{data.title}</div>
     <p>{data.body}</p>
   </>
@@ -38,6 +39,8 @@ const rollItems = (n: number): StackSectionItem[] => {
   return [...Array(n)].map(() => ({
     id: faker.string.uuid(),
     icon: BookBookmark,
+    isResizable: true,
+    rendersToolbar: true,
     object: {
       id: faker.string.uuid(),
       title: faker.lorem.words(3),
@@ -87,25 +90,25 @@ export const Simple = {
           <Mosaic.DragOverlay />
           <Deck.Root>
             <Deck.Plank>
-              <DemoStackPlank toolbar />
+              <DemoStackPlank />
             </Deck.Plank>
             <Deck.Plank>
               <DemoStackPlank />
             </Deck.Plank>
             <Deck.Plank>
-              <DemoStackPlank toolbar />
+              <DemoStackPlank />
             </Deck.Plank>
             <Deck.Plank>
               <DemoStackPlank />
             </Deck.Plank>
             <Deck.Plank>
-              <DemoStackPlank toolbar />
+              <DemoStackPlank />
             </Deck.Plank>
             <Deck.Plank>
               <DemoStackPlank />
             </Deck.Plank>
             <Deck.Plank>
-              <DemoStackPlank toolbar />
+              <DemoStackPlank />
             </Deck.Plank>
           </Deck.Root>
         </AttentionProvider>

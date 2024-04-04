@@ -22,10 +22,19 @@ import React, {
   type PropsWithChildren,
   type Dispatch,
   type SetStateAction,
+  type ComponentPropsWithRef,
 } from 'react';
 
-import { Button, DropdownMenu, List, ListItem, useTranslation, type TFunction } from '@dxos/react-ui';
-import { DropDownMenuDragHandleTrigger } from '@dxos/react-ui-deck';
+import {
+  Button,
+  DropdownMenu,
+  List,
+  ListItem,
+  useTranslation,
+  type TFunction,
+  type ThemedClassName,
+} from '@dxos/react-ui';
+import { DropDownMenuDragHandleTrigger, resizeHandle, resizeHandleHorizontal } from '@dxos/react-ui-deck';
 import {
   type MosaicActiveType,
   type MosaicDataItem,
@@ -68,6 +77,8 @@ export type StackSectionItem = MosaicDataItem & {
   object: StackSectionContent;
   icon?: FC<IconProps>;
   placeholder?: string | [string, Parameters<TFunction>[1]];
+  isResizable?: boolean;
+  rendersToolbar?: boolean;
 };
 
 export type StackSectionItemWithContext = StackSectionItem & StackContextValue;
@@ -86,8 +97,11 @@ export type SectionProps = PropsWithChildren<
     MosaicTileProps,
     'draggableProps' | 'draggableStyle' | 'onDelete' | 'onNavigate' | 'onAddAfter' | 'onAddBefore'
   > &
-    Pick<StackContextValue, 'collapsedSections' | 'onCollapseSection'>
+    Pick<StackContextValue, 'collapsedSections' | 'onCollapseSection'> &
+    Pick<StackSectionItem, 'isResizable' | 'rendersToolbar'>
 >;
+
+const resizeHandleStyles = mx(resizeHandle, resizeHandleHorizontal, 'is-full bs-[--rail-action] col-start-2');
 
 export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElement>> = forwardRef<
   HTMLLIElement,
@@ -99,6 +113,8 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
       title,
       icon: Icon = DotsNine,
       active,
+      isResizable,
+      rendersToolbar,
       draggableProps,
       draggableStyle,
       collapsedSections,
@@ -137,17 +153,18 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
           <div
             role='none'
             className={mx(
-              'grid col-span-2 grid-cols-subgrid outline outline-1 outline-transparent focus-within:s-outline-separator focus-within:surface-attention',
+              'grid col-span-2 grid-cols-subgrid outline outline-1 outline-transparent mlb-px surface-base focus-within:s-outline-separator focus-within:surface-attention',
               active && 'surface-attention after:separator-separator s-outline-separator',
               (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
             )}
           >
             <div
               role='toolbar'
+              data-clears={!collapsed && rendersToolbar ? 'toolbar' : 'none'}
               aria-label={t('section controls label')}
               {...(!active && { tabIndex: 0 })}
               {...(!active && sectionActionsToolbar)}
-              className='grid grid-cols-subgrid ch-focus-ring rounded-sm grid-rows-[min-content_min-content_1fr] m-1'
+              className='grid grid-cols-subgrid ch-focus-ring rounded-sm grid-rows-[min-content_min-content_1fr] m-1 data-[clears=toolbar]:pbs-[--rail-action]'
             >
               <DropdownMenu.Root
                 {...{
@@ -214,11 +231,24 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
               {children}
             </CollapsiblePrimitive.Content>
           </div>
+          {isResizable && !collapsed && (
+            <button className={resizeHandleStyles}>
+              <span className='sr-only'>{t('resize section label')}</span>
+            </button>
+          )}
         </ListItem.Root>
       </CollapsiblePrimitive.Root>
     );
   },
 );
+
+export const SectionToolbar = ({ children, classNames }: ThemedClassName<ComponentPropsWithRef<'div'>>) => {
+  return (
+    <div role='toolbar' className={mx('bs-[--rail-action] bg-[--sticky-bg] sticky -block-start-px', classNames)}>
+      {children}
+    </div>
+  );
+};
 
 export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLLIElement> = forwardRef(
   ({ path, type, active, draggableStyle, draggableProps, item, itemContext }, forwardedRef) => {
@@ -234,6 +264,8 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
       SectionContent,
       collapsedSections,
       onCollapseSection,
+      rendersToolbar,
+      isResizable,
       ...contentItem
     } = {
       ...itemContext,
@@ -272,6 +304,8 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
         draggableStyle={draggableStyle}
         collapsedSections={collapsedSections}
         onCollapseSection={onCollapseSection}
+        rendersToolbar={rendersToolbar}
+        isResizable={isResizable}
         onDelete={() => onDeleteSection?.(path)}
         onNavigate={() => onNavigateToSection?.(itemObject.id)}
         onAddAfter={() => onAddSection?.(path, 'after')}
