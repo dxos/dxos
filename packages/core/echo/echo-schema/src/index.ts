@@ -11,7 +11,7 @@ export * from './object';
 export * from './proto';
 export * from './query';
 export * from './serializer';
-export { TypeCollection } from './type-collection';
+export { TypeCollection, TextCompatibilitySchema } from './type-collection';
 export * from './util';
 export * from './automerge';
 export * from './automerge/key-path';
