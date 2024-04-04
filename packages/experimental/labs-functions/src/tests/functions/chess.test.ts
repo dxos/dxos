@@ -43,8 +43,6 @@ describe('Chess', () => {
     await client.initialize();
     afterTest(() => client.destroy());
 
-    client.addTypes(types);
-
     const functionsPlugin = new FunctionsPlugin();
     await functionsPlugin.initialize({
       client,
