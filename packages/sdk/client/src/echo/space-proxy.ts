@@ -35,10 +35,6 @@ import { trace } from '@dxos/tracing';
 
 import { InvitationsProxy } from '../invitations';
 
-export type SpaceProxyOptions = {
-  useReactiveObjectApi?: boolean;
-};
-
 // TODO(burdon): This should not be used as part of the API (don't export).
 @trace.resource()
 export class SpaceProxy implements Space {
@@ -95,7 +91,6 @@ export class SpaceProxy implements Space {
     private _data: SpaceData,
     graph: Hypergraph,
     automergeContext: AutomergeContext,
-    options: SpaceProxyOptions = {},
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
@@ -113,7 +108,6 @@ export class SpaceProxy implements Space {
       spaceKey: this.key,
       graph,
       automergeContext,
-      useReactiveObjectApi: options.useReactiveObjectApi,
     });
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias

@@ -20,7 +20,7 @@ const DEFAULT_ORG: Omit<Organization, 'id'> = { name: 'FooCorp' };
 
 describe('EchoObject class dsl', () => {
   const setupDatabase = async () => {
-    const result = await createDatabase(undefined, { useReactiveObjectApi: true });
+    const result = await createDatabase();
     result.graph.types.registerEffectSchema(Organization);
     return result;
   };
