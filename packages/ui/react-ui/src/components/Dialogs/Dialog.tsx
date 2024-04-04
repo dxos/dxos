@@ -81,7 +81,7 @@ const [OverlayLayoutProvider, useOverlayLayoutContext] = createContext<OverlayLa
   inOverlayLayout: false,
 });
 
-type DialogOverlayProps = ThemedClassName<DialogOverlayPrimitiveProps> & { blockAlign?: 'center' | 'top' };
+type DialogOverlayProps = ThemedClassName<DialogOverlayPrimitiveProps> & { blockAlign?: 'center' | 'start' };
 
 const DialogOverlay: ForwardRefExoticComponent<DialogOverlayProps> = forwardRef<HTMLDivElement, DialogOverlayProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
@@ -95,8 +95,8 @@ const DialogOverlay: ForwardRefExoticComponent<DialogOverlayProps> = forwardRef<
           'dialog__overlay',
           {},
           classNames,
-          'data-[block-align=top]:justify-center',
-          'data-[block-align=top]:items-start',
+          'data-[block-align=start]:justify-center',
+          'data-[block-align=start]:items-start',
           'data-[block-align=center]:place-content-center',
         )}
         ref={forwardedRef}

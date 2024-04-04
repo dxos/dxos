@@ -16,7 +16,7 @@ type StorybookDialogProps = Partial<{
   body: string;
   closeTrigger: string;
   openTrigger: string;
-  blockAlign: 'center' | 'top';
+  blockAlign: 'center' | 'start';
 }>;
 
 const StorybookDialog = ({ title, openTrigger, description, body, closeTrigger, blockAlign }: StorybookDialogProps) => {
@@ -58,7 +58,7 @@ export const Default = {
   argTypes: {
     blockAlign: {
       type: 'select',
-      options: ['center', 'top'],
+      options: ['center', 'start'],
     },
   },
 };
