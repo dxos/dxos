@@ -232,7 +232,6 @@ export class ClientServicesHost {
 
     if (!this._level) {
       this._level = await createLevel(this._config.get('runtime.client.storage', {})!);
-      log.info('level db opened');
     }
     await this._resourceLock?.acquire();
 

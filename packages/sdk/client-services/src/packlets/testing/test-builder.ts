@@ -8,6 +8,7 @@ import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/cred
 import { failUndefined } from '@dxos/debug';
 import { AutomergeHost, MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
+import { createTestLevel } from '@dxos/indexing/testing';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
@@ -29,7 +30,7 @@ export const createServiceHost = (config: Config, signalManagerContext: MemorySi
   });
 };
 
-export const createServiceContext = ({
+export const createServiceContext = async ({
   signalContext = new MemorySignalManagerContext(),
   storage = createStorage({ type: StorageType.RAM }),
 }: {
@@ -41,8 +42,9 @@ export const createServiceContext = ({
     signalManager,
     transportFactory: MemoryTransportFactory,
   });
+  const level = await createTestLevel();
 
-  return new ServiceContext(storage, networkManager, signalManager);
+  return new ServiceContext(storage, level, networkManager, signalManager);
 };
 
 export const createPeers = async (numPeers: number) => {
@@ -50,7 +52,7 @@ export const createPeers = async (numPeers: number) => {
 
   return await Promise.all(
     Array.from(Array(numPeers)).map(async () => {
-      const peer = createServiceContext({ signalContext });
+      const peer = await createServiceContext({ signalContext });
       await peer.open(new Context());
       return peer;
     }),
