@@ -40,7 +40,6 @@ const rollItems = (n: number): StackSectionItem[] => {
     id: faker.string.uuid(),
     icon: BookBookmark,
     isResizable: true,
-    rendersToolbar: true,
     object: {
       id: faker.string.uuid(),
       title: faker.lorem.words(3),

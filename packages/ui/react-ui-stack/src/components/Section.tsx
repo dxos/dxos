@@ -78,7 +78,6 @@ export type StackSectionItem = MosaicDataItem & {
   icon?: FC<IconProps>;
   placeholder?: string | [string, Parameters<TFunction>[1]];
   isResizable?: boolean;
-  rendersToolbar?: boolean;
 };
 
 export type StackSectionItemWithContext = StackSectionItem & StackContextValue;
@@ -98,7 +97,7 @@ export type SectionProps = PropsWithChildren<
     'draggableProps' | 'draggableStyle' | 'onDelete' | 'onNavigate' | 'onAddAfter' | 'onAddBefore'
   > &
     Pick<StackContextValue, 'collapsedSections' | 'onCollapseSection'> &
-    Pick<StackSectionItem, 'isResizable' | 'rendersToolbar'>
+    Pick<StackSectionItem, 'isResizable'>
 >;
 
 const resizeHandleStyles = mx(resizeHandle, resizeHandleHorizontal, 'is-full bs-[--rail-action] col-start-2');
@@ -114,7 +113,6 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
       icon: Icon = DotsNine,
       active,
       isResizable,
-      rendersToolbar,
       draggableProps,
       draggableStyle,
       collapsedSections,
@@ -153,18 +151,18 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
           <div
             role='none'
             className={mx(
-              'grid col-span-2 grid-cols-subgrid outline outline-1 outline-transparent mlb-px surface-base focus-within:s-outline-separator focus-within:surface-attention',
+              'group grid col-span-2 grid-cols-subgrid outline outline-1 outline-transparent mlb-px surface-base focus-within:s-outline-separator focus-within:surface-attention',
               active && 'surface-attention after:separator-separator s-outline-separator',
               (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
             )}
           >
             <div
               role='toolbar'
-              data-clears={!collapsed && rendersToolbar ? 'toolbar' : 'none'}
+              aria-orientation='vertical'
               aria-label={t('section controls label')}
               {...(!active && { tabIndex: 0 })}
               {...(!active && sectionActionsToolbar)}
-              className='grid grid-cols-subgrid ch-focus-ring rounded-sm grid-rows-[min-content_min-content_1fr] m-1 data-[clears=toolbar]:pbs-[--rail-action]'
+              className='grid grid-cols-subgrid ch-focus-ring rounded-sm grid-rows-[min-content_min-content_1fr] m-1 group-has-[[role=toolbar][aria-orientation=horizontal]]:pbs-[--rail-action]'
             >
               <DropdownMenu.Root
                 {...{
@@ -244,7 +242,11 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
 
 export const SectionToolbar = ({ children, classNames }: ThemedClassName<ComponentPropsWithRef<'div'>>) => {
   return (
-    <div role='toolbar' className={mx('bs-[--rail-action] bg-[--sticky-bg] sticky -block-start-px', classNames)}>
+    <div
+      role='toolbar'
+      aria-orientation='horizontal'
+      className={mx('bs-[--rail-action] bg-[--sticky-bg] sticky -block-start-px', classNames)}
+    >
       {children}
     </div>
   );
@@ -264,7 +266,6 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
       SectionContent,
       collapsedSections,
       onCollapseSection,
-      rendersToolbar,
       isResizable,
       ...contentItem
     } = {
@@ -304,7 +305,6 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
         draggableStyle={draggableStyle}
         collapsedSections={collapsedSections}
         onCollapseSection={onCollapseSection}
-        rendersToolbar={rendersToolbar}
         isResizable={isResizable}
         onDelete={() => onDeleteSection?.(path)}
         onNavigate={() => onNavigateToSection?.(itemObject.id)}
