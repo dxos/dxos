@@ -18,7 +18,8 @@
       "options": {
         "environments": [
           "nodejs"
-        ]
+        ],
+        "forceExit": true
       }
     }
   },
