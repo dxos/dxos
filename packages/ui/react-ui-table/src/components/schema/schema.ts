@@ -7,6 +7,8 @@ import type * as S from '@effect/schema/Schema';
 
 import { type ColumnType } from '../../schema';
 
+export type ClassifiedColumnType = ColumnType | 'display';
+
 const isOptionalUnion = (prop: AST.PropertySignature) => AST.isUnion(prop.type) && prop.isOptional;
 
 const unwrapOptionProperty = (prop: AST.PropertySignature) => {
@@ -23,7 +25,7 @@ const unwrapOptionProperty = (prop: AST.PropertySignature) => {
   return type;
 };
 
-const typeToColumn = (type: AST.AST): ColumnType | 'display' => {
+const typeToColumn = (type: AST.AST): ClassifiedColumnType => {
   if (AST.isStringKeyword(type)) {
     return 'string';
   } else if (AST.isNumberKeyword(type)) {
@@ -53,7 +55,7 @@ const typeToColumn = (type: AST.AST): ColumnType | 'display' => {
   return 'display';
 };
 
-const propertyToColumn = (property: AST.PropertySignature): ColumnType | 'display' => {
+const propertyToColumn = (property: AST.PropertySignature): ClassifiedColumnType => {
   let type = property.type;
 
   if (property.isOptional) {
@@ -66,7 +68,7 @@ const propertyToColumn = (property: AST.PropertySignature): ColumnType | 'displa
 const isStruct = (node: AST.AST) => AST.isTypeLiteral(node);
 
 export const classifySchemaProperties = (schema: S.Schema<any, any>) => {
-  const recurse = (node: AST.AST, path: string[], acc: [string, ColumnType | 'display'][]) => {
+  const recurse = (node: AST.AST, path: string[], acc: [string, ClassifiedColumnType][]) => {
     const properties = AST.getPropertySignatures(node);
 
     properties.forEach((prop) => {

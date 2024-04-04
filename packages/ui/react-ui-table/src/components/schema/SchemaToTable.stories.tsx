@@ -33,7 +33,6 @@ const exampleSchema = S.struct({
   field2: S.number,
   field3: S.Date,
   field4: S.optional(S.string.pipe(S.length(10))),
-  // Not editable yet
   field5: S.optional(
     S.struct({
       innerField1: S.string,
