@@ -9,21 +9,14 @@ import { AutomergeContext, type AutomergeContextConfig } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 
-export type CreateDatabaseOpts = {
-  useReactiveObjectApi?: boolean;
-};
-
 /**
  * @deprecated Use TestBuilder.
  */
 // TODO(burdon): Builder pattern.
-export const createDatabase = async (
-  graph = new Hypergraph(),
-  { useReactiveObjectApi }: CreateDatabaseOpts = { useReactiveObjectApi: true },
-) => {
+export const createDatabase = async (graph = new Hypergraph()) => {
   const spaceKey = PublicKey.random();
   const automergeContext = new AutomergeContext();
-  const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey, useReactiveObjectApi });
+  const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey });
   await db.automerge.open({
     rootUrl: automergeContext.repo.create().url,
   });
@@ -68,7 +61,6 @@ export class TestPeer {
     spaceKey: this.spaceKey,
     graph: this.builder.graph,
     automergeContext: this.builder.automergeContext,
-    useReactiveObjectApi: true,
   });
 
   constructor(
@@ -83,7 +75,6 @@ export class TestPeer {
       spaceKey: this.spaceKey,
       graph: this.builder.graph,
       automergeContext: this.builder.automergeContext,
-      useReactiveObjectApi: true,
     });
     await this.db.automerge.open({
       rootUrl: this.automergeDocId,

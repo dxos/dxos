@@ -21,7 +21,7 @@ describe('Serializer', () => {
     let data: SerializedSpace;
 
     {
-      const { db } = await createDatabase(undefined, { useReactiveObjectApi: true });
+      const { db } = await createDatabase();
       const obj = object({} as any);
       obj.title = 'Test';
       db.add(obj);
@@ -38,7 +38,7 @@ describe('Serializer', () => {
     }
 
     {
-      const { db } = await createDatabase(undefined, { useReactiveObjectApi: true });
+      const { db } = await createDatabase();
       await serializer.import(db, data);
 
       const { objects } = db.query();
@@ -53,7 +53,7 @@ describe('Serializer', () => {
     let serialized: SerializedSpace;
 
     {
-      const { db } = await createDatabase(undefined, { useReactiveObjectApi: true });
+      const { db } = await createDatabase();
       const obj = object({
         title: 'Main task',
         subtasks: [
@@ -76,7 +76,7 @@ describe('Serializer', () => {
     }
 
     {
-      const { db } = await createDatabase(undefined, { useReactiveObjectApi: true });
+      const { db } = await createDatabase();
       await serializer.import(db, serialized);
 
       const { objects } = db.query();
@@ -95,7 +95,7 @@ describe('Serializer', () => {
     const name = 'Rich Burton';
 
     {
-      const { db, graph } = await createDatabase(undefined, { useReactiveObjectApi: true });
+      const { db, graph } = await createDatabase();
       graph.types.registerEffectSchema(Contact);
       const contact = object(Contact, { name });
       db.add(contact);
@@ -104,7 +104,7 @@ describe('Serializer', () => {
     }
 
     {
-      const { db, graph } = await createDatabase(undefined, { useReactiveObjectApi: true });
+      const { db, graph } = await createDatabase();
       graph.types.registerEffectSchema(Contact);
 
       await new Serializer().import(db, data);
