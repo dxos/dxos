@@ -50,7 +50,6 @@ export class IndexMetadataStore implements MetadataMethods {
   @trace.span({ showInBrowserTimeline: true })
   @synchronized
   async markDirty(idToLastHash: Map<string, string>) {
-    log.info('Marking dirty documents.');
     const batch = this._db.batch();
 
     for (const [id, lastAvailableHash] of idToLastHash.entries()) {
