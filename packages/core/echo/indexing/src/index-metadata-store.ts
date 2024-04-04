@@ -4,7 +4,6 @@
 
 import { Event, synchronized } from '@dxos/async';
 import { type MetadataMethods } from '@dxos/echo-pipeline';
-import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
 import { type MySublevel } from './testing';
