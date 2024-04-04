@@ -30,6 +30,7 @@ import {
   DropdownMenu,
   List,
   ListItem,
+  Toolbar,
   useTranslation,
   type TFunction,
   type ThemedClassName,
@@ -240,15 +241,16 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
   },
 );
 
-export const SectionToolbar = ({ children, classNames }: ThemedClassName<ComponentPropsWithRef<'div'>>) => {
+export type SectionToolbarProps = ThemedClassName<ComponentPropsWithRef<'div'>>;
+
+export const SectionToolbar = ({ children, classNames }: SectionToolbarProps) => {
   return (
-    <div
-      role='toolbar'
-      aria-orientation='horizontal'
-      className={mx('bs-[--rail-action] bg-[--sticky-bg] sticky -block-start-px', classNames)}
+    <Toolbar.Root
+      orientation='horizontal'
+      classNames={['bs-[--rail-action] bg-[--sticky-bg] sticky -block-start-px', classNames]}
     >
       {children}
-    </div>
+    </Toolbar.Root>
   );
 };
 
