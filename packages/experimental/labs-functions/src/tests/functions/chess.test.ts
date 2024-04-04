@@ -8,10 +8,11 @@ import { join } from 'path';
 
 import { FunctionsPlugin } from '@dxos/agent';
 import { Trigger } from '@dxos/async';
-import { Game, types } from '@dxos/chess-app/proto';
+import { GameType } from '@dxos/chess-app/types';
 import { Client, Config } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import { subscribe } from '@dxos/echo-schema';
+import * as E from '@dxos/echo-schema';
+import { getAutomergeObjectCore } from '@dxos/echo-schema';
 import { DevServer, type FunctionManifest, Scheduler } from '@dxos/functions';
 import { afterTest, openAndClose, test } from '@dxos/test';
 
@@ -72,7 +73,7 @@ describe('Chess', () => {
 
     await client.halo.createIdentity();
     await client.spaces.isReady.wait();
-    const game = client.spaces.default.db.add(new Game());
+    const game = client.spaces.default.db.add(E.object(GameType, {}));
     await client.spaces.default.db.flush();
 
     const { Chess } = await import('chess.js');
@@ -96,7 +97,7 @@ describe('Chess', () => {
       }
     };
 
-    const cleanup = game[subscribe](advanceGame);
+    const cleanup = getAutomergeObjectCore(game).updates.on(advanceGame);
     afterTest(cleanup);
     advanceGame();
 
