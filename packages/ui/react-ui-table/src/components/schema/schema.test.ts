@@ -74,4 +74,84 @@ describe('schema->column-type', () => {
       ['age', 'number'],
     ]);
   });
+
+  test('nested schema', () => {
+    const simpleSchema = S.struct({
+      name: S.string,
+      nested: S.struct({
+        age: S.number,
+      }),
+      someUnion: S.union(S.string, S.number),
+    });
+
+    const columns = classifySchemaProperties(simpleSchema);
+
+    expect(columns).to.deep.equal([
+      ['name', 'string'],
+      ['nested.age', 'number'],
+      ['someUnion', 'display'],
+    ]);
+  });
+
+  test('deeply nested schema', () => {
+    const simpleSchema = S.struct({
+      name: S.string,
+      nested: S.struct({
+        age: S.number,
+        deeplyNested: S.struct({
+          height: S.number,
+        }),
+      }),
+    });
+
+    const columns = classifySchemaProperties(simpleSchema);
+
+    expect(columns).to.deep.equal([
+      ['name', 'string'],
+      ['nested.age', 'number'],
+      ['nested.deeplyNested.height', 'number'],
+    ]);
+  });
+
+  test('even more deeply nested schema with optionals', () => {
+    const simpleSchema = S.struct({
+      name: S.string,
+      nested: S.struct({
+        age: S.number,
+        deeplyNested: S.optional(
+          S.struct({
+            height: S.optional(S.number),
+          }),
+        ),
+      }),
+    });
+
+    const columns = classifySchemaProperties(simpleSchema);
+
+    expect(columns).to.deep.equal([
+      ['name', 'string'],
+      ['nested.age', 'number'],
+      ['nested.deeplyNested.height', 'number'],
+    ]);
+  });
+
+  test('multiple-nested schemata as sibblings', () => {
+    const simpleSchema = S.struct({
+      name: S.string,
+      nested: S.struct({
+        age: S.number,
+      }),
+      nested2: S.struct({
+        height: S.number,
+      }),
+    });
+
+    const columns = classifySchemaProperties(simpleSchema);
+
+    expect(columns).to.deep.equal([
+      ['name', 'string'],
+      ['nested.age', 'number'],
+      ['nested2.height', 'number'],
+    ]);
+  });
 });
