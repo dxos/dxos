@@ -5,7 +5,7 @@
 import type { Config as ImapConfig } from 'imap';
 
 import { MessageType, MailboxType } from '@braneframe/types';
-import { getSpaceForObject } from '@dxos/client/echo';
+import { getSpace } from '@dxos/client/echo';
 import { type Space } from '@dxos/client/echo';
 import { Filter, hasType, matchKeys } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
@@ -14,11 +14,12 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { ImapProcessor } from './imap-processor';
-import { getKey } from '../../util';
+import { getKey, registerTypes } from '../../util';
 
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
   const { space, objects } = event;
   const { client } = context;
+  registerTypes(space);
 
   // TODO(burdon): Generalize util for getting properties from config/env.
   const config = client.config;
@@ -48,7 +49,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
       await processor.connect();
 
       for (const mailbox of mailboxes) {
-        const space = getSpaceForObject(mailbox);
+        const space = getSpace(mailbox);
         invariant(space);
         // TODO(burdon): Debounce requests (i.e., store seq).
         log('requesting messages...');
@@ -74,7 +75,7 @@ const processMailbox = async (space: Space, mailbox: MailboxType, messages: Mess
   // console.log(messages.map((message) => message[debug]));
   let added = 0;
   for (const message of messages) {
-    const exists = current.find((m) => matchKeys(E.metaOf(m).keys, E.metaOf(message).keys));
+    const exists = current.find((m) => matchKeys(E.getMeta(m).keys, E.getMeta(message).keys));
     if (!exists) {
       mailbox.messages.push(message);
       added++;

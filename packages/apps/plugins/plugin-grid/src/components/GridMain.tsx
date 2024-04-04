@@ -7,7 +7,7 @@ import React, { forwardRef, type FC } from 'react';
 import { DocumentType, GridItemType, type GridType } from '@braneframe/types';
 import { Surface, parseMetadataResolverPlugin, useResolvePlugin } from '@dxos/app-framework';
 import * as E from '@dxos/echo-schema';
-import { getSpaceForObject, isTypedObject, type TypedObject } from '@dxos/react-client/echo';
+import { getSpace, isTypedObject, type TypedObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import type { MosaicDropEvent, MosaicOperation, MosaicTileAction, MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
@@ -36,7 +36,7 @@ export const colors: Record<string, string> = {
 export const getObject = (item: any): TypedObject => item.node?.data ?? item.object ?? item;
 
 const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
-  const space = getSpaceForObject(grid);
+  const space = getSpace(grid);
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
 
   if (!space) {

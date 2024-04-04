@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { getSpaceProperty, setSpaceProperty } from '@braneframe/plugin-client/space-properties';
 import { FolderType } from '@braneframe/types';
-import { Client, Config, PublicKey } from '@dxos/client';
+import { Client, PublicKey } from '@dxos/client';
 import { type Space, Filter } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import * as E from '@dxos/echo-schema';
@@ -21,10 +21,7 @@ describe('Composer migrations', () => {
   let space: Space;
 
   beforeEach(async () => {
-    client = new Client({
-      services: testBuilder.createLocal(),
-      config: new Config({ runtime: { client: { useReactiveObjectApi: true } } }),
-    });
+    client = new Client({ services: testBuilder.createLocal() });
     client.addSchema(FolderType, E.ExpandoType);
     await client.initialize();
     await client.halo.createIdentity();

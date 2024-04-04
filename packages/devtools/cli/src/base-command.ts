@@ -230,7 +230,9 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     });
   }
 
-  private async _initObservability(logCb: (input: string) => void = (input: string) => process.stderr.write(input)) {
+  private async _initObservability(
+    logCb: (input: string) => void = (input: string) => process.stderr.write(chalk`{bold {magenta ${input} }}`),
+  ) {
     const observabilityState = await getObservabilityState(DX_DATA);
     const { mode, installationId, group } = observabilityState;
 
@@ -244,8 +246,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       }
 
       await showObservabilityBanner(DX_DATA, (input: string) => {
-        // Avoid interfering with JSON output and JSON log output on stderr.
-        logCb(chalk`{bold {magenta ${input} }}`);
+        // Use callback to enable avoid interfering with JSON output (--json flag) and JSON log output on stderr (--json-log).
+        logCb(input);
       });
     }
 

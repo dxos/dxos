@@ -8,22 +8,15 @@ import { ComplexMap } from '@dxos/util';
 import { AutomergeContext, type AutomergeContextConfig } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
-import { schemaBuiltin } from '../proto';
-
-export type CreateDatabaseOpts = {
-  useReactiveObjectApi?: boolean;
-};
 
 /**
  * @deprecated Use TestBuilder.
  */
 // TODO(burdon): Builder pattern.
-export const createDatabase = async (graph = new Hypergraph(), { useReactiveObjectApi }: CreateDatabaseOpts = {}) => {
-  graph.addTypes(schemaBuiltin);
-
+export const createDatabase = async (graph = new Hypergraph()) => {
   const spaceKey = PublicKey.random();
   const automergeContext = new AutomergeContext();
-  const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey, useReactiveObjectApi });
+  const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey });
   await db.automerge.open({
     rootUrl: automergeContext.repo.create().url,
   });

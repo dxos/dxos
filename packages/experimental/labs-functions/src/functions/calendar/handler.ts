@@ -14,13 +14,14 @@ import { subscriptionHandler } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 import { ObjectSyncer } from '../../sync';
-import { getYaml } from '../../util';
+import { getYaml, registerTypes } from '../../util';
 
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
   const { space } = event;
   if (!space) {
     return;
   }
+  registerTypes(space);
 
   // TODO(burdon): Prevent multiple calls from scheduler.
 
@@ -58,7 +59,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
 
   const sourceId = 'google.com/calendar';
   const syncer = new ObjectSyncer<EchoReactiveObject<EventType>>(Filter.schema(EventType), (object) => {
-    for (const { id, source } of E.metaOf(object).keys ?? []) {
+    for (const { id, source } of E.getMeta(object).keys ?? []) {
       if (source === sourceId) {
         return id;
       }
@@ -88,7 +89,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
           attendees:
             attendees?.map(({ email, displayName }) => ({ email: email!, name: displayName }) as RecipientType) ?? [],
         });
-        E.metaOf(newEvent).keys = [{ source: sourceId, id }];
+        E.getMeta(newEvent).keys = [{ source: sourceId, id }];
         space.db.add(newEvent);
       }
     }

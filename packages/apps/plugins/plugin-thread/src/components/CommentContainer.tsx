@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { MessageType, TextV0Type } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
-import { getSpaceForObject, useMembers } from '@dxos/react-client/echo';
+import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
@@ -32,7 +32,7 @@ export const CommentContainer = ({
   onDelete,
 }: ThreadContainerProps) => {
   const identity = useIdentity()!;
-  const space = getSpaceForObject(thread);
+  const space = getSpace(thread);
   const members = useMembers(space?.key);
   const activity = useStatus(space, thread.id);
   const { t } = useTranslation(THREAD_PLUGIN);

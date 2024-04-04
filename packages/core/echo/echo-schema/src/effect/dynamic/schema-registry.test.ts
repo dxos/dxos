@@ -102,7 +102,7 @@ describe('schema registry', () => {
   });
 
   const setupTest = async () => {
-    const { db } = await createDatabase(undefined, { useReactiveObjectApi: true });
+    const { db } = await createDatabase();
     return { db, registry: db.schemaRegistry };
   };
 });

@@ -5,8 +5,10 @@
 import { expect } from 'chai';
 
 import { Client } from '@dxos/client';
-import { Expando, type Space } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
+import * as E from '@dxos/echo-schema';
+import { ExpandoType } from '@dxos/echo-schema';
 import { describe, test, beforeEach, beforeAll, afterAll } from '@dxos/test';
 
 import { Migrations } from './migrations';
@@ -15,7 +17,7 @@ Migrations.define('test', [
   {
     version: 1,
     up: async ({ space }) => {
-      space.db.add(new Expando({ namespace: 'test', count: 1 }));
+      space.db.add(E.object(E.ExpandoType, { namespace: 'test', count: 1 }));
     },
     down: async ({ space }) => {
       const { objects } = space.db.query({ namespace: 'test' });
@@ -82,7 +84,7 @@ describe('Migrations', () => {
 
   test('if some migrations have been run before, runs only the remaining migrations', async () => {
     space.properties['test.version'] = 2;
-    space.db.add(new Expando({ namespace: 'test', count: 5 }));
+    space.db.add(E.object(ExpandoType, { namespace: 'test', count: 5 }));
     await Migrations.migrate(space);
     const { objects } = space.db.query({ namespace: 'test' });
     expect(objects).to.have.length(1);

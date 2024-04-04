@@ -28,13 +28,20 @@ import {
 } from './types';
 import { isReactiveProxy } from '../effect/proxy';
 import { isEchoReactiveObject } from '../effect/reactive';
-import { type TypedObjectOptions, type EchoObject, TextObject, type OpaqueEchoObject } from '../object';
+import {
+  type TypedObjectOptions,
+  type EchoObject,
+  TextObject,
+  type OpaqueEchoObject,
+  type ObjectMeta,
+} from '../object';
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
 
+export const META_NAMESPACE = 'meta';
 const SYSTEM_NAMESPACE = 'system';
 
 /**
@@ -73,7 +80,7 @@ export class AutomergeObjectCore {
    * Set only when the object is not bound to a database.
    */
   // TODO(dmaretskyi): Change to object core.
-  public linkCache?: Map<string, EchoObject> = new Map<string, EchoObject>();
+  public linkCache?: Map<string, OpaqueEchoObject> = new Map<string, OpaqueEchoObject>();
 
   /**
    * Key path at where we are mounted in the `doc` or `docHandle`.
@@ -309,7 +316,7 @@ export class AutomergeObjectCore {
   /**
    * Lookup referenced object.
    */
-  lookupLink(ref: Reference): EchoObject | undefined {
+  lookupLink(ref: Reference): OpaqueEchoObject | undefined {
     if (this.database) {
       // This doesn't clean-up properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
       return this.database.graph._lookupLink(ref, this.database, this.notifyUpdate);
@@ -440,6 +447,10 @@ export class AutomergeObjectCore {
 
   setType(reference: Reference) {
     this.set([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
+  }
+
+  setMeta(meta: ObjectMeta) {
+    this.set([META_NAMESPACE], this.encode(meta));
   }
 
   delete(path: KeyPath) {

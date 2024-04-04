@@ -2881,9 +2881,18 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
     devDependencies:
       '@braneframe/plugin-space':
         specifier: workspace:*
@@ -4913,17 +4922,17 @@ importers:
   packages/core/echo/automerge:
     dependencies:
       '@automerge/automerge':
-        specifier: ^2.1.10
-        version: 2.1.10
+        specifier: ^2.1.13
+        version: 2.1.13
       '@automerge/automerge-repo':
-        specifier: ^1.1.1
-        version: 1.1.1(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+        specifier: ^1.1.4
+        version: 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       '@automerge/automerge-repo-storage-indexeddb':
-        specifier: ^1.1.1
-        version: 1.1.1(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+        specifier: ^1.1.4
+        version: 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       '@automerge/automerge-wasm':
-        specifier: ^0.9.0
-        version: 0.9.0
+        specifier: ^0.12.0
+        version: 0.12.0
       bs58check:
         specifier: ^3.0.1
         version: 3.0.1
@@ -4980,11 +4989,11 @@ importers:
         version: link:../../../common/util
     devDependencies:
       '@automerge/automerge':
-        specifier: ^2.1.10
-        version: 2.1.10
+        specifier: ^2.1.13
+        version: 2.1.13
       '@automerge/automerge-repo':
-        specifier: ^1.1.1
-        version: 1.1.1(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+        specifier: ^1.1.4
+        version: 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../../common/feed-store
@@ -7432,8 +7441,8 @@ importers:
   packages/gravity/kube-testing:
     dependencies:
       '@automerge/automerge-repo-network-websocket':
-        specifier: ^1.1.1
-        version: 1.1.1(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+        specifier: ^1.1.4
+        version: 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -8114,6 +8123,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -8927,8 +8939,8 @@ importers:
         version: 4.1.0
     devDependencies:
       '@automerge/automerge-repo-network-broadcastchannel':
-        specifier: ^1.1.1
-        version: 1.1.1(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+        specifier: ^1.1.4
+        version: 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -10194,10 +10206,10 @@ packages:
       leven: 3.1.0
     dev: true
 
-  /@automerge/automerge-repo-network-broadcastchannel@1.1.1(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
-    resolution: {integrity: sha512-g0SDRwpb4u2ZzRpQXSHnozuAL0/uyuRovvGtRrbryh6SxO/QPPzgoGTcX5sHcloZ0nlQ50wE2hL2FL1UNcIV4Q==}
+  /@automerge/automerge-repo-network-broadcastchannel@1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-aCPtGFz9tMHhzZnpquAf5bhqjarrsVyQXVN7Wdd1AR1gg+RbFhphnITQVMds7c8QogTI2Xdzh+7nhKFyun74qw==}
     dependencies:
-      '@automerge/automerge-repo': 1.1.1(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+      '@automerge/automerge-repo': 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -10206,10 +10218,10 @@ packages:
       - typescript
     dev: true
 
-  /@automerge/automerge-repo-network-websocket@1.1.1(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
-    resolution: {integrity: sha512-1KHMeeAagsptbwML6WUhcAyhFffy3RYBRUhZPZwB01Cj90S4DdAtHyAW7wgG8CTWIUNd9BaKex6ZmeMKhcgARw==}
+  /@automerge/automerge-repo-network-websocket@1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-CTo3VvLRnuhE7sAg8oFnMyvfzZolKT8WSizQHIMlv4AlEbOc/e54wEwfZ09ySaabwT8u8eVj5R3WCvfVdkkSBA==}
     dependencies:
-      '@automerge/automerge-repo': 1.1.1(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+      '@automerge/automerge-repo': 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       cbor-x: 1.5.4
       debug: 4.3.4(supports-color@5.5.0)
       eventemitter3: 5.0.1
@@ -10225,10 +10237,10 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@automerge/automerge-repo-storage-indexeddb@1.1.1(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
-    resolution: {integrity: sha512-NCI8JNmOgJ/E1rwxHdo+yRXTA95CCf/gmQvrvK2ymI9onApJ6m835/tYtWFHm5TYA0f7c2K2J6GosL8+u6I9WA==}
+  /@automerge/automerge-repo-storage-indexeddb@1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-PNravKPsF0wn0XllqwzamRjEF/HgcvwWyExBzKk2WUqIclQzLchlECHwZmq4BjsfJZXbq/6rgDIsTMhyFgvwzQ==}
     dependencies:
-      '@automerge/automerge-repo': 1.1.1(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+      '@automerge/automerge-repo': 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -10237,10 +10249,10 @@ packages:
       - typescript
     dev: false
 
-  /@automerge/automerge-repo@1.1.1(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
-    resolution: {integrity: sha512-fQq+4eUadubzHOUi2BIiC5f/XFUHixJ/kdfnbXRoh2xwzojMfQIlrRfZzxkuW5AdD9LOC2/LoWJs+ak4a9vq4Q==}
+  /@automerge/automerge-repo@1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-EuY/+hwPkR0bLkMzi2obRFzW3fsUtlih7S0Te/nJRvsXS7a5mrzmqnQpFwYZPZzeBsPrxaBC2vVrcNqferlaLQ==}
     dependencies:
-      '@automerge/automerge': 2.1.10
+      '@automerge/automerge': 2.1.13
       bs58check: 3.0.1
       cbor-x: 1.5.4
       debug: 4.3.4(supports-color@5.5.0)
@@ -10257,13 +10269,13 @@ packages:
       - supports-color
       - typescript
 
-  /@automerge/automerge-wasm@0.9.0:
-    resolution: {integrity: sha512-wTPcW3wVk20D1x0DOko/RsfZV1mlc8HJynqgTRhVocOxFIU/RCilnYRfJmSb8LwCG2uZzfqg0DLsEBqQZ53KBQ==}
+  /@automerge/automerge-wasm@0.12.0:
+    resolution: {integrity: sha512-MJVmw/83Uy7WuqA9Dac3VcLXpXENZSDu7hqxttdFyAYZXQYQugiU7R+RUO2sP7081J9gRUb2+73sYpNnSTwzYQ==}
 
-  /@automerge/automerge@2.1.10:
-    resolution: {integrity: sha512-xj8R3fQHZmDYnrYW5WrBqWm/r5sLV9Z7mu89pJ10wGLVS2V+iAB2os85DoOGI2etzjmQsoHyrd97GBmszjH4zQ==}
+  /@automerge/automerge@2.1.13:
+    resolution: {integrity: sha512-9t185MgkFvwvqccmA45yKq61If2KCpKxZg19gukwO9G15bvxuh5ulWv2PWvMZ+iTvhDYCH+pZwXmFkD4nufScw==}
     dependencies:
-      '@automerge/automerge-wasm': 0.9.0
+      '@automerge/automerge-wasm': 0.12.0
       uuid: 9.0.1
 
   /@aw-web-design/x-default-browser@1.4.126:

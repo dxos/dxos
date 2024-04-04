@@ -5,7 +5,7 @@
 import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, scheduleMicroTask, synchronized, Trigger } from '@dxos/async';
-import { Properties, type ClientServicesProvider, type Space, type SpaceInternal } from '@dxos/client-protocol';
+import { type ClientServicesProvider, type Space, type SpaceInternal, PropertiesSchema } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
@@ -15,7 +15,8 @@ import {
   type AutomergeContext,
   type EchoDatabase,
   type Hypergraph,
-  type TypedObject,
+  Filter,
+  type EchoReactiveObject,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -33,10 +34,6 @@ import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gos
 import { trace } from '@dxos/tracing';
 
 import { InvitationsProxy } from '../invitations';
-
-export type SpaceProxyOptions = {
-  useReactiveObjectApi?: boolean;
-};
 
 // TODO(burdon): This should not be used as part of the API (don't export).
 @trace.resource()
@@ -87,14 +84,13 @@ export class SpaceProxy implements Space {
 
   private _databaseOpen = false;
   private _error: Error | undefined = undefined;
-  private _properties?: TypedObject = undefined;
+  private _properties?: EchoReactiveObject<any> = undefined;
 
   constructor(
     private _clientServices: ClientServicesProvider,
     private _data: SpaceData,
     graph: Hypergraph,
     automergeContext: AutomergeContext,
-    options: SpaceProxyOptions = {},
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
@@ -112,7 +108,6 @@ export class SpaceProxy implements Space {
       spaceKey: this.key,
       graph,
       automergeContext,
-      useReactiveObjectApi: options.useReactiveObjectApi,
     });
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -155,7 +150,7 @@ export class SpaceProxy implements Space {
   }
 
   @trace.info({ depth: 2 })
-  get properties(): TypedObject {
+  get properties(): EchoReactiveObject<any> {
     if (!this._initialized) {
       throw new Error('Space is not initialized');
     }
@@ -316,7 +311,7 @@ export class SpaceProxy implements Space {
     //   This is needed to ensure reactivity for newly created spaces.
     // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
-      const unsubscribe = this._db.query(Properties.filter()).subscribe((query) => {
+      const unsubscribe = this._db.query(Filter.schema(PropertiesSchema)).subscribe((query) => {
         if (query.objects.length === 1) {
           this._properties = query.objects[0];
           propertiesAvailable.wake();

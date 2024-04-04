@@ -11,13 +11,14 @@ import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 import { createSubscription } from './subscription';
-import { Expando } from './typed-object';
+import * as E from '../effect/reactive';
+import { type ExpandoType, type ReactiveObject } from '../effect/reactive';
 import { createDatabase } from '../testing';
 
 describe('create subscription', () => {
   test('updates are propagated', async () => {
     const { db } = await createDatabase();
-    const task = new Expando();
+    const task = createExpando();
     db.add(task);
 
     const counter = createUpdateCounter(task);
@@ -31,7 +32,7 @@ describe('create subscription', () => {
 
   test('updates are synchronous', async () => {
     const { db } = await createDatabase();
-    const task = new Expando();
+    const task = createExpando();
     db.add(task);
 
     const actions: string[] = [];
@@ -54,7 +55,7 @@ describe('create subscription', () => {
     registerSignalRuntime();
 
     const { db } = await createDatabase();
-    const task = new Expando();
+    const task = createExpando();
     db.add(task);
 
     const actions: string[] = [];
@@ -78,7 +79,7 @@ describe('create subscription', () => {
 
   test('latest value is available in subscription', async () => {
     const { db } = await createDatabase();
-    const task = new Expando();
+    const task = createExpando();
     db.add(task);
 
     let counter = 0;
@@ -102,7 +103,7 @@ describe('create subscription', () => {
 
   test('updates for nested objects', async () => {
     const { db } = await createDatabase();
-    const task = new Expando({ nested: { title: 'Test title' } });
+    const task = createExpando({ nested: { title: 'Test title' } });
     db.add(task);
 
     const counter = createUpdateCounter(task);
@@ -114,7 +115,7 @@ describe('create subscription', () => {
 
   test('updates for deep nested objects', async () => {
     const { db } = await createDatabase();
-    const task = new Expando({
+    const task = createExpando({
       nested: { deep_nested: { title: 'Test title' } },
     });
     db.add(task);
@@ -128,7 +129,7 @@ describe('create subscription', () => {
 
   test('updates for array objects', async () => {
     const { db } = await createDatabase();
-    const task = new Expando({ array: ['Test value'] });
+    const task = createExpando({ array: ['Test value'] });
     db.add(task);
 
     const counter = createUpdateCounter(task);
@@ -141,7 +142,7 @@ describe('create subscription', () => {
 
 test('updates for automerge array object fields', async () => {
   const { db } = await createDatabase();
-  const task = new Expando({ array: [{ title: 'Test value' }] }, { automerge: true });
+  const task = createExpando({ array: [{ title: 'Test value' }] });
   db.add(task);
 
   const counter = createUpdateCounter(task);
@@ -154,7 +155,7 @@ test('updates for automerge array object fields', async () => {
 test('updates for nested automerge array object fields', async () => {
   const { db } = await createDatabase();
   const nestedArrayHolder = { nested_array: [{ title: 'Test value' }] };
-  const task = new Expando({ array: [nestedArrayHolder] }, { automerge: true });
+  const task = createExpando({ array: [nestedArrayHolder] });
   db.add(task);
 
   const counter = createUpdateCounter(task);
@@ -171,4 +172,8 @@ const createUpdateCounter = (object: any) => {
   });
   selection.update([object]);
   return counter;
+};
+
+const createExpando = <T extends Record<string, any>>(props: T = {} as T): ReactiveObject<ExpandoType> => {
+  return E.object(E.ExpandoType, props);
 };

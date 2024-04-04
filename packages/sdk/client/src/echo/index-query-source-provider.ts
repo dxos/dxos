@@ -5,16 +5,13 @@
 import { Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
-import { warnAfterTimeout } from '@dxos/debug';
 import {
   type QuerySourceProvider,
-  db,
   type EchoObject,
   type Filter,
   type QueryResult,
   type QuerySource,
   filterMatch,
-  base,
   getAutomergeObjectCore,
 } from '@dxos/echo-schema';
 import { type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
@@ -28,7 +25,6 @@ export type IndexQueryProviderParams = {
   spaceList: SpaceList;
 };
 
-// TODO(mykola): Separate by client-services barrier.
 export class IndexQuerySourceProvider implements QuerySourceProvider {
   constructor(private readonly _params: IndexQueryProviderParams) {}
 
@@ -62,7 +58,7 @@ export class IndexQuerySource implements QuerySource {
     this.changed.emit();
 
     const start = Date.now();
-    this._stream = this._params.service.find({ filter: filter.toProto() });
+    this._stream = this._params.service.find({ filter: filter.toProto() }, { timeout: 20_000 });
     let currentCtx: Context;
     this._stream.subscribe(async (response) => {
       await currentCtx?.dispose();
@@ -79,10 +75,8 @@ export class IndexQuerySource implements QuerySource {
             return;
           }
 
-          const object = await warnAfterTimeout(2000, 'Loading object', async () => {
-            await (space as SpaceProxy)._databaseInitialized.wait();
-            return space.db.automerge.loadObjectById(result.id);
-          });
+          await (space as SpaceProxy)._databaseInitialized.wait();
+          const object = await space.db.automerge.loadObjectById(result.id);
           if (ctx.disposed) {
             return;
           }
@@ -91,13 +85,14 @@ export class IndexQuerySource implements QuerySource {
             return;
           }
 
-          if (!filterMatch(filter, getAutomergeObjectCore(object[base]))) {
+          const core = getAutomergeObjectCore(object);
+          if (!filterMatch(filter, core)) {
             return;
           }
 
           return {
             id: object.id,
-            spaceKey: object[db]!.spaceKey,
+            spaceKey: core.database!.spaceKey,
             object,
             match: { rank: result.rank },
             resolution: { source: 'index', time: Date.now() - start },

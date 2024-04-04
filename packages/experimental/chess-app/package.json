@@ -15,6 +15,10 @@
     "./proto": {
       "browser": "./dist/lib/browser/proto/index.mjs",
       "node": "./dist/lib/node/proto/index.cjs"
+    },
+    "./types": {
+      "browser": "./dist/lib/browser/types.mjs",
+      "node": "./dist/lib/node/types.cjs"
     }
   },
   "types": "./dist/types/src/index.d.ts",
@@ -22,6 +26,9 @@
     "*": {
       "proto": [
         "dist/types/src/proto"
+      ],
+      "types": [
+        "dist/types/src/types"
       ]
     }
   },
