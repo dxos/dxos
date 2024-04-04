@@ -52,7 +52,7 @@ export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Gr
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   return (
-    <Dialog.Content classNames={['md:max-is-[30rem] overflow-hidden mt-12']}>
+    <Dialog.Content classNames={['md:max-is-[30rem] overflow-hidden mbs-12']}>
       <Dialog.Title>{t('commands dialog title', { ns: NAVTREE_PLUGIN })}</Dialog.Title>
 
       {/* TODO(burdon): BUG: Overscrolls container. */}
