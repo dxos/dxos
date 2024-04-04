@@ -15,6 +15,30 @@ import { type Unsubscribe } from '../types';
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
 
+// TODO(burdon): Import/export to JSON.
+interface ObjectSerializer {
+  import(data: string, migrate?: boolean): void;
+  export(data: any): string;
+}
+
+class SketchSerializer implements ObjectSerializer {
+  constructor(private _store: TLStore) {}
+
+  import(data, migrate) {
+    const s1 = JSON.parse(data);
+    if (migrate) {
+      this._store.migrateSnapshot(s1);
+    } else {
+      this._store.loadSnapshot(s1);
+    }
+  }
+
+  export(data) {
+    // NOTE: Includes schema.
+    return JSON.stringify(this._store.getSnapshot());
+  }
+}
+
 // TODO(dmaretskyi): Take a look at https://github.com/LiangrunDa/tldraw-with-automerge/blob/main/src/App.tsx.
 export class AutomergeStoreAdapter {
   private readonly _store: TLStore;
@@ -29,16 +53,7 @@ export class AutomergeStoreAdapter {
     return this._store;
   }
 
-  // TODO(burdon): Generalize migration across types.
-  //  migrateRecord(record, migrations, from, to);
-  saveSnapshot() {
-    const s1 = this._store.getSnapshot();
-    const s2 = this._store.migrateSnapshot(s1);
-    this._store.loadSnapshot(s2);
-  }
-
   open(accessor: DocAccessor<{ content: Record<string, any> }>) {
-    console.log(this._store.schema.currentStoreVersion); // 2.0.2 is version 4.
     if (this._subscriptions.length) {
       this.close();
     }
@@ -66,18 +81,7 @@ export class AutomergeStoreAdapter {
         transact(() => {
           log('load initial records', { contentRecords });
           this._store.clear();
-          [...Object.values(contentRecords ?? {})].forEach((record) => {
-            try {
-              console.log('111');
-              const r = decode(record);
-              // this._store.schema.validateRecord(this._store, r);
-              console.log('222', r);
-              this._store.put(r);
-            } catch (err) {
-              // TODO(burdon): !!!
-              console.warn(String(err));
-            }
-          });
+          this._store.put([...Object.values(contentRecords ?? {})].map((record) => decode(record)));
         });
       }
     }
@@ -97,7 +101,6 @@ export class AutomergeStoreAdapter {
 
       diff.forEach((patch) => {
         // TODO(dmaretskyi): Filter out local updates.
-
         const relativePath = rebasePath(patch.path, path);
         if (!relativePath) {
           return;
