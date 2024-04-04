@@ -6,12 +6,12 @@ import React, { type FC } from 'react';
 
 import { TextV0Type, TreeItemType, type TreeType } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
-import { getSpaceForObject } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 
 import { Outliner } from './Outliner';
 
 const TreeSection: FC<{ tree: TreeType }> = ({ tree }) => {
-  const space = getSpaceForObject(tree);
+  const space = getSpace(tree);
   if (!space || !tree.root) {
     return null;
   }

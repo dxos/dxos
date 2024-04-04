@@ -12,20 +12,14 @@ import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import * as E from '@dxos/echo-schema';
-import {
-  type EchoReactiveObject,
-  type Expando,
-  getAutomergeObjectCore,
-  getTextContent,
-  type ReactiveObject,
-} from '@dxos/echo-schema';
+import { type ExpandoType, getAutomergeObjectCore, getTextContent, type ReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
-import { SpaceState, getSpaceForObject, type SpaceProxy } from '../echo';
+import { SpaceState, getSpace, type SpaceProxy } from '../echo';
 import { TestBuilder, testSpaceAutomerge, waitForSpace } from '../testing';
 
 describe('Spaces', () => {
@@ -124,7 +118,7 @@ describe('Spaces', () => {
       const space = await spaceTrigger.wait({ timeout: 500 });
       await space.waitUntilReady();
 
-      const obj = space.db.getObjectById(objectId)!;
+      const obj = await space.db.automerge.loadObjectById(objectId)!;
       expect(obj).to.exist;
     }
 
@@ -275,7 +269,7 @@ describe('Spaces', () => {
     const space = await client.spaces.create();
 
     const obj = space.db.add(createEchoObject({ data: 'test' }));
-    expect(getSpaceForObject(obj)).to.equal(space);
+    expect(getSpace(obj)).to.equal(space);
   });
 
   test('spaces can be opened and closed', async () => {
@@ -304,7 +298,7 @@ describe('Spaces', () => {
     }, 1000);
     expect(space.db.getObjectById(id)).to.exist;
 
-    space.db.getObjectById<Expando>(id)!.data = 'test2';
+    space.db.getObjectById<ReactiveObject<any>>(id)!.data = 'test2';
     await space.db.flush();
   });
 
@@ -351,7 +345,7 @@ describe('Spaces', () => {
     }, 1000);
     expect(space2.db.getObjectById(id)).to.exist;
 
-    space2.db.getObjectById<Expando>(id)!.data = 'test2';
+    space2.db.getObjectById<ReactiveObject<any>>(id)!.data = 'test2';
     await space2.db.flush();
   });
 
@@ -472,14 +466,15 @@ describe('Spaces', () => {
     {
       const done = new Trigger();
 
-      await waitForExpect(() => {
-        expect(guestSpace.db.getObjectById(hostRoot.id)).not.to.be.undefined;
+      await waitForExpect(async () => {
+        expect(await guestSpace.db.automerge.loadObjectById(hostRoot.id)).not.to.be.undefined;
       });
-      const guestRoot: Expando = guestSpace.db.getObjectById(hostRoot.id)!;
+      const guestRoot: ExpandoType = guestSpace.db.getObjectById(hostRoot.id)!;
 
       const unsub = getAutomergeObjectCore(guestRoot).updates.on(() => {
-        expect([...guestRoot.entries].length).to.equal(2);
-        done.wake();
+        if (guestRoot.entries.length === 2) {
+          done.wake();
+        }
       });
 
       afterTest(() => unsub());
@@ -503,7 +498,7 @@ describe('Spaces', () => {
     });
   };
 
-  const createEchoObject = <T extends {}>(props: T): EchoReactiveObject<T> => {
+  const createEchoObject = <T extends {}>(props: T): ReactiveObject<ExpandoType> => {
     return E.object(E.ExpandoType, props);
   };
 });

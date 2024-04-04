@@ -8,6 +8,7 @@ import { warnAfterTimeout } from '@dxos/debug';
 import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
 import { Filter } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
 import { type QueryRequest, type QueryResponse, type QueryResult } from '@dxos/protocols/proto/dxos/agent/query';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
@@ -25,6 +26,10 @@ export class IndexServiceImpl implements IndexService {
   constructor(private readonly _params: IndexServiceParams) {}
 
   async setConfig(config: IndexConfig): Promise<void> {
+    if (this._params.indexer.initialized) {
+      log.warn('Indexer already initialized. Cannot change config.');
+      return;
+    }
     this._params.indexer.setIndexConfig(config);
     await this._params.indexer.initialize();
   }

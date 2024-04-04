@@ -7,18 +7,12 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import {
-  AutomergeDb,
-  AutomergeObject,
-  type AutomergeContext,
-  type AutomergeObjectCore,
-  type InitRootProxyFn,
-} from './automerge';
+import { AutomergeDb, type AutomergeContext, type AutomergeObjectCore, type InitRootProxyFn } from './automerge';
 import { DynamicSchemaRegistry } from './effect/dynamic/schema-registry';
 import { createEchoReactiveObject, initEchoReactiveObjectRootProxy } from './effect/echo-handler';
 import { type EchoReactiveObject, getSchema, isEchoReactiveObject } from './effect/reactive';
 import { type Hypergraph } from './hypergraph';
-import { base, isAutomergeObject, type EchoObject, type OpaqueEchoObject, type TypedObject } from './object';
+import { isAutomergeObject, type EchoObject, type OpaqueEchoObject, type TypedObject } from './object';
 import { type Filter, type FilterSource, type Query } from './query';
 
 export interface EchoDatabase {
@@ -26,7 +20,7 @@ export interface EchoDatabase {
 
   get spaceKey(): PublicKey;
 
-  getObjectById<T extends EchoObject>(id: string): T | undefined;
+  getObjectById<T extends OpaqueEchoObject>(id: string): T | undefined;
 
   /**
    * Adds object to the database.
@@ -76,8 +70,6 @@ export type EchoDatabaseParams = {
   graph: Hypergraph;
   automergeContext: AutomergeContext;
   spaceKey: PublicKey;
-
-  useReactiveObjectApi?: boolean;
 };
 
 /**
@@ -90,23 +82,14 @@ export class EchoDatabaseImpl implements EchoDatabase {
    */
   _automerge: AutomergeDb;
 
-  private _useReactiveObjectApi: boolean;
-
   public readonly schemaRegistry: DynamicSchemaRegistry;
 
   constructor(params: EchoDatabaseParams) {
     const initRootProxyFn: InitRootProxyFn = (core: AutomergeObjectCore) => {
-      if (this._useReactiveObjectApi) {
-        initEchoReactiveObjectRootProxy(core);
-      } else {
-        const obj = new AutomergeObject();
-        obj[base]._core = core;
-        core.rootProxy = obj;
-      }
+      initEchoReactiveObjectRootProxy(core);
     };
 
     this._automerge = new AutomergeDb(params.graph, params.automergeContext, params.spaceKey, initRootProxyFn, this);
-    this._useReactiveObjectApi = params.useReactiveObjectApi ?? false;
     this.schemaRegistry = new DynamicSchemaRegistry(this);
   }
 
@@ -118,13 +101,12 @@ export class EchoDatabaseImpl implements EchoDatabase {
     return this._automerge.spaceKey;
   }
 
-  getObjectById<T extends EchoObject>(id: string): T | undefined {
+  getObjectById<T extends OpaqueEchoObject>(id: string): T | undefined {
     return this._automerge.getObjectById(id) as T | undefined;
   }
 
   add<T extends OpaqueEchoObject>(obj: T): T extends EchoObject ? T : EchoReactiveObject<{ [K in keyof T]: T[K] }> {
-    if (!this._useReactiveObjectApi) {
-      invariant(isAutomergeObject(obj));
+    if (isEchoReactiveObject(obj)) {
       this._automerge.add(obj);
       return obj as any;
     } else {

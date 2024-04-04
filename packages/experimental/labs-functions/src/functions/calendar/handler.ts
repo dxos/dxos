@@ -59,7 +59,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
 
   const sourceId = 'google.com/calendar';
   const syncer = new ObjectSyncer<EchoReactiveObject<EventType>>(Filter.schema(EventType), (object) => {
-    for (const { id, source } of E.metaOf(object).keys ?? []) {
+    for (const { id, source } of E.getMeta(object).keys ?? []) {
       if (source === sourceId) {
         return id;
       }
@@ -89,7 +89,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
           attendees:
             attendees?.map(({ email, displayName }) => ({ email: email!, name: displayName }) as RecipientType) ?? [],
         });
-        E.metaOf(newEvent).keys = [{ source: sourceId, id }];
+        E.getMeta(newEvent).keys = [{ source: sourceId, id }];
         space.db.add(newEvent);
       }
     }

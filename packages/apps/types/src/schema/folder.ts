@@ -9,7 +9,7 @@ import { EchoObjectSchema } from '@dxos/echo-schema';
 
 export class FolderType extends EchoObjectSchema({ typename: 'braneframe.Folder', version: '0.1.0' })({
   name: S.optional(S.string),
-  objects: S.mutable(S.array(E.ref(E.AnyEchoObject))),
+  objects: S.mutable(S.array(E.ref(E.ExpandoType))),
 }) {}
 
 // TODO(burdon): Standardize views?
