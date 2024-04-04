@@ -42,15 +42,7 @@
       }
     },
     "lint": {},
-    "prebuild": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "prebuild"
-      },
-      "outputs": [
-        "{projectRoot}/src/proto/gen"
-      ]
-    },
+    "prebuild": {},
     "preview": {
       "executor": "@nx/web:file-server",
       "options": {
