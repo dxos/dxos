@@ -9,7 +9,7 @@ import type {
   SurfaceProvides,
   MetadataRecordsProvides,
 } from '@dxos/app-framework';
-import { isTypedObject, type Expando, type TypedObject } from '@dxos/react-client/echo';
+import { isEchoReactiveObject, type EchoReactiveObject } from '@dxos/react-client/echo';
 
 import { TEMPLATE_PLUGIN } from './meta';
 
@@ -27,6 +27,6 @@ export type TemplatePluginProvides = SurfaceProvides &
 
 // TODO(burdon): Warning: Encountered two children with the same key, `dxos.org/plugin/template`.
 // TODO(burdon): Better way to detect?
-export const isObject = (object: unknown): object is TypedObject => {
-  return isTypedObject(object) && (object as Expando).type === 'template';
+export const isObject = (object: unknown): object is EchoReactiveObject<any> => {
+  return isEchoReactiveObject(object) && object.type === 'template';
 };
