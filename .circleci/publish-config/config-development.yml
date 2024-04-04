@@ -5,7 +5,6 @@ runtime:
     storage:
       persistent: true
       dataRoot: /tmp/dx/run
-    useReactiveObjectApi: true
 
   services:
     ipfs:
