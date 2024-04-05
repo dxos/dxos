@@ -21,7 +21,6 @@ import {
   useFormattingState,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
-import { hoverableControlItem } from '@dxos/react-ui-theme';
 
 import { MARKDOWN_PLUGIN } from '../meta';
 
@@ -56,19 +55,19 @@ const DocumentSection: FC<{
   const handleAction = useActionHandler(editorView);
 
   return (
-    <>
+    <div role='none' className='contents group'>
       {toolbar && (
         <Toolbar.Root
           state={formattingState}
           onAction={handleAction}
-          classNames={['z-[1]', sectionToolbarLayout, hoverableControlItem]}
+          classNames={['z-[1] invisible group-focus-within:visible', sectionToolbarLayout]}
         >
           <Toolbar.Markdown />
           <Toolbar.Separator />
         </Toolbar.Root>
       )}
       <div ref={parentRef} className='min-bs-[8rem]' data-testid='composer.markdownRoot' />
-    </>
+    </div>
   );
 };
 
