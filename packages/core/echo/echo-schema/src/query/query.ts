@@ -161,10 +161,18 @@ export class Query<T extends OpaqueEchoObject = EchoReactiveObject<any>> {
       prohibitSignalActions(() => {
         // TODO(dmaretskyi): Clean up getters in the internal signals so they don't use the Proxy API and don't hit the signals.
         compositeRuntime.untracked(() => {
+          const seen = new Set<string>();
           this._resultCache = Array.from(this._sources).flatMap((source) => source.getResults()) as QueryResult<T>[];
           this._objectCache = this._resultCache
             .map((result) => result.object!)
-            .filter((object): object is T => !!object);
+            .filter((object): object is T => !!object)
+            .filter((object) => {
+              if (seen.has(object.id)) {
+                return false;
+              }
+              seen.add(object.id);
+              return true;
+            });
         });
       });
     }
