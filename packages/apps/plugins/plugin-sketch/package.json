@@ -23,7 +23,7 @@
     "src"
   ],
   "scripts": {
-    "vitest-ui": "vitest --ui"
+    "vitest-ui": "VITEST_ENV=chrome nx vitest plugin-sketch"
   },
   "dependencies": {
     "@braneframe/plugin-space": "workspace:*",
