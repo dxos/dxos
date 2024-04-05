@@ -7,7 +7,8 @@ import React, { forwardRef, type FC } from 'react';
 import { DocumentType, GridItemType, type GridType } from '@braneframe/types';
 import { Surface, parseMetadataResolverPlugin, useResolvePlugin } from '@dxos/app-framework';
 import * as E from '@dxos/echo-schema';
-import { getSpace, isTypedObject, type TypedObject } from '@dxos/react-client/echo';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { getSpace } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import type { MosaicDropEvent, MosaicOperation, MosaicTileAction, MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
@@ -33,7 +34,7 @@ export const colors: Record<string, string> = {
 };
 
 // TODO(burdon): Need lenses (which should be normalized outside of card).
-export const getObject = (item: any): TypedObject => item.node?.data ?? item.object ?? item;
+export const getObject = (item: any): EchoReactiveObject<any> => item.node?.data ?? item.object ?? item;
 
 const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
   const space = getSpace(grid);
@@ -71,7 +72,7 @@ const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
     } else if (over.position) {
       const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
       const object = parseData ? parseData(active.item, 'object') : undefined;
-      isTypedObject(object) && grid.items.push(E.object(GridItemType, { object, position: over.position }));
+      E.isEchoReactiveObject(object) && grid.items.push(E.object(GridItemType, { object, position: over.position }));
     }
   };
 

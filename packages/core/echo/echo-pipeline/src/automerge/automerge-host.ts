@@ -138,6 +138,7 @@ export class AutomergeHost {
       this._repo.on('document', listener);
       this._ctx.onDispose(() => {
         this._repo.off('document', listener);
+        Object.values(this._repo.handles).forEach((handle) => handle.off('change'));
       });
     }
   }
@@ -156,9 +157,6 @@ export class AutomergeHost {
   private _onDocument(handle: DocHandle<any>) {
     const listener = (event: DocHandleChangePayload<any>) => this._onUpdate(event);
     handle.on('change', listener);
-    this._ctx.onDispose(() => {
-      handle.off('change', listener);
-    });
   }
 
   private _onUpdate(event: DocHandleChangePayload<any>) {

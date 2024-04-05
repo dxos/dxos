@@ -28,6 +28,33 @@ describe('schema-validator', () => {
     });
   });
 
+  describe('hasPropertyAnnotation', () => {
+    test('has annotation', () => {
+      const annotationId = Symbol('foo');
+      const annotationValue = 'bar';
+      const human: S.Schema<any> = S.struct({
+        name: S.string.annotations({ [annotationId]: annotationValue }),
+        parent: S.optional(S.suspend(() => human.annotations({ [annotationId]: annotationValue }))),
+        friends: S.suspend(() => S.mutable(S.array(human.annotations({ [annotationId]: annotationValue })))),
+      });
+      expect(SchemaValidator.hasTypeAnnotation(human, 'name', annotationId)).to.be.true;
+      expect(SchemaValidator.hasTypeAnnotation(human, 'parent', annotationId)).to.be.true;
+      expect(SchemaValidator.hasTypeAnnotation(human, 'friends', annotationId)).to.be.true;
+    });
+
+    test('no annotation', () => {
+      const annotationId = Symbol('foo');
+      const human: S.Schema<any> = S.struct({
+        name: S.string,
+        parent: S.optional(S.suspend(() => human)),
+        friends: S.suspend(() => S.mutable(S.array(human))),
+      });
+      expect(SchemaValidator.hasTypeAnnotation(human, 'name', annotationId)).to.be.false;
+      expect(SchemaValidator.hasTypeAnnotation(human, 'parent', annotationId)).to.be.false;
+      expect(SchemaValidator.hasTypeAnnotation(human, 'friends', annotationId)).to.be.false;
+    });
+  });
+
   describe('getPropertySchema', () => {
     const validateValueToAssign = (args: {
       schema: S.Schema<any>;
@@ -59,6 +86,19 @@ describe('schema-validator', () => {
           expectToThrow: typeof value !== 'number',
         });
       }
+    });
+
+    test('preserves annotations', () => {
+      const annotationId = Symbol('foo');
+      const annotationValue = 'bar';
+      const human: S.Schema<any> = S.struct({
+        parent: S.optional(S.suspend(() => human.annotations({ [annotationId]: annotationValue }))),
+        friends: S.suspend(() => S.mutable(S.array(human.annotations({ [annotationId]: annotationValue })))),
+      });
+      expect(SchemaValidator.getPropertySchema(human, ['parent']).ast.annotations[annotationId]).to.eq(annotationValue);
+      expect(SchemaValidator.getPropertySchema(human, ['friends', '0']).ast.annotations[annotationId]).to.eq(
+        annotationValue,
+      );
     });
 
     test('discriminated union', () => {
