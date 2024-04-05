@@ -17,8 +17,7 @@
     "bundle": {
       "dependsOn": [
         "^build",
-        "^bundle",
-        "prebuild"
+        "^bundle"
       ],
       "executor": "@nx/vite:build",
       "options": {
@@ -42,7 +41,6 @@
       }
     },
     "lint": {},
-    "prebuild": {},
     "preview": {
       "executor": "@nx/web:file-server",
       "options": {

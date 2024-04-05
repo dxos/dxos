@@ -15,7 +15,7 @@
       "outputs": ["{options.outputPath}"]
     },
     "bundle": {
-      "dependsOn": ["^build", "^bundle", "prebuild"],
+      "dependsOn": ["^build", "^bundle"],
       "executor": "@nx/vite:build",
       "options": {
         "outputPath": "packages/apps/tasks/out/tasks",
@@ -31,7 +31,6 @@
       },
       "outputs": ["{options.outputFile}"]
     },
-    "prebuild": {},
     "preview": {
       "executor": "@nx/web:file-server",
       "options": {
