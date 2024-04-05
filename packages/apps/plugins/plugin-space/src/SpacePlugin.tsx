@@ -472,6 +472,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
       },
       intent: {
         resolver: async (intent, plugins) => {
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
           const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
           const client = clientPlugin?.provides.client;
           switch (intent.action) {
@@ -498,6 +499,11 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               if (Migrations.versionProperty) {
                 setSpaceProperty(space, Migrations.versionProperty, Migrations.targetVersion);
               }
+
+              void intentPlugin?.provides.intent.dispatch({
+                action: NavigationAction.ACTIVATE,
+                data: { id: space.key.toHex() },
+              });
               return { data: { space, id: space.key.toHex() } };
             }
 
