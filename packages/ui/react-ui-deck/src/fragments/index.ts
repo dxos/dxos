@@ -3,3 +3,4 @@
 //
 
 export * from './layout';
+export * from './resize-handle';

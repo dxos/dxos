@@ -3,4 +3,4 @@
 //
 
 export * from './Stack';
-export { type StackSectionItem } from './Section';
+export { SectionToolbar, type SectionToolbarProps, sectionToolbarLayout, type StackSectionItem } from './Section';
