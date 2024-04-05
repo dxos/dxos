@@ -180,7 +180,6 @@ export const serializers: Record<string, TypedObjectSerializer> = {
           core.setType(typeRef);
         }
         return deserializedObject;
-        throw new Error('Not implemented');
       } else {
         Object.entries(data)
           .filter(([key]) => !key.startsWith('@'))
