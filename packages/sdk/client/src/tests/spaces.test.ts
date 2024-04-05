@@ -11,6 +11,7 @@ import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import * as E from '@dxos/echo-schema';
 import { type ExpandoType, getAutomergeObjectCore, getTextContent, type ReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -18,7 +19,6 @@ import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { TYPE_PROPERTIES } from '../../../../core/echo/echo-db/src';
 import { Client } from '../client';
 import { SpaceState, getSpace, type SpaceProxy } from '../echo';
 import { TestBuilder, testSpaceAutomerge, waitForSpace } from '../testing';
