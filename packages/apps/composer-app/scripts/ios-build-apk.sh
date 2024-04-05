@@ -6,4 +6,4 @@
 DX_HOST=true pnpm -w nx bundle composer-app
 
 # Builds an iOS app APK with code signing
-ssc build -r -c -o --platform ios
+ssc build -o -c -p --platform ios
