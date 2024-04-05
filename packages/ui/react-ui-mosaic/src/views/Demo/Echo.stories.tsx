@@ -6,7 +6,7 @@ import React, { type FC } from 'react';
 
 import { faker } from '@dxos/random';
 import { type PublicKey } from '@dxos/react-client';
-import { Expando } from '@dxos/react-client/echo';
+import * as E from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -49,7 +49,7 @@ export default {
         const objects = [
           factory.schema,
           ...range(factory.createObject, 10),
-          new Expando({
+          E.object({
             type: 'kanban',
             title: 'Projects',
             schema: factory.schema,

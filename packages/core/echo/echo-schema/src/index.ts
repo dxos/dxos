@@ -11,7 +11,7 @@ export * from './object';
 export * from './proto';
 export * from './query';
 export * from './serializer';
-export { TypeCollection } from './type-collection';
+export { TypeCollection, TextCompatibilitySchema } from './type-collection';
 export * from './util';
 export * from './automerge';
 export * from './automerge/key-path';
@@ -23,5 +23,7 @@ export * from './effect/echo-object-class';
 export * from './effect/dynamic/dynamic-schema';
 export * from './effect/dynamic/stored-schema';
 export { isReactiveProxy } from './effect/proxy';
+export { SchemaValidator } from './effect/schema-validator';
+export { createEchoReactiveObject } from './effect/echo-handler';
 
 linkDeferred();

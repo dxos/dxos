@@ -9,6 +9,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type Filter } from './filter';
+import { type EchoReactiveObject } from '../effect/reactive';
 import { prohibitSignalActions } from '../guarded-scope';
 import { type OpaqueEchoObject, type EchoObject, type TypedObject } from '../object';
 
@@ -23,7 +24,7 @@ export type Subscription = () => void;
 // TODO(burdon): Fix garbage collection.
 const queries: Query<any>[] = [];
 
-export type QueryResult<T extends OpaqueEchoObject> = {
+export type QueryResult<T extends OpaqueEchoObject = EchoReactiveObject<any>> = {
   id: string;
   spaceKey: PublicKey;
 
@@ -87,7 +88,7 @@ export interface QueryContext {
 /**
  * Predicate based query.
  */
-export class Query<T extends OpaqueEchoObject = TypedObject> {
+export class Query<T extends OpaqueEchoObject = EchoReactiveObject<any>> {
   private readonly _ctx = new Context({
     onError: (err) => {
       log.catch(err);
@@ -160,10 +161,18 @@ export class Query<T extends OpaqueEchoObject = TypedObject> {
       prohibitSignalActions(() => {
         // TODO(dmaretskyi): Clean up getters in the internal signals so they don't use the Proxy API and don't hit the signals.
         compositeRuntime.untracked(() => {
+          const seen = new Set<string>();
           this._resultCache = Array.from(this._sources).flatMap((source) => source.getResults()) as QueryResult<T>[];
           this._objectCache = this._resultCache
             .map((result) => result.object!)
-            .filter((object): object is T => !!object);
+            .filter((object): object is T => !!object)
+            .filter((object) => {
+              if (seen.has(object.id)) {
+                return false;
+              }
+              seen.add(object.id);
+              return true;
+            });
         });
       });
     }

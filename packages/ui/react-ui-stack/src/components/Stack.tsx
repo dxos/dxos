@@ -98,7 +98,7 @@ export const Stack = ({
 
   return (
     // TODO(thure): Can this ref be passed into `SectionTile`? This can’t use `display: contents` because it breaks `useResizeDetector`.
-    <div ref={containerRef} {...props} className={mx(classNames)}>
+    <div role='none' ref={containerRef} {...props} className={mx(classNames)}>
       <Mosaic.Container
         {...{
           id,

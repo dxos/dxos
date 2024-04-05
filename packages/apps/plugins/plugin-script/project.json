@@ -17,7 +17,11 @@
       }
     },
     "lint": {},
-    "test": {}
+    "test": {
+      "options": {
+        "forceExit": true
+      }
+    }
   },
   "implicitDependencies": [
     "esbuild"
