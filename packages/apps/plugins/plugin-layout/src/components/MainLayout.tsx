@@ -28,6 +28,7 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
     complementarySidebarContent,
     dialogOpen,
     dialogContent,
+    dialogBlockAlign,
     popoverOpen,
     popoverContent,
     popoverAnchorId,
@@ -168,7 +169,7 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
         {/* Global dialog. */}
         <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
           <DensityProvider density='fine'>
-            <Dialog.Overlay>
+            <Dialog.Overlay blockAlign={dialogBlockAlign}>
               <Surface role='dialog' data={dialogContent} />
             </Dialog.Overlay>
           </DensityProvider>

@@ -21,7 +21,7 @@ export const CommandsTrigger = () => {
       onClick={() =>
         dispatch({
           action: LayoutAction.SET_LAYOUT,
-          data: { element: 'dialog', component: `${NAVTREE_PLUGIN}/Commands` },
+          data: { element: 'dialog', component: `${NAVTREE_PLUGIN}/Commands`, dialogBlockAlign: 'start' },
         })
       }
     >
