@@ -9,10 +9,11 @@ import { effect } from '@preact/signals-core';
 import React, { useEffect, useState } from 'react';
 
 import { EventSubscriptions } from '@dxos/async';
+import * as E from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { faker } from '@dxos/random';
 import { Client } from '@dxos/react-client';
-import { Expando, type Space, SpaceState } from '@dxos/react-client/echo';
+import { type Space, SpaceState } from '@dxos/react-client/echo';
 import { ClientRepeater, TestBuilder } from '@dxos/react-client/testing';
 import { Button, DensityProvider, Input, Select } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -94,7 +95,7 @@ const objectBuilderExtension = (graph: Graph) => {
     subscriptions.clear();
     spaces.forEach((space) => {
       const query = space.db.query({ type: 'test' });
-      let previousObjects: Expando[] = [];
+      let previousObjects: E.EchoReactiveObject<any>[] = [];
       subscriptions.add(
         effect(() => {
           const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
@@ -180,7 +181,7 @@ const runAction = (action: Action) => {
     }
 
     case Action.ADD_OBJECT:
-      getSpace()?.db.add(new Expando({ type: 'test', name: faker.commerce.productName() }));
+      getSpace()?.db.add(E.object({ type: 'test', name: faker.commerce.productName() }));
       break;
 
     case Action.REMOVE_OBJECT: {

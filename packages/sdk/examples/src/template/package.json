@@ -3,10 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "dev": "npm run prebuild && vite",
-    "build": "npm run prebuild && tsc && vite build",
-    "preview": "vite preview",
-    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@dxos/react-ui": "latest",

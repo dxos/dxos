@@ -6,16 +6,17 @@ import { X } from '@phosphor-icons/react';
 import React, { type KeyboardEventHandler, useState, type ChangeEventHandler } from 'react';
 
 import type { PublicKey } from '@dxos/client';
+import { Filter } from '@dxos/echo-schema';
+import * as E from '@dxos/echo-schema';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { Button, Input } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
-// TODO(wittjosiah): Why doesn't Stackblitz understand import of just proto directory?
-import { Task } from '../proto/gen/schema';
+import { TaskType } from '../types';
 
 const TaskList = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
   const space = useSpace(spaceKey);
-  const tasks = useQuery(space, Task.filter());
+  const tasks = useQuery(space, Filter.schema(TaskType));
   const [value, setValue] = useState('');
 
   const handleChange: ChangeEventHandler<HTMLInputElement> = (event) => {
@@ -24,7 +25,7 @@ const TaskList = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
 
   const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
     if (event.key === 'Enter' && space && value) {
-      const task = new Task({ title: value });
+      const task = E.object(TaskType, { title: value, completed: false });
       setValue('');
       space.db.add(task);
     }

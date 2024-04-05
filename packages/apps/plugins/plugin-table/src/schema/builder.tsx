@@ -6,7 +6,8 @@ import { Plus, X } from '@phosphor-icons/react';
 import React from 'react';
 
 import * as E from '@dxos/echo-schema';
-import { type EchoDatabase, type Space, type TypedObject } from '@dxos/react-client/echo';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoDatabase, type Space } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import {
   createColumnBuilder,
@@ -69,7 +70,7 @@ export const createColumns = (
   return tableDef.columns.map((column) => {
     const { type, id, label, fixed, resizable, ...props } = column;
 
-    const options: BaseColumnOptions<TypedObject, any> = {
+    const options: BaseColumnOptions<EchoReactiveObject<any>, any> = {
       ...props,
       meta: { resizable },
       label,
@@ -104,7 +105,7 @@ export const createColumns = (
       default:
         return helper.accessor(id, builder.string(options));
     }
-  }) as TableColumnDef<TypedObject>[];
+  }) as TableColumnDef<EchoReactiveObject<any>>[];
 };
 
 /**
@@ -113,8 +114,8 @@ export const createColumns = (
 export const createActionColumn = (
   tableDef: TableDef,
   { onColumnUpdate, onRowDelete }: TableColumnBuilderOptions = {},
-): TableColumnDef<TypedObject> => {
-  const { helper } = createColumnBuilder<TypedObject>();
+): TableColumnDef<EchoReactiveObject<any>> => {
+  const { helper } = createColumnBuilder<EchoReactiveObject<any>>();
 
   const handleAddColumn = () => {
     const id = createUniqueProp(tableDef);
@@ -155,27 +156,27 @@ export const createActionColumn = (
             </div>
           ) : null
       : undefined,
-  }) as TableColumnDef<TypedObject>;
+  }) as TableColumnDef<EchoReactiveObject<any>>;
 };
 
 // TODO(burdon): Factor out.
-class QueryModel implements SearchListQueryModel<TypedObject> {
+class QueryModel implements SearchListQueryModel<EchoReactiveObject<any>> {
   constructor(
     private readonly _db: EchoDatabase,
     private readonly _schemaId: string,
     private readonly _prop: string,
   ) {}
 
-  getId(object: TypedObject) {
+  getId(object: EchoReactiveObject<any>) {
     return object.id;
   }
 
-  getText(object: TypedObject) {
+  getText(object: EchoReactiveObject<any>) {
     return object[this._prop];
   }
 
   async query(text?: string) {
-    const { objects = [] } = this._db.query((object: TypedObject) => {
+    const { objects = [] } = this._db.query((object: EchoReactiveObject<any>) => {
       if (!text?.length) {
         return null;
       }

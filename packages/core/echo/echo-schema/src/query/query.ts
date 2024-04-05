@@ -9,6 +9,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type Filter } from './filter';
+import { type EchoReactiveObject } from '../effect/reactive';
 import { prohibitSignalActions } from '../guarded-scope';
 import { type OpaqueEchoObject, type EchoObject, type TypedObject } from '../object';
 
@@ -23,7 +24,7 @@ export type Subscription = () => void;
 // TODO(burdon): Fix garbage collection.
 const queries: Query<any>[] = [];
 
-export type QueryResult<T extends OpaqueEchoObject> = {
+export type QueryResult<T extends OpaqueEchoObject = EchoReactiveObject<any>> = {
   id: string;
   spaceKey: PublicKey;
 
@@ -87,7 +88,7 @@ export interface QueryContext {
 /**
  * Predicate based query.
  */
-export class Query<T extends OpaqueEchoObject = TypedObject> {
+export class Query<T extends OpaqueEchoObject = EchoReactiveObject<any>> {
   private readonly _ctx = new Context({
     onError: (err) => {
       log.catch(err);
