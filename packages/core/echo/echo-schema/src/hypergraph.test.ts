@@ -7,7 +7,8 @@ import { expect } from 'chai';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
-import { subscribe, Expando } from './object';
+import { getAutomergeObjectCore } from './automerge';
+import * as E from './effect/reactive';
 import { TestBuilder } from './testing';
 
 describe('HyperGraph', () => {
@@ -19,19 +20,19 @@ describe('HyperGraph', () => {
     const space2 = await builder.createPeer(spaceKey2);
 
     const obj1 = space1.db.add(
-      new Expando({
+      E.object(E.ExpandoType, {
         type: 'task',
         title: 'A',
       }),
     );
     const obj2 = space2.db.add(
-      new Expando({
+      E.object(E.ExpandoType, {
         type: 'task',
         title: 'B',
       }),
     );
     const obj3 = space2.db.add(
-      new Expando({
+      E.object(E.ExpandoType, {
         type: 'record',
         title: 'C',
       }),
@@ -77,13 +78,13 @@ describe('HyperGraph', () => {
     const space2 = await builder.createPeer(spaceKey2);
 
     const obj1 = space1.db.add(
-      new Expando({
+      E.object(E.ExpandoType, {
         type: 'task',
         title: 'A',
       }),
     );
     const obj2 = space2.db.add(
-      new Expando({
+      E.object(E.ExpandoType, {
         type: 'task',
         title: 'B',
       }),
@@ -107,13 +108,13 @@ describe('HyperGraph', () => {
     const space2 = await builder.createPeer(spaceKey2);
 
     const obj1 = space1.db.add(
-      new Expando({
+      E.object(E.ExpandoType, {
         type: 'task',
         title: 'A',
       }),
     );
     const obj2 = space2.db.add(
-      new Expando({
+      E.object(E.ExpandoType, {
         type: 'task',
         title: 'B',
       }),
@@ -126,7 +127,7 @@ describe('HyperGraph', () => {
     expect(obj1.link).to.eq(undefined);
 
     let called = false;
-    obj1[subscribe](() => {
+    getAutomergeObjectCore(obj1).updates.on(() => {
       called = true;
     });
 

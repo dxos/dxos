@@ -17,7 +17,7 @@ import {
   useResolvePlugin,
 } from '@dxos/app-framework';
 import * as E from '@dxos/echo-schema';
-import { getSpaceForObject, isTypedObject, useQuery } from '@dxos/react-client/echo';
+import { getSpace, isTypedObject, useQuery } from '@dxos/react-client/echo';
 import { Main, Button, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import { Stack, type StackProps, type CollapsedSections, type AddSectionPosition } from '@dxos/react-ui-stack';
@@ -53,7 +53,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
       const rest = metadataPlugin?.provides.metadata.resolver(E.typeOf(object!)?.itemId ?? 'never');
       return { id, object: object as SectionType, ...rest };
     });
-  const space = getSpaceForObject(stack);
+  const space = getSpace(stack);
   const [folder] = useQuery(space, E.Filter.schema(FolderType));
 
   const [collapsedSections, onChangeCollapsedSections] = useState<CollapsedSections>({});

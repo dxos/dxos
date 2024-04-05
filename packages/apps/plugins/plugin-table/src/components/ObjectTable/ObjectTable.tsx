@@ -10,7 +10,7 @@ import { TableType, type TableTypeProp } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
 import { EchoObjectSchema, type EchoReactiveObject, Filter } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { getSpaceForObject, useQuery } from '@dxos/react-client/echo';
+import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider } from '@dxos/react-ui';
 import { Table, type TableDef, type TableProps } from '@dxos/react-ui-table';
 
@@ -23,7 +23,7 @@ export type ObjectTableProps = Pick<TableProps<any>, 'stickyHeader' | 'role' | '
 };
 
 export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
-  const space = getSpaceForObject(table);
+  const space = getSpace(table);
 
   const objects = useQuery<EchoReactiveObject<any>>(
     space,

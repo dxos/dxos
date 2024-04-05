@@ -9,6 +9,7 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { DynamicEchoSchema } from './dynamic-schema';
+import { Filter } from '../../query';
 import { createDatabase } from '../../testing';
 import { EchoObjectSchema } from '../echo-object-class';
 import * as E from '../reactive';
@@ -66,6 +67,14 @@ describe('dynamic schema', () => {
     expect(() => {
       object.field2 = false;
     }).to.throw();
+
+    expect(E.getSchema(object)?.ast).to.deep.eq(schema.ast);
+    expect(E.typeOf(object)?.itemId).to.be.eq(schema.id);
+
+    db.add(object);
+    const queried = db.query(Filter.schema(schema)).objects;
+    expect(queried.length).to.eq(1);
+    expect(queried[0].id).to.eq(object.id);
   });
 
   test('getTypeReference', async () => {
@@ -147,7 +156,7 @@ describe('dynamic schema', () => {
   });
 
   const setupTest = async () => {
-    const { db, graph } = await createDatabase(undefined, { useReactiveObjectApi: true });
+    const { db, graph } = await createDatabase();
     graph.types.registerEffectSchema(ClassWithSchemaField);
     return { db };
   };

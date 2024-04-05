@@ -6,7 +6,7 @@ import React, { type FC } from 'react';
 
 import { type KanbanType, KanbanColumnType, KanbanItemType, TextV0Type } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
-import { getSpaceForObject } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
@@ -15,7 +15,7 @@ import { type KanbanModel } from '../types';
 
 const KanbanMain: FC<{ kanban: KanbanType }> = ({ kanban }) => {
   // const { t } = useTranslation(KANBAN_PLUGIN);
-  const space = getSpaceForObject(kanban);
+  const space = getSpace(kanban);
   if (!space) {
     return null;
   }

@@ -42,7 +42,6 @@ describe('QueryPlugin', () => {
       services: services1,
       config: new Config({
         runtime: {
-          client: { useReactiveObjectApi: true },
           agent: { plugins: [{ id: 'dxos.org/agent/plugin/query' }] },
         },
       }),

@@ -15,7 +15,6 @@ runtime:
   client:
     storage:
       persistent: true
-    useReactiveObjectApi: true
 
   services:
     signaling:

@@ -9,6 +9,8 @@ import { type ServiceContextRuntimeParams } from '@dxos/client-services/src';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
+import * as E from '@dxos/echo-schema';
+import { ExpandoType } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -24,10 +26,9 @@ import {
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
 import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
-import { defer } from '@dxos/util';
 
 import { Client } from '../client';
-import { Expando, type EchoDatabase } from '../echo';
+import { type EchoDatabase } from '../echo';
 import { ClientServicesProxy, LocalClientServices } from '../services';
 
 export const testConfigWithLocalSignal = new Config({
@@ -160,21 +161,11 @@ export class TestBuilder {
 }
 
 export const testSpaceAutomerge = async (create: EchoDatabase, check: EchoDatabase = create) => {
-  const object = new Expando();
+  const object = E.object(ExpandoType, {});
 
   create.add(object);
 
-  const done = new Trigger<void>();
-  const query = check.query((o: Expando) => o.id === object.id);
-  using _ = defer(
-    query.subscribe(() => {
-      if (query.objects.length > 0) {
-        done.wake();
-      }
-    }, true),
-  );
-
-  await done.wait({ timeout: 1000 });
+  await check.automerge.loadObjectById(object.id, { timeout: 1000 });
 
   return { objectId: object.id };
 };

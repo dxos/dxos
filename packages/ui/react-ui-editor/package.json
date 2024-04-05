@@ -57,7 +57,7 @@
     "style-mod": "^4.1.0"
   },
   "devDependencies": {
-    "@automerge/automerge-repo-network-broadcastchannel": "^1.1.1",
+    "@automerge/automerge-repo-network-broadcastchannel": "^1.1.4",
     "@dxos/config": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",

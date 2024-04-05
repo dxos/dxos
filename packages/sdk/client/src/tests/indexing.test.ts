@@ -6,17 +6,19 @@ import { expect } from 'chai';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { Contact } from '@braneframe/types/proto';
+import { ContactType } from '@braneframe/types';
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { type Space } from '@dxos/client-protocol';
 import { warnAfterTimeout } from '@dxos/debug';
+import * as E from '@dxos/echo-schema';
+import { Filter } from '@dxos/echo-schema';
 import { IndexServiceImpl, IndexStore, Indexer } from '@dxos/indexing';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { StorageType, createStorage } from '@dxos/random-access-storage';
+import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Client } from '../client';
@@ -26,15 +28,7 @@ import { TestBuilder } from '../testing';
 
 describe('Index queries', () => {
   test('indexing stack', async () => {
-    const builder = new TestBuilder();
-    builder.storage = createStorage({ type: StorageType.RAM });
-    afterTest(() => builder.destroy());
-
-    const services = builder.createLocal();
-    const client = new Client({ services });
-    afterTest(() => client.destroy());
-    await client.initialize();
-
+    const { client, builder, services } = await setupClient();
     await client.halo.createIdentity();
 
     const indexer = new Indexer({
@@ -67,7 +61,7 @@ describe('Index queries', () => {
     {
       await space.waitUntilReady();
 
-      const contact = new Contact({ name: 'John Doe' });
+      const contact = E.object(ContactType, { name: 'John Doe', identifiers: [] });
       space.db.add(contact);
       await space.db.flush();
     }
@@ -77,35 +71,20 @@ describe('Index queries', () => {
   });
 
   test('index queries work with client', async () => {
-    const testStoragePath = fs.mkdtempSync(path.join('tmp', 'client-indexing-'));
-    afterTest(() => fs.rmSync(testStoragePath, { recursive: true, force: true }));
-    const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
-    builder.storage = createStorage({ type: StorageType.RAM });
-
-    const services = builder.createLocal();
-    const client = new Client({ services });
-    afterTest(() => client.destroy());
-    await client.initialize();
+    const { client } = await setupClient();
     await client.halo.createIdentity();
-    await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
 
-    const indexingDone = services.host!.context.indexer.indexed.waitForCount(2);
     const space = await client.spaces.create();
     {
       await space.waitUntilReady();
 
-      const contact = new Contact({ name: 'John Doe' });
+      const contact = E.object(ContactType, { name: 'John Doe', identifiers: [] });
       space.db.add(contact);
       await space.db.flush();
     }
 
-    await asyncTimeout(indexingDone, 1000);
     const indexedContact = await queryIndexedContact(space);
     expect(indexedContact.name).to.equal('John Doe');
-    await client.destroy();
-    await builder.storage.close();
-    builder.destroy();
   });
 
   test('indexes persists between client restarts', async () => {
@@ -115,45 +94,33 @@ describe('Index queries', () => {
 
     let spaceKey: PublicKey;
     {
-      const builder = new TestBuilder();
-      builder.storage = storage;
-      const services = builder.createLocal();
-      const client = new Client({ services });
-      await client.initialize();
+      const { client, builder } = await setupClient(storage);
       await client.halo.createIdentity();
-      await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
 
-      const indexingDone = services.host!.context.indexer.indexed.waitForCount(2);
       await client.spaces.isReady.wait();
       const space = await client.spaces.create();
       {
         await space.waitUntilReady();
         spaceKey = space.key;
 
-        const contact = new Contact({ name: 'John Doe' });
+        const contact = E.object(ContactType, { name: 'John Doe', identifiers: [] });
         space.db.add(contact);
         await space.db.flush();
       }
 
-      await asyncTimeout(indexingDone, 1000);
-
       const indexedContact = await queryIndexedContact(space);
       expect(indexedContact.name).to.equal('John Doe');
 
+      // TODO(mykola): Clean as automerge team updates storage API.
       await sleep(200); // Sleep to get services storage to finish writing.
       await client.destroy();
-      await builder.storage.close();
+      await builder.storage!.close();
       builder.destroy();
     }
 
     {
-      const builder = new TestBuilder();
-      afterTest(() => builder.destroy());
-      builder.storage = storage;
-      const services = builder.createLocal();
-      const client = new Client({ services });
-      afterTest(() => client.destroy());
-      await client.initialize();
+      const { client } = await setupClient(storage);
+
       await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
 
       await client.spaces.isReady.wait();
@@ -168,36 +135,41 @@ describe('Index queries', () => {
   });
 
   test('index already available data', async () => {
-    const builder = new TestBuilder();
-    builder.storage = createStorage({ type: StorageType.RAM });
-    afterTest(() => builder.destroy());
-
-    const services = builder.createLocal();
-    const client = new Client({ services });
-    afterTest(() => client.destroy());
-    await client.initialize();
+    const { client } = await setupClient();
     await client.halo.createIdentity();
-
-    await client.spaces.isReady.wait();
 
     const space = await client.spaces.create();
     await space.waitUntilReady();
 
-    const contact = new Contact({ name: 'John Doe' });
+    const contact = E.object(ContactType, { name: 'John Doe', identifiers: [] });
     space.db.add(contact);
     await space.db.flush();
-    const indexingDone = services.host!.context.indexer.indexed.waitForCount(2);
-    await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
-    await asyncTimeout(indexingDone, 1000);
 
     const indexedContact = await queryIndexedContact(space);
     expect(indexedContact.name).to.equal('John Doe');
   });
+
+  const setupClient = async (storage: Storage = createStorage({ type: StorageType.RAM })) => {
+    const builder = new TestBuilder();
+    builder.storage = storage;
+    afterTest(async () => {
+      await storage.close();
+      builder.destroy();
+    });
+    const services = builder.createLocal();
+    const client = new Client({ services });
+    afterTest(() => client.destroy());
+    await client.initialize();
+    if (!client._graph.types.isEffectSchemaRegistered(ContactType)) {
+      client._graph.types.registerEffectSchema(ContactType);
+    }
+    return { client, services, builder };
+  };
 });
 
 const queryIndexedContact = async (space: Space) => {
-  const receivedIndexedContact = new Trigger<Contact>();
-  const query = space.db.query(Contact.filter(), { dataLocation: QueryOptions.DataLocation.ALL });
+  const receivedIndexedContact = new Trigger<ContactType>();
+  const query = space.db.query(Filter.schema(ContactType), { dataLocation: QueryOptions.DataLocation.ALL });
   query.subscribe((query) => {
     log('Query results', {
       length: query.results.length,
@@ -207,7 +179,7 @@ const queryIndexedContact = async (space: Space) => {
       })),
     });
     for (const result of query.results) {
-      if (result.object instanceof Contact && result.resolution?.source === 'index') {
+      if (result.object instanceof ContactType && result.resolution?.source === 'index') {
         receivedIndexedContact.wake(result.object);
       }
     }
