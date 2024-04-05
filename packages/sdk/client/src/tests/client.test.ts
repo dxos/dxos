@@ -184,25 +184,4 @@ describe('Client', () => {
       expect(thread1.messages[0]!.blocks[0].content?.content).to.eq(text);
     }, 1000);
   });
-
-  test('reactive object API', async () => {
-    const config = new Config({
-      runtime: {
-        client: {
-          useReactiveObjectApi: true,
-        },
-      },
-    });
-    const testBuilder = new TestBuilder(config);
-    afterTest(() => testBuilder.destroy());
-
-    const client = new Client({ config, services: testBuilder.createLocal() });
-    await client.initialize();
-    await client.halo.createIdentity();
-
-    const space = await client.spaces.create();
-    await space.waitUntilReady();
-    space.properties.name = 'test';
-    expect(space.properties.name).to.eq('test');
-  });
 });

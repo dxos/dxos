@@ -134,9 +134,6 @@ message Runtime {
     
     /// Connect to and serve client services to a remote proxy.
     optional string devtools_proxy = 7;
-
-    /// Enable E.object api
-    optional bool use_reactive_object_api = 8;
   }
 
   message App {
