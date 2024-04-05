@@ -16,7 +16,7 @@ import {
   getTypeRef,
 } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
-import { createEchoReactiveObject } from '@dxos/echo-schema/dist/types/src/effect/echo-handler';
+import { createEchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { nonNullable } from '@dxos/util';
 

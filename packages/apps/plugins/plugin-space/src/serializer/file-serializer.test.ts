@@ -5,9 +5,10 @@
 import { expect } from 'chai';
 
 import { getSpaceProperty, setSpaceProperty } from '@braneframe/plugin-client/space-properties';
-import { Document as DocumentType, Folder } from '@braneframe/types/proto';
+import { DocumentType, FolderType } from '@braneframe/types';
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
+import * as E from '@dxos/echo-schema';
 import { TextObject, getTextContent } from '@dxos/echo-schema';
 import { afterTest, describe, test } from '@dxos/test';
 
@@ -16,7 +17,7 @@ import { FileSerializer, type SerializedSpace } from './file-serializer';
 const createSpace = async (client: Client, name: string | undefined = undefined) => {
   const space = await client.spaces.create(name ? { name } : undefined);
   await space.waitUntilReady();
-  setSpaceProperty(space, Folder.schema.typename, new Folder());
+  setSpaceProperty(space, FolderType.typename, E.object(FolderType, { objects: [] }));
   await space.db.flush();
   return space;
 };
