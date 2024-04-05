@@ -1230,6 +1230,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/gem-core':
         specifier: workspace:*
         version: link:../../../experimental/gem-core
@@ -1242,6 +1245,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@observablehq/plot':
         specifier: ^0.6.11
         version: 0.6.11
@@ -1251,6 +1257,9 @@ importers:
       d3:
         specifier: ^7.8.5
         version: 7.8.5
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -1512,9 +1521,15 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -3636,9 +3651,18 @@ importers:
       '@dxos/shell':
         specifier: workspace:*
         version: link:../../sdk/shell
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -3851,12 +3875,18 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@sentry/react':
         specifier: ^7.100.1
         version: 7.101.0(react@18.2.0)
       classnames:
         specifier: ^2.3.2
         version: 2.3.2
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -8085,6 +8115,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -8097,6 +8130,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^4.2.1
         version: 4.2.1(vite@5.1.5)
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -9077,12 +9113,18 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
       '@radix-ui/react-compose-refs':
         specifier: ^1.0.0
         version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -9171,9 +9213,15 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
     devDependencies:
       '@dnd-kit/core':
         specifier: ^6.0.5
@@ -9275,6 +9323,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@fluentui/react-tabster':
         specifier: ^9.19.0
         version: 9.19.2(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -9296,6 +9347,9 @@ importers:
       '@radix-ui/react-use-controllable-state':
         specifier: ^1.0.0
         version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
       react-resize-detector:
         specifier: ^7.1.2
         version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
