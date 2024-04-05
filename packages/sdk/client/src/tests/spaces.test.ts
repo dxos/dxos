@@ -440,7 +440,7 @@ describe('Spaces', () => {
     }
   });
 
-  test('queries respect space boundaries', async () => {
+  test.repeat(10)('queries respect space boundaries', async () => {
     const testBuilder = new TestBuilder();
     testBuilder.storage = createStorage({ type: StorageType.RAM });
 
