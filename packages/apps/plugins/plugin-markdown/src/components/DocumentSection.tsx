@@ -20,6 +20,8 @@ import {
   useActionHandler,
   useFormattingState,
 } from '@dxos/react-ui-editor';
+import { sectionToolbarLayout } from '@dxos/react-ui-stack';
+import { hoverableControlItem } from '@dxos/react-ui-theme';
 
 import { MARKDOWN_PLUGIN } from '../meta';
 
@@ -59,11 +61,10 @@ const DocumentSection: FC<{
         <Toolbar.Root
           state={formattingState}
           onAction={handleAction}
-          classNames='bg-[--sticky-bg] sticky z-[1] -block-start-px'
+          classNames={['z-[1]', sectionToolbarLayout, hoverableControlItem]}
         >
           <Toolbar.Markdown />
           <Toolbar.Separator />
-          <Toolbar.Actions />
         </Toolbar.Root>
       )}
       <div ref={parentRef} className='min-bs-[8rem]' data-testid='composer.markdownRoot' />

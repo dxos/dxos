@@ -43,7 +43,14 @@ import {
   type MosaicTileProps,
   useMosaic,
 } from '@dxos/react-ui-mosaic';
-import { focusRing, getSize, mx } from '@dxos/react-ui-theme';
+import {
+  focusRing,
+  getSize,
+  hoverableControlItem,
+  hoverableControls,
+  hoverableFocusedWithinControls,
+  mx,
+} from '@dxos/react-ui-theme';
 
 import { CaretDownUp } from './CaretDownUp';
 import { stackColumns } from './style-fragments';
@@ -153,6 +160,8 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
             role='none'
             className={mx(
               'group grid col-span-2 grid-cols-subgrid outline outline-1 outline-transparent mlb-px surface-base focus-within:s-outline-separator focus-within:surface-attention',
+              hoverableControls,
+              hoverableFocusedWithinControls,
               active && 'surface-attention after:separator-separator s-outline-separator',
               (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
             )}
@@ -165,45 +174,47 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
               {...(!active && sectionActionsToolbar)}
               className='grid grid-cols-subgrid ch-focus-ring rounded-sm grid-rows-[min-content_min-content_1fr] m-1 group-has-[[role=toolbar][aria-orientation=horizontal]]:pbs-[--rail-action]'
             >
-              <DropdownMenu.Root
-                {...{
-                  open: optionsMenuOpen,
-                  onOpenChange: setOptionsMenuOpen,
-                }}
-              >
-                <DropDownMenuDragHandleTrigger active={!!active} variant='ghost' classNames='m-0' {...draggableProps}>
-                  <Icon className={mx(getSize(5), 'transition-opacity')} />
-                </DropDownMenuDragHandleTrigger>
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content>
-                    <DropdownMenu.Viewport>
-                      <DropdownMenu.Item onClick={onAddBefore} data-testid='section.add-before'>
-                        <ArrowLineUp className={mx(getSize(5), 'mr-2')} />
-                        <span className='grow'>{t('add section before label')}</span>
-                      </DropdownMenu.Item>
-                      <DropdownMenu.Item onClick={onAddAfter} data-testid='section.add-after'>
-                        <ArrowLineDown className={mx(getSize(5), 'mr-2')} />
-                        <span className='grow'>{t('add section after label')}</span>
-                      </DropdownMenu.Item>
-                      <DropdownMenu.Item onClick={onNavigate} data-testid='section.navigate-to'>
-                        <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
-                        <span className='grow'>{t('navigate to section label')}</span>
-                      </DropdownMenu.Item>
-                      <DropdownMenu.Item onClick={() => onDelete?.()} data-testid='section.remove'>
-                        <X className={mx(getSize(5), 'mr-2')} />
-                        <span className='grow'>{t('remove section label')}</span>
-                      </DropdownMenu.Item>
-                    </DropdownMenu.Viewport>
-                    <DropdownMenu.Arrow />
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
-              <CollapsiblePrimitive.Trigger asChild>
-                <Button variant='ghost' data-state='' classNames={sectionActionDimensions}>
-                  <span className='sr-only'>{t(collapsed ? 'expand label' : 'collapse label')}</span>
-                  {collapsed ? <CaretUpDown className={getSize(4)} /> : <CaretDownUp className={getSize(4)} />}
-                </Button>
-              </CollapsiblePrimitive.Trigger>
+              <div role='none' className='sticky -block-start-px bg-[--sticky-bg]'>
+                <DropdownMenu.Root
+                  {...{
+                    open: optionsMenuOpen,
+                    onOpenChange: setOptionsMenuOpen,
+                  }}
+                >
+                  <DropDownMenuDragHandleTrigger active={!!active} variant='ghost' classNames='m-0' {...draggableProps}>
+                    <Icon className={mx(getSize(5), 'transition-opacity')} />
+                  </DropDownMenuDragHandleTrigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content>
+                      <DropdownMenu.Viewport>
+                        <DropdownMenu.Item onClick={onAddBefore} data-testid='section.add-before'>
+                          <ArrowLineUp className={mx(getSize(5), 'mr-2')} />
+                          <span className='grow'>{t('add section before label')}</span>
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Item onClick={onAddAfter} data-testid='section.add-after'>
+                          <ArrowLineDown className={mx(getSize(5), 'mr-2')} />
+                          <span className='grow'>{t('add section after label')}</span>
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Item onClick={onNavigate} data-testid='section.navigate-to'>
+                          <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
+                          <span className='grow'>{t('navigate to section label')}</span>
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Item onClick={() => onDelete?.()} data-testid='section.remove'>
+                          <X className={mx(getSize(5), 'mr-2')} />
+                          <span className='grow'>{t('remove section label')}</span>
+                        </DropdownMenu.Item>
+                      </DropdownMenu.Viewport>
+                      <DropdownMenu.Arrow />
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
+                <CollapsiblePrimitive.Trigger asChild>
+                  <Button variant='ghost' data-state='' classNames={sectionActionDimensions}>
+                    <span className='sr-only'>{t(collapsed ? 'expand label' : 'collapse label')}</span>
+                    {collapsed ? <CaretUpDown className={getSize(4)} /> : <CaretDownUp className={getSize(4)} />}
+                  </Button>
+                </CollapsiblePrimitive.Trigger>
+              </div>
             </div>
 
             {/* Main content */}
@@ -243,12 +254,11 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
 
 export type SectionToolbarProps = ThemedClassName<ComponentPropsWithRef<'div'>>;
 
+export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky -block-start-px transition-opacity';
+
 export const SectionToolbar = ({ children, classNames }: SectionToolbarProps) => {
   return (
-    <Toolbar.Root
-      orientation='horizontal'
-      classNames={['bs-[--rail-action] bg-[--sticky-bg] sticky -block-start-px', classNames]}
-    >
+    <Toolbar.Root orientation='horizontal' classNames={[sectionToolbarLayout, hoverableControlItem, classNames]}>
       {children}
     </Toolbar.Root>
   );
