@@ -302,12 +302,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     }
 
     // TODO(burdon): Use Profile()?
-    const config: ConfigProto = yaml.load(await readFile(configFile, 'utf-8')) as ConfigProto;
-    // TODO: remove after useReactiveObjectApi becomes the default
-    config.runtime ??= {};
-    config.runtime.client ??= {};
-    config.runtime.client.useReactiveObjectApi = config.runtime.client.useReactiveObjectApi ?? true;
-    this._clientConfig = new Config(config);
+    this._clientConfig = new Config(yaml.load(await readFile(configFile, 'utf-8')) as ConfigProto);
   }
 
   // TODO(burdon): Reconcile internal/external logging.

@@ -23,7 +23,7 @@ for (const schema of [undefined, TestSchema, TestSchemaClass]) {
       continue;
     }
 
-    const testSetup = useDatabase ? createDatabase(new Hypergraph(), { useReactiveObjectApi: true }) : undefined;
+    const testSetup = useDatabase ? createDatabase(new Hypergraph()) : undefined;
 
     const objectsHaveId = useDatabase;
 
