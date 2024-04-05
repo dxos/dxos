@@ -53,8 +53,6 @@ export const SchemaTable = {
   render: () => {
     const containerRef = useRef<HTMLDivElement | null>(null);
 
-    // TODO(zan): (Updates?)
-
     return (
       <div ref={containerRef} className='fixed inset-0 overflow-auto'>
         <Table<ExampleSchema>

@@ -9,15 +9,6 @@ import { describe, test } from '@dxos/test';
 
 import { classifySchemaProperties } from './schema';
 
-// TODO(zan): Remove this utility
-const _failwith = (...data: any) => {
-  // if data is an array, we want to log each element separately
-  // intelligently stringify antyhing that isn't a string
-  const message = data.map((d: any) => (typeof d === 'string' ? d : JSON.stringify(d, null, 2))).join('\n');
-
-  throw new Error(message);
-};
-
 describe('schema->column-type', () => {
   test('basic', () => {
     const simpleSchema = S.struct({

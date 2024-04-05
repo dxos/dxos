@@ -38,9 +38,9 @@ const typeToColumn = (type: AST.AST): ClassifiedColumnType => {
     return typeToColumn(type.from);
   }
 
-  // How should we be thinking about transformations?
-  // - Should the table present the data as the 'from' type or the 'to' type?
+  // TODO(zan): How should we be thinking about transformations?
   // - Which of these are we storing in the database?
+  // - For types that aren't the 'DateFromString' transformation, should we be using the 'from' or 'to' type?
 
   if (AST.isTransform(type)) {
     const identifier = AST.getIdentifierAnnotation(type);
