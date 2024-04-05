@@ -60,6 +60,18 @@ export class SchemaValidator {
     return value;
   }
 
+  public static hasTypeAnnotation(rootObjectSchema: S.Schema<any>, property: string, annotation: symbol): boolean {
+    try {
+      let type = this.getPropertySchema(rootObjectSchema, [property]);
+      if (AST.isTupleType(type.ast)) {
+        type = this.getPropertySchema(rootObjectSchema, [property, '0']);
+      }
+      return type.ast.annotations[annotation] != null;
+    } catch (e) {
+      return false;
+    }
+  }
+
   public static getPropertySchema(
     rootObjectSchema: S.Schema<any>,
     propertyPath: KeyPath,
