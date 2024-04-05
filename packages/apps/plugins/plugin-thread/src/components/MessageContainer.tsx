@@ -8,8 +8,9 @@ import React, { forwardRef } from 'react';
 import { type TextV0Type, type BlockType, type MessageType } from '@braneframe/types';
 import { Surface } from '@dxos/app-framework';
 import { type SpaceMember } from '@dxos/client/echo';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
-import { type Expando, getTextContent } from '@dxos/react-client/echo';
+import { getTextContent } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, DensityProvider, useThemeContext } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
@@ -107,7 +108,7 @@ const TextboxBlock = ({
 };
 
 // TODO(burdon): Need delete button for message (not individual blocks)?
-const MessageBlockObjectTile: MosaicTileComponent<Expando> = forwardRef(
+const MessageBlockObjectTile: MosaicTileComponent<EchoReactiveObject<any>> = forwardRef(
   ({ draggableStyle, draggableProps, item, onDelete, active, ...props }, forwardedRef) => {
     let title = item.name ?? item.title ?? item.__typename ?? 'Object';
     if (typeof title !== 'string') {

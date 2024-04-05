@@ -7,7 +7,6 @@ import '@dxosTheme';
 import * as Plot from '@observablehq/plot';
 import React, { useEffect, useState } from 'react';
 
-import { types } from '@braneframe/types/proto';
 import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
 
 import { Chart } from './Chart';
@@ -21,7 +20,7 @@ export default {
   decorators: [FullscreenDecorator()],
 };
 
-export const Default = () => <ClientRepeater component={DefaultStory} types={types} />;
+export const Default = () => <ClientRepeater component={DefaultStory} />;
 const DefaultStory = () => {
   const [data, setData] = useState<{ cities: any }>();
   useEffect(() => {

@@ -22,8 +22,9 @@ import {
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { type TypedObject, getSpace, getTextInRange, SpaceProxy, Filter } from '@dxos/react-client/echo';
+import { getSpace, getTextInRange, SpaceProxy, Filter } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
 import { comments, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
@@ -118,7 +119,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             icon: (props: IconProps) => <Chat {...props} />,
           },
           [THREAD_ITEM]: {
-            parse: (item: TypedObject, type: string) => {
+            parse: (item: EchoReactiveObject<any>, type: string) => {
               switch (type) {
                 case 'node':
                   return { id: item.id, label: item.title, data: item };

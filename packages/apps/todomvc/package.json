@@ -8,9 +8,6 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "scripts": {
-    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
-  },
   "dependencies": {
     "@dxos/config": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
@@ -19,8 +16,10 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/schema": "0.64.7",
     "@sentry/react": "^7.100.1",
     "classnames": "^2.3.2",
+    "effect": "2.4.9",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.0",

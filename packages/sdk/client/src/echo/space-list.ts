@@ -24,7 +24,6 @@ import {
   type Hypergraph,
   type Query,
   type TypeCollection,
-  type TypedObject,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -303,7 +302,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    * @param filter
    * @param options
    */
-  query<T extends TypedObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
+  query<T extends {} = any>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
     return this._graph.query(filter, options);
   }
 }
