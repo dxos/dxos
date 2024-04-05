@@ -61,6 +61,19 @@ describe('schema-validator', () => {
       }
     });
 
+    test('preserves annotations', () => {
+      const annotationId = Symbol('foo');
+      const annotationValue = 'bar';
+      const human: S.Schema<any> = S.struct({
+        parent: S.optional(S.suspend(() => human.annotations({ [annotationId]: annotationValue }))),
+        friends: S.suspend(() => S.mutable(S.array(human.annotations({ [annotationId]: annotationValue })))),
+      });
+      expect(SchemaValidator.getPropertySchema(human, ['parent']).ast.annotations[annotationId]).to.eq(annotationValue);
+      expect(SchemaValidator.getPropertySchema(human, ['friends', '0']).ast.annotations[annotationId]).to.eq(
+        annotationValue,
+      );
+    });
+
     test('discriminated union', () => {
       const square = S.struct({ type: S.literal('square'), side: S.number });
       const circle = S.struct({ type: S.literal('circle'), radius: S.number });
