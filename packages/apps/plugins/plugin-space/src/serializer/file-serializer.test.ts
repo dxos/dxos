@@ -5,11 +5,11 @@
 import { expect } from 'chai';
 
 import { getSpaceProperty, setSpaceProperty } from '@braneframe/plugin-client/space-properties';
-import { DocumentType, FolderType } from '@braneframe/types';
+import { DocumentType, FolderType, TextV0Type } from '@braneframe/types';
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import * as E from '@dxos/echo-schema';
-import { TextObject, getTextContent } from '@dxos/echo-schema';
+import { getTextContent } from '@dxos/echo-schema';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { FileSerializer, type SerializedSpace } from './file-serializer';
@@ -39,8 +39,8 @@ describe('FileSerializer', () => {
     let serialized: SerializedSpace;
     {
       const space1 = await createSpace(client, 'test-1');
-      getSpaceProperty<Folder>(space1, Folder.schema.typename)!.objects.push(
-        new DocumentType({ content: new TextObject(text) }),
+      getSpaceProperty<FolderType>(space1, FolderType.typename)!.objects.push(
+        E.object(DocumentType, { content: E.object(TextV0Type, { content: text }) }),
       );
       serialized = await serializer.serializeSpace(space1);
     }
@@ -49,10 +49,10 @@ describe('FileSerializer', () => {
       const space2 = await createSpace(client, 'test-2');
       const space3 = await serializer.deserializeSpace(space2, serialized);
 
-      const object = getSpaceProperty<Folder>(space3, Folder.schema.typename)!.objects[0];
+      const object = getSpaceProperty<FolderType>(space3, FolderType.typename)!.objects[0];
       expect(object instanceof DocumentType).to.be.true;
 
-      const content = getTextContent(object.content);
+      const content = getTextContent(object?.content);
       expect(content).to.equal(text);
     }
   });

@@ -24,5 +24,6 @@ export * from './effect/dynamic/dynamic-schema';
 export * from './effect/dynamic/stored-schema';
 export { isReactiveProxy } from './effect/proxy';
 export { SchemaValidator } from './effect/schema-validator';
+export { createEchoReactiveObject } from './effect/echo-handler';
 
 linkDeferred();
