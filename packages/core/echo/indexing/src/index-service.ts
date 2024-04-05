@@ -60,6 +60,13 @@ export class IndexServiceImpl implements IndexService {
                   if (!spaceKey) {
                     return;
                   }
+                  // TODO(mykola): Remove business logic from here.
+                  if (
+                    request.filter.options?.spaces?.length &&
+                    !request.filter.options.spaces.some((key) => key.equals(spaceKey.toString()))
+                  ) {
+                    return;
+                  }
                   return {
                     id: objectId,
                     spaceKey: PublicKey.from(spaceKey),
