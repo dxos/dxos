@@ -3006,15 +3006,6 @@ importers:
       react-resize-detector:
         specifier: ^7.1.2
         version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
-      signia:
-        specifier: ^0.1.4
-        version: 0.1.4
-      signia-react:
-        specifier: ^0.1.4
-        version: 0.1.4(react@18.2.0)
-      yjs:
-        specifier: ^13.6.10
-        version: 13.6.10
     devDependencies:
       '@braneframe/plugin-client':
         specifier: workspace:*
@@ -41556,19 +41547,6 @@ packages:
     dependencies:
       varint: 5.0.2
     dev: true
-
-  /signia-react@0.1.4(react@18.2.0):
-    resolution: {integrity: sha512-sIb6z+8FdJGxgYokp/00D9I+ftb+Y3CaA9Dy0aFdD17mQ2nBDHKQQKsrnD/QkCHPTKDe6jB96JlmlOvoHps4RQ==}
-    peerDependencies:
-      react: ^18
-    dependencies:
-      react: 18.2.0
-      signia: 0.1.4
-    dev: false
-
-  /signia@0.1.4:
-    resolution: {integrity: sha512-ES2fuLU2iVY/f3dOk41vTTGlRfOps5z/ixEZKXJz2ibRotvFoemN7aHxPNAJjQE94BU1ZWLRBO6/1dpFK8uZmA==}
-    dev: false
 
   /simple-concat@1.0.1:
     resolution: {integrity: sha512-cSFtAPtRhljv69IK0hTVZQ+OfE9nePi/rtJmw5UjHeVyVroEqJXP1sFztKUy1qU+xvz3u/sfYJLa947b7nAN2Q==}

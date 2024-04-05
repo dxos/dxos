@@ -24,7 +24,7 @@ interface ObjectSerializer {
 class SketchSerializer implements ObjectSerializer {
   constructor(private _store: TLStore) {}
 
-  import(data, migrate) {
+  import(data: string, migrate?: boolean) {
     const s1 = JSON.parse(data);
     if (migrate) {
       this._store.migrateSnapshot(s1);
@@ -33,7 +33,7 @@ class SketchSerializer implements ObjectSerializer {
     }
   }
 
-  export(data) {
+  export(data: any) {
     // NOTE: Includes schema.
     return JSON.stringify(this._store.getSnapshot());
   }
