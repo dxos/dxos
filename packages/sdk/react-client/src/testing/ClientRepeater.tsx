@@ -5,7 +5,7 @@
 import React, { useState, type FC, useEffect } from 'react';
 
 import { Client, type PublicKey } from '@dxos/client';
-import { type SpaceProxy, type Space, type TypeCollection } from '@dxos/client/echo';
+import { type SpaceProxy, type Space } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
@@ -24,7 +24,7 @@ export type ClientRepeaterProps<P extends RepeatedComponentProps> = {
   count?: number;
   registerSignalFactory?: boolean;
   className?: string;
-  types?: TypeCollection;
+  types?: Parameters<Client['addSchema']>;
   createIdentity?: boolean;
   createSpace?: boolean;
   onCreateSpace?: (space: Space) => MaybePromise<void>;
@@ -62,7 +62,7 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
     const timeout = setTimeout(async () => {
       const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocal() }));
       await Promise.all(clients.map((client) => client.initialize()));
-      types && clients.map((client) => client.spaces.addSchema(types));
+      types && clients.map((client) => client.addSchema(...types));
 
       if (createIdentity || createSpace) {
         await Promise.all(clients.map((client) => client.halo.createIdentity()));

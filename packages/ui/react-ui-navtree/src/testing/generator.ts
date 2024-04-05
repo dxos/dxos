@@ -6,8 +6,10 @@
 
 // TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
 
-import { Schema } from '@dxos/client/echo';
-import { Expando, type TypedObject } from '@dxos/echo-schema';
+import * as S from '@effect/schema/Schema';
+
+import * as E from '@dxos/echo-schema';
+import { EchoObjectSchema } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
 // TODO(burdon): Util.
@@ -20,12 +22,12 @@ export const range = <T>(fn: (i: number) => T | undefined, length: number): T[] 
 export type TestItem = { id: string; type: string } & Record<string, any>;
 
 type ObjectDataGenerator = {
-  createSchema?: () => Schema;
+  createSchema?: () => S.Schema<any>;
   createData: () => any;
 };
 
-type ObjectFactory<T extends TypedObject> = {
-  schema?: Schema; // TODO(burdon): Support both typed and expando schema.
+type ObjectFactory<T extends E.EchoReactiveObject<any>> = {
+  schema?: S.Schema<any>; // TODO(burdon): Support both typed and expando schema.
   createObject: () => T;
 };
 
@@ -35,7 +37,7 @@ const createFactory = ({ createSchema, createData }: ObjectDataGenerator) => {
   const schema = createSchema?.();
   return {
     schema,
-    createObject: () => new Expando(createData(), { schema }),
+    createObject: () => (schema ? E.object(schema, createData()) : E.object(createData())),
   };
 };
 
@@ -61,26 +63,12 @@ export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
 
   project: {
     createSchema: () =>
-      new Schema({
-        props: [
-          {
-            id: 'title',
-            type: Schema.PropType.STRING,
-          },
-          {
-            id: 'repo',
-            type: Schema.PropType.STRING,
-          },
-          {
-            id: 'status',
-            type: Schema.PropType.STRING,
-          },
-          {
-            id: 'priority',
-            type: Schema.PropType.NUMBER,
-          },
-        ],
-      }),
+      class ProjectType extends EchoObjectSchema({ typename: 'dxos.test.Project', version: '0.1.0' })({
+        title: S.string,
+        repo: S.string,
+        status: S.string,
+        priority: S.number,
+      }) {},
     createData: () => ({
       title: faker.commerce.productName(),
       repo: faker.datatype.boolean({ probability: 0.3 }) ? faker.internet.url() : undefined,
@@ -105,7 +93,7 @@ export class TestObjectGenerator {
       }, {});
   }
 
-  get schema(): Schema[] {
+  get schema(): S.Schema<any>[] {
     return Object.values(this.factories).map((f) => f.schema!);
   }
 

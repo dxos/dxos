@@ -60,10 +60,22 @@ export class SchemaValidator {
     return value;
   }
 
+  public static hasTypeAnnotation(rootObjectSchema: S.Schema<any>, property: string, annotation: symbol): boolean {
+    try {
+      let type = this.getPropertySchema(rootObjectSchema, [property]);
+      if (AST.isTupleType(type.ast)) {
+        type = this.getPropertySchema(rootObjectSchema, [property, '0']);
+      }
+      return type.ast.annotations[annotation] != null;
+    } catch (e) {
+      return false;
+    }
+  }
+
   public static getPropertySchema(
     rootObjectSchema: S.Schema<any>,
     propertyPath: KeyPath,
-    getPropertyFn: (path: KeyPath) => any,
+    getPropertyFn: (path: KeyPath) => any = () => null,
   ): S.Schema<any> {
     let schema: S.Schema<any> = rootObjectSchema;
     for (let i = 0; i < propertyPath.length; i++) {
@@ -76,7 +88,7 @@ export class SchemaValidator {
           getPropertyFn([...propertyPath.slice(0, i), propertyName]),
         );
         invariant(propertyType, `unknown property: ${String(propertyName)}, path: ${propertyPath}`);
-        schema = S.make(propertyType);
+        schema = S.make(propertyType).annotations(propertyType.annotations);
       }
     }
     return schema;
@@ -106,10 +118,11 @@ const getArrayElementSchema = (tupleAst: AST.TupleType, property: string | symbo
     return S.number;
   }
   if (elementIndex < tupleAst.elements.length) {
-    return S.make(tupleAst.elements[elementIndex].type);
+    const elementType = tupleAst.elements[elementIndex].type;
+    return S.make(elementType).annotations(elementType.annotations);
   }
   const restType = tupleAst.rest;
-  return S.make(restType[0]);
+  return S.make(restType[0]).annotations(restType[0].annotations);
 };
 
 const flattenUnion = (typeAst: AST.AST): AST.AST[] =>
@@ -150,10 +163,10 @@ const getPropertyType = (
   }
   const targetProperty = getProperties(typeAst, getTargetPropertyFn).find((p) => p.name === propertyName);
   if (targetProperty != null) {
-    return targetProperty.type;
+    return unwrapAst(targetProperty.type);
   }
   if (AST.isTypeLiteral(typeAst) && typeAst.indexSignatures.length > 0) {
-    return typeAst.indexSignatures[0].type;
+    return unwrapAst(typeAst.indexSignatures[0].type);
   }
   return null;
 };
@@ -177,23 +190,28 @@ const getTargetPropertySchema = (target: any, prop: string | symbol): S.Schema<a
   if (arrayAst != null) {
     return getArrayElementSchema(arrayAst, prop);
   }
-  const propertyType = getPropertyType(schema.ast as AST.AST, prop.toString(), (prop) => target[prop]);
+  const propertyType = getPropertyType(schema.ast, prop.toString(), (prop) => target[prop]);
   invariant(propertyType, `invalid property: ${prop.toString()}`);
   return S.make(propertyType);
 };
 
-const unwrapAst = (rootAst: AST.AST, predicate: (ast: AST.AST) => boolean): AST.AST | null => {
+const unwrapAst = (rootAst: AST.AST, predicate?: (ast: AST.AST) => boolean): AST.AST | null => {
   let ast: AST.AST | undefined = rootAst;
   while (ast != null) {
-    if (predicate(ast)) {
+    if (predicate?.(ast)) {
       return ast;
     }
     if (AST.isUnion(ast)) {
-      ast = ast.types.find((t) => predicate(t) || AST.isSuspend(t));
-    } else if (AST.isSuspend(ast)) {
+      const next: any = ast.types.find((t) => (predicate != null && predicate(t)) || AST.isSuspend(t));
+      if (next != null) {
+        ast = next;
+        continue;
+      }
+    }
+    if (AST.isSuspend(ast)) {
       ast = ast.f();
     } else {
-      return null;
+      return predicate == null ? ast : null;
     }
   }
   return null;

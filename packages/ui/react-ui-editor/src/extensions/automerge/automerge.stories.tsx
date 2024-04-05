@@ -9,9 +9,10 @@ import '@preact/signals-react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Repo } from '@dxos/automerge/automerge-repo';
-import { createDocAccessor, Filter, DocAccessor } from '@dxos/echo-schema';
+import { createDocAccessor, Filter, DocAccessor, TextCompatibilitySchema } from '@dxos/echo-schema';
+import * as E from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
-import { Expando, TextObject, useSpace } from '@dxos/react-client/echo';
+import { useSpace } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
@@ -124,9 +125,9 @@ export const WithEcho = {
         createSpace
         onCreateSpace={async (space) => {
           space.db.add(
-            new Expando({
+            E.object({
               type: 'test',
-              content: new TextObject(initialContent),
+              content: E.object(TextCompatibilitySchema, { content: initialContent }),
             }),
           );
         }}
