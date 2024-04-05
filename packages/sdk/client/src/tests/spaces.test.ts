@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
 import { DocumentType, TextV0Type } from '@braneframe/types';
-import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
@@ -18,6 +18,7 @@ import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
+import { TYPE_PROPERTIES } from '../../../../core/echo/echo-db/src';
 import { Client } from '../client';
 import { SpaceState, getSpace, type SpaceProxy } from '../echo';
 import { TestBuilder, testSpaceAutomerge, waitForSpace } from '../testing';
@@ -437,6 +438,44 @@ describe('Spaces', () => {
         expect(getDocumentText(guestSpace, hostDocument.id)).to.equal('Hello, world!');
       });
     }
+  });
+
+  test('queries respect space boundaries', async () => {
+    const testBuilder = new TestBuilder();
+    testBuilder.storage = createStorage({ type: StorageType.RAM });
+
+    const client = new Client({ services: testBuilder.createLocal() });
+    await client.initialize();
+    afterTest(() => client.destroy());
+
+    await client.halo.createIdentity({ displayName: 'test-user' });
+
+    const spaceA = await client.spaces.create();
+    const spaceB = await client.spaces.create();
+
+    const objA = spaceA.db.add(createEchoObject({ data: 'object A' }));
+    const objB = spaceB.db.add(createEchoObject({ data: 'object B' }));
+
+    await spaceA.db.flush();
+    await spaceB.db.flush();
+
+    const [wait, inc] = latch({ count: 2, timeout: 1000 });
+
+    spaceA.db.query().subscribe(({ objects }) => {
+      expect(objects).to.have.length(2);
+      expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
+      expect(objects.some((obj) => obj === objA)).to.be.true;
+      inc();
+    }, true);
+
+    spaceB.db.query().subscribe(({ objects }) => {
+      expect(objects).to.have.length(2);
+      expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
+      expect(objects.some((obj) => obj === objB)).to.be.true;
+      inc();
+    }, true);
+
+    await wait();
   });
 
   test('object receives updates from another peer', async () => {
