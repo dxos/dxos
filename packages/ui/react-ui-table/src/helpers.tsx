@@ -498,4 +498,26 @@ export class ColumnBuilder<TData extends RowData> {
       ...props,
     };
   }
+
+  /**
+   * This display column type is for nested/unhandled data to appear as JSON.
+   */
+  display({ label, classNames, ...props }: KeyColumnOptions<TData> = {}): Partial<ColumnDef<TData, PublicKey>> {
+    return {
+      size: 120,
+      minSize: 120,
+      header: (cell) => label ?? cell.header.id,
+      cell: (cell) => {
+        const value = cell.getValue();
+
+        return (
+          <div className='overflow-scroll'>
+            <code className='text-xs'>{JSON.stringify(value)}</code>
+          </div>
+        );
+      },
+      ...props,
+      meta: { ...props.meta, cell: { ...props.meta?.cell, classNames: ['font-mono', textPadding, classNames] } },
+    };
+  }
 }
