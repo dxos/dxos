@@ -17,7 +17,7 @@ import {
   useResolvePlugin,
 } from '@dxos/app-framework';
 import * as E from '@dxos/echo-schema';
-import { getSpace, isTypedObject, useQuery } from '@dxos/react-client/echo';
+import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Main, Button, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import { Stack, type StackProps, type CollapsedSections, type AddSectionPosition } from '@dxos/react-ui-stack';
@@ -64,7 +64,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
 
     // TODO(wittjosiah): Prevent dropping items which don't have a section renderer?
     //  Perhaps stack plugin should just provide a fallback section renderer.
-    if (!(isTypedObject(data) || E.isReactiveProxy(data)) || data instanceof StackType) {
+    if (!E.isReactiveProxy(data) || data instanceof StackType) {
       return 'reject';
     }
 
@@ -146,7 +146,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
   };
 
   return (
-    <Main.Content classNames={[baseSurface, topbarBlockPaddingStart]}>
+    <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
       <Stack
         id={id}
         data-testid='main.stack'

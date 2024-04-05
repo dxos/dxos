@@ -9,7 +9,7 @@ import { Client, Config } from '@dxos/client';
 import { QueryOptions } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { Filter, type TypedObject, type ReactiveObject, type Query } from '@dxos/echo-schema';
+import { Filter, type TypedObject, type ReactiveObject, type Query, type EchoReactiveObject } from '@dxos/echo-schema';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type QueryRequest } from '@dxos/protocols/proto/dxos/agent/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -180,7 +180,7 @@ describe('QueryPlugin', () => {
     });
 
     const waitForQueryResults = async (query: Query) => {
-      const results = new Trigger<TypedObject[]>();
+      const results = new Trigger<EchoReactiveObject<any>[]>();
       query.subscribe((query) => {
         if (query.results.some((result) => result.resolution?.source === 'remote')) {
           results.wake(query.objects);
