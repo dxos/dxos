@@ -57,4 +57,5 @@ export type IdentityPanelHeadingProps = Pick<IdentityPanelImplProps, 'titleId' |
 export type IdentityPanelStepProps = Pick<IdentityPanelImplProps, 'send' | 'onDone' | 'doneActionParent'> & {
   active?: boolean;
   agentHostingEnabled?: boolean;
+  devices: Device[];
 };

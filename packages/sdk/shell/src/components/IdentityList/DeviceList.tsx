@@ -2,48 +2,38 @@
 // Copyright 2023 DXOS.org
 //
 
+import { CaretRight, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { generateName } from '@dxos/display-name';
-import { type Device, DeviceType } from '@dxos/react-client/halo';
-import { List, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { type Device } from '@dxos/react-client/halo';
+import { Button, List, useTranslation } from '@dxos/react-ui';
+import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 
-import { IdentityListItem } from './IdentityListItem';
+import { DeviceListItem } from './DeviceListItem';
 
 export interface DeviceListProps {
   devices: Device[];
-  onSelect?: (device: Device) => void;
 }
 
-export const DeviceList = ({ devices, onSelect }: DeviceListProps) => {
+export const DeviceList = ({ devices }: DeviceListProps) => {
   const { t } = useTranslation('os');
-  return devices.length > 0 ? (
-    <List classNames='flex flex-col gap-2'>
-      {devices.map((device) => {
-        // TODO(wittjosiah): Render this better. Consider communicating these as apps rather than devices.
-        const deviceType = device.profile?.type || DeviceType.UNKNOWN;
-        const displayName = device.profile?.label
-          ? `${device.profile.label} (${DeviceType[deviceType]})`
-          : generateName(device.deviceKey.toHex());
-
-        const identity = {
-          identityKey: device.deviceKey,
-          profile: { displayName },
-        };
-        return (
-          <IdentityListItem
-            key={device.deviceKey.toHex()}
-            identity={identity}
-            presence={device.presence}
-            onClick={onSelect && (() => onSelect(device))}
-          />
-        );
-      })}
-    </List>
-  ) : (
-    <div role='none' className='grow flex items-center p-2'>
-      <p className={mx(descriptionText, 'text-center is-full')}>{t('empty device list message')}</p>
-    </div>
+  return (
+    <>
+      <h2 className={mx(descriptionText, 'text-center')}>{t('devices heading')}</h2>
+      {devices.length > 0 && (
+        <List>
+          {devices.map((device) => {
+            return <DeviceListItem key={device.deviceKey.toHex()} device={device} />;
+          })}
+        </List>
+      )}
+      <Button variant='ghost' classNames='justify-start gap-2 pis-0 pie-3'>
+        <div role='img' className={mx(getSize(8), 'm-1 rounded-sm surface-input grid place-items-center')}>
+          <Plus weight='light' className={getSize(6)} />
+        </div>
+        <span className='grow font-medium text-start'>{t('choose add device label')}</span>
+        <CaretRight weight='bold' className={getSize(4)} />
+      </Button>
+    </>
   );
 };

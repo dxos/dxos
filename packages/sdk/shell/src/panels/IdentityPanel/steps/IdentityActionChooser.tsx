@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretRight, Devices, Plus, Power, UserGear, HardDrive, Intersect } from '@phosphor-icons/react';
+import { CaretRight, Plus, Power, UserGear, HardDrive, Intersect } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
 import { log } from '@dxos/log';
@@ -12,7 +12,7 @@ import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { DensityProvider, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
-import { Action } from '../../../components';
+import { Action, DeviceList } from '../../../components';
 import { type IdentityPanelStepProps } from '../IdentityPanelProps';
 
 export type IdentityActionChooserProps = IdentityPanelStepProps;
@@ -58,9 +58,8 @@ export const IdentityActionChooserImpl = ({
   onCreateInvitationClick,
   active,
   send,
-  onDone,
-  doneActionParent,
   agentHostingEnabled,
+  devices,
 }: IdentityActionChooserImplProps) => {
   const { t } = useTranslation('os');
 
@@ -104,11 +103,6 @@ export const IdentityActionChooserImpl = ({
             <span className='grow mli-3'>{t('choose join new identity label')}</span>
             <CaretRight weight='bold' className={getSize(4)} />
           </Action>
-          <Action data-testid='manage-devices' onClick={() => send?.({ type: 'chooseDevices' })} classNames='plb-4'>
-            <Devices className={getSize(6)} />
-            <span className='grow mli-3'>{t('choose devices label')}</span>
-            <CaretRight weight='bold' className={getSize(4)} />
-          </Action>
           <Action
             data-testid='devices-panel.sign-out'
             onClick={() => send?.({ type: 'chooseResetStorage' })}
@@ -118,9 +112,9 @@ export const IdentityActionChooserImpl = ({
             <span className='grow mli-3'>{t('choose sign out label')}</span>
             <CaretRight weight='bold' className={getSize(4)} />
           </Action>
+          <DeviceList devices={devices} />
         </div>
       </DensityProvider>
-      {/* <PanelActions>{doneActionParent ? cloneElement(doneActionParent, {}, doneAction) : doneAction}</PanelActions> */}
     </div>
   );
 };
