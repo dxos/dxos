@@ -32,9 +32,11 @@ export const semanticColors = plugin(({ addUtilities, theme, e }) => {
       },
       [`.surface-${e(`${key}`)}`]: {
         backgroundColor: `${value.light}`,
+        '--sticky-bg': `${value.light}`,
       },
       [`.dark .surface-${e(`${key}`)}`]: {
         backgroundColor: `${value.dark}`,
+        '--sticky-bg': `${value.dark}`,
       },
       [`.separator-${e(`${key}`)}`]: {
         borderColor: `${value.fg?.light ?? value.light}`,
