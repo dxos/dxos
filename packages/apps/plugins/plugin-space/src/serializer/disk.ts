@@ -2,14 +2,27 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type SpaceProxy } from '@dxos/client/echo';
 import { log } from '@dxos/log';
-import { type Space } from '@dxos/react-client/echo';
 
 import { FileSerializer, type SerializedObject, type SerializedSpace } from './file-serializer';
 
-// TODO(burdon): Create class.
+export type SerializerOptions = {
+  space: SpaceProxy;
+  directory: FileSystemDirectoryHandle;
+};
 
-export const saveSpaceToDisk = async ({ space, directory }: { space: Space; directory: FileSystemDirectoryHandle }) => {
+export class Serializer {
+  async load({ space, directory }: SerializerOptions) {
+    return loadSpaceFromDisk({ space, directory });
+  }
+
+  async save({ space, directory }: SerializerOptions) {
+    return saveSpaceToDisk({ space, directory });
+  }
+}
+
+const saveSpaceToDisk = async ({ space, directory }: SerializerOptions) => {
   const serializer = new FileSerializer();
   const serializedSpace = await serializer.serializeSpace(space);
 
@@ -72,13 +85,7 @@ const saveObjectsToDisk = async ({
   }
 };
 
-export const loadSpaceFromDisk = async ({
-  space,
-  directory,
-}: {
-  space: Space;
-  directory: FileSystemDirectoryHandle;
-}) => {
+const loadSpaceFromDisk = async ({ space, directory }: SerializerOptions) => {
   try {
     if (!('TextDecoder' in window)) {
       throw new Error('Sorry, this browser does not support TextDecoder...');

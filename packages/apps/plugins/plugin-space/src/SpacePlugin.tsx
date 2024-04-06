@@ -54,7 +54,7 @@ import {
   SpaceSettings,
 } from './components';
 import meta, { SPACE_PLUGIN } from './meta';
-import { saveSpaceToDisk, loadSpaceFromDisk, clone } from './serializer';
+import { clone, Serializer } from './serializer';
 import translations from './translations';
 import {
   SpaceAction,
@@ -95,7 +95,9 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
-  let directory: FileSystemDirectoryHandle | null;
+
+  let rootDir: FileSystemDirectoryHandle | null;
+  const serializer = new Serializer();
 
   let clientPlugin: Plugin<ClientPluginProvides> | undefined;
 
@@ -579,48 +581,45 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             }
 
             case SpaceAction.SELECT_DIRECTORY: {
-              const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
-              directory = handle;
-              await localforage.setItem(SPACE_DIRECTORY_HANDLE, handle);
-              return { data: handle };
+              rootDir = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+              await localforage.setItem(SPACE_DIRECTORY_HANDLE, rootDir);
+              return { data: rootDir };
             }
 
             case SpaceAction.SAVE: {
+              console.log('???');
               const space = intent.data?.space;
-              if (space instanceof SpaceProxy) {
-                if (!directory) {
-                  directory = await localforage.getItem(SPACE_DIRECTORY_HANDLE);
-                }
-                if (!directory) {
-                  // TODO(wittjosiah): Consider implementing this as an intent chain by returning other intents.
-                  const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-                  const result = await intentPlugin?.provides.intent.dispatch({
-                    plugin: SPACE_PLUGIN,
-                    action: SpaceAction.SELECT_DIRECTORY,
-                  });
-                  directory = result?.data;
-                }
-                invariant(directory, 'No directory selected.');
-                if ((directory as any).queryPermission && (await (directory as any).queryPermission()) !== 'granted') {
-                  // TODO(mykola): Is it Chrome-specific?
-                  await (directory as any).requestPermission?.({ mode: 'readwrite' });
-                }
-                await saveSpaceToDisk({ space, directory }).catch((error) => {
-                  log.catch(error);
-                });
-                return { data: true };
+              console.log(space);
+              invariant(space instanceof SpaceProxy);
+              if (!rootDir) {
+                rootDir = await localforage.getItem(SPACE_DIRECTORY_HANDLE);
               }
-              break;
+              console.log(rootDir);
+              if (!rootDir) {
+                // TODO(wittjosiah): Consider implementing this as an intent chain by returning other intents.
+                const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+                const result = await intentPlugin?.provides.intent.dispatch({
+                  plugin: SPACE_PLUGIN,
+                  action: SpaceAction.SELECT_DIRECTORY,
+                });
+                rootDir = result?.data;
+              }
+              invariant(rootDir, 'No directory selected.');
+              // TODO(burdon): Resolve casts.
+              if ((rootDir as any).queryPermission && (await (rootDir as any).queryPermission()) !== 'granted') {
+                // TODO(mykola): Is it Chrome-specific?
+                await (rootDir as any).requestPermission?.({ mode: 'readwrite' });
+              }
+              await serializer.save({ space, directory: rootDir }).catch(log.catch);
+              return { data: true };
             }
 
             case SpaceAction.LOAD: {
               const space = intent.data?.space;
-              if (space instanceof SpaceProxy) {
-                const directory = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
-                await loadSpaceFromDisk({ space, directory });
-                return { data: true };
-              }
-              break;
+              invariant(space instanceof SpaceProxy);
+              const directory = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+              await serializer.load({ space, directory }).catch(log.catch);
+              return { data: true };
             }
 
             case SpaceAction.ADD_OBJECT: {

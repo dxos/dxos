@@ -11,6 +11,7 @@ import { serializers } from './serializers';
 /**
  * @deprecated Workaround for ECHO not supporting clone.
  */
+// TODO(burdon): Remove.
 export const clone = async (object: ExpandoType) => {
   const schema = getSchema(object);
   const typename = schema ? getEchoObjectAnnotation(schema)?.typename ?? TypeOfExpando : TypeOfExpando;
