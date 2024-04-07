@@ -34,13 +34,7 @@ const saveSpaceToDisk = async ({ space, directory }: SerializerOptions) => {
   await saveObjectsToDisk({ data: serializedSpace.data, directory: saveDir });
 };
 
-const writeComposerMetadata = async ({
-  space,
-  directory,
-}: {
-  space: SerializedSpace;
-  directory: FileSystemDirectoryHandle;
-}) => {
+const writeComposerMetadata = async ({ space, directory }: SerializerOptions) => {
   const composerDir = await directory.getDirectoryHandle('.composer', { create: true });
   const metadataFile = await composerDir.getFileHandle('space.json', { create: true });
   const writable = await metadataFile.createWritable();
