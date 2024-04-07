@@ -13,12 +13,12 @@ export type SerializerOptions = {
 };
 
 export class Serializer {
-  async load({ space, directory }: SerializerOptions) {
-    return loadSpaceFromDisk({ space, directory });
-  }
-
   async save({ space, directory }: SerializerOptions) {
     return saveSpaceToDisk({ space, directory });
+  }
+
+  async load({ space, directory }: SerializerOptions) {
+    return loadSpaceFromDisk({ space, directory });
   }
 }
 
@@ -30,11 +30,18 @@ const saveSpaceToDisk = async ({ space, directory }: SerializerOptions) => {
     serializedSpace.metadata.name ?? serializedSpace.metadata.spaceKey,
     { create: true },
   );
+
   await writeComposerMetadata({ space: serializedSpace, directory: saveDir });
   await saveObjectsToDisk({ data: serializedSpace.data, directory: saveDir });
 };
 
-const writeComposerMetadata = async ({ space, directory }: SerializerOptions) => {
+const writeComposerMetadata = async ({
+  space,
+  directory,
+}: {
+  space: SerializedSpace;
+  directory: FileSystemDirectoryHandle;
+}) => {
   const composerDir = await directory.getDirectoryHandle('.composer', { create: true });
   const metadataFile = await composerDir.getFileHandle('space.json', { create: true });
   const writable = await metadataFile.createWritable();

@@ -59,7 +59,6 @@ export class FileSerializer {
 
     // Skip root folder.
     serializedSpace.data.push(...(await this._serializeFolder(spaceRoot)).children);
-
     return serializedSpace;
   }
 
