@@ -36,7 +36,7 @@ describe('Serialization', () => {
     afterTest(() => builder.destroy());
 
     const client = new Client({ services: builder.createLocal() });
-    client._graph.types.registerEffectSchema(FolderType, DocumentType);
+    client.addSchema(FolderType, DocumentType);
     await client.initialize();
     afterTest(() => client.destroy());
     await client.halo.createIdentity();
