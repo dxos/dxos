@@ -135,9 +135,6 @@ export class AutomergeHost {
         }
       },
     });
-    this.repo.on('document', ({ handle }) => {
-      log.info('document', { doc: handle.docSync() });
-    });
     this._clientNetwork.ready();
     this._meshNetwork.ready();
 
