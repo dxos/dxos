@@ -4,9 +4,10 @@
 
 import { CronJob } from 'cron';
 
+import { TextV0Type } from '@braneframe/types';
 import { debounce, DeferredTask } from '@dxos/async';
 import { type Client, type PublicKey } from '@dxos/client';
-import { type Space, TextObject } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { Filter, createSubscription, type Query, getAutomergeObjectCore } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -157,7 +158,7 @@ export class Scheduler {
         log.info('update', { type, deep, objects: objects.length });
         for (const object of objects) {
           const content = object.content;
-          if (content instanceof TextObject) {
+          if (content instanceof TextV0Type) {
             subscriptions.push(
               getAutomergeObjectCore(content).updates.on(debounce(() => subscription.update([object]), 1_000)),
             );

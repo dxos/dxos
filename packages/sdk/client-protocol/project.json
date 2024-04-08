@@ -7,11 +7,16 @@
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": ["packages/sdk/client-protocol/src/index.ts"]
+        "entryPoints": [
+          "packages/sdk/client-protocol/src/index.ts"
+        ]
       }
     },
     "lint": {},
     "test": {}
   },
-  "implicitDependencies": ["esbuild", "test"]
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
 }

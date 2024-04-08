@@ -5409,6 +5409,9 @@ importers:
 
   packages/core/functions:
     dependencies:
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../apps/types
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -8981,6 +8984,9 @@ importers:
       '@automerge/automerge-repo-network-broadcastchannel':
         specifier: ^1.1.4
         version: 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../apps/types
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -9438,6 +9444,9 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.3.1
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
     devDependencies:
       '@dxos/echo-schema':
         specifier: workspace:*
@@ -9561,6 +9570,9 @@ importers:
         specifier: ^3.3.1
         version: 3.3.1
     devDependencies:
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../apps/types
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema

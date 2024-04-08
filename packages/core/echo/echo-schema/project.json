@@ -22,5 +22,8 @@
       }
     }
   },
-  "implicitDependencies": ["esbuild", "test"]
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
 }

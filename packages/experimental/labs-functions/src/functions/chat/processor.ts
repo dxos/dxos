@@ -21,7 +21,7 @@ import {
 } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import * as E from '@dxos/echo-schema';
-import { Filter, getTextContent, type JsonSchema, Schema } from '@dxos/echo-schema';
+import { Filter, type JsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { createContext, type RequestContext } from './context';
@@ -48,7 +48,7 @@ export class RequestProcessor {
     const { start, stop } = createStatusNotifier(space, thread.id);
     try {
       const text = message.blocks
-        .map((block) => getTextContent(block.content))
+        .map((block) => block.content?.content)
         .filter(Boolean)
         .join('\n');
 
@@ -157,7 +157,7 @@ export class RequestProcessor {
 
     return RunnableSequence.from([
       inputs,
-      PromptTemplate.fromTemplate(getTextContent(prompt.source)!),
+      PromptTemplate.fromTemplate(prompt.source!.content),
       promptLogger,
       this._resources.model.bind(customArgs),
       withSchema ? new JsonOutputFunctionsParser() : new StringOutputParser(),

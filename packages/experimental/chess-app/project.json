@@ -7,7 +7,10 @@
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": ["packages/experimental/chess-app/src/index.ts", "packages/experimental/chess-app/src/types.ts"]
+        "entryPoints": [
+          "packages/experimental/chess-app/src/index.ts",
+          "packages/experimental/chess-app/src/types.ts"
+        ]
       }
     },
     "lint": {},
@@ -19,9 +22,13 @@
     },
     "test": {
       "options": {
-        "ciEnvironments": ["nodejs"]
+        "ciEnvironments": [
+          "nodejs"
+        ]
       }
     }
   },
-  "implicitDependencies": ["test"]
+  "implicitDependencies": [
+    "test"
+  ]
 }

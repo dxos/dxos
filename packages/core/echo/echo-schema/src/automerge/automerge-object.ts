@@ -4,12 +4,12 @@
 
 import { invariant } from '@dxos/invariant';
 
+import { type AutomergeObjectCore } from './automerge-object-core';
+import { type DocAccessor } from './automerge-types';
+import { isValidKeyPath, type KeyPath } from './key-path';
 import type * as echoHandlerModule from '../effect/echo-handler'; // Keep as type-only import.
 import { getProxyHandlerSlot, isReactiveProxy } from '../effect/proxy';
 import { type OpaqueEchoObject } from '../object';
-import { AutomergeObjectCore } from './automerge-object-core';
-import { type DocAccessor } from './automerge-types';
-import { isValidKeyPath, type KeyPath } from './key-path';
 
 export const getRawDoc = (obj: OpaqueEchoObject, path?: KeyPath): DocAccessor => {
   invariant(isReactiveProxy(obj));
