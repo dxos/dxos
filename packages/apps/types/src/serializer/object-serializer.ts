@@ -19,7 +19,7 @@ export const TypeOfExpando = 'dxos.org/typename/expando';
 export type SpaceMetadata = {
   name: string;
   version: number;
-  timestamp: string;
+  timestamp: string; // ISO.
   spaceKey: string;
 };
 
@@ -55,7 +55,7 @@ export class ObjectSerializer {
       metadata: {
         name: space.properties.name ?? space.key.toHex(),
         version: 1,
-        timestamp: new Date().toUTCString(),
+        timestamp: new Date().toISOString(),
         spaceKey: space.key.toHex(),
       },
       objects: [],

@@ -35,22 +35,33 @@ describe('Serialization', () => {
 
     const serializer = new ObjectSerializer();
 
-    const text = 'Hello world!';
+    const text = ['# Hello world!', '', 'This is a document.'].join('\n');
     let serialized: SerializedSpace;
     {
       const space1 = await createSpace(client, 'test-1');
-      const object = E.object(DocumentType, { content: E.object(TextV0Type, { content: text }) });
-      getSpaceProperty<FolderType>(space1, FolderType.typename)!.objects.push(object);
+      const { objects } = getSpaceProperty<FolderType>(space1, FolderType.typename)!;
+      objects.push(E.object(DocumentType, { content: E.object(TextV0Type, { content: text }) }));
       serialized = await serializer.serializeSpace(space1);
+      expect(serialized.metadata.name).to.equal('test-1');
+      expect(serialized.objects).to.have.length(1);
+      // console.log(serialized);
     }
 
     {
       const space2 = await createSpace(client, 'test-2');
       const space3 = await serializer.deserializeSpace(space2, serialized);
-      const object = getSpaceProperty<FolderType>(space3, FolderType.typename)!.objects[0];
+      const { objects } = getSpaceProperty<FolderType>(space3, FolderType.typename)!;
+      const object = objects[0]!;
       expect(object instanceof DocumentType).to.be.true;
-      const content = getTextContent(object?.content);
+      const content = getTextContent(object.content);
       expect(content).to.equal(text);
+
+      // TODO(burdon): Object ID is not preserved (refs?)
+      expect(object.id).to.not.equal(serialized.objects[0].id);
     }
   });
+
+  // TODO(burdon): Test folders.
+  // TODO(burdon): Test filename collisions.
+  // TODO(burdon): Test different serializers.
 });
