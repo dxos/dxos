@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Event, sleep, synchronized } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, defaultKey, type ClientServices, PropertiesSchema } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
