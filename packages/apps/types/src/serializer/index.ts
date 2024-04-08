@@ -3,5 +3,5 @@
 //
 
 export * from './clone';
-export * from './serializer';
 export * from './space-properties';
+export * from './space-serializer';

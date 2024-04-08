@@ -7,17 +7,19 @@ import { invariant } from '@dxos/invariant';
 
 import { FileSerializer, type SerializedObject, type SerializedSpace } from './file-serializer';
 
-export type SerializerOptions = {
+// TODO(burdon): Change to .dxos (do not use "composer" in file names.)
+const META_DIR = '.composer';
+const SPACE_FILE = 'space.json';
+
+export type SpaceSerializerOptions = {
   space: Space;
   directory: FileSystemDirectoryHandle;
 };
 
-export class Serializer {
-  async save({ space, directory }: SerializerOptions): Promise<void> {
+export class SpaceSerializer {
+  async save({ space, directory }: SpaceSerializerOptions): Promise<void> {
     const serializer = new FileSerializer();
     const serializedSpace = await serializer.serializeSpace(space);
-
-    console.log(serializedSpace);
 
     const saveDir = await directory.getDirectoryHandle(
       serializedSpace.metadata.name ?? serializedSpace.metadata.spaceKey,
@@ -28,11 +30,11 @@ export class Serializer {
     await saveObjects({ objects: serializedSpace.objects, directory: saveDir });
   }
 
-  async load({ space, directory }: SerializerOptions): Promise<Space | void> {
+  async load({ space, directory }: SpaceSerializerOptions): Promise<Space | void> {
     invariant('TextDecoder' in window, 'This browser does not support TextDecoder...');
-    const composerDir = await directory.getDirectoryHandle('.composer', { create: false });
-    const metadataFile = await composerDir.getFileHandle('space.json', { create: false });
-    const metadataWithoutContent: SerializedSpace = JSON.parse(
+    const composerDir = await directory.getDirectoryHandle(META_DIR, { create: false });
+    const metadataFile = await composerDir.getFileHandle(SPACE_FILE, { create: false });
+    const metadata: SerializedSpace = JSON.parse(
       new TextDecoder().decode(await (await metadataFile.getFile()).arrayBuffer()),
     );
 
@@ -51,23 +53,21 @@ export class Serializer {
           result.push({ ...item, content });
         }
       }
+
       return result;
     };
 
-    const serializedSpace: SerializedSpace = {
-      ...metadataWithoutContent,
-      objects: await loadContent(directory, metadataWithoutContent.objects),
-    };
-
     const serializer = new FileSerializer();
-    return serializer.deserializeSpace(space, serializedSpace);
+    return serializer.deserializeSpace(space, {
+      ...metadata,
+      objects: await loadContent(directory, metadata.objects),
+    });
   }
 }
 
 const saveMetadata = async ({ space, directory }: { space: SerializedSpace; directory: FileSystemDirectoryHandle }) => {
-  // TODO(burdon): Do not use "composer" in file names.
-  const composerDir = await directory.getDirectoryHandle('.composer', { create: true });
-  const metadataFile = await composerDir.getFileHandle('space.json', { create: true });
+  const composerDir = await directory.getDirectoryHandle(META_DIR, { create: true });
+  const metadataFile = await composerDir.getFileHandle(SPACE_FILE, { create: true });
   const writable = await metadataFile.createWritable();
 
   const serialize = (data: SerializedObject[]) => {

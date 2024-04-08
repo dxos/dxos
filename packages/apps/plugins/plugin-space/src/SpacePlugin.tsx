@@ -9,7 +9,7 @@ import React from 'react';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
-import { getSpaceProperty, setSpaceProperty, FolderType, Serializer, cloneObject } from '@braneframe/types';
+import { getSpaceProperty, setSpaceProperty, FolderType, SpaceSerializer, cloneObject } from '@braneframe/types';
 import {
   type IntentDispatcher,
   type PluginDefinition,
@@ -94,7 +94,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
 
-  const serializer = new Serializer();
+  const serializer = new SpaceSerializer();
 
   let clientPlugin: Plugin<ClientPluginProvides> | undefined;
 
