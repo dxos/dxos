@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
 import { compareType, Filter, filterMatch } from './filter';
-import { AutomergeObjectCore } from '../automerge';
+import { AutomergeObjectCore, getAutomergeObjectCore } from '../automerge';
 import { EchoObjectSchema } from '../effect/echo-object-class';
 import * as E from '../effect/reactive';
 import { createDatabase } from '../testing';
@@ -105,10 +105,10 @@ describe('Filter', () => {
     const { db } = await createDatabase();
     const schema = db.schemaRegistry.add(GeneratedSchema);
 
-    const core = createAutomergeObjectCore({ title: 'test' }, E.getTypeReference(schema));
+    const obj = db.add(E.object(schema, { title: 'test' }));
 
     const filter = Filter.typename(schema.id);
-    expect(filterMatch(filter, core)).to.be.true;
+    expect(filterMatch(filter, getAutomergeObjectCore(obj))).to.be.true;
   });
 });
 
