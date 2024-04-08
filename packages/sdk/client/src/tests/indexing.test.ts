@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { type Space } from '@dxos/client-protocol';
 import { warnAfterTimeout } from '@dxos/debug';
@@ -110,8 +110,6 @@ describe('Index queries', () => {
       const indexedContact = await queryIndexedContact(space);
       expect(indexedContact.name).to.equal('John Doe');
 
-      // TODO(mykola): Clean as automerge team updates storage API.
-      await sleep(200); // Sleep to get services storage to finish writing.
       await client.destroy();
       await builder.storage!.close();
       builder.destroy();
