@@ -260,6 +260,13 @@ export class AutomergeDb {
     core.setDeleted(true);
   }
 
+  async flush(): Promise<void> {
+    // TODO(mykola): send out only changed documents.
+    await this.automerge.flush({
+      documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId),
+    });
+  }
+
   private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandle<SpaceDoc>, objectsToLoad: string[]) {
     const spaceRootDoc: SpaceDoc = spaceRootDocHandle.docSync();
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
