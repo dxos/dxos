@@ -75,7 +75,7 @@ const IdentityHeading = ({
 
   return (
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
-      <Avatar.Root size={16} variant='circle' status='active' hue={hue || fallbackValue.hue}>
+      <Avatar.Root size={16} variant='circle' status={isConnected ? 'active' : 'error'} hue={hue || fallbackValue.hue}>
         <Toolbar.Root classNames='grid grid-cols-[1fr_var(--rail-action)_min-content_var(--rail-action)_1fr] items-center gap-2'>
           <Toolbar.Button
             classNames='bs-[--rail-action] is-[--rail-action] justify-self-end'
