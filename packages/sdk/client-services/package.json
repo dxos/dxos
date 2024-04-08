@@ -10,6 +10,7 @@
   "browser": {
     "jsondown": false,
     "./src/packlets/locks/node.ts": "./src/packlets/locks/browser.ts",
+    "./src/packlets/diagnostics/diagnostics-broadcast.ts": "./src/packlets/diagnostics/browser-diagnostics-broadcast.ts",
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
     "./testing.js": "./dist/lib/browser/packlets/testing/index.mjs"
   },

@@ -8,9 +8,21 @@ import { GetDiagnosticsRequest } from '@dxos/protocols/proto/dxos/client/service
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { type JsonKeyOptions, jsonKeyReplacer, nonNullable } from '@dxos/util';
 
+import { createCollectDiagnosticsBroadcastSender } from './diagnostics-broadcast';
 import { ClientServicesProviderResource } from '../services';
 
+export interface CollectDiagnosticsBroadcastSender {
+  broadcastDiagnosticsRequest(): any;
+}
+
+export interface CollectDiagnosticsBroadcastHandler {
+  start(): void;
+  stop(): void;
+}
+
 export class DiagnosticsCollector {
+  private static broadcastSender = createCollectDiagnosticsBroadcastSender();
+
   public static async collect(
     config: Config | Config[] = findConfigs(),
     services: ClientServicesProvider | null = findSystemServiceProvider(),
@@ -29,10 +41,13 @@ export class DiagnosticsCollector {
       trace: TRACE_PROCESSOR.getDiagnostics(),
     };
 
-    const diagnostics = {
-      client: clientDiagnostics,
-      services: serviceDiagnostics,
-    };
+    const diagnostics =
+      serviceDiagnostics != null
+        ? { client: clientDiagnostics, services: serviceDiagnostics }
+        : {
+            client: clientDiagnostics,
+            broadcast: await this.broadcastSender.broadcastDiagnosticsRequest(),
+          };
 
     return JSON.parse(JSON.stringify(diagnostics, jsonKeyReplacer(options)));
   }
