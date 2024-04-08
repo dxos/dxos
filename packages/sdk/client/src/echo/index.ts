@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export { type Echo, type Space, defaultKey, Properties, type PropertiesProps } from '@dxos/client-protocol';
+export { type Echo, type Space, defaultKey, Properties } from '@dxos/client-protocol';
 // TODO(burdon): Remove/Rename Item.
 export {
   base,
@@ -12,7 +12,6 @@ export {
   hasType,
   Filter,
   Query,
-  Schema,
   getRawDoc,
   getTextInRange,
   fromCursor,
@@ -27,7 +26,6 @@ export {
   TextCompatibilitySchema,
   type EchoReactiveObject,
   type ReactiveObject,
-  type AutomergeTextCompat,
   type EchoDatabase,
   type EchoObject, // TODO(burdon): Remove from API.
   type FilterSource,
@@ -39,10 +37,6 @@ export {
 
   // TODO(burdon): Deprecated.
   createDocAccessor,
-  getTextContent,
-  setTextContent,
-  Text,
-  TextObject,
   TypeCollection,
 } from '@dxos/echo-schema';
 

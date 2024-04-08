@@ -22,3 +22,4 @@ export * from './effect/json-schema';
 export { isReactiveProxy } from './effect/proxy';
 export * from './effect/reactive';
 export { SchemaValidator } from './effect/schema-validator';
+export * from './text';
