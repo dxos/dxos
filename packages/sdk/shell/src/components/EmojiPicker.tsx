@@ -51,7 +51,7 @@ export const EmojiPickerToolbarButton = ({
         <Toolbar.Button asChild>
           <Button classNames={['gap-2 text-2xl plb-1', classNames]} disabled={disabled}>
             <span className='sr-only'>{t('select emoji label')}</span>
-            <ImageSquare />
+            <ImageSquare className={getSize(5)} />
           </Button>
         </Toolbar.Button>
       </Popover.Trigger>

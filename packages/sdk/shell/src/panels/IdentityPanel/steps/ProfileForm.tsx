@@ -17,7 +17,7 @@ import {
   Input,
   useClipboardContext,
   EmojiPickerBlock,
-  HuePicker,
+  HuePickerBlock,
 } from '../../../components';
 import { type IdentityPanelStepProps } from '../IdentityPanelProps';
 import { type IdentityEvent } from '../identityMachine';
@@ -82,7 +82,7 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
             disabled={disabled}
             onClickClear={() => setEmoji(getEmojiValue(identity))}
           />
-          <HuePicker
+          <HuePickerBlock
             hue={hue}
             onChangeHue={setHue}
             disabled={disabled}

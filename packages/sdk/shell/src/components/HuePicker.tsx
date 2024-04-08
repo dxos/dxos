@@ -1,12 +1,21 @@
 //
 // Copyright 2024 DXOS.org
 //
-import { ArrowCounterClockwise, CaretDown, Check } from '@phosphor-icons/react';
+import { ArrowCounterClockwise, CaretDown, Check, PaintBrush } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type Dispatch, type SetStateAction } from 'react';
 
-import { Button, useTranslation, Tooltip, DropdownMenu, useThemeContext, type ButtonProps } from '@dxos/react-ui';
-import { getSize, hueTokenThemes } from '@dxos/react-ui-theme';
+import {
+  Button,
+  useTranslation,
+  Tooltip,
+  DropdownMenu,
+  useThemeContext,
+  type ButtonProps,
+  Toolbar,
+  type ThemedClassName,
+} from '@dxos/react-ui';
+import { getSize, hueTokenThemes, mx } from '@dxos/react-ui-theme';
 
 const HuePreview = ({ hue }: { hue: string }) => {
   const { tx } = useThemeContext();
@@ -25,7 +34,52 @@ export type HuePickerProps = {
   onClickClear?: ButtonProps['onClick'];
 };
 
-export const HuePicker = ({ disabled, hue, onChangeHue, defaultHue, onClickClear }: HuePickerProps) => {
+export const HuePickerToolbarButton = ({
+  disabled,
+  hue,
+  onChangeHue,
+  classNames,
+  defaultHue,
+}: ThemedClassName<Omit<HuePickerProps, 'onClickClear'>>) => {
+  const { t } = useTranslation('os');
+
+  const [hueValue, setHueValue] = useControllableState<string>({
+    prop: hue,
+    onChange: onChangeHue,
+    defaultProp: defaultHue,
+  });
+
+  return (
+    <DropdownMenu.Root modal={false}>
+      <DropdownMenu.Trigger asChild>
+        <Toolbar.Button asChild>
+          <Button classNames={mx('gap-2 plb-1', classNames)} disabled={disabled}>
+            <span className='sr-only'>{t('select hue label')}</span>
+            <PaintBrush className={getSize(5)} />
+          </Button>
+        </Toolbar.Button>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Content side='bottom'>
+        <DropdownMenu.Viewport>
+          {Object.keys(hueTokenThemes).map((hue) => {
+            return (
+              <DropdownMenu.CheckboxItem key={hue} checked={hue === hueValue} onCheckedChange={() => setHueValue(hue)}>
+                <HuePreview hue={hue} />
+                <span className='grow'>{t(`${hue} label`)}</span>
+                <DropdownMenu.ItemIndicator>
+                  <Check />
+                </DropdownMenu.ItemIndicator>
+              </DropdownMenu.CheckboxItem>
+            );
+          })}
+        </DropdownMenu.Viewport>
+        <DropdownMenu.Arrow />
+      </DropdownMenu.Content>
+    </DropdownMenu.Root>
+  );
+};
+
+export const HuePickerBlock = ({ disabled, hue, onChangeHue, defaultHue, onClickClear }: HuePickerProps) => {
   const { t } = useTranslation('os');
 
   const [hueValue, setHueValue] = useControllableState<string>({

@@ -1,6 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
+import { CopySimple, WifiHigh } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { generateName } from '@dxos/display-name';
@@ -9,7 +10,8 @@ import { useClient } from '@dxos/react-client';
 import { type Identity, useIdentity, useDevices, useHaloInvitations } from '@dxos/react-client/halo';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
-import { Avatar, DensityProvider, Toolbar, useId, useTranslation } from '@dxos/react-ui';
+import { Avatar, DensityProvider, Input, Toolbar, useId, useTranslation } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
 import {
@@ -20,7 +22,14 @@ import {
 import { useIdentityMachine } from './identityMachine';
 import { AgentForm, DeviceManager, IdentityActionChooser, ProfileForm } from './steps';
 import { useAgentHandlers } from './useAgentHandlers';
-import { Viewport, Heading, CloseButton, EmojiPickerToolbarButton, useClipboardContext } from '../../components';
+import {
+  Viewport,
+  Heading,
+  CloseButton,
+  EmojiPickerToolbarButton,
+  useClipboardContext,
+  HuePickerToolbarButton,
+} from '../../components';
 import { ConfirmReset, InvitationManager } from '../../steps';
 
 const viewStyles = 'pbs-1 pbe-3 pli-3';
@@ -33,42 +42,72 @@ const getEmojiValue = (identity?: Identity) =>
 
 const IdentityHeading = ({ titleId, title, identity, onDone, onUpdateProfile }: IdentityPanelHeadingProps) => {
   const fallbackValue = keyToFallback(identity.identityKey);
-  const { t: _t } = useTranslation('os');
-  const [displayName, _setDisplayName] = useState(identity.profile?.displayName ?? '');
+  const { t } = useTranslation('os');
+  const [displayName, setDisplayName] = useState(identity.profile?.displayName ?? '');
   const [emoji, setEmoji] = useState<string>(getEmojiValue(identity));
-  const [hue, _setHue] = useState<string>(getHueValue(identity));
-  const { textValue, setTextValue: _setTextValue } = useClipboardContext();
+  const [hue, setHue] = useState<string>(getHueValue(identity));
+  const { textValue, setTextValue } = useClipboardContext();
   const identityHex = identity?.identityKey.toHex();
-  const _copied = textValue === identityHex;
+  const copied = textValue === identityHex;
 
-  const handleUpdateProfile = () =>
-    onUpdateProfile?.({
+  const handleUpdateProfile = async () => {
+    const nextProfile = {
       ...(displayName && { displayName }),
       ...((emoji || hue) && { data: { ...(emoji && { emoji }), ...(hue && { hue }) } }),
-    });
+    };
+    return onUpdateProfile?.(nextProfile);
+  };
+
+  useEffect(() => {
+    void handleUpdateProfile();
+  }, [emoji, hue]);
 
   return (
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
-      <Avatar.Root size={14} variant='circle' status='active' hue={identity.profile?.data?.hue || fallbackValue.hue}>
+      <Avatar.Root size={14} variant='circle' status='active' hue={hue || fallbackValue.hue}>
         <Toolbar.Root classNames='grid grid-cols-[1fr_var(--rail-action)_min-content_var(--rail-action)_1fr] items-center gap-2'>
-          <Toolbar.Button classNames='bs-[--rail-action] is-[--rail-action] justify-self-end'>A</Toolbar.Button>
+          <Toolbar.Button
+            classNames='bs-[--rail-action] is-[--rail-action] justify-self-end'
+            data-testid='update-profile-form-copy-key'
+            onClick={() => {
+              if (identityHex) {
+                void setTextValue(identityHex);
+              }
+            }}
+          >
+            <span>{t(copied ? 'copy success label' : 'copy self public key label')}</span>
+            <CopySimple className={getSize(5)} />
+          </Toolbar.Button>
           <EmojiPickerToolbarButton
             emoji={emoji}
-            onChangeEmoji={(nextEmoji) => {
-              setEmoji(nextEmoji);
-              void handleUpdateProfile();
-            }}
+            onChangeEmoji={setEmoji}
             classNames='bs-[--rail-action] is-[--rail-action]'
           />
           <Avatar.Frame classNames='relative z-[2] -mli-4 chromatic-ignore'>
             <Avatar.Fallback text={emoji || fallbackValue.emoji} />
           </Avatar.Frame>
-          <Toolbar.Button classNames='bs-[--rail-action] is-[--rail-action]'>C</Toolbar.Button>
-          <Toolbar.Button classNames='bs-[--rail-action] is-[--rail-action] justify-self-start'>D</Toolbar.Button>
+          <HuePickerToolbarButton hue={hue} onChangeHue={setHue} classNames='bs-[--rail-action] is-[--rail-action]' />
+          <Toolbar.Button classNames='bs-[--rail-action] is-[--rail-action] justify-self-start'>
+            <WifiHigh className={getSize(5)} />
+          </Toolbar.Button>
         </Toolbar.Root>
-        <Avatar.Label classNames='block text-center font-light text-xl' data-testid='identityHeading.displayName'>
+        <Avatar.Label classNames='sr-only' data-testid='identityHeading.displayName'>
           {identity.profile?.displayName ?? generateName(identity.identityKey.toHex())}
         </Avatar.Label>
+        <Input.Root>
+          <Input.Label srOnly>{t('display name input label')}</Input.Label>
+          <Input.TextInput
+            variant='subdued'
+            data-testid='display-name-input'
+            placeholder={t('display name input placeholder')}
+            classNames='text-center font-light text-xl'
+            value={displayName}
+            onChange={({ target: { value } }) => {
+              setDisplayName(value);
+            }}
+            onBlur={handleUpdateProfile}
+          />
+        </Input.Root>
       </Avatar.Root>
     </Heading>
   );
