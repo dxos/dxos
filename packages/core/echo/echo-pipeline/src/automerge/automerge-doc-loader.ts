@@ -17,6 +17,8 @@ type SpaceDocumentLinks = SpaceDoc['links'];
 export interface AutomergeDocumentLoader {
   onObjectDocumentLoaded: Event<ObjectDocumentLoaded>;
 
+  getAllHandles(): DocHandle<SpaceDoc>[];
+
   loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void>;
   loadObjectDocument(objectId: string): void;
   getSpaceRootDocHandle(): DocHandle<SpaceDoc>;
@@ -51,6 +53,10 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     private readonly _spaceKey: PublicKey,
     private readonly _repo: Repo,
   ) {}
+
+  getAllHandles(): DocHandle<SpaceDoc>[] {
+    return [...new Set(this._objectDocumentHandles.values())];
+  }
 
   public async loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void> {
     if (this._spaceRootDocHandle != null) {

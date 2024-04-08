@@ -6,7 +6,7 @@
 
 import { expect } from 'chai';
 
-import { sleep, waitForCondition } from '@dxos/async';
+import { waitForCondition } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { describe, test, afterTest } from '@dxos/test';
@@ -37,10 +37,8 @@ describe('Halo', () => {
 
       await client.halo.createIdentity({ displayName: 'test-user' });
       expect(client.halo.identity).exist;
+      await client.spaces.isReady.wait();
     }
-
-    // TODO(mykola): Clean as automerge team updates storage API.
-    await sleep(200);
 
     {
       const client = new Client({ config, services: testBuilder.createLocal() });
