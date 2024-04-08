@@ -11,7 +11,7 @@ import { type Identity, useIdentity, useDevices, useHaloInvitations } from '@dxo
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { useNetworkStatus, ConnectionState } from '@dxos/react-client/mesh';
-import { Avatar, DensityProvider, Input, Toolbar, useId, useTranslation } from '@dxos/react-ui';
+import { Avatar, DensityProvider, Input, Toolbar, Tooltip, useId, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
@@ -77,18 +77,25 @@ const IdentityHeading = ({
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
       <Avatar.Root size={16} variant='circle' status={isConnected ? 'active' : 'error'} hue={hue || fallbackValue.hue}>
         <Toolbar.Root classNames='grid grid-cols-[1fr_var(--rail-action)_min-content_var(--rail-action)_1fr] items-center gap-2'>
-          <Toolbar.Button
-            classNames='bs-[--rail-action] is-[--rail-action] justify-self-end'
-            data-testid='update-profile-form-copy-key'
-            onClick={() => {
-              if (identityHex) {
-                void setTextValue(identityHex);
-              }
-            }}
-          >
-            <span className='sr-only'>{t(copied ? 'copy success label' : 'copy self public key label')}</span>
-            <CopySimple className={getSize(5)} />
-          </Toolbar.Button>
+          <Tooltip.Root>
+            <Tooltip.Trigger asChild>
+              <Toolbar.Button
+                classNames='bs-[--rail-action] is-[--rail-action] justify-self-end'
+                onClick={() =>
+                  onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)
+                }
+              >
+                <span className='sr-only'>{t(isConnected ? 'disconnect label' : 'connect label')}</span>
+                {isConnected ? <PlugsConnected className={getSize(5)} /> : <Plugs className={getSize(5)} />}
+              </Toolbar.Button>
+            </Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Content side='bottom'>
+                {t(isConnected ? 'disconnect label' : 'connect label')}
+                <Tooltip.Arrow />
+              </Tooltip.Content>
+            </Tooltip.Portal>
+          </Tooltip.Root>
           <EmojiPickerToolbarButton
             emoji={emoji}
             onChangeEmoji={setEmoji}
@@ -98,13 +105,28 @@ const IdentityHeading = ({
             <Avatar.Fallback text={emoji || fallbackValue.emoji} />
           </Avatar.Frame>
           <HuePickerToolbarButton hue={hue} onChangeHue={setHue} classNames='bs-[--rail-action] is-[--rail-action]' />
-          <Toolbar.Button
-            classNames='bs-[--rail-action] is-[--rail-action] justify-self-start'
-            onClick={() => onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)}
-          >
-            <span className='sr-only'>{t(isConnected ? 'disconnect label' : 'connect label')}</span>
-            {isConnected ? <PlugsConnected className={getSize(5)} /> : <Plugs className={getSize(5)} />}
-          </Toolbar.Button>
+          <Tooltip.Root>
+            <Tooltip.Trigger asChild>
+              <Toolbar.Button
+                classNames='bs-[--rail-action] is-[--rail-action] justify-self-start'
+                data-testid='update-profile-form-copy-key'
+                onClick={() => {
+                  if (identityHex) {
+                    void setTextValue(identityHex);
+                  }
+                }}
+              >
+                <span className='sr-only'>{t(copied ? 'copy success label' : 'copy self public key label')}</span>
+                <CopySimple className={getSize(5)} />
+              </Toolbar.Button>
+            </Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Content side='bottom'>
+                {t(copied ? 'copy success label' : 'copy self public key label')}
+                <Tooltip.Arrow />
+              </Tooltip.Content>
+            </Tooltip.Portal>
+          </Tooltip.Root>
         </Toolbar.Root>
         <Avatar.Label classNames='sr-only' data-testid='identityHeading.displayName'>
           {identity.profile?.displayName ?? generateName(identity.identityKey.toHex())}
@@ -115,7 +137,7 @@ const IdentityHeading = ({
             variant='subdued'
             data-testid='display-name-input'
             placeholder={t('display name input placeholder')}
-            classNames='text-center font-light text-xl'
+            classNames='mbs-2 text-center font-light text-xl'
             value={displayName}
             onChange={({ target: { value } }) => {
               setDisplayName(value);

@@ -3,7 +3,7 @@
 //
 import { ArrowCounterClockwise, CaretDown, Check, PaintBrush } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type Dispatch, type SetStateAction } from 'react';
+import React, { type Dispatch, type SetStateAction, useRef, useState } from 'react';
 
 import {
   Button,
@@ -49,33 +49,67 @@ export const HuePickerToolbarButton = ({
     defaultProp: defaultHue,
   });
 
+  const [huePickerOpen, setHuePickerOpen] = useState<boolean>(false);
+
+  const suppressNextTooltip = useRef<boolean>(false);
+  const [triggerTooltipOpen, setTriggerTooltipOpen] = useState(false);
+
   return (
-    <DropdownMenu.Root modal={false}>
-      <DropdownMenu.Trigger asChild>
-        <Toolbar.Button asChild>
-          <Button classNames={mx('gap-2 plb-1', classNames)} disabled={disabled}>
-            <span className='sr-only'>{t('select hue label')}</span>
-            <PaintBrush className={getSize(5)} />
-          </Button>
-        </Toolbar.Button>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Content side='bottom'>
-        <DropdownMenu.Viewport>
-          {Object.keys(hueTokenThemes).map((hue) => {
-            return (
-              <DropdownMenu.CheckboxItem key={hue} checked={hue === hueValue} onCheckedChange={() => setHueValue(hue)}>
-                <HuePreview hue={hue} />
-                <span className='grow'>{t(`${hue} label`)}</span>
-                <DropdownMenu.ItemIndicator>
-                  <Check />
-                </DropdownMenu.ItemIndicator>
-              </DropdownMenu.CheckboxItem>
-            );
-          })}
-        </DropdownMenu.Viewport>
-        <DropdownMenu.Arrow />
-      </DropdownMenu.Content>
-    </DropdownMenu.Root>
+    <Tooltip.Root
+      open={triggerTooltipOpen}
+      onOpenChange={(nextOpen) => {
+        if (suppressNextTooltip.current) {
+          setTriggerTooltipOpen(false);
+          suppressNextTooltip.current = false;
+        } else {
+          setTriggerTooltipOpen(nextOpen);
+        }
+      }}
+    >
+      <DropdownMenu.Root
+        modal={false}
+        open={huePickerOpen}
+        onOpenChange={(nextOpen) => {
+          setHuePickerOpen(nextOpen);
+          suppressNextTooltip.current = true;
+        }}
+      >
+        <Tooltip.Trigger asChild>
+          <DropdownMenu.Trigger asChild>
+            <Toolbar.Button classNames={mx('gap-2 plb-1', classNames)} disabled={disabled}>
+              <span className='sr-only'>{t('select hue label')}</span>
+              <PaintBrush className={getSize(5)} />
+            </Toolbar.Button>
+          </DropdownMenu.Trigger>
+        </Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Content side='bottom'>
+            {t('select hue label')}
+            <Tooltip.Arrow />
+          </Tooltip.Content>
+        </Tooltip.Portal>
+        <DropdownMenu.Content side='bottom'>
+          <DropdownMenu.Viewport>
+            {Object.keys(hueTokenThemes).map((hue) => {
+              return (
+                <DropdownMenu.CheckboxItem
+                  key={hue}
+                  checked={hue === hueValue}
+                  onCheckedChange={() => setHueValue(hue)}
+                >
+                  <HuePreview hue={hue} />
+                  <span className='grow'>{t(`${hue} label`)}</span>
+                  <DropdownMenu.ItemIndicator>
+                    <Check />
+                  </DropdownMenu.ItemIndicator>
+                </DropdownMenu.CheckboxItem>
+              );
+            })}
+          </DropdownMenu.Viewport>
+          <DropdownMenu.Arrow />
+        </DropdownMenu.Content>
+      </DropdownMenu.Root>
+    </Tooltip.Root>
   );
 };
 

@@ -5,7 +5,7 @@ import emojiData from '@emoji-mart/data';
 import EmojiMart from '@emoji-mart/react';
 import { ArrowCounterClockwise, CaretDown, ImageSquare } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type Dispatch, type SetStateAction, useState } from 'react';
+import React, { type Dispatch, type SetStateAction, useRef, useState } from 'react';
 
 import {
   Button,
@@ -35,7 +35,6 @@ export const EmojiPickerToolbarButton = ({
   classNames,
 }: ThemedClassName<Omit<EmojiPickerProps, 'onClickClear'>>) => {
   const { t } = useTranslation('os');
-  const [isMd] = useMediaQuery('md', { ssr: false });
 
   const [_emojiValue, setEmojiValue] = useControllableState<string>({
     prop: emoji,
@@ -45,41 +44,68 @@ export const EmojiPickerToolbarButton = ({
 
   const [emojiPickerOpen, setEmojiPickerOpen] = useState<boolean>(false);
 
+  const suppressNextTooltip = useRef<boolean>(false);
+  const [triggerTooltipOpen, setTriggerTooltipOpen] = useState(false);
+
   return (
-    <Popover.Root open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
-      <Popover.Trigger asChild>
-        <Toolbar.Button asChild>
-          <Button classNames={['gap-2 text-2xl plb-1', classNames]} disabled={disabled}>
-            <span className='sr-only'>{t('select emoji label')}</span>
-            <ImageSquare className={getSize(5)} />
-          </Button>
-        </Toolbar.Button>
-      </Popover.Trigger>
-      <Popover.Content
-        side='bottom'
-        sideOffset={isMd ? 0 : -310}
-        onKeyDownCapture={(event) => {
-          if (event.key === 'Escape') {
-            event.stopPropagation();
-            setEmojiPickerOpen(false);
-          }
+    <Tooltip.Root
+      open={triggerTooltipOpen}
+      onOpenChange={(nextOpen) => {
+        if (suppressNextTooltip.current) {
+          setTriggerTooltipOpen(false);
+          suppressNextTooltip.current = false;
+        } else {
+          setTriggerTooltipOpen(nextOpen);
+        }
+      }}
+    >
+      <Popover.Root
+        open={emojiPickerOpen}
+        onOpenChange={(nextOpen) => {
+          setEmojiPickerOpen(nextOpen);
+          suppressNextTooltip.current = true;
         }}
       >
-        <EmojiMart
-          data={emojiData}
-          onEmojiSelect={({ native }: { native?: string }) => {
-            if (native) {
-              setEmojiValue(native);
+        <Tooltip.Trigger asChild>
+          <Popover.Trigger asChild>
+            <Toolbar.Button classNames={['gap-2 text-2xl plb-1', classNames]} disabled={disabled}>
+              <span className='sr-only'>{t('select emoji label')}</span>
+              <ImageSquare className={getSize(5)} />
+            </Toolbar.Button>
+          </Popover.Trigger>
+        </Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Content side='bottom'>
+            {t('select emoji label')}
+            <Tooltip.Arrow />
+          </Tooltip.Content>
+        </Tooltip.Portal>
+        <Popover.Content
+          side='bottom'
+          onKeyDownCapture={(event) => {
+            if (event.key === 'Escape') {
+              event.stopPropagation();
               setEmojiPickerOpen(false);
+              suppressNextTooltip.current = true;
             }
           }}
-          autoFocus={true}
-          maxFrequentRows={0}
-          noCountryFlags={true}
-        />
-        <Popover.Arrow />
-      </Popover.Content>
-    </Popover.Root>
+        >
+          <EmojiMart
+            data={emojiData}
+            onEmojiSelect={({ native }: { native?: string }) => {
+              if (native) {
+                setEmojiValue(native);
+                setEmojiPickerOpen(false);
+              }
+            }}
+            autoFocus={true}
+            maxFrequentRows={0}
+            noCountryFlags={true}
+          />
+          <Popover.Arrow />
+        </Popover.Content>
+      </Popover.Root>
+    </Tooltip.Root>
   );
 };
 
