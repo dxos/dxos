@@ -99,8 +99,6 @@ describe('Spaces', () => {
       expect(space.members.get()).to.be.length(1);
       await space.db.flush();
     }
-    // TODO(mykola): Clean as automerge team updates storage API.
-    // Need this `sleep` for automerge to finish storage write.
     await client.destroy();
 
     await client.initialize();

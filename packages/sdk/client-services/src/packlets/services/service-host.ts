@@ -360,8 +360,8 @@ export class ClientServicesHost {
     document.change((doc: SpaceDoc) => {
       assignDeep(doc, ['objects', objectDocument.id], objectDocument.handle.docSync());
     });
-    // TODO: replace with flush when supported by automerge-repo
-    await sleep(200);
+
+    await this._serviceContext.automergeHost.repo.flush();
 
     return identity;
   }

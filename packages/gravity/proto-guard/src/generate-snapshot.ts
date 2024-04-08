@@ -4,7 +4,6 @@
 
 import path from 'node:path';
 
-import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import * as E from '@dxos/client/echo';
 import { log } from '@dxos/log';
@@ -58,13 +57,10 @@ const main = async () => {
 
     // TODO(burdon): Add mutations.
     space.db.add(E.object(E.TextCompatibilitySchema, { content: data.space.text.content }));
-    // await space.db.flush();
+    await space.db.flush();
   }
 
   log.break();
-
-  // TODO(mykola): Clean as automerge team updates storage API.
-  await sleep(200);
 
   {
     // Clean up.
