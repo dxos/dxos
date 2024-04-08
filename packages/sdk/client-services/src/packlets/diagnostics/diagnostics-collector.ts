@@ -3,7 +3,7 @@
 //
 
 import { type ClientServicesProvider } from '@dxos/client-protocol';
-import { type Config, type ConfigProto, ConfigResource } from '@dxos/config';
+import { type Config, ConfigResource } from '@dxos/config';
 import { GetDiagnosticsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { type JsonKeyOptions, jsonKeyReplacer, nonNullable } from '@dxos/util';
@@ -37,7 +37,7 @@ export class DiagnosticsCollector {
     });
 
     const clientDiagnostics = {
-      config: config != null ? (Array.isArray(config) ? mergeConfigs(config) : config.values) : undefined,
+      config,
       trace: TRACE_PROCESSOR.getDiagnostics(),
     };
 
@@ -52,12 +52,6 @@ export class DiagnosticsCollector {
     return JSON.parse(JSON.stringify(diagnostics, jsonKeyReplacer(options)));
   }
 }
-
-const mergeConfigs = (configs: Config[]) =>
-  configs.reduce<{ [idx: number]: ConfigProto }>((acc, v, idx) => {
-    acc[idx] = v.values;
-    return acc;
-  }, {});
 
 const findSystemServiceProvider = (): ClientServicesProvider | null => {
   const serviceProviders = TRACE_PROCESSOR.findByAnnotation(ClientServicesProviderResource);
