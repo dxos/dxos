@@ -34,13 +34,14 @@ describe('Serialization', () => {
     await client.halo.createIdentity();
 
     const serializer = new ObjectSerializer();
+    const content = ['# Hello world!', '', 'This is a document.'].join('\n');
 
-    const text = ['# Hello world!', '', 'This is a document.'].join('\n');
     let serialized: SerializedSpace;
     {
       const space1 = await createSpace(client, 'test-1');
       const { objects } = getSpaceProperty<FolderType>(space1, FolderType.typename)!;
-      objects.push(E.object(DocumentType, { content: E.object(TextV0Type, { content: text }) }));
+      objects.push(E.object(DocumentType, { content: E.object(TextV0Type, { content }) }));
+
       serialized = await serializer.serializeSpace(space1);
       expect(serialized.metadata.name).to.equal('test-1');
       expect(serialized.objects).to.have.length(1);
@@ -51,10 +52,10 @@ describe('Serialization', () => {
       const space2 = await createSpace(client, 'test-2');
       const space3 = await serializer.deserializeSpace(space2, serialized);
       const { objects } = getSpaceProperty<FolderType>(space3, FolderType.typename)!;
+
       const object = objects[0]!;
       expect(object instanceof DocumentType).to.be.true;
-      const content = getTextContent(object.content);
-      expect(content).to.equal(text);
+      expect(getTextContent(object.content)).to.equal(content);
 
       // TODO(burdon): Object ID is not preserved (refs?)
       expect(object.id).to.not.equal(serialized.objects[0].id);
