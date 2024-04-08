@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretRight, Plus, Power, UserGear, HardDrive, Intersect } from '@phosphor-icons/react';
+import { CaretRight, Plus, Power, HardDrive, Intersect } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
 import { log } from '@dxos/log';
@@ -72,11 +72,6 @@ export const IdentityActionChooserImpl = ({
     <div role='none' className='grow flex flex-col gap-1'>
       <DensityProvider density='coarse'>
         <div className='grow justify-center flex flex-col gap-1'>
-          <Action data-testid='manage-profile' onClick={() => send?.({ type: 'chooseProfile' })} classNames='plb-4'>
-            <UserGear className={getSize(6)} />
-            <span className='grow mli-3'>{t('choose profile label')}</span>
-            <CaretRight weight='bold' className={getSize(4)} />
-          </Action>
           {agentHostingEnabled && (
             <Action data-testid='manage-agent' onClick={() => send?.({ type: 'chooseAgent' })} classNames='plb-4'>
               <HardDrive className={getSize(6)} />

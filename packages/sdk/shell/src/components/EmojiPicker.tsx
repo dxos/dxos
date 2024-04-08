@@ -75,7 +75,7 @@ export const EmojiPickerToolbarButton = ({
           </Popover.Trigger>
         </Tooltip.Trigger>
         <Tooltip.Portal>
-          <Tooltip.Content side='bottom'>
+          <Tooltip.Content side='bottom' classNames='z-50'>
             {t('select emoji label')}
             <Tooltip.Arrow />
           </Tooltip.Content>

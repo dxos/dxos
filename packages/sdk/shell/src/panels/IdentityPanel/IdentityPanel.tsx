@@ -90,25 +90,21 @@ const IdentityHeading = ({
               </Toolbar.Button>
             </Tooltip.Trigger>
             <Tooltip.Portal>
-              <Tooltip.Content side='bottom'>
+              <Tooltip.Content side='bottom' classNames='z-50'>
                 {t(isConnected ? 'disconnect label' : 'connect label')}
                 <Tooltip.Arrow />
               </Tooltip.Content>
             </Tooltip.Portal>
           </Tooltip.Root>
-          <EmojiPickerToolbarButton
-            emoji={emoji}
-            onChangeEmoji={setEmoji}
-            classNames='bs-[--rail-action] is-[--rail-action]'
-          />
+          <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='bs-[--rail-action]' />
           <Avatar.Frame classNames='relative z-[2] -mli-4 chromatic-ignore'>
             <Avatar.Fallback text={emoji || fallbackValue.emoji} />
           </Avatar.Frame>
-          <HuePickerToolbarButton hue={hue} onChangeHue={setHue} classNames='bs-[--rail-action] is-[--rail-action]' />
+          <HuePickerToolbarButton hue={hue} onChangeHue={setHue} classNames='bs-[--rail-action]' />
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
               <Toolbar.Button
-                classNames='bs-[--rail-action] is-[--rail-action] justify-self-start'
+                classNames='bs-[--rail-action] justify-self-start'
                 data-testid='update-profile-form-copy-key'
                 onClick={() => {
                   if (identityHex) {
@@ -121,7 +117,7 @@ const IdentityHeading = ({
               </Toolbar.Button>
             </Tooltip.Trigger>
             <Tooltip.Portal>
-              <Tooltip.Content side='bottom'>
+              <Tooltip.Content side='bottom' classNames='z-50'>
                 {t(copied ? 'copy success label' : 'copy self public key label')}
                 <Tooltip.Arrow />
               </Tooltip.Content>

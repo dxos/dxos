@@ -1,7 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
-import { ArrowCounterClockwise, CaretDown, Check, PaintBrush } from '@phosphor-icons/react';
+import { ArrowCounterClockwise, CaretDown, Check, Palette } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type Dispatch, type SetStateAction, useRef, useState } from 'react';
 
@@ -78,12 +78,12 @@ export const HuePickerToolbarButton = ({
           <DropdownMenu.Trigger asChild>
             <Toolbar.Button classNames={mx('gap-2 plb-1', classNames)} disabled={disabled}>
               <span className='sr-only'>{t('select hue label')}</span>
-              <PaintBrush className={getSize(5)} />
+              <Palette className={getSize(5)} />
             </Toolbar.Button>
           </DropdownMenu.Trigger>
         </Tooltip.Trigger>
         <Tooltip.Portal>
-          <Tooltip.Content side='bottom'>
+          <Tooltip.Content side='bottom' classNames='z-50'>
             {t('select hue label')}
             <Tooltip.Arrow />
           </Tooltip.Content>
