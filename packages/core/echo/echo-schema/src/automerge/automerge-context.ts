@@ -9,7 +9,12 @@ import { exposeModule } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type HostInfo, type DataService, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
+import {
+  type HostInfo,
+  type DataService,
+  type SyncRepoResponse,
+  type FlushRequest,
+} from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
 
@@ -32,11 +37,14 @@ export class AutomergeContext {
   @trace.info()
   public readonly spaceFragmentationEnabled: boolean;
 
-  constructor(dataService: DataService | undefined = undefined, config: AutomergeContextConfig = {}) {
+  constructor(
+    private readonly _dataService: DataService | undefined = undefined,
+    config: AutomergeContextConfig = {},
+  ) {
     this._peerId = `client-${PublicKey.random().toHex()}` as PeerId;
     this.spaceFragmentationEnabled = config.spaceFragmentationEnabled ?? false;
-    if (dataService) {
-      this._adapter = new LocalClientNetworkAdapter(dataService);
+    if (this._dataService) {
+      this._adapter = new LocalClientNetworkAdapter(this._dataService);
       this._repo = new Repo({
         peerId: this._peerId as PeerId,
         network: [this._adapter],
@@ -50,6 +58,16 @@ export class AutomergeContext {
 
   get repo(): Repo {
     return this._repo;
+  }
+
+  /**
+   * Waits to flush all data to the storage.
+   *
+   * Note: AutomergeContext does not have a storage adapter,
+   *       so this method sends a RPC call to the AutomergeHost.
+   */
+  async flush({ spaceKey }: FlushRequest): Promise<void> {
+    await this._dataService?.flush({ spaceKey });
   }
 
   @trace.info({ depth: null })

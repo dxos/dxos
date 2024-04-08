@@ -17,7 +17,12 @@ import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
-import { type HostInfo, type SyncRepoRequest, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
+import {
+  type FlushRequest,
+  type HostInfo,
+  type SyncRepoRequest,
+  type SyncRepoResponse,
+} from '@dxos/protocols/proto/dxos/echo/service';
 import { StorageType, type Directory } from '@dxos/random-access-storage';
 import { type AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
 import { trace } from '@dxos/tracing';
@@ -228,6 +233,21 @@ export class AutomergeHost {
   //
   // Methods for client-services.
   //
+
+  async flush({ spaceKey }: FlushRequest): Promise<void> {
+    let documentIds: DocumentId[] | undefined;
+    if (spaceKey) {
+      documentIds = await Promise.all(
+        Object.values(this._repo.handles)
+          .filter(async (handle) => {
+            const doc = await handle.doc();
+            return doc && spaceKey.equals(getSpaceKeyFromDoc(doc) ?? '');
+          })
+          .map((handle) => handle.documentId),
+      );
+    }
+    await this._repo.flush(documentIds);
+  }
 
   syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {
     return this._clientNetwork.syncRepo(request);

@@ -260,6 +260,10 @@ export class AutomergeDb {
     core.setDeleted(true);
   }
 
+  async flush() {
+    await this.automerge.flush({ spaceKey: this.spaceKey });
+  }
+
   private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandle<SpaceDoc>, objectsToLoad: string[]) {
     const spaceRootDoc: SpaceDoc = spaceRootDocHandle.docSync();
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));

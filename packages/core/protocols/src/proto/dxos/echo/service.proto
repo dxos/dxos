@@ -47,7 +47,7 @@ message MutationReceipt {
 }
 
 message FlushRequest {
-  dxos.keys.PublicKey space_key = 1;
+  optional dxos.keys.PublicKey space_key = 1;
 }
 
 // Automerge specific.
