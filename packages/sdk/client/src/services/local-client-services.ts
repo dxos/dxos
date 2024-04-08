@@ -4,7 +4,11 @@
 
 import { Event, synchronized } from '@dxos/async';
 import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
-import { type ClientServicesHost, type ClientServicesHostParams } from '@dxos/client-services';
+import {
+  type ClientServicesHost,
+  type ClientServicesHostParams,
+  ClientServicesProviderResource,
+} from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
@@ -81,7 +85,7 @@ const setupNetworking = async (
 /**
  * Starts a local instance of the service host.
  */
-@trace.resource()
+@trace.resource(ClientServicesProviderResource)
 export class LocalClientServices implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
   private readonly _ctx = new Context();

@@ -14,6 +14,7 @@ import {
   type ClientServices,
   type ClientServicesProvider,
 } from '@dxos/client-protocol';
+import { DiagnosticsCollector } from '@dxos/client-services';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
@@ -23,15 +24,11 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
-import {
-  GetDiagnosticsRequest,
-  SystemStatus,
-  type QueryStatusResponse,
-} from '@dxos/protocols/proto/dxos/client/services';
+import { SystemStatus, type QueryStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
-import { trace, TRACE_PROCESSOR } from '@dxos/tracing';
-import { jsonKeyReplacer, type JsonKeyOptions, type MaybePromise } from '@dxos/util';
+import { trace } from '@dxos/tracing';
+import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
 import { ClientRuntime } from './client-runtime';
 import { IndexKind, type SpaceList, type TypeCollection } from '../echo';
@@ -248,25 +245,7 @@ export class Client {
    */
   async diagnostics(options: JsonKeyOptions = {}): Promise<any> {
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
-    const serviceDiagnostics = await this._services.services.SystemService.getDiagnostics({
-      keys: options.humanize
-        ? GetDiagnosticsRequest.KEY_OPTION.HUMANIZE
-        : options.truncate
-          ? GetDiagnosticsRequest.KEY_OPTION.TRUNCATE
-          : undefined,
-    });
-
-    const clientDiagnostics = {
-      config: this._config?.values,
-      trace: TRACE_PROCESSOR.getDiagnostics(),
-    };
-
-    const diagnostics = {
-      client: clientDiagnostics,
-      services: serviceDiagnostics,
-    };
-
-    return JSON.parse(JSON.stringify(diagnostics, jsonKeyReplacer(options)));
+    return DiagnosticsCollector.collect(this._config, this.services, options);
   }
 
   /**
