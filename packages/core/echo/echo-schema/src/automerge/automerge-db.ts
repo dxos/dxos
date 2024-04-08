@@ -441,7 +441,7 @@ export class AutomergeDb {
   );
 
   async flush(): Promise<void> {
-    await this.automerge.repo.flush();
+    await this.automerge.repo.flush(this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId));
   }
 
   // TODO(dmaretskyi): Pass all remote updates through this.
