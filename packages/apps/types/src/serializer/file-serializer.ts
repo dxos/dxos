@@ -8,6 +8,7 @@ import { type Space } from '@dxos/client/echo';
 import * as E from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
+import { jsonSerializer } from './serializer';
 import { serializers } from './serializers';
 import { getSpaceProperty } from './space-properties';
 import { FolderType } from '../schema';
@@ -24,15 +25,22 @@ export type SpaceMetadata = {
 
 export type SerializedObject =
   | {
+      // Object.
       type: 'file';
       name: string;
       id: string;
       extension: string;
       typename: string;
-      content?: string;
       md5sum: string;
+      content?: string;
     }
-  | { type: 'folder'; name: string; children: SerializedObject[]; id: string };
+  | {
+      // Folder.
+      type: 'folder';
+      name: string;
+      id: string;
+      children: SerializedObject[];
+    };
 
 export type SerializedSpace = {
   metadata: SpaceMetadata;
@@ -78,7 +86,6 @@ export class FileSerializer {
 
   private async _serializeFolder(folder: FolderType): Promise<SerializedObject & { type: 'folder' }> {
     const files: SerializedObject[] = [];
-
     for (const child of folder.objects) {
       if (!child) {
         continue;
@@ -95,10 +102,10 @@ export class FileSerializer {
       }
 
       const typename = E.getEchoObjectAnnotation(schema)?.typename ?? TypeOfExpando;
-      const serializer = serializers[typename] ?? serializers.default;
+      const serializer = serializers[typename] ?? jsonSerializer;
 
       const filename = serializer.filename(child);
-      const content = await serializer.serialize(child);
+      const content = await serializer.serialize(child, serializers);
       files.push({
         type: 'file',
         id: child.id,
@@ -114,7 +121,7 @@ export class FileSerializer {
       type: 'folder',
       id: folder.id,
       // TODO(mykola): Use folder.name instead of folder.title.
-      name: this._fixNamesCollisions((folder as any).title ?? 'New folder'),
+      name: this._fixNamesCollisions(folder.name ?? (folder as any).title ?? 'New folder'),
       children: files,
     };
   }
@@ -139,7 +146,7 @@ export class FileSerializer {
           case 'file': {
             const child = folder.objects.find((item) => item?.id === object.id);
             const serializer = serializers[object.typename] ?? serializers.default;
-            const deserialized = await serializer.deserialize(object.content!, child);
+            const deserialized = await serializer.deserialize(object.content!, child, serializers);
 
             if (!child) {
               // TODO(dmaretskyi): This won't work.
@@ -157,10 +164,12 @@ export class FileSerializer {
 
   private readonly _namesCount = new Map<string, number>();
 
+  // TODO(burdon): Factor out.
   private _fixNamesCollisions = (name = 'untitled') => {
     if (this._namesCount.has(name)) {
       const count = this._namesCount.get(name)!;
       this._namesCount.set(name, count + 1);
+      // TODO(burdon): Don't assume spaces?
       return `${name} (${count})`;
     } else {
       this._namesCount.set(name, 1);
