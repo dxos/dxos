@@ -28,7 +28,6 @@ export type ReplicationOptions = {
 export class ReplicatorExtension implements TeleportExtension {
   private readonly _ctx = new Context({
     onError: (err) => {
-      log.catch(err);
       this._extensionContext?.close(err);
     },
   });
@@ -130,6 +129,7 @@ export class ReplicatorExtension implements TeleportExtension {
       port: await context.createPort('rpc', {
         contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
       }),
+      timeout: 10_000,
     });
     await this._rpc.open();
 
