@@ -22,11 +22,11 @@ import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
 import { assignDeep } from '@dxos/util';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
-import { createDiagnostics } from './diagnostics';
 import { ServiceContext, type ServiceContextRuntimeParams } from './service-context';
 import { ServiceRegistry } from './service-registry';
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools';
+import { createDiagnostics } from '../diagnostics';
 import { IdentityServiceImpl, type CreateIdentityOptions } from '../identity';
 import { InvitationsServiceImpl } from '../invitations';
 import { Lock, type ResourceLock } from '../locks';

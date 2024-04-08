@@ -8,7 +8,7 @@ import { GetDiagnosticsRequest } from '@dxos/protocols/proto/dxos/client/service
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { type JsonKeyOptions, jsonKeyReplacer, nonNullable } from '@dxos/util';
 
-import { ClientServicesProviderResource } from './util';
+import { ClientServicesProviderResource } from '../services';
 
 export class DiagnosticsCollector {
   public static async collect(
