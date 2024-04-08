@@ -38,6 +38,8 @@ export class IndexServiceImpl implements IndexService {
     const filter = Filter.fromProto(request.filter);
     return new Stream(({ next, close }) => {
       let currentCtx: Context;
+      // Previous id-s.
+      let previousResults: string[] = [];
 
       const update = async () => {
         try {
@@ -80,6 +82,16 @@ export class IndexServiceImpl implements IndexService {
             return;
           }
 
+          // Skip if results are the same.
+          if (
+            previousResults.length === response.results?.length &&
+            previousResults.every((id) => response.results?.some((result) => result.id === id)) &&
+            response.results.every((result) => previousResults.some((id) => id === result.id))
+          ) {
+            return;
+          }
+
+          previousResults = response.results?.map((result) => result.id) ?? [];
           next(response);
         } catch (error) {
           log.catch(error);
