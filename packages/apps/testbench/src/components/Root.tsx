@@ -18,8 +18,8 @@ export const Root = () => {
 
   const space = client.spaces.default;
   // TODO(burdon): [API]: Neither { type: ItemType } nor E.Filter.schema works.
-  const o = useQuery<ItemType>(space, { type: E.Filter.schema(ItemType) });
-  const objects = useQuery(space);
+  const objects = useQuery<ItemType>(space, { type: E.Filter.schema(ItemType) });
+  const all = useQuery(space);
 
   const handleAdd = (n = 1) => {
     let count = objects.length;
@@ -31,8 +31,8 @@ export const Root = () => {
 
   // TODO(burdon): Track how many renders?
   return (
-    <div className='flex justify-center absolute inset-0 overflow-hidden bg-neutral-100 dark:bg-neutral-800'>
-      <div className='flex flex-col w-full max-w-[40rem] shadow-lg bg-white dark:bg-black'>
+    <div className='flex justify-center fixed inset-0 overflow-hidden bg-neutral-100 dark:bg-neutral-800'>
+      <div className='flex flex-col w-full max-w-[40rem] shadow-lg bg-white dark:bg-black divide-y'>
         <div className='flex-col flex-shrink-0 p-2'>
           <table>
             <tbody>
@@ -52,7 +52,7 @@ export const Root = () => {
           {objects.map((object) => (
             <Item key={object.id} object={object} />
           ))}
-          {objects.length} / {o.length}
+          {objects.length} / {all.length}
         </div>
 
         <div className='flex-col flex-shrink-0 p-2'>
@@ -66,9 +66,11 @@ export const Root = () => {
 };
 
 // TODO(burdon): Text editor.
+// TODO(burdon): Use ui list with key nav/selection.
+// TODO(burdon): Delete button.
+// TODO(burdon): Show deleted.
 const Item: FC<{ object: ReactiveObject<ItemType> }> = ({ object }) => {
   const meta = E.getMeta(object);
-  E.getDatabase());
   return (
     <div className='border m-1 p-1'>
       <div className='text-xs'>{object.id.slice(0, 8)}</div>

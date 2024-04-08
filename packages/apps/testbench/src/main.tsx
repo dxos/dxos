@@ -25,6 +25,7 @@ void initializeAppObservability({ namespace: 'testbench.dxos.org', config: new C
 
 const Identity: FC<PropsWithChildren> = ({ children }) => {
   const client = useClient();
+  // TODO(burdon): [API]: get() here is strange; should be natural like client.spaces.default?
   const [identity, setIdentity] = useState(client.halo.identity.get());
   useEffect(() => {
     try {
@@ -37,6 +38,7 @@ const Identity: FC<PropsWithChildren> = ({ children }) => {
       setTimeout(async () => {
         // TODO(burdon): [API]: Need better start-up API.
         // TODO(burdon): [API]: Race condition with identity not set.
+        //  Should through API-level error, not: "Error: invariant violation:"
         await client.halo.createIdentity({ displayName: 'Test User' });
         await client.spaces.isReady.wait();
         setIdentity(client.halo.identity.get());
@@ -62,6 +64,7 @@ const router = createBrowserRouter([
   },
 ]);
 
+// TODO(burdon): ErrorBoundary.
 const App = withProfiler(() => {
   return (
     <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
