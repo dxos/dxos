@@ -5,7 +5,7 @@
 import { getSchema, type ExpandoType, getEchoObjectAnnotation } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
-import { TypeOfExpando } from './file-serializer';
+import { TypeOfExpando } from './object-serializer';
 import { jsonSerializer } from './serializer';
 import { serializers } from './serializers';
 

@@ -5,7 +5,7 @@
 import { type Space } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 
-import { FileSerializer, type SerializedObject, type SerializedSpace } from './file-serializer';
+import { ObjectSerializer, type SerializedObject, type SerializedSpace } from './object-serializer';
 
 // TODO(burdon): Change to .dxos (do not use "composer" in file names.)
 const META_DIR = '.composer';
@@ -18,7 +18,7 @@ export type SpaceSerializerOptions = {
 
 export class SpaceSerializer {
   async save({ space, directory }: SpaceSerializerOptions): Promise<void> {
-    const serializer = new FileSerializer();
+    const serializer = new ObjectSerializer();
     const serializedSpace = await serializer.serializeSpace(space);
 
     const saveDir = await directory.getDirectoryHandle(
@@ -57,7 +57,7 @@ export class SpaceSerializer {
       return result;
     };
 
-    const serializer = new FileSerializer();
+    const serializer = new ObjectSerializer();
     return serializer.deserializeSpace(space, {
       ...metadata,
       objects: await loadContent(directory, metadata.objects),

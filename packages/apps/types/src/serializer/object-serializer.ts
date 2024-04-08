@@ -47,7 +47,7 @@ export type SerializedSpace = {
   objects: SerializedObject[];
 };
 
-export class FileSerializer {
+export class ObjectSerializer {
   async serializeSpace(space: Space): Promise<SerializedSpace> {
     await space.waitUntilReady();
 

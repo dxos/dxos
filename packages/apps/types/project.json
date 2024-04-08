@@ -23,6 +23,7 @@
       "outputs": [
         "{projectRoot}/src/proto/gen"
       ]
-    }
+    },
+    "test": {}
   }
 }
