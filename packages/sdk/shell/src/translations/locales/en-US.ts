@@ -45,8 +45,6 @@ export const os = {
   'connected status label': 'Enter confirmation PIN',
   'authenticating status label': 'Enter confirmation PIN',
   'success status label': 'Success',
-  'connect label': 'Connect',
-  'reconnect label': 'Reconnect',
   'cancel label': 'Cancel',
   'done label': 'Done',
   'reset label': 'Start over',
@@ -134,4 +132,6 @@ export const os = {
   'current device tag label': 'This device',
   'device name placeholder': '{{platform}} on {{os}}',
   'more options label': 'More options',
+  'disconnect label': 'Currently online. Click to go offline.',
+  'connect label': 'Currently offline. Click to go online.',
 };

@@ -7,6 +7,7 @@ import type { Event, SingleOrArray } from 'xstate';
 
 import type { Device, Identity } from '@dxos/react-client/halo';
 import type { InvitationStatus } from '@dxos/react-client/invitations';
+import type { ConnectionState } from '@dxos/react-client/mesh';
 
 import type { IdentityEvent } from './identityMachine';
 import type { InvitationManagerProps } from '../../steps';
@@ -35,6 +36,8 @@ export type IdentityPanelImplProps = {
   initialDisposition?: IdentityPanelInitialDisposition;
   identity: Identity;
   devices: Device[];
+  connectionState?: ConnectionState;
+  onChangeConnectionState?: (nextState: ConnectionState) => Promise<void>;
   onUpdateProfile?: (profile: NonNullable<Identity['profile']>) => Promise<void>;
   onResetStorage?: () => Promise<void>;
   onJoinNewIdentity?: () => Promise<void>;
@@ -52,7 +55,7 @@ export type IdentityPanelProps = Partial<Omit<IdentityPanelImplProps, 'send' | '
 
 export type IdentityPanelHeadingProps = Pick<
   IdentityPanelImplProps,
-  'titleId' | 'identity' | 'onDone' | 'onUpdateProfile'
+  'titleId' | 'identity' | 'onDone' | 'onUpdateProfile' | 'connectionState' | 'onChangeConnectionState'
 > & {
   title: string;
 };

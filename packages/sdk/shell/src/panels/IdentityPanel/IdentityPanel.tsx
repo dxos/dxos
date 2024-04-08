@@ -1,7 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
-import { CopySimple, WifiHigh } from '@phosphor-icons/react';
+import { CopySimple, Plugs, PlugsConnected } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { generateName } from '@dxos/display-name';
@@ -10,6 +10,7 @@ import { useClient } from '@dxos/react-client';
 import { type Identity, useIdentity, useDevices, useHaloInvitations } from '@dxos/react-client/halo';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
+import { useNetworkStatus, ConnectionState } from '@dxos/react-client/mesh';
 import { Avatar, DensityProvider, Input, Toolbar, useId, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
@@ -40,7 +41,15 @@ const getHueValue = (identity?: Identity) =>
 const getEmojiValue = (identity?: Identity) =>
   identity?.profile?.data?.emoji || hexToEmoji(identity?.identityKey.toHex() ?? '0');
 
-const IdentityHeading = ({ titleId, title, identity, onDone, onUpdateProfile }: IdentityPanelHeadingProps) => {
+const IdentityHeading = ({
+  titleId,
+  title,
+  identity,
+  onDone,
+  onUpdateProfile,
+  connectionState,
+  onChangeConnectionState,
+}: IdentityPanelHeadingProps) => {
   const fallbackValue = keyToFallback(identity.identityKey);
   const { t } = useTranslation('os');
   const [displayName, setDisplayName] = useState(identity.profile?.displayName ?? '');
@@ -62,9 +71,11 @@ const IdentityHeading = ({ titleId, title, identity, onDone, onUpdateProfile }: 
     void handleUpdateProfile();
   }, [emoji, hue]);
 
+  const isConnected = connectionState === ConnectionState.ONLINE;
+
   return (
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
-      <Avatar.Root size={14} variant='circle' status='active' hue={hue || fallbackValue.hue}>
+      <Avatar.Root size={16} variant='circle' status='active' hue={hue || fallbackValue.hue}>
         <Toolbar.Root classNames='grid grid-cols-[1fr_var(--rail-action)_min-content_var(--rail-action)_1fr] items-center gap-2'>
           <Toolbar.Button
             classNames='bs-[--rail-action] is-[--rail-action] justify-self-end'
@@ -75,7 +86,7 @@ const IdentityHeading = ({ titleId, title, identity, onDone, onUpdateProfile }: 
               }
             }}
           >
-            <span>{t(copied ? 'copy success label' : 'copy self public key label')}</span>
+            <span className='sr-only'>{t(copied ? 'copy success label' : 'copy self public key label')}</span>
             <CopySimple className={getSize(5)} />
           </Toolbar.Button>
           <EmojiPickerToolbarButton
@@ -87,8 +98,12 @@ const IdentityHeading = ({ titleId, title, identity, onDone, onUpdateProfile }: 
             <Avatar.Fallback text={emoji || fallbackValue.emoji} />
           </Avatar.Frame>
           <HuePickerToolbarButton hue={hue} onChangeHue={setHue} classNames='bs-[--rail-action] is-[--rail-action]' />
-          <Toolbar.Button classNames='bs-[--rail-action] is-[--rail-action] justify-self-start'>
-            <WifiHigh className={getSize(5)} />
+          <Toolbar.Button
+            classNames='bs-[--rail-action] is-[--rail-action] justify-self-start'
+            onClick={() => onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)}
+          >
+            <span className='sr-only'>{t(isConnected ? 'disconnect label' : 'connect label')}</span>
+            {isConnected ? <PlugsConnected className={getSize(5)} /> : <Plugs className={getSize(5)} />}
           </Toolbar.Button>
         </Toolbar.Root>
         <Avatar.Label classNames='sr-only' data-testid='identityHeading.displayName'>
@@ -123,6 +138,8 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
     onJoinNewIdentity,
     IdentityActionChooser: IdentityActionChooserComponent = IdentityActionChooser,
     InvitationManager: InvitationManagerComponent = InvitationManager,
+    connectionState,
+    onChangeConnectionState,
     onDone,
     ...rest
   } = props;
@@ -142,7 +159,9 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
 
   return (
     <DensityProvider density='fine'>
-      <IdentityHeading {...{ identity, titleId, title, onDone, onUpdateProfile }} />
+      <IdentityHeading
+        {...{ identity, titleId, title, onDone, onUpdateProfile, connectionState, onChangeConnectionState }}
+      />
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
           <Viewport.View id='identity action chooser' classNames={viewStyles}>
@@ -221,6 +240,10 @@ export const IdentityPanel = ({
     context: { initialDisposition },
   });
 
+  const { swarm: connectionState } = useNetworkStatus();
+
+  const handleChangeConnectionState = async (nextState: ConnectionState) => client?.mesh.updateConfig(nextState);
+
   useEffect(() => {
     const subscription = identityService.subscribe((state) => {
       log('[state]', state);
@@ -264,6 +287,8 @@ export const IdentityPanel = ({
     titleId,
     createInvitationUrl,
     onUpdateProfile,
+    connectionState,
+    onChangeConnectionState: handleChangeConnectionState,
     ...agentProps,
   } satisfies IdentityPanelImplProps;
 
