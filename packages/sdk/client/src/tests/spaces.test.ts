@@ -5,7 +5,6 @@
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
-import { DocumentType, TextV0Type } from '@braneframe/types';
 import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
@@ -21,7 +20,7 @@ import { range } from '@dxos/util';
 
 import { Client } from '../client';
 import { SpaceState, getSpace, type SpaceProxy } from '../echo';
-import { TestBuilder, testSpaceAutomerge, waitForSpace } from '../testing';
+import { DocumentType, TextV0Type, TestBuilder, testSpaceAutomerge, waitForSpace } from '../testing';
 
 describe('Spaces', () => {
   test('creates a default space', async () => {

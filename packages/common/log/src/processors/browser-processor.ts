@@ -58,7 +58,7 @@ const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
     const filename = getRelativeFilename(entry.meta.F);
     const filepath = `${LOG_BROWSER_PREFIX.replace(/\/$/, '')}/${filename}`;
     // TODO(burdon): Line numbers not working for app link, even with colons.
-    //   https://stackoverflow.com/a/54459820/2804332
+    //  https://stackoverflow.com/a/54459820/2804332
     link = `${filepath}#L${entry.meta.L}`;
   }
 

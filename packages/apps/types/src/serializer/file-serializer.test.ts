@@ -4,8 +4,6 @@
 
 import { expect } from 'chai';
 
-import { getSpaceProperty, setSpaceProperty } from '@braneframe/plugin-client/space-properties';
-import { DocumentType, FolderType, TextV0Type } from '@braneframe/types';
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import * as E from '@dxos/echo-schema';
@@ -13,6 +11,8 @@ import { getTextContent } from '@dxos/echo-schema';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { FileSerializer, type SerializedSpace } from './file-serializer';
+import { getSpaceProperty, setSpaceProperty } from './space-properties';
+import { DocumentType, FolderType, TextV0Type } from '../schema';
 
 const createSpace = async (client: Client, name: string | undefined = undefined) => {
   const space = await client.spaces.create(name ? { name } : undefined);

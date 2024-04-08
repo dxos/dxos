@@ -4,8 +4,7 @@
 
 import { expect } from 'chai';
 
-import { getSpaceProperty, setSpaceProperty } from '@braneframe/plugin-client/space-properties';
-import { FolderType } from '@braneframe/types';
+import { getSpaceProperty, setSpaceProperty, FolderType } from '@braneframe/types';
 import { Client, PublicKey } from '@dxos/client';
 import { type Space, Filter } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';

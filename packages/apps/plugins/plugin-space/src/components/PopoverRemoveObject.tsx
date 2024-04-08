@@ -4,8 +4,7 @@
 
 import React, { useCallback, useRef } from 'react';
 
-import { getSpaceProperty } from '@braneframe/plugin-client';
-import { FolderType } from '@braneframe/types';
+import { getSpaceProperty, FolderType } from '@braneframe/types';
 import { NavigationAction, parseIntentPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { type ExpandoType, isEchoReactiveObject } from '@dxos/echo-schema';
 import { getSpace } from '@dxos/react-client/echo';

@@ -4,21 +4,22 @@
 
 import get from 'lodash.get';
 
-import { DocumentType, ThreadType, TextV0Type } from '@braneframe/types';
 import { next as A, type Prop } from '@dxos/automerge/automerge';
 import {
+  AutomergeObject,
+  type EchoReactiveObject,
   type ExpandoType,
   type IDocHandle,
-  AutomergeObject,
-  getRawDoc,
-  type EchoReactiveObject,
   getAutomergeObjectCore,
+  getRawDoc,
   getTypeRef,
 } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
 import { createEchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { nonNullable } from '@dxos/util';
+
+import { DocumentType, ThreadType, TextV0Type } from '../schema';
 
 export interface CursorConverter {
   toCursor(position: number, assoc?: -1 | 1 | undefined): string;
@@ -66,24 +67,28 @@ const cursorConverter = (handle: IDocHandle, path: readonly Prop[]) => ({
   },
 });
 
-export type FileName = { name: string; extension: string };
+export type Filename = { name?: string; extension: string };
 
 export interface TypedObjectSerializer {
-  filename(object: ExpandoType): FileName;
-
+  // TODO(burdon): Get filename from object.meta.keys.
+  filename(object: ExpandoType): Filename;
   serialize(object: ExpandoType): Promise<string>;
 
   /**
+   * @param text
    * @param object Deserializing into an existing object. If not provided, a new object is created.
    */
   deserialize(text: string, object?: ExpandoType): Promise<ExpandoType>;
 }
 
+const validFilename = (title?: string) => title?.replace(/\W/g, '_');
+
 // TODO(mykola): Factor out to respective plugins as providers.
+// TODO(burdon): Serializer for sketch.
 export const serializers: Record<string, TypedObjectSerializer> = {
   [DocumentType.typename]: {
     filename: (object: DocumentType) => ({
-      name: object.title?.replace(/[/\\?%*:|"<>]/g, '-') ?? '',
+      name: validFilename(object.title),
       extension: 'md',
     }),
 
@@ -111,23 +116,20 @@ export const serializers: Record<string, TypedObjectSerializer> = {
 
       const insertions: Record<number, string> = {};
       let footnote = '---\n';
-      {
-        for (const [index, comment] of comments.entries()) {
-          if (!comment.cursor || !comment.thread) {
-            continue;
-          }
-          const range = getRangeFromCursor(convertor, comment.cursor);
-          if (!range) {
-            continue;
-          }
-          const pointer = `[^${index}]`;
-          insertions[range.to] = (insertions[range.to] || '') + pointer;
-          footnote += `${pointer}: ${await threadSerializer.serialize(comment.thread)}\n`;
+      for (const [index, comment] of comments.entries()) {
+        if (!comment.cursor || !comment.thread) {
+          continue;
         }
+        const range = getRangeFromCursor(convertor, comment.cursor);
+        if (!range) {
+          continue;
+        }
+        const pointer = `[^${index}]`;
+        insertions[range.to] = (insertions[range.to] || '') + pointer;
+        footnote += `${pointer}: ${await threadSerializer.serialize(comment.thread)}\n`;
       }
 
       text = text.replace(/(?:)/g, (_, index) => insertions[index] || '');
-
       return `${text}\n\n${footnote}`;
     },
 
@@ -145,7 +147,7 @@ export const serializers: Record<string, TypedObjectSerializer> = {
 
   [ThreadType.typename]: {
     filename: (object: ThreadType) => ({
-      name: object.title?.replace(/[/\\?%*:|"<>]/g, '-') ?? '',
+      name: validFilename(object.title),
       extension: 'md',
     }),
 
@@ -164,7 +166,9 @@ export const serializers: Record<string, TypedObjectSerializer> = {
   } satisfies TypedObjectSerializer,
 
   default: {
-    filename: () => ({ name: 'Untitled', extension: 'json' }),
+    // TODO(burdon): Get name from schema.
+    filename: (object) => ({ name: validFilename(object.filename ?? object.title ?? object.name), extension: 'json' }),
+    // TODO(burdon): Should we assume Expando?
     serialize: async (object: ExpandoType) => JSON.stringify(object.toJSON(), null, 2),
     deserialize: async (text: string, object?: ExpandoType) => {
       const { '@id': id, '@type': type, '@meta': meta, ...data } = JSON.parse(text);

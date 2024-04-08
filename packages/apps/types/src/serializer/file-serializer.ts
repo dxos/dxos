@@ -4,14 +4,15 @@
 
 import md5 from 'md5';
 
-import { getSpaceProperty } from '@braneframe/plugin-client/space-properties';
-import { FolderType } from '@braneframe/types';
+import { type Space } from '@dxos/client/echo';
 import * as E from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { type Space } from '@dxos/react-client/echo';
 
 import { serializers } from './serializers';
+import { getSpaceProperty } from './space-properties';
+import { FolderType } from '../schema';
 
+// TODO(burdon): Why is this defined here?
 export const TypeOfExpando = 'dxos.org/typename/expando';
 
 export type SpaceMetadata = {
@@ -35,7 +36,7 @@ export type SerializedObject =
 
 export type SerializedSpace = {
   metadata: SpaceMetadata;
-  data: SerializedObject[];
+  objects: SerializedObject[];
 };
 
 export class FileSerializer {
@@ -49,7 +50,7 @@ export class FileSerializer {
         timestamp: new Date().toUTCString(),
         spaceKey: space.key.toHex(),
       },
-      data: [],
+      objects: [],
     };
 
     const spaceRoot = getSpaceProperty<FolderType>(space, FolderType.typename);
@@ -58,7 +59,7 @@ export class FileSerializer {
     }
 
     // Skip root folder.
-    serializedSpace.data.push(...(await this._serializeFolder(spaceRoot)).children);
+    serializedSpace.objects.push(...(await this._serializeFolder(spaceRoot)).children);
     return serializedSpace;
   }
 
@@ -69,8 +70,8 @@ export class FileSerializer {
     if (!spaceRoot) {
       throw new Error('No root folder.');
     }
-    await this._deserializeFolder(spaceRoot, serializedSpace.data);
 
+    await this._deserializeFolder(spaceRoot, serializedSpace.objects);
     await space.db.flush();
     return space;
   }
@@ -89,7 +90,6 @@ export class FileSerializer {
       }
 
       const schema = E.getSchema(child);
-
       if (!schema) {
         continue;
       }
@@ -150,13 +150,14 @@ export class FileSerializer {
           }
         }
       } catch (err) {
-        log.error('Failed to deserialize object:', object);
+        log.error('Failed to deserialize object.', { object });
       }
     }
   }
 
   private readonly _namesCount = new Map<string, number>();
-  private _fixNamesCollisions = (name = 'Untitled') => {
+
+  private _fixNamesCollisions = (name = 'untitled') => {
     if (this._namesCount.has(name)) {
       const count = this._namesCount.get(name)!;
       this._namesCount.set(name, count + 1);

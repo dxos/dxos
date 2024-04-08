@@ -9,8 +9,7 @@
       "options": {
         "entryPoints": [
           "packages/apps/plugins/plugin-client/src/index.ts",
-          "packages/apps/plugins/plugin-client/src/meta.ts",
-          "packages/apps/plugins/plugin-client/src/space-properties.ts"
+          "packages/apps/plugins/plugin-client/src/meta.ts"
         ]
       }
     },

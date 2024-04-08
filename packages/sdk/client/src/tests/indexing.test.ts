@@ -6,7 +6,6 @@ import { expect } from 'chai';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { ContactType } from '@braneframe/types';
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { type Space } from '@dxos/client-protocol';
@@ -24,7 +23,7 @@ import { afterTest, describe, test } from '@dxos/test';
 import { Client } from '../client';
 import { QueryOptions } from '../echo';
 import { IndexQuerySourceProvider } from '../echo/index-query-source-provider';
-import { TestBuilder } from '../testing';
+import { ContactType, TestBuilder } from '../testing';
 
 describe('Index queries', () => {
   test('indexing stack', async () => {

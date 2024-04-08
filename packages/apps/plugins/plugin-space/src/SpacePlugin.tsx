@@ -8,9 +8,8 @@ import localforage from 'localforage';
 import React from 'react';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
-import { getSpaceProperty, setSpaceProperty } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
-import { FolderType } from '@braneframe/types';
+import { getSpaceProperty, setSpaceProperty, FolderType, Serializer, cloneObject } from '@braneframe/types';
 import {
   type IntentDispatcher,
   type PluginDefinition,
@@ -54,7 +53,6 @@ import {
   SpaceSettings,
 } from './components';
 import meta, { SPACE_PLUGIN } from './meta';
-import { clone, Serializer } from './serializer';
 import translations from './translations';
 import {
   SpaceAction,
@@ -96,7 +94,6 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
 
-  let rootDir: FileSystemDirectoryHandle | null;
   const serializer = new Serializer();
 
   let clientPlugin: Plugin<ClientPluginProvides> | undefined;
@@ -581,20 +578,14 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             }
 
             case SpaceAction.SELECT_DIRECTORY: {
-              rootDir = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+              const rootDir = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
               await localforage.setItem(SPACE_DIRECTORY_HANDLE, rootDir);
               return { data: rootDir };
             }
 
             case SpaceAction.SAVE: {
-              console.log('???');
               const space = intent.data?.space;
-              console.log(space);
-              invariant(space instanceof SpaceProxy);
-              if (!rootDir) {
-                rootDir = await localforage.getItem(SPACE_DIRECTORY_HANDLE);
-              }
-              console.log(rootDir);
+              let rootDir: FileSystemDirectoryHandle | null = await localforage.getItem(SPACE_DIRECTORY_HANDLE);
               if (!rootDir) {
                 // TODO(wittjosiah): Consider implementing this as an intent chain by returning other intents.
                 const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
@@ -602,15 +593,19 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                   plugin: SPACE_PLUGIN,
                   action: SpaceAction.SELECT_DIRECTORY,
                 });
-                rootDir = result?.data;
+                rootDir = result?.data as FileSystemDirectoryHandle;
+                invariant(rootDir);
               }
-              invariant(rootDir, 'No directory selected.');
+
               // TODO(burdon): Resolve casts.
               if ((rootDir as any).queryPermission && (await (rootDir as any).queryPermission()) !== 'granted') {
                 // TODO(mykola): Is it Chrome-specific?
                 await (rootDir as any).requestPermission?.({ mode: 'readwrite' });
               }
-              await serializer.save({ space, directory: rootDir }).catch(log.catch);
+              await serializer.save({ space, directory: rootDir }).catch((err) => {
+                void localforage.removeItem(SPACE_DIRECTORY_HANDLE);
+                log.catch(err);
+              });
               return { data: true };
             }
 
@@ -701,7 +696,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 return;
               }
 
-              const newObject = await clone(originalObject);
+              const newObject = await cloneObject(originalObject);
               return {
                 intents: [
                   [{ action: SpaceAction.ADD_OBJECT, data: { object: newObject, target: intent.data?.target } }],
