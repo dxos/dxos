@@ -22,7 +22,7 @@ export const forceUpdate = (obj: AbstractEchoObject) => {
   obj[base]._itemUpdate();
 };
 
-export const getDatabaseFromObject = (obj: OpaqueEchoObject): EchoDatabase | undefined => {
+export const getDatabase = (obj: OpaqueEchoObject): EchoDatabase | undefined => {
   if (isAutomergeObject(obj)) {
     return obj[base]._core.database?._dbApi;
   }
@@ -36,7 +36,7 @@ export const getDatabaseFromObject = (obj: OpaqueEchoObject): EchoDatabase | und
 };
 
 export const getReferenceWithSpaceKey = (obj: EchoObject): Reference | undefined => {
-  const db = getDatabaseFromObject(obj);
+  const db = getDatabase(obj);
   return db && new Reference(obj.id, undefined, db.spaceKey.toHex());
 };
 

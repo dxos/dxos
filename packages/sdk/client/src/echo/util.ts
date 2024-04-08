@@ -4,7 +4,7 @@
 //
 
 import { type Space } from '@dxos/client-protocol';
-import { getDatabaseFromObject, type OpaqueEchoObject } from '@dxos/echo-schema';
+import { getDatabase, type OpaqueEchoObject } from '@dxos/echo-schema';
 
 import { SpaceProxy } from './space-proxy';
 
@@ -13,7 +13,7 @@ import { SpaceProxy } from './space-proxy';
  */
 // TODO(burdon): Normalize API getters.
 export const getSpace = (object: OpaqueEchoObject): Space | undefined => {
-  const db = getDatabaseFromObject(object);
+  const db = getDatabase(object);
   const key = db?.spaceKey;
   if (key) {
     const owner = db.graph._getOwningObject(key);
