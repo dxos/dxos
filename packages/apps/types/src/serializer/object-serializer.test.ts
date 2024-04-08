@@ -22,14 +22,13 @@ const createSpace = async (client: Client, name: string | undefined = undefined)
   return space;
 };
 
-// TODO(burdon): Fix.
-//  Error: Schema not registered in Hypergraph: call registerEffectSchema before adding an object
 describe('Serialization', () => {
   test('serialize/deserialize space', async () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
 
     const client = new Client({ services: builder.createLocal() });
+    client._graph.types.registerEffectSchema(FolderType, DocumentType);
     await client.initialize();
     afterTest(() => client.destroy());
     await client.halo.createIdentity();
