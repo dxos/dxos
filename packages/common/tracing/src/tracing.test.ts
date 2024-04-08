@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { expect } from 'chai';
+
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { test } from '@dxos/test';
@@ -9,7 +11,9 @@ import { test } from '@dxos/test';
 import { trace } from './api';
 import { TRACE_PROCESSOR } from './trace-processor';
 
-@trace.resource()
+const FeedStoreResource = Symbol.for('FeedStore');
+
+@trace.resource(FeedStoreResource)
 class FeedStore {
   private readonly _storage: any;
 
@@ -48,11 +52,16 @@ class Feed {
 
 test('feed store tracing', async () => {
   const store = new FeedStore();
-  await store.openFeed(new Context());
-  const feed = await store.openFeed(new Context());
+  const feed1 = await store.openFeed(new Context());
+  const feed2 = await store.openFeed(new Context());
 
-  await feed.close().catch(() => {});
+  await feed2.close().catch(() => {});
 
-  log.info('resources', TRACE_PROCESSOR.resources);
+  expect([...TRACE_PROCESSOR.resources.values()].map((r) => r.instance.deref())).to.deep.eq([store, feed1, feed2]);
   log.info('spans', TRACE_PROCESSOR.spans);
+});
+
+test('findByAnnotation', async () => {
+  const store = new FeedStore();
+  expect(TRACE_PROCESSOR.findByAnnotation(FeedStoreResource)[0].instance.deref()).to.eq(store);
 });
