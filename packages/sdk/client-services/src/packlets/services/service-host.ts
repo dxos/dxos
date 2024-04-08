@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Event, sleep, synchronized } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, defaultKey, type ClientServices, PropertiesSchema } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
@@ -360,8 +360,8 @@ export class ClientServicesHost {
     document.change((doc: SpaceDoc) => {
       assignDeep(doc, ['objects', objectDocument.id], objectDocument.handle.docSync());
     });
-    // TODO: replace with flush when supported by automerge-repo
-    await sleep(200);
+
+    await this._serviceContext.automergeHost.repo.flush();
 
     return identity;
   }

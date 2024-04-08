@@ -22,11 +22,10 @@ parameters:
     default: false
 
 aliases:
-  # https://github.com/dxos/dxos/issues/4946
-  # - &node-version [ "18.19.0", "20.11.1", "21.6.2" ]
-  - &node-version [ "18.19.1", "20.11.1"]
+  # Ensure these images have been built manually or by .github/workflows/circleci_docker_image.yml
+  - &node-version [ "18.20.1", "20.12.1", "21.7.2"]
   - &docker_image_default
-    image: ghcr.io/dxos/circleci-node:18.19.0
+    image: ghcr.io/dxos/circleci-node:18.20.1
     auth:
       username: dxos-bot
       password: $GH_TOKEN

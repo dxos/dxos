@@ -25,7 +25,7 @@ export const createSelectedDocumentsIterator = (automergeHost: AutomergeHost) =>
       await warnAfterTimeout(5000, 'to long to load doc', () => handle.whenReady());
       const doc = handle.docSync();
       const hash = getHeads(doc).join('');
-      yield [{ id, object: doc.objects[objectId], currentHash: hash }];
+      yield doc.objects?.[objectId] ? [{ id, object: doc.objects[objectId], currentHash: hash }] : [];
     }
   };
 

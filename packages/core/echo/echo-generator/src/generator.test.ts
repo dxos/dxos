@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { Client, Config } from '@dxos/client';
+import { Client } from '@dxos/client';
 import { debug } from '@dxos/client/echo';
 import * as E from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
@@ -66,7 +66,7 @@ describe('TestObjectGenerator', () => {
   });
 
   const setupTest = async () => {
-    const client = new Client({ config: new Config({ runtime: { client: { useReactiveObjectApi: true } } }) });
+    const client = new Client();
     await client.initialize();
     afterTest(async () => await client.destroy());
     await client.halo.createIdentity();

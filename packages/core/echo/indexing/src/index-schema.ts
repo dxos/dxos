@@ -53,15 +53,16 @@ export class IndexSchema implements Index {
 
   // TODO(mykola): Fix Filter type with new Reactive API.
   async find(filter: Filter) {
+    let results: orama.Results<ObjectType>;
     if (!filter.type) {
-      return [];
+      results = await orama.search(await this._orama, { term: '', exact: false, threshold: 1 });
+    } else {
+      results = await orama.search<OramaSchemaType, ObjectType>(await this._orama, {
+        term: filter.type.itemId,
+        exact: true,
+        threshold: 0,
+      });
     }
-    // TODO(mykola): Use Schema URI.
-    const results = await orama.search<OramaSchemaType, ObjectType>(await this._orama, {
-      term: filter.type.itemId,
-      exact: true,
-      threshold: 0,
-    });
     return results.hits.map((hit) => ({ id: hit.id, rank: hit.score }));
   }
 

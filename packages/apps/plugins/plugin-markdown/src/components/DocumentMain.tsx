@@ -6,7 +6,7 @@ import { EditorView } from '@codemirror/view';
 import React, { useMemo } from 'react';
 
 import { type DocumentType } from '@braneframe/types';
-import { getSpaceForObject } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { createDataExtensions, localStorageStateStoreAdapter, state, useDocAccessor } from '@dxos/react-ui-editor';
 
@@ -19,7 +19,7 @@ type DocumentMainProps = { document: DocumentType } & Omit<EditorMainProps, 'id'
  */
 const DocumentMain = ({ document, extensions: _extensions = [], ...props }: DocumentMainProps) => {
   const identity = useIdentity();
-  const space = getSpaceForObject(document);
+  const space = getSpace(document);
   const { id, doc, accessor } = useDocAccessor(document.content!);
   const extensions = useMemo(
     () => [

@@ -80,7 +80,7 @@ export class AutomergeObjectCore {
    * Set only when the object is not bound to a database.
    */
   // TODO(dmaretskyi): Change to object core.
-  public linkCache?: Map<string, EchoObject> = new Map<string, EchoObject>();
+  public linkCache?: Map<string, OpaqueEchoObject> = new Map<string, OpaqueEchoObject>();
 
   /**
    * Key path at where we are mounted in the `doc` or `docHandle`.
@@ -316,7 +316,7 @@ export class AutomergeObjectCore {
   /**
    * Lookup referenced object.
    */
-  lookupLink(ref: Reference): EchoObject | undefined {
+  lookupLink(ref: Reference): OpaqueEchoObject | undefined {
     if (this.database) {
       // This doesn't clean-up properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
       return this.database.graph._lookupLink(ref, this.database, this.notifyUpdate);

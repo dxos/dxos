@@ -8,6 +8,7 @@ import { warnAfterTimeout } from '@dxos/debug';
 import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
 import { Filter } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
 import { type QueryRequest, type QueryResponse, type QueryResult } from '@dxos/protocols/proto/dxos/agent/query';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
@@ -25,6 +26,10 @@ export class IndexServiceImpl implements IndexService {
   constructor(private readonly _params: IndexServiceParams) {}
 
   async setConfig(config: IndexConfig): Promise<void> {
+    if (this._params.indexer.initialized) {
+      log.warn('Indexer already initialized. Cannot change config.');
+      return;
+    }
     this._params.indexer.setIndexConfig(config);
     await this._params.indexer.initialize();
   }
@@ -35,45 +40,53 @@ export class IndexServiceImpl implements IndexService {
       let currentCtx: Context;
 
       const update = async () => {
-        await currentCtx?.dispose();
-        const ctx = new Context();
-        currentCtx = ctx;
-        const results = await this._params.indexer.find(filter);
-        const response: QueryResponse = {
-          queryId: request.queryId,
-          results: (
-            await Promise.all(
-              results.map(async (result) => {
-                const { objectId, documentId } = idCodec.decode(result.id);
-                const handle = this._params.automergeHost.repo.find(documentId as any);
-                await warnAfterTimeout(5000, 'to long to load doc', () => handle.whenReady());
-                if (this._ctx.disposed || currentCtx.disposed) {
-                  return;
-                }
-                const spaceKey = getSpaceKeyFromDoc(handle.docSync());
-                if (!spaceKey) {
-                  return;
-                }
-                return {
-                  id: objectId,
-                  spaceKey: PublicKey.from(spaceKey),
-                  rank: result.rank,
-                };
-              }),
-            )
-          ).filter(Boolean) as QueryResult[],
-        };
-        if (this._ctx.disposed || ctx.disposed) {
-          return;
-        }
+        try {
+          await currentCtx?.dispose();
+          const ctx = new Context();
+          currentCtx = ctx;
+          const results = await this._params.indexer.find(filter);
+          const response: QueryResponse = {
+            queryId: request.queryId,
+            results: (
+              await Promise.all(
+                results.map(async (result) => {
+                  const { objectId, documentId } = idCodec.decode(result.id);
+                  const handle = this._params.automergeHost.repo.find(documentId as any);
+                  await warnAfterTimeout(5000, 'to long to load doc', () => handle.whenReady());
+                  if (this._ctx.disposed || currentCtx.disposed) {
+                    return;
+                  }
+                  const spaceKey = getSpaceKeyFromDoc(handle.docSync());
+                  if (!spaceKey) {
+                    return;
+                  }
+                  // TODO(mykola): Remove business logic from here.
+                  if (
+                    request.filter.options?.spaces?.length &&
+                    !request.filter.options.spaces.some((key) => key.equals(spaceKey.toString()))
+                  ) {
+                    return;
+                  }
+                  return {
+                    id: objectId,
+                    spaceKey: PublicKey.from(spaceKey),
+                    rank: result.rank,
+                  };
+                }),
+              )
+            ).filter(Boolean) as QueryResult[],
+          };
+          if (this._ctx.disposed || ctx.disposed) {
+            return;
+          }
 
-        next(response);
+          next(response);
+        } catch (error) {
+          log.catch(error);
+        }
       };
 
-      this._params.indexer.indexed.on(this._ctx, update);
-      const unsub = this._ctx.onDispose(() => {
-        close();
-      });
+      const unsub = this._params.indexer.indexed.on(update);
 
       void update();
 

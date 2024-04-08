@@ -14,7 +14,7 @@ import { resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
-import { type OpaqueEchoObject, SpaceState, metaOf } from '@dxos/react-client/echo';
+import { type OpaqueEchoObject, SpaceState, getMeta } from '@dxos/react-client/echo';
 
 import { EmbeddedMain, ImportDialog, OctokitProvider, GitHubSettings, UrlDialog, MarkdownActions } from './components';
 import meta, { GITHUB_PLUGIN, GITHUB_PLUGIN_SHORT_ID } from './meta';
@@ -51,7 +51,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
 
               // TODO(dmaretskyi): Meta filters?.
               const query = space.db.query((obj: OpaqueEchoObject) =>
-                metaOf(obj)?.keys?.find((key) => key?.source?.includes('github')),
+                getMeta(obj)?.keys?.find((key) => key?.source?.includes('github')),
               );
               let previousObjects: DocumentType[] = [];
               subscriptions.add(

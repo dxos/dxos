@@ -37,6 +37,7 @@ describe('Halo', () => {
 
       await client.halo.createIdentity({ displayName: 'test-user' });
       expect(client.halo.identity).exist;
+      await client.spaces.isReady.wait();
     }
 
     {

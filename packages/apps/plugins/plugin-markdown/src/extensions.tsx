@@ -8,7 +8,7 @@ import { createRoot } from 'react-dom/client';
 
 import { DocumentType } from '@braneframe/types';
 import { type IntentDispatcher, NavigationAction } from '@dxos/app-framework';
-import { Filter, getSpaceForObject } from '@dxos/react-client/echo';
+import { Filter, getSpace } from '@dxos/react-client/echo';
 import {
   type AutocompleteResult,
   type Extension,
@@ -38,7 +38,7 @@ export type ExtensionsOptions = {
  * Create extension instances for editor.
  */
 export const getExtensions = ({ dispatch, settings, document }: ExtensionsOptions): Extension[] => {
-  const space = document ? getSpaceForObject(document) : undefined;
+  const space = document ? getSpace(document) : undefined;
 
   const extensions: Extension[] = [
     //

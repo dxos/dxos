@@ -34,7 +34,7 @@ import { trace, TRACE_PROCESSOR } from '@dxos/tracing';
 import { jsonKeyReplacer, type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
 import { ClientRuntime } from './client-runtime';
-import type { SpaceList, TypeCollection } from '../echo';
+import { IndexKind, type SpaceList, type TypeCollection } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { IFrameManager, Shell, ShellManager } from '../services';
@@ -311,7 +311,7 @@ export class Client {
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
 
     this._ctx = new Context();
-    this._config = this._options.config ?? new Config({ runtime: { client: { useReactiveObjectApi: true } } });
+    this._config = this._options.config ?? new Config();
     // NOTE: Must currently match the host.
     this._services = await (this._options.services ?? createClientServices(this._config, this._options.createWorker));
     this._iframeManager = this._options.shell
@@ -325,6 +325,8 @@ export class Client {
       const { mountDevtoolsHooks } = await import('../devtools');
       mountDevtoolsHooks({ client: this });
     }
+
+    await this.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
 
     this._initialized = true;
     log.trace('dxos.sdk.client.open', Trace.end({ id: this._instanceId }));

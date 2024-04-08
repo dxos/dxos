@@ -230,7 +230,9 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     });
   }
 
-  private async _initObservability(logCb: (input: string) => void = (input: string) => process.stderr.write(input)) {
+  private async _initObservability(
+    logCb: (input: string) => void = (input: string) => process.stderr.write(chalk`{bold {magenta ${input} }}`),
+  ) {
     const observabilityState = await getObservabilityState(DX_DATA);
     const { mode, installationId, group } = observabilityState;
 
@@ -244,8 +246,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       }
 
       await showObservabilityBanner(DX_DATA, (input: string) => {
-        // Avoid interfering with JSON output and JSON log output on stderr.
-        logCb(chalk`{bold {magenta ${input} }}`);
+        // Use callback to enable avoid interfering with JSON output (--json flag) and JSON log output on stderr (--json-log).
+        logCb(input);
       });
     }
 
@@ -300,12 +302,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     }
 
     // TODO(burdon): Use Profile()?
-    const config: ConfigProto = yaml.load(await readFile(configFile, 'utf-8')) as ConfigProto;
-    // TODO: remove after useReactiveObjectApi becomes the default
-    config.runtime ??= {};
-    config.runtime.client ??= {};
-    config.runtime.client.useReactiveObjectApi = config.runtime.client.useReactiveObjectApi ?? true;
-    this._clientConfig = new Config(config);
+    this._clientConfig = new Config(yaml.load(await readFile(configFile, 'utf-8')) as ConfigProto);
   }
 
   // TODO(burdon): Reconcile internal/external logging.

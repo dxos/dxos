@@ -6,6 +6,7 @@ settings:
 
 overrides:
   ipfs-utils: 9.0.14
+  nan: 2.19.0
 
 patchedDependencies:
   '@nx/js@17.3.2':
@@ -1229,6 +1230,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/gem-core':
         specifier: workspace:*
         version: link:../../../experimental/gem-core
@@ -1241,6 +1245,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@observablehq/plot':
         specifier: ^0.6.11
         version: 0.6.11
@@ -1250,6 +1257,9 @@ importers:
       d3:
         specifier: ^7.8.5
         version: 7.8.5
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -1511,9 +1521,15 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -2150,6 +2166,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -3632,9 +3651,18 @@ importers:
       '@dxos/shell':
         specifier: workspace:*
         version: link:../../sdk/shell
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -3847,12 +3875,18 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@sentry/react':
         specifier: ^7.100.1
         version: 7.101.0(react@18.2.0)
       classnames:
         specifier: ^2.3.2
         version: 2.3.2
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -4925,8 +4959,8 @@ importers:
         specifier: ^2.1.13
         version: 2.1.13
       '@automerge/automerge-repo':
-        specifier: ^1.1.4
-        version: 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+        specifier: ^1.1.5
+        version: 1.1.5(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       '@automerge/automerge-repo-storage-indexeddb':
         specifier: ^1.1.4
         version: 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
@@ -4992,8 +5026,8 @@ importers:
         specifier: ^2.1.13
         version: 2.1.13
       '@automerge/automerge-repo':
-        specifier: ^1.1.4
-        version: 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+        specifier: ^1.1.5
+        version: 1.1.5(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../../common/feed-store
@@ -8081,6 +8115,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -8093,6 +8130,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^4.2.1
         version: 4.2.1(vite@5.1.5)
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -9073,12 +9113,18 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
       '@radix-ui/react-compose-refs':
         specifier: ^1.0.0
         version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -9167,9 +9213,15 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
     devDependencies:
       '@dnd-kit/core':
         specifier: ^6.0.5
@@ -9271,6 +9323,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@fluentui/react-tabster':
         specifier: ^9.19.0
         version: 9.19.2(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -9292,6 +9347,9 @@ importers:
       '@radix-ui/react-use-controllable-state':
         specifier: ^1.0.0
         version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
       react-resize-detector:
         specifier: ^7.1.2
         version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
@@ -9359,6 +9417,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@fluentui/react-tabster':
         specifier: ^9.19.0
         version: 9.19.2(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -9389,13 +9450,16 @@ importers:
         version: link:../storybook-utils
       '@phosphor-icons/react':
         specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        version: 2.1.4(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
       '@types/react-dom':
         specifier: ^18.0.6
         version: 18.0.6
+      fast-check:
+        specifier: ^3.15.1
+        version: 3.15.1
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -10245,6 +10309,26 @@ packages:
 
   /@automerge/automerge-repo@1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
     resolution: {integrity: sha512-EuY/+hwPkR0bLkMzi2obRFzW3fsUtlih7S0Te/nJRvsXS7a5mrzmqnQpFwYZPZzeBsPrxaBC2vVrcNqferlaLQ==}
+    dependencies:
+      '@automerge/automerge': 2.1.13
+      bs58check: 3.0.1
+      cbor-x: 1.5.4
+      debug: 4.3.4(supports-color@8.1.1)
+      eventemitter3: 5.0.1
+      fast-sha256: 1.3.0
+      tiny-typed-emitter: 2.1.0
+      ts-node: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+      uuid: 9.0.1
+      xstate: 4.37.1
+    transitivePeerDependencies:
+      - '@swc/core'
+      - '@swc/wasm'
+      - '@types/node'
+      - supports-color
+      - typescript
+
+  /@automerge/automerge-repo@1.1.5(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-SwXWwkasugfdGwQy4RuS/pn2FrI+YDtzrwvUbXkLVRiX83Zt3UQBXlL+QW+5QbH7uQ2mK0l3rOkRlQwnsYHUNg==}
     dependencies:
       '@automerge/automerge': 2.1.13
       bs58check: 3.0.1
@@ -14973,7 +15057,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@mapbox/node-pre-gyp': 1.0.10
-      nan: 2.17.0
+      nan: 2.19.0
       node-addon-api: 1.7.2
       node-cmake: 2.3.2
     optionalDependencies:
@@ -17391,6 +17475,17 @@ packages:
     dependencies:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
+
+  /@phosphor-icons/react@2.1.4(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-EeNwgcg1aeK5vG/JYVTullnZzk5zjftOrjLb1iYetyhn5ImFFREc+xG0FAB/dAY277DGDSF8pNdNbqG1SUKIxQ==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      react: '>= 16.8'
+      react-dom: '>= 16.8'
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+    dev: true
 
   /@pkgjs/parseargs@0.11.0:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
@@ -25781,7 +25876,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@mapbox/node-pre-gyp': 1.0.10
-      nan: 2.17.0
+      nan: 2.19.0
       simple-get: 3.1.1
     transitivePeerDependencies:
       - encoding
@@ -28286,7 +28381,7 @@ packages:
     engines: {node: '>=0.10'}
     requiresBuild: true
     dependencies:
-      nan: 2.17.0
+      nan: 2.19.0
     dev: true
     optional: true
 
@@ -30356,7 +30451,7 @@ packages:
     engines: {node: '>= 8.0.0'}
     requiresBuild: true
     dependencies:
-      nan: 2.17.0
+      nan: 2.19.0
     dev: false
 
   /fs-extra@10.1.0:
@@ -37163,9 +37258,8 @@ packages:
     resolution: {integrity: sha512-WA5aRaaqZapIaOIZPiRJDsQytGd37u/xFBztZfBDFCTqwWyN/VWAZReQECJT8gWMd+d1xJVo7LYYayYkyANs4g==}
     dev: true
 
-  /nan@2.17.0:
-    resolution: {integrity: sha512-2ZTgtl0nJsO0KQCjEpxcIr5D+Yv90plTitZt9JBfQvVJDS5seMl3FOvsh3+9CoYWXf/1l5OaZzzF6nDm4cagaQ==}
-    requiresBuild: true
+  /nan@2.19.0:
+    resolution: {integrity: sha512-nO1xXxfh/RWNxfd/XPfbIfFk5vgLsAxUR9y5O0cHMJu/AW9U95JLXqthYHjEp+8gQ5p96K9jUp8nbVOxCdRbtw==}
 
   /nanoassert@1.1.0:
     resolution: {integrity: sha512-C40jQ3NzfkP53NsO8kEOFd79p4b9kDXQMwgiY1z8ZwrDZgUyom0AHwGegF4Dm99L+YoYhuaB0ceerUcXmqr1rQ==}
@@ -37355,7 +37449,7 @@ packages:
     resolution: {integrity: sha512-t3m0q/tB8b7eg1yAUZCx/UdC8bTPf9gNzQPWl+62fsLYE2pEeoU71auIYtgGos0G36jopbo+FCLini4NMzpFhg==}
     hasBin: true
     dependencies:
-      nan: 2.17.0
+      nan: 2.19.0
       which: 1.3.1
       yargs: 7.1.2
     dev: false
@@ -41073,7 +41167,7 @@ packages:
     resolution: {integrity: sha512-6pRWI3d+CBZqCXT/rsJfabbZoELua+jTeXilG27F8Jvix/J2BYZ0O7Tly2WCmXyqw5xYdCvOwvCeLRHEtXkt4w==}
     requiresBuild: true
     dependencies:
-      nan: 2.17.0
+      nan: 2.19.0
       node-abi: 2.30.1
       prebuild-install: 5.3.6
     dev: true

@@ -7,7 +7,7 @@ import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { MessageType, TextV0Type } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
-import { getSpaceForObject, useMembers } from '@dxos/react-client/echo';
+import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ScrollArea, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
@@ -40,7 +40,7 @@ export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
 
 export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: ThreadContainerProps) => {
   const identity = useIdentity()!;
-  const space = getSpaceForObject(thread);
+  const space = getSpace(thread);
   const members = useMembers(space?.key);
   const activity = useStatus(space, thread.id);
   const { t } = useTranslation(THREAD_PLUGIN);

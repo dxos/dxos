@@ -20,11 +20,12 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type AutomergeContext } from './automerge-context';
-import { getAutomergeObjectCore, type AutomergeObject } from './automerge-object';
+import { getAutomergeObjectCore } from './automerge-object';
 import { AutomergeObjectCore } from './automerge-object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { type EchoDatabase } from '../database';
 import { isReactiveProxy } from '../effect/proxy';
+import { isEchoReactiveObject } from '../effect/reactive';
 import { type Hypergraph } from '../hypergraph';
 import { isAutomergeObject, type EchoObject, type OpaqueEchoObject } from '../object';
 import { type Schema } from '../proto';
@@ -259,6 +260,13 @@ export class AutomergeDb {
     core.setDeleted(true);
   }
 
+  async flush(): Promise<void> {
+    // TODO(mykola): send out only changed documents.
+    await this.automerge.flush({
+      documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId),
+    });
+  }
+
   private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandle<SpaceDoc>, objectsToLoad: string[]) {
     const spaceRootDoc: SpaceDoc = spaceRootDocHandle.docSync();
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
@@ -454,10 +462,10 @@ export interface ItemsUpdatedEvent {
 }
 
 export const shouldObjectGoIntoFragmentedSpace = (core: AutomergeObjectCore) => {
-  if (isAutomergeObject(core.rootProxy)) {
+  if (isEchoReactiveObject(core.rootProxy)) {
     // NOTE: We need to store properties in the root document because
     //       space-list initialization expects it to be loaded as space become available.
-    if ((core.rootProxy as AutomergeObject).__typename === TYPE_PROPERTIES) {
+    if (core.getType()?.itemId === TYPE_PROPERTIES) {
       return false;
     }
     return true;

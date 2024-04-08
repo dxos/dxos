@@ -7,6 +7,7 @@ import React, { type ComponentPropsWithRef, forwardRef, useCallback, useEffect, 
 import { Main, type MainProps, type ThemedClassName, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
+import { resizeHandle, resizeHandleVertical } from '../../fragments/resize-handle';
 import { translationKey } from '../../translations';
 
 type DeckRootProps = MainProps;
@@ -14,8 +15,7 @@ type DeckRootProps = MainProps;
 const deckLayout =
   'fixed inset-0 z-0 overflow-x-auto overflow-y-hidden snap-inline snap-proximity grid grid-rows-[var(--rail-size)_[toolbar-start]_var(--rail-action)_[content-start]_1fr_[content-end]] grid-cols-[repeat(99,min-content)]';
 
-const resizeButtonStyles =
-  'hidden sm:grid is-6 row-span-3 p-0 cursor-col-resize touch-none justify-items-center items-stretch plb-2 before:rounded-full before:is-1 before:surface-input hover:before:surface-inputHover before:transition-colors hover:before:surface-accentFocusIndicator focus-visible:before:surface-accentFocusIndicator data-[resizing=true]:before:surface-accentFocusIndicator focus:outline-none';
+const resizeButtonStyles = mx(resizeHandle, resizeHandleVertical, 'hidden sm:grid row-span-3');
 
 const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(({ classNames, children, ...props }, forwardedRef) => {
   return (

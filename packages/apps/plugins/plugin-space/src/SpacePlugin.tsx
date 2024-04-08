@@ -31,7 +31,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { type Space, SpaceProxy, getSpaceForObject, type PropertiesProps } from '@dxos/react-client/echo';
+import { type Space, SpaceProxy, getSpace, type PropertiesProps } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
 import { ComplexMap } from '@dxos/util';
@@ -311,7 +311,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             case 'navbar-start': {
               const space =
                 isGraphNode(data.activeNode) && E.isReactiveProxy(data.activeNode.data)
-                  ? getSpaceForObject(data.activeNode.data)
+                  ? getSpace(data.activeNode.data)
                   : undefined;
               return space ? <PersistenceStatus db={space.db} /> : null;
             }
@@ -321,7 +321,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               }
 
               const defaultSpace = clientPlugin?.provides.client.spaces.default;
-              const space = getSpaceForObject(data.object);
+              const space = getSpace(data.object);
               return space && space !== defaultSpace
                 ? {
                     node: (
@@ -472,6 +472,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
       },
       intent: {
         resolver: async (intent, plugins) => {
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
           const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
           const client = clientPlugin?.provides.client;
           switch (intent.action) {
@@ -498,6 +499,11 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               if (Migrations.versionProperty) {
                 setSpaceProperty(space, Migrations.versionProperty, Migrations.targetVersion);
               }
+
+              void intentPlugin?.provides.intent.dispatch({
+                action: NavigationAction.ACTIVATE,
+                data: { id: space.key.toHex() },
+              });
               return { data: { space, id: space.key.toHex() } };
             }
 

@@ -6,26 +6,21 @@ import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
 import { DocumentType, TextV0Type } from '@braneframe/types';
-import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import * as E from '@dxos/echo-schema';
-import {
-  type EchoReactiveObject,
-  type Expando,
-  getAutomergeObjectCore,
-  getTextContent,
-  type ReactiveObject,
-} from '@dxos/echo-schema';
+import { type ExpandoType, getAutomergeObjectCore, getTextContent, type ReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
-import { SpaceState, getSpaceForObject, type SpaceProxy } from '../echo';
+import { SpaceState, getSpace, type SpaceProxy } from '../echo';
 import { TestBuilder, testSpaceAutomerge, waitForSpace } from '../testing';
 
 describe('Spaces', () => {
@@ -102,10 +97,8 @@ describe('Spaces', () => {
       const space = client.spaces.default;
       ({ objectId } = await testSpaceAutomerge(space.db));
       expect(space.members.get()).to.be.length(1);
+      await space.db.flush();
     }
-    // TODO(mykola): Clean as automerge team updates storage API.
-    // Need this `sleep` for automerge to finish storage write.
-    await sleep(200);
     await client.destroy();
 
     await client.initialize();
@@ -124,7 +117,7 @@ describe('Spaces', () => {
       const space = await spaceTrigger.wait({ timeout: 500 });
       await space.waitUntilReady();
 
-      const obj = space.db.getObjectById(objectId)!;
+      const obj = await space.db.automerge.loadObjectById(objectId)!;
       expect(obj).to.exist;
     }
 
@@ -275,7 +268,7 @@ describe('Spaces', () => {
     const space = await client.spaces.create();
 
     const obj = space.db.add(createEchoObject({ data: 'test' }));
-    expect(getSpaceForObject(obj)).to.equal(space);
+    expect(getSpace(obj)).to.equal(space);
   });
 
   test('spaces can be opened and closed', async () => {
@@ -304,7 +297,7 @@ describe('Spaces', () => {
     }, 1000);
     expect(space.db.getObjectById(id)).to.exist;
 
-    space.db.getObjectById<Expando>(id)!.data = 'test2';
+    space.db.getObjectById<ReactiveObject<any>>(id)!.data = 'test2';
     await space.db.flush();
   });
 
@@ -351,7 +344,7 @@ describe('Spaces', () => {
     }, 1000);
     expect(space2.db.getObjectById(id)).to.exist;
 
-    space2.db.getObjectById<Expando>(id)!.data = 'test2';
+    space2.db.getObjectById<ReactiveObject<any>>(id)!.data = 'test2';
     await space2.db.flush();
   });
 
@@ -445,6 +438,44 @@ describe('Spaces', () => {
     }
   });
 
+  test('queries respect space boundaries', async () => {
+    const testBuilder = new TestBuilder();
+    testBuilder.storage = createStorage({ type: StorageType.RAM });
+
+    const client = new Client({ services: testBuilder.createLocal() });
+    await client.initialize();
+    afterTest(() => client.destroy());
+
+    await client.halo.createIdentity({ displayName: 'test-user' });
+
+    const spaceA = await client.spaces.create();
+    const spaceB = await client.spaces.create();
+
+    const objA = spaceA.db.add(createEchoObject({ data: 'object A' }));
+    const objB = spaceB.db.add(createEchoObject({ data: 'object B' }));
+
+    await spaceA.db.flush();
+    await spaceB.db.flush();
+
+    const [wait, inc] = latch({ count: 2, timeout: 1000 });
+
+    spaceA.db.query().subscribe(({ objects }) => {
+      expect(objects).to.have.length(2);
+      expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
+      expect(objects.some((obj) => obj === objA)).to.be.true;
+      inc();
+    }, true);
+
+    spaceB.db.query().subscribe(({ objects }) => {
+      expect(objects).to.have.length(2);
+      expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
+      expect(objects.some((obj) => obj === objB)).to.be.true;
+      inc();
+    }, true);
+
+    await wait();
+  });
+
   test('object receives updates from another peer', async () => {
     const testBuilder = new TestBuilder();
 
@@ -472,14 +503,15 @@ describe('Spaces', () => {
     {
       const done = new Trigger();
 
-      await waitForExpect(() => {
-        expect(guestSpace.db.getObjectById(hostRoot.id)).not.to.be.undefined;
+      await waitForExpect(async () => {
+        expect(await guestSpace.db.automerge.loadObjectById(hostRoot.id)).not.to.be.undefined;
       });
-      const guestRoot: Expando = guestSpace.db.getObjectById(hostRoot.id)!;
+      const guestRoot: ExpandoType = guestSpace.db.getObjectById(hostRoot.id)!;
 
       const unsub = getAutomergeObjectCore(guestRoot).updates.on(() => {
-        expect([...guestRoot.entries].length).to.equal(2);
-        done.wake();
+        if (guestRoot.entries.length === 2) {
+          done.wake();
+        }
       });
 
       afterTest(() => unsub());
@@ -503,7 +535,7 @@ describe('Spaces', () => {
     });
   };
 
-  const createEchoObject = <T extends {}>(props: T): EchoReactiveObject<T> => {
+  const createEchoObject = <T extends {}>(props: T): ReactiveObject<ExpandoType> => {
     return E.object(E.ExpandoType, props);
   };
 });
