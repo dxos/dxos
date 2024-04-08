@@ -32,9 +32,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
-  },
   "dependencies": {
     "@dxos/echo-schema": "workspace:*",
     "@dxos/node-std": "workspace:*",
