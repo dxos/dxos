@@ -7,11 +7,16 @@ import { expect } from 'chai';
 import { DiagnosticsCollector } from '@dxos/client-services';
 import { Context } from '@dxos/context';
 import { afterTest, describe, test } from '@dxos/test';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { Client } from '../client';
 import { TestBuilder } from '../testing';
 
-describe.only('DiagnosticsCollector', () => {
+describe('DiagnosticsCollector', () => {
+  beforeEach(() => {
+    TRACE_PROCESSOR.resources.clear();
+  });
+
   test('collects configs and traces if client was not initialized', async () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());

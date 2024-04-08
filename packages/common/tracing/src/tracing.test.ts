@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { test } from '@dxos/test';
+import { describe, test } from '@dxos/test';
 
 import { trace } from './api';
 import { TRACE_PROCESSOR } from './trace-processor';
@@ -50,18 +50,24 @@ class Feed {
   }
 }
 
-test('feed store tracing', async () => {
-  const store = new FeedStore();
-  const feed1 = await store.openFeed(new Context());
-  const feed2 = await store.openFeed(new Context());
+describe('tracing', () => {
+  beforeEach(() => {
+    TRACE_PROCESSOR.resources.clear();
+  });
 
-  await feed2.close().catch(() => {});
+  test('feed store tracing', async () => {
+    const store = new FeedStore();
+    const feed1 = await store.openFeed(new Context());
+    const feed2 = await store.openFeed(new Context());
 
-  expect([...TRACE_PROCESSOR.resources.values()].map((r) => r.instance.deref())).to.deep.eq([store, feed1, feed2]);
-  log.info('spans', TRACE_PROCESSOR.spans);
-});
+    await feed2.close().catch(() => {});
 
-test('findByAnnotation', async () => {
-  const store = new FeedStore();
-  expect(TRACE_PROCESSOR.findByAnnotation(FeedStoreResource)[0].instance.deref()).to.eq(store);
+    expect([...TRACE_PROCESSOR.resources.values()].map((r) => r.instance.deref())).to.deep.eq([store, feed1, feed2]);
+    log.info('spans', TRACE_PROCESSOR.spans);
+  });
+
+  test('findByAnnotation', async () => {
+    const store = new FeedStore();
+    expect(TRACE_PROCESSOR.findByAnnotation(FeedStoreResource)[0].instance.deref()).to.eq(store);
+  });
 });
