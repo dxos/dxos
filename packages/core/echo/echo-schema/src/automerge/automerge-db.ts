@@ -440,10 +440,6 @@ export class AutomergeDb {
     },
   );
 
-  async flush(): Promise<void> {
-    await this.automerge.repo.flush(this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId));
-  }
-
   // TODO(dmaretskyi): Pass all remote updates through this.
   private _scheduleThrottledUpdate(itemIds: string[]) {
     for (const id of itemIds) {
