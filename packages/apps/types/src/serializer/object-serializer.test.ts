@@ -10,7 +10,7 @@ import * as E from '@dxos/echo-schema';
 import { getTextContent } from '@dxos/echo-schema';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { ObjectSerializer, type SerializedSpace } from './object-serializer';
+import { ObjectSerializer, type SerializedSpace, UniqueNames } from './object-serializer';
 import { getSpaceProperty, setSpaceProperty } from './space-properties';
 import { DocumentType, FolderType, TextV0Type } from '../schema';
 
@@ -23,6 +23,14 @@ const createSpace = async (client: Client, name: string | undefined = undefined)
 };
 
 describe('Serialization', () => {
+  test('unique', () => {
+    const uniqueNames = new UniqueNames();
+    expect(uniqueNames.unique('foo')).to.equal('foo');
+    expect(uniqueNames.unique('foo')).to.equal('foo_1');
+    // TODO(burdon): Check for collisions.
+    // expect(uniqueNames.unique('foo_1')).to.equal('foo_2');
+  });
+
   test('serialize/deserialize space', async () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());

@@ -48,6 +48,8 @@ export type SerializedSpace = {
 };
 
 export class ObjectSerializer {
+  private readonly _uniqueNames = new UniqueNames();
+
   async serializeSpace(space: Space): Promise<SerializedSpace> {
     await space.waitUntilReady();
 
@@ -109,7 +111,8 @@ export class ObjectSerializer {
       files.push({
         type: 'file',
         id: child.id,
-        name: this._fixNamesCollisions(filename.name),
+        // TODO(burdon): Extension is part of name.
+        name: this._uniqueNames.unique(filename.name),
         extension: filename.extension,
         content,
         md5sum: md5(content),
@@ -121,7 +124,7 @@ export class ObjectSerializer {
       type: 'folder',
       id: folder.id,
       // TODO(mykola): Use folder.name instead of folder.title.
-      name: this._fixNamesCollisions(folder.name ?? (folder as any).title ?? 'New folder'),
+      name: this._uniqueNames.unique(folder.name ?? (folder as any).title),
       children: files,
     };
   }
@@ -143,6 +146,7 @@ export class ObjectSerializer {
             await this._deserializeFolder(child as FolderType, object.children);
             break;
           }
+
           case 'file': {
             const child = folder.objects.find((item) => item?.id === object.id);
             const serializer = serializers[object.typename] ?? serializers.default;
@@ -157,23 +161,28 @@ export class ObjectSerializer {
           }
         }
       } catch (err) {
-        log.error('Failed to deserialize object.', { object });
+        log.warn('Failed to deserialize object.', { object });
       }
     }
   }
+}
 
+// TODO(burdon): Factor out.
+export class UniqueNames {
   private readonly _namesCount = new Map<string, number>();
 
-  // TODO(burdon): Factor out.
-  private _fixNamesCollisions = (name = 'untitled') => {
+  // TODO(burdon): Make unique by folder?
+  // TODO(burdon): Use meta key for filename.
+  unique(name = 'untitled') {
     if (this._namesCount.has(name)) {
       const count = this._namesCount.get(name)!;
       this._namesCount.set(name, count + 1);
-      // TODO(burdon): Don't assume spaces?
-      return `${name} (${count})`;
+      // TODO(burdon): Detect and replace current count (e.g., foo_1 => foo_2 not foo_1_1).
+      //  Have to check doesn't collide with existing names.
+      return `${name}_${count}`;
     } else {
       this._namesCount.set(name, 1);
       return name;
     }
-  };
+  }
 }
