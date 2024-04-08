@@ -50,7 +50,10 @@ export type IdentityPanelImplProps = {
 
 export type IdentityPanelProps = Partial<Omit<IdentityPanelImplProps, 'send' | 'activeView' | 'identity'>>;
 
-export type IdentityPanelHeadingProps = Pick<IdentityPanelImplProps, 'titleId' | 'identity' | 'onDone'> & {
+export type IdentityPanelHeadingProps = Pick<
+  IdentityPanelImplProps,
+  'titleId' | 'identity' | 'onDone' | 'onUpdateProfile'
+> & {
   title: string;
 };
 

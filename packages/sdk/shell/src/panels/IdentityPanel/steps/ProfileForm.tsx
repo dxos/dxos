@@ -10,11 +10,19 @@ import { type Identity } from '@dxos/react-client/halo';
 import { useTranslation } from '@dxos/react-ui';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
-import { Action, Actions, StepHeading, Input, useClipboardContext, EmojiPicker, HuePicker } from '../../../components';
+import {
+  Action,
+  Actions,
+  StepHeading,
+  Input,
+  useClipboardContext,
+  EmojiPickerBlock,
+  HuePicker,
+} from '../../../components';
 import { type IdentityPanelStepProps } from '../IdentityPanelProps';
 import { type IdentityEvent } from '../identityMachine';
 
-export interface ProfileFormProps extends Omit<IdentityPanelStepProps, 'send'> {
+export interface ProfileFormProps extends Omit<IdentityPanelStepProps, 'send' | 'devices'> {
   send?: (event: SingleOrArray<Event<IdentityEvent>>) => void;
   onUpdateProfile?: (profile: NonNullable<Identity['profile']>) => Promise<void>;
   identity?: Identity;
@@ -68,7 +76,7 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
         />
         <StepHeading className='mbe-2'>{t('emoji and color label')}</StepHeading>
         <div role='none' className='grid grid-cols-[1fr_min-content] gap-y-2'>
-          <EmojiPicker
+          <EmojiPickerBlock
             emoji={emoji}
             onChangeEmoji={setEmoji}
             disabled={disabled}

@@ -1,7 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
@@ -9,8 +9,8 @@ import { useClient } from '@dxos/react-client';
 import { type Identity, useIdentity, useDevices, useHaloInvitations } from '@dxos/react-client/halo';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
-import { Avatar, DensityProvider, useId, useTranslation } from '@dxos/react-ui';
-import { keyToFallback } from '@dxos/util';
+import { Avatar, DensityProvider, Toolbar, useId, useTranslation } from '@dxos/react-ui';
+import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
 import {
   type IdentityPanelHeadingProps,
@@ -20,19 +20,52 @@ import {
 import { useIdentityMachine } from './identityMachine';
 import { AgentForm, DeviceManager, IdentityActionChooser, ProfileForm } from './steps';
 import { useAgentHandlers } from './useAgentHandlers';
-import { Viewport, Heading, CloseButton } from '../../components';
+import { Viewport, Heading, CloseButton, EmojiPickerToolbarButton, useClipboardContext } from '../../components';
 import { ConfirmReset, InvitationManager } from '../../steps';
 
 const viewStyles = 'pbs-1 pbe-3 pli-3';
 
-const IdentityHeading = ({ titleId, title, identity, onDone }: IdentityPanelHeadingProps) => {
+// TODO(thure): Factor out?
+const getHueValue = (identity?: Identity) =>
+  identity?.profile?.data?.hue || hexToHue(identity?.identityKey.toHex() ?? '0');
+const getEmojiValue = (identity?: Identity) =>
+  identity?.profile?.data?.emoji || hexToEmoji(identity?.identityKey.toHex() ?? '0');
+
+const IdentityHeading = ({ titleId, title, identity, onDone, onUpdateProfile }: IdentityPanelHeadingProps) => {
   const fallbackValue = keyToFallback(identity.identityKey);
+  const { t: _t } = useTranslation('os');
+  const [displayName, _setDisplayName] = useState(identity.profile?.displayName ?? '');
+  const [emoji, setEmoji] = useState<string>(getEmojiValue(identity));
+  const [hue, _setHue] = useState<string>(getHueValue(identity));
+  const { textValue, setTextValue: _setTextValue } = useClipboardContext();
+  const identityHex = identity?.identityKey.toHex();
+  const _copied = textValue === identityHex;
+
+  const handleUpdateProfile = () =>
+    onUpdateProfile?.({
+      ...(displayName && { displayName }),
+      ...((emoji || hue) && { data: { ...(emoji && { emoji }), ...(hue && { hue }) } }),
+    });
+
   return (
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
-      <Avatar.Root size={12} variant='circle' status='active' hue={identity.profile?.data?.hue || fallbackValue.hue}>
-        <Avatar.Frame classNames='block mbs-4 mbe-2 mli-auto chromatic-ignore'>
-          <Avatar.Fallback text={identity.profile?.data?.emoji || fallbackValue.emoji} />
-        </Avatar.Frame>
+      <Avatar.Root size={14} variant='circle' status='active' hue={identity.profile?.data?.hue || fallbackValue.hue}>
+        <Toolbar.Root classNames='grid grid-cols-[1fr_var(--rail-action)_min-content_var(--rail-action)_1fr] items-center gap-2'>
+          <Toolbar.Button classNames='bs-[--rail-action] is-[--rail-action] justify-self-end'>A</Toolbar.Button>
+          <EmojiPickerToolbarButton
+            emoji={emoji}
+            onChangeEmoji={(nextEmoji) => {
+              setEmoji(nextEmoji);
+              void handleUpdateProfile();
+            }}
+            classNames='bs-[--rail-action] is-[--rail-action]'
+          />
+          <Avatar.Frame classNames='relative z-[2] -mli-4 chromatic-ignore'>
+            <Avatar.Fallback text={emoji || fallbackValue.emoji} />
+          </Avatar.Frame>
+          <Toolbar.Button classNames='bs-[--rail-action] is-[--rail-action]'>C</Toolbar.Button>
+          <Toolbar.Button classNames='bs-[--rail-action] is-[--rail-action] justify-self-start'>D</Toolbar.Button>
+        </Toolbar.Root>
         <Avatar.Label classNames='block text-center font-light text-xl' data-testid='identityHeading.displayName'>
           {identity.profile?.displayName ?? generateName(identity.identityKey.toHex())}
         </Avatar.Label>
@@ -70,7 +103,7 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
 
   return (
     <DensityProvider density='fine'>
-      <IdentityHeading {...{ identity, titleId, title, onDone }} />
+      <IdentityHeading {...{ identity, titleId, title, onDone, onUpdateProfile }} />
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
           <Viewport.View id='identity action chooser' classNames={viewStyles}>
