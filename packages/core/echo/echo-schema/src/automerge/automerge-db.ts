@@ -261,6 +261,7 @@ export class AutomergeDb {
   }
 
   async flush(): Promise<void> {
+    // TODO(mykola): send out only changed documents.
     await this.automerge.flush({
       documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId),
     });
