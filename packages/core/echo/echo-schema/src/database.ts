@@ -143,7 +143,7 @@ export class EchoDatabaseImpl implements EchoDatabase {
   }
 
   async flush(): Promise<void> {
-    await this._automerge.automerge.flush({ spaceKey: this.spaceKey });
+    await this._automerge.flush();
   }
 
   /**

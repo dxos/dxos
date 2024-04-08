@@ -48,6 +48,10 @@ message MutationReceipt {
 
 message FlushRequest {
   optional dxos.keys.PublicKey space_key = 1;
+  /**
+   * Automerge specific document ids to wait to flush.
+   */
+  repeated string document_ids = 2;
 }
 
 // Automerge specific.

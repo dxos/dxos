@@ -135,6 +135,9 @@ export class AutomergeHost {
         }
       },
     });
+    this.repo.on('document', ({ handle }) => {
+      log.info('document', { doc: handle.docSync() });
+    });
     this._clientNetwork.ready();
     this._meshNetwork.ready();
 
@@ -200,8 +203,8 @@ export class AutomergeHost {
       hasDoc: !!handle.docSync(),
       heads: handle.docSync() ? automerge.getHeads(handle.docSync()) : null,
       data:
-        handle.docSync()?.doc &&
-        mapValues(handle.docSync()?.doc, (value, key) => {
+        handle.docSync() &&
+        mapValues(handle.docSync(), (value, key) => {
           try {
             switch (key) {
               case 'access':
@@ -234,19 +237,10 @@ export class AutomergeHost {
   // Methods for client-services.
   //
 
-  async flush({ spaceKey }: FlushRequest): Promise<void> {
-    let documentIds: DocumentId[] | undefined;
-    if (spaceKey) {
-      documentIds = await Promise.all(
-        Object.values(this._repo.handles)
-          .filter(async (handle) => {
-            const doc = await handle.doc();
-            return doc && spaceKey.equals(getSpaceKeyFromDoc(doc) ?? '');
-          })
-          .map((handle) => handle.documentId),
-      );
-    }
-    await this._repo.flush(documentIds);
+  async flush({ documentIds }: FlushRequest): Promise<void> {
+    // Note: Wait for all requested documents to be loaded/synced from thin-client.
+    await Promise.all(documentIds?.map((id) => this._repo.find(id as DocumentId).whenReady()) ?? []);
+    await this._repo.flush(documentIds as DocumentId[]);
   }
 
   syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {

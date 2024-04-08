@@ -66,8 +66,8 @@ export class AutomergeContext {
    * Note: AutomergeContext does not have a storage adapter,
    *       so this method sends a RPC call to the AutomergeHost.
    */
-  async flush({ spaceKey }: FlushRequest): Promise<void> {
-    await this._dataService?.flush({ spaceKey });
+  async flush(request: FlushRequest): Promise<void> {
+    await this._dataService?.flush(request);
   }
 
   @trace.info({ depth: null })
