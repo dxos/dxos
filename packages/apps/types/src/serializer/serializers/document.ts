@@ -76,7 +76,7 @@ interface CursorConverter {
   fromCursor(cursor: string): number;
 }
 
-// TODO(burdon): Reconcile with automerge/text-object.
+// TODO(burdon): Reconcile with react-ui-editor/automerge; echo-schema/text-object.
 const cursorConverter = (handle: IDocHandle, path: readonly Prop[]) => ({
   toCursor: (pos: number): string => {
     const doc = handle.docSync();

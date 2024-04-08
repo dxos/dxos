@@ -11,71 +11,42 @@ import { log } from '@dxos/log';
 import { jsonSerializer } from './serializer';
 import { serializers } from './serializers';
 import { getSpaceProperty } from './space-properties';
+import { type SerializedObject, type SerializedSpace, TypeOfExpando } from './types';
+import { UniqueNames } from './util';
 import { FolderType } from '../schema';
-
-// TODO(burdon): Why is this defined here?
-export const TypeOfExpando = 'dxos.org/typename/expando';
-
-export type SpaceMetadata = {
-  name: string;
-  version: number;
-  timestamp: string; // ISO.
-  spaceKey: string;
-};
-
-export type SerializedObject =
-  | {
-      // Object.
-      type: 'file';
-      name: string;
-      id: string;
-      extension: string;
-      typename: string;
-      md5sum: string;
-      content?: string;
-    }
-  | {
-      // Folder.
-      type: 'folder';
-      name: string;
-      id: string;
-      children: SerializedObject[];
-    };
-
-export type SerializedSpace = {
-  metadata: SpaceMetadata;
-  objects: SerializedObject[];
-};
 
 export class ObjectSerializer {
   private readonly _uniqueNames = new UniqueNames();
 
   async serializeSpace(space: Space): Promise<SerializedSpace> {
-    await space.waitUntilReady();
-
-    const serializedSpace: SerializedSpace = {
-      metadata: {
-        name: space.properties.name ?? space.key.toHex(),
-        version: 1,
-        timestamp: new Date().toISOString(),
-        spaceKey: space.key.toHex(),
-      },
-      objects: [],
+    const metadata = {
+      name: space.properties.name ?? space.key.toHex(),
+      version: 1,
+      timestamp: new Date().toISOString(),
+      spaceKey: space.key.toHex(),
     };
 
+    const objects = await this.serializeObjects(space);
+
+    return {
+      metadata,
+      objects,
+    };
+  }
+
+  async serializeObjects(space: Space): Promise<SerializedObject[]> {
     const spaceRoot = getSpaceProperty<FolderType>(space, FolderType.typename);
     if (!spaceRoot) {
       throw new Error('No root folder.');
     }
 
     // Skip root folder.
-    serializedSpace.objects.push(...(await this._serializeFolder(spaceRoot)).children);
-    return serializedSpace;
+    const objects: SerializedObject[] = [];
+    objects.push(...(await this._serializeFolder(spaceRoot)).children);
+    return objects;
   }
 
-  async deserializeSpace(space: Space, serializedSpace: SerializedSpace): Promise<Space> {
-    await space.waitUntilReady();
-
+  async deserializeObjects(space: Space, serializedSpace: SerializedSpace): Promise<Space> {
     const spaceRoot = getSpaceProperty<FolderType>(space, FolderType.typename);
     if (!spaceRoot) {
       throw new Error('No root folder.');
@@ -163,26 +134,6 @@ export class ObjectSerializer {
       } catch (err) {
         log.warn('Failed to deserialize object.', { object });
       }
-    }
-  }
-}
-
-// TODO(burdon): Factor out.
-export class UniqueNames {
-  private readonly _namesCount = new Map<string, number>();
-
-  // TODO(burdon): Make unique by folder?
-  // TODO(burdon): Use meta key for filename.
-  unique(name = 'untitled') {
-    if (this._namesCount.has(name)) {
-      const count = this._namesCount.get(name)!;
-      this._namesCount.set(name, count + 1);
-      // TODO(burdon): Detect and replace current count (e.g., foo_1 => foo_2 not foo_1_1).
-      //  Have to check doesn't collide with existing names.
-      return `${name}_${count}`;
-    } else {
-      this._namesCount.set(name, 1);
-      return name;
     }
   }
 }

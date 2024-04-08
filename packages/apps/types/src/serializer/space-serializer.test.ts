@@ -10,8 +10,9 @@ import * as E from '@dxos/echo-schema';
 import { getTextContent } from '@dxos/echo-schema';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { ObjectSerializer, type SerializedSpace, UniqueNames } from './object-serializer';
+import { ObjectSerializer } from './object-serializer';
 import { getSpaceProperty, setSpaceProperty } from './space-properties';
+import { type SerializedSpace } from './types';
 import { DocumentType, FolderType, TextV0Type } from '../schema';
 
 const createSpace = async (client: Client, name: string | undefined = undefined) => {
@@ -23,14 +24,6 @@ const createSpace = async (client: Client, name: string | undefined = undefined)
 };
 
 describe('Serialization', () => {
-  test('unique', () => {
-    const uniqueNames = new UniqueNames();
-    expect(uniqueNames.unique('foo')).to.equal('foo');
-    expect(uniqueNames.unique('foo')).to.equal('foo_1');
-    // TODO(burdon): Check for collisions.
-    // expect(uniqueNames.unique('foo_1')).to.equal('foo_2');
-  });
-
   test('serialize/deserialize space', async () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
@@ -58,7 +51,7 @@ describe('Serialization', () => {
 
     {
       const space2 = await createSpace(client, 'test-2');
-      const space3 = await serializer.deserializeSpace(space2, serialized);
+      const space3 = await serializer.deserializeObjects(space2, serialized);
       const { objects } = getSpaceProperty<FolderType>(space3, FolderType.typename)!;
 
       const object = objects[0]!;

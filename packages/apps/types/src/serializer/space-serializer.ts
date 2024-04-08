@@ -5,7 +5,8 @@
 import { type Space } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 
-import { ObjectSerializer, type SerializedObject, type SerializedSpace } from './object-serializer';
+import { ObjectSerializer } from './object-serializer';
+import { type SerializedObject, type SerializedSpace } from './types';
 
 // TODO(burdon): Change to .dxos (do not use "composer" in file names.)
 const META_DIR = '.composer';
@@ -16,11 +17,13 @@ export type SpaceSerializerOptions = {
   directory: FileSystemDirectoryHandle;
 };
 
+// TODO(burdon): Reconcile with ObjectSerializer.
 export class SpaceSerializer {
   async save({ space, directory }: SpaceSerializerOptions): Promise<void> {
+    await space.waitUntilReady();
+
     const serializer = new ObjectSerializer();
     const serializedSpace = await serializer.serializeSpace(space);
-
     const saveDir = await directory.getDirectoryHandle(
       serializedSpace.metadata.name ?? serializedSpace.metadata.spaceKey,
       { create: true },
@@ -32,6 +35,7 @@ export class SpaceSerializer {
 
   async load({ space, directory }: SpaceSerializerOptions): Promise<Space | void> {
     invariant('TextDecoder' in window, 'This browser does not support TextDecoder...');
+    await space.waitUntilReady();
     const composerDir = await directory.getDirectoryHandle(META_DIR, { create: false });
     const metadataFile = await composerDir.getFileHandle(SPACE_FILE, { create: false });
     const metadata: SerializedSpace = JSON.parse(
@@ -58,7 +62,7 @@ export class SpaceSerializer {
     };
 
     const serializer = new ObjectSerializer();
-    return serializer.deserializeSpace(space, {
+    return serializer.deserializeObjects(space, {
       ...metadata,
       objects: await loadContent(directory, metadata.objects),
     });

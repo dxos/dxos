@@ -5,9 +5,9 @@
 import { getSchema, type ExpandoType, getEchoObjectAnnotation } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
-import { TypeOfExpando } from './object-serializer';
 import { jsonSerializer } from './serializer';
 import { serializers } from './serializers';
+import { TypeOfExpando } from './types';
 
 /**
  * @deprecated Workaround for ECHO not supporting clone.
