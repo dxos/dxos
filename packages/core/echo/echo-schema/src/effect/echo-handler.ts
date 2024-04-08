@@ -25,9 +25,9 @@ import { getTargetMeta } from './reactive-meta-handler';
 import { SchemaValidator } from './schema-validator';
 import { AutomergeObjectCore, META_NAMESPACE } from '../automerge/automerge-object-core';
 import { type KeyPath } from '../automerge/key-path';
-import { encodeReference } from '../automerge/types';
 import { data, type ObjectMeta } from '../object';
 import { defineHiddenProperty } from '../util/property';
+import { encodeReference } from '@dxos/echo-pipeline';
 
 const symbolPath = Symbol('path');
 const symbolNamespace = Symbol('namespace');

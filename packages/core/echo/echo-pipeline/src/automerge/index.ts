@@ -8,3 +8,4 @@ export * from './automerge-doc-loader';
 export * from './local-host-network-adapter';
 export * from './mesh-network-adapter';
 export * from './types';
+export * from './reference';

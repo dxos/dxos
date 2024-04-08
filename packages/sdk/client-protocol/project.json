@@ -7,25 +7,11 @@
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/sdk/client-protocol/src/index.ts"
-        ]
+        "entryPoints": ["packages/sdk/client-protocol/src/index.ts"]
       }
     },
     "lint": {},
-    "prebuild": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "prebuild"
-      },
-      "outputs": [
-        "{projectRoot}/src/proto/gen"
-      ]
-    },
     "test": {}
   },
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ]
+  "implicitDependencies": ["esbuild", "test"]
 }

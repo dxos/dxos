@@ -11,12 +11,12 @@ import { log } from '@dxos/log';
 import { type Filter } from './filter';
 import { type EchoReactiveObject } from '../effect/reactive';
 import { prohibitSignalActions } from '../guarded-scope';
-import { type OpaqueEchoObject, type EchoObject, type TypedObject } from '../object';
+import { type OpaqueEchoObject, type EchoObject } from '../object';
 
 // TODO(burdon): Reconcile with echo-db/database/selection.
 
 // TODO(burdon): Multi-sort option.
-export type Sort<T extends TypedObject> = (a: T, b: T) => -1 | 0 | 1;
+export type Sort<T extends OpaqueEchoObject> = (a: T, b: T) => -1 | 0 | 1;
 
 // TODO(burdon): Change to SubscriptionHandle.
 export type Subscription = () => void;

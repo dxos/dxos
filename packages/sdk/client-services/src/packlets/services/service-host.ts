@@ -3,12 +3,11 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
-import { clientServiceBundle, defaultKey, type ClientServices, PropertiesSchema } from '@dxos/client-protocol';
+import { PropertiesSchema, clientServiceBundle, defaultKey, type ClientServices } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { DataServiceImpl, type SpaceDoc } from '@dxos/echo-pipeline';
+import { DataServiceImpl, ObjectStructure, encodeReference, type SpaceDoc } from '@dxos/echo-pipeline';
 import * as E from '@dxos/echo-schema';
-import { createRawObjectDoc } from '@dxos/echo-schema';
 import { IndexServiceImpl } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -22,9 +21,6 @@ import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
 import { assignDeep } from '@dxos/util';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
-import { createDiagnostics } from './diagnostics';
-import { ServiceContext, type ServiceContextRuntimeParams } from './service-context';
-import { ServiceRegistry } from './service-registry';
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools';
 import { IdentityServiceImpl, type CreateIdentityOptions } from '../identity';
@@ -35,6 +31,9 @@ import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
+import { createDiagnostics } from './diagnostics';
+import { ServiceContext, type ServiceContextRuntimeParams } from './service-context';
+import { ServiceRegistry } from './service-registry';
 
 export type ClientServicesHostParams = {
   /**
@@ -353,12 +352,21 @@ export class ClientServicesHost {
     const document = await this._serviceContext.automergeHost.repo.find<SpaceDoc>(automergeIndex as any);
     await document.whenReady();
 
-    const objectDocument = createRawObjectDoc(
-      { [defaultKey]: identity.identityKey.toHex() },
-      { type: E.getTypeReference(PropertiesSchema) },
-    );
+    // TODO(dmaretskyi): Better API for low-level data access.
+    const properties: ObjectStructure = {
+      system: {
+        type: encodeReference(E.getTypeReference(PropertiesSchema)!),
+      },
+      data: {
+        [defaultKey]: identity.identityKey.toHex(),
+      },
+      meta: {
+        keys: [],
+      },
+    };
+    const propertiesId = PublicKey.random().toHex();
     document.change((doc: SpaceDoc) => {
-      assignDeep(doc, ['objects', objectDocument.id], objectDocument.handle.docSync());
+      assignDeep(doc, ['objects', propertiesId], properties);
     });
 
     await this._serviceContext.automergeHost.repo.flush();

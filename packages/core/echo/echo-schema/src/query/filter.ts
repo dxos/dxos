@@ -14,16 +14,7 @@ import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/
 import { type AutomergeObjectCore } from '../automerge';
 import { getSchemaTypeRefOrThrow } from '../effect/echo-handler';
 import { type EchoReactiveObject } from '../effect/reactive';
-import {
-  getReferenceWithSpaceKey,
-  immutable,
-  isTypedObject,
-  type EchoObject,
-  type Expando,
-  type OpaqueEchoObject,
-  type TypedObject,
-} from '../object';
-import { type Schema } from '../proto';
+import { getReferenceWithSpaceKey, type EchoObject, type OpaqueEchoObject } from '../object';
 
 export const hasType =
   <T extends EchoReactiveObject<T>>(type: { new (): T }) =>
@@ -54,7 +45,7 @@ export type FilterParams<T extends OpaqueEchoObject> = {
 };
 
 export class Filter<T extends OpaqueEchoObject = EchoObject> {
-  static from<T extends TypedObject>(source?: FilterSource<T>, options?: QueryOptions): Filter<T> {
+  static from<T extends EchoReactiveObject<{}>>(source?: FilterSource<T>, options?: QueryOptions): Filter<T> {
     if (source === undefined || source === null) {
       return new Filter({}, options);
     } else if (source instanceof Filter) {
@@ -97,11 +88,7 @@ export class Filter<T extends OpaqueEchoObject = EchoObject> {
     filter?: Record<string, any> | OperatorFilter<any>,
   ): Filter<EchoReactiveObject<Mutable<T>>>;
 
-  static schema(schema: Schema, filter?: Record<string, any> | OperatorFilter<any>): Filter<Expando>;
-  static schema(
-    schema: S.Schema<any> | Schema,
-    filter?: Record<string, any> | OperatorFilter<any>,
-  ): Filter<OpaqueEchoObject> {
+  static schema(schema: S.Schema<any>, filter?: Record<string, any> | OperatorFilter<any>): Filter<OpaqueEchoObject> {
     const typeReference = S.isSchema(schema) ? getSchemaTypeRefOrThrow(schema) : getReferenceWithSpaceKey(schema);
     invariant(typeReference, 'Invalid schema; check persisted in the database.');
     return this._fromTypeWithPredicate(typeReference, filter);
@@ -313,30 +300,30 @@ export const compareType = (expected: Reference, actual: Reference, spaceKey?: P
  * @deprecated
  */
 // TODO(dmaretskyi): Cleanup.
-const legacyGetDynamicSchemaTypename = (core: AutomergeObjectCore): string | undefined =>
-  compositeRuntime.untracked(() => {
-    const object = core.rootProxy;
-    if (!isTypedObject(object)) {
-      return undefined;
-    }
+const legacyGetDynamicSchemaTypename = (core: AutomergeObjectCore): string | undefined => undefined;
+// compositeRuntime.untracked(() => {
+//   const object = core.rootProxy;
+//   if (!isTypedObject(object)) {
+//     return undefined;
+//   }
 
-    const schema = object.__schema;
-    if (!schema || schema[immutable]) {
-      return undefined;
-    }
+//   const schema = object.__schema;
+//   if (!schema || schema[immutable]) {
+//     return undefined;
+//   }
 
-    return schema.typename;
-  });
+//   return schema.typename;
+// });
 
 /**
  * @deprecated
  */
 // TODO(dmaretskyi): Cleanup.
-const legacyGetTextForMatch = (core: AutomergeObjectCore): string =>
-  compositeRuntime.untracked(() => {
-    if (!isTypedObject(core.rootProxy)) {
-      return '';
-    }
+const legacyGetTextForMatch = (core: AutomergeObjectCore): string => '';
+// compositeRuntime.untracked(() => {
+//   if (!isTypedObject(core.rootProxy)) {
+//     return '';
+//   }
 
-    return JSON.stringify(core.rootProxy.toJSON());
-  });
+//   return JSON.stringify(core.rootProxy.toJSON());
+// });
