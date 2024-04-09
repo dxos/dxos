@@ -28,7 +28,12 @@ const Story = () => {
     generator.addSchemas();
     generator.createObjects({ [TestSchemaType.project]: 6 });
 
-    const table = space.db.add(create(TableType, { title: '', props: [] }));
+    if (!client._graph.types.isEffectSchemaRegistered(TableType)) {
+      client._graph.types.registerEffectSchema(TableType);
+    }
+
+    const table = space.db.add(create(TableType, { title: 'Test Prop', props: [{ id: 'test' }] }));
+
     setTable(table);
   }, []);
 
