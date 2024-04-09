@@ -50,7 +50,7 @@
     "copy": "~0.3.2",
     "crx": "^5.0.1",
     "esbuild-plugin-inline-image": "^0.0.9",
-    "express": "^4.17.1",
+    "express": "^4.19.2",
     "postcss": "^8.4.21",
     "rmdir": "~1.2.0",
     "safe-compare": "~1.1.4",
