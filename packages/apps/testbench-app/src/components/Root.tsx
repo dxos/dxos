@@ -9,6 +9,7 @@ import React, { useState } from 'react';
 import * as E from '@dxos/echo-schema'; // TODO(burdon): [API]: Import syntax?
 import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 import { Input, Toolbar } from '@dxos/react-ui';
 
 import { ItemList } from './ItemList';
@@ -16,26 +17,11 @@ import { ItemType, TextV0Type } from '../data';
 
 export const Root = () => {
   const client = useClient();
-  const { identityKey } = client.halo.identity.get() ?? {};
-
   const space = client.spaces.default;
+  const identity = useIdentity();
 
   // TODO(burdon): Toolbar selector for type.
-  // TODO(burdon): [API]: Neither { type: ItemType } doesn't work.
   const [filter, setFilter] = useState<string>();
-  const match = (filter: string | undefined, text: string | undefined) => {
-    if (!filter?.length) {
-      return true;
-    }
-
-    if (!text?.length) {
-      return false;
-    }
-
-    const content = text.toLowerCase();
-    const words = filter.split(/\s+/).map((word: string) => word.toLowerCase());
-    return !words.some((word) => content.indexOf(word) === -1);
-  };
 
   const objects = useQuery<ItemType>(
     space,
@@ -45,9 +31,8 @@ export const Root = () => {
   const [num, setNum] = useState(10);
 
   const handleAdd = (n = num) => {
-    const count = objects.length;
     Array.from({ length: n }).forEach(() => {
-      // TODO(burdon): [API]: Automerge strings?
+      // TODO(burdon): [API]: Use basic Automerge strings?
       // space.db.add(E.object(ItemType, { content: '' }));
       space.db.add(E.object(ItemType, { text: E.object(TextV0Type, { content: randSentence() }) }));
     });
@@ -61,7 +46,6 @@ export const Root = () => {
     }
   };
 
-  // TODO(burdon): Track how many renders?
   return (
     <div className='flex justify-center fixed inset-0 overflow-hidden bg-neutral-100 dark:bg-neutral-800'>
       <div className='flex flex-col w-full max-w-[40rem] shadow-lg bg-white dark:bg-black divide-y'>
@@ -70,7 +54,7 @@ export const Root = () => {
             <tbody>
               <tr>
                 <td className='text-xs'>identity</td>
-                <td className='px-2 font-mono'>{identityKey?.truncate()}</td>
+                <td className='px-2 font-mono'>{identity?.identityKey.truncate()}</td>
               </tr>
               <tr>
                 <td className='text-xs'>space</td>
@@ -107,6 +91,20 @@ export const Root = () => {
       </div>
     </div>
   );
+};
+
+const match = (filter: string | undefined, text: string | undefined) => {
+  if (!filter?.length) {
+    return true;
+  }
+
+  if (!text?.length) {
+    return false;
+  }
+
+  const content = text.toLowerCase();
+  const words = filter.split(/\s+/).map((word: string) => word.toLowerCase());
+  return !words.some((word) => content.indexOf(word) === -1);
 };
 
 const safeParseInt = (str: string): number | undefined => {
