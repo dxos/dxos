@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { randSentence } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
+import { Plus } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import * as E from '@dxos/echo-schema'; // TODO(burdon): [API]: Import syntax?
@@ -17,17 +19,37 @@ export const Root = () => {
   const { identityKey } = client.halo.identity.get() ?? {};
 
   const space = client.spaces.default;
+
   // TODO(burdon): Toolbar selector for type.
   // TODO(burdon): [API]: Neither { type: ItemType } doesn't work.
-  const objects = useQuery<ItemType>(space, E.Filter.schema(ItemType));
+  const [filter, setFilter] = useState<string>();
+  const match = (filter: string | undefined, text: string | undefined) => {
+    if (!filter?.length) {
+      return true;
+    }
+
+    if (!text?.length) {
+      return false;
+    }
+
+    const content = text.toLowerCase();
+    const words = filter.split(/\s+/).map((word: string) => word.toLowerCase());
+    return !words.some((word) => content.indexOf(word) === -1);
+  };
+
+  const objects = useQuery<ItemType>(
+    space,
+    E.Filter.schema(ItemType, (object: ItemType) => match(filter, object.text?.content)),
+  );
 
   const [num, setNum] = useState(10);
 
   const handleAdd = (n = num) => {
-    let count = objects.length;
+    const count = objects.length;
     Array.from({ length: n }).forEach(() => {
       // TODO(burdon): [API]: Automerge strings?
-      space.db.add(E.object(ItemType, { text: E.object(TextV0Type, { content: `Item ${++count}` }) }));
+      // space.db.add(E.object(ItemType, { content: '' }));
+      space.db.add(E.object(ItemType, { text: E.object(TextV0Type, { content: randSentence() }) }));
     });
   };
 
@@ -58,13 +80,25 @@ export const Root = () => {
           </table>
         </div>
 
-        <ItemList objects={objects} onDelete={handleDelete} />
-
-        <div className='p-2 text-xs'>{objects.length} objects</div>
-
-        <div className='flex-col shrink-0 p-2'>
+        <div className='shrink-0 p-2'>
           <Toolbar.Root>
-            <Toolbar.Button onClick={() => handleAdd()}>Add</Toolbar.Button>
+            <Input.Root>
+              <Input.TextInput
+                placeholder='Filter objects...'
+                value={filter}
+                onChange={(event) => setFilter(event.target.value)}
+              />
+            </Input.Root>
+          </Toolbar.Root>
+        </div>
+
+        <ItemList debug objects={objects} onDelete={handleDelete} />
+
+        <div className='shrink-0 p-2'>
+          <Toolbar.Root>
+            <Toolbar.Button onClick={() => handleAdd()}>
+              <Plus />
+            </Toolbar.Button>
             <Input.Root>
               <Input.TextInput value={num} onChange={(event) => setNum(safeParseInt(event.target.value) ?? num)} />
             </Input.Root>
