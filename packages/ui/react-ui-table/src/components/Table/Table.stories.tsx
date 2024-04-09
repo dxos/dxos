@@ -10,7 +10,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { create } from '@dxos/echo-schema/schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
-import { AnchoredOverflow, DensityProvider } from '@dxos/react-ui';
+import { AnchoredOverflow, Button, DensityProvider } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 import { range } from '@dxos/util';
 
@@ -277,6 +277,61 @@ export const PinnedLastRow = {
           getScrollElement={() => containerRef.current}
           pinLastRow
         />
+      </div>
+    );
+  },
+};
+
+export const InsertDelete = {
+  render: () => {
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const [items, setItems] = useState<Item[]>(createItems(10));
+
+    const onUpdate: ValueUpdater<Item, any> = useCallback(
+      (item, prop, value) => setItems((items) => updateItems(items, item.publicKey, prop, value)),
+      [setItems],
+    );
+
+    const columns = useMemo(() => makeColumns(onUpdate), [onUpdate]);
+
+    const onInsertFirst = () => {
+      setItems((items) => [...createItems(1), ...items]);
+    };
+
+    const onInsertLast = () => {
+      setItems((items) => [...items, ...createItems(1)]);
+    };
+
+    const onDeleteFirst = () => {
+      setItems(([_first, ...rest]) => rest);
+    };
+
+    const onDeleteLast = () => {
+      setItems((items) => [...items.slice(0, items.length - 1)]);
+    };
+
+    return (
+      <div>
+        <div className='flex flex-row gap-2'>
+          <Button onClick={onInsertFirst}>Insert first</Button>
+          <Button onClick={onInsertLast}>Insert last</Button>
+          <Button onClick={onDeleteFirst}>Delete first</Button>
+          <Button onClick={onDeleteLast}>Delete last</Button>
+        </div>
+        <div ref={containerRef} className='fixed inset-0 top-[72px] overflow-auto'>
+          <Table<Item>
+            role='grid'
+            rowsSelectable='multi'
+            keyAccessor={(row) => row.publicKey.toHex()}
+            columns={columns}
+            data={items}
+            fullWidth
+            stickyHeader
+            border
+            getScrollElement={() => containerRef.current}
+            pinLastRow
+          />
+        </div>
       </div>
     );
   },
