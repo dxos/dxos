@@ -12,6 +12,7 @@ import WasmPlugin from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -38,12 +39,13 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, './index.html'),
-        shell: resolve(__dirname, './shell.html'),
       },
       output: {
         manualChunks: {
           react: ['react', 'react-dom', 'react-router-dom'],
           dxos: ['@dxos/react-client'],
+          ui: ['@dxos/react-ui', '@dxos/react-ui-theme'],
+          editor: ['@dxos/react-ui-editor'],
         },
       },
     },
@@ -53,6 +55,9 @@ export default defineConfig({
     plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
   },
   plugins: [
+    tsconfigPaths({
+      projects: ['../../../tsconfig.paths.json'],
+    }),
     ConfigPlugin({ env: ['DX_VAULT'] }),
     ThemePlugin({
       root: __dirname,

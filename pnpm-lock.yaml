@@ -3924,6 +3924,9 @@ importers:
       '@dxos/echo-typegen':
         specifier: workspace:*
         version: link:../../core/echo/echo-typegen
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../ui/storybook-utils
       '@sentry/vite-plugin':
         specifier: ^2.14.0
         version: 2.14.0

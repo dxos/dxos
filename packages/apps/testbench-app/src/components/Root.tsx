@@ -22,7 +22,6 @@ export const Root = () => {
 
   // TODO(burdon): Toolbar selector for type.
   const [filter, setFilter] = useState<string>();
-
   const objects = useQuery<ItemType>(
     space,
     E.Filter.schema(ItemType, (object: ItemType) => match(filter, object.text?.content)),
@@ -32,6 +31,7 @@ export const Root = () => {
 
   const handleAdd = (n = num) => {
     Array.from({ length: n }).forEach(() => {
+      // TODO(burdon): Migrate generator from DebugPlugin.
       // TODO(burdon): [API]: Use basic Automerge strings?
       // space.db.add(E.object(ItemType, { content: '' }));
       space.db.add(E.object(ItemType, { text: E.object(TextV0Type, { content: randSentence() }) }));
@@ -47,23 +47,24 @@ export const Root = () => {
   };
 
   return (
-    <div className='flex justify-center fixed inset-0 overflow-hidden bg-neutral-100 dark:bg-neutral-800'>
-      <div className='flex flex-col w-full max-w-[40rem] shadow-lg bg-white dark:bg-black divide-y'>
-        <div className='flex-col flex-shrink-0 p-2'>
-          <table>
-            <tbody>
-              <tr>
-                <td className='text-xs'>identity</td>
-                <td className='px-2 font-mono'>{identity?.identityKey.truncate()}</td>
-              </tr>
-              <tr>
-                <td className='text-xs'>space</td>
-                <td className='px-2 font-mono'>{space.key.truncate()}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+    <div className='flex flex-col grow max-w-[40rem] shadow-lg bg-white dark:bg-black divide-y'>
+      <div className='flex-col flex-shrink-0 p-2'>
+        <table>
+          <tbody>
+            <tr>
+              <td className='text-xs'>identity</td>
+              <td className='px-2 font-mono'>{identity?.identityKey.truncate()}</td>
+            </tr>
+            <tr>
+              <td className='text-xs'>space</td>
+              <td className='px-2 font-mono'>{space.key.truncate()}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
+      {/* TODO(burdon): Panel. */}
+      <>
         <div className='shrink-0 p-2'>
           <Toolbar.Root>
             <Input.Root>
@@ -77,7 +78,6 @@ export const Root = () => {
         </div>
 
         <ItemList debug objects={objects} onDelete={handleDelete} />
-
         <div className='shrink-0 p-2'>
           <Toolbar.Root>
             <Toolbar.Button onClick={() => handleAdd()}>
@@ -88,7 +88,7 @@ export const Root = () => {
             </Input.Root>
           </Toolbar.Root>
         </div>
-      </div>
+      </>
     </div>
   );
 };
