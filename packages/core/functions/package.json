@@ -19,6 +19,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",

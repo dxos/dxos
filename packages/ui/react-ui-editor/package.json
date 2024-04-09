@@ -58,6 +58,7 @@
   },
   "devDependencies": {
     "@automerge/automerge-repo-network-broadcastchannel": "^1.1.4",
+    "@braneframe/types": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",

@@ -5,12 +5,11 @@
 import React, { type FC } from 'react';
 
 import { type DocumentType } from '@braneframe/types';
-import { getTextContent } from '@dxos/react-client/echo';
 
 import { Container, Slide } from './Markdown';
 
 const MarkdownSlideMain: FC<{ document: DocumentType }> = ({ document }) => {
-  const content = getTextContent(document.content);
+  const content = document.content?.content;
   if (!content) {
     return null;
   }

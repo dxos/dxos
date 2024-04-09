@@ -9,7 +9,6 @@ import type { ChangeFn, ChangeOptions, Doc, Heads } from '@dxos/automerge/autome
 import { getRawDoc } from './automerge-object';
 import { type KeyPath } from './key-path';
 import { type EchoReactiveObject } from '../effect/reactive';
-import { type AutomergeTextCompat, type TextObject } from '../object';
 
 //
 // Automerge types.
@@ -34,10 +33,12 @@ export const DocAccessor = {
   getValue: <T>(accessor: DocAccessor): T => get(accessor.handle.docSync(), accessor.path) as T,
 };
 
+/**
+ * @deprecated Use `getRawDoc` instead.
+ */
 export const createDocAccessor = <T = any>(
-  text: TextObject | EchoReactiveObject<{ content: string }>,
+  text: EchoReactiveObject<{ content: string; field?: string }>,
 ): DocAccessor<T> => {
-  const obj = text as any as AutomergeTextCompat;
   // TODO(dmaretskyi): I don't think `obj.field` is a thing anymore, can we remove it?
-  return getRawDoc(obj, [obj.field ?? 'content']);
+  return getRawDoc(text, [text.field ?? 'content']);
 };

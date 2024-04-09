@@ -10,8 +10,6 @@ import * as S from '@effect/schema/Schema';
 import { type Mutable } from 'effect/Types';
 
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
-import { stripUndefinedValues } from '@dxos/util';
 
 import {
   type EchoObjectAnnotation,
@@ -20,7 +18,6 @@ import {
   EchoObjectFieldMetaAnnotationId,
   ReferenceAnnotation,
 } from './reactive';
-import { type Schema } from '../proto';
 
 const ECHO_REFINEMENT_KEY = '$echo';
 interface EchoRefinement {
@@ -34,24 +31,31 @@ const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } 
   [EchoObjectFieldMetaAnnotationId]: 'fieldMeta',
 };
 
-// Circular deps.
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const requireSchema = (): typeof Schema => require('../proto').Schema;
+export enum PropType {
+  NONE = 0,
+  STRING = 1, // TODO(burdon): vs TEXT?
+  NUMBER = 2,
+  BOOLEAN = 3,
+  DATE = 4,
+  REF = 5, // TODO(burdon): Add RICH text separately?
+  RECORD = 6,
+  ENUM = 7,
+}
 
 // TODO(burdon): Reconcile with plugin-table.
-export const getPropType = (type?: Schema.PropType): string => {
+export const getPropType = (type?: PropType): string => {
   switch (type) {
-    case requireSchema().PropType.REF:
+    case PropType.REF:
       return 'ref';
-    case requireSchema().PropType.BOOLEAN:
+    case PropType.BOOLEAN:
       return 'boolean';
-    case requireSchema().PropType.NUMBER:
+    case PropType.NUMBER:
       return 'number';
-    case requireSchema().PropType.DATE:
+    case PropType.DATE:
       return 'date';
-    case requireSchema().PropType.STRING:
+    case PropType.STRING:
       return 'string';
-    case requireSchema().PropType.RECORD:
+    case PropType.RECORD:
       return 'object';
     default:
       throw new Error(`Invalid type: ${type}`);
@@ -82,70 +86,6 @@ export const getTypename = (schema: JsonSchema): string | undefined => {
   } else {
     return undefined;
   }
-};
-
-/**
- * @deprecated Use TS-Effect types to generate JSON Schema
- */
-export const toJsonSchema = (schema: Schema): JsonSchema => {
-  return schema.props.reduce<JsonSchema>(
-    (schema, { id, type, description }) => {
-      invariant(id);
-      // TODO(burdon): Handle nested objects.
-      schema.properties![id] = stripUndefinedValues({ type: getPropType(type), description });
-      return schema;
-    },
-    {
-      $schema: 'http://json-schema.org/draft-07/schema#',
-      // TODO(burdon): Invalid use of $id. Use ref which must be a valid URI.
-      // https://datatracker.ietf.org/doc/html/draft-wright-json-schema-01#section-9.2
-      $id: schema.typename,
-      // https://datatracker.ietf.org/doc/html/draft-wright-json-schema-01#section-8
-      $ref: schema.typename,
-
-      title: schema.typename.split(/[.-/]/).pop(),
-      type: 'object',
-      properties: {},
-    },
-  );
-};
-
-/**
- * Convert ECHO schema to ts-effect schema.
- * @deprecated Next version will support ts-effect directly.
- */
-export const toEffectSchema = (schema: Schema): S.Schema<any> => {
-  // TODO(burdon): Recursive?
-  const fields = schema.props.reduce<Record<string, S.Schema<any>>>((fields, { id, type, description }) => {
-    let field: S.Schema<any>;
-    switch (type) {
-      case requireSchema().PropType.STRING:
-        field = S.string;
-        break;
-      case requireSchema().PropType.BOOLEAN:
-        field = S.boolean;
-        break;
-      case requireSchema().PropType.NUMBER:
-        field = S.number;
-        break;
-
-      case requireSchema().PropType.REF:
-      case requireSchema().PropType.DATE:
-      case requireSchema().PropType.RECORD:
-      default:
-        log.error(`Invalid type: ${type}`);
-        return fields;
-    }
-
-    if (description) {
-      field = field.pipe(S.description(description));
-    }
-
-    fields[id!] = field;
-    return fields;
-  }, {});
-
-  return S.struct(fields).pipe(S.identifier(schema.typename));
 };
 
 export const effectToJsonSchema = (schema: S.Schema<any>): any => {

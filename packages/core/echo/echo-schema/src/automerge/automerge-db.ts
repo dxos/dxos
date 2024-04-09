@@ -5,7 +5,7 @@
 import { Event, UpdateScheduler, asyncTimeout, synchronized } from '@dxos/async';
 import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
-import { TYPE_PROPERTIES, type Reference } from '@dxos/echo-db';
+import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import {
   type SpaceState,
   type SpaceDoc,
@@ -27,8 +27,7 @@ import { type EchoDatabase } from '../database';
 import { isReactiveProxy } from '../effect/proxy';
 import { isEchoReactiveObject } from '../effect/reactive';
 import { type Hypergraph } from '../hypergraph';
-import { isAutomergeObject, type EchoObject, type OpaqueEchoObject } from '../object';
-import { type Schema } from '../proto';
+import { type EchoObject, type OpaqueEchoObject } from '../object';
 
 export type InitRootProxyFn = (core: AutomergeObjectCore) => void;
 
@@ -195,7 +194,7 @@ export class AutomergeDb {
     }
 
     const root = objCore.rootProxy;
-    invariant(isAutomergeObject(root) || isReactiveProxy(root));
+    invariant(isReactiveProxy(root));
     return root as any;
   }
 
@@ -332,18 +331,6 @@ export class AutomergeDb {
         }
       }
     });
-  }
-
-  /**
-   * @internal
-   */
-  _resolveSchema(type: Reference): Schema | undefined {
-    if (type.protocol === 'protobuf') {
-      return this.graph.types.getSchema(type.itemId);
-    } else {
-      // TODO(dmaretskyi): Cross-space references.
-      return this.getObjectById(type.itemId) as Schema | undefined;
-    }
   }
 
   /**

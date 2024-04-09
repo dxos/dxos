@@ -17,8 +17,7 @@ import '@dxosTheme';
 
 import React from 'react';
 
-import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
-import { TextObject } from '@dxos/react-client/echo';
+import { createEchoReactiveObject } from '@dxos/echo-schema';
 import { useDocAccessor } from '@dxos/react-ui-editor';
 
 import { ScriptEditor } from './ScriptEditor';
@@ -43,7 +42,8 @@ const examples: string[] = [
 ];
 
 const Story = () => {
-  const { accessor } = useDocAccessor(new TextObject(examples[1], TextKind.PLAIN));
+  // TODO(dmaretskyi): Review what's the right way to create automerge-backed objects.
+  const { accessor } = useDocAccessor(createEchoReactiveObject({ content: examples[1] }));
   return (
     <div className='flex fixed inset-0 bg-neutral-50'>
       <div className='flex w-[700px] mx-auto'>

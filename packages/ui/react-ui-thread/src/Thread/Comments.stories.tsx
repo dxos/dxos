@@ -7,7 +7,8 @@ import '@dxosTheme';
 import { Check, Trash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { getTextContent, TextObject } from '@dxos/echo-schema';
+import { MessageType, TextV0Type } from '@braneframe/types';
+import * as E from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
@@ -23,7 +24,7 @@ import {
   createBasicExtensions,
   createThemeExtensions,
   automerge,
-  useDocAccessor,
+  listener,
 } from '@dxos/react-ui-editor';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -42,7 +43,7 @@ const authorId = PublicKey.random().toHex();
 
 const Editor: FC<{
   id?: string;
-  item: { text: TextObject };
+  item: TextV0Type;
   comments: Comment[];
   selected?: string;
   onCreateComment: CommentsOptions['onCreate'];
@@ -62,7 +63,8 @@ const Editor: FC<{
   const [selected, setSelected] = useState<string>();
 
   const { themeMode } = useThemeContext();
-  const { doc, accessor } = useDocAccessor(item.text);
+  const doc = item.content;
+  const accessor = E.getRawDoc(item, ['content']);
   const { parentRef, view } = useTextEditor(
     () => ({
       id,
@@ -103,12 +105,13 @@ type StoryCommentThread = {
   cursor?: string;
   range?: Range;
   yPos?: number;
-  messages: MessageEntity<{ text: TextObject }>[];
+  messages: MessageEntity<{ content?: TextV0Type }>[];
 };
 
-const StoryMessageBlock = (props: MessageBlockProps<{ text: TextObject }>) => {
+const StoryMessageBlock = (props: MessageBlockProps<{ content?: TextV0Type }>) => {
   const { themeMode } = useThemeContext();
-  const { doc, accessor } = useDocAccessor(props.block.text);
+  const doc = props.block.content?.content;
+  const accessor = E.getRawDoc(props.block.content!, ['content']);
   const { parentRef } = useTextEditor(
     () => ({
       doc,
@@ -133,15 +136,17 @@ const StoryThread: FC<{
 }> = ({ thread, selected, onSelect, onResolve }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { themeMode } = useThemeContext();
-  const [item, setItem] = useState({ text: new TextObject() });
-  const { doc, accessor } = useDocAccessor(item.text);
+  // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
+  const [_count, _setCount] = useState(0);
+  const rerenderEditor = () => _setCount((count) => count + 1);
+  const messageRef = useRef('');
   const extensions = useMemo(
     () => [
       createBasicExtensions({ placeholder: 'Enter comment' }),
       createThemeExtensions({ themeMode }),
-      automerge(accessor),
+      listener({ onChange: (text) => (messageRef.current = text) }),
     ],
-    [themeMode, accessor],
+    [themeMode, _count],
   );
 
   const [autoFocus, setAutoFocus] = useState(false);
@@ -156,15 +161,21 @@ const StoryThread: FC<{
   }, [selected]);
 
   const handleCreateMessage = () => {
-    const text = getTextContent(item.text)?.trim();
-    if (text?.length) {
-      thread.messages.push({
-        id: item.text.id,
-        authorId,
-        blocks: [{ text: item.text, timestamp: new Date().toISOString() }],
+    if (messageRef.current?.length) {
+      const message = E.object(MessageType, {
+        from: { identityKey: authorId },
+        blocks: [
+          {
+            timestamp: new Date().toISOString(),
+            content: E.object(TextV0Type, { content: messageRef.current }),
+          },
+        ],
       });
-      setItem({ text: new TextObject() });
+      thread.messages.push(message);
+
+      messageRef.current = '';
       setAutoFocus(true);
+      rerenderEditor();
     }
   };
 
@@ -182,13 +193,12 @@ const StoryThread: FC<{
       </ThreadHeading>
 
       {thread.messages.map((message) => (
-        <Message<{ text: TextObject }> key={message.id} {...message} MessageBlockComponent={StoryMessageBlock} />
+        <Message<{ content?: TextV0Type }> key={message.id} {...message} MessageBlockComponent={StoryMessageBlock} />
       ))}
 
       <div ref={containerRef} className='contents'>
         <MessageTextbox
-          id={item.text.id}
-          doc={doc}
+          id={thread.id}
           authorId={authorId}
           autoFocus={autoFocus}
           extensions={extensions}
@@ -243,7 +253,7 @@ type StoryProps = {
 };
 
 const Story = ({ text, autoCreate }: StoryProps) => {
-  const [item] = useState({ text: new TextObject(text) });
+  const [item] = useState(E.object(TextV0Type, { content: text ?? '' }));
   const [threads, setThreads] = useState<StoryCommentThread[]>([]);
   const [selected, setSelected] = useState<string>();
 
@@ -269,7 +279,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
                 blocks: [
                   {
                     timestamp: new Date().toISOString(),
-                    text: new TextObject(faker.lorem.sentence()),
+                    content: E.object(TextV0Type, { content: faker.lorem.sentence() }),
                   },
                 ],
               }),
