@@ -31,7 +31,7 @@ const serviceBundle = createServiceBundle<TestServices>({
 describe('service registry', () => {
   test('builds a service registry', async () => {
     const remoteSource = 'https://remote.source';
-    const serviceContext = createServiceContext();
+    const serviceContext = await createServiceContext();
     await serviceContext.open(new Context());
 
     const serviceRegistry = new ServiceRegistry(serviceBundle, {
