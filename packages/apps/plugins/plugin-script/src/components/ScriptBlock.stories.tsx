@@ -11,8 +11,8 @@ import { useClient } from '@dxos/react-client';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { useDocAccessor } from '@dxos/react-ui-editor';
 
-// @ts-ignore
 import { createEchoReactiveObject } from '@dxos/echo-schema';
+// @ts-ignore
 import mainUrl from './FrameContainer/frame?url';
 import { ScriptBlock } from './ScriptBlock';
 
