@@ -428,7 +428,9 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
 
   getSchema(target: ProxyTarget): S.Schema<any> | undefined {
     // TODO: make reactive
-    invariant(target[symbolInternals].core.database, 'EchoHandler used without database');
+    if (!target[symbolInternals].core.database) {
+      return undefined;
+    }
     const typeReference = target[symbolInternals].core.getType();
     if (typeReference == null) {
       return undefined;
@@ -436,6 +438,9 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     const staticSchema = target[symbolInternals].core.database.graph.types.getEffectSchema(typeReference.itemId);
     if (staticSchema != null) {
       return staticSchema;
+    }
+    if (typeReference.protocol === 'protobuf') {
+      return undefined;
     }
     return target[symbolInternals].core.database._dbApi.schemaRegistry.getById(typeReference.itemId);
   }

@@ -12,8 +12,9 @@ import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { type AutomergeObjectCore } from '../automerge';
+import { DynamicEchoSchema } from '../effect/dynamic/dynamic-schema';
 import { getSchemaTypeRefOrThrow } from '../effect/echo-handler';
-import { type EchoReactiveObject } from '../effect/reactive';
+import { getSchema, type EchoReactiveObject } from '../effect/reactive';
 import { getReferenceWithSpaceKey, type EchoObject, type OpaqueEchoObject } from '../object';
 
 export const hasType =
@@ -300,20 +301,15 @@ export const compareType = (expected: Reference, actual: Reference, spaceKey?: P
  * @deprecated
  */
 // TODO(dmaretskyi): Cleanup.
-const legacyGetDynamicSchemaTypename = (core: AutomergeObjectCore): string | undefined => undefined;
-// compositeRuntime.untracked(() => {
-//   const object = core.rootProxy;
-//   if (!isTypedObject(object)) {
-//     return undefined;
-//   }
-
-//   const schema = object.__schema;
-//   if (!schema || schema[immutable]) {
-//     return undefined;
-//   }
-
-//   return schema.typename;
-// });
+const legacyGetDynamicSchemaTypename = (core: AutomergeObjectCore): string | undefined =>
+  compositeRuntime.untracked(() => {
+    const object: any = core.rootProxy;
+    const schema = getSchema(object);
+    if (schema instanceof DynamicEchoSchema) {
+      return schema.id;
+    }
+    return undefined;
+  });
 
 /**
  * @deprecated
