@@ -75,6 +75,7 @@ export const scheduleTask = (ctx: Context, fn: () => MaybePromise<void>, afterMs
     openStack: new StackTrace(),
   }));
 
+  // TODO(dmaretskyi): Create a task using message port if there's no delay.
   const timeout = setTimeout(async () => {
     clearDispose();
     await runInContextAsync(ctx, fn);
@@ -139,5 +140,55 @@ export const scheduleExponentialBackoffTaskInterval = (
   ctx.onDispose(() => {
     clearTracking();
     clearTimeout(timeoutId);
+  });
+};
+
+const IDLE_DETECTION_INTERVAL = 200;
+const IDLE_THRESHOLD = IDLE_DETECTION_INTERVAL * 2;
+
+// Unix timestamp of the last time the idle detection task was run.
+// NOTE: Date.now() is used instead of performance.now() because the latter is significantly slower.
+let lastIdleTime = Date.now();
+const tasksOnIdle: (() => void)[] = [];
+
+// If the timer is delayed, we know that the thread is saturated.
+const scheduleIdleTask = () => {
+  setTimeout(() => {
+    lastIdleTime = Date.now();
+
+    // Run the tasks that were scheduled to run on idle.
+    const tasksToRun = Array.from(tasksOnIdle);
+    tasksOnIdle.length = 0;
+    for (const task of tasksToRun) {
+      task();
+    }
+
+    scheduleIdleTask();
+  }, IDLE_DETECTION_INTERVAL);
+};
+
+scheduleIdleTask();
+
+/**
+ * Detects when the thread is saturated and is not able to run tasks in a timely manner.
+ */
+export const isThreadSaturated = () => {
+  return Date.now() - lastIdleTime > IDLE_THRESHOLD;
+};
+
+/**
+ * Delay the task until the thread is idle.
+ * Make sure to guard this call with `isThreadSaturated` to avoid delays.
+ *
+ * @example
+ * ```ts
+ * if (isThreadSaturated()) {
+ *  await yieldUntilIdle();
+ * }
+ * ```
+ */
+export const yieldUntilIdle = async () => {
+  await new Promise<void>((resolve) => {
+    tasksOnIdle.push(resolve);
   });
 };
