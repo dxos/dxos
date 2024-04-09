@@ -8,7 +8,6 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { type SketchType } from '@braneframe/types';
 import { debounce } from '@dxos/async';
-import { type TextObject } from '@dxos/echo-schema';
 import { useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -44,7 +43,8 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
     }
   }, [editor, themeMode]);
 
-  const store = useStoreAdapter(sketch.data as unknown as TextObject);
+  // TODO(dmaretskyi): Handle nullability.
+  const store = useStoreAdapter(sketch.data!);
 
   // Zoom to fit.
   const { ref: containerRef, width = 0, height } = useResizeDetector();

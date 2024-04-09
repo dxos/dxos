@@ -645,6 +645,7 @@ const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
 };
 
 // TODO(dmaretskyi): Read schema from typed in-memory objects.
+// TODO(dmaretskyi): Review whether we can expose this.
 export const createEchoReactiveObject = <T extends {}>(init: T): EchoReactiveObject<T> => {
   const schema = getSchema(init);
   if (schema != null) {
