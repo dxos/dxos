@@ -19,7 +19,7 @@ import {
 } from '@phosphor-icons/react';
 import React, { type FC, useContext, useEffect, useMemo, useState } from 'react';
 
-import { type Schema, type ReactiveObject } from '@dxos/echo-schema';
+import { type ReactiveObject } from '@dxos/echo-schema';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { type Space, useSpaceInvitation } from '@dxos/react-client/echo';
@@ -93,7 +93,8 @@ const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: ReactiveObject<any
     }
   };
 
-  const handleCreate = (schema: Schema, count: number) => {
+  // TODO(dmaretskyi): Convert to the new dynamic schema API.
+  const handleCreate = (schema: any /*Schema */, count: number) => {
     generator.createObjects({ [schema.typename]: count });
   };
 

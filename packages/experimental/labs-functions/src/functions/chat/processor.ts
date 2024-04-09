@@ -30,6 +30,7 @@ import { type ResolverMap } from './resolvers';
 import { ResponseBuilder } from './response';
 import { createStatusNotifier } from './status';
 import { type ChainResources } from '../../chain';
+import { todo } from '@dxos/debug';
 
 export type SequenceOptions = {
   prompt?: string;
@@ -215,12 +216,13 @@ export class RequestProcessor {
           return null;
         }
 
-        const { objects: schemas } = space.db.query(Schema.filter());
+        // TODO(dmaretskyi): Convert to the new dynamic schema API.
+        const schemas = space.db.schemaRegistry.getAll();
         const schema = schemas.find((schema) => schema.typename === type);
         if (schema) {
           // TODO(burdon): Use effect schema to generate JSON schema.
           const name = schema.typename.split(/[.-/]/).pop();
-          const fields = schema.props.filter(({ type }) => type === Schema.PropType.STRING).map(({ id }) => id);
+          const fields = todo() as any[]; //schema.props.filter(({ type }) => type === Schema.PropType.STRING).map(({ id }) => id);
           return () => `${name}: ${fields.join(', ')}`;
         }
 
