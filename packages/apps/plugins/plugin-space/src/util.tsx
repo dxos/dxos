@@ -420,11 +420,16 @@ export const updateGraphWithSpace = ({
           graph.addNodes({
             id: getId(SpaceAction.ADD_OBJECT.replace('object', 'folder')),
             data: () =>
-              dispatch({
-                plugin: SPACE_PLUGIN,
-                action: SpaceAction.ADD_OBJECT,
-                data: { target: folder, object: E.object(FolderType, { objects: [] }) },
-              }),
+              dispatch([
+                {
+                  plugin: SPACE_PLUGIN,
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { target: object, object: E.object(FolderType, { objects: [] }) },
+                },
+                {
+                  action: NavigationAction.ACTIVATE,
+                },
+              ]),
             properties: {
               label: ['create folder label', { ns: SPACE_PLUGIN }],
               icon: (props: IconProps) => <FolderPlus {...props} />,

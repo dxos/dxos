@@ -109,7 +109,10 @@ const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
           });
         }
 
-        state.history = [...state.history.slice(0, HISTORY_LIMIT - 2), executionResults];
+        state.history.push(executionResults);
+        if (state.history.length > HISTORY_LIMIT) {
+          state.history.splice(0, state.history.length - HISTORY_LIMIT);
+        }
 
         if (isUndoable(executionResults)) {
           void dispatch({ action: IntentAction.SHOW_UNDO, data: { results: executionResults } });
