@@ -40,6 +40,8 @@ const router = createBrowserRouter([
 ]);
 
 const App = withProfiler(() => {
+  const config = () => getConfig();
+
   const handleInitialized = async (client: Client) => {
     if (!client.halo.identity.get()) {
       await client.halo.createIdentity({ displayName: 'Test User' });
@@ -52,7 +54,7 @@ const App = withProfiler(() => {
   return (
     <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
       <DensityProvider density='fine'>
-        <ClientProvider config={getConfig()} shell='./shell.html' onInitialized={handleInitialized}>
+        <ClientProvider config={config} shell='./shell.html' onInitialized={handleInitialized}>
           <RouterProvider router={router} />
         </ClientProvider>
       </DensityProvider>
