@@ -19,15 +19,15 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log'; // Keep type-only.
 import { assignDeep, defer, getDeep } from '@dxos/util';
 
-import { isReactiveProxy } from '../effect/proxy';
-import { isEchoReactiveObject } from '../effect/reactive';
-import { type EchoObject, type ObjectMeta, type OpaqueEchoObject } from '../object';
 import { type AutomergeDb } from './automerge-db';
 import { getAutomergeObjectCore } from './automerge-object';
 import { type DocAccessor } from './automerge-types';
 import { docChangeSemaphore } from './doc-semaphore';
 import { isValidKeyPath, type KeyPath } from './key-path';
 import { type DecodedAutomergePrimaryValue, type DecodedAutomergeValue } from './types';
+import { isReactiveProxy } from '../effect/proxy';
+import { isEchoReactiveObject } from '../effect/reactive';
+import { type EchoObject, type ObjectMeta, type OpaqueEchoObject } from '../object';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 // TODO(dmaretskyi): Remove in favour of explicitly specifying this in the API/Schema.

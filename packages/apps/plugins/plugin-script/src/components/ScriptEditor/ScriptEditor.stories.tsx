@@ -17,9 +17,9 @@ import '@dxosTheme';
 
 import React from 'react';
 
+import { createEchoReactiveObject } from '@dxos/echo-schema';
 import { useDocAccessor } from '@dxos/react-ui-editor';
 
-import { createEchoReactiveObject } from '@dxos/echo-schema';
 import { ScriptEditor } from './ScriptEditor';
 
 const examples: string[] = [

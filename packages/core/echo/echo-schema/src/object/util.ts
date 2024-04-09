@@ -4,11 +4,11 @@
 
 import { Reference } from '@dxos/echo-db';
 
+import { type ForeignKey, type OpaqueEchoObject } from './types';
 import type { EchoDatabase } from '../database';
 import type * as echoHandlerModule from '../effect/echo-handler';
 import { getProxyHandlerSlot } from '../effect/proxy';
 import { isEchoReactiveObject } from '../effect/reactive';
-import { type ForeignKey, type OpaqueEchoObject } from './types';
 
 export const getDatabaseFromObject = (obj: OpaqueEchoObject): EchoDatabase | undefined => {
   if (isEchoReactiveObject(obj)) {

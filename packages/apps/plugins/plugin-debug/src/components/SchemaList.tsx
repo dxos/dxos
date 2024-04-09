@@ -16,7 +16,7 @@ type SchemaRecord = {
 };
 
 // TODO(dmaretskyi): Convert to the new dynamic schema API.
-export const SchemaList: FC<{ space: Space; onCreate?: (schema: any /*Schema */, count: number) => void }> = ({
+export const SchemaList: FC<{ space: Space; onCreate?: (schema: any /* Schema */, count: number) => void }> = ({
   space,
   onCreate,
 }) => {

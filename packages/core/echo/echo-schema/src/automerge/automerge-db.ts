@@ -5,7 +5,7 @@
 import { Event, UpdateScheduler, asyncTimeout, synchronized } from '@dxos/async';
 import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
-import { TYPE_PROPERTIES, type Reference } from '@dxos/echo-db';
+import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import {
   type SpaceState,
   type SpaceDoc,

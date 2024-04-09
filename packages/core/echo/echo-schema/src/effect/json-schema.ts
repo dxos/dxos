@@ -10,8 +10,6 @@ import * as S from '@effect/schema/Schema';
 import { type Mutable } from 'effect/Types';
 
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
-import { stripUndefinedValues } from '@dxos/util';
 
 import {
   type EchoObjectAnnotation,

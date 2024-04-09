@@ -6,8 +6,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Reference } from '@dxos/echo-db';
-import { EncodedReferenceObject } from './reference';
+import { type EncodedReferenceObject } from './reference';
 
 export type SpaceState = {
   // Url of the root automerge document.

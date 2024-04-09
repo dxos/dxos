@@ -21,7 +21,7 @@ const nullStyle = { style: 'color: #777' };
 
 const defaultKeys = ['id', '__typename', '__schema', 'meta'];
 
-export const getHeader = (obj: any /*TypedObject*/, config?: any): JsonML => {
+export const getHeader = (obj: any /* TypedObject */, config?: any): JsonML => {
   return [
     'span',
     {
@@ -42,7 +42,7 @@ const formatValue = (object: any, config?: any): JsonML => {
   }
 };
 
-export const getBody = (obj: any /*TypedObject*/): JsonML => {
+export const getBody = (obj: any /* TypedObject */): JsonML => {
   let objData = obj[data];
   objData = {
     id: obj.id,

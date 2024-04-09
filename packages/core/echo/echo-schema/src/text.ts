@@ -1,8 +1,14 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import get from 'lodash.get';
-import { getRawDoc } from './automerge';
-import { EchoReactiveObject } from './effect/reactive';
+
 import { next as A } from '@dxos/automerge/automerge';
-import { OpaqueEchoObject } from './object';
+
+import { getRawDoc } from './automerge';
+import { type EchoReactiveObject } from './effect/reactive';
+import { type OpaqueEchoObject } from './object';
 
 export const LEGACY_TEXT_TYPE = 'dxos.Text.v0';
 

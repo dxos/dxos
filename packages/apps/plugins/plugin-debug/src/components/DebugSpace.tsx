@@ -94,7 +94,7 @@ const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: ReactiveObject<any
   };
 
   // TODO(dmaretskyi): Convert to the new dynamic schema API.
-  const handleCreate = (schema: any /*Schema */, count: number) => {
+  const handleCreate = (schema: any /* Schema */, count: number) => {
     generator.createObjects({ [schema.typename]: count });
   };
 

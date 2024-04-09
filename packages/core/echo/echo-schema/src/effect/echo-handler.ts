@@ -7,6 +7,7 @@ import { type Brand } from 'effect';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { Reference } from '@dxos/echo-db';
+import { encodeReference } from '@dxos/echo-pipeline';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { assignDeep, ComplexMap, defaultMap, getDeep } from '@dxos/util';
@@ -27,7 +28,6 @@ import { AutomergeObjectCore, META_NAMESPACE } from '../automerge/automerge-obje
 import { type KeyPath } from '../automerge/key-path';
 import { data, type ObjectMeta } from '../object';
 import { defineHiddenProperty } from '../util/property';
-import { encodeReference } from '@dxos/echo-pipeline';
 
 const symbolPath = Symbol('path');
 const symbolNamespace = Symbol('namespace');

@@ -21,7 +21,7 @@ const Story: FC = () => {
     }
   }, [space]);
 
-  const handleCreate = (schema: any /*Schema */, count: number) => {
+  const handleCreate = (schema: any /* Schema */, count: number) => {
     console.log(schema.id, count);
   };
 
