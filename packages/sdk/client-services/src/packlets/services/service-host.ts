@@ -5,7 +5,7 @@
 import { type Level } from 'level';
 
 import { Event, synchronized } from '@dxos/async';
-import { clientServiceBundle, defaultKey, type ClientServices, PropertiesSchema } from '@dxos/client-protocol';
+import { clientServiceBundle, defaultKey, type ClientServices, Properties } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { DataServiceImpl, type ObjectStructure, encodeReference, type SpaceDoc } from '@dxos/echo-pipeline';
