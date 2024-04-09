@@ -5,7 +5,7 @@
 import { type Level } from 'level';
 
 import { Trigger } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { Context, Resource } from '@dxos/context';
 import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { AutomergeHost, MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
@@ -49,7 +49,7 @@ export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams & DataSpa
 // TODO(dmaretskyi): Gets duplicated in CJS build between normal and testing bundles.
 @safeInstanceof('dxos.client-services.ServiceContext')
 @Trace.resource()
-export class ServiceContext {
+export class ServiceContext extends Resource {
   public readonly initialized = new Trigger();
   public readonly metadataStore: MetadataStore;
   /**
@@ -85,6 +85,8 @@ export class ServiceContext {
     public readonly signalManager: SignalManager,
     public readonly _runtimeParams?: IdentityManagerRuntimeParams & DataSpaceManagerRuntimeParams,
   ) {
+    super();
+
     // TODO(burdon): Move strings to constants.
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     this.snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
@@ -148,7 +150,7 @@ export class ServiceContext {
   }
 
   @Trace.span()
-  async open(ctx: Context) {
+  protected override async _open(ctx: Context) {
     await this._checkStorageVersion();
 
     log('opening...');
@@ -166,7 +168,7 @@ export class ServiceContext {
     log('opened');
   }
 
-  async close() {
+  protected override async _close() {
     log('closing...');
     if (this._deviceSpaceSync && this.identityManager.identity) {
       await this.identityManager.identity.space.spaceState.removeCredentialProcessor(this._deviceSpaceSync);
