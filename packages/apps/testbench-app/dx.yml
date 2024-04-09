@@ -13,6 +13,7 @@ runtime:
   services:
     signaling:
       - server: wss://kube.dxos.org/.well-known/dx/signal
+      - server: wss://dev.kube.dxos.org/.well-known/dx/signal
     ice:
       - urls: turn:kube.dxos.org:3478
         username: dxos

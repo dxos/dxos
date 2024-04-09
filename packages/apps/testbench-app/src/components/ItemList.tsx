@@ -11,12 +11,12 @@ import { automerge, createBasicExtensions, useDocAccessor, useTextEditor } from 
 
 import { type ItemType } from '../data';
 
-// TODO(burdon): List and Table variants.
-
 export type ItemListProps<T> = {
   objects: T[];
 } & Pick<ItemProps<T>, 'debug' | 'onDelete'>;
 
+// TODO(burdon): [BUG]: On join/reload:
+//    Uncaught TypeError: Cannot read properties of undefined (reading 'id').
 export const ItemList = ({ objects, ...props }: ItemListProps<ItemType>) => {
   return (
     <>

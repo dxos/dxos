@@ -13,7 +13,7 @@ export type DataToolbarProps = {
 };
 
 export const DataToolbar = ({ onAdd, onFilterChange }: DataToolbarProps) => {
-  const [count, setCount] = useState(10);
+  const [count, setCount] = useState(3);
   const [filter, setFilter] = useState<string>();
   useEffect(() => {
     onFilterChange(filter);

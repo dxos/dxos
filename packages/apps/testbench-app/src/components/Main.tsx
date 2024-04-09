@@ -3,10 +3,10 @@
 //
 
 import { randSentence } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import * as E from '@dxos/echo-schema'; // TODO(burdon): [API]: Import syntax?
-import { useClient } from '@dxos/react-client';
+import { type PublicKey, useClient } from '@dxos/react-client';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 
 import { AppToolbar } from './AppToolbar';
@@ -20,14 +20,32 @@ export const Main = () => {
   const client = useClient();
   const [space, setSpace] = useState<Space>();
 
-  // TODO(burdon): Toolbar selector for type.
   const [filter, setFilter] = useState<string>();
+  // TODO(burdon): [BUG]: Shows deleted objects.
   const objects = useQuery<ItemType>(
     space,
     E.Filter.schema(ItemType, (object: ItemType) => match(filter, object.text?.content)),
     {},
     [filter],
   );
+
+  // Handle invitation.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const invitationCode = url.searchParams.get('spaceInvitationCode');
+    let t: ReturnType<typeof setTimeout>;
+    if (invitationCode) {
+      t = setTimeout(async () => {
+        const { space } = await client.shell.joinSpace({ invitationCode });
+        setSpace(space);
+
+        url.searchParams.delete('spaceInvitationCode');
+        history.replaceState({}, document.title, url.href);
+      });
+    }
+
+    return () => clearTimeout(t);
+  }, []);
 
   const handleAdd = (n = 1) => {
     if (!space) {
@@ -54,27 +72,42 @@ export const Main = () => {
     }
   };
 
+  const handleSpaceCreate = async () => {
+    const space = await client.spaces.create();
+    return space.key;
+  };
+
+  const handleSpaceSelect = (spaceKey?: PublicKey) => {
+    const space = spaceKey ? client.spaces.get(spaceKey) : undefined;
+    setSpace(space);
+  };
+
+  const handleSpaceInvite = (spaceKey: PublicKey) => {
+    const space = client.spaces.get(spaceKey);
+    if (!space) {
+      return;
+    }
+
+    void client.shell.shareSpace({ spaceKey });
+  };
+
   return (
     <div className='flex flex-col grow max-w-[40rem] shadow-lg bg-white dark:bg-black divide-y'>
-      <AppToolbar onHome={() => window.open(defs.issueUrl, 'dxos')} />
-
-      <SpaceToolbar
-        onCreate={async () => {
-          const space = await client.spaces.create();
-          return space.key;
+      <AppToolbar
+        onHome={() => window.open(defs.issueUrl, 'dxos')}
+        onProfile={() => {
+          void client.shell.open();
         }}
-        onSelect={(key) => {
-          setSpace(key ? client.spaces.get(key) : undefined);
-        }}
-        // TODO(burdon): Copy invitation key.
-        onInvite={(key) => {}}
       />
+      <SpaceToolbar onCreate={handleSpaceCreate} onSelect={handleSpaceSelect} onInvite={handleSpaceInvite} />
 
-      <>
-        {space && <DataToolbar onAdd={handleAdd} onFilterChange={setFilter} />}
-
-        <ItemList debug objects={objects} onDelete={handleDelete} />
-      </>
+      {/* TODO(burdon): Different UX panels (e.g., table). */}
+      {space && (
+        <>
+          <DataToolbar onAdd={handleAdd} onFilterChange={setFilter} />
+          <ItemList debug objects={objects} onDelete={handleDelete} />
+        </>
+      )}
     </div>
   );
 };

@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
 import { join, resolve } from 'node:path';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
@@ -39,6 +38,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, './index.html'),
+        shell: resolve(__dirname, './shell.html'),
       },
       output: {
         manualChunks: {
@@ -70,17 +70,6 @@ export default defineConfig({
     WasmPlugin(),
     // https://github.com/preactjs/signals/issues/269
     ReactPlugin({ jsxRuntime: 'classic' }),
-    // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    // https://www.npmjs.com/package/@sentry/vite-plugin
-    sentryVitePlugin({
-      org: 'dxos',
-      project: 'testbench-app',
-      sourcemaps: {
-        assets: './packages/apps/testbench-app/out/testbench-app/**',
-      },
-      authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
-      disable: process.env.DX_ENVIRONMENT !== 'production',
-    }),
     // https://www.bundle-buddy.com/rollup
     {
       name: 'bundle-buddy',

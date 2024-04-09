@@ -7,14 +7,15 @@ import '@dxosTheme';
 import { withProfiler } from '@sentry/react';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createBrowserRouter, RouterProvider, useRouteError } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
 import { initializeAppObservability } from '@dxos/observability';
 import { type Client, ClientProvider, Config, Defaults } from '@dxos/react-client';
 import { DensityProvider, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
-import { AppContainer, Main } from './components';
+import { AppContainer, Main, Error } from './components';
+import { getConfig } from './config';
 import { ItemType } from './data';
 import translations from './translations';
 
@@ -25,17 +26,6 @@ void initializeAppObservability({
   namespace: 'testbench.dxos.org',
   config: new Config(Defaults()),
 });
-
-const Error = () => {
-  const error = useRouteError();
-  const stack = (error as any)?.stack;
-  return (
-    <div className='flex flex-col m-8 p-2 gap-4 border'>
-      <div className='text-blue-500'>{String(error)}</div>
-      {stack && <pre className='opacity-75'>{stack}</pre>}
-    </div>
-  );
-};
 
 const router = createBrowserRouter([
   {
@@ -56,14 +46,13 @@ const App = withProfiler(() => {
     }
 
     client.addSchema(ItemType);
-
     await client.spaces.isReady.wait();
   };
 
   return (
     <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
       <DensityProvider density='fine'>
-        <ClientProvider onInitialized={handleInitialized}>
+        <ClientProvider config={getConfig()} shell='./shell.html' onInitialized={handleInitialized}>
           <RouterProvider router={router} />
         </ClientProvider>
       </DensityProvider>

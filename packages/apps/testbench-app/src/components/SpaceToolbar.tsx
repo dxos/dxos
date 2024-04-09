@@ -5,7 +5,8 @@
 import { Plus, UserPlus } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/client';
+import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Select, Toolbar } from '@dxos/react-ui';
 
@@ -16,8 +17,9 @@ export type SpaceToolbarProps = {
 };
 
 export const SpaceToolbar = ({ onCreate, onSelect, onInvite }: SpaceToolbarProps) => {
+  const client = useClient();
   const spaces = useSpaces();
-  const [spaceKey, setSpaceKey] = useState<PublicKey | undefined>(spaces[0]?.key);
+  const [spaceKey, setSpaceKey] = useState<PublicKey | undefined>();
   useEffect(() => {
     onSelect(spaceKey);
   }, [spaceKey]);
@@ -41,11 +43,13 @@ export const SpaceToolbar = ({ onCreate, onSelect, onInvite }: SpaceToolbarProps
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>
-                {spaces.map((space) => (
-                  <Select.Option key={space.key.toHex()} value={space.key.toHex()}>
-                    <span className='font-mono'>{space.key.truncate()}</span>
-                  </Select.Option>
-                ))}
+                {spaces
+                  .filter((space) => space !== client.spaces.default)
+                  .map((space) => (
+                    <Select.Option key={space.key.toHex()} value={space.key.toHex()}>
+                      <span className='font-mono'>{space.key.truncate()}</span>
+                    </Select.Option>
+                  ))}
               </Select.Viewport>
             </Select.Content>
           </Select.Portal>
