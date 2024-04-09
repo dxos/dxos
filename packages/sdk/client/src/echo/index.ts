@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export { type Echo, type Space, defaultKey, Properties } from '@dxos/client-protocol';
+export { type Echo, type Space, defaultKey, Properties, type PropertiesProps } from '@dxos/client-protocol';
 // TODO(burdon): Remove/Rename Item.
 export {
   base,
