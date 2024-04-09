@@ -131,7 +131,7 @@ describe('AutomergeDb', () => {
       newRootDocHandle.change((newDoc: any) => {
         newDoc.links = getDocHandles(peer).spaceRootHandle.docSync().links;
       });
-      const beforeUpdate = await peer.db.automerge.loadObjectById(originalObj.id)!;
+      const beforeUpdate = (await peer.db.automerge.loadObjectById(originalObj.id))!;
       expect(getObjectDocHandle(beforeUpdate).url).to.eq(
         getDocHandles(peer).spaceRootHandle.docSync().links[beforeUpdate.id],
       );
