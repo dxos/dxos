@@ -21,6 +21,8 @@ import translations from './translations';
 // TODO(burdon): Purpose: Basic ECHO queries; evolve to replace DebugPlug (evolution of devtools as composer plugins).
 // TODO(burdon): App, storybook, vite tests (in-browser and headless), playwright tests.
 
+// TODO(burdon): Migrate generator from DebugPlugin.
+
 void initializeAppObservability({ namespace: 'testbench.dxos.org', config: new Config(Defaults()) });
 
 const Identity: FC<PropsWithChildren> = ({ children }) => {
