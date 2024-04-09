@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Trigger } from '@dxos/async';
+import { Trigger, isThreadSaturated, yieldUntilIdle } from '@dxos/async';
 import { NetworkAdapter, type Message, type PeerId, cbor } from '@dxos/automerge/automerge-repo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -87,6 +87,12 @@ export class MeshNetworkAdapter extends NetworkAdapter {
           if (!peerInfo) {
             return;
           }
+
+          // Throttle replication if the thread is saturated.
+          if (isThreadSaturated()) {
+            await yieldUntilIdle();
+          }
+
           const message = cbor.decode(payload) as Message;
           // Note: automerge Repo dedup messages.
           this.emit('message', message);

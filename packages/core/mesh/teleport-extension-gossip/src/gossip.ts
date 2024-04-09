@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { scheduleTask, Event, scheduleTaskInterval } from '@dxos/async';
+import { scheduleTask, Event, scheduleTaskInterval, isThreadSaturated, yieldUntilIdle } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -75,6 +75,11 @@ export class Gossip {
   createExtension({ remotePeerId }: { remotePeerId: PublicKey }): GossipExtension {
     const extension = new GossipExtension({
       onAnnounce: async (message) => {
+        // Throttle processing if the thread is saturated.
+        if (isThreadSaturated()) {
+          await yieldUntilIdle();
+        }
+
         if (this._receivedMessages.has(message.messageId)) {
           return;
         }
