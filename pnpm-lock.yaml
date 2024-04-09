@@ -3857,6 +3857,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/echo-generator':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-generator
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
