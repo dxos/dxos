@@ -149,7 +149,7 @@ describe('database', () => {
     database.add(E.object(Task, { title: 'foo 2' }));
     database.add(E.object(Task, { title: 'bar 3' }));
 
-    expect(database.query(Filter.schema(Task, (task) => task.title.startsWith('foo'))).objects).to.have.length(2);
+    expect(database.query(Filter.schema(Task, (task) => task.title?.startsWith('foo'))).objects).to.have.length(2);
   });
 
   test('typenames of nested objects', async () => {

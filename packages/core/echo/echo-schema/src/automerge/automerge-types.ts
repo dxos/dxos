@@ -34,7 +34,10 @@ export const DocAccessor = {
   getValue: <T>(accessor: DocAccessor): T => get(accessor.handle.docSync(), accessor.path) as T,
 };
 
-// TODO(burdon): Remove?
+/**
+ * @deprecated
+ */
+// TODO(burdon): Delete.
 export const createDocAccessor = <T = any>(
   text: TextObject | EchoReactiveObject<{ content: string }>,
 ): DocAccessor<T> => {

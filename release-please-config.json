@@ -239,7 +239,7 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/testbench/package.json",
+          "path": "packages/apps/testbench-app/package.json",
           "jsonpath": "$.version"
         },
         {
