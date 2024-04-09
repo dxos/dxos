@@ -27,6 +27,7 @@ export const ItemList = ({ objects, ...props }: ItemListProps<ItemType>) => {
           ))}
         </div>
       </div>
+
       <div className='p-2 text-xs'>{objects.length} objects</div>
     </>
   );
@@ -75,7 +76,8 @@ export const Item = ({ object, debug, onDelete }: ItemProps<ItemType>) => {
         </div>
       </div>
       {debug && (
-        <div className='flex w-full ml-[40px] px-1.5 text-xs font-mono opacity-25'>
+        <div className='flex w-full px-1.5 py-1 text-xs font-mono opacity-25'>
+          <div className='w-[40px] ' />
           <div>{JSON.stringify({ id: object.id.slice(0, 8), ...meta })}</div>
         </div>
       )}

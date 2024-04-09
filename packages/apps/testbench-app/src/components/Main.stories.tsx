@@ -10,24 +10,23 @@ import { ClientRepeater } from '@dxos/react-client/testing';
 import { DensityProvider } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { MainContainer } from './Main';
-import { Root } from './Root';
+import { AppContainer } from './AppContainer';
+import { Main } from './Main';
+import { ItemType } from '../data';
 
 const Story = () => (
   <DensityProvider density='fine'>
-    <Root />
+    <Main />
   </DensityProvider>
 );
 
-// TODO(burdon): Configure clients to use space created by repeater.
-
 export default {
-  title: 'testbench-app',
-  component: Root,
+  title: 'testbench-app/Main',
+  component: Main,
   render: () => (
-    <MainContainer>
-      <ClientRepeater component={Story} createSpace count={2} />
-    </MainContainer>
+    <AppContainer>
+      <ClientRepeater component={Story} count={2} createSpace schema={[ItemType]} />
+    </AppContainer>
   ),
   decorators: [withTheme],
   parameters: {
