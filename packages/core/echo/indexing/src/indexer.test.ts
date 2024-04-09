@@ -34,6 +34,7 @@ describe('Indexer', () => {
       },
       getAllDocuments: async function* () {},
     });
+    afterTest(() => indexer.destroy());
 
     const schemaURI = '@example.org/schema/Contact';
     const objects = [
