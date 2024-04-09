@@ -6,9 +6,8 @@ import { X } from '@phosphor-icons/react';
 import React from 'react';
 
 import * as E from '@dxos/echo-schema';
-import { createDocAccessor, DocAccessor } from '@dxos/echo-schema';
 import { Button, Input } from '@dxos/react-ui';
-import { automerge, createBasicExtensions, useTextEditor } from '@dxos/react-ui-editor';
+import { automerge, createBasicExtensions, useDocAccessor, useTextEditor } from '@dxos/react-ui-editor';
 
 import { type ItemType } from '../data';
 
@@ -16,14 +15,14 @@ import { type ItemType } from '../data';
 
 export type ItemListProps<T> = {
   objects: T[];
-} & ItemProps<T>['onDelete'];
+} & Pick<ItemProps<T>, 'onDelete'>;
 
-export const ItemList = ({ objects, ...rest }: ItemListProps<ItemType>) => {
+export const ItemList = ({ objects, ...props }: ItemListProps<ItemType>) => {
   return (
     <div className='flex flex-col grow overflow-hidden'>
       <div className='flex flex-col overflow-y-scroll pr-2'>
         {objects.map((object) => (
-          <Item key={object.id} object={object} {...rest} />
+          <Item key={object.id} object={object} {...props} />
         ))}
       </div>
     </div>
@@ -39,20 +38,21 @@ export type ItemProps<T> = {
 // TODO(burdon): Toggle options to show deleted.
 export const Item = ({ object, onDelete }: ItemProps<ItemType>) => {
   // const { themeMode } = useThemeContext(); // TODO(burdon): Set-up theme.
+  invariant(object.text, 'Missing text.'); // TODO(burdon): [API]: Accept undefined?
+  const { doc, accessor } = useDocAccessor(object.text);
   const meta = E.getMeta(object);
-  const source = createDocAccessor(object.text); // TODO(burdon): Type error.
   // TODO(burdon): Cannot focus item.
   const { parentRef } = useTextEditor(
     () => ({
-      doc: DocAccessor.getValue(source),
+      doc,
       extensions: [
         //
         createBasicExtensions(),
         // createThemeExtensions({ themeMode }),
-        automerge(source),
+        automerge(accessor),
       ],
     }),
-    [source],
+    [doc, accessor],
   );
 
   return (
