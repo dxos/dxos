@@ -19,7 +19,7 @@ describe('DevicesService', () => {
   let devicesService: DevicesService;
 
   beforeEach(async () => {
-    serviceContext = createServiceContext();
+    serviceContext = await createServiceContext();
     await serviceContext.open(new Context());
     devicesService = new DevicesServiceImpl(serviceContext.identityManager);
   });

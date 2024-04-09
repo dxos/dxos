@@ -4,22 +4,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DX_DATA } from '@dxos/client-protocol';
 import { InvalidConfigError } from '@dxos/protocols';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { isNode } from '@dxos/util';
 
 import StorageDriver = Runtime.Client.Storage.StorageDriver;
+import { getRootPath } from './util';
 
 // TODO(burdon): Factor out.
 export const createStorageObjects = (config: Runtime.Client.Storage) => {
-  const {
-    persistent = false,
-    keyStore,
-    dataStore,
-    dataRoot = isNode() ? DX_DATA : 'dxos/storage', // TODO(burdon): Factor out const.
-  } = config ?? {};
+  const { persistent = false, keyStore, dataStore } = config ?? {};
 
   if (persistent && dataStore === StorageDriver.RAM) {
     throw new InvalidConfigError('RAM storage cannot be used in persistent mode.');
@@ -37,7 +31,7 @@ export const createStorageObjects = (config: Runtime.Client.Storage) => {
   return {
     storage: createStorage({
       type: persistent ? toStorageType(dataStore) : StorageType.RAM,
-      root: `${dataRoot}/`,
+      root: getRootPath(config),
     }),
   };
 };
