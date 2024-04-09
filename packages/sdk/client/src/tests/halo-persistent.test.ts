@@ -48,8 +48,9 @@ describe('Halo', () => {
 
       await waitForCondition({ condition: () => !!client.halo.identity });
       expect(client.halo.identity).exist;
-      // TODO(burdon): Not working.
-      // expect(client.halo.identity!.displayName).to.eq('test-user');
+      await client.spaces.isReady.wait();
+      expect(client.halo.identity.get()?.profile?.displayName).to.eq('test-user');
+      await client.destroy();
     }
   });
 });
