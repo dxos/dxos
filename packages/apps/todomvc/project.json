@@ -17,8 +17,7 @@
     "bundle": {
       "dependsOn": [
         "^build",
-        "^bundle",
-        "prebuild"
+        "^bundle"
       ],
       "executor": "@nx/vite:build",
       "options": {
@@ -42,15 +41,6 @@
       }
     },
     "lint": {},
-    "prebuild": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "prebuild"
-      },
-      "outputs": [
-        "{projectRoot}/src/proto/gen"
-      ]
-    },
     "preview": {
       "executor": "@nx/web:file-server",
       "options": {

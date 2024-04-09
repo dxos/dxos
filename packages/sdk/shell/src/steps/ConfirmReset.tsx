@@ -64,6 +64,7 @@ export const ConfirmResetImpl = ({
   const { t } = useTranslation('os');
   const confirmationValue = t('confirmation value');
   const [inputValue, setInputValue] = useState('');
+  const testIdAffix = mode === 'join new identity' ? 'join-new-identity' : 'reset-storage';
   return (
     <>
       <div role='none' className='grow flex flex-col gap-2 justify-center'>
@@ -84,14 +85,14 @@ export const ConfirmResetImpl = ({
             </StepHeading>
           }
           disabled={disabled}
-          data-testid='reset-identity-input'
+          data-testid={`${testIdAffix}.reset-identity-input`}
           placeholder={confirmationValue}
           onChange={({ target: { value } }) => setInputValue(value)}
         />
       </div>
       <Actions>
         {onCancel && (
-          <Action disabled={disabled} onClick={onCancel} data-testid='reset-identity-input-cancel'>
+          <Action disabled={disabled} onClick={onCancel} data-testid={`${testIdAffix}.reset-identity-cancel`}>
             {t('cancel label')}
           </Action>
         )}
@@ -100,7 +101,7 @@ export const ConfirmResetImpl = ({
             variant='destructive'
             disabled={disabled || pending || inputValue !== confirmationValue}
             onClick={onConfirm}
-            data-testid='reset-identity-input-confirm'
+            data-testid={`${testIdAffix}.reset-identity-confirm`}
           >
             {pending ? t('reset in progress label') : t('reset device label')}
           </Action>

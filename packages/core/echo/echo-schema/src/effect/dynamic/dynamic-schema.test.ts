@@ -156,7 +156,7 @@ describe('dynamic schema', () => {
   });
 
   const setupTest = async () => {
-    const { db, graph } = await createDatabase(undefined, { useReactiveObjectApi: true });
+    const { db, graph } = await createDatabase();
     graph.types.registerEffectSchema(ClassWithSchemaField);
     return { db };
   };

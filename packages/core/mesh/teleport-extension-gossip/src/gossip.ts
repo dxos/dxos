@@ -18,9 +18,6 @@ export type GossipParams = {
 
 const RECEIVED_MESSAGES_GC_INTERVAL = 120_000;
 
-const YJS_CHANNEL_PREFIX = 'user-channel/yjs.awareness';
-const YJS_TIMEOUT_THRESHOLD = 20;
-const YJS_TIMEOUT_WINDOW = 1000 * 30;
 const MAX_CTX_TASKS = 50;
 
 /**
@@ -49,10 +46,6 @@ export class Gossip {
   private readonly _connections = new ComplexMap<PublicKey, GossipExtension>(PublicKey.hash);
 
   public readonly connectionClosed = new Event<PublicKey>();
-
-  // ringbuffer for yjs timeouts
-  private _yjs_timeout = new Array(YJS_TIMEOUT_THRESHOLD);
-  private _yjs_timeout_index = 0;
 
   constructor(private readonly _params: GossipParams) {}
 
@@ -87,16 +80,8 @@ export class Gossip {
         }
         this._receivedMessages.add(message.messageId);
         this._callListeners(message);
-        if (message.channelId.startsWith(YJS_CHANNEL_PREFIX) && this._oldestYjsTimeoutInWindow()) {
-          log(
-            `skipping propagating YJS gossip message due to timeouts (>${YJS_TIMEOUT_THRESHOLD} received in ${
-              YJS_TIMEOUT_WINDOW / 1000
-            })`,
-          );
-          return;
-        }
         if (this._ctx.disposeCallbacksLength > MAX_CTX_TASKS) {
-          log(`skipping propagating YJS gossip message due to exessive tasks (${MAX_CTX_TASKS})`);
+          log(`skipping propagating gossip message due to exessive tasks (${MAX_CTX_TASKS})`);
           return;
         }
         scheduleTask(this._ctx, async () => {
@@ -119,14 +104,6 @@ export class Gossip {
   }
 
   postMessage(channel: string, payload: any) {
-    if (channel.startsWith(YJS_CHANNEL_PREFIX) && this._oldestYjsTimeoutInWindow()) {
-      log(
-        `skipping YJS gossip message due to timeouts (>${YJS_TIMEOUT_THRESHOLD} received in ${
-          YJS_TIMEOUT_WINDOW / 1000
-        }s )`,
-      );
-      return;
-    }
     for (const extension of this._connections.values()) {
       this._sendAnnounceWithTimeoutTracking(extension, {
         peerId: this._params.localPeerId,
@@ -199,27 +176,9 @@ export class Gossip {
     }
   }
 
-  private _addYjsTimeout() {
-    this._yjs_timeout[this._yjs_timeout_index] = Date.now();
-    this._yjs_timeout_index = (this._yjs_timeout_index + 1) % YJS_TIMEOUT_THRESHOLD;
-  }
-
-  private _oldestYjsTimeoutInWindow(): boolean {
-    const lastTS = this._yjs_timeout[(this._yjs_timeout_index + 1) % YJS_TIMEOUT_THRESHOLD];
-    if (!lastTS) {
-      return false;
-    }
-
-    return Date.now() - lastTS < YJS_TIMEOUT_WINDOW;
-  }
-
   private _sendAnnounceWithTimeoutTracking(extension: GossipExtension, message: GossipMessage) {
     return extension.sendAnnounce(message).catch((err) => {
-      if (err instanceof TimeoutError || err.constructor.name === 'TimeoutError' || err.message.startsWith('Timeout')) {
-        if (message.channelId.startsWith(YJS_CHANNEL_PREFIX)) {
-          this._addYjsTimeout();
-        }
-      }
+      // Noop?
     });
   }
 }

@@ -6,7 +6,6 @@ import { Plus } from '@phosphor-icons/react';
 import React, { type FC, useState } from 'react';
 
 import { type Space } from '@dxos/client/echo';
-import { Schema } from '@dxos/echo-schema';
 import { Button, DensityProvider } from '@dxos/react-ui';
 import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
 
@@ -16,12 +15,13 @@ type SchemaRecord = {
   count?: number;
 };
 
-export const SchemaList: FC<{ space: Space; onCreate?: (schema: Schema, count: number) => void }> = ({
+// TODO(dmaretskyi): Convert to the new dynamic schema API.
+export const SchemaList: FC<{ space: Space; onCreate?: (schema: any /* Schema */, count: number) => void }> = ({
   space,
   onCreate,
 }) => {
   const [schemaCount, setSchemaCount] = useState<Record<string, number>>({});
-  const { objects } = space.db.query(Schema.filter());
+  const objects = space.db.schemaRegistry.getAll();
   const data = objects
     .filter((object) => object.typename)
     .map((schema) => ({ id: schema.id, typename: schema.typename, count: schemaCount[schema.id] ?? 1 }));

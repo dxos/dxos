@@ -168,12 +168,16 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             const identity = client.halo.identity.get();
             const space = getActiveSpace(graph, location.active);
             if (identity && space && location.active) {
-              void space.postMessage('viewing', {
-                identityKey: identity.identityKey.toHex(),
-                spaceKey: space.key.toHex(),
-                added: [location.active],
-                removed: [location.previous],
-              });
+              void space
+                .postMessage('viewing', {
+                  identityKey: identity.identityKey.toHex(),
+                  spaceKey: space.key.toHex(),
+                  added: [location.active],
+                  removed: [location.previous],
+                })
+                .catch((err) => {
+                  log.warn('Failed to broadcast active node for presence', { err: err.message });
+                });
             }
           };
 
@@ -472,6 +476,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
       },
       intent: {
         resolver: async (intent, plugins) => {
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
           const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
           const client = clientPlugin?.provides.client;
           switch (intent.action) {
@@ -498,6 +503,11 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               if (Migrations.versionProperty) {
                 setSpaceProperty(space, Migrations.versionProperty, Migrations.targetVersion);
               }
+
+              void intentPlugin?.provides.intent.dispatch({
+                action: NavigationAction.ACTIVATE,
+                data: { id: space.key.toHex() },
+              });
               return { data: { space, id: space.key.toHex() } };
             }
 

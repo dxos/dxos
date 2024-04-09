@@ -32,8 +32,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       },
       translations,
       echo: {
-        // TODO(wittjosiah): Expando shouldn't need to be registered.
-        schema: [SketchType, E.ExpandoType],
+        schema: [SketchType],
       },
       graph: {
         builder: (plugins, graph) => {

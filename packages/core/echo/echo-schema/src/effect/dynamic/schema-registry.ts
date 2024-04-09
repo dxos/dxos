@@ -48,6 +48,12 @@ export class DynamicSchemaRegistry {
     return this.register(typeObject);
   }
 
+  public getByTypename(typename: string): DynamicEchoSchema | undefined {
+    return this.db
+      .query(Filter.schema(StoredEchoSchema, (s) => s.typename === typename))
+      .objects.map((stored) => this.register(stored))[0];
+  }
+
   public getAll(): DynamicEchoSchema[] {
     return this.db.query(Filter.schema(StoredEchoSchema)).objects.map((stored) => {
       return this.register(stored);

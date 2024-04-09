@@ -38,47 +38,67 @@ export class IndexServiceImpl implements IndexService {
     const filter = Filter.fromProto(request.filter);
     return new Stream(({ next, close }) => {
       let currentCtx: Context;
+      // Previous id-s.
+      let previousResults: string[] = [];
 
       const update = async () => {
-        await currentCtx?.dispose();
-        const ctx = new Context();
-        currentCtx = ctx;
-        const results = await this._params.indexer.find(filter);
-        const response: QueryResponse = {
-          queryId: request.queryId,
-          results: (
-            await Promise.all(
-              results.map(async (result) => {
-                const { objectId, documentId } = idCodec.decode(result.id);
-                const handle = this._params.automergeHost.repo.find(documentId as any);
-                await warnAfterTimeout(5000, 'to long to load doc', () => handle.whenReady());
-                if (this._ctx.disposed || currentCtx.disposed) {
-                  return;
-                }
-                const spaceKey = getSpaceKeyFromDoc(handle.docSync());
-                if (!spaceKey) {
-                  return;
-                }
-                return {
-                  id: objectId,
-                  spaceKey: PublicKey.from(spaceKey),
-                  rank: result.rank,
-                };
-              }),
-            )
-          ).filter(Boolean) as QueryResult[],
-        };
-        if (this._ctx.disposed || ctx.disposed) {
-          return;
-        }
+        try {
+          await currentCtx?.dispose();
+          const ctx = new Context();
+          currentCtx = ctx;
+          const results = await this._params.indexer.find(filter);
+          const response: QueryResponse = {
+            queryId: request.queryId,
+            results: (
+              await Promise.all(
+                results.map(async (result) => {
+                  const { objectId, documentId } = idCodec.decode(result.id);
+                  const handle = this._params.automergeHost.repo.find(documentId as any);
+                  await warnAfterTimeout(5000, 'to long to load doc', () => handle.whenReady());
+                  if (this._ctx.disposed || currentCtx.disposed) {
+                    return;
+                  }
+                  const spaceKey = getSpaceKeyFromDoc(handle.docSync());
+                  if (!spaceKey) {
+                    return;
+                  }
+                  // TODO(mykola): Remove business logic from here.
+                  if (
+                    request.filter.options?.spaces?.length &&
+                    !request.filter.options.spaces.some((key) => key.equals(spaceKey.toString()))
+                  ) {
+                    return;
+                  }
+                  return {
+                    id: objectId,
+                    spaceKey: PublicKey.from(spaceKey),
+                    rank: result.rank,
+                  };
+                }),
+              )
+            ).filter(Boolean) as QueryResult[],
+          };
+          if (this._ctx.disposed || ctx.disposed) {
+            return;
+          }
 
-        next(response);
+          // Skip if results are the same.
+          if (
+            previousResults.length === response.results?.length &&
+            previousResults.every((id) => response.results?.some((result) => result.id === id)) &&
+            response.results.every((result) => previousResults.some((id) => id === result.id))
+          ) {
+            return;
+          }
+
+          previousResults = response.results?.map((result) => result.id) ?? [];
+          next(response);
+        } catch (error) {
+          log.catch(error);
+        }
       };
 
-      this._params.indexer.indexed.on(this._ctx, update);
-      const unsub = this._ctx.onDispose(() => {
-        close();
-      });
+      const unsub = this._params.indexer.indexed.on(update);
 
       void update();
 

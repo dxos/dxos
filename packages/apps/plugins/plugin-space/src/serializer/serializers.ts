@@ -6,10 +6,17 @@ import get from 'lodash.get';
 
 import { DocumentType, ThreadType, TextV0Type } from '@braneframe/types';
 import { next as A, type Prop } from '@dxos/automerge/automerge';
-import { type ExpandoType, base, getTypeRef, type IDocHandle, AutomergeObject, getRawDoc } from '@dxos/echo-schema';
+import {
+  type ExpandoType,
+  type IDocHandle,
+  getRawDoc,
+  type EchoReactiveObject,
+  getAutomergeObjectCore,
+  getTypeRef,
+} from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
+import { createEchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { TypedObject } from '@dxos/react-client/echo';
 import { nonNullable } from '@dxos/util';
 
 export interface CursorConverter {
@@ -89,8 +96,7 @@ export const serializers: Record<string, TypedObjectSerializer> = {
       };
 
       const content = object.content;
-      let text: string =
-        content instanceof AutomergeObject ? (content as any)[(content as any).field] : E.getTextContent(content);
+      let text: string = content?.content ?? '';
 
       // Insert comments.
       const comments = object.comments;
@@ -123,10 +129,10 @@ export const serializers: Record<string, TypedObjectSerializer> = {
       return `${text}\n\n${footnote}`;
     },
 
-    deserialize: async (text: string, existingDoc?: TypedObject) => {
+    deserialize: async (text: string, existingDoc?: EchoReactiveObject<any>) => {
       if (existingDoc) {
         invariant(existingDoc instanceof Document, 'Invalid document');
-        invariant(existingDoc.content instanceof AutomergeObject, 'Invalid content');
+        invariant(!!existingDoc.content, 'Invalid content');
         (existingDoc.content as any)[(existingDoc.content as any).field] = text;
         return existingDoc;
       } else {
@@ -157,18 +163,20 @@ export const serializers: Record<string, TypedObjectSerializer> = {
 
   default: {
     filename: () => ({ name: 'Untitled', extension: 'json' }),
-    serialize: async (object: TypedObject) => JSON.stringify(object.toJSON(), null, 2),
-    deserialize: async (text: string, object?: TypedObject) => {
+    serialize: async (object: ExpandoType) => JSON.stringify(object.toJSON(), null, 2),
+    deserialize: async (text: string, object?: ExpandoType) => {
       const { '@id': id, '@type': type, '@meta': meta, ...data } = JSON.parse(text);
       if (!object) {
-        const deserializedObject = new TypedObject(
-          Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@'))),
-          {
-            meta,
-            type: getTypeRef(type),
-          },
+        const deserializedObject = createEchoReactiveObject(
+          E.object(Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@')))),
         );
-        deserializedObject[base]._id = id;
+        E.getMeta(deserializedObject).keys = meta?.keys ?? E.getMeta(deserializedObject).keys;
+        const core = getAutomergeObjectCore(deserializedObject);
+        core.id = id;
+        const typeRef = getTypeRef(type);
+        if (typeRef) {
+          core.setType(typeRef);
+        }
         return deserializedObject;
       } else {
         Object.entries(data)

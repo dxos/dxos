@@ -148,7 +148,8 @@
   },
   "pnpm": {
     "overrides": {
-      "ipfs-utils": "9.0.14"
+      "ipfs-utils": "9.0.14",
+      "nan": "2.19.0"
     },
     "patchedDependencies": {
       "memdown@5.1.0": "patches/memdown@5.1.0.patch",
