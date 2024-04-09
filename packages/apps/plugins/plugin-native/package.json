@@ -30,7 +30,7 @@
     "@braneframe/plugin-help": "workspace:*",
     "@braneframe/plugin-navtree": "workspace:*",
     "@dxos/app-framework": "workspace:*",
-    "vite": "^5.1.5"
+    "vite": "^5.1.7"
   },
   "peerDependencies": {
     "@braneframe/plugin-help": "workspace:*",
