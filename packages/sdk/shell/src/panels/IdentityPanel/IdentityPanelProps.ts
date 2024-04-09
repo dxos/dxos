@@ -10,18 +10,10 @@ import type { InvitationStatus } from '@dxos/react-client/invitations';
 import type { ConnectionState } from '@dxos/react-client/mesh';
 
 import type { IdentityEvent } from './identityMachine';
+import { type AgentFormProps } from '../../components';
 import type { InvitationManagerProps } from '../../steps';
 
 export type IdentityPanelInitialDisposition = 'default' | 'manage-device-invitation' | 'manage-profile';
-
-export type AgentFormProps = {
-  onAgentCreate?: () => Promise<void>;
-  onAgentDestroy?: () => Promise<void>;
-  agentStatus?: string;
-  agentActive?: boolean;
-  agentProviderDisabled?: boolean;
-  validationMessage?: string;
-};
 
 export type IdentityPanelImplProps = {
   titleId: string;

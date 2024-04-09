@@ -135,4 +135,11 @@ export const os = {
   'disconnect label': 'Currently online. Click to go offline.',
   'connect label': 'Currently offline. Click to go online.',
   'edit device label': 'Edit device name & avatar',
+  'agent heading': 'Agent',
+  'agent message title': 'About creating an agent',
+  'agent message body':
+    'Creating an agent helps keep your devices and peers in-sync. An agent is like any other device, but since it’s always online your changes will sync even when all your physical devices are asleep.',
+  'create agent label': 'Start an agent',
+  'destroy agent label': 'Shut down agent',
+  'agent device label': 'Your agent',
 };

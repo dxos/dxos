@@ -13,6 +13,16 @@ export type DeviceListProps = {
   onClickJoinExisting?: () => void;
 };
 
+export type AgentFormProps = {
+  onAgentCreate?: () => Promise<void>;
+  onAgentDestroy?: () => Promise<void>;
+  agentStatus?: string;
+  agentActive?: boolean;
+  agentProviderDisabled?: boolean;
+  validationMessage?: string;
+  agentHostingEnabled?: boolean;
+};
+
 export type DeviceListItemProps = {
   device: Device;
   presence?: SpaceMember['presence'];

@@ -6,8 +6,8 @@ import React from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
 
-import { Action, Actions, StepHeading, Input } from '../../../components';
-import { type AgentFormProps, type IdentityPanelStepProps } from '../IdentityPanelProps';
+import { Action, Actions, StepHeading, Input, type AgentFormProps } from '../../../components';
+import { type IdentityPanelStepProps } from '../IdentityPanelProps';
 
 export const AgentForm = (props: IdentityPanelStepProps & AgentFormProps) => {
   const {
