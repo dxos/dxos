@@ -16,7 +16,7 @@ const Story = () => (
 );
 
 export default {
-  title: 'testbench',
+  title: 'testbench-app',
   component: Root,
   render: () => <ClientRepeater component={Story} createSpace />,
   decorators: [],

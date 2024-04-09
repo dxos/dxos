@@ -1,17 +1,17 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "testbench",
-  "sourceRoot": "packages/apps/testbench/src",
+  "name": "testbench-app",
+  "sourceRoot": "packages/apps/testbench-app/src",
   "projectType": "library",
   "targets": {
     "build": {
       "options": {
-        "main": "packages/apps/testbench/src/index.ts",
-        "outputPath": "packages/apps/testbench/dist",
+        "main": "packages/apps/testbench-app/src/index.ts",
+        "outputPath": "packages/apps/testbench-app/dist",
         "transformers": [
           "@dxos/log-hook/transformer"
         ],
-        "tsConfig": "packages/apps/testbench/tsconfig.json"
+        "tsConfig": "packages/apps/testbench-app/tsconfig.json"
       }
     },
     "bundle": {
@@ -22,7 +22,7 @@
       "executor": "@nx/vite:build",
       "options": {
         "generatePackageJson": false,
-        "outputPath": "packages/apps/testbench/out/testbench"
+        "outputPath": "packages/apps/testbench-app/out/testbench-app"
       },
       "outputs": [
         "{options.outputPath}"
@@ -30,13 +30,13 @@
     },
     "e2e": {
       "options": {
-        "playwrightConfigPath": "packages/apps/testbench/src/playwright/playwright.config.ts",
-        "serve": "testbench:preview",
+        "playwrightConfigPath": "packages/apps/testbench-app/src/playwright/playwright.config.ts",
+        "serve": "testbench-app:preview",
         "testPatterns": [
-          "packages/apps/testbench/src/playwright/**/*.spec.{ts,js}"
+          "packages/apps/testbench-app/src/playwright/**/*.spec.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/apps/testbench/src/**/*"
+          "packages/apps/testbench-app/src/**/*"
         ]
       }
     },
@@ -44,14 +44,14 @@
     "preview": {
       "executor": "@nx/web:file-server",
       "options": {
-        "buildTarget": "testbench:bundle",
-        "staticFilePath": "packages/apps/testbench/out/testbench"
+        "buildTarget": "testbench-app:bundle",
+        "staticFilePath": "packages/apps/testbench-app/out/testbench-app"
       }
     },
     "serve": {
       "executor": "@nx/vite:dev-server",
       "options": {
-        "buildTarget": "testbench:bundle"
+        "buildTarget": "testbench-app:bundle"
       }
     }
   }

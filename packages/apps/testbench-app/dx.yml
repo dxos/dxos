@@ -1,11 +1,11 @@
 version: 1
 package:
   modules:
-    - name: testbench
+    - name: testbench-app
       type: dxos:type/app
       build:
-        command: pnpm -w nx bundle testbench
-        outdir: out/testbench
+        command: pnpm -w nx bundle testbench-app
+        outdir: out/testbench-app
 runtime:
   client:
     storage:

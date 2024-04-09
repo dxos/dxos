@@ -69,9 +69,9 @@ export default defineConfig({
     // https://www.npmjs.com/package/@sentry/vite-plugin
     sentryVitePlugin({
       org: 'dxos',
-      project: 'testbench',
+      project: 'testbench-app',
       sourcemaps: {
-        assets: './packages/apps/testbench/out/testbench/**',
+        assets: './packages/apps/testbench-app/out/testbench-app/**',
       },
       authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
       disable: process.env.DX_ENVIRONMENT !== 'production',

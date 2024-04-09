@@ -3852,11 +3852,14 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
 
-  packages/apps/testbench:
+  packages/apps/testbench-app:
     dependencies:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/echo-generator':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-generator
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -3890,6 +3893,9 @@ importers:
       '@effect/schema':
         specifier: 0.64.7
         version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
+      '@ngneat/falso':
+        specifier: ^7.1.1
+        version: 7.1.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)

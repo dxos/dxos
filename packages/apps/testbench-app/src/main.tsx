@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { withProfiler } from '@sentry/react';
 import React, { type FC, type PropsWithChildren, StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, useRouteError } from 'react-router-dom';
 
 import { initializeAppObservability } from '@dxos/observability';
 import { ClientProvider, Config, Defaults, useClient } from '@dxos/react-client';
@@ -55,9 +55,21 @@ const Identity: FC<PropsWithChildren> = ({ children }) => {
   return <>{children}</>;
 };
 
+const Error = () => {
+  const error = useRouteError();
+  const stack = (error as any)?.stack;
+  return (
+    <div className='flex flex-col m-8 p-2 gap-4 border'>
+      <div className='text-blue-500'>{String(error)}</div>
+      {stack && <pre className='opacity-75'>{stack}</pre>}
+    </div>
+  );
+};
+
 const router = createBrowserRouter([
   {
     path: '/',
+    errorElement: <Error />,
     element: (
       <Identity>
         <Root />
