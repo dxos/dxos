@@ -199,7 +199,15 @@ export class AutomergeDb {
   }
 
   // TODO(Mykola): Reconcile with `getObjectById`.
-  async loadObjectById(objectId: string, { timeout = 5000 }: { timeout?: number } = {}): Promise<EchoObject> {
+  async loadObjectById(
+    objectId: string,
+    { timeout = 5000 }: { timeout?: number } = {},
+  ): Promise<EchoObject | undefined> {
+    // Check if deleted.
+    if (this._objects.get(objectId)?.isDeleted()) {
+      return Promise.resolve(undefined);
+    }
+
     const obj = this.getObjectById(objectId);
     if (obj) {
       return Promise.resolve(obj);
@@ -207,7 +215,7 @@ export class AutomergeDb {
     return asyncTimeout(
       this._updateEvent
         .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId))
-        .then(() => this.getObjectById(objectId)!),
+        .then(() => this.getObjectById(objectId)),
       timeout,
     );
   }
