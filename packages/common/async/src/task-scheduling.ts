@@ -75,34 +75,16 @@ export const scheduleTask = (ctx: Context, fn: () => MaybePromise<void>, afterMs
     openStack: new StackTrace(),
   }));
 
-  if (afterMs !== undefined) {
-    const timeout = setTimeout(async () => {
-      clearDispose();
-      await runInContextAsync(ctx, fn);
-      clearTracking();
-    }, afterMs);
+  const timeout = setTimeout(async () => {
+    clearDispose();
+    await runInContextAsync(ctx, fn);
+    clearTracking();
+  }, afterMs);
 
-    const clearDispose = ctx.onDispose(() => {
-      clearTracking();
-      clearTimeout(timeout);
-    });
-  } else {
-    // We prefer MessageChannel because of the 4ms setTimeout clamping.
-    const messageChannel = new MessageChannel();
-    messageChannel.port1.onmessage = async () => {
-      messageChannel.port1.close();
-      clearDispose();
-      await runInContextAsync(ctx, fn);
-      clearTracking();
-    };
-
-    const clearDispose = ctx.onDispose(() => {
-      clearTracking();
-      messageChannel.port1.close();
-    });
-
-    messageChannel.port2.postMessage(null);
-  }
+  const clearDispose = ctx.onDispose(() => {
+    clearTracking();
+    clearTimeout(timeout);
+  });
 };
 
 /**
