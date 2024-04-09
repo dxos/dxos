@@ -187,6 +187,9 @@ export class Indexer {
   }
 
   private async _indexUpdatedObjects() {
+    if (this._ctx.disposed) {
+      return;
+    }
     const ids = await this._metadataStore.getDirtyDocuments();
     if (ids.length === 0 || this._ctx.disposed) {
       return;
