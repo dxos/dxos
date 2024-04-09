@@ -43,11 +43,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "gen-schema": "dxtype --schema-package ../reexports ./src/proto/schema.proto ./src/proto/gen/schema.ts",
-    "gen-test": "dxtype --schema-package ../../.. ./src/tests/proto/test.proto ./src/tests/proto/gen/test.ts",
-    "prebuild": "pnpm gen-schema && pnpm gen-test"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",

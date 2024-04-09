@@ -3,9 +3,9 @@
 //
 
 import '@dxosTheme';
-import React, { type FC, useMemo } from 'react';
+import React, { useMemo, type FC } from 'react';
 
-import { TextObject } from '@dxos/react-client/echo';
+import { createEchoReactiveObject } from '@dxos/echo-schema';
 import { Tooltip } from '@dxos/react-ui';
 import { automerge, useDocAccessor } from '@dxos/react-ui-editor';
 import { withTheme } from '@dxos/storybook-utils';
@@ -17,7 +17,7 @@ const Story: FC<{
   content: string;
   toolbar?: boolean;
 }> = ({ content = '# Test', toolbar }) => {
-  const { doc, accessor } = useDocAccessor(new TextObject(content));
+  const { doc, accessor } = useDocAccessor(createEchoReactiveObject({ content }));
   const extensions = useMemo(() => [automerge(accessor)], [doc, accessor]);
 
   return (

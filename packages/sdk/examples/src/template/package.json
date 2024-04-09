@@ -24,6 +24,6 @@
     "@vitejs/plugin-react": "^4.2.1",
     "noise-protocol": "3.0.1",
     "typescript": "^5.2.2",
-    "vite": "^5.1.5"
+    "vite": "^5.1.7"
   }
 }

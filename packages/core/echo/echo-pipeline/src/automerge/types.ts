@@ -6,7 +6,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Reference } from '@dxos/echo-db';
+import { type EncodedReferenceObject } from './reference';
 
 export type SpaceState = {
   // Url of the root automerge document.
@@ -79,5 +79,5 @@ export type ObjectSystem = {
   /**
    * Object reference ('protobuf' protocol) type.
    */
-  type?: Reference;
+  type?: EncodedReferenceObject;
 };

@@ -2,13 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
+import { type Level } from 'level';
+
 import { Event, synchronized } from '@dxos/async';
-import { clientServiceBundle, defaultKey, type ClientServices, PropertiesSchema } from '@dxos/client-protocol';
+import { clientServiceBundle, defaultKey, type ClientServices, Properties } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { DataServiceImpl, type SpaceDoc } from '@dxos/echo-pipeline';
+import { DataServiceImpl, type ObjectStructure, encodeReference, type SpaceDoc } from '@dxos/echo-pipeline';
 import * as E from '@dxos/echo-schema';
-import { createRawObjectDoc } from '@dxos/echo-schema';
 import { IndexServiceImpl } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -33,7 +34,7 @@ import { Lock, type ResourceLock } from '../locks';
 import { LoggingServiceImpl } from '../logging';
 import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
-import { createStorageObjects } from '../storage';
+import { createLevel, createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
 
 export type ClientServicesHostParams = {
@@ -77,6 +78,7 @@ export class ClientServicesHost {
   private _signalManager?: SignalManager;
   private _networkManager?: NetworkManager;
   private _storage?: Storage;
+  private _level?: Level<string, string>;
   private _callbacks?: ClientServicesHostCallbacks;
   private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
 
@@ -227,12 +229,17 @@ export class ClientServicesHost {
 
     this._opening = true;
     log('opening...', { lockKey: this._resourceLock?.lockKey });
+
+    if (!this._level) {
+      this._level = await createLevel(this._config.get('runtime.client.storage', {})!);
+    }
     await this._resourceLock?.acquire();
 
     await this._loggingService.open();
 
     this._serviceContext = new ServiceContext(
       this._storage,
+      this._level,
       this._networkManager,
       this._signalManager,
       this._runtimeParams,
@@ -324,6 +331,7 @@ export class ClientServicesHost {
     this._serviceRegistry.setServices({ SystemService: this._systemService });
     await this._loggingService.close();
     await this._serviceContext.close();
+    await this._level?.close();
     this._open = false;
     this._statusUpdate.emit();
     log('closed', { deviceKey });
@@ -353,12 +361,21 @@ export class ClientServicesHost {
     const document = await this._serviceContext.automergeHost.repo.find<SpaceDoc>(automergeIndex as any);
     await document.whenReady();
 
-    const objectDocument = createRawObjectDoc(
-      { [defaultKey]: identity.identityKey.toHex() },
-      { type: E.getTypeReference(PropertiesSchema) },
-    );
+    // TODO(dmaretskyi): Better API for low-level data access.
+    const properties: ObjectStructure = {
+      system: {
+        type: encodeReference(E.getTypeReference(Properties)!),
+      },
+      data: {
+        [defaultKey]: identity.identityKey.toHex(),
+      },
+      meta: {
+        keys: [],
+      },
+    };
+    const propertiesId = PublicKey.random().toHex();
     document.change((doc: SpaceDoc) => {
-      assignDeep(doc, ['objects', objectDocument.id], objectDocument.handle.docSync());
+      assignDeep(doc, ['objects', propertiesId], properties);
     });
 
     await this._serviceContext.automergeHost.repo.flush();

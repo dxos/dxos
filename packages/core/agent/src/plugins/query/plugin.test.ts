@@ -9,7 +9,7 @@ import { Client, Config } from '@dxos/client';
 import { QueryOptions } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { Filter, type TypedObject, type ReactiveObject, type Query, type EchoReactiveObject } from '@dxos/echo-schema';
+import { Filter, type ReactiveObject, type Query, type EchoReactiveObject } from '@dxos/echo-schema';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type QueryRequest } from '@dxos/protocols/proto/dxos/agent/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -190,11 +190,11 @@ describe('QueryPlugin', () => {
     };
 
     test('Text query', async () => {
-      const results = (await waitForQueryResults(
+      const results = await waitForQueryResults(
         client.spaces.query(testName, {
           dataLocation: QueryOptions.DataLocation.REMOTE,
         }),
-      )) as TypedObject[];
+      );
 
       expect(results.length >= 0).to.be.true;
       expect(results[0].name).to.equal(testName);
