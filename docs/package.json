@@ -60,7 +60,7 @@
     "ts-node": "10.9.1",
     "typedoc": "^0.25.10",
     "typescript": "^5.2.2",
-    "vite": "^5.1.5",
+    "vite": "^5.1.7",
     "vue": "^3.3.12",
     "vue-router": "^4.2.5",
     "vuepress": "2.0.0-rc.0",
