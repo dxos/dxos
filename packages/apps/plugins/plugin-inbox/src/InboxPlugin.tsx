@@ -53,6 +53,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
 
           const subscriptions = new EventSubscriptions();
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            subscriptions.clear();
             spaces.forEach((space) => {
               subscriptions.add(
                 updateGraphWithAddObjectAction({

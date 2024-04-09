@@ -4020,6 +4020,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../node-std
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
@@ -9468,7 +9471,7 @@ importers:
         version: link:../storybook-utils
       '@phosphor-icons/react':
         specifier: ^2.0.5
-        version: 2.1.4(react-dom@18.2.0)(react@18.2.0)
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -17496,17 +17499,6 @@ packages:
     dependencies:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-
-  /@phosphor-icons/react@2.1.4(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-EeNwgcg1aeK5vG/JYVTullnZzk5zjftOrjLb1iYetyhn5ImFFREc+xG0FAB/dAY277DGDSF8pNdNbqG1SUKIxQ==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      react: '>= 16.8'
-      react-dom: '>= 16.8'
-    dependencies:
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-    dev: true
 
   /@pkgjs/parseargs@0.11.0:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}

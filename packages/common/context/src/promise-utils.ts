@@ -3,7 +3,7 @@
 //
 
 import { type Context } from './context';
-import { ContextDisposedError } from './context-disposed';
+import { ContextDisposedError } from './context-disposed-error';
 
 /**
  * @returns A promise that rejects when the context is disposed.
