@@ -2,31 +2,41 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React, { useState } from 'react';
 
-import { type ReactiveObject } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema'; // TODO(burdon): [API]: Import syntax?
 import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
-import { Toolbar } from '@dxos/react-ui';
+import { Input, Toolbar } from '@dxos/react-ui';
 
-import { ItemType } from '../data';
+import { ItemList } from './ItemList';
+import { ItemType, TextV0Type } from '../data';
 
 export const Root = () => {
   const client = useClient();
   const { identityKey } = client.halo.identity.get() ?? {};
 
   const space = client.spaces.default;
-  // TODO(burdon): [API]: Neither { type: ItemType } nor E.Filter.schema works.
-  const objects = useQuery<ItemType>(space, { type: E.Filter.schema(ItemType) });
-  const all = useQuery(space);
+  // TODO(burdon): Toolbar selector for type.
+  // TODO(burdon): [API]: Neither { type: ItemType } doesn't work.
+  const objects = useQuery<ItemType>(space, E.Filter.schema(ItemType));
 
-  const handleAdd = (n = 1) => {
+  const [num, setNum] = useState(10);
+
+  const handleAdd = (n = num) => {
     let count = objects.length;
     Array.from({ length: n }).forEach(() => {
       // TODO(burdon): [API]: Automerge strings?
-      space.db.add(E.object(ItemType, { text: `Item ${++count}` }));
+      space.db.add(E.object(ItemType, { text: E.object(TextV0Type, { content: `Item ${++count}` }) }));
     });
+  };
+
+  const handleDelete = (id: string) => {
+    // TODO(burdon): [API]: Rename delete and just provide ID?
+    const object = space.db.getObjectById(id);
+    if (object) {
+      space.db.remove(object);
+    }
   };
 
   // TODO(burdon): Track how many renders?
@@ -37,27 +47,27 @@ export const Root = () => {
           <table>
             <tbody>
               <tr>
-                <td>identity</td>
+                <td className='text-xs'>identity</td>
                 <td className='px-2 font-mono'>{identityKey?.truncate()}</td>
               </tr>
               <tr>
-                <td>space</td>
+                <td className='text-xs'>space</td>
                 <td className='px-2 font-mono'>{space.key.truncate()}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <div className='flex-col flex-grow p-2 overflow-y-scroll'>
-          {objects.map((object) => (
-            <Item key={object.id} object={object} />
-          ))}
-          {objects.length} / {all.length}
-        </div>
+        <ItemList objects={objects} onDelete={handleDelete} />
 
-        <div className='flex-col flex-shrink-0 p-2'>
+        <div className='p-2 text-xs'>{objects.length} objects</div>
+
+        <div className='flex-col shrink-0 p-2'>
           <Toolbar.Root>
             <Toolbar.Button onClick={() => handleAdd()}>Add</Toolbar.Button>
+            <Input.Root>
+              <Input.TextInput value={num} onChange={(event) => setNum(safeParseInt(event.target.value) ?? num)} />
+            </Input.Root>
           </Toolbar.Root>
         </div>
       </div>
@@ -65,17 +75,7 @@ export const Root = () => {
   );
 };
 
-// TODO(burdon): Text editor.
-// TODO(burdon): Use ui list with key nav/selection.
-// TODO(burdon): Delete button.
-// TODO(burdon): Show deleted.
-const Item: FC<{ object: ReactiveObject<ItemType> }> = ({ object }) => {
-  const meta = E.getMeta(object);
-  return (
-    <div className='border m-1 p-1'>
-      <div className='text-xs'>{object.id.slice(0, 8)}</div>
-      <div className='text-xs'>{JSON.stringify(meta)}</div>
-      <div>{object.text}</div>
-    </div>
-  );
+const safeParseInt = (str: string): number | undefined => {
+  const value = parseInt(str);
+  return isNaN(value) ? undefined : value;
 };

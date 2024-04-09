@@ -21,6 +21,7 @@
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/schema": "0.64.7",
+    "@phosphor-icons/react": "^2.0.5",
     "@sentry/react": "^7.100.1",
     "classnames": "^2.3.2",
     "effect": "2.4.9",

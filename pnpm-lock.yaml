@@ -3884,6 +3884,9 @@ importers:
       '@effect/schema':
         specifier: 0.64.7
         version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.1.4(react-dom@18.2.0)(react@18.2.0)
       '@sentry/react':
         specifier: ^7.100.1
         version: 7.101.0(react@18.2.0)
@@ -17603,7 +17606,6 @@ packages:
     dependencies:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-    dev: true
 
   /@pkgjs/parseargs@0.11.0:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
