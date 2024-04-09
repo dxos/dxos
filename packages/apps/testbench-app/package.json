@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/testbench",
+  "name": "@dxos/testbench-app",
   "version": "0.4.9",
   "private": true,
   "description": "DXOS Testing",

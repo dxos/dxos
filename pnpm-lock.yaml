@@ -3852,7 +3852,7 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
 
-  packages/apps/testbench:
+  packages/apps/testbench-app:
     dependencies:
       '@dxos/config':
         specifier: workspace:*
