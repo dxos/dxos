@@ -89,6 +89,7 @@ describe('Index queries', () => {
 
   test('indexes persists between client restarts', async () => {
     const testStoragePath = fs.mkdtempSync(path.join('tmp', 'client-indexing-'));
+    fs.rmSync(testStoragePath, { recursive: true, force: true });
     const storage = createStorage({ type: StorageType.NODE, root: testStoragePath });
     afterTest(() => fs.rmSync(testStoragePath, { recursive: true, force: true }));
 
