@@ -3,4 +3,4 @@
 //
 
 // TODO(burdon): Update to TS defs.
-declare module '@dxos/benchmark-suite'
+declare module '@dxos/benchmark-suite';
