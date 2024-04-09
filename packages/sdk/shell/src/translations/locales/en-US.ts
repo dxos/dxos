@@ -134,4 +134,5 @@ export const os = {
   'more options label': 'More options',
   'disconnect label': 'Currently online. Click to go offline.',
   'connect label': 'Currently offline. Click to go online.',
+  'edit device label': 'Edit device name & avatar',
 };

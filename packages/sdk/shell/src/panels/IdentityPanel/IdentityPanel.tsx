@@ -21,7 +21,7 @@ import {
   type IdentityPanelProps,
 } from './IdentityPanelProps';
 import { useIdentityMachine } from './identityMachine';
-import { AgentForm, DeviceManager, IdentityActionChooser, ProfileForm } from './steps';
+import { AgentForm, IdentityActionChooser, ProfileForm } from './steps';
 import { useAgentHandlers } from './useAgentHandlers';
 import {
   Viewport,
@@ -191,9 +191,6 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
               {...rest}
               invitationUrl={rest.createInvitationUrl(rest.invitationCode!)}
             />
-          </Viewport.View>
-          <Viewport.View id='device manager' classNames={viewStyles}>
-            <DeviceManager active={activeView === 'device manager'} {...rest} />
           </Viewport.View>
           <Viewport.View classNames={viewStyles} id='update profile form'>
             <ProfileForm

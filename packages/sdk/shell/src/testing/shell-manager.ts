@@ -65,13 +65,15 @@ export class ShellManager extends ScopedShellManager {
     };
 
     this.page.on('dialog', handleDialog);
-    await this.shell.getByTestId('devices-panel.sign-out').click();
+    await this.shell.getByTestId('device-list-item-current.options').click();
+    await this.shell.getByTestId('device-list-item-current.reset').click();
     await this.shell.getByTestId('reset-storage.reset-identity-input').fill('CONFIRM');
     await this.shell.getByTestId('reset-storage.reset-identity-confirm').click();
   }
 
   async joinNewIdentity(invitationCode: string) {
-    await this.shell.getByTestId('devices-panel.join-new-identity').click();
+    await this.shell.getByTestId('device-list-item-current.options').click();
+    await this.shell.getByTestId('device-list-item-current.join-existing').click();
     await this.shell.getByTestId('join-new-identity.reset-identity-input').fill('CONFIRM');
     await this.shell.getByTestId('join-new-identity.reset-identity-input-confirm').click();
     await this.inputInvitation('device', invitationCode, this.shell);

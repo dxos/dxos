@@ -7,6 +7,7 @@ export * from './CompoundButton';
 export * from './EmojiPicker';
 export * from './HuePicker';
 export * from './IdentityList';
+export * from './DeviceList';
 export * from './InvitationList';
 export * from './Panel';
 export * from './Viewport';

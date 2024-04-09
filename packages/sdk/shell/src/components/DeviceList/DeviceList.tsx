@@ -10,24 +10,33 @@ import { Button, List, useTranslation } from '@dxos/react-ui';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 
 import { DeviceListItem } from './DeviceListItem';
+import { type DeviceListProps } from './DeviceListProps';
 
-export interface DeviceListProps {
-  devices: Device[];
-}
-
-export const DeviceList = ({ devices }: DeviceListProps) => {
+export const DeviceList = ({ devices, onClickAdd, onClickEdit, ...handlers }: DeviceListProps) => {
   const { t } = useTranslation('os');
   return (
     <>
       <h2 className={mx(descriptionText, 'text-center')}>{t('devices heading')}</h2>
       {devices.length > 0 && (
         <List>
-          {devices.map((device) => {
-            return <DeviceListItem key={device.deviceKey.toHex()} device={device} />;
+          {devices.map((device: Device) => {
+            return (
+              <DeviceListItem
+                key={device.deviceKey.toHex()}
+                device={device}
+                onClickEdit={() => onClickEdit?.(device)}
+                {...handlers}
+              />
+            );
           })}
         </List>
       )}
-      <Button variant='ghost' classNames='justify-start gap-2 pis-0 pie-3'>
+      <Button
+        variant='ghost'
+        classNames='justify-start gap-2 pis-0 pie-3'
+        data-testid='devices-panel.create-invitation'
+        onClick={onClickAdd}
+      >
         <div role='img' className={mx(getSize(8), 'm-1 rounded-sm surface-input grid place-items-center')}>
           <Plus weight='light' className={getSize(6)} />
         </div>
