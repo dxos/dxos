@@ -8,10 +8,6 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "type": "module",
-  "scripts": {
-    "/": "https://github.com/dxos/dxos/issues/4511",
-    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
-  },
   "dependencies": {
     "@braneframe/types": "workspace:*",
     "@dxos/echo-schema": "workspace:*",

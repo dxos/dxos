@@ -23,7 +23,6 @@ import { Hypergraph } from '../hypergraph';
 import { data } from '../object';
 import { Filter } from '../query';
 import { createDatabase, TestBuilder } from '../testing';
-import { Task as TaskProto } from '../tests/proto';
 import { Contact, Task } from '../tests/schema';
 
 registerSignalRuntime();
@@ -173,48 +172,6 @@ describe('Reactive Object with ECHO database', () => {
 
       graph.types.registerEffectSchema(EchoObjectSchema);
       expect(E.getSchema(obj)).to.eq(EchoObjectSchema);
-    }
-  });
-
-  test('effect-protobuf schema interop', async () => {
-    const graph = new Hypergraph();
-
-    const automergeContext = new AutomergeContext();
-    const doc = automergeContext.repo.create<SpaceDoc>();
-    const spaceKey = PublicKey.random();
-    const task = new TaskProto({ title: 'Hello' });
-
-    let id: string;
-    {
-      const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
-      await db._automerge.open({ rootUrl: doc.url });
-      const obj = db._automerge.add(task);
-      id = obj.id;
-    }
-
-    // Create a new DB instance to simulate a restart
-    {
-      const TaskSchema = S.mutable(S.struct({ title: S.string })).pipe(E.echoObject('example.test.Task', '1.0.0'));
-      type TaskSchema = S.Schema.Type<typeof TaskSchema>;
-      const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
-      await db._automerge.open({ rootUrl: doc.url });
-
-      const obj = db.getObjectById(id) as E.EchoReactiveObject<TaskSchema>;
-      expect(E.isEchoReactiveObject(obj)).to.be.true;
-      expect(obj.id).to.eq(id);
-
-      expect(obj.title).to.eq(task.title);
-
-      const updatedTitle = 'Updated';
-
-      // schema was not registered
-      expect(() => (obj.title = updatedTitle)).to.throw();
-
-      graph.types.registerEffectSchema(TaskSchema);
-      obj.title = updatedTitle;
-      expect(obj.title).to.eq(updatedTitle);
-
-      expect(E.getSchema(obj)).to.eq(TaskSchema);
     }
   });
 

@@ -7,6 +7,7 @@ import { type Brand } from 'effect';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { Reference } from '@dxos/echo-db';
+import { encodeReference } from '@dxos/echo-pipeline';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { assignDeep, ComplexMap, defaultMap, getDeep } from '@dxos/util';
@@ -25,7 +26,6 @@ import { getTargetMeta } from './reactive-meta-handler';
 import { SchemaValidator } from './schema-validator';
 import { AutomergeObjectCore, META_NAMESPACE } from '../automerge/automerge-object-core';
 import { type KeyPath } from '../automerge/key-path';
-import { encodeReference } from '../automerge/types';
 import { data, type ObjectMeta } from '../object';
 import { defineHiddenProperty } from '../util/property';
 
@@ -650,6 +650,7 @@ const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
 };
 
 // TODO(dmaretskyi): Read schema from typed in-memory objects.
+// TODO(dmaretskyi): Review whether we can expose this.
 export const createEchoReactiveObject = <T extends {}>(init: T): EchoReactiveObject<T> => {
   const schema = getSchema(init);
   if (schema != null) {
