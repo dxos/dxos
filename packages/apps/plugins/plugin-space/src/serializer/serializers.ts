@@ -9,7 +9,6 @@ import { next as A, type Prop } from '@dxos/automerge/automerge';
 import {
   type ExpandoType,
   type IDocHandle,
-  AutomergeObject,
   getRawDoc,
   type EchoReactiveObject,
   getAutomergeObjectCore,
@@ -97,8 +96,7 @@ export const serializers: Record<string, TypedObjectSerializer> = {
       };
 
       const content = object.content;
-      let text: string =
-        content instanceof AutomergeObject ? (content as any)[(content as any).field] : E.getTextContent(content);
+      let text: string = content?.content ?? '';
 
       // Insert comments.
       const comments = object.comments;
@@ -134,7 +132,7 @@ export const serializers: Record<string, TypedObjectSerializer> = {
     deserialize: async (text: string, existingDoc?: EchoReactiveObject<any>) => {
       if (existingDoc) {
         invariant(existingDoc instanceof Document, 'Invalid document');
-        invariant(existingDoc.content instanceof AutomergeObject, 'Invalid content');
+        invariant(!!existingDoc.content, 'Invalid content');
         (existingDoc.content as any)[(existingDoc.content as any).field] = text;
         return existingDoc;
       } else {

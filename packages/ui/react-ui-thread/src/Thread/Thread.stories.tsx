@@ -3,11 +3,10 @@
 //
 
 import '@dxosTheme';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 
-import { setTextContent, TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { automerge, createBasicExtensions, createThemeExtensions, useDocAccessor } from '@dxos/react-ui-editor';
+import { createBasicExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Thread, ThreadFooter } from './Thread';
@@ -19,7 +18,7 @@ const Story = () => {
   const [pending, setPending] = useState(false);
   const [identityKey1] = useState(PublicKey.random());
   const [identityKey2] = useState(PublicKey.random());
-  const [messages] = useState<MessageEntity<{ id: string; text: string }>[]>([
+  const [messages, setMesssages] = useState<MessageEntity<{ id: string; text: string }>[]>([
     {
       id: 'm1',
       authorId: identityKey1.toHex(),
@@ -44,17 +43,34 @@ const Story = () => {
     },
   ]);
 
-  const [item] = useState(new TextObject());
-  const { accessor } = useDocAccessor(item);
-  const extensions = useMemo(() => [createBasicExtensions(), createThemeExtensions(), automerge(accessor)], [accessor]);
+  // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
+  const [_count, _setCount] = useState(3);
+  const rerenderEditor = () => _setCount((count) => count + 1);
+  const messageRef = useRef('');
+  const extensions = useMemo(() => [createBasicExtensions(), createThemeExtensions()], []);
 
   // TODO(thure): Why does pressing Enter clear the text content?
   //  Something to do with the in-memory text model perhaps?
   const handleSend = () => {
     setPending(true);
     setTimeout(() => {
-      setTextContent(item, '');
+      setMesssages((messages) => [
+        ...messages,
+        {
+          id: `m${_count}`,
+          authorId: identityKey1.toHex(),
+          blocks: [
+            {
+              id: `b${_count}`,
+              timestamp: new Date().toISOString(),
+              text: messageRef.current,
+            },
+          ],
+        },
+      ]);
+      messageRef.current = '';
       setPending(false);
+      rerenderEditor();
     }, 2_000);
   };
 
@@ -64,7 +80,7 @@ const Story = () => {
         <Message key={message.id} {...message} />
       ))}
       <MessageTextbox
-        id={item.id}
+        id={String(_count)}
         authorId={identityKey1.toHex()}
         disabled={pending}
         extensions={extensions}

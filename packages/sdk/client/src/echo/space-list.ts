@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { Event, MulticastObservable, PushStream, Trigger, scheduleTask } from '@dxos/async';
 import {
   CREATE_SPACE_TIMEOUT,
-  PropertiesSchema,
+  Properties,
   defaultKey,
   type ClientServicesProvider,
   type Echo,
@@ -252,7 +252,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spaceProxy = (this.get().find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy) ?? failUndefined();
 
     await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
-    spaceProxy.db.add(E.object(PropertiesSchema, meta ?? {}));
+    spaceProxy.db.add(E.object(Properties, meta ?? {}));
     await spaceProxy.db.flush();
     await spaceProxy._initializationComplete.wait();
 

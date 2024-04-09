@@ -12,7 +12,7 @@ import { DynamicSchemaRegistry } from './effect/dynamic/schema-registry';
 import { createEchoReactiveObject, initEchoReactiveObjectRootProxy } from './effect/echo-handler';
 import { type EchoReactiveObject, getSchema, isEchoReactiveObject, type ReactiveObject } from './effect/reactive';
 import { type Hypergraph } from './hypergraph';
-import { isAutomergeObject, type EchoObject, type OpaqueEchoObject } from './object';
+import { type EchoObject, type OpaqueEchoObject } from './object';
 import { type Filter, type FilterSource, type Query } from './query';
 
 export interface EchoDatabase {
@@ -107,7 +107,6 @@ export class EchoDatabaseImpl implements EchoDatabase {
       this._automerge.add(obj);
       return obj as any;
     } else {
-      invariant(!isAutomergeObject(obj));
       const schema = getSchema(obj);
       if (schema != null) {
         if (!this.schemaRegistry.isRegistered(schema) && !this.graph.types.isEffectSchemaRegistered(schema)) {
@@ -121,7 +120,7 @@ export class EchoDatabaseImpl implements EchoDatabase {
   }
 
   remove<T extends OpaqueEchoObject>(obj: T): void {
-    invariant(isAutomergeObject(obj) || isEchoReactiveObject(obj));
+    invariant(isEchoReactiveObject(obj));
     return this._automerge.remove(obj);
   }
 
