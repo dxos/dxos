@@ -268,7 +268,10 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
   if (annotation == null) {
     return undefined;
   }
-  return Reference.fromLegacyTypename(annotation.storedSchemaId ?? annotation.typename);
+  if (annotation.storedSchemaId) {
+    return new Reference(annotation.storedSchemaId);
+  }
+  return Reference.fromLegacyTypename(annotation.typename);
 };
 
 export const getMeta = <T extends {}>(obj: T): ObjectMeta => {

@@ -143,7 +143,7 @@ export class EchoDatabaseImpl implements EchoDatabase {
   }
 
   async flush(): Promise<void> {
-    // TODO(dmaretskyi): Noop until we implement flushing with automerger.
+    await this._automerge.flush();
   }
 
   /**
