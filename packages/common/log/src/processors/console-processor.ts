@@ -53,10 +53,9 @@ export type Formatter = (config: LogConfig, parts: FormatParts) => (string | und
 
 export const DEFAULT_FORMATTER: Formatter = (
   config,
-  { path, line, timestamp, level, message, context, error, scope },
-) => {
+  { path, line, level, message, context, error, scope },
+): string[] => {
   const column = config.options?.formatter?.column;
-
   const filepath = path !== undefined && line !== undefined ? chalk.grey(`${path}:${line}`) : undefined;
 
   let instance;
@@ -86,11 +85,13 @@ export const DEFAULT_FORMATTER: Formatter = (
       ];
 };
 
-export const SHORT_FORMATTER: Formatter = (config, { path, level, message }) => [
-  chalk.grey(truncate(path, 16, true)), // NOTE: Breaks terminal linking.
-  chalk[LEVEL_COLORS[level]](shortLevelName[level]),
-  message,
-];
+export const SHORT_FORMATTER: Formatter = (config, { path, level, message }) => {
+  return [
+    chalk.grey(truncate(path, 16, true)), // NOTE: Breaks terminal linking.
+    chalk[LEVEL_COLORS[level]](shortLevelName[level]),
+    message,
+  ];
+};
 
 // TODO(burdon): Config option.
 const formatter = DEFAULT_FORMATTER;

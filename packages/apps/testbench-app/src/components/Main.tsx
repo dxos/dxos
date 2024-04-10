@@ -12,10 +12,10 @@ import { type Space, useQuery } from '@dxos/react-client/echo';
 
 import { AppToolbar } from './AppToolbar';
 import { DataToolbar } from './DataToolbar';
-import { ErrorIndicator } from './ErrorIndicator';
 import { ItemList } from './ItemList';
 import { SpaceToolbar } from './SpaceToolbar';
-import { ItemType, TextV0Type } from '../data';
+import { ErrorIndicator, NetworkIndicator } from './status';
+import { ItemType } from '../data';
 import { defs } from '../defs';
 
 export const Main = () => {
@@ -30,7 +30,7 @@ export const Main = () => {
   // TODO(burdon): [BUG]: Shows deleted objects.
   const objects = useQuery<ItemType>(
     space,
-    E.Filter.schema(ItemType, (object: ItemType) => match(filter, object.text?.content)),
+    E.Filter.schema(ItemType, (object: ItemType) => match(filter, object.content)),
     {},
     [filter],
   );
@@ -60,9 +60,7 @@ export const Main = () => {
 
     Array.from({ length: n }).forEach(() => {
       // TODO(burdon): Migrate generator from DebugPlugin.
-      // TODO(burdon): [API]: Use basic Automerge strings?
-      // space.db.add(E.object(ItemType, { content: '' }));
-      space.db.add(E.object(ItemType, { text: E.object(TextV0Type, { content: randSentence() }) }));
+      space.db.add(E.object(ItemType, { content: randSentence() }));
     });
 
     setIsFlushing(true);
@@ -151,7 +149,10 @@ export const Main = () => {
       <div className='flex p-2 items-center text-xs'>
         <div>{objects.length} objects</div>
         <div className='grow' />
-        <ErrorIndicator />
+        <div className='flex gap-1 items-center'>
+          <NetworkIndicator />
+          <ErrorIndicator />
+        </div>
       </div>
     </div>
   );
