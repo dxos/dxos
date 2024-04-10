@@ -58,7 +58,11 @@ export const Error = ({ noJoke }: ErrorProps) => {
 
       <div className='flex flex-col p-4 gap-4 font-mono overflow-hidden'>
         <div className='text-blue-500'>{String(error)}</div>
-        {stack && <pre className='text-sm overflow-x opacity-75'>{stack}</pre>}
+        {stack && (
+          <div className='flex overflow-hidden'>
+            <pre className='overflow-x-scroll text-sm opacity-75'>{stack}</pre>
+          </div>
+        )}
       </div>
     </div>
   );

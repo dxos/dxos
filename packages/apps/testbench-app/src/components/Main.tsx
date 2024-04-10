@@ -11,6 +11,7 @@ import { type Space, useQuery } from '@dxos/react-client/echo';
 
 import { AppToolbar } from './AppToolbar';
 import { DataToolbar } from './DataToolbar';
+import { ErrorIndicator } from './ErrorIndicator';
 import { ItemList } from './ItemList';
 import { SpaceToolbar } from './SpaceToolbar';
 import { ItemType, TextV0Type } from '../data';
@@ -20,7 +21,9 @@ export const Main = () => {
   const client = useClient();
   const [space, setSpace] = useState<Space>();
 
+  const [debug, setDebug] = useState(false);
   const [filter, setFilter] = useState<string>();
+
   // TODO(burdon): [BUG]: Shows deleted objects.
   const objects = useQuery<ItemType>(
     space,
@@ -77,6 +80,12 @@ export const Main = () => {
     return space.key;
   };
 
+  const handleSpaceClose = async (spaceKey: PublicKey) => {
+    const space = client.spaces.get(spaceKey);
+    await space?.close(); // TODO(burdon): [BUG] Not implemented error.
+    setSpace(undefined);
+  };
+
   const handleSpaceSelect = (spaceKey?: PublicKey) => {
     const space = spaceKey ? client.spaces.get(spaceKey) : undefined;
     setSpace(space);
@@ -94,20 +103,34 @@ export const Main = () => {
   return (
     <div className='flex flex-col grow max-w-[40rem] shadow-lg bg-white dark:bg-black divide-y'>
       <AppToolbar
-        onHome={() => window.open(defs.issueUrl, 'dxos')}
+        onHome={() => window.open(defs.issueUrl, 'DXOS')}
         onProfile={() => {
           void client.shell.open();
         }}
       />
-      <SpaceToolbar onCreate={handleSpaceCreate} onSelect={handleSpaceSelect} onInvite={handleSpaceInvite} />
+      <SpaceToolbar
+        onCreate={handleSpaceCreate}
+        onClose={handleSpaceClose}
+        onSelect={handleSpaceSelect}
+        onInvite={handleSpaceInvite}
+      />
 
       {/* TODO(burdon): Different UX panels (e.g., table). */}
-      {space && (
-        <>
-          <DataToolbar onAdd={handleAdd} onFilterChange={setFilter} />
-          <ItemList debug objects={objects} onDelete={handleDelete} />
-        </>
-      )}
+      <div className='flex flex-col grow overflow-hidden'>
+        {space && (
+          <>
+            <DataToolbar onAdd={handleAdd} onFilterChange={setFilter} onDebugChange={setDebug} />
+            <ItemList debug={debug} objects={objects} onDelete={handleDelete} />
+          </>
+        )}
+      </div>
+
+      {/* TODO(burdon): Toggle network. */}
+      <div className='flex p-2 items-center text-xs'>
+        <div>{objects.length} objects</div>
+        <div className='grow' />
+        <ErrorIndicator />
+      </div>
     </div>
   );
 };
