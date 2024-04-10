@@ -46,6 +46,7 @@ describe('Index queries', () => {
       },
       getAllDocuments: async function* () {},
     });
+    afterTest(() => indexer.destroy());
     const indexingDone = indexer.indexed.waitForCount(2);
 
     indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });

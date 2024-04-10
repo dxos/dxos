@@ -4,15 +4,15 @@
 
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
-import { warnAfterTimeout } from '@dxos/debug';
 import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
 import { Filter } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
-import { type QueryRequest, type QueryResponse, type QueryResult } from '@dxos/protocols/proto/dxos/agent/query';
+import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { nonNullable } from '@dxos/util';
 
 import { type Indexer } from './indexer';
 
@@ -54,7 +54,7 @@ export class IndexServiceImpl implements IndexService {
                 results.map(async (result) => {
                   const { objectId, documentId } = idCodec.decode(result.id);
                   const handle = this._params.automergeHost.repo.find(documentId as any);
-                  await warnAfterTimeout(5000, 'to long to load doc', () => handle.whenReady());
+                  await handle.whenReady();
                   if (this._ctx.disposed || currentCtx.disposed) {
                     return;
                   }
@@ -76,7 +76,7 @@ export class IndexServiceImpl implements IndexService {
                   };
                 }),
               )
-            ).filter(Boolean) as QueryResult[],
+            ).filter(nonNullable),
           };
           if (this._ctx.disposed || ctx.disposed) {
             return;

@@ -11,11 +11,11 @@ import {
   type Filter,
   type QueryResult,
   type QuerySource,
-  filterMatch,
   getAutomergeObjectCore,
 } from '@dxos/echo-schema';
 import { type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
+import { nonNullable } from '@dxos/util';
 
 import { type SpaceList } from './space-list';
 import { type SpaceProxy } from './space-proxy';
@@ -68,42 +68,44 @@ export class IndexQuerySource implements QuerySource {
         return [];
       }
 
-      const results: (QueryResult<EchoObject> | undefined)[] = await Promise.all(
-        response.results!.map(async (result) => {
-          const space = this._params.spaceList.get(result.spaceKey);
-          if (!space) {
-            return;
-          }
+      const results: QueryResult<EchoObject>[] = (
+        await Promise.all(
+          response.results!.map(async (result) => {
+            const space = this._params.spaceList.get(result.spaceKey);
+            if (!space) {
+              return;
+            }
 
-          await (space as SpaceProxy)._databaseInitialized.wait();
-          const object = await space.db.automerge.loadObjectById(result.id);
-          if (ctx.disposed) {
-            return;
-          }
+            await (space as SpaceProxy)._databaseInitialized.wait();
+            const object = await space.db.automerge.loadObjectById(result.id);
+            if (ctx.disposed) {
+              return;
+            }
 
-          if (!object) {
-            return;
-          }
+            if (!object) {
+              return;
+            }
 
-          const core = getAutomergeObjectCore(object);
-          if (!filterMatch(filter, core)) {
-            return;
-          }
+            const core = getAutomergeObjectCore(object);
 
-          return {
-            id: object.id,
-            spaceKey: core.database!.spaceKey,
-            object,
-            match: { rank: result.rank },
-            resolution: { source: 'index', time: Date.now() - start },
-          };
-        }),
-      );
+            const queryResult: QueryResult<EchoObject> = {
+              id: object.id,
+              spaceKey: core.database!.spaceKey,
+              object,
+              match: { rank: result.rank },
+              resolution: { source: 'index', time: Date.now() - start },
+            };
+            return queryResult;
+          }),
+        )
+      ).filter(nonNullable);
 
       if (ctx.disposed) {
         return;
       }
-      this._results = results.filter(Boolean) as QueryResult<EchoObject>[];
+
+      this._results = results;
+
       this.changed.emit();
     });
   }
