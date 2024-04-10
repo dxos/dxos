@@ -10,33 +10,33 @@ export {
   subscribe,
   createSubscription,
   hasType,
-  isTypedObject,
-  Expando,
   Filter,
   Query,
-  Schema,
-  TypedObject,
   getRawDoc,
   getTextInRange,
   fromCursor,
   toCursor,
   DocAccessor,
-  type AutomergeTextCompat,
+  getMeta,
+  getSchema,
+  typeOf,
+  isEchoReactiveObject,
+  object,
+  ExpandoType,
+  TextCompatibilitySchema,
+  type EchoReactiveObject,
+  type ReactiveObject,
   type EchoDatabase,
   type EchoObject, // TODO(burdon): Remove from API.
   type FilterSource,
   type ObjectMeta,
+  type OpaqueEchoObject,
   type Selection,
   type Subscription,
   type SubscriptionHandle,
 
   // TODO(burdon): Deprecated.
   createDocAccessor,
-  isAutomergeObject,
-  getTextContent,
-  setTextContent,
-  Text,
-  TextObject,
   TypeCollection,
 } from '@dxos/echo-schema';
 
@@ -47,4 +47,4 @@ export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 export { SpaceList } from './space-list';
 export { SpaceProxy } from './space-proxy'; // TODO(burdon): Don't export as part of API.
-export { getSpaceForObject } from './util';
+export { getSpace } from './util';

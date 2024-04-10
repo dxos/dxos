@@ -98,6 +98,10 @@ export class Indexer {
     this._saveAfterTime = saveAfterTime;
   }
 
+  get initialized() {
+    return this._initialized;
+  }
+
   @synchronized
   setIndexConfig(config: IndexConfig) {
     invariant(!this._indexConfig, 'Index config is already set');
@@ -183,6 +187,9 @@ export class Indexer {
   }
 
   private async _indexUpdatedObjects() {
+    if (this._ctx.disposed) {
+      return;
+    }
     const ids = await this._metadataStore.getDirtyDocuments();
     if (ids.length === 0 || this._ctx.disposed) {
       return;
@@ -242,7 +249,6 @@ export class Indexer {
   }
 
   async destroy() {
-    await this._saveIndexes();
     await this._ctx.dispose();
   }
 }

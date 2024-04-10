@@ -8,14 +8,15 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { Map as MapType } from '@braneframe/types';
+import { MapType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
+import * as E from '@dxos/echo-schema';
 
 import { MapMain, MapSection } from './components';
 import meta, { MAP_PLUGIN } from './meta';
 import translations from './translations';
-import { MapAction, type MapPluginProvides, isMap } from './types';
+import { MapAction, type MapPluginProvides } from './types';
 
 export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
   return {
@@ -23,13 +24,16 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
     provides: {
       metadata: {
         records: {
-          [MapType.schema.typename]: {
+          [MapType.typename]: {
             placeholder: ['object title placeholder', { ns: MAP_PLUGIN }],
             icon: (props: IconProps) => <Compass {...props} />,
           },
         },
       },
       translations,
+      echo: {
+        schema: [MapType],
+      },
       graph: {
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
@@ -40,6 +44,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
 
           const subscriptions = new EventSubscriptions();
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            subscriptions.clear();
             spaces.forEach((space) => {
               subscriptions.add(
                 updateGraphWithAddObjectAction({
@@ -57,7 +62,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
               );
 
               // Add all maps to the graph.
-              const query = space.db.query(MapType.filter());
+              const query = space.db.query(E.Filter.schema(MapType));
               let previousObjects: MapType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -112,10 +117,10 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main': {
-              return isMap(data.active) ? <MapMain map={data.active} /> : null;
+              return data.active instanceof MapType ? <MapMain map={data.active} /> : null;
             }
             case 'section': {
-              return isMap(data.object) ? <MapSection map={data.object} /> : null;
+              return data.object instanceof MapType ? <MapSection map={data.object} /> : null;
             }
           }
 
@@ -126,7 +131,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case MapAction.CREATE: {
-              return { data: new MapType() };
+              return { data: E.object(MapType, {}) };
             }
           }
         },

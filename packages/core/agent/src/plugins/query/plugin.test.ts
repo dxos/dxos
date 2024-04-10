@@ -9,7 +9,7 @@ import { Client, Config } from '@dxos/client';
 import { QueryOptions } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { Filter, type TypedObject, type Query } from '@dxos/echo-schema';
+import { Filter, type ReactiveObject, type Query, type EchoReactiveObject } from '@dxos/echo-schema';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type QueryRequest } from '@dxos/protocols/proto/dxos/agent/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -41,14 +41,16 @@ describe('QueryPlugin', () => {
     const client1 = new Client({
       services: services1,
       config: new Config({
-        runtime: { agent: { plugins: [{ id: 'dxos.org/agent/plugin/query' }] } },
+        runtime: {
+          agent: { plugins: [{ id: 'dxos.org/agent/plugin/query' }] },
+        },
       }),
     });
     await client1.initialize();
     afterTest(() => client1.destroy());
     await client1.halo.createIdentity({ displayName: 'user-with-index-plugin' });
 
-    let org: TypedObject;
+    let org: ReactiveObject<any>;
     {
       const space = await client1.spaces.create({ name: 'first space' });
       await space.waitUntilReady();
@@ -178,7 +180,7 @@ describe('QueryPlugin', () => {
     });
 
     const waitForQueryResults = async (query: Query) => {
-      const results = new Trigger<TypedObject[]>();
+      const results = new Trigger<EchoReactiveObject<any>[]>();
       query.subscribe((query) => {
         if (query.results.some((result) => result.resolution?.source === 'remote')) {
           results.wake(query.objects);
@@ -188,11 +190,11 @@ describe('QueryPlugin', () => {
     };
 
     test('Text query', async () => {
-      const results = (await waitForQueryResults(
+      const results = await waitForQueryResults(
         client.spaces.query(testName, {
           dataLocation: QueryOptions.DataLocation.REMOTE,
         }),
-      )) as TypedObject[];
+      );
 
       expect(results.length >= 0).to.be.true;
       expect(results[0].name).to.equal(testName);

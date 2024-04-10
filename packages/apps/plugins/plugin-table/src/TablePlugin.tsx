@@ -8,9 +8,11 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { Table as TableType } from '@braneframe/types';
+import { TableType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
+import { Filter } from '@dxos/echo-schema';
+import * as E from '@dxos/echo-schema/schema';
 
 import { TableMain, TableSection, TableSlide } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
@@ -20,10 +22,14 @@ import { TableAction, type TablePluginProvides, isTable } from './types';
 export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
   return {
     meta,
+    ready: async (plugins) => {
+      const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
+      clientPlugin?.provides.client.addSchema(TableType);
+    },
     provides: {
       metadata: {
         records: {
-          [TableType.schema.typename]: {
+          [TableType.typename]: {
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
             icon: (props: IconProps) => <Table {...props} />,
           },
@@ -40,6 +46,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
 
           const subscriptions = new EventSubscriptions();
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            subscriptions.clear();
             spaces.forEach((space) => {
               subscriptions.add(
                 updateGraphWithAddObjectAction({
@@ -57,7 +64,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
               );
 
               // Add all tables to the graph.
-              const query = space.db.query(TableType.filter());
+              const query = space.db.query(Filter.schema(TableType));
               let previousObjects: TableType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -110,7 +117,9 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case TableAction.CREATE: {
-              return { data: new TableType() };
+              return {
+                data: E.object(TableType, { title: '', props: [] }),
+              };
             }
           }
         },

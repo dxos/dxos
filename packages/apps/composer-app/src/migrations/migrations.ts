@@ -2,23 +2,25 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Folder } from '@braneframe/types';
+import { getSpaceProperty, setSpaceProperty, FolderType } from '@braneframe/types';
+import * as E from '@dxos/echo-schema';
 import { type Migration } from '@dxos/migrations';
+import { Filter } from '@dxos/react-client/echo';
 
 export const migrations: Migration[] = [
   {
     version: 1,
     up: ({ space }) => {
-      const rootFolder = space.properties[Folder.schema.typename];
-      if (rootFolder instanceof Folder) {
+      const rootFolder = getSpaceProperty(space, FolderType.typename);
+      if (rootFolder instanceof FolderType) {
         return;
       }
 
-      const { objects } = space.db.query(Folder.filter({ name: space.key.toHex() }));
+      const { objects } = space.db.query(Filter.schema(FolderType, { name: space.key.toHex() }));
       if (objects.length > 0) {
-        space.properties[Folder.schema.typename] = objects[0];
+        setSpaceProperty(space, FolderType.typename, objects[0]);
       } else {
-        space.properties[Folder.schema.typename] = new Folder({ name: space.key.toHex() });
+        setSpaceProperty(space, FolderType.typename, E.object(FolderType, { name: space.key.toHex(), objects: [] }));
       }
     },
     down: () => {},
@@ -26,8 +28,8 @@ export const migrations: Migration[] = [
   {
     version: 2,
     up: ({ space }) => {
-      const rootFolder = space.properties[Folder.schema.typename] as Folder;
-      const { objects } = space.db.query(Folder.filter({ name: space.key.toHex() }));
+      const rootFolder = getSpaceProperty<FolderType>(space, FolderType.typename)!;
+      const { objects } = space.db.query(Filter.schema(FolderType, { name: space.key.toHex() }));
       if (objects.length <= 1) {
         return;
       }

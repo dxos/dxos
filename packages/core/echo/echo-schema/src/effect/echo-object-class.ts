@@ -18,6 +18,7 @@ export interface EchoSchemaClass<Fields> extends S.Schema<Fields> {
   readonly typename: string;
 }
 
+// TODO(dmaretskyi): [API]: Rename to `TypedObject`.
 export const EchoObjectSchema = <Klass>(args: EchoObjectAnnotation) => {
   return <
     Options extends EchoClassOptions,
@@ -46,7 +47,7 @@ export const EchoObjectSchema = <Klass>(args: EchoObjectAnnotation) => {
       static readonly annotations = annotatedSchema.annotations.bind(annotatedSchema);
       static readonly pipe = annotatedSchema.pipe.bind(annotatedSchema);
 
-      constructor() {
+      private constructor() {
         throw new Error('use E.object(MyClass, fields) to instantiate an object');
       }
     } as any;

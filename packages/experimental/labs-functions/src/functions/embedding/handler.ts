@@ -6,19 +6,20 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import textract from 'textract';
 
-import { Document as DocumentType, File as FileType } from '@braneframe/types';
-import { getTextContent, hasType, type TypedObject } from '@dxos/echo-schema';
+import { DocumentType, FileType } from '@braneframe/types';
+import { type EchoReactiveObject, Filter, getTextContent, hasType } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type ChainDocument, type ChainVariant, createChainResources } from '../../chain';
-import { getKey } from '../../util';
+import { getKey, registerTypes } from '../../util';
 
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
   const { client, dataDir } = context;
   const { space, objects } = event;
+  registerTypes(space);
   // TODO(burdon): Option to process all spaces.
   // if (!space || !objects?.length) {
   //   return response.status(400);
@@ -28,17 +29,17 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   const docs: ChainDocument[] = [];
   const addDocuments =
     (space: PublicKey | undefined = undefined) =>
-    async (objects: TypedObject[]) => {
+    async (objects: EchoReactiveObject<any>[]) => {
       for (const object of objects) {
         let pageContent: string | undefined;
         log.info('processing', { object: { id: object.id, type: object.__typename } });
         switch (object.__typename) {
-          case DocumentType.schema.typename: {
+          case DocumentType.typename: {
             pageContent = getTextContent(object.content)?.trim();
             break;
           }
 
-          case FileType.schema.typename: {
+          case FileType.typename: {
             const endpoint = client.config.values.runtime?.services?.ipfs?.gateway;
             if (endpoint && object.cid) {
               const url = join(endpoint, object.cid);
@@ -70,20 +71,20 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   if (space) {
     const add = addDocuments(space.key);
     if (objects?.length) {
-      await add(objects.filter(hasType(DocumentType.schema)));
-      await add(objects.filter(hasType(FileType.schema)));
+      await add(objects.filter(hasType(DocumentType)));
+      await add(objects.filter(hasType(FileType)));
     } else {
-      const { objects: documents } = space.db.query(DocumentType.filter());
+      const { objects: documents } = space.db.query(Filter.schema(DocumentType));
       await add(documents);
-      const { objects: files } = space.db.query(FileType.filter());
+      const { objects: files } = space.db.query(Filter.schema(FileType));
       await add(files);
     }
   } else {
     const spaces = client.spaces.get();
     for (const space of spaces) {
-      const { objects: documents } = space.db.query(DocumentType.filter());
+      const { objects: documents } = space.db.query(Filter.schema(DocumentType));
       await addDocuments(space.key)(documents);
-      const { objects: files } = space.db.query(FileType.filter());
+      const { objects: files } = space.db.query(Filter.schema(FileType));
       await addDocuments(space.key)(files);
     }
   }

@@ -5,16 +5,10 @@
 import { EditorView } from '@codemirror/view';
 import React, { useMemo } from 'react';
 
-import { type Document as DocumentType } from '@braneframe/types';
-import { getSpaceForObject } from '@dxos/react-client/echo';
+import { type DocumentType } from '@braneframe/types';
+import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import {
-  type Comment,
-  createDataExtensions,
-  localStorageStateStoreAdapter,
-  state,
-  useDocAccessor,
-} from '@dxos/react-ui-editor';
+import { createDataExtensions, localStorageStateStoreAdapter, state, useDocAccessor } from '@dxos/react-ui-editor';
 
 import EditorMain, { type EditorMainProps } from './EditorMain';
 
@@ -25,11 +19,10 @@ type DocumentMainProps = { document: DocumentType } & Omit<EditorMainProps, 'id'
  */
 const DocumentMain = ({ document, extensions: _extensions = [], ...props }: DocumentMainProps) => {
   const identity = useIdentity();
-  const space = getSpaceForObject(document);
-  const { id, doc, accessor } = useDocAccessor(document.content);
+  const space = getSpace(document);
+  const { id, doc, accessor } = useDocAccessor(document.content!);
   const extensions = useMemo(
     () => [
-      //
       _extensions,
       createDataExtensions({ id, text: accessor, space, identity }),
       state(localStorageStateStoreAdapter),
@@ -45,9 +38,7 @@ const DocumentMain = ({ document, extensions: _extensions = [], ...props }: Docu
     };
   }, [id]);
 
-  const comments = useMemo<Comment[]>(() => {
-    return document.comments?.map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! }));
-  }, [document.comments]);
+  const comments = document.comments?.map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! })) ?? [];
 
   return (
     <EditorMain

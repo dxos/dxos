@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { useEffect, useState } from 'react';
 
-import { type Thread as ThreadType, types } from '@braneframe/types';
+import { type ThreadType } from '@braneframe/types';
 import { SurfaceProvider } from '@dxos/app-framework';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
@@ -67,7 +67,8 @@ const Story = () => {
 export default {
   title: 'plugin-thread/Chat',
   component: Thread,
-  render: () => <ClientRepeater component={Story} types={types} createIdentity createSpace />,
+  // TODO(wittjosiah): Register schemas.
+  render: () => <ClientRepeater component={Story} createIdentity createSpace />,
   decorators: [withTheme],
   parameters: { translations, layout: 'fullscreen' },
 };

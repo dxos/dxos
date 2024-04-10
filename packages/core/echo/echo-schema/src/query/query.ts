@@ -7,15 +7,18 @@ import { Context } from '@dxos/context';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { nonNullable } from '@dxos/util';
 
-import { type Filter } from './filter';
+import { filterMatch, type Filter } from './filter';
+import { getAutomergeObjectCore } from '../automerge';
+import { type EchoReactiveObject } from '../effect/reactive';
 import { prohibitSignalActions } from '../guarded-scope';
-import { type OpaqueEchoObject, type EchoObject, type TypedObject } from '../object';
+import { type OpaqueEchoObject, type EchoObject } from '../object';
 
 // TODO(burdon): Reconcile with echo-db/database/selection.
 
 // TODO(burdon): Multi-sort option.
-export type Sort<T extends TypedObject> = (a: T, b: T) => -1 | 0 | 1;
+export type Sort<T extends OpaqueEchoObject> = (a: T, b: T) => -1 | 0 | 1;
 
 // TODO(burdon): Change to SubscriptionHandle.
 export type Subscription = () => void;
@@ -23,7 +26,7 @@ export type Subscription = () => void;
 // TODO(burdon): Fix garbage collection.
 const queries: Query<any>[] = [];
 
-export type QueryResult<T extends OpaqueEchoObject> = {
+export type QueryResult<T extends OpaqueEchoObject = EchoReactiveObject<any>> = {
   id: string;
   spaceKey: PublicKey;
 
@@ -87,7 +90,7 @@ export interface QueryContext {
 /**
  * Predicate based query.
  */
-export class Query<T extends OpaqueEchoObject = TypedObject> {
+export class Query<T extends OpaqueEchoObject = EchoReactiveObject<any>> {
   private readonly _ctx = new Context({
     onError: (err) => {
       log.catch(err);
@@ -160,10 +163,23 @@ export class Query<T extends OpaqueEchoObject = TypedObject> {
       prohibitSignalActions(() => {
         // TODO(dmaretskyi): Clean up getters in the internal signals so they don't use the Proxy API and don't hit the signals.
         compositeRuntime.untracked(() => {
-          this._resultCache = Array.from(this._sources).flatMap((source) => source.getResults()) as QueryResult<T>[];
+          const seen = new Set<string>();
+          this._resultCache = Array.from(this._sources)
+            .flatMap((source) => source.getResults())
+            .filter(
+              (result) => result.object && filterMatch(this._filter, getAutomergeObjectCore(result.object)),
+            ) as QueryResult<T>[];
           this._objectCache = this._resultCache
-            .map((result) => result.object!)
-            .filter((object): object is T => !!object);
+            .map((result) => result.object)
+            .filter(nonNullable)
+            .filter((object) => {
+              // TODO(burdon): Dedupe?
+              if (seen.has(object.id)) {
+                return false;
+              }
+              seen.add(object.id);
+              return true;
+            });
         });
       });
     }

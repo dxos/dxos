@@ -6,7 +6,9 @@ import '@dxosTheme';
 
 import React, { type FC, useEffect, useState } from 'react';
 
-import { types, Tree as TreeType } from '@braneframe/types';
+import { TextV0Type, TreeItemType, TreeType } from '@braneframe/types';
+import { range } from '@dxos/echo-generator';
+import * as E from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
@@ -19,66 +21,38 @@ import { Tree, type TreeComponentProps } from './Tree';
 
 faker.seed(1);
 
+const makeTreeItems = <T extends number>(count: T, items: TreeItemType[] = []) => {
+  return range(() => E.object(TreeItemType, { text: E.object(TextV0Type, { content: '' }), items }), count);
+};
+
 const Story: FC<{ type?: TreeComponentProps<any>['variant'] }> = ({ type } = {}) => {
   const client = useClient();
   const space = client.spaces.default;
   const [object, setObject] = useState<TreeType>();
   useEffect(() => {
     setTimeout(() => {
-      const tree = new TreeType({
-        root: new TreeType.Item({
-          items: [
-            new TreeType.Item(),
-            new TreeType.Item(),
-            new TreeType.Item(),
-            new TreeType.Item(),
-            new TreeType.Item(),
-            new TreeType.Item(),
-            new TreeType.Item(),
-            new TreeType.Item({
-              items: [
-                new TreeType.Item(),
-                new TreeType.Item({
-                  items: [
-                    new TreeType.Item(),
-                    new TreeType.Item(),
-                    new TreeType.Item(),
-                    new TreeType.Item({
-                      items: [new TreeType.Item(), new TreeType.Item()],
-                    }),
-                    new TreeType.Item(),
-                    new TreeType.Item(),
-                    new TreeType.Item({
-                      items: [new TreeType.Item(), new TreeType.Item()],
-                    }),
-                    new TreeType.Item(),
-                    new TreeType.Item(),
-                  ],
-                }),
-                new TreeType.Item(),
-              ],
-            }),
-            new TreeType.Item(),
-            new TreeType.Item(),
-            new TreeType.Item({
-              items: [
-                new TreeType.Item(),
-                new TreeType.Item({
-                  items: [
-                    new TreeType.Item(),
-                    new TreeType.Item(),
-                    new TreeType.Item({
-                      items: [new TreeType.Item(), new TreeType.Item()],
-                    }),
-                  ],
-                }),
-                new TreeType.Item(),
-              ],
-            }),
-            new TreeType.Item(),
-            new TreeType.Item(),
-          ],
-        }),
+      const tree = E.object(TreeType, {
+        root: makeTreeItems(1, [
+          ...makeTreeItems(7),
+          ...makeTreeItems(1, [
+            ...makeTreeItems(1),
+            ...makeTreeItems(1, [
+              ...makeTreeItems(3),
+              ...makeTreeItems(1, makeTreeItems(2)),
+              ...makeTreeItems(2),
+              ...makeTreeItems(1, makeTreeItems(2)),
+              ...makeTreeItems(2),
+            ]),
+            ...makeTreeItems(1),
+          ]),
+          ...makeTreeItems(2),
+          ...makeTreeItems(1, [
+            ...makeTreeItems(1),
+            ...makeTreeItems(1, [...makeTreeItems(2), ...makeTreeItems(1, makeTreeItems(2))]),
+            ...makeTreeItems(1),
+          ]),
+          ...makeTreeItems(2),
+        ])[0],
       });
 
       space.db.add(tree);
@@ -96,7 +70,7 @@ const Story: FC<{ type?: TreeComponentProps<any>['variant'] }> = ({ type } = {})
 export default {
   title: 'plugin-explorer/Tree',
   component: Tree,
-  render: () => <ClientRepeater component={Story} types={types} createSpace />,
+  render: () => <ClientRepeater component={Story} createSpace />,
   decorators: [FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',

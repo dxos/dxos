@@ -38,6 +38,7 @@ export type Intent = {
   /**
    * Any data needed to perform the desired action.
    */
+  // TODO(burdon): Typed intents.
   data?: IntentData;
 };
 
@@ -83,6 +84,7 @@ export type IntentResult = {
  *
  * @returns The result of the last intent.
  */
+// TODO(burdon): Generic/typed intents.
 export type IntentDispatcher = (intent: Intent | Intent[]) => Promise<IntentResult | void>;
 
 /**

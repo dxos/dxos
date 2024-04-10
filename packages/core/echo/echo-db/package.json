@@ -48,8 +48,8 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "@automerge/automerge": "^2.1.10",
-    "@automerge/automerge-repo": "^1.1.1",
+    "@automerge/automerge": "^2.1.13",
+    "@automerge/automerge-repo": "^1.1.5",
     "@dxos/feed-store": "workspace:*",
     "@dxos/typings": "workspace:*",
     "yjs": "^13.6.10"

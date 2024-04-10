@@ -3,14 +3,16 @@
 //
 import React, { useCallback, useState } from 'react';
 
-import { Folder, Stack as StackType } from '@braneframe/types';
+import { FolderType, type StackType, SectionType } from '@braneframe/types';
 import { usePlugin, useIntent, LayoutAction } from '@dxos/app-framework';
-import { getSpaceForObject, useQuery } from '@dxos/react-client/echo';
+import * as E from '@dxos/echo-schema';
+import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Path } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { type AddSectionPosition } from '@dxos/react-ui-stack';
 import { getSize, mx } from '@dxos/react-ui-theme';
+import { nonNullable } from '@dxos/util';
 
 import { STACK_PLUGIN } from '../meta';
 import { type StackPluginProvides } from '../types';
@@ -32,23 +34,23 @@ export const AddSectionDialog = ({ path, position, stack }: AddSectionDialogProp
   const { t } = useTranslation(STACK_PLUGIN);
   const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
   const { dispatch } = useIntent();
-  const space = getSpaceForObject(stack);
-  const [folder] = useQuery(space, Folder.filter());
+  const space = getSpace(stack);
+  const [folder] = useQuery(space, Filter.schema(FolderType));
   const [pending, setPending] = useState<boolean>(false);
 
   const handleAdd = useCallback(
-    (sectionObject: StackType.Section['object']) => {
+    (sectionObject: SectionType['object']) => {
       const index =
         position === 'beforeAll'
           ? 0
           : position === 'afterAll'
             ? stack.sections.length
-            : stack.sections.findIndex((section) => section.id === Path.last(path!));
+            : stack.sections.filter(nonNullable).findIndex((section) => section.id === Path.last(path!));
 
       stack.sections.splice(
         index + (position === 'after' ? 1 : 0),
         0,
-        new StackType.Section({ object: sectionObject }),
+        E.object(SectionType, { object: sectionObject }),
       );
       // TODO(wittjosiah): Remove once stack items can be added to folders separately.
       folder?.objects.push(sectionObject);

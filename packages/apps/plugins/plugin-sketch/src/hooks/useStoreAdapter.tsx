@@ -5,11 +5,12 @@
 import { type TLStore } from '@tldraw/tlschema';
 import { useEffect, useState } from 'react';
 
-import { getRawDoc, type Expando, type TextObject } from '@dxos/react-client/echo';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { getRawDoc } from '@dxos/react-client/echo';
 
 import { AutomergeStoreAdapter } from './automerge';
 
-export const useStoreAdapter = (data: TextObject | Expando, options = { timeout: 250 }): TLStore => {
+export const useStoreAdapter = (data: EchoReactiveObject<any>, options = { timeout: 250 }): TLStore => {
   const [adapter] = useState(() => new AutomergeStoreAdapter(options));
 
   useEffect(() => {

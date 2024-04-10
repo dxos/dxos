@@ -5,7 +5,7 @@
 import { Plus } from '@phosphor-icons/react';
 import React, { useCallback, type FC, useState } from 'react';
 
-import { File as FileType, Stack as StackType, Folder } from '@braneframe/types';
+import { FileType, StackType, SectionType, FolderType } from '@braneframe/types';
 import {
   LayoutAction,
   NavigationAction,
@@ -16,7 +16,8 @@ import {
   useIntent,
   useResolvePlugin,
 } from '@dxos/app-framework';
-import { getSpaceForObject, isTypedObject, useQuery } from '@dxos/react-client/echo';
+import * as E from '@dxos/echo-schema';
+import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Main, Button, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import { Stack, type StackProps, type CollapsedSections, type AddSectionPosition } from '@dxos/react-ui-stack';
@@ -27,10 +28,10 @@ import {
   surfaceElevation,
   staticDefaultButtonColors,
 } from '@dxos/react-ui-theme';
+import { nonNullable } from '@dxos/util';
 
 import { FileUpload } from './FileUpload';
 import { STACK_PLUGIN } from '../meta';
-import { isStack } from '../types';
 
 const SectionContent: StackProps['SectionContent'] = ({ data }) => {
   // TODO(wittjosiah): Better section placeholder.
@@ -44,15 +45,16 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
 
   const id = `stack-${stack.id}`;
   const items = stack.sections
+    .filter(nonNullable)
     // TODO(wittjosiah): Should the database handle this differently?
     // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
-    .filter(({ object }) => Boolean(object))
+    .filter(({ object }) => object)
     .map(({ id, object }) => {
-      const rest = metadataPlugin?.provides.metadata.resolver(object.__typename ?? 'never');
-      return { id, object, ...rest };
+      const rest = metadataPlugin?.provides.metadata.resolver(E.typeOf(object!)?.itemId ?? 'never');
+      return { id, object: object as SectionType, ...rest };
     });
-  const space = getSpaceForObject(stack);
-  const [folder] = useQuery(space, Folder.filter());
+  const space = getSpace(stack);
+  const [folder] = useQuery(space, E.Filter.schema(FolderType));
 
   const [collapsedSections, onChangeCollapsedSections] = useState<CollapsedSections>({});
 
@@ -62,7 +64,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
 
     // TODO(wittjosiah): Prevent dropping items which don't have a section renderer?
     //  Perhaps stack plugin should just provide a fallback section renderer.
-    if (!isTypedObject(data) || isStack(data)) {
+    if (!E.isReactiveProxy(data) || data instanceof StackType) {
       return 'reject';
     }
 
@@ -86,34 +88,36 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
     const object = parseData?.(active.item, 'object');
     // TODO(wittjosiah): Stop creating new section objects for each drop.
     if (object && over.path === Path.create(id, over.item.id)) {
-      stack.sections.splice(over.position!, 0, new StackType.Section({ object }));
+      stack.sections.splice(over.position!, 0, E.object(SectionType, { object }));
     } else if (object && over.path === id) {
-      stack.sections.push(new StackType.Section({ object }));
+      stack.sections.push(E.object(SectionType, { object }));
     }
   };
 
   const handleDelete = (path: string) => {
-    const index = stack.sections.findIndex((section) => section.id === Path.last(path));
+    const index = stack.sections.filter(nonNullable).findIndex((section) => section.id === Path.last(path));
     if (index >= 0) {
       stack.sections.splice(index, 1);
     }
   };
 
   const handleAdd = useCallback(
-    (sectionObject: StackType.Section['object']) => {
-      stack.sections.push(new StackType.Section({ object: sectionObject }));
+    (sectionObject: SectionType['object']) => {
+      stack.sections.push(E.object(SectionType, { object: sectionObject }));
       // TODO(wittjosiah): Remove once stack items can be added to folders separately.
       folder?.objects.push(sectionObject);
     },
     [stack, stack.sections],
   );
 
+  // TODO(wittjosiah): Factor out.
   const handleFileUpload = fileManagerPlugin?.provides.file.upload
     ? async (file: File) => {
         const filename = file.name.split('.')[0];
         const info = await fileManagerPlugin.provides.file.upload?.(file);
         if (info) {
-          handleAdd(new FileType({ type: file.type, title: filename, filename, cid: info.cid }));
+          const obj = E.object(FileType, { type: file.type, title: filename, filename, cid: info.cid });
+          handleAdd(obj);
         }
       }
     : undefined;
@@ -142,12 +146,12 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
   };
 
   return (
-    <Main.Content classNames={[baseSurface, topbarBlockPaddingStart]}>
+    <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
       <Stack
         id={id}
         data-testid='main.stack'
         SectionContent={SectionContent}
-        type={StackType.Section.schema.typename}
+        type={SectionType.typename}
         items={items}
         separation={separation}
         transform={handleTransform}

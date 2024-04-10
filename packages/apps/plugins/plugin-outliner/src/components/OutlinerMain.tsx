@@ -4,8 +4,9 @@
 
 import React, { type FC } from 'react';
 
-import { Tree as TreeType } from '@braneframe/types';
-import { TextObject, getSpaceForObject } from '@dxos/react-client/echo';
+import { TextV0Type, TreeItemType, type TreeType } from '@braneframe/types';
+import * as E from '@dxos/echo-schema';
+import { getSpace } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
   baseSurface,
@@ -19,8 +20,8 @@ import {
 import { Outliner } from './Outliner';
 
 const OutlinerMain: FC<{ tree: TreeType }> = ({ tree }) => {
-  const space = getSpaceForObject(tree);
-  if (!space) {
+  const space = getSpace(tree);
+  if (!space || !tree.root) {
     return null;
   }
 
@@ -33,7 +34,9 @@ const OutlinerMain: FC<{ tree: TreeType }> = ({ tree }) => {
             className={mx(attentionSurface, surfaceElevation({ elevation: 'group' }), 'p-4')}
             isTasklist={tree.checkbox}
             root={tree.root}
-            onCreate={(text?: string) => new TreeType.Item({ text: new TextObject(text) })}
+            onCreate={(text?: string) =>
+              E.object(TreeItemType, { text: E.object(TextV0Type, { content: text ?? '' }), items: [] })
+            }
             onDelete={({ id }) => {
               const item = space.db.getObjectById(id);
               item && space.db.remove(item);

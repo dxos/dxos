@@ -2,14 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
+import { inspect } from 'node:util';
+
 import { log } from '@dxos/log';
 import { safeInstanceof } from '@dxos/util';
 
-import { ContextDisposedError } from './context-disposed';
+import { ContextDisposedError } from './context-disposed-error';
 
 export type ContextErrorHandler = (error: Error) => void;
 
-export type DisposeCallback = () => void | Promise<void>;
+export type DisposeCallback = () => any | Promise<any>;
 
 export type CreateContextParams = {
   onError?: ContextErrorHandler;
@@ -24,6 +26,10 @@ const MAX_SAFE_DISPOSE_CALLBACKS = 300;
 
 @safeInstanceof('Context')
 export class Context {
+  static default() {
+    return new Context();
+  }
+
   private readonly _onError: ContextErrorHandler;
   private readonly _disposeCallbacks: DisposeCallback[] = [];
   private _isDisposed = false;
@@ -192,5 +198,13 @@ export class Context {
       return this._parent.getAttribute(key);
     }
     return undefined;
+  }
+
+  [Symbol.toStringTag] = 'Context';
+
+  [inspect.custom] = () => this.toString();
+
+  toString() {
+    return `Context(${this._isDisposed ? 'disposed' : 'active'})`;
   }
 }

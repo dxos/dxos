@@ -5,7 +5,9 @@
 import { Plus, X } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type EchoDatabase, type Space, type TypedObject } from '@dxos/react-client/echo';
+import * as E from '@dxos/echo-schema';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoDatabase, type Space } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import {
   createColumnBuilder,
@@ -23,8 +25,8 @@ import { createUniqueProp } from './types';
 type TableColumnBuilderOptions = {
   onColumnUpdate?: (id: string, column: ColumnProps) => void;
   onColumnDelete?: (id: string) => void;
-  onRowUpdate?: (object: TypedObject, key: string, value: any) => void;
-  onRowDelete?: (object: TypedObject) => void;
+  onRowUpdate?: (object: any, key: string, value: any) => void;
+  onRowDelete?: (object: any) => void;
 };
 
 /**
@@ -43,7 +45,7 @@ export class TableColumnBuilder {
     this._tableDef = this._tableDefs.find((def) => def.id === tableId);
   }
 
-  createColumns(): TableColumnDef<TypedObject>[] {
+  createColumns(): TableColumnDef<any>[] {
     if (!this._tableDef) {
       return [];
     }
@@ -63,19 +65,19 @@ export const createColumns = (
   tableDef: TableDef,
   space: Space,
   { onRowUpdate, onColumnUpdate, onColumnDelete }: TableColumnBuilderOptions = {},
-): TableColumnDef<TypedObject>[] => {
+): TableColumnDef<any>[] => {
   const { helper, builder } = createColumnBuilder<any>();
   return tableDef.columns.map((column) => {
     const { type, id, label, fixed, resizable, ...props } = column;
 
-    const options: BaseColumnOptions<TypedObject, any> = {
+    const options: BaseColumnOptions<EchoReactiveObject<any>, any> = {
       ...props,
       meta: { resizable },
       label,
       header: fixed
         ? undefined
         : (context) => (
-            <ColumnMenu<TypedObject, any>
+            <ColumnMenu<any, any>
               context={context}
               tableDefs={tableDefs}
               tableDef={tableDef}
@@ -103,7 +105,7 @@ export const createColumns = (
       default:
         return helper.accessor(id, builder.string(options));
     }
-  }) as TableColumnDef<TypedObject>[];
+  }) as TableColumnDef<EchoReactiveObject<any>>[];
 };
 
 /**
@@ -112,8 +114,8 @@ export const createColumns = (
 export const createActionColumn = (
   tableDef: TableDef,
   { onColumnUpdate, onRowDelete }: TableColumnBuilderOptions = {},
-): TableColumnDef<TypedObject> => {
-  const { helper } = createColumnBuilder<TypedObject>();
+): TableColumnDef<EchoReactiveObject<any>> => {
+  const { helper } = createColumnBuilder<EchoReactiveObject<any>>();
 
   const handleAddColumn = () => {
     const id = createUniqueProp(tableDef);
@@ -154,32 +156,32 @@ export const createActionColumn = (
             </div>
           ) : null
       : undefined,
-  }) as TableColumnDef<TypedObject>;
+  }) as TableColumnDef<EchoReactiveObject<any>>;
 };
 
 // TODO(burdon): Factor out.
-class QueryModel implements SearchListQueryModel<TypedObject> {
+class QueryModel implements SearchListQueryModel<EchoReactiveObject<any>> {
   constructor(
     private readonly _db: EchoDatabase,
-    private readonly _schema: string,
+    private readonly _schemaId: string,
     private readonly _prop: string,
   ) {}
 
-  getId(object: TypedObject) {
+  getId(object: EchoReactiveObject<any>) {
     return object.id;
   }
 
-  getText(object: TypedObject) {
+  getText(object: EchoReactiveObject<any>) {
     return object[this._prop];
   }
 
   async query(text?: string) {
-    const { objects = [] } = this._db.query((object: TypedObject) => {
+    const { objects = [] } = this._db.query((object: EchoReactiveObject<any>) => {
       if (!text?.length) {
         return null;
       }
 
-      if (object.__schema?.id !== this._schema) {
+      if (E.typeOf(object)?.itemId !== this._schemaId) {
         return false;
       }
 

@@ -24,9 +24,12 @@
   ],
   "dependencies": {
     "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/types": "workspace:*",
     "@dnd-kit/core": "^6.0.5",
     "@dxos/async": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "lodash.defaultsdeep": "^4.6.1",
     "react-markdown": "^8.0.5",
@@ -34,7 +37,6 @@
   },
   "devDependencies": {
     "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
     "@dxos/random": "workspace:*",
@@ -50,7 +52,7 @@
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "vite": "^5.1.5"
+    "vite": "^5.1.7"
   },
   "peerDependencies": {
     "@braneframe/plugin-client": "workspace:*",

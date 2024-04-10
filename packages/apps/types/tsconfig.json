@@ -8,13 +8,28 @@
   ],
   "references": [
     {
+      "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/node-std"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/automerge"
     },
     {
       "path": "../../core/echo/echo-schema"
     },
     {
       "path": "../../core/echo/echo-typegen"
+    },
+    {
+      "path": "../../sdk/client"
     }
   ]
 }

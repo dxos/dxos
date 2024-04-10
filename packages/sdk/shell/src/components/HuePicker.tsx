@@ -1,12 +1,21 @@
 //
 // Copyright 2024 DXOS.org
 //
-import { ArrowCounterClockwise, CaretDown, Check } from '@phosphor-icons/react';
+import { ArrowCounterClockwise, CaretDown, Check, Palette } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type Dispatch, type SetStateAction } from 'react';
+import React, { type Dispatch, type SetStateAction, useRef, useState } from 'react';
 
-import { Button, useTranslation, Tooltip, DropdownMenu, useThemeContext, type ButtonProps } from '@dxos/react-ui';
-import { getSize, hueTokenThemes } from '@dxos/react-ui-theme';
+import {
+  Button,
+  useTranslation,
+  Tooltip,
+  DropdownMenu,
+  useThemeContext,
+  type ButtonProps,
+  Toolbar,
+  type ThemedClassName,
+} from '@dxos/react-ui';
+import { getSize, hueTokenThemes, mx } from '@dxos/react-ui-theme';
 
 const HuePreview = ({ hue }: { hue: string }) => {
   const { tx } = useThemeContext();
@@ -25,7 +34,92 @@ export type HuePickerProps = {
   onClickClear?: ButtonProps['onClick'];
 };
 
-export const HuePicker = ({ disabled, hue, onChangeHue, defaultHue, onClickClear }: HuePickerProps) => {
+/**
+ * A toolbar button for picking hue. Use only in `role=toolbar` elements. Unable to unset the value.
+ */
+export const HuePickerToolbarButton = ({
+  disabled,
+  hue,
+  onChangeHue,
+  classNames,
+  defaultHue,
+}: ThemedClassName<Omit<HuePickerProps, 'onClickClear'>>) => {
+  const { t } = useTranslation('os');
+
+  const [hueValue, setHueValue] = useControllableState<string>({
+    prop: hue,
+    onChange: onChangeHue,
+    defaultProp: defaultHue,
+  });
+
+  const [huePickerOpen, setHuePickerOpen] = useState<boolean>(false);
+
+  const suppressNextTooltip = useRef<boolean>(false);
+  const [triggerTooltipOpen, setTriggerTooltipOpen] = useState(false);
+
+  return (
+    <Tooltip.Root
+      open={triggerTooltipOpen}
+      onOpenChange={(nextOpen) => {
+        if (suppressNextTooltip.current) {
+          setTriggerTooltipOpen(false);
+          suppressNextTooltip.current = false;
+        } else {
+          setTriggerTooltipOpen(nextOpen);
+        }
+      }}
+    >
+      <DropdownMenu.Root
+        modal={false}
+        open={huePickerOpen}
+        onOpenChange={(nextOpen) => {
+          setHuePickerOpen(nextOpen);
+          suppressNextTooltip.current = true;
+        }}
+      >
+        <Tooltip.Trigger asChild>
+          <DropdownMenu.Trigger asChild>
+            <Toolbar.Button classNames={mx('gap-2 plb-1', classNames)} disabled={disabled}>
+              <span className='sr-only'>{t('select hue label')}</span>
+              <Palette className={getSize(5)} />
+            </Toolbar.Button>
+          </DropdownMenu.Trigger>
+        </Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Content side='bottom' classNames='z-50'>
+            {t('select hue label')}
+            <Tooltip.Arrow />
+          </Tooltip.Content>
+        </Tooltip.Portal>
+        <DropdownMenu.Content side='bottom'>
+          <DropdownMenu.Viewport>
+            {Object.keys(hueTokenThemes).map((hue) => {
+              return (
+                <DropdownMenu.CheckboxItem
+                  key={hue}
+                  checked={hue === hueValue}
+                  onCheckedChange={() => setHueValue(hue)}
+                >
+                  <HuePreview hue={hue} />
+                  <span className='grow'>{t(`${hue} label`)}</span>
+                  <DropdownMenu.ItemIndicator>
+                    <Check />
+                  </DropdownMenu.ItemIndicator>
+                </DropdownMenu.CheckboxItem>
+              );
+            })}
+          </DropdownMenu.Viewport>
+          <DropdownMenu.Arrow />
+        </DropdownMenu.Content>
+      </DropdownMenu.Root>
+    </Tooltip.Root>
+  );
+};
+
+/**
+ * A button for picking hue alongside a button for unsetting it.
+ */
+export const HuePickerBlock = ({ disabled, hue, onChangeHue, defaultHue, onClickClear }: HuePickerProps) => {
   const { t } = useTranslation('os');
 
   const [hueValue, setHueValue] = useControllableState<string>({

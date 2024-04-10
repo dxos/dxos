@@ -97,7 +97,8 @@ export const Stack = ({
   );
 
   return (
-    <div ref={containerRef} {...props}>
+    // TODO(thure): Can this ref be passed into `SectionTile`? This can’t use `display: contents` because it breaks `useResizeDetector`.
+    <div role='none' ref={containerRef} {...props} className={mx(classNames)}>
       <Mosaic.Container
         {...{
           id,
@@ -113,7 +114,6 @@ export const Stack = ({
         <Mosaic.DroppableTile
           path={id}
           type={type}
-          classNames={classNames}
           item={{ id, items: itemsWithPreview }}
           itemContext={{
             separation,

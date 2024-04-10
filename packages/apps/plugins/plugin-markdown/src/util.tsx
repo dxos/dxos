@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Document } from '@braneframe/types';
+import { type DocumentType } from '@braneframe/types';
 import { type Plugin } from '@dxos/app-framework';
-import { getTextContent, isTypedObject } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
+import { isEchoReactiveObject } from '@dxos/echo-schema';
 
 import { type MarkdownProperties, type MarkdownExtensionProvides } from './types';
 
 export const isMarkdownProperties = (data: unknown): data is MarkdownProperties =>
-  isTypedObject(data)
+  isEchoReactiveObject(data)
     ? true
     : data && typeof data === 'object'
       ? 'title' in data && typeof data.title === 'string'
@@ -23,7 +23,7 @@ export const markdownExtensionPlugins = (plugins: Plugin[]): MarkdownExtensionPl
 
 const nonTitleChars = /[^\w ]/g;
 
-export const getFallbackTitle = (document: Document) => {
-  const content = getTextContent(document.content);
+export const getFallbackTitle = (document: DocumentType) => {
+  const content = document.content?.content;
   return content?.substring(0, 31).split('\n')[0].replaceAll(nonTitleChars, '').trim();
 };

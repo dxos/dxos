@@ -6,9 +6,10 @@ import React, { useEffect, useState } from 'react';
 
 import { NavigationAction, useIntentDispatcher, usePlugin } from '@dxos/app-framework';
 import { generateName } from '@dxos/display-name';
+import { type ExpandoType } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { PublicKey, useClient } from '@dxos/react-client';
-import { type TypedObject, getSpaceForObject, useSpace, useMembers, type SpaceMember } from '@dxos/react-client/echo';
+import { getSpace, useSpace, useMembers, type SpaceMember } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import {
   Avatar,
@@ -39,14 +40,14 @@ const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 // TODO(wittjosiah): Factor out?
 const getName = (identity: Identity) => identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
 
-export const SpacePresence = ({ object, spaceKey }: { object: TypedObject; spaceKey?: PublicKey }) => {
+export const SpacePresence = ({ object, spaceKey }: { object: ExpandoType; spaceKey?: PublicKey }) => {
   const density = useDensityContext();
   const dispatch = useIntentDispatcher();
   const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
   const client = useClient();
   const identity = useIdentity();
   const defaultSpace = useSpace();
-  const space = spaceKey ? client.spaces.get(spaceKey) : getSpaceForObject(object);
+  const space = spaceKey ? client.spaces.get(spaceKey) : getSpace(object);
   const spaceMembers = useMembers(space?.key);
 
   const [moment, setMoment] = useState(Date.now());

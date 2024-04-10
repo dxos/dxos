@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type Event as EventType } from '@braneframe/types';
+import { type EventType } from '@braneframe/types';
 import { List, ListItem } from '@dxos/react-ui';
 import { ghostHover, groupBorder, attentionSurface, mx } from '@dxos/react-ui-theme';
 

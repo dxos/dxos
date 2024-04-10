@@ -6,11 +6,14 @@ import { scheduleTask, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { subscriptionHandler } from '@dxos/functions';
 
+import { registerTypes } from '../../util';
+
 export const handler = subscriptionHandler(async ({ event }) => {
   const { space, objects } = event;
   if (!space || !objects?.length) {
     return;
   }
+  registerTypes(space);
 
   // Wait until done otherwise could be shut down prematurely.
   const done = new Trigger();

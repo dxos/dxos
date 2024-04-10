@@ -18,7 +18,7 @@ describe('NetworkService', () => {
   let networkService: NetworkService;
 
   beforeEach(async () => {
-    serviceContext = createServiceContext();
+    serviceContext = await createServiceContext();
     await serviceContext.open(new Context());
     networkService = new NetworkServiceImpl(serviceContext.networkManager, serviceContext.signalManager);
   });

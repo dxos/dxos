@@ -4,43 +4,44 @@
 
 import { Event } from '@dxos/async';
 import { next as A, type ChangeFn, type ChangeOptions, type Doc, type Heads } from '@dxos/automerge/automerge';
-import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
+import { type DocHandle, type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
 import { Reference } from '@dxos/echo-db';
-import { type ObjectStructure, type SpaceDoc } from '@dxos/echo-pipeline';
+import {
+  decodeReference,
+  encodeReference,
+  isEncodedReferenceObject,
+  type ObjectStructure,
+  type SpaceDoc,
+} from '@dxos/echo-pipeline';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log'; // Keep type-only.
 import { assignDeep, defer, getDeep } from '@dxos/util';
 
-import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
-import { AutomergeObject, getAutomergeObjectCore } from './automerge-object';
+import { getAutomergeObjectCore } from './automerge-object';
 import { type DocAccessor } from './automerge-types';
 import { docChangeSemaphore } from './doc-semaphore';
-import { type KeyPath, isValidKeyPath } from './key-path';
-import {
-  encodeReference,
-  isEncodedReferenceObject,
-  decodeReference,
-  type DecodedAutomergeValue,
-  type DecodedAutomergePrimaryValue,
-} from './types';
+import { isValidKeyPath, type KeyPath } from './key-path';
+import { type DecodedAutomergePrimaryValue, type DecodedAutomergeValue } from './types';
 import { isReactiveProxy } from '../effect/proxy';
 import { isEchoReactiveObject } from '../effect/reactive';
-import { type TypedObjectOptions, type EchoObject, TextObject, type OpaqueEchoObject } from '../object';
-import { AbstractEchoObject } from '../object/object';
-import { type Schema } from '../proto';
+import { type EchoObject, type ObjectMeta, type OpaqueEchoObject } from '../object';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
+// TODO(dmaretskyi): Remove in favour of explicitly specifying this in the API/Schema.
 const STRING_CRDT_LIMIT = 300_000;
 
+export const META_NAMESPACE = 'meta';
 const SYSTEM_NAMESPACE = 'system';
 
-/**
- * @deprecated
- */
-const TEXT_MODEL_TYPE = 'dxos.org/model/text';
+// TODO(dmaretskyi): Rename.
+export type TypedObjectOptions = {
+  type?: Reference;
+  meta?: ObjectMeta;
+  immutable?: boolean;
+};
 
 // TODO(dmaretskyi): Rename to `AutomergeObject`.
 export class AutomergeObjectCore {
@@ -73,7 +74,7 @@ export class AutomergeObjectCore {
    * Set only when the object is not bound to a database.
    */
   // TODO(dmaretskyi): Change to object core.
-  public linkCache?: Map<string, EchoObject> = new Map<string, EchoObject>();
+  public linkCache?: Map<string, OpaqueEchoObject> = new Map<string, OpaqueEchoObject>();
 
   /**
    * Key path at where we are mounted in the `doc` or `docHandle`.
@@ -104,18 +105,6 @@ export class AutomergeObjectCore {
     invariant(!this.docHandle && !this.doc);
 
     initialProps ??= {};
-
-    // Init schema defaults.
-    if (opts?.schema) {
-      for (const field of opts.schema.props) {
-        if (field.repeated) {
-          (initialProps as Record<string, any>)[field.id!] ??= [];
-        } else if (field.type === getSchemaProto().PropType.REF && field.refModelType === TEXT_MODEL_TYPE) {
-          // TODO(dmaretskyi): Is this right? Should we init with empty string or an actual reference to a Text object?
-          (initialProps as Record<string, any>)[field.id!] ??= new TextObject();
-        }
-      }
-    }
 
     this.doc = A.from<ObjectStructure>({
       data: this.encode(initialProps as any),
@@ -296,6 +285,11 @@ export class AutomergeObjectCore {
       }
     } else {
       invariant(this.linkCache);
+
+      // Can be caused not using `object(Expando, { ... })` constructor.
+      // TODO(dmaretskyi): Add better validation.
+      invariant(obj.id != null);
+
       this.linkCache.set(obj.id, obj as EchoObject);
       return new Reference(obj.id);
     }
@@ -304,7 +298,7 @@ export class AutomergeObjectCore {
   /**
    * Lookup referenced object.
    */
-  lookupLink(ref: Reference): EchoObject | undefined {
+  lookupLink(ref: Reference): OpaqueEchoObject | undefined {
     if (this.database) {
       // This doesn't clean-up properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
       return this.database.graph._lookupLink(ref, this.database, this.notifyUpdate);
@@ -327,11 +321,7 @@ export class AutomergeObjectCore {
       return null;
     }
     // TODO(dmaretskyi): Move proxy handling out of this class.
-    if (
-      value instanceof AbstractEchoObject ||
-      value instanceof AutomergeObject ||
-      (isReactiveProxy(value) as boolean)
-    ) {
+    if (isReactiveProxy(value) as boolean) {
       if (!allowLinks) {
         throw new TypeError('Linking is not allowed');
       }
@@ -343,7 +333,7 @@ export class AutomergeObjectCore {
       // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
       return encodeReference(value);
     }
-    if (value instanceof AutomergeArray || Array.isArray(value)) {
+    if (Array.isArray(value)) {
       const values: any = value.map((val) => this.encode(val, options));
       return values;
     }
@@ -437,6 +427,10 @@ export class AutomergeObjectCore {
     this.set([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
   }
 
+  setMeta(meta: ObjectMeta) {
+    this.set([META_NAMESPACE], this.encode(meta));
+  }
+
   delete(path: KeyPath) {
     const fullPath = [...this.mountPath, ...path];
 
@@ -482,18 +476,6 @@ export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<Spa
     return true;
   }
   return false;
-};
-
-// Deferred import to avoid circular dependency.
-let schemaProto: typeof Schema;
-const getSchemaProto = (): typeof Schema => {
-  if (!schemaProto) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { Schema } = require('../proto');
-    schemaProto = Schema;
-  }
-
-  return schemaProto;
 };
 
 const looksLikeReferenceObject = (value: unknown) =>

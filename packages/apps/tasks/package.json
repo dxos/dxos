@@ -7,18 +7,20 @@
     "build": "tsc --noEmit && vite build",
     "deploy": "dx app publish",
     "preview": "vite preview",
-    "serve": "vite",
-    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
+    "serve": "vite"
   },
   "dependencies": {
     "@dxos/config": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.4.0"
+    "react-router-dom": "^6.4.0",
+    "@effect/schema": "0.64.7",
+    "effect": "2.4.9"
   },
   "devDependencies": {
     "@dxos/cli": "workspace:*",
@@ -31,7 +33,7 @@
     "postcss": "^8.4.21",
     "tailwindcss": "~3.4.1",
     "typescript": "^5.2.2",
-    "vite": "^5.1.5",
+    "vite": "^5.1.7",
     "vite-plugin-top-level-await": "^1.4.1",
     "vite-plugin-wasm": "^3.3.0",
     "workbox-window": "^7.0.0"

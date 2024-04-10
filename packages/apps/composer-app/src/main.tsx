@@ -43,7 +43,6 @@ import TableMeta from '@braneframe/plugin-table/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
-import { types, Document } from '@braneframe/types';
 import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
 import { createStorageObjects } from '@dxos/client-services';
 import { defs, SaveConfig } from '@dxos/config';
@@ -51,9 +50,9 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
 import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
 import { createClientServices } from '@dxos/react-client';
-import { TextObject } from '@dxos/react-client/echo';
 import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
+
 import './globals';
 
 import { ResetDialog } from './components';
@@ -172,7 +171,6 @@ const main = async () => {
         appKey,
         config,
         services,
-        types,
         shell: './shell.html',
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
@@ -209,8 +207,11 @@ const main = async () => {
       [SettingsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-settings')),
       [SketchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-sketch')),
       [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {
-        onFirstRun: ({ personalSpaceFolder, dispatch }) => {
-          const document = new Document({ title: INITIAL_TITLE, content: new TextObject(INITIAL_CONTENT) });
+        onFirstRun: async ({ personalSpaceFolder, dispatch }) => {
+          const { object } = await import('@dxos/echo-schema');
+          const { DocumentType, TextV0Type } = await import('@braneframe/types');
+          const content = object(TextV0Type, { content: INITIAL_CONTENT });
+          const document = object(DocumentType, { title: INITIAL_TITLE, content });
           personalSpaceFolder.objects.push(document);
           void dispatch({
             action: NavigationAction.ACTIVATE,

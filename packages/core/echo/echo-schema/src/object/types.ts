@@ -2,11 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { AbstractEchoObject } from './object';
-import { type AutomergeObject } from '../automerge';
 import type { EchoDatabase } from '../database';
 import { type ReactiveObject } from '../effect/reactive';
-import type { Schema } from '../proto';
 
 // TODO(burdon): Don't export symbols outside of package?
 
@@ -31,12 +28,14 @@ export const subscribe = Symbol.for('dxos.echo-object.subscribe');
  * Only needed while we're transitioning from TypedObject to ReactiveObject APIs.
  * To be removed afterwards.
  */
+// TODO(dmaretskyi): REMOVE.
 export type OpaqueEchoObject = EchoObject | ReactiveObject<any>;
 
 /**
  * Shared interface of all echo objects.
  * May be behind a proxy for key-value documents.
  */
+// TODO(dmaretskyi): REMOVE.
 export interface EchoObject {
   readonly id: string;
 
@@ -49,7 +48,7 @@ export interface EchoObject {
    * Returns the underlying object.
    * Same as `this` for non-proxied objects.
    */
-  [base]: AbstractEchoObject | AutomergeObject;
+  [base]: OpaqueEchoObject;
 
   /**
    * The database this object belongs to.
@@ -95,17 +94,12 @@ export type ObjectMeta = {
  * Base properties of all typed echo objects.
  */
 // TODO(dmaretskyi): Merge with `EchoObject` after automerge migration.
+// TODO(dmaretskyi): REMOVE.
 export interface TypedObjectProperties extends EchoObject {
   /**
    * Fully qualified name of the object type for objects created from the schema.
    */
   readonly __typename: string | undefined;
-
-  /**
-   * Object schema.
-   * Can be a reference to a dynamic schema persisted in ECHO or a static one generated at compile-time.
-   */
-  readonly __schema: Schema | undefined;
 
   /**
    * Object metadata.

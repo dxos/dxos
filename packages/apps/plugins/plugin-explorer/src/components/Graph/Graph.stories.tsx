@@ -6,8 +6,9 @@ import '@dxosTheme';
 
 import React, { useEffect, useState } from 'react';
 
-import { View as ViewType, types } from '@braneframe/types';
+import { ViewType } from '@braneframe/types';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
+import * as E from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -28,7 +29,7 @@ const Story = () => {
     generator.addSchemas();
     generator.createObjects({ [TestSchemaType.organization]: 20, [TestSchemaType.contact]: 50 });
 
-    const view = space.db.add(new ViewType({}));
+    const view = space.db.add(E.object(ViewType, { title: '', type: '' }));
 
     setSpace(space);
     setView(view);
@@ -44,7 +45,7 @@ const Story = () => {
 export default {
   title: 'plugin-explorer/Graph',
   component: Graph,
-  render: () => <ClientRepeater component={Story} createSpace types={types} />,
+  render: () => <ClientRepeater component={Story} createSpace schema={[ViewType]} />,
   decorators: [FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',

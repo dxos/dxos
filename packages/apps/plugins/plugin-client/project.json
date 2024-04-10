@@ -10,9 +10,6 @@
         "entryPoints": [
           "packages/apps/plugins/plugin-client/src/index.ts",
           "packages/apps/plugins/plugin-client/src/meta.ts"
-        ],
-        "platforms": [
-          "browser"
         ]
       }
     },
