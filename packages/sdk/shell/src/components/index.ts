@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+export * from './AgentConfig';
 export * from './Clipboard';
 export * from './CompoundButton';
 export * from './EmojiPicker';

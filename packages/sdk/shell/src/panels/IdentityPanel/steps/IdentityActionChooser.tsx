@@ -9,7 +9,7 @@ import { useAgentHostingProviderClient, useClient } from '@dxos/react-client';
 import { useHaloInvitations } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
-import { type AgentFormProps, DeviceList } from '../../../components';
+import { AgentConfig, type AgentFormProps, DeviceList } from '../../../components';
 import { type IdentityPanelStepProps } from '../IdentityPanelProps';
 
 export type IdentityActionChooserProps = IdentityPanelStepProps;
@@ -52,14 +52,22 @@ export type IdentityActionChooserImplProps = IdentityActionChooserProps &
 export const IdentityActionChooserImpl = ({
   send,
   onCreateInvitationClick,
-  ...deviceListProps
+  devices,
+  onAgentDestroy,
+  onAgentCreate,
+  agentStatus,
+  agentActive,
+  agentHostingEnabled,
 }: IdentityActionChooserImplProps) => {
   return (
-    <DeviceList
-      onClickAdd={onCreateInvitationClick}
-      onClickJoinExisting={() => send?.({ type: 'chooseJoinNewIdentity' })}
-      onClickReset={() => send?.({ type: 'chooseResetStorage' })}
-      {...deviceListProps}
-    />
+    <>
+      <DeviceList
+        devices={devices}
+        onClickAdd={onCreateInvitationClick}
+        onClickJoinExisting={() => send?.({ type: 'chooseJoinNewIdentity' })}
+        onClickReset={() => send?.({ type: 'chooseResetStorage' })}
+      />
+      {agentHostingEnabled && <AgentConfig {...{ agentActive, agentStatus, onAgentDestroy, onAgentCreate }} />}
+    </>
   );
 };
