@@ -36,9 +36,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
-  },
   "dependencies": {
     "@dxos/echo-schema": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
@@ -59,6 +56,6 @@
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "typescript": "^5.2.2",
-    "vite": "^5.1.5"
+    "vite": "^5.1.7"
   }
 }

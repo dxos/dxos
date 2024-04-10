@@ -5,85 +5,72 @@
 import '@dxosTheme';
 
 import { withProfiler } from '@sentry/react';
-import React, { type FC, type PropsWithChildren, StrictMode, useEffect, useState } from 'react';
+import React, { StrictMode, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createBrowserRouter, RouterProvider, useRouteError } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
 import { initializeAppObservability } from '@dxos/observability';
-import { ClientProvider, Config, Defaults, useClient } from '@dxos/react-client';
-import { DensityProvider, ThemeProvider } from '@dxos/react-ui';
+import { type Client, ClientProvider, Config, Defaults } from '@dxos/react-client';
+import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
-import { Root } from './components';
+import { AppContainer, Main, Error } from './components';
+import { getConfig } from './config';
 import { ItemType } from './data';
 import translations from './translations';
 
-// TODO(burdon): Purpose: Basic ECHO queries; evolve to replace DebugPlug (evolution of devtools as composer plugins).
-// TODO(burdon): App, storybook, vite tests (in-browser and headless), playwright tests.
-
-// TODO(burdon): Migrate generator from DebugPlugin.
-
-void initializeAppObservability({ namespace: 'testbench.dxos.org', config: new Config(Defaults()) });
-
-const Identity: FC<PropsWithChildren> = ({ children }) => {
-  const client = useClient();
-  // TODO(burdon): [API]: get() here is strange; should be natural like client.spaces.default?
-  const [identity, setIdentity] = useState(client.halo.identity.get());
-  useEffect(() => {
-    try {
-      client.addSchema(ItemType);
-    } catch (err) {
-      // TODO(burdon): [API]: Not idempotent.
-    }
-
-    if (!identity) {
-      setTimeout(async () => {
-        // TODO(burdon): [API]: Need better start-up API.
-        // TODO(burdon): [API]: Race condition with identity not set.
-        //  Should through API-level error, not: "Error: invariant violation:"
-        await client.halo.createIdentity({ displayName: 'Test User' });
-        await client.spaces.isReady.wait();
-        setIdentity(client.halo.identity.get());
-      });
-    }
-  }, []);
-
-  if (!identity) {
-    return null;
-  }
-
-  return <>{children}</>;
-};
-
-const Error = () => {
-  const error = useRouteError();
-  const stack = (error as any)?.stack;
-  return (
-    <div className='flex flex-col m-8 p-2 gap-4 border'>
-      <div className='text-blue-500'>{String(error)}</div>
-      {stack && <pre className='opacity-75'>{stack}</pre>}
-    </div>
-  );
-};
+void initializeAppObservability({
+  namespace: 'testbench.dxos.org',
+  config: new Config(Defaults()),
+});
 
 const router = createBrowserRouter([
   {
     path: '/',
     errorElement: <Error />,
     element: (
-      <Identity>
-        <Root />
-      </Identity>
+      <AppContainer>
+        <Main />
+      </AppContainer>
     ),
   },
 ]);
 
-// TODO(burdon): ErrorBoundary.
+// TODO(burdon): Factor out.
+const useThemeWatcher = () => {
+  const [themeMode, setThemeMode] = React.useState<ThemeMode>('dark');
+  const setTheme = ({ matches: prefersDark }: { matches?: boolean }) => {
+    document.documentElement.classList[prefersDark ? 'add' : 'remove']('dark');
+    setThemeMode(prefersDark ? 'dark' : 'light');
+  };
+
+  useEffect(() => {
+    const modeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    setTheme({ matches: modeQuery.matches });
+    modeQuery.addEventListener('change', setTheme);
+    return () => modeQuery.removeEventListener('change', setTheme);
+  }, []);
+
+  return themeMode;
+};
+
 const App = withProfiler(() => {
+  const config = () => getConfig();
+  const themeMode = useThemeWatcher();
+
+  const handleInitialized = async (client: Client) => {
+    if (!client.halo.identity.get()) {
+      await client.halo.createIdentity({ displayName: 'Test User' });
+    }
+
+    client.addSchema(ItemType);
+    await client.spaces.isReady.wait();
+  };
+
   return (
-    <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
+    <ThemeProvider tx={defaultTx} themeMode={themeMode} resourceExtensions={translations}>
       <DensityProvider density='fine'>
-        <ClientProvider>
+        <ClientProvider config={config} shell='./shell.html' onInitialized={handleInitialized}>
           <RouterProvider router={router} />
         </ClientProvider>
       </DensityProvider>

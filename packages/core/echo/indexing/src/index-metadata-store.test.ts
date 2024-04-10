@@ -4,17 +4,19 @@
 
 import { expect } from 'chai';
 
-import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { IndexMetadataStore } from './index-metadata-store';
+import { createTestLevel } from './testing';
 
 describe('IndexMetadataStore', () => {
   test('basic', async () => {
-    const storage = createStorage({ type: StorageType.RAM });
-    afterTest(() => storage.close());
-    const directory = storage.createDirectory('IndexMetadataStore');
-    const metadataStore = new IndexMetadataStore({ directory });
+    const level = await createTestLevel();
+    afterTest(() => level.close());
+
+    const metadataStore = new IndexMetadataStore({
+      db: level.sublevel('indexer-metadata'),
+    });
 
     const ids = ['1', '2', '3'];
     const dirtyMap = new Map(ids.map((id) => [id, `hash-${id}`]));

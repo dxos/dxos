@@ -8,22 +8,11 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/apps/types/src/index.ts",
-          "packages/apps/types/src/proto/index.ts"
+          "packages/apps/types/src/index.ts"
         ],
         "injectGlobals": true
       }
     },
-    "lint": {},
-    "prebuild": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "prebuild"
-      },
-      "outputs": [
-        "{projectRoot}/src/proto/gen"
-      ]
-    },
-    "test": {}
+    "lint": {}
   }
 }

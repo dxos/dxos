@@ -5,7 +5,7 @@
 import get from 'lodash.get';
 
 import { next as A, type Prop } from '@dxos/automerge/automerge';
-import { AutomergeObject, type EchoReactiveObject, type IDocHandle, getRawDoc } from '@dxos/echo-schema';
+import { type EchoReactiveObject, type IDocHandle, getRawDoc } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
@@ -28,8 +28,7 @@ export const serializer: TypedObjectSerializer = {
     };
 
     const content = object.content;
-    let text: string =
-      content instanceof AutomergeObject ? (content as any)[(content as any).field] : E.getTextContent(content);
+    let text: string = content?.content ?? '';
 
     // Insert comments.
     const comments = object.comments;
@@ -62,7 +61,7 @@ export const serializer: TypedObjectSerializer = {
   deserialize: async (text: string, existingDoc?: EchoReactiveObject<any>) => {
     if (existingDoc) {
       invariant(existingDoc instanceof Document, 'Invalid document');
-      invariant(existingDoc.content instanceof AutomergeObject, 'Invalid content');
+      invariant(!!existingDoc.content, 'Invalid content');
       (existingDoc.content as any)[(existingDoc.content as any).field] = text;
       return existingDoc;
     } else {

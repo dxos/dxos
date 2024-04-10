@@ -9,6 +9,8 @@ import { PublicKey } from '@dxos/keys';
 import { humanize } from './human-hash';
 import { arrayToBuffer } from './uint8array';
 
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+
 const MAX_DEPTH = 5;
 
 /**

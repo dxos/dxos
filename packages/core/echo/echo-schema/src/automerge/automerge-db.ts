@@ -5,7 +5,7 @@
 import { Event, UpdateScheduler, asyncTimeout, synchronized } from '@dxos/async';
 import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
-import { TYPE_PROPERTIES, type Reference } from '@dxos/echo-db';
+import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import {
   type SpaceState,
   type SpaceDoc,
@@ -27,8 +27,7 @@ import { type EchoDatabase } from '../database';
 import { isReactiveProxy } from '../effect/proxy';
 import { isEchoReactiveObject } from '../effect/reactive';
 import { type Hypergraph } from '../hypergraph';
-import { isAutomergeObject, type EchoObject, type OpaqueEchoObject } from '../object';
-import { type Schema } from '../proto';
+import { type EchoObject, type OpaqueEchoObject } from '../object';
 
 export type InitRootProxyFn = (core: AutomergeObjectCore) => void;
 
@@ -195,20 +194,29 @@ export class AutomergeDb {
     }
 
     const root = objCore.rootProxy;
-    invariant(isAutomergeObject(root) || isReactiveProxy(root));
+    invariant(isReactiveProxy(root));
     return root as any;
   }
 
   // TODO(Mykola): Reconcile with `getObjectById`.
-  async loadObjectById(objectId: string, { timeout = 5000 }: { timeout?: number } = {}): Promise<EchoObject> {
+  async loadObjectById(
+    objectId: string,
+    { timeout = 5000 }: { timeout?: number } = {},
+  ): Promise<EchoObject | undefined> {
+    // Check if deleted.
+    if (this._objects.get(objectId)?.isDeleted()) {
+      return Promise.resolve(undefined);
+    }
+
     const obj = this.getObjectById(objectId);
     if (obj) {
       return Promise.resolve(obj);
     }
+
     return asyncTimeout(
       this._updateEvent
         .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId))
-        .then(() => this.getObjectById(objectId)!),
+        .then(() => this.getObjectById(objectId)),
       timeout,
     );
   }
@@ -249,7 +257,6 @@ export class AutomergeDb {
 
   add(obj: OpaqueEchoObject) {
     const core = getAutomergeObjectCore(obj);
-
     this.addCore(core);
     return obj;
   }
@@ -320,6 +327,7 @@ export class AutomergeDb {
     if (itemsUpdated.length === 0) {
       return;
     }
+
     compositeRuntime.batch(() => {
       this._updateEvent.emit({
         spaceKey: this.spaceKey,
@@ -332,18 +340,6 @@ export class AutomergeDb {
         }
       }
     });
-  }
-
-  /**
-   * @internal
-   */
-  _resolveSchema(type: Reference): Schema | undefined {
-    if (type.protocol === 'protobuf') {
-      return this.graph.types.getSchema(type.itemId);
-    } else {
-      // TODO(dmaretskyi): Cross-space references.
-      return this.getObjectById(type.itemId) as Schema | undefined;
-    }
   }
 
   /**
@@ -374,6 +370,7 @@ export class AutomergeDb {
         objectsToRebind.push(updatedObject);
       }
     }
+
     return {
       updatedObjectIds: inlineChangedObjects,
       objectsToRebind,
@@ -406,7 +403,6 @@ export class AutomergeDb {
 
   private _createObjectInDocument(docHandle: DocHandle<SpaceDoc>, objectId: string) {
     invariant(!this._objects.get(objectId));
-
     const core = new AutomergeObjectCore();
     core.id = objectId;
     this._objects.set(core.id, core);
@@ -463,8 +459,8 @@ export interface ItemsUpdatedEvent {
 
 export const shouldObjectGoIntoFragmentedSpace = (core: AutomergeObjectCore) => {
   if (isEchoReactiveObject(core.rootProxy)) {
-    // NOTE: We need to store properties in the root document because
-    //       space-list initialization expects it to be loaded as space become available.
+    // NOTE: We need to store properties in the root document since space-list initialization
+    //  expects it to be loaded as space become available.
     if (core.getType()?.itemId === TYPE_PROPERTIES) {
       return false;
     }

@@ -33,3 +33,8 @@ export const staticImplements =
   <U extends T>(constructor: U) => {
     return constructor;
   };
+
+/**
+ * Document head hashes concatenated with a no separator.
+ */
+export type ConcatenatedHeadHashes = string;

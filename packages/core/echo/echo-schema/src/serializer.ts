@@ -3,10 +3,11 @@
 //
 
 import { Reference, TYPE_PROPERTIES } from '@dxos/echo-db';
+import { type EncodedReferenceObject, encodeReference } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { stripUndefinedValues } from '@dxos/util';
 
-import { AutomergeObjectCore, type EncodedReferenceObject, encodeReference, getAutomergeObjectCore } from './automerge';
+import { AutomergeObjectCore, getAutomergeObjectCore } from './automerge';
 import { type EchoDatabase } from './database';
 import { type OpaqueEchoObject } from './object';
 import { Filter } from './query';

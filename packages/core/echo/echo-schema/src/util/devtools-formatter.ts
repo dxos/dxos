@@ -4,7 +4,9 @@
 
 import { type JsonML } from '@dxos/debug';
 
-import { base, data, type TypedObject } from '../object';
+import { base, data } from '../object';
+
+// TODO(dmaretskyi): Fix those to work with the new reactive API.
 
 const idStyle = { style: 'color: #777' };
 const listStyle = {
@@ -19,7 +21,7 @@ const nullStyle = { style: 'color: #777' };
 
 const defaultKeys = ['id', '__typename', '__schema', 'meta'];
 
-export const getHeader = (obj: TypedObject, config?: any): JsonML => {
+export const getHeader = (obj: any /* TypedObject */, config?: any): JsonML => {
   return [
     'span',
     {
@@ -40,7 +42,7 @@ const formatValue = (object: any, config?: any): JsonML => {
   }
 };
 
-export const getBody = (obj: TypedObject): JsonML => {
+export const getBody = (obj: any /* TypedObject */): JsonML => {
   let objData = obj[data];
   objData = {
     id: obj.id,

@@ -13,7 +13,6 @@ import { Filter } from './filter';
 import { type EchoDatabase } from '../database';
 import * as E from '../effect/reactive';
 import { type EchoReactiveObject, ExpandoType } from '../effect/reactive';
-import { type TypedObject } from '../object';
 import { TestBuilder, createDatabase } from '../testing';
 import { Contact } from '../tests/schema';
 import { TextCompatibilitySchema } from '../type-collection';
@@ -77,7 +76,7 @@ describe('Queries', () => {
     }
 
     {
-      const { objects } = db.query((object: TypedObject) => object.label === 'red' || object.label === 'green');
+      const { objects } = db.query((object: ExpandoType) => object.label === 'red' || object.label === 'green');
       expect(objects).to.have.length(5);
     }
   });

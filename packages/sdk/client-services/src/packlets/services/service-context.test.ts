@@ -12,10 +12,10 @@ import { performInvitation } from '../testing/invitation-utils';
 describe('services/ServiceContext', () => {
   test('new space is synchronized on device invitations', async () => {
     const networkContext = new MemorySignalManagerContext();
-    const device1 = createServiceContext({ signalContext: networkContext });
+    const device1 = await createServiceContext({ signalContext: networkContext });
     await device1.createIdentity();
 
-    const device2 = createServiceContext({ signalContext: networkContext });
+    const device2 = await createServiceContext({ signalContext: networkContext });
     await Promise.all(performInvitation({ host: device1, guest: device2, options: { kind: Invitation.Kind.DEVICE } }));
 
     const space1 = await device1.dataSpaceManager!.createSpace();
@@ -26,13 +26,13 @@ describe('services/ServiceContext', () => {
 
   test('joined space is synchronized on device invitations', async () => {
     const networkContext = new MemorySignalManagerContext();
-    const device1 = createServiceContext({ signalContext: networkContext });
+    const device1 = await createServiceContext({ signalContext: networkContext });
     await device1.createIdentity();
 
-    const device2 = createServiceContext({ signalContext: networkContext });
+    const device2 = await createServiceContext({ signalContext: networkContext });
     await Promise.all(performInvitation({ host: device1, guest: device2, options: { kind: Invitation.Kind.DEVICE } }));
 
-    const identity2 = createServiceContext({ signalContext: networkContext });
+    const identity2 = await createServiceContext({ signalContext: networkContext });
     await identity2.createIdentity();
     const space1 = await identity2.dataSpaceManager!.createSpace();
     await Promise.all(

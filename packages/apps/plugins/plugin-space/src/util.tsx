@@ -28,7 +28,6 @@ import {
   EchoDatabaseImpl,
   Filter,
   LEGACY_TEXT_TYPE,
-  isTypedObject,
   type OpaqueEchoObject,
   type EchoReactiveObject,
 } from '@dxos/echo-schema';
@@ -328,12 +327,10 @@ export const updateGraphWithSpace = ({
   // Update graph with all objects in the space.
   // TODO(wittjosiah): If text objects are included in this query then it updates on every keystroke in the editor.
   const query = space.db.query((obj: OpaqueEchoObject) => {
-    if (isTypedObject(obj) && obj.__typename === LEGACY_TEXT_TYPE) {
-      return false;
-    }
     if (E.typeOf(obj)?.itemId === LEGACY_TEXT_TYPE) {
       return false;
     }
+
     return true;
   });
   const previousObjects = new Map<string, EchoReactiveObject<any>[]>();
@@ -600,7 +597,7 @@ export const getActiveSpace = (graph: Graph, active?: string) => {
   }
 
   const node = graph.findNode(active);
-  if (!node || !(isTypedObject(node.data) || E.isEchoReactiveObject(node.data))) {
+  if (!node || !E.isEchoReactiveObject(node.data)) {
     return;
   }
 

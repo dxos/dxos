@@ -51,7 +51,6 @@ export class UpdateScheduler {
       if (this._params.maxFrequency) {
         const now = performance.now();
         const delay = this._lastUpdateTime + TIME_PERIOD / this._params.maxFrequency - now;
-
         if (delay > 0) {
           await new Promise<void>((resolve) => {
             const clearContext = this._ctx.onDispose(() => {

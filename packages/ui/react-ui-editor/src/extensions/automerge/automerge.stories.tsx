@@ -9,7 +9,7 @@ import '@preact/signals-react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Repo } from '@dxos/automerge/automerge-repo';
-import { createDocAccessor, Filter, DocAccessor, TextCompatibilitySchema } from '@dxos/echo-schema';
+import { Filter, DocAccessor, TextCompatibilitySchema } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
@@ -98,9 +98,9 @@ const EchoStory = ({ spaceKey }: { spaceKey: PublicKey }) => {
   // const identity = useIdentity();
   const space = useSpace(spaceKey);
   const source = useMemo<DocAccessor | undefined>(() => {
-    const { objects = [] } = space?.db.query(Filter.from({ type: 'test' })) ?? {};
+    const { objects = [] } = space?.db.query<E.ExpandoType>(Filter.from({ type: 'test' })) ?? {};
     if (objects.length) {
-      return createDocAccessor(objects[0].content);
+      return E.getRawDoc(objects[0].content, ['content']);
     }
   }, [space]);
 
