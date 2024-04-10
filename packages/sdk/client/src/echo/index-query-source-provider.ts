@@ -15,6 +15,7 @@ import {
 } from '@dxos/echo-schema';
 import { type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
+import { nonNullable } from '@dxos/util';
 
 import { type SpaceList } from './space-list';
 import { type SpaceProxy } from './space-proxy';
@@ -87,16 +88,17 @@ export class IndexQuerySource implements QuerySource {
 
             const core = getAutomergeObjectCore(object);
 
-            return {
+            const queryResult: QueryResult<EchoObject> = {
               id: object.id,
               spaceKey: core.database!.spaceKey,
               object,
               match: { rank: result.rank },
               resolution: { source: 'index', time: Date.now() - start },
             };
+            return queryResult;
           }),
         )
-      ).filter(Boolean) as QueryResult<EchoObject>[];
+      ).filter(nonNullable);
 
       if (ctx.disposed) {
         return;
