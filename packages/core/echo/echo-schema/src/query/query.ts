@@ -7,6 +7,7 @@ import { Context } from '@dxos/context';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { nonNullable } from '@dxos/util';
 
 import { type Filter } from './filter';
 import { type EchoReactiveObject } from '../effect/reactive';
@@ -164,9 +165,10 @@ export class Query<T extends OpaqueEchoObject = EchoReactiveObject<any>> {
           const seen = new Set<string>();
           this._resultCache = Array.from(this._sources).flatMap((source) => source.getResults()) as QueryResult<T>[];
           this._objectCache = this._resultCache
-            .map((result) => result.object!)
-            .filter((object): object is T => !!object)
+            .map((result) => result.object)
+            .filter(nonNullable)
             .filter((object) => {
+              // TODO(burdon): Dedupe?
               if (seen.has(object.id)) {
                 return false;
               }
