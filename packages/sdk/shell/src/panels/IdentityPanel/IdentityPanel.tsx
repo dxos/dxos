@@ -56,7 +56,7 @@ const IdentityHeading = ({
   const [emoji, setEmoji] = useState<string>(getEmojiValue(identity));
   const [hue, setHue] = useState<string>(getHueValue(identity));
   const { textValue, setTextValue } = useClipboardContext();
-  const identityHex = identity?.identityKey.toHex();
+  const identityHex = identity.identityKey.toHex();
   const copied = textValue === identityHex;
 
   const handleUpdateProfile = async () => {
@@ -106,11 +106,7 @@ const IdentityHeading = ({
               <Toolbar.Button
                 classNames='bs-[--rail-action] justify-self-start'
                 data-testid='update-profile-form-copy-key'
-                onClick={() => {
-                  if (identityHex) {
-                    void setTextValue(identityHex);
-                  }
-                }}
+                onClick={() => setTextValue(identityHex)}
               >
                 <span className='sr-only'>{t(copied ? 'copy success label' : 'copy self public key label')}</span>
                 <CopySimple className={getSize(5)} />
