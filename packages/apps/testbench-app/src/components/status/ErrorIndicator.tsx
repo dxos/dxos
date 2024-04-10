@@ -7,12 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-const styles = {
-  default: 'text-neutral-500',
-  success: 'text-sky-300 dark:text-green-700',
-  warning: 'text-orange-300 dark:text-orange-600',
-  error: 'text-red-300 dark:text-red-600',
-};
+import { styles } from './styles';
 
 // TODO(burdon): Reconcile with DebugPlugin.
 export const ErrorIndicator = (props: IconProps) => {
