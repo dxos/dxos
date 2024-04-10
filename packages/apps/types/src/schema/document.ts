@@ -7,6 +7,7 @@ import * as S from '@effect/schema/Schema';
 import * as E from '@dxos/echo-schema';
 import { EchoObjectSchema } from '@dxos/echo-schema';
 
+// TODO(burdon): Temporary?
 export class TextV0Type extends EchoObjectSchema({ typename: 'dxos.Text.v0', version: '0.1.0' })({
   content: S.string,
 }) {}

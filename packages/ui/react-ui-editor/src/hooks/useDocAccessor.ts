@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 
 import { createDocAccessor, type DocAccessor, getTextContent, type EchoReactiveObject } from '@dxos/echo-schema';
 
-// TODO(burdon): Factor out.
+// TODO(burdon): Remove.
 export const useDocAccessor = <T = any>(
   text: EchoReactiveObject<{ content: string }>,
 ): { id: string; doc: string | undefined; accessor: DocAccessor<T> } => {
