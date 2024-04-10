@@ -132,7 +132,7 @@ export class ObjectSerializer {
           }
         }
       } catch (err) {
-        log.warn('Failed to deserialize object.', { object });
+        log.catch(err);
       }
     }
   }

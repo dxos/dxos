@@ -27,7 +27,7 @@ export type SerializerMap = Record<string, TypedObjectSerializer>;
 export const validFilename = (title?: string) => title?.replace(/[^\w-_]/g, '_');
 
 export const jsonSerializer: TypedObjectSerializer = {
-  // TODO(burdon): Get name from schema.
+  // TODO(burdon): Get name field from schema.
   filename: (object) => {
     return {
       name: validFilename(object.filename ?? object.title ?? object.name),
@@ -44,10 +44,11 @@ export const jsonSerializer: TypedObjectSerializer = {
     const { '@id': id, '@type': type, '@meta': meta, ...data } = JSON.parse(text);
     if (!object) {
       const deserializedObject = createEchoReactiveObject(
+        // TODO(burdon): Move to ECHO? Remove test for '@' properties.
         E.object(Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@')))),
       );
 
-      // TODO(burdon): Hack.
+      // TODO(burdon): Should be immutable?
       E.getMeta(deserializedObject).keys = meta?.keys ?? E.getMeta(deserializedObject).keys;
       const core = getAutomergeObjectCore(deserializedObject);
       core.id = id;

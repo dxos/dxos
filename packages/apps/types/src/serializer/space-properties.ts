@@ -14,7 +14,9 @@ import { invariant } from '@dxos/invariant';
  * when working with space properties.
  */
 
-// TODO(burdon): Factor out.
+// TODO( wittjosiah): Mainly need for backwards compat with lodash-style nested selectors.
+//  If we migrate data stored with those kinds of selectors (mainly space properties) then we could probably
+//  just remove this util altogether.
 
 export const getSpaceProperty = <T>(space: Space | undefined, key: string): T | undefined => {
   if (space == null) {
