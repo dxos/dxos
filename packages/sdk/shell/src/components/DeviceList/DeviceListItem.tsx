@@ -10,7 +10,6 @@ import {
   DotsThree,
   type IconProps,
   Intersect,
-  PencilSimpleLine,
   Power,
   Robot,
 } from '@phosphor-icons/react';
@@ -86,38 +85,36 @@ export const DeviceListItem = forwardRef<
         </Avatar.Frame>
         {isCurrent && <Tag color='primary'>{t('current device tag label')}</Tag>}
         <Avatar.Label classNames='flex-1 text-sm truncate'>{displayName}</Avatar.Label>
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
-            <Button
-              variant='ghost'
-              classNames='pli-0 is-[--rail-action] bs-[--rail-action]'
-              data-testid={`device-list-item${isCurrent ? '-current' : ''}.options`}
-            >
-              <span className='sr-only'>{t('more options label')}</span>
-              <DotsThree className={getSize(5)} />
-            </Button>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Content>
-            <DropdownMenu.Viewport>
-              <DropdownMenu.Item disabled onClick={onClickEdit}>
-                <PencilSimpleLine className={getSize(5)} />
-                {t('edit device label')}
-              </DropdownMenu.Item>
-              {device.kind === DeviceKind.CURRENT && (
-                <>
-                  <DropdownMenu.Item data-testid='device-list-item-current.join-existing' onClick={onClickJoinExisting}>
-                    <Intersect className={getSize(5)} />
-                    {t('choose join new identity label')}
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
-                    <Power className={getSize(5)} />
-                    {t('reset device label')}
-                  </DropdownMenu.Item>
-                </>
-              )}
-            </DropdownMenu.Viewport>
-          </DropdownMenu.Content>
-        </DropdownMenu.Root>
+        {device.kind === DeviceKind.CURRENT && (
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <Button
+                variant='ghost'
+                classNames='pli-0 is-[--rail-action] bs-[--rail-action]'
+                data-testid={`device-list-item${isCurrent ? '-current' : ''}.options`}
+              >
+                <span className='sr-only'>{t('more options label')}</span>
+                <DotsThree className={getSize(5)} />
+              </Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              <DropdownMenu.Viewport>
+                {/* <DropdownMenu.Item disabled onClick={onClickEdit}> */}
+                {/*  <PencilSimpleLine className={getSize(5)} /> */}
+                {/*  {t('edit device label')} */}
+                {/* </DropdownMenu.Item> */}
+                <DropdownMenu.Item data-testid='device-list-item-current.join-existing' onClick={onClickJoinExisting}>
+                  <Intersect className={getSize(5)} />
+                  {t('choose join new identity label')}
+                </DropdownMenu.Item>
+                <DropdownMenu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
+                  <Power className={getSize(5)} />
+                  {t('reset device label')}
+                </DropdownMenu.Item>
+              </DropdownMenu.Viewport>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+        )}
       </Avatar.Root>
     </ListItem.Root>
   );
