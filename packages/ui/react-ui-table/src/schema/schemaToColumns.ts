@@ -6,7 +6,7 @@ import type * as S from '@effect/schema/Schema';
 import { type ColumnDef } from '@tanstack/react-table';
 
 import { classifySchemaProperties } from './schema';
-import { createColumnBuilder } from '../../helpers';
+import { createColumnBuilder } from '../helpers';
 
 export const schemaToColumnDefs = <T>(schema: S.Schema<T, any>): ColumnDef<T, any>[] => {
   const classified = classifySchemaProperties(schema);
@@ -39,10 +39,9 @@ export const schemaToColumnDefs = <T>(schema: S.Schema<T, any>): ColumnDef<T, an
         column = builder.display({ label: propertyKey, id: propertyKey });
         break;
       }
-    }
-
-    if (column === undefined) {
-      throw new Error(`Unhandled column type: ${type}`);
+      default: {
+        throw new Error(`Unhandled column type: ${type}`);
+      }
     }
 
     return helper.accessor(propertyKey as any, column);

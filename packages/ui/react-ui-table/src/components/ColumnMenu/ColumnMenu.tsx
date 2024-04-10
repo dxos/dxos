@@ -10,8 +10,8 @@ import { Button, DensityProvider, Popover, DropdownMenu } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { ColumnSettingsForm } from './ColumnSettingsForm';
-import { useColumnSorting } from './hooks/useColumnSorting';
-import { type TableDef, type ColumnProps } from '../schema';
+import { useColumnSorting } from '../../hooks';
+import { type TableDef, type ColumnProps } from '../../schema';
 
 export type ColumnMenuProps<TData extends RowData, TValue> = {
   context: HeaderContext<TData, TValue>;
