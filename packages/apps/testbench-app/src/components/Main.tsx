@@ -3,7 +3,6 @@
 //
 
 import { randSentence } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
-import { ArrowsClockwise } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import * as E from '@dxos/echo-schema'; // TODO(burdon): [API]: Import syntax?
@@ -16,7 +15,7 @@ import { DataToolbar, type DataView } from './DataToolbar';
 import { ItemList } from './ItemList';
 import { ItemTable } from './ItemTable';
 import { SpaceToolbar } from './SpaceToolbar';
-import { ErrorIndicator, NetworkIndicator } from './status';
+import { StatusBar } from './status';
 import { ItemType } from '../data';
 import { defs } from '../defs';
 
@@ -31,7 +30,7 @@ export const Main = () => {
 
   const [view, setView] = useState<DataView>();
   const [filter, setFilter] = useState<string>();
-  const [isFlushing, setIsFlushing] = useState(false);
+  const [flushing, setFlushing] = useState(false);
   const flushingPromise = React.useRef<Promise<void>>();
 
   // TODO(burdon): [BUG]: Shows deleted objects.
@@ -76,13 +75,13 @@ export const Main = () => {
       );
     });
 
-    setIsFlushing(true);
+    setFlushing(true);
     const promise = space.db.flush();
     flushingPromise.current = promise;
     promise.then(
       () => {
         if (flushingPromise.current === promise) {
-          setIsFlushing(false);
+          setFlushing(false);
         }
       },
       (err) => {
@@ -159,12 +158,7 @@ export const Main = () => {
       <div className='flex p-2 items-center text-xs'>
         <div>{objects.length} objects</div>
         <div className='grow' />
-        <div className='flex gap-1 items-center'>
-          {isFlushing && <ArrowsClockwise className='animate-spin' />}
-          {/* TODO(burdon): Toggle network. */}
-          <NetworkIndicator />
-          <ErrorIndicator />
-        </div>
+        <StatusBar flushing={flushing} />
       </div>
     </div>
   );
