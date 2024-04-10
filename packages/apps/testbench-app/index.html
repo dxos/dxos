@@ -2,7 +2,18 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>DXOS Testing</title>
+    <title>DXOS Testbench</title>
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f8f9" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#252529" />
+    <script>
+      function setTheme(darkMode) {
+        document.documentElement.classList[darkMode ? 'add' : 'remove']('dark');
+      }
+      setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (event) {
+        setTheme(event.matches);
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>

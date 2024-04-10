@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Plus, UserPlus } from '@phosphor-icons/react';
+import { Plus, Trash, UserPlus } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import { type PublicKey } from '@dxos/client';
@@ -12,11 +12,12 @@ import { Select, Toolbar } from '@dxos/react-ui';
 
 export type SpaceToolbarProps = {
   onCreate: () => Promise<PublicKey>;
+  onClose: (space: PublicKey) => void;
   onSelect: (space: PublicKey | undefined) => void;
   onInvite: (space: PublicKey) => void;
 };
 
-export const SpaceToolbar = ({ onCreate, onSelect, onInvite }: SpaceToolbarProps) => {
+export const SpaceToolbar = ({ onCreate, onClose, onSelect, onInvite }: SpaceToolbarProps) => {
   const client = useClient();
   const spaces = useSpaces();
   const [spaceKey, setSpaceKey] = useState<PublicKey | undefined>();
@@ -56,9 +57,16 @@ export const SpaceToolbar = ({ onCreate, onSelect, onInvite }: SpaceToolbarProps
         </Select.Root>
       </div>
       <div className='grow' />
-      <Toolbar.Button onClick={() => spaceKey && onInvite(spaceKey)} title='Create space.'>
-        <UserPlus />
-      </Toolbar.Button>
+      {spaceKey && (
+        <>
+          <Toolbar.Button onClick={() => onClose(spaceKey)} title='Close space.'>
+            <Trash />
+          </Toolbar.Button>
+          <Toolbar.Button onClick={() => onInvite(spaceKey)} title='Create space.'>
+            <UserPlus />
+          </Toolbar.Button>
+        </>
+      )}
     </Toolbar.Root>
   );
 };
