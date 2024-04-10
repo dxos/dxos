@@ -62,6 +62,12 @@ export const unrefTimeout = (timeoutId: NodeJS.Timeout) => {
   }
 };
 
+export const refTimeout = (timeoutId: NodeJS.Timeout) => {
+  if (typeof timeoutId === 'object' && 'ref' in timeoutId) {
+    timeoutId.ref();
+  }
+};
+
 export const sleepWithContext = (ctx: Context, ms: number) => {
   const error = new ContextDisposedError();
   return new Promise<void>((resolve, reject) => {

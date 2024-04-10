@@ -6,6 +6,7 @@ import { type Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type MaybePromise } from '@dxos/util';
 
+import { refTimeout, unrefTimeout } from './timeout';
 import { trackResource } from './track-leaks';
 
 export type ClearCallback = () => void;
@@ -140,4 +141,73 @@ export const scheduleExponentialBackoffTaskInterval = (
     clearTracking();
     clearTimeout(timeoutId);
   });
+};
+
+const IDLE_DETECTION_INTERVAL = 200;
+const IDLE_THRESHOLD = IDLE_DETECTION_INTERVAL * 2;
+
+// Unix timestamp of the last time the idle detection task was run.
+// NOTE: Date.now() is used instead of performance.now() because the latter is significantly slower.
+let lastIdleTime = Date.now();
+const tasksOnIdle: (() => void)[] = [];
+let idleTimeout: NodeJS.Timeout | null = null;
+
+// If the timer is delayed, we know that the thread is saturated.
+const scheduleIdleTask = () => {
+  idleTimeout = setTimeout(() => {
+    lastIdleTime = Date.now();
+
+    // Run the tasks that were scheduled to run on idle.
+    if (tasksOnIdle.length > 0) {
+      performance.mark('run-idle-tasks');
+      const tasksToRun = Array.from(tasksOnIdle);
+      tasksOnIdle.length = 0;
+      for (const task of tasksToRun) {
+        task();
+      }
+    }
+
+    scheduleIdleTask();
+  }, IDLE_DETECTION_INTERVAL);
+  if (tasksOnIdle.length === 0) {
+    unrefTimeout(idleTimeout);
+  }
+};
+
+scheduleIdleTask();
+
+/**
+ * Detects when the thread is saturated and is not able to run tasks in a timely manner.
+ */
+export const isThreadSaturated = () => {
+  return Date.now() - lastIdleTime > IDLE_THRESHOLD;
+};
+
+/**
+ * Delay the task until the thread is idle.
+ * Make sure to guard this call with `isThreadSaturated` to avoid delays.
+ *
+ * @example
+ * ```ts
+ * if (isThreadSaturated()) {
+ *  await yieldUntilIdle();
+ * }
+ * ```
+ */
+export const yieldUntilIdle = async () => {
+  await new Promise<void>((resolve) => {
+    tasksOnIdle.push(resolve);
+    if (tasksOnIdle.length === 1 && idleTimeout !== null) {
+      refTimeout(idleTimeout);
+    }
+  });
+};
+
+/*
+ * If the thread is saturated, delay the task until the thread is idle.
+ */
+export const yieldIfSaturated = async () => {
+  if (isThreadSaturated()) {
+    await yieldUntilIdle();
+  }
 };

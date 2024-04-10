@@ -3881,9 +3881,6 @@ importers:
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
       '@dxos/shell':
         specifier: workspace:*
         version: link:../../sdk/shell
@@ -3924,6 +3921,9 @@ importers:
       '@dxos/echo-typegen':
         specifier: workspace:*
         version: link:../../core/echo/echo-typegen
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils

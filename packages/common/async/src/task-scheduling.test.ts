@@ -8,7 +8,7 @@ import waitForExpect from 'wait-for-expect';
 import { Context } from '@dxos/context';
 import { describe, test } from '@dxos/test';
 
-import { scheduleTask } from './task-scheduling';
+import { isThreadSaturated, scheduleTask, yieldUntilIdle } from './task-scheduling';
 import { sleep } from './timeout';
 
 describe('task-scheduling', () => {
@@ -43,5 +43,12 @@ describe('task-scheduling', () => {
       await sleep(2);
       expect(called).to.be.false;
     });
+  });
+
+  test('isThreadSaturated', async () => {
+    // just a sanity check
+    if (isThreadSaturated()) {
+      await yieldUntilIdle();
+    }
   });
 });
