@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { DeferredTask, Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import {
@@ -13,6 +13,7 @@ import {
   type QuerySource,
   filterMatch,
   getAutomergeObjectCore,
+  subscribe,
 } from '@dxos/echo-schema';
 import { type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
@@ -68,42 +69,61 @@ export class IndexQuerySource implements QuerySource {
         return [];
       }
 
-      const results: (QueryResult<EchoObject> | undefined)[] = await Promise.all(
-        response.results!.map(async (result) => {
-          const space = this._params.spaceList.get(result.spaceKey);
-          if (!space) {
-            return;
-          }
+      const results: QueryResult<EchoObject>[] = (
+        await Promise.all(
+          response.results!.map(async (result) => {
+            const space = this._params.spaceList.get(result.spaceKey);
+            if (!space) {
+              return;
+            }
 
-          await (space as SpaceProxy)._databaseInitialized.wait();
-          const object = await space.db.automerge.loadObjectById(result.id);
-          if (ctx.disposed) {
-            return;
-          }
+            await (space as SpaceProxy)._databaseInitialized.wait();
+            const object = await space.db.automerge.loadObjectById(result.id);
+            if (ctx.disposed) {
+              return;
+            }
 
-          if (!object) {
-            return;
-          }
+            if (!object) {
+              return;
+            }
 
-          const core = getAutomergeObjectCore(object);
-          if (!filterMatch(filter, core)) {
-            return;
-          }
+            const core = getAutomergeObjectCore(object);
+            if (!filterMatch(filter, core)) {
+              return;
+            }
 
-          return {
-            id: object.id,
-            spaceKey: core.database!.spaceKey,
-            object,
-            match: { rank: result.rank },
-            resolution: { source: 'index', time: Date.now() - start },
-          };
-        }),
-      );
+            return {
+              id: object.id,
+              spaceKey: core.database!.spaceKey,
+              object,
+              match: { rank: result.rank },
+              resolution: { source: 'index', time: Date.now() - start },
+            };
+          }),
+        )
+      ).filter(Boolean) as QueryResult<EchoObject>[];
 
       if (ctx.disposed) {
         return;
       }
-      this._results = results.filter(Boolean) as QueryResult<EchoObject>[];
+
+      this._results = results;
+
+      const checkIfDeleted = new DeferredTask(currentCtx, async () => {
+        const newResults = results.filter(
+          (result) => result.object && !getAutomergeObjectCore(result.object).isDeleted(),
+        );
+        if (newResults.length !== this._results?.length) {
+          this._results = newResults;
+          this.changed.emit();
+        }
+      });
+
+      results?.forEach((result) => {
+        const unsub = result.object?.[subscribe](() => checkIfDeleted.schedule());
+        unsub && currentCtx.onDispose(() => unsub());
+      });
+
       this.changed.emit();
     });
   }
