@@ -21,13 +21,7 @@ type IdentityMachineContext = {
 };
 
 type IdentityChooseActionEvent = {
-  type:
-    | 'chooseDevices'
-    | 'chooseAgent'
-    | 'chooseProfile'
-    | 'chooseResetStorage'
-    | 'chooseJoinNewIdentity'
-    | 'unchooseAction';
+  type: 'chooseResetStorage' | 'chooseJoinNewIdentity' | 'unchooseAction';
 };
 
 type IdentitySelectDeviceInvitationEvent = {
@@ -67,31 +61,11 @@ const identityMachine = createMachine<IdentityMachineContext, IdentityEvent>(
       unknown: {
         always: [
           { cond: 'initiallyManagingDeviceInvitation', target: 'managingDeviceInvitation', actions: 'log' },
-          { cond: 'initiallyManagingProfile', target: 'managingProfile', actions: 'log' },
           { target: 'choosingAction', actions: 'log' },
         ],
       },
       choosingAction: {},
       managingDeviceInvitation: {},
-      managingAgent: {
-        initial: 'idle',
-        states: {
-          idle: {},
-          pending: {},
-        },
-      },
-      managingDevices: {},
-      managingProfile: {
-        initial: 'idle',
-        states: {
-          idle: {},
-          pending: {},
-        },
-        on: {
-          setIdentity: { target: 'choosingAction', actions: ['setIdentity', 'log'] },
-          updateProfile: { target: '.pending', actions: 'log' },
-        },
-      },
       confirmingResetStorage: {},
       confirmingJoinNewIdentity: {},
     },
@@ -99,18 +73,14 @@ const identityMachine = createMachine<IdentityMachineContext, IdentityEvent>(
       unchooseAction: { target: '.choosingAction', actions: ['unsetInvitation', 'log'] },
       deselectInvitation: { target: '.choosingAction', actions: ['unsetInvitation', 'log'] },
       selectInvitation: { target: '.managingDeviceInvitation', actions: ['setInvitation', 'log'] },
-      chooseDevices: { target: '.managingDevices', actions: 'log' },
-      chooseProfile: { target: '.managingProfile', actions: 'log' },
       chooseJoinNewIdentity: { target: '.confirmingJoinNewIdentity', actions: 'log' },
       chooseResetStorage: { target: '.confirmingResetStorage', actions: 'log' },
-      chooseAgent: { target: '.managingAgent', actions: 'log' },
     },
   },
   {
     guards: {
       initiallyManagingDeviceInvitation: ({ initialDisposition }, _event) =>
         initialDisposition === 'manage-device-invitation',
-      initiallyManagingProfile: ({ initialDisposition }, _event) => initialDisposition === 'manage-profile',
     },
     actions: {
       setIdentity: assign<IdentityMachineContext, IdentityEvent>({
