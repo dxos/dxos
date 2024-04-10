@@ -4784,18 +4784,30 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
+      buffer-alloc:
+        specifier: ^1.1.0
+        version: 1.2.0
+      buffer-from:
+        specifier: ^0.1.1
+        version: 0.1.2
       del:
         specifier: ^5.1.0
         version: 5.1.0
+      inherits:
+        specifier: ^2.0.3
+        version: 2.0.4
+      next-tick:
+        specifier: ^1.0.0
+        version: 1.1.0
+      once:
+        specifier: ^1.4.0
+        version: 1.4.0
       pify:
         specifier: ~5.0.0
         version: 5.0.0
       random-access-file:
         specifier: ^2.2.1
         version: 2.2.1
-      random-access-idb:
-        specifier: ^1.2.2
-        version: 1.2.2(patch_hash=mqfhtwnltd5kq5s4kb4gk7k2k4)
       random-access-memory:
         specifier: ^4.1.0
         version: 4.1.0
@@ -4812,6 +4824,9 @@ importers:
       '@types/randombytes':
         specifier: ^2.0.0
         version: 2.0.0
+      random-access-idb:
+        specifier: ^1.2.2
+        version: 1.2.2(patch_hash=mqfhtwnltd5kq5s4kb4gk7k2k4)
       randombytes:
         specifier: ^2.1.0
         version: 2.1.0
@@ -25732,7 +25747,6 @@ packages:
 
   /buffer-from@0.1.2:
     resolution: {integrity: sha512-RiWIenusJsmI2KcvqQABB83tLxCByE3upSP8QU3rJDMVFGPWLvPQJt/O1Su9moRWeH7d+Q2HYb68f6+v+tw2vg==}
-    dev: false
 
   /buffer-from@1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
@@ -28906,7 +28920,7 @@ packages:
       typed-array-byte-offset: 1.0.0
       typed-array-length: 1.0.4
       unbox-primitive: 1.0.2
-      which-typed-array: 1.1.11
+      which-typed-array: 1.1.13
 
   /es-get-iterator@1.1.3:
     resolution: {integrity: sha512-sPZmqHBe6JIiTfN5q2pEi//TwxmAFHwj/XEuYjTuse78i8KxaqMTTzxPoFKuzRpDpTJ+0NAbpfenkmH2rePtuw==}
@@ -37600,7 +37614,6 @@ packages:
 
   /next-tick@1.1.0:
     resolution: {integrity: sha512-CXdUiJembsNjuToQvxayPZF9Vqht7hewsvy2sOWafLvi2awflj9mOC6bHIg50orX8IJvWKY9wYQ/zB2kogPslQ==}
-    dev: false
 
   /nice-try@1.0.5:
     resolution: {integrity: sha512-1nh45deeb5olNY7eX82BkPO7SSxR5SSYJiPTrTdFUVYwAl8CKMA5N9PjTYkHiRjisVcxcQ1HXdLhx2qxxJzLNQ==}
@@ -39881,7 +39894,6 @@ packages:
       next-tick: 1.1.0
       once: 1.4.0
       random-access-storage: 1.4.3
-    dev: false
     patched: true
 
   /random-access-memory@3.1.4:
@@ -46293,7 +46305,7 @@ packages:
       isarray: 2.0.5
       which-boxed-primitive: 1.0.2
       which-collection: 1.0.1
-      which-typed-array: 1.1.11
+      which-typed-array: 1.1.13
     dev: false
 
   /which-collection@1.0.1:
@@ -46325,16 +46337,6 @@ packages:
       load-yaml-file: 0.2.0
       path-exists: 4.0.0
     dev: true
-
-  /which-typed-array@1.1.11:
-    resolution: {integrity: sha512-qe9UWWpkeG5yzZ0tNYxDmd7vo58HDBc39mZ0xWWpolAGADdFOzkfamWLDxkOWcvHQKVmdTyQdLD4NOfjLWTKew==}
-    engines: {node: '>= 0.4'}
-    dependencies:
-      available-typed-arrays: 1.0.5
-      call-bind: 1.0.5
-      for-each: 0.3.3
-      gopd: 1.0.1
-      has-tostringtag: 1.0.0
 
   /which-typed-array@1.1.13:
     resolution: {integrity: sha512-P5Nra0qjSncduVPEAr7xhoF5guty49ArDTwzJ/yNuPIbZppyRxFQsRCWrocxIY+CnMVG+qfbU2FmDKyvSGClow==}
