@@ -202,3 +202,12 @@ export const yieldUntilIdle = async () => {
     }
   });
 };
+
+/*
+ * If the thread is saturated, delay the task until the thread is idle.
+ */
+export const yieldIfSaturated = async () => {
+  if (isThreadSaturated()) {
+    await yieldUntilIdle();
+  }
+};
