@@ -18,6 +18,8 @@ import {
 
 import { type ItemType } from '../data';
 
+const MAX_RENDERED_COUNT = 50;
+
 export type ItemListProps<T> = {
   objects: T[];
 } & Pick<ItemProps<T>, 'debug' | 'onDelete'>;
@@ -26,11 +28,14 @@ export const ItemList = ({ objects, debug, ...props }: ItemListProps<ItemType>) 
   return (
     <div className='flex flex-col grow overflow-hidden'>
       <div className='flex flex-col overflow-y-scroll pr-2'>
-        {objects.map(
+        {objects.slice(0, MAX_RENDERED_COUNT).map(
           (object) =>
             (debug && <DebugItem key={object.id} object={object} {...props} />) ||
             /* TODO: Workaround for useDocAccessor issue */
             (object.text ? <Item key={object.id} object={object} {...props} /> : <div key={object.id} />),
+        )}
+        {objects.length > MAX_RENDERED_COUNT && (
+          <div className='text-xs text-gray-400'>({objects.length - MAX_RENDERED_COUNT} more items)</div>
         )}
       </div>
     </div>
