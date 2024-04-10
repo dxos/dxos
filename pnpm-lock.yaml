@@ -3921,6 +3921,9 @@ importers:
       '@dxos/echo-typegen':
         specifier: workspace:*
         version: link:../../core/echo/echo-typegen
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
