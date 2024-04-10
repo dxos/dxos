@@ -21,7 +21,7 @@ import {
   type IdentityPanelProps,
 } from './IdentityPanelProps';
 import { useIdentityMachine } from './identityMachine';
-import { AgentForm, IdentityActionChooser, ProfileForm } from './steps';
+import { IdentityActionChooser } from './steps';
 import { useAgentHandlers } from './useAgentHandlers';
 import {
   Viewport,
@@ -164,8 +164,6 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
   const { t } = useTranslation('os');
   const title = useMemo(() => {
     switch (activeView) {
-      case 'agent manager':
-        return 'Manage Agent';
       case 'device invitation manager':
         return t('choose add device label');
       default:
@@ -191,17 +189,6 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
               {...rest}
               invitationUrl={rest.createInvitationUrl(rest.invitationCode!)}
             />
-          </Viewport.View>
-          <Viewport.View classNames={viewStyles} id='update profile form'>
-            <ProfileForm
-              send={rest.send}
-              active={activeView === 'update profile form'}
-              identity={identity}
-              onUpdateProfile={onUpdateProfile}
-            />
-          </Viewport.View>
-          <Viewport.View classNames={viewStyles} id='agent manager'>
-            <AgentForm send={rest.send} active={activeView === 'agent manager'} {...rest} />
           </Viewport.View>
           <Viewport.View classNames={viewStyles} id='confirm join new identity'>
             <ConfirmReset
@@ -273,16 +260,10 @@ export const IdentityPanel = ({
         return 'identity action chooser';
       case identityState.matches('managingDeviceInvitation'):
         return 'device invitation manager';
-      case identityState.matches('managingDevices'):
-        return 'device manager';
-      case [{ managingProfile: 'idle' }, { managingProfile: 'pending' }].some(identityState.matches):
-        return 'update profile form';
       case identityState.matches('confirmingResetStorage'):
         return 'confirm reset storage';
       case identityState.matches('confirmingJoinNewIdentity'):
         return 'confirm join new identity';
-      case [{ managingAgent: 'idle' }, { managingAgent: 'pending' }].some(identityState.matches):
-        return 'agent manager';
       default:
         return 'identity action chooser';
     }

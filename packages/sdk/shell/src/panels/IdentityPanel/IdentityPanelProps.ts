@@ -13,14 +13,11 @@ import type { IdentityEvent } from './identityMachine';
 import { type AgentFormProps } from '../../components';
 import type { InvitationManagerProps } from '../../steps';
 
-export type IdentityPanelInitialDisposition = 'default' | 'manage-device-invitation' | 'manage-profile';
+export type IdentityPanelInitialDisposition = 'default' | 'manage-device-invitation';
 
 export type IdentityPanelImplProps = {
   titleId: string;
   activeView:
-    | 'device manager'
-    | 'agent manager'
-    | 'update profile form'
     | 'device invitation manager'
     | 'identity action chooser'
     | 'confirm join new identity'
