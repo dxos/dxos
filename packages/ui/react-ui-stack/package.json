@@ -39,9 +39,11 @@
     "react-resize-detector": "^7.1.2"
   },
   "devDependencies": {
+    "@braneframe/types": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/random": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@types/react": "^18.0.21",

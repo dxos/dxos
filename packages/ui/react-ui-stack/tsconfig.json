@@ -17,6 +17,9 @@
   ],
   "references": [
     {
+      "path": "../../apps/types"
+    },
+    {
       "path": "../../common/random"
     },
     {
@@ -30,6 +33,9 @@
     },
     {
       "path": "../react-ui-deck"
+    },
+    {
+      "path": "../react-ui-editor"
     },
     {
       "path": "../react-ui-mosaic"
