@@ -88,7 +88,7 @@ export const DebugItem = ({ object, onDelete }: Pick<ItemProps<ItemType>, 'objec
   const meta = E.getMeta(object);
   const deleted = JSON.stringify(object).indexOf('@deleted') !== -1; // TODO(burdon): [API] Missing API.
   return (
-    <div className='flex w-full px-1.5 py-1 text-sm font-thin font-mono opacity-50'>
+    <div className='flex w-full px-1.5 py-1 text-sm font-thin font-mono'>
       <pre className='grow'>{JSON.stringify({ id: object.id.slice(0, 8), deleted, ...meta }, undefined, 2)}</pre>
       <Button variant='ghost' classNames='p-0' onClick={() => onDelete(object.id)}>
         <X />
