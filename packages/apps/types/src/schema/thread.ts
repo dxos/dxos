@@ -5,7 +5,7 @@
 import * as S from '@effect/schema/Schema';
 
 import * as E from '@dxos/echo-schema';
-import { EchoObjectSchema } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo-schema';
 
 import { TextV0Type } from './document';
 
@@ -16,7 +16,7 @@ export enum MessageState {
   SPAM = 3,
 }
 
-export class ContactType extends EchoObjectSchema({ typename: 'braneframe.Contact', version: '0.1.0' })({
+export class ContactType extends TypedObject({ typename: 'braneframe.Contact', version: '0.1.0' })({
   name: S.optional(S.string),
   identifiers: S.mutable(
     S.array(
@@ -45,7 +45,7 @@ const _BlockSchema = S.struct({
 });
 export interface BlockType extends S.Schema.Type<typeof _BlockSchema> {}
 
-export class MessageType extends EchoObjectSchema({ typename: 'braneframe.Message', version: '0.1.0' })({
+export class MessageType extends TypedObject({ typename: 'braneframe.Message', version: '0.1.0' })({
   type: S.optional(S.string),
   date: S.optional(S.string),
   from: _RecipientSchema,
@@ -70,7 +70,7 @@ export class MessageType extends EchoObjectSchema({ typename: 'braneframe.Messag
 //   Interoperability should be handled by lenses or some other transformation mechanism.
 //   Requiring the same schema for all types of messages will not scale -
 //   It also makes the simple cases much more complex than they need to be.
-export class ThreadType extends EchoObjectSchema({ typename: 'braneframe.Thread', version: '0.1.0' })({
+export class ThreadType extends TypedObject({ typename: 'braneframe.Thread', version: '0.1.0' })({
   title: S.optional(S.string),
   messages: S.mutable(S.array(E.ref(MessageType))),
   // TODO(burdon): Reconcile with Message.Context.
@@ -84,12 +84,12 @@ export class ThreadType extends EchoObjectSchema({ typename: 'braneframe.Thread'
 }) {}
 
 // TODO(burdon): Reconcile with Thread?
-export class MailboxType extends EchoObjectSchema({ typename: 'braneframe.Mailbox', version: '0.1.0' })({
+export class MailboxType extends TypedObject({ typename: 'braneframe.Mailbox', version: '0.1.0' })({
   title: S.optional(S.string),
   messages: S.mutable(S.array(E.ref(MessageType))),
 }) {}
 
-export class EventType extends EchoObjectSchema({ typename: 'braneframe.Event', version: '0.1.0' })({
+export class EventType extends TypedObject({ typename: 'braneframe.Event', version: '0.1.0' })({
   title: S.optional(S.string),
   owner: _RecipientSchema,
   attendees: S.mutable(S.array(_RecipientSchema)),
@@ -97,6 +97,6 @@ export class EventType extends EchoObjectSchema({ typename: 'braneframe.Event', 
   links: S.mutable(S.array(E.ref(E.ExpandoType))),
 }) {}
 
-export class AddressBookType extends EchoObjectSchema({ typename: 'braneframe.AddressBook', version: '0.1.0' })({}) {}
+export class AddressBookType extends TypedObject({ typename: 'braneframe.AddressBook', version: '0.1.0' })({}) {}
 
-export class CalendarType extends EchoObjectSchema({ typename: 'braneframe.Calendar', version: '0.1.0' })({}) {}
+export class CalendarType extends TypedObject({ typename: 'braneframe.Calendar', version: '0.1.0' })({}) {}

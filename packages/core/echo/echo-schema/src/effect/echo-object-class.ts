@@ -18,8 +18,7 @@ export interface EchoSchemaClass<Fields> extends S.Schema<Fields> {
   readonly typename: string;
 }
 
-// TODO(dmaretskyi): [API]: Rename to `TypedObject`.
-export const EchoObjectSchema = <Klass>(args: EchoObjectAnnotation) => {
+export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
   return <
     Options extends EchoClassOptions,
     SchemaFields extends Struct.Fields,
