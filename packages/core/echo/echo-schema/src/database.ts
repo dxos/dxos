@@ -16,9 +16,18 @@ import { type EchoObject, type OpaqueEchoObject } from './object';
 import { type Filter, type FilterSource, type Query } from './query';
 
 export interface EchoDatabase {
-  get graph(): Hypergraph;
-
   get spaceKey(): PublicKey;
+
+  // TODO(burdon): Should this be public?
+  get schemaRegistry(): DynamicSchemaRegistry;
+
+  /**
+   * All loaded objects.
+   * @deprecated Use query instead.
+   */
+  get objects(): EchoObject[];
+
+  get graph(): Hypergraph;
 
   getObjectById<T extends OpaqueEchoObject>(id: string): T | undefined;
 
@@ -43,14 +52,6 @@ export interface EchoDatabase {
    * Wait for all pending changes to be saved to disk.
    */
   flush(): Promise<void>;
-
-  /**
-   * All loaded objects.
-   * @deprecated Use query instead.
-   */
-  get objects(): EchoObject[];
-
-  get schemaRegistry(): DynamicSchemaRegistry;
 
   /**
    * @deprecated
@@ -135,10 +136,10 @@ export class EchoDatabaseImpl implements EchoDatabase {
     filter?: FilterSource<T> | undefined,
     options?: QueryOptions | undefined,
   ): Query<T> {
-    options ??= {};
-    options.spaces = [this.spaceKey];
-
-    return this._automerge.graph.query(filter, options);
+    return this._automerge.graph.query(filter, {
+      ...options,
+      spaces: [this.spaceKey],
+    });
   }
 
   async flush(): Promise<void> {

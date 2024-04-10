@@ -199,15 +199,24 @@ export class AutomergeDb {
   }
 
   // TODO(Mykola): Reconcile with `getObjectById`.
-  async loadObjectById(objectId: string, { timeout = 5000 }: { timeout?: number } = {}): Promise<EchoObject> {
+  async loadObjectById(
+    objectId: string,
+    { timeout = 5000 }: { timeout?: number } = {},
+  ): Promise<EchoObject | undefined> {
+    // Check if deleted.
+    if (this._objects.get(objectId)?.isDeleted()) {
+      return Promise.resolve(undefined);
+    }
+
     const obj = this.getObjectById(objectId);
     if (obj) {
       return Promise.resolve(obj);
     }
+
     return asyncTimeout(
       this._updateEvent
         .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId))
-        .then(() => this.getObjectById(objectId)!),
+        .then(() => this.getObjectById(objectId)),
       timeout,
     );
   }
@@ -248,7 +257,6 @@ export class AutomergeDb {
 
   add(obj: OpaqueEchoObject) {
     const core = getAutomergeObjectCore(obj);
-
     this.addCore(core);
     return obj;
   }
@@ -319,6 +327,7 @@ export class AutomergeDb {
     if (itemsUpdated.length === 0) {
       return;
     }
+
     compositeRuntime.batch(() => {
       this._updateEvent.emit({
         spaceKey: this.spaceKey,
@@ -361,6 +370,7 @@ export class AutomergeDb {
         objectsToRebind.push(updatedObject);
       }
     }
+
     return {
       updatedObjectIds: inlineChangedObjects,
       objectsToRebind,
@@ -393,7 +403,6 @@ export class AutomergeDb {
 
   private _createObjectInDocument(docHandle: DocHandle<SpaceDoc>, objectId: string) {
     invariant(!this._objects.get(objectId));
-
     const core = new AutomergeObjectCore();
     core.id = objectId;
     this._objects.set(core.id, core);
@@ -450,8 +459,8 @@ export interface ItemsUpdatedEvent {
 
 export const shouldObjectGoIntoFragmentedSpace = (core: AutomergeObjectCore) => {
   if (isEchoReactiveObject(core.rootProxy)) {
-    // NOTE: We need to store properties in the root document because
-    //       space-list initialization expects it to be loaded as space become available.
+    // NOTE: We need to store properties in the root document since space-list initialization
+    //  expects it to be loaded as space become available.
     if (core.getType()?.itemId === TYPE_PROPERTIES) {
       return false;
     }
