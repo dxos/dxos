@@ -6,7 +6,6 @@ import { data } from './data';
 
 const capitalize = (input: string): string => input.charAt(0).toUpperCase() + input.slice(1);
 
-// TODO(burdon): Use simplehash?
 // TODO(burdon): Rename package (for related things to do with human readable hashes?)
 export const generateName = (input: string): string => {
   const split = (input.length * 2) / 3;

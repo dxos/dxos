@@ -52,6 +52,7 @@ import { getObservabilityGroup, initializeAppObservability, isObservabilityDisab
 import { createClientServices } from '@dxos/react-client';
 import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
+
 import './globals';
 
 import { ResetDialog } from './components';

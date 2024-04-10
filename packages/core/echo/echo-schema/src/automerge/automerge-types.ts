@@ -34,7 +34,7 @@ export const DocAccessor = {
 };
 
 /**
- * @deprecated Use `getRawDoc` instead.
+ * @deprecated
  */
 // TODO(burdon): Delete.
 export const createDocAccessor = <T = any>(

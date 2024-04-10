@@ -39,6 +39,9 @@
       "path": "../../core/echo/echo-typegen"
     },
     {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../sdk/config"
     },
     {
