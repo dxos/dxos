@@ -18,7 +18,6 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/schema": "0.64.7",

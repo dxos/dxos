@@ -6,14 +6,16 @@ import { Plus } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import { Input, Toolbar } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 export type DataToolbarProps = {
+  isFlushing?: boolean;
   onAdd: (count: number) => void;
   onFilterChange?: (filter: string | undefined) => void;
   onDebugChange?: (debug: boolean) => void;
 };
 
-export const DataToolbar = ({ onAdd, onFilterChange, onDebugChange }: DataToolbarProps) => {
+export const DataToolbar = ({ isFlushing, onAdd, onFilterChange, onDebugChange }: DataToolbarProps) => {
   const [debug, setDebug] = useState(false);
   const [count, setCount] = useState(3);
   const [filter, setFilter] = useState<string>();
@@ -27,7 +29,7 @@ export const DataToolbar = ({ onAdd, onFilterChange, onDebugChange }: DataToolba
   return (
     <Toolbar.Root classNames='p-1'>
       <Toolbar.Button onClick={() => onAdd(count)} title='Create objects.'>
-        <Plus />
+        <Plus className={mx(isFlushing && 'animate-spin')} />
       </Toolbar.Button>
       <Input.Root>
         <Input.TextInput
