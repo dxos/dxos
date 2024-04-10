@@ -10,7 +10,7 @@ import React from 'react';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { ColumnMenu } from './ColumnMenu';
-import { type ColumnProps } from '../schema';
+import { type ColumnProps } from '../../schema';
 
 export default {
   title: 'react-ui-table/ColumnMenu',

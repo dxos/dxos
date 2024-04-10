@@ -26,8 +26,8 @@ import { type TypedTableProvider, TableProvider as UntypedTableProvider, useTabl
 import { TableFooter } from './TableFooter';
 import { TableHead } from './TableHead';
 import { type TableProps } from './props';
+import { usePinLastRow } from '../../hooks';
 import { groupTh, tableRoot } from '../../theme';
-import { usePinLastRow } from '../hooks/usePinLastRow';
 
 export const Table = <TData extends RowData>(props: TableProps<TData>) => {
   const {

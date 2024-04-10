@@ -5,7 +5,7 @@
 import { AST } from '@effect/schema';
 import type * as S from '@effect/schema/Schema';
 
-import { type ColumnType } from '../../schema';
+import { type ColumnType } from './types';
 
 export type ClassifiedColumnType = ColumnType | 'display';
 
@@ -44,7 +44,6 @@ const typeToColumn = (type: AST.AST): ClassifiedColumnType => {
 
   if (AST.isTransform(type)) {
     const identifier = AST.getIdentifierAnnotation(type);
-
     if (identifier._tag === 'Some') {
       if (identifier.value === 'DateFromString') {
         return 'date';
@@ -70,13 +69,11 @@ const isStruct = (node: AST.AST) => AST.isTypeLiteral(node);
 export const classifySchemaProperties = (schema: S.Schema<any, any>) => {
   const recurse = (node: AST.AST, path: string[], acc: [string, ClassifiedColumnType][]) => {
     const properties = AST.getPropertySignatures(node);
-
     properties.forEach((prop) => {
       const propName = prop.name.toString();
 
       if (prop.isOptional) {
         const unwrappedAst = unwrapOptionProperty(prop);
-
         if (isStruct(unwrappedAst)) {
           return recurse(unwrappedAst, [...path, propName], acc);
         }
