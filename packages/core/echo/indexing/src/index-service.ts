@@ -4,7 +4,6 @@
 
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
-import { warnAfterTimeout } from '@dxos/debug';
 import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
 import { Filter } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
@@ -54,7 +53,7 @@ export class IndexServiceImpl implements IndexService {
                 results.map(async (result) => {
                   const { objectId, documentId } = idCodec.decode(result.id);
                   const handle = this._params.automergeHost.repo.find(documentId as any);
-                  await warnAfterTimeout(5000, 'to long to load doc', () => handle.whenReady());
+                  await handle.whenReady();
                   if (this._ctx.disposed || currentCtx.disposed) {
                     return;
                   }
