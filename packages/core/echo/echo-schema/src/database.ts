@@ -136,10 +136,10 @@ export class EchoDatabaseImpl implements EchoDatabase {
     filter?: FilterSource<T> | undefined,
     options?: QueryOptions | undefined,
   ): Query<T> {
-    options ??= {};
-    options.spaces = [this.spaceKey];
-
-    return this._automerge.graph.query(filter, options);
+    return this._automerge.graph.query(filter, {
+      ...options,
+      spaces: [this.spaceKey],
+    });
   }
 
   async flush(): Promise<void> {

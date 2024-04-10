@@ -9,7 +9,8 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
-import { type Filter } from './filter';
+import { filterMatch, type Filter } from './filter';
+import { getAutomergeObjectCore } from '../automerge';
 import { type EchoReactiveObject } from '../effect/reactive';
 import { prohibitSignalActions } from '../guarded-scope';
 import { type OpaqueEchoObject, type EchoObject } from '../object';
@@ -163,7 +164,11 @@ export class Query<T extends OpaqueEchoObject = EchoReactiveObject<any>> {
         // TODO(dmaretskyi): Clean up getters in the internal signals so they don't use the Proxy API and don't hit the signals.
         compositeRuntime.untracked(() => {
           const seen = new Set<string>();
-          this._resultCache = Array.from(this._sources).flatMap((source) => source.getResults()) as QueryResult<T>[];
+          this._resultCache = Array.from(this._sources)
+            .flatMap((source) => source.getResults())
+            .filter(
+              (result) => result.object && filterMatch(this._filter, getAutomergeObjectCore(result.object)),
+            ) as QueryResult<T>[];
           this._objectCache = this._resultCache
             .map((result) => result.object)
             .filter(nonNullable)

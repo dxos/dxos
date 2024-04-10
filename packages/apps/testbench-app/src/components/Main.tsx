@@ -6,6 +6,7 @@ import { randSentence } from '@ngneat/falso'; // TODO(burdon): Reconcile with ec
 import React, { useEffect, useState } from 'react';
 
 import * as E from '@dxos/echo-schema'; // TODO(burdon): [API]: Import syntax?
+import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 
@@ -23,6 +24,8 @@ export const Main = () => {
 
   const [debug, setDebug] = useState(false);
   const [filter, setFilter] = useState<string>();
+  const [isFlushing, setIsFlushing] = useState(false);
+  const flushingPromise = React.useRef<Promise<void>>();
 
   // TODO(burdon): [BUG]: Shows deleted objects.
   const objects = useQuery<ItemType>(
@@ -59,6 +62,20 @@ export const Main = () => {
       // TODO(burdon): Migrate generator from DebugPlugin.
       space.db.add(E.object(ItemType, { content: randSentence() }));
     });
+
+    setIsFlushing(true);
+    const promise = space.db.flush();
+    flushingPromise.current = promise;
+    promise.then(
+      () => {
+        if (flushingPromise.current === promise) {
+          setIsFlushing(false);
+        }
+      },
+      (err) => {
+        log.catch(err);
+      },
+    );
   };
 
   const handleDelete = (id: string) => {
@@ -117,7 +134,12 @@ export const Main = () => {
       <div className='flex flex-col grow overflow-hidden'>
         {space && (
           <>
-            <DataToolbar onAdd={handleAdd} onFilterChange={setFilter} onDebugChange={setDebug} />
+            <DataToolbar
+              isFlushing={isFlushing}
+              onAdd={handleAdd}
+              onFilterChange={setFilter}
+              onDebugChange={setDebug}
+            />
             <ItemList debug={debug} objects={objects} onDelete={handleDelete} />
           </>
         )}
