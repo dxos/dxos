@@ -6,8 +6,8 @@ import { type Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type MaybePromise } from '@dxos/util';
 
-import { trackResource } from './track-leaks';
 import { refTimeout, unrefTimeout } from './timeout';
+import { trackResource } from './track-leaks';
 
 export type ClearCallback = () => void;
 
