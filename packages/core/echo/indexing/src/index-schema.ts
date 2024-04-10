@@ -58,7 +58,12 @@ export class IndexSchema implements Index {
   async find(filter: Filter) {
     let results: orama.Results<ObjectType>;
     if (!filter.type) {
-      results = await orama.search(await this._orama, { term: '', exact: false, threshold: 1, limit: ORAMA_LIMIT });
+      results = await orama.search(await this._orama, {
+        term: '',
+        exact: true,
+        threshold: 1,
+        limit: ORAMA_LIMIT,
+      });
     } else {
       results = await orama.search<OramaSchemaType, ObjectType>(await this._orama, {
         term: filter.type.itemId,
