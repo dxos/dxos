@@ -47,10 +47,9 @@ export const DeviceListItem = forwardRef<
   const { t } = useTranslation('os');
   const fallbackValue = keyToFallback(device.deviceKey);
   const labelId = useId('identityListItem__label');
-  const displayName =
-    device.profile?.displayName ?? device.profile
-      ? t('device name placeholder', { os: device.profile.os, platform: device.profile.platform })
-      : generateName(device.deviceKey.toHex());
+  const displayName = device.profile
+    ? t('device name placeholder', { os: device.profile.os, platform: device.profile.platform })
+    : generateName(device.deviceKey.toHex());
   const isCurrent = device.kind === DeviceKind.CURRENT;
   return (
     <ListItem.Root
@@ -63,7 +62,7 @@ export const DeviceListItem = forwardRef<
       <Avatar.Root
         status={device.presence === Device.PresenceState.ONLINE ? 'active' : 'inactive'}
         labelId={labelId}
-        hue={device.profile?.hue || fallbackValue.hue}
+        hue={fallbackValue.hue}
         variant='square'
       >
         <Avatar.Frame classNames='place-self-center'>
@@ -80,7 +79,7 @@ export const DeviceListItem = forwardRef<
               <Devices {...iconProps} />
             )
           ) : (
-            <Avatar.Fallback text={device.profile?.emoji || fallbackValue.emoji} />
+            <Avatar.Fallback text={fallbackValue.emoji} />
           )}
         </Avatar.Frame>
         {isCurrent && <Tag color='primary'>{t('current device tag label')}</Tag>}
