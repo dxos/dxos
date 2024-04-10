@@ -34,6 +34,9 @@ export type HuePickerProps = {
   onClickClear?: ButtonProps['onClick'];
 };
 
+/**
+ * A toolbar button for picking hue. Use only in `role=toolbar` elements. Unable to unset the value.
+ */
 export const HuePickerToolbarButton = ({
   disabled,
   hue,
@@ -113,6 +116,9 @@ export const HuePickerToolbarButton = ({
   );
 };
 
+/**
+ * A button for picking hue alongside a button for unsetting it.
+ */
 export const HuePickerBlock = ({ disabled, hue, onChangeHue, defaultHue, onClickClear }: HuePickerProps) => {
   const { t } = useTranslation('os');
 

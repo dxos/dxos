@@ -27,6 +27,9 @@ export type EmojiPickerProps = {
   onClickClear?: ButtonProps['onClick'];
 };
 
+/**
+ * A toolbar button for picking an emoji. Use only in `role=toolbar` elements. Unable to unset the value.
+ */
 export const EmojiPickerToolbarButton = ({
   disabled,
   defaultEmoji,
@@ -109,6 +112,9 @@ export const EmojiPickerToolbarButton = ({
   );
 };
 
+/**
+ * A button for picking an emoji alongside a button for unsetting it.
+ */
 export const EmojiPickerBlock = ({ disabled, defaultEmoji, emoji, onChangeEmoji, onClickClear }: EmojiPickerProps) => {
   const { t } = useTranslation('os');
   const [isMd] = useMediaQuery('md', { ssr: false });
