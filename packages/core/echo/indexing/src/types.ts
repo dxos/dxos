@@ -43,5 +43,4 @@ export const staticImplements =
 export type ConcatenatedHeadHashes = string;
 
 export type MyLevel = Level<string, string>;
-export type MySublevel = AbstractSublevel<MyLevel, string | Buffer | Uint8Array, string, string>;
-export type MySubSublevel = AbstractSublevel<MySublevel, string | Buffer | Uint8Array, string, string>;
+export type MySublevel = AbstractSublevel<any, string | Buffer | Uint8Array, string, string>;
