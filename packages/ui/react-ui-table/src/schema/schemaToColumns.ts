@@ -9,15 +9,13 @@ import { classifySchemaProperties } from './schema';
 import { createColumnBuilder } from '../helpers';
 
 export const schemaToColumnDefs = <T>(schema: S.Schema<T, any>): ColumnDef<T, any>[] => {
-  const classified = classifySchemaProperties(schema);
-
   const { helper, builder } = createColumnBuilder<T>();
 
+  const classified = classifySchemaProperties(schema);
   return classified.map(([name, type]) => {
     const propertyKey = name.toString();
 
     let column: Partial<ColumnDef<any, any>> | undefined;
-
     switch (type) {
       case 'string': {
         column = builder.string({ label: propertyKey });

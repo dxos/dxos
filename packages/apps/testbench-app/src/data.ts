@@ -14,4 +14,7 @@ export class ItemType extends EchoObjectSchema({ typename: 'example.com/type/Ite
   // TODO(burdon): [API]: Make props optional by default?
   done: S.optional(S.boolean),
   content: S.optional(S.string),
+  // TODO(burdon): [API]: Are dates supported?
+  //  TypeError: Method Date.prototype.toString called on incompatible receiver [object Object]
+  // due: S.optional(S.Date),
 }) {}

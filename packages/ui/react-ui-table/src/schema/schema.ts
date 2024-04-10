@@ -5,7 +5,7 @@
 import { AST } from '@effect/schema';
 import type * as S from '@effect/schema/Schema';
 
-import { type ColumnType } from '../schema';
+import { type ColumnType } from './types';
 
 export type ClassifiedColumnType = ColumnType | 'display';
 
