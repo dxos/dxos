@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DeferredTask, Event } from '@dxos/async';
+import { Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import {
@@ -11,9 +11,7 @@ import {
   type Filter,
   type QueryResult,
   type QuerySource,
-  filterMatch,
   getAutomergeObjectCore,
-  subscribe,
 } from '@dxos/echo-schema';
 import { type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
@@ -88,9 +86,6 @@ export class IndexQuerySource implements QuerySource {
             }
 
             const core = getAutomergeObjectCore(object);
-            if (!filterMatch(filter, core)) {
-              return;
-            }
 
             return {
               id: object.id,
@@ -108,21 +103,6 @@ export class IndexQuerySource implements QuerySource {
       }
 
       this._results = results;
-
-      const checkIfDeleted = new DeferredTask(currentCtx, async () => {
-        const newResults = results.filter(
-          (result) => result.object && !getAutomergeObjectCore(result.object).isDeleted(),
-        );
-        if (newResults.length !== this._results?.length) {
-          this._results = newResults;
-          this.changed.emit();
-        }
-      });
-
-      results?.forEach((result) => {
-        const unsub = result.object?.[subscribe](() => checkIfDeleted.schedule());
-        unsub && currentCtx.onDispose(() => unsub());
-      });
 
       this.changed.emit();
     });
