@@ -25,14 +25,10 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "buffer-alloc": "^1.1.0",
-    "buffer-from": "^0.1.1",
     "del": "^5.1.0",
-    "inherits": "^2.0.3",
-    "next-tick": "^1.0.0",
-    "once": "^1.4.0",
     "pify": "~5.0.0",
     "random-access-file": "^2.2.1",
+    "random-access-idb": "^1.2.2",
     "random-access-memory": "^4.1.0",
     "random-access-storage": "^3.0.0",
     "random-access-web": "^2.0.3"
@@ -40,7 +36,6 @@
   "devDependencies": {
     "@types/pify": "^3.0.2",
     "@types/randombytes": "^2.0.0",
-    "random-access-idb": "^1.2.2",
     "randombytes": "^2.1.0"
   },
   "publishConfig": {

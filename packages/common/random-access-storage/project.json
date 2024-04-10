@@ -7,9 +7,6 @@
     "build": {},
     "compile": {
       "options": {
-        "bundlePackages": [
-          "random-access-idb"
-        ],
         "entryPoints": [
           "packages/common/random-access-storage/src/index.ts"
         ],
