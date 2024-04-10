@@ -28,9 +28,9 @@ export const ItemList = ({ objects, debug, ...props }: ItemListProps<ItemType>) 
       <div className='flex flex-col overflow-y-scroll pr-2'>
         {objects.map(
           (object) =>
-            (debug && <DebugItem key={object.id} object={object} {...props} />) || (
-              <Item key={object.id} object={object} {...props} />
-            ),
+            (debug && <DebugItem key={object.id} object={object} {...props} />) ||
+            /* TODO: Workaround for useDocAccessor issue */
+            (object.text ? <Item key={object.id} object={object} {...props} /> : <div key={object.id} />),
         )}
       </div>
     </div>
