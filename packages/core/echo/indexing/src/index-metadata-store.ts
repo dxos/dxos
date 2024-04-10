@@ -5,9 +5,9 @@
 import { Event, synchronized } from '@dxos/async';
 import { type MetadataMethods } from '@dxos/echo-pipeline';
 import { trace } from '@dxos/tracing';
+import { defaultMap } from '@dxos/util';
 
-import { type MySublevel } from './testing';
-import { type ConcatenatedHeadHashes } from './types';
+import { type MySubSublevel, type MySublevel, type ConcatenatedHeadHashes } from './types';
 
 export type IndexMetadataStoreParams = {
   db: MySublevel;
@@ -27,35 +27,46 @@ export class IndexMetadataStore implements MetadataMethods {
   public readonly dirty = new Event<void>();
   public readonly clean = new Event<void>();
 
-  private readonly _db: MySublevel;
+  private readonly _clean: MySubSublevel;
+  private readonly _dirty: MySubSublevel;
 
   constructor({ db }: IndexMetadataStoreParams) {
-    this._db = db;
+    this._clean = db.sublevel('clean');
+    this._dirty = db.sublevel('dirty');
   }
 
   @trace.span({ showInBrowserTimeline: true })
   async getDirtyDocuments(): Promise<string[]> {
-    const res: string[] = [];
+    const res = new Map<string, DocumentMetadata>();
 
-    for await (const [id, metadata] of this._db.iterator<string, DocumentMetadata>({ valueEncoding: 'json' })) {
-      if (metadata.lastIndexedHash !== metadata.lastAvailableHash) {
-        res.push(id);
+    for await (const [id, lastAvailableHash] of this._dirty.iterator<string, string>({
+      valueEncoding: 'json',
+    })) {
+      defaultMap(res, id, { id, lastAvailableHash });
+    }
+
+    for await (const [id, lastIndexedHash] of this._clean.iterator<string, string>({
+      valueEncoding: 'json',
+    })) {
+      if (res.has(id)) {
+        res.get(id)!.lastIndexedHash = lastIndexedHash;
+      } else {
+        defaultMap(res, id, { id, lastIndexedHash });
       }
     }
 
-    return res;
+    return Array.from(res.values())
+      .filter((metadata) => metadata.lastIndexedHash !== metadata.lastAvailableHash)
+      .map((metadata) => metadata.id);
   }
 
   @trace.span({ showInBrowserTimeline: true })
   @synchronized
   async markDirty(idToLastHash: Map<string, string>) {
-    const batch = this._db.batch();
+    const batch = this._dirty.batch();
 
     for (const [id, lastAvailableHash] of idToLastHash.entries()) {
-      // TODO(dmaretskyi): Splitting metadata into separate keys would allow us set hashes without reading data.
-      const metadata = await this._getMetadata(id);
-      metadata.lastAvailableHash = lastAvailableHash;
-      batch.put<string, DocumentMetadata>(id, metadata, { valueEncoding: 'json' });
+      batch.put<string, string>(id, lastAvailableHash, { valueEncoding: 'json' });
     }
 
     await batch.write();
@@ -64,22 +75,7 @@ export class IndexMetadataStore implements MetadataMethods {
   }
 
   async markClean(id: string, lastIndexedHash: string) {
-    const metadata = await this._getMetadata(id);
-    metadata.lastIndexedHash = lastIndexedHash;
-    await this._db.put<string, DocumentMetadata>(id, metadata, { valueEncoding: 'json' });
+    await this._clean.put<string, string>(id, lastIndexedHash, { valueEncoding: 'json' });
     this.clean.emit();
-  }
-
-  private async _getMetadata(id: string): Promise<DocumentMetadata> {
-    // TODO(dmaretskyi): Research performance implications of going using try-catch for missing keys.
-    try {
-      return await this._db.get<string, DocumentMetadata>(id, { valueEncoding: 'json' });
-    } catch (err: any) {
-      if (err.notFound) {
-        return { id };
-      } else {
-        throw err;
-      }
-    }
   }
 }
