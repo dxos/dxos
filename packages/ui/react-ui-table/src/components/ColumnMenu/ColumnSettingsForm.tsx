@@ -9,14 +9,23 @@ import { Button, Input, Select, Separator, useTranslation } from '@dxos/react-ui
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { safeParseInt } from '@dxos/util';
 
-import { type TableDef, type ColumnProps, type ColumnType } from '../schema';
-import { translationKey } from '../translations';
+import { type TableDef, type ColumnProps, type ColumnType } from '../../schema';
+import { translationKey } from '../../translations';
 
 const Section: FC<PropsWithChildren & { className?: string }> = ({ children, className }) => (
   <div role='none' className={mx('p-2', className)}>
     {children}
   </div>
 );
+
+export type ColumnSettingsFormProps = {
+  column: ColumnProps;
+  tableDef: TableDef;
+  tableDefs: TableDef[];
+  onUpdate?: ((id: string, column: ColumnProps) => void) | undefined;
+  onDelete?: ((id: string) => void) | undefined;
+  onClose?: () => void;
+};
 
 export const ColumnSettingsForm = ({
   column,
@@ -25,14 +34,7 @@ export const ColumnSettingsForm = ({
   onUpdate,
   onDelete,
   onClose,
-}: {
-  column: ColumnProps;
-  tableDef: TableDef;
-  tableDefs: TableDef[];
-  onUpdate?: ((id: string, column: ColumnProps) => void) | undefined;
-  onDelete?: ((id: string) => void) | undefined;
-  onClose: () => void;
-}) => {
+}: ColumnSettingsFormProps) => {
   const [prop, setProp] = useState(column.id);
   const [refTable, setRefTable] = useState(column.refTable);
   const [refProp, setRefProp] = useState(column.refProp);
@@ -44,7 +46,7 @@ export const ColumnSettingsForm = ({
 
   const handleCancel = () => {
     setProp(column.id);
-    onClose;
+    onClose?.();
   };
 
   const handleSave = () => {
@@ -76,7 +78,7 @@ export const ColumnSettingsForm = ({
       digits: safeParseInt(digits),
     });
 
-    onClose();
+    onClose?.();
   };
 
   return (
