@@ -15,6 +15,7 @@ import {
   createThemeExtensions,
   useTextEditor,
 } from '@dxos/react-ui-editor';
+import { mx, subtleHover } from '@dxos/react-ui-theme';
 
 import { type ItemType } from '../data';
 
@@ -61,8 +62,9 @@ export const Item = ({ object, onDelete }: ItemProps<ItemType>) => {
     [],
   );
 
+  // TODO(burdon): Hover.
   return (
-    <div className='flex flex-col'>
+    <div className={mx('flex flex-col', subtleHover)}>
       <div className='flex w-full justify-between'>
         <div className='flex shrink-0 items-center justify-center w-[40px] h-[40px]'>
           <Input.Root>
