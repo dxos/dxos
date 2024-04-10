@@ -2,34 +2,35 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { Plus, Table, List, ListMagnifyingGlass } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import { Input, Toolbar } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { getSize } from '@dxos/react-ui-theme';
+
+export type DataView = 'table' | 'list' | 'debug';
 
 export type DataToolbarProps = {
-  isFlushing?: boolean;
   onAdd: (count: number) => void;
   onFilterChange?: (filter: string | undefined) => void;
-  onDebugChange?: (debug: boolean) => void;
+  onViewChange?: (view: DataView | undefined) => void;
 };
 
-export const DataToolbar = ({ isFlushing, onAdd, onFilterChange, onDebugChange }: DataToolbarProps) => {
-  const [debug, setDebug] = useState(false);
+export const DataToolbar = ({ onAdd, onFilterChange, onViewChange }: DataToolbarProps) => {
+  const [view, setView] = useState<DataView>('table');
   const [count, setCount] = useState(3);
   const [filter, setFilter] = useState<string>();
   useEffect(() => {
     onFilterChange?.(filter);
   }, [filter]);
   useEffect(() => {
-    onDebugChange?.(debug);
-  }, [debug]);
+    onViewChange?.(view);
+  }, [view]);
 
   return (
     <Toolbar.Root classNames='p-1'>
       <Toolbar.Button onClick={() => onAdd(count)} title='Create objects.'>
-        <Plus className={mx(isFlushing && 'animate-spin')} />
+        <Plus />
       </Toolbar.Button>
       <Input.Root>
         <Input.TextInput
@@ -47,10 +48,18 @@ export const DataToolbar = ({ isFlushing, onAdd, onFilterChange, onDebugChange }
           />
         </Input.Root>
       )}
-      {onDebugChange && (
-        <Input.Root>
-          <Input.Switch checked={debug} onCheckedChange={(value) => setDebug(value)} title='Debug' />
-        </Input.Root>
+      {onViewChange && (
+        <Toolbar.ToggleGroup type='single' value={view} onValueChange={(value) => setView(value as DataView)}>
+          <Toolbar.ToggleGroupItem value='table'>
+            <Table className={getSize(5)} />
+          </Toolbar.ToggleGroupItem>
+          <Toolbar.ToggleGroupItem value='list'>
+            <List className={getSize(5)} />
+          </Toolbar.ToggleGroupItem>
+          <Toolbar.ToggleGroupItem value='debug'>
+            <ListMagnifyingGlass className={getSize(5)} />
+          </Toolbar.ToggleGroupItem>
+        </Toolbar.ToggleGroup>
       )}
     </Toolbar.Root>
   );
