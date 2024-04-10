@@ -33,6 +33,7 @@
   "devDependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@sentry/vite-plugin": "^2.14.0",
     "@types/react": "^18.0.21",
