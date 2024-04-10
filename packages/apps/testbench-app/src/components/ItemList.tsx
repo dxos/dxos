@@ -5,6 +5,7 @@
 import { X } from '@phosphor-icons/react';
 import React from 'react';
 
+import { getRawDoc } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
 import { Button, Input, useThemeContext } from '@dxos/react-ui';
 import {
@@ -12,7 +13,6 @@ import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
-  useDocAccessor,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 
@@ -45,23 +45,20 @@ export type ItemProps<T> = {
 
 // TODO(burdon): Use ui list with key nav/selection.
 // TODO(burdon): Toggle options to show deleted.
-export const Item = ({ object, debug, onDelete }: ItemProps<ItemType>) => {
+export const Item = ({ object, onDelete }: ItemProps<ItemType>) => {
   const { themeMode } = useThemeContext(); // TODO(burdon): What is required to config theme?
 
-  // TODO(burdon): [API] How to get accessor for raw Automerge string property?
-  const { doc, accessor } = useDocAccessor(object.text!); // TODO(burdon): [API]: Accept undefined?
-  // TODO(burdon): Cannot focus item.
   const { parentRef } = useTextEditor(
     () => ({
-      doc,
+      doc: object.content,
       extensions: [
         createBasicExtensions(),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode }),
-        automerge(accessor),
+        automerge(getRawDoc(object, ['content'])), // TODO(burdon): [API]: Type safe?
       ],
     }),
-    [doc, accessor],
+    [],
   );
 
   return (
