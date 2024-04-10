@@ -168,7 +168,7 @@ describe('Orama', () => {
 
   test('get everything', async () => {
     const db = await getOrama();
-    const result = await orama.search(db, { term: '', exact: false, threshold: 1, limit: 1_000_000 });
+    const result = await orama.search(db, { term: '', exact: true, threshold: 1, limit: 1_000_000 });
     expect(result.hits.length).to.equal(objects.length);
   });
 });

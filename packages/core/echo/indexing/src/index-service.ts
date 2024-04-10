@@ -9,9 +9,10 @@ import { Filter } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
-import { type QueryRequest, type QueryResponse, type QueryResult } from '@dxos/protocols/proto/dxos/agent/query';
+import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { nonNullable } from '@dxos/util';
 
 import { type Indexer } from './indexer';
 
@@ -75,7 +76,7 @@ export class IndexServiceImpl implements IndexService {
                   };
                 }),
               )
-            ).filter(Boolean) as QueryResult[],
+            ).filter(nonNullable),
           };
           if (this._ctx.disposed || ctx.disposed) {
             return;
