@@ -6,6 +6,7 @@ import { randSentence } from '@ngneat/falso'; // TODO(burdon): Reconcile with ec
 import React, { useEffect, useState } from 'react';
 
 import * as E from '@dxos/echo-schema'; // TODO(burdon): [API]: Import syntax?
+import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 
@@ -16,7 +17,6 @@ import { ItemList } from './ItemList';
 import { SpaceToolbar } from './SpaceToolbar';
 import { ItemType, TextV0Type } from '../data';
 import { defs } from '../defs';
-import { log } from '@dxos/log';
 
 export const Main = () => {
   const client = useClient();
