@@ -13,28 +13,24 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { Input, Toolbar } from '@dxos/react-ui';
 
 import { ItemList } from './ItemList';
-import { ItemType, TextV0Type } from '../data';
+import { ItemType } from '../data';
 
 export const Root = () => {
   const client = useClient();
   const space = client.spaces.default;
   const identity = useIdentity();
 
-  // TODO(burdon): Toolbar selector for type.
   const [filter, setFilter] = useState<string>();
-
   const objects = useQuery<ItemType>(
     space,
-    E.Filter.schema(ItemType, (object: ItemType) => match(filter, object.text?.content)),
+    E.Filter.schema(ItemType, (object: ItemType) => match(filter, object.content)),
   );
 
   const [num, setNum] = useState(10);
 
   const handleAdd = (n = num) => {
     Array.from({ length: n }).forEach(() => {
-      // TODO(burdon): [API]: Use basic Automerge strings?
-      // space.db.add(E.object(ItemType, { content: '' }));
-      space.db.add(E.object(ItemType, { text: E.object(TextV0Type, { content: randSentence() }) }));
+      space.db.add(E.object(ItemType, { content: randSentence() }));
     });
   };
 
