@@ -1,0 +1,58 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "testbench-app",
+  "sourceRoot": "packages/apps/testbench-app/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "options": {
+        "main": "packages/apps/testbench-app/src/index.ts",
+        "outputPath": "packages/apps/testbench-app/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/apps/testbench-app/tsconfig.json"
+      }
+    },
+    "bundle": {
+      "dependsOn": [
+        "^build",
+        "^bundle"
+      ],
+      "executor": "@nx/vite:build",
+      "options": {
+        "generatePackageJson": false,
+        "outputPath": "packages/apps/testbench-app/out/testbench-app"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "e2e": {
+      "options": {
+        "playwrightConfigPath": "packages/apps/testbench-app/src/playwright/playwright.config.ts",
+        "serve": "testbench-app:preview",
+        "testPatterns": [
+          "packages/apps/testbench-app/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/apps/testbench-app/src/**/*"
+        ]
+      }
+    },
+    "lint": {},
+    "preview": {
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "testbench-app:bundle",
+        "staticFilePath": "packages/apps/testbench-app/out/testbench-app"
+      }
+    },
+    "serve": {
+      "executor": "@nx/vite:dev-server",
+      "options": {
+        "buildTarget": "testbench-app:bundle"
+      }
+    }
+  }
+}

@@ -134,7 +134,7 @@
     "typescript": "^5.2.2",
     "unplugin": "^1.7.1",
     "uuid": "^8.3.2",
-    "vite": "^5.1.5",
+    "vite": "^5.1.7",
     "vite-plugin-inspect": "^0.8.1",
     "vite-plugin-top-level-await": "^1.4.1",
     "vite-plugin-wasm": "^3.3.0",

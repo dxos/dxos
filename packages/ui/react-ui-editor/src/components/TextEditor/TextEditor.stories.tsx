@@ -10,7 +10,8 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import React, { type FC, type KeyboardEvent, StrictMode, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { TextObject } from '@dxos/echo-schema';
+import { TextV0Type } from '@braneframe/types';
+import * as E from '@dxos/echo-schema';
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -49,7 +50,6 @@ import {
   type CommentsOptions,
   type SelectionState,
 } from '../../extensions';
-import { useDocAccessor } from '../../hooks';
 import translations from '../../translations';
 
 faker.seed(101);
@@ -252,7 +252,8 @@ const Story = ({
   placeholder = 'New document.',
   ...props
 }: StoryProps) => {
-  const { accessor } = useDocAccessor(new TextObject(text));
+  const [object] = useState(E.object(TextV0Type, { content: text ?? '' }));
+  const accessor = E.getRawDoc(object, ['content']);
 
   const viewRef = useRef<EditorView>(null);
   useComments(viewRef.current, id, comments);

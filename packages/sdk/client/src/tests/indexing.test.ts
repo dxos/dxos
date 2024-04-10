@@ -46,6 +46,7 @@ describe('Index queries', () => {
       },
       getAllDocuments: async function* () {},
     });
+    afterTest(() => indexer.destroy());
     const indexingDone = indexer.indexed.waitForCount(2);
 
     indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
@@ -89,6 +90,7 @@ describe('Index queries', () => {
 
   test('indexes persists between client restarts', async () => {
     const testStoragePath = fs.mkdtempSync(path.join('tmp', 'client-indexing-'));
+    fs.rmSync(testStoragePath, { recursive: true, force: true });
     const storage = createStorage({ type: StorageType.NODE, root: testStoragePath });
     afterTest(() => fs.rmSync(testStoragePath, { recursive: true, force: true }));
 

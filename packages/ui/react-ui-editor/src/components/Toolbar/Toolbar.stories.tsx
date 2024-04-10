@@ -6,7 +6,8 @@ import '@dxosTheme';
 
 import React, { type FC, useState } from 'react';
 
-import { TextObject } from '@dxos/echo-schema';
+import { TextV0Type } from '@braneframe/types';
+import * as E from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { Tooltip, useThemeContext } from '@dxos/react-ui';
@@ -28,15 +29,17 @@ import {
   useComments,
   useFormattingState,
 } from '../../extensions';
-import { useActionHandler, useDocAccessor, useTextEditor } from '../../hooks';
+import { useActionHandler, useTextEditor } from '../../hooks';
 import translations from '../../translations';
 
 faker.seed(101);
 
 const Story: FC<{ content: string }> = ({ content }) => {
   const { themeMode } = useThemeContext();
-  const [item] = useState({ text: new TextObject(content) });
-  const { id, doc, accessor } = useDocAccessor(item.text);
+  const [text] = useState(E.object(TextV0Type, { content }));
+  const id = text.id;
+  const doc = text.content;
+  const accessor = E.getRawDoc(text);
   const [formattingState, formattingObserver] = useFormattingState();
   const { parentRef, view } = useTextEditor(() => {
     return {

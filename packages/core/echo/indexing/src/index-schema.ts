@@ -10,6 +10,9 @@ import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
 import { type ObjectType, type Index, type IndexStaticProps, type LoadParams, staticImplements } from './types';
 
+// Note: By default, Orama search returns 10 results.
+const ORAMA_LIMIT = 1_000_000;
+
 // TODO(mykola): Correct schema ref?
 type OramaSchemaType = orama.Orama<
   {
@@ -55,12 +58,18 @@ export class IndexSchema implements Index {
   async find(filter: Filter) {
     let results: orama.Results<ObjectType>;
     if (!filter.type) {
-      results = await orama.search(await this._orama, { term: '', exact: false, threshold: 1 });
+      results = await orama.search(await this._orama, {
+        term: '',
+        exact: true,
+        threshold: 1,
+        limit: ORAMA_LIMIT,
+      });
     } else {
       results = await orama.search<OramaSchemaType, ObjectType>(await this._orama, {
         term: filter.type.itemId,
         exact: true,
         threshold: 0,
+        limit: ORAMA_LIMIT,
       });
     }
     return results.hits.map((hit) => ({ id: hit.id, rank: hit.score }));
