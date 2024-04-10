@@ -21,14 +21,23 @@ export type ObjectTableProps = Pick<TableProps<any>, 'stickyHeader' | 'role' | '
   table: TableType;
 };
 
+const Stable = {
+  empty: {
+    object: Object.freeze({}),
+    array: Object.freeze([] as any[]),
+  },
+};
+
 export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
   const space = getSpace(table);
 
+  const objectFilter = useMemo(() => (table.schema ? Filter.schema(table.schema) : () => false), [table.schema]);
+
   const objects = useQuery<EchoReactiveObject<any>>(
     space,
-    table.schema ? Filter.schema(table.schema) : () => false,
+    objectFilter,
+    Stable.empty.object,
     // TODO(burdon): Toggle deleted.
-    {},
     [table.schema],
   );
 
@@ -38,7 +47,8 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
 
   const rows = useMemo(() => [...filteredObjects, newObject], [filteredObjects, newObject]);
 
-  const tables = useQuery<TableType>(space, Filter.schema(TableType));
+  const tableFilter = useMemo(() => Filter.schema(TableType), []);
+  const tables = useQuery<TableType>(space, tableFilter);
 
   const updateSchemaProp = useCallback(
     (update: S.Struct.Fields) => table.schema?.updateColumns(update),
