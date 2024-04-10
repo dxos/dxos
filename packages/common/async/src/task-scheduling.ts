@@ -7,6 +7,7 @@ import { StackTrace } from '@dxos/debug';
 import { type MaybePromise } from '@dxos/util';
 
 import { trackResource } from './track-leaks';
+import { refTimeout, unrefTimeout } from './timeout';
 
 export type ClearCallback = () => void;
 
@@ -149,10 +150,11 @@ const IDLE_THRESHOLD = IDLE_DETECTION_INTERVAL * 2;
 // NOTE: Date.now() is used instead of performance.now() because the latter is significantly slower.
 let lastIdleTime = Date.now();
 const tasksOnIdle: (() => void)[] = [];
+let idleTimeout: NodeJS.Timeout | null = null;
 
 // If the timer is delayed, we know that the thread is saturated.
 const scheduleIdleTask = () => {
-  setTimeout(() => {
+  idleTimeout = setTimeout(() => {
     lastIdleTime = Date.now();
 
     // Run the tasks that were scheduled to run on idle.
@@ -164,6 +166,9 @@ const scheduleIdleTask = () => {
 
     scheduleIdleTask();
   }, IDLE_DETECTION_INTERVAL);
+  if (tasksOnIdle.length === 0) {
+    unrefTimeout(idleTimeout);
+  }
 };
 
 scheduleIdleTask();
@@ -189,5 +194,8 @@ export const isThreadSaturated = () => {
 export const yieldUntilIdle = async () => {
   await new Promise<void>((resolve) => {
     tasksOnIdle.push(resolve);
+    if (tasksOnIdle.length === 1 && idleTimeout !== null) {
+      refTimeout(idleTimeout);
+    }
   });
 };
