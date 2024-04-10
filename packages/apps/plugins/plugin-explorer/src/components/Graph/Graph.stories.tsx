@@ -45,7 +45,7 @@ const Story = () => {
 export default {
   title: 'plugin-explorer/Graph',
   component: Graph,
-  render: () => <ClientRepeater component={Story} createSpace types={[ViewType]} />,
+  render: () => <ClientRepeater component={Story} createSpace schema={[ViewType]} />,
   decorators: [FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',

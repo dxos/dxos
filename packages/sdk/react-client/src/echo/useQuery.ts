@@ -34,4 +34,8 @@ export const useQuery: UseQuery = <T extends OpaqueEchoObject>(
   );
 };
 
-const filterToDepsArray = (filter?: FilterSource<any>) => Object.entries(filter ?? {}).flat();
+// TODO(dmaretskyi): Serialize the filter here instead.
+const filterToDepsArray = (filter?: FilterSource<any>) =>
+  Object.entries(filter ?? {})
+    .flat(10)
+    .map((x) => (typeof x === 'function' || typeof x === 'object' ? null : x));
