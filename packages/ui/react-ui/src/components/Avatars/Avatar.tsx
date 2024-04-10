@@ -119,7 +119,7 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
             />
           ) : (
             <rect
-              className='avatarFrameFill fill-[var(--surface-bg)]'
+              className={hue ? tx('hue.fill', 'avatar__frame__rect', { hue }) : 'fill-[var(--surface-bg)]'}
               x={ringGap + ringWidth}
               y={ringGap + ringWidth}
               width={2 * r}
