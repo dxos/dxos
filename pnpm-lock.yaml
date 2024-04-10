@@ -3925,7 +3925,7 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1(vite@5.1.7)
       vite:
-        specifier: ^5.1.5
+        specifier: ^5.1.7
         version: 5.1.7(@types/node@18.11.9)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
