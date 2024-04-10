@@ -158,10 +158,13 @@ const scheduleIdleTask = () => {
     lastIdleTime = Date.now();
 
     // Run the tasks that were scheduled to run on idle.
-    const tasksToRun = Array.from(tasksOnIdle);
-    tasksOnIdle.length = 0;
-    for (const task of tasksToRun) {
-      task();
+    if (tasksOnIdle.length > 0) {
+      performance.mark('run-idle-tasks');
+      const tasksToRun = Array.from(tasksOnIdle);
+      tasksOnIdle.length = 0;
+      for (const task of tasksToRun) {
+        task();
+      }
     }
 
     scheduleIdleTask();
