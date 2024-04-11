@@ -9,4 +9,3 @@ export * from './InvitationAccepted';
 export * from './InvitationInput';
 export * from './InvitationRescuer';
 export * from './InvitationAuthenticator';
-export * from './ResetIdentity';

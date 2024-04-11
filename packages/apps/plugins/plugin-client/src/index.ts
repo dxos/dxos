@@ -7,4 +7,3 @@ import { ClientPlugin } from './ClientPlugin';
 export default ClientPlugin;
 
 export * from './ClientPlugin';
-export * from './space-properties';

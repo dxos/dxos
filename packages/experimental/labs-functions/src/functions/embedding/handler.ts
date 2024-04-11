@@ -14,11 +14,12 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type ChainDocument, type ChainVariant, createChainResources } from '../../chain';
-import { getKey } from '../../util';
+import { getKey, registerTypes } from '../../util';
 
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
   const { client, dataDir } = context;
   const { space, objects } = event;
+  registerTypes(space);
   // TODO(burdon): Option to process all spaces.
   // if (!space || !objects?.length) {
   //   return response.status(400);

@@ -33,7 +33,7 @@ export class DataServiceImpl implements DataService {
   }
 
   async flush(request: FlushRequest): Promise<void> {
-    // TODO(dmaretskyi): Implement with automerge.
+    await this._automergeHost.flush(request);
   }
 
   // Automerge specific.

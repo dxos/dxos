@@ -13,15 +13,18 @@ import { afterTest, describe, test } from '@dxos/test';
 import { IndexMetadataStore } from './index-metadata-store';
 import { IndexStore } from './index-store';
 import { Indexer, type ObjectSnapshot } from './indexer';
+import { createTestLevel } from './testing';
 
 describe('Indexer', () => {
   test('objects that are marked as dirty are getting indexed', async () => {
     const storage = createStorage({ type: StorageType.RAM });
     afterTest(() => storage.close());
+    const level = await createTestLevel();
+    afterTest(() => level.close());
 
     const documents: ObjectSnapshot[] = [];
 
-    const metadataStore = new IndexMetadataStore({ directory: storage.createDirectory('IndexMetadataStore') });
+    const metadataStore = new IndexMetadataStore({ db: level.sublevel('indexer-metadata') });
     const doneIndexing = metadataStore.clean.waitForCount(2);
     const indexer = new Indexer({
       indexStore: new IndexStore({ directory: storage.createDirectory('IndexStore') }),
@@ -31,6 +34,7 @@ describe('Indexer', () => {
       },
       getAllDocuments: async function* () {},
     });
+    afterTest(() => indexer.destroy());
 
     const schemaURI = '@example.org/schema/Contact';
     const objects = [
@@ -61,6 +65,8 @@ describe('Indexer', () => {
   test('objects are indexed for first time', async () => {
     const storage = createStorage({ type: StorageType.RAM });
     afterTest(() => storage.close());
+    const level = await createTestLevel();
+    afterTest(() => level.close());
 
     const documents: ObjectSnapshot[] = [];
 
@@ -71,7 +77,7 @@ describe('Indexer', () => {
     ];
     objects.forEach((object) => documents.push({ id: object.id, object, currentHash: 'hash' }));
 
-    const metadataStore = new IndexMetadataStore({ directory: storage.createDirectory('IndexMetadataStore') });
+    const metadataStore = new IndexMetadataStore({ db: level.sublevel('indexer-metadata') });
     const indexer = new Indexer({
       indexStore: new IndexStore({ directory: storage.createDirectory('IndexStore') }),
       metadataStore,

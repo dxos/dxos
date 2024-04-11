@@ -5,7 +5,7 @@
 import { Event, UpdateScheduler, asyncTimeout, synchronized } from '@dxos/async';
 import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
-import { TYPE_PROPERTIES, type Reference } from '@dxos/echo-db';
+import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import {
   type SpaceState,
   type SpaceDoc,
@@ -20,14 +20,14 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type AutomergeContext } from './automerge-context';
-import { getAutomergeObjectCore, type AutomergeObject } from './automerge-object';
+import { getAutomergeObjectCore } from './automerge-object';
 import { AutomergeObjectCore } from './automerge-object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { type EchoDatabase } from '../database';
 import { isReactiveProxy } from '../effect/proxy';
+import { isEchoReactiveObject } from '../effect/reactive';
 import { type Hypergraph } from '../hypergraph';
-import { isAutomergeObject, type EchoObject, type OpaqueEchoObject } from '../object';
-import { type Schema } from '../proto';
+import { type EchoObject, type OpaqueEchoObject } from '../object';
 
 export type InitRootProxyFn = (core: AutomergeObjectCore) => void;
 
@@ -71,14 +71,6 @@ export class AutomergeDb {
     this._dbApi = dbApi;
   }
 
-  allObjectCores() {
-    return Array.from(this._objects.values());
-  }
-
-  allObjects(): EchoObject[] {
-    return this.allObjectCores().map((core) => core.rootProxy as EchoObject);
-  }
-
   @synchronized
   async open(spaceState: SpaceState) {
     const start = performance.now();
@@ -112,6 +104,46 @@ export class AutomergeDb {
     }
   }
 
+  // TODO(dmaretskyi): Cant close while opening.
+  @synchronized
+  async close() {
+    if (!this._isOpen) {
+      return;
+    }
+    this._isOpen = false;
+
+    void this._ctx.dispose();
+    this._ctx = new Context();
+  }
+
+  /**
+   * @deprecated
+   * Return only loaded objects.
+   */
+  allObjectCores() {
+    return Array.from(this._objects.values());
+  }
+
+  /**
+   * @deprecated
+   * Return only loaded objects.
+   */
+  allObjects(): EchoObject[] {
+    return this.allObjectCores().map((core) => core.rootProxy as EchoObject);
+  }
+
+  /**
+   * Returns ids for loaded and not loaded objects.
+   */
+  getAllObjectIds(): string[] {
+    const rootDoc = this._automergeDocLoader.getSpaceRootDocHandle().docSync();
+    if (!rootDoc) {
+      return [];
+    }
+
+    return [...new Set([...Object.keys(rootDoc.objects ?? {}), ...Object.keys(rootDoc.links ?? {})])];
+  }
+
   /**
    * Update DB in response to space state change.
    * Can be used to change the root AM document.
@@ -140,18 +172,6 @@ export class AutomergeDb {
     }
   }
 
-  // TODO(dmaretskyi): Cant close while opening.
-  @synchronized
-  async close() {
-    if (!this._isOpen) {
-      return;
-    }
-    this._isOpen = false;
-
-    void this._ctx.dispose();
-    this._ctx = new Context();
-  }
-
   getObjectCoreById(id: string): AutomergeObjectCore | undefined {
     const objCore = this._objects.get(id);
     if (!objCore) {
@@ -174,27 +194,34 @@ export class AutomergeDb {
     }
 
     const root = objCore.rootProxy;
-    invariant(isAutomergeObject(root) || isReactiveProxy(root));
+    invariant(isReactiveProxy(root));
     return root as any;
   }
 
   // TODO(Mykola): Reconcile with `getObjectById`.
-  async loadObjectById(objectId: string, { timeout = 5000 }: { timeout?: number } = {}): Promise<EchoObject> {
+  async loadObjectById(
+    objectId: string,
+    { timeout = 5000 }: { timeout?: number } = {},
+  ): Promise<EchoObject | undefined> {
+    // Check if deleted.
+    if (this._objects.get(objectId)?.isDeleted()) {
+      return Promise.resolve(undefined);
+    }
+
     const obj = this.getObjectById(objectId);
     if (obj) {
       return Promise.resolve(obj);
     }
+
     return asyncTimeout(
       this._updateEvent
         .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId))
-        .then(() => this.getObjectById(objectId)!),
+        .then(() => this.getObjectById(objectId)),
       timeout,
     );
   }
 
-  add(obj: OpaqueEchoObject) {
-    const core = getAutomergeObjectCore(obj);
-
+  addCore(core: AutomergeObjectCore) {
     if (core.database) {
       return; // Already in the database.
     }
@@ -221,6 +248,16 @@ export class AutomergeDb {
       path: ['objects', core.id],
       assignFromLocalState: true,
     });
+
+    // TODO(dmaretskyi): This should be handled in the API layer.
+    if (!core.rootProxy) {
+      this._initRootProxyFn(core);
+    }
+  }
+
+  add(obj: OpaqueEchoObject) {
+    const core = getAutomergeObjectCore(obj);
+    this.addCore(core);
     return obj;
   }
 
@@ -228,6 +265,13 @@ export class AutomergeDb {
     const core = getAutomergeObjectCore(obj);
     invariant(this._objects.has(core.id));
     core.setDeleted(true);
+  }
+
+  async flush(): Promise<void> {
+    // TODO(mykola): send out only changed documents.
+    await this.automerge.flush({
+      documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId),
+    });
   }
 
   private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandle<SpaceDoc>, objectsToLoad: string[]) {
@@ -283,6 +327,7 @@ export class AutomergeDb {
     if (itemsUpdated.length === 0) {
       return;
     }
+
     compositeRuntime.batch(() => {
       this._updateEvent.emit({
         spaceKey: this.spaceKey,
@@ -295,18 +340,6 @@ export class AutomergeDb {
         }
       }
     });
-  }
-
-  /**
-   * @internal
-   */
-  _resolveSchema(type: Reference): Schema | undefined {
-    if (type.protocol === 'protobuf') {
-      return this.graph.types.getSchema(type.itemId);
-    } else {
-      // TODO(dmaretskyi): Cross-space references.
-      return this.getObjectById(type.itemId) as Schema | undefined;
-    }
   }
 
   /**
@@ -337,6 +370,7 @@ export class AutomergeDb {
         objectsToRebind.push(updatedObject);
       }
     }
+
     return {
       updatedObjectIds: inlineChangedObjects,
       objectsToRebind,
@@ -369,7 +403,6 @@ export class AutomergeDb {
 
   private _createObjectInDocument(docHandle: DocHandle<SpaceDoc>, objectId: string) {
     invariant(!this._objects.get(objectId));
-
     const core = new AutomergeObjectCore();
     core.id = objectId;
     this._objects.set(core.id, core);
@@ -425,10 +458,10 @@ export interface ItemsUpdatedEvent {
 }
 
 export const shouldObjectGoIntoFragmentedSpace = (core: AutomergeObjectCore) => {
-  if (isAutomergeObject(core.rootProxy)) {
-    // NOTE: We need to store properties in the root document because
-    //       space-list initialization expects it to be loaded as space become available.
-    if ((core.rootProxy as AutomergeObject).__typename === TYPE_PROPERTIES) {
+  if (isEchoReactiveObject(core.rootProxy)) {
+    // NOTE: We need to store properties in the root document since space-list initialization
+    //  expects it to be loaded as space become available.
+    if (core.getType()?.itemId === TYPE_PROPERTIES) {
       return false;
     }
     return true;

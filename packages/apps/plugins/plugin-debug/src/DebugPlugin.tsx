@@ -6,10 +6,10 @@ import { Bug, type IconProps } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
 import React, { useEffect, useState } from 'react';
 
-import { parseClientPlugin, type ClientPluginProvides, getSpaceProperty } from '@braneframe/plugin-client';
+import { parseClientPlugin, type ClientPluginProvides } from '@braneframe/plugin-client';
 import { Graph, manageNodes } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { FolderType } from '@braneframe/types';
+import { FolderType, getSpaceProperty } from '@braneframe/types';
 import {
   getPlugin,
   parseGraphPlugin,

@@ -4,15 +4,17 @@
 
 import React, { useState } from 'react';
 
-import { type Task } from './proto';
+import { nonNullable } from '@dxos/util';
+
+import { type TaskType } from './types';
 
 export type TaskListProps = {
-  tasks?: Task[];
+  tasks?: TaskType[];
   onInviteClick?: () => any;
   onTaskCreate?: (text: string) => any;
-  onTaskRemove?: (task: Task) => any;
-  onTaskTitleChange?: (task: Task, newTitle: string) => any;
-  onTaskCheck?: (task: Task, checked: boolean) => any;
+  onTaskRemove?: (task: TaskType) => any;
+  onTaskTitleChange?: (task: TaskType, newTitle: string) => any;
+  onTaskCheck?: (task: TaskType, checked: boolean) => any;
 };
 
 export const TaskList = (props: TaskListProps) => {
@@ -42,7 +44,7 @@ export const TaskList = (props: TaskListProps) => {
         <h1 className='mt-3 text-3xl font-bold leading-tight text-gray-900 mb-2'>Task List</h1>
         {tasks && (
           <ul className='mb-2'>
-            {tasks.map((task, index) => (
+            {tasks.filter(nonNullable).map((task, index) => (
               <li
                 key={index}
                 className='flex items-center justify-between text-gray-700 max-w-md rounded p-1 h-8'

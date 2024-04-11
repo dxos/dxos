@@ -134,7 +134,7 @@
     "typescript": "^5.2.2",
     "unplugin": "^1.7.1",
     "uuid": "^8.3.2",
-    "vite": "^5.1.5",
+    "vite": "^5.1.7",
     "vite-plugin-inspect": "^0.8.1",
     "vite-plugin-top-level-await": "^1.4.1",
     "vite-plugin-wasm": "^3.3.0",
@@ -148,7 +148,8 @@
   },
   "pnpm": {
     "overrides": {
-      "ipfs-utils": "9.0.14"
+      "ipfs-utils": "9.0.14",
+      "nan": "2.19.0"
     },
     "patchedDependencies": {
       "memdown@5.1.0": "patches/memdown@5.1.0.patch",

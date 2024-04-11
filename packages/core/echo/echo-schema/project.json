@@ -16,20 +16,11 @@
       }
     },
     "lint": {},
-    "prebuild": {
-      "executor": "nx:run-script",
+    "test": {
       "options": {
-        "script": "prebuild",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ]
-      },
-      "outputs": [
-        "{projectRoot}/src/proto/gen",
-        "{projectRoot}/src/tests/proto/gen"
-      ]
-    },
-    "test": {}
+        "forceExit": true
+      }
+    }
   },
   "implicitDependencies": [
     "esbuild",

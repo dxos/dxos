@@ -3,9 +3,11 @@
 //
 
 import * as S from '@effect/schema/Schema';
+import { type Brand } from 'effect';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { Reference } from '@dxos/echo-db';
+import { encodeReference } from '@dxos/echo-pipeline';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { assignDeep, ComplexMap, defaultMap, getDeep } from '@dxos/util';
@@ -20,52 +22,148 @@ import {
   type ReactiveHandler,
 } from './proxy';
 import { getSchema, getTypeReference, type EchoReactiveObject, EchoReactiveHandler } from './reactive';
+import { getTargetMeta } from './reactive-meta-handler';
 import { SchemaValidator } from './schema-validator';
-import { AutomergeObjectCore } from '../automerge/automerge-object-core';
+import { AutomergeObjectCore, META_NAMESPACE } from '../automerge/automerge-object-core';
 import { type KeyPath } from '../automerge/key-path';
-import { encodeReference, REFERENCE_TYPE_TAG } from '../automerge/types';
 import { data, type ObjectMeta } from '../object';
 import { defineHiddenProperty } from '../util/property';
 
 const symbolPath = Symbol('path');
 const symbolNamespace = Symbol('namespace');
 const symbolHandler = Symbol('handler');
+const symbolInternals = Symbol('internals');
 
+/**
+ * Generic proxy target type for ECHO handler.
+ * Targets can either be objects or arrays (instances of `EchoArrayTwoPointO`).
+ * Every targets holds a set of hidden properties on symbols.
+ */
 type ProxyTarget = {
-  [symbolPath]: KeyPath;
+  [symbolInternals]: ObjectInternals;
+  /**
+   * `data` or `meta` namespace.
+   */
   [symbolNamespace]: string;
+
+  /**
+   * Path within the namespace.
+   *
+   * Root objects have an empty path: `[]`.
+   */
+  [symbolPath]: KeyPath;
+
+  /**
+   * Reference to the handler.
+   */
+  // TODO(dmaretskyi): Can be removed.
   [symbolHandler]?: EchoReactiveHandler;
-} & ({ [key: keyof any]: any } | any[]);
+} & ({ [key: keyof any]: any } | EchoArrayTwoPointO<any>);
+
+/**
+ * Extends the native array with methods overrides for automerge.
+ */
+// TODO(dmaretskyi): Rename once the original AutomergeArray gets deleted.
+class EchoArrayTwoPointO<T> extends Array<T> {
+  static get [Symbol.species]() {
+    return Array;
+  }
+
+  // Will be initialize when the proxy is created.
+  [symbolInternals]: ObjectInternals = null as any;
+  [symbolPath]: KeyPath = null as any;
+  [symbolNamespace]: string = null as any;
+  [symbolHandler]: EchoReactiveHandler = null as any;
+
+  static {
+    /**
+     * These methods will trigger proxy traps like `set` and `defineProperty` and emit signal notifications.
+     * We wrap them in a batch to avoid unnecessary signal notifications.
+     */
+    const BATCHED_METHODS = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'] as const;
+
+    for (const method of BATCHED_METHODS) {
+      const handlerMethodName = `array${method.slice(0, 1).toUpperCase()}${method.slice(1)}`;
+
+      Object.defineProperty(this.prototype, method, {
+        enumerable: false,
+        value: function (this: EchoArrayTwoPointO<any>, ...args: any[]) {
+          let result!: any;
+          compositeRuntime.batch(() => {
+            const handler = this[symbolHandler] as any;
+            result = (handler[handlerMethodName] as any).apply(handler, [this, this[symbolPath], ...args]);
+          });
+          return result;
+        },
+      });
+    }
+  }
+}
+
+/**
+ * For tracking proxy targets in the `targetsMap`.
+ */
+type TargetKey = {
+  path: KeyPath;
+  namespace: string;
+  type: 'record' | 'array';
+} & Brand.Brand<'TargetKey'>;
+
+const TargetKey = {
+  /**
+   * Constructor function forces the order of the fields.
+   */
+  new: (path: KeyPath, namespace: string, type: 'record' | 'array'): TargetKey =>
+    ({
+      path,
+      namespace,
+      type,
+    }) as TargetKey,
+  hash: (key: TargetKey): string => JSON.stringify(key),
+};
+
+type ObjectInternals = {
+  core: AutomergeObjectCore;
+
+  /**
+   * Caching targets based on key path.
+   * Only used for records and arrays.
+   */
+  // TODO(dmaretskyi): We need to include data type in the map key. it's safe for typed objects since fields cannot change from record to array and vice versa, but its gonna be a bug for untyped objects.
+  targetsMap: ComplexMap<KeyPath, ProxyTarget>;
+};
 
 const PROPERTY_ID = 'id';
 
 const DATA_NAMESPACE = 'data';
-const META_NAMESPACE = 'meta';
 
 /**
  * Shared for all targets within one ECHO object.
  */
 export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
+  public static instance = new EchoReactiveHandlerImpl();
+
+  private constructor() {
+    super();
+  }
+
   _proxyMap = new WeakMap<object, any>();
 
-  _objectCore = new AutomergeObjectCore();
-
-  private _targetsMap = new ComplexMap<KeyPath, ProxyTarget>((key) => JSON.stringify(key));
-
   _init(target: ProxyTarget): void {
+    invariant(target[symbolInternals]);
     invariant(!(target as any)[symbolIsProxy]);
     invariant(Array.isArray(target[symbolPath]));
 
     // Handle ID pre-generated by `E.object`.
     if (PROPERTY_ID in target) {
-      this._objectCore.id = target[PROPERTY_ID];
+      target[symbolInternals].core.id = target[PROPERTY_ID];
       delete target[PROPERTY_ID];
     }
 
     if (target[symbolPath].length === 0) {
       this.validateInitialProps(target);
-      if (this._objectCore.database == null) {
-        this._objectCore.initNewObject(target);
+      if (target[symbolInternals].core.database == null) {
+        target[symbolInternals].core.initNewObject(target);
       }
     }
 
@@ -84,7 +182,7 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     }
   }
 
-  private validateInitialProps(target: any) {
+  private validateInitialProps(target: ProxyTarget) {
     for (const key in target) {
       const value = target[key];
       if (value === undefined) {
@@ -120,7 +218,7 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
     invariant(Array.isArray(target[symbolPath]));
 
-    this._objectCore.signal.notifyRead();
+    target[symbolInternals].core.signal.notifyRead();
 
     if (isRootDataObject(target)) {
       const handled = this._handleRootObjectProperty(target, prop);
@@ -138,7 +236,7 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     }
 
     const decodedValueAtPath = this.getDecodedValueAtPath(target, prop);
-    return this._wrapInProxyIfRequired(decodedValueAtPath);
+    return this._wrapInProxyIfRequired(target, decodedValueAtPath);
   }
 
   private _handleRootObjectProperty(target: ProxyTarget, prop: string | symbol) {
@@ -149,47 +247,59 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
       return () => this._toJSON(target);
     }
     if (prop === PROPERTY_ID) {
-      return this._objectCore.id;
+      return target[symbolInternals].core.id;
     }
     return null;
   }
 
-  private _wrapInProxyIfRequired(decodedValueAtPath: DecodedValueAtPath) {
+  /**
+   * Takes a decoded value from the document, and wraps it in a proxy if required.
+   * We use it to wrap records and arrays to provide deep mutability.
+   * Wrapped targets are cached in the `targetsMap` to ensure that the same proxy is returned for the same path.
+   */
+  private _wrapInProxyIfRequired(target: ProxyTarget, decodedValueAtPath: DecodedValueAtPath) {
     const { value: decoded, dataPath, namespace } = decodedValueAtPath;
     if (decoded == null) {
       return decoded;
     }
     if (decoded[symbolIsProxy]) {
-      return this._handleStoredSchema(decoded);
+      return this._handleStoredSchema(target, decoded);
     }
     if (decoded instanceof Reference) {
-      return this._handleStoredSchema(this._objectCore.lookupLink(decoded));
+      return this._handleStoredSchema(target, target[symbolInternals].core.lookupLink(decoded));
     }
     if (Array.isArray(decoded)) {
-      const target = defaultMap(this._targetsMap, dataPath, (): ProxyTarget => {
+      const newTarget = defaultMap(target[symbolInternals].targetsMap, dataPath, (): ProxyTarget => {
         const array = new EchoArrayTwoPointO();
+        array[symbolInternals] = target[symbolInternals];
         array[symbolPath] = dataPath;
         array[symbolNamespace] = namespace;
         array[symbolHandler] = this;
         return array;
       });
-      return createReactiveProxy(target, this);
+      return createReactiveProxy(newTarget, this);
     }
     if (typeof decoded === 'object') {
       // TODO(dmaretskyi): Materialize properties for easier debugging.
-      const target = defaultMap(
-        this._targetsMap,
+      const newTarget = defaultMap(
+        target[symbolInternals].targetsMap,
         dataPath,
-        (): ProxyTarget => ({ [symbolPath]: dataPath, [symbolNamespace]: namespace }),
+        (): ProxyTarget => ({
+          [symbolInternals]: target[symbolInternals],
+          [symbolPath]: dataPath,
+          [symbolNamespace]: namespace,
+        }),
       );
-      return createReactiveProxy(target, this);
+      return createReactiveProxy(newTarget, this);
     }
     return decoded;
   }
 
-  private _handleStoredSchema(object: any): any {
-    if (object != null && object instanceof StoredEchoSchema) {
-      return this._objectCore.database?._dbApi.schemaRegistry.register(object);
+  private _handleStoredSchema(target: ProxyTarget, object: any): any {
+    // object instanceof StoredEchoSchema requires database to lookup schema
+    const database = target[symbolInternals].core.database;
+    if (object != null && database && object instanceof StoredEchoSchema) {
+      return database._dbApi.schemaRegistry.register(object);
     }
     return object;
   }
@@ -212,8 +322,8 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
       dataPath.push(prop);
     }
     const fullPath = [getNamespace(target), ...dataPath];
-    const value = this._objectCore.get(fullPath);
-    return { namespace: getNamespace(target), value: this._objectCore.decode(value), dataPath };
+    const value = target[symbolInternals].core.get(fullPath);
+    return { namespace: getNamespace(target), value: target[symbolInternals].core.decode(value), dataPath };
   }
 
   private _arrayGet(target: ProxyTarget, prop: string) {
@@ -225,7 +335,7 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
       return Reflect.get(target, prop);
     }
     const decodedValueAtPath = this.getDecodedValueAtPath(target, prop);
-    return this._wrapInProxyIfRequired(decodedValueAtPath);
+    return this._wrapInProxyIfRequired(target, decodedValueAtPath);
   }
 
   private _arrayHas(target: ProxyTarget, prop: string | symbol) {
@@ -254,45 +364,51 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     const fullPath = [getNamespace(target), ...target[symbolPath], prop];
 
     if (validatedValue === undefined) {
-      this._objectCore.delete(fullPath);
+      target[symbolInternals].core.delete(fullPath);
     } else if (validatedValue !== null && validatedValue[symbolHandler] instanceof EchoReactiveHandlerImpl) {
-      const link = this._linkReactiveHandler(validatedValue, validatedValue[symbolHandler]);
-      this._objectCore.set(fullPath, encodeReference(link));
+      const link = this._linkReactiveHandler(target, validatedValue, validatedValue[symbolInternals]);
+      target[symbolInternals].core.set(fullPath, encodeReference(link));
     } else {
-      const encoded = this._objectCore.encode(validatedValue, { removeUndefined: true });
-      this._objectCore.set(fullPath, encoded);
+      const encoded = target[symbolInternals].core.encode(validatedValue, { removeUndefined: true });
+      target[symbolInternals].core.set(fullPath, encoded);
     }
 
     return true;
   }
 
-  private _linkReactiveHandler(proxy: any, handler: EchoReactiveHandlerImpl): Reference {
-    const itemId = handler._objectCore.id;
-    if (this._objectCore.database) {
-      const anotherDb = handler._objectCore.database;
+  /**
+   * Used when `set` and other mutating methods are called with a proxy.
+   * @param target - self
+   * @param proxy - the proxy that was passed to the method
+   * @param internals - internals of the proxy
+   */
+  private _linkReactiveHandler(target: ProxyTarget, proxy: any, internals: ObjectInternals): Reference {
+    const itemId = internals.core.id;
+    if (target[symbolInternals].core.database) {
+      const anotherDb = internals.core.database;
       if (!anotherDb) {
-        this._objectCore.database.add(proxy);
+        target[symbolInternals].core.database.add(proxy);
         return new Reference(itemId);
       } else {
-        if (anotherDb !== this._objectCore.database) {
+        if (anotherDb !== target[symbolInternals].core.database) {
           return new Reference(itemId, undefined, anotherDb.spaceKey.toHex());
         } else {
           return new Reference(itemId);
         }
       }
     } else {
-      invariant(this._objectCore.linkCache);
-      this._objectCore.linkCache.set(itemId, proxy);
+      invariant(target[symbolInternals].core.linkCache);
+      target[symbolInternals].core.linkCache.set(itemId, proxy);
       return new Reference(itemId);
     }
   }
 
-  private validateValue(target: any, path: KeyPath, value: any): any {
+  private validateValue(target: ProxyTarget, path: KeyPath, value: any): any {
     invariant(path.length > 0);
     throwIfCustomClass(path[path.length - 1], value);
-    const rootObjectSchema = this.getSchema();
+    const rootObjectSchema = this.getSchema(target);
     if (rootObjectSchema == null) {
-      const typeReference = this._objectCore.getType();
+      const typeReference = target[symbolInternals].core.getType();
       if (typeReference) {
         throw new Error(`Schema not found in schema registry: ${typeReference.itemId}`);
       }
@@ -301,7 +417,7 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     // DynamicEchoSchema is a utility-wrapper around the object we actually store in automerge, unwrap it
     const unwrappedValue = value instanceof DynamicEchoSchema ? value.serializedSchema : value;
     const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) =>
-      this._objectCore.getDecoded([getNamespace(target), ...path]),
+      target[symbolInternals].core.getDecoded([getNamespace(target), ...path]),
     );
     if (propertySchema == null) {
       return unwrappedValue;
@@ -310,29 +426,34 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     return unwrappedValue;
   }
 
-  getSchema(): S.Schema<any> | undefined {
+  getSchema(target: ProxyTarget): S.Schema<any> | undefined {
     // TODO: make reactive
-    invariant(this._objectCore.database, 'EchoHandler used without database');
-    const typeReference = this._objectCore.getType();
+    if (!target[symbolInternals].core.database) {
+      return undefined;
+    }
+    const typeReference = target[symbolInternals].core.getType();
     if (typeReference == null) {
       return undefined;
     }
-    const staticSchema = this._objectCore.database.graph.types.getEffectSchema(typeReference.itemId);
+    const staticSchema = target[symbolInternals].core.database.graph.types.getEffectSchema(typeReference.itemId);
     if (staticSchema != null) {
       return staticSchema;
     }
-    return this._objectCore.database._dbApi.schemaRegistry.getById(typeReference.itemId);
+    if (typeReference.protocol === 'protobuf') {
+      return undefined;
+    }
+    return target[symbolInternals].core.database._dbApi.schemaRegistry.getById(typeReference.itemId);
   }
 
-  arrayPush(target: any, path: KeyPath, ...items: any[]): number {
+  arrayPush(target: ProxyTarget, path: KeyPath, ...items: any[]): number {
     this._validateForArray(target, path, items, target.length);
 
     const fullPath = this._getPropertyMountPath(target, path);
 
-    const encodedItems = this._encodeForArray(items);
+    const encodedItems = this._encodeForArray(target, items);
 
     let newLength: number = -1;
-    this._objectCore.change((doc) => {
+    target[symbolInternals].core.change((doc) => {
       const array = getDeep(doc, fullPath);
       invariant(Array.isArray(array));
       newLength = array.push(...encodedItems);
@@ -342,11 +463,11 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     return newLength;
   }
 
-  arrayPop(target: any, path: KeyPath): any {
+  arrayPop(target: ProxyTarget, path: KeyPath): any {
     const fullPath = this._getPropertyMountPath(target, path);
 
     let returnValue: any | undefined;
-    this._objectCore.change((doc) => {
+    target[symbolInternals].core.change((doc) => {
       const array = getDeep(doc, fullPath);
       invariant(Array.isArray(array));
       returnValue = array.pop();
@@ -355,11 +476,11 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     return returnValue;
   }
 
-  arrayShift(target: any, path: KeyPath): any {
+  arrayShift(target: ProxyTarget, path: KeyPath): any {
     const fullPath = this._getPropertyMountPath(target, path);
 
     let returnValue: any | undefined;
-    this._objectCore.change((doc) => {
+    target[symbolInternals].core.change((doc) => {
       const array = getDeep(doc, fullPath);
       invariant(Array.isArray(array));
       returnValue = array.shift();
@@ -368,15 +489,15 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     return returnValue;
   }
 
-  arrayUnshift(target: any, path: KeyPath, ...items: any[]): number {
+  arrayUnshift(target: ProxyTarget, path: KeyPath, ...items: any[]): number {
     this._validateForArray(target, path, items, 0);
 
     const fullPath = this._getPropertyMountPath(target, path);
 
-    const encodedItems = this._encodeForArray(items);
+    const encodedItems = this._encodeForArray(target, items);
 
     let newLength: number = -1;
-    this._objectCore.change((doc) => {
+    target[symbolInternals].core.change((doc) => {
       const array = getDeep(doc, fullPath);
       invariant(Array.isArray(array));
       newLength = array.unshift(...encodedItems);
@@ -386,15 +507,15 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     return newLength;
   }
 
-  arraySplice(target: any, path: KeyPath, start: number, deleteCount?: number, ...items: any[]): any[] {
+  arraySplice(target: ProxyTarget, path: KeyPath, start: number, deleteCount?: number, ...items: any[]): any[] {
     this._validateForArray(target, path, items, start);
 
     const fullPath = this._getPropertyMountPath(target, path);
 
-    const encodedItems = this._encodeForArray(items);
+    const encodedItems = this._encodeForArray(target, items);
 
     let deletedElements: any[] | undefined;
-    this._objectCore.change((doc) => {
+    target[symbolInternals].core.change((doc) => {
       const array = getDeep(doc, fullPath);
       invariant(Array.isArray(array));
       if (deleteCount != null) {
@@ -408,44 +529,48 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     return deletedElements;
   }
 
-  arraySort(target: any, path: KeyPath, compareFn?: (v1: any, v2: any) => number): any[] {
+  arraySort(target: ProxyTarget, path: KeyPath, compareFn?: (v1: any, v2: any) => number): any[] {
     const fullPath = this._getPropertyMountPath(target, path);
 
-    this._objectCore.change((doc) => {
+    target[symbolInternals].core.change((doc) => {
       const array = getDeep(doc, fullPath);
       invariant(Array.isArray(array));
       const sortedArray = [...array].sort(compareFn);
       assignDeep(doc, fullPath, sortedArray);
     });
 
-    return target;
+    return target as EchoArrayTwoPointO<any>;
   }
 
-  arrayReverse(target: any, path: KeyPath): any[] {
+  arrayReverse(target: ProxyTarget, path: KeyPath): any[] {
     const fullPath = this._getPropertyMountPath(target, path);
 
-    this._objectCore.change((doc) => {
+    target[symbolInternals].core.change((doc) => {
       const array = getDeep(doc, fullPath);
       invariant(Array.isArray(array));
       const reversedArray = [...array].reverse();
       assignDeep(doc, fullPath, reversedArray);
     });
 
-    return target;
+    return target as EchoArrayTwoPointO<any>;
   }
 
-  getMeta(): ObjectMeta {
-    const target: any = { [symbolPath]: [], [symbolNamespace]: META_NAMESPACE };
-    return createReactiveProxy(target, this) as ObjectMeta;
+  getMeta(target: ProxyTarget): ObjectMeta {
+    const metaTarget: ProxyTarget = {
+      [symbolInternals]: target[symbolInternals],
+      [symbolPath]: [],
+      [symbolNamespace]: META_NAMESPACE,
+    };
+    return createReactiveProxy(metaTarget, this) as any;
   }
 
-  private _arraySetLength(target: any, path: KeyPath, newLength: number) {
+  private _arraySetLength(target: ProxyTarget, path: KeyPath, newLength: number) {
     if (newLength < 0) {
       throw new RangeError('Invalid array length');
     }
     const fullPath = this._getPropertyMountPath(target, path);
 
-    this._objectCore.change((doc) => {
+    target[symbolInternals].core.change((doc) => {
       const array = getDeep(doc, fullPath);
       invariant(Array.isArray(array));
       const trimmedArray = [...array];
@@ -454,19 +579,20 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     });
   }
 
-  private _validateForArray(target: any, path: KeyPath, items: any[], start: number) {
+  private _validateForArray(target: ProxyTarget, path: KeyPath, items: any[], start: number) {
     let index = start;
     for (const item of items) {
       this.validateValue(target, [...path, String(index++)], item);
     }
   }
 
-  private _encodeForArray(items: any[] | undefined): any[] {
-    return items?.map((value) => this._objectCore.encode(value, { removeUndefined: true })) ?? [];
+  // TODO(dmaretskyi): Change to not rely on object-core doing linking.
+  private _encodeForArray(target: ProxyTarget, items: any[] | undefined): any[] {
+    return items?.map((value) => target[symbolInternals].core.encode(value, { removeUndefined: true })) ?? [];
   }
 
-  private _getPropertyMountPath(target: any, path: KeyPath): KeyPath {
-    return [...this._objectCore.mountPath, getNamespace(target), ...path];
+  private _getPropertyMountPath(target: ProxyTarget, path: KeyPath): KeyPath {
+    return [...target[symbolInternals].core.mountPath, getNamespace(target), ...path];
   }
 
   // Will be bound to the proxy target.
@@ -477,7 +603,7 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     inspectFn: (value: any, options?: InspectOptionsStylized) => string,
   ) {
     const handler = this[symbolHandler] as EchoReactiveHandlerImpl;
-    const isTyped = !!handler._objectCore.getType();
+    const isTyped = !!this[symbolInternals].core.getType();
     const proxy = handler.getReified(this);
     invariant(proxy, '_proxyMap corrupted');
     const reified = { ...proxy }; // Will call proxy methods and construct a plain JS object.
@@ -489,65 +615,24 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     })}`;
   };
 
-  private _toJSON(target: any): any {
-    const typeRef = this._objectCore.getType();
+  private _toJSON(target: ProxyTarget): any {
+    const typeRef = target[symbolInternals].core.getType();
     const reified = this.getReified(target);
     delete reified.id;
     return {
-      '@type': typeRef
-        ? { '@type': REFERENCE_TYPE_TAG, itemId: typeRef.itemId, protocol: typeRef.protocol, host: typeRef.host }
-        : undefined,
-      ...(this._objectCore.isDeleted() ? { '@deleted': true } : {}),
-      '@meta': { ...this.getMeta() },
-      '@id': this._objectCore.id,
+      '@type': typeRef ? encodeReference(typeRef) : undefined,
+      ...(target[symbolInternals].core.isDeleted() ? { '@deleted': true } : {}),
+      '@meta': { ...this.getMeta(target) },
+      '@id': target[symbolInternals].core.id,
       ...reified,
     };
   }
 
-  private getReified(target: any) {
+  private getReified(target: ProxyTarget) {
     const proxy = this._proxyMap.get(target);
     invariant(proxy, '_proxyMap corrupted');
     // Will call proxy methods and construct a plain JS object.
     return { ...proxy };
-  }
-}
-
-/**
- * Extends the native array with methods overrides for automerge.
- */
-// TODO(dmaretskyi): Rename once the original AutomergeArray gets deleted.
-class EchoArrayTwoPointO<T> extends Array<T> {
-  static get [Symbol.species]() {
-    return Array;
-  }
-
-  // Will be initialize when the proxy is created.
-  [symbolPath]: KeyPath = null as any;
-  [symbolNamespace]: string = null as any;
-  [symbolHandler]: EchoReactiveHandler = null as any;
-
-  static {
-    /**
-     * These methods will trigger proxy traps like `set` and `defineProperty` and emit signal notifications.
-     * We wrap them in a batch to avoid unnecessary signal notifications.
-     */
-    const BATCHED_METHODS = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'] as const;
-
-    for (const method of BATCHED_METHODS) {
-      const handlerMethodName = `array${method.slice(0, 1).toUpperCase()}${method.slice(1)}`;
-
-      Object.defineProperty(this.prototype, method, {
-        enumerable: false,
-        value: function (this: EchoArrayTwoPointO<any>, ...args: any[]) {
-          let result!: any;
-          compositeRuntime.batch(() => {
-            const handler = this[symbolHandler] as any;
-            result = (handler[handlerMethodName] as any).apply(handler, [this, this[symbolPath], ...args]);
-          });
-          return result;
-        },
-      });
-    }
   }
 }
 
@@ -565,6 +650,7 @@ const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
 };
 
 // TODO(dmaretskyi): Read schema from typed in-memory objects.
+// TODO(dmaretskyi): Review whether we can expose this.
 export const createEchoReactiveObject = <T extends {}>(init: T): EchoReactiveObject<T> => {
   const schema = getSchema(init);
   if (schema != null) {
@@ -575,33 +661,55 @@ export const createEchoReactiveObject = <T extends {}>(init: T): EchoReactiveObj
     const proxy = init as any;
 
     const slot = getProxyHandlerSlot(proxy);
+    const meta = getProxyHandlerSlot<ObjectMeta>(getTargetMeta(slot.target)).target!;
 
-    const echoHandler = new EchoReactiveHandlerImpl();
-    echoHandler._objectCore.rootProxy = proxy;
+    const core = new AutomergeObjectCore();
+    core.rootProxy = proxy;
 
-    slot.handler = echoHandler;
+    slot.handler = EchoReactiveHandlerImpl.instance;
     const target = slot.target as ProxyTarget;
+
+    target[symbolInternals] = {
+      core,
+      targetsMap: new ComplexMap((key) => JSON.stringify(key)),
+    };
     target[symbolPath] = [];
     target[symbolNamespace] = DATA_NAMESPACE;
     slot.handler._proxyMap.set(target, proxy);
     slot.handler._init(target);
-    saveTypeInAutomerge(echoHandler, schema);
+    saveTypeInAutomerge(target[symbolInternals], schema);
+    if (meta.keys.length > 0) {
+      target[symbolInternals].core.setMeta(meta);
+    }
     return proxy;
   } else {
-    const target = { [symbolPath]: [], [symbolNamespace]: DATA_NAMESPACE, ...(init as any) };
-    const handler = new EchoReactiveHandlerImpl();
-    const proxy = createReactiveProxy<ProxyTarget>(target, handler) as any;
-    handler._objectCore.rootProxy = proxy;
-    saveTypeInAutomerge(handler, schema);
+    const core = new AutomergeObjectCore();
+    const target: ProxyTarget = {
+      [symbolInternals]: {
+        core,
+        targetsMap: new ComplexMap((key) => JSON.stringify(key)),
+      },
+      [symbolPath]: [],
+      [symbolNamespace]: DATA_NAMESPACE,
+      ...(init as any),
+    };
+    const proxy = createReactiveProxy<ProxyTarget>(target, EchoReactiveHandlerImpl.instance) as any;
+    core.rootProxy = proxy;
+    saveTypeInAutomerge(target[symbolInternals], schema);
     return proxy;
   }
 };
 
 export const initEchoReactiveObjectRootProxy = (core: AutomergeObjectCore) => {
-  const target = { [symbolPath]: [], [symbolNamespace]: DATA_NAMESPACE };
-  const handler = new EchoReactiveHandlerImpl();
-  handler._objectCore = core;
-  handler._objectCore.rootProxy = createReactiveProxy<ProxyTarget>(target, handler) as any;
+  const target: ProxyTarget = {
+    [symbolInternals]: {
+      core,
+      targetsMap: new ComplexMap((key) => JSON.stringify(key)),
+    },
+    [symbolPath]: [],
+    [symbolNamespace]: DATA_NAMESPACE,
+  };
+  core.rootProxy = createReactiveProxy<ProxyTarget>(target, EchoReactiveHandlerImpl.instance) as any;
 };
 
 const validateSchema = (schema: S.Schema<any>) => {
@@ -609,9 +717,9 @@ const validateSchema = (schema: S.Schema<any>) => {
   SchemaValidator.validateSchema(schema);
 };
 
-const saveTypeInAutomerge = (handler: EchoReactiveHandlerImpl, schema: S.Schema<any> | undefined) => {
+const saveTypeInAutomerge = (internals: ObjectInternals, schema: S.Schema<any> | undefined) => {
   if (schema != null) {
-    handler._objectCore.setType(getSchemaTypeRefOrThrow(schema));
+    internals.core.setType(getSchemaTypeRefOrThrow(schema));
   }
 };
 
@@ -625,9 +733,11 @@ export const getSchemaTypeRefOrThrow = (schema: S.Schema<any>): Reference => {
   return typeReference;
 };
 
-const getNamespace = (target: any): string => target[symbolNamespace];
+export const getObjectCoreFromEchoTarget = (target: ProxyTarget): AutomergeObjectCore => target[symbolInternals].core;
 
-const isRootDataObject = (target: any) => {
+const getNamespace = (target: ProxyTarget): string => target[symbolNamespace];
+
+const isRootDataObject = (target: ProxyTarget) => {
   const path = target[symbolPath];
   if (!Array.isArray(path) || path.length > 0) {
     return false;

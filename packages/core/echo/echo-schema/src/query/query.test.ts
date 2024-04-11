@@ -7,31 +7,29 @@ import { expect } from 'chai';
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { afterTest, beforeAll, beforeEach, describe, test } from '@dxos/test';
+import { range } from '@dxos/util';
 
 import { Filter } from './filter';
 import { type EchoDatabase } from '../database';
-import { Expando, TypedObject, TextObject } from '../object';
+import * as E from '../effect/reactive';
+import { type EchoReactiveObject, ExpandoType } from '../effect/reactive';
 import { TestBuilder, createDatabase } from '../testing';
-import { Contact, types } from '../tests/proto';
+import { Contact } from '../tests/schema';
+import { TextCompatibilitySchema } from '../type-collection';
+
+const createTestObject = (idx: number, label?: string) => {
+  return E.object(ExpandoType, { idx, title: `Task ${idx}`, label });
+};
 
 describe('Queries', () => {
   let db: EchoDatabase;
   beforeAll(async () => {
     ({ db } = await createDatabase());
 
-    // TODO(burdon): Factor out common dataset. Change to Expando.
-    const objects = [
-      new TypedObject({ idx: 0, title: 'Task 0', label: 'red' }),
-      new TypedObject({ idx: 1, title: 'Task 1', label: 'red' }),
-      new TypedObject({ idx: 2, title: 'Task 2', label: 'red' }),
-      new TypedObject({ idx: 3, title: 'Task 3', label: 'green' }),
-      new TypedObject({ idx: 4, title: 'Task 4', label: 'green' }),
-      new TypedObject({ idx: 5, title: 'Task 5', label: 'blue' }),
-      new TypedObject({ idx: 6, title: 'Task 6', label: 'blue' }),
-      new TypedObject({ idx: 7, title: 'Task 7', label: 'blue' }),
-      new TypedObject({ idx: 8, title: 'Task 8', label: 'blue' }),
-      new TypedObject({ idx: 9, title: 'Task 9' }),
-    ];
+    const objects = [createTestObject(9)]
+      .concat(range(3).map((idx) => createTestObject(idx, 'red')))
+      .concat(range(2).map((idx) => createTestObject(idx + 3, 'green')))
+      .concat(range(4).map((idx) => createTestObject(idx + 5, 'blue')));
 
     for (const object of objects) {
       db.add(object);
@@ -78,7 +76,7 @@ describe('Queries', () => {
     }
 
     {
-      const { objects } = db.query((object: TypedObject) => object.label === 'red' || object.label === 'green');
+      const { objects } = db.query((object: ExpandoType) => object.label === 'red' || object.label === 'green');
       expect(objects).to.have.length(5);
     }
   });
@@ -131,16 +129,12 @@ describe('Queries', () => {
 // TODO(wittjosiah): 2/3 of these tests fail. They reproduce issues that we want to fix.
 describe.skip('Query updates', () => {
   let db: EchoDatabase;
-  let objects: TypedObject[];
+  let objects: EchoReactiveObject<any>[];
 
   beforeEach(async () => {
     ({ db } = await createDatabase());
 
-    objects = [
-      new TypedObject({ idx: 0, title: 'Task 0', label: 'red' }),
-      new TypedObject({ idx: 1, title: 'Task 1', label: 'red' }),
-      new TypedObject({ idx: 2, title: 'Task 2', label: 'red' }),
-    ];
+    objects = range(3).map((idx) => createTestObject(idx, 'red'));
 
     for (const object of objects) {
       db.add(object);
@@ -157,7 +151,7 @@ describe.skip('Query updates', () => {
       count++;
       expect(query.objects).to.have.length(4);
     });
-    db.add(new TypedObject({ idx: 3, title: 'Task 3', label: 'red' }));
+    db.add(createTestObject(3, 'red'));
     await sleep(10);
     expect(count).to.equal(1);
   });
@@ -191,9 +185,9 @@ test.skip('query with model filters', async () => {
   const peer = await testBuilder.createPeer();
 
   const obj = peer.db.add(
-    new Expando({
+    E.object(ExpandoType, {
       title: 'title',
-      description: new TextObject('description'),
+      description: E.object(TextCompatibilitySchema, { content: 'description' }),
     }),
   );
 
@@ -206,9 +200,9 @@ test.skip('query with model filters', async () => {
 describe('Queries with types', () => {
   test('query by typename receives updates', async () => {
     const testBuilder = new TestBuilder();
-    testBuilder.graph.addTypes(types);
+    testBuilder.graph.types.registerEffectSchema(Contact);
     const peer = await testBuilder.createPeer();
-    const contact = peer.db.add(new Contact());
+    const contact = peer.db.add(E.object(Contact, {}));
     const name = 'Rich Ivanov';
 
     const query = peer.db.query(Filter.typename('example.test.Contact'));
@@ -228,7 +222,7 @@ describe('Queries with types', () => {
     afterTest(() => unsub());
 
     contact.name = name;
-    peer.db.add(new Contact());
+    peer.db.add(E.object(Contact, {}));
 
     await asyncTimeout(nameUpdate.wait(), 1000);
     await asyncTimeout(anotherContactAdded.wait(), 1000);
@@ -236,16 +230,16 @@ describe('Queries with types', () => {
 
   test('`instanceof` operator works', async () => {
     const testBuilder = new TestBuilder();
-    testBuilder.graph.addTypes(types);
+    testBuilder.graph.types.registerEffectSchema(Contact);
     const peer = await testBuilder.createPeer();
     const name = 'Rich Ivanov';
-    const contact = new Contact({ name });
+    const contact = E.object(Contact, { name });
     peer.db.add(contact);
     expect(contact instanceof Contact).to.be.true;
 
     // query
     {
-      const contact = peer.db.query(Contact.filter()).objects[0];
+      const contact = peer.db.query(Filter.schema(Contact)).objects[0];
       expect(contact.name).to.eq(name);
       expect(contact instanceof Contact).to.be.true;
     }
@@ -256,12 +250,8 @@ test('map over refs in query result', async () => {
   const testBuilder = new TestBuilder();
   const peer = await testBuilder.createPeer();
 
-  const folder = peer.db.add(new TypedObject({ name: 'folder', objects: [] }));
-  const objects = [
-    new TypedObject({ idx: 0, title: 'Task 0' }),
-    new TypedObject({ idx: 1, title: 'Task 1' }),
-    new TypedObject({ idx: 2, title: 'Task 2' }),
-  ];
+  const folder = peer.db.add(E.object(ExpandoType, { name: 'folder', objects: [] as any[] }));
+  const objects = range(3).map((idx) => createTestObject(idx));
   for (const object of objects) {
     folder.objects.push(object);
   }

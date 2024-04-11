@@ -61,18 +61,14 @@ const _timer = (cb: (err?: Error) => void, options?: { min?: number; max?: numbe
 // TODO(burdon): Integrate with Sentry?
 const ErrorIndicator: FC<IconProps> = (props) => {
   const [, forceUpdate] = useState({});
-  const error = useRef<Error>();
-  const debug = true; // TODO(burdon): From config?
+  const errorRef = useRef<Error>();
   useEffect(() => {
     const errorListener = (event: any) => {
+      const error: Error = event.error ?? event.reason;
       // event.preventDefault();
-      // TODO(burdon): Handler is called twice.
-      if (error.current !== event.error) {
+      if (errorRef.current !== error) {
         log.error('onError', { event });
-        error.current = event.error;
-        if (debug) {
-          log.catch(event.error);
-        }
+        errorRef.current = error;
         forceUpdate({});
       }
     };
@@ -91,13 +87,13 @@ const ErrorIndicator: FC<IconProps> = (props) => {
   }, []);
 
   const handleReset = () => {
-    error.current = undefined;
+    errorRef.current = undefined;
     forceUpdate({});
   };
 
-  if (error.current) {
+  if (errorRef.current) {
     return (
-      <span title={error.current.message} onClick={handleReset}>
+      <span title={errorRef.current.message} onClick={handleReset}>
         <Circle weight='fill' className={mx(styles.error, getSize(3))} {...props} />
       </span>
     );

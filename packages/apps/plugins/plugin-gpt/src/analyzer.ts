@@ -2,12 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as AST from '@effect/schema/AST';
 import OpenAI from 'openai';
 import { type Chat } from 'openai/resources';
 
-import { type DocumentType } from '@braneframe/types';
+import { type DocumentType, TextV0Type } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { getTextContent, toJsonSchema, Schema, Expando, TextObject, getTypename } from '@dxos/echo-schema';
+import { getTextContent, getTypename } from '@dxos/echo-schema';
+import * as E from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -27,22 +29,14 @@ export class GptAnalyzer {
   }
 
   async exec(space: Space, document: DocumentType) {
-    const { objects: schemas } = space.db.query(Schema.filter());
+    const schemas = space.db.schemaRegistry.getAll();
     const text = getTextContent(document.content);
     log.info('analyzing...', { length: text?.length, schema: schemas.length });
     if (!text?.length || !schemas.length) {
       return;
     }
 
-    const schemaMap = schemas.reduce((map, schema) => {
-      const jsonSchema = toJsonSchema(schema);
-      if (jsonSchema.title) {
-        log.info(schema.typename);
-        map.set(jsonSchema.title, jsonSchema);
-      }
-
-      return map;
-    }, new Map());
+    const schemaMap = new Map(schemas.map((schema) => [schema.typename, schema.serializedSchema.jsonSchema]));
 
     const messages: Chat.ChatCompletionMessageParam[] = [
       {
@@ -86,21 +80,15 @@ export class GptAnalyzer {
             '@type': schema.typename,
           };
 
-          for (const { id, type } of schema.props) {
+          for (const { name: id, type } of schema.getProperties()) {
             invariant(id);
             const value = obj[id];
-            if (value !== undefined && value !== null) {
-              switch (type) {
-                // TODO(burdon): Currently only handles string properties.
-                case Schema.PropType.STRING: {
-                  data[id] = new TextObject(value);
-                  break;
-                }
-              }
+            if (value != null && AST.isStringKeyword(type)) {
+              data[String(id)] = E.object(TextV0Type, { content: value });
             }
           }
 
-          const object = new Expando(data, { schema });
+          const object = E.object(schema, data);
           space.db.add(object);
           log.info('created', { json: JSON.stringify(object, null, 2) });
         }

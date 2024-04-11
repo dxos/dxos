@@ -8,7 +8,6 @@ import { Event, MulticastObservable, PushStream, Trigger, scheduleTask } from '@
 import {
   CREATE_SPACE_TIMEOUT,
   Properties,
-  PropertiesSchema,
   defaultKey,
   type ClientServicesProvider,
   type Echo,
@@ -25,7 +24,6 @@ import {
   type Hypergraph,
   type Query,
   type TypeCollection,
-  type TypedObject,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -76,7 +74,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     super(spacesStream.observable, []);
     this._spacesStream = spacesStream;
     this._automergeContext = new AutomergeContext(_serviceProvider.services.DataService, {
-      spaceFragmentationEnabled: this._config?.values?.runtime?.client?.storage?.spaceFragmentation ?? false,
+      spaceFragmentationEnabled: true,
     });
   }
 
@@ -129,9 +127,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
         let spaceProxy = newSpaces.find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy | undefined;
         if (!spaceProxy) {
-          spaceProxy = new SpaceProxy(this._serviceProvider, space, this._graph, this._automergeContext, {
-            useReactiveObjectApi: this._config?.values?.runtime?.client?.useReactiveObjectApi ?? false,
-          });
+          spaceProxy = new SpaceProxy(this._serviceProvider, space, this._graph, this._automergeContext);
 
           // Propagate space state updates to the space list observable.
           spaceProxy._stateUpdate.on(this._ctx, () => {
@@ -256,12 +252,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spaceProxy = (this.get().find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy) ?? failUndefined();
 
     await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
-    if (this._config?.values?.runtime?.client?.useReactiveObjectApi ?? false) {
-      // TODO(wittjosiah): Remove cast.
-      spaceProxy.db.add(E.object(PropertiesSchema, (meta ?? {}) as any));
-    } else {
-      spaceProxy.db.add(new Properties(meta));
-    }
+    spaceProxy.db.add(E.object(Properties, meta ?? {}));
     await spaceProxy.db.flush();
     await spaceProxy._initializationComplete.wait();
 
@@ -311,7 +302,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    * @param filter
    * @param options
    */
-  query<T extends TypedObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
+  query<T extends {} = any>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
     return this._graph.query(filter, options);
   }
 }

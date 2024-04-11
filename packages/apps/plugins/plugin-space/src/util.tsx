@@ -19,20 +19,24 @@ import {
 import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
-import { getSpaceProperty } from '@braneframe/plugin-client';
 import { actionGroupSymbol, type InvokeParams, type Graph, type Node, manageNodes } from '@braneframe/plugin-graph';
-import { FolderType } from '@braneframe/types';
+import { cloneObject, getSpaceProperty, FolderType } from '@braneframe/types';
 import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
-import { EchoDatabaseImpl, Filter, LEGACY_TEXT_TYPE, isTypedObject, type OpaqueEchoObject } from '@dxos/echo-schema';
+import {
+  EchoDatabaseImpl,
+  Filter,
+  LEGACY_TEXT_TYPE,
+  type OpaqueEchoObject,
+  type EchoReactiveObject,
+} from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { Migrations } from '@dxos/migrations';
-import { SpaceState, getSpaceForObject, type Space, type TypedObject } from '@dxos/react-client/echo';
+import { SpaceState, getSpace, type Space } from '@dxos/react-client/echo';
 import { nonNullable } from '@dxos/util';
 
 import { SPACE_PLUGIN } from './meta';
-import { clone } from './serializer';
 import { SpaceAction } from './types';
 
 export const SHARED = 'shared-spaces';
@@ -62,9 +66,9 @@ const getFolderGraphNodePartials = ({ graph, folder, space }: { graph: Graph; fo
       // Change on disk.
       folder.objects = nextOrder.filter(E.isEchoReactiveObject);
     },
-    onTransferStart: (child: Node<TypedObject>) => {
+    onTransferStart: (child: Node<EchoReactiveObject<any>>) => {
       // TODO(wittjosiah): Support transfer between spaces.
-      // const childSpace = getSpaceForObject(child.data);
+      // const childSpace = getSpace(child.data);
       // if (space && childSpace && !childSpace.key.equals(space.key)) {
       //   // Create clone of child and add to destination space.
       //   const newObject = clone(child.data, {
@@ -84,7 +88,7 @@ const getFolderGraphNodePartials = ({ graph, folder, space }: { graph: Graph; fo
 
       // }
     },
-    onTransferEnd: (child: Node<TypedObject>, destination: Node) => {
+    onTransferEnd: (child: Node<EchoReactiveObject<any>>, destination: Node) => {
       // Remove child from origin folder.
       const index = folder.objects.indexOf(child.data);
       if (index > -1) {
@@ -92,17 +96,17 @@ const getFolderGraphNodePartials = ({ graph, folder, space }: { graph: Graph; fo
       }
 
       // TODO(wittjosiah): Support transfer between spaces.
-      // const childSpace = getSpaceForObject(child.data);
+      // const childSpace = getSpace(child.data);
       // const destinationSpace =
-      //   destination.data instanceof SpaceProxy ? destination.data : getSpaceForObject(destination.data);
+      //   destination.data instanceof SpaceProxy ? destination.data : getSpace(destination.data);
       // if (destinationSpace && childSpace && !childSpace.key.equals(destinationSpace.key)) {
       //   // Mark child as deleted in origin space.
       //   childSpace.db.remove(child.data);
       // }
     },
-    onCopy: async (child: Node<TypedObject>) => {
+    onCopy: async (child: Node<EchoReactiveObject<any>>) => {
       // Create clone of child and add to destination space.
-      const newObject = await clone(child.data);
+      const newObject = await cloneObject(child.data);
       space.db.add(newObject);
       folder.objects.push(newObject);
     },
@@ -323,15 +327,13 @@ export const updateGraphWithSpace = ({
   // Update graph with all objects in the space.
   // TODO(wittjosiah): If text objects are included in this query then it updates on every keystroke in the editor.
   const query = space.db.query((obj: OpaqueEchoObject) => {
-    if (isTypedObject(obj) && obj.__typename === LEGACY_TEXT_TYPE) {
-      return false;
-    }
     if (E.typeOf(obj)?.itemId === LEGACY_TEXT_TYPE) {
       return false;
     }
+
     return true;
   });
-  const previousObjects = new Map<string, E.Ref<E.AnyEchoObject>[]>();
+  const previousObjects = new Map<string, EchoReactiveObject<any>[]>();
   const unsubscribeQuery = effect(() => {
     const folder =
       space.state.get() === SpaceState.READY ? getSpaceProperty<FolderType>(space, FolderType.typename) : null;
@@ -339,7 +341,7 @@ export const updateGraphWithSpace = ({
     const removedObjects =
       previousObjects
         .get(space.key.toHex())
-        ?.filter((object) => !(query.objects as E.Ref<E.AnyEchoObject>[]).includes(object)) ?? [];
+        ?.filter((object) => !(query.objects as EchoReactiveObject<any>[]).includes(object)) ?? [];
     previousObjects.set(space.key.toHex(), [...query.objects]);
     const unsortedObjects = query.objects.filter((object) => !folderObjects.includes(object));
     const objects = [...folderObjects, ...unsortedObjects].filter((object) => object !== folder);
@@ -385,12 +387,10 @@ export const updateGraphWithSpace = ({
 
           const removedObjects = previousObjects.get(object.id)?.filter((o) => !object.objects.includes(o)) ?? [];
           // TODO(wittjosiah): Not speading here results in empty array being stored.
-          previousObjects.set(object.id, [...object.objects]);
+          previousObjects.set(object.id, [...object.objects.filter(nonNullable)]);
 
           // Remove objects no longer in folder.
-          removedObjects
-            .filter(nonNullable)
-            .forEach((child) => graph.removeEdge({ source: object.id, target: child.id }));
+          removedObjects.forEach((child) => graph.removeEdge({ source: object.id, target: child.id }));
 
           // Add new objects to folder.
           object.objects.filter(nonNullable).forEach((child) => graph.addEdge({ source: object.id, target: child.id }));
@@ -597,11 +597,11 @@ export const getActiveSpace = (graph: Graph, active?: string) => {
   }
 
   const node = graph.findNode(active);
-  if (!node || !(isTypedObject(node.data) || E.isEchoReactiveObject(node.data))) {
+  if (!node || !E.isEchoReactiveObject(node.data)) {
     return;
   }
 
-  return getSpaceForObject(node.data);
+  return getSpace(node.data);
 };
 
 export const prepareSpaceForMigration = (space: Space) => {

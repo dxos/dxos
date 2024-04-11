@@ -4,9 +4,9 @@
 
 import { type UnsubscribeCallback } from '@dxos/async';
 
-import { AbstractEchoObject } from './object';
-import { type EchoObject, subscribe } from './types';
-import { AutomergeObject } from '../automerge';
+import { type EchoObject } from './types';
+import { getAutomergeObjectCore } from '../automerge';
+import { isEchoReactiveObject } from '../effect/reactive';
 
 export type Selection = any[];
 
@@ -41,11 +41,7 @@ export const createSubscription = (onUpdate: (info: UpdateInfo) => void): Subscr
 
   const handle = {
     update: (selection: Selection) => {
-      const newSelected = new Set(
-        selection.filter(
-          (item): item is EchoObject => item instanceof AbstractEchoObject || item instanceof AutomergeObject,
-        ),
-      );
+      const newSelected = new Set(selection.filter((item): item is EchoObject => isEchoReactiveObject(item)));
       const removed = [...handle.selected].filter((item) => !newSelected.has(item));
       const added = [...newSelected].filter((item) => !handle.selected.has(item));
       handle.selected = newSelected;
@@ -60,7 +56,7 @@ export const createSubscription = (onUpdate: (info: UpdateInfo) => void): Subscr
         added.forEach((obj) => {
           subscriptions.set(
             obj,
-            obj[subscribe](() => {
+            getAutomergeObjectCore(obj).updates.on(() => {
               onUpdate({
                 added: [],
                 removed: [],

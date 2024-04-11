@@ -3,20 +3,19 @@
 //
 
 import { Event } from '@dxos/async';
-import { warnAfterTimeout } from '@dxos/debug';
+import { type Stream } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import {
   type QuerySourceProvider,
-  db,
   type EchoObject,
   type Filter,
   type QueryResult,
   type QuerySource,
-  filterMatch,
-  base,
   getAutomergeObjectCore,
 } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
+import { type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
+import { nonNullable } from '@dxos/util';
 
 import { type SpaceList } from './space-list';
 import { type SpaceProxy } from './space-proxy';
@@ -26,63 +25,23 @@ export type IndexQueryProviderParams = {
   spaceList: SpaceList;
 };
 
-// TODO(mykola): Separate by client-services barrier.
 export class IndexQuerySourceProvider implements QuerySourceProvider {
   constructor(private readonly _params: IndexQueryProviderParams) {}
 
-  private async find(filter: Filter): Promise<QueryResult<EchoObject>[]> {
-    const start = Date.now();
-    const response = await this._params.service.find({ filter: filter.toProto() });
-
-    if (!response.results || response.results.length === 0) {
-      return [];
-    }
-
-    const results: (QueryResult<EchoObject> | undefined)[] = await Promise.all(
-      response.results!.map(async (result) => {
-        const space = this._params.spaceList.get(result.spaceKey);
-        if (!space) {
-          return;
-        }
-
-        const object = await warnAfterTimeout(2000, 'Loading object', async () => {
-          await (space as SpaceProxy)._databaseInitialized.wait();
-          return space.db.automerge.loadObjectById(result.id);
-        });
-
-        if (!object) {
-          return;
-        }
-
-        if (!filterMatch(filter, getAutomergeObjectCore(object[base]))) {
-          return;
-        }
-
-        return {
-          id: object.id,
-          spaceKey: object[db]!.spaceKey,
-          object,
-          match: { rank: result.rank },
-          resolution: { source: 'index', time: Date.now() - start },
-        };
-      }),
-    );
-
-    return results.filter(Boolean) as QueryResult<EchoObject>[];
-  }
-
   create(): QuerySource {
-    return new IndexQuerySource({ find: (params) => this.find(params) });
+    return new IndexQuerySource({ service: this._params.service, spaceList: this._params.spaceList });
   }
 }
 
 export type IndexQuerySourceParams = {
-  find: (filter: Filter) => Promise<QueryResult<EchoObject>[]>;
+  service: IndexService;
+  spaceList: SpaceList;
 };
 
 export class IndexQuerySource implements QuerySource {
   changed = new Event<void>();
   private _results?: QueryResult<EchoObject>[] = [];
+  private _stream?: Stream<QueryResponse>;
 
   constructor(private readonly _params: IndexQuerySourceParams) {}
 
@@ -91,18 +50,63 @@ export class IndexQuerySource implements QuerySource {
   }
 
   update(filter: Filter<EchoObject>): void {
+    if (this._stream) {
+      void this._stream.close();
+      this._stream = undefined;
+    }
     this._results = [];
     this.changed.emit();
 
-    this._params
-      .find(filter)
-      .then((results) => {
-        if (results.length === 0) {
-          return;
-        }
-        this._results = results;
-        this.changed.emit();
-      })
-      .catch((error) => log.catch(error));
+    const start = Date.now();
+    this._stream = this._params.service.find({ filter: filter.toProto() }, { timeout: 20_000 });
+    let currentCtx: Context;
+    this._stream.subscribe(async (response) => {
+      await currentCtx?.dispose();
+      const ctx = new Context();
+      currentCtx = ctx;
+      if (!response.results || response.results.length === 0) {
+        return [];
+      }
+
+      const results: QueryResult<EchoObject>[] = (
+        await Promise.all(
+          response.results!.map(async (result) => {
+            const space = this._params.spaceList.get(result.spaceKey);
+            if (!space) {
+              return;
+            }
+
+            await (space as SpaceProxy)._databaseInitialized.wait();
+            const object = await space.db.automerge.loadObjectById(result.id);
+            if (ctx.disposed) {
+              return;
+            }
+
+            if (!object) {
+              return;
+            }
+
+            const core = getAutomergeObjectCore(object);
+
+            const queryResult: QueryResult<EchoObject> = {
+              id: object.id,
+              spaceKey: core.database!.spaceKey,
+              object,
+              match: { rank: result.rank },
+              resolution: { source: 'index', time: Date.now() - start },
+            };
+            return queryResult;
+          }),
+        )
+      ).filter(nonNullable);
+
+      if (ctx.disposed) {
+        return;
+      }
+
+      this._results = results;
+
+      this.changed.emit();
+    });
   }
 }

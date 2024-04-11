@@ -204,7 +204,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
             data: () =>
               intentPlugin?.provides.intent.dispatch({
                 action: LayoutAction.SET_LAYOUT,
-                data: { element: 'dialog', component: `${NAVTREE_PLUGIN}/Commands` },
+                data: { element: 'dialog', component: `${NAVTREE_PLUGIN}/Commands`, dialogBlockAlign: 'start' },
               }),
             properties: {
               label: ['open commands label', { ns: NAVTREE_PLUGIN }],

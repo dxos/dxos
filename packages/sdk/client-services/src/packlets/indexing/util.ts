@@ -12,7 +12,7 @@ import { idCodec } from '@dxos/protocols';
 /**
  * Factory for `loadDocuments` iterator.
  */
-export const createLoadDocuments = (automergeHost: AutomergeHost) =>
+export const createSelectedDocumentsIterator = (automergeHost: AutomergeHost) =>
   /**
    * Get object data blobs from Automerge Repo by ids.
    * @param ids
@@ -25,14 +25,14 @@ export const createLoadDocuments = (automergeHost: AutomergeHost) =>
       await warnAfterTimeout(5000, 'to long to load doc', () => handle.whenReady());
       const doc = handle.docSync();
       const hash = getHeads(doc).join('');
-      yield [{ id, object: doc.objects[objectId], currentHash: hash }];
+      yield doc.objects?.[objectId] ? [{ id, object: doc.objects[objectId], currentHash: hash }] : [];
     }
   };
 
 /**
  * Factory for `getAllDocuments` iterator.
  */
-export const createGetAllDocuments = (automergeHost: AutomergeHost) =>
+export const createDocumentsIterator = (automergeHost: AutomergeHost) =>
   /**
    * Recursively get all object data blobs from Automerge Repo.
    * @param ids
@@ -57,7 +57,7 @@ export const createGetAllDocuments = (automergeHost: AutomergeHost) =>
           return {
             id: idCodec.encode({ documentId: handle.documentId, objectId }),
             object,
-            currentHash: heads.at(-1)!,
+            currentHash: heads.join(''),
           };
         });
       }

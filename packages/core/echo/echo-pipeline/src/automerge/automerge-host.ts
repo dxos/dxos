@@ -17,7 +17,12 @@ import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
-import { type HostInfo, type SyncRepoRequest, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
+import {
+  type FlushRequest,
+  type HostInfo,
+  type SyncRepoRequest,
+  type SyncRepoResponse,
+} from '@dxos/protocols/proto/dxos/echo/service';
 import { StorageType, type Directory } from '@dxos/random-access-storage';
 import { type AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
 import { trace } from '@dxos/tracing';
@@ -138,6 +143,7 @@ export class AutomergeHost {
       this._repo.on('document', listener);
       this._ctx.onDispose(() => {
         this._repo.off('document', listener);
+        Object.values(this._repo.handles).forEach((handle) => handle.off('change'));
       });
     }
   }
@@ -156,9 +162,6 @@ export class AutomergeHost {
   private _onDocument(handle: DocHandle<any>) {
     const listener = (event: DocHandleChangePayload<any>) => this._onUpdate(event);
     handle.on('change', listener);
-    this._ctx.onDispose(() => {
-      handle.off('change', listener);
-    });
   }
 
   private _onUpdate(event: DocHandleChangePayload<any>) {
@@ -197,8 +200,8 @@ export class AutomergeHost {
       hasDoc: !!handle.docSync(),
       heads: handle.docSync() ? automerge.getHeads(handle.docSync()) : null,
       data:
-        handle.docSync()?.doc &&
-        mapValues(handle.docSync()?.doc, (value, key) => {
+        handle.docSync() &&
+        mapValues(handle.docSync(), (value, key) => {
           try {
             switch (key) {
               case 'access':
@@ -230,6 +233,12 @@ export class AutomergeHost {
   //
   // Methods for client-services.
   //
+
+  async flush({ documentIds }: FlushRequest): Promise<void> {
+    // Note: Wait for all requested documents to be loaded/synced from thin-client.
+    await Promise.all(documentIds?.map((id) => this._repo.find(id as DocumentId).whenReady()) ?? []);
+    await this._repo.flush(documentIds as DocumentId[]);
+  }
 
   syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {
     return this._clientNetwork.syncRepo(request);

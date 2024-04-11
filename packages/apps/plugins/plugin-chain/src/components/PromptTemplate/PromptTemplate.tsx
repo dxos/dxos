@@ -6,7 +6,6 @@ import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { ChainInput, ChainInputType, type ChainPromptType } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
-import { getTextContent } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   createBasicExtensions,
@@ -59,7 +58,7 @@ const inputTypes = [
 const getInputType = (type: string) => inputTypes.find(({ value }) => String(value) === type)?.value;
 
 const usePromptInputs = (prompt: ChainPromptType) => {
-  const text = getTextContent(prompt.source) ?? '';
+  const text = prompt.source?.content ?? '';
   useEffect(() => {
     if (!prompt.inputs) {
       prompt.inputs = []; // TODO(burdon): Required?
