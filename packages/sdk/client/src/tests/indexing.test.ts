@@ -90,11 +90,11 @@ describe('Index queries', () => {
   test('indexes persists between client restarts', async () => {
     const testStoragePath = fs.mkdtempSync(path.join('tmp', 'client-indexing-'));
     fs.rmSync(testStoragePath, { recursive: true, force: true });
-    const storage = createStorage({ type: StorageType.NODE, root: testStoragePath });
     afterTest(() => fs.rmSync(testStoragePath, { recursive: true, force: true }));
 
     let spaceKey: PublicKey;
     {
+      const storage = createStorage({ type: StorageType.NODE, root: testStoragePath });
       const { client, builder } = await setupClient(storage);
       await client.halo.createIdentity();
 
@@ -118,9 +118,8 @@ describe('Index queries', () => {
     }
 
     {
+      const storage = createStorage({ type: StorageType.NODE, root: testStoragePath });
       const { client } = await setupClient(storage);
-
-      await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
 
       await client.spaces.isReady.wait();
 
