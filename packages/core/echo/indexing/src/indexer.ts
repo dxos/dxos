@@ -77,7 +77,6 @@ export class Indexer {
     }
 
     await this._indexUpdatedObjects();
-    this.indexed.emit();
   });
 
   private readonly _metadataStore: IndexMetadataStore;
@@ -189,6 +188,7 @@ export class Indexer {
     this._newIndexes.forEach((index) => this._indexes.set(index.kind, index));
     this._newIndexes.length = 0; // Clear new indexes.
     await this._saveIndexes();
+    this.indexed.emit();
   }
 
   @trace.span({ showInBrowserTimeline: true })
@@ -221,6 +221,7 @@ export class Indexer {
       }
     }
     await saveIndexChanges();
+    this.indexed.emit();
   }
 
   @trace.span({ showInBrowserTimeline: true })
