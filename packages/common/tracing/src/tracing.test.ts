@@ -13,7 +13,7 @@ import { TRACE_PROCESSOR } from './trace-processor';
 
 const FeedStoreResource = Symbol.for('FeedStore');
 
-@trace.resource(FeedStoreResource)
+@trace.resource({ annotation: FeedStoreResource })
 class FeedStore {
   private readonly _storage: any;
 

@@ -34,7 +34,7 @@ export const fromAgent = ({
   return new AgentClientServiceProvider(profile);
 };
 
-@trace.resource(ClientServicesProviderResource)
+@trace.resource({ annotation: ClientServicesProviderResource })
 export class AgentClientServiceProvider implements ClientServicesProvider {
   // TODO(wittjosiah): Fire an event if the socket disconnects.
   readonly closed = new Event<Error | undefined>();

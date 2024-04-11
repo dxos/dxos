@@ -122,7 +122,7 @@ export const ConfigResource = Symbol.for('dxos.resource.Config');
  * Global configuration object.
  * NOTE: Config objects are immutable.
  */
-@trace.resource(ConfigResource)
+@trace.resource({ annotation: ConfigResource })
 export class Config {
   private readonly _config: any;
 

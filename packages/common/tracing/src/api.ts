@@ -11,14 +11,14 @@ import { TRACE_PROCESSOR } from './trace-processor';
  * Annotates a class as a tracked resource.
  */
 const resource =
-  (annotation?: symbol) =>
+  (options?: { annotation?: symbol }) =>
   <T extends { new (...args: any[]): {} }>(constructor: T) => {
     // Wrapping class declaration into an IIFE so it doesn't capture the `klass` class name.
     const klass = (() =>
       class extends constructor {
         constructor(...rest: any[]) {
           super(...rest);
-          TRACE_PROCESSOR.traceResourceConstructor({ constructor, annotation, instance: this });
+          TRACE_PROCESSOR.traceResourceConstructor({ constructor, annotation: options?.annotation, instance: this });
         }
       })();
     Object.defineProperty(klass, 'name', { value: constructor.name });

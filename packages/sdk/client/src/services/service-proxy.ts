@@ -14,7 +14,7 @@ import { trace } from '@dxos/tracing';
  * Implements services that are not local to the app.
  * For example, the services can be located in Wallet Extension.
  */
-@trace.resource(ClientServicesProviderResource)
+@trace.resource({ annotation: ClientServicesProviderResource })
 export class ClientServicesProxy implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
   private _proxy?: ProtoRpcPeer<ClientServices>;

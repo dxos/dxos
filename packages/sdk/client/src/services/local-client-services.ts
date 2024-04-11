@@ -85,7 +85,7 @@ const setupNetworking = async (
 /**
  * Starts a local instance of the service host.
  */
-@trace.resource(ClientServicesProviderResource)
+@trace.resource({ annotation: ClientServicesProviderResource })
 export class LocalClientServices implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
   private readonly _ctx = new Context();
