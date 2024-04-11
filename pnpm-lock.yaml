@@ -8574,6 +8574,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../config
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
