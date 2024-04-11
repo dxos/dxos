@@ -25,9 +25,9 @@ import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Resource, type Span } from '@dxos/protocols/proto/dxos/tracing';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { getPlatform } from './platform';
-import { type ServiceContext } from './service-context';
 import { DXOS_VERSION } from '../../version';
+import { type ServiceContext } from '../services';
+import { getPlatform } from '../services/platform';
 import { type DataSpace } from '../spaces';
 
 const DEFAULT_TIMEOUT = 1_000;

@@ -150,7 +150,7 @@ export class TestBuilder {
 
     // TODO(dmaretskyi): Refactor.
 
-    const client = new Client({ services: new ClientServicesProxy(proxyPort) });
+    const client = new Client({ config: this.config, services: new ClientServicesProxy(proxyPort) });
     this._ctx.onDispose(() => client.destroy());
     return [client, server];
   }
