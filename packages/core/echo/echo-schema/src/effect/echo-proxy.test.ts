@@ -320,12 +320,36 @@ describe('Reactive Object with ECHO database', () => {
     });
   });
 
+  describe('isDeleted', () => {
+    test('throws when accessing meta of a non-reactive-proxy', async () => {
+      expect(() => E.isDeleted({})).to.throw();
+    });
+
+    test('returns false for a non-echo reactive-proxy', async () => {
+      const obj = E.object({ string: 'foo' });
+      expect(E.isDeleted(obj)).to.be.false;
+    });
+
+    test('returns false for a non-deleted object', async () => {
+      const { db } = await createDatabase();
+      const obj = db.add(E.object({ string: 'foo' }));
+      expect(E.isDeleted(obj)).to.be.false;
+    });
+
+    test('returns true for a deleted object', async () => {
+      const { db } = await createDatabase();
+      const obj = db.add(E.object({ string: 'foo' }));
+      db.remove(obj);
+      expect(E.isDeleted(obj)).to.be.true;
+    });
+  });
+
   describe('meta', () => {
     test('throws when accessing meta of a non-reactive-proxy', async () => {
       expect(() => E.getMeta({})).to.throw();
     });
 
-    test('cat set meta on a non-ECHO object', async () => {
+    test('can set meta on a non-ECHO object', async () => {
       const obj = E.object({ string: 'foo' });
       expect(E.getMeta(obj)).to.deep.eq({ keys: [] });
       const testKey = { key: 'hello', source: 'test' };
