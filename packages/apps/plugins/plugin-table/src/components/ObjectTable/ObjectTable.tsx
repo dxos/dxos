@@ -143,8 +143,12 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
     setShowSettings(false);
   };
 
+  const [schemas, setSchemas] = useState<E.DynamicEchoSchema[]>([]);
+  useEffect(() => {
+    setSchemas(space.db.schemaRegistry.getAll());
+  }, [showSettings, space.db.schemaRegistry]);
+
   if (showSettings) {
-    const schemas = space.db.schemaRegistry.getAll();
     return <TableSettings open={showSettings} table={table} schemas={schemas} onClose={handleClose} />;
   }
 

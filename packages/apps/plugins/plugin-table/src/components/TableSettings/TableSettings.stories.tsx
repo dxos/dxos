@@ -8,6 +8,8 @@ import React, { useEffect, useState } from 'react';
 
 import { TableType } from '@braneframe/types';
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
+import * as E from '@dxos/echo-schema';
+import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
@@ -31,6 +33,8 @@ const Story = () => {
     }
 
     setTable(space.db.add(E.object(TableType, { title: 'Table', props: [] })));
+
+    setSchemas(space.db.schemaRegistry.getAll());
   }, []);
 
   const handleClose = (success: boolean) => {
