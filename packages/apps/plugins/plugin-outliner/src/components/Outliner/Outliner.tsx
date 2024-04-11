@@ -9,6 +9,7 @@ import React, { type HTMLAttributes, StrictMode, useEffect, useMemo, useState } 
 import { createRoot } from 'react-dom/client';
 
 import { type TreeItemType } from '@braneframe/types';
+import { createDocAccessor } from '@dxos/echo-schema';
 import { Button, DensityProvider, DropdownMenu, Input, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type CursorInfo,
@@ -19,7 +20,6 @@ import {
   createThemeExtensions,
   decorateMarkdown,
   formattingKeymap,
-  useDocAccessor,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -242,10 +242,9 @@ const OutlinerItem = (props: OutlinerItemProps) => {
     }
   }, [focus]);
 
-  const { doc, accessor } = useDocAccessor(item.text!);
   const { parentRef, view } = useTextEditor(
     () => ({
-      doc,
+      doc: item.text?.content,
       extensions: [
         EditorView.updateListener.of(({ view }) => setFocus(view.hasFocus)),
         createBasicExtensions({ placeholder }),
@@ -253,11 +252,11 @@ const OutlinerItem = (props: OutlinerItemProps) => {
         createThemeExtensions({ themeMode }),
         decorateMarkdown({ renderLinkButton: onRenderLink }),
         formattingKeymap(),
-        automerge(accessor),
+        ...(item.text ? [automerge(createDocAccessor(item.text, ['content']))] : []),
         keymap,
       ],
     }),
-    [accessor, themeMode],
+    [item, themeMode],
   );
   useEffect(() => {
     if (active) {

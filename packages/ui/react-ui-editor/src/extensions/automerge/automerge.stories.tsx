@@ -100,7 +100,7 @@ const EchoStory = ({ spaceKey }: { spaceKey: PublicKey }) => {
   const source = useMemo<DocAccessor | undefined>(() => {
     const { objects = [] } = space?.db.query<E.Expando>(Filter.from({ type: 'test' })) ?? {};
     if (objects.length) {
-      return E.getRawDoc(objects[0].content, ['content']);
+      return E.createDocAccessor(objects[0].content, ['content']);
     }
   }, [space]);
 
