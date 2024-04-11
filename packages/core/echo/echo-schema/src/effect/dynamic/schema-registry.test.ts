@@ -11,7 +11,7 @@ import { DynamicEchoSchema } from './dynamic-schema';
 import { StoredEchoSchema } from './stored-schema';
 import { Filter } from '../../query';
 import { createDatabase } from '../../testing';
-import { EchoObjectSchema } from '../echo-object-class';
+import { TypedObject } from '../echo-object-class';
 import { effectToJsonSchema } from '../json-schema';
 import * as E from '../reactive';
 import { type EchoObjectAnnotation, EchoObjectAnnotationId } from '../reactive';
@@ -32,7 +32,7 @@ const createTestSchemas = () => [
 describe('schema registry', () => {
   test('add new schema', async () => {
     const { registry } = await setupTest();
-    class TestClass extends EchoObjectSchema(testType)({}) {}
+    class TestClass extends TypedObject(testType)({}) {}
     const dynamicSchema = registry.add(TestClass);
     const expectedSchema = TestClass.annotations({
       [EchoObjectAnnotationId]: { ...testType, storedSchemaId: dynamicSchema.id },
@@ -44,7 +44,7 @@ describe('schema registry', () => {
 
   test('can store the same schema multiple times', async () => {
     const { registry } = await setupTest();
-    class TestClass extends EchoObjectSchema(testType)({}) {}
+    class TestClass extends TypedObject(testType)({}) {}
     const stored1 = registry.add(TestClass);
     const stored2 = registry.add(TestClass);
     expect(stored1.id).to.not.equal(stored2.id);

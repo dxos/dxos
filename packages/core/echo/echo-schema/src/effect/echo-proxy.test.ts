@@ -27,14 +27,14 @@ import { Contact, Task } from '../tests/schema';
 
 registerSignalRuntime();
 
-const EchoObjectSchema = TestSchema.pipe(E.echoObject('TestSchema', '1.0.0'));
+const TypedObject = TestSchema.pipe(E.echoObject('TestSchema', '1.0.0'));
 
 test('id property name is reserved', () => {
   const invalidSchema = S.struct({ id: S.number });
   expect(() => createEchoReactiveObject(E.object(invalidSchema, { id: 42 }))).to.throw();
 });
 
-for (const schema of [undefined, EchoObjectSchema, TestSchemaClass]) {
+for (const schema of [undefined, TypedObject, TestSchemaClass]) {
   const createObject = (props: Partial<TestSchemaWithClass> = {}): E.EchoReactiveObject<TestSchemaWithClass> => {
     return createEchoReactiveObject(schema ? E.object(schema as any, props) : E.object(props));
   };
@@ -88,18 +88,18 @@ describe('Reactive Object with ECHO database', () => {
 
   test('throws if schema was not registered in Hypergraph', async () => {
     const { db } = await createDatabase();
-    expect(() => db.add(E.object(EchoObjectSchema, { string: 'foo' }))).to.throw();
+    expect(() => db.add(E.object(TypedObject, { string: 'foo' }))).to.throw();
   });
 
   test('existing proxy objects can be added to the database', async () => {
     const { db, graph } = await createDatabase();
-    graph.types.registerEffectSchema(EchoObjectSchema);
+    graph.types.registerEffectSchema(TypedObject);
 
-    const obj = E.object(EchoObjectSchema, { string: 'foo' });
+    const obj = E.object(TypedObject, { string: 'foo' });
     const returnObj = db.add(obj);
     expect(returnObj.id).to.be.a('string');
     expect(returnObj.string).to.eq('foo');
-    expect(E.getSchema(returnObj)).to.eq(EchoObjectSchema);
+    expect(E.getSchema(returnObj)).to.eq(TypedObject);
     expect(returnObj === obj).to.be.true;
   });
 
@@ -114,7 +114,7 @@ describe('Reactive Object with ECHO database', () => {
 
   test('instantiating reactive objects after a restart', async () => {
     const graph = new Hypergraph();
-    graph.types.registerEffectSchema(EchoObjectSchema);
+    graph.types.registerEffectSchema(TypedObject);
 
     const automergeContext = new AutomergeContext();
     const doc = automergeContext.repo.create<SpaceDoc>();
@@ -125,7 +125,7 @@ describe('Reactive Object with ECHO database', () => {
       const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
       await db._automerge.open({ rootUrl: doc.url });
 
-      const obj = db.add(E.object(EchoObjectSchema, { string: 'foo' }));
+      const obj = db.add(E.object(TypedObject, { string: 'foo' }));
       id = obj.id;
     }
 
@@ -139,7 +139,7 @@ describe('Reactive Object with ECHO database', () => {
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
 
-      expect(E.getSchema(obj)).to.eq(EchoObjectSchema);
+      expect(E.getSchema(obj)).to.eq(TypedObject);
     }
   });
 
@@ -151,11 +151,11 @@ describe('Reactive Object with ECHO database', () => {
     let id: string;
     {
       const graph = new Hypergraph();
-      graph.types.registerEffectSchema(EchoObjectSchema);
+      graph.types.registerEffectSchema(TypedObject);
       const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
       await db._automerge.open({ rootUrl: doc.url });
 
-      const obj = db.add(E.object(EchoObjectSchema, { string: 'foo' }));
+      const obj = db.add(E.object(TypedObject, { string: 'foo' }));
       id = obj.id;
     }
 
@@ -170,18 +170,18 @@ describe('Reactive Object with ECHO database', () => {
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
 
-      graph.types.registerEffectSchema(EchoObjectSchema);
-      expect(E.getSchema(obj)).to.eq(EchoObjectSchema);
+      graph.types.registerEffectSchema(TypedObject);
+      expect(E.getSchema(obj)).to.eq(TypedObject);
     }
   });
 
   describe('queries', () => {
     test('filter by schema or typename', async () => {
       const graph = new Hypergraph();
-      graph.types.registerEffectSchema(EchoObjectSchema);
+      graph.types.registerEffectSchema(TypedObject);
       const { db } = await createDatabase(graph);
 
-      db.add(E.object(EchoObjectSchema, { string: 'foo' }));
+      db.add(E.object(TypedObject, { string: 'foo' }));
 
       {
         const query = db.query(Filter.typename('TestSchema'));
@@ -189,7 +189,7 @@ describe('Reactive Object with ECHO database', () => {
       }
 
       {
-        const query = db.query(Filter.schema(EchoObjectSchema));
+        const query = db.query(Filter.schema(TypedObject));
         expect(query.objects.length).to.eq(1);
       }
 
@@ -202,9 +202,9 @@ describe('Reactive Object with ECHO database', () => {
 
   test('data symbol', async () => {
     const { db, graph } = await createDatabase();
-    graph.types.registerEffectSchema(EchoObjectSchema);
+    graph.types.registerEffectSchema(TypedObject);
     const objects = [
-      db.add(E.object(EchoObjectSchema, { ...TEST_OBJECT })),
+      db.add(E.object(TypedObject, { ...TEST_OBJECT })),
       db.add(E.object(TestSchemaClass, { ...TEST_OBJECT })),
     ];
     for (const obj of objects) {
@@ -212,7 +212,7 @@ describe('Reactive Object with ECHO database', () => {
       expect(objData).to.deep.contain({
         '@id': obj.id,
         '@meta': { keys: [] },
-        '@type': { '@type': 'dxos.echo.model.document.Reference', ...getTypeReference(EchoObjectSchema) },
+        '@type': { '@type': 'dxos.echo.model.document.Reference', ...getTypeReference(TypedObject) },
         ...TEST_OBJECT,
       });
     }
