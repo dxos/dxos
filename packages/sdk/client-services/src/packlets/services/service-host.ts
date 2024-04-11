@@ -23,11 +23,15 @@ import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
 import { assignDeep } from '@dxos/util';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
-import { createDiagnostics } from './diagnostics';
 import { ServiceContext, type ServiceContextRuntimeParams } from './service-context';
 import { ServiceRegistry } from './service-registry';
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools';
+import {
+  type CollectDiagnosticsBroadcastHandler,
+  createCollectDiagnosticsBroadcastHandler,
+  createDiagnostics,
+} from '../diagnostics';
 import { IdentityServiceImpl, type CreateIdentityOptions } from '../identity';
 import { InvitationsServiceImpl } from '../invitations';
 import { Lock, type ResourceLock } from '../locks';
@@ -84,6 +88,7 @@ export class ClientServicesHost {
 
   private _serviceContext!: ServiceContext;
   private readonly _runtimeParams?: ServiceContextRuntimeParams;
+  private diagnosticsBroadcastHandler: CollectDiagnosticsBroadcastHandler;
 
   @Trace.info()
   private _opening = false;
@@ -141,6 +146,7 @@ export class ClientServicesHost {
       },
     });
 
+    this.diagnosticsBroadcastHandler = createCollectDiagnosticsBroadcastHandler(this._systemService);
     this._loggingService = new LoggingServiceImpl();
 
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
@@ -309,6 +315,7 @@ export class ClientServicesHost {
       });
       void this._devtoolsProxy.open();
     }
+    this.diagnosticsBroadcastHandler.start();
 
     this._opening = false;
     this._open = true;
@@ -327,6 +334,7 @@ export class ClientServicesHost {
 
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
     log('closing...', { deviceKey });
+    this.diagnosticsBroadcastHandler.stop();
     await this._devtoolsProxy?.close();
     this._serviceRegistry.setServices({ SystemService: this._systemService });
     await this._loggingService.close();
