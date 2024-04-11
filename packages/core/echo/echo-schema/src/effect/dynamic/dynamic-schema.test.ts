@@ -11,15 +11,15 @@ import { describe, test } from '@dxos/test';
 import { DynamicEchoSchema } from './dynamic-schema';
 import { Filter } from '../../query';
 import { createDatabase } from '../../testing';
-import { EchoObjectSchema } from '../echo-object-class';
+import { TypedObject } from '../echo-object-class';
 import * as E from '../reactive';
 import { EchoObjectAnnotationId, getEchoObjectAnnotation, getFieldMetaAnnotation, getTypeReference } from '../reactive';
 
 const generatedType = { typename: 'generated', version: '1.0.0' };
 
-class GeneratedEmptySchema extends EchoObjectSchema(generatedType)({}) {}
+class GeneratedEmptySchema extends TypedObject(generatedType)({}) {}
 
-class ClassWithSchemaField extends EchoObjectSchema({ typename: 'SchemaHolder', version: '1.0.0' })({
+class ClassWithSchemaField extends TypedObject({ typename: 'SchemaHolder', version: '1.0.0' })({
   schema: S.optional(E.ref(DynamicEchoSchema)),
 }) {}
 
@@ -27,7 +27,7 @@ describe('dynamic schema', () => {
   test('set DynamicSchema as echo object field', async () => {
     const { db } = await setupTest();
     const instanceWithSchemaRef = db.add(E.object(ClassWithSchemaField, {}));
-    class GeneratedSchema extends EchoObjectSchema(generatedType)({
+    class GeneratedSchema extends TypedObject(generatedType)({
       field: S.string,
     }) {}
 
@@ -44,7 +44,7 @@ describe('dynamic schema', () => {
 
   test('create echo object with DynamicSchema', async () => {
     const { db } = await setupTest();
-    class GeneratedSchema extends EchoObjectSchema(generatedType)({ field: S.string }) {}
+    class GeneratedSchema extends TypedObject(generatedType)({ field: S.string }) {}
     const schema = db.schemaRegistry.add(GeneratedSchema);
     const instanceWithSchemaRef = db.add(E.object(ClassWithSchemaField, { schema }));
 
@@ -85,7 +85,7 @@ describe('dynamic schema', () => {
 
   test('getProperties filters out id and unwraps optionality', async () => {
     const { db } = await setupTest();
-    class GeneratedSchema extends EchoObjectSchema(generatedType)({
+    class GeneratedSchema extends TypedObject(generatedType)({
       field1: S.string,
       field2: S.boolean,
     }) {}
@@ -99,7 +99,7 @@ describe('dynamic schema', () => {
 
   test('addColumns', async () => {
     const { db } = await setupTest();
-    class GeneratedSchema extends EchoObjectSchema(generatedType)({
+    class GeneratedSchema extends TypedObject(generatedType)({
       field1: S.string,
     }) {}
 
