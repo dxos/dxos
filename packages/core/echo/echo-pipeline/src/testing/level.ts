@@ -4,8 +4,9 @@
 
 import { Level } from 'level';
 
-import { type MyLevel } from '@dxos/echo-pipeline';
 import { PublicKey } from '@dxos/keys';
+
+import { type MyLevel } from '../automerge/types';
 
 export const createTestLevel = async (): Promise<MyLevel> => {
   const level = new Level<string, string>(`/tmp/dxos-${PublicKey.random().toHex()}`);
