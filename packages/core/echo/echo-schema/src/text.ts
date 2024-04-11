@@ -6,7 +6,7 @@ import get from 'lodash.get';
 
 import { next as A } from '@dxos/automerge/automerge';
 
-import { createDocAccessor } from './automerge';
+import { type DocAccessor, createDocAccessor, type KeyPath } from './automerge';
 import { type EchoReactiveObject } from './effect/reactive';
 
 /**
@@ -14,15 +14,20 @@ import { type EchoReactiveObject } from './effect/reactive';
  */
 export const LEGACY_TEXT_TYPE = 'dxos.Text.v0';
 
-// TODO(burdon): Reconcile with cursorConverter.
-
-// TODO(wittjosiah): Path shouldn't be hardcoded.
-const path = ['content'];
-
-export const toCursor = <T>(object: EchoReactiveObject<T>, pos: number) => {
-  const accessor = createDocAccessor(object, path);
-  const doc = accessor.handle.docSync();
-  if (!doc) {
+export const toCursor = <T>({
+  object,
+  path,
+  accessor: _accessor,
+  position: pos,
+}: {
+  object?: EchoReactiveObject<T>;
+  path?: KeyPath;
+  accessor?: DocAccessor;
+  position: number;
+}) => {
+  const accessor = _accessor ?? (object && path ? createDocAccessor(object, path) : undefined);
+  const doc = accessor?.handle.docSync();
+  if (!accessor || !doc) {
     return '';
   }
 
@@ -35,14 +40,24 @@ export const toCursor = <T>(object: EchoReactiveObject<T>, pos: number) => {
   return A.getCursor(doc, accessor.path.slice(), pos);
 };
 
-export const fromCursor = <T>(object: EchoReactiveObject<T>, cursor: string) => {
+export const fromCursor = <T>({
+  object,
+  path,
+  accessor: _accessor,
+  cursor,
+}: {
+  object?: EchoReactiveObject<T>;
+  path?: KeyPath;
+  accessor?: DocAccessor;
+  cursor: string;
+}) => {
   if (cursor === '') {
     return 0;
   }
 
-  const accessor = createDocAccessor(object, path);
-  const doc = accessor.handle.docSync();
-  if (!doc) {
+  const accessor = _accessor ?? (object && path ? createDocAccessor(object, path) : undefined);
+  const doc = accessor?.handle.docSync();
+  if (!accessor || !doc) {
     return 0;
   }
 
@@ -59,18 +74,25 @@ export const fromCursor = <T>(object: EchoReactiveObject<T>, cursor: string) => 
   return A.getCursorPosition(doc, accessor.path.slice(), cursor);
 };
 
-/**
- * TODO(dima?): This API will change.
- */
-export const getTextInRange = (
-  object: EchoReactiveObject<{ content: string }> | undefined,
-  begin: string,
-  end: string,
-) => {
-  if (object == null) {
+export const getTextInRange = <T>({
+  object,
+  path,
+  start,
+  end,
+}: {
+  object: EchoReactiveObject<T>;
+  path: KeyPath;
+  start: string;
+  end: string;
+}) => {
+  const accessor = createDocAccessor(object, path);
+  const beginIdx = fromCursor({ accessor, cursor: start });
+  const endIdx = fromCursor({ accessor, cursor: end });
+  const doc = accessor.handle.docSync();
+  const value = get(doc, accessor.path);
+  if (typeof value === 'string') {
+    return value.slice(beginIdx, endIdx);
+  } else {
     return '';
   }
-  const beginIdx = fromCursor(object, begin);
-  const endIdx = fromCursor(object, end);
-  return (object.content as string).slice(beginIdx, endIdx);
 };

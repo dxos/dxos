@@ -63,6 +63,6 @@ const getReferencedText = (document: DocumentType, comment: DocumentCommentType)
     return '';
   }
 
-  const [begin, end] = comment.cursor.split(':');
-  return document.content ? getTextInRange(document.content, begin, end) : '';
+  const [start, end] = comment.cursor.split(':');
+  return document.content ? getTextInRange({ object: document.content, path: ['content'], start, end }) : '';
 };
