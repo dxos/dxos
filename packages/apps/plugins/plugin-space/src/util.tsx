@@ -19,9 +19,8 @@ import {
 import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
-import { getSpaceProperty } from '@braneframe/plugin-client';
 import { actionGroupSymbol, type InvokeParams, type Graph, type Node, manageNodes } from '@braneframe/plugin-graph';
-import { FolderType } from '@braneframe/types';
+import { cloneObject, getSpaceProperty, FolderType } from '@braneframe/types';
 import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
@@ -38,7 +37,6 @@ import { SpaceState, getSpace, type Space } from '@dxos/react-client/echo';
 import { nonNullable } from '@dxos/util';
 
 import { SPACE_PLUGIN } from './meta';
-import { clone } from './serializer';
 import { SpaceAction } from './types';
 
 export const SHARED = 'shared-spaces';
@@ -108,7 +106,7 @@ const getFolderGraphNodePartials = ({ graph, folder, space }: { graph: Graph; fo
     },
     onCopy: async (child: Node<EchoReactiveObject<any>>) => {
       // Create clone of child and add to destination space.
-      const newObject = await clone(child.data);
+      const newObject = await cloneObject(child.data);
       space.db.add(newObject);
       folder.objects.push(newObject);
     },

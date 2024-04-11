@@ -1085,6 +1085,9 @@ importers:
 
   packages/apps/plugins/plugin-debug:
     dependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
@@ -1158,9 +1161,6 @@ importers:
         specifier: ^15.5.0
         version: 15.5.0(react@18.2.0)
     devDependencies:
-      '@braneframe/plugin-client':
-        specifier: workspace:*
-        version: link:../plugin-client
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -3155,9 +3155,6 @@ importers:
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
-      md5:
-        specifier: ^2.3.0
-        version: 2.3.0
       react-drag-drop-files:
         specifier: ^2.3.8
         version: 2.3.8(react-dom@18.2.0)(react-is@18.2.0)(react@18.2.0)
@@ -3198,9 +3195,6 @@ importers:
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
-      '@types/md5':
-        specifier: ^2.3.5
-        version: 2.3.5
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -3852,6 +3846,106 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
 
+  packages/apps/testbench-app:
+    dependencies:
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
+      '@dxos/echo-generator':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-generator
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/observability':
+        specifier: workspace:*
+        version: link:../../sdk/observability
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-editor
+      '@dxos/react-ui-table':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-table
+      '@dxos/shell':
+        specifier: workspace:*
+        version: link:../../sdk/shell
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
+      '@ngneat/falso':
+        specifier: ^7.1.1
+        version: 7.1.1
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@sentry/react':
+        specifier: ^7.100.1
+        version: 7.101.0(react@18.2.0)
+      classnames:
+        specifier: ^2.3.2
+        version: 2.3.2
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      react-router-dom:
+        specifier: ^6.4.0
+        version: 6.4.2(react-dom@18.2.0)(react@18.2.0)
+    devDependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/echo-typegen':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-typegen
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../ui/storybook-utils
+      '@sentry/vite-plugin':
+        specifier: ^2.14.0
+        version: 2.14.0
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      '@vitejs/plugin-react':
+        specifier: ^4.2.1
+        version: 4.2.1(vite@5.1.7)
+      vite:
+        specifier: ^5.1.7
+        version: 5.1.7(@types/node@18.11.9)
+      vite-plugin-top-level-await:
+        specifier: ^1.4.1
+        version: 1.4.1(rollup@3.23.0)(vite@5.1.7)
+      vite-plugin-wasm:
+        specifier: ^3.3.0
+        version: 3.3.0(vite@5.1.7)
+
   packages/apps/todomvc:
     dependencies:
       '@dxos/config':
@@ -3933,22 +4027,49 @@ importers:
 
   packages/apps/types:
     dependencies:
+      '@dxos/automerge':
+        specifier: workspace:*
+        version: link:../../core/echo/automerge
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       '@effect/schema':
         specifier: 0.64.7
         version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       effect:
         specifier: 2.4.9
         version: 2.4.9
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
+      md5:
+        specifier: ^2.3.0
+        version: 2.3.0
     devDependencies:
       '@dxos/echo-typegen':
         specifier: workspace:*
         version: link:../../core/echo/echo-typegen
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
+      '@types/md5':
+        specifier: ^2.3.5
+        version: 2.3.5
 
   packages/common/async:
     dependencies:
@@ -7841,9 +7962,18 @@ importers:
       '@dxos/websocket-rpc':
         specifier: workspace:*
         version: link:../../core/mesh/websocket-rpc
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       base-x:
         specifier: ~3.0.9
         version: 3.0.9
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
       lodash.isequal:
         specifier: ^4.5.0
         version: 4.5.0
@@ -7851,9 +7981,6 @@ importers:
         specifier: ^4.4.0
         version: 4.4.0
     devDependencies:
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../apps/types
       '@dxos/automerge':
         specifier: workspace:*
         version: link:../../core/echo/automerge
@@ -7863,6 +7990,9 @@ importers:
       '@dxos/random-access-storage':
         specifier: workspace:*
         version: link:../../common/random-access-storage
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
       '@types/lodash.isequal':
         specifier: ^4.5.0
         version: 4.5.6

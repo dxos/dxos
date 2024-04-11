@@ -34,8 +34,9 @@ export const DocAccessor = {
 };
 
 /**
- * @deprecated Use `getRawDoc` instead.
+ * @deprecated
  */
+// TODO(burdon): Delete.
 export const createDocAccessor = <T = any>(
   text: EchoReactiveObject<{ content: string; field?: string }>,
 ): DocAccessor<T> => {

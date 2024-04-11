@@ -19,12 +19,12 @@ export type RepeatedComponentProps = { id: number; count: number };
 
 export type ClientRepeaterProps<P extends RepeatedComponentProps> = {
   component: FC<any>;
+  className?: string;
   controls?: FC<{ clients: Client[] }>;
   clients?: Client[];
   count?: number;
   registerSignalFactory?: boolean;
-  className?: string;
-  types?: Parameters<Client['addSchema']>;
+  schema?: Parameters<Client['addSchema']>;
   createIdentity?: boolean;
   createSpace?: boolean;
   onCreateSpace?: (space: Space) => MaybePromise<void>;
@@ -46,7 +46,7 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
     controls: Controls,
     count = 1,
     className = 'flex w-full place-content-evenly',
-    types,
+    schema,
     createIdentity,
     createSpace,
     onCreateSpace,
@@ -62,7 +62,7 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
     const timeout = setTimeout(async () => {
       const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocal() }));
       await Promise.all(clients.map((client) => client.initialize()));
-      types && clients.map((client) => client.addSchema(...types));
+      schema && clients.map((client) => client.addSchema(...schema));
 
       if (createIdentity || createSpace) {
         await Promise.all(clients.map((client) => client.halo.createIdentity()));
