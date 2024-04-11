@@ -20,7 +20,7 @@ const closeAfterTest = async (peer: ServiceContext) => {
 
 describe('services/device', () => {
   test('creates identity', async () => {
-    const peer = createServiceContext();
+    const peer = await createServiceContext();
     await peer.open(new Context());
     afterTest(() => peer.close());
 

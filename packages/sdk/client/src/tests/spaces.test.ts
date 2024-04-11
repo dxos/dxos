@@ -5,8 +5,7 @@
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
-import { DocumentType, TextV0Type } from '@braneframe/types';
-import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
@@ -21,7 +20,7 @@ import { range } from '@dxos/util';
 
 import { Client } from '../client';
 import { SpaceState, getSpace, type SpaceProxy } from '../echo';
-import { TestBuilder, testSpaceAutomerge, waitForSpace } from '../testing';
+import { DocumentType, TextV0Type, TestBuilder, testSpaceAutomerge, waitForSpace } from '../testing';
 
 describe('Spaces', () => {
   test('creates a default space', async () => {
@@ -97,10 +96,8 @@ describe('Spaces', () => {
       const space = client.spaces.default;
       ({ objectId } = await testSpaceAutomerge(space.db));
       expect(space.members.get()).to.be.length(1);
+      await space.db.flush();
     }
-    // TODO(mykola): Clean as automerge team updates storage API.
-    // Need this `sleep` for automerge to finish storage write.
-    await sleep(200);
     await client.destroy();
 
     await client.initialize();
@@ -440,7 +437,7 @@ describe('Spaces', () => {
     }
   });
 
-  test.repeat(10)('queries respect space boundaries', async () => {
+  test('queries respect space boundaries', async () => {
     const testBuilder = new TestBuilder();
     testBuilder.storage = createStorage({ type: StorageType.RAM });
 

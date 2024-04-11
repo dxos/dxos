@@ -22,7 +22,7 @@ describe('IdentityService', () => {
   let identityService: IdentityService;
 
   beforeEach(async () => {
-    serviceContext = createServiceContext();
+    serviceContext = await createServiceContext();
     await serviceContext.open(new Context());
     identityService = new IdentityServiceImpl(
       (options) => serviceContext.createIdentity(options),

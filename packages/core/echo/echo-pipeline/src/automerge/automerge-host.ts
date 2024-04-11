@@ -17,7 +17,12 @@ import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
-import { type HostInfo, type SyncRepoRequest, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
+import {
+  type FlushRequest,
+  type HostInfo,
+  type SyncRepoRequest,
+  type SyncRepoResponse,
+} from '@dxos/protocols/proto/dxos/echo/service';
 import { StorageType, type Directory } from '@dxos/random-access-storage';
 import { type AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
 import { trace } from '@dxos/tracing';
@@ -195,8 +200,8 @@ export class AutomergeHost {
       hasDoc: !!handle.docSync(),
       heads: handle.docSync() ? automerge.getHeads(handle.docSync()) : null,
       data:
-        handle.docSync()?.doc &&
-        mapValues(handle.docSync()?.doc, (value, key) => {
+        handle.docSync() &&
+        mapValues(handle.docSync(), (value, key) => {
           try {
             switch (key) {
               case 'access':
@@ -228,6 +233,12 @@ export class AutomergeHost {
   //
   // Methods for client-services.
   //
+
+  async flush({ documentIds }: FlushRequest): Promise<void> {
+    // Note: Wait for all requested documents to be loaded/synced from thin-client.
+    await Promise.all(documentIds?.map((id) => this._repo.find(id as DocumentId).whenReady()) ?? []);
+    await this._repo.flush(documentIds as DocumentId[]);
+  }
 
   syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {
     return this._clientNetwork.syncRepo(request);

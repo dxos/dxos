@@ -10,7 +10,6 @@ import { Surface } from '@dxos/app-framework';
 import { type SpaceMember } from '@dxos/client/echo';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
-import { getTextContent } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, DensityProvider, useThemeContext } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
@@ -112,7 +111,7 @@ const MessageBlockObjectTile: MosaicTileComponent<EchoReactiveObject<any>> = for
   ({ draggableStyle, draggableProps, item, onDelete, active, ...props }, forwardedRef) => {
     let title = item.name ?? item.title ?? item.__typename ?? 'Object';
     if (typeof title !== 'string') {
-      title = getTextContent(title);
+      title = title?.content ?? '';
     }
 
     return (

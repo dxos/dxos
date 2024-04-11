@@ -7,8 +7,7 @@ import chaiAsPromised from 'chai-as-promised';
 import { rmSync } from 'node:fs';
 import waitForExpect from 'wait-for-expect';
 
-import { MessageType, TextV0Type, ThreadType } from '@braneframe/types';
-import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import * as E from '@dxos/echo-schema';
 import { Filter } from '@dxos/echo-schema';
@@ -16,7 +15,7 @@ import { describe, test, afterTest } from '@dxos/test';
 import { isNode } from '@dxos/util';
 
 import { Client } from '../client';
-import { TestBuilder, performInvitation } from '../testing';
+import { MessageType, TextV0Type, ThreadType, TestBuilder, performInvitation } from '../testing';
 
 chai.use(chaiAsPromised);
 
@@ -103,8 +102,7 @@ describe('Client', () => {
       expect(client.halo.identity.get()).not.to.exist;
       const identity = await client.halo.createIdentity({ displayName });
       expect(client.halo.identity.get()).to.deep.eq(identity);
-      // TODO(mykola): Clean as automerge team updates storage API.
-      await sleep(200);
+      await client.spaces.isReady.wait();
       await client.destroy();
     }
 
@@ -114,9 +112,8 @@ describe('Client', () => {
       expect(client.halo.identity).to.exist;
       // TODO(burdon): Error type.
       await expect(client.halo.createIdentity({ displayName })).to.be.rejected;
+      await client.spaces.isReady.wait();
     }
-    // TODO(mykola): Clean as automerge team updates storage API.
-    await sleep(200);
     {
       // Reset storage.
       await client.reset();
@@ -127,6 +124,7 @@ describe('Client', () => {
       expect(client.halo.identity.get()).to.eq(null);
       await client.halo.createIdentity({ displayName });
       expect(client.halo.identity).to.exist;
+      await client.spaces.isReady.wait();
       await client.destroy();
     }
   }).onlyEnvironments('nodejs', 'chromium', 'firefox');
@@ -172,7 +170,6 @@ describe('Client', () => {
     const text = 'Hello world';
     const message = space2.db.add(
       E.object(MessageType, {
-        from: {},
         blocks: [{ timestamp: new Date().toISOString(), content: E.object(TextV0Type, { content: text }) }],
       }),
     );

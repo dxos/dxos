@@ -21,7 +21,7 @@ import {
 } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import * as E from '@dxos/echo-schema';
-import { Filter, getTextContent, type JsonSchema, Schema } from '@dxos/echo-schema';
+import { Filter, type JsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { createContext, type RequestContext } from './context';
@@ -30,6 +30,7 @@ import { type ResolverMap } from './resolvers';
 import { ResponseBuilder } from './response';
 import { createStatusNotifier } from './status';
 import { type ChainResources } from '../../chain';
+import { todo } from '@dxos/debug';
 
 export type SequenceOptions = {
   prompt?: string;
@@ -48,7 +49,7 @@ export class RequestProcessor {
     const { start, stop } = createStatusNotifier(space, thread.id);
     try {
       const text = message.blocks
-        .map((block) => getTextContent(block.content))
+        .map((block) => block.content?.content)
         .filter(Boolean)
         .join('\n');
 
@@ -157,7 +158,7 @@ export class RequestProcessor {
 
     return RunnableSequence.from([
       inputs,
-      PromptTemplate.fromTemplate(getTextContent(prompt.source)!),
+      PromptTemplate.fromTemplate(prompt.source!.content),
       promptLogger,
       this._resources.model.bind(customArgs),
       withSchema ? new JsonOutputFunctionsParser() : new StringOutputParser(),
@@ -215,12 +216,13 @@ export class RequestProcessor {
           return null;
         }
 
-        const { objects: schemas } = space.db.query(Schema.filter());
+        // TODO(dmaretskyi): Convert to the new dynamic schema API.
+        const schemas = space.db.schemaRegistry.getAll();
         const schema = schemas.find((schema) => schema.typename === type);
         if (schema) {
           // TODO(burdon): Use effect schema to generate JSON schema.
           const name = schema.typename.split(/[.-/]/).pop();
-          const fields = schema.props.filter(({ type }) => type === Schema.PropType.STRING).map(({ id }) => id);
+          const fields = todo() as any[]; //schema.props.filter(({ type }) => type === Schema.PropType.STRING).map(({ id }) => id);
           return () => `${name}: ${fields.join(', ')}`;
         }
 

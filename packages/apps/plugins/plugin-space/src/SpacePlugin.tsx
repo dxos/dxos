@@ -8,9 +8,8 @@ import localforage from 'localforage';
 import React from 'react';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
-import { getSpaceProperty, setSpaceProperty } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
-import { FolderType } from '@braneframe/types';
+import { getSpaceProperty, setSpaceProperty, FolderType, SpaceSerializer, cloneObject } from '@braneframe/types';
 import {
   type IntentDispatcher,
   type PluginDefinition,
@@ -54,7 +53,6 @@ import {
   SpaceSettings,
 } from './components';
 import meta, { SPACE_PLUGIN } from './meta';
-import { saveSpaceToDisk, loadSpaceFromDisk, clone } from './serializer';
 import translations from './translations';
 import {
   SpaceAction,
@@ -95,7 +93,8 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
-  let directory: FileSystemDirectoryHandle | null;
+
+  const serializer = new SpaceSerializer();
 
   let clientPlugin: Plugin<ClientPluginProvides> | undefined;
 
@@ -168,12 +167,16 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             const identity = client.halo.identity.get();
             const space = getActiveSpace(graph, location.active);
             if (identity && space && location.active) {
-              void space.postMessage('viewing', {
-                identityKey: identity.identityKey.toHex(),
-                spaceKey: space.key.toHex(),
-                added: [location.active],
-                removed: [location.previous],
-              });
+              void space
+                .postMessage('viewing', {
+                  identityKey: identity.identityKey.toHex(),
+                  spaceKey: space.key.toHex(),
+                  added: [location.active],
+                  removed: [location.previous],
+                })
+                .catch((err) => {
+                  log.warn('Failed to broadcast active node for presence', { err: err.message });
+                });
             }
           };
 
@@ -579,48 +582,43 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             }
 
             case SpaceAction.SELECT_DIRECTORY: {
-              const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
-              directory = handle;
-              await localforage.setItem(SPACE_DIRECTORY_HANDLE, handle);
-              return { data: handle };
+              const rootDir = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+              await localforage.setItem(SPACE_DIRECTORY_HANDLE, rootDir);
+              return { data: rootDir };
             }
 
             case SpaceAction.SAVE: {
               const space = intent.data?.space;
-              if (space instanceof SpaceProxy) {
-                if (!directory) {
-                  directory = await localforage.getItem(SPACE_DIRECTORY_HANDLE);
-                }
-                if (!directory) {
-                  // TODO(wittjosiah): Consider implementing this as an intent chain by returning other intents.
-                  const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-                  const result = await intentPlugin?.provides.intent.dispatch({
-                    plugin: SPACE_PLUGIN,
-                    action: SpaceAction.SELECT_DIRECTORY,
-                  });
-                  directory = result?.data;
-                }
-                invariant(directory, 'No directory selected.');
-                if ((directory as any).queryPermission && (await (directory as any).queryPermission()) !== 'granted') {
-                  // TODO(mykola): Is it Chrome-specific?
-                  await (directory as any).requestPermission?.({ mode: 'readwrite' });
-                }
-                await saveSpaceToDisk({ space, directory }).catch((error) => {
-                  log.catch(error);
+              let rootDir: FileSystemDirectoryHandle | null = await localforage.getItem(SPACE_DIRECTORY_HANDLE);
+              if (!rootDir) {
+                // TODO(wittjosiah): Consider implementing this as an intent chain by returning other intents.
+                const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+                const result = await intentPlugin?.provides.intent.dispatch({
+                  plugin: SPACE_PLUGIN,
+                  action: SpaceAction.SELECT_DIRECTORY,
                 });
-                return { data: true };
+                rootDir = result?.data as FileSystemDirectoryHandle;
+                invariant(rootDir);
               }
-              break;
+
+              // TODO(burdon): Resolve casts.
+              if ((rootDir as any).queryPermission && (await (rootDir as any).queryPermission()) !== 'granted') {
+                // TODO(mykola): Is it Chrome-specific?
+                await (rootDir as any).requestPermission?.({ mode: 'readwrite' });
+              }
+              await serializer.save({ space, directory: rootDir }).catch((err) => {
+                void localforage.removeItem(SPACE_DIRECTORY_HANDLE);
+                log.catch(err);
+              });
+              return { data: true };
             }
 
             case SpaceAction.LOAD: {
               const space = intent.data?.space;
-              if (space instanceof SpaceProxy) {
-                const directory = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
-                await loadSpaceFromDisk({ space, directory });
-                return { data: true };
-              }
-              break;
+              invariant(space instanceof SpaceProxy);
+              const directory = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+              await serializer.load({ space, directory }).catch(log.catch);
+              return { data: true };
             }
 
             case SpaceAction.ADD_OBJECT: {
@@ -702,7 +700,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 return;
               }
 
-              const newObject = await clone(originalObject);
+              const newObject = await cloneObject(originalObject);
               return {
                 intents: [
                   [{ action: SpaceAction.ADD_OBJECT, data: { object: newObject, target: intent.data?.target } }],

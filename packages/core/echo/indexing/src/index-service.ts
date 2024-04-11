@@ -4,15 +4,15 @@
 
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
-import { warnAfterTimeout } from '@dxos/debug';
 import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
 import { Filter } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
-import { type QueryRequest, type QueryResponse, type QueryResult } from '@dxos/protocols/proto/dxos/agent/query';
+import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { nonNullable } from '@dxos/util';
 
 import { type Indexer } from './indexer';
 
@@ -38,6 +38,8 @@ export class IndexServiceImpl implements IndexService {
     const filter = Filter.fromProto(request.filter);
     return new Stream(({ next, close }) => {
       let currentCtx: Context;
+      // Previous id-s.
+      let previousResults: string[] = [];
 
       const update = async () => {
         try {
@@ -52,7 +54,7 @@ export class IndexServiceImpl implements IndexService {
                 results.map(async (result) => {
                   const { objectId, documentId } = idCodec.decode(result.id);
                   const handle = this._params.automergeHost.repo.find(documentId as any);
-                  await warnAfterTimeout(5000, 'to long to load doc', () => handle.whenReady());
+                  await handle.whenReady();
                   if (this._ctx.disposed || currentCtx.disposed) {
                     return;
                   }
@@ -74,12 +76,22 @@ export class IndexServiceImpl implements IndexService {
                   };
                 }),
               )
-            ).filter(Boolean) as QueryResult[],
+            ).filter(nonNullable),
           };
           if (this._ctx.disposed || ctx.disposed) {
             return;
           }
 
+          // Skip if results are the same.
+          if (
+            previousResults.length === response.results?.length &&
+            previousResults.every((id) => response.results?.some((result) => result.id === id)) &&
+            response.results.every((result) => previousResults.some((id) => id === result.id))
+          ) {
+            return;
+          }
+
+          previousResults = response.results?.map((result) => result.id) ?? [];
           next(response);
         } catch (error) {
           log.catch(error);

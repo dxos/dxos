@@ -22,11 +22,6 @@
           "packages/apps/plugins/plugin-space/src/**/*.{ts,tsx,js,jsx}"
         ]
       }
-    },
-    "test": {
-      "options": {
-        "forceExit": true
-      }
     }
   },
   "implicitDependencies": [

@@ -17,6 +17,7 @@
   ],
   "dependencies": {
     "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "publishConfig": {

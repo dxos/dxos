@@ -22,7 +22,7 @@ describe('SpacesService', () => {
   let spacesService: SpacesService;
 
   beforeEach(async () => {
-    serviceContext = createServiceContext();
+    serviceContext = await createServiceContext();
     await serviceContext.open(new Context());
     spacesService = new SpacesServiceImpl(serviceContext.identityManager, serviceContext.spaceManager, async () => {
       await serviceContext.initialized.wait();

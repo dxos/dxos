@@ -6,10 +6,9 @@ import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
 import {
-  types as clientSchema,
   clientServiceBundle,
   DEFAULT_CLIENT_CHANNEL,
-  PropertiesSchema,
+  Properties,
   STATUS_TIMEOUT,
   type ClientServices,
   type ClientServicesProvider,
@@ -19,7 +18,7 @@ import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { Hypergraph, schemaBuiltin } from '@dxos/echo-schema';
+import { Hypergraph } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -48,7 +47,7 @@ export type ClientOptions = {
   services?: MaybePromise<ClientServicesProvider>;
   /** Custom model factory. @deprecated */
   modelFactory?: any;
-  /** Types. */
+  /** Types. @deprecated Use effect schema */
   types?: TypeCollection;
   /** Shell path. */
   shell?: string;
@@ -128,13 +127,11 @@ export class Client {
       log.config({ filter, prefix });
     }
 
-    this.addTypes(schemaBuiltin);
-    this.addTypes(clientSchema);
     if (this._options.types) {
       this.addTypes(this._options.types);
     }
 
-    this._graph.types.registerEffectSchema(PropertiesSchema);
+    this._graph.types.registerEffectSchema(Properties);
   }
 
   [inspect.custom]() {
