@@ -24,7 +24,7 @@ import { createStorageObjects } from '@dxos/client-services';
 import { changeStorageVersionInMetadata } from '@dxos/echo-pipeline/testing';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type Client } from '@dxos/react-client';
-import { SpaceProxy, SpaceState } from '@dxos/react-client/echo';
+import { SpaceState, isSpace } from '@dxos/react-client/echo';
 
 import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsMain } from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
@@ -215,12 +215,11 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             case 'main':
               return active === 'devtools' ? (
                 <DevtoolsMain />
-              ) : !active || typeof active !== 'object' ? null : 'space' in active &&
-                active.space instanceof SpaceProxy ? (
+              ) : !active || typeof active !== 'object' ? null : 'space' in active && isSpace(active.space) ? (
                 <DebugSpace
                   space={active.space}
                   onAddObjects={(objects) => {
-                    if (!(active.space instanceof SpaceProxy)) {
+                    if (!isSpace(active.space)) {
                       return;
                     }
 

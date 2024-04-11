@@ -3,6 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
+import { type Echo } from '@dxos/client-protocol';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import {
@@ -17,25 +18,24 @@ import { type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
 import { nonNullable } from '@dxos/util';
 
-import { type SpaceList } from './space-list';
 import { type SpaceProxy } from './space-proxy';
 
 export type IndexQueryProviderParams = {
   service: IndexService;
-  spaceList: SpaceList;
+  echo: Echo;
 };
 
 export class IndexQuerySourceProvider implements QuerySourceProvider {
   constructor(private readonly _params: IndexQueryProviderParams) {}
 
   create(): QuerySource {
-    return new IndexQuerySource({ service: this._params.service, spaceList: this._params.spaceList });
+    return new IndexQuerySource({ service: this._params.service, echo: this._params.echo });
   }
 }
 
 export type IndexQuerySourceParams = {
   service: IndexService;
-  spaceList: SpaceList;
+  echo: Echo;
 };
 
 export class IndexQuerySource implements QuerySource {
@@ -71,7 +71,7 @@ export class IndexQuerySource implements QuerySource {
       const results: QueryResult<EchoObject>[] = (
         await Promise.all(
           response.results!.map(async (result) => {
-            const space = this._params.spaceList.get(result.spaceKey);
+            const space = this._params.echo.get(result.spaceKey);
             if (!space) {
               return;
             }

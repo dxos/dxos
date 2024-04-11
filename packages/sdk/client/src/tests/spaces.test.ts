@@ -19,7 +19,7 @@ import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
-import { SpaceState, getSpace, type SpaceProxy } from '../echo';
+import { SpaceState, getSpace } from '../echo';
 import { DocumentType, TextV0Type, TestBuilder, testSpaceAutomerge, waitForSpace } from '../testing';
 
 describe('Spaces', () => {
@@ -141,7 +141,7 @@ describe('Spaces', () => {
     const space1 = await client1.spaces.create();
     log('spaces.create', { key: space1.key });
     const [, { invitation: guestInvitation }] = await Promise.all(
-      performInvitation({ host: space1 as SpaceProxy, guest: client2.spaces }),
+      performInvitation({ host: space1, guest: client2.spaces }),
     );
     const space2 = await waitForSpace(client2, guestInvitation!.spaceKey!, { ready: true });
 

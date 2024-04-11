@@ -30,7 +30,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { type Space, SpaceProxy, getSpace, type PropertiesProps } from '@dxos/react-client/echo';
+import { type Space, getSpace, type PropertiesProps, isSpace } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
 import { ComplexMap } from '@dxos/util';
@@ -61,7 +61,7 @@ import {
   type PluginState,
   SPACE_DIRECTORY_HANDLE,
 } from './types';
-import { SHARED, getActiveSpace, isSpace, updateGraphWithSpace, prepareSpaceForMigration } from './util';
+import { SHARED, getActiveSpace, updateGraphWithSpace, prepareSpaceForMigration } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 
@@ -533,7 +533,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
 
             case SpaceAction.RENAME: {
               const { caller, space } = intent.data ?? {};
-              if (typeof caller === 'string' && space instanceof SpaceProxy) {
+              if (typeof caller === 'string' && isSpace(space)) {
                 return {
                   intents: [
                     [
@@ -555,7 +555,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
 
             case SpaceAction.OPEN: {
               const space = intent.data?.space;
-              if (space instanceof SpaceProxy) {
+              if (isSpace(space)) {
                 await space.internal.open();
                 return { data: true };
               }
@@ -564,7 +564,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
 
             case SpaceAction.CLOSE: {
               const space = intent.data?.space;
-              if (space instanceof SpaceProxy) {
+              if (isSpace(space)) {
                 await space.internal.close();
                 return { data: true };
               }
@@ -573,7 +573,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
 
             case SpaceAction.MIGRATE: {
               const space = intent.data?.space;
-              if (space instanceof SpaceProxy) {
+              if (isSpace(space)) {
                 prepareSpaceForMigration(space);
                 const result = Migrations.migrate(space, intent.data?.version);
                 return { data: result };
@@ -615,10 +615,12 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
 
             case SpaceAction.LOAD: {
               const space = intent.data?.space;
-              invariant(space instanceof SpaceProxy);
-              const directory = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
-              await serializer.load({ space, directory }).catch(log.catch);
-              return { data: true };
+              if (isSpace(space)) {
+                const directory = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+                await serializer.load({ space, directory }).catch(log.catch);
+                return { data: true };
+              }
+              break;
             }
 
             case SpaceAction.ADD_OBJECT: {
@@ -632,8 +634,8 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 return { data: object };
               }
 
-              if (intent.data?.target instanceof SpaceProxy) {
-                const space = intent.data.target;
+              const space = intent.data?.target;
+              if (isSpace(space)) {
                 const folder = getSpaceProperty(space, FolderType.typename);
                 if (folder instanceof FolderType) {
                   folder.objects.push(object as Identifiable);

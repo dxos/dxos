@@ -53,7 +53,7 @@ describe('Index queries', () => {
     const service = new IndexServiceImpl({ indexer, automergeHost: services.host!.context.automergeHost });
     const agentQuerySourceProvider = new IndexQuerySourceProvider({
       service,
-      spaceList: client.spaces,
+      echo: client.spaces,
     });
     client._graph.registerQuerySourceProvider(agentQuerySourceProvider);
     const space = await client.spaces.create();

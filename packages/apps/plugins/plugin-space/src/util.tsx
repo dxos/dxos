@@ -24,14 +24,7 @@ import { cloneObject, getSpaceProperty, FolderType } from '@braneframe/types';
 import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
-import {
-  EchoDatabaseImpl,
-  Filter,
-  LEGACY_TEXT_TYPE,
-  type OpaqueEchoObject,
-  type EchoReactiveObject,
-} from '@dxos/echo-schema';
-import { PublicKey } from '@dxos/keys';
+import { Filter, LEGACY_TEXT_TYPE, type OpaqueEchoObject, type EchoReactiveObject } from '@dxos/echo-schema';
 import { Migrations } from '@dxos/migrations';
 import { SpaceState, getSpace, type Space } from '@dxos/react-client/echo';
 import { nonNullable } from '@dxos/util';
@@ -41,11 +34,6 @@ import { SpaceAction } from './types';
 
 export const SHARED = 'shared-spaces';
 export const HIDDEN = 'hidden-spaces';
-
-export const isSpace = (data: unknown): data is Space =>
-  data && typeof data === 'object'
-    ? 'key' in data && data.key instanceof PublicKey && 'db' in data && data.db instanceof EchoDatabaseImpl // TODO(dmaretskyi): No doing duck typing.
-    : false;
 
 export const getSpaceDisplayName = (space: Space): string | [string, { ns: string }] => {
   return space.state.get() === SpaceState.READY && (space.properties.name?.length ?? 0) > 0

@@ -3,11 +3,13 @@
 //
 
 import type { MulticastObservable } from '@dxos/async';
-import type { TypeCollection } from '@dxos/echo-schema';
+import type { FilterSource, Query, TypeCollection } from '@dxos/echo-schema';
 import type { PublicKey } from '@dxos/keys';
 import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import type { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import type { AuthenticatingInvitation } from './invitations';
+import type { PropertiesProps } from './schema';
 import type { Space } from './space';
 
 // Space properties key for default metadata.
@@ -45,7 +47,7 @@ export interface Echo extends MulticastObservable<Space[]> {
   /**
    * Creates a new space.
    */
-  create(): Promise<Space>;
+  create(meta?: PropertiesProps): Promise<Space>;
 
   /**
    * Creates a space from the given snapshot.
@@ -56,6 +58,13 @@ export interface Echo extends MulticastObservable<Space[]> {
    * Joins an existing space using the given invitation.
    */
   join(invitation: Invitation | string): AuthenticatingInvitation;
+
+  /**
+   * Query all spaces.
+   * @param filter
+   * @param options
+   */
+  query<T extends {} = any>(filter?: FilterSource<T>, options?: QueryOptions): Query<T>;
 
   /**
    * Adds a schema to ECHO.
