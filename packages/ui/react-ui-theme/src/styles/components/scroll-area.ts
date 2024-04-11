@@ -12,7 +12,7 @@ export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = (_props, 
   mx('overflow-hidden', ...etc);
 
 export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (_props, ...etc) =>
-  mx('is-full bs-full scroll-smooth', '[&>div]:table-fixed [&>div]:w-full', ...etc);
+  mx('is-full bs-full [&>div]:table-fixed [&>div]:is-full', ...etc);
 
 export const scrollAreaScrollbar: ComponentFunction<ScrollAreaStyleProps> = (_props, ...etc) =>
   mx(
