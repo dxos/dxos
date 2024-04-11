@@ -4,11 +4,11 @@
 
 import * as S from '@effect/schema/Schema';
 
-import { EchoObjectSchema } from '../effect/echo-object-class';
+import { TypedObject } from '../effect/echo-object-class';
 import * as E from '../effect/reactive';
 import { ExpandoType, type Ref, ref } from '../effect/reactive';
 
-export class Contact extends EchoObjectSchema({
+export class Contact extends TypedObject({
   typename: 'example.test.Contact',
   version: '0.1.0',
 })(
@@ -30,14 +30,14 @@ export class Contact extends EchoObjectSchema({
   { partial: true },
 ) {}
 
-export class Todo extends EchoObjectSchema({
+export class Todo extends TypedObject({
   typename: 'example.test.Task.Todo',
   version: '0.1.0',
 })({
   name: S.optional(S.string),
 }) {}
 
-export class Task extends EchoObjectSchema({
+export class Task extends TypedObject({
   typename: 'example.test.Task',
   version: '0.1.0',
 })({
@@ -56,7 +56,7 @@ export enum RecordType {
   WORK = 2,
 }
 
-export class Container extends EchoObjectSchema({
+export class Container extends TypedObject({
   typename: 'example.test.Container',
   version: '0.1.0',
 })(

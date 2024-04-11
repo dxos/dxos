@@ -7,12 +7,12 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { EchoObjectSchema } from './echo-object-class';
+import { TypedObject } from './echo-object-class';
 import * as E from './reactive';
 import { Filter } from '../query';
 import { createDatabase } from '../testing';
 
-class Organization extends EchoObjectSchema({ typename: 'Organization', version: '1.0.0' })({
+class Organization extends TypedObject({ typename: 'Organization', version: '1.0.0' })({
   name: S.string,
 }) {}
 
@@ -66,7 +66,7 @@ describe('EchoObject class dsl', () => {
   });
 
   describe('references', () => {
-    class Person extends EchoObjectSchema<Person>({ typename: 'Person', version: '1.0.0' })({
+    class Person extends TypedObject<Person>({ typename: 'Person', version: '1.0.0' })({
       name: S.string,
       worksAt: E.ref(Organization),
     }) {}
@@ -89,7 +89,7 @@ describe('EchoObject class dsl', () => {
   });
 
   describe('class options', () => {
-    class Person extends EchoObjectSchema<Person>({ typename: 'Person', version: '1.0.0' })(
+    class Person extends TypedObject<Person>({ typename: 'Person', version: '1.0.0' })(
       {
         name: S.string,
       },

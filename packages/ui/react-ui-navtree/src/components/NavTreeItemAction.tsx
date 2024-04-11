@@ -3,6 +3,7 @@
 //
 
 import { type IconProps } from '@phosphor-icons/react';
+import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type FC, type MutableRefObject, type PropsWithChildren, useRef, useState } from 'react';
 
 import { keySymbols } from '@dxos/keyboard';
@@ -32,14 +33,24 @@ export const NavTreeItemActionDropdownMenu = ({
   active,
   testId,
   actions,
-  suppressNextTooltip,
   onAction,
+  suppressNextTooltip,
+  menuOpen,
+  defaultMenuOpen,
+  onChangeMenuOpen,
 }: Pick<NavTreeItemActionProps, 'icon' | 'actions' | 'testId' | 'active' | 'onAction'> & {
   suppressNextTooltip: MutableRefObject<boolean>;
+  menuOpen?: boolean;
+  defaultMenuOpen?: boolean;
+  onChangeMenuOpen?: (nextOpen: boolean) => void;
 }) => {
   const { t } = useTranslation(translationKey);
 
-  const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
+  const [optionsMenuOpen, setOptionsMenuOpen] = useControllableState({
+    prop: menuOpen,
+    defaultProp: defaultMenuOpen,
+    onChange: onChangeMenuOpen,
+  });
 
   return (
     <DropdownMenu.Root

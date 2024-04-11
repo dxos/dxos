@@ -13,7 +13,7 @@ import { DensityProvider } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { schemaToColumnDefs } from './schemaToColumns';
-import { Table } from '../Table/Table';
+import { Table } from '../components';
 
 export default {
   title: 'react-ui-table/SchemaTable',
