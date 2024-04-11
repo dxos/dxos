@@ -19,7 +19,7 @@ export type SpaceToolbarProps = {
 
 export const SpaceToolbar = ({ onCreate, onClose, onSelect, onInvite }: SpaceToolbarProps) => {
   const client = useClient();
-  const spaces = useSpaces();
+  const spaces = useSpaces().filter((space) => space !== client.spaces.default);
   const [spaceKey, setSpaceKey] = useState<PublicKey | undefined>();
   useEffect(() => {
     onSelect(spaceKey);
@@ -44,18 +44,17 @@ export const SpaceToolbar = ({ onCreate, onClose, onSelect, onInvite }: SpaceToo
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>
-                {spaces
-                  .filter((space) => space !== client.spaces.default)
-                  .map((space) => (
-                    <Select.Option key={space.key.toHex()} value={space.key.toHex()}>
-                      <span className='font-mono'>{space.key.truncate()}</span>
-                    </Select.Option>
-                  ))}
+                {spaces.map((space) => (
+                  <Select.Option key={space.key.toHex()} value={space.key.toHex()}>
+                    <span className='font-mono'>{space.key.truncate()}</span>
+                  </Select.Option>
+                ))}
               </Select.Viewport>
             </Select.Content>
           </Select.Portal>
         </Select.Root>
       </div>
+      <div>{spaces.length}</div>
       <div className='grow' />
       {spaceKey && (
         <>

@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-settings": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
@@ -49,7 +50,6 @@
     "react-syntax-highlighter": "^15.5.0"
   },
   "devDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",

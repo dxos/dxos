@@ -81,13 +81,7 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
             await runtime.setAppContext({ display: ShellDisplay.NONE });
             runtime.setLayout({ layout: ShellLayout.DEFAULT });
           }}
-          initialDisposition={
-            layout === ShellLayout.SHARE_IDENTITY
-              ? 'manage-device-invitation'
-              : layout === ShellLayout.EDIT_PROFILE
-                ? 'manage-profile'
-                : 'default'
-          }
+          initialDisposition={layout === ShellLayout.SHARE_IDENTITY ? 'manage-device-invitation' : 'default'}
         />
       );
 

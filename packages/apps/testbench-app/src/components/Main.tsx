@@ -11,26 +11,33 @@ import { type PublicKey, useClient } from '@dxos/react-client';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 
 import { AppToolbar } from './AppToolbar';
-import { DataToolbar } from './DataToolbar';
-import { ErrorIndicator } from './ErrorIndicator';
+import { DataToolbar, type DataView } from './DataToolbar';
 import { ItemList } from './ItemList';
+import { ItemTable } from './ItemTable';
 import { SpaceToolbar } from './SpaceToolbar';
-import { ItemType, TextV0Type } from '../data';
+import { StatusBar } from './status';
+import { ItemType } from '../data';
 import { defs } from '../defs';
+
+// const dateRange = {
+//   from: new Date(),
+//   to: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+// };
 
 export const Main = () => {
   const client = useClient();
   const [space, setSpace] = useState<Space>();
 
-  const [debug, setDebug] = useState(false);
+  const [view, setView] = useState<DataView>();
   const [filter, setFilter] = useState<string>();
-  const [isFlushing, setIsFlushing] = useState(false);
+  const [flushing, setFlushing] = useState(false);
   const flushingPromise = React.useRef<Promise<void>>();
 
   // TODO(burdon): [BUG]: Shows deleted objects.
+  // TODO(burdon): Remove restricted list of objects.
   const objects = useQuery<ItemType>(
     space,
-    E.Filter.schema(ItemType, (object: ItemType) => match(filter, object.text?.content)),
+    E.Filter.schema(ItemType, (object: ItemType) => match(filter, object.content)),
     {},
     [filter],
   );
@@ -60,18 +67,21 @@ export const Main = () => {
 
     Array.from({ length: n }).forEach(() => {
       // TODO(burdon): Migrate generator from DebugPlugin.
-      // TODO(burdon): [API]: Use basic Automerge strings?
-      // space.db.add(E.object(ItemType, { content: '' }));
-      space.db.add(E.object(ItemType, { text: E.object(TextV0Type, { content: randSentence() }) }));
+      space.db.add(
+        E.object(ItemType, {
+          content: randSentence(),
+          // due: randBetweenDate(dateRange)
+        }),
+      );
     });
 
-    setIsFlushing(true);
+    setFlushing(true);
     const promise = space.db.flush();
     flushingPromise.current = promise;
     promise.then(
       () => {
         if (flushingPromise.current === promise) {
-          setIsFlushing(false);
+          setFlushing(false);
         }
       },
       (err) => {
@@ -125,6 +135,7 @@ export const Main = () => {
           void client.shell.open();
         }}
       />
+
       <SpaceToolbar
         onCreate={handleSpaceCreate}
         onClose={handleSpaceClose}
@@ -132,26 +143,22 @@ export const Main = () => {
         onInvite={handleSpaceInvite}
       />
 
-      {/* TODO(burdon): Different UX panels (e.g., table). */}
       <div className='flex flex-col grow overflow-hidden'>
         {space && (
           <>
-            <DataToolbar
-              isFlushing={isFlushing}
-              onAdd={handleAdd}
-              onFilterChange={setFilter}
-              onDebugChange={setDebug}
-            />
-            <ItemList debug={debug} objects={objects} onDelete={handleDelete} />
+            <DataToolbar onAdd={handleAdd} onFilterChange={setFilter} onViewChange={(view) => setView(view)} />
+
+            {view === 'list' && <ItemList objects={objects} onDelete={handleDelete} />}
+            {view === 'debug' && <ItemList debug objects={objects} onDelete={handleDelete} />}
+            {view === 'table' && <ItemTable schema={ItemType} objects={objects} />}
           </>
         )}
       </div>
 
-      {/* TODO(burdon): Toggle network. */}
       <div className='flex p-2 items-center text-xs'>
         <div>{objects.length} objects</div>
         <div className='grow' />
-        <ErrorIndicator />
+        <StatusBar flushing={flushing} />
       </div>
     </div>
   );

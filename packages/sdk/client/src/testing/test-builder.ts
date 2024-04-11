@@ -52,8 +52,8 @@ export class TestBuilder {
   private readonly _ctx = new Context();
 
   public config: Config;
-
   public storage?: Storage;
+
   _transport: TransportKind;
 
   // prettier-ignore
@@ -98,9 +98,9 @@ export class TestBuilder {
         transportFactory,
       };
     }
-    if (this._transport !== TransportKind.MEMORY) {
-      // log.warn(`specified transport ${this._transport} but no signalling configured, using memory transport instead`);
-    }
+    // if (this._transport !== TransportKind.MEMORY) {
+    // log.warn(`specified transport ${this._transport} but no signalling configured, using memory transport instead`);
+    // }
 
     // Memory transport with shared context.
     return {
@@ -150,7 +150,7 @@ export class TestBuilder {
 
     // TODO(dmaretskyi): Refactor.
 
-    const client = new Client({ services: new ClientServicesProxy(proxyPort) });
+    const client = new Client({ config: this.config, services: new ClientServicesProxy(proxyPort) });
     this._ctx.onDispose(() => client.destroy());
     return [client, server];
   }

@@ -10,6 +10,8 @@ import { jsonify } from '@dxos/util';
 import { type LogFilter, LogLevel } from '../config';
 import { type LogProcessor, getContextFromEntry, shouldLog } from '../context';
 
+// Amount of time to retry writing after encountering EAGAIN before giving up.
+const EAGAIN_MAX_DURATION = 1000;
 /**
  * Create a file processor.
  * @param path - Path to log file to create or append to, or existing open file descriptor e.g. stdout.
@@ -52,7 +54,31 @@ export const createFileProcessor = ({
       },
       context: jsonify(getContextFromEntry(entry)),
     };
-    appendFileSync(fd, JSON.stringify(record) + '\n');
+    let retryTS: number = 0;
+
+    // Retry writing if EAGAIN is encountered.
+    //
+    // Node may set stdout and stderr to non-blocking. https://github.com/nodejs/node/issues/42826
+    // This can cause EAGAIN errors when writing to them.
+    // In order to not drop logs, make log methods asynchronous, or deal with buffering/delayed writes, spin until write succeeds.
+
+    while (true) {
+      try {
+        return appendFileSync(fd, JSON.stringify(record) + '\n');
+      } catch (err: any) {
+        if (err.code !== 'EAGAIN') {
+          throw err;
+        }
+        if (retryTS === 0) {
+          retryTS = performance.now();
+        } else {
+          if (performance.now() - retryTS > EAGAIN_MAX_DURATION) {
+            console.log(`could not write after ${EAGAIN_MAX_DURATION}ms of EAGAIN failures, giving up`);
+            throw err;
+          }
+        }
+      }
+    }
   };
 };
 

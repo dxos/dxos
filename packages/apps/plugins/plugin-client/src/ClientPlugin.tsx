@@ -5,6 +5,7 @@
 import { AddressBook, type IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
+import { getSpaceProperty, setSpaceProperty } from '@braneframe/types';
 import {
   parseIntentPlugin,
   resolvePlugin,
@@ -21,7 +22,6 @@ import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@d
 import { type TypeCollection } from '@dxos/react-client/echo';
 
 import meta, { CLIENT_PLUGIN } from './meta';
-import { getSpaceProperty, setSpaceProperty } from './space-properties';
 import translations from './translations';
 
 const WAIT_FOR_DEFAULT_SPACE_TIMEOUT = 30_000;
