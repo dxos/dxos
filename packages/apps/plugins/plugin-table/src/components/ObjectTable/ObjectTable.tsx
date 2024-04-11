@@ -13,7 +13,7 @@ import { DensityProvider } from '@dxos/react-ui';
 import { Table, type TableDef, type TableProps } from '@dxos/react-ui-table';
 
 // TODO(burdon): Remove deps.
-import { getSchema, schemaPropMapper, TableColumnBuilder } from '../../schema';
+import { getSchema, schemaPropMapper, createColumnsFromTableDefs } from '../../schema';
 import { TableSettings } from '../TableSettings';
 
 export type ObjectTableProps = Pick<TableProps<any>, 'stickyHeader' | 'role' | 'getScrollElement'> & {
@@ -144,7 +144,7 @@ const ObjectTableTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, get
         columns: table.schema!.getProperties().map(schemaPropMapper(table)),
       }));
 
-    const builder = new TableColumnBuilder(tableDefs, table.schema?.id, space!, {
+    return createColumnsFromTableDefs(tableDefs, table.schema?.id, space!, {
       onColumnUpdate: (id, column) => {
         const { type, refTable, refProp, digits, label } = column;
         updateTableProp({ id, refProp, label });
@@ -166,8 +166,6 @@ const ObjectTableTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, get
         space!.db.remove(object);
       },
     });
-
-    return builder.createColumns();
   }, [space, tables, table, table.schema, newObject]);
 
   const handleColumnResize = useCallback(
