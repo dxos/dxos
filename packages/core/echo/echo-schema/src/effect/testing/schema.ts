@@ -4,7 +4,7 @@
 
 import * as S from '@effect/schema/Schema';
 
-import { EchoObjectSchema } from '../echo-object-class';
+import { TypedObject } from '../echo-object-class';
 
 export class TestClass {
   field = 'value';
@@ -34,7 +34,7 @@ const fields = {
   other: S.any,
 };
 
-export class TestSchemaClass extends EchoObjectSchema<TestSchemaClass>({
+export class TestSchemaClass extends TypedObject<TestSchemaClass>({
   typename: 'TestSchema',
   version: '1.0.0',
 })(fields, { partial: true }) {}

@@ -5,13 +5,13 @@
 import * as S from '@effect/schema/Schema';
 
 import * as E from '@dxos/echo-schema';
-import { EchoObjectSchema } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo-schema';
 
-export class SectionType extends EchoObjectSchema({ typename: 'braneframe.Stack.Section', version: '0.1.0' })({
+export class SectionType extends TypedObject({ typename: 'braneframe.Stack.Section', version: '0.1.0' })({
   object: E.ref(E.ExpandoType),
 }) {}
 
-export class StackType extends EchoObjectSchema({ typename: 'braneframe.Stack', version: '0.1.0' })({
+export class StackType extends TypedObject({ typename: 'braneframe.Stack', version: '0.1.0' })({
   title: S.optional(S.string),
   sections: S.mutable(S.array(E.ref(SectionType))),
 }) {}

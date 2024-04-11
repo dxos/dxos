@@ -4915,6 +4915,10 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
+    devDependencies:
+      '@dxos/test':
+        specifier: workspace:*
+        version: link:../../../tools/executors/test
 
   packages/common/typings: {}
 
@@ -8193,6 +8197,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../../common/tracing
       boolean:
         specifier: ^3.0.1
         version: 3.2.0

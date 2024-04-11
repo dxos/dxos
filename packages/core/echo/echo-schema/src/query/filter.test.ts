@@ -11,7 +11,7 @@ import { describe, test } from '@dxos/test';
 
 import { compareType, Filter, filterMatch } from './filter';
 import { AutomergeObjectCore, getAutomergeObjectCore } from '../automerge';
-import { EchoObjectSchema } from '../effect/echo-object-class';
+import { TypedObject } from '../effect/echo-object-class';
 import * as E from '../effect/reactive';
 import { createDatabase } from '../testing';
 
@@ -100,7 +100,7 @@ describe('Filter', () => {
   });
 
   test('dynamic schema', async () => {
-    class GeneratedSchema extends EchoObjectSchema({ typename: 'dynamic', version: '0.1.0' })({ title: S.string }) {}
+    class GeneratedSchema extends TypedObject({ typename: 'dynamic', version: '0.1.0' })({ title: S.string }) {}
 
     const { db } = await createDatabase();
     const schema = db.schemaRegistry.add(GeneratedSchema);

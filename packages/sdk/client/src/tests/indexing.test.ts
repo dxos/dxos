@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { Trigger, asyncTimeout } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { type Space } from '@dxos/client-protocol';
 import { warnAfterTimeout } from '@dxos/debug';
@@ -46,7 +46,6 @@ describe('Index queries', () => {
       getAllDocuments: async function* () {},
     });
     afterTest(() => indexer.destroy());
-    const indexingDone = indexer.indexed.waitForCount(2);
 
     indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
     await indexer.initialize();
@@ -65,7 +64,6 @@ describe('Index queries', () => {
       space.db.add(contact);
       await space.db.flush();
     }
-    await asyncTimeout(indexingDone, 1000);
 
     await queryIndexedContact(space);
   });
@@ -90,11 +88,11 @@ describe('Index queries', () => {
   test('indexes persists between client restarts', async () => {
     const testStoragePath = fs.mkdtempSync(path.join('tmp', 'client-indexing-'));
     fs.rmSync(testStoragePath, { recursive: true, force: true });
-    const storage = createStorage({ type: StorageType.NODE, root: testStoragePath });
     afterTest(() => fs.rmSync(testStoragePath, { recursive: true, force: true }));
 
     let spaceKey: PublicKey;
     {
+      const storage = createStorage({ type: StorageType.NODE, root: testStoragePath });
       const { client, builder } = await setupClient(storage);
       await client.halo.createIdentity();
 
@@ -118,9 +116,8 @@ describe('Index queries', () => {
     }
 
     {
+      const storage = createStorage({ type: StorageType.NODE, root: testStoragePath });
       const { client } = await setupClient(storage);
-
-      await client.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
 
       await client.spaces.isReady.wait();
 
