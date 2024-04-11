@@ -13,7 +13,7 @@ import { afterTest, describe, test } from '@dxos/test';
 import { IndexMetadataStore } from './index-metadata-store';
 import { IndexStore } from './index-store';
 import { Indexer, type ObjectSnapshot } from './indexer';
-import { createTestLevel } from './testing';
+import { createTestLevel } from '@dxos/echo-pipeline/testing';
 
 describe('Indexer', () => {
   test('objects that are marked as dirty are getting indexed', async () => {

@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { expect } from 'chai';
 
 import { afterTest, describe, test } from '@dxos/test';
 
 import { IndexMetadataStore } from './index-metadata-store';
-import { createTestLevel } from './testing';
 
 describe('IndexMetadataStore', () => {
   test('basic', async () => {
