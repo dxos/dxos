@@ -223,6 +223,7 @@ export class ReplicatorExtension implements TeleportExtension {
     const networkStream = await this._extensionContext!.createStream(streamTag, {
       contentType: 'application/x-hypercore',
     });
+    let replicationStreamErrors = 0;
 
     // https://github.com/holepunchto/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
     const replicationStream = feed.replicate(true, {
@@ -264,8 +265,13 @@ export class ReplicatorExtension implements TeleportExtension {
         return;
       }
 
-      // TODO(nf): WARN on first error?
-      log.info('replication stream error', { err, info });
+      // TODO(nf): WARN on first error? log full info on some subsequent errors?
+      if (replicationStreamErrors === 0) {
+        log.info('replication stream error', { err, info });
+      } else {
+        log.info('replication stream error', { err, feedKey: info.feedKey, count: replicationStreamErrors });
+      }
+      replicationStreamErrors++;
     });
 
     this._streams.set(info.feedKey, {
