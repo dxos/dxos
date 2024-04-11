@@ -17,14 +17,20 @@ import { TableSettings } from './TableSettings';
 
 const Story = () => {
   const [space] = useSpaces();
+  const client = useClient();
   const [open, setOpen] = useState(true);
   const [table, setTable] = useState<TableType>();
-  const schemas = space.db.schemaRegistry.getAll();
+  const [schemas, setSchemas] = useState<E.DynamicEchoSchema[]>([]);
+
   useEffect(() => {
     const generator = createSpaceObjectGenerator(space);
     generator.addSchemas();
 
-    setTable(space.db.add(new TableType()));
+    if (!client._graph.types.isEffectSchemaRegistered(TableType)) {
+      client._graph.types.registerEffectSchema(TableType);
+    }
+
+    setTable(space.db.add(E.object(TableType, { title: 'Table', props: [] })));
   }, []);
 
   const handleClose = (success: boolean) => {
