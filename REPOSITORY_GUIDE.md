@@ -6,7 +6,6 @@ Instructions and documentation for developer workflows in this DXOS repository.
 
 - Node v18.x (recommended: [Node Version Manager](https://github.com/nvm-sh/nvm); see `.node-version`).
 - Native libraries: `brew install pkg-config cairo pango libpng jpeg giflib librsvg python-setuptools`
-  git remote add dxos https://github.com/herbcaudill/dxos.git
 
 ## Monorepo workspace
 
