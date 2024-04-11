@@ -18,6 +18,11 @@ import { type IndexMetadataStore } from './index-metadata-store';
 import { type IndexStore } from './index-store';
 import { type ObjectType, type Index } from './types';
 
+/**
+ * Amount of documents processed in a batch to save indexes after.
+ */
+const INDEX_UPDATE_BATCH_SIZE = 100;
+
 export type ObjectSnapshot = {
   /**
    * Index ID.
@@ -72,7 +77,6 @@ export class Indexer {
     }
 
     await this._indexUpdatedObjects();
-    this.indexed.emit();
   });
 
   private readonly _metadataStore: IndexMetadataStore;
@@ -184,8 +188,10 @@ export class Indexer {
     this._newIndexes.forEach((index) => this._indexes.set(index.kind, index));
     this._newIndexes.length = 0; // Clear new indexes.
     await this._saveIndexes();
+    this.indexed.emit();
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   private async _indexUpdatedObjects() {
     if (this._ctx.disposed) {
       return;
@@ -195,16 +201,27 @@ export class Indexer {
       return;
     }
 
+    const documentsUpdated: ObjectSnapshot[] = [];
+    const saveIndexChanges = async () => {
+      await this._saveIndexes();
+      await Promise.all(
+        documentsUpdated.map(async (document) => this._metadataStore.markClean(document.id, document.currentHash)),
+      );
+    };
+
     for await (const documents of this._loadDocuments(ids)) {
       if (this._ctx.disposed) {
         return;
       }
       await this._updateIndexes(Array.from(this._indexes.values()), documents);
-      await this._saveIndexes();
-      await Promise.all(
-        documents.map(async (document) => this._metadataStore.markClean(document.id, document.currentHash)),
-      );
+      documentsUpdated.push(...documents);
+      if (documentsUpdated.length >= INDEX_UPDATE_BATCH_SIZE) {
+        await saveIndexChanges();
+        documentsUpdated.length = 0;
+      }
     }
+    await saveIndexChanges();
+    this.indexed.emit();
   }
 
   @trace.span({ showInBrowserTimeline: true })
