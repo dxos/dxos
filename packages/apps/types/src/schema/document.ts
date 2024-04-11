@@ -14,7 +14,7 @@ export class TextV0Type extends TypedObject({ typename: 'dxos.Text.v0', version:
 
 const CommentSchema = S.mutable(
   S.struct({
-    thread: S.optional(E.ref(E.ExpandoType)),
+    thread: S.optional(E.ref(E.Expando)),
     cursor: S.optional(S.string),
   }),
 );

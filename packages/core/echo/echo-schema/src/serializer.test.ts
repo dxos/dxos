@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { ExpandoType } from './effect/reactive';
+import { Expando } from './effect/reactive';
 import { Filter } from './query';
 import { getSchema, object } from './schema';
 import { Serializer, type SerializedSpace } from './serializer';
@@ -57,14 +57,14 @@ describe('Serializer', () => {
       const obj = object({
         title: 'Main task',
         subtasks: [
-          object(ExpandoType, {
+          object(Expando, {
             title: 'Subtask 1',
           }),
-          object(ExpandoType, {
+          object(Expando, {
             title: 'Subtask 2',
           }),
         ],
-        previous: object(ExpandoType, {
+        previous: object(Expando, {
           title: 'Previous task',
         }),
       });

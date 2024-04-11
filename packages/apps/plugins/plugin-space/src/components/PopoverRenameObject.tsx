@@ -5,12 +5,12 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { FolderType } from '@braneframe/types';
-import { type ExpandoType } from '@dxos/echo-schema';
+import { type Expando } from '@dxos/echo-schema';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
 
-export const PopoverRenameObject = ({ object: obj }: { object: ExpandoType }) => {
+export const PopoverRenameObject = ({ object: obj }: { object: Expando }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const doneButton = useRef<HTMLButtonElement>(null);
   // TODO(wittjosiah): Use schema here.

@@ -288,10 +288,7 @@ describe('Reactive Object with ECHO database', () => {
       const person = db.add(
         E.object({
           name: 'John',
-          previousEmployment: [
-            E.object(E.ExpandoType, { name: 'DXOS' }),
-            E.object(E.ExpandoType, { name: 'Braneframe' }),
-          ],
+          previousEmployment: [E.object(E.Expando, { name: 'DXOS' }), E.object(E.Expando, { name: 'Braneframe' })],
         }),
       );
 
@@ -384,8 +381,8 @@ describe('Reactive Object with ECHO database', () => {
 
     const { db } = await createDatabase();
 
-    const obj1 = db.add(E.object(E.ExpandoType, { title: 'Object 1' }));
-    const obj2 = db.add(E.object(E.ExpandoType, { title: 'Object 2' }));
+    const obj1 = db.add(E.object(E.Expando, { title: 'Object 1' }));
+    const obj2 = db.add(E.object(E.Expando, { title: 'Object 2' }));
 
     let updateCount = 0;
     using _ = defer(

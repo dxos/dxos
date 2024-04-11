@@ -12,13 +12,13 @@ import { range } from '@dxos/util';
 import { Filter } from './filter';
 import { type EchoDatabase } from '../database';
 import * as E from '../effect/reactive';
-import { type EchoReactiveObject, ExpandoType } from '../effect/reactive';
+import { type EchoReactiveObject, Expando } from '../effect/reactive';
 import { TestBuilder, createDatabase } from '../testing';
 import { Contact } from '../tests/schema';
 import { TextCompatibilitySchema } from '../type-collection';
 
 const createTestObject = (idx: number, label?: string) => {
-  return E.object(ExpandoType, { idx, title: `Task ${idx}`, label });
+  return E.object(Expando, { idx, title: `Task ${idx}`, label });
 };
 
 describe('Queries', () => {
@@ -76,7 +76,7 @@ describe('Queries', () => {
     }
 
     {
-      const { objects } = db.query((object: ExpandoType) => object.label === 'red' || object.label === 'green');
+      const { objects } = db.query((object: Expando) => object.label === 'red' || object.label === 'green');
       expect(objects).to.have.length(5);
     }
   });
@@ -185,7 +185,7 @@ test.skip('query with model filters', async () => {
   const peer = await testBuilder.createPeer();
 
   const obj = peer.db.add(
-    E.object(ExpandoType, {
+    E.object(Expando, {
       title: 'title',
       description: E.object(TextCompatibilitySchema, { content: 'description' }),
     }),
@@ -250,7 +250,7 @@ test('map over refs in query result', async () => {
   const testBuilder = new TestBuilder();
   const peer = await testBuilder.createPeer();
 
-  const folder = peer.db.add(E.object(ExpandoType, { name: 'folder', objects: [] as any[] }));
+  const folder = peer.db.add(E.object(Expando, { name: 'folder', objects: [] as any[] }));
   const objects = range(3).map((idx) => createTestObject(idx));
   for (const object of objects) {
     folder.objects.push(object);
