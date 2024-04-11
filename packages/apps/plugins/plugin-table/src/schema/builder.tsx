@@ -28,23 +28,17 @@ type ColumnCreationOptions = {
   onRowDelete?: (object: any) => void;
 };
 
-const findTableDef = (tableDefs: TableDef[], tableId: string): TableDef | undefined => {
-  return tableDefs.find((def) => def.id === tableId);
-};
-
-export const createColumnsFromTableDefs = (
-  tableDefs: TableDef[],
-  tableId: string,
-  space: Space,
-  options: ColumnCreationOptions,
-): TableColumnDef<any>[] => {
-  const tableDef = findTableDef(tableDefs, tableId);
-
-  if (!tableDef) {
-    return [];
-  }
-
-  const dataColumns = createColumns(tableDefs, tableDef, space, options);
+export const createColumnsFromTableDef = ({
+  space,
+  tableDef,
+  tablesToReference,
+  ...options
+}: {
+  space: Space;
+  tableDef: TableDef;
+  tablesToReference: TableDef[];
+} & ColumnCreationOptions): TableColumnDef<any>[] => {
+  const dataColumns = createColumns(tableDef, tablesToReference, space, options);
   const actionColumn = createActionColumn(tableDef, options);
 
   return [...dataColumns, actionColumn];
@@ -54,8 +48,8 @@ export const createColumnsFromTableDefs = (
  * Create column definitions from schema metadata.
  */
 export const createColumns = (
-  tableDefs: TableDef[],
   tableDef: TableDef,
+  tablesToReference: TableDef[],
   space: Space,
   { onRowUpdate, onColumnUpdate, onColumnDelete }: ColumnCreationOptions = {},
 ): TableColumnDef<any>[] => {
@@ -72,7 +66,7 @@ export const createColumns = (
         : (context) => (
             <ColumnMenu<any, any>
               context={context}
-              tableDefs={tableDefs}
+              tableDefs={tablesToReference}
               tableDef={tableDef}
               column={column}
               onUpdate={onColumnUpdate}

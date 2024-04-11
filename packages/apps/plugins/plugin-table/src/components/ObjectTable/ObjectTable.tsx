@@ -13,7 +13,7 @@ import { DensityProvider } from '@dxos/react-ui';
 import { Table, type TableDef, type TableProps } from '@dxos/react-ui-table';
 
 // TODO(burdon): Remove deps.
-import { getSchema, schemaPropMapper, createColumnsFromTableDefs } from '../../schema';
+import { getSchema, schemaPropMapper, createColumnsFromTableDef } from '../../schema';
 import { TableSettings } from '../TableSettings';
 
 export type ObjectTableProps = Pick<TableProps<any>, 'stickyHeader' | 'role' | 'getScrollElement'> & {
@@ -75,57 +75,14 @@ const useUpdateProperty = (table: TableType) => {
   return { updateSchemaProp, updateTableProp };
 };
 
-export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
-  const space = getSpace(table);
-  const [showSettings, setShowSettings] = useState(false);
-
-  useEffect(() => setShowSettings(!table.schema), [table.schema]);
-
-  const handleClose = (success: boolean) => {
-    // TODO(burdon): If cancel then undo create?
-    if (!success || !space) {
-      return;
-    }
-
-    if (!table.schema) {
-      table.schema = space.db.schemaRegistry.add(
-        TypedObject({ typename: `example.com/schema/${PublicKey.random().truncate()}`, version: '0.1.0' })({
-          title: S.string,
-        }),
-      );
-    }
-
-    setShowSettings(false);
-  };
-
-  const [schemas, setSchemas] = useState<DynamicEchoSchema[]>([]);
-
-  useEffect(() => {
-    if (space) {
-      setSchemas(space.db.schemaRegistry.getAll());
-    }
-  }, [showSettings, space]);
-
-  if (!space) {
-    return null;
-  }
-
-  if (showSettings) {
-    return <TableSettings open={showSettings} table={table} schemas={schemas} onClose={handleClose} />;
-  } else {
-    return (
-      <ObjectTableTable table={table} role={role} stickyHeader={stickyHeader} getScrollElement={getScrollElement} />
-    );
-  }
-};
-
-// TODO(Zan): Better name?
+// TODO(Zan): Better name.
 const ObjectTableTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
   const space = getSpace(table);
 
   const objects = useObjects(space, table.schema);
   const tables = useTables(space);
 
+  // TODO(zan): New object should probably be a ref? (Why should we re-create the columns when adding rows)
   const [newObject, setNewObject] = useState({});
   const rows = useMemo(() => [...objects, newObject], [objects, newObject]);
 
@@ -144,7 +101,16 @@ const ObjectTableTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, get
         columns: table.schema!.getProperties().map(schemaPropMapper(table)),
       }));
 
-    return createColumnsFromTableDefs(tableDefs, table.schema?.id, space!, {
+    const tableDef = tableDefs.find((tableDef) => tableDef.id === table.schema?.id);
+
+    if (!tableDef) {
+      return [];
+    }
+
+    return createColumnsFromTableDef({
+      tableDef,
+      tablesToReference: tableDefs,
+      space: space!,
       onColumnUpdate: (id, column) => {
         const { type, refTable, refProp, digits, label } = column;
         updateTableProp({ id, refProp, label });
@@ -196,9 +162,54 @@ const ObjectTableTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, get
       />
       {debug && (
         <div className='flex text-xs'>
-          <pre className='flex-1'>{JSON.stringify(table, undefined, 2)}</pre>
+          <pre className='flex-1'>{JSON.stringify(table.props, undefined, 2)}</pre>
+          <pre className='flex-1'>{JSON.stringify((table.schema as any)?._schema, undefined, 2)}</pre>
         </div>
       )}
     </DensityProvider>
   );
+};
+
+export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
+  const space = getSpace(table);
+  const [showSettings, setShowSettings] = useState(false);
+
+  useEffect(() => setShowSettings(!table.schema), [table.schema]);
+
+  const handleClose = (success: boolean) => {
+    // TODO(burdon): If cancel then undo create?
+    if (!success || !space) {
+      return;
+    }
+
+    if (!table.schema) {
+      table.schema = space.db.schemaRegistry.add(
+        TypedObject({ typename: `example.com/schema/${PublicKey.random().truncate()}`, version: '0.1.0' })({
+          title: S.string,
+        }),
+      );
+    }
+
+    setShowSettings(false);
+  };
+
+  const [schemas, setSchemas] = useState<DynamicEchoSchema[]>([]);
+
+  useEffect(() => {
+    if (space) {
+      setSchemas(space.db.schemaRegistry.getAll());
+    }
+  }, [showSettings, space]);
+
+  if (!space) {
+    return null;
+  }
+
+  if (showSettings) {
+    return <TableSettings open={showSettings} table={table} schemas={schemas} onClose={handleClose} />;
+  } else {
+    return (
+      <ObjectTableTable table={table} role={role} stickyHeader={stickyHeader} getScrollElement={getScrollElement} />
+    );
+  }
 };
