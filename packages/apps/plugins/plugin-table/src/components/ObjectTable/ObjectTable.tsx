@@ -9,7 +9,7 @@ import { TableType, type TableTypeProp } from '@braneframe/types';
 import { S, create } from '@dxos/echo-schema';
 import { TypedObject, type EchoReactiveObject, Filter } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { getSpace, useQuery } from '@dxos/react-client/echo';
+import { getSpace, Space, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider } from '@dxos/react-ui';
 import { Table, type TableDef, type TableProps } from '@dxos/react-ui-table';
 
@@ -21,6 +21,7 @@ export type ObjectTableProps = Pick<TableProps<any>, 'stickyHeader' | 'role' | '
   table: TableType;
 };
 
+// TODO(Zan): Consolidate.
 const Stable = {
   empty: {
     object: Object.freeze({}),
@@ -28,28 +29,30 @@ const Stable = {
   },
 };
 
-export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
-  const space = getSpace(table);
+// -- Hooks
+// TODO(Zan): Move them to a file
+//            They are here rn so I can think
 
-  const objectFilter = useMemo(() => (table.schema ? Filter.schema(table.schema) : () => false), [table.schema]);
+const useObjects = (space?: Space, schema?: S.Schema<any>) => {
+  const objectFilter = useMemo(() => (schema ? Filter.schema(schema) : () => false), [schema]);
 
   const objects = useQuery<EchoReactiveObject<any>>(
     space,
     objectFilter,
     Stable.empty.object,
     // TODO(burdon): Toggle deleted.
-    [table.schema],
+    [schema],
   );
 
-  const filteredObjects = useFilteredObjects(objects);
+  return useFilteredObjects(objects);
+};
 
-  const [newObject, setNewObject] = useState({});
-
-  const rows = useMemo(() => [...filteredObjects, newObject], [filteredObjects, newObject]);
-
+const useTables = (space?: Space) => {
   const tableFilter = useMemo(() => Filter.schema(TableType), []);
-  const tables = useQuery<TableType>(space, tableFilter);
+  return useQuery<TableType>(space, tableFilter);
+};
 
+const useUpdateProperty = (table: TableType) => {
   const updateSchemaProp = useCallback(
     (update: S.Struct.Fields) => table.schema?.updateColumns(update),
     [table.schema],
@@ -67,6 +70,21 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
     },
     [table.props],
   );
+
+  return { updateSchemaProp, updateTableProp };
+};
+
+export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
+  const space = getSpace(table);
+
+  const objects = useObjects(space, table.schema);
+
+  const [newObject, setNewObject] = useState({});
+  const rows = useMemo(() => [...objects, newObject], [objects, newObject]);
+
+  const tables = useTables(space);
+
+  const { updateSchemaProp, updateTableProp } = useUpdateProperty(table);
 
   const columns = useMemo(() => {
     if (!space || !table.schema || !tables.length) {
