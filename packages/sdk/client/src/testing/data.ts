@@ -5,21 +5,21 @@
 import * as S from '@effect/schema/Schema';
 
 import * as E from '@dxos/echo-schema';
-import { EchoObjectSchema } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo-schema';
 
 // TODO(burdon): Copied to avoid circular dependency @dxos/client <=> @braneframe/types.
 //  Better to simplify tests and remove dependency completely.
 
-export class TextV0Type extends EchoObjectSchema({ typename: 'dxos.Text.v0', version: '0.1.0' })({
+export class TextV0Type extends TypedObject({ typename: 'dxos.Text.v0', version: '0.1.0' })({
   content: S.string,
 }) {}
 
-export class DocumentType extends EchoObjectSchema({ typename: 'braneframe.Document', version: '0.1.0' })({
+export class DocumentType extends TypedObject({ typename: 'braneframe.Document', version: '0.1.0' })({
   title: S.optional(S.string),
   content: E.ref(TextV0Type),
 }) {}
 
-export class ContactType extends EchoObjectSchema({ typename: 'braneframe.Contact', version: '0.1.0' })({
+export class ContactType extends TypedObject({ typename: 'braneframe.Contact', version: '0.1.0' })({
   name: S.optional(S.string),
   identifiers: S.mutable(
     S.array(
@@ -38,7 +38,7 @@ const _BlockSchema = S.struct({
 });
 export interface BlockType extends S.Schema.Type<typeof _BlockSchema> {}
 
-export class MessageType extends EchoObjectSchema({ typename: 'braneframe.Message', version: '0.1.0' })({
+export class MessageType extends TypedObject({ typename: 'braneframe.Message', version: '0.1.0' })({
   type: S.optional(S.string),
   date: S.optional(S.string),
   subject: S.optional(S.string),
@@ -54,7 +54,7 @@ export class MessageType extends EchoObjectSchema({ typename: 'braneframe.Messag
   ),
 }) {}
 
-export class ThreadType extends EchoObjectSchema({ typename: 'braneframe.Thread', version: '0.1.0' })({
+export class ThreadType extends TypedObject({ typename: 'braneframe.Thread', version: '0.1.0' })({
   title: S.optional(S.string),
   messages: S.mutable(S.array(E.ref(MessageType))),
   context: S.optional(

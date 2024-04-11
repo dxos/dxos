@@ -4,8 +4,8 @@
 
 import * as S from '@effect/schema/Schema';
 
-import { EchoObjectSchema } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo-schema';
 
-export class MapType extends EchoObjectSchema({ typename: 'braneframe.Map', version: '0.1.0' })({
+export class MapType extends TypedObject({ typename: 'braneframe.Map', version: '0.1.0' })({
   title: S.optional(S.string),
 }) {}

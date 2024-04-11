@@ -9,7 +9,7 @@
 import * as S from '@effect/schema/Schema';
 
 import * as E from '@dxos/echo-schema';
-import { EchoObjectSchema } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
 // TODO(burdon): Util.
@@ -63,7 +63,7 @@ export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
 
   project: {
     createSchema: () =>
-      class ProjectType extends EchoObjectSchema({ typename: 'dxos.test.Project', version: '0.1.0' })({
+      class ProjectType extends TypedObject({ typename: 'dxos.test.Project', version: '0.1.0' })({
         title: S.string,
         repo: S.string,
         status: S.string,
