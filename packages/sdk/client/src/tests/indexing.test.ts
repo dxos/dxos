@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { Trigger, asyncTimeout } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { type Space } from '@dxos/client-protocol';
 import { warnAfterTimeout } from '@dxos/debug';
@@ -46,7 +46,6 @@ describe('Index queries', () => {
       getAllDocuments: async function* () {},
     });
     afterTest(() => indexer.destroy());
-    const indexingDone = indexer.indexed.waitForCount(2);
 
     indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
     await indexer.initialize();
@@ -65,7 +64,6 @@ describe('Index queries', () => {
       space.db.add(contact);
       await space.db.flush();
     }
-    await asyncTimeout(indexingDone, 1000);
 
     await queryIndexedContact(space);
   });
