@@ -6,10 +6,9 @@ import React, { type FC, useEffect, useMemo, useState, useCallback } from 'react
 
 import { useFilteredObjects } from '@braneframe/plugin-search';
 import { TableType, type TableTypeProp } from '@braneframe/types';
-import { S, create } from '@dxos/echo-schema';
-import { TypedObject, type EchoReactiveObject, Filter } from '@dxos/echo-schema';
+import { type DynamicEchoSchema, S, create, TypedObject, type EchoReactiveObject, Filter } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { getSpace, Space, useQuery } from '@dxos/react-client/echo';
+import { getSpace, type Space, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider } from '@dxos/react-ui';
 import { Table, type TableDef, type TableProps } from '@dxos/react-ui-table';
 
@@ -54,7 +53,9 @@ const useTables = (space?: Space) => {
 
 const useUpdateProperty = (table: TableType) => {
   const updateSchemaProp = useCallback(
-    (update: S.Struct.Fields) => table.schema?.updateColumns(update),
+    (update: S.Struct.Fields) => {
+      return table.schema?.updateColumns(update);
+    },
     [table.schema],
   );
 
@@ -76,13 +77,57 @@ const useUpdateProperty = (table: TableType) => {
 
 export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
   const space = getSpace(table);
+  const [showSettings, setShowSettings] = useState(false);
+
+  useEffect(() => setShowSettings(!table.schema), [table.schema]);
+
+  const handleClose = (success: boolean) => {
+    // TODO(burdon): If cancel then undo create?
+    if (!success || !space) {
+      return;
+    }
+
+    if (!table.schema) {
+      table.schema = space.db.schemaRegistry.add(
+        TypedObject({ typename: `example.com/schema/${PublicKey.random().truncate()}`, version: '0.1.0' })({
+          title: S.string,
+        }),
+      );
+    }
+
+    setShowSettings(false);
+  };
+
+  const [schemas, setSchemas] = useState<DynamicEchoSchema[]>([]);
+
+  useEffect(() => {
+    if (space) {
+      setSchemas(space.db.schemaRegistry.getAll());
+    }
+  }, [showSettings, space]);
+
+  if (!space) {
+    return null;
+  }
+
+  if (showSettings) {
+    return <TableSettings open={showSettings} table={table} schemas={schemas} onClose={handleClose} />;
+  } else {
+    return (
+      <ObjectTableTable table={table} role={role} stickyHeader={stickyHeader} getScrollElement={getScrollElement} />
+    );
+  }
+};
+
+// TODO(Zan): Better name?
+const ObjectTableTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
+  const space = getSpace(table);
 
   const objects = useObjects(space, table.schema);
+  const tables = useTables(space);
 
   const [newObject, setNewObject] = useState({});
   const rows = useMemo(() => [...objects, newObject], [objects, newObject]);
-
-  const tables = useTables(space);
 
   const { updateSchemaProp, updateTableProp } = useUpdateProperty(table);
 
@@ -132,42 +177,10 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
     [updateTableProp],
   );
 
-  const debug = false;
-
-  const [showSettings, setShowSettings] = useState(false);
-
-  useEffect(() => {
-    setShowSettings(!table.schema);
-  }, [table]);
+  const debug = true;
 
   if (!space) {
     return null;
-  }
-
-  const handleClose = (success: boolean) => {
-    // TODO(burdon): If cancel then undo create?
-    if (!success) {
-      return;
-    }
-
-    if (!table.schema) {
-      table.schema = space.db.schemaRegistry.add(
-        TypedObject({ typename: `example.com/schema/${PublicKey.random().truncate()}`, version: '0.1.0' })({
-          title: S.string,
-        }),
-      );
-    }
-
-    setShowSettings(false);
-  };
-
-  const [schemas, setSchemas] = useState<E.DynamicEchoSchema[]>([]);
-  useEffect(() => {
-    setSchemas(space.db.schemaRegistry.getAll());
-  }, [showSettings, space.db.schemaRegistry]);
-
-  if (showSettings) {
-    return <TableSettings open={showSettings} table={table} schemas={schemas} onClose={handleClose} />;
   }
 
   return (
@@ -186,7 +199,6 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
       {debug && (
         <div className='flex text-xs'>
           <pre className='flex-1'>{JSON.stringify(table, undefined, 2)}</pre>
-          <pre className='flex-1'>{JSON.stringify(table.schema, undefined, 2)}</pre>
         </div>
       )}
     </DensityProvider>

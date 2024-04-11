@@ -33,7 +33,6 @@ const Story = () => {
     }
 
     const table = space.db.add(create(TableType, { title: 'Test Prop', props: [{ id: 'test' }] }));
-
     setTable(table);
   }, []);
 
