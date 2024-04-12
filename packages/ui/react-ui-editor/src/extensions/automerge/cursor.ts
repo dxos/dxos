@@ -11,7 +11,7 @@ export const cursorConverter = (accessor: DocAccessor): CursorConverter => ({
   // TODO(burdon): Handle assoc to associate with a previous character.
   toCursor: (pos) => {
     try {
-      return toCursor({ accessor, position: pos });
+      return toCursor(accessor, pos);
     } catch (err) {
       log.catch(err);
       return ''; // In case of invalid request (e.g., wrong document).
@@ -20,7 +20,7 @@ export const cursorConverter = (accessor: DocAccessor): CursorConverter => ({
 
   fromCursor: (cursor) => {
     try {
-      return fromCursor({ accessor, cursor });
+      return fromCursor(accessor, cursor);
     } catch (err) {
       log.catch(err);
       return 0; // In case of invalid request (e.g., wrong document).

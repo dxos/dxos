@@ -6,28 +6,16 @@ import get from 'lodash.get';
 
 import { next as A } from '@dxos/automerge/automerge';
 
-import { type DocAccessor, createDocAccessor, type KeyPath } from './automerge';
-import { type EchoReactiveObject } from './effect/reactive';
+import { type DocAccessor } from './automerge';
 
 /**
  * @deprecated
  */
 export const LEGACY_TEXT_TYPE = 'dxos.Text.v0';
 
-export const toCursor = <T>({
-  object,
-  path,
-  accessor: _accessor,
-  position: pos,
-}: {
-  object?: EchoReactiveObject<T>;
-  path?: KeyPath;
-  accessor?: DocAccessor;
-  position: number;
-}) => {
-  const accessor = _accessor ?? (object && path ? createDocAccessor(object, path) : undefined);
-  const doc = accessor?.handle.docSync();
-  if (!accessor || !doc) {
+export const toCursor = (accessor: DocAccessor, pos: number) => {
+  const doc = accessor.handle.docSync();
+  if (!doc) {
     return '';
   }
 
@@ -40,24 +28,13 @@ export const toCursor = <T>({
   return A.getCursor(doc, accessor.path.slice(), pos);
 };
 
-export const fromCursor = <T>({
-  object,
-  path,
-  accessor: _accessor,
-  cursor,
-}: {
-  object?: EchoReactiveObject<T>;
-  path?: KeyPath;
-  accessor?: DocAccessor;
-  cursor: string;
-}) => {
+export const fromCursor = (accessor: DocAccessor, cursor: string) => {
   if (cursor === '') {
     return 0;
   }
 
-  const accessor = _accessor ?? (object && path ? createDocAccessor(object, path) : undefined);
-  const doc = accessor?.handle.docSync();
-  if (!accessor || !doc) {
+  const doc = accessor.handle.docSync();
+  if (!doc) {
     return 0;
   }
 
@@ -74,22 +51,11 @@ export const fromCursor = <T>({
   return A.getCursorPosition(doc, accessor.path.slice(), cursor);
 };
 
-export const getTextInRange = <T>({
-  object,
-  path,
-  start,
-  end,
-}: {
-  object: EchoReactiveObject<T>;
-  path: KeyPath;
-  start: string;
-  end: string;
-}) => {
-  const accessor = createDocAccessor(object, path);
-  const beginIdx = fromCursor({ accessor, cursor: start });
-  const endIdx = fromCursor({ accessor, cursor: end });
+export const getTextInRange = (accessor: DocAccessor, start: string, end: string) => {
   const doc = accessor.handle.docSync();
   const value = get(doc, accessor.path);
+  const beginIdx = fromCursor(accessor, start);
+  const endIdx = fromCursor(accessor, end);
   if (typeof value === 'string') {
     return value.slice(beginIdx, endIdx);
   } else {

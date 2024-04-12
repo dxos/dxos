@@ -7,6 +7,7 @@ import { type Space } from '@dxos/client/echo';
 import {
   type DynamicEchoSchema,
   type EchoReactiveObject,
+  createDocAccessor,
   effectToJsonSchema,
   getTextInRange,
   loadObjectReferences,
@@ -64,5 +65,5 @@ const getReferencedText = (document: DocumentType, comment: DocumentCommentType)
   }
 
   const [start, end] = comment.cursor.split(':');
-  return document.content ? getTextInRange({ object: document.content, path: ['content'], start, end }) : '';
+  return document.content ? getTextInRange(createDocAccessor(document.content, ['content']), start, end) : '';
 };

@@ -22,7 +22,7 @@ import {
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { createDocAccessor, type EchoReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { getSpace, getTextInRange, SpaceProxy, Filter } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
@@ -344,7 +344,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 doc.comments?.forEach(({ thread, cursor }) => {
                   if (thread instanceof ThreadType && cursor) {
                     const [start, end] = cursor.split(':');
-                    const title = doc.content && getTextInRange({ object: doc.content, path: ['content'], start, end });
+                    const title =
+                      doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
                     // TODO(burdon): This seems unsafe; review.
                     // Only update if the title has changed, otherwise this will cause an infinite loop.
                     // Skip if the title is empty - this means comment text was deleted, but thread title should remain.
@@ -360,7 +361,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               onCreate: ({ cursor, location }) => {
                 // Create comment thread.
                 const [start, end] = cursor.split(':');
-                const title = doc.content && getTextInRange({ object: doc.content, path: ['content'], start, end });
+                const title = doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
                 const thread = space.db.add(E.object(ThreadType, { title, messages: [], context: { object: doc.id } }));
                 if (doc.comments) {
                   doc.comments.push({ thread, cursor });
@@ -395,7 +396,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 if (comment && comment.thread instanceof ThreadType) {
                   const [start, end] = cursor.split(':');
                   comment.thread.title =
-                    doc.content && getTextInRange({ object: doc.content, path: ['content'], start, end });
+                    doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
                   comment.cursor = cursor;
                 }
               },
