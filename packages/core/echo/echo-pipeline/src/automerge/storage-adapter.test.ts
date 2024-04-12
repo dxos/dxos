@@ -6,9 +6,11 @@ import { expect } from 'chai';
 
 import { type StorageAdapterInterface } from '@dxos/automerge/automerge-repo';
 import { PublicKey } from '@dxos/keys';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
 import { type MaybePromise } from '@dxos/util';
 
+import { AutomergeStorageAdapter } from './automerge-storage-adapter';
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
 import { createTestLevel } from '../testing';
 
