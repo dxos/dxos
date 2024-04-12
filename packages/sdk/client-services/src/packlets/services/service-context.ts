@@ -159,7 +159,7 @@ export class ServiceContext extends Resource {
     await this.signalManager.open();
     await this.networkManager.open();
 
-    await this.automergeHost.initialize();
+    await this.automergeHost.open();
     await this.metadataStore.load();
     await this.spaceManager.open();
     await this.identityManager.open(ctx);

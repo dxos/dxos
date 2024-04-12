@@ -79,7 +79,7 @@ export class AutomergeHost {
     this._metadata = metadata;
   }
 
-  async initialize() {
+  async open() {
     this._directory && (await levelMigration({ db: await this._db, directory: this._directory }));
     this._storage = new LevelDBStorageAdapter({
       db: await this._db,
@@ -158,6 +158,12 @@ export class AutomergeHost {
     }
   }
 
+  async close() {
+    this._storage.close?.();
+    await this._clientNetwork.close();
+    await this._ctx.dispose();
+  }
+
   get repo(): Repo {
     return this._repo;
   }
@@ -232,12 +238,6 @@ export class AutomergeHost {
   @trace.info({ depth: null })
   private _automergePeers() {
     return this._repo.peers;
-  }
-
-  async close() {
-    this._storage.close?.();
-    await this._clientNetwork.close();
-    await this._ctx.dispose();
   }
 
   //

@@ -25,7 +25,7 @@ describe('AutomergeHost', () => {
     const host = new AutomergeHost({
       db: level.sublevel('automerge'),
     });
-    await host.initialize();
+    await host.open();
     afterTest(() => host.close());
 
     const dataService = new DataServiceImpl(host);

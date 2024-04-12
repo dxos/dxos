@@ -34,7 +34,7 @@ describe('AutomergeHost', () => {
     const host = new AutomergeHost({
       db: level.sublevel('automerge'),
     });
-    await host.initialize();
+    await host.open();
     afterTest(() => host.close());
 
     const handle = host.repo.create();
@@ -49,7 +49,7 @@ describe('AutomergeHost', () => {
     afterTest(() => level.close());
 
     const host = new AutomergeHost({ db: level.sublevel('automerge') });
-    await host.initialize();
+    await host.open();
     afterTest(() => host.close());
     const handle = host.repo.create();
     handle.change((doc: any) => {
@@ -61,7 +61,7 @@ describe('AutomergeHost', () => {
     await sleep(100);
 
     const host2 = new AutomergeHost({ db: level.sublevel('automerge') });
-    await host2.initialize();
+    await host2.open();
     afterTest(() => host2.close());
     const handle2 = host2.repo.find(url);
     await handle2.whenReady();
