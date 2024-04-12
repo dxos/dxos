@@ -70,7 +70,7 @@ export const ColumnSettingsForm = ({
       }
     }
 
-    onUpdate?.(prop, {
+    onUpdate?.(column.id, {
       id: prop, // TODO(burdon): Make unique.
       prop,
       label,

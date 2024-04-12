@@ -59,9 +59,19 @@ const useUpdateProperty = (table: TableType) => {
     [table.schema],
   );
 
+  const updateSchemaPropName = useCallback(
+    (before: PropertyKey, after: PropertyKey) => {
+      return table.schema?.updateColumnName({ before, after });
+    },
+    [table.schema],
+  );
+
   const updateTableProp = useCallback(
-    (update: TableTypeProp) => {
-      const idx = table.props?.findIndex((prop) => prop.id === update.id);
+    (oldId: string, update: TableTypeProp) => {
+      console.log('updateTableProp', update);
+
+      const idx = table.props?.findIndex((prop) => prop.id === oldId);
+
       if (idx !== -1) {
         const current = table.props![idx];
         table.props.splice(idx, 1, { ...current, ...update });
@@ -72,7 +82,7 @@ const useUpdateProperty = (table: TableType) => {
     [table.props],
   );
 
-  return { updateSchemaProp, updateTableProp };
+  return { updateSchemaProp, updateSchemaPropName, updateTableProp };
 };
 
 // TODO(Zan): Better name.
@@ -86,7 +96,7 @@ const ObjectTableTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, get
   const [newObject, setNewObject] = useState({});
   const rows = useMemo(() => [...objects, newObject], [objects, newObject]);
 
-  const { updateSchemaProp, updateTableProp } = useUpdateProperty(table);
+  const { updateSchemaProp, updateSchemaPropName, updateTableProp } = useUpdateProperty(table);
 
   const columns = useMemo(() => {
     if (!space || !table.schema || !tables.length) {
@@ -97,7 +107,7 @@ const ObjectTableTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, get
       .filter((table) => table.schema)
       .map((table) => ({
         id: table.schema!.id,
-        name: table.schema?.typename ?? table.title,
+        name: table.title ?? table.schema?.typename,
         columns: table.schema!.getProperties().map(schemaPropMapper(table)),
       }));
 
@@ -111,12 +121,17 @@ const ObjectTableTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, get
       tableDef,
       tablesToReference: tableDefs,
       space: space!,
-      onColumnUpdate: (id, column) => {
-        const { type, refTable, refProp, digits, label } = column;
-        updateTableProp({ id, refProp, label });
+      onColumnUpdate: (oldId, column) => {
+        const { id, type, refTable, refProp, digits, label } = column;
+        updateTableProp(oldId, { id, refProp, label });
+
         updateSchemaProp({
-          [id]: getSchema(tables, type, { digits, refTable, refProp }),
+          [oldId]: getSchema(tables, type, { digits, refTable, refProp }),
         });
+
+        if (oldId !== column.id) {
+          updateSchemaPropName(oldId, id);
+        }
       },
       onColumnDelete: (id) => table.schema?.removeColumns([id]),
       onRowUpdate: (object, prop, value) => {
@@ -136,7 +151,7 @@ const ObjectTableTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, get
 
   const handleColumnResize = useCallback(
     (state: Record<string, number>) => {
-      Object.entries(state).forEach(([id, size]) => updateTableProp({ id, size }));
+      Object.entries(state).forEach(([id, size]) => updateTableProp(id, { id, size }));
     },
     [updateTableProp],
   );
