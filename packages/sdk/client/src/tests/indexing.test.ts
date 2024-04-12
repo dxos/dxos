@@ -6,9 +6,10 @@ import { expect } from 'chai';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { Trigger } from '@dxos/async';
+import { Trigger, asyncTimeout } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { type Space } from '@dxos/client-protocol';
+import { Config } from '@dxos/config';
 import { warnAfterTimeout } from '@dxos/debug';
 import * as E from '@dxos/echo-schema';
 import { Filter } from '@dxos/echo-schema';
@@ -89,7 +90,6 @@ describe('Index queries', () => {
     const testStoragePath = fs.mkdtempSync(path.join('tmp', 'client-indexing-'));
     fs.rmSync(testStoragePath, { recursive: true, force: true });
     afterTest(() => fs.rmSync(testStoragePath, { recursive: true, force: true }));
-
     let spaceKey: PublicKey;
     {
       const storage = createStorage({ type: StorageType.NODE, root: testStoragePath });
@@ -119,7 +119,7 @@ describe('Index queries', () => {
       const storage = createStorage({ type: StorageType.NODE, root: testStoragePath });
       const { client } = await setupClient(storage);
 
-      await client.spaces.isReady.wait();
+      await asyncTimeout(client.spaces.isReady.wait(), 5000);
 
       const space = client.spaces.get(spaceKey)!;
 
@@ -146,7 +146,11 @@ describe('Index queries', () => {
   });
 
   const setupClient = async (storage: Storage = createStorage({ type: StorageType.RAM })) => {
-    const builder = new TestBuilder();
+    const builder = new TestBuilder(
+      storage.type !== StorageType.RAM
+        ? new Config({ runtime: { client: { storage: { persistent: true } } } })
+        : new Config({}),
+    );
     builder.storage = storage;
     afterTest(async () => {
       await storage.close();
