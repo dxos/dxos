@@ -58,6 +58,7 @@
   },
   "devDependencies": {
     "@dxos/config": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
