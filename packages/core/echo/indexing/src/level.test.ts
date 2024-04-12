@@ -4,9 +4,8 @@
 
 import { expect } from 'chai';
 
-import { describe, test } from '@dxos/test';
-
 import { createTestLevel } from '@dxos/echo-pipeline/testing';
+import { describe, test } from '@dxos/test';
 
 describe('Level', () => {
   test('missing keys', async () => {
