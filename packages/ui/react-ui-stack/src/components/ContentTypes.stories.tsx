@@ -31,7 +31,12 @@ const ContentTypesStoryStack = ({ items }: { items: StackSectionItem[] }) => {
     <Tooltip.Provider>
       <Mosaic.Root>
         <Mosaic.DragOverlay />
-        <Stack id='stack-editors' SectionContent={ContentTypeDelegator} items={items} />
+        <Stack
+          id='stack-editors'
+          SectionContent={ContentTypeDelegator}
+          items={items}
+          classNames='max-is-[min(100dvw,60rem)]'
+        />
       </Mosaic.Root>
     </Tooltip.Provider>
   );
