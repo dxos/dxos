@@ -7,7 +7,6 @@ import { expect } from 'chai';
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import * as E from '@dxos/echo-schema';
-import { getTextContent } from '@dxos/echo-schema';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { ObjectSerializer } from './object-serializer';
@@ -56,7 +55,7 @@ describe('Serialization', () => {
 
       const object = objects[0]!;
       expect(object instanceof DocumentType).to.be.true;
-      expect(getTextContent(object.content)).to.equal(content);
+      expect(object.content.content).to.equal(content);
 
       // TODO(burdon): Object ID is not preserved (refs?)
       expect(object.id).to.not.equal(serialized.objects[0].id);

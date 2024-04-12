@@ -5,7 +5,7 @@
 import { X } from '@phosphor-icons/react';
 import React from 'react';
 
-import { getRawDoc } from '@dxos/echo-schema';
+import { createDocAccessor } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
 import { Button, Input, useThemeContext } from '@dxos/react-ui';
 import {
@@ -63,7 +63,7 @@ export const Item = ({ object, onDelete }: ItemProps<ItemType>) => {
         createBasicExtensions(),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode }),
-        automerge(getRawDoc(object, ['content'])), // TODO(burdon): [API]: Type safe?
+        automerge(createDocAccessor(object, ['content'])), // TODO(burdon): [API]: Type safe?
       ],
     }),
     [],

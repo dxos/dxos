@@ -6,32 +6,21 @@ import get from 'lodash.get';
 
 import { next as A } from '@dxos/automerge/automerge';
 
-import { getRawDoc } from './automerge';
+import { createDocAccessor } from './automerge';
 import { type EchoReactiveObject } from './effect/reactive';
-import { type OpaqueEchoObject } from './object';
-
-export const LEGACY_TEXT_TYPE = 'dxos.Text.v0';
 
 /**
  * @deprecated
  */
-export const getTextContent: {
-  (object: EchoReactiveObject<{ content: string }> | undefined): string | undefined;
-  (object: EchoReactiveObject<{ content: string }> | undefined, defaultValue: string): string;
-} = (object: EchoReactiveObject<{ content: string }> | undefined, defaultValue?: string) => {
-  if (!object) {
-    return defaultValue;
-  }
-
-  return (object as any)?.content ?? defaultValue;
-};
+export const LEGACY_TEXT_TYPE = 'dxos.Text.v0';
 
 // TODO(burdon): Reconcile with cursorConverter.
 
+// TODO(wittjosiah): Path shouldn't be hardcoded.
 const path = ['content'];
 
-export const toCursor = (object: EchoReactiveObject<{ content: string }>, pos: number) => {
-  const accessor = getRawDoc(object, path);
+export const toCursor = <T>(object: EchoReactiveObject<T>, pos: number) => {
+  const accessor = createDocAccessor(object, path);
   const doc = accessor.handle.docSync();
   if (!doc) {
     return '';
@@ -46,12 +35,12 @@ export const toCursor = (object: EchoReactiveObject<{ content: string }>, pos: n
   return A.getCursor(doc, accessor.path.slice(), pos);
 };
 
-export const fromCursor = (object: OpaqueEchoObject, cursor: string) => {
+export const fromCursor = <T>(object: EchoReactiveObject<T>, cursor: string) => {
   if (cursor === '') {
     return 0;
   }
 
-  const accessor = getRawDoc(object, path);
+  const accessor = createDocAccessor(object, path);
   const doc = accessor.handle.docSync();
   if (!doc) {
     return 0;
@@ -74,7 +63,7 @@ export const fromCursor = (object: OpaqueEchoObject, cursor: string) => {
  * TODO(dima?): This API will change.
  */
 export const getTextInRange = (
-  object: (OpaqueEchoObject & { content: string }) | undefined,
+  object: EchoReactiveObject<{ content: string }> | undefined,
   begin: string,
   end: string,
 ) => {
