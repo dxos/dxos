@@ -34,6 +34,7 @@ import {
   useTranslation,
   type TFunction,
   type ThemedClassName,
+  ScrollArea,
 } from '@dxos/react-ui';
 import { DropDownMenuDragHandleTrigger, resizeHandle, resizeHandleHorizontal } from '@dxos/react-ui-deck';
 import {
@@ -234,11 +235,20 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
               */}
               <span className='truncate'>{title}</span>
             </ListItem.Heading>
-            <CollapsiblePrimitive.Content
-              {...(!collapsed && { ...sectionContentGroup, tabIndex: 0 })}
-              className={mx(focusRing, 'rounded-sm mlb-1 mie-1 is-full overflow-x-auto')}
-            >
-              {children}
+            <CollapsiblePrimitive.Content asChild>
+              <ScrollArea.Root
+                {...(!collapsed && { ...sectionContentGroup, tabIndex: 0 })}
+                classNames={mx(focusRing, 'rounded-sm mlb-1 mie-1 is-full')}
+              >
+                <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+                <ScrollArea.Scrollbar orientation='horizontal'>
+                  <ScrollArea.Thumb />
+                </ScrollArea.Scrollbar>
+                <ScrollArea.Scrollbar orientation='vertical'>
+                  <ScrollArea.Thumb />
+                </ScrollArea.Scrollbar>
+                <ScrollArea.Corner />
+              </ScrollArea.Root>
             </CollapsiblePrimitive.Content>
           </div>
           {isResizable && !collapsed && (
