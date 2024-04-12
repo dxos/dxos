@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { ThreadType, MessageType } from '@braneframe/types';
 import { sleep } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
-import { Filter } from '@dxos/echo-schema';
+import { Filter, loadObjectReferences } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 
 import { RequestProcessor } from './processor';
@@ -29,6 +29,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   // Get active threads.
   // TODO(burdon): Handle batches with multiple block mutations per thread?
   const { objects: threads } = space.db.query(Filter.schema(ThreadType));
+  await loadObjectReferences(objects, (t) => t.messages ?? []);
   const activeThreads = objects.reduce((activeThreads, message) => {
     const thread = threads.find((thread) => thread.messages.some((m) => m?.id === message.id));
     if (thread) {
