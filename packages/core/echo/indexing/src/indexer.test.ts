@@ -5,6 +5,7 @@
 import { expect } from 'chai';
 
 import { asyncTimeout } from '@dxos/async';
+import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { type Filter } from '@dxos/echo-schema';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
@@ -13,7 +14,6 @@ import { afterTest, describe, test } from '@dxos/test';
 import { IndexMetadataStore } from './index-metadata-store';
 import { IndexStore } from './index-store';
 import { Indexer, type ObjectSnapshot } from './indexer';
-import { createTestLevel } from '@dxos/echo-pipeline/testing';
 
 describe('Indexer', () => {
   test('objects that are marked as dirty are getting indexed', async () => {
@@ -88,6 +88,7 @@ describe('Indexer', () => {
         }
       },
     });
+    afterTest(() => indexer.destroy());
 
     const doneIndexing = indexer.indexed.waitForCount(1);
 
