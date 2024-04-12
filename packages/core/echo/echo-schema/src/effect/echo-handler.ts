@@ -149,7 +149,7 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
 
   _proxyMap = new WeakMap<object, any>();
 
-  _init(target: ProxyTarget): void {
+  init(target: ProxyTarget): void {
     invariant(target[symbolInternals]);
     invariant(!(target as any)[symbolIsProxy]);
     invariant(Array.isArray(target[symbolPath]));
@@ -676,7 +676,7 @@ export const createEchoReactiveObject = <T extends {}>(init: T): EchoReactiveObj
     target[symbolPath] = [];
     target[symbolNamespace] = DATA_NAMESPACE;
     slot.handler._proxyMap.set(target, proxy);
-    slot.handler._init(target);
+    slot.handler.init(target);
     saveTypeInAutomerge(target[symbolInternals], schema);
     if (meta.keys.length > 0) {
       target[symbolInternals].core.setMeta(meta);

@@ -9,7 +9,7 @@ export class LoggingReactiveHandler implements ReactiveHandler<any> {
 
   _proxyMap = new WeakMap<object, any>();
 
-  _init(target: any): void {
+  init(target: any): void {
     target[LoggingReactiveHandler.symbolChangeLog] = [];
   }
 

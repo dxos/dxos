@@ -35,7 +35,7 @@ export const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHa
   handlerSlot.target = target;
 
   const proxy = new Proxy(target, handlerSlot);
-  handler._init(target);
+  handler.init(target);
 
   // TODO(dmaretskyi): Check if this will actually work - maybe a global WeakMap is better?
   handler._proxyMap.set(target, proxy);
@@ -51,7 +51,7 @@ export interface ReactiveHandler<T extends object> extends ProxyHandler<T> {
   /**
    * Called when a proxy is created for this target.
    */
-  _init(target: T): void;
+  init(target: T): void;
 }
 
 /**
