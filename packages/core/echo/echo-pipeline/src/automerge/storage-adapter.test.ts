@@ -6,7 +6,6 @@ import { expect } from 'chai';
 
 import { type StorageAdapterInterface } from '@dxos/automerge/automerge-repo';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { afterTest, describe, test } from '@dxos/test';
 import { type MaybePromise } from '@dxos/util';
 
@@ -69,14 +68,14 @@ const runTests = (
 /**
  * Run tests for AutomergeStorageAdapter.
  */
-// runTests('AutomergeStorageAdapter', () => {
-//   const storage = createStorage({ type: StorageType.RAM });
-//   afterTest(() => storage.close());
-//   const dir = storage.createDirectory('automerge');
-//   const adapter = new AutomergeStorageAdapter(dir);
-//   afterTest(() => adapter.close());
-//   return adapter;
-// });
+runTests('AutomergeStorageAdapter', () => {
+  const storage = createStorage({ type: StorageType.RAM });
+  afterTest(() => storage.close());
+  const dir = storage.createDirectory('automerge');
+  const adapter = new AutomergeStorageAdapter(dir);
+  afterTest(() => adapter.close());
+  return adapter;
+});
 
 /**
  * Run tests for LevelDBStorageAdapter.
