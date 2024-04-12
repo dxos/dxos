@@ -236,7 +236,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
             </ListItem.Heading>
             <CollapsiblePrimitive.Content
               {...(!collapsed && { ...sectionContentGroup, tabIndex: 0 })}
-              className={mx(focusRing, 'rounded-sm mlb-1 mie-1')}
+              className={mx(focusRing, 'rounded-sm mlb-1 mie-1 is-full overflow-x-auto')}
             >
               {children}
             </CollapsiblePrimitive.Content>

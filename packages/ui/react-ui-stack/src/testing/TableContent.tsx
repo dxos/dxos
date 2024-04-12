@@ -100,6 +100,7 @@ export const createItems = (count: number) =>
       E.object<Item>({
         publicKey: PublicKey.random(),
         name: faker.commerce.productName(),
+        company: faker.commerce.productName(),
         count: faker.datatype.boolean({ probability: 0.9 }) ? faker.number.int({ min: 0, max: 10_000 }) : undefined,
         started: faker.date.recent(),
         complete: faker.datatype.boolean() ? true : faker.datatype.boolean() ? false : undefined,
