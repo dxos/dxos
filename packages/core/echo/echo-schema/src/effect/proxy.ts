@@ -3,11 +3,31 @@
 //
 
 import { invariant } from '@dxos/invariant';
+import * as S from '@effect/schema/Schema';
 
 import { type ReactiveObject } from './reactive';
 import { ReactiveArray } from './reactive-array';
+import { ObjectMeta } from '@dxos/echo-pipeline';
 
 export const symbolIsProxy = Symbol('isProxy');
+
+export interface ReactiveHandler<T extends object> extends ProxyHandler<T> {
+  /**
+   * Target to Proxy mapping.
+   */
+  readonly _proxyMap: WeakMap<object, any>;
+
+  /**
+   * Called when a proxy is created for this target.
+   */
+  init(target: T): void;
+
+  isObjectDeleted(target: T): boolean;
+
+  getSchema(target: T): S.Schema<any> | undefined;
+
+  getMeta(target: T): ObjectMeta;
+}
 
 export const isValidProxyTarget = (value: any): value is object => {
   if (value == null || value[symbolIsProxy]) {
@@ -41,18 +61,6 @@ export const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHa
   handler._proxyMap.set(target, proxy);
   return proxy;
 };
-
-export interface ReactiveHandler<T extends object> extends ProxyHandler<T> {
-  /**
-   * Target to Proxy mapping.
-   */
-  readonly _proxyMap: WeakMap<object, any>;
-
-  /**
-   * Called when a proxy is created for this target.
-   */
-  init(target: T): void;
-}
 
 /**
  * Passed as the handler to the Proxy constructor.
