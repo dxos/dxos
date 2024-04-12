@@ -482,7 +482,7 @@ export const loadObjectReferences = async <T extends OpaqueEchoObject, U>(
   objOrArray: T | T[],
   valueAccessor: (obj: T) => U,
   { timeout }: { timeout: number } = { timeout: 5000 },
-): Promise<T extends T[] ? U[] : U> => {
+): Promise<T extends T[] ? Array<NonNullable<U>> : NonNullable<U>> => {
   const objectArray = Array.isArray(objOrArray) ? objOrArray : [objOrArray];
   const tasks = objectArray.map((obj) => {
     const core = getAutomergeObjectCore(obj);
