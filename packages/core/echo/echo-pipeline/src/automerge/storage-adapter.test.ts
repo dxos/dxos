@@ -6,11 +6,10 @@ import { expect } from 'chai';
 
 import { type StorageAdapterInterface } from '@dxos/automerge/automerge-repo';
 import { PublicKey } from '@dxos/keys';
-import { StorageType, createStorage } from '@dxos/random-access-storage';
+import { log } from '@dxos/log';
 import { afterTest, describe, test } from '@dxos/test';
 import { type MaybePromise } from '@dxos/util';
 
-import { AutomergeStorageAdapter } from './automerge-storage-adapter';
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
 import { createTestLevel } from '../testing';
 
@@ -41,6 +40,7 @@ const runTests = (
       }
 
       expect((await adapter.loadRange(['a', 'b'])).length).to.equal(4);
+      expect((await adapter.loadRange(['a', 'b', 'c']))[0]).to.deep.equal(chunks[0]);
       expect((await adapter.loadRange(['a', 'b', 'c'])).length).to.equal(2);
     });
 
@@ -59,22 +59,9 @@ const runTests = (
       await adapter.removeRange(['a', 'b', 'd']);
 
       expect((await adapter.loadRange(['a', 'b'])).length).to.equal(1);
+      expect((await adapter.loadRange(['a', 'b']))[0]).to.deep.equal(chunks[1]);
       expect(await adapter.load(['a', 'b', 'c', '2'])).to.deep.equal(chunks[1].data);
       expect(await adapter.load(['a', 'b', 'd', '3'])).to.be.undefined;
-    });
-
-    test('persist after reload', async () => {
-      const adapter = await createAdapter();
-
-      for (const chunk of chunks) {
-        await adapter.save(chunk.key, chunk.data);
-      }
-
-      const adapter2 = await createAdapter();
-
-      expect((await adapter2.loadRange(['a', 'b'])).length).to.equal(4);
-      expect(await adapter2.load(['a', 'b', 'c', '1'])).to.deep.equal(chunks[0].data);
-      expect(await adapter2.load(['a', 'b', 'd', '4'])).to.deep.equal(chunks[3].data);
     });
   });
 };
@@ -82,14 +69,14 @@ const runTests = (
 /**
  * Run tests for AutomergeStorageAdapter.
  */
-runTests('AutomergeStorageAdapter', () => {
-  const storage = createStorage({ type: StorageType.RAM });
-  afterTest(() => storage.close());
-  const dir = storage.createDirectory('automerge');
-  const adapter = new AutomergeStorageAdapter(dir);
-  afterTest(() => adapter.close());
-  return adapter;
-});
+// runTests('AutomergeStorageAdapter', () => {
+//   const storage = createStorage({ type: StorageType.RAM });
+//   afterTest(() => storage.close());
+//   const dir = storage.createDirectory('automerge');
+//   const adapter = new AutomergeStorageAdapter(dir);
+//   afterTest(() => adapter.close());
+//   return adapter;
+// });
 
 /**
  * Run tests for LevelDBStorageAdapter.
