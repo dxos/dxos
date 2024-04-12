@@ -472,8 +472,10 @@ export const shouldObjectGoIntoFragmentedSpace = (core: AutomergeObjectCore) => 
 
 /**
  * EXPERIMENTAL - the API is subject to change.
- * @param objOrArray - an echo object with references to other echo objects.
+ * @param objOrArray - an echo object or collection of objects with references to other echo objects.
  * @param valueAccessor - selector for a reference that needs to be loaded.
+ *                        if return type is an array the method exits when all entries are non-null.
+ *                        otherwise the method exits when valueAccessor is not null.
  * @param timeout - loading timeout, defaults to 5s.
  */
 export const loadObjectReferences = async <T extends OpaqueEchoObject, U>(
@@ -489,7 +491,7 @@ export const loadObjectReferences = async <T extends OpaqueEchoObject, U>(
       return value;
     }
     const isLoadedPredicate = Array.isArray(value)
-      ? () => value.every((v) => v != null)
+      ? () => (valueAccessor(obj) as any[]).every((v) => v != null)
       : () => valueAccessor(obj) != null;
     if (isLoadedPredicate()) {
       return value;
