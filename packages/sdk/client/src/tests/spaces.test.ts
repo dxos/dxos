@@ -12,7 +12,7 @@ import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import * as E from '@dxos/echo-schema';
-import { type Expando, getAutomergeObjectCore, getTextContent, type ReactiveObject } from '@dxos/echo-schema';
+import { type Expando, getAutomergeObjectCore, type ReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
@@ -521,7 +521,7 @@ describe('Spaces', () => {
   });
 
   const getDocumentText = (space: Space, documentId: string): string => {
-    return getTextContent((space.db.getObjectById(documentId) as any).content)!;
+    return (space.db.getObjectById(documentId) as DocumentType).content!.content;
   };
 
   const registerTypes = (client: Client) => {

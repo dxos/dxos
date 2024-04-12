@@ -8,7 +8,7 @@ import { type Chat } from 'openai/resources';
 
 import { type DocumentType, TextV0Type } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { getTextContent, getTypename } from '@dxos/echo-schema';
+import { getTypename } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -30,7 +30,7 @@ export class GptAnalyzer {
 
   async exec(space: Space, document: DocumentType) {
     const schemas = space.db.schemaRegistry.getAll();
-    const text = getTextContent(document.content);
+    const text = document.content?.content;
     log.info('analyzing...', { length: text?.length, schema: schemas.length });
     if (!text?.length || !schemas.length) {
       return;
