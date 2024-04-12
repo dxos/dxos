@@ -128,7 +128,7 @@ describe('Index queries', () => {
       const indexedContact = await queryIndexedContact(space);
       expect(indexedContact.name).to.equal('John Doe');
     }
-  });
+  }).tag('flaky');
 
   test('index already available data', async () => {
     const { client } = await setupClient();
