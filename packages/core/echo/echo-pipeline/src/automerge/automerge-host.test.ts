@@ -25,10 +25,18 @@ import { arrayToBuffer, bufferToArray } from '@dxos/util';
 import { AutomergeHost } from './automerge-host';
 import { AutomergeStorageAdapter } from './automerge-storage-adapter';
 import { MeshNetworkAdapter } from './mesh-network-adapter';
+import { createTestLevel } from '../testing';
 
 describe('AutomergeHost', () => {
-  test('can create documents', () => {
-    const host = new AutomergeHost({ directory: createStorage({ type: StorageType.RAM }).createDirectory() });
+  test('can create documents', async () => {
+    const level = await createTestLevel();
+    afterTest(() => level.close());
+    const host = new AutomergeHost({
+      directory: createStorage({ type: StorageType.RAM }).createDirectory(),
+      db: level.sublevel('automerge'),
+    });
+    await host.initialize();
+    afterTest(() => host.close());
 
     const handle = host.repo.create();
     handle.change((doc: any) => {
@@ -38,9 +46,13 @@ describe('AutomergeHost', () => {
   });
 
   test('changes are preserved in storage', async () => {
+    const level = await createTestLevel();
+    afterTest(() => level.close());
     const storageDirectory = createStorage({ type: StorageType.RAM }).createDirectory();
 
-    const host = new AutomergeHost({ directory: storageDirectory });
+    const host = new AutomergeHost({ directory: storageDirectory, db: level.sublevel('automerge') });
+    await host.initialize();
+    afterTest(() => host.close());
     const handle = host.repo.create();
     handle.change((doc: any) => {
       doc.text = 'Hello world';
@@ -50,7 +62,9 @@ describe('AutomergeHost', () => {
     // TODO(dmaretskyi): Is there a way to know when automerge has finished saving?
     await sleep(100);
 
-    const host2 = new AutomergeHost({ directory: storageDirectory });
+    const host2 = new AutomergeHost({ directory: storageDirectory, db: level.sublevel('automerge') });
+    await host2.initialize();
+    afterTest(() => host2.close());
     const handle2 = host2.repo.find(url);
     await handle2.whenReady();
     expect(handle2.docSync().text).toEqual('Hello world');

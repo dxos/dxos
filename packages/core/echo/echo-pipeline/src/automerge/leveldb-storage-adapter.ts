@@ -20,15 +20,22 @@ export type StorageCallbacks = {
 };
 
 export class LevelDBStorageAdapter implements StorageAdapterInterface {
+  private _state: 'opened' | 'closed' = 'opened';
   constructor(private readonly _params: LevelDBStorageAdapterParams) {}
 
   async load(keyArray: StorageKey): Promise<Uint8Array | undefined> {
+    if (this._state !== 'opened') {
+      return undefined;
+    }
     return this._params.db
       .get<StorageKey, Uint8Array>(keyArray, { keyEncoding: keyEncoder, valueEncoding: 'buffer' })
       .catch((err) => (err.code === 'LEVEL_NOT_FOUND' ? undefined : Promise.reject(err)));
   }
 
   async save(keyArray: StorageKey, binary: Uint8Array): Promise<void> {
+    if (this._state !== 'opened') {
+      return undefined;
+    }
     await this._params.callbacks?.beforeSave?.(keyArray);
     await this._params.db.put<StorageKey, Uint8Array>(keyArray, Buffer.from(binary), {
       keyEncoding: keyEncoder,
@@ -38,10 +45,16 @@ export class LevelDBStorageAdapter implements StorageAdapterInterface {
   }
 
   async remove(keyArray: StorageKey): Promise<void> {
+    if (this._state !== 'opened') {
+      return undefined;
+    }
     await this._params.db.del<StorageKey>(keyArray, { keyEncoding: keyEncoder });
   }
 
   async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
+    if (this._state !== 'opened') {
+      return [];
+    }
     const result: Chunk[] = [];
     for await (const [key, value] of this._params.db.iterator<StorageKey, Uint8Array>({
       gte: keyPrefix,
@@ -58,6 +71,9 @@ export class LevelDBStorageAdapter implements StorageAdapterInterface {
   }
 
   async removeRange(keyPrefix: StorageKey): Promise<void> {
+    if (this._state !== 'opened') {
+      return undefined;
+    }
     const batch = this._params.db.batch();
 
     for await (const [key] of this._params.db.iterator<StorageKey, Uint8Array>({
@@ -69,6 +85,10 @@ export class LevelDBStorageAdapter implements StorageAdapterInterface {
       batch.del<StorageKey>(key, { keyEncoding: keyEncoder });
     }
     await batch.write();
+  }
+
+  close() {
+    this._state = 'closed';
   }
 }
 
