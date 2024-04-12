@@ -396,10 +396,15 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               {
                 id: SpaceAction.CREATE,
                 data: () =>
-                  dispatch({
-                    plugin: SPACE_PLUGIN,
-                    action: SpaceAction.CREATE,
-                  }),
+                  dispatch([
+                    {
+                      plugin: SPACE_PLUGIN,
+                      action: SpaceAction.CREATE,
+                    },
+                    {
+                      action: NavigationAction.ACTIVATE,
+                    },
+                  ]),
                 properties: {
                   label: ['create space label', { ns: SPACE_PLUGIN }],
                   icon: (props: IconProps) => <Plus {...props} />,
@@ -475,7 +480,6 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
       },
       intent: {
         resolver: async (intent, plugins) => {
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
           const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
           const client = clientPlugin?.provides.client;
           switch (intent.action) {
@@ -503,10 +507,6 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 setSpaceProperty(space, Migrations.versionProperty, Migrations.targetVersion);
               }
 
-              void intentPlugin?.provides.intent.dispatch({
-                action: NavigationAction.ACTIVATE,
-                data: { id: space.key.toHex() },
-              });
               return { data: { space, id: space.key.toHex() } };
             }
 

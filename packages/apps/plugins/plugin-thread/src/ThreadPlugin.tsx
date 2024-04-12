@@ -305,7 +305,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
             case ThreadAction.DELETE: {
               const { document: doc, thread, cursor } = intent.data ?? {};
-              if (!(doc instanceof DocumentType) || !doc.comments || !(thread instanceof ThreadType)) {
+              const space = getSpace(thread);
+              if (!(doc instanceof DocumentType) || !doc.comments || !(thread instanceof ThreadType) || !space) {
                 return;
               }
 
@@ -316,6 +317,9 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   doc.comments?.splice(index, 1);
                 }
 
+                // TODO(wittjosiah): Deleting the thread entirely here causes an error when undoing.
+                // space.db.remove(thread);
+
                 return {
                   undoable: {
                     message: translations[0]['en-US'][THREAD_PLUGIN]['thread deleted label'],
@@ -323,7 +327,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   },
                 };
               } else if (intent.undo && typeof cursor === 'string') {
-                doc.comments?.push({ thread, cursor });
+                doc.comments.push({ thread, cursor });
                 return { data: true };
               }
             }
