@@ -63,19 +63,19 @@ export const echoObject =
 export const ExpandoMarker = Symbol.for('@dxos/echo-schema/Expando');
 
 const _Expando = S.struct({}, { key: S.string, value: S.any }).pipe(echoObject('Expando', '0.1.0'));
-export interface ExpandoType extends S.Schema.Type<typeof _Expando> {
+export interface Expando extends S.Schema.Type<typeof _Expando> {
   id: string;
   [key: string]: any;
   [ExpandoMarker]?: true;
 }
 
-export interface ExpandoType extends S.Schema.Type<typeof _Expando> {}
+export interface Expando extends S.Schema.Type<typeof _Expando> {}
 
 /**
  * Marker value to be passed to `object` constructor to create an ECHO object with a generated ID.
  */
 // TODO(dmaretskyi): Rename to `Expando` once old code has been deleted.
-export const ExpandoType: S.Schema<ExpandoType> & { [ExpandoMarker]: true } = _Expando as any;
+export const Expando: S.Schema<Expando> & { [ExpandoMarker]: true } = _Expando as any;
 
 /**
  * Has `id`.
@@ -124,10 +124,10 @@ export const isEchoReactiveObject = (value: unknown): value is EchoReactiveObjec
 // TODO(dmaretskyi): Deep mutability.
 export const object: {
   <T extends {}>(obj: T): ReactiveObject<T>;
-  <T extends {}>(schema: typeof ExpandoType, obj: T): ReactiveObject<ExpandoType>;
+  <T extends {}>(schema: typeof Expando, obj: T): ReactiveObject<Expando>;
   <T extends {}>(schema: S.Schema<T>, obj: ExcludeId<T>): ReactiveObject<T>;
 } = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: ExcludeId<T>): ReactiveObject<T> => {
-  if (obj && (schemaOrObj as any) !== ExpandoType) {
+  if (obj && (schemaOrObj as any) !== Expando) {
     if (!isValidProxyTarget(obj)) {
       throw new Error('Value cannot be made into a reactive object.');
     }
@@ -146,7 +146,7 @@ export const object: {
     initMeta(obj);
     SchemaValidator.prepareTarget(obj as T, schema);
     return createReactiveProxy(obj, TypedReactiveHandler.instance as ReactiveHandler<any>) as ReactiveObject<T>;
-  } else if (obj && (schemaOrObj as any) === ExpandoType) {
+  } else if (obj && (schemaOrObj as any) === Expando) {
     if (!isValidProxyTarget(obj)) {
       throw new Error('Value cannot be made into a reactive object.');
     }

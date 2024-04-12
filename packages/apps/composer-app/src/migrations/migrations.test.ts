@@ -21,7 +21,7 @@ describe('Composer migrations', () => {
 
   beforeEach(async () => {
     client = new Client({ services: testBuilder.createLocal() });
-    client.addSchema(FolderType, E.ExpandoType);
+    client.addSchema(FolderType, E.Expando);
     await client.initialize();
     await client.halo.createIdentity();
     await client.spaces.isReady.wait();
@@ -49,9 +49,9 @@ describe('Composer migrations', () => {
     setSpaceProperty(space, FolderType.typename, folder3);
 
     const keys = [...Array(9)].map(() => PublicKey.random().toHex());
-    folder1.objects = keys.slice(0, 3).map((key) => E.object(E.ExpandoType, { key }));
-    folder2.objects = keys.slice(3, 6).map((key) => E.object(E.ExpandoType, { key }));
-    folder3.objects = keys.slice(6, 9).map((key) => E.object(E.ExpandoType, { key }));
+    folder1.objects = keys.slice(0, 3).map((key) => E.object(E.Expando, { key }));
+    folder2.objects = keys.slice(3, 6).map((key) => E.object(E.Expando, { key }));
+    folder3.objects = keys.slice(6, 9).map((key) => E.object(E.Expando, { key }));
 
     const query = space.db.query(Filter.schema(FolderType));
     expect(query.objects).to.have.lengthOf(3);
