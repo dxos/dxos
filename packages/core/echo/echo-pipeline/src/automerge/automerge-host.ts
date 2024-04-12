@@ -42,7 +42,7 @@ export interface MetadataMethods {
 
 export type AutomergeHostParams = {
   directory: Directory;
-  db: MySublevel;
+  db?: MySublevel;
   metadata?: MetadataMethods;
 };
 
@@ -50,7 +50,7 @@ export type AutomergeHostParams = {
 export class AutomergeHost {
   private readonly _ctx = new Context();
   private readonly _directory: Directory;
-  private readonly _db: MySublevel;
+  private readonly _db?: MySublevel;
   private readonly _metadata?: MetadataMethods;
 
   private _repo!: Repo;
@@ -77,17 +77,9 @@ export class AutomergeHost {
   }
 
   async initialize() {
-    await levelMigration({ db: this._db, directory: this._directory });
-    // this._storage = new AutomergeStorageWrapper({
-    //   storage:
-    //     // TODO(mykola): Delete specific handling of IDB storage.
-    //     this._directory.type === StorageType.IDB
-    //       ? new IndexedDBStorageAdapter(this._directory.path, 'data')
-    //       : new AutomergeStorageAdapter(this._directory),
-    //   callbacks: { beforeSave: (params) => this._beforeSave(params) },
-    // });
+    await levelMigration({ db: this._db!, directory: this._directory });
     this._storage = new LevelDBStorageAdapter({
-      db: this._db,
+      db: this._db!,
       callbacks: { beforeSave: (params) => this._beforeSave(params) },
     });
     this._peerId = `host-${PublicKey.random().toHex()}` as PeerId;

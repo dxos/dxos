@@ -8,14 +8,14 @@ import { log } from '@dxos/log';
 import { StorageType, type Directory } from '@dxos/random-access-storage';
 
 import { AutomergeStorageAdapter } from './automerge-storage-adapter';
+import { encodingOptions } from './leveldb-storage-adapter';
 import { type MySublevel } from './types';
 
 export const levelMigration = async ({ db, directory }: { db: MySublevel; directory: Directory }) => {
   // Note: Make automigration from previous storage to leveldb here.
   const isNewLevel = !(await db
     .iterator<StorageKey, Uint8Array>({
-      keyEncoding: 'buffer',
-      valueEncoding: 'buffer',
+      ...encodingOptions,
     })
     .next());
 
@@ -32,7 +32,7 @@ export const levelMigration = async ({ db, directory }: { db: MySublevel; direct
   const chunks = await oldStorageAdapter.loadRange([]);
   log.info('found chunks on old storage adapter', { chunks: chunks.length });
   for (const { key, data } of await oldStorageAdapter.loadRange([])) {
-    data && batch.put<StorageKey, Uint8Array>(key, data, { keyEncoding: 'buffer', valueEncoding: 'buffer' });
+    data && batch.put<StorageKey, Uint8Array>(key, data, { ...encodingOptions });
   }
   await batch.write();
 };

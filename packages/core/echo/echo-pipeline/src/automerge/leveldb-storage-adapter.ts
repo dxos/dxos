@@ -28,7 +28,7 @@ export class LevelDBStorageAdapter implements StorageAdapterInterface {
       return undefined;
     }
     return this._params.db
-      .get<StorageKey, Uint8Array>(keyArray, { keyEncoding: keyEncoder, valueEncoding: 'buffer' })
+      .get<StorageKey, Uint8Array>(keyArray, { ...encodingOptions })
       .catch((err) => (err.code === 'LEVEL_NOT_FOUND' ? undefined : Promise.reject(err)));
   }
 
@@ -38,8 +38,7 @@ export class LevelDBStorageAdapter implements StorageAdapterInterface {
     }
     await this._params.callbacks?.beforeSave?.(keyArray);
     await this._params.db.put<StorageKey, Uint8Array>(keyArray, Buffer.from(binary), {
-      keyEncoding: keyEncoder,
-      valueEncoding: 'buffer',
+      ...encodingOptions,
     });
     await this._params.callbacks?.afterSave?.(keyArray);
   }
@@ -48,7 +47,7 @@ export class LevelDBStorageAdapter implements StorageAdapterInterface {
     if (this._state !== 'opened') {
       return undefined;
     }
-    await this._params.db.del<StorageKey>(keyArray, { keyEncoding: keyEncoder });
+    await this._params.db.del<StorageKey>(keyArray, { ...encodingOptions });
   }
 
   async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
@@ -59,8 +58,7 @@ export class LevelDBStorageAdapter implements StorageAdapterInterface {
     for await (const [key, value] of this._params.db.iterator<StorageKey, Uint8Array>({
       gte: keyPrefix,
       lte: [...keyPrefix, '\uffff'],
-      keyEncoding: keyEncoder,
-      valueEncoding: 'buffer',
+      ...encodingOptions,
     })) {
       result.push({
         key,
@@ -79,10 +77,9 @@ export class LevelDBStorageAdapter implements StorageAdapterInterface {
     for await (const [key] of this._params.db.iterator<StorageKey, Uint8Array>({
       gte: keyPrefix,
       lte: [...keyPrefix, '\uffff'],
-      keyEncoding: keyEncoder,
-      valueEncoding: 'buffer',
+      ...encodingOptions,
     })) {
-      batch.del<StorageKey>(key, { keyEncoding: keyEncoder });
+      batch.del<StorageKey>(key, { ...encodingOptions });
     }
     await batch.write();
   }
@@ -100,4 +97,9 @@ const keyEncoder: MixedEncoding<StorageKey, Uint8Array, StorageKey> = {
       .toString()
       .split('-')
       .map((k) => k.replaceAll('%2D', '-').replaceAll('%25', '%')),
+};
+
+export const encodingOptions = {
+  keyEncoding: keyEncoder,
+  valueEncoding: 'buffer',
 };
