@@ -24,7 +24,7 @@ export const createChatThread = (identity: Identity) => {
                 } satisfies BlockType)
               : ({
                   timestamp: new Date().toISOString(),
-                  object: E.object(E.ExpandoType, { title: faker.lorem.sentence() }),
+                  object: E.object(E.Expando, { title: faker.lorem.sentence() }),
                 } satisfies BlockType),
           { count: { min: 1, max: 3 } },
         ),

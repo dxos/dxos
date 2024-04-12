@@ -14,7 +14,7 @@ import { Button, Toolbar } from '@dxos/react-ui';
 import SketchComponent from './Sketch';
 
 const Story = () => {
-  const [sketch, setSketch] = useState<SketchType>(E.object(SketchType, { data: E.object(E.ExpandoType, {}) }));
+  const [sketch, setSketch] = useState<SketchType>(E.object(SketchType, { data: E.object(E.Expando, {}) }));
 
   return (
     <div className='flex flex-col grow overflow-hidden divide-y'>

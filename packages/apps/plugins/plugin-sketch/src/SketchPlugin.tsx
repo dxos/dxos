@@ -141,7 +141,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             case SketchAction.CREATE: {
               return {
                 data: E.object(SketchType, {
-                  data: E.object(E.ExpandoType, {}),
+                  data: E.object(E.Expando, {}),
                 }),
               };
             }

@@ -16,17 +16,17 @@ describe('Database', () => {
   test('flush with test builder', async () => {
     const testBuilder = new TestBuilder();
     const peer = await testBuilder.createPeer();
-    peer.db.add(E.object(E.ExpandoType, { str: 'test' }));
+    peer.db.add(E.object(E.Expando, { str: 'test' }));
     await testBuilder.flushAll();
   });
 
   test('inspect', async () => {
     const { db } = await createDatabase();
 
-    const task = E.object(E.ExpandoType, {
+    const task = E.object(E.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
-      assignee: E.object(E.ExpandoType, { name: 'Bob' }),
+      assignee: E.object(E.Expando, { name: 'Bob' }),
     });
     db.add(task);
     await db.flush();
@@ -40,7 +40,7 @@ describe('Database', () => {
 
     const n = 10;
     for (const _ of Array.from({ length: n })) {
-      const obj = E.object(E.ExpandoType, {});
+      const obj = E.object(E.Expando, {});
       db.add(obj);
     }
     await db.flush();
@@ -62,7 +62,7 @@ describe('Database', () => {
   test('meta', async () => {
     const { db } = await createDatabase();
 
-    const obj = E.object(E.ExpandoType, {});
+    const obj = E.object(E.Expando, {});
     expectObjects(E.getMeta(obj).keys, []);
     E.getMeta(obj).keys = [{ id: 'test-key', source: 'test' }];
     expectObjects(E.getMeta(obj).keys, [{ id: 'test-key', source: 'test' }]);

@@ -10,7 +10,7 @@ import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import * as E from '@dxos/echo-schema';
-import { ExpandoType } from '@dxos/echo-schema';
+import { Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -161,7 +161,7 @@ export class TestBuilder {
 }
 
 export const testSpaceAutomerge = async (create: EchoDatabase, check: EchoDatabase = create) => {
-  const object = E.object(ExpandoType, {});
+  const object = E.object(Expando, {});
 
   create.add(object);
 
