@@ -26,7 +26,7 @@ describe('Search', () => {
     Array.from({ length: 20 }).map((_, i) => {
       const content =
         i === 10 ? faker.lorem.sentence() + ` ${match}}. ` + faker.lorem.sentence() : faker.lorem.sentences();
-      return space.db.add(E.object(E.ExpandoType, { title: faker.lorem.sentence(), content }));
+      return space.db.add(E.object(E.Expando, { title: faker.lorem.sentence(), content }));
     });
 
     const { objects } = space.db.query();

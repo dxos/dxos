@@ -34,7 +34,7 @@ export class ContactType extends TypedObject({ typename: 'braneframe.Contact', v
 const _BlockSchema = S.struct({
   timestamp: S.string,
   content: S.optional(E.ref(TextV0Type)),
-  object: S.optional(E.ref(E.ExpandoType)),
+  object: S.optional(E.ref(E.Expando)),
 });
 export interface BlockType extends S.Schema.Type<typeof _BlockSchema> {}
 
@@ -43,7 +43,7 @@ export class MessageType extends TypedObject({ typename: 'braneframe.Message', v
   date: S.optional(S.string),
   subject: S.optional(S.string),
   blocks: S.mutable(S.array(_BlockSchema)),
-  links: S.optional(S.array(E.ref(E.ExpandoType))),
+  links: S.optional(S.array(E.ref(E.Expando))),
   read: S.optional(S.boolean),
   context: S.optional(
     S.struct({

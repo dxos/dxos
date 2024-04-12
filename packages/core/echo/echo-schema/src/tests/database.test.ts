@@ -76,8 +76,8 @@ describe('database', () => {
       database.add(container);
       await database.flush();
 
-      container.objects!.push(E.object(E.ExpandoType, { foo: 100 }));
-      container.objects!.push(E.object(E.ExpandoType, { bar: 200 }));
+      container.objects!.push(E.object(E.Expando, { foo: 100 }));
+      container.objects!.push(E.object(E.Expando, { bar: 200 }));
     }
 
     {

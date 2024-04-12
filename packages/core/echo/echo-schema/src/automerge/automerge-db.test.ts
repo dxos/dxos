@@ -14,7 +14,7 @@ import { range } from '@dxos/util';
 
 import { getAutomergeObjectCore } from './automerge-object';
 import * as E from '../effect/reactive';
-import { type EchoReactiveObject, type ExpandoType } from '../effect/reactive';
+import { type EchoReactiveObject, type Expando } from '../effect/reactive';
 import { TestBuilder, type TestPeer } from '../testing';
 import { TextCompatibilitySchema } from '../type-collection';
 
@@ -60,7 +60,7 @@ describe('AutomergeDb', () => {
 
       const document = createExpando({ text: createTextObject('Hello, world!') });
       const peer = await createPeerInSpaceWithObject(document);
-      const peerDocument = (await peer.db.automerge.loadObjectById(document.id)!) as ExpandoType;
+      const peerDocument = (await peer.db.automerge.loadObjectById(document.id)!) as Expando;
       expect(peerDocument).not.to.be.undefined;
 
       let isFirstInvocation = true;
@@ -238,7 +238,7 @@ describe('AutomergeDb', () => {
       const objectsToAdd = range(2).map(() => createExpando());
       const rootObject = [objectsToRebind, objectsToRemove, loadedLinks, partiallyLoadedLinks]
         .flatMap((v: any[]) => v)
-        .reduce((acc: ExpandoType, obj: any) => {
+        .reduce((acc: Expando, obj: any) => {
           acc[obj.id] = obj;
           return acc;
         }, createExpando());
@@ -330,8 +330,8 @@ const createPeerInSpaceWithObject = async (
   return testBuilder.createPeer(firstPeer.spaceKey, firstPeer.automergeDocId);
 };
 
-const createExpando = (props: any = {}): EchoReactiveObject<ExpandoType> => {
-  return E.object(E.ExpandoType, props);
+const createExpando = (props: any = {}): EchoReactiveObject<Expando> => {
+  return E.object(E.Expando, props);
 };
 
 const createTextObject = (content: string = ''): EchoReactiveObject<TextCompatibilitySchema> => {
