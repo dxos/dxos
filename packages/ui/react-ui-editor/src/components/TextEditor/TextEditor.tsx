@@ -16,6 +16,7 @@ import React, {
 } from 'react';
 
 import { log } from '@dxos/log';
+import { useDefaultValue } from '@dxos/react-ui';
 import { isNotFalsy } from '@dxos/util';
 
 import { documentId, editorMode, focusEvent } from '../../extensions';
@@ -56,7 +57,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
       extensions,
       className,
       autoFocus,
-      scrollTo = EditorView.scrollIntoView(0, { yMargin: 0 }),
+      scrollTo: propsScrollTo,
       moveToEndOfLine,
       debug,
       dataTestId,
@@ -65,6 +66,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
   ) => {
     // NOTE: Increments by 2 in strict mode.
     const [instanceId] = useState(() => `text-editor-${++instanceCount}`);
+    const scrollTo = useDefaultValue(propsScrollTo, EditorView.scrollIntoView(0, { yMargin: 0 }));
 
     // TODO(burdon): Make tabster optional.
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
