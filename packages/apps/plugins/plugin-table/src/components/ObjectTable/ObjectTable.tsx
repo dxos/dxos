@@ -185,7 +185,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
     if (!table.schema) {
       table.schema = space.db.schemaRegistry.add(
         TypedObject({ typename: `example.com/schema/${PublicKey.random().truncate()}`, version: '0.1.0' })({
-          title: S.string,
+          title: S.optional(S.string),
         }),
       );
     }
