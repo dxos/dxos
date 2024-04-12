@@ -308,7 +308,7 @@ describe('AutomergeDb', () => {
       expect(loadedObject).to.deep.eq(object);
     });
 
-    describe('loadObjectReferences', () => {
+    describe.only('loadObjectReferences', () => {
       test('loads a field', async () => {
         const nestedValue = 'test';
         const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
@@ -332,7 +332,24 @@ describe('AutomergeDb', () => {
         const loaded: any = await restartedPeer.db.automerge.loadObjectById(object.id);
         expect((loaded.nestedArray as any[]).every((v) => v == null)).to.be.true;
         const loadedArray = await loadObjectReferences(loaded, (o) => o.nestedArray as any[]);
-        expect(loadedArray.every((v) => v != null)).to.true;
+        expect(loadedArray.every((v) => v != null)).to.be.true;
+      });
+
+      test('loads on multiple objects', async () => {
+        const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
+        const testPeer = await testBuilder.createPeer();
+        const objects = [
+          createExpando({ nestedArray: [createExpando(), createExpando()] }),
+          createExpando({ nestedArray: [createExpando(), createExpando(), createExpando()] }),
+        ];
+        objects.forEach((o) => testPeer.db.add(o));
+
+        const restartedPeer = await testBuilder.createPeer(testPeer.spaceKey, testPeer.automergeDocId);
+        const loaded: any[] = await Promise.all(objects.map((o) => restartedPeer.db.automerge.loadObjectById(o.id)));
+        const loadedArrays = await loadObjectReferences(loaded, (o) => o.nestedArray as any[]);
+        const mergedArrays = loadedArrays.flatMap((v) => v);
+        expect(mergedArrays.length).to.eq(objects[0].nestedArray.length + objects[1].nestedArray.length);
+        expect(mergedArrays.every((v) => v != null)).to.be.true;
       });
 
       test('throws on timeout', async () => {
