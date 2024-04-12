@@ -41,6 +41,9 @@
       "path": "../react-ui-mosaic"
     },
     {
+      "path": "../react-ui-table"
+    },
+    {
       "path": "../react-ui-theme"
     },
     {

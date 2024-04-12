@@ -1,13 +1,12 @@
 //
 // Copyright 2024 DXOS.org
 //
-import '@dxosTheme';
+
 import React, { useState } from 'react';
 
 import { TextV0Type } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
-import { faker } from '@dxos/random';
-import { Tooltip, useThemeContext } from '@dxos/react-ui';
+import { useThemeContext } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -21,16 +20,11 @@ import {
   useFormattingState,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { Mosaic } from '@dxos/react-ui-mosaic';
 import { textBlockWidth } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
 
-import type { StackSectionContent, StackSectionItem } from './Section';
-import { Stack } from './Stack';
+import type { StackSectionContent } from '../components/Section';
 
-faker.seed(1234);
-
-const EditorContent = ({ data: { content = '' } }: { data: StackSectionContent & { content?: string } }) => {
+export const EditorContent = ({ data: { content = '' } }: { data: StackSectionContent & { content?: string } }) => {
   const { themeMode } = useThemeContext();
   const [text] = useState(E.object(TextV0Type, { content }));
   const id = text.id;
@@ -68,35 +62,4 @@ const EditorContent = ({ data: { content = '' } }: { data: StackSectionContent &
       <div ref={parentRef} className={textBlockWidth} />
     </>
   );
-};
-
-const EditorsStack = () => {
-  const [items, _setItems] = useState<StackSectionItem[]>(
-    [...Array(12)].map(() => ({
-      id: faker.string.uuid(),
-      object: { id: faker.string.uuid(), content: faker.lorem.paragraphs(4) },
-    })),
-  );
-  return (
-    <Tooltip.Provider>
-      <Mosaic.Root>
-        <Mosaic.DragOverlay />
-        <Stack id='stack-editors' SectionContent={EditorContent} items={items} />
-      </Mosaic.Root>
-    </Tooltip.Provider>
-  );
-};
-
-export default {
-  title: 'react-ui-stack/Editors',
-  component: EditorsStack,
-  decorators: [withTheme],
-  args: {},
-};
-
-export const Editors = {
-  args: {},
-  parameters: {
-    layout: 'fullscreen',
-  },
 };

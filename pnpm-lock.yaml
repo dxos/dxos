@@ -9527,6 +9527,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
+      '@dxos/react-ui-table':
+        specifier: workspace:*
+        version: link:../react-ui-table
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../storybook-utils
