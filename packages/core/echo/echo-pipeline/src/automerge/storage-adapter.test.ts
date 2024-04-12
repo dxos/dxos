@@ -74,7 +74,8 @@ const runTests = (
 
       expect((await adapter2.loadRange(['a', 'b'])).length).to.equal(4);
       expect(await adapter2.load(['a', 'b', 'c', '1'])).to.deep.equal(chunks[0].data);
-      expect(await adapter2.load(['a', 'b', 'd', '4'])).to.deep.equal(chunks[3].data);    
+      expect(await adapter2.load(['a', 'b', 'd', '4'])).to.deep.equal(chunks[3].data);
+    });
   });
 };
 
