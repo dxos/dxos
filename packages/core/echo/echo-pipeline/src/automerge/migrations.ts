@@ -28,8 +28,11 @@ export const levelMigration = async ({ db, directory }: { db: MySublevel; direct
       ? new IndexedDBStorageAdapter(directory.path, 'data')
       : new AutomergeStorageAdapter(directory);
 
-  const batch = db.batch();
   const chunks = await oldStorageAdapter.loadRange([]);
+  if (chunks.length === 0) {
+    return;
+  }
+  const batch = db.batch();
   log.info('found chunks on old storage adapter', { chunks: chunks.length });
   for (const { key, data } of await oldStorageAdapter.loadRange([])) {
     data && batch.put<StorageKey, Uint8Array>(key, data, { ...encodingOptions });
