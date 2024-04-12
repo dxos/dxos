@@ -4,7 +4,13 @@
 
 import { type DocumentCommentType, DocumentType, type MessageType, type ThreadType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { type DynamicEchoSchema, type EchoReactiveObject, effectToJsonSchema, getTextInRange } from '@dxos/echo-schema';
+import {
+  type DynamicEchoSchema,
+  type EchoReactiveObject,
+  effectToJsonSchema,
+  getTextInRange,
+  loadObjectReferences,
+} from '@dxos/echo-schema';
 
 export type RequestContext = {
   object?: EchoReactiveObject<any>;
@@ -12,18 +18,21 @@ export type RequestContext = {
   schema?: Map<string, DynamicEchoSchema>;
 };
 
-export const createContext = (space: Space, message: MessageType, thread: ThreadType): RequestContext => {
+export const createContext = async (
+  space: Space,
+  message: MessageType,
+  thread: ThreadType,
+): Promise<RequestContext> => {
   let object: EchoReactiveObject<any> | undefined;
   if (message.context?.object) {
-    const { objects } = space.db.query({ id: message.context?.object });
-    object = objects[0];
+    object = await space.db.automerge.loadObjectById(message.context?.object);
   } else if (thread.context?.object) {
-    const { objects } = space.db.query({ id: thread.context?.object });
-    object = objects[0];
+    object = await space.db.automerge.loadObjectById(thread.context?.object);
   }
 
   let text: string | undefined;
   if (object instanceof DocumentType) {
+    await loadObjectReferences(object, (doc) => (doc.comments ?? []).map((c) => c.thread));
     const comment = object.comments?.find((comment) => comment.thread === thread);
     if (comment) {
       text = getReferencedText(object, comment);
