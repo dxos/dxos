@@ -23,6 +23,7 @@ import { getTargetMeta, initMeta } from './reactive-meta-handler';
 import { SchemaValidator, symbolSchema, validateIdNotPresentOnSchema } from './schema-validator';
 import { TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
+import { getAutomergeObjectCore } from '../automerge';
 import { type ObjectMeta } from '../object';
 
 // TODO: remove during refactoring. was introduced to help with recursive imports
@@ -277,6 +278,15 @@ export const getMeta = <T extends {}>(obj: T): ObjectMeta => {
     return proxyHandlerSlot.handler.getMeta(proxyHandlerSlot.target);
   } else {
     return getTargetMeta(obj);
+  }
+};
+
+export const isDeleted = <T extends {}>(obj: T): boolean => {
+  const proxyHandlerSlot = getProxyHandlerSlot(obj);
+  if (proxyHandlerSlot.handler instanceof EchoReactiveHandler) {
+    return getAutomergeObjectCore(obj).isDeleted();
+  } else {
+    return false;
   }
 };
 
