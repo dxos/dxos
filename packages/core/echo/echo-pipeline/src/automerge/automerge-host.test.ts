@@ -32,7 +32,6 @@ describe('AutomergeHost', () => {
     const level = await createTestLevel();
     afterTest(() => level.close());
     const host = new AutomergeHost({
-      directory: createStorage({ type: StorageType.RAM }).createDirectory(),
       db: level.sublevel('automerge'),
     });
     await host.initialize();
@@ -48,9 +47,8 @@ describe('AutomergeHost', () => {
   test('changes are preserved in storage', async () => {
     const level = await createTestLevel();
     afterTest(() => level.close());
-    const storageDirectory = createStorage({ type: StorageType.RAM }).createDirectory();
 
-    const host = new AutomergeHost({ directory: storageDirectory, db: level.sublevel('automerge') });
+    const host = new AutomergeHost({ db: level.sublevel('automerge') });
     await host.initialize();
     afterTest(() => host.close());
     const handle = host.repo.create();
@@ -62,7 +60,7 @@ describe('AutomergeHost', () => {
     // TODO(dmaretskyi): Is there a way to know when automerge has finished saving?
     await sleep(100);
 
-    const host2 = new AutomergeHost({ directory: storageDirectory, db: level.sublevel('automerge') });
+    const host2 = new AutomergeHost({ db: level.sublevel('automerge') });
     await host2.initialize();
     afterTest(() => host2.close());
     const handle2 = host2.repo.find(url);

@@ -26,7 +26,7 @@ import {
 import { type Directory } from '@dxos/random-access-storage';
 import { type AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
 import { trace } from '@dxos/tracing';
-import { ComplexMap, ComplexSet, defaultMap, mapValues } from '@dxos/util';
+import { ComplexMap, ComplexSet, type MaybePromise, defaultMap, mapValues } from '@dxos/util';
 
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
@@ -41,16 +41,19 @@ export interface MetadataMethods {
 }
 
 export type AutomergeHostParams = {
-  directory: Directory;
-  db?: MySublevel;
+  db: MaybePromise<MySublevel>;
+  /**
+   * For migration purposes.
+   */
+  directory?: Directory;
   metadata?: MetadataMethods;
 };
 
 @trace.resource()
 export class AutomergeHost {
   private readonly _ctx = new Context();
-  private readonly _directory: Directory;
-  private readonly _db?: MySublevel;
+  private readonly _directory?: Directory;
+  private readonly _db: MaybePromise<MySublevel>;
   private readonly _metadata?: MetadataMethods;
 
   private _repo!: Repo;
@@ -77,9 +80,9 @@ export class AutomergeHost {
   }
 
   async initialize() {
-    await levelMigration({ db: this._db!, directory: this._directory });
+    this._directory && (await levelMigration({ db: await this._db, directory: this._directory }));
     this._storage = new LevelDBStorageAdapter({
-      db: this._db!,
+      db: await this._db,
       callbacks: { beforeSave: (params) => this._beforeSave(params) },
     });
     this._peerId = `host-${PublicKey.random().toHex()}` as PeerId;
