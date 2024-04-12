@@ -12,7 +12,7 @@ import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import * as E from '@dxos/echo-schema';
-import { type ExpandoType, getAutomergeObjectCore, getTextContent, type ReactiveObject } from '@dxos/echo-schema';
+import { type Expando, getAutomergeObjectCore, type ReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
@@ -505,7 +505,7 @@ describe('Spaces', () => {
       await waitForExpect(async () => {
         expect(await guestSpace.db.automerge.loadObjectById(hostRoot.id)).not.to.be.undefined;
       });
-      const guestRoot: ExpandoType = guestSpace.db.getObjectById(hostRoot.id)!;
+      const guestRoot: Expando = guestSpace.db.getObjectById(hostRoot.id)!;
 
       const unsub = getAutomergeObjectCore(guestRoot).updates.on(() => {
         if (guestRoot.entries.length === 2) {
@@ -521,7 +521,7 @@ describe('Spaces', () => {
   });
 
   const getDocumentText = (space: Space, documentId: string): string => {
-    return getTextContent((space.db.getObjectById(documentId) as any).content)!;
+    return (space.db.getObjectById(documentId) as DocumentType).content!.content;
   };
 
   const registerTypes = (client: Client) => {
@@ -534,7 +534,7 @@ describe('Spaces', () => {
     });
   };
 
-  const createEchoObject = <T extends {}>(props: T): ReactiveObject<ExpandoType> => {
-    return E.object(E.ExpandoType, props);
+  const createEchoObject = <T extends {}>(props: T): ReactiveObject<Expando> => {
+    return E.object(E.Expando, props);
   };
 });

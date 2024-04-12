@@ -8,7 +8,7 @@ import * as E from '@dxos/echo-schema';
 import { TypedObject } from '@dxos/echo-schema';
 
 export class GridItemType extends TypedObject({ typename: 'braneframe.Grid.Item', version: '0.1.0' })({
-  object: E.ref(E.ExpandoType),
+  object: E.ref(E.Expando),
   position: S.mutable(
     S.struct({
       x: S.number,

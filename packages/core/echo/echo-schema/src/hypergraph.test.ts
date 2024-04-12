@@ -20,19 +20,19 @@ describe('HyperGraph', () => {
     const space2 = await builder.createPeer(spaceKey2);
 
     const obj1 = space1.db.add(
-      E.object(E.ExpandoType, {
+      E.object(E.Expando, {
         type: 'task',
         title: 'A',
       }),
     );
     const obj2 = space2.db.add(
-      E.object(E.ExpandoType, {
+      E.object(E.Expando, {
         type: 'task',
         title: 'B',
       }),
     );
     const obj3 = space2.db.add(
-      E.object(E.ExpandoType, {
+      E.object(E.Expando, {
         type: 'record',
         title: 'C',
       }),
@@ -78,13 +78,13 @@ describe('HyperGraph', () => {
     const space2 = await builder.createPeer(spaceKey2);
 
     const obj1 = space1.db.add(
-      E.object(E.ExpandoType, {
+      E.object(E.Expando, {
         type: 'task',
         title: 'A',
       }),
     );
     const obj2 = space2.db.add(
-      E.object(E.ExpandoType, {
+      E.object(E.Expando, {
         type: 'task',
         title: 'B',
       }),
@@ -108,13 +108,13 @@ describe('HyperGraph', () => {
     const space2 = await builder.createPeer(spaceKey2);
 
     const obj1 = space1.db.add(
-      E.object(E.ExpandoType, {
+      E.object(E.Expando, {
         type: 'task',
         title: 'A',
       }),
     );
     const obj2 = space2.db.add(
-      E.object(E.ExpandoType, {
+      E.object(E.Expando, {
         type: 'task',
         title: 'B',
       }),

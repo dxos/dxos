@@ -4,7 +4,7 @@
 
 import { Code, type IconProps } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
@@ -12,9 +12,8 @@ import { ScriptType, TextV0Type } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import * as E from '@dxos/echo-schema';
-import { Filter } from '@dxos/react-client/echo';
+import { Filter, createDocAccessor } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
-import { useDocAccessor } from '@dxos/react-ui-editor';
 import { baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
 import { ScriptBlock, type ScriptBlockProps } from './components';
@@ -172,8 +171,8 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
 };
 
 const ScriptBlockWrapper = ({ script, ...props }: { script: ScriptType } & Omit<ScriptBlockProps, 'id' | 'source'>) => {
-  const { accessor } = useDocAccessor(script.source!);
-  return <ScriptBlock id={script.id} source={accessor} {...props} />;
+  const source = useMemo(() => script.source && createDocAccessor(script.source, ['content']), [script.source]);
+  return source ? <ScriptBlock id={script.id} source={source} {...props} /> : null;
 };
 
 // TODO(burdon): Import.

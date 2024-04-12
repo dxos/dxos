@@ -3,7 +3,6 @@
 //
 
 export { type Echo, type Space, defaultKey, Properties, type PropertiesProps } from '@dxos/client-protocol';
-// TODO(burdon): Remove/Rename Item.
 export {
   base,
   debug,
@@ -12,7 +11,7 @@ export {
   hasType,
   Filter,
   Query,
-  getRawDoc,
+  createDocAccessor,
   getTextInRange,
   fromCursor,
   toCursor,
@@ -22,7 +21,7 @@ export {
   typeOf,
   isEchoReactiveObject,
   object,
-  ExpandoType,
+  Expando,
   TextCompatibilitySchema,
   type EchoReactiveObject,
   type ReactiveObject,
@@ -36,7 +35,6 @@ export {
   type SubscriptionHandle,
 
   // TODO(burdon): Deprecated.
-  createDocAccessor,
   TypeCollection,
 } from '@dxos/echo-schema';
 

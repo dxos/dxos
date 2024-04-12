@@ -12,6 +12,9 @@ import { TypedObject } from './effect/echo-object-class';
 import * as E from './effect/reactive';
 import { LEGACY_TEXT_TYPE } from './text';
 
+/**
+ * @deprecated
+ */
 const LEGACY_SCHEMA_TYPE = 'dxos.schema.Schema';
 
 /**
@@ -79,6 +82,9 @@ export class TypeCollection {
 
 const getTypenameOrThrow = (schema: S.Schema<any>): string => getSchemaTypeRefOrThrow(schema).itemId;
 
+/**
+ * @deprecated
+ */
 export class TextCompatibilitySchema extends TypedObject({ typename: LEGACY_TEXT_TYPE, version: '0.1.0' })(
   {
     kind: S.enums(TextKind),
@@ -88,6 +94,9 @@ export class TextCompatibilitySchema extends TypedObject({ typename: LEGACY_TEXT
   { partial: true },
 ) {}
 
+/**
+ * @deprecated
+ */
 enum LegacySchemaPropType {
   NONE = 0,
   STRING = 1,
@@ -99,6 +108,9 @@ enum LegacySchemaPropType {
   ENUM = 7,
 }
 
+/**
+ * @deprecated
+ */
 const LegacySchemaPropSchema: S.Schema<any> = S.mutable(
   S.partial(
     S.struct({
@@ -117,6 +129,9 @@ const LegacySchemaPropSchema: S.Schema<any> = S.mutable(
   ),
 );
 
+/**
+ * @deprecated
+ */
 const LegacySchemaTypeSchema = S.partial(
   S.struct({
     typename: S.string,
