@@ -22,32 +22,34 @@ export class LevelDBStorageAdapter implements StorageAdapterInterface {
 
   async load(keyArray: StorageKey): Promise<Uint8Array | undefined> {
     return this._params.db
-      .get<string, Uint8Array>(this._getDbKey(keyArray), { valueEncoding: 'buffer' })
-      .catch((err) => (err.message === 'NotFound' ? undefined : Promise.reject(err)));
+      .get<StorageKey, Uint8Array>(keyArray, { keyEncoding: 'buffer', valueEncoding: 'buffer' })
+      .catch((err) => (err.code === 'LEVEL_NOT_FOUND' ? undefined : Promise.reject(err)));
   }
 
   async save(keyArray: StorageKey, binary: Uint8Array): Promise<void> {
     await this._params.callbacks?.beforeSave?.(keyArray);
-    await this._params.db.put<string, Uint8Array>(this._getDbKey(keyArray), Buffer.from(binary), {
+    await this._params.db.put<StorageKey, Uint8Array>(keyArray, Buffer.from(binary), {
+      keyEncoding: 'buffer',
       valueEncoding: 'buffer',
     });
     await this._params.callbacks?.afterSave?.(keyArray);
   }
 
   async remove(keyArray: StorageKey): Promise<void> {
-    await this._params.db.del<string>(this._getDbKey(keyArray), {});
+    await this._params.db.del<StorageKey>(keyArray, { keyEncoding: 'buffer' });
   }
 
   async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
     const result: Chunk[] = [];
-    for await (const [key, value] of this._params.db.iterator<string, Uint8Array>({
-      gte: this._getDbKey(keyPrefix),
-      lte: this._getDbKey([...keyPrefix, '\uffff']),
+    for await (const [key, value] of this._params.db.iterator<StorageKey, Uint8Array>({
+      gte: keyPrefix,
+      lte: [...keyPrefix, '\uffff'],
+      keyEncoding: 'buffer',
       valueEncoding: 'buffer',
     })) {
       result.push({
         data: value,
-        key: this._getStorageKey(key),
+        key,
       });
     }
 
@@ -57,21 +59,14 @@ export class LevelDBStorageAdapter implements StorageAdapterInterface {
   async removeRange(keyPrefix: StorageKey): Promise<void> {
     const batch = this._params.db.batch();
 
-    for await (const [key] of this._params.db.iterator<string, Uint8Array>({
-      gte: this._getDbKey(keyPrefix),
-      lte: this._getDbKey([...keyPrefix, '\uffff']),
+    for await (const [key] of this._params.db.iterator<StorageKey, Uint8Array>({
+      gte: keyPrefix,
+      lte: [...keyPrefix, '\uffff'],
+      keyEncoding: 'buffer',
       valueEncoding: 'buffer',
     })) {
-      batch.del<string>(key, {});
+      batch.del<StorageKey>(key, { keyEncoding: 'buffer' });
     }
     await batch.write();
-  }
-
-  private _getDbKey(key: StorageKey): string {
-    return key.map((k) => k.replaceAll('%', '%25').replaceAll('-', '%2D')).join('-');
-  }
-
-  private _getStorageKey(dbKey: string): StorageKey {
-    return dbKey.split('-').map((k) => k.replaceAll('%2D', '-').replaceAll('%25', '%'));
   }
 }
