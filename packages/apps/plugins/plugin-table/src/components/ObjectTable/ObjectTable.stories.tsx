@@ -32,7 +32,11 @@ const Story = () => {
       client._graph.types.registerEffectSchema(TableType);
     }
 
-    const table = space.db.add(create(TableType, { title: 'Test Prop', props: [{ id: 'test' }] }));
+    // We need a table to reference
+    // TODO(zan): Workout how to get this to not double add in debug.
+    space.db.add(create(TableType, { title: 'Other table', props: [], schema: generator.schemas[3] }));
+
+    const table = space.db.add(create(TableType, { title: '', props: [] }));
     setTable(table);
   }, []);
 

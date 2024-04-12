@@ -68,8 +68,6 @@ const useUpdateProperty = (table: TableType) => {
 
   const updateTableProp = useCallback(
     (oldId: string, update: TableTypeProp) => {
-      console.log('updateTableProp', update);
-
       const idx = table.props?.findIndex((prop) => prop.id === oldId);
 
       if (idx !== -1) {
