@@ -12,6 +12,7 @@ import {
   type SearchListQueryModel,
   Table,
   type TableColumnDef,
+  type TableProps,
   type ValueUpdater,
 } from '@dxos/react-ui-table';
 
@@ -25,6 +26,8 @@ type Item = {
   started?: Date;
   complete?: boolean;
 };
+
+faker.seed(1234);
 
 const timeout = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -52,7 +55,7 @@ const { helper, builder } = createColumnBuilder<Item>();
 
 faker.seed(1234);
 
-const makeColumns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, any>[] => [
+export const makeColumns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, any>[] => [
   helper.display(builder.selectRow()),
   helper.accessor((item) => item.publicKey, { id: 'key', ...builder.key({ tooltip: true }) }),
   helper.accessor(
@@ -91,7 +94,7 @@ const makeColumns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, a
   ),
 ];
 
-const createItems = (count: number) =>
+export const createItems = (count: number) =>
   [...Array(count)].map(
     () =>
       E.object<Item>({
@@ -103,13 +106,8 @@ const createItems = (count: number) =>
       }) as Item,
   );
 
-export const TableContent = ({ data: { count = 12 } }: { data: StackSectionContent & { count?: number } }) => {
-  return (
-    <Table
-      {...{
-        columns: makeColumns(),
-        data: createItems(count),
-      }}
-    />
-  );
+export type TableContentProps = StackSectionContent & Pick<TableProps<Item>, 'columns' | 'data'>;
+
+export const TableContent = ({ data: { columns, data } }: { data: TableContentProps }) => {
+  return <Table columns={columns} data={data} />;
 };

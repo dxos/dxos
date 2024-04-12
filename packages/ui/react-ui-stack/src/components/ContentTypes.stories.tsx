@@ -12,15 +12,15 @@ import { withTheme } from '@dxos/storybook-utils';
 import type { StackSectionContent, StackSectionItem } from './Section';
 import { Stack, type StackProps } from './Stack';
 import { EditorContent } from '../testing/EditorContent';
-import { TableContent } from '../testing/TableContent';
+import { makeColumns, createItems, TableContent, type TableContentProps } from '../testing/TableContent';
 
 faker.seed(1234);
 
 const ContentTypeDelegator: StackProps['SectionContent'] = (section: { data: StackSectionContent }) => {
   if ('content' in section.data) {
     return <EditorContent {...section} />;
-  } else if ('count' in section.data) {
-    return <TableContent {...section} />;
+  } else if ('columns' in section.data) {
+    return <TableContent data={section.data as TableContentProps} />;
   } else {
     return null;
   }
@@ -59,7 +59,11 @@ export const Tables = {
   args: {
     items: [...Array(12)].map(() => ({
       id: faker.string.uuid(),
-      object: { id: faker.string.uuid(), count: faker.number.int({ min: 4, max: 20 }) },
+      object: {
+        id: faker.string.uuid(),
+        columns: makeColumns(),
+        data: createItems(faker.number.int({ min: 4, max: 12 })),
+      },
     })),
   },
   parameters: {
@@ -75,7 +79,7 @@ export const EditorsAndTables = {
         id: faker.string.uuid(),
         ...(faker.number.float(1) < 0.5
           ? { content: faker.lorem.paragraphs(4) }
-          : { count: faker.number.int({ min: 20, max: 40 }) }),
+          : { columns: makeColumns(), data: createItems(faker.number.int({ min: 4, max: 12 })) }),
       },
     })),
   },
