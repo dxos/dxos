@@ -1,12 +1,16 @@
-import { plate } from "@dxos/plate";
+//
+// Copyright 2024 DXOS.org
+//
+
+import { plate } from '@dxos/plate';
 import template from '../template.t';
 
 export default template.define.script({
-  content: plate /* javascript */ `
+  content: plate/* javascript */ `
 
   import React, { useState } from 'react';
-
-  import { Task } from './proto';
+  
+  import { Task } from './schema';
 
   export type TaskListProps = {
     tasks?: Task[];
@@ -120,4 +124,5 @@ export default template.define.script({
       </div>
     );
   };
-  `});
+  `,
+});
