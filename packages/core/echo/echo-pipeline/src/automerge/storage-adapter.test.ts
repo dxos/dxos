@@ -18,7 +18,7 @@ const runTests = (
   testNamespace: string,
   /** Run per test. Expects automatic clean-up with `afterTest`. */ createAdapter: () => MaybePromise<StorageAdapterInterface>,
 ) => {
-  describe.only(testNamespace, () => {
+  describe(testNamespace, () => {
     const chunks = [
       { key: ['a', 'b', 'c', '1'], data: PublicKey.random().asUint8Array() },
       { key: ['a', 'b', 'c', '2'], data: PublicKey.random().asUint8Array() },
@@ -60,22 +60,35 @@ const runTests = (
 
       expect((await adapter.loadRange(['a', 'b'])).length).to.equal(1);
       expect(await adapter.load(['a', 'b', 'c', '2'])).to.deep.equal(chunks[1].data);
-      // expect(await adapter.load(['a', 'b', 'd', '3'])).to.be.undefined;
+      expect(await adapter.load(['a', 'b', 'd', '3'])).to.be.undefined;
     });
+
+    test('persist after reload', async () => {
+      const adapter = await createAdapter();
+
+      for (const chunk of chunks) {
+        await adapter.save(chunk.key, chunk.data);
+      }
+
+      const adapter2 = await createAdapter();
+
+      expect((await adapter2.loadRange(['a', 'b'])).length).to.equal(4);
+      expect(await adapter2.load(['a', 'b', 'c', '1'])).to.deep.equal(chunks[0].data);
+      expect(await adapter2.load(['a', 'b', 'd', '4'])).to.deep.equal(chunks[3].data);    
   });
 };
 
 /**
  * Run tests for AutomergeStorageAdapter.
  */
-// runTests('AutomergeStorageAdapter', () => {
-//   const storage = createStorage({ type: StorageType.RAM });
-//   afterTest(() => storage.close());
-//   const dir = storage.createDirectory('automerge');
-//   const adapter = new AutomergeStorageAdapter(dir);
-//   afterTest(() => adapter.close());
-//   return adapter;
-// });
+runTests('AutomergeStorageAdapter', () => {
+  const storage = createStorage({ type: StorageType.RAM });
+  afterTest(() => storage.close());
+  const dir = storage.createDirectory('automerge');
+  const adapter = new AutomergeStorageAdapter(dir);
+  afterTest(() => adapter.close());
+  return adapter;
+});
 
 /**
  * Run tests for LevelDBStorageAdapter.
