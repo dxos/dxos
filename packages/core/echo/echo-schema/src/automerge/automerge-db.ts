@@ -469,3 +469,31 @@ export const shouldObjectGoIntoFragmentedSpace = (core: AutomergeObjectCore) => 
     return false;
   }
 };
+
+/**
+ * EXPERIMENTAL - the API is subject to change.
+ * @param obj - an echo object with references to other echo objects.
+ * @param valueAccessor - selector for a reference that needs to be loaded.
+ * @param timeout - loading timeout, defaults to 5s.
+ */
+export const loadObjectReferences = async <T extends OpaqueEchoObject, U>(
+  obj: T,
+  valueAccessor: (obj: T) => U,
+  { timeout }: { timeout: number } = { timeout: 5000 },
+): Promise<U> => {
+  const core = getAutomergeObjectCore(obj);
+  const value = valueAccessor(obj);
+  if (core.database == null) {
+    return value;
+  }
+  const isLoadedPredicate = Array.isArray(value)
+    ? () => value.every((v) => v != null)
+    : () => valueAccessor(obj) != null;
+  if (isLoadedPredicate()) {
+    return value;
+  }
+  return asyncTimeout(
+    core.database._updateEvent.waitFor(() => isLoadedPredicate()).then(() => valueAccessor(obj)),
+    timeout,
+  );
+};

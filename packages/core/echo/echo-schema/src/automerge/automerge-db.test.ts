@@ -12,6 +12,7 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
+import { loadObjectReferences } from './automerge-db';
 import { getAutomergeObjectCore } from './automerge-object';
 import * as E from '../effect/reactive';
 import { type EchoReactiveObject, type ExpandoType } from '../effect/reactive';
@@ -305,6 +306,53 @@ describe('AutomergeDb', () => {
       await peer.db.automerge.loadObjectById(object.id);
       const loadedObject = peer.db.getObjectById(object.id);
       expect(loadedObject).to.deep.eq(object);
+    });
+
+    describe('loadObjectReferences', () => {
+      test('loads a field', async () => {
+        const nestedValue = 'test';
+        const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
+        const testPeer = await testBuilder.createPeer();
+        const object = createExpando({ nested: createExpando({ value: nestedValue }) });
+        testPeer.db.add(object);
+
+        const restartedPeer = await testBuilder.createPeer(testPeer.spaceKey, testPeer.automergeDocId);
+        const loaded: any = await restartedPeer.db.automerge.loadObjectById(object.id);
+        expect(loaded.nested?.value).to.be.undefined;
+        expect(await loadObjectReferences(loaded, (o) => o.nested?.value)).to.eq(nestedValue);
+      });
+
+      test('loads array', async () => {
+        const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
+        const testPeer = await testBuilder.createPeer();
+        const object = createExpando({ nestedArray: [createExpando(), createExpando()] });
+        testPeer.db.add(object);
+
+        const restartedPeer = await testBuilder.createPeer(testPeer.spaceKey, testPeer.automergeDocId);
+        const loaded: any = await restartedPeer.db.automerge.loadObjectById(object.id);
+        expect((loaded.nestedArray as any[]).every((v) => v == null)).to.be.true;
+        const loadedArray = await loadObjectReferences(loaded, (o) => o.nestedArray as any[]);
+        expect(loadedArray.every((v) => v != null)).to.true;
+      });
+
+      test('throws on timeout', async () => {
+        const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
+        const testPeer = await testBuilder.createPeer();
+        const object = createExpando({ nested: createExpando() });
+        testPeer.db.add(object);
+        testPeer.db.remove(object.nested);
+
+        const restartedPeer = await testBuilder.createPeer(testPeer.spaceKey, testPeer.automergeDocId);
+        const loaded: any = await restartedPeer.db.automerge.loadObjectById(object.id);
+        expect(loaded.nested?.value).to.be.undefined;
+        let threw = false;
+        try {
+          await loadObjectReferences(loaded, (o) => o.nested, { timeout: 1 });
+        } catch (e) {
+          threw = true;
+        }
+        expect(threw).to.be.true;
+      });
     });
   });
 });
