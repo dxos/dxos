@@ -28,7 +28,11 @@ export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Gr
     const actions: ActionLike[] = [];
     graph?.traverse({
       visitor: (node, path) => {
-        if (isAction(node) && !actionMap.has(node.id) && current.startsWith(path.slice(0, -1).join('/'))) {
+        if (
+          (isAction(node) || isActionGroup(node)) &&
+          !actionMap.has(node.id) &&
+          current.startsWith(path.slice(0, -1).join('/'))
+        ) {
           actionMap.add(node.id);
           actions.push(node);
         }
