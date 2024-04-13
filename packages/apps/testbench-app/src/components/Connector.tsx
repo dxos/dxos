@@ -2,8 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import PartySocket from 'partysocket';
 import React, { useEffect, useState } from 'react';
 
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Button, Input, Toolbar } from '@dxos/react-ui';
 
@@ -13,26 +15,26 @@ import { Button, Input, Toolbar } from '@dxos/react-ui';
 const CHANNEL_LABEL = 'data-channel';
 
 class Connection {
-  private connection?: RTCPeerConnection;
-  private channel?: RTCDataChannel;
-  private makingOffer?: boolean;
+  private readonly id = `client-${PublicKey.random().toHex().slice(0, 4)}`;
 
-  constructor(private readonly endpoint: string) {}
+  private peer?: RTCPeerConnection;
+  private channel?: RTCDataChannel;
+  private signaling?: PartySocket;
+  private makingOffer?: boolean;
 
   get info() {
     return {
       ts: Date.now(),
-      config: this.connection?.getConfiguration(),
       // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection
-      connection: this.connection && {
-        connectionState: this.connection.connectionState,
-        currentLocalDescription: this.connection.currentLocalDescription,
-        currentRemoteDescription: this.connection.currentRemoteDescription,
-        iceConnectionState: this.connection.iceConnectionState,
-        iceGatheringState: this.connection.iceGatheringState,
-        localDescription: this.connection.localDescription,
-        remoteDescription: this.connection.remoteDescription,
-        signalingState: this.connection.signalingState,
+      connection: this.peer && {
+        connectionState: this.peer.connectionState,
+        currentLocalDescription: this.peer.currentLocalDescription,
+        currentRemoteDescription: this.peer.currentRemoteDescription,
+        iceConnectionState: this.peer.iceConnectionState,
+        iceGatheringState: this.peer.iceGatheringState,
+        localDescription: this.peer.localDescription,
+        remoteDescription: this.peer.remoteDescription,
+        signalingState: this.peer.signalingState,
       },
       // https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannel
       channel: this.channel && {
@@ -47,19 +49,57 @@ class Connection {
         protocol: this.channel.protocol,
         readyState: this.channel.readyState,
       },
+      config: this.peer?.getConfiguration(),
     };
   }
 
-  async open({ sdp }: { sdp?: string }): Promise<string | undefined> {
+  async open(initiate = false) {
     await this.close();
-    log.info('opening...', { sdp });
+    log.info('opening...', { initiate });
 
     // TODO(burdon): Offer/Answer over https.
     // https://developers.cloudflare.com/calls/https-api/
 
+    // https://docs.partykit.io/reference/partysocket-api
+    this.signaling = new PartySocket({
+      host: 'http://127.0.0.1:1999',
+      id: 'client-' + PublicKey.random().toHex().slice(0, 4),
+      party: 'main', // Default party.
+      room: 'signaling',
+    });
+
+    this.signaling.addEventListener('open', (event) => {
+      log.info('signaling.open', { event });
+    });
+
+    this.signaling.addEventListener('message', async (event) => {
+      const data = JSON.parse(event.data);
+      log.info('signaling.message', { data });
+      const { description, candidate } = data;
+
+      if (description) {
+        log.info('received', { type: description.type });
+        await this.peer!.setRemoteDescription(
+          new RTCSessionDescription({ type: description.type, sdp: description.sdp }),
+        );
+
+        if (description.type === 'offer') {
+          await this.peer!.setLocalDescription();
+          this.send({ description: this.peer?.localDescription?.toJSON() });
+        }
+      }
+
+      if (candidate) {
+        await this.peer!.addIceCandidate(candidate);
+      }
+    });
+
+    this.signaling.reconnect();
+
     // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Connectivity
-    // https://github.com/cloudflare/workers-sdk/blob/main/templates/stream/webrtc/src/WHIPClient.ts
-    this.connection = new RTCPeerConnection({
+    // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling#signaling_transaction_flow
+    // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#implementing_perfect_negotiation
+    this.peer = new RTCPeerConnection({
       iceServers: [
         {
           urls: 'stun:stun.cloudflare.com:3478',
@@ -67,141 +107,98 @@ class Connection {
       ],
     });
 
-    this.connection.addEventListener('connectionstatechange', async (event) => {
-      log.info('connectionstatechange', { event });
+    this.peer.addEventListener('connectionstatechange', async (event) => {
+      log.info('peer.connectionstatechange', { event });
     });
 
-    // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling#signaling_transaction_flow
-    // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#implementing_perfect_negotiation
-    this.connection.addEventListener('negotiationneeded', async (event) => {
-      log.info('negotiationneeded', { event });
+    this.peer.addEventListener('negotiationneeded', async (event) => {
+      log.info('peer.negotiationneeded', { event });
 
-      try {
-        this.makingOffer = true;
-        await this.connection!.setLocalDescription();
-        const message = encodeURI(JSON.stringify(this.connection!.localDescription!.toJSON()));
-        log.info('making offer', { message });
-        void navigator.clipboard.writeText(message);
-      } catch (err) {
-        log.catch(err);
-      } finally {
-        this.makingOffer = false;
+      if (initiate) {
+        try {
+          log.info('making offer...');
+          this.makingOffer = true;
+          await this.peer!.setLocalDescription();
+          this.send({ description: this.peer!.localDescription!.toJSON() });
+          // void navigator.clipboard.writeText(message);
+        } catch (err) {
+          log.catch(err);
+        } finally {
+          this.makingOffer = false;
+        }
       }
-
-      // invariant(sdp);
-      // await this.connection!.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: decodeURI(sdp!) }));
-      // const answer = await this.connection!.createAnswer();
-      // await this.connection!.setLocalDescription(answer);
     });
 
-    this.connection.addEventListener('icecandidate', async (event) => {
-      log.info('icecandidate', { event });
-      // TODO(burdon): Send ice candidate.
+    this.peer.addEventListener('icecandidate', async (event) => {
+      log.info('peer.icecandidate', { event });
+      if (event.candidate) {
+        this.send({ candidate: event.candidate });
+      }
     });
 
-    this.connection.addEventListener('icecandidateerror', async (event) => {
-      log.info('icecandidateerror', { event });
+    this.peer.addEventListener('icecandidateerror', async (event) => {
+      log.info('peer.icecandidateerror', { event });
     });
 
-    this.connection.addEventListener('iceconnectionstatechange', async (event) => {
-      log.info('iceconnectionstatechange', { event });
-      this.connection?.restartIce();
+    this.peer.addEventListener('iceconnectionstatechange', async (event) => {
+      log.info('peer.iceconnectionstatechange', { event });
+      this.peer?.restartIce();
     });
 
-    this.connection.addEventListener('datachannel', async (event) => {
-      log.info('datachannel', { event });
+    this.peer.addEventListener('datachannel', async (event) => {
+      log.info('peer.datachannel', { event });
     });
 
     // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Using_data_channels
-    if (!sdp) {
-      // const offer = await this.connection.createOffer();
-      // await this.connection.setLocalDescription(offer);
-      // log.info('offer', { offer });
-      log.info('creating channel...');
-      this.channel = this.connection.createDataChannel(CHANNEL_LABEL, { negotiated: true, id: 0 });
-      this.channel.addEventListener('open', () => {
-        log.info('channel open');
-      });
-      // return encodeURI(offer.sdp!);
-    } else {
-      log.info('listening...');
-      await this.connection.setRemoteDescription({ type: 'offer', sdp: decodeURI(sdp!) });
-      await this.connection.setLocalDescription();
-
-      // this.channel = this.connection.createDataChannel(CHANNEL_LABEL, { negotiated: true, id: 0 });
-      // this.channel.addEventListener('open', () => {
-      //   log.info('channel open');
-      // });
-
-      // await this.connection!.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: decodeURI(sdp!) }));
-      // await this.connection!.setRemoteDescription({ type: 'offer', sdp: decodeURI(sdp!) });
-      // const answer = await this.connection!.createAnswer();
-      // await this.connection!.setLocalDescription(answer);
-    }
-
-    // {
-    //   const offer = await waitToCompleteICEGathering(this.connection);
-    //   log.info('offer', { offer });
-    //
-    //   if (offer) {
-    //     while (this.connection && this.connection.connectionState !== 'closed') {
-    //       log.info('polling...');
-    //       const response = await this.postMessage(offer.sdp);
-    //       console.log(response);
-    //       await sleep(1000);
-    //     }
-    //   }
-    // }
+    log.info('creating channel...');
+    this.channel = this.peer.createDataChannel(CHANNEL_LABEL, { negotiated: true, id: 0 });
+    this.channel.addEventListener('open', () => {
+      log.info('channel.open');
+      this.channel?.send(JSON.stringify({ sender: this.id, message: 'hello' }));
+    });
+    this.channel.addEventListener('message', (event) => {
+      const data = JSON.parse(event.data);
+      log.info('channel.message', { data });
+    });
   }
 
   async close() {
-    if (this.connection) {
+    if (this.signaling) {
+      this.signaling.close();
+      this.signaling = undefined;
+    }
+
+    if (this.peer) {
       log.info('closing...');
       this.channel?.close();
-      this.connection?.close();
+      this.peer?.close();
       this.channel = undefined;
-      this.connection = undefined;
+      this.peer = undefined;
     }
   }
 
-  // async postMessage(data: string) {
-  //   return await fetch(this.endpoint, {
-  //     method: 'POST',
-  //     mode: 'cors',
-  //     headers: {
-  //       'content-type': 'application/sdp',
-  //     },
-  //     body: data,
-  //   });
-  // }
-}
+  // TODO(burdon): Effect schema.
+  send<T>(message: T) {
+    log.info('send', { message });
+    this.signaling?.send(JSON.stringify(message));
+  }
 
-// const waitToCompleteICEGathering = async (peerConnection: RTCPeerConnection, timeout = 1000) =>
-//   new Promise<RTCSessionDescription | null>((resolve) => {
-//     // Wait at most 1 second for ICE gathering.
-//     setTimeout(() => {
-//       resolve(peerConnection.localDescription);
-//     }, timeout);
-//
-//     peerConnection.onicegatheringstatechange = (ev) =>
-//       peerConnection.iceGatheringState === 'complete' && resolve(peerConnection.localDescription);
-//   });
+  ping() {
+    this.send({ command: 'ping' });
+  }
+}
 
 export const Connector = () => {
   const [, forceUpdate] = useState({});
   const [connection, setConnection] = useState<Connection>();
-  const [sdp, setSdp] = useState<string>();
+  const [invitation, setInvitation] = useState<string>();
   useEffect(() => {
-    setConnection(new Connection('/data/x-1234'));
+    setConnection(new Connection());
   }, []);
 
-  const handleConnect = ({ sdp }: { sdp?: string } = {}) => {
+  const handleConnect = (initiate = false) => {
     setTimeout(async () => {
-      const s = await connection!.open({ sdp });
-      // if (s) {
-      //   void navigator.clipboard.writeText(s);
-      // }
-
+      await connection!.open(initiate);
       forceUpdate({});
     });
   };
@@ -213,17 +210,28 @@ export const Connector = () => {
     });
   };
 
+  const handlePing = () => {
+    connection?.ping();
+  };
+
   return (
     <div className='fixed inset-0 flex flex-col overflow-hidden'>
-      <Toolbar.Root>
-        <Button onClick={() => handleConnect()}>Offer</Button>
-        <Button onClick={() => handleConnect({ sdp })}>Listen</Button>
+      <Toolbar.Root classNames='p-2'>
+        <Button onClick={() => handleConnect(true)}>Offer</Button>
+        <Button onClick={() => handleConnect()}>Listen</Button>
         <Button onClick={() => handleClose()}>Close</Button>
+        <Button onClick={() => handlePing()}>Ping</Button>
         <Button onClick={() => forceUpdate({})}>Refresh</Button>
       </Toolbar.Root>
-      <Input.Root>
-        <Input.TextInput placeholder='SDP' value={sdp ?? ''} onChange={(event) => setSdp(event.target.value)} />
-      </Input.Root>
+      <div className='p-2'>
+        <Input.Root>
+          <Input.TextInput
+            placeholder='Invitation'
+            value={invitation ?? ''}
+            onChange={(event) => setInvitation(event.target.value)}
+          />
+        </Input.Root>
+      </div>
       <div className='flex flex-col grow overflow-hidden p-2'>
         <div className='flex flex-col overflow-y-scroll'>
           <pre className='text-sm'>{JSON.stringify(connection?.info ?? {}, undefined, 2)}</pre>
