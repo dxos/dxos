@@ -8,6 +8,7 @@ import { withProfiler } from '@sentry/react';
 import React, { StrictMode, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import adapter from 'webrtc-adapter';
 
 import { initializeAppObservability } from '@dxos/observability';
 import { type Client, ClientProvider, Config, Defaults } from '@dxos/react-client';
@@ -18,6 +19,8 @@ import { AppContainer, Main, Error } from './components';
 import { getConfig } from './config';
 import { ItemType } from './data';
 import translations from './translations';
+
+console.log(adapter.browserDetails.browser);
 
 void initializeAppObservability({
   namespace: 'testbench.dxos.org',
