@@ -29,11 +29,13 @@ const MAX_MESSAGE_SIZE = 64 * 1024;
  */
 export class LibDataChannelTransport implements Transport {
   private static _instanceCount = 0;
+
   private _closed = false;
-  readonly closed = new Event();
   private _connected = false;
+  readonly closed = new Event();
   readonly connected = new Event();
   readonly errors = new ErrorStream();
+  // TODO(burdon): Why promise? Make well-formed in initialize method?
   private readonly _peer: Promise<RTCPeerConnection>;
   private _channel!: RTCDataChannel;
   private _stream!: Duplex;
@@ -42,6 +44,7 @@ export class LibDataChannelTransport implements Transport {
   private _writeCallback: (() => void) | null = null;
 
   constructor(private readonly params: LibDataChannelTransportParams) {
+    // TODO(burdon): Move to initialize method?
     this._peer = (async () => {
       /* eslint-disable @typescript-eslint/consistent-type-imports */
       const { RTCPeerConnection } = (await importESM('node-datachannel/polyfill'))
@@ -90,7 +93,7 @@ export class LibDataChannelTransport implements Transport {
               },
             });
           } catch (err) {
-            log.info('signaling errror', { err });
+            log.info('signaling error', { err });
           }
         }
       };
@@ -103,10 +106,11 @@ export class LibDataChannelTransport implements Transport {
               return;
             }
             if (peer.connectionState !== 'connecting') {
-              log.error('i am initiator but peer not in state connecting', { peer });
+              log.error('peer not connecting', { peer });
               this.errors.raise(new Error('invalid state: peer is initiator, but other peer not in state connecting'));
             }
-            log.debug(`im the initiator, creating offer, peer is in state ${peer.connectionState}`, { offer });
+
+            log.debug('creating offer', { peer, offer });
             await peer.setLocalDescription(offer);
             await params.sendSignal({ payload: { data: { type: offer.type, sdp: offer.sdp } } });
             return offer;
@@ -114,6 +118,7 @@ export class LibDataChannelTransport implements Transport {
           .catch((err) => {
             this.errors.raise(err);
           });
+
         this.handleChannel(peer.createDataChannel(DATACHANNEL_LABEL));
         log.debug('created data channel');
         peer.ondatachannel = (event) => {
@@ -273,7 +278,6 @@ export class LibDataChannelTransport implements Transport {
   async _getStats(): Promise<any> {
     return this._peer.then(async (peer) => {
       const stats = await peer.getStats();
-
       const statsEntries = Array.from((stats as any).entries() as any[]);
       const transport = statsEntries.filter((s) => s[1].type === 'transport')[0][1];
       const candidatePair = statsEntries.filter((s: any) => s[0] === transport.selectedCandidatePairId);

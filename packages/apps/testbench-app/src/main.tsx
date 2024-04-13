@@ -8,19 +8,16 @@ import { withProfiler } from '@sentry/react';
 import React, { StrictMode, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import adapter from 'webrtc-adapter';
 
 import { initializeAppObservability } from '@dxos/observability';
 import { type Client, ClientProvider, Config, Defaults } from '@dxos/react-client';
 import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
-import { AppContainer, Main, Error } from './components';
+import { AppContainer, Main, Error, Connector } from './components';
 import { getConfig } from './config';
-import { ItemType } from './data';
+import { ItemType, DocumentType } from './data';
 import translations from './translations';
-
-console.log(adapter.browserDetails.browser);
 
 void initializeAppObservability({
   namespace: 'testbench.dxos.org',
@@ -36,6 +33,10 @@ const router = createBrowserRouter([
         <Main />
       </AppContainer>
     ),
+  },
+  {
+    path: '/test',
+    element: <Connector />,
   },
 ]);
 
@@ -66,7 +67,9 @@ const App = withProfiler(() => {
       await client.halo.createIdentity({ displayName: 'Test User' });
     }
 
-    client.addSchema(ItemType);
+    // TODO(burdon): [API]: Pass array.
+    // TODO(burdon): [API]: Get array of registered schema.
+    client.addSchema(ItemType, DocumentType);
     await client.spaces.isReady.wait();
   };
 
