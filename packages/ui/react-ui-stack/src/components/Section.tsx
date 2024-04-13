@@ -237,14 +237,23 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
             </ListItem.Heading>
             <CollapsiblePrimitive.Content asChild>
               <ScrollArea.Root
+                type='always'
                 {...(!collapsed && { ...sectionContentGroup, tabIndex: 0 })}
-                classNames={mx(focusRing, 'rounded-sm mlb-1 mie-1 is-full')}
+                classNames={mx(
+                  focusRing,
+                  'rounded-sm mlb-1 mie-1 is-full',
+                  'has-[[data-radix-scroll-area-viewport]]:pbe-4',
+                )}
               >
                 <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
-                <ScrollArea.Scrollbar orientation='horizontal'>
+                <ScrollArea.Scrollbar
+                  orientation='horizontal'
+                  variant='coarse'
+                  classNames='hidden has-[div]:flex !inline-end-[max(.25rem,var(--radix-scroll-area-corner-width))]'
+                >
                   <ScrollArea.Thumb />
                 </ScrollArea.Scrollbar>
-                <ScrollArea.Scrollbar orientation='vertical'>
+                <ScrollArea.Scrollbar orientation='vertical' variant='coarse' classNames='hidden has-[div]:flex'>
                   <ScrollArea.Thumb />
                 </ScrollArea.Scrollbar>
                 <ScrollArea.Corner />
