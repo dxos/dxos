@@ -24,14 +24,16 @@ export interface Transport {
   errors: ErrorStream;
 
   /**
-   * Transport-specfic stats.
+   * Transport-specific stats.
    */
   getStats(): Promise<TransportStats>;
   /**
-   * Transport-specfic connection details.
+   * Transport-specific connection details.
    */
   getDetails(): Promise<string>;
   destroy(): Promise<void>;
+
+  // TODO(burdon): Make async.
   signal(signal: Signal): void;
 }
 

@@ -81,7 +81,7 @@ describe('LibDataChannelTransport', () => {
         log.debug('signal', signal);
 
         await sleep(10);
-        await connection1.signal(signal);
+        connection1.signal(signal);
       },
     });
     afterTest(() => connection2.destroy());

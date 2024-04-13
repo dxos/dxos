@@ -213,6 +213,7 @@ export class LibDataChannelTransport implements Transport {
     this.closed.emit();
   }
 
+  // TODO(burdon): Make async.
   signal(signal: Signal): void {
     this._peer
       .then(async (peer) => {
