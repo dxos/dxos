@@ -8,7 +8,7 @@ import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 import { StoredEchoSchema } from './effect/dynamic/stored-schema';
 import { getSchemaTypeRefOrThrow } from './effect/echo-handler';
-import { EchoObjectSchema } from './effect/echo-object-class';
+import { TypedObject } from './effect/echo-object-class';
 import * as E from './effect/reactive';
 import { LEGACY_TEXT_TYPE } from './text';
 
@@ -79,7 +79,7 @@ export class TypeCollection {
 
 const getTypenameOrThrow = (schema: S.Schema<any>): string => getSchemaTypeRefOrThrow(schema).itemId;
 
-export class TextCompatibilitySchema extends EchoObjectSchema({ typename: LEGACY_TEXT_TYPE, version: '0.1.0' })(
+export class TextCompatibilitySchema extends TypedObject({ typename: LEGACY_TEXT_TYPE, version: '0.1.0' })(
   {
     kind: S.enums(TextKind),
     field: S.string,

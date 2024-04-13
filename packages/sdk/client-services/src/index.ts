@@ -10,3 +10,4 @@ export * from './packlets/spaces';
 export * from './packlets/storage';
 export * from './packlets/vault';
 export * from './packlets/locks';
+export * from './packlets/diagnostics';

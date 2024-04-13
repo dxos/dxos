@@ -233,9 +233,7 @@ describe('Agent', () => {
 
   // TODO(burdon): Write custom BaseChain based on AgentExecutor (langchain/src/agents).
   // TODO(burdon): Figure out how to invoke tool from basics.
-  // TODO(burdon): Create custom tool and check is invoked.
-  // TODO(burdon): Error.
-  //  InputFormatError: Error: Field "chat_history" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: [
+  // TODO(burdon): Create custom tool and check it is invoked.
 
   // https://api.js.langchain.com/functions/langchain_agents.createOpenAIFunctionsAgent.html
   test('createOpenAIFunctionsAgent', async () => {

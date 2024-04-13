@@ -17,7 +17,7 @@ export type DatadogOptions = {
   host?: string;
   site?: String;
   getTags: () => { [key: string]: string };
-  // needed to read CORS proxy
+  // Needed to read CORS proxy.
   config: Config;
   debug?: boolean;
 };

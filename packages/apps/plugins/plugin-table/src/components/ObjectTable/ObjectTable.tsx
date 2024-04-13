@@ -8,7 +8,7 @@ import React, { type FC, useEffect, useMemo, useState, useCallback } from 'react
 import { useFilteredObjects } from '@braneframe/plugin-search';
 import { TableType, type TableTypeProp } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
-import { EchoObjectSchema, type EchoReactiveObject, Filter } from '@dxos/echo-schema';
+import { TypedObject, type EchoReactiveObject, Filter } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider } from '@dxos/react-ui';
@@ -125,7 +125,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
 
     if (!table.schema) {
       table.schema = space.db.schemaRegistry.add(
-        EchoObjectSchema({ typename: `example.com/schema/${PublicKey.random().truncate()}`, version: '0.1.0' })({
+        TypedObject({ typename: `example.com/schema/${PublicKey.random().truncate()}`, version: '0.1.0' })({
           title: S.string,
         }),
       );
