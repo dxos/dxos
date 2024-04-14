@@ -2,5 +2,5 @@
   "$schema": "https://www.partykit.io/schema.json",
   "name": "signaling-server",
   "compatibilityDate": "2024-04-01",
-  "main": "src/signaling/server.ts"
+  "main": "src/webrtc/server/signaling.ts"
 }
