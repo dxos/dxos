@@ -17,12 +17,13 @@ export const Connector = () => {
   const { setUser, sendEvent } = useBaselimeRum();
   const [, forceUpdate] = useState({});
   const [peer, setPeer] = useState<Peer>();
+  const [state, setState] = useState<string>();
   const [invitation, setInvitation] = useState<string>();
   useEffect(() => {
     const peer = new Peer(PublicKey.random());
     setUser(peer.id.toHex());
-    const unsubscribe = peer.update.on((event) => {
-      forceUpdate({});
+    const unsubscribe = peer.update.on(({ state }) => {
+      setState(state);
     });
     setPeer(peer);
     return () => unsubscribe();
@@ -74,6 +75,7 @@ export const Connector = () => {
             onChange={(event) => setInvitation(event.target.value)}
           />
         </Input.Root>
+        <div className='w-[100px] flex shrink-0 items-center font-mono'>{state}</div>
         <Button onClick={() => forceUpdate({})}>Refresh</Button>
       </Toolbar.Root>
       <div className='flex flex-col grow overflow-hidden p-2'>
