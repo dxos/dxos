@@ -11,7 +11,7 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
 import { initializeAppObservability } from '@dxos/observability';
-import { type Client, ClientProvider, Config, Defaults } from '@dxos/react-client';
+import { type Client, ClientProvider, Config, Defaults, Envs } from '@dxos/react-client';
 import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
@@ -19,7 +19,6 @@ import { AppContainer, Main, Error, Connector } from './components';
 import { getConfig } from './config';
 import { ItemType, DocumentType } from './data';
 import translations from './translations';
-import { BASELIME_API_KEY } from './webrtc/client/defs';
 
 void initializeAppObservability({
   namespace: 'testbench.dxos.org',
@@ -86,11 +85,16 @@ const App = withProfiler(() => {
   );
 });
 
-const root = createRoot(document.getElementById('root')!);
-root.render(
-  <StrictMode>
-    <BaselimeRum apiKey={BASELIME_API_KEY} enableWebVitals>
-      <App />
-    </BaselimeRum>
-  </StrictMode>,
-);
+const main = () => {
+  const config = Envs();
+  const root = createRoot(document.getElementById('root')!);
+  root.render(
+    <StrictMode>
+      <BaselimeRum apiKey={config?.runtime?.app?.env?.BASELIME_API_KEY} enableWebVitals>
+        <App />
+      </BaselimeRum>
+    </StrictMode>,
+  );
+};
+
+main();

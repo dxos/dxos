@@ -36,8 +36,9 @@ export default class SignalingServer implements Server {
     hibernate: false, // TODO(burdon): If more than 100 concurrent clients.
   };
 
-  // TODO(burdon): Index by sender and invitation.
-  private buffer = new Map<string, string[]>();
+  // TODO(burdon): Index by sender and invitation? Is it sensible to shard rooms by invitation? Or space discovery key?
+  // TODO(burdon): Authenticate connections (e.g., using OTP style session key)?
+  private readonly buffer = new Map<string, string[]>();
 
   constructor(private readonly room: Room) {}
 

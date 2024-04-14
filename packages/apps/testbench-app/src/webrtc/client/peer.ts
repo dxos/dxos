@@ -8,7 +8,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { DATA_CHANNEL_ID, DATA_CHANNEL_LABEL, STUN_ENDPOINT } from './defs';
-import { SignalingChannel } from './signaling';
+import { SignalingChannel } from './signaling-channel';
 
 /**
  * WebRTC Peer.
@@ -17,7 +17,9 @@ export class Peer {
   private _signaler: SignalingChannel;
   private _connection?: RTCPeerConnection;
   private _channel?: RTCDataChannel; // TODO(burdon): Multiple?
+
   private _makingOffer = false;
+  private _ignoreOffer = false;
 
   public readonly error = new Event<Error>();
   public readonly update = new Event<{ state?: string }>();
@@ -63,25 +65,30 @@ export class Peer {
     return this._connection?.connectionState === 'connected';
   }
 
-  async open(room = 'invitation', initiate = false) {
+  async open(room = 'invitation', initiating = false) {
     await this.close();
-    log.info('opening...', { room, initiate });
+    log.info('opening...', { room, initiating });
 
     //
     // Signaling.
     //
 
     const getPeer = () => this;
-    
-    // TODO(burdon):  Catch error
 
+    // TODO(burdon): Catch errors
     // TODO(burdon): Should we keep open the signaling connection -- or only during invitations?
     await this._signaler.open(room, {
       //
       async onDescription(description: RTCSessionDescription) {
         const peer = getPeer();
         if (peer._connection) {
-          const offerCollision = description.type === "offer" && (peer._makingOffer || peer._connection.signalingState !== "stable");
+          const offerCollision =
+            description.type === 'offer' && (peer._makingOffer || peer._connection.signalingState !== 'stable');
+          // TODO(burdon): Polite peer is either not initiating or connects to the signaling server last.
+          peer._ignoreOffer = !initiating && offerCollision;
+          if (peer._ignoreOffer) {
+            return;
+          }
 
           await peer._connection.setRemoteDescription(
             new RTCSessionDescription({ type: description.type, sdp: description.sdp }),
@@ -89,16 +96,22 @@ export class Peer {
 
           if (description.type === 'offer') {
             await peer._connection.setLocalDescription();
-            peer._signaler.sendDescription(peer.._connection.localDescription!);
+            peer._signaler.sendDescription(peer._connection.localDescription!);
           }
         }
       },
 
-      //
+      // Share ICE candidates.
       async onIceCandidate(candidate: RTCIceCandidate) {
         const peer = getPeer();
         if (peer._connection) {
-          await peer._connection.addIceCandidate(candidate);
+          try {
+            await peer._connection.addIceCandidate(candidate);
+          } catch (err) {
+            if (!peer._ignoreOffer) {
+              throw err;
+            }
+          }
         }
       },
     });
@@ -132,7 +145,7 @@ export class Peer {
         // A polite peer uses ICE rollback to prevent collisions with incoming offers.
         // An impolite peer, which always ignores incoming offers that collide with its own offers.
         // E.g., assign role via signaling server.
-        if (initiate) {
+        if (initiating) {
           try {
             log.info('making offer...');
             this._makingOffer = true;
