@@ -17,6 +17,7 @@ export interface SignalingListener {
 
 /**
  * Signaling client.
+ * https://docs.partykit.io/reference/partysocket-api
  */
 export class SignalingClient {
   private socket?: PartySocket;
@@ -44,6 +45,7 @@ export class SignalingClient {
       party: 'main', // Default party.
       room,
       debug: false,
+      startClosed: true,
     });
 
     this.socket.addEventListener('open', (event) => {
@@ -52,6 +54,10 @@ export class SignalingClient {
 
     this.socket.addEventListener('close', (event) => {
       log.info('signaling.close', { room: this.socket?.room, event });
+    });
+
+    this.socket.addEventListener('error', (event) => {
+      log.warn('signaling.error', { room: this.socket?.room, event });
     });
 
     this.socket.addEventListener('message', async (event) => {

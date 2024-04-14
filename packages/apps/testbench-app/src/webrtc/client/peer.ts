@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Event } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -19,6 +20,8 @@ export class Peer {
   private connection?: RTCPeerConnection;
   private channel?: RTCDataChannel;
   private makingOffer = false;
+
+  public readonly update = new Event();
 
   constructor(private readonly id: PublicKey) {
     this.signaling = new SignalingClient(this.id);
@@ -56,12 +59,17 @@ export class Peer {
     };
   }
 
-  async open(initiate = false) {
+  async open(room = 'invitation', initiate = false) {
     await this.close();
-    log.info('opening...', { initiate });
+    log.info('opening...', { room, initiate });
 
     const getPeer = () => this;
-    await this.signaling.open('invitation', {
+
+    //
+    // Signaling.
+    //
+
+    await this.signaling.open(room, {
       async onDescription(description: RTCSessionDescription) {
         const { connection, signaling } = getPeer();
         if (connection) {
@@ -84,17 +92,17 @@ export class Peer {
       },
     });
 
+    //
+    // Peer connection.
     // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Connectivity
+    //
+
     this.connection = new RTCPeerConnection({
       iceServers: [
         {
           urls: STUN_ENDPOINT,
         },
       ],
-    });
-
-    this.connection.addEventListener('connectionstatechange', async (event) => {
-      log.info('peer.connectionstatechange', { event });
     });
 
     this.connection.addEventListener('negotiationneeded', async (event) => {
@@ -124,7 +132,7 @@ export class Peer {
     });
 
     this.connection.addEventListener('icecandidateerror', async (event) => {
-      log.info('peer.icecandidateerror', { event });
+      log.warn('peer.icecandidateerror', { event });
     });
 
     this.connection.addEventListener('iceconnectionstatechange', async (event) => {
@@ -132,11 +140,20 @@ export class Peer {
       this.connection?.restartIce();
     });
 
+    this.connection.addEventListener('connectionstatechange', async (event) => {
+      log.info('peer.connectionstatechange', { event });
+      this.update.emit();
+    });
+
     this.connection.addEventListener('datachannel', async (event) => {
       log.info('peer.datachannel', { event });
     });
 
+    //
+    // Data channel.
     // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Using_data_channels
+    //
+
     log.info('creating channel...');
     this.channel = this.connection.createDataChannel(DATA_CHANNEL_LABEL, {
       id: DATA_CHANNEL_ID,

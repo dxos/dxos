@@ -12,32 +12,43 @@ import { Peer } from '../webrtc/client';
 // TODO(burdon): Goal:
 //  Establish P2P connection using cloudflare STUN server.
 
-// void navigator.clipboard.writeText(message);
-
 export const Connector = () => {
   const [, forceUpdate] = useState({});
-  const [connection, setConnection] = useState<Peer>();
+  const [peer, setPeer] = useState<Peer>();
   const [invitation, setInvitation] = useState<string>();
   useEffect(() => {
-    setConnection(new Peer(PublicKey.random()));
+    const peer = new Peer(PublicKey.random());
+    const unsubscribe = peer.update.on((event) => {
+      forceUpdate({});
+    });
+    setPeer(peer);
+    return () => unsubscribe();
   }, []);
 
   const handleConnect = (initiate = false) => {
+    let invitation_ = invitation;
+    if (initiate) {
+      invitation_ = PublicKey.random().truncate();
+      setInvitation(invitation_);
+      void navigator.clipboard.writeText(invitation_);
+    }
+
     setTimeout(async () => {
-      await connection!.open(initiate);
+      await peer!.open(invitation_, initiate);
       forceUpdate({});
     });
   };
 
   const handleClose = () => {
     setTimeout(async () => {
-      await connection!.close();
+      await peer!.close();
       forceUpdate({});
     });
   };
 
   const handlePing = () => {
-    connection?.send({ action: 'ping' });
+    peer?.send({ action: 'ping' });
+    forceUpdate({});
   };
 
   return (
@@ -58,7 +69,7 @@ export const Connector = () => {
       </Toolbar.Root>
       <div className='flex flex-col grow overflow-hidden p-2'>
         <div className='flex flex-col overflow-y-scroll'>
-          <pre className='text-xs'>{JSON.stringify(connection?.info ?? {}, undefined, 2)}</pre>
+          <pre className='text-xs'>{JSON.stringify(peer?.info ?? {}, undefined, 2)}</pre>
         </div>
       </div>
     </div>

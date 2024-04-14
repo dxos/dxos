@@ -9,18 +9,27 @@ import { type Connection, type Room, type Server } from 'partykit/server';
 // Party: A single server instance - in other words, a single Durable Object.
 // Room: An instance of a party, distinguishable by a unique id.
 
-// TODO(burdon): Test offer before listen (how long before forgotten); Polling? Memcache?
-// TODO(burdon): Room vs. party.
+// TODO(burdon): Room vs. party (Discord).
 // TODO(burdon): Import issues; ESM?
 // TODO(burdon): Deploy.
 // TODO(burdon): Security/auth.
 // TODO(burdon): Analytics.
 // https://developers.cloudflare.com/calls/https-api
 
+// TODO(burdon): TURN? (requires credentials).
+//  https://developers.cloudflare.com/calls/turn/
+// TODO(burdon): Cloudflare public STUN?
+
 /**
  * `npx partykit dev`
+ * https://docs.partykit.io/reference/partyserver-api
  */
 export default class SignalingServer implements Server {
+  // https://docs.partykit.io/guides/scaling-partykit-servers-with-hibernation
+  readonly options = {
+    hibernate: false, // TODO(burdon): If more than 100 concurrent clients.
+  };
+
   // TODO(burdon): Index by sender and invitation.
   private buffer = new Map<string, string[]>();
 
@@ -39,13 +48,23 @@ export default class SignalingServer implements Server {
     }
   }
 
+  // TODO(burdon): Tag connections.
+
+  // TODO(burdon): Purge after timeout?
+  // onDisconnect(connection: Connection) {
+  //   console.log('disconnect', { room: this.room?.name, peer: connection.id });
+  //   this.buffer.delete(connection.id);
+  // }
+
   // TODO(burdon): Buffer.
   onMessage(data: string, connection: Connection) {
     // const { invitation } = JSON.parse(data);
     console.log('message', { room: this.room?.name, peer: connection.id, data: JSON.parse(data) });
-    this.room.broadcast(data, [connection.id]);
+
     const buffer = this.buffer.get(connection.id) ?? [];
     this.buffer.set(connection.id, buffer);
     buffer.push(data);
+
+    this.room.broadcast(data, [connection.id]);
   }
 }
