@@ -21,7 +21,7 @@ export interface SignalingListener {
 export class SignalingClient {
   private socket?: PartySocket;
 
-  constructor(private readonly id: PublicKey) {}
+  constructor(public readonly id: PublicKey) {}
 
   get info() {
     return {

@@ -5,6 +5,10 @@
 // export const SIGNALING_ENDPOINT = 'http://127.0.0.1:1999';
 export const SIGNALING_ENDPOINT = 'https://signaling.dxos.network';
 
+export const STUN_ENDPOINT = 'stun:stun.cloudflare.com:3478';
+
 export const DATA_CHANNEL_LABEL = 'data-channel';
 export const DATA_CHANNEL_ID = 0;
-export const STUN_ENDPOINT = 'stun:stun.cloudflare.com:3478';
+
+// https://console.baselime.io/dxos/prod/api-keys (dev/experimental)
+export const BASELIME_API_KEY = 'ad2a062ccdc634dccccd52f7fec9aed834ca6e5e';

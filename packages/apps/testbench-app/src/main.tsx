@@ -4,6 +4,7 @@
 
 import '@dxosTheme';
 
+import { BaselimeRum } from '@baselime/react-rum';
 import { withProfiler } from '@sentry/react';
 import React, { StrictMode, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -18,6 +19,7 @@ import { AppContainer, Main, Error, Connector } from './components';
 import { getConfig } from './config';
 import { ItemType, DocumentType } from './data';
 import translations from './translations';
+import { BASELIME_API_KEY } from './webrtc/client/defs';
 
 void initializeAppObservability({
   namespace: 'testbench.dxos.org',
@@ -87,6 +89,8 @@ const App = withProfiler(() => {
 const root = createRoot(document.getElementById('root')!);
 root.render(
   <StrictMode>
-    <App />
+    <BaselimeRum apiKey={BASELIME_API_KEY} enableWebVitals>
+      <App />
+    </BaselimeRum>
   </StrictMode>,
 );

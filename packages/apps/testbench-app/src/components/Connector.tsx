@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useBaselimeRum } from '@baselime/react-rum';
 import React, { useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
@@ -13,11 +14,13 @@ import { Peer } from '../webrtc/client';
  * Experimental mechanism to establish WebRTC connection between peers.
  */
 export const Connector = () => {
+  const { setUser, sendEvent } = useBaselimeRum();
   const [, forceUpdate] = useState({});
   const [peer, setPeer] = useState<Peer>();
   const [invitation, setInvitation] = useState<string>();
   useEffect(() => {
     const peer = new Peer(PublicKey.random());
+    setUser(peer.id.toHex());
     const unsubscribe = peer.update.on((event) => {
       forceUpdate({});
     });
@@ -31,11 +34,13 @@ export const Connector = () => {
       invitation_ = PublicKey.random().truncate();
       setInvitation(invitation_);
       void navigator.clipboard.writeText(invitation_);
+      sendEvent('connection.connect', { invitation: invitation_ });
     } else if (!invitation_) {
       return;
     }
 
     setTimeout(async () => {
+      sendEvent('connection.open');
       await peer!.open(invitation_, initiate);
       forceUpdate({});
     });
@@ -43,6 +48,7 @@ export const Connector = () => {
 
   const handleClose = () => {
     setTimeout(async () => {
+      sendEvent('connection.close');
       await peer!.close();
       forceUpdate({});
     });
@@ -51,6 +57,7 @@ export const Connector = () => {
   const handlePing = () => {
     peer?.send({ action: 'ping' });
     forceUpdate({});
+    sendEvent('connection.ping');
   };
 
   return (

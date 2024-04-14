@@ -4,21 +4,21 @@
 
 import { type Connection, type Room, type Server } from 'partykit/server';
 
+import { log } from '@dxos/log';
+
 // https://docs.partykit.io/glossary/#durable-object
 // Durable object: A piece of code running at the edge (worker) with persistent state that is infinitely scaleable (from Cloudflare). It is best suited for real time collaborative applications. Learn more.
 // Party: A single server instance - in other words, a single Durable Object.
 // Room: An instance of a party, distinguishable by a unique id.
 
-// TODO(burdon): Room vs. party (Discord).
-// TODO(burdon): Import issues; ESM?
-// TODO(burdon): Deploy.
+// Setting `team` required whitelising from PartyKit (from Sunil via Discord).
+
 // TODO(burdon): Security/auth.
 // TODO(burdon): Analytics.
 // https://developers.cloudflare.com/calls/https-api
 
 // TODO(burdon): TURN? (requires credentials).
 //  https://developers.cloudflare.com/calls/turn/
-// TODO(burdon): Cloudflare public STUN?
 
 // https://docs.partykit.io/guides/deploy-to-cloudflare
 // https://dash.cloudflare.com/profile/api-tokens (API token)
@@ -40,7 +40,7 @@ export default class SignalingServer implements Server {
   constructor(private readonly room: Room) {}
 
   onStart() {
-    console.log('start', { room: this.room?.id });
+    log.info('start', { room: this.room?.id });
   }
 
   onConnect(connection: Connection) {
@@ -53,14 +53,10 @@ export default class SignalingServer implements Server {
   }
 
   // TODO(burdon): Tag connections.
-
-  // TODO(burdon): Purge after timeout?
-  // onDisconnect(connection: Connection) {
-  //   console.log('disconnect', { room: this.room?.name, peer: connection.id });
-  //   this.buffer.delete(connection.id);
+  // getConnectionTags(connection: Connection) {
+  //   return [];
   // }
 
-  // TODO(burdon): Buffer.
   onMessage(data: string, connection: Connection) {
     // const { invitation } = JSON.parse(data);
     console.log('message', { room: this.room?.id, peer: connection.id, data: JSON.parse(data) });
