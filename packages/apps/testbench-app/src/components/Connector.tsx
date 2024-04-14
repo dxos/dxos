@@ -47,9 +47,6 @@ export const Connector = () => {
         <Button onClick={() => handleConnect()}>Listen</Button>
         <Button onClick={() => handleClose()}>Close</Button>
         <Button onClick={() => handlePing()}>Ping</Button>
-        <Button onClick={() => forceUpdate({})}>Refresh</Button>
-      </Toolbar.Root>
-      <div className='p-2'>
         <Input.Root>
           <Input.TextInput
             placeholder='Invitation'
@@ -57,10 +54,11 @@ export const Connector = () => {
             onChange={(event) => setInvitation(event.target.value)}
           />
         </Input.Root>
-      </div>
+        <Button onClick={() => forceUpdate({})}>Refresh</Button>
+      </Toolbar.Root>
       <div className='flex flex-col grow overflow-hidden p-2'>
         <div className='flex flex-col overflow-y-scroll'>
-          <pre className='text-sm'>{JSON.stringify(connection?.info ?? {}, undefined, 2)}</pre>
+          <pre className='text-xs'>{JSON.stringify(connection?.info ?? {}, undefined, 2)}</pre>
         </div>
       </div>
     </div>

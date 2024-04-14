@@ -5,12 +5,11 @@
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import { DATA_CHANNEL_ID, DATA_CHANNEL_LABEL, STUN_ENDPOINT } from './defs';
 import { SignalingClient } from './signaling';
 
-// TODO(burdon): Remove handler.
-
-const CHANNEL_LABEL = 'data-channel';
-const STUN_URL = 'stun:stun.cloudflare.com:3478';
+// TODO(burdon): Remove event handlers.
+// TODO(burdon): Use invitation/discovery key as room.
 
 /**
  * WebRTC Peer.
@@ -62,7 +61,7 @@ export class Peer {
     log.info('opening...', { initiate });
 
     const getPeer = () => this;
-    await this.signaling.open({
+    await this.signaling.open('invitation', {
       async onDescription(description: RTCSessionDescription) {
         const { connection, signaling } = getPeer();
         if (connection) {
@@ -89,7 +88,7 @@ export class Peer {
     this.connection = new RTCPeerConnection({
       iceServers: [
         {
-          urls: STUN_URL,
+          urls: STUN_ENDPOINT,
         },
       ],
     });
@@ -139,7 +138,10 @@ export class Peer {
 
     // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Using_data_channels
     log.info('creating channel...');
-    this.channel = this.connection.createDataChannel(CHANNEL_LABEL, { negotiated: true, id: 0 });
+    this.channel = this.connection.createDataChannel(DATA_CHANNEL_LABEL, {
+      id: DATA_CHANNEL_ID,
+      negotiated: true,
+    });
 
     this.channel.addEventListener('open', () => {
       log.info('channel.open');
@@ -168,7 +170,7 @@ export class Peer {
     }
   }
 
-  send(data: any) {
+  send(data: Object) {
     this.channel?.send(JSON.stringify(data));
   }
 }

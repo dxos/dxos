@@ -4,10 +4,11 @@
 
 import PartySocket from 'partysocket';
 
+import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-const HOST_URL = 'http://127.0.0.1:1999';
+import { SOCKET_HOST_ENDPOINT } from './defs';
 
 export interface SignalingListener {
   onDescription(description: RTCSessionDescription): void;
@@ -20,7 +21,9 @@ export interface SignalingListener {
 export class SignalingClient {
   private socket?: PartySocket;
 
-  constructor(private readonly id: PublicKey) {}
+  constructor(private readonly id: PublicKey) {
+    invariant(id);
+  }
 
   get info() {
     return {
@@ -29,29 +32,31 @@ export class SignalingClient {
     };
   }
 
-  async open(listener: SignalingListener) {
+  // TODO(burdon): Use room for invitation.
+  async open(room: string, listener: SignalingListener) {
     await this.close();
-    log.info('opening...');
+    log.info('opening...', { room });
 
     // https://docs.partykit.io/reference/partysocket-api
     this.socket = new PartySocket({
-      host: HOST_URL,
+      host: SOCKET_HOST_ENDPOINT,
       id: this.id.toHex(),
       party: 'main', // Default party.
-      room: 'signaling',
+      room,
+      debug: false,
     });
 
     this.socket.addEventListener('open', (event) => {
-      log.info('signaling.open', { event });
+      log.info('signaling.open', { room: this.socket?.room, event });
     });
 
     this.socket.addEventListener('close', (event) => {
-      log.info('signaling.close', { event });
+      log.info('signaling.close', { room: this.socket?.room, event });
     });
 
     this.socket.addEventListener('message', async (event) => {
       const data = JSON.parse(event.data);
-      log.info('signaling.message', { data });
+      log.info('signaling.message', { room: this.socket?.room, data });
       const { description, candidate } = data;
 
       if (description) {
@@ -59,7 +64,7 @@ export class SignalingClient {
       }
 
       if (candidate) {
-        listener.onIceCandidate(candidate);
+        listener.onIceCandidate(new RTCIceCandidate(candidate));
       }
     });
 
@@ -75,17 +80,16 @@ export class SignalingClient {
     }
   }
 
-  // TODO(burdon): Effect schema.
-  send<T>(data: T) {
-    log.info('sending', { data });
-    this.socket?.send(JSON.stringify(data));
-  }
-
   sendDescription(description: RTCSessionDescription) {
     this.send({ description });
   }
 
   sendIceCandidate(candidate: RTCIceCandidate) {
     this.send({ candidate });
+  }
+
+  protected send<T extends Object>(data: T) {
+    log.info('sending', { data });
+    this.socket?.send(JSON.stringify(data));
   }
 }
