@@ -9,8 +9,8 @@ import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 export enum TransportKind {
   SIMPLE_PEER = 'SIMPLE_PEER',
-  LIBDATACHANNEL = 'LIBDATACHANNEL',
   SIMPLE_PEER_PROXY = 'SIMPLE_PEER_PROXY',
+  LIBDATACHANNEL = 'LIBDATACHANNEL',
   MEMORY = 'MEMORY',
   TCP = 'TCP',
 }
@@ -23,17 +23,19 @@ export interface Transport {
   connected: Event;
   errors: ErrorStream;
 
+  open(): Promise<void>;
+  destroy(): Promise<void>; // TODO(burdon): Rename close.
+
   /**
    * Transport-specific stats.
    */
   getStats(): Promise<TransportStats>;
+
   /**
    * Transport-specific connection details.
    */
   getDetails(): Promise<string>;
-  destroy(): Promise<void>;
 
-  // TODO(burdon): Make async.
   signal(signal: Signal): void;
 }
 
@@ -58,9 +60,6 @@ export type TransportOptions = {
   sessionId?: PublicKey;
 };
 
-/**
- *
- */
 export interface TransportFactory {
   createTransport(options: TransportOptions): Transport;
 }

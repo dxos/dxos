@@ -68,17 +68,18 @@ export class MemoryTransport implements Transport {
 
     // Initiator will send a signal, the receiver will receive the unique ID and connect the streams.
     if (this.options.initiator) {
-      // prettier-ignore
       setTimeout(async () => {
         log('sending signal');
-        void this.options.sendSignal({
-          payload: { transportId: this._instanceId.toHex() }
-        }).catch(err => {
-          if (!this._destroyed) {
-            this.errors.raise(err);
-          }
-        });
-    });
+        void this.options
+          .sendSignal({
+            payload: { transportId: this._instanceId.toHex() },
+          })
+          .catch((err) => {
+            if (!this._destroyed) {
+              this.errors.raise(err);
+            }
+          });
+      });
     } else {
       this._remote
         .wait({ timeout: this.options.timeout ?? 1000 })
@@ -119,6 +120,8 @@ export class MemoryTransport implements Transport {
         });
     }
   }
+
+  async open() {}
 
   async destroy(): Promise<void> {
     log('closing');

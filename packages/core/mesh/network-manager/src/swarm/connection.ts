@@ -203,6 +203,8 @@ export class Connection {
       sessionId: this.sessionId,
     });
 
+    await this._transport.open();
+
     this._transport.connected.once(async () => {
       this._changeState(ConnectionState.CONNECTED);
       await this.connectedTimeoutContext.dispose();

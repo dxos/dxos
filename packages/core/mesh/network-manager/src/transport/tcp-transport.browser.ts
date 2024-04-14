@@ -18,6 +18,8 @@ export class TcpTransport implements Transport {
   public readonly connected = new Event<void>();
   public readonly errors = new ErrorStream();
 
+  async open() {}
+
   async destroy() {
     throw new Error('Method not implemented.');
   }
