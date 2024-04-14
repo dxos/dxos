@@ -26,6 +26,8 @@ import { type Connection, type Request, type Room, type Server } from 'partykit/
 // https://dash.cloudflare.com/profile/api-tokens (API token)
 // CLOUDFLARE_ACCOUNT_ID=<your account id> CLOUDFLARE_API_TOKEN=<your api token> npx partykit deploy --domain signaling.dxos.network
 
+// TODO(burdon): Experimental (move to closed source)?
+
 /**
  * `npx partykit dev`
  * https://docs.partykit.io/reference/partyserver-api
@@ -42,11 +44,16 @@ export default class SignalingServer implements Server {
   //   return new Response('Access denied', { status: 403 });
   // }
 
-  // A different room is created for each swarm key.
-  // Messages are recorded by sender and replayed to new peers joining the swarm.
   // TODO(burdon): However, signaling should be private peer-to-peer.
   private readonly _buffer = new Map<string, string[]>();
 
+  /**
+   * For invitations the caller initiates usings a temporary swarm key.
+   * To reconnect to space, peers join using the swarm key and have to negotiate roles (e.g., polite/impolite).
+   * A new room (durable object) is created for each swarm/invitation.
+   * Cloudflare Workers allow 100K requests/day (10ms CPU time per invocation) on the free tier.
+   * https://developers.cloudflare.com/workers/platform/pricing
+   */
   constructor(private readonly room: Room) {}
 
   // TODO(burdon): Tag connections.
@@ -58,6 +65,9 @@ export default class SignalingServer implements Server {
     console.log('start', { room: this.room?.id });
   }
 
+  /**
+   * Messages are recorded by sender and replayed to new peers joining the swarm.
+   */
   onConnect(connection: Connection) {
     console.log('connect', { room: this.room?.id, peer: connection.id });
     for (const [id, buffer] of this._buffer.entries()) {
@@ -77,15 +87,20 @@ export default class SignalingServer implements Server {
   }
 
   onMessage(data: string, connection: Connection) {
-    console.log('message', { room: this.room?.id, peer: connection.id, data: JSON.parse(data) });
-    const buffer = this._buffer.get(connection.id) ?? [];
-    this._buffer.set(connection.id, buffer);
-    buffer.push(data);
+    try {
+      console.log('message', { room: this.room?.id, peer: connection.id, data: JSON.parse(data) });
+      const buffer = this._buffer.get(connection.id) ?? [];
+      this._buffer.set(connection.id, buffer);
+      buffer.push(data);
 
-    this.room.broadcast(data, [connection.id]);
+      this.room.broadcast(data, [connection.id]);
+    } catch (err) {
+      // TODO(burdon): Test if uncaught errors fire the onError handler?
+      console.error('error', { room: this.room?.id, peer: connection.id, error: err });
+    }
   }
 
-  // TODO(burdon): Authz.
+  // TODO(burdon): Authz admin API.
   // curl -s -X POST -H "Content-Type: application/json" http://127.0.0.1:1999/parties/main/<SWARM_KEY> | jq
   async onRequest(req: Request) {
     console.log('onRequest', { room: this.room?.id });
