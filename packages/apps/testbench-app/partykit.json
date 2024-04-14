@@ -1,6 +1,9 @@
 {
   "$schema": "https://www.partykit.io/schema.json",
-  "name": "signaling-server",
   "compatibilityDate": "2024-04-01",
+  "domain": "signaling.dxos.network",
+  // TODO(burdon): Permissions error if setting team.
+  // "team": "dxos",
+  "name": "signaling-server",
   "main": "src/webrtc/server/signaling-server.ts"
 }

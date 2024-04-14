@@ -7,7 +7,7 @@ import PartySocket from 'partysocket';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { SOCKET_HOST_ENDPOINT } from './defs';
+import { SIGNALING_ENDPOINT } from './defs';
 
 export interface SignalingListener {
   onDescription(description: RTCSessionDescription): void;
@@ -26,7 +26,8 @@ export class SignalingClient {
   get info() {
     return {
       ts: Date.now(),
-      socket: this.socket?.id,
+      id: this.socket?.id,
+      host: this.socket?.host,
     };
   }
 
@@ -37,7 +38,7 @@ export class SignalingClient {
 
     // https://docs.partykit.io/reference/partysocket-api
     this.socket = new PartySocket({
-      host: SOCKET_HOST_ENDPOINT,
+      host: SIGNALING_ENDPOINT,
       id: this.id.toHex(),
       party: 'main', // Default party.
       room,

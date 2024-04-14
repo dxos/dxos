@@ -20,6 +20,10 @@ import { type Connection, type Room, type Server } from 'partykit/server';
 //  https://developers.cloudflare.com/calls/turn/
 // TODO(burdon): Cloudflare public STUN?
 
+// https://docs.partykit.io/guides/deploy-to-cloudflare
+// https://dash.cloudflare.com/profile/api-tokens (API token)
+// CLOUDFLARE_ACCOUNT_ID=<your account id> CLOUDFLARE_API_TOKEN=<your api token> npx partykit deploy --domain signaling.dxos.network
+
 /**
  * `npx partykit dev`
  * https://docs.partykit.io/reference/partyserver-api

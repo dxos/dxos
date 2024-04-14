@@ -28,6 +28,7 @@ export class Peer {
     return {
       ts: Date.now(),
       id: this.id.toHex(),
+      signaling: this.signaling.info,
       // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection
       connection: this.connection && {
         connectionState: this.connection.connectionState,
