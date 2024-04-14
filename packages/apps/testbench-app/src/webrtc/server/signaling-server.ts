@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Connection, type Room, type Server } from 'partykit/server';
+import { type Connection, type Request, type Room, type Server } from 'partykit/server';
 
 // https://docs.partykit.io/glossary/#durable-object
 // Durable object: A piece of code running at the edge (worker) with persistent state that is infinitely scaleable (from Cloudflare). It is best suited for real time collaborative applications. Learn more.
@@ -36,41 +36,60 @@ export default class SignalingServer implements Server {
     hibernate: false, // TODO(burdon): If more than 100 concurrent clients.
   };
 
+  // TODO(burdon): Authz connections (e.g., using OTP style session key)?
+  //  https://www.npmjs.com/package/otp-io
+  // static onBeforeConnect(req: Request) {
+  //   return new Response('Access denied', { status: 403 });
+  // }
+
   // A different room is created for each swarm key.
   // Messages are recorded by sender and replayed to new peers joining the swarm.
   // TODO(burdon): However, signaling should be private peer-to-peer.
-  private readonly buffer = new Map<string, string[]>();
+  private readonly _buffer = new Map<string, string[]>();
 
   constructor(private readonly room: Room) {}
-
-  onStart() {
-    console.log('start', { room: this.room?.id });
-  }
-
-  // TODO(burdon): Authz connections (e.g., using OTP style session key)?
-  //  https://www.npmjs.com/package/otp-io
-  onConnect(connection: Connection) {
-    console.log('connect', { room: this.room?.id, peer: connection.id });
-    for (const [id, buffer] of this.buffer.entries()) {
-      for (const data of buffer) {
-        this.room.broadcast(data, [id]);
-      }
-    }
-  }
 
   // TODO(burdon): Tag connections.
   // getConnectionTags(connection: Connection) {
   //   return [];
   // }
 
-  onMessage(data: string, connection: Connection) {
-    // const { invitation } = JSON.parse(data);
-    console.log('message', { room: this.room?.id, peer: connection.id, data: JSON.parse(data) });
+  onStart() {
+    console.log('start', { room: this.room?.id });
+  }
 
-    const buffer = this.buffer.get(connection.id) ?? [];
-    this.buffer.set(connection.id, buffer);
+  onConnect(connection: Connection) {
+    console.log('connect', { room: this.room?.id, peer: connection.id });
+    for (const [id, buffer] of this._buffer.entries()) {
+      for (const data of buffer) {
+        this.room.broadcast(data, [id]);
+      }
+    }
+  }
+
+  onClose(connection: Connection) {
+    console.log('close', { room: this.room?.id, peer: connection.id });
+    this._buffer.delete(connection.id);
+  }
+
+  onError(connection: Connection, error: Error) {
+    console.error('error', { room: this.room?.id, peer: connection.id, error });
+  }
+
+  onMessage(data: string, connection: Connection) {
+    console.log('message', { room: this.room?.id, peer: connection.id, data: JSON.parse(data) });
+    const buffer = this._buffer.get(connection.id) ?? [];
+    this._buffer.set(connection.id, buffer);
     buffer.push(data);
 
     this.room.broadcast(data, [connection.id]);
+  }
+
+  // TODO(burdon): Authz.
+  // curl -s -X POST -H "Content-Type: application/json" http://127.0.0.1:1999/parties/main/<SWARM_KEY> | jq
+  async onRequest(req: Request) {
+    console.log('onRequest', { room: this.room?.id });
+    const peers = Array.from(this.room.getConnections()).map((connection) => connection.id);
+    return Response.json({ ok: true, connections: peers });
   }
 }
