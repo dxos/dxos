@@ -189,7 +189,7 @@ export class Peer {
 
       // When new track (or channel) is added.
       // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/connectionstatechange_event
-      onconnectionstatechange: (event) => {
+      onconnectionstatechange: () => {
         log.info('connection.onconnectionstatechange', { connectionState: this._connection?.connectionState });
         this.update.emit({ state: this._connection?.connectionState });
         if (this._connection?.connectionState === 'failed') {

@@ -13,7 +13,7 @@ import { type Connection, type Request, type Room, type Server } from 'partykit/
 
 // TODO(burdon): Build target for server (compile/imports).
 // TODO(burdon): Telemetry.
-// https://baselime.io/docs/sending-data/languages/node.js/
+// https://baselime.io/docs/sending-data/languages/node.js
 
 // TODO(burdon): Security/auth.
 // TODO(burdon): Analytics.

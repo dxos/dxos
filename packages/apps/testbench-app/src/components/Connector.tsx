@@ -70,12 +70,12 @@ export const Connector = () => {
         <Button onClick={() => handlePing()}>Ping</Button>
         <Input.Root>
           <Input.TextInput
-            placeholder='Invitation'
+            placeholder='Swarm key'
             value={invitation ?? ''}
             onChange={(event) => setInvitation(event.target.value)}
           />
         </Input.Root>
-        <div className='w-[100px] flex shrink-0 items-center font-mono'>{state}</div>
+        <div className='w-[120px] flex shrink-0 items-center font-mono'>{state}</div>
         <Button onClick={() => forceUpdate({})}>Refresh</Button>
       </Toolbar.Root>
       <div className='flex flex-col grow overflow-hidden p-2'>
