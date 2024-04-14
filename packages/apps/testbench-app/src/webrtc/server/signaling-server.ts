@@ -36,11 +36,11 @@ export default class SignalingServer implements Server {
   constructor(private readonly room: Room) {}
 
   onStart() {
-    console.log('start', { room: this.room?.name });
+    console.log('start', { room: this.room?.id });
   }
 
   onConnect(connection: Connection) {
-    console.log('connect', { room: this.room?.name, peer: connection.id });
+    console.log('connect', { room: this.room?.id, peer: connection.id });
     for (const [id, buffer] of this.buffer.entries()) {
       for (const data of buffer) {
         this.room.broadcast(data, [id]);
@@ -59,7 +59,7 @@ export default class SignalingServer implements Server {
   // TODO(burdon): Buffer.
   onMessage(data: string, connection: Connection) {
     // const { invitation } = JSON.parse(data);
-    console.log('message', { room: this.room?.name, peer: connection.id, data: JSON.parse(data) });
+    console.log('message', { room: this.room?.id, peer: connection.id, data: JSON.parse(data) });
 
     const buffer = this.buffer.get(connection.id) ?? [];
     this.buffer.set(connection.id, buffer);

@@ -9,9 +9,9 @@ import { Button, Input, Toolbar } from '@dxos/react-ui';
 
 import { Peer } from '../webrtc/client';
 
-// TODO(burdon): Goal:
-//  Establish P2P connection using cloudflare STUN server.
-
+/**
+ * Experimental mechanism to establish WebRTC connection between peers.
+ */
 export const Connector = () => {
   const [, forceUpdate] = useState({});
   const [peer, setPeer] = useState<Peer>();
@@ -31,6 +31,8 @@ export const Connector = () => {
       invitation_ = PublicKey.random().truncate();
       setInvitation(invitation_);
       void navigator.clipboard.writeText(invitation_);
+    } else if (!invitation_) {
+      return;
     }
 
     setTimeout(async () => {

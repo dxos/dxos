@@ -9,9 +9,6 @@ import { log } from '@dxos/log';
 import { DATA_CHANNEL_ID, DATA_CHANNEL_LABEL, STUN_ENDPOINT } from './defs';
 import { SignalingClient } from './signaling';
 
-// TODO(burdon): Remove event handlers.
-// TODO(burdon): Use invitation/discovery key as room.
-
 /**
  * WebRTC Peer.
  */
@@ -63,12 +60,13 @@ export class Peer {
     await this.close();
     log.info('opening...', { room, initiate });
 
-    const getPeer = () => this;
-
     //
     // Signaling.
     //
 
+    const getPeer = () => this;
+
+    // TODO(burdon): Should we keep open the signaling connection -- or only during invitations?
     await this.signaling.open(room, {
       async onDescription(description: RTCSessionDescription) {
         const { connection, signaling } = getPeer();
@@ -95,6 +93,7 @@ export class Peer {
     //
     // Peer connection.
     // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Connectivity
+    // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection
     //
 
     this.connection = new RTCPeerConnection({
@@ -105,48 +104,47 @@ export class Peer {
       ],
     });
 
-    this.connection.addEventListener('negotiationneeded', async (event) => {
-      log.info('peer.negotiationneeded', { event });
+    // Event handlers.
+    // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection
+    Object.assign<RTCPeerConnection, Partial<RTCPeerConnection>>(this.connection, {
+      onnegotiationneeded: async (event) => {
+        log.info('connection.onnegotiationneeded', { event });
 
-      // TODO(burdon): Error handling.
-      // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#implementing_perfect_negotiation
-      if (initiate) {
-        try {
-          log.info('making offer...');
-          this.makingOffer = true;
-          await this.connection!.setLocalDescription();
-          this.signaling.sendDescription(this.connection!.localDescription!);
-        } catch (err) {
-          log.catch(err);
-        } finally {
-          this.makingOffer = false;
+        // TODO(burdon): Error handling.
+        // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#implementing_perfect_negotiation
+        if (initiate) {
+          try {
+            log.info('making offer...');
+            this.makingOffer = true;
+            await this.connection!.setLocalDescription();
+            this.signaling.sendDescription(this.connection!.localDescription!);
+          } catch (err) {
+            log.catch(err);
+          } finally {
+            this.makingOffer = false;
+          }
         }
-      }
-    });
-
-    this.connection.addEventListener('icecandidate', async (event) => {
-      log.info('peer.icecandidate', { event });
-      if (event.candidate) {
-        this.signaling.sendIceCandidate(event.candidate);
-      }
-    });
-
-    this.connection.addEventListener('icecandidateerror', async (event) => {
-      log.warn('peer.icecandidateerror', { event });
-    });
-
-    this.connection.addEventListener('iceconnectionstatechange', async (event) => {
-      log.info('peer.iceconnectionstatechange', { event });
-      this.connection?.restartIce();
-    });
-
-    this.connection.addEventListener('connectionstatechange', async (event) => {
-      log.info('peer.connectionstatechange', { event });
-      this.update.emit();
-    });
-
-    this.connection.addEventListener('datachannel', async (event) => {
-      log.info('peer.datachannel', { event });
+      },
+      onicecandidate: (event) => {
+        log.info('connection.onicecandidate', { event });
+        if (event.candidate) {
+          this.signaling.sendIceCandidate(event.candidate);
+        }
+      },
+      oniceconnectionstatechange: (event) => {
+        log.info('connection.oniceconnectionstatechange', { event });
+        this.connection?.restartIce();
+      },
+      onicecandidateerror: (event) => {
+        log.warn('connection.onicecandidateerror', { event });
+      },
+      onconnectionstatechange: (event) => {
+        log.info('connection.onconnectionstatechange', { state: this.connection?.connectionState });
+        this.update.emit();
+      },
+      ondatachannel: (event: RTCDataChannelEvent) => {
+        log.info('connection.ondatachannel', { event });
+      },
     });
 
     //
@@ -160,18 +158,21 @@ export class Peer {
       negotiated: true,
     });
 
-    this.channel.addEventListener('open', () => {
-      log.info('channel.open');
-      this.send({ sender: this.id, message: 'hello' });
-    });
-
-    this.channel.addEventListener('close', () => {
-      log.info('channel.close');
-    });
-
-    this.channel.addEventListener('message', (event) => {
-      const data = JSON.parse(event.data);
-      log.info('channel.message', { data });
+    Object.assign<RTCDataChannel, Partial<RTCDataChannel>>(this.channel, {
+      onopen: (event) => {
+        log.info('channel.onopen', { event });
+        this.send({ sender: this.id, message: 'hello' });
+      },
+      onclose: (event) => {
+        log.info('channel.onclose', { event });
+      },
+      onmessage: (event) => {
+        const data = JSON.parse(event.data);
+        log.info('channel.onmessage', { data });
+      },
+      onerror: (event) => {
+        log.info('channel.onerror', { event });
+      },
     });
   }
 

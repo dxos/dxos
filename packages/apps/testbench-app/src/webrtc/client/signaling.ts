@@ -4,7 +4,6 @@
 
 import PartySocket from 'partysocket';
 
-import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -22,9 +21,7 @@ export interface SignalingListener {
 export class SignalingClient {
   private socket?: PartySocket;
 
-  constructor(private readonly id: PublicKey) {
-    invariant(id);
-  }
+  constructor(private readonly id: PublicKey) {}
 
   get info() {
     return {
