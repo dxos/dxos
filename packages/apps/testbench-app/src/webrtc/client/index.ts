@@ -3,4 +3,4 @@
 //
 
 export * from './peer';
-export * from './signaling';
+export * from './signaling-channel';
