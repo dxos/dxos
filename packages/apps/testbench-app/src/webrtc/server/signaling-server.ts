@@ -36,8 +36,9 @@ export default class SignalingServer implements Server {
     hibernate: false, // TODO(burdon): If more than 100 concurrent clients.
   };
 
-  // TODO(burdon): Index by sender and invitation? Is it sensible to shard rooms by invitation? Or space discovery key?
-  // TODO(burdon): Authenticate connections (e.g., using OTP style session key)?
+  // A different room is created for each swarm key.
+  // Messages are recorded by sender and replayed to new peers joining the swarm.
+  // TODO(burdon): However, signaling should be private peer-to-peer.
   private readonly buffer = new Map<string, string[]>();
 
   constructor(private readonly room: Room) {}
@@ -46,6 +47,8 @@ export default class SignalingServer implements Server {
     console.log('start', { room: this.room?.id });
   }
 
+  // TODO(burdon): Authz connections (e.g., using OTP style session key)?
+  //  https://www.npmjs.com/package/otp-io
   onConnect(connection: Connection) {
     console.log('connect', { room: this.room?.id, peer: connection.id });
     for (const [id, buffer] of this.buffer.entries()) {

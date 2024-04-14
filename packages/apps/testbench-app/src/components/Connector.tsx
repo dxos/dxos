@@ -30,19 +30,19 @@ export const Connector = () => {
   }, []);
 
   const handleConnect = (initiate = false) => {
-    let invitation_ = invitation;
+    let swarmKey = invitation;
     if (initiate) {
-      invitation_ = PublicKey.random().truncate();
-      setInvitation(invitation_);
-      void navigator.clipboard.writeText(invitation_);
-      sendEvent('connection.connect', { invitation: invitation_ });
-    } else if (!invitation_) {
+      swarmKey = PublicKey.random().toHex();
+      setInvitation(swarmKey);
+      void navigator.clipboard.writeText(swarmKey);
+      sendEvent('connection.connect', { invitation: swarmKey });
+    } else if (!swarmKey) {
       return;
     }
 
     setTimeout(async () => {
       sendEvent('connection.open');
-      await peer!.open(invitation_, initiate);
+      await peer!.open(PublicKey.from(swarmKey!), initiate);
       forceUpdate({});
     });
   };

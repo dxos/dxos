@@ -31,17 +31,16 @@ export class SignalingChannel {
     };
   }
 
-  // TODO(burdon): Use room for invitation.
-  async open(room: string, listener: SignalingListener) {
+  async open(swarmKey: PublicKey, listener: SignalingListener) {
     await this.close();
-    log.info('opening...', { room });
+    log.info('opening...', { swarmKey });
 
     // https://docs.partykit.io/reference/partysocket-api
     this.socket = new PartySocket({
       host: SIGNALING_ENDPOINT,
       id: this.id.toHex(),
       party: 'main', // Default party.
-      room,
+      room: swarmKey.toHex(),
       debug: false,
       startClosed: true,
     });

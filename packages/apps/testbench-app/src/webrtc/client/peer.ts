@@ -65,9 +65,9 @@ export class Peer {
     return this._connection?.connectionState === 'connected';
   }
 
-  async open(room = 'invitation', initiating = false) {
+  async open(swarmKey: PublicKey, initiating = false) {
     await this.close();
-    log.info('opening...', { room, initiating });
+    log.info('opening...', { room: swarmKey, initiating });
 
     //
     // Signaling.
@@ -77,7 +77,7 @@ export class Peer {
 
     // TODO(burdon): Catch errors
     // TODO(burdon): Should we keep open the signaling connection -- or only during invitations?
-    await this._signaler.open(room, {
+    await this._signaler.open(swarmKey, {
       //
       async onDescription(description: RTCSessionDescription) {
         const peer = getPeer();
