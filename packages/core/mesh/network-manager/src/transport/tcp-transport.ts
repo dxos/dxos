@@ -68,7 +68,9 @@ export class TcpTransport implements Transport {
     }
   }
 
-  async destroy(): Promise<void> {
+  async open() {}
+
+  async destroy() {
     log('closing');
     this._socket?.destroy();
     this._server?.close();

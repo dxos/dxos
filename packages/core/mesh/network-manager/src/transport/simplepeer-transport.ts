@@ -129,6 +129,20 @@ export class SimplePeerTransport implements Transport {
     log.trace('dxos.mesh.webrtc-transport.constructor', trace.end({ id: this._instanceId }));
   }
 
+  async open() {}
+
+  async destroy() {
+    log('closing...');
+    if (this._closed) {
+      return;
+    }
+    this._disconnectStreams();
+    this._peer!.destroy();
+    this._closed = true;
+    this.closed.emit();
+    log('closed');
+  }
+
   async getStats(): Promise<TransportStats> {
     const stats = await this._getStats();
     if (!stats) {
@@ -186,18 +200,6 @@ export class SimplePeerTransport implements Transport {
       return `${rc.ip}:${rc.port}/${rc.protocol} relay for ${rc.relatedAddress}:${rc.relatedPort}`;
     }
     return `${rc.ip}:${rc.port}/${rc.protocol} ${rc.candidateType}`;
-  }
-
-  async destroy() {
-    log('closing...');
-    if (this._closed) {
-      return;
-    }
-    this._disconnectStreams();
-    this._peer!.destroy();
-    this._closed = true;
-    this.closed.emit();
-    log('closed');
   }
 
   signal(signal: Signal) {

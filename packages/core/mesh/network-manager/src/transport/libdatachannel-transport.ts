@@ -55,12 +55,14 @@ export class LibDataChannelTransport implements Transport {
       if (this._closed) {
         this.errors.raise(new Error('connection already closed'));
       }
+
       // workaround https://github.com/murat-dogan/node-datachannel/pull/207
       if (_params.webrtcConfig) {
         _params.webrtcConfig.iceServers = _params.webrtcConfig.iceServers ?? [];
       } else {
         _params.webrtcConfig = { iceServers: [] };
       }
+
       const peer = new RTCPeerConnection(_params.webrtcConfig);
       LibDataChannelTransport._instanceCount++;
 
@@ -158,7 +160,6 @@ export class LibDataChannelTransport implements Transport {
         read: () => {},
         write: async (chunk, encoding, callback) => {
           // todo wait to open
-
           if (chunk.length > MAX_MESSAGE_SIZE) {
             this.errors.raise(new Error(`message too large: ${chunk.length} > ${MAX_MESSAGE_SIZE}`));
           }
