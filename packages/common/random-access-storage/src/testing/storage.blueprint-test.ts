@@ -11,7 +11,7 @@ import { type File, type Storage, StorageType } from '../common';
 
 export const randomText = () => uuid.v4();
 
-export const storageTests = (testGroupName: StorageType, createStorage: () => Storage) => {
+export const storageTests = (testGroupName: StorageType, createStorage: (name: string) => Storage) => {
   const writeAndCheck = async (file: File, data: Buffer, offset = 0) => {
     await file.write(offset, data);
     const bufferRead = await file.read(offset, data.length);
@@ -21,7 +21,9 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
 
   describe(testGroupName, () => {
     test('open & close', async () => {
-      const storage = createStorage();
+      const storageName = uuid.v4();
+
+      const storage = createStorage(storageName);
       const directory = storage.createDirectory();
       const fileName = randomText();
       const file = directory.getOrCreateFile(fileName);
@@ -29,7 +31,9 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
     });
 
     test('open file, read & write', async () => {
-      const storage = createStorage();
+      const storageName = uuid.v4();
+
+      const storage = createStorage(storageName);
       const fileName = randomText();
       const directory = storage.createDirectory();
       const file = directory.getOrCreateFile(fileName);
@@ -45,9 +49,9 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
     });
 
     test('list files', async () => {
-      // await waitForDebugger();
+      const storageName = uuid.v4();
 
-      const storage = createStorage();
+      const storage = createStorage(storageName);
       const directoryName = randomText();
       const directory = storage.createDirectory(directoryName);
 
@@ -84,7 +88,9 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
     });
 
     test('read from empty file', async () => {
-      const storage = createStorage();
+      const storageName = uuid.v4();
+
+      const storage = createStorage(storageName);
       const directory = storage.createDirectory();
 
       const fileName = randomText();
@@ -95,7 +101,9 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
     });
 
     test('reopen and check if data is the same', async () => {
-      const storage = createStorage();
+      const storageName = uuid.v4();
+
+      const storage = createStorage(storageName);
       const directory = storage.createDirectory();
       const fileName = randomText();
       const data1 = Buffer.from(randomText());
@@ -115,7 +123,9 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
     });
 
     test('destroy clears all data', async () => {
-      const storage = createStorage();
+      const storageName = uuid.v4();
+
+      const storage = createStorage(storageName);
       const directory = storage.createDirectory();
       const fileName = randomText();
 
@@ -139,12 +149,14 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       if (testGroupName !== StorageType.NODE) {
         t.skip();
       }
+      const storageName = uuid.v4();
+
       const fileName = randomText();
       let firstHandle: File;
       let secondHandle: File;
 
       {
-        const storage = createStorage();
+        const storage = createStorage(storageName);
         const directory = storage.createDirectory();
         const file = directory.getOrCreateFile(fileName);
         const buffer = Buffer.from(randomText());
@@ -153,7 +165,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       }
 
       {
-        const storage = createStorage();
+        const storage = createStorage(storageName);
         const directory = storage.createDirectory();
         const file = directory.getOrCreateFile(fileName);
         const buffer = Buffer.from(randomText());
@@ -166,8 +178,10 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
     });
 
     test('sub-directories', async () => {
+      const storageName = uuid.v4();
+
       // 1. Create storage and two subdirectories
-      const storage = createStorage();
+      const storage = createStorage(storageName);
       const dir1 = storage.createDirectory('dir1');
       const dir2 = storage.createDirectory('dir2');
 
@@ -189,7 +203,9 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
     });
 
     test('write in directory/sub-directory/file', async () => {
-      const storage = createStorage();
+      const storageName = uuid.v4();
+
+      const storage = createStorage(storageName);
       const dir = storage.createDirectory('directory');
       const subDir = dir.createDirectory('subDirectory');
 
@@ -206,10 +222,11 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       if (testGroupName === StorageType.RAM) {
         t.skip();
       }
+      const storageName = uuid.v4();
 
       const fileName = randomText();
       {
-        const storage = createStorage();
+        const storage = createStorage(storageName);
         const directory = storage.createDirectory();
         const file = directory.getOrCreateFile(fileName);
         await file.write(0, Buffer.alloc(10, '0'));
@@ -220,7 +237,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       }
 
       {
-        const storage = createStorage();
+        const storage = createStorage(storageName);
         const directory = storage.createDirectory();
         const file = directory.getOrCreateFile(fileName);
         const allContent = await file.read(0, (await file.stat()).size);
@@ -232,10 +249,11 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       if (testGroupName === StorageType.RAM) {
         t.skip();
       }
+      const storageName = uuid.v4();
 
       const fileName = randomText();
       {
-        const storage = createStorage();
+        const storage = createStorage(storageName);
         const directory = storage.createDirectory();
         const file = directory.getOrCreateFile(fileName);
         await file.write(0, Buffer.alloc(3, '0'));
@@ -246,7 +264,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       }
 
       {
-        const storage = createStorage();
+        const storage = createStorage(storageName);
         const directory = storage.createDirectory();
         const file = directory.getOrCreateFile(fileName);
         const allContent = await file.read(0, (await file.stat()).size);
@@ -255,7 +273,9 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
     });
 
     test('operations on a destroyed file are rejected', async () => {
-      const storage = createStorage();
+      const storageName = uuid.v4();
+
+      const storage = createStorage(storageName);
       const directory = storage.createDirectory();
       const file = directory.getOrCreateFile(randomText());
 
@@ -275,7 +295,9 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
     });
 
     test('delete directory', async () => {
-      const storage = createStorage();
+      const storageName = uuid.v4();
+
+      const storage = createStorage(storageName);
       const directory = storage.createDirectory();
       const file = directory.getOrCreateFile(randomText());
 
@@ -291,7 +313,9 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       if (testGroupName !== StorageType.NODE) {
         t.skip();
       }
-      const storage = createStorage();
+      const storageName = uuid.v4();
+
+      const storage = createStorage(storageName);
 
       const directory = storage.createDirectory();
       const file = directory.getOrCreateFile(randomText());
@@ -310,14 +334,18 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
     });
 
     test('stat of new file', async () => {
-      const storage = createStorage();
+      const storageName = uuid.v4();
+
+      const storage = createStorage(storageName);
       const directory = storage.createDirectory();
       const file = directory.getOrCreateFile(randomText());
       expect((await file.stat()).size).toBe(0);
     });
 
     test('call del with edge arguments', async () => {
-      const storage = createStorage();
+      const storageName = uuid.v4();
+
+      const storage = createStorage(storageName);
       if (storage.type === StorageType.IDB) {
         // Not deletable.
         return;
@@ -347,18 +375,19 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       }
     });
 
-    test('reset', async () => {
+    test('reset', async (t) => {
       if (
         testGroupName === StorageType.RAM || // RAM storage does not persist data.
         testGroupName === StorageType.IDB // IDB storage is blocked by opened connection, and there is no handle to close it.
       ) {
-        return;
+        t.skip();
       }
+      const storageName = uuid.v4();
       const filename = randomText();
       const buffer = Buffer.from(randomText());
 
       {
-        const storage = createStorage();
+        const storage = createStorage(storageName);
         const directory = storage.createDirectory();
         const file = directory.getOrCreateFile(filename);
         await file.write(0, buffer);
@@ -366,7 +395,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       }
 
       {
-        const storage = createStorage();
+        const storage = createStorage(storageName);
         const directory = storage.createDirectory();
         const file = directory.getOrCreateFile(filename);
         await expect(file.read(0, buffer.length)).resolves.toEqual(buffer);
@@ -374,15 +403,16 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       }
 
       {
-        const storage = createStorage();
+        const storage = createStorage(storageName);
         await asyncTimeout(storage.reset(), 1_000);
       }
 
       {
-        const storage = createStorage();
+        const storage = createStorage(storageName);
         const directory = storage.createDirectory();
         const file = directory.getOrCreateFile(filename);
-        await expect(file.read(0, buffer.length)).rejects.toThrow();
+        const { size } = await file.stat();
+        await expect(size).to.eq(0);
       }
     });
 
@@ -390,10 +420,10 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       if (testGroupName === StorageType.RAM) {
         t.skip();
       }
-
+      const storageName = uuid.v4();
       const dirname = randomText();
 
-      const storage = createStorage();
+      const storage = createStorage(storageName);
       const directory = storage.createDirectory(dirname);
 
       {
@@ -413,7 +443,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       }
 
       {
-        const storage = createStorage();
+        const storage = createStorage(storageName);
         const directory = storage.createDirectory(dirname);
         const entries = await directory.list();
         expect(entries.length).toBe(files.length);
@@ -421,10 +451,11 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
     });
 
     test('list returns correct filenames', async () => {
+      const storageName = uuid.v4();
       const FILES = ['one', 'two', 'three'];
 
       // Create storage and check.
-      const storage = createStorage();
+      const storage = createStorage(storageName);
       const directory = storage.createDirectory('dir');
 
       for (const file of FILES) {
@@ -436,7 +467,9 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
     });
 
     test('getDiskInfo returns correct size', async (t) => {
-      const storage = createStorage();
+      const storageName = uuid.v4();
+
+      const storage = createStorage(storageName);
       if (storage.type === StorageType.IDB) {
         t.skip();
       }
