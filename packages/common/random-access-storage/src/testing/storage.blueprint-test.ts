@@ -376,10 +376,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: (name: s
     });
 
     test('reset', async (t) => {
-      if (
-        testGroupName === StorageType.RAM || // RAM storage does not persist data.
-        testGroupName === StorageType.IDB // IDB storage is blocked by opened connection, and there is no handle to close it.
-      ) {
+      if (testGroupName === StorageType.RAM) {
         t.skip();
       }
       const storageName = uuid.v4();
@@ -392,6 +389,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: (name: s
         const file = directory.getOrCreateFile(filename);
         await file.write(0, buffer);
         await file.close();
+        await storage.close();
       }
 
       {
@@ -400,6 +398,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: (name: s
         const file = directory.getOrCreateFile(filename);
         await expect(file.read(0, buffer.length)).resolves.toEqual(buffer);
         await file.close();
+        await storage.close();
       }
 
       {
@@ -413,6 +412,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: (name: s
         const file = directory.getOrCreateFile(filename);
         const { size } = await file.stat();
         await expect(size).to.eq(0);
+        await storage.close();
       }
     });
 

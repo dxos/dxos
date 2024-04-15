@@ -38,7 +38,16 @@ export class IDbStorage extends AbstractStorage {
     return database.create;
   }
 
-  protected override async _destroy() {
+  override async close() {
+    await this._closeFilesInPath('');
+    (await this._db).close();
+  }
+
+  override async reset() {
+    await this._closeFilesInPath('');
+    await this._remove('');
+    (await this._db).close();
+
     // eslint-disable-next-line no-undef
     return new Promise<void>((resolve, reject) => {
       const request = indexedDB.deleteDatabase(this.path);
@@ -55,6 +64,10 @@ export class IDbStorage extends AbstractStorage {
         reject(err);
       };
     });
+  }
+
+  protected override async _destroy() {
+    throw new Error('Unreachable');
   }
 
   protected override _createFile(path: string, filename: string): RandomAccessStorage {

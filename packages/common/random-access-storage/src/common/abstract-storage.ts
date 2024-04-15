@@ -129,7 +129,7 @@ export abstract class AbstractStorage implements Storage {
     );
   }
 
-  private async _closeFilesInPath(path: string): Promise<void> {
+  protected async _closeFilesInPath(path: string): Promise<void> {
     await Promise.all(
       Array.from((await this._getFiles(path)).values()).map((file) => file.close().catch((err: any) => log.catch(err))),
     );
