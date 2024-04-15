@@ -43,13 +43,13 @@ export const InvitationManager = ({
   active,
   send,
   status,
-  type,
+  multiUse,
   authCode,
   id = '0',
 }: InvitationManagerProps) => {
   const { t } = useTranslation('os');
   const qrLabel = useId('invitation-manager__qr-code');
-  const statusValue = authCode == null ? 0 : invitationStatusValue.get(status!) ?? 0;
+  const statusValue = multiUse ? 0 : invitationStatusValue.get(status!) ?? 0;
   const showAuthCode = statusValue === 3;
   const emoji = hexToEmoji(id);
   const activeView = useMemo(() => {
@@ -69,7 +69,7 @@ export const InvitationManager = ({
         <Viewport.Views>
           <InvitationManagerView id='showing qr' emoji={emoji}>
             <p className='text-sm mlb-1 font-normal text-center'>
-              {t(authCode == null ? 'invite many qr label' : 'invite one qr label')}
+              {t(multiUse ? 'invite many qr label' : 'invite one qr label')}
             </p>
             <div role='none' className={mx(descriptionText, 'is-full max-is-[14rem] relative')}>
               <QR
