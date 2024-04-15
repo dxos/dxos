@@ -136,7 +136,9 @@ describe('Client', () => {
     const client1 = new Client({ services: testBuilder.createLocal() });
     const client2 = new Client({ services: testBuilder.createLocal() });
     await client1.initialize();
+    afterTest(() => client1.destroy());
     await client2.initialize();
+    afterTest(() => client2.destroy());
 
     await client1.halo.createIdentity();
     await client2.halo.createIdentity();
