@@ -8465,6 +8465,9 @@ importers:
         specifier: ^13.6.10
         version: 13.6.10
     devDependencies:
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui

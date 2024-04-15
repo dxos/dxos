@@ -6,16 +6,22 @@ import { act, renderHook } from '@testing-library/react';
 import { expect } from 'chai';
 import React from 'react';
 
-import { Client } from '@dxos/client';
+import { Client, Config } from '@dxos/client';
 import { fromHost } from '@dxos/client/services';
-import { describe, test } from '@dxos/test';
+import { Context } from '@dxos/context';
+import { afterTest, describe, test } from '@dxos/test';
 
 import { useSpace, useSpaces } from './useSpaces';
 import { ClientContext } from '../client';
+import { testConfig } from '../testing/util';
 
 describe('useSpaces', () => {
   test('lists existing spaces', async () => {
-    const client = new Client({ services: fromHost() });
+    const client = new Client({ services: fromHost(new Config(testConfig())) });
+    afterTest(async () => {
+      await client.destroy();
+      await client.services.close(new Context());
+    });
     await client.initialize();
     await client.halo.createIdentity();
     await client.spaces.isReady.wait();
@@ -28,7 +34,11 @@ describe('useSpaces', () => {
   });
 
   test('updates when new spaces are created', async () => {
-    const client = new Client({ services: fromHost() });
+    const client = new Client({ services: fromHost(new Config(testConfig())) });
+    afterTest(async () => {
+      await client.destroy();
+      await client.services.close(new Context());
+    });
     await client.initialize();
     await client.halo.createIdentity();
     await client.spaces.isReady.wait();
@@ -48,8 +58,13 @@ describe('useSpaces', () => {
 
 describe('useSpace', () => {
   test('gets default space', async () => {
-    const client = new Client({ services: fromHost() });
+    const client = new Client({ services: fromHost(new Config(testConfig())) });
+    afterTest(async () => {
+      await client.destroy();
+      await client.services.close(new Context());
+    });
     await client.initialize();
+
     // TODO(wittjosiah): Factor out.
     const wrapper = ({ children }: any) => (
       <ClientContext.Provider value={{ client }}>{children}</ClientContext.Provider>
@@ -65,7 +80,11 @@ describe('useSpace', () => {
   });
 
   test('gets space by key', async () => {
-    const client = new Client({ services: fromHost() });
+    const client = new Client({ services: fromHost(new Config(testConfig())) });
+    afterTest(async () => {
+      await client.destroy();
+      await client.services.close(new Context());
+    });
     await client.initialize();
     await client.halo.createIdentity();
     const space = await client.spaces.create();
