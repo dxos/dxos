@@ -83,7 +83,8 @@ runTests('AutomergeStorageAdapter', () => {
  * Run tests for LevelDBStorageAdapter.
  */
 runTests('LevelDBStorageAdapter', async () => {
-  const level = await createTestLevel();
+  const level = createTestLevel();
+  await level.open();
   afterTest(() => level.close());
   return new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
 });

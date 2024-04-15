@@ -50,7 +50,7 @@ const setup = (getConfig: Provider<MaybePromise<Config>>) => {
   });
   afterTest(async () => {
     await client.destroy();
-    await clientProxy.close();
+    await clientProxy.close().catch(() => {});
     await workerRuntime.stop();
   });
 

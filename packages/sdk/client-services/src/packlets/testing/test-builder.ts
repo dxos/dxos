@@ -50,7 +50,8 @@ export const createServiceContext = async ({
     signalManager,
     transportFactory: MemoryTransportFactory,
   });
-  const level = await createTestLevel();
+  const level = createTestLevel();
+  await level.open();
 
   return new ServiceContext(storage, level, networkManager, signalManager);
 };

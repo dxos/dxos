@@ -29,7 +29,8 @@ import { createTestLevel } from '../testing';
 
 describe('AutomergeHost', () => {
   test('can create documents', async () => {
-    const level = await createTestLevel();
+    const level = createTestLevel();
+    await level.open();
     afterTest(() => level.close());
     const host = new AutomergeHost({
       db: level.sublevel('automerge'),
@@ -45,7 +46,8 @@ describe('AutomergeHost', () => {
   });
 
   test('changes are preserved in storage', async () => {
-    const level = await createTestLevel();
+    const level = createTestLevel();
+    await level.open();
     afterTest(() => level.close());
 
     const host = new AutomergeHost({ db: level.sublevel('automerge') });

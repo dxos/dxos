@@ -115,8 +115,8 @@ export class TestBuilder {
   /**
    * Create backend service handlers.
    */
-  async createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams) {
-    const level = this.level ?? (await createTestLevel());
+  createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams) {
+    const level = this.level ?? createTestLevel();
     const services = new ClientServicesHost({
       config: this.config,
       storage: this.storage,
@@ -134,8 +134,8 @@ export class TestBuilder {
   /**
    * Create local services host.
    */
-  async createLocal() {
-    const level = this.level ?? (await createTestLevel());
+  createLocal() {
+    const level = this.level ?? createTestLevel();
     const services = new LocalClientServices({
       config: this.config,
       storage: this.storage,
@@ -152,8 +152,7 @@ export class TestBuilder {
   /**
    * Create client/server.
    */
-  async createClientServer(host?: ClientServicesHost): Promise<[Client, ProtoRpcPeer<{}>]> {
-    host ??= await this.createClientServicesHost();
+  createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, ProtoRpcPeer<{}>] {
     const [proxyPort, hostPort] = createLinkedPorts();
     const server = createProtoRpcPeer({
       exposed: host.descriptors,

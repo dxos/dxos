@@ -27,7 +27,7 @@ describe('Client services', () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
 
-    const servicesProvider = await testBuilder.createLocal();
+    const servicesProvider = testBuilder.createLocal();
     await servicesProvider.open();
     afterTest(() => servicesProvider.close());
 
@@ -41,11 +41,11 @@ describe('Client services', () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
 
-    const peer = await testBuilder.createClientServicesHost();
+    const peer = testBuilder.createClientServicesHost();
     await peer.open(new Context());
     afterTest(() => peer.close());
 
-    const [client, server] = await testBuilder.createClientServer(peer);
+    const [client, server] = testBuilder.createClientServer(peer);
     void server.open();
     afterTest(() => server.close());
 
@@ -56,16 +56,16 @@ describe('Client services', () => {
 
   test('creates clients with multiple peers connected via memory transport', async () => {
     const testBuilder = new TestBuilder();
-    testBuilder.level = await createTestLevel();
+    testBuilder.level = createTestLevel();
     afterTest(() => testBuilder.destroy());
 
     {
-      const peer1 = await testBuilder.createClientServicesHost();
+      const peer1 = testBuilder.createClientServicesHost();
       await peer1.open(new Context());
       afterTest(() => peer1.close());
 
       {
-        const [client1a, server1a] = await testBuilder.createClientServer(peer1);
+        const [client1a, server1a] = testBuilder.createClientServer(peer1);
         void server1a.open();
         await client1a.initialize();
         afterTest(async () => {
@@ -77,7 +77,7 @@ describe('Client services', () => {
         await client1a.halo.createIdentity();
       }
       {
-        const [client1b, server1b] = await testBuilder.createClientServer(peer1);
+        const [client1b, server1b] = testBuilder.createClientServer(peer1);
         void server1b.open();
         await client1b.initialize();
         afterTest(async () => {
@@ -91,12 +91,12 @@ describe('Client services', () => {
     }
 
     {
-      const peer2 = await testBuilder.createClientServicesHost();
+      const peer2 = testBuilder.createClientServicesHost();
       await peer2.open(new Context());
       afterTest(() => peer2.close());
 
       {
-        const [client2a, server2a] = await testBuilder.createClientServer(peer2);
+        const [client2a, server2a] = testBuilder.createClientServer(peer2);
         void server2a.open();
         await client2a.initialize();
         afterTest(async () => {
@@ -114,11 +114,11 @@ describe('Client services', () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
 
-    const peer1 = await testBuilder.createClientServicesHost({
+    const peer1 = testBuilder.createClientServicesHost({
       devicePresenceAnnounceInterval: 1_000,
       devicePresenceOfflineTimeout: 2_000,
     });
-    const peer2 = await testBuilder.createClientServicesHost({
+    const peer2 = testBuilder.createClientServicesHost({
       devicePresenceAnnounceInterval: 1_000,
       devicePresenceOfflineTimeout: 2_000,
     });
@@ -126,8 +126,8 @@ describe('Client services', () => {
     await peer1.open(new Context());
     await peer2.open(new Context());
 
-    const [client1, server1] = await testBuilder.createClientServer(peer1);
-    const [client2, server2] = await testBuilder.createClientServer(peer2);
+    const [client1, server1] = testBuilder.createClientServer(peer1);
+    const [client2, server2] = testBuilder.createClientServer(peer2);
 
     // Don't wait (otherwise will block).
     {
@@ -187,14 +187,14 @@ describe('Client services', () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
 
-    const peer1 = await testBuilder.createClientServicesHost();
-    const peer2 = await testBuilder.createClientServicesHost();
+    const peer1 = testBuilder.createClientServicesHost();
+    const peer2 = testBuilder.createClientServicesHost();
 
     await peer1.open(new Context());
     await peer2.open(new Context());
 
-    const [client1, server1] = await testBuilder.createClientServer(peer1);
-    const [client2, server2] = await testBuilder.createClientServer(peer2);
+    const [client1, server1] = testBuilder.createClientServer(peer1);
+    const [client2, server2] = testBuilder.createClientServer(peer2);
 
     // Don't wait (otherwise will block).
     {

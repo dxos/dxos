@@ -11,7 +11,8 @@ import { IndexMetadataStore } from './index-metadata-store';
 
 describe('IndexMetadataStore', () => {
   test('basic', async () => {
-    const level = await createTestLevel();
+    const level = createTestLevel();
+    await level.open();
     afterTest(() => level.close());
 
     const metadataStore = new IndexMetadataStore({

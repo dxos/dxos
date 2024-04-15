@@ -44,9 +44,9 @@ describe.skip('DiagnosticsCollector', () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
 
-    const peer = await testBuilder.createClientServicesHost();
+    const peer = testBuilder.createClientServicesHost();
     await peer.open(new Context());
-    const [client, server] = await testBuilder.createClientServer(peer);
+    const [client, server] = testBuilder.createClientServer(peer);
     void server.open();
     await client.initialize();
     afterTest(() => client.destroy());

@@ -30,7 +30,7 @@ describe('Halo', () => {
     });
 
     const testBuilder = new TestBuilder(config);
-    testBuilder.level = await createTestLevel();
+    testBuilder.level = createTestLevel();
 
     {
       const client = new Client({ config, services: testBuilder.createLocal() });

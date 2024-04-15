@@ -19,7 +19,8 @@ describe('AutomergeHost', () => {
     // creates repo and document | replicates repo | finds document in repo
     //
 
-    const level = await createTestLevel();
+    const level = createTestLevel();
+    await level.open();
     afterTest(() => level.close());
 
     const host = new AutomergeHost({

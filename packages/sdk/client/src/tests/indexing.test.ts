@@ -31,7 +31,7 @@ describe('Index queries', () => {
     afterTest(async () => {
       await builder.destroy();
     });
-    const services = await builder.createLocal();
+    const services = builder.createLocal();
     const client = new Client({ services });
     afterTest(() => client.destroy());
     await client.initialize();
@@ -84,7 +84,7 @@ describe('Index queries', () => {
     afterTest(async () => {
       await builder.destroy();
     });
-    const client = new Client({ services: await builder.createLocal() });
+    const client = new Client({ services: builder.createLocal() });
     afterTest(() => client.destroy());
     await client.initialize();
     if (!client._graph.types.isEffectSchemaRegistered(ContactType)) {
@@ -111,13 +111,13 @@ describe('Index queries', () => {
 
     const builder = new TestBuilder();
     builder.storage = createStorage({ type: StorageType.RAM });
-    builder.level = await createTestLevel();
+    builder.level = createTestLevel();
     afterTest(async () => {
       await builder.destroy();
     });
 
     {
-      const client = new Client({ services: await builder.createLocal() });
+      const client = new Client({ services: builder.createLocal() });
       await client.initialize();
       if (!client._graph.types.isEffectSchemaRegistered(ContactType)) {
         client._graph.types.registerEffectSchema(ContactType);
@@ -141,7 +141,7 @@ describe('Index queries', () => {
     }
 
     {
-      const client = new Client({ services: await builder.createLocal() });
+      const client = new Client({ services: builder.createLocal() });
       await client.initialize();
       if (!client._graph.types.isEffectSchemaRegistered(ContactType)) {
         client._graph.types.registerEffectSchema(ContactType);
@@ -164,7 +164,7 @@ describe('Index queries', () => {
     afterTest(async () => {
       await builder.destroy();
     });
-    const client = new Client({ services: await builder.createLocal() });
+    const client = new Client({ services: builder.createLocal() });
     await client.initialize();
     if (!client._graph.types.isEffectSchemaRegistered(ContactType)) {
       client._graph.types.registerEffectSchema(ContactType);

@@ -12,7 +12,8 @@ import { createTestLevel } from '../testing';
 
 describe('Level', () => {
   test('missing keys', async () => {
-    const level = await createTestLevel();
+    const level = createTestLevel();
+    await level.open();
 
     expect(() => level.get('missing')).to.throw;
   });
