@@ -4,7 +4,7 @@
 
 import isEqual from 'lodash.isequal';
 
-import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
+import { DeferredTask, Event, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Filter } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -251,8 +251,6 @@ export class Indexer {
       }
       await this._indexStore.save(index);
     }
-    this._updatesAfterSave = 0;
-    this._lastSave = Date.now();
   }
 
   async destroy() {
