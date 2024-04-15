@@ -28,7 +28,7 @@ const createPair = () => {
     initiator: true,
   });
 
-  afterTest(() => connection1.destroy());
+  afterTest(() => connection1.close());
   afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
   const stream2 = new TestStream();
@@ -40,7 +40,7 @@ const createPair = () => {
     initiator: false,
   });
 
-  afterTest(() => connection2.destroy());
+  afterTest(() => connection2.close());
   afterTest(() => connection2.errors.assertNoUnhandledErrors());
 
   return {

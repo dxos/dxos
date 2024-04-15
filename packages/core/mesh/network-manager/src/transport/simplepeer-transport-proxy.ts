@@ -117,6 +117,27 @@ export class SimplePeerTransportProxy implements Transport {
     );
   }
 
+  async open() {}
+
+  // TODO(burdon): Move open from constructor.
+  async close(): Promise<void> {
+    await this._ctx.dispose();
+    if (this._closed) {
+      return;
+    }
+
+    await this._serviceStream.close();
+
+    try {
+      await this._params.bridgeService.close({ proxyId: this._proxyId }, { timeout: RPC_TIMEOUT });
+    } catch (err: any) {
+      log.catch(err);
+    }
+
+    this.closed.emit();
+    this._closed = true;
+  }
+
   private async _handleConnection(connectionEvent: BridgeEvent.ConnectionEvent): Promise<void> {
     if (connectionEvent.error) {
       this.errors.raise(decodeError(connectionEvent.error));
@@ -128,7 +149,7 @@ export class SimplePeerTransportProxy implements Transport {
         break;
       }
       case ConnectionState.CLOSED: {
-        await this.destroy();
+        await this.close();
         break;
       }
     }
@@ -162,25 +183,6 @@ export class SimplePeerTransportProxy implements Transport {
   async getStats(): Promise<TransportStats> {
     return (await this._params.bridgeService.getStats({ proxyId: this._proxyId }, { timeout: RPC_TIMEOUT }))
       .stats as TransportStats;
-  }
-
-  // TODO(burdon): Move open from constructor.
-  async destroy(): Promise<void> {
-    await this._ctx.dispose();
-    if (this._closed) {
-      return;
-    }
-
-    await this._serviceStream.close();
-
-    try {
-      await this._params.bridgeService.close({ proxyId: this._proxyId }, { timeout: RPC_TIMEOUT });
-    } catch (err: any) {
-      log.catch(err);
-    }
-
-    this.closed.emit();
-    this._closed = true;
   }
 
   /**

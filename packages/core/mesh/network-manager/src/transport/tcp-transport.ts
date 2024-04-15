@@ -27,58 +27,56 @@ export class TcpTransport implements Transport {
   public readonly errors = new ErrorStream();
 
   private _destroyed = false;
-
   private _connected = false;
 
-  constructor(private readonly options: TransportOptions) {
+  constructor(private readonly _options: TransportOptions) {}
+
+  async open() {
     log('creating');
-
-    // Initiator will send a signal, the receiver will receive the unique ID and connect the streams.
-    if (this.options.initiator) {
-      // prettier-ignore
-      setTimeout(async () => {
-        const { Server } = await import('node:net');
-        this._server = new Server(socket => {
-          log('new connection');
-          if (this._connected) {
-            socket.destroy();
-          }
-          this._handleSocket(socket);
-        });
-
-        this._server.on('listening', () => {
-          const { port } = this._server!.address() as AddressInfo;
-          log('listening', { port });
-          void this.options.sendSignal({
-            payload: { port }
-          }).catch(err => {
-            if (!this._destroyed) {
-              this.errors.raise(err);
-            }
-          });
-
-        });
-
-        this._server.on('error', err => {
-          this.errors.raise(err);
-        });
-
-        this._server.listen(0);
-      });
+    if (!this._options.initiator) {
+      return;
     }
+
+    const { Server } = await import('node:net');
+    this._server = new Server((socket) => {
+      log('new connection');
+      if (this._connected) {
+        socket.destroy();
+      }
+      this._handleSocket(socket);
+    });
+
+    this._server.on('listening', () => {
+      const { port } = this._server!.address() as AddressInfo;
+      log('listening', { port });
+      void this._options
+        .sendSignal({
+          payload: { port },
+        })
+        .catch((err) => {
+          if (!this._destroyed) {
+            this.errors.raise(err);
+          }
+        });
+    });
+
+    this._server.on('error', (err) => {
+      this.errors.raise(err);
+    });
+
+    this._server.listen(0);
   }
 
-  async destroy(): Promise<void> {
+  async close() {
     log('closing');
     this._socket?.destroy();
     this._server?.close();
-
     this._destroyed = true;
   }
 
   signal({ payload }: Signal) {
     log('received signal', { payload });
-    if (this.options.initiator || this._connected) {
+    if (this._options.initiator || this._connected) {
       return;
     }
 
@@ -88,7 +86,7 @@ export class TcpTransport implements Transport {
   }
 
   async getDetails(): Promise<string> {
-    if (this.options.initiator) {
+    if (this._options.initiator) {
       const { port, address } = this._server?.address() as AddressInfo;
       return `LISTEN ${address}:${port}`;
     }
@@ -109,15 +107,17 @@ export class TcpTransport implements Transport {
     log('handling socket', { remotePort: socket.remotePort, localPort: socket.localPort });
     this._socket = socket;
     this.connected.emit();
-    this.options.stream.pipe(this._socket!).pipe(this.options.stream);
+    this._options.stream.pipe(this._socket!).pipe(this._options.stream);
 
     this._socket.on('connect', () => {
       log('connected to', { port: this._socket?.remotePort });
       this._connected = true;
     });
+
     this._socket.on('error', (err) => {
       this.errors.raise(err);
     });
+
     this._socket.on('close', () => {
       this.closed.emit();
     });

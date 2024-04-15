@@ -65,7 +65,7 @@ describe('SimplePeerTransportProxy', () => {
       sendSignal,
       bridgeService: rpcClient.rpc.BridgeService,
     });
-    afterTest(async () => await simplePeerTransportProxy.destroy());
+    afterTest(async () => await simplePeerTransportProxy.close());
 
     return { simplePeerService: rpcService, SimplePeerTransportProxy: simplePeerTransportProxy };
   };
@@ -75,7 +75,7 @@ describe('SimplePeerTransportProxy', () => {
     const { SimplePeerTransportProxy: connection } = await setupProxy();
 
     const wait = connection.closed.waitForCount(1);
-    await connection.destroy();
+    await connection.close();
     await wait;
   }).timeout(1_000);
 
@@ -153,7 +153,7 @@ describe('SimplePeerTransportProxy', () => {
       });
       afterTest(async () => {
         proxy1.errors.assertNoUnhandledErrors();
-        await proxy1.destroy();
+        await proxy1.close();
       });
 
       const stream2 = new TestStream();
@@ -167,7 +167,7 @@ describe('SimplePeerTransportProxy', () => {
       });
       afterTest(async () => {
         proxy2.errors.assertNoUnhandledErrors();
-        await proxy2.destroy();
+        await proxy2.close();
       });
 
       await TestStream.assertConnectivity(stream1, stream2);

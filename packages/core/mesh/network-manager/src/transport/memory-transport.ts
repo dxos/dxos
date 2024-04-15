@@ -61,6 +61,7 @@ export class MemoryTransport implements Transport {
   private _remoteConnection?: MemoryTransport;
 
   constructor(private readonly options: TransportOptions) {
+    // TODO(burdon): Base class for logging.
     log('creating');
 
     invariant(!MemoryTransport._connections.has(this._instanceId), 'Duplicate memory connection');
@@ -68,17 +69,19 @@ export class MemoryTransport implements Transport {
 
     // Initiator will send a signal, the receiver will receive the unique ID and connect the streams.
     if (this.options.initiator) {
-      // prettier-ignore
+      // TODO(burdon): Why timeout?
       setTimeout(async () => {
         log('sending signal');
-        void this.options.sendSignal({
-          payload: { transportId: this._instanceId.toHex() }
-        }).catch(err => {
-          if (!this._destroyed) {
-            this.errors.raise(err);
-          }
-        });
-    });
+        void this.options
+          .sendSignal({
+            payload: { transportId: this._instanceId.toHex() },
+          })
+          .catch((err) => {
+            if (!this._destroyed) {
+              this.errors.raise(err);
+            }
+          });
+      });
     } else {
       this._remote
         .wait({ timeout: this.options.timeout ?? 1000 })
@@ -120,7 +123,9 @@ export class MemoryTransport implements Transport {
     }
   }
 
-  async destroy(): Promise<void> {
+  async open() {}
+
+  async close(): Promise<void> {
     log('closing');
     this._destroyed = true;
 
@@ -154,11 +159,12 @@ export class MemoryTransport implements Transport {
     log('closed');
   }
 
-  signal({ payload }: Signal) {
+  async signal({ payload }: Signal) {
     log('received signal', { payload });
     if (!payload?.transportId) {
       return;
     }
+
     // TODO(burdon): Check open?
     const transportId = payload.transportId as string;
     if (transportId) {

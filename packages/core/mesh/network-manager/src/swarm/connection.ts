@@ -203,6 +203,8 @@ export class Connection {
       sessionId: this.sessionId,
     });
 
+    await this._transport.open();
+
     this._transport.connected.once(async () => {
       this._changeState(ConnectionState.CONNECTED);
       await this.connectedTimeoutContext.dispose();
@@ -278,7 +280,7 @@ export class Connection {
 
     try {
       // After the transport is closed streams are disconnected.
-      await this._transport?.destroy();
+      await this._transport?.close();
     } catch (err: any) {
       log.catch(err);
     }
@@ -323,7 +325,7 @@ export class Connection {
 
       try {
         // After the transport is closed streams are disconnected.
-        await this._transport?.destroy();
+        await this._transport?.close();
       } catch (err: any) {
         log.catch(err);
       }
@@ -335,7 +337,7 @@ export class Connection {
         log.catch(err);
       }
       try {
-        await this._transport?.destroy();
+        await this._transport?.close();
       } catch (err: any) {
         log.catch(err);
       }
