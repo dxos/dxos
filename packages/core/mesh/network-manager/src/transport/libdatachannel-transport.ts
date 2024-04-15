@@ -52,18 +52,20 @@ export class LibDataChannelTransport implements Transport {
 
   constructor(private readonly _options: LibDataChannelTransportOptions) {}
 
+  get isOpen() {
+    return !!this._peer && !this._closed;
+  }
+
   async open() {
-    invariant(!this._peer, 'already open');
+    if (this._closed) {
+      // TODO(burdon): Make idempotent?
+      this.errors.raise(new Error('connection already closed'));
+    }
 
     // TODO(burdon): Move to factory?
     /* eslint-disable @typescript-eslint/consistent-type-imports */
     const { RTCPeerConnection } = (await importESM('node-datachannel/polyfill'))
       .default as typeof import('node-datachannel/polyfill');
-
-    /* eslint-enable @typescript-eslint/consistent-type-imports */
-    if (this._closed) {
-      this.errors.raise(new Error('connection already closed'));
-    }
 
     // workaround https://github.com/murat-dogan/node-datachannel/pull/207
     if (this._options.webrtcConfig) {
@@ -135,7 +137,7 @@ export class LibDataChannelTransport implements Transport {
           this.errors.raise(err);
         });
 
-      this.handleChannel(this._peer.createDataChannel(DATACHANNEL_LABEL));
+      this._handleChannel(this._peer.createDataChannel(DATACHANNEL_LABEL));
       log.debug('created data channel');
       this._peer.ondatachannel = (event) => {
         this.errors.raise(new Error('got ondatachannel when i am the initiator?'));
@@ -148,7 +150,7 @@ export class LibDataChannelTransport implements Transport {
           this.errors.raise(new Error(`unexpected channel label ${event.channel.label}`));
         }
 
-        this.handleChannel(event.channel);
+        this._handleChannel(event.channel);
       };
     }
 
@@ -162,11 +164,29 @@ export class LibDataChannelTransport implements Transport {
     }
   }
 
-  private handleChannel(dataChannel: RTCDataChannel) {
+  @synchronized
+  private async _close() {
+    if (this._closed) {
+      return;
+    }
+    await this._disconnectStreams();
+
+    try {
+      this._peer?.close();
+    } catch (err: any) {
+      this.errors.raise(err);
+    }
+
+    this._peer = undefined;
+    this._closed = true;
+    this.closed.emit();
+  }
+
+  private _handleChannel(dataChannel: RTCDataChannel) {
     this._channel = dataChannel;
 
     this._channel.onopen = () => {
-      log.debug('dataChannel.onopen');
+      log.debug('channel.onopen');
       const duplex = new Duplex({
         read: () => {},
         write: async (chunk, encoding, callback) => {
@@ -183,7 +203,7 @@ export class LibDataChannelTransport implements Transport {
           }
           if (this._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
             if (this._writeCallback !== null) {
-              log.error("consumer trying to write before we're ready for more data");
+              log.error('consumer trying to write before we are ready for more data');
             }
             this._writeCallback = callback;
           } else {
@@ -198,22 +218,14 @@ export class LibDataChannelTransport implements Transport {
       this.connected.emit();
     };
 
+    this._channel.onclose = async (err) => {
+      log.info('channel.onclose', { err });
+      await this._close();
+    };
+
     this._channel.onerror = async (err) => {
       this.errors.raise(new Error('channel error: ' + err.toString()));
       await this._close();
-    };
-
-    this._channel.onclose = async (err) => {
-      log.info('channel onclose', { err });
-      await this._close();
-    };
-
-    this._channel.onmessage = (event) => {
-      let data = event.data;
-      if (data instanceof ArrayBuffer) {
-        data = Buffer.from(data);
-      }
-      this._stream.push(data);
     };
 
     this._channel.onbufferedamountlow = () => {
@@ -221,23 +233,15 @@ export class LibDataChannelTransport implements Transport {
       this._writeCallback = null;
       cb?.();
     };
-  }
 
-  @synchronized
-  private async _close() {
-    if (this._closed) {
-      return;
-    }
-    await this._disconnectStreams();
+    this._channel.onmessage = (event) => {
+      let data = event.data;
+      if (data instanceof ArrayBuffer) {
+        data = Buffer.from(data);
+      }
 
-    try {
-      this._peer?.close();
-    } catch (err: any) {
-      this.errors.raise(err);
-    }
-
-    this._closed = true;
-    this.closed.emit();
+      this._stream.push(data);
+    };
   }
 
   async signal(signal: Signal) {
@@ -260,7 +264,7 @@ export class LibDataChannelTransport implements Transport {
             await this._options.sendSignal({ payload: { data: { type: answer.type, sdp: answer.sdp } } });
             this._readyForCandidates.wake();
           } catch (err) {
-            log.error("can't handle offer from signalling server", { err });
+            log.error('cannot handle offer from signalling server', { err });
             this.errors.raise(new Error('error handling offer'));
           }
           break;
@@ -271,7 +275,7 @@ export class LibDataChannelTransport implements Transport {
             await this._peer.setRemoteDescription({ type: data.type, sdp: data.sdp });
             this._readyForCandidates.wake();
           } catch (err) {
-            log.error("can't handle answer from signalling server", { err });
+            log.error('cannot handle answer from signalling server', { err });
             this.errors.raise(new Error('error handling answer'));
           }
           break;

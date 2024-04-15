@@ -7,16 +7,21 @@ import { ErrorStream } from '@dxos/debug';
 
 import { type Transport, type TransportFactory, type TransportStats } from './transport';
 
-// NOTE: Browser stub.
-
 export const TcpTransportFactory: TransportFactory = {
   createTransport: () => new TcpTransport(),
 };
 
+/**
+ * NOTE: Browser stub.
+ */
 export class TcpTransport implements Transport {
   public readonly closed = new Event<void>();
   public readonly connected = new Event<void>();
   public readonly errors = new ErrorStream();
+
+  get isOpen() {
+    return true;
+  }
 
   async open() {}
 

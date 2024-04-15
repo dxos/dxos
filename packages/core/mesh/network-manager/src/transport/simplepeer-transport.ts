@@ -41,6 +41,11 @@ export class SimplePeerTransport implements Transport {
 
   private readonly _instanceId = PublicKey.random().toHex();
 
+  get isOpen() {
+    // TODO(burdon): Open state?
+    return this._piped && !this._closed;
+  }
+
   /**
    * @params opts.config formatted as per https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/RTCPeerConnection
    */

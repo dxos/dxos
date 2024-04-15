@@ -49,7 +49,7 @@ export class MemoryTransport implements Transport {
   private readonly _outgoingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
   private readonly _incomingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
 
-  private _destroyed = false;
+  private _closed = false;
 
   @logInfo
   private _remoteInstanceId!: PublicKey;
@@ -65,6 +65,11 @@ export class MemoryTransport implements Transport {
     MemoryTransport._connections.set(this._instanceId, this);
   }
 
+  get isOpen() {
+    // TODO(burdon): Open state?
+    return !this._closed;
+  }
+
   async open() {
     log('opening...');
 
@@ -74,7 +79,7 @@ export class MemoryTransport implements Transport {
       try {
         await this._options.sendSignal({ payload: { transportId: this._instanceId.toHex() } });
       } catch (err) {
-        if (!this._destroyed) {
+        if (!this._closed) {
           this.errors.raise(toError(err));
         }
       }
@@ -83,7 +88,7 @@ export class MemoryTransport implements Transport {
       this._remote
         .wait({ timeout: this._options.timeout ?? 1_000 })
         .then((remoteId) => {
-          if (this._destroyed) {
+          if (this._closed) {
             return;
           }
 
@@ -91,7 +96,7 @@ export class MemoryTransport implements Transport {
           this._remoteConnection = MemoryTransport._connections.get(this._remoteInstanceId);
           if (!this._remoteConnection) {
             // Remote connection was destroyed before we could connect.
-            this._destroyed = true;
+            this._closed = true;
             this.closed.emit();
             return;
           }
@@ -111,7 +116,7 @@ export class MemoryTransport implements Transport {
           this._remoteConnection.connected.emit();
         })
         .catch((err) => {
-          if (this._destroyed) {
+          if (this._closed) {
             return;
           }
 
@@ -122,11 +127,11 @@ export class MemoryTransport implements Transport {
 
   async close() {
     log('closing...');
-    this._destroyed = true;
+    this._closed = true;
 
     MemoryTransport._connections.delete(this._instanceId);
     if (this._remoteConnection) {
-      this._remoteConnection._destroyed = true;
+      this._remoteConnection._closed = true;
       MemoryTransport._connections.delete(this._remoteInstanceId);
 
       // TODO(dmaretskyi): Hypercore streams do not seem to have the unpipe method.

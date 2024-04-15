@@ -22,14 +22,18 @@ export class TcpTransport implements Transport {
   private _server?: Server = undefined;
   private _socket?: Socket = undefined;
 
-  private _destroyed = false;
   private _connected = false;
+  private _closed = false;
 
   public readonly closed = new Event<void>();
   public readonly connected = new Event<void>();
   public readonly errors = new ErrorStream();
 
   constructor(private readonly options: TransportOptions) {}
+
+  get isOpen() {
+    return this._connected && !this._closed;
+  }
 
   async open() {
     log('opening');
@@ -55,7 +59,7 @@ export class TcpTransport implements Transport {
               payload: { port },
             })
             .catch((err) => {
-              if (!this._destroyed) {
+              if (!this._closed) {
                 this.errors.raise(err);
               }
             });
@@ -74,7 +78,7 @@ export class TcpTransport implements Transport {
     log('closing');
     this._socket?.destroy();
     this._server?.close();
-    this._destroyed = true;
+    this._closed = true;
   }
 
   async signal({ payload }: Signal) {

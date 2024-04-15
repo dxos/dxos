@@ -28,6 +28,8 @@ export interface Transport {
   open(): Promise<void>;
   close(): Promise<void>;
 
+  get isOpen(): boolean;
+
   signal(signal: Signal): Promise<void>;
 
   /**
