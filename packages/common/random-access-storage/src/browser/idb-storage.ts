@@ -50,15 +50,19 @@ export class IDbStorage extends AbstractStorage {
 
     // eslint-disable-next-line no-undef
     return new Promise<void>((resolve, reject) => {
+      // Declared here to capture the stack-trace.
+      const errUpgradeNeeded = new Error('Upgrade needed.');
+      const errBlocked = new Error('Blocked.');
+
       const request = indexedDB.deleteDatabase(this.path);
       request.onsuccess = () => {
         resolve();
       };
       request.onupgradeneeded = () => {
-        reject(new Error('Upgrade needed.'));
+        reject(errUpgradeNeeded);
       };
       request.onblocked = () => {
-        reject(new Error('Blocked.'));
+        reject(errBlocked);
       };
       request.onerror = (err: any) => {
         reject(err);
