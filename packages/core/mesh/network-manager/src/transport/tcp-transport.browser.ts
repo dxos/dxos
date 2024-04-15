@@ -7,22 +7,27 @@ import { ErrorStream } from '@dxos/debug';
 
 import { type Transport, type TransportFactory, type TransportStats } from './transport';
 
-// NOTE: Browser stub.
-
 export const TcpTransportFactory: TransportFactory = {
   createTransport: () => new TcpTransport(),
 };
 
+/**
+ * NOTE: Browser stub.
+ */
 export class TcpTransport implements Transport {
   public readonly closed = new Event<void>();
   public readonly connected = new Event<void>();
   public readonly errors = new ErrorStream();
 
-  async destroy() {
-    throw new Error('Method not implemented.');
+  get isOpen() {
+    return true;
   }
 
-  signal() {
+  async open() {}
+
+  async close() {}
+
+  async onSignal() {
     throw new Error('Method not implemented.');
   }
 
