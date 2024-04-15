@@ -23,6 +23,10 @@ export type SimplePeerTransportParams = {
   sendSignal: (signal: Signal) => Promise<void>;
 };
 
+export const createSimplePeerTransportFactory = (webrtcConfig?: any): TransportFactory => ({
+  createTransport: (options) => new SimplePeerTransport({ ...options, webrtcConfig }),
+});
+
 /**
  * Implements Transport for WebRTC. Uses simple-peer under the hood.
  */
@@ -218,7 +222,3 @@ export class SimplePeerTransport implements Transport {
     }
   }
 }
-
-export const createSimplePeerTransportFactory = (webrtcConfig?: any): TransportFactory => ({
-  createTransport: (params) => new SimplePeerTransport({ ...params, webrtcConfig }),
-});

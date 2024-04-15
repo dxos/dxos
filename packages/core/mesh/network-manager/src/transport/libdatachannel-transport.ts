@@ -25,6 +25,10 @@ export type LibDataChannelTransportOptions = {
   sendSignal: (signal: Signal) => Promise<void>;
 };
 
+export const createLibDataChannelTransportFactory = (webrtcConfig?: any): TransportFactory => ({
+  createTransport: (options) => new LibDataChannelTransport({ ...options, webrtcConfig }),
+});
+
 /**
  * Transport
  */
@@ -346,10 +350,6 @@ export class LibDataChannelTransport implements Transport {
     this._options.stream.unpipe?.(this._stream)?.unpipe?.(this._options.stream);
   }
 }
-
-export const createLibDataChannelTransportFactory = (webrtcConfig?: any): TransportFactory => ({
-  createTransport: (params) => new LibDataChannelTransport({ ...params, webrtcConfig }),
-});
 
 // eslint-disable-next-line no-new-func
 const importESM = Function('path', 'return import(path)');

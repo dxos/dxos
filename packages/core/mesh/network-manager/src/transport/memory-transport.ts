@@ -31,7 +31,7 @@ const createStreamDelay = (delay: number): NodeJS.ReadWriteStream => {
 };
 
 export const MemoryTransportFactory: TransportFactory = {
-  createTransport: (params) => new MemoryTransport(params),
+  createTransport: (options) => new MemoryTransport(options),
 };
 
 /**
