@@ -19,7 +19,7 @@ export enum TransportKind {
  * Abstraction over a P2P connection transport.
  * Currently, WebRTC or in-memory.
  */
-// TODO(burdon): Create abstract base class for common logging and error handling.
+// TODO(burdon): Create abstract base class for common logging and error handling?
 export interface Transport {
   closed: Event;
   connected: Event;
