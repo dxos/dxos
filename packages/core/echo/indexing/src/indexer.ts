@@ -62,9 +62,6 @@ export class Indexer {
   private _initialized = false;
   private readonly _newIndexes: Index[] = [];
 
-  private _updatesAfterSave = 0;
-  private _lastSave = Date.now();
-
   public readonly indexed = new Event<void>();
 
   private readonly _run = new DeferredTask(this._ctx, async () => {
@@ -168,10 +165,10 @@ export class Indexer {
     this._initialized = true;
   }
 
-  // TODO(mykola): `Find` should use junctions and conjunctions of ID sets.
+  @synchronized
   async find(filter: Filter): Promise<{ id: string; rank: number }[]> {
     if (!this._initialized || this._indexConfig?.enabled !== true) {
-      return [];
+      throw new Error('Indexer is not initialized or not enabled');
     }
     const arraysOfIds = await Promise.all(Array.from(this._indexes.values()).map((index) => index.find(filter)));
     return arraysOfIds.reduce((acc, ids) => acc.concat(ids), []);
@@ -245,13 +242,6 @@ export class Indexer {
     }
   }
 
-  private async _maybeSaveIndexes() {
-    this._updatesAfterSave++;
-    if (this._updatesAfterSave >= this._saveAfterUpdates || Date.now() - this._lastSave >= this._saveAfterTime) {
-      await this._saveIndexes();
-    }
-  }
-
   @trace.span({ showInBrowserTimeline: true })
   @synchronized
   private async _saveIndexes() {
@@ -261,8 +251,6 @@ export class Indexer {
       }
       await this._indexStore.save(index);
     }
-    this._updatesAfterSave = 0;
-    this._lastSave = Date.now();
   }
 
   async destroy() {

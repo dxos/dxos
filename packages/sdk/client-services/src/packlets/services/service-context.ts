@@ -124,6 +124,7 @@ export class ServiceContext extends Resource {
 
     this.automergeHost = new AutomergeHost({
       directory: storage.createDirectory('automerge'),
+      db: level.sublevel('automerge'),
       metadata: this.indexMetadata,
     });
 
@@ -158,6 +159,7 @@ export class ServiceContext extends Resource {
     await this.signalManager.open();
     await this.networkManager.open();
 
+    await this.automergeHost.open();
     await this.metadataStore.load();
     await this.spaceManager.open();
     await this.identityManager.open(ctx);
