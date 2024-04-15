@@ -19,6 +19,7 @@ import { getFullPath } from './utils';
  * https://github.com/random-access-storage
  * https://github.com/random-access-storage/random-access-storage
  */
+// TODO(dmaretskyi): Remove this class.
 export abstract class AbstractStorage implements Storage {
   protected readonly _files = new Map<string, File>();
 
