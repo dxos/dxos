@@ -15,6 +15,7 @@ import {
 } from '@dxos/echo-schema';
 import { type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
+import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { nonNullable } from '@dxos/util';
 
 import { type SpaceList } from './space-list';
@@ -50,6 +51,10 @@ export class IndexQuerySource implements QuerySource {
   }
 
   update(filter: Filter<EchoObject>): void {
+    if (filter.options?.dataLocation === QueryOptions.DataLocation.LOCAL) {
+      return;
+    }
+
     if (this._stream) {
       void this._stream.close();
       this._stream = undefined;

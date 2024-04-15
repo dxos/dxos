@@ -28,12 +28,8 @@ const RPC_TIMEOUT = 10_000;
 const RESP_MIN_THRESHOLD = 500;
 const TIMEOUT_THRESHOLD = 10;
 
-export type SimplePeerTransportProxyParams = {
-  initiator: boolean;
-  stream: NodeJS.ReadWriteStream;
+export type SimplePeerTransportProxyOptions = TransportOptions & {
   bridgeService: BridgeService;
-  // TODO(burdon): Rename onSignal.
-  sendSignal: (signal: Signal) => Promise<void>;
 };
 
 export class SimplePeerTransportProxy implements Transport {
@@ -48,11 +44,18 @@ export class SimplePeerTransportProxy implements Transport {
   private _closed = false;
   private _serviceStream!: Stream<BridgeEvent>;
 
-  constructor(private readonly _params: SimplePeerTransportProxyParams) {
-    this._serviceStream = this._params.bridgeService.open(
+  constructor(private readonly _options: SimplePeerTransportProxyOptions) {}
+
+  get isOpen() {
+    // TODO(burdon): Open state?
+    return !this._closed;
+  }
+
+  async open() {
+    this._serviceStream = this._options.bridgeService.open(
       {
         proxyId: this._proxyId,
-        initiator: this._params.initiator,
+        initiator: this._options.initiator,
       },
       { timeout: RPC_TIMEOUT },
     );
@@ -73,7 +76,7 @@ export class SimplePeerTransportProxy implements Transport {
         const proxyStream = new Writable({
           write: (chunk, _, callback) => {
             const then = performance.now();
-            this._params.bridgeService
+            this._options.bridgeService
               .sendData(
                 {
                   proxyId: this._proxyId,
@@ -111,16 +114,13 @@ export class SimplePeerTransportProxy implements Transport {
           log('proxystream error', { err });
         });
 
-        this._params.stream.pipe(proxyStream);
+        this._options.stream.pipe(proxyStream);
       },
       (error) => log.catch(error),
     );
   }
 
-  async open() {}
-
-  // TODO(burdon): Move open from constructor.
-  async destroy(): Promise<void> {
+  async close() {
     await this._ctx.dispose();
     if (this._closed) {
       return;
@@ -129,13 +129,25 @@ export class SimplePeerTransportProxy implements Transport {
     await this._serviceStream.close();
 
     try {
-      await this._params.bridgeService.close({ proxyId: this._proxyId }, { timeout: RPC_TIMEOUT });
+      await this._options.bridgeService.close({ proxyId: this._proxyId }, { timeout: RPC_TIMEOUT });
     } catch (err: any) {
       log.catch(err);
     }
 
     this.closed.emit();
     this._closed = true;
+  }
+
+  async onSignal(signal: Signal) {
+    this._options.bridgeService
+      .sendSignal(
+        {
+          proxyId: this._proxyId,
+          signal,
+        },
+        { timeout: RPC_TIMEOUT },
+      )
+      .catch((err) => this.errors.raise(decodeError(err)));
   }
 
   private async _handleConnection(connectionEvent: BridgeEvent.ConnectionEvent): Promise<void> {
@@ -149,7 +161,7 @@ export class SimplePeerTransportProxy implements Transport {
         break;
       }
       case ConnectionState.CLOSED: {
-        await this.destroy();
+        await this.close();
         break;
       }
     }
@@ -157,31 +169,19 @@ export class SimplePeerTransportProxy implements Transport {
 
   private _handleData(dataEvent: BridgeEvent.DataEvent) {
     // NOTE: This must be a Buffer otherwise hypercore-protocol breaks.
-    this._params.stream.write(arrayToBuffer(dataEvent.payload));
+    this._options.stream.write(arrayToBuffer(dataEvent.payload));
   }
 
   private async _handleSignal(signalEvent: BridgeEvent.SignalEvent) {
-    await this._params.sendSignal(signalEvent.payload);
-  }
-
-  signal(signal: Signal): void {
-    this._params.bridgeService
-      .sendSignal(
-        {
-          proxyId: this._proxyId,
-          signal,
-        },
-        { timeout: RPC_TIMEOUT },
-      )
-      .catch((err) => this.errors.raise(decodeError(err)));
+    await this._options.sendSignal(signalEvent.payload);
   }
 
   async getDetails(): Promise<string> {
-    return (await this._params.bridgeService.getDetails({ proxyId: this._proxyId }, { timeout: RPC_TIMEOUT })).details;
+    return (await this._options.bridgeService.getDetails({ proxyId: this._proxyId }, { timeout: RPC_TIMEOUT })).details;
   }
 
   async getStats(): Promise<TransportStats> {
-    return (await this._params.bridgeService.getStats({ proxyId: this._proxyId }, { timeout: RPC_TIMEOUT }))
+    return (await this._options.bridgeService.getStats({ proxyId: this._proxyId }, { timeout: RPC_TIMEOUT }))
       .stats as TransportStats;
   }
 
@@ -216,7 +216,6 @@ export class SimplePeerTransportProxyFactory implements TransportFactory {
 
   createTransport(options: TransportOptions): Transport {
     invariant(this._bridgeService, 'SimplePeerTransportProxyFactory is not ready to open connections');
-
     const transport = new SimplePeerTransportProxy({
       ...options,
       bridgeService: this._bridgeService,
@@ -224,7 +223,6 @@ export class SimplePeerTransportProxyFactory implements TransportFactory {
 
     this._connections.add(transport);
     transport.closed.on(() => this._connections.delete(transport));
-
     return transport;
   }
 }
@@ -232,7 +230,6 @@ export class SimplePeerTransportProxyFactory implements TransportFactory {
 // TODO(nf): fix so Errors crossing RPC boundary preserve class
 const decodeError = (err: Error | string) => {
   const message = typeof err === 'string' ? err : err.message;
-
   if (message.includes('CONNECTION_RESET')) {
     return new ConnectionResetError(message);
   } else if (message.includes('TIMEOUT')) {

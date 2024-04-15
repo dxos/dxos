@@ -29,6 +29,7 @@ import {
   type Space as SpaceData,
   type SpaceMember,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { trace } from '@dxos/tracing';
@@ -311,16 +312,18 @@ export class SpaceProxy implements Space {
     //   This is needed to ensure reactivity for newly created spaces.
     // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
-      const unsubscribe = this._db.query(Filter.schema(Properties)).subscribe((query) => {
-        if (query.objects.length === 1) {
-          this._properties = query.objects[0];
-          propertiesAvailable.wake();
-          this._stateUpdate.emit(this._currentState);
-          scheduleMicroTask(this._ctx, () => {
-            unsubscribe();
-          });
-        }
-      }, true);
+      const unsubscribe = this._db
+        .query(Filter.schema(Properties), { dataLocation: QueryOptions.DataLocation.LOCAL })
+        .subscribe((query) => {
+          if (query.objects.length === 1) {
+            this._properties = query.objects[0];
+            propertiesAvailable.wake();
+            this._stateUpdate.emit(this._currentState);
+            scheduleMicroTask(this._ctx, () => {
+              unsubscribe();
+            });
+          }
+        }, true);
     }
     await warnAfterTimeout(5_000, 'Finding properties for a space', () =>
       cancelWithContext(this._ctx, propertiesAvailable.wait()),

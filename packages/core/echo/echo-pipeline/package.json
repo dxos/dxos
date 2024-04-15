@@ -64,7 +64,10 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
-    "crc-32": "^1.2.2"
+    "abstract-level": "^1.0.2",
+    "crc-32": "^1.2.2",
+    "level": "^8.0.1",
+    "level-transcoder": "^1.0.1"
   },
   "devDependencies": {
     "fast-check": "^3.15.1",

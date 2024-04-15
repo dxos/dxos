@@ -16,15 +16,24 @@ export enum TransportKind {
 }
 
 /**
- * Abstraction over a P2P connection transport. Currently either WebRTC or in-memory.
+ * Abstraction over a P2P connection transport.
+ * Currently, WebRTC or in-memory.
  */
+// TODO(burdon): Create abstract base class for common logging and error handling?
 export interface Transport {
   closed: Event;
   connected: Event;
   errors: ErrorStream;
 
   open(): Promise<void>;
-  destroy(): Promise<void>; // TODO(burdon): Rename close.
+  close(): Promise<void>;
+
+  get isOpen(): boolean;
+
+  /**
+   * Handle message from signaling.
+   */
+  onSignal(signal: Signal): Promise<void>;
 
   /**
    * Transport-specific stats.
@@ -35,10 +44,11 @@ export interface Transport {
    * Transport-specific connection details.
    */
   getDetails(): Promise<string>;
-
-  signal(signal: Signal): void;
 }
 
+/**
+ * Common options for all transports.
+ */
 export type TransportOptions = {
   /**
    * Did local node initiate this connection.
@@ -46,18 +56,18 @@ export type TransportOptions = {
   initiator: boolean;
 
   /**
-   * Wire protocol.
+   * Wire protocol for data stream.
    */
   stream: NodeJS.ReadWriteStream;
 
   /**
-   * Send a signal message to remote peer.
+   * Sends signal message to remote peer.
    */
-  sendSignal: (signal: Signal) => Promise<void>; // TODO(burdon): Remove async?
-
-  timeout?: number;
+  sendSignal: (signal: Signal) => Promise<void>;
 
   sessionId?: PublicKey;
+
+  timeout?: number;
 };
 
 export interface TransportFactory {

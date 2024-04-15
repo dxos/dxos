@@ -12,7 +12,7 @@ import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from './transport';
 
 export const TcpTransportFactory: TransportFactory = {
-  createTransport: (params) => new TcpTransport(params),
+  createTransport: (options) => new TcpTransport(options),
 };
 
 /**
@@ -22,23 +22,28 @@ export class TcpTransport implements Transport {
   private _server?: Server = undefined;
   private _socket?: Socket = undefined;
 
+  private _connected = false;
+  private _closed = false;
+
   public readonly closed = new Event<void>();
   public readonly connected = new Event<void>();
   public readonly errors = new ErrorStream();
 
-  private _destroyed = false;
+  constructor(private readonly options: TransportOptions) {}
 
-  private _connected = false;
+  get isOpen() {
+    return this._connected && !this._closed;
+  }
 
-  constructor(private readonly options: TransportOptions) {
-    log('creating');
+  async open() {
+    log('opening');
 
     // Initiator will send a signal, the receiver will receive the unique ID and connect the streams.
     if (this.options.initiator) {
-      // prettier-ignore
+      // TODO(burdon): Why timeout?
       setTimeout(async () => {
         const { Server } = await import('node:net');
-        this._server = new Server(socket => {
+        this._server = new Server((socket) => {
           log('new connection');
           if (this._connected) {
             socket.destroy();
@@ -49,17 +54,18 @@ export class TcpTransport implements Transport {
         this._server.on('listening', () => {
           const { port } = this._server!.address() as AddressInfo;
           log('listening', { port });
-          void this.options.sendSignal({
-            payload: { port }
-          }).catch(err => {
-            if (!this._destroyed) {
-              this.errors.raise(err);
-            }
-          });
-
+          void this.options
+            .sendSignal({
+              payload: { port },
+            })
+            .catch((err) => {
+              if (!this._closed) {
+                this.errors.raise(err);
+              }
+            });
         });
 
-        this._server.on('error', err => {
+        this._server.on('error', (err) => {
           this.errors.raise(err);
         });
 
@@ -68,17 +74,14 @@ export class TcpTransport implements Transport {
     }
   }
 
-  async open() {}
-
-  async destroy() {
+  async close() {
     log('closing');
     this._socket?.destroy();
     this._server?.close();
-
-    this._destroyed = true;
+    this._closed = true;
   }
 
-  signal({ payload }: Signal) {
+  async onSignal({ payload }: Signal) {
     log('received signal', { payload });
     if (this.options.initiator || this._connected) {
       return;
@@ -94,6 +97,7 @@ export class TcpTransport implements Transport {
       const { port, address } = this._server?.address() as AddressInfo;
       return `LISTEN ${address}:${port}`;
     }
+
     const { port, address } = this._socket?.address() as AddressInfo;
     return `ACCEPT ${address}:${port}`;
   }
@@ -110,18 +114,21 @@ export class TcpTransport implements Transport {
   private _handleSocket(socket: Socket) {
     log('handling socket', { remotePort: socket.remotePort, localPort: socket.localPort });
     this._socket = socket;
-    this.connected.emit();
-    this.options.stream.pipe(this._socket!).pipe(this.options.stream);
 
     this._socket.on('connect', () => {
       log('connected to', { port: this._socket?.remotePort });
       this._connected = true;
     });
+
     this._socket.on('error', (err) => {
       this.errors.raise(err);
     });
+
     this._socket.on('close', () => {
       this.closed.emit();
     });
+
+    this.connected.emit();
+    this.options.stream.pipe(this._socket!).pipe(this.options.stream);
   }
 }

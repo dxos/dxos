@@ -13,15 +13,16 @@ import { log } from '@dxos/log';
 import { ConnectionResetError, ConnectivityError, ProtocolError, UnknownProtocolError, trace } from '@dxos/protocols';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { type Transport, type TransportFactory, type TransportStats } from './transport';
+import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from './transport';
 import { wrtc } from './webrtc';
 
-export type SimplePeerTransportParams = {
-  initiator: boolean;
-  stream: NodeJS.ReadWriteStream;
+export type SimplePeerTransportParams = TransportOptions & {
   webrtcConfig?: any;
-  sendSignal: (signal: Signal) => Promise<void>;
 };
+
+export const createSimplePeerTransportFactory = (webrtcConfig?: any): TransportFactory => ({
+  createTransport: (options) => new SimplePeerTransport({ ...options, webrtcConfig }),
+});
 
 /**
  * Implements Transport for WebRTC. Uses simple-peer under the hood.
@@ -37,34 +38,39 @@ export class SimplePeerTransport implements Transport {
 
   private readonly _instanceId = PublicKey.random().toHex();
 
+  get isOpen() {
+    // TODO(burdon): Open state?
+    return this._piped && !this._closed;
+  }
+
   /**
    * @params opts.config formatted as per https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/RTCPeerConnection
    */
-  constructor(private readonly params: SimplePeerTransportParams) {
+  constructor(private readonly _params: SimplePeerTransportParams) {
     log.trace('dxos.mesh.webrtc-transport.constructor', trace.begin({ id: this._instanceId }));
-    log('created connection', params);
+    log('created connection', _params);
     this._peer = new SimplePeerConstructor({
       channelName: 'dxos.mesh.transport',
-      initiator: this.params.initiator,
+      initiator: this._params.initiator,
       wrtc: SimplePeerConstructor.WEBRTC_SUPPORT ? undefined : wrtc ?? raise(new Error('wrtc not available')),
-      config: this.params.webrtcConfig,
+      config: this._params.webrtcConfig,
     });
 
     this._peer.on('signal', async (data) => {
       log('signal', data);
-      await this.params.sendSignal({ payload: { data } });
+      await this._params.sendSignal({ payload: { data } });
     });
 
     this._peer.on('connect', () => {
       log('connected');
-      this.params.stream.pipe(this._peer!).pipe(this.params.stream);
+      this._params.stream.pipe(this._peer!).pipe(this._params.stream);
       this._piped = true;
       this.connected.emit();
     });
 
     this._peer.on('close', async () => {
       log('closed');
-      await this.destroy();
+      await this.close();
     });
 
     this._peer.on('error', async (err) => {
@@ -114,7 +120,7 @@ export class SimplePeerTransport implements Transport {
         if (typeof (this._peer as any)?._pc?.getStats === 'function') {
           (this._peer as any)._pc.getStats().then((stats: any) => {
             log.info('report after webrtc error', {
-              config: this.params.webrtcConfig,
+              config: this._params.webrtcConfig,
               stats: Object.fromEntries((stats as any).entries()),
             });
           });
@@ -123,24 +129,10 @@ export class SimplePeerTransport implements Transport {
         log.catch(err);
       }
 
-      await this.destroy();
+      await this.close();
     });
 
     log.trace('dxos.mesh.webrtc-transport.constructor', trace.end({ id: this._instanceId }));
-  }
-
-  async open() {}
-
-  async destroy() {
-    log('closing...');
-    if (this._closed) {
-      return;
-    }
-    this._disconnectStreams();
-    this._peer!.destroy();
-    this._closed = true;
-    this.closed.emit();
-    log('closed');
   }
 
   async getStats(): Promise<TransportStats> {
@@ -202,7 +194,21 @@ export class SimplePeerTransport implements Transport {
     return `${rc.ip}:${rc.port}/${rc.protocol} ${rc.candidateType}`;
   }
 
-  signal(signal: Signal) {
+  async open() {}
+
+  async close() {
+    log('closing...');
+    if (this._closed) {
+      return;
+    }
+    this._disconnectStreams();
+    this._peer!.destroy();
+    this._closed = true;
+    this.closed.emit();
+    log('closed');
+  }
+
+  async onSignal(signal: Signal) {
     if (this._closed) {
       return; // Ignore signals after close.
     }
@@ -214,15 +220,7 @@ export class SimplePeerTransport implements Transport {
   private _disconnectStreams() {
     // TODO(rzadp): Find a way of unpiping this?
     if (this._piped) {
-      this.params.stream.unpipe?.(this._peer)?.unpipe?.(this.params.stream);
+      this._params.stream.unpipe?.(this._peer)?.unpipe?.(this._params.stream);
     }
   }
 }
-
-export const createSimplePeerTransportFactory = (webrtcConfig?: any): TransportFactory => ({
-  createTransport: (params) =>
-    new SimplePeerTransport({
-      ...params,
-      webrtcConfig,
-    }),
-});
