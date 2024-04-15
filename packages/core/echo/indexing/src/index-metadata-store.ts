@@ -3,11 +3,11 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
-import { type MetadataMethods } from '@dxos/echo-pipeline';
+import { type MySublevel, type MetadataMethods } from '@dxos/echo-pipeline';
 import { trace } from '@dxos/tracing';
 import { defaultMap } from '@dxos/util';
 
-import { type MySublevel, type ConcatenatedHeadHashes } from './types';
+import { type ConcatenatedHeadHashes } from './types';
 
 export type IndexMetadataStoreParams = {
   db: MySublevel;

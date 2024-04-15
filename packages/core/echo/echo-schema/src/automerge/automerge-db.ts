@@ -212,6 +212,7 @@ export class AutomergeDb {
     if (obj) {
       return Promise.resolve(obj);
     }
+    this._automergeDocLoader.loadObjectDocument(objectId);
 
     return asyncTimeout(
       this._updateEvent

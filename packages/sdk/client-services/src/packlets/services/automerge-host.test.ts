@@ -6,8 +6,8 @@ import { expect } from 'chai';
 
 import { asyncTimeout, sleep } from '@dxos/async';
 import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
+import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { AutomergeContext } from '@dxos/echo-schema';
-import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
 
 describe('AutomergeHost', () => {
@@ -19,10 +19,16 @@ describe('AutomergeHost', () => {
     // creates repo and document | replicates repo | finds document in repo
     //
 
-    const storageDirectory = createStorage({ type: StorageType.RAM }).createDirectory();
+    const level = createTestLevel();
+    await level.open();
+    afterTest(() => level.close());
 
-    const host = new AutomergeHost({ directory: storageDirectory });
+    const host = new AutomergeHost({
+      db: level.sublevel('automerge'),
+    });
+    await host.open();
     afterTest(() => host.close());
+
     const dataService = new DataServiceImpl(host);
     const client = new AutomergeContext(dataService);
     afterTest(() => client.close());

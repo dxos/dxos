@@ -8,8 +8,7 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/core/echo/indexing/src/index.ts",
-          "packages/core/echo/indexing/src/testing/index.ts"
+          "packages/core/echo/indexing/src/index.ts"
         ]
       }
     },

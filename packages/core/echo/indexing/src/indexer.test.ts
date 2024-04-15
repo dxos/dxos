@@ -5,6 +5,7 @@
 import { expect } from 'chai';
 
 import { asyncTimeout } from '@dxos/async';
+import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { type Filter } from '@dxos/echo-schema';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
@@ -13,13 +14,13 @@ import { afterTest, describe, test } from '@dxos/test';
 import { IndexMetadataStore } from './index-metadata-store';
 import { IndexStore } from './index-store';
 import { Indexer, type ObjectSnapshot } from './indexer';
-import { createTestLevel } from './testing';
 
 describe('Indexer', () => {
   test('objects that are marked as dirty are getting indexed', async () => {
     const storage = createStorage({ type: StorageType.RAM });
     afterTest(() => storage.close());
-    const level = await createTestLevel();
+    const level = createTestLevel();
+    await level.open();
     afterTest(() => level.close());
 
     const documents: ObjectSnapshot[] = [];
@@ -65,7 +66,8 @@ describe('Indexer', () => {
   test('objects are indexed for first time', async () => {
     const storage = createStorage({ type: StorageType.RAM });
     afterTest(() => storage.close());
-    const level = await createTestLevel();
+    const level = createTestLevel();
+    await level.open();
     afterTest(() => level.close());
 
     const documents: ObjectSnapshot[] = [];
@@ -88,6 +90,7 @@ describe('Indexer', () => {
         }
       },
     });
+    afterTest(() => indexer.destroy());
 
     const doneIndexing = indexer.indexed.waitForCount(1);
 
