@@ -9551,6 +9551,9 @@ importers:
         specifier: ^7.1.2
         version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../apps/types
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -9560,6 +9563,12 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../react-ui-editor
+      '@dxos/react-ui-table':
+        specifier: workspace:*
+        version: link:../react-ui-table
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../storybook-utils
