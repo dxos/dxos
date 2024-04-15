@@ -11,7 +11,7 @@ import { afterTest, describe, test } from '@dxos/test';
 import { LibDataChannelTransport } from './libdatachannel-transport';
 import { SimplePeerTransport } from './simplepeer-transport';
 
-describe('LibDataChannelTransport', () => {
+describe.only('LibDataChannelTransport', () => {
   test('open and close', async () => {
     const connection = new LibDataChannelTransport({
       initiator: true,
@@ -38,6 +38,7 @@ describe('LibDataChannelTransport', () => {
         await connection2.signal(signal);
       },
     });
+    await connection1.open();
     afterTest(() => connection1.close());
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
@@ -50,11 +51,9 @@ describe('LibDataChannelTransport', () => {
         await connection1.signal(signal);
       },
     });
+    await connection2.open();
     afterTest(() => connection2.close());
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
-
-    await connection1.open();
-    await connection2.open();
 
     await TestStream.assertConnectivity(stream1, stream2, { timeout: 2_000 });
   })
@@ -74,6 +73,7 @@ describe('LibDataChannelTransport', () => {
         await connection2.signal(signal);
       },
     });
+    await connection1.open();
     afterTest(() => connection1.close());
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
@@ -88,11 +88,9 @@ describe('LibDataChannelTransport', () => {
         await connection1.signal(signal);
       },
     });
+    await connection2.open();
     afterTest(() => connection2.close());
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
-
-    await connection1.open();
-    await connection2.open();
 
     await TestStream.assertConnectivity(stream1, stream2, { timeout: 2_000 });
   })

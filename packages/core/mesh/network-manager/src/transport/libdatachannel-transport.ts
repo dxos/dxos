@@ -6,6 +6,7 @@ import { Duplex } from 'stream';
 
 import { Event, Trigger, synchronized } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
@@ -14,7 +15,7 @@ import { type Transport, type TransportFactory, type TransportStats } from './tr
 const DATACHANNEL_LABEL = 'dxos.mesh.transport';
 const MAX_BUFFERED_AMOUNT = 64 * 1024;
 
-// https://viblast.com/blog/2015/2/5/webrtc-data-channel-message-size/
+// https://viblast.com/blog/2015/2/5/webrtc-data-channel-message-size
 const MAX_MESSAGE_SIZE = 64 * 1024;
 
 export type LibDataChannelTransportOptions = {
@@ -27,10 +28,11 @@ export type LibDataChannelTransportOptions = {
 /**
  * Transport
  */
+// TODO(burdon): Purpose.
 export class LibDataChannelTransport implements Transport {
   private static _instanceCount = 0;
 
-  private _peer: Promise<RTCPeerConnection>;
+  private _peer?: RTCPeerConnection;
   private _channel!: RTCDataChannel;
   private _stream!: Duplex;
 
@@ -47,100 +49,103 @@ export class LibDataChannelTransport implements Transport {
   constructor(private readonly _options: LibDataChannelTransportOptions) {}
 
   async open() {
-    this._peer = (async () => {
-      /* eslint-disable @typescript-eslint/consistent-type-imports */
-      const { RTCPeerConnection } = (await importESM('node-datachannel/polyfill'))
-        .default as typeof import('node-datachannel/polyfill');
+    invariant(!this._peer, 'already open');
 
-      /* eslint-enable @typescript-eslint/consistent-type-imports */
-      if (this._closed) {
-        this.errors.raise(new Error('connection already closed'));
-      }
+    // TODO(burdon): Move to factory?
+    /* eslint-disable @typescript-eslint/consistent-type-imports */
+    const { RTCPeerConnection } = (await importESM('node-datachannel/polyfill'))
+      .default as typeof import('node-datachannel/polyfill');
 
-      // workaround https://github.com/murat-dogan/node-datachannel/pull/207
-      if (this._options.webrtcConfig) {
-        this._options.webrtcConfig.iceServers = this._options.webrtcConfig.iceServers ?? [];
-      } else {
-        this._options.webrtcConfig = { iceServers: [] };
-      }
+    /* eslint-enable @typescript-eslint/consistent-type-imports */
+    if (this._closed) {
+      this.errors.raise(new Error('connection already closed'));
+    }
 
-      const peer = new RTCPeerConnection(this._options.webrtcConfig);
+    // workaround https://github.com/murat-dogan/node-datachannel/pull/207
+    if (this._options.webrtcConfig) {
+      this._options.webrtcConfig.iceServers = this._options.webrtcConfig.iceServers ?? [];
+    } else {
+      this._options.webrtcConfig = { iceServers: [] };
+    }
 
-      peer.onicecandidateerror = (event) => {
-        log.error('peer.onicecandidateerror', { event });
-      };
+    this._peer = new RTCPeerConnection(this._options.webrtcConfig);
 
-      peer.onconnectionstatechange = (event) => {
-        log.debug('peer.onconnectionstatechange', {
-          event,
-          peerConnectionState: peer.connectionState,
-          transportConnectionState: this._connected,
-        });
-        // TODO(nf): throw error if datachannel does not connect after some time?
-      };
+    this._peer.onicecandidateerror = (event) => {
+      log.error('peer.onicecandidateerror', { event });
+    };
 
-      peer.onicecandidate = async (event) => {
-        log.debug('peer.onicecandidate', { event });
-        if (event.candidate) {
-          try {
-            await this._options.sendSignal({
-              payload: {
-                data: {
-                  type: 'candidate',
-                  candidate: {
-                    candidate: event.candidate.candidate,
-                    // these fields never seem to be not null, but connecting to Chrome doesn't work if they are
-                    sdpMLineIndex: event.candidate.sdpMLineIndex ?? 0,
-                    sdpMid: event.candidate.sdpMid ?? 0,
-                  },
+    this._peer.onconnectionstatechange = (event) => {
+      log.debug('peer.onconnectionstatechange', {
+        event,
+        peerConnectionState: this._peer?.connectionState,
+        transportConnectionState: this._connected,
+      });
+      // TODO(nf): throw error if datachannel does not connect after some time?
+      // TODO(burdon): Restart ICE.
+    };
+
+    this._peer.onicecandidate = async (event) => {
+      log.debug('peer.onicecandidate', { event });
+      if (event.candidate) {
+        try {
+          await this._options.sendSignal({
+            payload: {
+              data: {
+                type: 'candidate',
+                candidate: {
+                  candidate: event.candidate.candidate,
+                  // These fields never seem to be not null, but connecting to Chrome doesn't work if they are.
+                  sdpMLineIndex: event.candidate.sdpMLineIndex ?? 0,
+                  sdpMid: event.candidate.sdpMid ?? 0,
                 },
               },
-            });
-          } catch (err) {
-            log.info('signaling error', { err });
-          }
-        }
-      };
-
-      if (this._options.initiator) {
-        peer
-          .createOffer()
-          .then(async (offer) => {
-            if (this._closed) {
-              return;
-            }
-            if (peer.connectionState !== 'connecting') {
-              log.error('peer not connecting', { peer });
-              this.errors.raise(new Error('invalid state: peer is initiator, but other peer not in state connecting'));
-            }
-
-            log.debug('creating offer', { peer, offer });
-            await peer.setLocalDescription(offer);
-            await this._options.sendSignal({ payload: { data: { type: offer.type, sdp: offer.sdp } } });
-            return offer;
-          })
-          .catch((err) => {
-            this.errors.raise(err);
+            },
           });
-
-        this.handleChannel(peer.createDataChannel(DATACHANNEL_LABEL));
-        log.debug('created data channel');
-        peer.ondatachannel = (event) => {
-          this.errors.raise(new Error('got ondatachannel when i am the initiator?'));
-        };
-      } else {
-        peer.ondatachannel = (event) => {
-          log.debug('peer.ondatachannel (non-initiator)', { event });
-          // TODO(nf): should the label contain some identifier?
-          if (event.channel.label !== DATACHANNEL_LABEL) {
-            this.errors.raise(new Error(`unexpected channel label ${event.channel.label}`));
-          }
-          this.handleChannel(event.channel);
-        };
+        } catch (err) {
+          log.info('signaling error', { err });
+        }
       }
+    };
 
-      return peer;
-    })();
+    if (this._options.initiator) {
+      invariant(this._peer, 'not open');
+      // TODO(burdon): Deprecated. https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation
+      this._peer
+        .createOffer()
+        .then(async (offer) => {
+          if (this._closed) {
+            return;
+          }
+
+          if (this._peer?.connectionState !== 'connecting') {
+            log.error('peer not connecting', { peer: this._peer });
+            this.errors.raise(new Error('invalid state: peer is initiator, but other peer not in state connecting'));
+          }
+
+          log.debug('creating offer', { peer: this._peer, offer });
+          await this._peer!.setLocalDescription(offer);
+          await this._options.sendSignal({ payload: { data: { type: offer.type, sdp: offer.sdp } } });
+        })
+        .catch((err) => {
+          this.errors.raise(toError(err));
+        });
+
+      this.handleChannel(this._peer.createDataChannel(DATACHANNEL_LABEL));
+      log.debug('created data channel');
+      this._peer.ondatachannel = (event) => {
+        this.errors.raise(new Error('got ondatachannel when i am the initiator?'));
+      };
+    } else {
+      this._peer.ondatachannel = (event) => {
+        log.debug('peer.ondatachannel (non-initiator)', { event });
+        // TODO(nf): should the label contain some identifier?
+        if (event.channel.label !== DATACHANNEL_LABEL) {
+          this.errors.raise(new Error(`unexpected channel label ${event.channel.label}`));
+        }
+
+        this.handleChannel(event.channel);
+      };
+    }
 
     LibDataChannelTransport._instanceCount++;
   }
@@ -154,16 +159,17 @@ export class LibDataChannelTransport implements Transport {
 
   private handleChannel(dataChannel: RTCDataChannel) {
     this._channel = dataChannel;
+
     this._channel.onopen = () => {
       log.debug('dataChannel.onopen');
       const duplex = new Duplex({
         read: () => {},
         write: async (chunk, encoding, callback) => {
-          // todo wait to open
-
+          // TODO(nf): Wait to open.
           if (chunk.length > MAX_MESSAGE_SIZE) {
             this.errors.raise(new Error(`message too large: ${chunk.length} > ${MAX_MESSAGE_SIZE}`));
           }
+
           try {
             dataChannel.send(chunk);
           } catch (err: any) {
@@ -191,10 +197,12 @@ export class LibDataChannelTransport implements Transport {
       this.errors.raise(new Error('channel error: ' + err.toString()));
       await this._close();
     };
+
     this._channel.onclose = async (err) => {
       log.info('channel onclose', { err });
       await this._close();
     };
+
     this._channel.onmessage = (event) => {
       let data = event.data;
       if (data instanceof ArrayBuffer) {
@@ -216,63 +224,65 @@ export class LibDataChannelTransport implements Transport {
       return;
     }
     await this._disconnectStreams();
-    const peer = await this._peer;
+
     try {
-      peer.close();
+      this._peer?.close();
     } catch (err: any) {
       this.errors.raise(err);
     }
+
     this._closed = true;
     this.closed.emit();
   }
 
   async signal(signal: Signal) {
-    this._peer
-      .then(async (peer) => {
-        const data = signal.payload.data;
-        switch (data.type) {
-          case 'offer': {
-            if ((await this._peer).connectionState !== 'new') {
-              log.error('received offer but peer not in state new', { peer });
-              this.errors.raise(new Error('invalid signalling state: received offer when peer is not in state new'));
-              break;
-            }
-            try {
-              await peer.setRemoteDescription({ type: data.type, sdp: data.sdp });
-              const answer = await peer.createAnswer();
-              await peer.setLocalDescription(answer);
-              await this._options.sendSignal({ payload: { data: { type: answer.type, sdp: answer.sdp } } });
-              this._readyForCandidates.wake();
-            } catch (err) {
-              log.error("can't handle offer from signalling server", { err });
-              this.errors.raise(new Error('error handling offer'));
-            }
+    invariant(this._peer, 'not open');
+
+    try {
+      const data = signal.payload.data;
+      switch (data.type) {
+        case 'offer': {
+          if (this._peer.connectionState !== 'new') {
+            log.error('received offer but peer not in state new', { peer: this._peer });
+            this.errors.raise(new Error('invalid signalling state: received offer when peer is not in state new'));
             break;
           }
 
-          case 'answer':
-            try {
-              await peer.setRemoteDescription({ type: data.type, sdp: data.sdp });
-              this._readyForCandidates.wake();
-            } catch (err) {
-              log.error("can't handle answer from signalling server", { err });
-              this.errors.raise(new Error('error handling answer'));
-            }
-            break;
-
-          case 'candidate':
-            await this._readyForCandidates.wait();
-            await peer.addIceCandidate({ candidate: data.candidate.candidate });
-            break;
-
-          default:
-            log.error('unhandled signal type', { type: data.type, signal });
-            this.errors.raise(new Error(`unhandled signal type ${data.type}`));
+          try {
+            await this._peer.setRemoteDescription({ type: data.type, sdp: data.sdp });
+            const answer = await this._peer.createAnswer();
+            await this._peer.setLocalDescription(answer);
+            await this._options.sendSignal({ payload: { data: { type: answer.type, sdp: answer.sdp } } });
+            this._readyForCandidates.wake();
+          } catch (err) {
+            log.error("can't handle offer from signalling server", { err });
+            this.errors.raise(new Error('error handling offer'));
+          }
+          break;
         }
-      })
-      .catch((err) => {
-        log.catch(err);
-      });
+
+        case 'answer':
+          try {
+            await this._peer.setRemoteDescription({ type: data.type, sdp: data.sdp });
+            this._readyForCandidates.wake();
+          } catch (err) {
+            log.error("can't handle answer from signalling server", { err });
+            this.errors.raise(new Error('error handling answer'));
+          }
+          break;
+
+        case 'candidate':
+          await this._readyForCandidates.wait();
+          await this._peer.addIceCandidate({ candidate: data.candidate.candidate });
+          break;
+
+        default:
+          log.error('unhandled signal type', { type: data.type, signal });
+          this.errors.raise(new Error(`unhandled signal type ${data.type}`));
+      }
+    } catch (err) {
+      log.catch(err);
+    }
   }
 
   async getDetails(): Promise<string> {
@@ -285,29 +295,8 @@ export class LibDataChannelTransport implements Transport {
     if (rc.candidateType === 'relay') {
       return `${rc.ip}:${rc.port} relay for ${rc.relatedAddress}:${rc.relatedPort}`;
     }
+
     return `${rc.ip}:${rc.port} ${rc.candidateType}`;
-  }
-
-  async _getStats(): Promise<any> {
-    return this._peer.then(async (peer) => {
-      const stats = await peer.getStats();
-      const statsEntries = Array.from((stats as any).entries() as any[]);
-      const transport = statsEntries.filter((s) => s[1].type === 'transport')[0][1];
-      const candidatePair = statsEntries.filter((s: any) => s[0] === transport.selectedCandidatePairId);
-      let selectedCandidatePair: any;
-      let remoteCandidate: any;
-      if (candidatePair.length > 0) {
-        selectedCandidatePair = candidatePair[0][1];
-        remoteCandidate = statsEntries.filter((s: any) => s[0] === selectedCandidatePair.remoteCandidateId)[0][1];
-      }
-
-      return {
-        transport,
-        selectedCandidatePair,
-        remoteCandidate,
-        raw: Object.fromEntries(stats as any),
-      };
-    });
   }
 
   async getStats(): Promise<TransportStats> {
@@ -331,6 +320,27 @@ export class LibDataChannelTransport implements Transport {
     };
   }
 
+  async _getStats(): Promise<any> {
+    invariant(this._peer, 'not open');
+    const stats = await this._peer.getStats();
+    const statsEntries = Array.from((stats as any).entries() as any[]);
+    const transport = statsEntries.filter((s) => s[1].type === 'transport')[0][1];
+    const candidatePair = statsEntries.filter((s: any) => s[0] === transport.selectedCandidatePairId);
+    let selectedCandidatePair: any;
+    let remoteCandidate: any;
+    if (candidatePair.length > 0) {
+      selectedCandidatePair = candidatePair[0][1];
+      remoteCandidate = statsEntries.filter((s: any) => s[0] === selectedCandidatePair.remoteCandidateId)[0][1];
+    }
+
+    return {
+      transport,
+      selectedCandidatePair,
+      remoteCandidate,
+      raw: Object.fromEntries(stats as any),
+    };
+  }
+
   private async _disconnectStreams() {
     this._options.stream.unpipe?.(this._stream)?.unpipe?.(this._options.stream);
   }
@@ -342,3 +352,6 @@ export const createLibDataChannelTransportFactory = (webrtcConfig?: any): Transp
 
 // eslint-disable-next-line no-new-func
 const importESM = Function('path', 'return import(path)');
+
+// TODO(burdon): Factor out.
+const toError = (err: any) => (err instanceof Error ? err : new Error(String(err)));
