@@ -109,7 +109,8 @@ export class LibDataChannelTransport implements Transport {
 
     if (this._options.initiator) {
       invariant(this._peer, 'not open');
-      // TODO(burdon): Deprecated. https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation
+      // TODO(burdon): Deprecated negotiation pattern?
+      //  https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation
       this._peer
         .createOffer()
         .then(async (offer) => {
@@ -127,7 +128,7 @@ export class LibDataChannelTransport implements Transport {
           await this._options.sendSignal({ payload: { data: { type: offer.type, sdp: offer.sdp } } });
         })
         .catch((err) => {
-          this.errors.raise(toError(err));
+          this.errors.raise(err);
         });
 
       this.handleChannel(this._peer.createDataChannel(DATACHANNEL_LABEL));
@@ -352,6 +353,3 @@ export const createLibDataChannelTransportFactory = (webrtcConfig?: any): Transp
 
 // eslint-disable-next-line no-new-func
 const importESM = Function('path', 'return import(path)');
-
-// TODO(burdon): Factor out.
-const toError = (err: any) => (err instanceof Error ? err : new Error(String(err)));

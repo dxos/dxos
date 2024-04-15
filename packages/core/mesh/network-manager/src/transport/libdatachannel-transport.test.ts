@@ -11,7 +11,7 @@ import { afterTest, describe, test } from '@dxos/test';
 import { LibDataChannelTransport } from './libdatachannel-transport';
 import { SimplePeerTransport } from './simplepeer-transport';
 
-describe.only('LibDataChannelTransport', () => {
+describe('LibDataChannelTransport', () => {
   test('open and close', async () => {
     const connection = new LibDataChannelTransport({
       initiator: true,
