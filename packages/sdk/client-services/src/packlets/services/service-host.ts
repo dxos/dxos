@@ -8,7 +8,13 @@ import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, defaultKey, type ClientServices, Properties } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { DataServiceImpl, type ObjectStructure, encodeReference, type SpaceDoc } from '@dxos/echo-pipeline';
+import {
+  DataServiceImpl,
+  type ObjectStructure,
+  encodeReference,
+  type SpaceDoc,
+  type MyLevel,
+} from '@dxos/echo-pipeline';
 import * as E from '@dxos/echo-schema';
 import { IndexServiceImpl } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
@@ -50,6 +56,7 @@ export type ClientServicesHostParams = {
   signalManager?: SignalManager;
   connectionLog?: boolean;
   storage?: Storage;
+  level?: MyLevel;
   lockKey?: string;
   callbacks?: ClientServicesHostCallbacks;
   runtimeParams?: ServiceContextRuntimeParams;
@@ -101,12 +108,14 @@ export class ClientServicesHost {
     transportFactory,
     signalManager,
     storage,
+    level,
     // TODO(wittjosiah): Turn this on by default.
     lockKey,
     callbacks,
     runtimeParams,
   }: ClientServicesHostParams = {}) {
     this._storage = storage;
+    this._level = level;
     this._callbacks = callbacks;
     this._runtimeParams = runtimeParams;
 
@@ -239,6 +248,8 @@ export class ClientServicesHost {
     if (!this._level) {
       this._level = await createLevel(this._config.get('runtime.client.storage', {})!);
     }
+    await this._level.open();
+
     await this._resourceLock?.acquire();
 
     await this._loggingService.open();
