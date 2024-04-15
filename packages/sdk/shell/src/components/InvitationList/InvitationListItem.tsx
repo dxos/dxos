@@ -96,14 +96,14 @@ export const InvitationListItemImpl = ({
   ...props
 }: InvitationListItemImplProps) => {
   const { t } = useTranslation('os');
-  const { cancel, status: invitationStatus, invitationCode, authCode, type } = propsInvitationStatus;
+  const { cancel, status: invitationStatus, invitationCode, authCode, type, multiUse } = propsInvitationStatus;
 
   const isCancellable = !(
     [Invitation.State.ERROR, Invitation.State.TIMEOUT, Invitation.State.CANCELLED].indexOf(invitationStatus) >= 0
   );
 
   const showShare =
-    type === Invitation.Type.MULTIUSE ||
+    multiUse ||
     [Invitation.State.INIT, Invitation.State.CONNECTING, Invitation.State.CONNECTED].indexOf(invitationStatus) >= 0;
 
   const showAuthCode = invitationStatus === Invitation.State.READY_FOR_AUTHENTICATION;
@@ -147,9 +147,9 @@ export const InvitationListItemImpl = ({
       classNames={['flex gap-2 pis-3 pie-1 items-center relative', props.classNames]}
     >
       <ListItem.Heading classNames='sr-only'>
-        {t(type === Invitation.Type.MULTIUSE ? 'invite many list item label' : 'invite one list item label')}
+        {t(multiUse ? 'invite many list item label' : 'invite one list item label')}
       </ListItem.Heading>
-      {type === Invitation.Type.MULTIUSE && (
+      {multiUse && (
         <AvatarStackEffect status={avatarStatus} animation={avatarAnimation} reverseEffects={reverseEffects} />
       )}
       <Tooltip.Root>
@@ -162,7 +162,7 @@ export const InvitationListItemImpl = ({
         </Avatar.Root>
         <Tooltip.Portal>
           <Tooltip.Content side='left' classNames='z-[70]'>
-            {t(type === Invitation.Type.MULTIUSE ? 'invite many qr label' : 'invite one qr label')}
+            {t(multiUse ? 'invite many qr label' : 'invite one qr label')}
             <Tooltip.Arrow />
           </Tooltip.Content>
         </Tooltip.Portal>

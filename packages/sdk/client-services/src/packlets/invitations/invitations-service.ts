@@ -91,7 +91,7 @@ export class InvitationsServiceImpl implements InvitationsService {
           }
 
           this._createInvitations.delete(invitation.get().invitationId);
-          if (invitation.get().type !== Invitation.Type.MULTIUSE) {
+          if (!invitation.get().multiUse) {
             this._removedCreated.emit(invitation.get());
           }
         },
@@ -148,7 +148,7 @@ export class InvitationsServiceImpl implements InvitationsService {
         () => {
           close();
           this._acceptInvitations.delete(invitation.get().invitationId);
-          if (invitation.get().type !== Invitation.Type.MULTIUSE) {
+          if (!invitation.get().multiUse) {
             this._removedAccepted.emit(invitation.get());
           }
         },

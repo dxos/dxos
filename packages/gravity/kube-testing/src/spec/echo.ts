@@ -276,14 +276,16 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         this.space.share({
           swarmKey: PublicKey.from(env.params.config.invitationTopic),
           authMethod: Invitation.AuthMethod.NONE,
-          type: Invitation.Type.MULTIUSE,
+          type: Invitation.Type.INTERACTIVE,
+          multiUse: true,
         });
       } else {
         const invitation = this.client.spaces.join({
           swarmKey: PublicKey.from(env.params.config.invitationTopic),
           authMethod: Invitation.AuthMethod.NONE,
-          type: Invitation.Type.MULTIUSE,
+          type: Invitation.Type.INTERACTIVE,
           kind: Invitation.Kind.SPACE,
+          multiUse: true,
         } as any); // TODO(dmaretskyi): Fix types.
         this.space = await new Promise<Space>((resolve) => {
           invitation.subscribe((event) => {

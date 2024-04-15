@@ -76,7 +76,8 @@ export class InvitationsHandler {
       swarmKey = PublicKey.random(),
       persistent = true,
       created = new Date(),
-      lifetime = 86400, // 1 day
+      lifetime = 86400, // 1 day,
+      multiUse = false,
     } = options ?? {};
     const authCode =
       options?.authCode ??
@@ -91,9 +92,10 @@ export class InvitationsHandler {
       swarmKey,
       authCode,
       timeout,
-      persistent,
+      persistent: persistent && type !== Invitation.Type.OFFLINE, // offline invitations are persisted in control feed
       created,
       lifetime,
+      multiUse,
       ...protocol.getInvitationContext(),
     };
 
@@ -162,7 +164,7 @@ export class InvitationsHandler {
               }
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.error({ id: traceId, error: err }));
             } finally {
-              if (type !== Invitation.Type.MULTIUSE) {
+              if (!multiUse) {
                 // Wait for graceful close before disposing.
                 await swarmConnection.close();
                 await ctx.dispose();

@@ -405,10 +405,8 @@ message Invitation {
   enum Type {
     /// Requires both to be online to complete key exchange.
     INTERACTIVE = 0;
-    /// Guest's identity key is known; invitation can be accepted by any valid peer.
+    /// Invitation can be accepted by any valid peer.
     OFFLINE = 1;
-    /// Multiple-use interactive invitation.
-    MULTIUSE = 2;
   }
 
   enum Kind {
@@ -422,6 +420,9 @@ message Invitation {
 
     /// Guest should call `Authenticate` with the shared secret.
     SHARED_SECRET = 1;
+
+    /// Guest should prove they possess a private key corresponding to the known public key recorded in an invitation.
+    KNOWN_PUBLIC_KEY = 2;
   }
 
   enum State {
@@ -480,6 +481,9 @@ message Invitation {
   // TODO(nf): some feedback mechanism or GC for immortal invitations?
   // TODO(nf): should the creator have a way to make an invitation last as long as the client? this was the previous behavior.
   optional int32 lifetime = 14;
+
+  /// Whether an invitation can be used multiple times.
+  optional bool multi_use = 15;
 }
 
 message AcceptInvitationRequest {
