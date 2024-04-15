@@ -2,10 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { FirefoxStorage } from './firefox-storage';
+import { MemoryStorage, StorageType, type Storage, type StorageConstructor } from '../common';
 import { IDbStorage } from './idb-storage';
 import { WebFS } from './web-fs';
-import { MemoryStorage, type Storage, type StorageConstructor, StorageType } from '../common';
 
 export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Storage => {
   if (type === undefined) {
@@ -33,7 +32,7 @@ export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Sto
     }
 
     case StorageType.FIREFOX: {
-      return new FirefoxStorage(root);
+      throw new Error('Firefox storage is no longer supported.');
     }
 
     case StorageType.WEBFS: {
