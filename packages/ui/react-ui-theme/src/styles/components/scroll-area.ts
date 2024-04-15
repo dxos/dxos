@@ -17,15 +17,16 @@ export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (_pro
 export const scrollAreaScrollbar: ComponentFunction<ScrollAreaStyleProps> = (_props, ...etc) =>
   mx(
     'flex select-none touch-none p-0.5 ease-out',
-    'data-[orientation=vertical]:is-1.5 data-[orientation=vertical]:data-[variant=coarse]:is-3',
-    'data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:bs-1.5 data-[orientation=horizontal]:data-[variant=coarse]:bs-3',
-    'data-[variant=coarse]:surface-separator rounded-full',
+    'data-[orientation=vertical]:is-1.5 sm:data-[orientation=vertical]:data-[variant=coarse]:is-3',
+    'data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:bs-1.5 sm:data-[orientation=horizontal]:data-[variant=coarse]:bs-3',
+    'sm:data-[variant=coarse]:surface-separator rounded-full',
+    '[&>div]:surface-unAccent sm:[&[data-variant=coarse]>div]:surface-attention',
     ...etc,
   );
 
 export const scrollAreaThumb: ComponentFunction<ScrollAreaStyleProps> = (_props, ...etc) =>
   mx(
-    'surface-attention flex-1 rounded-full relative',
+    'flex-1 rounded-full relative',
     "before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:w-full before:h-full before:min-w-[6px] before:min-h-[6px]",
     ...etc,
   );

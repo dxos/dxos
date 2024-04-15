@@ -64,6 +64,7 @@ export const Tables = {
   args: {
     items: [...Array(12)].map(() => ({
       id: faker.string.uuid(),
+      size: 'extrinsic',
       object: {
         id: faker.string.uuid(),
         columns: makeColumns(),
@@ -78,15 +79,25 @@ export const Tables = {
 
 export const EditorsAndTables = {
   args: {
-    items: [...Array(12)].map(() => ({
-      id: faker.string.uuid(),
-      object: {
-        id: faker.string.uuid(),
-        ...(faker.number.float(1) < 0.5
-          ? { content: faker.lorem.paragraphs(4) }
-          : { columns: makeColumns(), data: createItems(faker.number.int({ min: 4, max: 12 })) }),
-      },
-    })),
+    items: [...Array(12)].map(() =>
+      faker.number.float(1) < 0.5
+        ? {
+            id: faker.string.uuid(),
+            object: {
+              id: faker.string.uuid(),
+              content: faker.lorem.paragraphs(4),
+            },
+          }
+        : {
+            id: faker.string.uuid(),
+            size: 'extrinsic',
+            object: {
+              id: faker.string.uuid(),
+              columns: makeColumns(),
+              data: createItems(faker.number.int({ min: 4, max: 12 })),
+            },
+          },
+    ),
   },
   parameters: {
     layout: 'fullscreen',
