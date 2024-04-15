@@ -31,7 +31,6 @@ const Stable = {
 // -- Hooks
 // TODO(Zan): Move them to a file
 //            They are here rn so I can think
-
 const useObjects = (space?: Space, schema?: S.Schema<any>) => {
   const objectFilter = useMemo(() => (schema ? Filter.schema(schema) : () => false), [schema]);
 
@@ -154,6 +153,7 @@ const ObjectTableTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, get
     [updateTableProp],
   );
 
+  // TODO(Zan): Set this back to false before merge
   const debug = true;
 
   if (!space) {

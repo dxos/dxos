@@ -137,6 +137,7 @@ export const ColumnSettingsForm = ({
           </Input.Root>
         </Section>
       )}
+
       {formState.type === 'ref' && (
         <Section>
           <Input.Root>
@@ -161,6 +162,7 @@ export const ColumnSettingsForm = ({
               </Select.Portal>
             </Select.Root>
           </Input.Root>
+
           {formState.refTable && (
             <Input.Root>
               <Input.Label classNames='mbe-1 mbs-3'>Table property</Input.Label>
@@ -187,7 +189,9 @@ export const ColumnSettingsForm = ({
           )}
         </Section>
       )}
+
       <Separator classNames='mli-2' />
+
       <Section className='space-b-1.5'>
         <Button variant='primary' classNames='is-full flex gap-2' onClick={handleSave}>
           <span>{t('save label')}</span>
