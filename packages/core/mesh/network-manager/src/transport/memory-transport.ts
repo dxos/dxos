@@ -186,4 +186,4 @@ export class MemoryTransport implements Transport {
 }
 
 // TODO(burdon): Factor out.
-const toError = (err: any) => (err instanceof Error ? err : new Error(String(err)));
+const toError = (err: any): Error => (err instanceof Error ? err : new Error(String(err)));
