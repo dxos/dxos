@@ -8,9 +8,9 @@ import waitForExpect from 'wait-for-expect';
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
-import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { TYPE_PROPERTIES } from '@dxos/echo-db';
+import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import * as E from '@dxos/echo-schema';
 import { type Expando, getAutomergeObjectCore, type ReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -83,8 +83,10 @@ describe('Spaces', () => {
   });
 
   test('creates a space re-opens the client', async () => {
-    const testBuilder = new TestBuilder(new Config({ version: 1 }));
+    const testBuilder = new TestBuilder();
+    afterTest(() => testBuilder.destroy());
     testBuilder.storage = createStorage({ type: StorageType.RAM });
+    testBuilder.level = createTestLevel();
 
     const client = new Client({ services: testBuilder.createLocal() });
     await client.initialize();

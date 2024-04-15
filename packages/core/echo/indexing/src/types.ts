@@ -2,9 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type AbstractSublevel } from 'abstract-level';
-import { type Level } from 'level';
-
 import { type Event } from '@dxos/async';
 import { type Filter } from '@dxos/echo-schema';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
@@ -41,6 +38,3 @@ export const staticImplements =
  * Document head hashes concatenated with a no separator.
  */
 export type ConcatenatedHeadHashes = string;
-
-export type MyLevel = Level<string, string>;
-export type MySublevel = AbstractSublevel<any, string | Buffer | Uint8Array, string, string>;

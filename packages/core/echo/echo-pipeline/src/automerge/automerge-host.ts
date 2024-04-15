@@ -10,8 +10,8 @@ import {
   type StorageKey,
   type DocHandle,
   type DocHandleChangePayload,
+  type StorageAdapterInterface,
 } from '@dxos/automerge/automerge-repo';
-import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
@@ -23,15 +23,16 @@ import {
   type SyncRepoRequest,
   type SyncRepoResponse,
 } from '@dxos/protocols/proto/dxos/echo/service';
-import { StorageType, type Directory } from '@dxos/random-access-storage';
+import { type Directory } from '@dxos/random-access-storage';
 import { type AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
 import { trace } from '@dxos/tracing';
-import { ComplexMap, ComplexSet, defaultMap, mapValues } from '@dxos/util';
+import { ComplexMap, ComplexSet, type MaybePromise, defaultMap, mapValues } from '@dxos/util';
 
-import { AutomergeStorageAdapter } from './automerge-storage-adapter';
-import { AutomergeStorageWrapper } from './automerge-storage–wrapper';
+import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
 import { MeshNetworkAdapter } from './mesh-network-adapter';
+import { levelMigration } from './migrations';
+import { type MySublevel } from './types';
 
 export type { DocumentId };
 
@@ -40,20 +41,28 @@ export interface MetadataMethods {
 }
 
 export type AutomergeHostParams = {
-  directory: Directory;
+  db: MaybePromise<MySublevel>;
+  /**
+   * For migration purposes.
+   */
+  directory?: Directory;
   metadata?: MetadataMethods;
 };
 
 @trace.resource()
 export class AutomergeHost {
   private readonly _ctx = new Context();
-  private readonly _repo: Repo;
-  private readonly _meshNetwork: MeshNetworkAdapter;
-  private readonly _clientNetwork: LocalHostNetworkAdapter;
-  private readonly _storage: AutomergeStorageWrapper;
+  private readonly _directory?: Directory;
+  private readonly _db: MaybePromise<MySublevel>;
+  private readonly _metadata?: MetadataMethods;
+
+  private _repo!: Repo;
+  private _meshNetwork!: MeshNetworkAdapter;
+  private _clientNetwork!: LocalHostNetworkAdapter;
+  private _storage!: StorageAdapterInterface & { close?: () => void };
 
   @trace.info()
-  private readonly _peerId: string;
+  private _peerId!: string;
 
   /**
    * spaceKey -> deviceKey[]
@@ -61,24 +70,25 @@ export class AutomergeHost {
   private readonly _authorizedDevices = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(PublicKey.hash);
 
   private readonly _updatingMetadata = new Map<string, Promise<void>>();
-  private readonly _metadata?: MetadataMethods;
 
   public _requestedDocs = new Set<string>();
 
-  constructor({ directory, metadata }: AutomergeHostParams) {
+  constructor({ directory, db, metadata }: AutomergeHostParams) {
+    this._directory = directory;
+    this._db = db;
     this._metadata = metadata;
-    this._meshNetwork = new MeshNetworkAdapter();
-    this._clientNetwork = new LocalHostNetworkAdapter();
+  }
 
-    this._storage = new AutomergeStorageWrapper({
-      storage:
-        // TODO(mykola): Delete specific handling of IDB storage.
-        directory.type === StorageType.IDB
-          ? new IndexedDBStorageAdapter(directory.path, 'data')
-          : new AutomergeStorageAdapter(directory),
+  async open() {
+    this._directory && (await levelMigration({ db: await this._db, directory: this._directory }));
+    this._storage = new LevelDBStorageAdapter({
+      db: await this._db,
       callbacks: { beforeSave: (params) => this._beforeSave(params) },
     });
     this._peerId = `host-${PublicKey.random().toHex()}` as PeerId;
+
+    this._meshNetwork = new MeshNetworkAdapter();
+    this._clientNetwork = new LocalHostNetworkAdapter();
     this._repo = new Repo({
       peerId: this._peerId as PeerId,
       network: [this._clientNetwork, this._meshNetwork],
@@ -146,6 +156,12 @@ export class AutomergeHost {
         Object.values(this._repo.handles).forEach((handle) => handle.off('change'));
       });
     }
+  }
+
+  async close() {
+    this._storage.close?.();
+    await this._clientNetwork.close();
+    await this._ctx.dispose();
   }
 
   get repo(): Repo {
@@ -222,12 +238,6 @@ export class AutomergeHost {
   @trace.info({ depth: null })
   private _automergePeers() {
     return this._repo.peers;
-  }
-
-  async close() {
-    await this._storage.close();
-    await this._clientNetwork.close();
-    await this._ctx.dispose();
   }
 
   //

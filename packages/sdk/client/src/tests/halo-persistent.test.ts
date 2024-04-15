@@ -8,6 +8,7 @@ import { expect } from 'chai';
 
 import { waitForCondition } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { PublicKey } from '@dxos/keys';
 import { describe, test, afterTest } from '@dxos/test';
 
@@ -29,6 +30,7 @@ describe('Halo', () => {
     });
 
     const testBuilder = new TestBuilder(config);
+    testBuilder.level = createTestLevel();
 
     {
       const client = new Client({ config, services: testBuilder.createLocal() });
