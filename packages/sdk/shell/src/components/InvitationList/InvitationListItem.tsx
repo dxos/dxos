@@ -96,7 +96,7 @@ export const InvitationListItemImpl = ({
   ...props
 }: InvitationListItemImplProps) => {
   const { t } = useTranslation('os');
-  const { cancel, status: invitationStatus, invitationCode, authCode, type, multiUse } = propsInvitationStatus;
+  const { cancel, status: invitationStatus, invitationCode, authCode, multiUse } = propsInvitationStatus;
 
   const isCancellable = !(
     [Invitation.State.ERROR, Invitation.State.TIMEOUT, Invitation.State.CANCELLED].indexOf(invitationStatus) >= 0
