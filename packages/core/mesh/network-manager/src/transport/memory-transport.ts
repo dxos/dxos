@@ -72,17 +72,16 @@ export class MemoryTransport implements Transport {
     if (this._options.initiator) {
       log('sending signal');
       try {
-        await this._options.sendSignal({
-          payload: { transportId: this._instanceId.toHex() },
-        });
+        await this._options.sendSignal({ payload: { transportId: this._instanceId.toHex() } });
       } catch (err) {
         if (!this._destroyed) {
           this.errors.raise(toError(err));
         }
       }
     } else {
+      // Don't block the open method.
       this._remote
-        .wait({ timeout: this._options.timeout ?? 1000 })
+        .wait({ timeout: this._options.timeout ?? 1_000 })
         .then((remoteId) => {
           if (this._destroyed) {
             return;
