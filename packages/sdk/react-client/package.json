@@ -96,7 +96,6 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "@dxos/context": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

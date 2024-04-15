@@ -9,13 +9,11 @@ import React, { Component, type PropsWithChildren } from 'react';
 import { waitForCondition } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { SystemStatus, fromHost } from '@dxos/client/services';
-import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 import { ClientProvider, useClient } from './ClientContext';
 import { useIdentity } from '../halo';
-import { testConfig } from '../testing/util';
 
 log.config({ filter: 'ClientContext:debug,warn' });
 
@@ -94,14 +92,9 @@ describe('ClientProvider', () => {
 
   beforeEach(async () => {
     // TODO(wittjosiah): Use test builder to avoid warnings.
-    client = new Client({ services: fromHost(new Config(testConfig())) });
+    client = new Client({ services: fromHost() });
     await client.initialize();
     await client.halo.createIdentity({ displayName: 'test-user' });
-  });
-
-  afterEach(async () => {
-    await client.destroy();
-    await client.services.close(new Context());
   });
 
   test('Renders with children', async () => {
@@ -145,9 +138,7 @@ describe('ClientProvider', () => {
     });
     expect(() => screen.getByText('Identity is defined')).not.toThrow();
 
-    const newClient = new Client({
-      services: fromHost(new Config(testConfig())),
-    });
+    const newClient = new Client({ services: fromHost() });
     await newClient.initialize();
     rerender(
       <ClientProvider client={newClient}>
@@ -162,7 +153,5 @@ describe('ClientProvider', () => {
     });
     expect(client.initialized).toBe(false);
     expect(() => screen.getByText('Identity is NOT there')).not.toThrow();
-    await newClient.destroy();
-    await newClient.services.close(new Context());
   });
 });
