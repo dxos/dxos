@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 
 import { sleep } from '@dxos/async';
-import { Client, Config, PublicKey } from '@dxos/client';
+import { Client, Config } from '@dxos/client';
 import { fromHost } from '@dxos/client/services';
 import { Context } from '@dxos/context';
 import { describe, test } from '@dxos/test';
@@ -21,10 +21,7 @@ describe('EpochMonitor', () => {
     ctx = new Context();
 
     const config = new Config({
-      runtime: {
-        agent: { plugins: [{ id: 'dxos.org/agent/plugin/epoch-monitor' }] },
-        client: { storage: { persistent: false, dataRoot: `/tmp/dxos-${PublicKey.random().toHex()}` } },
-      },
+      runtime: { agent: { plugins: [{ id: 'dxos.org/agent/plugin/epoch-monitor' }] } },
     });
 
     const client = new Client({ config, services: await fromHost(config) });
@@ -36,7 +33,6 @@ describe('EpochMonitor', () => {
 
     ctx.onDispose(async () => {
       await client.destroy();
-      await client.services.close(ctx);
       await plugin.close();
     });
   });
