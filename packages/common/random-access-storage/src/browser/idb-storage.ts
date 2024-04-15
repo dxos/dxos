@@ -44,6 +44,8 @@ export class IDbStorage extends AbstractStorage {
   }
 
   override async reset() {
+    // We don't delete the database, just erase the data.
+    // Deleting that database causes IDB errors which I have no idea how to fix.
     await this._closeFilesInPath('');
     await this._remove('');
     // TODO(dmaretskyi): Set a flag to make the current instance unusable.
