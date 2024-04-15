@@ -11,18 +11,18 @@ import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { type Transport, type TransportFactory, type TransportStats } from './transport';
 
-export type LibDataChannelTransportParams = {
-  initiator: boolean;
-  stream: NodeJS.ReadWriteStream;
-  webrtcConfig?: RTCConfiguration;
-  sendSignal: (signal: Signal) => Promise<void>;
-};
-
 const DATACHANNEL_LABEL = 'dxos.mesh.transport';
 const MAX_BUFFERED_AMOUNT = 64 * 1024;
 
 // https://viblast.com/blog/2015/2/5/webrtc-data-channel-message-size/
 const MAX_MESSAGE_SIZE = 64 * 1024;
+
+export type LibDataChannelTransportOptions = {
+  initiator: boolean;
+  stream: NodeJS.ReadWriteStream;
+  webrtcConfig?: RTCConfiguration;
+  sendSignal: (signal: Signal) => Promise<void>;
+};
 
 /**
  * Transport
@@ -30,8 +30,7 @@ const MAX_MESSAGE_SIZE = 64 * 1024;
 export class LibDataChannelTransport implements Transport {
   private static _instanceCount = 0;
 
-  // TODO(burdon): Why promise? Make well-formed in initialize method?
-  private readonly _peer: Promise<RTCPeerConnection>;
+  private _peer: Promise<RTCPeerConnection>;
   private _channel!: RTCDataChannel;
   private _stream!: Duplex;
 
@@ -45,26 +44,27 @@ export class LibDataChannelTransport implements Transport {
   readonly connected = new Event();
   readonly errors = new ErrorStream();
 
-  constructor(private readonly _params: LibDataChannelTransportParams) {
-    // TODO(burdon): Move to initialize method?
+  constructor(private readonly _options: LibDataChannelTransportOptions) {}
+
+  async open() {
     this._peer = (async () => {
       /* eslint-disable @typescript-eslint/consistent-type-imports */
       const { RTCPeerConnection } = (await importESM('node-datachannel/polyfill'))
         .default as typeof import('node-datachannel/polyfill');
+
       /* eslint-enable @typescript-eslint/consistent-type-imports */
       if (this._closed) {
         this.errors.raise(new Error('connection already closed'));
       }
 
       // workaround https://github.com/murat-dogan/node-datachannel/pull/207
-      if (_params.webrtcConfig) {
-        _params.webrtcConfig.iceServers = _params.webrtcConfig.iceServers ?? [];
+      if (this._options.webrtcConfig) {
+        this._options.webrtcConfig.iceServers = this._options.webrtcConfig.iceServers ?? [];
       } else {
-        _params.webrtcConfig = { iceServers: [] };
+        this._options.webrtcConfig = { iceServers: [] };
       }
 
-      const peer = new RTCPeerConnection(_params.webrtcConfig);
-      LibDataChannelTransport._instanceCount++;
+      const peer = new RTCPeerConnection(this._options.webrtcConfig);
 
       peer.onicecandidateerror = (event) => {
         log.error('peer.onicecandidateerror', { event });
@@ -83,7 +83,7 @@ export class LibDataChannelTransport implements Transport {
         log.debug('peer.onicecandidate', { event });
         if (event.candidate) {
           try {
-            await _params.sendSignal({
+            await this._options.sendSignal({
               payload: {
                 data: {
                   type: 'candidate',
@@ -102,7 +102,7 @@ export class LibDataChannelTransport implements Transport {
         }
       };
 
-      if (_params.initiator) {
+      if (this._options.initiator) {
         peer
           .createOffer()
           .then(async (offer) => {
@@ -116,7 +116,7 @@ export class LibDataChannelTransport implements Transport {
 
             log.debug('creating offer', { peer, offer });
             await peer.setLocalDescription(offer);
-            await _params.sendSignal({ payload: { data: { type: offer.type, sdp: offer.sdp } } });
+            await this._options.sendSignal({ payload: { data: { type: offer.type, sdp: offer.sdp } } });
             return offer;
           })
           .catch((err) => {
@@ -141,9 +141,9 @@ export class LibDataChannelTransport implements Transport {
 
       return peer;
     })();
-  }
 
-  async open() {}
+    LibDataChannelTransport._instanceCount++;
+  }
 
   async close() {
     await this._close();
@@ -181,7 +181,7 @@ export class LibDataChannelTransport implements Transport {
         },
       });
 
-      duplex.pipe(this._params.stream).pipe(duplex);
+      duplex.pipe(this._options.stream).pipe(duplex);
       this._stream = duplex;
       this._connected = true;
       this.connected.emit();
@@ -241,7 +241,7 @@ export class LibDataChannelTransport implements Transport {
               await peer.setRemoteDescription({ type: data.type, sdp: data.sdp });
               const answer = await peer.createAnswer();
               await peer.setLocalDescription(answer);
-              await this._params.sendSignal({ payload: { data: { type: answer.type, sdp: answer.sdp } } });
+              await this._options.sendSignal({ payload: { data: { type: answer.type, sdp: answer.sdp } } });
               this._readyForCandidates.wake();
             } catch (err) {
               log.error("can't handle offer from signalling server", { err });
@@ -332,7 +332,7 @@ export class LibDataChannelTransport implements Transport {
   }
 
   private async _disconnectStreams() {
-    this._params.stream.unpipe?.(this._stream)?.unpipe?.(this._params.stream);
+    this._options.stream.unpipe?.(this._stream)?.unpipe?.(this._options.stream);
   }
 }
 
