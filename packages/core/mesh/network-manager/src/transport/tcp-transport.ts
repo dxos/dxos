@@ -81,7 +81,7 @@ export class TcpTransport implements Transport {
     this._closed = true;
   }
 
-  async signal({ payload }: Signal) {
+  async onSignal({ payload }: Signal) {
     log('received signal', { payload });
     if (this.options.initiator || this._connected) {
       return;

@@ -27,7 +27,7 @@ export class TcpTransport implements Transport {
 
   async close() {}
 
-  async signal() {
+  async onSignal() {
     throw new Error('Method not implemented.');
   }
 

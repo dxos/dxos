@@ -157,7 +157,7 @@ export class MemoryTransport implements Transport {
     log('closed');
   }
 
-  async signal({ payload }: Signal) {
+  async onSignal({ payload }: Signal) {
     log('received signal', { payload });
     if (!payload?.transportId) {
       return;

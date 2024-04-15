@@ -33,7 +33,7 @@ describe('SimplePeerTransport', () => {
       stream: stream1,
       sendSignal: async (signal) => {
         await sleep(10);
-        await connection2.signal(signal);
+        await connection2.onSignal(signal);
       },
     });
     afterTest(() => connection1.close());
@@ -45,7 +45,7 @@ describe('SimplePeerTransport', () => {
       stream: stream2,
       sendSignal: async (signal) => {
         await sleep(10);
-        await connection1.signal(signal);
+        await connection1.onSignal(signal);
       },
     });
     afterTest(() => connection2.close());

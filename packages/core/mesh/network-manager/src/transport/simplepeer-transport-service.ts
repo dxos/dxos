@@ -117,7 +117,7 @@ export class SimplePeerTransportService implements BridgeService {
 
   async sendSignal({ proxyId, signal }: SignalRequest): Promise<void> {
     invariant(this.transports.has(proxyId));
-    await this.transports.get(proxyId)!.transport.signal(signal);
+    await this.transports.get(proxyId)!.transport.onSignal(signal);
   }
 
   async getDetails({ proxyId }: DetailsRequest): Promise<DetailsResponse> {

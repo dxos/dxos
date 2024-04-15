@@ -28,12 +28,8 @@ const RPC_TIMEOUT = 10_000;
 const RESP_MIN_THRESHOLD = 500;
 const TIMEOUT_THRESHOLD = 10;
 
-export type SimplePeerTransportProxyOptions = {
-  initiator: boolean;
-  stream: NodeJS.ReadWriteStream;
+export type SimplePeerTransportProxyOptions = TransportOptions & {
   bridgeService: BridgeService;
-  // TODO(burdon): Rename onSignal.
-  sendSignal: (signal: Signal) => Promise<void>;
 };
 
 export class SimplePeerTransportProxy implements Transport {
@@ -48,7 +44,14 @@ export class SimplePeerTransportProxy implements Transport {
   private _closed = false;
   private _serviceStream!: Stream<BridgeEvent>;
 
-  constructor(private readonly _options: SimplePeerTransportProxyOptions) {
+  constructor(private readonly _options: SimplePeerTransportProxyOptions) {}
+
+  get isOpen() {
+    // TODO(burdon): Open state?
+    return !this._closed;
+  }
+
+  async open() {
     this._serviceStream = this._options.bridgeService.open(
       {
         proxyId: this._proxyId,
@@ -117,13 +120,6 @@ export class SimplePeerTransportProxy implements Transport {
     );
   }
 
-  get isOpen() {
-    // TODO(burdon): Open state?
-    return !this._closed;
-  }
-
-  async open() {}
-
   async close() {
     await this._ctx.dispose();
     if (this._closed) {
@@ -142,7 +138,7 @@ export class SimplePeerTransportProxy implements Transport {
     this._closed = true;
   }
 
-  async signal(signal: Signal) {
+  async onSignal(signal: Signal) {
     this._options.bridgeService
       .sendSignal(
         {
@@ -220,7 +216,6 @@ export class SimplePeerTransportProxyFactory implements TransportFactory {
 
   createTransport(options: TransportOptions): Transport {
     invariant(this._bridgeService, 'SimplePeerTransportProxyFactory is not ready to open connections');
-
     const transport = new SimplePeerTransportProxy({
       ...options,
       bridgeService: this._bridgeService,
@@ -228,7 +223,6 @@ export class SimplePeerTransportProxyFactory implements TransportFactory {
 
     this._connections.add(transport);
     transport.closed.on(() => this._connections.delete(transport));
-
     return transport;
   }
 }

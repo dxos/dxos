@@ -35,7 +35,7 @@ describe('LibDataChannelTransport', () => {
       stream: stream1,
       sendSignal: async (signal) => {
         await sleep(10);
-        await connection2.signal(signal);
+        await connection2.onSignal(signal);
       },
     });
     await connection1.open();
@@ -48,7 +48,7 @@ describe('LibDataChannelTransport', () => {
       stream: stream2,
       sendSignal: async (signal) => {
         await sleep(10);
-        await connection1.signal(signal);
+        await connection1.onSignal(signal);
       },
     });
     await connection2.open();
@@ -70,7 +70,7 @@ describe('LibDataChannelTransport', () => {
         log.debug('signal', signal);
 
         await sleep(10);
-        await connection2.signal(signal);
+        await connection2.onSignal(signal);
       },
     });
     await connection1.open();
@@ -85,7 +85,7 @@ describe('LibDataChannelTransport', () => {
         log.debug('signal', signal);
 
         await sleep(10);
-        await connection1.signal(signal);
+        await connection1.onSignal(signal);
       },
     });
     await connection2.open();

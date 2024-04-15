@@ -23,7 +23,7 @@ const createPair = async () => {
   const connection1 = new MemoryTransport({
     stream: stream1,
     sendSignal: async (signal) => {
-      await connection2.signal(signal);
+      await connection2.onSignal(signal);
     },
     initiator: true,
   });
@@ -35,7 +35,7 @@ const createPair = async () => {
   const connection2 = new MemoryTransport({
     stream: stream2,
     sendSignal: async (signal) => {
-      await connection1.signal(signal);
+      await connection1.onSignal(signal);
     },
     initiator: false,
   });

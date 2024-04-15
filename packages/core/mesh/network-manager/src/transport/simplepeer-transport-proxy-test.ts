@@ -86,7 +86,7 @@ describe('SimplePeerTransportProxy', () => {
       initiator: true,
       stream: stream1,
       sendSignal: async (signal) => {
-        connection2.signal(signal);
+        connection2.onSignal(signal);
       },
     });
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
@@ -96,7 +96,7 @@ describe('SimplePeerTransportProxy', () => {
       initiator: false,
       stream: stream2,
       sendSignal: async (signal) => {
-        connection1.signal(signal);
+        connection1.onSignal(signal);
       },
     });
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
@@ -148,7 +148,7 @@ describe('SimplePeerTransportProxy', () => {
         initiator: true,
         stream: stream1,
         sendSignal: async (signal) => {
-          await proxy2.signal(signal);
+          await proxy2.onSignal(signal);
         },
         bridgeService: rpcClient.rpc.BridgeService,
       });
@@ -162,7 +162,7 @@ describe('SimplePeerTransportProxy', () => {
         initiator: false,
         stream: stream2,
         sendSignal: async (signal) => {
-          await proxy1.signal(signal);
+          await proxy1.onSignal(signal);
         },
         bridgeService: rpcClient.rpc.BridgeService,
       });

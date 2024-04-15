@@ -13,14 +13,11 @@ import { log } from '@dxos/log';
 import { ConnectionResetError, ConnectivityError, ProtocolError, UnknownProtocolError, trace } from '@dxos/protocols';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { type Transport, type TransportFactory, type TransportStats } from './transport';
+import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from './transport';
 import { wrtc } from './webrtc';
 
-export type SimplePeerTransportParams = {
-  initiator: boolean;
-  stream: NodeJS.ReadWriteStream;
+export type SimplePeerTransportParams = TransportOptions & {
   webrtcConfig?: any;
-  sendSignal: (signal: Signal) => Promise<void>;
 };
 
 export const createSimplePeerTransportFactory = (webrtcConfig?: any): TransportFactory => ({
@@ -211,7 +208,7 @@ export class SimplePeerTransport implements Transport {
     log('closed');
   }
 
-  async signal(signal: Signal) {
+  async onSignal(signal: Signal) {
     if (this._closed) {
       return; // Ignore signals after close.
     }

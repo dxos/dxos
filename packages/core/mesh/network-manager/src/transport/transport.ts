@@ -30,7 +30,10 @@ export interface Transport {
 
   get isOpen(): boolean;
 
-  signal(signal: Signal): Promise<void>;
+  /**
+   * Handle message from signaling.
+   */
+  onSignal(signal: Signal): Promise<void>;
 
   /**
    * Transport-specific stats.
@@ -50,18 +53,18 @@ export type TransportOptions = {
   initiator: boolean;
 
   /**
-   * Wire protocol.
+   * Wire protocol for data stream.
    */
   stream: NodeJS.ReadWriteStream;
 
   /**
-   * Send a signal message to remote peer.
+   * Sends signal message to remote peer.
    */
   sendSignal: (signal: Signal) => Promise<void>;
 
-  timeout?: number;
-
   sessionId?: PublicKey;
+
+  timeout?: number;
 };
 
 export interface TransportFactory {

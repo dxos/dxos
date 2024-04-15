@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { type Transport, type TransportFactory, type TransportStats } from './transport';
+import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from './transport';
 
 const DATACHANNEL_LABEL = 'dxos.mesh.transport';
 const MAX_BUFFERED_AMOUNT = 64 * 1024;
@@ -18,11 +18,8 @@ const MAX_BUFFERED_AMOUNT = 64 * 1024;
 // https://viblast.com/blog/2015/2/5/webrtc-data-channel-message-size
 const MAX_MESSAGE_SIZE = 64 * 1024;
 
-export type LibDataChannelTransportOptions = {
-  initiator: boolean;
-  stream: NodeJS.ReadWriteStream;
+export type LibDataChannelTransportOptions = TransportOptions & {
   webrtcConfig?: RTCConfiguration;
-  sendSignal: (signal: Signal) => Promise<void>;
 };
 
 export const createLibDataChannelTransportFactory = (webrtcConfig?: any): TransportFactory => ({
@@ -32,7 +29,7 @@ export const createLibDataChannelTransportFactory = (webrtcConfig?: any): Transp
 /**
  * Transport
  */
-// TODO(burdon): Purpose.
+// TODO(burdon): Purpose (e.g., platform).
 export class LibDataChannelTransport implements Transport {
   private static _instanceCount = 0;
 
@@ -244,7 +241,7 @@ export class LibDataChannelTransport implements Transport {
     };
   }
 
-  async signal(signal: Signal) {
+  async onSignal(signal: Signal) {
     invariant(this._peer, 'not open');
 
     try {
