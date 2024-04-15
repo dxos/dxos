@@ -100,6 +100,7 @@ describe('SimplePeerTransportProxy', () => {
       },
     });
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
+
     await TestStream.assertConnectivity(stream1, stream2);
   }).timeout(2_000);
 
