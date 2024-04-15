@@ -28,6 +28,11 @@ import { type Connection, type Request, type Room, type Server } from 'partykit/
 
 // TODO(burdon): Experimental (move to closed source)?
 
+// eslint-disable-next-line no-console
+const log = console.log;
+// eslint-disable-next-line no-console
+const warn = console.warn;
+
 /**
  * `npx partykit dev`
  * https://docs.partykit.io/reference/partyserver-api
@@ -62,14 +67,14 @@ export default class SignalingServer implements Server {
   // }
 
   onStart() {
-    console.log('start', { room: this.room?.id });
+    log('start', { room: this.room?.id });
   }
 
   /**
    * Messages are recorded by sender and replayed to new peers joining the swarm.
    */
   onConnect(connection: Connection) {
-    console.log('connect', { room: this.room?.id, peer: connection.id });
+    log('connect', { room: this.room?.id, peer: connection.id });
     for (const [id, buffer] of this._buffer.entries()) {
       for (const data of buffer) {
         this.room.broadcast(data, [id]);
@@ -78,17 +83,17 @@ export default class SignalingServer implements Server {
   }
 
   onClose(connection: Connection) {
-    console.log('close', { room: this.room?.id, peer: connection.id });
+    log('close', { room: this.room?.id, peer: connection.id });
     this._buffer.delete(connection.id);
   }
 
   onError(connection: Connection, error: Error) {
-    console.error('error', { room: this.room?.id, peer: connection.id, error });
+    warn('error', { room: this.room?.id, peer: connection.id, error });
   }
 
   onMessage(data: string, connection: Connection) {
     try {
-      console.log('message', { room: this.room?.id, peer: connection.id, data: JSON.parse(data) });
+      log('message', { room: this.room?.id, peer: connection.id, data: JSON.parse(data) });
       const buffer = this._buffer.get(connection.id) ?? [];
       this._buffer.set(connection.id, buffer);
       buffer.push(data);
@@ -96,14 +101,14 @@ export default class SignalingServer implements Server {
       this.room.broadcast(data, [connection.id]);
     } catch (err) {
       // TODO(burdon): Test if uncaught errors fire the onError handler?
-      console.error('error', { room: this.room?.id, peer: connection.id, error: err });
+      warn('error', { room: this.room?.id, peer: connection.id, error: err });
     }
   }
 
   // TODO(burdon): Authz admin API.
   // curl -s -X POST -H "Content-Type: application/json" http://127.0.0.1:1999/parties/main/<SWARM_KEY> | jq
   async onRequest(req: Request) {
-    console.log('onRequest', { room: this.room?.id });
+    log('onRequest', { room: this.room?.id });
     const peers = Array.from(this.room.getConnections()).map((connection) => connection.id);
     return Response.json({ ok: true, connections: peers });
   }
