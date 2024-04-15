@@ -5,8 +5,9 @@
 import { appendFileSync, mkdirSync, openSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-import { jsonify } from '@dxos/util';
+import { jsonlogify } from '@dxos/util';
 
+import { getRelativeFilename } from './common';
 import { type LogFilter, LogLevel } from '../config';
 import { type LogProcessor, getContextFromEntry, shouldLog } from '../context';
 
@@ -48,11 +49,8 @@ export const createFileProcessor = ({
     const record = {
       ...entry,
       timestamp: Date.now(),
-      meta: {
-        file: entry.meta?.F,
-        line: entry.meta?.L,
-      },
-      context: jsonify(getContextFromEntry(entry)),
+      ...(entry.meta ? { meta: { file: getRelativeFilename(entry.meta.F), line: entry.meta.L } } : {}),
+      context: jsonlogify(getContextFromEntry(entry)),
     };
     let retryTS: number = 0;
 
