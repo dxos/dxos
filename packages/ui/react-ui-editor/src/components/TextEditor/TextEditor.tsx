@@ -52,6 +52,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
   (
     {
       id,
+      // TODO(wittjosiah): Rename initialText?
       doc,
       selection,
       extensions,
@@ -152,7 +153,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
         log('destroy', { id, instanceId });
         view?.destroy();
       };
-    }, [doc, selection, extensions]);
+    }, [id, selection, scrollTo, editorMode, extensions]);
 
     // Focus editor on Enter (e.g., when tabbing to this component).
     const handleKeyUp = useCallback<KeyboardEventHandler<HTMLDivElement>>(
