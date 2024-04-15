@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState } from 'react';
+import { useFocusableGroup } from '@fluentui/react-tabster';
+import React, { type KeyboardEventHandler, useCallback, useState } from 'react';
 
 import { TextV0Type } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
@@ -20,7 +21,7 @@ import {
   useFormattingState,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { textBlockWidth } from '@dxos/react-ui-theme';
+import { focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
 import type { StackSectionContent } from '../components/Section';
 
@@ -48,6 +49,21 @@ export const EditorContent = ({ data: { content = '' } }: { data: StackSectionCo
   }, [id, formattingObserver, themeMode]);
 
   const handleAction = useActionHandler(view);
+  const focusableGroup = useFocusableGroup({ tabBehavior: 'limited' });
+
+  // Focus editor on Enter (e.g., when tabbing to this component).
+  const handleKeyUp = useCallback<KeyboardEventHandler<HTMLDivElement>>(
+    (event) => {
+      const { key } = event;
+      switch (key) {
+        case 'Enter': {
+          view?.focus();
+          break;
+        }
+      }
+    },
+    [view],
+  );
 
   return (
     <>
@@ -59,7 +75,13 @@ export const EditorContent = ({ data: { content = '' } }: { data: StackSectionCo
         <Toolbar.Markdown />
         <Toolbar.Separator />
       </Toolbar.Root>
-      <div ref={parentRef} className={textBlockWidth} />
+      <div
+        ref={parentRef}
+        className={mx(textBlockWidth, focusRing, 'mbs-1 rounded-sm')}
+        tabIndex={0}
+        {...focusableGroup}
+        onKeyUp={handleKeyUp}
+      />
     </>
   );
 };
