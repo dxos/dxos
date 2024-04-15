@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataCorruptionError, STORAGE_VERSION, schema } from '@dxos/protocols';
-import { type Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import {
   type ControlPipelineSnapshot,
   EchoMetadata,
@@ -174,13 +174,8 @@ export class MetadataStore {
     scheduleTaskInterval(
       this._invitationCleanupCtx,
       async () => {
-        for (const invitation of this.getInvitations()) {
-          if (
-            invitation.created &&
-            invitation.lifetime &&
-            invitation.lifetime !== 0 &&
-            invitation.created.getTime() + invitation.lifetime * 1000 < Date.now()
-          ) {
+        for (const invitation of this._metadata.invitations ?? []) {
+          if (hasInvitationExpired(invitation) || isLegacyInvitationFormat(invitation)) {
             await this.removeInvitation(invitation.invitationId);
           }
         }
@@ -343,3 +338,17 @@ export class MetadataStore {
 }
 
 const fromBytesInt32 = (buf: Buffer) => buf.readInt32LE(0);
+
+export const hasInvitationExpired = (invitation: Invitation): boolean => {
+  return Boolean(
+    invitation.created &&
+      invitation.lifetime &&
+      invitation.lifetime !== 0 &&
+      invitation.created.getTime() + invitation.lifetime * 1000 < Date.now(),
+  );
+};
+
+// TODO: remove once "multiuse" type invitations get removed from local metadata of existing profiles
+const isLegacyInvitationFormat = (invitation: Invitation): boolean => {
+  return !Object.values(Invitation.Type).includes(invitation.type);
+};

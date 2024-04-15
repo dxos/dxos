@@ -426,12 +426,3 @@ export class InvitationsHandler {
     return observable;
   }
 }
-
-export const invitationExpired = (invitation: Invitation) => {
-  return (
-    invitation.created &&
-    invitation.lifetime &&
-    invitation.lifetime !== 0 &&
-    invitation.created.getTime() + invitation.lifetime * 1000 < Date.now()
-  );
-};

@@ -6,7 +6,7 @@ import { Event, scheduleTask } from '@dxos/async';
 import { type AuthenticatingInvitation, type CancellableInvitation } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
-import { type MetadataStore } from '@dxos/echo-pipeline';
+import { hasInvitationExpired, type MetadataStore } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import {
@@ -18,7 +18,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 
 import { type InvitationProtocol } from './invitation-protocol';
-import { invitationExpired, type InvitationsHandler } from './invitations-handler';
+import { type InvitationsHandler } from './invitations-handler';
 
 /**
  * Adapts invitation service observable to client/service stream.
@@ -103,7 +103,7 @@ export class InvitationsServiceImpl implements InvitationsService {
     const persistentInvitations = this._metadataStore.getInvitations();
 
     // get saved persistent invitations, filter and remove from storage those that have expired.
-    const freshInvitations = persistentInvitations.filter(async (invitation) => !invitationExpired(invitation));
+    const freshInvitations = persistentInvitations.filter(async (invitation) => !hasInvitationExpired(invitation));
 
     const cInvitations = freshInvitations.map((persistentInvitation) => {
       invariant(!this._createInvitations.get(persistentInvitation.invitationId), 'invitation already exists');
