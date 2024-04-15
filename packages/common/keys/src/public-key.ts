@@ -171,6 +171,10 @@ export class PublicKey implements Equatable {
     return this.toHex();
   }
 
+  toJSONL(): string {
+    return this.truncate();
+  }
+
   get length() {
     return this._value.length;
   }
