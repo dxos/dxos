@@ -1,53 +1,23 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 import React, { type FC, useEffect, useMemo, useState, useCallback } from 'react';
 
-import { useFilteredObjects } from '@braneframe/plugin-search';
-import { TableType, type TableTypeProp } from '@braneframe/types';
-import { type DynamicEchoSchema, S, create, TypedObject, type EchoReactiveObject, Filter } from '@dxos/echo-schema';
+import { type TableType, type TableTypeProp } from '@braneframe/types';
+import { type DynamicEchoSchema, S, create, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { getSpace, type Space, useQuery } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { DensityProvider } from '@dxos/react-ui';
 import { Table, type TableDef, type TableProps } from '@dxos/react-ui-table';
 
 // TODO(burdon): Remove deps.
+import { useObjects, useTables } from './hooks';
 import { getSchema, schemaPropMapper, createColumnsFromTableDef } from '../../schema';
 import { TableSettings } from '../TableSettings';
 
 export type ObjectTableProps = Pick<TableProps<any>, 'stickyHeader' | 'role' | 'getScrollElement'> & {
   table: TableType;
-};
-
-// TODO(Zan): Consolidate.
-const Stable = {
-  empty: {
-    object: Object.freeze({}),
-    array: Object.freeze([] as any[]),
-  },
-};
-
-// -- Hooks
-// TODO(Zan): Move them to a file
-//            They are here rn so I can think
-const useObjects = (space?: Space, schema?: S.Schema<any>) => {
-  const objectFilter = useMemo(() => (schema ? Filter.schema(schema) : () => false), [schema]);
-
-  const objects = useQuery<EchoReactiveObject<any>>(
-    space,
-    objectFilter,
-    Stable.empty.object,
-    // TODO(burdon): Toggle deleted.
-    [schema],
-  );
-
-  return useFilteredObjects(objects);
-};
-
-const useTables = (space?: Space) => {
-  const tableFilter = useMemo(() => Filter.schema(TableType), []);
-  return useQuery<TableType>(space, tableFilter);
 };
 
 // Mutable updates table properties
