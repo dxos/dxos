@@ -9,6 +9,8 @@ import { type ServiceContextRuntimeParams } from '@dxos/client-services/src';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
+import { type MyLevel } from '@dxos/echo-pipeline';
+import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import * as E from '@dxos/echo-schema';
 import { Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -53,6 +55,7 @@ export class TestBuilder {
 
   public config: Config;
   public storage?: Storage;
+  public level?: MyLevel;
 
   _transport: TransportKind;
 
@@ -112,34 +115,45 @@ export class TestBuilder {
   /**
    * Create backend service handlers.
    */
-  createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams) {
+  async createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams) {
+    const level = this.level ?? (await createTestLevel());
     const services = new ClientServicesHost({
       config: this.config,
       storage: this.storage,
+      level,
       runtimeParams,
       ...this.networking,
     });
-    this._ctx.onDispose(() => services.close());
+    this._ctx.onDispose(async () => {
+      await level.close();
+      await services.close();
+    });
     return services;
   }
 
   /**
    * Create local services host.
    */
-  createLocal() {
+  async createLocal() {
+    const level = this.level ?? (await createTestLevel());
     const services = new LocalClientServices({
       config: this.config,
       storage: this.storage,
+      level,
       ...this.networking,
     });
-    this._ctx.onDispose(() => services.close());
+    this._ctx.onDispose(async () => {
+      await level.close();
+      await services.close();
+    });
     return services;
   }
 
   /**
    * Create client/server.
    */
-  createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, ProtoRpcPeer<{}>] {
+  async createClientServer(host?: ClientServicesHost): Promise<[Client, ProtoRpcPeer<{}>]> {
+    host ??= await this.createClientServicesHost();
     const [proxyPort, hostPort] = createLinkedPorts();
     const server = createProtoRpcPeer({
       exposed: host.descriptors,
@@ -155,8 +169,9 @@ export class TestBuilder {
     return [client, server];
   }
 
-  destroy() {
+  async destroy() {
     void this._ctx.dispose();
+    await this.level?.close();
   }
 }
 

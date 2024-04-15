@@ -29,7 +29,7 @@ describe('Client', () => {
   test('creates client with embedded services', async () => {
     const testBuilder = new TestBuilder();
 
-    const client = new Client({ services: testBuilder.createLocal() });
+    const client = new Client({ services: await testBuilder.createLocal() });
     await client.initialize();
     afterTest(() => client.destroy());
     expect(client.initialized).to.be.true;
@@ -39,7 +39,7 @@ describe('Client', () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
 
-    const client = new Client({ services: testBuilder.createLocal() });
+    const client = new Client({ services: await testBuilder.createLocal() });
     await asyncTimeout(client.initialize(), 2_000);
     await asyncTimeout(client.halo.createIdentity(), 2_000);
     await asyncTimeout(client.spaces.isReady.wait(), 2_000);
@@ -48,7 +48,7 @@ describe('Client', () => {
   test('initialize and destroy multiple times', async () => {
     const testBuilder = new TestBuilder();
 
-    const client = new Client({ services: testBuilder.createLocal() });
+    const client = new Client({ services: await testBuilder.createLocal() });
     await client.initialize();
     await client.initialize();
     expect(client.initialized).to.be.true;
@@ -61,7 +61,7 @@ describe('Client', () => {
   test('closes and reopens', async () => {
     const testBuilder = new TestBuilder();
 
-    const client = new Client({ services: testBuilder.createLocal() });
+    const client = new Client({ services: await testBuilder.createLocal() });
     await client.initialize();
     expect(client.initialized).to.be.true;
 
@@ -78,7 +78,7 @@ describe('Client', () => {
   test('create space before identity', async () => {
     const testBuilder = new TestBuilder();
 
-    const client = new Client({ services: testBuilder.createLocal() });
+    const client = new Client({ services: await testBuilder.createLocal() });
     await client.initialize();
     afterTest(() => client.destroy());
     await expect(client.spaces.create()).to.eventually.be.rejectedWith('This device has no HALO identity available.');
@@ -94,7 +94,7 @@ describe('Client', () => {
       },
     });
     const testBuilder = new TestBuilder(config);
-    const client = new Client({ services: testBuilder.createLocal() });
+    const client = new Client({ services: await testBuilder.createLocal() });
     const displayName = 'test-user';
     {
       // Create identity.
@@ -133,8 +133,8 @@ describe('Client', () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
 
-    const client1 = new Client({ services: testBuilder.createLocal() });
-    const client2 = new Client({ services: testBuilder.createLocal() });
+    const client1 = new Client({ services: await testBuilder.createLocal() });
+    const client2 = new Client({ services: await testBuilder.createLocal() });
     await client1.initialize();
     await client2.initialize();
 

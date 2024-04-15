@@ -245,13 +245,6 @@ export class Indexer {
     }
   }
 
-  private async _maybeSaveIndexes() {
-    this._updatesAfterSave++;
-    if (this._updatesAfterSave >= this._saveAfterUpdates || Date.now() - this._lastSave >= this._saveAfterTime) {
-      await this._saveIndexes();
-    }
-  }
-
   @trace.span({ showInBrowserTimeline: true })
   @synchronized
   private async _saveIndexes() {
