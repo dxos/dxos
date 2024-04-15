@@ -23,7 +23,7 @@ describe('EpochMonitor', () => {
     const config = new Config({
       runtime: {
         agent: { plugins: [{ id: 'dxos.org/agent/plugin/epoch-monitor' }] },
-        client: { storage: { persistent: false, dataRoot: `tmp/agent/${PublicKey.random().toHex()}` } },
+        client: { storage: { persistent: false, dataRoot: `/tmp/dxos-${PublicKey.random().toHex()}` } },
       },
     });
 

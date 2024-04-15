@@ -7,6 +7,6 @@ import { type ConfigProto } from '@dxos/config';
 
 export const testConfig = (): ConfigProto => ({
   runtime: {
-    client: { storage: { persistent: false, dataRoot: `tmp/react-client/storage/${PublicKey.random().toHex()}` } },
+    client: { storage: { persistent: false, dataRoot: `/tmp/dxos-${PublicKey.random().toHex()}` } },
   },
 });
