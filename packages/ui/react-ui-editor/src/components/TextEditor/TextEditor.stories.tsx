@@ -242,7 +242,7 @@ type StoryProps = {
   comments?: Comment[];
   readonly?: boolean;
   placeholder?: string;
-} & Pick<TextEditorProps, 'extensions'>;
+} & Pick<TextEditorProps, 'selection' | 'extensions'>;
 
 const Story = ({
   id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
@@ -294,6 +294,8 @@ export default {
   render: Story,
   parameters: { translations, layout: 'fullscreen' },
 };
+
+// TODO(burdon): Test invalid inputs (e.g., selection).
 
 const defaults = [
   autocomplete({
