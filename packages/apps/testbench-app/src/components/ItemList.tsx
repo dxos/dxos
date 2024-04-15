@@ -69,7 +69,6 @@ export const Item = ({ object, onDelete }: ItemProps<ItemType>) => {
     [],
   );
 
-  // TODO(burdon): Hover.
   return (
     <div className={mx('flex flex-col', subtleHover)}>
       <div className='flex w-full justify-between'>
