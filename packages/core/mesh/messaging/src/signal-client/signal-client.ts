@@ -213,7 +213,6 @@ export class SignalClient implements SignalMethods {
   async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
     this._performance.leaveCounter++;
     log('leaving', { topic, peerId });
-
     void this._swarmStreams.get({ topic, peerId })?.close();
     this._swarmStreams.delete({ topic, peerId });
     this._joinedTopics.delete({ topic, peerId });

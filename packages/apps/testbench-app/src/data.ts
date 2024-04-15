@@ -4,8 +4,6 @@
 
 import * as S from '@effect/schema/Schema';
 
-// TODO(burdon): [API] wildcard imports?
-// TODO(burdon): Remove "ECHO" and "Object" from type name. Otherwise good.
 import { TypedObject } from '@dxos/echo-schema';
 
 // TODO(burdon): [API]: extends feels a bit Frankenstein (get review from effect discord).
@@ -17,4 +15,9 @@ export class ItemType extends TypedObject({ typename: 'example.com/type/Item', v
   // TODO(burdon): [API]: Are dates supported?
   //  TypeError: Method Date.prototype.toString called on incompatible receiver [object Object]
   // due: S.optional(S.Date),
+}) {}
+
+export class DocumentType extends TypedObject({ typename: 'example.com/type/Document', version: '0.1.0' })({
+  title: S.optional(S.string),
+  content: S.optional(S.string),
 }) {}
