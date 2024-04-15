@@ -40,34 +40,13 @@ export class IDbStorage extends AbstractStorage {
 
   override async close() {
     await this._closeFilesInPath('');
-    (await this._db).close();
+    // TODO(dmaretskyi): Set a flag to make the current instance unusable.
   }
 
   override async reset() {
     await this._closeFilesInPath('');
     await this._remove('');
-    (await this._db).close();
-
-    // eslint-disable-next-line no-undef
-    return new Promise<void>((resolve, reject) => {
-      // Declared here to capture the stack-trace.
-      const errUpgradeNeeded = new Error('Upgrade needed.');
-      const errBlocked = new Error('Blocked.');
-
-      const request = indexedDB.deleteDatabase(this.path);
-      request.onsuccess = () => {
-        resolve();
-      };
-      request.onupgradeneeded = () => {
-        reject(errUpgradeNeeded);
-      };
-      request.onblocked = () => {
-        reject(errBlocked);
-      };
-      request.onerror = (err: any) => {
-        reject(err);
-      };
-    });
+    // TODO(dmaretskyi): Set a flag to make the current instance unusable.
   }
 
   protected override async _destroy() {
