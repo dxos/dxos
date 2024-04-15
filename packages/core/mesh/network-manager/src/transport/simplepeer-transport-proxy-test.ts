@@ -86,7 +86,7 @@ describe('SimplePeerTransportProxy', () => {
       initiator: true,
       stream: stream1,
       sendSignal: async (signal) => {
-        connection2.onSignal(signal);
+        await connection2.onSignal(signal);
       },
     });
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
@@ -96,7 +96,7 @@ describe('SimplePeerTransportProxy', () => {
       initiator: false,
       stream: stream2,
       sendSignal: async (signal) => {
-        connection1.onSignal(signal);
+        await connection1.onSignal(signal);
       },
     });
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
