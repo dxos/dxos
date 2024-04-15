@@ -149,6 +149,24 @@ export class LibDataChannelTransport implements Transport {
     }
   }
 
+  @synchronized
+  private async _close() {
+    if (this._closed) {
+      return;
+    }
+
+    await this._disconnectStreams();
+
+    try {
+      this._peer?.close();
+    } catch (err: any) {
+      this.errors.raise(err);
+    }
+
+    this._closed = true;
+    this.closed.emit();
+  }
+
   private handleChannel(dataChannel: RTCDataChannel) {
     this._channel = dataChannel;
     this._channel.onopen = () => {
@@ -210,24 +228,6 @@ export class LibDataChannelTransport implements Transport {
     };
   }
 
-  @synchronized
-  private async _close() {
-    if (this._closed) {
-      return;
-    }
-
-    await this._disconnectStreams();
-
-    try {
-      this._peer?.close();
-    } catch (err: any) {
-      this.errors.raise(err);
-    }
-
-    this._closed = true;
-    this.closed.emit();
-  }
-
   async signal(signal: Signal) {
     invariant(this._peer);
 
@@ -285,6 +285,7 @@ export class LibDataChannelTransport implements Transport {
     if (rc.candidateType === 'relay') {
       return `${rc.ip}:${rc.port} relay for ${rc.relatedAddress}:${rc.relatedPort}`;
     }
+
     return `${rc.ip}:${rc.port} ${rc.candidateType}`;
   }
 
