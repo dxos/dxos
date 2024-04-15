@@ -135,9 +135,10 @@ export class LibDataChannelTransport implements Transport {
         });
 
       this._handleChannel(this._peer.createDataChannel(DATACHANNEL_LABEL));
+
       log.debug('created data channel');
-      this._peer.ondatachannel = (event) => {
-        this.errors.raise(new Error('got ondatachannel when i am the initiator?'));
+      this._peer.ondatachannel = () => {
+        this.errors.raise(new Error('unexpected ondatachannel event for initiator'));
       };
     } else {
       this._peer.ondatachannel = (event) => {
@@ -179,6 +180,9 @@ export class LibDataChannelTransport implements Transport {
     this.closed.emit();
   }
 
+  /**
+   * Handle data channel events.
+   */
   private _handleChannel(dataChannel: RTCDataChannel) {
     this._channel = dataChannel;
 

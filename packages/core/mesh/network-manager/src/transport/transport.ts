@@ -46,6 +46,9 @@ export interface Transport {
   getDetails(): Promise<string>;
 }
 
+/**
+ * Common options for all transports.
+ */
 export type TransportOptions = {
   /**
    * Did local node initiate this connection.
