@@ -5,7 +5,7 @@
 import React, { type FC } from 'react';
 
 import { type DocumentType } from '@braneframe/types';
-import { getSpace } from '@dxos/react-client/echo';
+import { createDocAccessor, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
@@ -13,7 +13,6 @@ import {
   createBasicExtensions,
   createDataExtensions,
   createThemeExtensions,
-  useDocAccessor,
   useTextEditor,
   createMarkdownExtensions,
   Toolbar,
@@ -34,11 +33,10 @@ const DocumentSection: FC<{
   const space = getSpace(document);
 
   const { themeMode } = useThemeContext();
-  const { doc, accessor } = useDocAccessor(document.content!);
   const [formattingState, formattingObserver] = useFormattingState();
   const { parentRef, view: editorView } = useTextEditor(
     () => ({
-      doc,
+      doc: document.content?.content,
       extensions: [
         formattingObserver,
         createBasicExtensions({ placeholder: t('editor placeholder') }),
@@ -46,7 +44,12 @@ const DocumentSection: FC<{
         createThemeExtensions({
           themeMode,
         }),
-        createDataExtensions({ id: document.id, text: accessor, space, identity }),
+        createDataExtensions({
+          id: document.id,
+          text: document.content && createDocAccessor(document.content, ['content']),
+          space,
+          identity,
+        }),
         ...extensions,
       ],
     }),

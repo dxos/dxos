@@ -162,14 +162,14 @@ export const createThemeExtensions = ({ theme, themeMode, slots: _slots }: Theme
 
 export type DataExtensionsProps = {
   id: string;
-  text: DocAccessor;
+  text?: DocAccessor;
   space?: Space;
   identity?: Identity | null;
 };
 
 // TODO(burdon): Move out of react-ui-editor (remove echo deps).
 export const createDataExtensions = ({ id, text, space, identity }: DataExtensionsProps): Extension[] => {
-  const extensions: Extension[] = [automerge(text)];
+  const extensions: Extension[] = text ? [automerge(text)] : [];
 
   if (space && identity) {
     const peerId = identity?.identityKey.toHex();

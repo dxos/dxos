@@ -48,6 +48,11 @@ const setup = (getConfig: Provider<MaybePromise<Config>>) => {
   const client = new Client({
     services: new ClientServicesProxy(appPorts[0]),
   });
+  afterTest(async () => {
+    await client.destroy();
+    await clientProxy.close().catch(() => {});
+    await workerRuntime.stop();
+  });
 
   return { workerRuntime, clientProxy, client };
 };

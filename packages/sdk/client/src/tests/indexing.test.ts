@@ -3,13 +3,12 @@
 //
 
 import { expect } from 'chai';
-import fs from 'node:fs';
-import path from 'node:path';
 
-import { Trigger } from '@dxos/async';
+import { Trigger, asyncTimeout } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { type Space } from '@dxos/client-protocol';
 import { warnAfterTimeout } from '@dxos/debug';
+import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import * as E from '@dxos/echo-schema';
 import { Filter } from '@dxos/echo-schema';
 import { IndexServiceImpl, IndexStore, Indexer } from '@dxos/indexing';
@@ -17,7 +16,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Client } from '../client';
@@ -25,9 +24,21 @@ import { QueryOptions } from '../echo';
 import { IndexQuerySourceProvider } from '../echo/index-query-source-provider';
 import { ContactType, TestBuilder } from '../testing';
 
-describe('Index queries', () => {
+describe.only('Index queries', () => {
   test('indexing stack', async () => {
-    const { client, builder, services } = await setupClient();
+    const builder = new TestBuilder();
+    builder.storage = createStorage({ type: StorageType.RAM });
+    afterTest(async () => {
+      await builder.destroy();
+    });
+    const services = builder.createLocal();
+    const client = new Client({ services });
+    afterTest(() => client.destroy());
+    await client.initialize();
+    if (!client._graph.types.isEffectSchemaRegistered(ContactType)) {
+      client._graph.types.registerEffectSchema(ContactType);
+    }
+
     await client.halo.createIdentity();
 
     const indexer = new Indexer({
@@ -51,11 +62,11 @@ describe('Index queries', () => {
     await indexer.initialize();
 
     const service = new IndexServiceImpl({ indexer, automergeHost: services.host!.context.automergeHost });
-    const agentQuerySourceProvider = new IndexQuerySourceProvider({
+    const indexQuerySourceProvider = new IndexQuerySourceProvider({
       service,
       spaceList: client.spaces,
     });
-    client._graph.registerQuerySourceProvider(agentQuerySourceProvider);
+    client._graph.registerQuerySourceProvider(indexQuerySourceProvider);
     const space = await client.spaces.create();
     {
       await space.waitUntilReady();
@@ -69,7 +80,17 @@ describe('Index queries', () => {
   });
 
   test('index queries work with client', async () => {
-    const { client } = await setupClient();
+    const builder = new TestBuilder();
+    afterTest(async () => {
+      await builder.destroy();
+    });
+    const client = new Client({ services: builder.createLocal() });
+    afterTest(() => client.destroy());
+    await client.initialize();
+    if (!client._graph.types.isEffectSchemaRegistered(ContactType)) {
+      client._graph.types.registerEffectSchema(ContactType);
+    }
+
     await client.halo.createIdentity();
 
     const space = await client.spaces.create();
@@ -86,17 +107,23 @@ describe('Index queries', () => {
   });
 
   test('indexes persists between client restarts', async () => {
-    const testStoragePath = fs.mkdtempSync(path.join('tmp', 'client-indexing-'));
-    fs.rmSync(testStoragePath, { recursive: true, force: true });
-    afterTest(() => fs.rmSync(testStoragePath, { recursive: true, force: true }));
-
     let spaceKey: PublicKey;
+
+    const builder = new TestBuilder();
+    builder.storage = createStorage({ type: StorageType.RAM });
+    builder.level = createTestLevel();
+    afterTest(async () => {
+      await builder.destroy();
+    });
+
     {
-      const storage = createStorage({ type: StorageType.NODE, root: testStoragePath });
-      const { client, builder } = await setupClient(storage);
+      const client = new Client({ services: builder.createLocal() });
+      await client.initialize();
+      if (!client._graph.types.isEffectSchemaRegistered(ContactType)) {
+        client._graph.types.registerEffectSchema(ContactType);
+      }
       await client.halo.createIdentity();
 
-      await client.spaces.isReady.wait();
       const space = await client.spaces.create();
       {
         await space.waitUntilReady();
@@ -111,15 +138,17 @@ describe('Index queries', () => {
       expect(indexedContact.name).to.equal('John Doe');
 
       await client.destroy();
-      await builder.storage!.close();
-      builder.destroy();
     }
 
     {
-      const storage = createStorage({ type: StorageType.NODE, root: testStoragePath });
-      const { client } = await setupClient(storage);
+      const client = new Client({ services: builder.createLocal() });
+      await client.initialize();
+      if (!client._graph.types.isEffectSchemaRegistered(ContactType)) {
+        client._graph.types.registerEffectSchema(ContactType);
+      }
+      afterTest(() => client.destroy());
 
-      await client.spaces.isReady.wait();
+      await asyncTimeout(client.spaces.isReady.wait(), 5000);
 
       const space = client.spaces.get(spaceKey)!;
 
@@ -131,7 +160,17 @@ describe('Index queries', () => {
   });
 
   test('index already available data', async () => {
-    const { client } = await setupClient();
+    const builder = new TestBuilder();
+    afterTest(async () => {
+      await builder.destroy();
+    });
+    const client = new Client({ services: builder.createLocal() });
+    await client.initialize();
+    if (!client._graph.types.isEffectSchemaRegistered(ContactType)) {
+      client._graph.types.registerEffectSchema(ContactType);
+    }
+    afterTest(() => client.destroy());
+
     await client.halo.createIdentity();
 
     const space = await client.spaces.create();
@@ -144,38 +183,22 @@ describe('Index queries', () => {
     const indexedContact = await queryIndexedContact(space);
     expect(indexedContact.name).to.equal('John Doe');
   });
-
-  const setupClient = async (storage: Storage = createStorage({ type: StorageType.RAM })) => {
-    const builder = new TestBuilder();
-    builder.storage = storage;
-    afterTest(async () => {
-      await storage.close();
-      builder.destroy();
-    });
-    const services = builder.createLocal();
-    const client = new Client({ services });
-    afterTest(() => client.destroy());
-    await client.initialize();
-    if (!client._graph.types.isEffectSchemaRegistered(ContactType)) {
-      client._graph.types.registerEffectSchema(ContactType);
-    }
-    return { client, services, builder };
-  };
 });
 
 const queryIndexedContact = async (space: Space) => {
   const receivedIndexedContact = new Trigger<ContactType>();
   const query = space.db.query(Filter.schema(ContactType), { dataLocation: QueryOptions.DataLocation.ALL });
-  query.subscribe((query) => {
+  const unsub = query.subscribe((query) => {
     log('Query results', {
       length: query.results.length,
-      objects: query.results.map(({ object, resolution }) => ({
+      results: query.results.map(({ object, resolution }) => ({
         object: (object as any).toJSON(),
         resolution,
       })),
     });
     for (const result of query.results) {
       if (result.object instanceof ContactType && result.resolution?.source === 'index') {
+        unsub();
         receivedIndexedContact.wake(result.object);
       }
     }

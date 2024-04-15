@@ -16,6 +16,7 @@ import React, {
 } from 'react';
 
 import { log } from '@dxos/log';
+import { useDefaultValue } from '@dxos/react-ui';
 import { isNotFalsy } from '@dxos/util';
 
 import { documentId, editorMode, focusEvent } from '../../extensions';
@@ -51,12 +52,13 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
   (
     {
       id,
+      // TODO(wittjosiah): Rename initialText?
       doc,
       selection,
       extensions,
       className,
       autoFocus,
-      scrollTo = EditorView.scrollIntoView(0, { yMargin: 0 }),
+      scrollTo: propsScrollTo,
       moveToEndOfLine,
       debug,
       dataTestId,
@@ -65,6 +67,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
   ) => {
     // NOTE: Increments by 2 in strict mode.
     const [instanceId] = useState(() => `text-editor-${++instanceCount}`);
+    const scrollTo = useDefaultValue(propsScrollTo, EditorView.scrollIntoView(0, { yMargin: 0 }));
 
     // TODO(burdon): Make tabster optional.
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
@@ -90,10 +93,10 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
       //
       // EditorState
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
+      // NOTE: Don't set selection here in case it is invalid (and crashes the state); dispatch below.
       //
       const state = EditorState.create({
         doc,
-        selection,
         extensions: [
           id && documentId.of(id),
           // TODO(burdon): NOTE: Doesn't catch errors in keymap functions.
@@ -150,7 +153,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
         log('destroy', { id, instanceId });
         view?.destroy();
       };
-    }, [doc, selection, extensions]);
+    }, [id, selection, scrollTo, editorMode, extensions]);
 
     // Focus editor on Enter (e.g., when tabbing to this component).
     const handleKeyUp = useCallback<KeyboardEventHandler<HTMLDivElement>>(

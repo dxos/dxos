@@ -10,7 +10,7 @@ import { TypedObject } from '@dxos/echo-schema';
 import { TextV0Type } from './document';
 
 export class KanbanItemType extends TypedObject({ typename: 'braneframe.Kanban.Item', version: '0.1.0' })({
-  object: S.optional(E.ref(E.ExpandoType)),
+  object: S.optional(E.ref(E.Expando)),
   title: E.ref(TextV0Type),
   index: S.optional(S.string),
 }) {}

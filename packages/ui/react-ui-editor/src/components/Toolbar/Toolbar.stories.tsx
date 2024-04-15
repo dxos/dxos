@@ -8,6 +8,7 @@ import React, { type FC, useState } from 'react';
 
 import { TextV0Type } from '@braneframe/types';
 import * as E from '@dxos/echo-schema';
+import { createDocAccessor } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { Tooltip, useThemeContext } from '@dxos/react-ui';
@@ -37,20 +38,17 @@ faker.seed(101);
 const Story: FC<{ content: string }> = ({ content }) => {
   const { themeMode } = useThemeContext();
   const [text] = useState(E.object(TextV0Type, { content }));
-  const id = text.id;
-  const doc = text.content;
-  const accessor = E.getRawDoc(text);
   const [formattingState, formattingObserver] = useFormattingState();
   const { parentRef, view } = useTextEditor(() => {
     return {
-      id,
-      doc,
+      id: text.id,
+      doc: text.content,
       extensions: [
         formattingObserver,
         createBasicExtensions(),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode, slots: { editor: { className: 'p-2' } } }),
-        createDataExtensions({ id, text: accessor }),
+        createDataExtensions({ id: text.id, text: createDocAccessor(text, ['content']) }),
         comments({
           onCreate: ({ cursor }) => {
             const id = PublicKey.random().toHex();
@@ -64,12 +62,12 @@ const Story: FC<{ content: string }> = ({ content }) => {
         table(),
       ],
     };
-  }, [id, accessor, formattingObserver, themeMode]);
+  }, [text, formattingObserver, themeMode]);
 
   const handleAction = useActionHandler(view);
 
   const [_comments, setComments] = useState<Comment[]>([]);
-  useComments(view, id, _comments);
+  useComments(view, text.id, _comments);
 
   return (
     <Tooltip.Provider>

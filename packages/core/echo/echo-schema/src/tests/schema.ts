@@ -6,7 +6,7 @@ import * as S from '@effect/schema/Schema';
 
 import { TypedObject } from '../effect/echo-object-class';
 import * as E from '../effect/reactive';
-import { ExpandoType, type Ref, ref } from '../effect/reactive';
+import { Expando, type Ref, ref } from '../effect/reactive';
 
 export class Contact extends TypedObject({
   typename: 'example.test.Contact',
@@ -61,7 +61,7 @@ export class Container extends TypedObject({
   version: '0.1.0',
 })(
   {
-    objects: S.mutable(S.array(E.ref(ExpandoType))),
+    objects: S.mutable(S.array(E.ref(Expando))),
     records: S.mutable(
       S.array(
         S.partial(

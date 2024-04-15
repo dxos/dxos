@@ -5,7 +5,7 @@
 import { DocumentType, TextV0Type, TableType } from '@braneframe/types';
 import { next as A } from '@dxos/automerge/automerge';
 import { createSpaceObjectGenerator, type SpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { Filter, getRawDoc } from '@dxos/echo-schema';
+import { Filter, createDocAccessor } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
@@ -74,7 +74,7 @@ export class Generator {
       const object = faker.helpers.arrayElement(objects);
       const text = object.content?.content ?? '';
       const idx = text.lastIndexOf(' ', faker.number.int({ min: 0, max: text.length }));
-      const docAccessor = getRawDoc(object, ['content']);
+      const docAccessor = createDocAccessor(object, ['content']);
       docAccessor.handle.change((doc) => {
         const insertText = idx >= 0 ? ' ' + faker.lorem.word() : faker.lorem.sentence();
         A.splice(doc, docAccessor.path.slice(), Math.max(idx, 0), 0, insertText.toString());
