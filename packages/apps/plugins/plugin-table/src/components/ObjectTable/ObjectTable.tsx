@@ -50,36 +50,16 @@ const useTables = (space?: Space) => {
   return useQuery<TableType>(space, tableFilter);
 };
 
-const useUpdateProperty = (table: TableType) => {
-  const updateSchemaProp = useCallback(
-    (update: S.Struct.Fields) => {
-      return table.schema?.updateColumns(update);
-    },
-    [table.schema],
-  );
+// Mutable updates table properties
+export const updateTableProp = (props: TableTypeProp[], oldId: string, update: TableTypeProp) => {
+  const idx = props.findIndex((prop) => prop.id === oldId);
 
-  const updateSchemaPropName = useCallback(
-    (before: PropertyKey, after: PropertyKey) => {
-      return table.schema?.updateColumnName({ before, after });
-    },
-    [table.schema],
-  );
-
-  const updateTableProp = useCallback(
-    (oldId: string, update: TableTypeProp) => {
-      const idx = table.props?.findIndex((prop) => prop.id === oldId);
-
-      if (idx !== -1) {
-        const current = table.props![idx];
-        table.props.splice(idx, 1, { ...current, ...update });
-      } else {
-        table.props.push(update);
-      }
-    },
-    [table.props],
-  );
-
-  return { updateSchemaProp, updateSchemaPropName, updateTableProp };
+  if (idx !== -1) {
+    const current = props![idx];
+    props.splice(idx, 1, { ...current, ...update });
+  } else {
+    props.push(update);
+  }
 };
 
 // TODO(Zan): Better name.
@@ -92,8 +72,6 @@ const ObjectTableTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, get
   // TODO(zan): New object should probably be a ref? (Why should we re-create the columns when adding rows)
   const [newObject, setNewObject] = useState({});
   const rows = useMemo(() => [...objects, newObject], [objects, newObject]);
-
-  const { updateSchemaProp, updateSchemaPropName, updateTableProp } = useUpdateProperty(table);
 
   const columns = useMemo(() => {
     if (!space || !table.schema || !tables.length) {
@@ -120,14 +98,14 @@ const ObjectTableTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, get
       space: space!,
       onColumnUpdate: (oldId, column) => {
         const { id, type, refTable, refProp, digits, label } = column;
-        updateTableProp(oldId, { id, refProp, label });
+        updateTableProp(table.props, oldId, { id, refProp, label });
 
-        updateSchemaProp({
+        table.schema?.updateColumns({
           [oldId]: getSchema(tables, type, { digits, refTable, refProp }),
         });
 
         if (oldId !== column.id) {
-          updateSchemaPropName(oldId, id);
+          table.schema?.updateColumnName({ before: oldId, after: id });
         }
       },
       onColumnDelete: (id) => table.schema?.removeColumns([id]),
@@ -148,7 +126,7 @@ const ObjectTableTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, get
 
   const handleColumnResize = useCallback(
     (state: Record<string, number>) => {
-      Object.entries(state).forEach(([id, size]) => updateTableProp(id, { id, size }));
+      Object.entries(state).forEach(([id, size]) => updateTableProp(table.props, id, { id, size }));
     },
     [updateTableProp],
   );
