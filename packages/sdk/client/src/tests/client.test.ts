@@ -40,6 +40,7 @@ describe('Client', () => {
     afterTest(() => testBuilder.destroy());
 
     const client = new Client({ services: testBuilder.createLocal() });
+    afterTest(() => client.destroy());
     await asyncTimeout(client.initialize(), 2_000);
     await asyncTimeout(client.halo.createIdentity(), 2_000);
     await asyncTimeout(client.spaces.isReady.wait(), 2_000);
