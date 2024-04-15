@@ -240,17 +240,24 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
               */}
               <span className='truncate'>{title}</span>
             </ListItem.Heading>
-            <CollapsiblePrimitive.Content asChild={size !== 'intrinsic'}>
-              {size === 'intrinsic' ? (
-                children
-              ) : (
+            {size === 'intrinsic' ? (
+              <CollapsiblePrimitive.Content
+                {...(!collapsed && {
+                  ...sectionContentGroup,
+                  tabIndex: 0,
+                })}
+                className={mx('mlb-1 mie-1 rounded-sm', focusRing)}
+              >
+                {children}
+              </CollapsiblePrimitive.Content>
+            ) : (
+              <CollapsiblePrimitive.Content asChild>
                 <ScrollArea.Root
                   type='always'
                   {...(!collapsed && { ...sectionContentGroup, tabIndex: 0 })}
                   classNames={mx(
                     focusRing,
-                    'rounded-sm mlb-1 mie-1 is-full',
-                    'has-[[data-radix-scroll-area-viewport]]:pbe-4',
+                    'rounded-sm mlb-1 mie-1 is-full has-[[data-radix-scroll-area-viewport]]:pbe-4',
                   )}
                 >
                   <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
@@ -266,8 +273,8 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                   </ScrollArea.Scrollbar>
                   <ScrollArea.Corner />
                 </ScrollArea.Root>
-              )}
-            </CollapsiblePrimitive.Content>
+              </CollapsiblePrimitive.Content>
+            )}
           </div>
           {isResizable && !collapsed && (
             <button className={resizeHandleStyles}>
