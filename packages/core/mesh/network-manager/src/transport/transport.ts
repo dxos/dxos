@@ -9,30 +9,36 @@ import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 export enum TransportKind {
   SIMPLE_PEER = 'SIMPLE_PEER',
-  LIBDATACHANNEL = 'LIBDATACHANNEL',
   SIMPLE_PEER_PROXY = 'SIMPLE_PEER_PROXY',
+  LIBDATACHANNEL = 'LIBDATACHANNEL',
   MEMORY = 'MEMORY',
   TCP = 'TCP',
 }
 
 /**
- * Abstraction over a P2P connection transport. Currently either WebRTC or in-memory.
+ * Abstraction over a P2P connection transport.
+ * Currently, WebRTC or in-memory.
  */
+// TODO(burdon): Create abstract base class for common logging and error handling.
 export interface Transport {
   closed: Event;
   connected: Event;
   errors: ErrorStream;
 
+  open(): Promise<void>;
+  close(): Promise<void>;
+
+  signal(signal: Signal): Promise<void>;
+
   /**
-   * Transport-specfic stats.
+   * Transport-specific stats.
    */
   getStats(): Promise<TransportStats>;
+
   /**
-   * Transport-specfic connection details.
+   * Transport-specific connection details.
    */
   getDetails(): Promise<string>;
-  destroy(): Promise<void>;
-  signal(signal: Signal): void;
 }
 
 export type TransportOptions = {
@@ -49,16 +55,13 @@ export type TransportOptions = {
   /**
    * Send a signal message to remote peer.
    */
-  sendSignal: (signal: Signal) => Promise<void>; // TODO(burdon): Remove async?
+  sendSignal: (signal: Signal) => Promise<void>;
 
   timeout?: number;
 
   sessionId?: PublicKey;
 };
 
-/**
- *
- */
 export interface TransportFactory {
   createTransport(options: TransportOptions): Transport;
 }

@@ -128,7 +128,7 @@ export class SimplePeerTransportProxy implements Transport {
         break;
       }
       case ConnectionState.CLOSED: {
-        await this.destroy();
+        await this.close();
         break;
       }
     }
@@ -143,7 +143,27 @@ export class SimplePeerTransportProxy implements Transport {
     await this._params.sendSignal(signalEvent.payload);
   }
 
-  signal(signal: Signal): void {
+  async open() {}
+
+  async close() {
+    await this._ctx.dispose();
+    if (this._closed) {
+      return;
+    }
+
+    await this._serviceStream.close();
+
+    try {
+      await this._params.bridgeService.close({ proxyId: this._proxyId }, { timeout: RPC_TIMEOUT });
+    } catch (err: any) {
+      log.catch(err);
+    }
+
+    this.closed.emit();
+    this._closed = true;
+  }
+
+  async signal(signal: Signal) {
     this._params.bridgeService
       .sendSignal(
         {
@@ -162,25 +182,6 @@ export class SimplePeerTransportProxy implements Transport {
   async getStats(): Promise<TransportStats> {
     return (await this._params.bridgeService.getStats({ proxyId: this._proxyId }, { timeout: RPC_TIMEOUT }))
       .stats as TransportStats;
-  }
-
-  // TODO(burdon): Move open from constructor.
-  async destroy(): Promise<void> {
-    await this._ctx.dispose();
-    if (this._closed) {
-      return;
-    }
-
-    await this._serviceStream.close();
-
-    try {
-      await this._params.bridgeService.close({ proxyId: this._proxyId }, { timeout: RPC_TIMEOUT });
-    } catch (err: any) {
-      log.catch(err);
-    }
-
-    this.closed.emit();
-    this._closed = true;
   }
 
   /**
@@ -230,7 +231,6 @@ export class SimplePeerTransportProxyFactory implements TransportFactory {
 // TODO(nf): fix so Errors crossing RPC boundary preserve class
 const decodeError = (err: Error | string) => {
   const message = typeof err === 'string' ? err : err.message;
-
   if (message.includes('CONNECTION_RESET')) {
     return new ConnectionResetError(message);
   } else if (message.includes('TIMEOUT')) {

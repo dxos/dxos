@@ -68,15 +68,16 @@ export class TcpTransport implements Transport {
     }
   }
 
-  async destroy(): Promise<void> {
+  async open() {}
+
+  async close() {
     log('closing');
     this._socket?.destroy();
     this._server?.close();
-
     this._destroyed = true;
   }
 
-  signal({ payload }: Signal) {
+  async signal({ payload }: Signal) {
     log('received signal', { payload });
     if (this.options.initiator || this._connected) {
       return;

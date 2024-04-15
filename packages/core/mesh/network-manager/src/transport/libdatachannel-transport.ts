@@ -29,19 +29,24 @@ const MAX_MESSAGE_SIZE = 64 * 1024;
  */
 export class LibDataChannelTransport implements Transport {
   private static _instanceCount = 0;
-  private _closed = false;
-  readonly closed = new Event();
-  private _connected = false;
-  readonly connected = new Event();
-  readonly errors = new ErrorStream();
+
+  // TODO(burdon): Why promise? Make well-formed in initialize method?
   private readonly _peer: Promise<RTCPeerConnection>;
   private _channel!: RTCDataChannel;
   private _stream!: Duplex;
 
-  private readonly _readyForCandidates = new Trigger();
-  private _writeCallback: (() => void) | null = null;
+  private _closed = false;
+  private _connected = false;
 
-  constructor(private readonly params: LibDataChannelTransportParams) {
+  private _writeCallback: (() => void) | null = null;
+  private readonly _readyForCandidates = new Trigger();
+
+  readonly closed = new Event();
+  readonly connected = new Event();
+  readonly errors = new ErrorStream();
+
+  constructor(private readonly _params: LibDataChannelTransportParams) {
+    // TODO(burdon): Move to initialize method?
     this._peer = (async () => {
       /* eslint-disable @typescript-eslint/consistent-type-imports */
       const { RTCPeerConnection } = (await importESM('node-datachannel/polyfill'))
@@ -50,13 +55,15 @@ export class LibDataChannelTransport implements Transport {
       if (this._closed) {
         this.errors.raise(new Error('connection already closed'));
       }
+
       // workaround https://github.com/murat-dogan/node-datachannel/pull/207
-      if (params.webrtcConfig) {
-        params.webrtcConfig.iceServers = params.webrtcConfig.iceServers ?? [];
+      if (_params.webrtcConfig) {
+        _params.webrtcConfig.iceServers = _params.webrtcConfig.iceServers ?? [];
       } else {
-        params.webrtcConfig = { iceServers: [] };
+        _params.webrtcConfig = { iceServers: [] };
       }
-      const peer = new RTCPeerConnection(params.webrtcConfig);
+
+      const peer = new RTCPeerConnection(_params.webrtcConfig);
       LibDataChannelTransport._instanceCount++;
 
       peer.onicecandidateerror = (event) => {
@@ -76,7 +83,7 @@ export class LibDataChannelTransport implements Transport {
         log.debug('peer.onicecandidate', { event });
         if (event.candidate) {
           try {
-            await params.sendSignal({
+            await _params.sendSignal({
               payload: {
                 data: {
                   type: 'candidate',
@@ -90,12 +97,12 @@ export class LibDataChannelTransport implements Transport {
               },
             });
           } catch (err) {
-            log.info('signaling errror', { err });
+            log.info('signaling error', { err });
           }
         }
       };
 
-      if (params.initiator) {
+      if (_params.initiator) {
         peer
           .createOffer()
           .then(async (offer) => {
@@ -103,17 +110,19 @@ export class LibDataChannelTransport implements Transport {
               return;
             }
             if (peer.connectionState !== 'connecting') {
-              log.error('i am initiator but peer not in state connecting', { peer });
+              log.error('peer not connecting', { peer });
               this.errors.raise(new Error('invalid state: peer is initiator, but other peer not in state connecting'));
             }
-            log.debug(`im the initiator, creating offer, peer is in state ${peer.connectionState}`, { offer });
+
+            log.debug('creating offer', { peer, offer });
             await peer.setLocalDescription(offer);
-            await params.sendSignal({ payload: { data: { type: offer.type, sdp: offer.sdp } } });
+            await _params.sendSignal({ payload: { data: { type: offer.type, sdp: offer.sdp } } });
             return offer;
           })
           .catch((err) => {
             this.errors.raise(err);
           });
+
         this.handleChannel(peer.createDataChannel(DATACHANNEL_LABEL));
         log.debug('created data channel');
         peer.ondatachannel = (event) => {
@@ -132,6 +141,15 @@ export class LibDataChannelTransport implements Transport {
 
       return peer;
     })();
+  }
+
+  async open() {}
+
+  async close() {
+    await this._close();
+    if (--LibDataChannelTransport._instanceCount === 0) {
+      (await importESM('node-datachannel')).cleanup();
+    }
   }
 
   private handleChannel(dataChannel: RTCDataChannel) {
@@ -163,7 +181,7 @@ export class LibDataChannelTransport implements Transport {
         },
       });
 
-      duplex.pipe(this.params.stream).pipe(duplex);
+      duplex.pipe(this._params.stream).pipe(duplex);
       this._stream = duplex;
       this._connected = true;
       this.connected.emit();
@@ -208,7 +226,7 @@ export class LibDataChannelTransport implements Transport {
     this.closed.emit();
   }
 
-  signal(signal: Signal): void {
+  async signal(signal: Signal) {
     this._peer
       .then(async (peer) => {
         const data = signal.payload.data;
@@ -223,7 +241,7 @@ export class LibDataChannelTransport implements Transport {
               await peer.setRemoteDescription({ type: data.type, sdp: data.sdp });
               const answer = await peer.createAnswer();
               await peer.setLocalDescription(answer);
-              await this.params.sendSignal({ payload: { data: { type: answer.type, sdp: answer.sdp } } });
+              await this._params.sendSignal({ payload: { data: { type: answer.type, sdp: answer.sdp } } });
               this._readyForCandidates.wake();
             } catch (err) {
               log.error("can't handle offer from signalling server", { err });
@@ -273,7 +291,6 @@ export class LibDataChannelTransport implements Transport {
   async _getStats(): Promise<any> {
     return this._peer.then(async (peer) => {
       const stats = await peer.getStats();
-
       const statsEntries = Array.from((stats as any).entries() as any[]);
       const transport = statsEntries.filter((s) => s[1].type === 'transport')[0][1];
       const candidatePair = statsEntries.filter((s: any) => s[0] === transport.selectedCandidatePairId);
@@ -314,24 +331,13 @@ export class LibDataChannelTransport implements Transport {
     };
   }
 
-  async destroy(): Promise<void> {
-    await this._close();
-    if (--LibDataChannelTransport._instanceCount === 0) {
-      (await importESM('node-datachannel')).cleanup();
-    }
-  }
-
   private async _disconnectStreams() {
-    this.params.stream.unpipe?.(this._stream)?.unpipe?.(this.params.stream);
+    this._params.stream.unpipe?.(this._stream)?.unpipe?.(this._params.stream);
   }
 }
 
 export const createLibDataChannelTransportFactory = (webrtcConfig?: any): TransportFactory => ({
-  createTransport: (params) =>
-    new LibDataChannelTransport({
-      ...params,
-      webrtcConfig,
-    }),
+  createTransport: (params) => new LibDataChannelTransport({ ...params, webrtcConfig }),
 });
 
 // eslint-disable-next-line no-new-func

@@ -18,8 +18,9 @@ describe('SimplePeerTransport', () => {
       sendSignal: async () => {},
     });
 
+    await connection.open();
     const wait = connection.closed.waitForCount(1);
-    await connection.destroy();
+    await connection.close();
     await wait;
   })
     .timeout(1_000)
@@ -35,7 +36,7 @@ describe('SimplePeerTransport', () => {
         await connection2.signal(signal);
       },
     });
-    afterTest(() => connection1.destroy());
+    afterTest(() => connection1.close());
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
     const stream2 = new TestStream();
@@ -47,8 +48,11 @@ describe('SimplePeerTransport', () => {
         await connection1.signal(signal);
       },
     });
-    afterTest(() => connection2.destroy());
+    afterTest(() => connection2.close());
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
+
+    await connection1.open();
+    await connection2.open();
 
     await TestStream.assertConnectivity(stream1, stream2);
   })

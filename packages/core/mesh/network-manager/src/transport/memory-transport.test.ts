@@ -14,7 +14,7 @@ import { MemoryTransport } from './memory-transport';
 //  Attempted to log "Ignoring unsupported ICE candidate.".
 
 // TODO(burdon): Move to TestBuilder.
-const createPair = () => {
+const createPair = async () => {
   const topic = PublicKey.random();
   const peer1Id = PublicKey.random();
   const peer2Id = PublicKey.random();
@@ -28,7 +28,7 @@ const createPair = () => {
     initiator: true,
   });
 
-  afterTest(() => connection1.destroy());
+  afterTest(() => connection1.close());
   afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
   const stream2 = new TestStream();
@@ -40,8 +40,11 @@ const createPair = () => {
     initiator: false,
   });
 
-  afterTest(() => connection2.destroy());
+  afterTest(() => connection2.close());
   afterTest(() => connection2.errors.assertNoUnhandledErrors());
+
+  await connection1.open();
+  await connection2.open();
 
   return {
     connection1,
@@ -56,14 +59,14 @@ const createPair = () => {
 
 describe('MemoryTransport', () => {
   test('establish connection and send data through with protocol', async () => {
-    const { stream1, stream2 } = createPair();
+    const { stream1, stream2 } = await createPair();
     await TestStream.assertConnectivity(stream1, stream2);
   });
 
   test('10 pairs of peers connecting at the same time', async () => {
     await Promise.all(
       range(10).map(async () => {
-        const { stream1, stream2 } = createPair();
+        const { stream1, stream2 } = await createPair();
         await TestStream.assertConnectivity(stream1, stream2);
       }),
     );
