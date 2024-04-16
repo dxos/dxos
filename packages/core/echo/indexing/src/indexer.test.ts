@@ -5,6 +5,8 @@
 import { expect } from 'chai';
 
 import { asyncTimeout } from '@dxos/async';
+import { Reference } from '@dxos/echo-db';
+import { type ObjectStructure, encodeReference } from '@dxos/echo-pipeline';
 import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { type Filter } from '@dxos/echo-schema';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
@@ -31,18 +33,21 @@ describe('Indexer', () => {
       indexStore: new IndexStore({ directory: storage.createDirectory('IndexStore') }),
       metadataStore,
       loadDocuments: async function* (ids) {
-        yield documents.filter((doc) => ids.includes(doc.object.id));
+        yield documents.filter((doc) => ids.includes(doc.id));
       },
       getAllDocuments: async function* () {},
     });
     afterTest(() => indexer.destroy());
 
     const schemaURI = '@example.org/schema/Contact';
-    const objects = [
-      { id: '1', data: { name: 'John' }, system: { type: { itemId: schemaURI } } },
-      { id: '2', data: { title: 'first document' }, system: { type: { itemId: '@example.org/schema/Document' } } },
+    const objects: Partial<ObjectStructure>[] = [
+      { data: { name: 'John' }, system: { type: encodeReference(new Reference(schemaURI)) } },
+      {
+        data: { title: 'first document' },
+        system: { type: encodeReference(new Reference('@example.org/schema/Document')) },
+      },
     ];
-    objects.forEach((object) => documents.push({ id: object.id, object, currentHash: 'hash' }));
+    objects.forEach((object, index) => documents.push({ id: String(index), object, currentHash: 'hash' }));
 
     {
       indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
@@ -50,7 +55,7 @@ describe('Indexer', () => {
     }
 
     {
-      const dirtyMap = new Map(objects.map((object) => [object.id, 'hash']));
+      const dirtyMap = new Map(objects.map((_, index) => [String(index), 'hash']));
       await metadataStore.markDirty(dirtyMap);
     }
 
@@ -59,7 +64,7 @@ describe('Indexer', () => {
     {
       const ids = await indexer.find({ type: { itemId: schemaURI } } as Filter);
       expect(ids.length).to.equal(1);
-      expect(ids[0].id).to.equal('1');
+      expect(ids[0].id).to.equal('0');
     }
   });
 
@@ -73,11 +78,14 @@ describe('Indexer', () => {
     const documents: ObjectSnapshot[] = [];
 
     const schemaURI = '@example.org/schema/Contact';
-    const objects = [
-      { id: '1', data: { name: 'John' }, system: { type: { itemId: schemaURI } } },
-      { id: '2', data: { title: 'first document' }, system: { type: { itemId: '@example.org/schema/Document' } } },
+    const objects: Partial<ObjectStructure>[] = [
+      { data: { name: 'John' }, system: { type: encodeReference(new Reference(schemaURI)) } },
+      {
+        data: { title: 'first document' },
+        system: { type: encodeReference(new Reference('@example.org/schema/Document')) },
+      },
     ];
-    objects.forEach((object) => documents.push({ id: object.id, object, currentHash: 'hash' }));
+    objects.forEach((object, index) => documents.push({ id: String(index), object, currentHash: 'hash' }));
 
     const metadataStore = new IndexMetadataStore({ db: level.sublevel('indexer-metadata') });
     const indexer = new Indexer({
@@ -85,14 +93,14 @@ describe('Indexer', () => {
       metadataStore,
       loadDocuments: async function* () {},
       getAllDocuments: async function* () {
-        for (const object of objects) {
-          yield [{ id: object.id, object, currentHash: 'hash' }];
+        for (const index in objects) {
+          yield [{ id: index, object: objects[index], currentHash: 'hash' }];
         }
       },
     });
     afterTest(() => indexer.destroy());
 
-    const doneIndexing = indexer.indexed.waitForCount(1);
+    const doneIndexing = indexer.updated.waitForCount(1);
 
     {
       indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
@@ -104,7 +112,7 @@ describe('Indexer', () => {
     {
       const ids = await indexer.find({ type: { itemId: schemaURI } } as Filter);
       expect(ids.length).to.equal(1);
-      expect(ids[0].id).to.equal('1');
+      expect(ids[0].id).to.equal('0');
     }
   });
 });

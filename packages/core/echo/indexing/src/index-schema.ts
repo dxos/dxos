@@ -4,11 +4,14 @@
 import * as orama from '@orama/orama';
 
 import { Event } from '@dxos/async';
+import { Resource } from '@dxos/context';
+import { type ObjectStructure } from '@dxos/echo-pipeline';
 import { type Filter } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
-import { type ObjectType, type Index, type IndexStaticProps, type LoadParams, staticImplements } from './types';
+import { type Index, type IndexStaticProps, type LoadParams, staticImplements } from './types';
 
 // Note: By default, Orama search returns 10 results.
 const ORAMA_LIMIT = 1_000_000;
@@ -25,15 +28,15 @@ type OramaSchemaType = orama.Orama<
 >;
 
 @staticImplements<IndexStaticProps>()
-export class IndexSchema implements Index {
+export class IndexSchema extends Resource implements Index {
   private _identifier = PublicKey.random().toString();
   public readonly kind: IndexKind = { kind: IndexKind.Kind.SCHEMA_MATCH };
   public readonly updated = new Event<void>();
 
-  private readonly _orama: Promise<OramaSchemaType>;
+  private _orama?: OramaSchemaType = undefined;
 
-  constructor() {
-    this._orama = orama.create({
+  override async _open() {
+    this._orama = await orama.create({
       schema: {
         system: {
           type: { itemId: 'string' },
@@ -42,30 +45,40 @@ export class IndexSchema implements Index {
     });
   }
 
+  override async _close() {}
+
   get identifier() {
     return this._identifier;
   }
 
-  async update(id: string, object: ObjectType) {
-    await orama.update<any>(await this._orama, id, { ...object, id });
+  async update(id: string, object: Partial<ObjectStructure>) {
+    invariant(this._orama, 'Index is not initialized');
+    const entry = await orama.getByID(this._orama, id);
+    if (entry && entry.system.type?.itemId === object.system?.type?.itemId) {
+      return false;
+    }
+    await orama.update<any>(this._orama, id, { ...object, id });
+    return true;
   }
 
   async remove(id: string) {
-    await orama.remove(await this._orama, id);
+    invariant(this._orama, 'Index is not initialized');
+    await orama.remove(this._orama, id);
   }
 
   // TODO(mykola): Fix Filter type with new Reactive API.
   async find(filter: Filter) {
-    let results: orama.Results<ObjectType>;
+    invariant(this._orama, 'Index is not initialized');
+    let results: orama.Results<Partial<ObjectStructure>>;
     if (!filter.type) {
-      results = await orama.search(await this._orama, {
+      results = await orama.search(this._orama, {
         term: '',
         exact: true,
         threshold: 1,
         limit: ORAMA_LIMIT,
       });
     } else {
-      results = await orama.search<OramaSchemaType, ObjectType>(await this._orama, {
+      results = await orama.search<OramaSchemaType, Partial<ObjectStructure>>(this._orama, {
         term: filter.type.itemId,
         exact: true,
         threshold: 0,
@@ -76,15 +89,18 @@ export class IndexSchema implements Index {
   }
 
   async serialize(): Promise<string> {
-    return JSON.stringify(await orama.save(await this._orama), null, 2);
+    invariant(this._orama, 'Index is not initialized');
+    return JSON.stringify(await orama.save(this._orama), null, 2);
   }
 
   static async load({ serialized, identifier }: LoadParams): Promise<IndexSchema> {
     const deserialized = JSON.parse(serialized);
 
     const index = new IndexSchema();
+    await index.open();
+    invariant(index._orama, 'Index is not initialized');
     index._identifier = identifier;
-    await orama.load(await index._orama, deserialized);
+    await orama.load(index._orama, deserialized);
     return index;
   }
 }
