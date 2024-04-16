@@ -20,6 +20,50 @@ export type ObjectTableProps = Pick<TableProps<any>, 'stickyHeader' | 'role' | '
   table: TableType;
 };
 
+export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
+  const space = getSpace(table);
+  const [showSettings, setShowSettings] = useState(false);
+
+  useEffect(() => setShowSettings(!table.schema), [table.schema]);
+
+  const handleClose = (success: boolean) => {
+    // TODO(burdon): If cancel then undo create?
+    if (!success || !space) {
+      return;
+    }
+
+    if (!table.schema) {
+      table.schema = space.db.schemaRegistry.add(
+        TypedObject({ typename: `example.com/schema/${PublicKey.random().truncate()}`, version: '0.1.0' })({
+          title: S.optional(S.string),
+        }),
+      );
+    }
+
+    setShowSettings(false);
+  };
+
+  const [schemas, setSchemas] = useState<DynamicEchoSchema[]>([]);
+
+  useEffect(() => {
+    if (space) {
+      setSchemas(space.db.schemaRegistry.getAll());
+    }
+  }, [showSettings, space]);
+
+  if (!space) {
+    return null;
+  }
+
+  if (showSettings) {
+    return <TableSettings open={showSettings} table={table} schemas={schemas} onClose={handleClose} />;
+  } else {
+    return (
+      <ObjectTableTable table={table} role={role} stickyHeader={stickyHeader} getScrollElement={getScrollElement} />
+    );
+  }
+};
+
 const ObjectTableTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
   const space = getSpace(table);
 
@@ -108,48 +152,4 @@ const ObjectTableTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, get
       )}
     </DensityProvider>
   );
-};
-
-export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
-  const space = getSpace(table);
-  const [showSettings, setShowSettings] = useState(false);
-
-  useEffect(() => setShowSettings(!table.schema), [table.schema]);
-
-  const handleClose = (success: boolean) => {
-    // TODO(burdon): If cancel then undo create?
-    if (!success || !space) {
-      return;
-    }
-
-    if (!table.schema) {
-      table.schema = space.db.schemaRegistry.add(
-        TypedObject({ typename: `example.com/schema/${PublicKey.random().truncate()}`, version: '0.1.0' })({
-          title: S.optional(S.string),
-        }),
-      );
-    }
-
-    setShowSettings(false);
-  };
-
-  const [schemas, setSchemas] = useState<DynamicEchoSchema[]>([]);
-
-  useEffect(() => {
-    if (space) {
-      setSchemas(space.db.schemaRegistry.getAll());
-    }
-  }, [showSettings, space]);
-
-  if (!space) {
-    return null;
-  }
-
-  if (showSettings) {
-    return <TableSettings open={showSettings} table={table} schemas={schemas} onClose={handleClose} />;
-  } else {
-    return (
-      <ObjectTableTable table={table} role={role} stickyHeader={stickyHeader} getScrollElement={getScrollElement} />
-    );
-  }
 };
