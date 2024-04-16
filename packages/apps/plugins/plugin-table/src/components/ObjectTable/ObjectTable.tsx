@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
 import React, { type FC, useEffect, useMemo, useState, useCallback } from 'react';
 
 import { useFilteredObjects } from '@braneframe/plugin-search';
 import { TableType, type TableTypeProp } from '@braneframe/types';
+import { S } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
 import { TypedObject, type EchoReactiveObject, Filter } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';

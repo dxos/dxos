@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as S from '@effect/schema/Schema';
 import { randWord, randSentence } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
 import React, { useEffect, useMemo, useState } from 'react';
 
-import type { ReactiveObject } from '@dxos/echo-schema';
+import type { ReactiveObject, S } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema'; // TODO(burdon): [API]: Import syntax?
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';

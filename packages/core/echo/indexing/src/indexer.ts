@@ -6,6 +6,7 @@ import isEqual from 'lodash.isequal';
 
 import { DeferredTask, Event, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { type ObjectStructure } from '@dxos/echo-pipeline';
 import { type Filter } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -16,7 +17,7 @@ import { ComplexMap } from '@dxos/util';
 import { IndexConstructors } from './index-constructors';
 import { type IndexMetadataStore } from './index-metadata-store';
 import { type IndexStore } from './index-store';
-import { type ObjectType, type Index } from './types';
+import { type Index } from './types';
 
 /**
  * Amount of documents processed in a batch to save indexes after.
@@ -28,7 +29,7 @@ export type ObjectSnapshot = {
    * Index ID.
    */
   id: string;
-  object: ObjectType;
+  object: Partial<ObjectStructure>;
   currentHash: string;
 };
 
@@ -39,16 +40,6 @@ export type IndexerParams = {
   loadDocuments: (ids: string[]) => AsyncGenerator<ObjectSnapshot[]>;
 
   getAllDocuments: () => AsyncGenerator<ObjectSnapshot[]>;
-
-  /**
-   * Amount of updates to save indexes after.
-   */
-  saveAfterUpdates?: number;
-
-  /**
-   * Amount of time in [ms] to save indexes after.
-   */
-  saveAfterTime?: number;
 };
 
 @trace.resource()
@@ -62,7 +53,7 @@ export class Indexer {
   private _initialized = false;
   private readonly _newIndexes: Index[] = [];
 
-  public readonly indexed = new Event<void>();
+  public readonly updated = new Event<void>();
 
   private readonly _run = new DeferredTask(this._ctx, async () => {
     if (!this._initialized || this._indexConfig?.enabled !== true) {
@@ -80,23 +71,12 @@ export class Indexer {
   private readonly _indexStore: IndexStore;
   private readonly _loadDocuments: (ids: string[]) => AsyncGenerator<ObjectSnapshot[]>;
   private readonly _getAllDocuments: () => AsyncGenerator<ObjectSnapshot[]>;
-  private readonly _saveAfterUpdates: number;
-  private readonly _saveAfterTime: number;
 
-  constructor({
-    metadataStore,
-    indexStore,
-    loadDocuments,
-    getAllDocuments,
-    saveAfterUpdates = 100,
-    saveAfterTime = 30_000,
-  }: IndexerParams) {
+  constructor({ metadataStore, indexStore, loadDocuments, getAllDocuments }: IndexerParams) {
     this._metadataStore = metadataStore;
     this._indexStore = indexStore;
     this._loadDocuments = loadDocuments;
     this._getAllDocuments = getAllDocuments;
-    this._saveAfterUpdates = saveAfterUpdates;
-    this._saveAfterTime = saveAfterTime;
   }
 
   get initialized() {
@@ -156,6 +136,7 @@ export class Indexer {
         this._newIndexes.push(new IndexConstructor(kind));
       }
     }
+    await Promise.all(this._newIndexes.map((index) => index.open()));
 
     if (this._indexConfig?.enabled === true) {
       this._metadataStore.dirty.on(this._ctx, () => this._run.schedule());
@@ -185,7 +166,7 @@ export class Indexer {
     this._newIndexes.forEach((index) => this._indexes.set(index.kind, index));
     this._newIndexes.length = 0; // Clear new indexes.
     await this._saveIndexes();
-    this.indexed.emit();
+    this.updated.emit();
   }
 
   @trace.span({ showInBrowserTimeline: true })
@@ -206,11 +187,12 @@ export class Indexer {
       );
     };
 
+    const updates: boolean[] = [];
     for await (const documents of this._loadDocuments(ids)) {
       if (this._ctx.disposed) {
         return;
       }
-      await this._updateIndexes(Array.from(this._indexes.values()), documents);
+      updates.push(...(await this._updateIndexes(Array.from(this._indexes.values()), documents)));
       documentsUpdated.push(...documents);
       if (documentsUpdated.length >= INDEX_UPDATE_BATCH_SIZE) {
         await saveIndexChanges();
@@ -218,28 +200,34 @@ export class Indexer {
       }
     }
     await saveIndexChanges();
-    this.indexed.emit();
+    if (updates.some(Boolean)) {
+      this.updated.emit();
+    }
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _updateIndexes(indexes: Index[], documents: ObjectSnapshot[]) {
+  private async _updateIndexes(indexes: Index[], documents: ObjectSnapshot[]): Promise<boolean[]> {
+    const updates: boolean[] = [];
     for (const index of indexes) {
       if (this._ctx.disposed) {
-        return;
+        return updates;
       }
       switch (index.kind.kind) {
         case IndexKind.Kind.FIELD_MATCH:
           invariant(index.kind.field, 'Field match index kind should have a field');
-          await updateIndexWithObjects(
-            index,
-            documents.filter((document) => index.kind.field! in document.object),
+          updates.push(
+            ...(await updateIndexWithObjects(
+              index,
+              documents.filter((document) => index.kind.field! in document.object),
+            )),
           );
           break;
         case IndexKind.Kind.SCHEMA_MATCH:
-          await updateIndexWithObjects(index, documents);
+          updates.push(...(await updateIndexWithObjects(index, documents)));
           break;
       }
     }
+    return updates;
   }
 
   @trace.span({ showInBrowserTimeline: true })

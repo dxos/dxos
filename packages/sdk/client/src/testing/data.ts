@@ -2,10 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
-
+import { S, TypedObject } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
-import { TypedObject } from '@dxos/echo-schema';
 
 // TODO(burdon): Copied to avoid circular dependency @dxos/client <=> @braneframe/types.
 //  Better to simplify tests and remove dependency completely.

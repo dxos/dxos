@@ -11,6 +11,7 @@ import {
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
+import { createKeyPair, sign } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -21,9 +22,9 @@ import {
   type SwarmConnection,
 } from '@dxos/network-manager';
 import { InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { type AdmissionKeypair, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { AuthenticationResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { AuthenticationResponse, type IntroductionResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
 
 import {
   InvitationGuestExtension,
@@ -74,9 +75,11 @@ export class InvitationsHandler {
       state = Invitation.State.INIT,
       timeout = INVITATION_TIMEOUT,
       swarmKey = PublicKey.random(),
-      persistent = true,
+      persistent = options?.authMethod !== Invitation.AuthMethod.KNOWN_PUBLIC_KEY, // default no not storing keypairs
       created = new Date(),
-      lifetime = 86400, // 1 day
+      guestKeypair = undefined,
+      lifetime = 86400, // 1 day,
+      multiUse = false,
     } = options ?? {};
     const authCode =
       options?.authCode ??
@@ -91,9 +94,12 @@ export class InvitationsHandler {
       swarmKey,
       authCode,
       timeout,
-      persistent,
+      persistent: persistent && type !== Invitation.Type.DELEGATED, // delegated invitations are persisted in control feed
+      guestKeypair:
+        guestKeypair ?? (authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY ? createAdmissionKeypair() : undefined),
       created,
       lifetime,
+      multiUse,
       ...protocol.getInvitationContext(),
     };
 
@@ -162,7 +168,7 @@ export class InvitationsHandler {
               }
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.error({ id: traceId, error: err }));
             } finally {
-              if (type !== Invitation.Type.MULTIUSE) {
+              if (!multiUse) {
                 // Wait for graceful close before disposing.
                 await swarmConnection.close();
                 await ctx.dispose();
@@ -317,26 +323,13 @@ export class InvitationsHandler {
 
               // 2. Get authentication code.
               if (isAuthenticationRequired(invitation)) {
-                for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
-                  log('guest waiting for authentication code...');
-                  setState({ state: Invitation.State.READY_FOR_AUTHENTICATION });
-                  const authCode = await authenticated.wait({ timeout });
-
-                  log('sending authentication request');
-                  setState({ state: Invitation.State.AUTHENTICATING });
-                  const response = await extension.rpc.InvitationHostService.authenticate({ authCode });
-                  if (response.status === undefined || response.status === AuthenticationResponse.Status.OK) {
+                switch (invitation.authMethod) {
+                  case Invitation.AuthMethod.SHARED_SECRET:
+                    await this._handleGuestOtpAuth(extension, setState, authenticated, { timeout });
                     break;
-                  }
-
-                  if (response.status === AuthenticationResponse.Status.INVALID_OTP) {
-                    if (attempt === MAX_OTP_ATTEMPTS) {
-                      throw new Error(`Maximum retry attempts: ${MAX_OTP_ATTEMPTS}`);
-                    } else {
-                      log('retrying invalid code', { attempt });
-                      authenticated.reset();
-                    }
-                  }
+                  case Invitation.AuthMethod.KNOWN_PUBLIC_KEY:
+                    await this._handleGuestKpkAuth(extension, setState, invitation, introductionResponse);
+                    break;
                 }
               }
 
@@ -423,13 +416,61 @@ export class InvitationsHandler {
 
     return observable;
   }
+
+  private async _handleGuestOtpAuth(
+    extension: InvitationGuestExtension,
+    setState: (newState: Partial<Invitation>) => void,
+    authenticated: Trigger<string>,
+    options: { timeout: number },
+  ) {
+    for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
+      log('guest waiting for authentication code...');
+      setState({ state: Invitation.State.READY_FOR_AUTHENTICATION });
+      const authCode = await authenticated.wait(options);
+
+      log('sending authentication request');
+      setState({ state: Invitation.State.AUTHENTICATING });
+      const response = await extension.rpc.InvitationHostService.authenticate({ authCode });
+      if (response.status === undefined || response.status === AuthenticationResponse.Status.OK) {
+        break;
+      }
+
+      if (response.status === AuthenticationResponse.Status.INVALID_OTP) {
+        if (attempt === MAX_OTP_ATTEMPTS) {
+          throw new Error(`Maximum retry attempts: ${MAX_OTP_ATTEMPTS}`);
+        } else {
+          log('retrying invalid code', { attempt });
+          authenticated.reset();
+        }
+      }
+    }
+  }
+
+  private async _handleGuestKpkAuth(
+    extension: InvitationGuestExtension,
+    setState: (newState: Partial<Invitation>) => void,
+    invitation: Invitation,
+    introductionResponse: IntroductionResponse,
+  ) {
+    if (invitation.guestKeypair?.privateKey == null) {
+      throw new Error('keypair missing in the invitation');
+    }
+    if (introductionResponse.challenge == null) {
+      throw new Error('challenge missing in the introduction');
+    }
+    log('sending authentication request');
+    setState({ state: Invitation.State.AUTHENTICATING });
+    const signature = sign(Buffer.from(introductionResponse.challenge), invitation.guestKeypair.privateKey);
+    const response = await extension.rpc.InvitationHostService.authenticate({
+      signedChallenge: signature,
+    });
+    if (response.status !== AuthenticationResponse.Status.OK) {
+      throw new Error(`Authentication failed with code: ${response.status}`);
+    }
+  }
 }
 
-export const invitationExpired = (invitation: Invitation) => {
-  return (
-    invitation.created &&
-    invitation.lifetime &&
-    invitation.lifetime !== 0 &&
-    invitation.created.getTime() + invitation.lifetime * 1000 < Date.now()
-  );
+export const createAdmissionKeypair = (): AdmissionKeypair => {
+  const keypair = createKeyPair();
+  return { publicKey: PublicKey.from(keypair.publicKey), privateKey: keypair.secretKey };
 };

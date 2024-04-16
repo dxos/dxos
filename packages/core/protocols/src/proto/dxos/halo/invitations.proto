@@ -33,12 +33,19 @@ message IntroductionRequest {
 message IntroductionResponse {
   dxos.client.services.Invitation.AuthMethod auth_method = 1;
 
+  /// Present when auth_method is KNOWN_PUBLIC_KEY.
+  optional bytes challenge = 2;
+
   /// Only present for testing invitation types.
   optional dxos.keys.PublicKey space_key = 100;
 }
 
 message AuthenticationRequest {
-  string auth_code = 1;
+  /// Present when auth_method is SHARED_SECRET.
+  optional string auth_code = 1;
+
+  /// Present when auth_method is KNOWN_PUBLIC_KEY.
+  optional bytes signed_challenge = 2;
 }
 
 message AuthenticationResponse {
@@ -47,6 +54,7 @@ message AuthenticationResponse {
     INVALID_OTP = 1;
     INVALID_OPT_ATTEMPTS = 2;
     INTERNAL_ERROR = 3;
+    INVALID_SIGNATURE = 4;
   }
 
   optional Status status = 1;

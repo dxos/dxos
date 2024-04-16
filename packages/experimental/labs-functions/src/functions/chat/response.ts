@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as AST from '@effect/schema/AST';
-
 import { DocumentType, StackType, type BlockType, TextV0Type, SectionType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
+import { AST } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
