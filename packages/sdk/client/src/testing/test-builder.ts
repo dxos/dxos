@@ -163,7 +163,7 @@ export class TestBuilder {
   }
 
   async destroy() {
-    void this._ctx.dispose();
+    await this._ctx.dispose();
     await this.level?.close();
   }
 }
