@@ -105,7 +105,7 @@ describe('Filter', () => {
     const { db } = await createDatabase();
     const schema = db.schemaRegistry.add(GeneratedSchema);
 
-    const obj = db.add(E.object(schema, { title: 'test' }));
+    const obj = db.add(E.create(schema, { title: 'test' }));
 
     const filter = Filter.typename(schema.id);
     expect(filterMatch(filter, getAutomergeObjectCore(obj))).to.be.true;

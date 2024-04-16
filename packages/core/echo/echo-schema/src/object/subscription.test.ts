@@ -175,5 +175,5 @@ const createUpdateCounter = (object: any) => {
 };
 
 const createExpando = <T extends Record<string, any>>(props: T = {} as T): ReactiveObject<Expando> => {
-  return E.object(E.Expando, props);
+  return E.create(E.Expando, props);
 };

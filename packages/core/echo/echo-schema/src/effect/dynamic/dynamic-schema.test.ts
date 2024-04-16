@@ -26,7 +26,7 @@ class ClassWithSchemaField extends TypedObject({ typename: 'SchemaHolder', versi
 describe('dynamic schema', () => {
   test('set DynamicSchema as echo object field', async () => {
     const { db } = await setupTest();
-    const instanceWithSchemaRef = db.add(E.object(ClassWithSchemaField, {}));
+    const instanceWithSchemaRef = db.add(E.create(ClassWithSchemaField, {}));
     class GeneratedSchema extends TypedObject(generatedType)({
       field: S.string,
     }) {}
@@ -46,7 +46,7 @@ describe('dynamic schema', () => {
     const { db } = await setupTest();
     class GeneratedSchema extends TypedObject(generatedType)({ field: S.string }) {}
     const schema = db.schemaRegistry.add(GeneratedSchema);
-    const instanceWithSchemaRef = db.add(E.object(ClassWithSchemaField, { schema }));
+    const instanceWithSchemaRef = db.add(E.create(ClassWithSchemaField, { schema }));
 
     const schemaWithId = GeneratedSchema.annotations({
       [EchoObjectAnnotationId]: { ...generatedType, storedSchemaId: instanceWithSchemaRef.schema?.id },
@@ -57,7 +57,7 @@ describe('dynamic schema', () => {
   test('can be used to create objects', async () => {
     const { db } = await setupTest();
     const schema = db.schemaRegistry.add(GeneratedEmptySchema);
-    const object = E.object(schema, {});
+    const object = E.create(schema, {});
     schema.addColumns({ field1: S.string });
     object.field1 = 'works';
     object.field1 = undefined;

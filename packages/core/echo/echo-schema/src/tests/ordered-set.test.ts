@@ -34,7 +34,7 @@ describe('ordered-set', () => {
     root.subTasks!.forEach((task, i) => expect(task!.id).to.eq(ids[i]));
     expect(Array.from(root.subTasks!.values())).to.have.length(5);
 
-    root.subTasks = [E.object(Task, {}), E.object(Task, {}), E.object(Task, {})];
+    root.subTasks = [E.create(Task, {}), E.create(Task, {}), E.create(Task, {})];
     expect(root.subTasks.length).to.eq(3);
 
     await addToDatabase(root);
@@ -49,10 +49,10 @@ describe('ordered-set', () => {
   });
 
   test('array of plain objects', async () => {
-    const root = E.object(Container, { records: [] });
+    const root = E.create(Container, { records: [] });
     root.records!.push({
       title: 'test',
-      contacts: [E.object(Contact, { name: 'tester' })],
+      contacts: [E.create(Contact, { name: 'tester' })],
     });
     const { db } = await addToDatabase(root);
 
@@ -63,7 +63,7 @@ describe('ordered-set', () => {
   });
 
   test('reset array', async () => {
-    const { db, obj: root } = await addToDatabase(E.object(Container, { records: [] }));
+    const { db, obj: root } = await addToDatabase(E.create(Container, { records: [] }));
 
     root.records!.push({ title: 'one' });
     expect(root.records).to.have.length(1);
@@ -80,7 +80,7 @@ describe('ordered-set', () => {
   });
 });
 
-const newTask = () => E.object(Task, { subTasks: [] });
+const newTask = () => E.create(Task, { subTasks: [] });
 
 const addToDatabase = async <T>(obj: ReactiveObject<T>) => {
   const graph = new Hypergraph();

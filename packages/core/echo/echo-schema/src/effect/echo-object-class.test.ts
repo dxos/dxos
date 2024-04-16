@@ -35,7 +35,7 @@ describe('EchoObject class dsl', () => {
 
   test('static isInstance check', async () => {
     const { db } = await setupDatabase();
-    const obj = db.add(E.object(Organization, { ...DEFAULT_ORG }));
+    const obj = db.add(E.create(Organization, { ...DEFAULT_ORG }));
     expect(obj instanceof Organization).to.be.true;
     expect({ id: '12345', ...DEFAULT_ORG } instanceof Organization).to.be.false;
   });
@@ -47,20 +47,20 @@ describe('EchoObject class dsl', () => {
 
   test('objects can be added to the database', async () => {
     const { db } = await setupDatabase();
-    const obj = db.add(E.object(Organization, { ...DEFAULT_ORG }));
+    const obj = db.add(E.create(Organization, { ...DEFAULT_ORG }));
     expect(obj.id).to.be.a('string');
     expect(obj.name).to.eq(DEFAULT_ORG.name);
   });
 
   test('can get object schema', async () => {
     const { db } = await setupDatabase();
-    const obj = db.add(E.object(Organization, { ...DEFAULT_ORG }));
+    const obj = db.add(E.create(Organization, { ...DEFAULT_ORG }));
     expect(E.getSchema(obj)).to.deep.eq(Organization);
   });
 
   test('can query objects by type', async () => {
     const { db } = await setupDatabase();
-    db.add(E.object(Organization, { ...DEFAULT_ORG }));
+    db.add(E.create(Organization, { ...DEFAULT_ORG }));
     const query = db.query(Filter.schema(Organization));
     expect(query.objects[0].name).to.eq(DEFAULT_ORG.name);
   });
@@ -74,15 +74,15 @@ describe('EchoObject class dsl', () => {
     test('references', async () => {
       const { db, graph } = await setupDatabase();
       graph.types.registerEffectSchema(Person);
-      const org = db.add(E.object(Organization, { ...DEFAULT_ORG }));
-      const person = db.add(E.object(Person, { name: 'John', worksAt: org }));
+      const org = db.add(E.create(Organization, { ...DEFAULT_ORG }));
+      const person = db.add(E.create(Person, { name: 'John', worksAt: org }));
       expect(person.worksAt).to.eq(org);
     });
 
     test('adding nested structures to DB', async () => {
       const { db, graph } = await setupDatabase();
       graph.types.registerEffectSchema(Person);
-      const person = db.add(E.object(Person, { name: 'John', worksAt: E.object(Organization, { ...DEFAULT_ORG }) }));
+      const person = db.add(E.create(Person, { name: 'John', worksAt: E.create(Organization, { ...DEFAULT_ORG }) }));
       expect(person.worksAt?.name).to.eq(DEFAULT_ORG.name);
       expect(person.worksAt?.id).to.be.a('string');
     });
@@ -99,7 +99,7 @@ describe('EchoObject class dsl', () => {
     test('can assign undefined to partial fields', async () => {
       const { db, graph } = await setupDatabase();
       graph.types.registerEffectSchema(Person);
-      const person = db.add(E.object(Person, { name: 'John' }));
+      const person = db.add(E.create(Person, { name: 'John' }));
       person.name = undefined;
       expect(person.name).to.be.undefined;
     });

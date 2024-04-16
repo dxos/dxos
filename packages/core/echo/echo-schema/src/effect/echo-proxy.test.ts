@@ -31,12 +31,12 @@ const TypedObject = TestSchema.pipe(E.echoObject('TestSchema', '1.0.0'));
 
 test('id property name is reserved', () => {
   const invalidSchema = S.struct({ id: S.number });
-  expect(() => createEchoReactiveObject(E.object(invalidSchema, { id: 42 }))).to.throw();
+  expect(() => createEchoReactiveObject(E.create(invalidSchema, { id: 42 }))).to.throw();
 });
 
 for (const schema of [undefined, TypedObject, TestSchemaClass]) {
   const createObject = (props: Partial<TestSchemaWithClass> = {}): E.EchoReactiveObject<TestSchemaWithClass> => {
-    return createEchoReactiveObject(schema ? E.object(schema as any, props) : E.object(props));
+    return createEchoReactiveObject(schema ? E.create(schema as any, props) : E.create(props));
   };
 
   describe(`Echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
@@ -88,14 +88,14 @@ describe('Reactive Object with ECHO database', () => {
 
   test('throws if schema was not registered in Hypergraph', async () => {
     const { db } = await createDatabase();
-    expect(() => db.add(E.object(TypedObject, { string: 'foo' }))).to.throw();
+    expect(() => db.add(E.create(TypedObject, { string: 'foo' }))).to.throw();
   });
 
   test('existing proxy objects can be added to the database', async () => {
     const { db, graph } = await createDatabase();
     graph.types.registerEffectSchema(TypedObject);
 
-    const obj = E.object(TypedObject, { string: 'foo' });
+    const obj = E.create(TypedObject, { string: 'foo' });
     const returnObj = db.add(obj);
     expect(returnObj.id).to.be.a('string');
     expect(returnObj.string).to.eq('foo');
@@ -125,7 +125,7 @@ describe('Reactive Object with ECHO database', () => {
       const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
       await db._automerge.open({ rootUrl: doc.url });
 
-      const obj = db.add(E.object(TypedObject, { string: 'foo' }));
+      const obj = db.add(E.create(TypedObject, { string: 'foo' }));
       id = obj.id;
     }
 
@@ -155,7 +155,7 @@ describe('Reactive Object with ECHO database', () => {
       const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
       await db._automerge.open({ rootUrl: doc.url });
 
-      const obj = db.add(E.object(TypedObject, { string: 'foo' }));
+      const obj = db.add(E.create(TypedObject, { string: 'foo' }));
       id = obj.id;
     }
 
@@ -181,7 +181,7 @@ describe('Reactive Object with ECHO database', () => {
       graph.types.registerEffectSchema(TypedObject);
       const { db } = await createDatabase(graph);
 
-      db.add(E.object(TypedObject, { string: 'foo' }));
+      db.add(E.create(TypedObject, { string: 'foo' }));
 
       {
         const query = db.query(Filter.typename('TestSchema'));
@@ -204,8 +204,8 @@ describe('Reactive Object with ECHO database', () => {
     const { db, graph } = await createDatabase();
     graph.types.registerEffectSchema(TypedObject);
     const objects = [
-      db.add(E.object(TypedObject, { ...TEST_OBJECT })),
-      db.add(E.object(TestSchemaClass, { ...TEST_OBJECT })),
+      db.add(E.create(TypedObject, { ...TEST_OBJECT })),
+      db.add(E.create(TestSchemaClass, { ...TEST_OBJECT })),
     ];
     for (const obj of objects) {
       const objData: any = (obj as any)[data];
@@ -221,7 +221,7 @@ describe('Reactive Object with ECHO database', () => {
   test('undefined field handling', async () => {
     const { db } = await createDatabase();
     const object = db.add(
-      E.object({
+      E.create({
         field: undefined,
         nested: { deep: { field: undefined } },
         array: [{ field: undefined }],
@@ -250,8 +250,8 @@ describe('Reactive Object with ECHO database', () => {
       const { db } = await createDatabase(graph);
 
       const orgName = 'DXOS';
-      const org = db.add(E.object(Org, { name: orgName }));
-      const person = db.add(E.object(Person, { name: 'John', worksAt: org }));
+      const org = db.add(E.create(Org, { name: orgName }));
+      const person = db.add(E.create(Person, { name: 'John', worksAt: org }));
 
       expect(person.worksAt).to.deep.eq(org);
       expect(person.worksAt?.name).to.eq(orgName);
@@ -262,7 +262,7 @@ describe('Reactive Object with ECHO database', () => {
       graph.types.registerEffectSchema(Org).registerEffectSchema(Person);
       const { db } = await createDatabase(graph);
 
-      const person = db.add(E.object(Person, { name: 'John', worksAt: E.object(Org, { name: 'DXOS' }) }));
+      const person = db.add(E.create(Person, { name: 'John', worksAt: E.create(Org, { name: 'DXOS' }) }));
 
       expect(person.worksAt?.name).to.eq('DXOS');
       expect(person.worksAt?.id).to.be.a('string');
@@ -273,9 +273,9 @@ describe('Reactive Object with ECHO database', () => {
       graph.types.registerEffectSchema(Org).registerEffectSchema(Person);
       const { db } = await createDatabase(graph);
 
-      const dxos = E.object(Org, { name: 'DXOS' });
-      const braneframe = E.object(Org, { name: 'Braneframe' });
-      const person = db.add(E.object(Person, { name: 'John', worksAt: dxos, previousEmployment: [dxos, braneframe] }));
+      const dxos = E.create(Org, { name: 'DXOS' });
+      const braneframe = E.create(Org, { name: 'Braneframe' });
+      const person = db.add(E.create(Person, { name: 'John', worksAt: dxos, previousEmployment: [dxos, braneframe] }));
 
       expect(person.previousEmployment![0]!.name).to.eq('DXOS');
       expect(person.previousEmployment![1]!.name).to.eq('Braneframe');
@@ -286,9 +286,9 @@ describe('Reactive Object with ECHO database', () => {
       const { db } = await createDatabase(graph);
 
       const person = db.add(
-        E.object({
+        E.create({
           name: 'John',
-          previousEmployment: [E.object(E.Expando, { name: 'DXOS' }), E.object(E.Expando, { name: 'Braneframe' })],
+          previousEmployment: [E.create(E.Expando, { name: 'DXOS' }), E.create(E.Expando, { name: 'Braneframe' })],
         }),
       );
 
@@ -301,10 +301,10 @@ describe('Reactive Object with ECHO database', () => {
       const { db } = await testBuilder.createPeer();
       db.graph.types.registerEffectSchema(Contact, Task);
 
-      const contact = E.object(Contact, { name: 'Contact', tasks: [] });
+      const contact = E.create(Contact, { name: 'Contact', tasks: [] });
       db.add(contact);
-      const task1 = E.object(Task, { title: 'Task1' });
-      const task2 = E.object(Task, { title: 'Task2' });
+      const task1 = E.create(Task, { title: 'Task1' });
+      const task2 = E.create(Task, { title: 'Task2' });
 
       contact.tasks!.push(task1);
       contact.tasks!.push(task2);
@@ -323,19 +323,19 @@ describe('Reactive Object with ECHO database', () => {
     });
 
     test('returns false for a non-echo reactive-proxy', async () => {
-      const obj = E.object({ string: 'foo' });
+      const obj = E.create({ string: 'foo' });
       expect(E.isDeleted(obj)).to.be.false;
     });
 
     test('returns false for a non-deleted object', async () => {
       const { db } = await createDatabase();
-      const obj = db.add(E.object({ string: 'foo' }));
+      const obj = db.add(E.create({ string: 'foo' }));
       expect(E.isDeleted(obj)).to.be.false;
     });
 
     test('returns true for a deleted object', async () => {
       const { db } = await createDatabase();
-      const obj = db.add(E.object({ string: 'foo' }));
+      const obj = db.add(E.create({ string: 'foo' }));
       db.remove(obj);
       expect(E.isDeleted(obj)).to.be.true;
     });
@@ -347,7 +347,7 @@ describe('Reactive Object with ECHO database', () => {
     });
 
     test('can set meta on a non-ECHO object', async () => {
-      const obj = E.object({ string: 'foo' });
+      const obj = E.create({ string: 'foo' });
       expect(E.getMeta(obj)).to.deep.eq({ keys: [] });
       const testKey = { key: 'hello', source: 'test' };
       E.getMeta(obj).keys.push(testKey);
@@ -357,7 +357,7 @@ describe('Reactive Object with ECHO database', () => {
 
     test('meta taken from reactive object when saving to echo', async () => {
       const testKey = { key: 'hello', source: 'test' };
-      const reactiveObject = E.object({});
+      const reactiveObject = E.create({});
       E.getMeta(reactiveObject).keys.push(testKey);
 
       const { db } = await createDatabase();
@@ -405,8 +405,8 @@ describe('Reactive Object with ECHO database', () => {
 
     const { db } = await createDatabase();
 
-    const obj1 = db.add(E.object(E.Expando, { title: 'Object 1' }));
-    const obj2 = db.add(E.object(E.Expando, { title: 'Object 2' }));
+    const obj1 = db.add(E.create(E.Expando, { title: 'Object 1' }));
+    const obj2 = db.add(E.create(E.Expando, { title: 'Object 2' }));
 
     let updateCount = 0;
     using _ = defer(

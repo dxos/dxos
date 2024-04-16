@@ -20,7 +20,7 @@ describe('database', () => {
   test('creating objects', async () => {
     const { db: database } = await createDbWithTypes();
 
-    const task = E.object(Task, { title: 'test' });
+    const task = E.create(Task, { title: 'test' });
     expect(task.title).to.eq('test');
     expect(task.id).to.exist;
     expect(() => getAutomergeObjectCore(task)).to.throw();
@@ -40,7 +40,7 @@ describe('database', () => {
     const { db: database } = await createDbWithTypes();
 
     {
-      const container = E.object(Container, { records: [{ type: RecordType.WORK }] });
+      const container = E.create(Container, { records: [{ type: RecordType.WORK }] });
       await database.add(container);
     }
 
@@ -72,12 +72,12 @@ describe('database', () => {
     const { db: database } = await createDbWithTypes();
 
     {
-      const container = E.object(Container, { objects: [] });
+      const container = E.create(Container, { objects: [] });
       database.add(container);
       await database.flush();
 
-      container.objects!.push(E.object(E.Expando, { foo: 100 }));
-      container.objects!.push(E.object(E.Expando, { bar: 200 }));
+      container.objects!.push(E.create(E.Expando, { foo: 100 }));
+      container.objects!.push(E.create(E.Expando, { bar: 200 }));
     }
 
     {
@@ -93,12 +93,12 @@ describe('database', () => {
     const { db: database } = await createDbWithTypes();
 
     {
-      const container = E.object(Container, { objects: [] });
+      const container = E.create(Container, { objects: [] });
       database.add(container);
       await database.flush();
 
-      container.objects!.push(E.object(Task, {}));
-      container.objects!.push(E.object(Contact, {}));
+      container.objects!.push(E.create(Task, {}));
+      container.objects!.push(E.create(Contact, {}));
     }
 
     {
@@ -111,7 +111,7 @@ describe('database', () => {
   });
 
   test('object fields', async () => {
-    const task = E.object(Task, {});
+    const task = E.create(Task, {});
 
     task.title = 'test';
     expect(task.title).to.eq('test');
@@ -125,7 +125,7 @@ describe('database', () => {
     const { db: db1 } = await createDbWithTypes();
     const { db: db2 } = await createDbWithTypes();
 
-    const task1 = E.object(Task, { title: 'Main task' });
+    const task1 = E.create(Task, { title: 'Main task' });
     db1.add(task1);
     await db1.flush();
 
@@ -145,9 +145,9 @@ describe('database', () => {
   test('operator-based filters', async () => {
     const { db: database } = await createDbWithTypes();
 
-    database.add(E.object(Task, { title: 'foo 1' }));
-    database.add(E.object(Task, { title: 'foo 2' }));
-    database.add(E.object(Task, { title: 'bar 3' }));
+    database.add(E.create(Task, { title: 'foo 1' }));
+    database.add(E.create(Task, { title: 'foo 2' }));
+    database.add(E.create(Task, { title: 'bar 3' }));
 
     expect(database.query(Filter.schema(Task, (task) => task.title?.startsWith('foo'))).objects).to.have.length(2);
   });
@@ -155,9 +155,9 @@ describe('database', () => {
   test('typenames of nested objects', async () => {
     const { db: database } = await createDbWithTypes();
 
-    const task = E.object(Task, {
+    const task = E.create(Task, {
       title: 'Main task',
-      todos: [E.object(Todo, { name: 'Sub task' })],
+      todos: [E.create(Todo, { name: 'Sub task' })],
     });
     database.add(task);
 

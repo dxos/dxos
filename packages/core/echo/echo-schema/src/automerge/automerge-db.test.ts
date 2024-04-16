@@ -420,11 +420,11 @@ const createPeerInSpaceWithObject = async (
 };
 
 const createExpando = (props: any = {}): EchoReactiveObject<Expando> => {
-  return E.object(E.Expando, props);
+  return E.create(E.Expando, props);
 };
 
 const createTextObject = (content: string = ''): EchoReactiveObject<TextCompatibilitySchema> => {
-  return E.object(TextCompatibilitySchema, { content });
+  return E.create(TextCompatibilitySchema, { content });
 };
 
 interface DocumentHandles {

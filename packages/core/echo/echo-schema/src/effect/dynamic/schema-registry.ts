@@ -63,7 +63,7 @@ export class DynamicSchemaRegistry {
   public add(schema: S.Schema<any>): DynamicEchoSchema {
     const typeAnnotation = getEchoObjectAnnotation(schema);
     invariant(typeAnnotation, 'use S.struct({}).pipe(E.echoObject(...)) or class syntax to create a valid schema');
-    const schemaToStore = E.object(StoredEchoSchema, {
+    const schemaToStore = E.create(StoredEchoSchema, {
       typename: typeAnnotation.typename,
       version: typeAnnotation.version,
       jsonSchema: {},

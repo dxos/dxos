@@ -16,7 +16,7 @@ describe('clone', () => {
     const { db: db1 } = await createDatabase();
     const { db: db2 } = await createDatabase();
 
-    const task1 = E.object(E.Expando, {
+    const task1 = E.create(E.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
     });
@@ -39,7 +39,7 @@ describe('clone', () => {
   test('clone to the same database by changing the id', async () => {
     const { db } = await createDatabase();
 
-    const task1 = E.object(E.Expando, {
+    const task1 = E.create(E.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
     });
@@ -59,10 +59,10 @@ describe('clone', () => {
     const { db: db1 } = await createDatabase();
     const { db: db2 } = await createDatabase();
 
-    const task1 = E.object(E.Expando, {
+    const task1 = E.create(E.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
-      assignee: E.object(E.Expando, {
+      assignee: E.create(E.Expando, {
         type: 'Person',
         name: 'John Doe',
       }),
@@ -92,10 +92,10 @@ describe('clone', () => {
     const { db: db1 } = await createDatabase();
     const { db: db2 } = await createDatabase();
 
-    const task1 = E.object(E.Expando, {
+    const task1 = E.create(E.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
-      details: E.object(TextCompatibilitySchema, { content: 'Some details' }),
+      details: E.create(TextCompatibilitySchema, { content: 'Some details' }),
     });
     db1.add(task1);
     await db1.flush();
