@@ -24,7 +24,7 @@ import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import { createDocAccessor, type EchoReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { getSpace, getTextInRange, SpaceProxy, Filter } from '@dxos/react-client/echo';
+import { getSpace, getTextInRange, Filter, isSpace } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
 import { comments, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
@@ -73,11 +73,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       unsubscribe = effect(() => {
         const active = navigationPlugin?.provides.location.active;
         const activeNode = active ? graphPlugin?.provides.graph.findNode(active) : undefined;
-        const space = activeNode
-          ? activeNode.data instanceof SpaceProxy
-            ? activeNode.data
-            : getSpace(activeNode.data)
-          : undefined;
+        const space = activeNode ? (isSpace(activeNode.data) ? activeNode.data : getSpace(activeNode.data)) : undefined;
         untracked(() => {
           const [thread] = space?.db.query(Filter.schema(ThreadType, (thread) => !thread.context)).objects ?? [];
           if (activeNode && activeNode?.data instanceof DocumentType && (activeNode.data.comments?.length ?? 0) > 0) {

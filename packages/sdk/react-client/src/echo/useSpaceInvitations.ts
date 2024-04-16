@@ -5,7 +5,6 @@
 import { useMemo, useSyncExternalStore } from 'react';
 
 import { type PublicKey } from '@dxos/client';
-import { SpaceProxy } from '@dxos/client/echo';
 
 import { useSpace } from './useSpaces';
 import { useInvitationStatus } from '../invitations';
@@ -15,7 +14,7 @@ export const useSpaceInvitations = (spaceKey?: PublicKey) => {
   const invitations =
     useSyncExternalStore(
       (listener) => {
-        if (!(space instanceof SpaceProxy)) {
+        if (!space) {
           return () => {};
         }
 

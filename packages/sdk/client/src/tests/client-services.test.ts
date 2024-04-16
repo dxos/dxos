@@ -16,7 +16,6 @@ import { Device, DeviceKind, Invitation, SpaceMember } from '@dxos/protocols/pro
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Client } from '../client';
-import { type SpaceProxy } from '../echo';
 import { syncItemsAutomerge, TestBuilder } from '../testing';
 
 // TODO(burdon): Use as set-up for test suite.
@@ -223,7 +222,7 @@ describe('Client services', () => {
     log('spaces.create', { key: hostSpace.key });
     const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({
-        host: hostSpace as SpaceProxy,
+        host: hostSpace,
         guest: client2.spaces,
         options: { authMethod: Invitation.AuthMethod.SHARED_SECRET },
       }),

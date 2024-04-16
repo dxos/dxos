@@ -8,10 +8,6 @@ import { getDatabaseFromObject, type OpaqueEchoObject } from '@dxos/echo-schema'
 
 import { SpaceProxy } from './space-proxy';
 
-/**
- * @deprecated
- */
-// TODO(burdon): Normalize API getters.
 export const getSpace = (object: OpaqueEchoObject): Space | undefined => {
   const db = getDatabaseFromObject(object);
   const key = db?.spaceKey;
@@ -24,3 +20,5 @@ export const getSpace = (object: OpaqueEchoObject): Space | undefined => {
 
   return undefined;
 };
+
+export const isSpace = (object: unknown): object is Space => object instanceof SpaceProxy;

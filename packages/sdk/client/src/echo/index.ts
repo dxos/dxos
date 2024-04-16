@@ -43,6 +43,4 @@ export { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
-export { SpaceList } from './space-list';
-export { SpaceProxy } from './space-proxy'; // TODO(burdon): Don't export as part of API.
-export { getSpace } from './util';
+export { getSpace, isSpace } from './util';
