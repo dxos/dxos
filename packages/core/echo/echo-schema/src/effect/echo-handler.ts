@@ -160,7 +160,7 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
       delete target[PROPERTY_ID];
     }
 
-    if (target[symbolPath].length === 0) {
+    if (target[symbolPath].length === 0 && target[symbolNamespace] === DATA_NAMESPACE) {
       this.validateInitialProps(target);
       if (target[symbolInternals].core.database == null) {
         target[symbolInternals].core.initNewObject(target);
