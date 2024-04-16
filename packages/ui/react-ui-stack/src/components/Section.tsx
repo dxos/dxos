@@ -34,6 +34,7 @@ import {
   useTranslation,
   type TFunction,
   type ThemedClassName,
+  ScrollArea,
 } from '@dxos/react-ui';
 import { DropDownMenuDragHandleTrigger, resizeHandle, resizeHandleHorizontal } from '@dxos/react-ui-deck';
 import {
@@ -83,12 +84,15 @@ export type StackItem = MosaicDataItem &
 
 export type StackSectionItem = MosaicDataItem & {
   object: StackSectionContent;
+  size?: SectionSize;
   icon?: FC<IconProps>;
   placeholder?: string | [string, Parameters<TFunction>[1]];
   isResizable?: boolean;
 };
 
 export type StackSectionItemWithContext = StackSectionItem & StackContextValue;
+
+export type SectionSize = 'intrinsic' | 'extrinsic';
 
 export type SectionProps = PropsWithChildren<
   {
@@ -97,6 +101,7 @@ export type SectionProps = PropsWithChildren<
     title: string;
     separation: boolean;
     icon?: FC<IconProps>;
+    size?: SectionSize;
 
     // Tile props.
     active?: MosaicActiveType;
@@ -119,6 +124,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
       id,
       title,
       icon: Icon = DotsNine,
+      size = 'intrinsic',
       active,
       isResizable,
       draggableProps,
@@ -234,12 +240,41 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
               */}
               <span className='truncate'>{title}</span>
             </ListItem.Heading>
-            <CollapsiblePrimitive.Content
-              {...(!collapsed && { ...sectionContentGroup, tabIndex: 0 })}
-              className={mx(focusRing, 'rounded-sm mlb-1 mie-1')}
-            >
-              {children}
-            </CollapsiblePrimitive.Content>
+            {size === 'intrinsic' ? (
+              <CollapsiblePrimitive.Content
+                {...(!collapsed && {
+                  ...sectionContentGroup,
+                  tabIndex: 0,
+                })}
+                className={mx('mlb-1 mie-1 rounded-sm', focusRing)}
+              >
+                {children}
+              </CollapsiblePrimitive.Content>
+            ) : (
+              <CollapsiblePrimitive.Content asChild>
+                <ScrollArea.Root
+                  type='always'
+                  {...(!collapsed && { ...sectionContentGroup, tabIndex: 0 })}
+                  classNames={mx(
+                    focusRing,
+                    'rounded-sm mlb-1 mie-1 is-full has-[[data-radix-scroll-area-viewport]]:pbe-4',
+                  )}
+                >
+                  <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+                  <ScrollArea.Scrollbar
+                    orientation='horizontal'
+                    variant='coarse'
+                    classNames='hidden has-[div]:flex !inline-end-[max(.25rem,var(--radix-scroll-area-corner-width))]'
+                  >
+                    <ScrollArea.Thumb />
+                  </ScrollArea.Scrollbar>
+                  <ScrollArea.Scrollbar orientation='vertical' variant='coarse' classNames='hidden has-[div]:flex'>
+                    <ScrollArea.Thumb />
+                  </ScrollArea.Scrollbar>
+                  <ScrollArea.Corner />
+                </ScrollArea.Root>
+              </CollapsiblePrimitive.Content>
+            )}
           </div>
           {isResizable && !collapsed && (
             <button className={resizeHandleStyles}>
@@ -308,8 +343,9 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
     const section = (
       <Section
         ref={forwardedRef}
-        id={transformedItem.id}
         title={title}
+        id={transformedItem.id}
+        size={transformedItem.size}
         icon={transformedItem.icon}
         separation={separation}
         active={active}
