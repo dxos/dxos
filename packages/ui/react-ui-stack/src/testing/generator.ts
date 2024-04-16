@@ -6,8 +6,7 @@
 
 // TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
 
-import * as S from '@effect/schema/Schema';
-
+import { S } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 

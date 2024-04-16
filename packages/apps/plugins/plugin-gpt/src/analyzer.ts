@@ -2,13 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as AST from '@effect/schema/AST';
 import OpenAI from 'openai';
 import { type Chat } from 'openai/resources';
 
 import { type DocumentType, TextV0Type } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { getTypename } from '@dxos/echo-schema';
+import { AST, getTypename } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

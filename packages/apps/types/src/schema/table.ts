@@ -2,9 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
-
-import { DynamicEchoSchema, TypedObject } from '@dxos/echo-schema';
+import { S, DynamicEchoSchema, TypedObject } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
 
 const TableTypePropSchema = S.partial(
