@@ -407,6 +407,11 @@ message Invitation {
     INTERACTIVE = 0;
     /// Invitation can be accepted by any valid peer.
     OFFLINE = 1;
+    /**
+     * Multi-use interactive invitations.
+     * @deprecated use multiUse flag with type=interactive instead.
+     */
+    MULTIUSE = 2;
   }
 
   enum Kind {
