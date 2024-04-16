@@ -4,6 +4,7 @@
 
 import { Trigger } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
+import { randomBytes, verify } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -50,6 +51,8 @@ export class InvitationHostExtension extends RpcExtension<
   private _ctx = new Context();
   private _remoteOptions?: Options;
   private _remoteOptionsTrigger = new Trigger();
+
+  private _challenge?: Buffer = undefined;
 
   public invitation?: Invitation = undefined;
 
@@ -113,13 +116,17 @@ export class InvitationHostExtension extends RpcExtension<
 
           this._callbacks.onStateUpdate({ ...this.invitation, state: Invitation.State.READY_FOR_AUTHENTICATION });
 
+          this._challenge =
+            this.invitation.authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY ? randomBytes(32) : undefined;
+
           log.trace('dxos.sdk.invitation-handler.host.introduce', trace.end({ id: traceId }));
           return {
             authMethod: this.invitation.authMethod,
+            challenge: this._challenge,
           };
         },
 
-        authenticate: async ({ authCode: code }) => {
+        authenticate: async ({ authCode: code, signedChallenge }) => {
           const traceId = PublicKey.random().toHex();
           log.trace('dxos.sdk.invitation-handler.host.authenticate', trace.begin({ id: traceId }));
           log('received authentication request', { authCode: code });
@@ -141,6 +148,26 @@ export class InvitationHostExtension extends RpcExtension<
                 } else {
                   this.authenticationPassed = true;
                 }
+              }
+              break;
+            }
+
+            case Invitation.AuthMethod.KNOWN_PUBLIC_KEY: {
+              if (!this.invitation.guestKeypair) {
+                status = AuthenticationResponse.Status.INTERNAL_ERROR;
+                break;
+              }
+              const isSignatureValid =
+                this._challenge &&
+                verify(
+                  this._challenge,
+                  Buffer.from(signedChallenge ?? []),
+                  this.invitation.guestKeypair.publicKey.asBuffer(),
+                );
+              if (isSignatureValid) {
+                this.authenticationPassed = true;
+              } else {
+                status = AuthenticationResponse.Status.INVALID_SIGNATURE;
               }
               break;
             }

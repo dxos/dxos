@@ -8,7 +8,12 @@ import waitForExpect from 'wait-for-expect';
 
 import { asyncChain, asyncTimeout, Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
-import { type DataSpace, InvitationsServiceImpl, type ServiceContext } from '@dxos/client-services';
+import {
+  createAdmissionKeypair,
+  type DataSpace,
+  InvitationsServiceImpl,
+  type ServiceContext,
+} from '@dxos/client-services';
 import {
   type PerformInvitationParams,
   type Result,
@@ -105,6 +110,55 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
     );
 
     await successfulInvitation({ host, guest, hostResult, guestResult });
+  });
+
+  test('with shared keypair', async () => {
+    const [host, guest] = getPeers();
+    const params = getParams();
+    const guestKeypair = createAdmissionKeypair();
+    const [hostResult, guestResult] = await Promise.all(
+      performInvitation({
+        ...params,
+        options: { ...params.options, guestKeypair, authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY },
+      }),
+    );
+
+    await successfulInvitation({ host, guest, hostResult, guestResult });
+  });
+
+  test('invalid shared keypair', async () => {
+    const params = getParams();
+    const keypair1 = createAdmissionKeypair();
+    const keypair2 = createAdmissionKeypair();
+    const invalidKeypair = { publicKey: keypair1.publicKey, privateKey: keypair2.privateKey };
+    const [hostResult, guestResult] = performInvitation({
+      ...params,
+      options: {
+        ...params.options,
+        guestKeypair: invalidKeypair,
+        authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+      },
+    });
+
+    expect((await guestResult).error).to.exist;
+    await expect(asyncTimeout(hostResult, 100)).to.be.rejected;
+  });
+
+  test('incomplete shared keypair', async () => {
+    const params = getParams();
+    const keypair = createAdmissionKeypair();
+    delete keypair.privateKey;
+    const [hostResult, guestResult] = performInvitation({
+      ...params,
+      options: {
+        ...params.options,
+        guestKeypair: keypair,
+        authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+      },
+    });
+
+    expect((await guestResult).error).to.exist;
+    await expect(asyncTimeout(hostResult, 100)).to.be.rejected;
   });
 
   test('with target', async () => {
