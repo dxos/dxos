@@ -80,7 +80,7 @@ export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Sc
     this.serializedSchema.jsonSchema = effectToJsonSchema(schemaWithUpdatedColumns);
   }
 
-  public updateColumnName = ({ before, after }: { before: PropertyKey; after: PropertyKey }) => {
+  public updatePropertyName = ({ before, after }: { before: PropertyKey; after: PropertyKey }) => {
     const oldAST = this._getSchema().ast;
     invariant(AST.isTypeLiteral(oldAST));
 

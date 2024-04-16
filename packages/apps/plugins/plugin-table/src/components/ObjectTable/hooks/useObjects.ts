@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useMemo } from 'react';
-
 import { useFilteredObjects } from '@braneframe/plugin-search';
 import { type EchoReactiveObject, Filter, type S } from '@dxos/echo-schema';
 import { type Space, useQuery } from '@dxos/react-client/echo';
@@ -17,11 +15,9 @@ const Stable = {
 };
 
 export const useObjects = (space?: Space, schema?: S.Schema<any>) => {
-  const objectFilter = useMemo(() => (schema ? Filter.schema(schema) : () => false), [schema]);
-
   const objects = useQuery<EchoReactiveObject<any>>(
     space,
-    objectFilter,
+    schema ? Filter.schema(schema) : () => false,
     Stable.empty.object,
     // TODO(burdon): Toggle deleted.
     [schema],
