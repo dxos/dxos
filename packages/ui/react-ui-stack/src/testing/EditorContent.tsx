@@ -49,8 +49,9 @@ export const EditorContent = ({ data: { content = '' } }: { data: StackSectionCo
   }, [id, formattingObserver, themeMode]);
 
   const handleAction = useActionHandler(view);
-  const focusableGroup = useFocusableGroup({ tabBehavior: 'limited' });
 
+  // TODO(thure): Should these be factored out?
+  const focusableGroup = useFocusableGroup({ tabBehavior: 'limited' });
   // Focus editor on Enter (e.g., when tabbing to this component).
   const handleKeyUp = useCallback<KeyboardEventHandler<HTMLDivElement>>(
     (event) => {
