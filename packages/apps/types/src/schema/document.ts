@@ -2,10 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
-
+import { S, TypedObject } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
-import { TypedObject } from '@dxos/echo-schema';
 
 // TODO(burdon): Temporary?
 export class TextV0Type extends TypedObject({ typename: 'dxos.Text.v0', version: '0.1.0' })({

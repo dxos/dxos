@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import type * as S from '@effect/schema/Schema';
 import yaml from 'js-yaml';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -22,6 +21,7 @@ import {
 import { GameType } from '@dxos/chess-app/types';
 import { type Space } from '@dxos/client/echo';
 import { Config } from '@dxos/config';
+import type { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 export const str = (...text: (string | undefined | boolean)[]): string => text.filter(Boolean).flat().join('\n');

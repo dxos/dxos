@@ -132,9 +132,7 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
-    "@effect/schema": "0.64.7",
     "base-x": "~3.0.9",
-    "effect": "2.4.9",
     "lodash.get": "^4.4.2",
     "lodash.isequal": "^4.5.0",
     "lodash.isequalwith": "^4.4.0"
