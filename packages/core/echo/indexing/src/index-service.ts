@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { DeferredTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
@@ -15,7 +16,6 @@ import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { nonNullable } from '@dxos/util';
 
 import { type Indexer } from './indexer';
-import { DeferredTask } from '@dxos/async';
 
 export type IndexServiceParams = {
   indexer: Indexer;
