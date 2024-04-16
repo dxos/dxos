@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, useEffect, useMemo, useState, useCallback } from 'react';
+import React, { type FC, useEffect, useMemo, useState, useCallback, useRef } from 'react';
 
 import { type TableType, type TableTypeProp } from '@braneframe/types';
 import { type DynamicEchoSchema, S, create, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { getSpace } from '@dxos/react-client/echo';
+import { type Space, getSpace } from '@dxos/react-client/echo';
 import { DensityProvider } from '@dxos/react-ui';
-import { Table, type TableDef, type TableProps } from '@dxos/react-ui-table';
+import { type ColumnProps, Table, type TableDef, type TableProps } from '@dxos/react-ui-table';
 
 // TODO(burdon): Remove deps.
 import { useObjects, useTables } from './hooks';
@@ -32,6 +32,40 @@ export const updateTableProp = (props: TableTypeProp[], oldId: string, update: T
   }
 };
 
+const createColumns = (
+  space: Space | undefined,
+  tables: TableType[],
+  table: TableType,
+  onColumnUpdate: (oldId: string, column: ColumnProps) => void,
+  onColumnDelete: (id: string) => void,
+  onRowUpdate: (object: any, prop: string, value: any) => void,
+  onRowDelete: (object: any) => void,
+) => {
+  const tableDefs: TableDef[] = tables
+    .filter((table) => table.schema)
+    .map((table) => ({
+      id: table.schema!.id,
+      name: table.title ?? table.schema?.typename,
+      columns: table.schema!.getProperties().map(schemaPropMapper(table)),
+    }));
+
+  const tableDef = tableDefs.find((tableDef) => tableDef.id === table.schema?.id);
+
+  if (!tableDef || !space) {
+    return [];
+  }
+
+  return createColumnsFromTableDef({
+    tableDef,
+    tablesToReference: tableDefs,
+    space,
+    onColumnUpdate,
+    onColumnDelete,
+    onRowUpdate,
+    onRowDelete,
+  });
+};
+
 // TODO(Zan): Better name.
 const ObjectTableTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
   const space = getSpace(table);
@@ -39,60 +73,53 @@ const ObjectTableTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, get
   const objects = useObjects(space, table.schema);
   const tables = useTables(space);
 
-  // TODO(zan): New object should probably be a ref? (Why should we re-create the columns when adding rows)
-  const [newObject, setNewObject] = useState({});
-  const rows = useMemo(() => [...objects, newObject], [objects, newObject]);
+  const newObject = useRef({});
+  const newObjectKey = '__new';
 
-  const columns = useMemo(() => {
-    if (!space || !table.schema || !tables.length) {
-      return [];
+  const keyAccessor = useCallback((row: any) => (row === newObject.current ? newObjectKey : row?.id ?? 'KEY'), []);
+
+  const [rows, setRows] = useState<any>([...objects]);
+
+  useEffect(() => {
+    if (!newObject.current) {
+      return;
     }
+    setRows([...objects, newObject.current]);
+  }, [objects, newObject.current]);
 
-    const tableDefs: TableDef[] = tables
-      .filter((table) => table.schema)
-      .map((table) => ({
-        id: table.schema!.id,
-        name: table.title ?? table.schema?.typename,
-        columns: table.schema!.getProperties().map(schemaPropMapper(table)),
-      }));
+  const onColumnUpdate = useMemo(
+    () => (oldId: string, column: ColumnProps) => {
+      const { id, type, refTable, refProp, digits, label } = column;
+      updateTableProp(table.props, oldId, { id, refProp, label });
+      table.schema?.updateColumns({
+        [oldId]: getSchema(tables, type, { digits, refTable, refProp }),
+      });
+      if (oldId !== column.id) {
+        table.schema?.updateColumnName({ before: oldId, after: id });
+      }
+    },
+    [table.props, table.schema, tables],
+  );
 
-    const tableDef = tableDefs.find((tableDef) => tableDef.id === table.schema?.id);
+  const onColumnDelete = useMemo(() => (id: string) => table.schema?.removeColumns([id]), [table.schema]);
 
-    if (!tableDef) {
-      return [];
-    }
+  const onRowUpdate = useMemo(
+    () => (object: any, prop: string, value: any) => {
+      object[prop] = value;
+      if (object === newObject.current) {
+        space!.db.add(create(table.schema!, { ...newObject.current }));
+        newObject.current = {};
+      }
+    },
+    [space, table.schema, newObject],
+  );
 
-    return createColumnsFromTableDef({
-      tableDef,
-      tablesToReference: tableDefs,
-      space: space!,
-      onColumnUpdate: (oldId, column) => {
-        const { id, type, refTable, refProp, digits, label } = column;
-        updateTableProp(table.props, oldId, { id, refProp, label });
+  const onRowDelete = useMemo(() => (object: any) => space!.db.remove(object), [space]);
 
-        table.schema?.updateColumns({
-          [oldId]: getSchema(tables, type, { digits, refTable, refProp }),
-        });
-
-        if (oldId !== column.id) {
-          table.schema?.updateColumnName({ before: oldId, after: id });
-        }
-      },
-      onColumnDelete: (id) => table.schema?.removeColumns([id]),
-      onRowUpdate: (object, prop, value) => {
-        object[prop] = value;
-        if (object === newObject) {
-          // TODO(burdon): Silent exception if try to add plain object directly.
-          space!.db.add(create(table.schema!, { ...newObject }));
-          setNewObject({});
-        }
-      },
-      onRowDelete: (object) => {
-        // TODO(burdon): Rename delete.
-        space!.db.remove(object);
-      },
-    });
-  }, [space, tables, table, table.schema, newObject]);
+  const columns = useMemo(
+    () => createColumns(space, tables, table, onColumnUpdate, onColumnDelete, onRowUpdate, onRowDelete),
+    [space, tables, table, onColumnUpdate, onColumnDelete, onRowUpdate, onRowDelete],
+  );
 
   const handleColumnResize = useCallback(
     (state: Record<string, number>) => {
@@ -111,7 +138,7 @@ const ObjectTableTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, get
   return (
     <DensityProvider density='fine'>
       <Table<any>
-        keyAccessor={(row) => row.id ?? '__new'}
+        keyAccessor={keyAccessor}
         columns={columns}
         data={rows}
         border
