@@ -120,7 +120,7 @@ export class ObjectSerializer {
 
           case 'file': {
             const child = folder.objects.find((item) => item?.id === object.id);
-            const serializer = serializers[object.typename] ?? serializers.default;
+            const serializer = serializers[object.typename] ?? jsonSerializer;
             const deserialized = await serializer.deserialize(object.content!, child, serializers);
 
             if (!child) {
