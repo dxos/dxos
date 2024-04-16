@@ -11,10 +11,17 @@ import { trackResource } from './track-leaks';
 export type ClearCallback = () => void;
 
 export enum TaskPriority {
-  Immediate = 0,
-  High = 10,
-  Normal = 20,
-  Low = 30,
+  IMMEDIATE = 0,
+
+  HIGH = 10,
+
+  NORMAL = 20,
+  REPLICATION = 25,
+
+  LOW = 30,
+  INDEXING = 35,
+
+  BACKGROUND = 40,
 }
 
 /**

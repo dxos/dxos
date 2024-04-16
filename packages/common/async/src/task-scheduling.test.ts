@@ -73,21 +73,21 @@ describe('task-scheduling', () => {
       () => {
         events.push('normal');
       },
-      { priority: TaskPriority.Normal },
+      { priority: TaskPriority.NORMAL },
     );
     scheduleMacroTask(
       ctx,
       () => {
         events.push('high');
       },
-      { priority: TaskPriority.High },
+      { priority: TaskPriority.HIGH },
     );
     scheduleMacroTask(
       ctx,
       () => {
         trigger.wake();
       },
-      { priority: TaskPriority.Low },
+      { priority: TaskPriority.LOW },
     );
 
     await trigger.wait();
