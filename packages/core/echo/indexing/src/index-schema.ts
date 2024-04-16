@@ -51,10 +51,10 @@ export class IndexSchema extends Resource implements Index {
     return this._identifier;
   }
 
-  async update(id: string, object: ObjectStructure) {
+  async update(id: string, object: Partial<ObjectStructure>) {
     invariant(this._orama, 'Index is not initialized');
     const entry = await orama.getByID(this._orama, id);
-    if (entry && entry.system.type?.itemId === object.system.type?.itemId) {
+    if (entry && entry.system.type?.itemId === object.system?.type?.itemId) {
       return false;
     }
     await orama.update<any>(this._orama, id, { ...object, id });
@@ -69,7 +69,7 @@ export class IndexSchema extends Resource implements Index {
   // TODO(mykola): Fix Filter type with new Reactive API.
   async find(filter: Filter) {
     invariant(this._orama, 'Index is not initialized');
-    let results: orama.Results<ObjectStructure>;
+    let results: orama.Results<Partial<ObjectStructure>>;
     if (!filter.type) {
       results = await orama.search(this._orama, {
         term: '',
@@ -78,7 +78,7 @@ export class IndexSchema extends Resource implements Index {
         limit: ORAMA_LIMIT,
       });
     } else {
-      results = await orama.search<OramaSchemaType, ObjectStructure>(this._orama, {
+      results = await orama.search<OramaSchemaType, Partial<ObjectStructure>>(this._orama, {
         term: filter.type.itemId,
         exact: true,
         threshold: 0,
