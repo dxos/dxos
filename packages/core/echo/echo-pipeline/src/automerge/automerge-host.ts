@@ -80,6 +80,7 @@ export class AutomergeHost {
   }
 
   async open() {
+    // TODO(mykola): remove this before 0.6 release.
     this._directory && (await levelMigration({ db: this._db, directory: this._directory }));
     this._storage = new LevelDBStorageAdapter({
       db: this._db,
