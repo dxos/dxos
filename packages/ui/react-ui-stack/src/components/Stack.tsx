@@ -131,7 +131,7 @@ export const Stack = ({
 };
 
 const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
-  ({ classNames, path, isOver, item: { items }, itemContext }, forwardedRef) => {
+  ({ classNames, path, isOver, item: { items }, itemContext, type: _type, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { Component, type } = useContainer();
     const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
@@ -151,6 +151,7 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
           classNames,
         )}
         {...(!activeItem && domAttributes)}
+        {...props}
       >
         {items.length > 0 ? (
           <Mosaic.SortableContext items={items} direction='vertical'>
