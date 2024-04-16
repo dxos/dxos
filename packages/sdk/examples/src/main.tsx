@@ -14,7 +14,7 @@ import { create } from '@dxos/echo-schema';
 import { registerSignalFactory } from '@dxos/echo-signals';
 import { faker } from '@dxos/random';
 import { Client, ClientContext } from '@dxos/react-client';
-import { type Space, type SpaceProxy } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
 import { Input, ThemeProvider, Tooltip, Status } from '@dxos/react-ui';
@@ -43,9 +43,7 @@ const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
   types && clients.map((client) => client.addSchema(...types));
   const space = await clients[0].spaces.create({ name: faker.commerce.productName() });
   await onCreateSpace?.(space);
-  await Promise.all(
-    clients.slice(1).map((client) => performInvitation({ host: space as SpaceProxy, guest: client.spaces })),
-  );
+  await Promise.all(clients.slice(1).map((client) => performInvitation({ host: space, guest: client.spaces })));
 
   return { spaceKey: space.key, clients };
 };

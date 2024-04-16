@@ -5,7 +5,7 @@
 import React, { useState, type FC, useEffect } from 'react';
 
 import { Client, type PublicKey } from '@dxos/client';
-import { type SpaceProxy, type Space } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
@@ -72,9 +72,7 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
         const space = await clients[0].spaces.create({ name: faker.commerce.productName() });
         setSpaceKey(space.key);
         await onCreateSpace?.(space);
-        await Promise.all(
-          clients.slice(1).map((client) => performInvitation({ host: space as SpaceProxy, guest: client.spaces })),
-        );
+        await Promise.all(clients.slice(1).map((client) => performInvitation({ host: space, guest: client.spaces })));
       }
 
       setClients(clients);

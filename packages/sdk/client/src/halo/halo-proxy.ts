@@ -187,10 +187,7 @@ export class HaloProxy implements Halo {
    * @param profile - optional display name
    * @param deviceProfile - optional device profile that will be merged with defaults
    */
-  async createIdentity(
-    profile: ProfileDocument = {},
-    deviceProfile: DeviceProfileDocument | undefined = undefined,
-  ): Promise<Identity> {
+  async createIdentity(profile: ProfileDocument = {}, deviceProfile?: DeviceProfileDocument): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const deviceProfileWithDefaults = {
       ...deviceProfile,
