@@ -38,7 +38,6 @@ export class IndexServiceImpl implements IndexService {
   find(request: QueryRequest): Stream<QueryResponse> {
     const filter = Filter.fromProto(request.filter);
     return new Stream(({ next, ctx }) => {
-      let currentCtx: Context;
       // Previous id-s.
       let previousResults: string[] = [];
 
@@ -53,7 +52,7 @@ export class IndexServiceImpl implements IndexService {
                   const { objectId, documentId } = idCodec.decode(result.id);
                   const handle = this._params.automergeHost.repo.find(documentId as any);
                   await handle.whenReady();
-                  if (this._ctx.disposed || currentCtx.disposed) {
+                  if (this._ctx.disposed || ctx.disposed) {
                     return;
                   }
                   const spaceKey = getSpaceKeyFromDoc(handle.docSync());
