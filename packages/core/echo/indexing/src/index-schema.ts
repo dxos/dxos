@@ -47,7 +47,12 @@ export class IndexSchema implements Index {
   }
 
   async update(id: string, object: ObjectType) {
+    const entry = await orama.getByID(await this._orama, id);
+    if (entry && entry.system.type.itemId === object.system.type.itemId) {
+      return false;
+    }
     await orama.update<any>(await this._orama, id, { ...object, id });
+    return true;
   }
 
   async remove(id: string) {

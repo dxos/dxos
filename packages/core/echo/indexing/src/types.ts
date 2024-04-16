@@ -13,7 +13,10 @@ export interface Index {
   kind: IndexKind;
   updated: Event;
 
-  update: (id: string, object: ObjectType) => Promise<void>;
+  /**
+   * @returns {Promise<boolean>} true if the object was updated, false otherwise.
+   */
+  update: (id: string, object: ObjectType) => Promise<boolean>;
   remove: (id: string) => Promise<void>;
   find: (filter: Filter) => Promise<{ id: string; rank: number }[]>;
 

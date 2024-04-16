@@ -92,7 +92,7 @@ describe('Indexer', () => {
     });
     afterTest(() => indexer.destroy());
 
-    const doneIndexing = indexer.indexed.waitForCount(1);
+    const doneIndexing = indexer.updated.waitForCount(1);
 
     {
       indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });

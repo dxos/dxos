@@ -62,7 +62,7 @@ export class Indexer {
   private _initialized = false;
   private readonly _newIndexes: Index[] = [];
 
-  public readonly indexed = new Event<void>();
+  public readonly updated = new Event<void>();
 
   private readonly _run = new DeferredTask(this._ctx, async () => {
     if (!this._initialized || this._indexConfig?.enabled !== true) {
@@ -185,7 +185,7 @@ export class Indexer {
     this._newIndexes.forEach((index) => this._indexes.set(index.kind, index));
     this._newIndexes.length = 0; // Clear new indexes.
     await this._saveIndexes();
-    this.indexed.emit();
+    this.updated.emit();
   }
 
   @trace.span({ showInBrowserTimeline: true })
@@ -206,11 +206,12 @@ export class Indexer {
       );
     };
 
+    const updates: boolean[] = [];
     for await (const documents of this._loadDocuments(ids)) {
       if (this._ctx.disposed) {
         return;
       }
-      await this._updateIndexes(Array.from(this._indexes.values()), documents);
+      updates.push(...(await this._updateIndexes(Array.from(this._indexes.values()), documents)));
       documentsUpdated.push(...documents);
       if (documentsUpdated.length >= INDEX_UPDATE_BATCH_SIZE) {
         await saveIndexChanges();
@@ -218,28 +219,34 @@ export class Indexer {
       }
     }
     await saveIndexChanges();
-    this.indexed.emit();
+    if (updates.some(Boolean)) {
+      this.updated.emit();
+    }
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _updateIndexes(indexes: Index[], documents: ObjectSnapshot[]) {
+  private async _updateIndexes(indexes: Index[], documents: ObjectSnapshot[]): Promise<boolean[]> {
+    const updates: boolean[] = [];
     for (const index of indexes) {
       if (this._ctx.disposed) {
-        return;
+        return updates;
       }
       switch (index.kind.kind) {
         case IndexKind.Kind.FIELD_MATCH:
           invariant(index.kind.field, 'Field match index kind should have a field');
-          await updateIndexWithObjects(
-            index,
-            documents.filter((document) => index.kind.field! in document.object),
+          updates.push(
+            ...(await updateIndexWithObjects(
+              index,
+              documents.filter((document) => index.kind.field! in document.object),
+            )),
           );
           break;
         case IndexKind.Kind.SCHEMA_MATCH:
-          await updateIndexWithObjects(index, documents);
+          updates.push(...(await updateIndexWithObjects(index, documents)));
           break;
       }
     }
+    return updates;
   }
 
   @trace.span({ showInBrowserTimeline: true })
