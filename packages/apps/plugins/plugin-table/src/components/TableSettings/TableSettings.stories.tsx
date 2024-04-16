@@ -28,11 +28,12 @@ const Story = () => {
     const generator = createSpaceObjectGenerator(space);
     generator.addSchemas();
 
-    if (!client._graph.types.isEffectSchemaRegistered(TableType)) {
-      client._graph.types.registerEffectSchema(TableType);
+    // TODO(zan): Currently we need to cast as any since `_graph` is marked @internal.
+    if (!(client as any)._graph.types.isEffectSchemaRegistered(TableType)) {
+      (client as any)._graph.types.registerEffectSchema(TableType);
     }
 
-    setTable(space.db.add(E.object(TableType, { title: 'Table', props: [] })));
+    setTable(space.db.add(E.create(TableType, { title: 'Table', props: [] })));
 
     setSchemas(space.db.schemaRegistry.getAll());
   }, []);

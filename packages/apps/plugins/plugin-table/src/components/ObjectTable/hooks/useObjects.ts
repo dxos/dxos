@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as S from '@effect/schema/Schema';
 import { useMemo } from 'react';
 
 import { useFilteredObjects } from '@braneframe/plugin-search';
-import { type EchoReactiveObject, Filter } from '@dxos/echo-schema';
+import { type EchoReactiveObject, Filter, type S } from '@dxos/echo-schema';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 
 // TODO(Zan): Consolidate.

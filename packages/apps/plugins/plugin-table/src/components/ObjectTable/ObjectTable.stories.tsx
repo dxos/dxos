@@ -28,8 +28,9 @@ const Story = () => {
     generator.addSchemas();
     generator.createObjects({ [TestSchemaType.project]: 6 });
 
-    if (!client._graph.types.isEffectSchemaRegistered(TableType)) {
-      client._graph.types.registerEffectSchema(TableType);
+    // TODO(zan): Currently we need to cast as any since `_graph` is marked @internal.
+    if (!(client as any)._graph.types.isEffectSchemaRegistered(TableType)) {
+      (client as any)._graph.types.registerEffectSchema(TableType);
     }
 
     // We need a table to reference
