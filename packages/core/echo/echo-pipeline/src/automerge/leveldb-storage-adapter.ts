@@ -84,7 +84,7 @@ export class LevelDBStorageAdapter implements StorageAdapterInterface {
     await batch.write();
   }
 
-  close() {
+  async close() {
     this._state = 'closed';
   }
 }
