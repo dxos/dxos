@@ -18,9 +18,7 @@
     "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.4.0",
-    "@effect/schema": "0.64.7",
-    "effect": "2.4.9"
+    "react-router-dom": "^6.4.0"
   },
   "devDependencies": {
     "@dxos/cli": "workspace:*",

@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as AST from '@effect/schema/AST';
-import type * as S from '@effect/schema/Schema';
-
 import { TextV0Type } from '@braneframe/types';
+import type { S } from '@dxos/echo-schema';
+import { AST } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
 
 // TODO(burdon): Type name registry linked to schema?

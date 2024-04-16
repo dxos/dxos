@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as JSONSchema from '@effect/schema/JSONSchema';
-import * as S from '@effect/schema/Schema';
 import { SerpAPI } from '@langchain/community/tools/serpapi';
 import { HNSWLib } from '@langchain/community/vectorstores/hnswlib';
 import { StringOutputParser } from '@langchain/core/output_parsers';
@@ -38,6 +36,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { z } from 'zod';
 
+import { effectToJsonSchema, S } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
 import { getConfig, getKey } from '../util';
@@ -250,7 +249,7 @@ describe.skip('LangChain', () => {
       ).pipe(S.description('An array of people mentioned in the text')),
     });
 
-    const jsonSchema: Record<string, unknown> = JSONSchema.make(defs) as any;
+    const jsonSchema: Record<string, unknown> = effectToJsonSchema(defs) as any;
     const model = createModel().bind({
       function_call: { name: 'output_formatter' },
       functions: [

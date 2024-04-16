@@ -2,10 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as AST from '@effect/schema/AST';
-import * as S from '@effect/schema/Schema';
-
 import { type TableType } from '@braneframe/types';
+import { AST, S } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
 import { type EchoObjectAnnotation, getFieldMetaAnnotation, ReferenceAnnotation } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
