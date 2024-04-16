@@ -44,9 +44,6 @@ export class IndexServiceImpl implements IndexService {
 
       const updateTask = new DeferredTask(ctx, async () => {
         try {
-          await currentCtx?.dispose();
-          const ctx = new Context();
-          currentCtx = ctx;
           const results = await this._params.indexer.find(filter);
           const response: QueryResponse = {
             queryId: request.queryId,
