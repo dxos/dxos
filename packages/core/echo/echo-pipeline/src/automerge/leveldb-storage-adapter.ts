@@ -30,10 +30,10 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
       if (this._lifecycleState !== LifecycleState.OPEN) {
         return undefined;
       }
-      return this._params.db.get<StorageKey, Uint8Array>(keyArray, { ...encodingOptions });
+      return await this._params.db.get<StorageKey, Uint8Array>(keyArray, { ...encodingOptions });
     } catch (err: any) {
-      if (err.code === 'ERR_NOT_FOUND') {
-        // Key not found. Automerge expects undefined in this case.
+      // Key not found. Automerge expects undefined in this case.
+      if (err.code !== 'ERR_NOT_FOUND') {
         return undefined;
       }
       throw err;
