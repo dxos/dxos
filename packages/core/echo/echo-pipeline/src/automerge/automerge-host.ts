@@ -13,7 +13,7 @@ import {
   type StorageAdapterInterface,
 } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
-import { Context } from '@dxos/context';
+import { Context, type Lifecycle } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
@@ -59,7 +59,7 @@ export class AutomergeHost {
   private _repo!: Repo;
   private _meshNetwork!: MeshNetworkAdapter;
   private _clientNetwork!: LocalHostNetworkAdapter;
-  private _storage!: StorageAdapterInterface & { close?: () => void };
+  private _storage!: StorageAdapterInterface & Lifecycle;
 
   @trace.info()
   private _peerId!: string;
@@ -161,7 +161,7 @@ export class AutomergeHost {
   }
 
   async close() {
-    this._storage.close?.();
+    await this._storage.close?.();
     await this._clientNetwork.close();
     await this._ctx.dispose();
   }
