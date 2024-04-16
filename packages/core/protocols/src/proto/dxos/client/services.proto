@@ -406,7 +406,7 @@ message Invitation {
     /// Requires both to be online to complete key exchange.
     INTERACTIVE = 0;
     /// Invitation can be accepted by any valid peer.
-    OFFLINE = 1;
+    DELEGATED = 1;
     /**
      * Multi-use interactive invitations.
      * @deprecated use multiUse flag with type=interactive instead.
@@ -489,6 +489,14 @@ message Invitation {
 
   /// Whether an invitation can be used multiple times.
   optional bool multi_use = 15;
+
+  /// Guest's keypair required for AuthMethod.KNOWN_PUBLIC_KEY.
+  optional AdmissionKeypair guest_keypair = 16;
+}
+
+message AdmissionKeypair {
+  dxos.keys.PublicKey public_key = 1;
+  optional dxos.keys.PrivateKey private_key = 2;
 }
 
 message AcceptInvitationRequest {
